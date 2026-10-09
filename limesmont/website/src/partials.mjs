@@ -385,65 +385,74 @@ export function residentialRefs(ctx, { limit = 8 } = {}) {
 <p class="fineprint">Herstellerreferenzen von MIRAL PVC. Alle Projekte mit Fotos: <a href="${SITE.miral.references}" target="_blank" rel="noopener">miral-pvc.com/reference</a></p>`;
 }
 
-/* ---------- Interaktive Lamellenfassade (CSS-3D, folgt Maus bzw. Scrollposition) ---------- */
-export function lamellaVisual() {
-  const group = (n) => `<div class="lamella-group">${'<span class="lamella"></span>'.repeat(n)}</div>`;
-  return `<figure class="page-hero__media lamella-visual reveal" data-lamellas aria-label="Animierte Lamellenfassade: Holzlamellen vor Balkonen und Glasflächen">
-    <div class="lamella-facade">
-      <div class="lamella-floors" aria-hidden="true">${'<span></span>'.repeat(5)}</div>
-      <div class="lamella-row" aria-hidden="true">${group(6)}${group(6)}${group(6)}${group(6)}</div>
-    </div>
-    <div class="scene-hud" aria-hidden="true"><span>Lamellenfassade</span><span>Maus bewegen</span></div>
+/* ---------- 3D-Sektion Lamellenfassade ---------- */
+const lamellaFallback = () => `<div class="lamella-facade scene-fallback" aria-hidden="true">
+          <div class="lamella-floors">${'<span></span>'.repeat(5)}</div>
+          <div class="lamella-row">${('<div class="lamella-group">' + '<span class="lamella"></span>'.repeat(6) + '</div>').repeat(4)}</div>
+        </div>`;
+
+// Seitenkopf der Leistungsseite: Nahaufnahme, Lamellen in Bewegung
+export function lamellaHero() {
+  return `<figure class="page-hero__media lamella-hero scene reveal" data-scene="facade-lamellas" data-mode="detail" aria-label="3D-Detailansicht einer Lamellenfassade in Holzoptik">
+    ${lamellaFallback()}
+    <div class="scene-hud" aria-hidden="true"><span>Detailansicht</span><span>Lamellen in Bewegung</span></div>
     <span class="corner corner--tl"></span><span class="corner corner--br"></span>
   </figure>`;
 }
 
-/* ---------- 3D-Sektion Lamellenfassade ---------- */
 export function lamellaSection(ctx, { heading = 'h2', standalone = true } = {}) {
   const finishes = [
     ['zeder', '#B5653A', 'Holzoptik Zeder'],
     ['eiche', '#C9A26A', 'Holzoptik Eiche'],
     ['anthrazit', '#3B4245', 'Anthrazitgrau'],
-    ['alu', '#B9BCBB', 'Aluminium natur'],
+    ['alu', '#C4C7C6', 'Aluminium'],
   ];
   const H = heading;
+  const points = [
+    ['louvre', 'Lamellenfassaden', 'Aluminium in Holzdekor, WPC oder Holz – vertikal oder horizontal.'],
+    ['facade', 'Fassadenplatten', 'Als vorgehängte hinterlüftete Fassade (VHF) aus HPL, Faserzement oder Alu-Verbund.'],
+    ['factory', 'Parkhausfassaden', 'Lamellen, Streckmetall oder Lochblech – offen für Luft, geschlossen in der Optik.'],
+    ['handshake', 'Aus einer Hand', 'Abgestimmt mit Fenstern und Glasgeländern – ohne Schnittstellen an den Anschlüssen.'],
+  ];
   return `
 <section class="section lamella-section" aria-labelledby="lamella-title">
   <div class="container">
-    <div class="section-head reveal">
-      <p class="eyebrow eyebrow--light">Fassadenlamellen &amp; Fassadenverkleidung</p>
-      <${H} id="lamella-title">Die Fassade, die man sich merkt.</${H}>
-      <p class="lead">Lamellen in Holzoptik gliedern die Fassade, spenden Schatten und schützen die Privatsphäre – dazu Fassadenplatten als vorgehängte hinterlüftete Fassade. Sehen Sie zu, wie wir eine Wohnanlage Geschoss für Geschoss verkleiden.</p>
-    </div>
-    <div class="configurator configurator--dark reveal" data-lamconfig>
-      <div class="configurator__stage scene lamella-stage" data-scene="facade-lamellas">
-        <div class="lamella-facade scene-fallback" aria-hidden="true">
-          <div class="lamella-floors">${'<span></span>'.repeat(5)}</div>
-          <div class="lamella-row">${('<div class="lamella-group">' + '<span class="lamella"></span>'.repeat(6) + '</div>').repeat(4)}</div>
-        </div>
-        <div class="scene-hud" aria-hidden="true"><span>Montage Lamellenfassade</span><span data-hud>bereit</span></div>
+    <div class="lamella-head reveal">
+      <div>
+        <p class="eyebrow eyebrow--light">Fassadenlamellen &amp; Fassadenverkleidung</p>
+        <${H} id="lamella-title">Die Fassade, an die man sich erinnert.</${H}>
       </div>
-      <div class="configurator__panel">
-        <div class="configurator__group">
-          <label class="configurator__label" for="lam-angle">Lamellenwinkel <em><output data-angle-out>0°</output></em></label>
+      <p class="lead">Lamellen in Holzoptik gliedern die Fassade, spenden Schatten und schützen die Privatsphäre. Sehen Sie zu, wie wir eine Wohnanlage Geschoss für Geschoss verkleiden – und drehen Sie die Lamellen selbst.</p>
+    </div>
+    <div class="lamella-showcase reveal" data-lamconfig>
+      <div class="lamella-stage scene" data-scene="facade-lamellas" data-mode="full">
+        ${lamellaFallback()}
+        <div class="scene-hud" aria-hidden="true"><span>Wohnanlage · 5 Geschosse</span><span data-hud>Montage bereit</span></div>
+      </div>
+      <div class="lamella-controls">
+        <div class="lamella-control lamella-control--range">
+          <label for="lam-angle">Lamellenwinkel <output data-angle-out>0°</output></label>
           <input class="range" id="lam-angle" type="range" min="0" max="90" step="1" value="0" data-angle>
           <div class="range__scale" aria-hidden="true"><span>offen</span><span>Sonnenschutz</span><span>geschlossen</span></div>
         </div>
-        <div class="configurator__group" role="group" aria-label="Oberfläche">
-          <span class="configurator__label">Oberfläche <em data-finish-name>${finishes[0][2]}</em></span>
+        <div class="lamella-control" role="group" aria-label="Oberfläche">
+          <span class="lamella-control__label">Oberfläche <em data-finish-name>${finishes[0][2]}</em></span>
           <div class="swatches">
             ${finishes.map(([k, c, n], i) => `<button type="button" class="swatch${i === 0 ? ' is-active' : ''}" style="--c:${c}" data-finish="${k}" data-name="${n}" aria-label="${n}" aria-pressed="${i === 0}"></button>`).join('')}
           </div>
         </div>
-        <ul class="check-list check-list--compact">
-          <li>${icon('check')} Lamellen aus Aluminium in Holzdekor, WPC oder Holz</li>
-          <li>${icon('check')} Fassadenplatten als vorgehängte hinterlüftete Fassade</li>
-          <li>${icon('check')} Parkhausfassaden aus Lamellen oder Streckmetall</li>
-          <li>${icon('check')} Abgestimmt mit Fenstern und Glasgeländern</li>
-        </ul>
-        <button type="button" class="btn btn--ghost btn--block" data-replay>${icon('louvre')} Montage erneut abspielen</button>
-        ${standalone ? `<a class="btn btn--primary btn--block" href="${ctx.r('leistungen/fassadenlamellen/')}">Mehr zu Fassadenlamellen ${icon('arrow')}</a>` : `<a class="btn btn--primary btn--block" href="${ctx.r('kontakt/')}#anfrage">Projekt anfragen ${icon('arrow')}</a>`}
+        <div class="lamella-control lamella-control--actions">
+          <button type="button" class="btn btn--ghost-light btn--sm" data-replay>${icon('louvre')} Montage abspielen</button>
+          <span class="lamella-control__hint">Ziehen dreht die Ansicht</span>
+        </div>
       </div>
+    </div>
+    <ul class="lamella-points">
+      ${points.map(([ic, t, d], i) => `<li class="reveal" style="--d:${i * 70}ms"><span>${icon(ic)}</span><div><b>${t}</b><p>${d}</p></div></li>`).join('\n      ')}
+    </ul>
+    <div class="actions actions--center">
+      ${standalone ? `<a class="btn btn--primary" href="${ctx.r('leistungen/fassadenlamellen/')}">Mehr zu Fassadenlamellen ${icon('arrow')}</a>` : ''}
+      <a class="btn ${standalone ? 'btn--ghost-light' : 'btn--primary'}" href="${ctx.r('kontakt/')}#anfrage">Fassadenprojekt anfragen ${icon('arrow')}</a>
     </div>
   </div>
 </section>`;

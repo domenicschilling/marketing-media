@@ -656,3 +656,35 @@ html:not(.js) .inquiry__head{display:none}
 .range{width:100%;accent-color:var(--lime-400);height:28px}
 .range__scale{display:flex;justify-content:space-between;font-size:.75rem;color:var(--on-dark-muted);margin-top:2px}
 @media (max-width:900px){.lamella-stage{min-height:380px}}
+
+/* ---------- Lamellenfassade v2: Bühne im Visualisierungs-Look ---------- */
+.lamella-facade{--a:28deg}
+.lamella-head{display:grid;grid-template-columns:1fr 1fr;gap:24px 56px;align-items:end;margin-bottom:clamp(28px,4vw,48px)}
+.lamella-head h2{margin:0}
+.lamella-head .lead{margin:0}
+@media (max-width:900px){.lamella-head{grid-template-columns:1fr}}
+.lamella-showcase{border-radius:22px;overflow:hidden;border:1px solid rgba(255,255,255,.1);box-shadow:0 30px 80px -30px rgba(0,0,0,.7);background:var(--g900)}
+.lamella-stage,.lamella-hero{background:linear-gradient(180deg,#7fa9d1 0%,#a9c7e2 30%,#cfdfec 58%,#dfe7ea 72%,#d6dcd6 100%)}
+.lamella-stage{height:min(72vh,680px);min-height:420px;cursor:grab;touch-action:pan-y}
+.lamella-stage:active{cursor:grabbing}
+.lamella-stage .scene-hud,.lamella-hero .scene-hud{color:rgba(15,26,21,.6)}
+.lamella-stage .scene-hud span,.lamella-hero .scene-hud span{background:rgba(255,255,255,.82);padding:6px 10px;border-radius:999px;backdrop-filter:blur(6px)}
+.lamella-stage .scene-hud span:last-child,.lamella-hero .scene-hud span:last-child{color:var(--g800)}
+.lamella-stage .lamella-facade,.lamella-hero .lamella-facade{border-radius:0;box-shadow:none}
+.lamella-controls{display:grid;grid-template-columns:1.4fr 1fr auto;gap:18px 32px;align-items:center;padding:20px 26px;background:linear-gradient(180deg,rgba(15,33,26,.96),var(--g900));border-top:1px solid rgba(255,255,255,.08)}
+.lamella-control label,.lamella-control__label{display:flex;justify-content:space-between;gap:10px;font:600 .78rem/1 var(--font-head);letter-spacing:.14em;text-transform:uppercase;color:var(--on-dark-muted);margin-bottom:10px}
+.lamella-control output,.lamella-control__label em{font-style:normal;color:#fff;letter-spacing:.04em;text-transform:none;font-size:.95rem}
+.lamella-control .swatch{border-color:var(--g900);box-shadow:0 0 0 1px rgba(255,255,255,.22)}
+.lamella-control .swatch.is-active{box-shadow:0 0 0 2px var(--lime-400)}
+.lamella-control--actions{display:grid;justify-items:end;gap:8px}
+.lamella-control__hint{font-size:.78rem;color:var(--on-dark-muted)}
+.lamella-points{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;margin:28px 0 8px}
+.lamella-points li{display:flex;gap:14px;padding:20px;border-radius:var(--radius);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
+.lamella-points li>span{flex:none;width:42px;height:42px;border-radius:10px;display:grid;place-items:center;background:rgba(155,192,79,.15);color:var(--lime-300)}
+.lamella-points b{font:700 1.08rem/1.2 var(--font-head);color:#fff}
+.lamella-points p{margin:4px 0 0;font-size:.9rem;color:var(--on-dark-muted)}
+.lamella-hero{position:relative;margin:0;aspect-ratio:5/4;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-lg)}
+.page-hero .lamella-hero{overflow:visible}
+.page-hero .lamella-hero canvas,.page-hero .lamella-hero .lamella-facade{border-radius:var(--radius)}
+@media (max-width:1000px){.lamella-points{grid-template-columns:1fr 1fr}.lamella-controls{grid-template-columns:1fr 1fr}.lamella-control--actions{grid-column:1/-1;justify-items:start;grid-auto-flow:column;align-items:center}}
+@media (max-width:600px){.lamella-points{grid-template-columns:1fr}.lamella-controls{grid-template-columns:1fr;padding:18px}.lamella-stage{height:58svh;min-height:340px}}

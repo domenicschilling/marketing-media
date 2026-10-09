@@ -1,6 +1,6 @@
 import { SITE, SERVICES, OWN_PROJECTS, waLink } from './config.mjs';
 import { icon } from './icons.mjs';
-import { pageHero, serviceCards, processSteps, faq, faqSchema, ctaBand, profileStory, panelConfigurator, areaMap, miralStats, inquiryForm, callbackForm, img, builderBenefits, residentialRefs, lamellaVisual, lamellaSection } from './partials.mjs';
+import { pageHero, serviceCards, processSteps, faq, faqSchema, ctaBand, profileStory, panelConfigurator, areaMap, miralStats, inquiryForm, callbackForm, img, builderBenefits, residentialRefs, lamellaHero, lamellaSection } from './partials.mjs';
 
 const todo = (v, label) => (v ? v : `<mark class="todo">[${label} – vom Kunden zu ergänzen]</mark>`);
 
@@ -493,7 +493,7 @@ function servicePage(s) {
       ...(c.faq?.length ? [faqSchema(c.faq)] : []),
     ],
     body: (ctx) => `
-${pageHero(ctx, { eyebrow: c.eyebrow, title: c.h1, lead: c.lead, image: c.image, imageAlt: c.imageAlt, media: c.media === 'lamellas' ? lamellaVisual() : undefined, crumbs: [['Leistungen', 'leistungen/'], [s.title, `leistungen/${s.slug}/`]] })}
+${pageHero(ctx, { eyebrow: c.eyebrow, title: c.h1, lead: c.lead, image: c.image, imageAlt: c.imageAlt, media: c.media === 'lamellas' ? lamellaHero() : undefined, crumbs: [['Leistungen', 'leistungen/'], [s.title, `leistungen/${s.slug}/`]] })}
 
 <section class="section">
   <div class="container split split--text">
