@@ -23,24 +23,80 @@
   <tr><th>Technik</th><td>ElevenLabs Agents (Stimme + Sprachmodell), Telefonie-Anbindung mit deutscher Ortsnetz-Nummer, Make für die Weiterleitung, Superchat für WhatsApp, Google Sheets fürs Reporting. Details: <a href="04-umsetzung-onboarding.html">Umsetzung</a>.</td></tr>
 </table>
 
-<h2>2. Pakete &amp; Preise (Listenpreise, netto)</h2>
+<h2>2. Angebot: ein Paket, zwei Zahlmodelle</h2>
+<p>Leistung und Betreuung sind in beiden Modellen identisch (alle Funktionen inkl. WhatsApp an Anrufer, Weiterleitung dringender Anrufe, Deutsch + Englisch, Monatsreport, Studio-Portal, Materialien). Betreuung ist immer <b>kostenlos</b>. Abschluss komplett online über die Website mit Vertrag, AVV und Stripe.</p>
 <table>
-  <tr><th></th><th class="r">Start</th><th class="r">Profi</th></tr>
-  <tr><td>Monatlich</td><td class="r"><b><span data-cfg="startPreis"></span></b></td><td class="r"><b><span data-cfg="profiPreis"></span></b></td></tr>
-  <tr><td>Inklusivminuten / Monat</td><td class="r"><span data-cfg="startMinuten"></span></td><td class="r"><span data-cfg="profiMinuten"></span></td></tr>
-  <tr><td>Einrichtung einmalig</td><td class="r"><span data-cfg="setup"></span></td><td class="r"><span data-cfg="setup"></span></td></tr>
-  <tr><td>Mehrminute</td><td class="r"><span data-cfg="extraMinute"></span> €</td><td class="r"><span data-cfg="extraMinute"></span> €</td></tr>
-  <tr><td>Kernleistungen</td><td class="r">Annahme, FAQ, Anfrage, Zusammenfassung</td><td class="r">+ WhatsApp an Anrufer, Weiterleitung, Englisch, Report</td></tr>
+  <tr><th style="width:30%"></th><th>A · Kauf</th><th>B · Provision (risikofrei)</th></tr>
+  <tr><td>Preis</td><td><b><span data-cfg="kaufPreis"></span> netto einmalig</b>, Aktion <span data-cfg="kaufAktionPreis"></span> mit Code <span data-cfg="aktionsCode"></span></td><td><b><span data-cfg="provisionSatz"></span> vom Tattoo-Preis netto</b> für Termine aus Ted-Anfragen</td></tr>
+  <tr><td>Laufende Kosten fürs Studio</td><td>keine (Fair Use <span data-cfg="fairUseMinuten"></span> Min./Monat, darüber <span data-cfg="extraMinute"></span> €/Min.)</td><td>nur Provision, keine Fix- oder Einrichtungskosten (Fair Use gleich)</td></tr>
+  <tr><td>Zahlung</td><td>Stripe Checkout (Karte, SEPA …) oder Rechnung 14 Tage</td><td>SEPA-Mandat oder Karte bei Stripe, Einzug monatlich am 4. für den Vormonat</td></tr>
+  <tr><td>Laufzeit</td><td>unbefristet; Kunde jederzeit; wir frühestens nach 24 Monaten (3 Monate Frist)</td><td><span data-cfg="kuendigungProvision"></span>, Nachlauf <span data-cfg="provisionNachlauf"></span></td></tr>
+  <tr><td>Risiko-Umkehr</td><td><span data-cfg="garantieTage"></span> Tage Geld-zurück ab Go-live</td><td>kein Termin = keine Kosten</td></tr>
+  <tr><td>Zuordnung</td><td>–</td><td>Termin innerhalb von <span data-cfg="provisionZuordnung"></span> nach der Ted-Anfrage, Meldung im Portal bis zum <span data-cfg="provisionMeldefrist"></span></td></tr>
 </table>
+<p><b>Empfehlung im Gespräch:</b> Provision als Standard-Einstieg (senkt die Hürde auf null). Kauf aktiv anbieten, wenn das Studio viele Anrufe, hohe Preise (große Projekte) oder keine Lust auf monatliche Abrechnung hat. Der Rechner auf der Website zeigt, ab wann sich der Kauf lohnt.</p>
+
+<h2>3. Kostenbasis pro Studio (Stand 10/2026)</h2>
+<table>
+  <tr><th>Posten</th><th>Preis laut Anbieter</th><th class="r">in € (1 $ ≈ 0,93 €)</th></tr>
+  <tr><td>ElevenLabs Agents (Stimme + Gespräch)</td><td>0,08 $/Min. in allen Plänen; Pro 99 $/Monat mit 1.238 Min., Scale 299 $ mit 3.738 Min.</td><td class="r">0,074 €/Min.</td></tr>
+  <tr><td>Sprachmodell (LLM)</td><td>wird zusätzlich abgerechnet, je nach Modell ca. 0,0005–0,045 $/Min.</td><td class="r">0,00–0,04 €/Min.</td></tr>
+  <tr><td>Twilio eingehend + Rufnummer DE</td><td>0,01 $/Min., lokale Nummer 1,35 $/Monat (Gewerbenachweis + Adresse im Vorwahlbereich nötig)</td><td class="r">0,009 €/Min. + 1,25 €/Monat</td></tr>
+  <tr><td>Make, Superchat, Mail, Netlify</td><td>Anteilig geschätzt</td><td class="r">ca. 2 €/Monat</td></tr>
+  <tr class="sum"><td>Planwert</td><td>mit mittlerem Sprachmodell</td><td class="r">≈ 0,11 €/Min. + 3,25 €/Monat</td></tr>
+</table>
+<table>
+  <tr><th>Nutzung (Ted-Minuten/Monat)</th><th class="r">150 Min.</th><th class="r">300 Min.</th><th class="r">500 Min. (Fair-Use-Grenze)</th></tr>
+  <tr><td>Etwa (bei Ø 2 Min. je Anruf)</td><td class="r">75 Anrufe</td><td class="r">150 Anrufe</td><td class="r">250 Anrufe</td></tr>
+  <tr><td>Kosten pro Monat</td><td class="r">≈ 20 €</td><td class="r">≈ 36 €</td><td class="r">≈ 58 €</td></tr>
+  <tr><td>Kosten pro Jahr</td><td class="r">≈ 240 €</td><td class="r">≈ 432 €</td><td class="r">≈ 696 €</td></tr>
+</table>
+<p class="small">Quellen: elevenlabs.io/pricing/agents, twilio.com/en-us/voice/pricing/de (abgerufen 10/2026). Interner Aufwand für Einrichtung ca. 3–4 Stunden je Studio, danach ca. 30 Min./Monat Pflege. Stripe-Gebühren: Karte EU ca. 1,5 % + 0,25 €, SEPA geringer.</p>
+
+<h2>4. Wirtschaftlichkeit</h2>
+<div class="grid2">
+  <div class="box"><h3>A · Kauf <span data-cfg="kaufPreis"></span></h3>
+    <ul style="margin:0">
+      <li>Deckungsbeitrag nach Stripe-Gebühr (~23 €): ≈ 1.476 €</li>
+      <li>Läuft das Studio mit 300 Min./Monat: Kauf ist nach ≈ <b>41 Monaten</b> durch Betriebskosten aufgezehrt, bei 500 Min. nach ≈ <b>25 Monaten</b> (ohne Arbeitszeit).</li>
+      <li>Darum im Vertrag: Kündigungsrecht für uns frühestens nach 24 Monaten. <b>Entscheidung offen:</b> ab Monat 25 eine kleine Betriebspauschale (z. B. 29 €/Monat) anbieten statt zu kündigen.</li>
+      <li>Fair Use schützt vor Ausreißern: Mehrminuten 0,15 € bei ≈ 0,11 € Kosten.</li>
+    </ul></div>
+  <div class="box gold"><h3>B · Provision <span data-cfg="provisionSatz"></span></h3>
+    <ul style="margin:0">
+      <li>Pro Termin à 250 € netto: 25 € Provision.</li>
+      <li>Break-even bei 300 Min./Monat (≈ 36 €): <b>1,5 Termine pro Monat</b> aus Ted-Anfragen.</li>
+      <li>Beispiel 30 Ted-Anfragen, 20 % werden Termine, Ø 300 €: 6 Termine → 180 € Provision → ≈ 144 € Deckungsbeitrag/Monat, ≈ 1.700 €/Jahr.</li>
+      <li>Risiko: Studios melden zu wenig. Gegenmittel: jede Anfrage automatisch im Portal, Erinnerungen, Plausibilitätscheck (siehe unten), Prüfrecht im Vertrag.</li>
+    </ul></div>
+</div>
+
+<h3>Plausibilitätscheck Provision (monatlich, Admin)</h3>
 <ul>
-  <li><b>Laufzeit:</b> <span data-cfg="mindestlaufzeit"></span> Mindestlaufzeit, danach monatlich kündbar (<span data-cfg="kuendigungsfrist"></span>). <b>Garantie:</b> <span data-cfg="garantieTage"></span> Tage, Einrichtungsgebühr zurück.</li>
-  <li><b>Bundle TattooLeadz-Bestandskunden:</b> Einrichtung gratis + <span data-cfg="bundleRabatt"></span> auf die Monatsgebühr.</li>
-  <li><b>Gründer-Aktion (Mailing):</b> Code <span data-cfg="aktionsCode"></span>, Einrichtung gratis für die ersten <span data-cfg="aktionsPlaetze"></span> Studios bis <span data-cfg="aktionsFrist"></span>.</li>
-  <li><b>Empfehlung:</b> 1 Monat gratis für den Empfehlenden, wenn das empfohlene Studio abschließt.</li>
-  <li><b>Rabattgrenze im Gespräch:</b> Einrichtung darf entfallen. Monatspreis nicht unter Liste senken, lieber Minuten oder ein Profi-Feature dazugeben.</li>
+  <li>Quote „gebucht“ unter 5 % bei mehr als 20 Anfragen im Monat → freundlich nachfragen (Wie läuft's? Fehlen Einträge?).</li>
+  <li>Viele Anfragen dauerhaft „offen“ → Erinnerung; bei Bedarf kurzer Call mit Blick ins Terminbuch (vertraglich als Stichprobe vereinbart).</li>
+  <li>Studio liefert dauerhaft Minuten, aber keine Termine → Wechsel auf Kauf anbieten.</li>
 </ul>
 
-<!--KALKULATION-->
+<h2>5. Wettbewerb (Deutschland, 10/2026)</h2>
+<table>
+  <tr><th>Anbieter</th><th>Preis</th><th>Unterschied zu Ted</th></tr>
+  <tr><td>fonio.ai</td><td>Solo 119 €/Monat (99 € jährlich), 1.000 Min.; Team 359 €</td><td>Allgemein, Selbstbedienung, monatliche Kosten</td></tr>
+  <tr><td>sipgate AI Agents</td><td>Free 500 Min., Starter 69,95 €, Scale 199,95 €</td><td>Werkzeug zum Selberbauen, kein Branchenwissen</td></tr>
+  <tr><td>VITAS</td><td>49–299 €/Monat</td><td>Fokus Praxen/Dienstleister</td></tr>
+  <tr><td>IONOS KI-Telefonassistent</td><td>39–99 €/Monat brutto, Abrechnung nach Anrufen</td><td>Massenprodukt, Standard-Abläufe</td></tr>
+  <tr><td>Aaron.ai</td><td>ca. 119 € je Behandler (über Doctolib)</td><td>Nur Arztpraxen</td></tr>
+</table>
+<p><b>Unsere Positionierung:</b> der einzige Telefonassistent, der für Tattoo-Studios gebaut ist (Motiv, Stelle, Größe, Stil, Wunsch-Artist, Cover-up, Abheilung), komplett eingerichtet und betreut, mit WhatsApp-Weiterführung und ohne Monatsgebühr. Ein Jahr fonio Solo kostet 1.188–1.428 €, Ted einmalig <span data-cfg="kaufPreis"></span> oder nur bei Erfolg.</p>
+<p class="small">Quellen: fonio.ai/de/preise, sipgate.de/preise, kopfundstift.de/ki-telefonassistent-kosten (10.08.2026), abgerufen 10/2026.</p>
+
+<h2>6. Offene Entscheidungen</h2>
+<ul class="check">
+  <li>Kauf: Was passiert nach 24 Monaten? (Weiterbetrieb gratis, Betriebspauschale oder Kündigung)</li>
+  <li>Provision: Zählen Folgesitzungen desselben Tattoos (z. B. Sleeve in 4 Sitzungen) und Stammkunden, die über Ted anrufen? Empfehlung: ja, jede Sitzung eines Projekts aus der Anfrage, Stammkunden nur bei neuem Projekt.</li>
+  <li>Empfehlungsprämie: z. B. 100 € Gutschrift (Kauf) bzw. 2 Monate provisionsfrei (Provision) je geworbenem Studio.</li>
+  <li>Dänemark/Ausland: Reverse-Charge-Rechnungen (aktuell nur Deutschland mit 19 % USt. eingerichtet).</li>
+</ul>
 
 <p class="footer-note"><span data-cfg="marke"></span> · <span data-cfg="firma"></span> · Vertraulich, nicht an Studios weitergeben. Preise änderbar in <code>assets/config.js</code>.</p>
 </main>

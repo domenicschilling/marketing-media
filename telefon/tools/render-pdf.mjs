@@ -38,6 +38,7 @@ const DOCS = [
   "studios/15-avv.html",
   "studios/16-onboarding-fragebogen.html",
   "studios/17-postkarte.html",
+  "studios/18-paket-aufkleber.html",
   "kunden/20-fensteraufkleber.html",
   "kunden/21-flyer-a6.html",
   "kunden/22-thekenaufsteller-a5.html",

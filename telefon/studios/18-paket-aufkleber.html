@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Paket-Aufkleber – Verpasster Anruf</title>
+<link rel="stylesheet" href="../assets/telefon.css">
+<style>
+/* Etikettenbogen A4 mit 8 Etiketten à 105 × 74 mm (z. B. Avery Zweckform 3427), randlos */
+@page{size:A4;margin:0}
+.sheet{width:210mm;height:297mm;display:grid;grid-template-columns:105mm 105mm;grid-template-rows:repeat(4,74.25mm)}
+.lbl{position:relative;overflow:hidden;padding:7mm 8mm;display:flex;flex-direction:column;justify-content:center}
+.notif{background:#1c232c;color:#fff}
+.notif .card{background:rgba(255,255,255,.1);border-radius:4mm;padding:4mm 5mm}
+.notif .r{display:flex;justify-content:space-between;font-size:7.5pt;color:#9aa4ae;margin-bottom:1.5mm;letter-spacing:.04em}
+.notif b{font:700 17pt/1.1 var(--head);color:#ff6b77;display:block}
+.notif span.s{font-size:9pt;color:#c9d1d9}
+.notif .to{font-size:7pt;color:#6e7781;margin-top:3mm}
+.hand{background:var(--ink);color:#fff}
+.hand h2{font:700 20pt/1.02 var(--head);margin:0 0 3mm;letter-spacing:-.02em}
+.hand p{font-size:8.6pt;line-height:1.35;color:#c9d1d9;margin:0}
+.hand .demo{margin-top:3mm;font:700 13pt var(--head);color:var(--gold)}
+.hand img{position:absolute;right:6mm;top:6mm;width:14mm}
+.hinweis{max-width:210mm;margin:14px auto;background:#fff;border-radius:10px;padding:12px 16px;font-size:10pt}
+@media print{.hinweis{display:none}}
+</style>
+</head><body>
+<div class="toolbar"><a href="../index.html">← Alle Unterlagen</a><span class="t">Für das Mailing · Paket-Aufkleber (Etiketten 105 × 74 mm)</span><button data-print>Drucken / PDF</button></div>
+<div class="hinweis"><b>Druck:</b> A4-Etikettenbogen mit 8 Etiketten à 105 × 74 mm (z. B. Avery Zweckform 3427), Druckeinstellung „Tatsächliche Größe / 100 %“, ohne Ränder. Links: Aufkleber außen auf die Versandbox. Rechts: Aufkleber auf die Handschuh-Box.</div>
+<section class="sheet">
+  <div class="lbl notif"><div class="card"><div class="r"><span>📞 TELEFON</span><span>jetzt</span></div><b>1 verpasster Anruf</b><span class="s">Neuer Kunde · Unterarm, Fineline, ca. 15 cm</span></div><div class="to">Absender: TattooLeadz · Ted am Telefon</div></div>
+  <div class="lbl hand"><img src="../assets/logo.png" alt=""><h2>Hände voll?<br><span class="tgold">Ted geht ran.</span></h2><p>Der KI-Telefonassistent für Tattoo-Studios. Teste ihn:</p><div class="demo" data-cfg="demoNummer"></div></div>
+  <div class="lbl notif"><div class="card"><div class="r"><span>📞 TELEFON</span><span>jetzt</span></div><b>1 verpasster Anruf</b><span class="s">Neuer Kunde · Cover-up Oberarm, ca. 20 cm</span></div><div class="to">Absender: TattooLeadz · Ted am Telefon</div></div>
+  <div class="lbl hand"><img src="../assets/logo.png" alt=""><h2>Hände voll?<br><span class="tgold">Ted geht ran.</span></h2><p>Der KI-Telefonassistent für Tattoo-Studios. Teste ihn:</p><div class="demo" data-cfg="demoNummer"></div></div>
+  <div class="lbl notif"><div class="card"><div class="r"><span>📞 TELEFON</span><span>jetzt</span></div><b>1 verpasster Anruf</b><span class="s">Neuer Kunde · Schriftzug Handgelenk</span></div><div class="to">Absender: TattooLeadz · Ted am Telefon</div></div>
+  <div class="lbl hand"><img src="../assets/logo.png" alt=""><h2>Hände voll?<br><span class="tgold">Ted geht ran.</span></h2><p>Der KI-Telefonassistent für Tattoo-Studios. Teste ihn:</p><div class="demo" data-cfg="demoNummer"></div></div>
+  <div class="lbl notif"><div class="card"><div class="r"><span>📞 TELEFON</span><span>jetzt</span></div><b>1 verpasster Anruf</b><span class="s">Neuer Kunde · Rückenstück, mehrere Sitzungen</span></div><div class="to">Absender: TattooLeadz · Ted am Telefon</div></div>
+  <div class="lbl hand"><img src="../assets/logo.png" alt=""><h2>Hände voll?<br><span class="tgold">Ted geht ran.</span></h2><p>Der KI-Telefonassistent für Tattoo-Studios. Teste ihn:</p><div class="demo" data-cfg="demoNummer"></div></div>
+</section>
+<script src="../assets/config.js"></script><script src="../assets/app.js"></script>
+</body></html>

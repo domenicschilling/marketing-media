@@ -9,6 +9,7 @@ Alles für Vertrieb, Umsetzung, Studios und deren Kunden rund um den KI-Telefona
 | `studios/` | Überblick (Verkaufs-Flyer), Erklärung, Rufumleitung, Mailing-Brief, Postkarte, Vertrag, AVV, Fragebogen |
 | `kunden/` | Fensteraufkleber, Flyer A6, Thekenaufsteller A5, Türschild A4, Datenschutzhinweis, Generator pro Studio |
 | `pdf/` | Fertige PDFs (neu erzeugen mit `node tools/render-pdf.mjs`) |
+| `website/` | Komplette Website: Online-Abschluss mit Stripe (Kauf 1.499 € oder 10 % Provision), Studio-Portal, Admin, E-Mails. Siehe `website/README.md` |
 | `video.html` | Mobile Seite mit Werbevideo (`assets/werbevideo.mp4`), Ziel aller QR-Codes |
 
 ## Werte ändern
