@@ -1,116 +1,241 @@
 <!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Tattoofin – Große Tattoo-Projekte leichter bezahlbar</title>
-<meta name="description" content="Tattoofin richtet deinem Tattoo-Studio eine professionelle Zahlungsstruktur ein: Zahlungslinks, QR-Code und zusätzliche Zahlungsoptionen wie Ratenzahlung über externe Anbieter. Einmal kaufen oder risikofrei per Provision.">
-<meta property="og:title" content="Tattoofin – Mach große Tattoo-Projekte leichter bezahlbar">
-<meta property="og:description" content="Flexible Zahlungsoptionen für Tattoo-Studios. Eingerichtet, getestet, betreut.">
+<title>Tattoofin – Mach große Tattoos leichter bezahlbar</title>
+<meta name="description" content="Tattoofin für Tattoo-Studios: Zahlungslinks per WhatsApp, QR-Zahlseite, Anzahlungen vor dem Termin und Ratenzahlung über externe Anbieter. Risikofrei per Provision oder einmal kaufen.">
+<meta property="og:title" content="Tattoofin – Mach große Tattoos leichter bezahlbar">
+<meta property="og:description" content="Zahlungslinks, QR-Code, Anzahlungen und Raten über externe Anbieter. Für Tattoo-Studios, eingerichtet und betreut.">
 <meta property="og:image" content="/assets/logo.png">
-<meta name="theme-color" content="#13243d">
+<meta name="theme-color" content="#fbb316">
 <link rel="icon" href="/assets/figur.png">
+<link rel="preload" href="/assets/fonts/LuckiestGuy.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/css/site.css">
+<link rel="stylesheet" href="/css/landing.css">
 </head><body>
 
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="star" viewBox="0 0 50 50"><path d="M25 3l6.2 15.6 16.8 1.1-13 10.8 4.2 16.3L25 37.8 10.8 46.8 15 30.5 2 19.7l16.8-1.1z" fill="#fff" stroke="#1f3d5c" stroke-width="3.6" stroke-linejoin="round"/></symbol>
+  <symbol id="heart" viewBox="0 0 50 46"><path d="M25 43S3 30 3 15.5C3 8 8.6 3 15 3c4.6 0 8 2.6 10 6 2-3.4 5.4-6 10-6 6.4 0 12 5 12 12.5C47 30 25 43 25 43z" fill="#f2682a" stroke="#1f3d5c" stroke-width="3.6" stroke-linejoin="round"/></symbol>
+</svg>
+
 <header class="nav"><div class="wrap">
-  <a class="brand" href="/"><img src="/assets/figur.png" alt=""> Tattoofin</a>
+  <a class="brand" href="/"><img src="/assets/figur.png" alt=""><img class="wm" src="/assets/wortmarke.png" alt="Tattoofin"></a>
   <nav class="links">
-    <a class="hide-m" href="#so-gehts">So geht's</a><a class="hide-m" href="#preise">Preise</a><a class="hide-m" href="#faq">FAQ</a>
-    <a href="/login.html">Login</a><a class="btn gold small" href="/start.html">Jetzt starten</a>
+    <a class="hide-m" href="#so-gehts">So geht's</a><a class="hide-m" href="#kit">Das Kit</a><a class="hide-m" href="#preise">Preise</a><a class="hide-m" href="#faq">FAQ</a>
+    <a href="/login.html">Login</a><a class="btn dark small" href="/start.html">Jetzt starten</a>
   </nav>
 </div></header>
 
-<section class="hero dark"><div class="wrap grid">
-  <div>
-    <span class="eyebrow">Für Tattoo-Studios</span>
-    <h1>Mach große Tattoo-Projekte <span class="gold">leichter bezahlbar.</span></h1>
-    <p class="lead">Tattoofin richtet deinem Studio eine professionelle Zahlungsstruktur ein. Du schickst deinem Kunden einen Zahlungslink oder zeigst deinen QR-Code, und er wählt, wie er zahlen möchte. Je nach Freigabe durch den Zahlungsanbieter auch in Raten.*</p>
-    <div class="ctas">
-      <a class="btn gold" href="/start.html?modell=provision">Risikofrei starten →</a>
-      <a class="btn ghost" href="#so-gehts">So funktioniert's</a>
+<!-- HERO mit 3D-Bühne -->
+<section class="hero" id="top">
+  <div class="sunburst" aria-hidden="true"></div>
+  <div class="wrap hero-grid">
+    <div>
+      <span class="stk">✦ Für Tattoo-Studios</span>
+      <h1><span class="l1">Mach große Tattoos</span> <span class="outline white">leichter bezahlbar.</span></h1>
+      <p class="lead">Zahlungslink per WhatsApp, QR-Code an der Theke, Anzahlung vor dem Termin. Dein Kunde wählt, wie er zahlt, je nach Freigabe durch den Zahlungsanbieter auch in Raten.*</p>
+      <div class="ctas">
+        <a class="btn dark big" href="/start.html?modell=provision">Risikofrei starten →</a>
+        <a class="btn big" href="#so-gehts">So geht's</a>
+      </div>
+      <div class="chips"><span>0 € Einrichtung</span><span>90 % direkt an dich</span><span>Klarna &amp; Apple Pay</span><span>Betreuung kostenlos</span></div>
+      <p class="fn">*Über externe Zahlungsanbieter wie Klarna, nach deren Prüfung. Tattoofin ist kein Kreditgeber. Achtung! Kreditaufnahme kostet Geld.</p>
     </div>
-    <div class="trust"><span>Keine monatliche Grundgebühr</span><span>Auszahlung direkt durch Stripe</span><span>Eingerichtet &amp; getestet</span><span>Betreuung kostenlos</span></div>
+
+    <div class="scene idle" id="scene" aria-hidden="true">
+      <div class="stage" id="stage">
+        <div class="mascot"><img src="/assets/figur.png" alt=""></div>
+        <div class="phone3d" data-slabs="10">
+          <div class="face"><div class="screen">
+            <div class="bar"><span>9:41</span><i></i><span>●●● 5G</span></div>
+            <div class="who"><b>I</b> Ink Studio Bamberg</div>
+            <div class="proj">Sleeve · linker Arm</div>
+            <div class="sum">1.500,00 €</div>
+            <div class="q">Wie möchtest du bezahlen?</div>
+            <div class="o"> Apple Pay <span>›</span></div>
+            <div class="o">Karte <span>›</span></div>
+            <div class="o on">Klarna <em>In Raten*</em></div>
+            <div class="o">Google Pay <span>›</span></div>
+            <div class="go">Weiter</div>
+            <small>*Verfügbarkeit und Bedingungen nach Prüfung durch den Anbieter.</small>
+          </div></div>
+        </div>
+        <div class="wa float"><b>Ink Studio Bamberg</b>Hi Lena 👋 hier ist dein Zahlungslink für den Sleeve: <u>tattoofin.de/z/7kx</u><span class="t">14:32 ✓✓</span></div>
+        <div class="coin float"><big>2.700 €</big>direkt an dich*</div>
+        <div class="badge-round">
+          <div class="ring"></div>
+          <svg viewBox="0 0 150 150"><defs><path id="circ1" d="M75,75 m-55,0 a55,55 0 1,1 110,0 a55,55 0 1,1 -110,0"/></defs><text font-family="Luckiest Guy" font-size="15.5" fill="#1f3d5c" letter-spacing="1.6"><textPath href="#circ1">RATEN? JA. ✦ ANZAHLUNG? JA. ✦</textPath></text></svg>
+          <div class="mid">✦</div>
+        </div>
+        <svg class="star s1"><use href="#star"/></svg>
+        <svg class="star s2"><use href="#heart"/></svg>
+        <svg class="star s3"><use href="#star"/></svg>
+      </div>
+    </div>
   </div>
-  <div class="phone co" aria-hidden="true">
-    <h4>Ink Studio · Sleeve, linker Arm</h4>
-    <div class="amt">1.500,00 €</div>
-    <div style="font-size:13px;color:var(--muted);margin-bottom:8px">Wie möchtest du bezahlen?</div>
-    <div class="opt">Karte · Apple Pay <span>›</span></div>
-    <div class="opt on">Ratenzahlung* <span>›</span></div>
-    <div class="opt">Google Pay <span>›</span></div>
-    <div class="pay">Weiter</div>
-    <small>*Über externe Zahlungsanbieter. Verfügbarkeit und Bedingungen nach Prüfung durch den Anbieter.</small>
+</section>
+
+<div class="band" aria-hidden="true"><div class="track"><span>Sleeves</span><i>✦</i><span>Rückenstücke</span><i>✦</i><span>Cover-ups</span><i>✦</i><span>Anzahlungen</span><i>✦</i><span>Keine No-Shows</span><i>✦</i><span>Klarna</span><i>✦</i><span>Apple Pay</span><i>✦</i><span>Sleeves</span><i>✦</i><span>Rückenstücke</span><i>✦</i><span>Cover-ups</span><i>✦</i><span>Anzahlungen</span><i>✦</i><span>Keine No-Shows</span><i>✦</i><span>Klarna</span><i>✦</i><span>Apple Pay</span><i>✦</i></div></div>
+<div class="band b2" aria-hidden="true"><div class="track"><span>Kann ich das in Raten zahlen?</span><i>♥</i><span>Ja.*</span><i>♥</i><span>Kann ich die Anzahlung per Link zahlen?</span><i>♥</i><span>Ja.</span><i>♥</i><span>Kann ich das in Raten zahlen?</span><i>♥</i><span>Ja.*</span><i>♥</i><span>Kann ich die Anzahlung per Link zahlen?</span><i>♥</i><span>Ja.</span><i>♥</i></div></div>
+
+<!-- PROBLEM -->
+<section class="sec problem"><div class="wrap">
+  <h2 class="reveal">„Kann ich das auch in Raten zahlen?“ <span class="ja">Ja.*</span></h2>
+  <p class="sub reveal">Der Moment, den jedes Studio kennt: Die Idee steht, der Kunde brennt dafür. Nur der Gesamtbetrag passt gerade nicht. Oder er taucht zum Termin einfach nicht auf.</p>
+  <div class="cards flash">
+    <div class="card reveal">
+      <svg class="ico" viewBox="0 0 64 64"><rect x="5" y="14" width="54" height="36" rx="7" fill="#fbb316" stroke="#1f3d5c" stroke-width="4"/><path d="M5 25h54" stroke="#1f3d5c" stroke-width="5"/><rect x="12" y="35" width="16" height="6" rx="2" fill="#1f3d5c"/></svg>
+      <div class="stat">1.500 €</div><h3>Auf einmal ist viel</h3><p>Für viele ist ein Sleeve auf einen Schlag zu viel. Mit flexiblen Zahlungsoptionen wird aus „irgendwann“ ein Termin.</p></div>
+    <div class="card reveal">
+      <svg class="ico" viewBox="0 0 64 64"><path d="M16 6h32M16 58h32M20 6c0 14 24 16 24 26S20 44 20 58M44 6c0 14-24 16-24 26s24 12 24 26" fill="none" stroke="#1f3d5c" stroke-width="4" stroke-linecap="round"/><path d="M24 52h16l-8-8z" fill="#f2682a" stroke="#1f3d5c" stroke-width="3" stroke-linejoin="round"/></svg>
+      <div class="stat text">„Ich spar noch.“</div><h3>Weniger verschobene Projekte</h3><p>Kunden müssen nicht monatelang sparen. Sie fangen an, solange die Idee frisch ist und die Vorfreude groß.</p></div>
+    <div class="card reveal">
+      <svg class="ico" viewBox="0 0 64 64"><rect x="6" y="10" width="52" height="48" rx="8" fill="#fff" stroke="#1f3d5c" stroke-width="4"/><path d="M6 24h52M20 4v12M44 4v12" stroke="#1f3d5c" stroke-width="4" stroke-linecap="round"/><path d="M22 41l7 7 14-14" fill="none" stroke="#2f8f5b" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div class="stat text">No-Show? Nope.</div><h3>Anzahlung per Link</h3><p>Anzahlung vor dem Termin, mit deinen Bedingungen, die der Kunde vor dem Bezahlen bestätigt. Fertig dokumentiert.</p></div>
   </div>
 </div></section>
 
-<section class="sec"><div class="wrap">
-  <h2>„Kann ich das auch in Raten zahlen?“</h2>
-  <p class="sub">Der Moment, den jedes Studio kennt: Die Idee steht, der Kunde ist begeistert. Nur der Gesamtbetrag passt gerade nicht. Und das Projekt wird verschoben.</p>
-  <div class="cards">
-    <div class="card"><div class="stat">1.500 €</div><h3>Auf einmal ist viel</h3><p>Für viele ist ein Sleeve auf einen Schlag zu viel. Als planbarer Monatsbetrag sieht es ganz anders aus. Beispiel: 1.500 € oder 50 € im Monat.**</p></div>
-    <div class="card"><div class="stat text">Weniger „Ich spar noch“</div><h3>Weniger verschobene Projekte</h3><p>Kunden müssen nicht erst monatelang sparen. Sie können loslegen, während die Idee frisch ist.</p></div>
-    <div class="card"><div class="stat text">Du tätowierst</div><h3>Wir machen die Struktur</h3><p>Kein eigener Ratenvertrag, kein Hinterherlaufen hinter Raten. Das Ausfallrisiko liegt nach Freigabe beim Zahlungsanbieter, nicht bei dir.</p></div>
-  </div>
-  <p class="fn">**Beispielrechnung ohne Zinsen. Die tatsächlichen Bedingungen hängen von der verfügbaren Zahlungsart und den Vereinbarungen des Zahlungsanbieters ab.</p>
-</div></section>
-
+<!-- SO GEHT'S -->
 <section class="sec dark" id="so-gehts"><div class="wrap">
   <span class="eyebrow">So geht's</span>
-  <h2>Von der Anmeldung bis zum Go-live.</h2>
-  <p class="sub">Keine langen Technik-Erklärungen. Wir richten den Ablauf ein, testen ihn und machen dein Team startklar.</p>
-  <div class="cards">
-    <div class="card"><div class="num">1</div><h3>Online abschließen</h3><p>Modell wählen, Vertrag akzeptieren, fertig. Danach richtest du in 10 Minuten dein Stripe-Konto ein, auf das Stripe deine Zahlungen auszahlt.</p></div>
-    <div class="card"><div class="num">2</div><h3>Wir richten alles ein</h3><p>Zahlungsarten, Branding mit deinem Logo, Zahlseite mit QR-Code, Testzahlung und eine kurze Schulung fürs Team.</p></div>
-    <div class="card"><div class="num">3</div><h3>Zahlungslink in 10 Sekunden</h3><p>Betrag und Projekt im Portal eintippen, Link per WhatsApp schicken. Dein Kunde wählt, wie er zahlt. Du siehst sofort, wenn das Geld da ist.</p></div>
+  <h2>Du tätowierst. <span style="color:#fff">Wir machen den Rest.</span></h2>
+  <p class="sub">Keine Technik-Vorlesung. Wir richten alles ein, testen es mit dir und machen dein Team startklar.</p>
+  <div class="steps">
+    <div class="step reveal"><div class="n">1</div><h3>3 Minuten online abschließen</h3><p>Modell wählen, Vertrag bestätigen, fertig. Danach in 10 Minuten das Stripe-Konto anlegen, auf das deine Auszahlungen gehen.</p></div>
+    <div class="step reveal"><div class="n">2</div><h3>Wir richten alles ein</h3><p>Zahlungsarten, Branding mit deinem Logo, Zahlseite mit QR-Code, Testzahlung und eine kurze Schulung fürs Team.</p></div>
+    <div class="step reveal"><div class="n">3</div><h3>Link raus, Geld rein</h3><p>Betrag eintippen, per WhatsApp schicken. Dein Kunde zahlt, wie er will. Du siehst sofort, wenn das Geld da ist.</p></div>
   </div>
-  <div id="video-wrap" style="margin-top:34px;max-width:420px" class="hidden"><video id="video" controls playsinline preload="metadata" style="width:100%;border-radius:18px;background:#000"></video></div>
+  <div id="video-wrap" style="margin-top:46px;max-width:440px" class="hidden"><video id="video" controls playsinline preload="metadata" style="width:100%;border-radius:22px;border:3px solid #fbb316;background:#000;box-shadow:9px 9px 0 #0c1a29"></video></div>
 </div></section>
 
+<!-- KIT: isometrische 3D-Mockups -->
+<section class="sec showcase" id="kit"><div class="wrap">
+  <span class="stk">✦ Alles im Paket</span>
+  <h2>Alles drin. <span class="outline white">Alles fertig.</span></h2>
+  <p class="sub">Portal, Zahlungslinks, Zahlseite mit QR und ein Studio Kit, das an deiner Theke richtig gut aussieht.</p>
+  <div class="iso" id="iso" aria-hidden="true">
+    <div class="iso-plane">
+      <div class="mock browser"><span class="pin">1</span>
+        <div class="top"><i></i><i></i><i></i><span>tattoofin.de/portal</span></div>
+        <div class="body">
+          <h4>Ink Studio Bamberg</h4>
+          <div class="k"><div><b>4.050 €</b>an dich im Oktober</div><div><b>14</b>Zahlungen</div><div><b>43 %</b>über Klarna</div></div>
+          <div class="r"><span>Lena · Sleeve linker Arm</span><span>bezahlt</span></div>
+          <div class="r"><span>Tom · Anzahlung Rückenstück</span><span class="anz">Anzahlung</span></div>
+          <div class="r"><span>Mia · Cover-up Schulter</span><span>bezahlt</span></div>
+          <span class="cta">+ Zahlungslink erstellen</span>
+        </div>
+      </div>
+      <div class="mock pwa" data-slabs="8"><span class="pin">2</span>
+        <div class="face"><div class="scr">
+          <div class="hd"><b></b>Lena 🖤</div>
+          <div class="m me">Hi Lena! Hier dein Link für die Anzahlung 💛 <u>tattoofin.de/z/7kx</u></div>
+          <div class="m you">Mega, danke! Ist bezahlt 🙌</div>
+          <div class="toast">✓ 150 € Anzahlung erhalten</div>
+        </div></div>
+      </div>
+      <div class="mock wsticker"><span class="pin">3</span>
+        <div class="disc"></div>
+        <svg viewBox="0 0 250 250"><defs><path id="circ2" d="M125,125 m-98,0 a98,98 0 1,1 196,0 a98,98 0 1,1 -196,0"/></defs><text font-family="Luckiest Guy" font-size="23" fill="#1f3d5c" letter-spacing="2"><textPath href="#circ2">HIER AUCH IN RATEN ZAHLEN* ✦ TATTOOFIN ✦</textPath></text></svg>
+        <img src="/assets/figur.png" alt="">
+      </div>
+      <div class="mock flyer"><span class="pin">4</span>
+        <h5>Raten? Ja.*</h5><p>QR scannen, Betrag eingeben, zahlen wie du willst.</p>
+        <div class="qr" id="flyer-qr"></div>
+        <small>*Nach Prüfung durch den Anbieter. Achtung! Kreditaufnahme kostet Geld.</small>
+      </div>
+    </div>
+  </div>
+  <div class="legend">
+    <div><b><i>1</i>Studio-Portal</b>Zahlungslinks in 10 Sekunden, alle Zahlungen, Auszahlungen und Abrechnungen.</div>
+    <div><b><i>2</i>WhatsApp-Link</b>Projektpreis oder Anzahlung, per WhatsApp oder E-Mail verschickt.</div>
+    <div><b><i>3</i>Fensteraufkleber</b>Damit jeder schon vor der Tür sieht: Hier geht's flexibel.</div>
+    <div><b><i>4</i>Flyer &amp; Theke</b>Mit deinem QR-Code zur Zahlseite. Plus Instagram-Vorlagen.</div>
+  </div>
+</div></section>
+
+<!-- ANZAHLUNGEN -->
+<section class="sec dark"><div class="wrap deposit">
+  <div class="reveal">
+    <span class="eyebrow">Neu: Anzahlungen</span>
+    <h2>Anzahlung rein. <span style="color:#fff">No-Show raus.</span></h2>
+    <p class="sub" style="margin-bottom:0">Schick die Anzahlung als Link oder lass sie an der Theke über den QR-Code zahlen. Dein Kunde bestätigt vorher deine Bedingungen.</p>
+    <ul>
+      <li><span><b>Deine Regeln:</b> Verrechnung mit dem Tattoo, Verfall bei No-Show, Verschieben nach Absprache. Den Text stellst du selbst ein.</span></li>
+      <li><span><b>Sauber belegt:</b> Bestätigung mit Zeitpunkt gespeichert. Dein stärkstes Argument, wenn jemand zurückbuchen will.</span></li>
+      <li><span><b>Kein PayPal-Freunde-Gebastel:</b> Karte, Apple Pay, Google Pay oder Klarna. Auszahlung automatisch.</span></li>
+    </ul>
+  </div>
+  <div class="dphone-wrap inview" aria-hidden="true">
+    <div class="dphone"><div class="screen">
+      <div class="who"><b>I</b> Ink Studio Bamberg</div>
+      <div class="proj">Anzahlung · Rückenstück, Termin 14.11.</div>
+      <div class="sum">150,00 €</div>
+      <div class="terms"><b>Anzahlungsbedingungen</b><br>Die Anzahlung wird mit dem Preis deines Tattoos verrechnet. Bei Absage unter 48 Stunden oder Nichterscheinen behält das Studio sie ein.
+        <label><span class="tick"></span>Gelesen und einverstanden</label></div>
+      <div class="go">Weiter zur Zahlung</div>
+    </div></div>
+    <div class="paid">✓ Anzahlung bezahlt<br><small style="font-size:12px">Bedingungen bestätigt 14:32</small></div>
+  </div>
+</div></section>
+
+<!-- GELD: 3.000 → 2.700 -->
 <section class="sec"><div class="wrap">
-  <div class="cards two">
-    <div class="card"><h3>📦 Das bekommst du</h3><p>Einrichtung deines Stripe-Kontos · Konfiguration und Branding · Zahlungs- und Checkout-Ablauf inklusive Test · Studio-Portal mit Zahlungslinks und Übersicht aller Zahlungen · eigene Zahlseite mit QR-Code · kurze Teamschulung mit Gesprächsbeispielen · Tattoofin Studio Kit (Fensteraufkleber, Flyer, Thekenaufsteller, Instagram-Vorlagen, WhatsApp-Texte) · <span data-c="setupSupportTage">30</span> Tage Setup-Support, danach Betreuung kostenlos.</p></div>
-    <div class="card"><h3>🤝 Ehrlich gesagt</h3><p>Tattoofin ist kein Kreditgeber und kein Kreditinstitut. Die Zahlungsabwicklung übernehmen externe Zahlungsanbieter wie Stripe und Klarna nach ihren eigenen Bedingungen. Nicht jede Zahlungsoption ist für jeden Kunden verfügbar. Im Provisionsmodell sind die Gebühren der Zahlungsanbieter in den 10 % enthalten, beim Kauf zahlt sie das Studio direkt an Stripe.</p></div>
+  <span class="stk">✦ Provisionsmodell</span>
+  <h2>Kunde zahlt 3.000 €. <span class="outline white">Du bekommst 2.700 €.</span></h2>
+  <p class="sub">Keine Einrichtungsgebühr, keine Grundgebühr, keine Extra-Gebühren. Stripe zahlt dir 90 % jeder Zahlung automatisch aufs Konto.</p>
+  <div class="money">
+    <div class="box reveal"><small>Dein Kunde zahlt</small><big data-count="3000">3.000 €</big></div>
+    <div class="coin3d" aria-hidden="true"><div class="c" id="coin"><div class="f front">10 %</div><div class="f back">✦</div></div></div>
+    <div class="box you reveal"><small>Auf deinem Konto</small><big data-count="2700">2.700 €</big></div>
   </div>
+  <p class="money-note">In den <span data-c="provisionProzent">10</span> % ist alles drin: Stripe, Klarna, Umsatzsteuer und unsere Betreuung. Einmal im Monat kommt die Rechnung für deine Buchhaltung.</p>
 </div></section>
 
-<section class="sec" id="preise" style="padding-top:20px"><div class="wrap">
-  <span class="eyebrow" style="color:#b07a00;border-color:#b07a00">Preise</span>
-  <h2>Ein Setup. Zwei Wege, es zu bezahlen.</h2>
-  <p class="sub">Gleiche Leistung, gleiche kostenlose Betreuung. Du entscheidest: einmal kaufen oder nur zahlen, wenn über Tattoofin Geld reinkommt.</p>
+<!-- PREISE -->
+<section class="sec" id="preise" style="padding-top:30px"><div class="wrap">
+  <h2 class="reveal">Ein Setup. <span class="outline white">Zwei Wege.</span></h2>
+  <p class="sub">Gleiche Leistung, gleiche kostenlose Betreuung. Du entscheidest: nur zahlen, wenn Geld reinkommt, oder einmal kaufen.</p>
   <div class="prices">
-    <div class="price hot"><span class="badge">Risikofrei</span>
+    <div class="price hot reveal"><span class="badge">Risikofrei</span>
       <h3>Provision</h3><div class="amount"><span data-c="provisionProzent">10</span> %<small> pro Zahlung</small></div>
-      <div class="muted">vom Zahlbetrag · alles inklusive, auch Zahlungsgebühren und USt.</div>
+      <div class="muted" style="font-weight:600">vom Zahlbetrag · alles inklusive, auch Zahlungsgebühren und USt.</div>
       <ul><li>0 € Einrichtung, keine Grundgebühr</li><li>Kunde zahlt 3.000 € → Stripe zahlt dir automatisch 2.700 € aus</li><li>Für Projektpreise und Anzahlungen vor dem Termin</li><li>Einmal im Monat Rechnung und Übersicht per E-Mail</li><li>Jederzeit zum Monatsende kündbar</li><li>Komplettes Setup, Studio Kit, Betreuung kostenlos</li></ul>
-      <a class="btn gold" href="/start.html?modell=provision">Risikofrei starten</a>
+      <a class="btn dark big" href="/start.html?modell=provision">Risikofrei starten</a>
       <div class="fine">Keine Zahlungen über Tattoofin = keine Kosten. Keine weiteren Gebühren von Stripe oder Klarna für dich.</div>
     </div>
-    <div class="price"><h3>Kaufen</h3><div class="amount"><span data-c="kaufNetto|euro">1.499 €</span><small> einmalig</small></div>
-      <div class="muted">netto · keine Grundgebühr · keine Provision</div>
-      <ul><li>Komplettes Setup und Studio Kit</li><li>Keine Provision, egal wie viel über Tattoofin läuft</li><li><span data-c="garantieTage">30</span> Tage Geld-zurück-Garantie ab Go-live</li><li>Zahlung per Karte, SEPA oder auf Rechnung</li><li>Betreuung kostenlos</li></ul>
-      <a class="btn dark" href="/start.html?modell=kauf">Setup kaufen</a>
+    <div class="price inv reveal"><h3>Kaufen</h3><div class="amount"><span data-c="kaufNetto|euro">1.499 €</span><small> einmalig</small></div>
+      <div class="muted" style="font-weight:600">netto · keine Grundgebühr · keine Provision</div>
+      <ul><li>Komplettes Setup und Studio Kit</li><li>Eigenes Stripe-Konto, keine Provision, egal wie viel läuft</li><li><span data-c="garantieTage">30</span> Tage Geld-zurück-Garantie ab Go-live</li><li>Zahlung per Karte, SEPA oder auf Rechnung</li><li>Betreuung kostenlos</li></ul>
+      <a class="btn gold big" href="/start.html?modell=kauf">Setup kaufen</a>
       <div class="fine">Zzgl. USt. Die Gebühren der Zahlungsanbieter zahlt beim Kauf das Studio direkt an Stripe.</div>
     </div>
   </div>
 
-  <div class="calc" id="rechner">
+  <div class="calc reveal" id="rechner">
     <div>
-      <h3 style="font-size:22px;margin-bottom:18px">Kauf oder Provision?</h3>
+      <h3 style="font:400 30px var(--head);margin-bottom:22px">Kauf oder Provision?</h3>
       <div class="row"><label>Projekte pro Monat über Tattoofin <span class="val" id="v-proj"></span></label><input id="proj" type="range" min="1" max="20" step="1" value="3"></div>
       <div class="row"><label>Durchschnittlicher Betrag pro Projekt <span class="val" id="v-betrag"></span></label><input id="betrag" type="range" min="300" max="5000" step="100" value="1500"></div>
       <p class="muted" style="font-size:13px;margin:0">Beispielrechnung, keine Garantie. Die Provision enthält bereits die Gebühren der Zahlungsanbieter; beim Kauf kommen diese für das Studio noch dazu.</p>
     </div>
     <div class="res">
-      <div><span>Umsatz über Tattoofin pro Monat</span><b id="r-umsatz"></b></div>
-      <div><span>Provision pro Monat (alles inklusive)</span><b id="r-prov" class="gold"></b></div>
-      <div><span>Kaufpreis entspricht</span><b id="r-amort"></b></div>
-      <div><span>Empfehlung</span><b id="r-tipp"></b></div>
+      <div><span>Zahlungen über Tattoofin pro Monat</span><b id="r-umsatz"></b></div>
+      <div><span>Provision pro Monat (alles inklusive)</span><b id="r-prov"></b></div>
+      <div><span>Kauf rechnet sich nach</span><b id="r-amort"></b></div>
+      <div><span>Unsere Empfehlung</span><b id="r-tipp"></b></div>
     </div>
+  </div>
+
+  <div class="card reveal" style="margin-top:40px;transform:rotate(-.6deg)">
+    <h3>🤝 Ehrlich gesagt</h3><p>Tattoofin ist kein Kreditgeber und kein Kreditinstitut. Die Zahlungsabwicklung übernehmen externe Zahlungsanbieter wie Stripe und Klarna nach ihren eigenen Bedingungen. Nicht jede Zahlungsoption ist für jeden Kunden verfügbar. Im Provisionsmodell sind die Gebühren der Zahlungsanbieter in den 10 % enthalten, beim Kauf zahlt sie das Studio direkt an Stripe.</p>
   </div>
 </div></section>
 
+<!-- FAQ -->
 <section class="sec dark" id="faq"><div class="wrap narrow">
-  <h2 style="margin-bottom:24px">Häufige Fragen</h2>
+  <h2 style="margin-bottom:30px">Häufige Fragen</h2>
   <details><summary>Ist Tattoofin selbst der Kreditgeber?</summary><p>Nein. Tattoofin ist kein Kreditgeber und kein Kreditinstitut. Wir richten deinem Studio die technische Zahlungsstruktur ein. Die Bedingungen für Raten oder späteres Bezahlen legt allein der jeweilige Zahlungsanbieter fest, der auch die Prüfung übernimmt.</p></details>
-  <details><summary>Was passiert, wenn ein Kunde seine Raten nicht zahlt?</summary><p>Bei Ratenzahlung über einen Zahlungsanbieter wie Klarna schließt der Kunde den Vertrag mit dem Anbieter. Nach erfolgreicher Freigabe bekommt dein Studio den Betrag in der Regel vollständig über Stripe ausgezahlt. Das Ausfallrisiko liegt dann beim Anbieter.</p></details>
+  <details><summary>Was passiert, wenn ein Kunde seine Raten nicht zahlt?</summary><p>Bei Ratenzahlung über einen Zahlungsanbieter wie Klarna schließt der Kunde den Vertrag mit dem Anbieter. Nach erfolgreicher Freigabe bekommt dein Studio den Betrag in der Regel vollständig ausgezahlt. Das Ausfallrisiko liegt dann beim Anbieter.</p></details>
   <details><summary>Wie kommt das Geld zu meinem Studio?</summary><p>Im Provisionsmodell zahlt dein Kunde über Tattoofin, die Abwicklung übernimmt Stripe. Stripe überweist <span data-c="provisionProzent|rest">90</span> % automatisch auf das Bankkonto deines Studios, dafür bekommst du ein Stripe-Auszahlungskonto (ca. 10 Minuten Einrichtung). Beim Kauf läuft alles über dein eigenes, vollwertiges Stripe-Konto.</p></details>
   <details><summary>Wie funktioniert die Provision?</summary><p>Bei jeder Zahlung über einen Tattoofin-Zahlungslink oder deine Zahlseite behalten wir <span data-c="provisionProzent">10</span> % vom Zahlbetrag ein. Darin ist alles enthalten: die Gebühren von Stripe und Klarna und die Umsatzsteuer. Beispiel: Dein Kunde zahlt 3.000 €, du bekommst 2.700 €. Einmal im Monat kommt eine Rechnung für deine Buchhaltung. Wird eine Zahlung erstattet, bekommst du die Provision anteilig zurück, abzüglich der Zahlungsgebühr, die Stripe bei Erstattungen nicht zurückgibt.</p></details>
   <details><summary>Kann ich damit auch Anzahlungen kassieren?</summary><p>Ja. Erstell einen Zahlungslink mit der Art „Anzahlung“ oder lass den Kunden über deine Zahlseite zahlen. Der Kunde bestätigt vor dem Bezahlen deine Anzahlungsbedingungen (z. B. Verfall bei No-Show). Das schützt dich, wenn jemand die Zahlung später zurückbuchen will.</p></details>
@@ -120,41 +245,23 @@
   <details><summary>Kann ich wieder aussteigen?</summary><p>Im Provisionsmodell jederzeit zum Monatsende, mit einem Klick im Portal. Beim Kauf gilt eine <span data-c="garantieTage">30</span>-Tage-Geld-zurück-Garantie ab Go-live. Offene Auszahlungen bekommst du auch nach dem Ende vollständig.</p></details>
 </div></section>
 
-<section class="sec"><div class="wrap" style="text-align:center">
-  <img src="/assets/logo.png" alt="Tattoofin" style="width:150px;margin:0 auto 18px">
-  <h2>Mach den Preis nicht zur ersten Hürde.</h2>
-  <p class="sub" style="margin:10px auto 26px">Abschluss in 3 Minuten, komplett online. Mit Vertrag, AVV und sicherer Zahlung über Stripe.</p>
-  <a class="btn gold" href="/start.html">Tattoofin fürs Studio holen</a>
-</div></section>
+<!-- SCHLUSS -->
+<section class="final">
+  <div class="sunburst" aria-hidden="true"></div>
+  <div class="wrap">
+    <img src="/assets/figur.png" alt="">
+    <h2><span class="outline white">Mach den Preis nicht</span><br>zur ersten Hürde.</h2>
+    <p>Abschluss in 3 Minuten, komplett online. Mit Vertrag, AVV und sicherer Zahlung über Stripe.</p>
+    <a class="btn dark big" href="/start.html">Tattoofin fürs Studio holen →</a>
+  </div>
+</section>
 
 <footer class="foot"><div class="wrap">
-  <div>© <span id="jahr"></span> <span data-c="firma"></span> · Tattoofin ist kein Kreditinstitut.</div>
+  <div><img class="wm" src="/assets/wortmarke.png" alt="Tattoofin"><div>© <span id="jahr"></span> <span data-c="firma"></span> · Tattoofin ist kein Kreditinstitut.</div></div>
   <div><a href="/impressum.html">Impressum</a><a href="/datenschutz.html">Datenschutz</a><a href="/vertrag.html">Vertrag</a><a href="/avv.html">AVV</a><a href="/login.html">Studio-Login</a></div>
 </div></footer>
 
+<script src="/js/qrcode.min.js"></script>
 <script src="/js/common.js"></script>
-<script>
-document.getElementById("jahr").textContent = new Date().getFullYear();
-TF.config().then(function (c) {
-  TF.fill(c);
-  if (c.videoUrl) {
-    var v = document.getElementById("video");
-    v.src = c.videoUrl;
-    v.addEventListener("loadedmetadata", function () { document.getElementById("video-wrap").classList.remove("hidden"); });
-  }
-  var $ = function (id) { return document.getElementById(id); };
-  function rechne() {
-    var n = +$("proj").value, b = +$("betrag").value;
-    var umsatz = n * b, prov = umsatz * c.provisionProzent / 100;
-    $("v-proj").textContent = n; $("v-betrag").textContent = b.toLocaleString("de-DE") + " €";
-    $("r-umsatz").textContent = TF.euro(umsatz * 100);
-    $("r-prov").textContent = TF.euro(prov * 100);
-    var monate = prov > 0 ? Math.ceil(c.kaufNetto / 100 / prov) : 0;
-    $("r-amort").textContent = monate ? (monate === 1 ? "1 Monat Provision" : monate + " Monaten Provision") : "–";
-    $("r-tipp").textContent = monate && monate <= 12 ? "Kaufen lohnt sich" : "Provision";
-  }
-  ["proj", "betrag"].forEach(function (id) { $(id).addEventListener("input", rechne); });
-  rechne();
-});
-</script>
+<script src="/js/landing.js"></script>
 </body></html>
