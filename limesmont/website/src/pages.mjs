@@ -1,25 +1,33 @@
 import { SITE, SERVICES, OWN_PROJECTS, waLink } from './config.mjs';
 import { icon } from './icons.mjs';
-import { pageHero, serviceCards, processSteps, faq, faqSchema, ctaBand, profileStory, panelConfigurator, areaMap, miralStats, inquiryForm, callbackForm, img } from './partials.mjs';
+import { pageHero, serviceCards, processSteps, faq, faqSchema, ctaBand, profileStory, panelConfigurator, areaMap, miralStats, inquiryForm, callbackForm, img, builderBenefits, residentialRefs } from './partials.mjs';
 
 const todo = (v, label) => (v ? v : `<mark class="todo">[${label} – vom Kunden zu ergänzen]</mark>`);
 
 /* =====================================================================
    STARTSEITE
    ===================================================================== */
+const BUILDER_FAQ = [
+  ['Welche Unterlagen brauchen Sie für ein Angebot?', 'Am besten Grundrisse und Ansichten, eine Fensterliste bzw. ein Positionsplan oder Ihr Leistungsverzeichnis. Dazu die Anforderungen an Wärme-, Schall- und Einbruchschutz sowie Ihren groben Terminrahmen. Bei kleineren Vorhaben genügen Fotos und ungefähre Maße.'],
+  ['Kalkulieren Sie komplette Wohnanlagen oder auch einzelne Bauabschnitte?', 'Beides. Wir rechnen das gesamte Objekt oder einzelne Häuser und Bauabschnitte – so, wie es zu Ihrer Vergabe und Ihrem Bauablauf passt.'],
+  ['Wie stimmen Sie Lieferung und Montage auf den Bauzeitenplan ab?', 'Die Elemente werden nach Aufmaß gefertigt und abschnittsweise angeliefert. Montagetermine planen wir gemeinsam mit Ihrer Bauleitung und bestätigen sie mit der Auftragsbestätigung.'],
+  ['Wie läuft die Bemusterung – auch für Sonderwünsche der Erwerber?', 'Sie geben Profilsystem, Farben, Gläser und Türfüllungen vorab frei. Abweichende Wünsche einzelner Erwerber nehmen wir je Einheit auf und berücksichtigen sie in Fertigung und Abrechnung.'],
+  ['Welche technischen Nachweise erhalten wir?', 'Mit dem Angebot erhalten Sie die technischen Kennwerte der angebotenen Systeme (z. B. Uw-Werte), mit der Übergabe die Montagedokumentation und das Abnahmeprotokoll je Abschnitt.'],
+];
+
 const HOME_FAQ = [
-  ['Was kostet ein neues Fenster inklusive Montage?', 'Das hängt von Größe, Material (Kunststoff oder Aluminium), Verglasung, Farbe und Einbausituation ab. Nach dem Aufmaß vor Ort erhalten Sie ein schriftliches Angebot mit allen Positionen. Für eine erste Einschätzung genügen oft Fotos und ungefähre Maße – einfach über das Anfrageformular hochladen.'],
-  ['Wie lange dauert es von der Bestellung bis zur Montage?', 'Fenster und Türen werden nach Maß gefertigt. Je nach Produkt und Saison dauert das in der Regel einige Wochen. Den konkreten Liefer- und Montagetermin bestätigen wir Ihnen mit der Auftragsbestätigung.'],
+  BUILDER_FAQ[0],
+  BUILDER_FAQ[1],
+  BUILDER_FAQ[2],
   ['Montieren Sie auch Bauelemente, die nicht bei Ihnen gekauft wurden?', 'In vielen Fällen ja – wir montieren genormte Fenster, Türen, Paneele und vorgefertigte Bauelemente aus Kunststoff, Aluminium oder Holz. Sprechen Sie uns mit den Produktdaten an, dann prüfen wir Ihr Vorhaben.'],
   ['In welchem Gebiet sind Sie tätig?', 'Unser Sitz ist in Wassertrüdingen. Wir sind vor allem in Westmittelfranken und Nordschwaben im Einsatz – etwa in Gunzenhausen, Dinkelsbühl, Ansbach, Nördlingen und Weißenburg. Industrie- und Gewerbeprojekte übernehmen wir auf Anfrage deutschlandweit.'],
-  ['Gibt es Förderung für neue Fenster und Türen?', 'Für energetische Sanierungen gibt es je nach aktueller Förderlage Zuschüsse (z. B. über die Bundesförderung für effiziente Gebäude) oder eine steuerliche Förderung nach § 35c EStG. Voraussetzungen und Förderhöhe ändern sich regelmäßig – lassen Sie sich vor der Auftragsvergabe von einem Energieeffizienz-Experten beraten.'],
   ['Welche Arbeiten führen Sie nicht aus?', 'Wir führen keine zulassungspflichtigen Handwerksarbeiten aus und nehmen keine Eingriffe in die Statik von Bauwerken vor. Unser Schwerpunkt ist der fachgerechte Einbau vorgefertigter, genormter Bauelemente.'],
 ];
 
 const home = {
   path: '',
-  title: 'LIMES MONT – Fenster, Türen & Industriemontage aus einer Hand | Wassertrüdingen',
-  description: 'Fenster, Türen und Glasfassaden direkt vom Hersteller MIRAL PVC – montiert vom eigenen Team. Dazu Sandwichpaneele, Industriemontage und Innenausbau. Jetzt kostenloses Angebot anfragen.',
+  title: 'LIMES MONT – Fenster & Türen für Bauträger, direkt vom Hersteller | Wassertrüdingen',
+  description: 'Fenster, Türen und Fassaden für Wohnanlagen und Gewerbebauten: Angebot nach Plänen oder LV, Fertigung bei MIRAL PVC, Montage nach Bauzeitenplan. LIMES MONT – Generalvertretung Deutschland.',
   dark: true,
   bodyClass: 'is-home',
   schema: [faqSchema(HOME_FAQ)],
@@ -28,16 +36,16 @@ const home = {
   <div class="hero__bg" aria-hidden="true"></div>
   <div class="container hero__grid">
     <div class="hero__text">
-      <p class="eyebrow eyebrow--light hero__eyebrow"><span class="dot"></span> Generalvertretung Deutschland · MIRAL PVC</p>
-      <h1 class="hero__title">Fenster, Türen &amp; Industrie&shy;montage <span>aus einer Hand.</span></h1>
-      <p class="hero__lead">Wir liefern Fenster, Türen und Fassaden direkt vom Hersteller und montieren sie mit unserem eigenen Team – für Neubau, Sanierung, Gewerbe und Industrie. Dazu Sandwichpaneele und vorgefertigte Industrieelemente.</p>
+      <p class="eyebrow eyebrow--light hero__eyebrow"><span class="dot"></span> Für Bauträger &amp; Generalunternehmer</p>
+      <h1 class="hero__title">Fenster &amp; Türen für Ihr Bauprojekt. <span>Direkt vom Hersteller.</span></h1>
+      <p class="hero__lead">Als Generalvertretung von MIRAL PVC liefern und montieren wir Fenster, Türen und Fassaden für Mehrfamilienhäuser, Wohnanlagen und Gewerbebauten – kalkuliert nach Ihren Plänen, montiert nach Ihrem Bauzeitenplan.</p>
       <div class="actions">
-        <a class="btn btn--primary btn--lg" href="${ctx.r('kontakt/')}#anfrage">Kostenloses Angebot ${icon('arrow')}</a>
+        <a class="btn btn--primary btn--lg" href="${ctx.r('kontakt/')}#anfrage">Projekt anfragen ${icon('arrow')}</a>
         <a class="btn btn--ghost-light btn--lg" href="tel:${SITE.tel}">${icon('phone')} ${SITE.phone}</a>
       </div>
       <ul class="hero__points">
-        <li>${icon('check')} Beratung &amp; Aufmaß vor Ort</li>
-        <li>${icon('check')} Lieferung direkt vom Hersteller</li>
+        <li>${icon('check')} Angebot nach Plänen oder LV</li>
+        <li>${icon('check')} Montage nach Bauzeitenplan</li>
         <li>${icon('check')} Ein Ansprechpartner bis zur Abnahme</li>
       </ul>
     </div>
@@ -53,23 +61,38 @@ const home = {
 
 <section class="trust" aria-label="Unser Partner MIRAL PVC in Zahlen">
   <div class="container">
-    <p class="trust__intro"><b>Starker Hersteller im Rücken:</b> Als Generalvertretung für Deutschland liefern wir Produkte von MIRAL PVC – Fenster, Türen und Fassaden aus eigener Fertigung.</p>
+    <p class="trust__intro"><b>Kapazität für ganze Wohnanlagen:</b> Als Generalvertretung für Deutschland liefern wir Fenster, Türen und Fassaden von MIRAL PVC – aus eigener Fertigung des Herstellers.</p>
     ${miralStats()}
   </div>
 </section>
 
-<section class="section" id="leistungen">
+<section class="section" id="bautraeger">
   <div class="container">
     <div class="section-head reveal">
-      <p class="eyebrow">Leistungen</p>
-      <h2>Vom einzelnen Fenster bis zur kompletten Gewerbehalle.</h2>
-      <p class="lead">Zwei Schwerpunkte, ein Team: Vertrieb und Montage von Fenster-, Tür- und Fassadenelementen – und Montageleistungen für Industrie und Gewerbe.</p>
+      <p class="eyebrow">Für Bauträger</p>
+      <h2>Gebaut für das Objektgeschäft.</h2>
+      <p class="lead">Bei einer Wohnanlage zählen Preis, Termine und ein Partner, der liefert, wenn die Baustelle so weit ist. Genau dafür ist unser Modell gemacht: Hersteller und Montage in einer Hand.</p>
     </div>
-    ${serviceCards(ctx)}
+    ${builderBenefits()}
+    <div class="actions">
+      <a class="btn btn--primary" href="${ctx.r('kontakt/')}#anfrage">Pläne oder LV senden ${icon('arrow')}</a>
+      <a class="btn btn--ghost" href="${ctx.r('bautraeger/')}">Mehr für Bauträger ${icon('arrow')}</a>
+    </div>
   </div>
 </section>
 
 ${profileStory(ctx)}
+
+<section class="section section--tint" id="leistungen">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">Leistungen</p>
+      <h2>Von der Wohnanlage bis zur Gewerbehalle.</h2>
+      <p class="lead">Unser Schwerpunkt sind Fenster, Türen und Fassaden im Objektbau. Dazu kommen Sandwichpaneele, Industriemontage und Innenausbau – alles aus einem Team.</p>
+    </div>
+    ${serviceCards(ctx)}
+  </div>
+</section>
 
 <section class="section section--split">
   <div class="container split">
@@ -114,11 +137,22 @@ ${profileStory(ctx)}
   </div>
 </section>
 
+<section class="section section--tint">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">Referenzen im Wohnungsbau</p>
+      <h2>Wohnanlagen, die schon mit MIRAL-Fenstern gebaut wurden.</h2>
+      <p class="lead">Unser Herstellerpartner hat Wohnsiedlungen, Wohnhochhäuser und Mehrfamilienhäuser in mehreren Ländern Europas ausgestattet – eine Auswahl.</p>
+    </div>
+    ${residentialRefs(ctx)}
+  </div>
+</section>
+
 <section class="section">
   <div class="container">
     <div class="section-head reveal">
-      <p class="eyebrow">So arbeiten wir</p>
-      <h2>In vier Schritten zum fertig montierten Bauelement.</h2>
+      <p class="eyebrow">Projektablauf</p>
+      <h2>Von Ihren Plänen bis zur Abnahme.</h2>
     </div>
     ${processSteps()}
   </div>
@@ -129,7 +163,7 @@ ${profileStory(ctx)}
     <div class="split__text reveal">
       <p class="eyebrow eyebrow--light">Einsatzgebiet</p>
       <h2>Zuhause in Wassertrüdingen. Unterwegs in der ganzen Region.</h2>
-      <p>Kurze Wege, schnelle Termine: Wir betreuen Privat- und Gewerbekunden in Westmittelfranken und Nordschwaben. Für Industrie- und Gewerbeprojekte sind wir auf Anfrage deutschlandweit im Einsatz.</p>
+      <p>Kurze Wege, schnelle Termine: Wir betreuen Bauträger, Generalunternehmer, Gewerbe- und Privatkunden in Westmittelfranken und Nordschwaben. Für größere Wohnbau-, Gewerbe- und Industrieprojekte sind wir auf Anfrage deutschlandweit im Einsatz.</p>
       <ul class="tag-list">
         <li>Wassertrüdingen</li><li>Gunzenhausen</li><li>Dinkelsbühl</li><li>Ansbach</li><li>Feuchtwangen</li><li>Oettingen</li><li>Nördlingen</li><li>Weißenburg</li><li>Treuchtlingen</li><li>Donauwörth</li>
       </ul>
@@ -145,6 +179,103 @@ ${profileStory(ctx)}
       <h2>Gut zu wissen</h2>
     </div>
     ${faq(HOME_FAQ)}
+  </div>
+</section>
+
+${ctaBand(ctx)}
+`,
+};
+
+/* =====================================================================
+   FÜR BAUTRÄGER (Hauptzielgruppe)
+   ===================================================================== */
+const builders = {
+  path: 'bautraeger/',
+  title: 'Fenster & Türen für Bauträger – Objektgeschäft direkt vom Hersteller',
+  description: 'Für Bauträger und Generalunternehmer: Fenster, Türen und Fassaden für Wohnanlagen und Mehrfamilienhäuser – Angebot nach Plänen oder LV, Fertigung bei MIRAL PVC, Montage nach Bauzeitenplan.',
+  crumbs: [['Für Bauträger', 'bautraeger/']],
+  preloadImg: 'fenster-haus-800.webp',
+  schema: [
+    { '@context': 'https://schema.org', '@type': 'Service', name: 'Fenster und Türen für Bauträger', serviceType: 'Lieferung und Montage von Fenstern, Türen und Fassaden im Objektbau', audience: { '@type': 'BusinessAudience', name: 'Bauträger, Projektentwickler und Generalunternehmer' }, provider: { '@id': SITE.url + '/#business' }, areaServed: 'Deutschland' },
+    faqSchema(BUILDER_FAQ),
+  ],
+  body: (ctx) => `
+${pageHero(ctx, { eyebrow: 'Für Bauträger & Generalunternehmer', title: 'Fenster, Türen und Fassaden für Ihre Wohnanlage.', lead: 'Ein Werk, ein Ansprechpartner, Ihr ganzes Projekt: Wir kalkulieren nach Ihren Plänen, lassen bei MIRAL PVC nach Maß fertigen und montieren im Takt Ihrer Baustelle.', image: 'fenster-haus', imageAlt: 'Modernes Wohngebäude mit großflächigen Fenstern und Fensterprofil im Querschnitt', crumbs: [['Für Bauträger', 'bautraeger/']] })}
+
+<section class="section">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">Ihre Vorteile</p>
+      <h2>Hersteller und Montage in einer Hand.</h2>
+      <p class="lead">Im Objektgeschäft gehen Marge und Zeitplan oft an den Schnittstellen verloren – zwischen Hersteller, Händler und Montagebetrieb. Bei uns gibt es diese Schnittstellen nicht.</p>
+    </div>
+    ${builderBenefits()}
+  </div>
+</section>
+
+${profileStory(ctx)}
+
+<section class="section">
+  <div class="container split split--text">
+    <div class="prose reveal">
+      <p class="eyebrow">Lieferumfang</p>
+      <h2>Was wir für Ihr Projekt liefern und montieren</h2>
+      <p>Aus dem Programm von MIRAL PVC stellen wir das Paket zusammen, das zu Ihrem Objekt, Ihrem Budget und den Anforderungen aus GEG, Schall- und Einbruchschutz passt.</p>
+      <ul class="check-list">
+        <li>${icon('check')} Kunststofffenster in Mehrkammer-Profilsystemen – weiß, farbig oder in Holzdekor</li>
+        <li>${icon('check')} Aluminiumfenster und -türen für Gewerbeeinheiten und Treppenhäuser</li>
+        <li>${icon('check')} Hauseingangstüren und Wohnungs-Außentüren</li>
+        <li>${icon('check')} Balkon- und Terrassentüren, Hebe-Schiebe-Anlagen</li>
+        <li>${icon('check')} Rollläden, Raffstores und Insektenschutz</li>
+        <li>${icon('check')} Balkon- und Treppengeländer aus Aluminium</li>
+        <li>${icon('check')} Glasfassaden und Pfosten-Riegel-Konstruktionen</li>
+        <li>${icon('check')} Fensterbänke innen und außen</li>
+      </ul>
+      <a class="btn btn--dark" href="${ctx.r('miral-pvc/')}">Zum Produktprogramm ${icon('arrow')}</a>
+    </div>
+    <div class="panel reveal">
+      <h2 class="panel__title">Diese Unterlagen helfen uns beim Angebot</h2>
+      <ul class="check-list">
+        <li>${icon('doc')} Grundrisse und Ansichten</li>
+        <li>${icon('doc')} Fensterliste bzw. Positionsplan</li>
+        <li>${icon('doc')} Leistungsverzeichnis (PDF, Excel oder GAEB)</li>
+        <li>${icon('doc')} Anforderungen an Uw-Wert, Schallschutz, Einbruchschutz</li>
+        <li>${icon('doc')} Bauzeitenplan bzw. gewünschter Montagezeitraum</li>
+        <li>${icon('doc')} Ansprechpartner Ihrer Bauleitung</li>
+      </ul>
+      <a class="btn btn--primary btn--block" href="${ctx.r('kontakt/')}#anfrage">Unterlagen hochladen ${icon('upload')}</a>
+    </div>
+  </div>
+</section>
+
+<section class="section section--tint">
+  <div class="container">
+    <div class="section-head reveal"><p class="eyebrow">Projektablauf</p><h2>So läuft Ihr Projekt mit uns.</h2></div>
+    ${processSteps()}
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">Referenzen im Wohnungsbau</p>
+      <h2>Erfahrung aus Wohnanlagen in ganz Europa.</h2>
+    </div>
+    ${residentialRefs(ctx)}
+  </div>
+</section>
+
+<section class="trust" aria-label="MIRAL PVC in Zahlen">
+  <div class="container">
+    <p class="trust__intro"><b>Das Werk hinter unseren Fenstern:</b> MIRAL PVC fertigt seit 1996 Fenster, Türen und Fassadensysteme aus PVC und Aluminium für Projekte in ganz Europa.</p>
+    ${miralStats()}
+  </div>
+</section>
+
+<section class="section">
+  <div class="container narrow">
+    <div class="section-head section-head--center reveal"><p class="eyebrow">Fragen &amp; Antworten</p><h2>Häufige Fragen von Bauträgern</h2></div>
+    ${faq(BUILDER_FAQ)}
   </div>
 </section>
 
@@ -190,12 +321,12 @@ const SERVICE_CONTENT = {
     description: 'PVC- und Aluminiumfenster, Haustüren und Hebe-Schiebe-Türen von MIRAL PVC – Beratung, Aufmaß, Lieferung und Montage aus einer Hand. Für Neubau und Sanierung.',
     eyebrow: 'Fenster & Türen',
     h1: 'Neue Fenster und Türen – geliefert vom Hersteller, eingebaut von uns.',
-    lead: 'Kunststoff- oder Aluminiumfenster, Haustüren, Balkon- und Hebe-Schiebe-Türen: Wir beraten, messen auf, bestellen direkt bei MIRAL PVC und montieren mit eigenem Team.',
+    lead: 'Kunststoff- oder Aluminiumfenster, Hauseingangs-, Balkon- und Hebe-Schiebe-Türen für Wohnanlagen, Mehrfamilienhäuser und Sanierungen – kalkuliert nach Plänen, gefertigt bei MIRAL PVC, montiert von uns.',
     image: 'fenster-haus',
     imageAlt: 'Modernes Wohnhaus mit großen Glasflächen und Fensterprofil im Querschnitt',
-    intro: ['Neue Fenster verändern ein Haus spürbar: Es wird leiser, wärmer und heller – und die Heizkosten sinken. Damit das gelingt, müssen Produkt und Einbau zusammenpassen. Genau darum kümmern wir uns.', 'Als Generalvertretung von MIRAL PVC haben wir direkten Zugang zu modernen Mehrkammer-Profilsystemen aus Kunststoff und Aluminium. Sie bekommen Fenster und Türen nach Maß – und einen Ansprechpartner, der von der Beratung bis zur Abnahme für Sie da ist.'],
+    intro: ['Ob Wohnanlage mit mehreren Häusern, Mehrfamilienhaus oder einzelne Sanierung: Fenster und Türen entscheiden über Energiebedarf, Schallschutz und Wohnkomfort – und bei Bauträgerprojekten über Kosten und Termine. Damit alles passt, müssen Produkt, Kalkulation und Einbau zusammenspielen. Genau darum kümmern wir uns.', 'Als Generalvertretung von MIRAL PVC haben wir direkten Zugang zu modernen Mehrkammer-Profilsystemen aus Kunststoff und Aluminium. Sie bekommen Fenster und Türen nach Maß – und einen Ansprechpartner, der von der Beratung bis zur Abnahme für Sie da ist.'],
     listTitle: 'Was wir für Sie einbauen',
-    list: ['Kunststofffenster (PVC) in Weiß, Farbe oder Holzdekor', 'Aluminiumfenster und -türen', 'Haustüren aus PVC und Aluminium', 'Balkon- und Terrassentüren', 'Hebe-Schiebe- und Schiebetüren für große Glasflächen', 'Austausch alter Fenster inkl. Ausbau und Entsorgung', 'Fensterbänke innen und außen, Rollläden, Insektenschutz'],
+    list: ['Komplette Fensterpakete für Wohnanlagen und Mehrfamilienhäuser', 'Kunststofffenster (PVC) in Weiß, Farbe oder Holzdekor', 'Aluminiumfenster und -türen', 'Haustüren aus PVC und Aluminium', 'Balkon- und Terrassentüren', 'Hebe-Schiebe- und Schiebetüren für große Glasflächen', 'Austausch alter Fenster inkl. Ausbau und Entsorgung', 'Fensterbänke innen und außen, Rollläden, Insektenschutz'],
     features: [
       ['leaf', 'Energieeffizient', 'Mehrkammerprofile und Zwei- oder Dreifach-Isolierglas senken den Wärmeverlust deutlich.'],
       ['shield', 'Sicher', 'Stahlverstärkte Profile und hochwertige Beschläge – einbruchhemmende Ausstattung auf Anfrage.'],
@@ -501,6 +632,10 @@ ${ctaBand(ctx, { title: 'Fenster & Türen von MIRAL PVC anfragen.', text: 'Wir b
    REFERENZEN
    ===================================================================== */
 const MIRAL_REFS = [
+  ['Wohnsiedlung mit 14 Gebäuden', 'Kroatien', 'HR', 'Wohnen'],
+  ['Wohnanlagen', 'Dubrovnik', 'HR', 'Wohnen'],
+  ['Wohngebäude', 'Split', 'HR', 'Wohnen'],
+  ['Wohn- und Geschäftshaus', 'Cazin', 'BA', 'Wohnen'],
   ['Seniorenheim', 'Köln', 'DE', 'Öffentlich'],
   ['Hotel Eraclea', 'Caorle', 'IT', 'Hotel'],
   ['Hotel Marina', 'Caorle', 'IT', 'Hotel'],
@@ -525,7 +660,7 @@ const refs = {
   description: 'Referenzen von LIMES MONT und Herstellerreferenzen von MIRAL PVC: Hotels, Wohn- und Gewerbebauten, Schulen und Fassaden in ganz Europa.',
   crumbs: [['Referenzen', 'referenzen/']],
   body: (ctx) => `
-${pageHero(ctx, { eyebrow: 'Referenzen', title: 'Projekte, die für sich sprechen.', lead: 'Von Hotels an der Adria bis zum Seniorenheim in Köln: Produkte unseres Herstellerpartners MIRAL PVC sind in ganz Europa verbaut.', image: 'paneelmontage', imageAlt: 'Montage von Fassadenelementen an einer Gewerbehalle', crumbs: [['Referenzen', 'referenzen/']] })}
+${pageHero(ctx, { eyebrow: 'Referenzen', title: 'Projekte, die für sich sprechen.', lead: 'Von der Wohnsiedlung mit 14 Gebäuden bis zum Seniorenheim in Köln: Fenster, Türen und Fassaden unseres Herstellerpartners MIRAL PVC sind in ganz Europa verbaut.', image: 'paneelmontage', imageAlt: 'Montage von Fassadenelementen an einer Gewerbehalle', crumbs: [['Referenzen', 'referenzen/']] })}
 
 ${OWN_PROJECTS.length ? `
 <section class="section">
@@ -545,7 +680,7 @@ ${OWN_PROJECTS.length ? `
       <p class="lead">Eine Auswahl von Objekten, die mit Produkten von MIRAL PVC ausgestattet wurden. Alle Projekte mit Bildern finden Sie auf der Website des Herstellers.</p>
     </div>
     <div class="ref-filter reveal" role="group" aria-label="Referenzen filtern">
-      ${['Alle', 'Hotel', 'Wohnen', 'Gewerbe', 'Öffentlich'].map((f, i) => `<button type="button" class="chip${i === 0 ? ' is-active' : ''}" data-filter="${f}" aria-pressed="${i === 0}">${f}</button>`).join('')}
+      ${['Alle', 'Wohnen', 'Hotel', 'Gewerbe', 'Öffentlich'].map((f, i) => `<button type="button" class="chip${i === 0 ? ' is-active' : ''}" data-filter="${f}" aria-pressed="${i === 0}">${f}</button>`).join('')}
     </div>
     <ul class="refs">
       ${MIRAL_REFS.map(([t, place, cc, cat]) => `<li class="ref reveal" data-cat="${cat}"><span class="ref__cc">${cc}</span><div><b>${t}</b><small>${place} · ${cat}</small></div></li>`).join('\n      ')}
@@ -626,8 +761,8 @@ ${ctaBand(ctx)}
    ===================================================================== */
 const contact = {
   path: 'kontakt/',
-  title: 'Kontakt & Angebot anfragen',
-  description: 'Kostenloses Angebot für Fenster, Türen, Sandwichpaneele oder Industriemontage anfragen: Formular mit Foto-Upload, Telefon, WhatsApp oder E-Mail. LIMES MONT, Wassertrüdingen.',
+  title: 'Projekt anfragen – Kontakt',
+  description: 'Projekt anfragen: Pläne, Fensterliste oder LV hochladen und ein Angebot für Fenster, Türen, Fassaden oder Montage erhalten. Telefon, WhatsApp oder E-Mail. LIMES MONT, Wassertrüdingen.',
   crumbs: [['Kontakt', 'kontakt/']],
   body: (ctx) => `
 <section class="contact-hero">
@@ -635,7 +770,7 @@ const contact = {
     <nav class="crumbs" aria-label="Brotkrümelnavigation"><ol><li><a href="${ctx.r('')}">Startseite</a></li><li aria-current="page">Kontakt</li></ol></nav>
     <p class="eyebrow eyebrow--light">Kontakt</p>
     <h1>Erzählen Sie uns von Ihrem Projekt.</h1>
-    <p class="lead">Kostenlos und unverbindlich. Je mehr wir wissen, desto genauer wird unsere erste Einschätzung.</p>
+    <p class="lead">Schicken Sie uns Eckdaten und gern gleich Pläne, Fensterliste oder Leistungsverzeichnis. Je mehr wir wissen, desto genauer wird unsere erste Einschätzung.</p>
   </div>
 </section>
 
@@ -785,4 +920,4 @@ const privacy = {
 </section>`,
 };
 
-export const PAGES = [home, services, ...SERVICES.map(servicePage), miral, refs, about, contact, thanks, imprint, privacy, notFound];
+export const PAGES = [home, builders, services, ...SERVICES.map(servicePage), miral, refs, about, contact, thanks, imprint, privacy, notFound];

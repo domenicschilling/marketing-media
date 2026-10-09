@@ -36,6 +36,7 @@ function header({ r, a, page }) {
     </a>
     <nav class="nav" id="nav" aria-label="Hauptnavigation">
       <ul class="nav__list">
+        <li class="nav__item"><a class="nav__link nav__link--accent" href="${r('bautraeger/')}"${cur('bautraeger/')}>Für Bauträger</a></li>
         <li class="nav__item nav__item--mega">
           <a class="nav__link" href="${r('leistungen/')}"${cur('leistungen/')} data-mega-toggle aria-expanded="false">Leistungen ${icon('chevron', 'i i--sm')}</a>
           <div class="mega">
@@ -50,13 +51,13 @@ function header({ r, a, page }) {
         <li class="nav__item"><a class="nav__link" href="${r('kontakt/')}"${cur('kontakt/')}>Kontakt</a></li>
       </ul>
       <div class="nav__mobile-extra">
-        <a class="btn btn--primary btn--block" href="${r('kontakt/')}#anfrage">Angebot anfragen ${icon('arrow')}</a>
+        <a class="btn btn--primary btn--block" href="${r('kontakt/')}#anfrage">Projekt anfragen ${icon('arrow')}</a>
         <a class="btn btn--ghost btn--block" href="tel:${SITE.tel}">${icon('phone')} ${SITE.phone}</a>
       </div>
     </nav>
     <div class="site-header__actions">
       <a class="header-phone" href="tel:${SITE.tel}">${icon('phone')}<span>${SITE.phone}</span></a>
-      <a class="btn btn--primary btn--sm" href="${r('kontakt/')}#anfrage">Angebot anfragen</a>
+      <a class="btn btn--primary btn--sm" href="${r('kontakt/')}#anfrage">Projekt anfragen</a>
       <button class="burger" type="button" aria-controls="nav" aria-expanded="false" aria-label="Menü öffnen" data-burger>
         <span></span><span></span><span></span>
       </button>
@@ -74,7 +75,7 @@ function footer({ r, a }) {
         <img class="brand__icon" src="${a('img/logo-icon-dark.png')}" width="34" height="40" alt="">
         <span class="brand__word"><b>LIMES</b> MONT</span>
       </a>
-      <p>Vertrieb und Montage von Fenstern, Türen, Fassaden und Sandwichpaneelen für Industrie, Gewerbe und private Bauherren.</p>
+      <p>Fenster, Türen und Fassaden direkt vom Hersteller – geliefert und montiert für Bauträger, Generalunternehmer, Gewerbe und Industrie.</p>
       <a class="partner-badge" href="${r('miral-pvc/')}">
         <span>Generalvertretung Deutschland</span><b>MIRAL PVC</b>
       </a>
@@ -88,6 +89,7 @@ function footer({ r, a }) {
     <div>
       <h2 class="site-footer__title">Unternehmen</h2>
       <ul class="site-footer__links">
+        <li><a href="${r('bautraeger/')}">Für Bauträger</a></li>
         <li><a href="${r('ueber-uns/')}">Über uns</a></li>
         <li><a href="${r('miral-pvc/')}">Partner MIRAL PVC</a></li>
         <li><a href="${r('referenzen/')}">Referenzen</a></li>
@@ -134,7 +136,7 @@ export function businessSchema() {
     geo: { '@type': 'GeoCoordinates', latitude: SITE.geo.lat, longitude: SITE.geo.lng },
     areaServed: ['Wassertrüdingen', 'Landkreis Ansbach', 'Gunzenhausen', 'Dinkelsbühl', 'Nördlingen', 'Weißenburg in Bayern', 'Deutschland'],
     founder: { '@type': 'Person', name: SITE.ceo, jobTitle: 'Geschäftsführer' },
-    knowsAbout: ['Fenstermontage', 'Türmontage', 'Sandwichpaneele', 'Industriemontage', 'Glasfassaden', 'Innenausbau'],
+    knowsAbout: ['Fenster und Türen für Bauträger', 'Objektgeschäft Wohnungsbau', 'Fenstermontage', 'Türmontage', 'Sandwichpaneele', 'Industriemontage', 'Glasfassaden', 'Innenausbau'],
   };
 }
 

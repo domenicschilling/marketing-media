@@ -20,7 +20,7 @@ export function pageHero(ctx, { eyebrow, title, lead, image, imageAlt, actions =
       <h1>${title}</h1>
       ${lead ? `<p class="lead">${lead}</p>` : ''}
       ${actions ? `<div class="actions">
-        <a class="btn btn--primary" href="${ctx.r('kontakt/')}#anfrage">Kostenloses Angebot anfragen ${icon('arrow')}</a>
+        <a class="btn btn--primary" href="${ctx.r('kontakt/')}#anfrage">Projekt anfragen ${icon('arrow')}</a>
         <a class="btn btn--ghost-light" href="tel:${SITE.tel}">${icon('phone')} ${SITE.phone}</a>
       </div>` : ''}
     </div>
@@ -51,10 +51,11 @@ export function serviceCards(ctx, { exclude, heading = true } = {}) {
 /* ---------- Ablauf ---------- */
 export function processSteps() {
   const steps = [
-    ['doc', 'Anfrage', 'Sie schildern uns Ihr Vorhaben – per Formular, Telefon oder WhatsApp. Fotos oder Pläne helfen bei der ersten Einschätzung.'],
-    ['ruler', 'Beratung & Aufmaß', 'Wir besprechen Ausführung, Material und Termin und nehmen die Maße vor Ort genau auf.'],
-    ['handshake', 'Angebot', 'Sie erhalten ein transparentes, schriftliches Angebot mit allen Positionen – ohne versteckte Kosten.'],
-    ['truck', 'Lieferung & Montage', 'Wir koordinieren Lieferung und Montage, arbeiten sauber und übergeben das Ergebnis mit gemeinsamer Abnahme.'],
+    ['doc', 'Unterlagen', 'Sie schicken uns Pläne, Fensterliste oder Leistungsverzeichnis – bei kleineren Vorhaben genügen Fotos und Maße.'],
+    ['handshake', 'Angebot', 'Wir kalkulieren das komplette Objekt oder einzelne Bauabschnitte und klären offene Punkte direkt mit Ihnen.'],
+    ['ruler', 'Bemusterung & Aufmaß', 'Sie geben Profile, Farben und Gläser frei, wir nehmen die Maße auf der Baustelle.'],
+    ['factory', 'Fertigung', 'Alle Elemente werden nach Maß im Werk von MIRAL PVC gefertigt und gesammelt angeliefert.'],
+    ['truck', 'Montage & Abnahme', 'Wir montieren nach Ihrem Bauzeitenplan und übergeben jeden Abschnitt mit gemeinsamer Abnahme.'],
   ];
   return `
 <ol class="process">
@@ -92,17 +93,17 @@ export const faqSchema = (items) => ({
 });
 
 /* ---------- Abschluss-CTA ---------- */
-export function ctaBand(ctx, { title = 'Lassen Sie uns über Ihr Projekt sprechen.', text = 'Ob einzelne Haustür oder komplette Halle: Schildern Sie uns Ihr Vorhaben – wir melden uns schnellstmöglich mit einer ersten Einschätzung.' } = {}) {
+export function ctaBand(ctx, { title = 'Ihr nächstes Bauprojekt? Lassen Sie uns rechnen.', text = 'Schicken Sie uns Pläne, Fensterliste oder Leistungsverzeichnis – wir melden uns schnellstmöglich mit einer ersten Einschätzung und klären offene Punkte direkt mit Ihnen.' } = {}) {
   return `
 <section class="cta-band">
   <div class="container cta-band__inner reveal">
     <div>
-      <p class="eyebrow eyebrow--light">Kostenlos & unverbindlich</p>
+      <p class="eyebrow eyebrow--light">Für Bauträger &amp; Generalunternehmer</p>
       <h2>${title}</h2>
       <p>${text}</p>
     </div>
     <div class="cta-band__actions">
-      <a class="btn btn--primary btn--lg" href="${ctx.r('kontakt/')}#anfrage">Angebot anfragen ${icon('arrow')}</a>
+      <a class="btn btn--primary btn--lg" href="${ctx.r('kontakt/')}#anfrage">Projekt anfragen ${icon('arrow')}</a>
       <div class="cta-band__direct">
         <a href="tel:${SITE.tel}">${icon('phone')} ${SITE.phone}</a>
         <a href="${waLink()}" target="_blank" rel="noopener">${icon('chat')} WhatsApp</a>
@@ -273,24 +274,27 @@ export function inquiryForm(ctx) {
 
   <fieldset class="step" data-step>
     <legend>Um was für ein Objekt geht es?</legend>
-    ${radio('objekt', [['Neubau'], ['Sanierung / Austausch'], ['Gewerbe / Halle'], ['Industrie / Produktion']])}
+    ${radio('objekt', [['Mehrfamilienhaus / Wohnanlage'], ['Reihen- / Doppelhäuser'], ['Gewerbe / Halle'], ['Einfamilienhaus / Sanierung']])}
     <p class="field-label">Sie fragen an als</p>
     <div class="choice-row">
-      <label class="choice choice--inline"><input type="radio" name="kundentyp" value="Privatkunde" required><span>Privatkunde</span></label>
-      <label class="choice choice--inline"><input type="radio" name="kundentyp" value="Gewerbe / Unternehmen"><span>Gewerbe / Unternehmen</span></label>
+      ${['Bauträger / Projektentwickler', 'Generalunternehmer / Bauunternehmen', 'Gewerbe / Industrie', 'Privat'].map((v, i) => `<label class="choice choice--inline"><input type="radio" name="kundentyp" value="${v}"${i === 0 ? ' required' : ''}><span>${v}</span></label>`).join('\n      ')}
     </div>
   </fieldset>
 
   <fieldset class="step" data-step>
     <legend>Was genau ist geplant?</legend>
     <label class="field"><span>Beschreibung</span>
-      <textarea name="beschreibung" rows="5" required placeholder="z. B. 8 Kunststofffenster ca. 120 × 140 cm, weiß, Dreifachverglasung, inkl. Ausbau der alten Fenster"></textarea>
+      <textarea name="beschreibung" rows="5" required placeholder="z. B. Wohnanlage mit 3 Häusern, ca. 120 Fenster und 24 Balkontüren in PVC, Dreifachverglasung, Montage ab Frühjahr in zwei Bauabschnitten"></textarea>
     </label>
     <div class="field-row">
-      <label class="upload"><input type="file" name="datei1" accept="image/*,.pdf"><span>${icon('upload')}<b>Foto / Plan hinzufügen</b><small data-file-name>JPG, PNG oder PDF</small></span></label>
-      <label class="upload"><input type="file" name="datei2" accept="image/*,.pdf"><span>${icon('upload')}<b>Weitere Datei</b><small data-file-name>optional</small></span></label>
+      <label class="field"><span>Wohneinheiten / Häuser</span><input name="einheiten" inputmode="numeric" placeholder="z. B. 24 WE in 3 Häusern"></label>
+      <label class="field"><span>Ca. Anzahl Elemente</span><input name="elemente" inputmode="numeric" placeholder="z. B. 140"></label>
     </div>
-    <p class="field-hint">Max. 8 MB insgesamt. Fotos der Einbausituation helfen uns bei der ersten Einschätzung.</p>
+    <div class="field-row">
+      <label class="upload"><input type="file" name="datei1" accept="image/*,.pdf,.xlsx,.xls,.x83,.x84,.d83,.gaeb"><span>${icon('upload')}<b>Pläne / LV hinzufügen</b><small data-file-name>PDF, Excel, GAEB oder Fotos</small></span></label>
+      <label class="upload"><input type="file" name="datei2" accept="image/*,.pdf,.xlsx,.xls,.x83,.x84,.d83,.gaeb"><span>${icon('upload')}<b>Fensterliste / weitere Datei</b><small data-file-name>optional</small></span></label>
+    </div>
+    <p class="field-hint">Max. 8 MB insgesamt. Größere Planunterlagen senden Sie uns gern per E-Mail oder Download-Link.</p>
   </fieldset>
 
   <fieldset class="step" data-step>
@@ -342,4 +346,41 @@ export function callbackForm(ctx) {
   <label class="consent consent--sm"><input type="checkbox" name="datenschutz" value="ja" required><span>Einverstanden mit der Verarbeitung gemäß <a href="${ctx.r('datenschutz/')}" target="_blank">Datenschutzerklärung</a>.</span></label>
   <button class="btn btn--primary btn--block" type="submit">Rückruf anfordern ${icon('phone')}</button>
 </form>`;
+}
+
+/* ---------- Vorteile für Bauträger ---------- */
+export const BUILDER_BENEFITS = [
+  ['doc', 'Angebot nach Ihren Plänen', 'Grundrisse, Fensterliste oder Leistungsverzeichnis genügen. Wir kalkulieren das komplette Objekt – oder einzelne Häuser und Bauabschnitte.'],
+  ['factory', 'Direkt vom Hersteller', 'Als Generalvertretung beziehen wir ohne Umweg über den Großhandel aus dem Werk von MIRAL PVC. Das hält die Kette kurz – bei Preis und Rückfragen.'],
+  ['clock', 'Montage im Takt der Baustelle', 'Lieferung und Einbau stimmen wir auf Ihren Bauzeitenplan ab – Haus für Haus oder Abschnitt für Abschnitt.'],
+  ['window', 'Bemusterung & Sonderwünsche', 'Profile, Farben, Gläser und Türfüllungen geben Sie vorab frei. Sonderwünsche Ihrer Erwerber nehmen wir strukturiert auf.'],
+  ['handshake', 'Ein Ansprechpartner', 'Vom Angebot über Aufmaß und Fertigung bis zur Abnahme sprechen Sie mit einer Person – statt zwischen Hersteller, Händler und Monteur zu vermitteln.'],
+  ['shield', 'Saubere Übergabe', 'Abnahme je Abschnitt, Dokumentation der Montage und technische Kennwerte der Elemente für Ihre Unterlagen.'],
+];
+
+export function builderBenefits() {
+  return `
+<div class="features features--3">
+  ${BUILDER_BENEFITS.map(([ic, t, d], i) => `<div class="feature reveal" style="--d:${(i % 3) * 70}ms"><span class="feature__icon">${icon(ic)}</span><h3>${t}</h3><p>${d}</p></div>`).join('\n  ')}
+</div>`;
+}
+
+/* ---------- Herstellerreferenzen Wohnungsbau ---------- */
+export const RESIDENTIAL_REFS = [
+  ['Wohnsiedlung mit 14 Gebäuden', 'Kroatien', 'HR'],
+  ['Wohnkomplex', 'Zadar, Kroatien', 'HR'],
+  ['Wohnhochhaus', 'Zagreb, Kroatien', 'HR'],
+  ['Wohngebäude', 'Split, Kroatien', 'HR'],
+  ['Wohn- und Geschäftshaus', 'Cazin, Bosnien und Herzegowina', 'BA'],
+  ['Wohngebäude', 'Schweiz', 'CH'],
+  ['Seniorenheim', 'Köln', 'DE'],
+  ['Wohnanlagen', 'Dubrovnik, Kroatien', 'HR'],
+];
+
+export function residentialRefs(ctx, { limit = 8 } = {}) {
+  return `
+<ul class="refs refs--compact">
+  ${RESIDENTIAL_REFS.slice(0, limit).map(([t, place, cc]) => `<li class="ref reveal"><span class="ref__cc">${cc}</span><div><b>${t}</b><small>${place}</small></div></li>`).join('\n  ')}
+</ul>
+<p class="fineprint">Herstellerreferenzen von MIRAL PVC. Alle Projekte mit Fotos: <a href="${SITE.miral.references}" target="_blank" rel="noopener">miral-pvc.com/reference</a></p>`;
 }

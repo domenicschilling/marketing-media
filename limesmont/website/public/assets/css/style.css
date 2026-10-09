@@ -283,7 +283,7 @@ html:not(.js) .js-only{display:none!important}
 @media (max-width:900px){.miral-band__grid{grid-template-columns:1fr}}
 
 /* ---------- Ablauf ---------- */
-.process{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px;counter-reset:s;position:relative}
+.process{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:20px;counter-reset:s;position:relative}
 .process::before{content:"";position:absolute;top:31px;left:32px;right:32px;height:2px;background:repeating-linear-gradient(90deg,var(--lime-300) 0 10px,transparent 10px 18px)}
 .process__step{position:relative}
 .process__icon{position:relative;width:64px;height:64px;border-radius:50%;display:grid;place-items:center;background:var(--g900);color:var(--lime-300);margin-bottom:22px;box-shadow:0 0 0 8px #fff}
@@ -592,3 +592,27 @@ html:not(.js) .inquiry__head{display:none}
 /* backdrop-filter würde das fixierte Mobilmenü auf die Headerhöhe begrenzen */
 .site-header.menu-open{backdrop-filter:none;-webkit-backdrop-filter:none;background:#fff}
 @media (max-width:1023px){.mega__item{align-items:center}}
+.features--3{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:1000px){.features--3{grid-template-columns:1fr 1fr}}
+@media (max-width:600px){.features--3{grid-template-columns:1fr}}
+.refs--compact{margin-bottom:8px}
+.docs-list{display:grid;grid-template-columns:1fr 1fr;gap:10px 28px;margin:24px 0}
+.docs-list li{display:flex;gap:10px;align-items:flex-start}
+.docs-list .i{flex:none;margin-top:4px;color:var(--lime)}
+@media (max-width:600px){.docs-list{grid-template-columns:1fr}}
+.nav__link--accent{color:var(--g800)}
+@media (max-width:1180px) and (min-width:1024px){.nav__link{padding:10px 10px;font-size:.95rem}.site-header__inner{gap:16px}}
+@media (max-width:1100px){.process{grid-template-columns:1fr 1fr 1fr;row-gap:36px}.process::before{display:none}}
+@media (max-width:900px){.process{grid-template-columns:1fr 1fr}}
+@media (max-width:540px){.process{grid-template-columns:1fr}}
+/* Header mit 6 Menüpunkten */
+.nav__link{white-space:nowrap}
+.nav__list{gap:0}
+.header-phone{white-space:nowrap}
+.is-over-dark:not(.scrolled):not(.menu-open) .nav__link--accent{color:var(--lime-300)}
+@media (max-width:1380px) and (min-width:1024px){
+  .header-phone span{display:none}
+  .header-phone{width:44px;height:44px;justify-content:center;border-radius:999px;border:1px solid rgba(127,127,127,.35)}
+  .nav__link{padding:10px 11px}
+}
+.hero__title{font-size:clamp(2.5rem,4.8vw,4.4rem)}
