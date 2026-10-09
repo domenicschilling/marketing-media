@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fragebogen – Ted am Telefon</title><meta name="robots" content="noindex">
+<link rel="icon" href="/assets/logo.png"><link rel="stylesheet" href="/css/site.css">
+<style>.form h2{font-size:21px;margin:26px 0 12px;display:flex;gap:10px;align-items:center}.form h2:first-of-type{margin-top:0}
+.form h2 .n{width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--gold);font:700 15px/30px var(--head);text-align:center;flex:none}
+.zeiten{display:grid;grid-template-columns:110px 1fr;gap:8px 12px;align-items:center}
+.opts{display:flex;flex-wrap:wrap;gap:6px 18px}.opts label{display:flex;gap:7px;align-items:center;font-weight:500}
+.sticky{position:sticky;bottom:0;background:var(--cream);padding:14px 0;margin-top:20px;display:flex;justify-content:space-between;align-items:center;gap:12px}</style>
+</head><body>
+<header class="nav"><div class="wrap"><a class="brand" href="/portal.html"><img src="/assets/logo.png" alt=""> Ted am Telefon</a><nav class="links"><a href="/portal.html">← Portal</a></nav></div></header>
+<main class="sec tight"><div class="wrap narrow">
+  <h1 style="font-size:36px;margin-bottom:6px">Fragebogen: Ted für dein Studio</h1>
+  <p class="muted" style="margin:0 0 20px">Ca. 15 Minuten. Je genauer, desto besser kennt Ted euer Studio. Du kannst zwischendurch speichern und später weitermachen.</p>
+  <div id="alert"></div>
+  <form id="f" class="form">
+    <h2><span class="n">1</span>Studio</h2>
+    <div class="field"><label>So soll Ted den Studionamen aussprechen</label><input type="text" name="aussprache" placeholder="z. B. „Ink-Studio Bamberg“"></div>
+    <div class="grid2"><div class="field"><label>Website</label><input type="text" name="website"></div><div class="field"><label>Instagram</label><input type="text" name="instagram"></div></div>
+    <div class="field"><label>Anfahrt: Parken, ÖPNV, Eingang</label><input type="text" name="anfahrt"></div>
+
+    <h2><span class="n">2</span>Öffnungszeiten</h2>
+    <div class="zeiten">
+      <label>Montag</label><input type="text" name="zeit_mo" placeholder="geschlossen / 11–19 Uhr">
+      <label>Dienstag</label><input type="text" name="zeit_di"><label>Mittwoch</label><input type="text" name="zeit_mi">
+      <label>Donnerstag</label><input type="text" name="zeit_do"><label>Freitag</label><input type="text" name="zeit_fr">
+      <label>Samstag</label><input type="text" name="zeit_sa"><label>Sonntag</label><input type="text" name="zeit_so">
+    </div>
+    <div class="field" style="margin-top:12px"><label>Betriebsurlaub / Conventions demnächst</label><input type="text" name="urlaub"></div>
+
+    <h2><span class="n">3</span>Team &amp; Artists</h2>
+    <div class="field"><label>Artists mit Stilen, Tagen im Studio und ob sie neue Kunden nehmen</label><textarea name="artists" placeholder="Kathi – Fineline, Blackwork – Di–Sa – ja&#10;Niko – Realistic, Cover-ups – Mi–Fr – nur Projekte ab 4 h"></textarea></div>
+
+    <h2><span class="n">4</span>Leistungen &amp; Regeln</h2>
+    <div class="opts" style="margin-bottom:12px">
+      <label><input type="checkbox" name="l_coverup"> Cover-ups</label><label><input type="checkbox" name="l_fremd"> Fremde Tattoos fertigstechen</label>
+      <label><input type="checkbox" name="l_laser"> Laser</label><label><input type="checkbox" name="l_piercing"> Piercing</label>
+      <label><input type="checkbox" name="l_gutschein"> Gutscheine</label><label><input type="checkbox" name="l_flash"> Flash-Days</label>
+    </div>
+    <div class="field"><label>Walk-ins möglich? Wann?</label><input type="text" name="walkin"></div>
+    <div class="field"><label>Was macht ihr NICHT?</label><input type="text" name="nicht"></div>
+    <div class="grid2"><div class="field"><label>Mindestalter</label><input type="text" name="mindestalter" placeholder="18, Ausweis nötig"></div>
+      <div class="field"><label>Anzahlung</label><input type="text" name="anzahlung" placeholder="z. B. 50 €, verrechnet, verfällt bei No-Show"></div></div>
+    <div class="field"><label>Absagen / Verschieben</label><input type="text" name="absage" placeholder="bis 48 h vorher kostenlos …"></div>
+    <div class="field"><label>Wie läuft eine Anfrage bei euch ab?</label><input type="text" name="ablauf" placeholder="Beratung vor Ort, dann Termin mit Anzahlung …"></div>
+
+    <h2><span class="n">5</span>Häufige Fragen am Telefon</h2>
+    <div class="field"><label>Frage – eure Antwort (eine pro Zeile)</label><textarea name="faq" style="min-height:140px" placeholder="Macht ihr auch kleine Tattoos? – Ja, ab ca. 5 cm.&#10;Kann ich mit Karte zahlen? – Ja, EC und Kreditkarte."></textarea></div>
+
+    <h2><span class="n">6</span>Wie soll Ted sein?</h2>
+    <div class="grid2">
+      <div class="field"><label>Name des Assistenten</label><input type="text" name="name_assistent" value="Ted"></div>
+      <div class="field"><label>Stimme</label><select name="stimme"><option>egal</option><option>männlich</option><option>weiblich</option></select></div>
+      <div class="field"><label>Ansprache</label><select name="ansprache"><option>Du</option><option>Sie</option><option>wie der Anrufer</option></select></div>
+      <div class="field"><label>Wann rangehen?</label><select name="modus"><option>nur wenn wir nicht rangehen (empfohlen)</option><option>immer</option></select></div>
+      <div class="field"><label>Englisch</label><select name="englisch"><option>ja</option><option>nein</option></select></div>
+      <div class="field"><label>WhatsApp an Anrufer für Motivbilder</label><select name="whatsapp_anrufer"><option>ja</option><option>nein</option></select></div>
+    </div>
+    <div class="field"><label>Handynummer für DRINGENDE Fälle</label><input type="tel" name="dringend_nummer"></div>
+    <div class="field"><label>Das soll Ted auf keinen Fall sagen oder tun</label><input type="text" name="nogo"></div>
+
+    <h2><span class="n">7</span>Euer Telefonanschluss</h2>
+    <div class="grid2">
+      <div class="field"><label>Anbieter</label><input type="text" name="anbieter" placeholder="Telekom, Vodafone, o2, 1&amp;1 …"></div>
+      <div class="field"><label>Studio-Telefon ist ein …</label><select name="geraet"><option>weiß nicht</option><option>Handy</option><option>FRITZ!Box</option><option>Router vom Anbieter</option><option>Telefonanlage / Cloud</option></select></div>
+    </div>
+    <div class="field"><label>Sonst noch etwas, das Ted wissen sollte?</label><textarea name="sonstiges"></textarea></div>
+
+    <div class="sticky"><span class="muted" id="saved"></span><button class="btn gold">Speichern &amp; absenden</button></div>
+  </form>
+</div></main>
+<script src="/js/common.js"></script>
+<script>
+(async function () {
+  var f = document.getElementById("f"), a = document.getElementById("alert");
+  try {
+    var d = await Ted.api("/api/portal/fragebogen");
+    Object.keys(d).forEach(function (k) {
+      var el = f.elements[k]; if (!el) return;
+      if (el.type === "checkbox") el.checked = d[k] === true; else el.value = d[k];
+    });
+    if (d.updatedAt) document.getElementById("saved").textContent = "Zuletzt gespeichert: " + Ted.datum(d.updatedAt);
+  } catch (err) { if (err.status === 401) location.href = "/login.html"; }
+  f.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var body = {};
+    Array.from(f.elements).forEach(function (el) { if (el.name) body[el.name] = el.type === "checkbox" ? el.checked : el.value; });
+    try {
+      await Ted.api("/api/portal/fragebogen", { body: body });
+      a.innerHTML = '<div class="alert ok">Danke, gespeichert! Wir melden uns für den Kickoff. <a href="/portal.html">Zurück zum Portal</a></div>';
+      document.getElementById("saved").textContent = "Gespeichert: " + Ted.datum(new Date().toISOString());
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (err) { a.innerHTML = '<div class="alert err">' + Ted.esc(err.message) + "</div>"; }
+  });
+})();
+</script>
+</body></html>

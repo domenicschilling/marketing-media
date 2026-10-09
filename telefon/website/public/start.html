@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Jetzt starten – Ted am Telefon</title>
+<link rel="icon" href="/assets/logo.png">
+<link rel="stylesheet" href="/css/site.css">
+<meta name="robots" content="noindex">
+</head><body>
+<header class="nav"><div class="wrap"><a class="brand" href="/"><img src="/assets/logo.png" alt=""> Ted am Telefon</a><nav class="links"><a href="/login.html">Login</a></nav></div></header>
+
+<main class="sec tight"><div class="wrap narrow">
+  <h1 style="font-size:clamp(30px,5vw,44px);margin-bottom:8px">Ted für dein Studio holen</h1>
+  <p class="muted" style="margin:0 0 24px">Dauert ca. 3 Minuten. Danach richten wir alles ein, und in ca. 5 Werktagen geht Ted ran.</p>
+  <div class="steps-bar"><span data-s="1"></span><span data-s="2"></span><span data-s="3"></span><span data-s="4"></span></div>
+  <div id="alert"></div>
+
+  <form id="f" class="form" novalidate>
+    <!-- Schritt 1 -->
+    <section data-step="1">
+      <h2 style="font-size:24px;margin-bottom:6px">1. Wie möchtest du bezahlen?</h2>
+      <p class="muted" style="margin:0 0 18px">Gleiche Leistung, gleiche kostenlose Betreuung.</p>
+      <div class="choice">
+        <label><input type="radio" name="modell" value="provision"><b>Provision · risikofrei</b><div class="p"><span data-c="provisionProzent">10</span> %</div><small>vom Tattoo-Preis, nur für Termine aus Ted-Anfragen. Keine Fixkosten, monatlich kündbar.</small></label>
+        <label><input type="radio" name="modell" value="kauf"><b>Kaufen</b><div class="p" id="kaufpreis"><span data-c="kaufNetto|euro"></span></div><small>einmalig netto. Keine monatlichen Kosten, <span data-c="garantieTage">30</span> Tage Geld-zurück-Garantie.</small></label>
+      </div>
+      <div id="kauf-extra" class="hidden" style="margin-top:18px">
+        <div class="field"><label>Zahlungsart</label>
+          <div class="choice">
+            <label><input type="radio" name="zahlart" value="sofort" checked><b style="font-size:16px">Jetzt bezahlen</b><small>Karte, SEPA-Lastschrift u. a. über Stripe</small></label>
+            <label><input type="radio" name="zahlart" value="rechnung"><b style="font-size:16px">Auf Rechnung</b><small>Zahlbar in 14 Tagen per Überweisung</small></label>
+          </div>
+        </div>
+        <div class="field"><label for="aktionscode">Aktionscode (optional)</label><input type="text" id="aktionscode" name="aktionscode" autocomplete="off" placeholder="z. B. aus unserem Brief"><div class="hint">Mit gültigem Code: <span data-c="aktionNetto|euro"></span> statt <span data-c="kaufNetto|euro"></span>.</div></div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:20px"><button type="button" class="btn gold" data-next>Weiter</button></div>
+    </section>
+
+    <!-- Schritt 2 -->
+    <section data-step="2" class="hidden">
+      <h2 style="font-size:24px;margin-bottom:16px">2. Dein Studio</h2>
+      <div class="field"><label for="firma">Studio / Firma (wie auf der Rechnung)</label><input type="text" id="firma" name="firma" required autocomplete="organization"></div>
+      <div class="grid2">
+        <div class="field"><label for="inhaber">Inhaber/in</label><input type="text" id="inhaber" name="inhaber" required autocomplete="name"></div>
+        <div class="field"><label for="ustid">USt-IdNr. (optional)</label><input type="text" id="ustid" name="ustid" placeholder="DE…"></div>
+      </div>
+      <div class="field"><label for="strasse">Straße und Hausnummer</label><input type="text" id="strasse" name="strasse" required autocomplete="street-address"></div>
+      <div class="grid2">
+        <div class="field"><label for="plz">PLZ</label><input type="text" id="plz" name="plz" required inputmode="numeric" autocomplete="postal-code"></div>
+        <div class="field"><label for="ort">Ort</label><input type="text" id="ort" name="ort" required autocomplete="address-level2"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label for="email">E-Mail</label><input type="email" id="email" name="email" required autocomplete="email"><div class="hint">Für Login, Anfragen und Rechnungen.</div></div>
+        <div class="field"><label for="telefon">Handynummer (WhatsApp)</label><input type="tel" id="telefon" name="telefon" required autocomplete="tel"><div class="hint">Hierhin schickt Ted die Anfragen.</div></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label for="studioTelefon">Studio-Telefonnummer</label><input type="tel" id="studioTelefon" name="studioTelefon" required><div class="hint">Die Nummer, die Kunden anrufen und die umgeleitet wird.</div></div>
+        <div class="field"><label for="artists">Anzahl Artists</label><select id="artists" name="artists"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option><option>6+</option></select></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:20px"><button type="button" class="btn ghost" data-back>Zurück</button><button type="button" class="btn gold" data-next>Weiter</button></div>
+    </section>
+
+    <!-- Schritt 3 -->
+    <section data-step="3" class="hidden">
+      <h2 style="font-size:24px;margin-bottom:6px">3. Vertrag &amp; Datenschutz</h2>
+      <p class="muted" style="margin:0 0 14px">Bitte lies den Vertrag und den Auftragsverarbeitungsvertrag (AVV). Du bekommst beides nach dem Abschluss per E-Mail.</p>
+      <div id="summary" class="alert info"></div>
+      <div class="vbox" id="vertrag-box">Vertrag wird geladen …</div>
+      <p style="font-size:14px;margin:8px 0 0"><a href="/vertrag.html" target="_blank">Vertrag in neuem Fenster</a> · <a href="/avv.html" target="_blank">AVV öffnen</a> · <a href="/datenschutz.html" target="_blank">Datenschutzerklärung</a></p>
+      <label class="check"><input type="checkbox" name="ak_vertrag"> <span>Ich habe den <a href="/vertrag.html" target="_blank">Dienstleistungsvertrag</a> (Version <span data-c="vertragVersion"></span>) gelesen und schließe ihn mit dem gewählten Modell ab.</span></label>
+      <label class="check"><input type="checkbox" name="ak_avv"> <span>Ich schließe den <a href="/avv.html" target="_blank">Auftragsverarbeitungsvertrag</a> nach Art. 28 DSGVO ab.</span></label>
+      <label class="check"><input type="checkbox" name="ak_unternehmer"> <span>Ich bestelle als Unternehmer/in (§ 14 BGB) für mein Studio und bin berechtigt, es zu vertreten.</span></label>
+      <div class="field" style="margin-top:14px"><label for="unterzeichner">Name des Unterzeichners (gilt als Unterschrift in Textform)</label><input type="text" id="unterzeichner" name="unterzeichner" required></div>
+      <div style="display:flex;justify-content:space-between;margin-top:20px"><button type="button" class="btn ghost" data-back>Zurück</button><button type="button" class="btn gold" data-next>Weiter</button></div>
+    </section>
+
+    <!-- Schritt 4 -->
+    <section data-step="4" class="hidden">
+      <h2 style="font-size:24px;margin-bottom:12px">4. Abschließen</h2>
+      <div id="final"></div>
+      <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:22px">
+        <button type="button" class="btn ghost" data-back>Zurück</button>
+        <button type="submit" class="btn gold" id="submit">Zahlungspflichtig abschließen</button>
+      </div>
+      <p class="muted" style="font-size:13px;margin:16px 0 0">🔒 Die Zahlung bzw. das Hinterlegen der Zahlungsmethode läuft sicher über Stripe. Wir sehen keine Karten- oder Kontodaten.</p>
+    </section>
+  </form>
+</div></main>
+
+<script src="/js/common.js"></script>
+<script src="/js/start.js"></script>
+</body></html>

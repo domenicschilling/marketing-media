@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Studio-Portal – Ted am Telefon</title><meta name="robots" content="noindex">
+<link rel="icon" href="/assets/logo.png"><link rel="stylesheet" href="/css/site.css">
+<style>
+.tbl input,.tbl select{padding:7px 9px;font-size:14px;border-radius:9px}
+.tbl input[type=date]{min-width:140px}.tbl input.preis{width:110px}
+.row-saved{animation:ok 1.2s}
+@keyframes ok{0%{background:#dff5e7}100%{background:transparent}}
+</style>
+</head><body>
+<header class="nav"><div class="wrap"><a class="brand" href="/"><img src="/assets/logo.png" alt=""> Ted am Telefon</a>
+  <nav class="links"><span id="who" style="color:#c9d1d9;font-size:14px"></span><a href="#" id="logout">Logout</a></nav></div></header>
+<main class="sec tight"><div class="wrap">
+  <div id="alert"></div>
+  <div id="app" class="hidden">
+    <h1 style="font-size:34px;margin-bottom:4px" id="titel"></h1>
+    <p class="muted" style="margin:0 0 20px" id="untertitel"></p>
+    <nav class="tabs" id="tabs">
+      <a href="#uebersicht" class="on">Übersicht</a><a href="#anfragen">Anfragen</a><a href="#abrechnungen">Abrechnungen</a>
+      <a href="#materialien">Materialien</a><a href="#vertrag">Vertrag</a><a href="#zahlung">Zahlung &amp; Kontakt</a>
+    </nav>
+
+    <section data-tab="uebersicht">
+      <div class="kpis" id="kpis"></div>
+      <div id="todo"></div>
+      <div class="panel"><h2>Neueste Anfragen</h2><div class="scroll" id="neueste"></div></div>
+    </section>
+
+    <section data-tab="anfragen" class="hidden">
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+          <h2 style="margin:0">Anfragen von Ted</h2>
+          <div><select id="filter" style="width:auto"><option value="offen">Nur offene</option><option value="alle">Alle</option><option value="gebucht">Gebucht</option></select></div>
+        </div>
+        <p class="muted" id="anfragen-hinweis" style="font-size:14px;margin:0 0 12px"></p>
+        <div class="scroll" id="anfragen-liste"></div>
+        <details style="margin-top:16px"><summary>Anfrage fehlt? Nachtragen</summary>
+          <p>Kam ein Kunde über Ted, ist aber nicht in der Liste (z. B. Rückruf über WhatsApp)? Hier nachtragen.</p>
+          <div class="grid3"><input type="text" id="n-name" placeholder="Name"><input type="date" id="n-datum"><input type="text" id="n-motiv" placeholder="Motiv"></div>
+          <p><button class="btn dark small" id="n-add">Nachtragen</button></p>
+        </details>
+      </div>
+    </section>
+
+    <section data-tab="abrechnungen" class="hidden">
+      <div class="panel"><h2>Abrechnungen</h2><div id="vorschau"></div><div class="scroll" id="abr-liste"></div></div>
+    </section>
+
+    <section data-tab="materialien" class="hidden">
+      <div class="panel"><h2>Materialien für dein Studio</h2>
+        <p class="muted">Mit deinem Studionamen und deiner Nummer. Öffnen → „Drucken / PDF“. Fensteraufkleber und Flyer schicken wir dir zum Go-live auch gedruckt.</p>
+        <div class="cards" id="mat" style="margin-top:14px"></div>
+      </div>
+      <div class="panel"><h2>Fragebogen</h2><p class="muted" id="fb-status"></p><a class="btn gold small" href="/onboarding.html">Fragebogen öffnen</a></div>
+    </section>
+
+    <section data-tab="vertrag" class="hidden">
+      <div class="panel"><h2>Dein Vertrag</h2><div id="vertrag-info"></div>
+        <p><a href="/vertrag.html" target="_blank">Vertrag</a> · <a href="/avv.html" target="_blank">Auftragsverarbeitungsvertrag</a></p></div>
+      <div class="panel" id="kuendigen-panel"></div>
+    </section>
+
+    <section data-tab="zahlung" class="hidden">
+      <div class="panel"><h2>Zahlungsmethode &amp; Rechnungen</h2>
+        <p class="muted">Zahlungsmethode ändern und alle Rechnungen herunterladen: sicher über Stripe.</p>
+        <button class="btn dark" id="stripe-portal">Zahlungen verwalten</button></div>
+      <div class="panel"><h2>Wohin sollen die Anfragen?</h2>
+        <div class="grid2"><div class="field"><label>E-Mail für Anfragen</label><input type="email" id="k-email"></div><div class="field"><label>WhatsApp-Nummer</label><input type="tel" id="k-wa"></div></div>
+        <button class="btn gold small" id="k-save">Speichern</button></div>
+    </section>
+  </div>
+</div></main>
+<script src="/js/common.js"></script>
+<script src="/js/portal.js"></script>
+</body></html>

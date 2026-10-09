@@ -21,10 +21,10 @@ export default handler(async (req, context) => {
   if (req.method === "GET") {
     const s = await getStudio(new URL(req.url).searchParams.get("id"));
     if (!s) return fail("Nicht gefunden", 404);
-    return json({
-      id: s.id, status: s.status, modell: s.modell, zahlart: s.zahlart, firma: s.firma, email: s.email,
-      inhaber: s.inhaber, strasse: s.strasse, plz: s.plz, ort: s.ort, telefon: s.telefon, studioTelefon: s.studioTelefon,
-    });
+    const kurz = { id: s.id, status: s.status, modell: s.modell, zahlart: s.zahlart, firma: s.firma };
+    // Vollständige Angaben nur zum Fortsetzen eines nicht abgeschlossenen Entwurfs
+    if (!["entwurf", "abgebrochen"].includes(s.status)) return json(kurz);
+    return json({ ...kurz, email: s.email, inhaber: s.inhaber, strasse: s.strasse, plz: s.plz, ort: s.ort, telefon: s.telefon, studioTelefon: s.studioTelefon, ustid: s.ustid });
   }
   if (req.method !== "POST") return fail("Methode nicht erlaubt", 405);
 

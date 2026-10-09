@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Studio-Login – Ted am Telefon</title><meta name="robots" content="noindex">
+<link rel="icon" href="/assets/logo.png"><link rel="stylesheet" href="/css/site.css">
+</head><body>
+<header class="nav"><div class="wrap"><a class="brand" href="/"><img src="/assets/logo.png" alt=""> Ted am Telefon</a></div></header>
+<main class="sec"><div class="wrap" style="max-width:480px">
+  <form id="f" class="form">
+    <h1 style="font-size:30px;margin-bottom:8px">Studio-Portal</h1>
+    <p class="muted" style="margin:0 0 20px">Kein Passwort nötig: Wir schicken dir einen Login-Link per E-Mail.</p>
+    <div id="alert"></div>
+    <div class="field"><label for="email">E-Mail-Adresse deines Studios</label><input type="email" id="email" required autocomplete="email"></div>
+    <button class="btn gold" style="width:100%" id="btn">Login-Link schicken</button>
+    <p class="muted" style="font-size:14px;margin:18px 0 0">Noch kein Kunde? <a href="/start.html">Jetzt starten</a></p>
+  </form>
+</div></main>
+<script src="/js/common.js"></script>
+<script>
+var a = document.getElementById("alert");
+if (new URLSearchParams(location.search).get("abgelaufen")) a.innerHTML = '<div class="alert err">Der Link ist abgelaufen oder ungültig. Fordere einfach einen neuen an.</div>';
+document.getElementById("f").addEventListener("submit", async function (e) {
+  e.preventDefault();
+  var b = document.getElementById("btn"); b.disabled = true;
+  try {
+    await Ted.api("/api/login", { body: { email: document.getElementById("email").value } });
+    a.innerHTML = '<div class="alert ok">Wenn es zu dieser E-Mail ein Studio gibt, ist der Link unterwegs. Schau auch im Spam-Ordner nach.</div>';
+  } catch (err) { a.innerHTML = '<div class="alert err">' + Ted.esc(err.message) + "</div>"; }
+  b.disabled = false;
+});
+</script>
+</body></html>

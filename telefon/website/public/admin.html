@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin – Ted am Telefon</title><meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="/assets/logo.png"><link rel="stylesheet" href="/css/site.css">
+<style>.tbl tr[data-id]{cursor:pointer}.tbl tr[data-id]:hover td{background:#faf8f3}pre{white-space:pre-wrap;font-size:12px;background:#f4f2ee;border-radius:10px;padding:10px;max-height:340px;overflow:auto}</style>
+</head><body>
+<header class="nav"><div class="wrap"><a class="brand" href="/admin.html"><img src="/assets/logo.png" alt=""> Ted · Admin</a><nav class="links"><a href="#" id="out">Abmelden</a></nav></div></header>
+<main class="sec tight"><div class="wrap">
+  <div id="alert"></div>
+  <form id="login" class="form hidden" style="max-width:420px"><h2 style="font-size:24px;margin-bottom:12px">Admin-Login</h2>
+    <div class="field"><label>Admin-Token (Netlify-Variable ADMIN_TOKEN)</label><input type="password" id="token"></div><button class="btn gold">Anmelden</button></form>
+
+  <div id="app" class="hidden">
+    <div class="kpis" id="kpis"></div>
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center"><h2 style="margin:0">Studios</h2>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <input type="month" id="monat" style="width:auto">
+          <button class="btn ghost small" id="abr-test">Abrechnung testen</button>
+          <button class="btn dark small" id="abr-los">Abrechnung erstellen</button>
+          <button class="btn ghost small" id="jobs">Tägliche Jobs</button>
+        </div></div>
+      <div class="scroll" style="margin-top:14px" id="liste"></div>
+    </div>
+    <div class="panel hidden" id="detail"></div>
+    <div class="panel"><h2>Letzte E-Mails</h2><div class="scroll" id="mails"></div></div>
+    <div class="panel"><h2>Ergebnis</h2><pre id="out-json">–</pre></div>
+  </div>
+</div></main>
+<script src="/js/common.js"></script>
+<script>
+(function () {
+  var $ = function (i) { return document.getElementById(i); }, e = Ted.esc;
+  var token = sessionStorage.getItem("ted-admin") || "";
+  function api(p, o) { o = o || {}; o.headers = { Authorization: "Bearer " + token }; return Ted.api("/api/admin/" + p, o); }
+  function msg(t, ty) { $("alert").innerHTML = t ? '<div class="alert ' + (ty || "ok") + '">' + e(t) + "</div>" : ""; }
+  function zeig(x) { $("out-json").textContent = JSON.stringify(x, null, 2); }
+  var vm = new Date(); vm.setMonth(vm.getMonth() - 1); $("monat").value = vm.toISOString().slice(0, 7);
+
+  async function start() {
+    try { var list = await api("studios"); } catch (err) { if (err.status === 401) { $("login").classList.remove("hidden"); $("app").classList.add("hidden"); return; } msg(err.message, "err"); return; }
+    $("login").classList.add("hidden"); $("app").classList.remove("hidden");
+    var live = list.filter(function (s) { return s.status === "live"; });
+    $("kpis").innerHTML = [[list.length, "Studios gesamt"], [live.length, "live"], [list.filter(function (s) { return s.modell === "provision"; }).length, "Provision"], [list.filter(function (s) { return s.modell === "kauf"; }).length, "Kauf"]]
+      .map(function (k) { return '<div class="kpi"><b>' + k[0] + "</b><span>" + k[1] + "</span></div>"; }).join("");
+    $("liste").innerHTML = '<table class="tbl"><tr><th>Studio</th><th>Modell</th><th>Status</th><th>Seit</th><th>Anfragen</th><th>offen</th><th>Min. (Monat)</th><th>Fragebogen</th><th>Ted-Nr.</th></tr>' +
+      list.map(function (s) {
+        return '<tr data-id="' + e(s.id) + '"><td><b>' + e(s.firma) + "</b><br><small>" + e(s.ort || "") + " · " + e(s.email) + "</small></td><td>" + e(s.modell) + '</td><td><span class="tag ' + e(s.status) + '">' + e(s.statusText) + "</span></td><td>" + Ted.datum(s.createdAt) +
+          "</td><td>" + s.anfragen + " (" + s.gebucht + " Termine)</td><td>" + s.offen + "</td><td>" + Math.ceil(s.minuten) + "</td><td>" + (s.fragebogen ? "✓" : "–") + "</td><td>" + e(s.tedNummer) + "</td></tr>";
+      }).join("") + "</table>";
+    var mails = await api("mails");
+    $("mails").innerHTML = '<table class="tbl"><tr><th>Zeit</th><th>An</th><th>Betreff</th></tr>' + mails.map(function (m) { return "<tr><td>" + new Date(m.at).toLocaleString("de-DE") + "</td><td>" + e(m.to) + "</td><td>" + e(m.subject) + "</td></tr>"; }).join("") + "</table>";
+    var h = location.hash.slice(1); if (h) detail(h);
+  }
+
+  async function detail(id) {
+    var d = await api("studio/" + id), s = d.studio, p = $("detail");
+    location.hash = id;
+    p.classList.remove("hidden");
+    p.innerHTML = "<h2>" + e(s.firma) + "</h2>" +
+      '<div class="grid2"><div><table class="tbl">' + [["Inhaber", s.inhaber], ["E-Mail", s.email], ["Handy", s.telefon], ["Studio-Tel.", s.studioTelefon], ["Adresse", s.strasse + ", " + s.plz + " " + s.ort], ["Modell", s.modell + (s.preisNetto ? " · " + Ted.euro(s.preisNetto) : "")], ["Zahlart", s.zahlart], ["Vertrag", (s.vertrag || {}).version + " · " + Ted.datum((s.vertrag || {}).akzeptiertAm) + " · " + e((s.vertrag || {}).name) + " · IP " + e((s.vertrag || {}).ip)], ["Stripe", (s.stripe || {}).customerId], ["Live seit", Ted.datum(s.goLiveAt)], ["Kündigung", s.kuendigung ? Ted.datum(s.kuendigung.zum) + (s.kuendigung.garantie ? " (GARANTIE)" : "") + " · " + e(s.kuendigung.grund) : "–"]]
+        .map(function (r) { return "<tr><th>" + r[0] + "</th><td>" + e(r[1] || "–") + "</td></tr>"; }).join("") + "</table></div><div>" +
+      '<div class="field"><label>Ted-Nummer</label><input type="text" id="d-nr" value="' + e(s.tedNummer || "") + '"></div>' +
+      '<div class="field"><label>ElevenLabs Agent-ID</label><input type="text" id="d-agent" value="' + e(s.agentId || "") + '"></div>' +
+      '<div class="field"><label>Notiz</label><textarea id="d-notiz">' + e(s.notiz || "") + "</textarea></div>" +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn dark small" id="d-save">Speichern</button><button class="btn gold small" id="d-live">Live schalten + E-Mail</button>' +
+      '<button class="btn ghost small" id="d-link">Login-Link</button><button class="btn ghost small" id="d-test">Testanfrage</button>' +
+      (s.modell === "kauf" && s.stripe && s.stripe.paymentIntentId ? '<button class="btn ghost small" id="d-refund" style="color:var(--red)">Garantie erstatten</button>' : "") + "</div></div></div>" +
+      "<h2 style='margin-top:20px;font-size:18px'>Fragebogen</h2><pre>" + e(JSON.stringify(s.fragebogen || {}, null, 2)) + "</pre>" +
+      "<h2 style='font-size:18px'>Anfragen (" + d.anfragen.length + ")</h2><pre>" + e(d.anfragen.map(function (a) { return Ted.datum(a.createdAt) + " · " + a.status + " · " + (a.name || "") + " · " + (a.motiv || "") + (a.preisNettoCent ? " · " + Ted.euro(a.preisNettoCent, true) + " am " + a.terminDatum : "") + (a.abgerechnet ? " [abgerechnet " + a.abgerechnet + "]" : ""); }).join("\n")) + "</pre>" +
+      "<h2 style='font-size:18px'>Abrechnungen</h2><pre>" + e(JSON.stringify(d.abrechnungen.map(function (a) { return { monat: a.monat, provision: a.summeNetto, mehrminuten: (a.mehrminuten || {}).cent, status: a.status, rechnung: a.rechnungNr }; }), null, 2)) + "</pre>";
+    $("d-save").onclick = async function () { zeig(await api("studio/" + id, { method: "PATCH", body: { tedNummer: $("d-nr").value, agentId: $("d-agent").value, notiz: $("d-notiz").value } })); msg("Gespeichert."); };
+    $("d-live").onclick = async function () { if (!confirm("Live schalten und Go-live-E-Mail senden?")) return; zeig(await api("studio/" + id + "/live", { body: { tedNummer: $("d-nr").value } })); msg("Live geschaltet."); start(); };
+    $("d-link").onclick = async function () { var r = await api("studio/" + id + "/login-link", { body: {} }); zeig(r); };
+    $("d-test").onclick = async function () { zeig(await api("studio/" + id + "/testanruf", { body: {} })); msg("Testanfrage angelegt."); };
+    var rf = $("d-refund"); if (rf) rf.onclick = async function () { if (!confirm("Kaufpreis wirklich vollständig erstatten?")) return; try { zeig(await api("studio/" + id + "/erstattung", { body: {} })); msg("Erstattet."); start(); } catch (err) { msg(err.message, "err"); } };
+    p.scrollIntoView({ behavior: "smooth" });
+  }
+
+  document.addEventListener("click", function (ev) { var tr = ev.target.closest("tr[data-id]"); if (tr) detail(tr.dataset.id); });
+  $("abr-test").onclick = async function () { zeig(await api("abrechnung", { body: { monat: $("monat").value, dryRun: true } })); };
+  $("abr-los").onclick = async function () { if (!confirm("Abrechnung für " + $("monat").value + " wirklich erstellen? Rechnungen werden erzeugt und eingezogen.")) return; try { zeig(await api("abrechnung", { body: { monat: $("monat").value, dryRun: false } })); msg("Abrechnung erstellt."); } catch (err) { msg(err.message, "err"); } };
+  $("jobs").onclick = async function () { zeig(await api("jobs", { body: {} })); };
+  $("login").addEventListener("submit", function (ev) { ev.preventDefault(); token = $("token").value; sessionStorage.setItem("ted-admin", token); start(); });
+  $("out").onclick = function (ev) { ev.preventDefault(); sessionStorage.removeItem("ted-admin"); location.reload(); };
+  start();
+})();
+</script>
+</body></html>

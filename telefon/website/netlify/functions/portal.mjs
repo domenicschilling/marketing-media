@@ -49,7 +49,7 @@ export default handler(async (req) => {
       materialLinks: ["20-fensteraufkleber", "21-flyer-a6", "22-thekenaufsteller-a5", "24-tuerschild-a4", "23-datenschutzhinweis-anrufer"].map((n) => ({
         name: n, url: `${CFG.materialsUrl}${n}.html?studio=${encodeURIComponent(s.firma)}&tel=${encodeURIComponent(s.studioTelefon || "")}&adresse=${encodeURIComponent(`${s.strasse}, ${s.plz} ${s.ort}`)}&email=${encodeURIComponent(s.email)}`,
       })),
-      config: { provisionProzent: CFG.provisionProzent, fairUseMinuten: CFG.fairUseMinuten, meldeTag: CFG.meldeTag, garantieTage: CFG.garantieTage, zuordnungMonate: CFG.zuordnungMonate },
+      config: { provisionProzent: CFG.provisionProzent, fairUseMinuten: CFG.fairUseMinuten, meldeTag: CFG.meldeTag, garantieTage: CFG.garantieTage, zuordnungMonate: CFG.zuordnungMonate, nachlaufMonate: CFG.nachlaufMonate },
     });
   }
 
@@ -92,6 +92,7 @@ export default handler(async (req) => {
       const daten = {};
       for (const [k, v] of Object.entries(b || {})) if (typeof v === "string" || typeof v === "boolean") daten[clean(k, 60)] = typeof v === "string" ? clean(v, 4000) : v;
       s.fragebogen = { ...daten, updatedAt: now() };
+      if (daten.dringend_nummer) s.dringendNummer = daten.dringend_nummer;
       await saveStudio(s);
       if (erstes) await notify(s, mails.fragebogen(s));
       await notifyAdmin(erstes ? "Fragebogen eingegangen" : "Fragebogen geändert", s, daten);

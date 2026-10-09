@@ -40,8 +40,8 @@ export async function provisionFuerMonat(studio, monat) {
     if (a.status !== "gebucht" || !a.terminDatum || !(a.preisNettoCent > 0)) continue;
     if (a.terminDatum.slice(0, 7) !== monat) continue;
     if (a.abgerechnet && a.abgerechnet !== monat) continue;
-    // Zuordnung: Termin muss innerhalb von X Monaten nach der Anfrage gebucht/stattgefunden haben
-    if (a.terminDatum > addMonths(a.createdAt, CFG.zuordnungMonate)) continue;
+    // Zuordnung: Termin nach der Anfrage und innerhalb von X Monaten danach
+    if (a.terminDatum < a.createdAt.slice(0, 10) || a.terminDatum > addMonths(a.createdAt, CFG.zuordnungMonate).slice(0, 10)) continue;
     // Nachlauf: nach Vertragsende nur Anfragen aus der Laufzeit, Termin höchstens X Monate nach Ende
     if (studio.vertragsende && (a.createdAt > studio.vertragsende || a.terminDatum > addMonths(studio.vertragsende, CFG.nachlaufMonate))) continue;
     positionen.push({
@@ -119,7 +119,7 @@ export async function monatsabrechnung(monat, { dryRun = false } = {}) {
     await log("abrechnung", { studioId: s.id, monat, gesamtNetto: ab.gesamtNetto });
     ergebnis.push({ studio: s.firma, monat, provisionNetto: ab.summeNetto, mehrminutenNetto: mm.cent, termine: ab.positionen.length, rechnung: ab.rechnungNr });
   }
-  if (!dryRun && ergebnis.length) await sendMail({
+  if (!dryRun && ergebnis.some((e) => e.status !== "schon abgerechnet")) await sendMail({
     to: CFG.adminEmail, subject: `[Ted] Monatsabrechnung ${monat} erstellt`,
     html: `<pre>${JSON.stringify(ergebnis, null, 2)}</pre>`, text: JSON.stringify(ergebnis, null, 2),
   });
