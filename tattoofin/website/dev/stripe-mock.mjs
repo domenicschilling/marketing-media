@@ -17,7 +17,9 @@ function nest(params) {
 }
 
 export function startStripeMock({ port = 12111, webhookUrl, webhookSecret, log = () => {} }) {
-  const db = { customers: {}, sessions: {}, invoices: {}, items: [], setupIntents: {}, refunds: [], taxRates: {}, accounts: {}, paymentIntents: {}, feeRefunds: [] };
+  const db = { customers: {}, sessions: {}, invoices: {}, items: [], setupIntents: {}, refunds: [], taxRates: {}, accounts: {}, paymentIntents: {}, feeRefunds: [], transfers: [], reversals: [] };
+  // Stripe-Gebühren im Nachbau: Karte EWR 1,5 % + 0,25 €, Klarna 2,99 % + 0,35 €
+  const gebuehr = (betrag, pm) => (pm === "klarna" ? Math.round(betrag * 0.0299) + 35 : Math.round(betrag * 0.015) + 25);
   const rid = (p) => p + "_" + crypto.randomBytes(6).toString("hex");
   let invoiceNr = 1000;
   const idem = {};
@@ -55,15 +57,19 @@ export function startStripeMock({ port = 12111, webhookUrl, webhookSecret, log =
         if (req.method === "GET") return send(200, `<!doctype html><meta charset=utf-8><title>Stripe (Test)</title><body style="font:16px system-ui;max-width:420px;margin:60px auto">
           <h2>Stripe Testkasse</h2><p>Modus: <b>${s.mode}</b>${s.amount_total ? " · Betrag: " + (s.amount_total / 100).toFixed(2) + " €" : ""}</p>
           <form method=post><input type=hidden name=pm value=card><button id=pay style="padding:12px 20px;font-size:16px">${s.mode === "setup" ? "Zahlungsmethode speichern" : "Mit Karte bezahlen"}</button></form>
-          ${s.account ? '<form method=post><input type=hidden name=pm value=klarna><button id=pay-klarna style="padding:12px 20px;font-size:16px;margin-top:8px">Mit Klarna (Raten) bezahlen</button></form>' : ""}
+          ${s.account || s.payment_intent_data?.transfer_data ? '<form method=post><input type=hidden name=pm value=klarna><button id=pay-klarna style="padding:12px 20px;font-size:16px;margin-top:8px">Mit Klarna (Raten) bezahlen</button></form>' : ""}
           <p><a id=cancel href="${s.cancel_url}">Abbrechen</a></p>`, "text/html");
         s.status = "complete";
-        if (s.mode === "payment" && s.account) {
+        const ziel = s.payment_intent_data?.transfer_data?.destination;
+        if (s.mode === "payment" && (s.account || ziel)) {
           const pmType = p.pm || "card";
-          const pi = { id: rid("pi"), amount: s.amount_total, payment_method_types: [pmType], latest_charge: { id: rid("ch"), payment_method_details: { type: pmType }, application_fee: s.payment_intent_data?.application_fee_amount ? rid("fee") : null, amount: s.amount_total } };
-          db.paymentIntents[pi.id] = { ...pi, account: s.account };
+          const pi = { id: rid("pi"), amount: s.amount_total, payment_method_types: [pmType], latest_charge: {
+            id: rid("ch"), payment_method_details: { type: pmType }, application_fee: s.payment_intent_data?.application_fee_amount ? rid("fee") : null, amount: s.amount_total,
+            transfer: ziel ? rid("tr") : null, balance_transaction: { id: rid("txn"), fee: gebuehr(s.amount_total, pmType) },
+          } };
+          db.paymentIntents[pi.id] = { ...pi, account: s.account, destination: ziel || null, refunded: 0 };
           s.payment_intent = pi.id; s.payment_status = "paid";
-          await webhook("checkout.session.completed", s, s.account);
+          await webhook("checkout.session.completed", s, s.account || undefined);
           res.writeHead(303, { Location: s.success_url.replace("{CHECKOUT_SESSION_ID}", s.id) });
           return res.end();
         }
@@ -98,15 +104,19 @@ export function startStripeMock({ port = 12111, webhookUrl, webhookSecret, log =
         if (parts[1] === "dispute") {
           const pi = db.paymentIntents[parts[2]];
           const d = { id: rid("dp"), object: "dispute", payment_intent: pi.id, charge: pi.latest_charge.id, amount: pi.amount, reason: "product_not_received", status: "needs_response", evidence_details: { due_by: Math.floor(Date.now() / 1000) + 7 * 86400 } };
-          await webhook("charge.dispute.created", d, pi.account);
+          const acc = pi.account || undefined;
+          await webhook("charge.dispute.created", d, acc);
+          if (!acc) await webhook("charge.dispute.funds_withdrawn", d, acc);
           const status = url.searchParams.get("status") || "lost";
-          return send(200, { status: await webhook("charge.dispute.closed", { ...d, status }, pi.account) });
+          if (!acc && status === "won") await webhook("charge.dispute.funds_reinstated", { ...d, status }, acc);
+          return send(200, { status: await webhook("charge.dispute.closed", { ...d, status }, acc) });
         }
         if (parts[1] === "refund") {
           const pi = db.paymentIntents[parts[2]];
           const amount = Number(url.searchParams.get("amount") || pi.amount);
+          pi.refunded = amount;
           const ch = { id: pi.latest_charge.id, object: "charge", payment_intent: pi.id, amount: pi.amount, amount_refunded: amount, application_fee: pi.latest_charge.application_fee };
-          return send(200, { status: await webhook("charge.refunded", ch, pi.account) });
+          return send(200, { status: await webhook("charge.refunded", ch, pi.account || undefined) });
         }
       }
 
@@ -117,10 +127,13 @@ export function startStripeMock({ port = 12111, webhookUrl, webhookSecret, log =
       const acctHdr = req.headers["stripe-account"];
       if (res1 === "accounts") {
         if (req.method === "POST" && !id1) { const a = { id: rid("acct"), object: "account", ...p, charges_enabled: false, payouts_enabled: false, details_submitted: false }; db.accounts[a.id] = a; return done(a); }
+        if (req.method === "POST" && act === "login_links") return done({ object: "login_link", url: `http://localhost:${port}/express/${id1}` });
         return send(200, db.accounts[id1]);
       }
       if (res1 === "account_links") return done({ url: `http://localhost:${port}/onboard/${p.account}?return=${encodeURIComponent(p.return_url)}` });
       if (res1 === "payment_intents") { const pi = db.paymentIntents[id1]; return pi ? send(200, pi) : send(404, { error: { message: "pi fehlt" } }); }
+      if (res1 === "transfers" && act === "reversals") { const r = { id: rid("trr"), transfer: id1, amount: Number(p.amount), metadata: p.metadata || {} }; db.reversals.push(r); return done(r); }
+      if (res1 === "transfers" && !id1) { const t = { id: rid("tr"), ...p, amount: Number(p.amount) }; db.transfers.push(t); return done(t); }
       if (res1 === "application_fees" && act === "refunds") { const r = { id: rid("fr"), fee: id1, amount: Number(p.amount) }; db.feeRefunds.push(r); return done(r); }
       if (res1 === "customers") {
         if (req.method === "POST" && !id1) { const c = { id: rid("cus"), object: "customer", ...p }; db.customers[c.id] = c; return done(c); }
@@ -162,6 +175,17 @@ export function startStripeMock({ port = 12111, webhookUrl, webhookSecret, log =
         }
         if (act === "send") return done(inv);
         if (act === "pay") { inv.status = "paid"; inv.paid_out_of_band = p.paid_out_of_band === "true"; return done(inv); }
+      }
+      if (res1 === "refunds" && db.paymentIntents[p.payment_intent]) {
+        const pi = db.paymentIntents[p.payment_intent];
+        const amount = Number(p.amount || pi.amount - pi.refunded);
+        if (pi.refunded + amount > pi.amount) return send(400, { error: { message: "Betrag zu hoch" } });
+        pi.refunded += amount;
+        const r = { id: rid("re"), payment_intent: pi.id, amount, reverse_transfer: p.reverse_transfer === "true", refund_application_fee: p.refund_application_fee === "true", status: "succeeded" };
+        db.refunds.push(r);
+        const ch = { id: pi.latest_charge.id, object: "charge", payment_intent: pi.id, amount: pi.amount, amount_refunded: pi.refunded, application_fee: pi.latest_charge.application_fee };
+        setTimeout(() => webhook("charge.refunded", ch, pi.account || undefined), 100);
+        return done(r);
       }
       if (res1 === "refunds") { const r = { id: rid("re"), payment_intent: p.payment_intent, amount: 178381, status: "succeeded" }; db.refunds.push(r); return done(r); }
       if (res1 === "billing_portal") return done({ id: rid("bps"), url: `http://localhost:${port}/invoice` });

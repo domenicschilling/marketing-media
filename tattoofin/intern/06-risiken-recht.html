@@ -18,7 +18,8 @@
   <li><b>Restrisiko</b> sind Rückbuchungen (Chargebacks, Klarna-Reklamationen) und Widerrufe. Ein Datum, ab dem eine Rückbuchung <b>garantiert</b> ausgeschlossen ist, gibt es nicht. Nach dem gestochenen Tattoo mit guter Dokumentation gewinnt das Studio aber in der Regel.</li>
   <li><b>SEPA-Lastschrift ist raus</b> aus dem Tattoofin-Checkout: Sie kann 8 Wochen lang ohne Grund zurückgeholt werden.</li>
   <li>Ab <b>20.11.2026</b> fallen alle Ratenkäufe unter das Verbraucherkreditrecht. Die Hauptpflichten trägt Klarna. Für Studios und uns ändert sich vor allem die <b>Werbung</b>: Pflicht-Warnhinweis „Achtung! Kreditaufnahme kostet Geld.“</li>
-  <li>Provision: <b>10 % vom Zahlbetrag</b> (zzgl. USt.). Bei Erstattungen und verlorenen Rückbuchungen wird sie automatisch zurückgebucht.</li>
+  <li>Provision: <b>10 % vom Zahlbetrag, alles inklusive</b>. Im Provisionsmodell kassiert Tattoofin als Plattform über Stripe, das Studio bekommt 90 %. Dadurch landen Rückbuchungen <b>zuerst bei uns</b>. Wir holen sie automatisch beim Studio zurück (Abschnitt 3).</li>
+  <li><b>Anzahlungen</b> sind das größte Rückbuchungsrisiko (Leistung noch nicht erbracht). Deshalb bestätigt der Kunde vor jeder Anzahlung die Anzahlungsbedingungen des Studios. Das ist gespeichert und steht im Stripe-Checkout.</li>
 </ul></div>
 
 <h2>1. Wie es überhaupt zu Rückbuchungen kommt</h2>
@@ -46,16 +47,36 @@
     <li><b>Unzufriedenheit</b> mit dem Ergebnis: Studio muss zeigen, dass das Vereinbarte geliefert wurde</li>
   </ul></div>
 </div>
-<p><b>Empfehlung an Studios:</b> Große Beträge über Tattoofin möglichst <b>am Tag der Sitzung oder danach</b> abrechnen, Anzahlungen klein halten und die Anzahlungsregeln (Verfall bei No-Show, Verrechnung) schriftlich bestätigen lassen.</p>
+<p><b>Empfehlung an Studios:</b> Große Beträge über Tattoofin möglichst <b>am Tag der Sitzung oder danach</b> abrechnen, Anzahlungen klein halten (typisch 50–200 € bzw. 10–20 %) und immer als „Anzahlung“ senden, damit die Anzahlungsbedingungen bestätigt werden.</p>
 
-<h2>3. Widerrufsrecht beim Tattoo</h2>
+<h2>3. Provisionsmodell: Tattoofin kassiert. Was heißt das für das Risiko?</h2>
+<p>Im Provisionsmodell läuft jede Kundenzahlung als <b>Destination Charge</b> über unser Stripe-Plattformkonto: Stripe zieht beim Kunden ein, überträgt sofort 90 % auf das Express-Konto des Studios und zahlt automatisch aus. Das Studio steht als Händler auf dem Beleg (<code>on_behalf_of</code>). Kein Geld läuft über ein DSX-Bankkonto.</p>
+<table>
+  <tr><th style="width:24%">Fall</th><th>Was technisch passiert</th><th style="width:30%">Wer trägt es am Ende</th></tr>
+  <tr><td>Erstattung (Studio klickt „Erstatten“ im Portal)</td><td>Refund mit <code>reverse_transfer</code>: der Betrag wird anteilig vom Studio-Konto zurückgeholt. Provision geht anteilig zurück, abzüglich Stripe-Gebühr + USt. (die gibt Stripe nicht zurück).</td><td>Studio: Erstattungsbetrag. Wir: nichts, Stripe-Gebühr ist gedeckt.</td></tr>
+  <tr><td>Rückbuchung eröffnet</td><td>Stripe bucht Betrag + 20 € bei <b>uns</b> ab. Automatisch: Rückholung beim Studio von Betrag − anteilige Provision + 20 € (Transfer-Reversal). E-Mail mit Belege-Checkliste an das Studio, Belege reichen <b>wir</b> bei Stripe ein.</td><td>vorläufig das Studio</td></tr>
+  <tr><td>Rückbuchung gewonnen</td><td>Stripe gibt uns den Betrag zurück. Automatisch: Rücküberweisung an das Studio.</td><td>niemand (20 € Gebühr ggf. bei uns)</td></tr>
+  <tr><td>Rückbuchung verloren</td><td>Status „rückgebucht“, keine Provision für diese Zahlung</td><td>Studio: Zahlbetrag − Provision + 20 €. Wir: die Stripe-Gebühr der Zahlung</td></tr>
+  <tr><td>Studio-Konto im Minus</td><td>Rückholung reicht nicht (Studio hat schon alles ausgezahlt). Stripe verrechnet mit künftigen Auszahlungen; bei Express-Konten haftet am Ende die Plattform.</td><td><b>wir</b>, mit Rückgriff auf das Studio (Vertrag § 3 Abs. 7)</td></tr>
+  <tr><td>Erstattung direkt im Stripe-Dashboard von DSX ohne „Transfer zurückbuchen“</td><td>Geld geht von unserem Guthaben an den Kunden, nichts wird beim Studio zurückgeholt</td><td><b>wir</b>. Deshalb Erstattungen nur über das Portal.</td></tr>
+</table>
+<div class="box gold"><h3>Unsere Schutzmaßnahmen</h3><ul style="margin:0">
+  <li>Anzahlungsbedingungen mit Pflicht-Häkchen auf der Zahlseite, gespeichert mit Text und Zeitpunkt, zusätzlich im Stripe-Checkout angezeigt</li>
+  <li>Automatische Rückholung beim Studio sofort bei Eröffnung (Webhook <code>charge.dispute.funds_withdrawn</code>), Rücküberweisung bei Gewinn (<code>charge.dispute.funds_reinstated</code>)</li>
+  <li>Optional Auszahlungsverzögerung <code>AUSZAHLUNG_TAGE</code> (z. B. 7 Tage) für neue oder auffällige Studios</li>
+  <li>Vertrag: Studio trägt das Risiko aus dem Kundenverhältnis, negativer Saldo ist auszugleichen, Belegpflicht 18 Monate (§ 3 Abs. 6–7, § 4)</li>
+  <li>Admin-Meldung, wenn eine Rückholung scheitert oder eine Erstattung/Rückbuchung nach der Monatsabrechnung kommt (dann Gutschrift erstellen)</li>
+</ul></div>
+<p><b>Grobe Größenordnung:</b> Bei einer Rückbuchungsquote von 0,5 % und 7.500 € Volumen je Studio und Monat sind das rund 37,50 € Volumen im Monat, bei rund 270 Zahlungen im Jahr also etwa 1 bis 2 Fälle je Studio und Jahr. Der Schaden für uns entsteht nur, wenn das Studio nicht zahlen kann oder will.</p>
+
+<h2>4. Widerrufsrecht beim Tattoo</h2>
 <ul>
   <li><b>Vertrag im Studio geschlossen</b> (Beratung vor Ort): kein gesetzliches 14-Tage-Widerrufsrecht für den Tattoo-Vertrag.</li>
   <li><b>Vertrag nur per WhatsApp, Telefon oder online</b> (Fernabsatz): grundsätzlich 14 Tage Widerrufsrecht. Es erlischt, wenn das Tattoo vollständig gestochen ist und der Kunde vorher ausdrücklich zugestimmt hat, dass vor Ablauf der Frist begonnen wird, und weiß, dass er sein Widerrufsrecht dadurch verliert (§ 356 Abs. 4 BGB). Bei mehreren Sitzungen ist das komplizierter.</li>
   <li><b>Ratenkauf über Klarna:</b> Der Kreditvertrag mit Klarna hat ein eigenes 14-Tage-Widerrufsrecht. Bei verbundenen Verträgen (§ 358 BGB) kann ein Widerruf des Kredits auch den Tattoo-Vertrag berühren. Für bereits gestochene Arbeit schuldet der Kunde dann in der Regel Wertersatz. <b>Diesen Punkt bitte anwaltlich prüfen lassen</b> und Studios eine Formulierung für die Einverständniserklärung mitgeben.</li>
 </ul>
 
-<h2>4. Neue EU-Verbraucherkreditrichtlinie ab 20.11.2026</h2>
+<h2>5. Neue EU-Verbraucherkreditrichtlinie ab 20.11.2026</h2>
 <p>Die Richtlinie (EU) 2023/2225 wurde in Deutschland umgesetzt (Bundestag 17.04.2026, verkündet im Mai 2026) und gilt ab <b>20.11.2026</b>.</p>
 <table>
   <tr><th style="width:30%">Was sich ändert</th><th>Folge für Klarna (Kreditgeber)</th><th style="width:34%">Folge für Studios &amp; Tattoofin</th></tr>
@@ -67,22 +88,25 @@
 </table>
 <p class="small">Quellen: <a href="https://www.bmjv.de/SharedDocs/Gesetzgebungsverfahren/DE/2025_VerbraucherkreditRL.html">BMJV Gesetzgebungsverfahren</a>, <a href="https://www.yagemi.de/blog/recht-compliance/verbraucherkreditrichtlinie-ccd2-checkout/">yagemi: CCD2 im Checkout</a>, <a href="https://www.splendid-internet.de/blog/neue-regeln-fuer-bnpl-ratenzahlung-und-rechnungskauf-ab-20-november-2026/">Splendid: BNPL ab 20.11.2026</a>, <a href="https://www.sage.com/de-de/blog/buy-now-pay-later-welche-regeln-gelten-ab-2026-fuer-ratenzahlungen-beim-onlineshopping/">Sage</a>. Abgerufen 10/2026. Die Details (z. B. Wortlaut des Warnhinweises) vor dem Druck am Gesetzestext prüfen.</p>
 
-<h2>5. Was in Tattoofin bereits umgesetzt ist</h2>
+<h2>6. Was in Tattoofin bereits umgesetzt ist</h2>
 <ul class="check">
   <li>Checkout nur mit Karte (inkl. Apple/Google Pay) und Klarna, <b>ohne SEPA-Lastschrift</b> (Einstellung <code>ZAHLARTEN</code>)</li>
-  <li>Bei Rückbuchung: E-Mail an das Studio mit Belege-Checkliste und Frist, Meldung an uns</li>
-  <li>Verlorene Rückbuchung: <b>Provision wird automatisch komplett zurückgebucht</b>; Erstattung: anteilig</li>
+  <li>Bei Rückbuchung: E-Mail an das Studio mit Belege-Checkliste und Frist, Meldung an uns; Provisionsmodell: automatische Rückholung beim Studio, Rücküberweisung bei Gewinn, E-Mail bei Entscheidung</li>
+  <li>Verlorene Rückbuchung: keine Provision für diese Zahlung; Erstattung über das Portal: Provision anteilig zurück, abzüglich Stripe-Gebühr + USt.</li>
+  <li>Anzahlungen nur mit bestätigten Anzahlungsbedingungen (Zahlungslink und Zahlseite)</li>
   <li>Monatsabrechnung rechnet Erstattungen und Rückbuchungen heraus</li>
   <li>Warnhinweis „Achtung! Kreditaufnahme kostet Geld.“ auf Fensteraufkleber, Flyer, Aufsteller, Kundeninfo, Social-Kit, Bezahlseiten und Kundentexten</li>
-  <li>Provision 10 % vom Zahlbetrag zzgl. USt. (bei 1.500 € also 150 € + 28,50 € USt.)</li>
+  <li>Provision 10 % vom Zahlbetrag inkl. USt. und Zahlungsgebühren (bei 1.500 € also 150 €, davon 126,05 € netto; das Studio bekommt 1.350 €)</li>
 </ul>
 
-<h2>6. Noch zu klären (Anwalt)</h2>
+<h2>7. Noch zu klären (Anwalt)</h2>
 <ul class="check">
   <li>Wortlaut des Warnhinweises und ob „Ratenzahlung möglich“ ohne Zahlen bereits Kreditwerbung ist</li>
   <li>Verbundene Verträge (§ 358 BGB): Muster-Klausel für die Einverständniserklärung der Studios</li>
   <li>Ausnahme für Studios von der Vermittler-Erlaubnis (§ 34c/§ 34k GewO) und Rolle von Tattoofin</li>
-  <li>Klarna-Händlerbedingungen für Plattformen (Connect) und Tattoo-Studios schriftlich bestätigen lassen</li>
+  <li>Klarna-Händlerbedingungen für Plattformen (Connect, <code>klarna_payments</code> auf Express-Konten mit <code>on_behalf_of</code>) und Tattoo-Studios schriftlich bestätigen lassen</li>
+  <li><b>ZAG:</b> Bestätigen, dass das Provisionsmodell (Destination Charges über Stripe Connect, keine eigenen Konten) für DSX keine BaFin-Erlaubnis erfordert. Stripe vorab fragen, ob Tattoo-Studios als Express-Konten akzeptiert werden.</li>
+  <li>Wirksamkeit der Rückhol- und Verrechnungsklauseln (§ 3 Abs. 6–7) und der Anzahlungsbedingungen gegenüber Verbrauchern (Verfall bei No-Show: angemessene Höhe, § 309 Nr. 5 BGB analog)</li>
 </ul>
 
 <p class="footer-note"><span data-cfg="marke"></span> · <span data-cfg="firma"></span> · Interne Unterlage, keine Rechtsberatung.</p>

@@ -57,13 +57,13 @@ function verifyOne(payload, header, secret, toleranceSec = 300) {
   return JSON.parse(payload);
 }
 
-// Steuersatz 19 % (exklusiv) einmal anlegen und merken
-export async function taxRateId() {
-  const key = "meta/stripe-tax-rate-" + CFG.ustProzent;
+// Steuersatz 19 % einmal anlegen und merken. inklusive=true für Beträge, die die USt. schon enthalten (Provision).
+export async function taxRateId({ inklusive: inclusive = false } = {}) {
+  const key = "meta/stripe-tax-rate-" + CFG.ustProzent + (inclusive ? "-inkl" : "");
   const cached = await store.get(key);
   if (cached?.id) return cached.id;
   const tr = await stripe("POST", "/tax_rates", {
-    display_name: "USt.", percentage: CFG.ustProzent, inclusive: false, country: "DE", jurisdiction: "DE", description: "Umsatzsteuer Deutschland",
+    display_name: "USt.", percentage: CFG.ustProzent, inclusive, country: "DE", jurisdiction: "DE", description: "Umsatzsteuer Deutschland",
   });
   await store.set(key, { id: tr.id });
   return tr.id;
@@ -83,16 +83,32 @@ export async function ensureCustomer(studio) {
   return c;
 }
 
-// Eigenes Stripe-Konto des Studios (Connect, Typ „standard“: das Konto gehört dem Studio)
+// Stripe-Konto des Studios über Connect.
+//  Kauf (Modell A):      Typ „standard“. Eigenes, vollwertiges Konto des Studios, Zahlungen laufen direkt dort (Direct Charges).
+//  Provision (Modell B): Typ „express“. Tattoofin kassiert als Plattform (Destination Charges), Stripe überweist
+//                        automatisch 90 % auf das Konto des Studios. Das Studio ist Händler (on_behalf_of).
 export async function ensureConnectedAccount(studio) {
   if (studio.stripe?.accountId) return studio.stripe.accountId;
+  const express = studio.modell === "provision";
+  const capabilities = express ? {
+    card_payments: { requested: true }, transfers: { requested: true },
+    ...(CFG.zahlarten.includes("klarna") ? { klarna_payments: { requested: true } } : {}),
+  } : undefined;
+  const delay = Number(CFG.auszahlungTage);
   const acct = await stripe("POST", "/accounts", {
-    type: "standard", country: "DE", email: studio.email, default_currency: "eur",
-    business_profile: { name: studio.firma, product_description: "Tätowierungen und Tattoo-Projekte", url: studio.website || undefined },
-    metadata: { studioId: studio.id },
+    type: express ? "express" : "standard", country: "DE", email: studio.email, default_currency: "eur", capabilities,
+    business_profile: { name: studio.firma, mcc: express ? "7299" : undefined, product_description: "Tätowierungen und Tattoo-Projekte", url: studio.website || undefined },
+    settings: express && delay > 0 ? { payouts: { schedule: { interval: "daily", delay_days: delay } } } : undefined,
+    metadata: { studioId: studio.id, modell: studio.modell },
   }, { idempotencyKey: "acct-" + studio.id });
-  studio.stripe = { ...(studio.stripe || {}), accountId: acct.id };
+  studio.stripe = { ...(studio.stripe || {}), accountId: acct.id, kontoTyp: express ? "express" : "standard" };
   return acct.id;
+}
+
+// Login in das Express-Dashboard (Auszahlungen, Bankkonto, Belege) für Provisions-Studios
+export async function dashboardLink(studio) {
+  if (studio.stripe?.kontoTyp !== "express") return "https://dashboard.stripe.com/";
+  return (await stripe("POST", `/accounts/${studio.stripe.accountId}/login_links`, {})).url;
 }
 
 export async function onboardingLink(studio, base) {

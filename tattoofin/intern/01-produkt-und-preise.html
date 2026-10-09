@@ -15,7 +15,7 @@
 
 <div class="box dark">
   <h3>Das Produkt in einem Satz</h3>
-  <p style="font-size:12pt;margin:0"><b>„Mach große Tattoo-Projekte leichter bezahlbar.“</b> Wir richten Tattoo-Studios eine professionelle Zahlungsstruktur ein. Kunden können damit flexibel bezahlen, vor allem in Raten über externe Zahlungsanbieter (z. B. Klarna), außerdem per Karte, Apple Pay, Google Pay oder SEPA. Das Studio verschickt in Sekunden einen Zahlungslink und bekommt das Geld nach Freigabe durch den Zahlungsanbieter ausgezahlt.</p>
+  <p style="font-size:12pt;margin:0"><b>„Mach große Tattoo-Projekte leichter bezahlbar.“</b> Wir richten Tattoo-Studios eine professionelle Zahlungsstruktur ein. Kunden können damit flexibel bezahlen, vor allem in Raten über externe Zahlungsanbieter (z. B. Klarna), außerdem per Karte, Apple Pay oder Google Pay. Das Studio verschickt in Sekunden einen Zahlungslink, für das große Projekt oder für die Anzahlung vor dem Termin, und bekommt das Geld nach Freigabe durch den Zahlungsanbieter ausgezahlt.</p>
 </div>
 
 <h2>1. Produkt auf einen Blick</h2>
@@ -23,9 +23,9 @@
   <tr><th style="width:26%">Name</th><td><b><span data-cfg="marke"></span></b>, Marke der <span data-cfg="firma"></span>. Website <span data-cfg="web"></span>, Ansprechpartner <span data-cfg="ansprechpartner"></span>.</td></tr>
   <tr><th>Claims</th><td>„Kann ich das auch in Raten zahlen? Ja.“ · „Mach den Preis nicht zur ersten Hürde.“ · „Weniger verschobene Projekte. Mehr Sleeves.“</td></tr>
   <tr><th>Zielgruppe</th><td>Tattoo-Studios in Deutschland mit großen Projekten: Sleeves, Rückenstücke, Realistic, Cover-ups, mehrere Sitzungen. Typische Projektpreise im vierstelligen Bereich.</td></tr>
-  <tr><th>Problem</th><td>Kunden wollen das große Projekt, schieben es aber auf, weil sie den Betrag nicht auf einmal zahlen wollen oder können. Sie sparen monatelang, verkleinern das Motiv oder springen ab. Das Studio bekommt die Frage „Kann ich das in Raten zahlen?“ und hat keine saubere Antwort.</td></tr>
-  <tr><th>Lösung</th><td>Eigenes Stripe-Konto des Studios, verbunden mit der Tattoofin-Plattform (Stripe Connect). Wir aktivieren die Zahlungsarten, richten Branding ein, testen alles und schulen das Team. Im Studio-Portal erstellt das Studio Zahlungslinks (Betrag, Kunde, Projekt) mit WhatsApp-Button und QR-Code. Dazu bekommt jedes Studio eine eigene Zahlseite mit QR für Theke, Flyer und Aufsteller.</td></tr>
-  <tr><th>Wer trägt das Risiko?</th><td>Der Kunde wählt die Zahlungsart, der Zahlungsanbieter prüft und entscheidet (bei Raten z. B. per Bonitätsprüfung). Nach Freigabe wird das Studio in der Regel voll ausbezahlt, abzüglich der Gebühren des Zahlungsanbieters. Das Ausfallrisiko der Ratenzahlung liegt beim Zahlungsanbieter, nicht beim Studio. Bei Klarna über Stripe steht das ausdrücklich in der Dokumentation („Klarna takes loss liability“).</td></tr>
+  <tr><th>Problem</th><td>Kunden wollen das große Projekt, schieben es aber auf, weil sie den Betrag nicht auf einmal zahlen wollen oder können. Sie sparen monatelang, verkleinern das Motiv oder springen ab. Das Studio bekommt die Frage „Kann ich das in Raten zahlen?“ und hat keine saubere Antwort. Dazu kommen No-Shows: Anzahlungen laufen oft über PayPal „Freunde“, Überweisung oder bar, ohne Beleg und ohne klare Bedingungen.</td></tr>
+  <tr><th>Lösung</th><td>Stripe-Konto des Studios, verbunden mit der Tattoofin-Plattform (Stripe Connect). Modell A: eigenes Standard-Konto, Zahlungen laufen direkt dort. Modell B: Tattoofin kassiert als Plattform, Stripe zahlt dem Studio automatisch 90 % aus (Express-Auszahlungskonto). Wir aktivieren die Zahlungsarten, richten Branding ein, testen alles und schulen das Team. Im Studio-Portal erstellt das Studio Zahlungslinks (Betrag, Kunde, Projekt) mit WhatsApp-Button und QR-Code. Dazu bekommt jedes Studio eine eigene Zahlseite mit QR für Theke, Flyer und Aufsteller. Anzahlungen laufen mit Anzahlungsbedingungen, die der Kunde vor dem Bezahlen bestätigt.</td></tr>
+  <tr><th>Wer trägt das Risiko?</th><td>Der Kunde wählt die Zahlungsart, der Zahlungsanbieter prüft und entscheidet (bei Raten z. B. per Bonitätsprüfung). Nach Freigabe wird das Studio in der Regel voll ausbezahlt (Modell A abzüglich der Gebühren des Zahlungsanbieters, Modell B abzüglich der 10 %). Das Ausfallrisiko der Ratenzahlung liegt beim Zahlungsanbieter, nicht beim Studio. Bei Klarna über Stripe steht das ausdrücklich in der Dokumentation („Klarna takes loss liability“). Was bleibt, ist das Risiko von Rückbuchungen und Reklamationen, siehe <a href="06-risiken-recht.html">Risiken &amp; Recht</a>. In Modell B landet es zuerst bei uns, wir holen es beim Studio zurück.</td></tr>
   <tr><th>Abgrenzung</th><td><b>Tattoofin ist kein Kreditgeber, kein Kreditinstitut und vermittelt keine Kredite.</b> Wir richten die technische Zahlungsstruktur ein. Raten, Laufzeiten, Zinsen und Freigabe legt allein der jeweilige Zahlungsanbieter fest. Nicht jede Zahlungsoption ist jederzeit für jeden Kunden verfügbar.</td></tr>
   <tr><th>Leistungen</th><td>Einrichtung bzw. Verbindung des Stripe-Kontos, Konfiguration, Branding, Grundeinstellungen, Aktivierung der Zahlungsarten, Test des kompletten Ablaufs, kurze Teamschulung mit Gesprächsbeispielen, <b>Tattoofin Studio Kit</b> (QR-Code + Zahlseite, Fensteraufkleber, Flyer, Thekenaufsteller, Website-Badge, Instagram-Story, WhatsApp-Vorlagen), Studio-Portal (Zahlungslinks, Übersicht aller Zahlungen, Abrechnungen), <span data-cfg="setupSupportTage"></span> Tage Setup-Support, danach Betreuung <span data-cfg="betreuung"></span>.</td></tr>
   <tr><th>Ziel</th><td>Startklar in wenigen Werktagen nach Freigabe des Stripe-Kontos. Details: <a href="04-umsetzung-onboarding.html">Umsetzung &amp; Onboarding</a>.</td></tr>
@@ -35,17 +35,19 @@
 <p>Die Leistung ist in beiden Modellen identisch. Die Betreuung ist immer <b><span data-cfg="betreuung"></span></b>. Abschluss komplett online über <span data-cfg="websiteUrl"></span> mit Vertrag, AVV und Zahlung bzw. Stripe-Verbindung, alternativ klassisch per PDF-Vertrag.</p>
 <table>
   <tr><th style="width:26%"></th><th>A · Kauf</th><th>B · Provision (risikofrei)</th></tr>
-  <tr><td>Preis</td><td><b><span data-cfg="kaufPreis"></span> netto einmalig</b>. Mit Code <span data-cfg="aktionsCode"></span> nur <span data-cfg="kaufAktionPreis"></span> (erste <span data-cfg="aktionsPlaetze"></span> Studios bis <span data-cfg="aktionsFrist"></span>)</td><td><b>0 € Einrichtung, keine Grundgebühr.</b> <span data-cfg="provisionSatz"></span> netto zzgl. USt. vom Betrag jeder Zahlung über Tattoofin (Zahlungslink oder Zahlseite)</td></tr>
-  <tr><td>Laufende Kosten an uns</td><td>keine</td><td>nur die Provision, automatisch bei jeder Zahlung als Plattformgebühr einbehalten</td></tr>
+  <tr><td>Preis</td><td><b><span data-cfg="kaufPreis"></span> netto einmalig</b>. Mit Code <span data-cfg="aktionsCode"></span> nur <span data-cfg="kaufAktionPreis"></span> (erste <span data-cfg="aktionsPlaetze"></span> Studios bis <span data-cfg="aktionsFrist"></span>)</td><td><b>0 € Einrichtung, keine Grundgebühr.</b> <span data-cfg="provisionSatz"></span> vom Zahlbetrag jeder Zahlung über Tattoofin (Zahlungslink oder Zahlseite, Projekt oder Anzahlung), <b>alles inklusive</b>: Gebühren von Stripe/Klarna und USt. Kunde zahlt 3.000 € → Studio bekommt 2.700 €.</td></tr>
+  <tr><td>Laufende Kosten an uns</td><td>keine</td><td>nur die Provision, automatisch bei jeder Zahlung einbehalten</td></tr>
+  <tr><td>Wer kassiert?</td><td>Das Studio auf dem eigenen Stripe-Konto (Direct Charge). Wir sehen die Zahlung über Connect.</td><td>Tattoofin als Plattform (Destination Charge, Studio als Händler per <code>on_behalf_of</code>). Stripe überträgt 90 % sofort auf das Express-Konto des Studios und zahlt automatisch aus. Kein Geld läuft über ein DSX-Bankkonto.</td></tr>
   <tr><td>Abrechnung</td><td>einmalige Rechnung, Zahlung über Stripe</td><td>einmal im Monat Abrechnung mit Rechnung und Übersicht aller Zahlungen</td></tr>
   <tr><td>Laufzeit</td><td>unbefristet</td><td>kündbar <span data-cfg="kuendigungProvision"></span></td></tr>
   <tr><td>Risiko-Umkehr</td><td><span data-cfg="garantieTage"></span> Tage Zufriedenheitsgarantie, volles Geld zurück ab Go-live</td><td>keine Zahlung über Tattoofin = keine Kosten</td></tr>
-  <tr><td>Gebühren der Zahlungsanbieter</td><td colspan="2">In beiden Modellen <b>nicht</b> im Tattoofin-Preis enthalten. Sie fallen direkt beim Studio an (siehe Abschnitt 3).</td></tr>
+  <tr><td>Gebühren der Zahlungsanbieter</td><td>zahlt das Studio direkt an Stripe (Abschnitt 3)</td><td><b>zahlen wir</b> aus den 10 % (Abschnitt 3 und 5)</td></tr>
+  <tr><td>Erstattungen, Rückbuchungen</td><td>bearbeitet das Studio im eigenen Stripe-Dashboard</td><td>laufen über uns: Erstatten-Button im Portal, Rückbuchungen beantworten wir mit den Belegen des Studios. Betrag wird beim Studio zurückgeholt.</td></tr>
 </table>
-<p><b>Empfehlung im Gespräch:</b> Provision als Standard-Einstieg, weil die Hürde bei null liegt. Den Kauf aktiv anbieten, wenn das Studio viele große Projekte hat oder keine laufende Provision will. Faustregel: Der Kauf lohnt sich, sobald über Tattoofin mehr als ca. 15.000 € netto Tattoo-Umsatz laufen (10 % davon = <span data-cfg="kaufPreis"></span>).</p>
+<p><b>Empfehlung im Gespräch:</b> Provision als Standard-Einstieg, weil die Hürde bei null liegt. Den Kauf aktiv anbieten, wenn das Studio viele große Projekte hat oder keine laufende Provision will. Faustregel: Für ein regelbesteuertes Studio lohnt sich der Kauf ab ca. 25.000 € Zahlungsvolumen über Tattoofin (Rechnung in Abschnitt 5). Bei kleinen und mittleren Studios ist die Provision für beide Seiten das bessere Modell.</p>
 
-<h2>3. Gebühren der Zahlungsanbieter (zahlt das Studio)</h2>
-<p>Die Zahlungen laufen als sogenannte Direct Charges über das eigene Stripe-Konto des Studios. Stripe zieht seine Gebühren dort ab. Unsere Provision wird als Plattformgebühr (<code>application_fee_amount</code>) aus derselben Zahlung an uns übertragen.</p>
+<h2>3. Gebühren der Zahlungsanbieter: wer zahlt was</h2>
+<p><b>Modell A (Kauf):</b> Die Zahlungen laufen als Direct Charges über das eigene Stripe-Konto des Studios. Stripe zieht seine Gebühren dort ab, das Studio zahlt sie. <b>Modell B (Provision):</b> Tattoofin kassiert als Plattform (Destination Charge). Stripe belastet die Gebühren <b>uns</b>, wir zahlen sie aus den 10 %. Das Studio bekommt glatt 90 %.</p>
 <table class="fees">
   <tr><th>Zahlungsart (Stripe Standardtarif Deutschland)</th><th class="r">Gebühr je Zahlung</th></tr>
   <tr><td>Karten EWR Standard (auch Apple Pay / Google Pay mit solchen Karten)</td><td class="r">1,5 % + 0,25 €</td></tr>
@@ -53,20 +55,33 @@
   <tr><td>Karten aus Großbritannien</td><td class="r">2,5 % + 0,25 €</td></tr>
   <tr><td>Internationale Karten (außerhalb EWR/UK)</td><td class="r">3,15 % + 0,25 €, ggf. +2 % Währungsumrechnung</td></tr>
   <tr><td>Klarna (Zahlen in voller Höhe, später, in 3 Raten oder Finanzierung)</td><td class="r">ab 2,99 % + 0,35 €</td></tr>
-  <tr><td>SEPA-Lastschrift</td><td class="r">0,35 €</td></tr>
   <tr><td>Rückbuchung / Zahlungsanfechtung (Dispute)</td><td class="r">20,00 € je Fall, Antwort weitere 20,00 € (bei Gewinn erstattet)</td></tr>
   <tr><td>Erstattung an den Kunden</td><td class="r">keine Erstattungsgebühr, aber Stripe-Gebühren der Ursprungszahlung werden nicht zurückgegeben</td></tr>
 </table>
-<p class="small">Quelle: stripe.com/de/pricing, abgerufen am 09.10.2026 (Stand 10/2026). Klarna-Betragsgrenzen Deutschland laut docs.stripe.com/payments/klarna: Zahlen in voller Höhe bis 10.000 €, Später bezahlen (30 Tage) 0,10–10.000 €, in 3 Raten 1–5.000 €, Finanzierung bis 36 Monate 25–10.000 € (Stand 10/2026). Welche Optionen ein Kunde sieht, entscheidet Klarna je nach Betrag und Prüfung.</p>
+<p class="small">Quelle: stripe.com/de/pricing, abgerufen am 09.10.2026 (Stand 10/2026). SEPA-Lastschrift bieten wir für Kundenzahlungen bewusst nicht an (8 Wochen Rückgaberecht ohne Grund). Klarna-Betragsgrenzen Deutschland laut docs.stripe.com/payments/klarna: Zahlen in voller Höhe bis 10.000 €, Später bezahlen (30 Tage) 0,10–10.000 €, in 3 Raten 1–5.000 €, Finanzierung bis 36 Monate 25–10.000 € (Stand 10/2026). Welche Optionen ein Kunde sieht, entscheidet Klarna je nach Betrag und Prüfung.</p>
 
 <div class="box gold">
   <h3>Was kostet Stripe Connect uns als Plattform?</h3>
   <ul style="margin:0">
-    <li><b>Standard-Konten („Stripe übernimmt die Preisgestaltung“):</b> Laut Stripe zahlt die Plattform <b>keine Transaktionsgebühren</b> und keine weiteren Gebühren für Konten, Auszahlungsvolumen, Steuerberichte oder einzelne Auszahlungen. Die Gebühren zahlt das Studio direkt an Stripe.</li>
-    <li><b>Plattformgebühr (application_fee):</b> Laut Stripe-Dokumentation fallen auf die Plattformgebühr selbst <b>keine zusätzlichen Stripe-Gebühren</b> an. Bei Direct Charges trägt das verbundene Konto (das Studio) Stripe-Gebühren, Erstattungen und Rückbuchungen.</li>
-    <li><b>Nicht wählen:</b> Das Modell „Sie übernehmen die Preisgestaltung“ (Express/Custom-Konten) kostet 2 € je aktivem Konto und Monat plus 0,25 % + 0,10 € je Auszahlung. Für Tattoofin brauchen wir das nicht.</li>
+    <li><b>Modell A, Standard-Konten („Stripe übernimmt die Preisgestaltung“):</b> Die Plattform zahlt keine Transaktionsgebühren und keine Konto- oder Auszahlungsgebühren. Das Studio zahlt direkt an Stripe.</li>
+    <li><b>Modell B, Express-Konten („Sie übernehmen die Preisgestaltung“):</b> 2 € je aktivem Konto und Monat (Monat mit Auszahlung) plus 0,25 % + 0,10 € je Auszahlung an das Studio. Dazu die Zahlungsgebühren oben, weil wir kassieren.</li>
+    <li><b>USt. auf Stripe-Gebühren:</b> Stripe rechnet aus Irland ab (Reverse Charge). Für uns als regelbesteuerte UG neutral, weil abziehbar. Mit dem Steuerbüro bestätigen.</li>
   </ul>
-  <p class="small" style="margin:6px 0 0">Quellen: stripe.com/de/connect/pricing und docs.stripe.com/connect/direct-charges, abgerufen am 09.10.2026 (Stand 10/2026). Eigene Stripe-Gebühren haben wir nur auf Zahlungen, die wir selbst kassieren (z. B. Kauf-Rechnungen).</p>
+  <p class="small" style="margin:6px 0 0">Quellen: stripe.com/de/connect/pricing, docs.stripe.com/connect/destination-charges und docs.stripe.com/connect/direct-charges, abgerufen am 09.10.2026 (Stand 10/2026).</p>
+</div>
+
+<div class="box">
+  <h3>Geldfluss Modell B am Beispiel 3.000 €</h3>
+  <table style="margin:0">
+    <tr><td>Kunde zahlt im Stripe Checkout (Studio steht als Händler auf dem Beleg)</td><td class="r">3.000,00 €</td></tr>
+    <tr><td>Stripe überträgt sofort auf das Express-Konto des Studios und zahlt automatisch aus</td><td class="r"><b>2.700,00 €</b></td></tr>
+    <tr><td>bleibt bei Tattoofin (Provision brutto)</td><td class="r">300,00 €</td></tr>
+    <tr><td>davon Umsatzsteuer (an das Finanzamt)</td><td class="r">− 47,90 €</td></tr>
+    <tr><td>Stripe-Gebühr Karte EWR Standard (1,5 % + 0,25 €)</td><td class="r">− 45,25 €</td></tr>
+    <tr><td>Auszahlungsgebühr Express (0,25 % + 0,10 € auf 2.700 €)</td><td class="r">− 6,85 €</td></tr>
+    <tr class="sum"><td>Deckungsbeitrag Tattoofin</td><td class="r">200,00 € (6,7 %)</td></tr>
+  </table>
+  <p class="small" style="margin:6px 0 0">Mit Klarna (2,99 % + 0,35 € = 90,05 €) bleiben 155,20 € (5,2 %), mit Premium-Karte (84,25 €) 161,00 €, mit internationaler Karte (94,75 €) 150,50 €. Fix je aktivem Studio-Konto: 2 € im Monat.</p>
 </div>
 
 <h2>4. Kostenbasis pro Studio (für uns)</h2>
@@ -75,7 +90,9 @@
   <tr><td>Einrichtung (Kickoff, Stripe-Onboarding begleiten, Zahlungsarten, Branding, Testprotokoll, Portal, Studio Kit generieren)</td><td>Schätzung 2,5–3 Std.</td><td class="r">Arbeitszeit</td></tr>
   <tr><td>Teamschulung</td><td>30 Min. per Video oder vor Ort</td><td class="r">Arbeitszeit</td></tr>
   <tr><td>Setup-Support <span data-cfg="setupSupportTage"></span> Tage, danach Betreuung</td><td>Schätzung 1 Std. im ersten Monat, danach ca. 15 Min./Monat</td><td class="r">Arbeitszeit</td></tr>
-  <tr><td>Stripe-Connect-Konto des Studios</td><td>Standard-Konto, siehe Kasten oben</td><td class="r">0,00 €</td></tr>
+  <tr><td>Rückbuchungen bearbeiten (nur Modell B)</td><td>Belege sammeln und bei Stripe einreichen, Schätzung 20–30 Min. je Fall</td><td class="r">Arbeitszeit</td></tr>
+  <tr><td>Stripe-Connect-Konto des Studios</td><td>Modell A Standard-Konto; Modell B Express-Konto</td><td class="r">0 € bzw. 2 €/Monat</td></tr>
+  <tr><td>Zahlungsgebühren (nur Modell B)</td><td>Karte 1,5 % + 0,25 €, Klarna ab 2,99 % + 0,35 €, Auszahlung 0,25 % + 0,10 €</td><td class="r">≈ 1,8–3,3 % vom Volumen</td></tr>
   <tr><td>Studio Kit gedruckt (optional): Fensteraufkleber rund 20 cm aus 100er-Auflage (102 €/100), Flyer A6 250 St. personalisiert (12,06 €), Versand DHL Kleinpaket (3,49 €)</td><td>Preise laut Mailing-Recherche 09.10.2026, netto; Thekenaufsteller je nach Auflage zusätzlich</td><td class="r">≈ 16,57 €</td></tr>
   <tr><td>Hosting, E-Mail-Versand, Domain (Website + Portal)</td><td>Schätzung anteilig</td><td class="r">≈ 1–2 €/Monat</td></tr>
   <tr><td>Stripe-Gebühr auf eine Kauf-Zahlung (Karte EWR, <span data-cfg="kaufPreis"></span> + 19 % USt.)</td><td>1,5 % + 0,25 € auf 1.783,81 €; per SEPA nur 0,35 €</td><td class="r">≈ 27 € bzw. 0,35 €</td></tr>
@@ -88,37 +105,45 @@
     <ul style="margin:0">
       <li>Einmalerlös netto <span data-cfg="kaufPreis"></span> bzw. <span data-cfg="kaufAktionPreis"></span> mit Code.</li>
       <li>Direkte Kosten: Kit ≈ 17 €, Stripe-Gebühr ≈ 27 € (Karte) bzw. 0,35 € (SEPA), Arbeitszeit ca. 3–4 Std. (Schätzung).</li>
-      <li>Laufende Kosten danach nur Hosting und Betreuung (Schätzung ≈ 1–2 €/Monat + 15 Min./Monat).</li>
+      <li>Laufende Kosten danach nur Hosting und Betreuung (Schätzung ≈ 1–2 €/Monat + 15 Min./Monat). Kein Rückbuchungsrisiko für uns.</li>
       <li>Risiko: Garantiefall in den ersten <span data-cfg="garantieTage"></span> Tagen ab Go-live. Darum Onboarding sauber machen und erste Zahlung aktiv begleiten.</li>
     </ul></div>
-  <div class="box gold"><h3>B · Provision <span data-cfg="provisionSatz"></span></h3>
+  <div class="box gold"><h3>B · Provision <span data-cfg="provisionSatz"></span> alles inklusive</h3>
     <ul style="margin:0">
-      <li>Erlös hängt direkt am Umsatz über Tattoofin. Keine Abrechnungs- oder Inkassoarbeit, weil die Plattformgebühr automatisch einbehalten wird.</li>
-      <li>Laufende Kosten pro Studio sehr klein (siehe Abschnitt 4). Jede Zahlung über Tattoofin trägt also fast vollständig zum Deckungsbeitrag bei.</li>
-      <li>Risiko: Studio richtet ein, nutzt die Links aber kaum. Gegenmittel: Schulung, Studio Kit sichtbar platzieren, Check-ins nach 14 und 30 Tagen.</li>
-      <li>Risiko: Studio kassiert große Projekte am Portal vorbei direkt im eigenen Stripe-Dashboard. Gegenmittel: Vertrag, einfache Bedienung im Portal, Kauf anbieten.</li>
+      <li>Deckungsbeitrag ca. <b>5–7 % vom Zahlungsvolumen</b> (nach USt., Stripe-, Klarna- und Auszahlungsgebühren). Karte rund 6,7 %, Klarna rund 5,2 %.</li>
+      <li>Keine Abrechnungs- oder Inkassoarbeit, weil die Provision automatisch einbehalten wird. Für das Studio extrem einfach: „Kunde zahlt 3.000, du bekommst 2.700.“</li>
+      <li><b>Anzahlungen</b> bringen zusätzliches, planbares Volumen: viele kleine Zahlungen, fast immer per Karte/Apple Pay (gute Marge).</li>
+      <li>Risiko: Rückbuchungen landen zuerst bei uns. Wir holen sie beim Studio zurück; reicht dessen Guthaben nicht, haften wir gegenüber Stripe für den negativen Saldo. Gegenmittel: Anzahlungsbedingungen, Belege, ggf. Auszahlungsverzögerung (<code>AUSZAHLUNG_TAGE</code>).</li>
+      <li>Risiko: Studio kassiert große Projekte am Portal vorbei. Gegenmittel: Vertrag, einfache Bedienung, Kauf anbieten.</li>
     </ul></div>
 </div>
 
-<h3>Rechenbeispiele Provision (Beispiel ohne Zinsen, Gebühren je nach Zahlungsart)</h3>
+<h3>Rechenbeispiele je Zahlung (Modell B)</h3>
 <table>
-  <tr><th>Umsatz über Tattoofin pro Monat</th><th class="r">1 Projekt à 1.500 €</th><th class="r">3 Projekte à 1.500 €</th><th class="r">6 Projekte à 1.500 €</th></tr>
-  <tr><td>Umsatz</td><td class="r">1.500 €</td><td class="r">4.500 €</td><td class="r">9.000 €</td></tr>
-  <tr><td>Provision Tattoofin netto (<span data-cfg="provisionSatz"></span>)</td><td class="r">150 €</td><td class="r"><b>450 €</b></td><td class="r">900 €</td></tr>
-  <tr><td>dazu 19 % USt. (für das Studio als Vorsteuer abziehbar, außer Kleinunternehmer)</td><td class="r">28,50 €</td><td class="r">85,50 €</td><td class="r">171 €</td></tr>
-  <tr><td>Gebühr Zahlungsanbieter, wenn alles über Klarna läuft (ab 2,99 % + 0,35 €)</td><td class="r">≈ 45,20 €</td><td class="r">≈ 135,60 €</td><td class="r">≈ 271,20 €</td></tr>
-  <tr><td>Gebühr, wenn alles mit EWR-Standardkarte bezahlt wird (1,5 % + 0,25 €)</td><td class="r">≈ 22,75 €</td><td class="r">≈ 68,25 €</td><td class="r">≈ 136,50 €</td></tr>
-  <tr class="sum"><td>Provision für uns pro Jahr (netto)</td><td class="r">1.800 €</td><td class="r">5.400 €</td><td class="r">10.800 €</td></tr>
+  <tr><th>Zahlung</th><th class="r">Provision brutto</th><th class="r">davon netto</th><th class="r">Gebühren (Karte / Klarna)</th><th class="r">Deckungsbeitrag (Karte / Klarna)</th></tr>
+  <tr><td>Anzahlung 150 €</td><td class="r">15,00 €</td><td class="r">12,61 €</td><td class="r">≈ 2,94 € / 5,28 €</td><td class="r">≈ 9,67 € / 7,33 €</td></tr>
+  <tr><td>Projekt 1.500 €</td><td class="r">150,00 €</td><td class="r">126,05 €</td><td class="r">≈ 26,23 € / 48,68 €</td><td class="r">≈ 99,82 € / 77,37 €</td></tr>
+  <tr><td>Projekt 3.000 €</td><td class="r">300,00 €</td><td class="r">252,10 €</td><td class="r">≈ 52,10 € / 96,90 €</td><td class="r">≈ 200,00 € / 155,20 €</td></tr>
 </table>
-<p class="small">Gebühren gerundet, auf Basis stripe.com/de/pricing (Stand 10/2026). Die Klarna-Gebühr ist ein „ab“-Preis. Beispiel: Ein Studio mit 3 Projekten à 1.500 € pro Monat über Tattoofin zahlt uns 450 € netto Provision im Monat.</p>
+<p class="small">Gebühren inkl. Auszahlungsgebühr 0,25 % + 0,10 € auf den Auszahlungsbetrag (bei mehreren Zahlungen am Tag teilen sich die 0,10 €). Ohne 2 € Kontogebühr je Studio und Monat. Klarna als „ab“-Preis.</p>
+
+<h3>Rechenbeispiel pro Studio und Monat (Modell B)</h3>
+<table>
+  <tr><th>Annahme</th><th class="r">Volumen</th><th class="r">Provision brutto</th><th class="r">Deckungsbeitrag</th></tr>
+  <tr><td>3 Projekte à 1.500 € (Hälfte Klarna, Hälfte Karte)</td><td class="r">4.500 €</td><td class="r">450 €</td><td class="r">≈ 266 €</td></tr>
+  <tr><td>20 Anzahlungen à 150 € (Karte / Apple Pay)</td><td class="r">3.000 €</td><td class="r">300 €</td><td class="r">≈ 193 €</td></tr>
+  <tr><td>Kontogebühr Express</td><td class="r"></td><td class="r"></td><td class="r">− 2 €</td></tr>
+  <tr class="sum"><td>Summe</td><td class="r">7.500 €</td><td class="r">750 €</td><td class="r"><b>≈ 457 €/Monat ≈ 5.480 €/Jahr</b></td></tr>
+</table>
+<p class="small">Schätzung ohne Rückbuchungsverluste und Arbeitszeit. Zum Vergleich ohne Anzahlungen: ≈ 264 €/Monat. Anzahlungen fast verdoppeln den Ertrag je Studio.</p>
 
 <h3>Break-even für das Studio: Kauf oder Provision?</h3>
 <div class="grid3">
-  <div class="box"><p class="kpi">≈ 15.000 €<small>Umsatz über Tattoofin, ab dem der Kauf (<span data-cfg="kaufPreis"></span>) günstiger ist als <span data-cfg="provisionSatz"></span> Provision</small></p></div>
-  <div class="box"><p class="kpi">≈ 12.500 €<small>Break-even mit Aktionspreis <span data-cfg="kaufAktionPreis"></span> (Code <span data-cfg="aktionsCode"></span>)</small></p></div>
-  <div class="box gold"><p class="kpi">≈ 10 Projekte<small>à 1.500 € bis zum Break-even. Bei 3 Projekten pro Monat nach etwa 3–4 Monaten erreicht</small></p></div>
+  <div class="box"><p class="kpi">≈ 25.000 €<small>Zahlungsvolumen, ab dem der Kauf (<span data-cfg="kaufPreis"></span> + eigene Zahlungsgebühren ≈ 2–3 %) für ein regelbesteuertes Studio günstiger ist als 10 % alles inklusive (effektiv 8,4 % netto)</small></p></div>
+  <div class="box"><p class="kpi">≈ 20.000 €<small>Break-even mit Aktionspreis <span data-cfg="kaufAktionPreis"></span> (Code <span data-cfg="aktionsCode"></span>). Kleinunternehmer (ohne Vorsteuerabzug) zum Normalpreis: ≈ 19.500 €</small></p></div>
+  <div class="box gold"><p class="kpi">≈ 17 Projekte<small>à 1.500 € bis zum Break-even. Bei 3 Projekten pro Monat nach etwa 5–6 Monaten, mit Anzahlungen früher</small></p></div>
 </div>
-<p>Für uns heißt das: Ein aktives Provisions-Studio bringt über die Zeit deutlich mehr als ein Kauf. Den Kauf trotzdem fair anbieten. Er bringt sofort Liquidität und passt zu Studios, die keine laufende Abgabe wollen.</p>
+<p>Für uns heißt das: Ein aktives Provisions-Studio bringt über die Zeit deutlich mehr als ein Kauf, trägt aber Rückbuchungsrisiko und etwas Arbeit. Den Kauf trotzdem fair anbieten. Er bringt sofort Liquidität, null Risiko und passt zu Studios mit hohem Volumen oder ohne Lust auf laufende Abgabe.</p>
 
 <h2>6. Wettbewerb und Alternativen (Deutschland, Stand 10/2026)</h2>
 <table>
@@ -139,11 +164,10 @@
 
 <h2>7. Offene Entscheidungen</h2>
 <ul class="check">
-  <li><b>Bemessungsgrundlage der Provision:</b> „Betrag jeder Zahlung“ heißt heute der vom Kunden gezahlte Betrag. Bei regelbesteuerten Studios enthält er 19 % USt. Klären: Provision auf Brutto-Zahlbetrag (einfach, technisch sauber) oder auf Netto (fairer, aber bei jeder Zahlung umrechnen)? Bei Kleinunternehmern (§ 19 UStG) ist brutto gleich netto.</li>
-  <li><b>USt. auf die Provision:</b> Die Plattformgebühr muss die USt. enthalten (10 % netto + 19 % USt. = 11,9 % des Zahlbetrags), sonst fehlt sie in der Monatsrechnung. Technisch so einstellen und in Vertrag und Website gleich formulieren.</li>
-  <li><b>Anzahlungen:</b> Zählt jede Teilzahlung (Anzahlung, Restzahlung je Sitzung) einzeln? Empfehlung: ja, jede Zahlung über Tattoofin, unabhängig vom Anlass.</li>
-  <li><b>Erstattungen:</b> Stripe gibt seine Gebühren bei Erstattung nicht zurück. Die Plattformgebühr wird nur zurückgegeben, wenn wir sie aktiv mit erstatten. Empfehlung: Bei voller Erstattung Provision mit erstatten, bei Teil-Erstattung anteilig. Vertraglich festhalten.</li>
-  <li><b>Rückbuchungen (Chargebacks):</b> Bei Direct Charges trägt das Studio Betrag und 20 € Gebühr. Unsere Plattformgebühr bleibt technisch bei uns. Entscheiden: verloren gegangene Fälle in der Monatsabrechnung gutschreiben?</li>
+  <li><b>Entschieden (10/2026):</b> Provision = 10 % vom Zahlbetrag, alles inklusive (USt. und Zahlungsgebühren). Jede Zahlung zählt, auch Anzahlungen und Restzahlungen. Tattoofin kassiert als Plattform, Stripe zahlt 90 % aus. Umgesetzt in Website, Vertrag (§ 3, § 5) und allen Unterlagen.</li>
+  <li><b>Entschieden, änderbar:</b> Erstattung = Provision anteilig zurück, abzüglich Stripe-Gebühr + USt. (Stripe gibt sie nicht zurück). Rückbuchung = Betrag minus anteilige Provision plus 20 € Gebühr wird beim Studio zurückgeholt; gewonnen → alles zurück, verloren → keine Provision. Wenn du großzügiger sein willst (z. B. volle Provision zurück bei Erstattung), ist das eine Zeile in <code>stripe-webhook.mjs</code> und ein Satz in § 5 Abs. 5.</li>
+  <li><b>Auszahlungsverzögerung:</b> Optional <code>AUSZAHLUNG_TAGE</code> (z. B. 7) setzen, damit bei Rückbuchungen noch Guthaben beim Studio liegt. Kostet Akzeptanz, senkt unser Risiko. Empfehlung: erst ohne, bei auffälligen Studios einschalten.</li>
+  <li><b>Preis für Anzahlungen:</b> 10 % auf kleine Anzahlungen ist teurer als PayPal/SumUp (1,4–3 %). Argument ist der Komfort, die Bedingungen und der Beleg. Beobachten, ob Studios deshalb Anzahlungen am Portal vorbei kassieren. Option: eigener Satz für Anzahlungen (z. B. 5 %).</li>
   <li><b>Klarna-Regeln:</b> Kein Aufpreis für Klarna-Zahlungen erlaubt, keine Gutscheine/Geschenkkarten über Klarna, keine Käufe durch Inhaber oder Mitarbeitende. Das Studio muss das wissen (Schulung, Vertrag).</li>
   <li><b>Ausland (z. B. Österreich, Schweiz, Dänemark):</b> Stripe und Klarna sind dort verfügbar, aber mit anderen Limits. Für uns: Reverse-Charge-Rechnungen und Vertragsrecht klären, bevor wir außerhalb Deutschlands verkaufen.</li>
   <li><b>Neue EU-Verbraucherkreditrichtlinie:</b> Ab 20.11.2026 gelten strengere Regeln für Ratenzahlungen und „Später bezahlen“. Freigabequoten können sich ändern. Beobachten und Formulierungen weiterhin vorsichtig halten („nach Prüfung durch den Anbieter“).</li>

@@ -36,6 +36,7 @@ window.Ted = window.TF = (function () {
       if (parts[1] === "euro") v = euro(v);
       if (parts[1] === "brutto") v = euro(Math.round(v * (100 + c.ustProzent) / 100));
       if (parts[1] === "cent2") v = euro(v, true);
+      if (parts[1] === "rest") v = 100 - v;
       el.textContent = v;
     });
   }

@@ -9,12 +9,12 @@
 //   POST  /api/admin/abrechnung               { monat: "YYYY-MM", dryRun }
 //   POST  /api/admin/jobs                     tägliche Jobs sofort ausführen
 //   GET   /api/admin/mails                    letzte E-Mails
-import { CFG } from "./_lib/config.mjs";
+import { CFG, netto } from "./_lib/config.mjs";
 import { json, fail, body, clean, now, handler } from "./_lib/util.mjs";
 import { allStudios, getStudio, saveStudio, zahlungenVon, abrechnungenVon, store, log } from "./_lib/store.mjs";
 import { isAdmin, loginLink } from "./_lib/auth.mjs";
 import { stripe } from "./_lib/stripe.mjs";
-import { notify, monatsabrechnung, taeglicheJobs, kontoAbgleichen, STATUS } from "./_lib/domain.mjs";
+import { notify, monatsabrechnung, taeglicheJobs, kontoAbgleichen, provisionVerdient, STATUS } from "./_lib/domain.mjs";
 import { mails } from "./_lib/emails.mjs";
 
 export default handler(async (req) => {
@@ -28,10 +28,13 @@ export default handler(async (req) => {
     for (const s of list) {
       const z = await zahlungenVon(s.id);
       const bezahlt = z.filter((x) => x.status === "bezahlt");
+      const abgerechnet = z.filter((x) => ["bezahlt", "erstattet", "rueckgebucht"].includes(x.status));
       out.push({
         id: s.id, firma: s.firma, ort: s.ort, email: s.email, modell: s.modell, status: s.status, statusText: STATUS[s.status],
         createdAt: s.createdAt, goLiveAt: s.goLiveAt, zahlungen: bezahlt.length, offen: z.filter((x) => x.status === "offen").length,
-        umsatzCent: bezahlt.reduce((a, x) => a + x.betragCent, 0), provisionNettoCent: bezahlt.reduce((a, x) => a + (x.gebuehrNettoCent || 0), 0),
+        umsatzCent: bezahlt.reduce((a, x) => a + x.betragCent, 0), provisionNettoCent: abgerechnet.reduce((a, x) => a + netto(provisionVerdient(x)), 0),
+        // Deckungsbeitrag Provision: Provision netto minus Stripe-Gebühren, die Tattoofin bei Provision trägt
+        deckungsbeitragCent: abgerechnet.reduce((a, x) => a + netto(provisionVerdient(x)) - (x.stripeGebuehrCent || 0), 0),
         stripe: s.stripe?.chargesEnabled ? "freigegeben" : s.stripe?.accountId ? "in Prüfung" : "nicht verbunden",
         fragebogen: Boolean(s.fragebogen), slug: s.slug,
       });

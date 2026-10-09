@@ -24,9 +24,10 @@ window.CFG = {
   whatsappLink: "https://wa.me/491741682157?text=Hi%2C%20ich%20interessiere%20mich%20f%C3%BCr%20Tattoofin!",
   websiteUrl: "[Website-URL]",   // Adresse der Abschluss-Website (tattoofin/website), z. B. https://start.tattoofin.de
 
-  // Preismodelle (netto, zzgl. USt.). Das Studio wählt EINES:
-  //  A) Kauf: einmalige Einrichtung, keine monatliche Grundgebühr, keine Provision
-  //  B) Provision: keine Einrichtungsgebühr, 10 % vom Tattoo-Preis jeder Zahlung über Tattoofin, Abrechnung monatlich
+  // Preismodelle. Das Studio wählt EINES:
+  //  A) Kauf: einmalige Einrichtung (netto zzgl. USt.), keine Grundgebühr, keine Provision; Zahlungsgebühren zahlt das Studio
+  //  B) Provision: keine Einrichtungsgebühr, 10 % vom Zahlbetrag jeder Zahlung über Tattoofin (auch Anzahlungen),
+  //     alles inklusive (Zahlungsgebühren + USt.). Tattoofin kassiert über Stripe, das Studio bekommt 90 %. Abrechnung monatlich
   kaufPreis: 1499,
   kaufAktionPreis: 1249,          // mit Aktionscode (Mailing)
   provisionSatz: "10 %",

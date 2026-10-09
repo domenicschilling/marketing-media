@@ -34,7 +34,7 @@
   }
 
   function preisText() {
-    if (modell() === "provision") return C.provisionProzent + " % zzgl. USt. vom Betrag jeder Zahlung über Tattoofin, automatisch einbehalten, keine Einrichtungs- und keine Grundgebühr";
+    if (modell() === "provision") return C.provisionProzent + " % vom Zahlbetrag jeder Zahlung über Tattoofin, alles inklusive (Gebühren der Zahlungsanbieter und USt.), Auszahlung von " + (100 - C.provisionProzent) + " % automatisch durch Stripe, keine Einrichtungs- und keine Grundgebühr";
     var code = val("aktionscode");
     return "Setup " + TF.euro(code ? C.aktionNetto : C.kaufNetto) + " netto einmalig" + (code ? " (mit Aktionscode, wird geprüft)" : "") + " zzgl. " + C.ustProzent + " % USt., keine Grundgebühr, keine Provision";
   }
@@ -48,7 +48,7 @@
     var m = modell(), z = zahlart(), html;
     if (m === "provision") {
       html = "<p>Du schließt das <b>Provisionsmodell</b> ab: " + TF.esc(preisText()) + ".</p>" +
-        "<p><b>Jetzt wird nichts bezahlt.</b> Im nächsten Schritt verbindest du das eigene Stripe-Konto deines Studios (ca. 10 Minuten, Ausweis und Bankverbindung bereithalten). Die Provision wird später automatisch bei jeder Zahlung über Tattoofin einbehalten.</p>";
+        "<p><b>Jetzt wird nichts bezahlt.</b> Im nächsten Schritt richtest du bei Stripe das Auszahlungskonto deines Studios ein (ca. 10 Minuten, Ausweis und Bankverbindung bereithalten). Darauf zahlt Stripe dir später automatisch " + (100 - C.provisionProzent) + " % jeder Kundenzahlung aus.</p>";
       document.getElementById("submit").textContent = "Vertrag abschließen & Stripe-Konto verbinden";
     } else {
       html = "<p>Du kaufst das <b>Tattoofin Setup</b>: " + TF.esc(preisText()) + ".</p>" +

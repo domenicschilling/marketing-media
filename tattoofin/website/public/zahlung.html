@@ -9,6 +9,10 @@
     <h1 style="font-size:24px;margin:6px 0 0" id="titel">Dein Zahlungslink</h1>
     <div class="amt" id="betrag"></div>
     <div class="muted" id="sub"></div>
+    <div id="bed" class="hidden" style="text-align:left;margin-top:16px;background:var(--gold-soft);border:1px solid #f5d77a;border-radius:12px;padding:12px 14px;font-size:14px">
+      <b>Anzahlungsbedingungen</b><p id="bed-text" style="margin:6px 0 10px"></p>
+      <label style="display:flex;gap:8px;align-items:flex-start"><input type="checkbox" id="bed-ok" style="width:auto;margin-top:3px"> <span>Ich habe die Anzahlungsbedingungen gelesen und bin einverstanden.</span></label>
+    </div>
     <div id="alert"></div>
     <button class="btn gold" id="pay" style="width:100%;margin-top:20px">Weiter zur Zahlung</button>
     <p class="fn">Beim Bezahlen siehst du, welche Zahlungsoptionen dir angeboten werden, je nach Prüfung durch den Zahlungsanbieter auch Ratenzahlung oder späteres Bezahlen. Die Bedingungen legt allein der Zahlungsanbieter fest. <b>Achtung! Kreditaufnahme kostet Geld.</b></p>
@@ -26,13 +30,17 @@
     document.getElementById("titel").textContent = (d.zahlung.kunde ? "Hi " + d.zahlung.kunde + ", hier ist dein Zahlungslink" : "Dein Zahlungslink");
     document.getElementById("betrag").textContent = TF.euro(d.zahlung.betragCent, true);
     document.getElementById("sub").textContent = d.zahlung.beschreibung + (d.zahlung.art === "anzahlung" ? " · Anzahlung" : "");
-    if (d.zahlung.status === "bezahlt") { btn.classList.add("hidden"); a.innerHTML = '<div class="alert ok">Dieser Betrag ist bereits bezahlt. Danke! 🖤</div>'; }
+    var anz = d.zahlung.art === "anzahlung";
+    if (anz) { document.getElementById("bed").classList.remove("hidden"); document.getElementById("bed-text").textContent = d.studio.anzahlungsbedingungen; }
+    if (d.zahlung.status === "bezahlt") { btn.classList.add("hidden"); document.getElementById("bed").classList.add("hidden"); a.innerHTML = '<div class="alert ok">Dieser Betrag ist bereits bezahlt. Danke! 🖤</div>'; }
     else if (!["offen", "abgebrochen"].includes(d.zahlung.status)) { btn.classList.add("hidden"); err("Dieser Zahlungslink ist nicht mehr gültig. Bitte frag im Studio nach einem neuen Link."); }
     if (q.get("abbruch")) a.innerHTML = '<div class="alert info">Zahlung abgebrochen. Du kannst es jederzeit erneut versuchen.</div>';
   } catch (e) { btn.classList.add("hidden"); err(e.message); }
   btn.onclick = async function () {
+    var bed = document.getElementById("bed-ok");
+    if (!document.getElementById("bed").classList.contains("hidden") && !bed.checked) return err("Bitte bestätige die Anzahlungsbedingungen.");
     btn.disabled = true; btn.textContent = "Einen Moment …";
-    try { location.href = (await TF.api("/api/pay", { body: { z: z } })).url; }
+    try { location.href = (await TF.api("/api/pay", { body: { z: z, bedingungen: bed.checked } })).url; }
     catch (e) { err(e.message); btn.disabled = false; btn.textContent = "Weiter zur Zahlung"; }
   };
 })();

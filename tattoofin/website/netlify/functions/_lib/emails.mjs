@@ -32,7 +32,7 @@ const rows = (pairs) => `<table role="presentation" cellpadding="0" cellspacing=
 const hallo = (s) => p(`Hey ${esc(s.inhaber?.split(" ")[0] || s.firma)},`);
 const modellText = (s) => (s.modell === "kauf"
   ? `Kauf: Einrichtung ${euro(s.preisNetto)} netto einmalig (${euro(brutto(s.preisNetto))} brutto), keine monatliche Grundgebühr, keine Provision`
-  : `Provision: ${CFG.provisionProzent} % netto vom Betrag jeder Zahlung über Tattoofin, keine Einrichtungs- und keine Grundgebühr`);
+  : `Provision: ${CFG.provisionProzent} % vom Zahlbetrag jeder Zahlung über Tattoofin, alles inklusive (Zahlungsgebühren und USt.), keine Einrichtungs- und keine Grundgebühr`);
 const mk = (subject, l) => ({ subject, ...layout(l) });
 
 export const mails = {
@@ -46,7 +46,7 @@ export const mails = {
       ["Vertragstext", `<a href="${CFG.siteUrl}/vertrag.html">Vertrag</a> · <a href="${CFG.siteUrl}/avv.html">AVV</a>`],
     ]) + p("<b>So geht's weiter:</b>") +
       `<ol style="margin:0 0 14px;padding-left:20px">
-      <li><b>Stripe-Konto verbinden</b> (ca. 10 Minuten): Das Konto gehört deinem Studio. Stripe prüft Identität und Bankverbindung, das dauert meist 1 bis 3 Werktage.</li>
+      <li><b>Stripe-Konto verbinden</b> (ca. 10 Minuten): ${s.modell === "provision" ? "Über dieses Konto zahlt Stripe dir automatisch " + (100 - CFG.provisionProzent) + " % jeder Kundenzahlung auf das Bankkonto deines Studios aus." : "Das Konto gehört deinem Studio."} Stripe prüft Identität und Bankverbindung, das dauert meist 1 bis 3 Werktage.</li>
       <li><b>Fragebogen ausfüllen</b>, damit wir Branding und Zahlungsarten passend einrichten.</li>
       <li>Wir richten alles ein, testen den Ablauf und schulen dein Team. Dann bekommst du dein Studio Kit mit QR-Code, Aufklebern und Vorlagen.</li></ol>` +
       p(`Über dein Studio-Portal kommst du jederzeit an alles ran: <a href="${esc(loginUrl)}">zum Portal</a>.`),
@@ -103,7 +103,7 @@ export const mails = {
       ["Zahlungslink erstellen", `<a href="${CFG.siteUrl}/portal.html#anfordern">im Portal</a> (Betrag, Kunde, Projekt, fertig)`],
       ["Deine Zahlseite mit QR", `<a href="${CFG.siteUrl}/zahlen.html?s=${esc(s.slug)}">${CFG.siteUrl}/zahlen.html?s=${esc(s.slug)}</a>`],
       ["Studio Kit", "Fensteraufkleber, Flyer, Aufsteller und Social-Vorlagen im Portal unter „Studio Kit“"],
-      [s.modell === "kauf" ? "Zufriedenheitsgarantie" : "Abrechnung", s.modell === "kauf" ? `bis ${datum(new Date(Date.now() + CFG.garantieTage * 864e5).toISOString())}` : `${CFG.provisionProzent} % werden automatisch einbehalten, die Rechnung kommt einmal im Monat`],
+      [s.modell === "kauf" ? "Zufriedenheitsgarantie" : "Abrechnung", s.modell === "kauf" ? `bis ${datum(new Date(Date.now() + CFG.garantieTage * 864e5).toISOString())}` : `Stripe zahlt dir automatisch ${100 - CFG.provisionProzent} % jeder Zahlung aus, die Rechnung über die ${CFG.provisionProzent} % kommt einmal im Monat`],
     ]) + box("Wichtig fürs Team: keine Raten oder Zinsen versprechen. Einfach sagen: „Du kannst beim Bezahlen schauen, welche Zahlungsoptionen dir angeboten werden.“"),
     cta: "Zum Studio-Portal", ctaUrl: `${CFG.siteUrl}/portal.html`,
   }),
@@ -114,8 +114,11 @@ export const mails = {
     body: rows([
       ["Kunde", esc(z.kunde)], ["Projekt", esc(z.beschreibung)], ["Betrag", euro(z.betragCent)],
       ["Zahlungsart", esc(z.zahlartText || z.zahlart || "")],
-      ["Tattoofin-Provision", s.modell === "provision" ? euro(z.gebuehrBruttoCent) + " inkl. USt. (automatisch einbehalten)" : ""],
-    ]) + p("Die Auszahlung auf dein Konto übernimmt Stripe nach deinem Auszahlungsplan. Gebühren des Zahlungsanbieters siehst du im Stripe-Dashboard."),
+      ["Tattoofin " + CFG.provisionProzent + " % (alles inklusive)", z.abwicklung === "plattform" ? euro(z.gebuehrBruttoCent) : ""],
+      ["Auszahlung an dich", z.abwicklung === "plattform" ? "<b>" + euro(z.betragCent - z.gebuehrBruttoCent) + "</b>" : ""],
+    ]) + p(z.abwicklung === "plattform"
+      ? "Stripe überweist den Betrag automatisch auf das Bankkonto deines Studios. Weitere Gebühren fallen für dich nicht an: Die Kosten des Zahlungsanbieters sind in den " + CFG.provisionProzent + " % enthalten."
+      : "Die Auszahlung auf dein Konto übernimmt Stripe nach deinem Auszahlungsplan. Gebühren des Zahlungsanbieters siehst du im Stripe-Dashboard."),
     cta: "Im Portal ansehen", ctaUrl: `${CFG.siteUrl}/portal.html#zahlungen`,
   }),
 
@@ -128,27 +131,59 @@ export const mails = {
     footerNote: `Diese E-Mail wurde im Auftrag von ${esc(s.firma)} über Tattoofin versendet.`,
   }),
 
-  rueckbuchung: (s, z) => mk(`⚠️ Rückbuchung: ${euro(z.betragCent)} von ${z.kunde || "Kunde"}`, {
-    preheader: "Bitte Belege bei Stripe einreichen.",
-    title: "Ein Kunde hat eine Zahlung zurückgebucht",
-    body: hallo(s) + p(`für die Zahlung von <b>${esc(z.kunde || "Kunde")}</b> über <b>${euro(z.betragCent)}</b> (${esc(z.beschreibung || "Tattoo-Projekt")}) wurde eine Rückbuchung bzw. Reklamation eröffnet. Grund laut Bank/Anbieter: <b>${esc(z.rueckbuchung?.grund || "nicht angegeben")}</b>.`) +
-      box(`<b>Was du jetzt tun solltest:</b> Im Stripe-Dashboard unter „Zahlungen → Angefochten“ Belege einreichen${z.rueckbuchung?.faelligBis ? `, spätestens bis <b>${datum(z.rueckbuchung.faelligBis)}</b>` : ""}: unterschriebene Einverständniserklärung, Terminbestätigung, Chatverlauf, Foto vom fertigen Tattoo (ohne Gesicht), Rechnung.`) +
-      p("Wird die Rückbuchung endgültig zu deinen Lasten entschieden, buchen wir die Tattoofin-Provision automatisch zurück."),
-    cta: "Zum Stripe-Dashboard", ctaUrl: "https://dashboard.stripe.com/disputes",
+  rueckbuchung: (s, z) => {
+    const plattform = z.abwicklung === "plattform";
+    const bis = z.rueckbuchung?.faelligBis ? `, spätestens bis <b>${datum(z.rueckbuchung.faelligBis)}</b>` : "";
+    const belege = "unterschriebene Einverständniserklärung, Terminbestätigung bzw. akzeptierte Anzahlungsbedingungen, Chatverlauf, Foto vom fertigen Tattoo (ohne Gesicht), Rechnung";
+    return mk(`⚠️ Rückbuchung: ${euro(z.betragCent)} von ${z.kunde || "Kunde"}`, {
+      preheader: plattform ? "Bitte schick uns die Belege." : "Bitte Belege bei Stripe einreichen.",
+      title: z.rueckbuchung?.anfrage ? "Ein Kunde hat eine Zahlung reklamiert" : "Ein Kunde hat eine Zahlung zurückgebucht",
+      body: hallo(s) + p(`für die Zahlung von <b>${esc(z.kunde || "Kunde")}</b> über <b>${euro(z.betragCent)}</b> (${esc(z.beschreibung || "Tattoo-Projekt")}${z.art === "anzahlung" ? ", Anzahlung" : ""}) wurde eine Rückbuchung bzw. Reklamation eröffnet. Grund laut Bank/Anbieter: <b>${esc(z.rueckbuchung?.grund || "nicht angegeben")}</b>.`) +
+        (plattform
+          ? box(`<b>Was du jetzt tun solltest:</b> Antworte auf diese E-Mail oder schick uns per WhatsApp die Belege${bis}: ${belege}. Wir reichen sie für dich bei Stripe ein.`) +
+            p(`Solange der Fall offen ist, holt Stripe den Betrag abzüglich der Tattoofin-Provision plus ${euro(CFG.ruecklastGebuehrCent)} Rückbuchungsgebühr von deinem Studio-Konto zurück. Wird zu deinen Gunsten entschieden, bekommst du alles zurück. Geht der Fall verloren, verlangen wir für diese Zahlung keine Provision.`)
+          : box(`<b>Was du jetzt tun solltest:</b> Im Stripe-Dashboard unter „Zahlungen → Angefochten“ Belege einreichen${bis}: ${belege}.`)),
+      cta: plattform ? "Belege per WhatsApp schicken" : "Zum Stripe-Dashboard",
+      ctaUrl: plattform ? `https://wa.me/${CFG.whatsapp}` : "https://dashboard.stripe.com/disputes",
+    });
+  },
+
+  rueckbuchungEntschieden: (s, z) => {
+    const st = z.rueckbuchung?.status;
+    const gewonnen = st === "won" || st === "warning_closed";
+    return mk(gewonnen ? `✅ Rückbuchung erledigt: ${euro(z.betragCent)} von ${z.kunde || "Kunde"}` : `Rückbuchung entschieden: ${euro(z.betragCent)} von ${z.kunde || "Kunde"}`, {
+      title: gewonnen ? "Der Fall ist zu deinen Gunsten erledigt" : st === "lost" ? "Die Rückbuchung ging leider verloren" : "Der Rückbuchungsfall ist abgeschlossen",
+      body: hallo(s) + (gewonnen
+        ? p(`die Reklamation zur Zahlung von <b>${esc(z.kunde || "Kunde")}</b> über <b>${euro(z.betragCent)}</b> ist erledigt. ${z.rueckbuchung?.zurueckgeholtCent ? `Die zurückgeholten <b>${euro(z.rueckbuchung.zurueckgeholtCent)}</b> überweist Stripe wieder auf dein Studio-Konto.` : "Das Geld bleibt bei dir."}`)
+        : st === "lost"
+          ? p(`die Bank bzw. der Zahlungsanbieter hat die Rückbuchung zur Zahlung von <b>${esc(z.kunde || "Kunde")}</b> über <b>${euro(z.betragCent)}</b> zugunsten des Kunden entschieden. Der Betrag geht an den Kunden zurück.`) +
+            (z.abwicklung === "plattform" ? p("Für diese Zahlung verlangen wir keine Provision. Tipp für die Zukunft: Anzahlungsbedingungen und Einverständniserklärung immer unterschreiben bzw. bestätigen lassen, das sind die stärksten Belege.") : "")
+          : p(`der Rückbuchungsfall zur Zahlung von <b>${esc(z.kunde || "Kunde")}</b> ist abgeschlossen (Status: ${esc(st || "")}).`)),
+      cta: "Im Portal ansehen", ctaUrl: `${CFG.siteUrl}/portal.html#zahlungen`,
+    });
+  },
+
+  erstattung: (s, z, { betragCent, provisionZurueckCent }) => mk(`Erstattung an ${z.kunde || "Kunde"}: ${euro(betragCent)}`, {
+    title: "Erstattung ausgelöst",
+    body: hallo(s) + p(`du hast <b>${euro(betragCent)}</b> an <b>${esc(z.kunde || "Kunde")}</b> erstattet (${esc(z.beschreibung || "Tattoo-Projekt")}). Der Kunde bekommt das Geld über die ursprüngliche Zahlungsart zurück, meist innerhalb von 5 bis 10 Werktagen.`) +
+      p(`Der Betrag wird von deinem Studio-Konto bei Stripe zurückgeholt. Die Tattoofin-Provision bekommst du anteilig zurück (${provisionZurueckCent != null ? euro(provisionZurueckCent) : "wird gleich verrechnet"}), abzüglich der Gebühr des Zahlungsanbieters, die bei Erstattungen nicht zurückkommt.`),
+    cta: "Im Portal ansehen", ctaUrl: `${CFG.siteUrl}/portal.html#zahlungen`,
   }),
 
   monatsabrechnung: (s, ab, { rechnungUrl }) => mk(`Deine Tattoofin-Abrechnung ${monatName(ab.monat)}`, {
-    preheader: ab.provisionNettoCent ? `${ab.positionen.length} Zahlungen · Umsatz ${euro(ab.umsatzCent)}` : "Diesen Monat fällt keine Provision an.",
+    preheader: ab.provisionBruttoCent ? `${ab.positionen.length} Zahlungen · ${euro(ab.umsatzCent)} · Auszahlung ${euro(ab.auszahlungCent ?? ab.umsatzCent - ab.provisionBruttoCent)}` : "Diesen Monat fällt keine Provision an.",
     title: `Abrechnung ${monatName(ab.monat)}`,
-    body: hallo(s) + (ab.provisionNettoCent
+    body: hallo(s) + (ab.provisionBruttoCent
       ? p(`im ${monatName(ab.monat)} haben deine Kunden <b>${ab.positionen.length} Zahlung${ab.positionen.length === 1 ? "" : "en"}</b> über Tattoofin geleistet, zusammen <b>${euro(ab.umsatzCent)}</b>. 🖤`) +
         rows([
-          ["Provision " + CFG.provisionProzent + " % (netto)", euro(ab.provisionNettoCent)],
-          ["USt. " + CFG.ustProzent + " %", euro(ab.provisionBruttoCent - ab.provisionNettoCent)],
-          ["Gesamt (bereits einbehalten)", "<b>" + euro(ab.provisionBruttoCent) + "</b>"],
-        ]) + p("Die Provision wurde bei jeder Zahlung automatisch einbehalten. Du musst nichts überweisen. Die Rechnung ist für deine Buchhaltung.")
+          ["Zahlungen deiner Kunden", euro(ab.umsatzCent)],
+          ["Tattoofin " + CFG.provisionProzent + " % (alles inklusive)", euro(ab.provisionBruttoCent)],
+          ["davon netto", euro(ab.provisionNettoCent)],
+          ["davon USt. " + CFG.ustProzent + " %", euro(ab.provisionBruttoCent - ab.provisionNettoCent)],
+          ["An dich ausgezahlt", "<b>" + euro(ab.auszahlungCent ?? ab.umsatzCent - ab.provisionBruttoCent) + "</b>"],
+        ]) + p(`Die Provision wurde bei jeder Zahlung automatisch einbehalten, Stripe hat dir den Rest ausgezahlt. Du musst nichts überweisen. In den ${CFG.provisionProzent} % sind die Gebühren der Zahlungsanbieter schon enthalten. Die Rechnung ist für deine Buchhaltung (Vorsteuer).`)
       : p(`im ${monatName(ab.monat)} liefen keine Zahlungen über Tattoofin. Es fällt keine Provision an.`)),
-    cta: ab.provisionNettoCent && rechnungUrl ? "Rechnung ansehen" : "Zum Portal", ctaUrl: ab.provisionNettoCent && rechnungUrl ? rechnungUrl : `${CFG.siteUrl}/portal.html#abrechnungen`,
+    cta: ab.provisionBruttoCent && rechnungUrl ? "Rechnung ansehen" : "Zum Portal", ctaUrl: ab.provisionBruttoCent && rechnungUrl ? rechnungUrl : `${CFG.siteUrl}/portal.html#abrechnungen`,
   }),
 
   zahlungFehlgeschlagen: (s, { betragCent, rechnungUrl }) => mk("Zahlung fehlgeschlagen: bitte kurz prüfen", {
@@ -192,7 +227,7 @@ export const mails = {
   anmeldungAbgebrochen: (s, { resumeUrl }) => mk("Fast geschafft: dein Abschluss ist noch offen", {
     title: "Du warst fast fertig 🙂", preheader: "Mit einem Klick weitermachen.",
     body: hallo(s) + p("du hast gestern angefangen, Tattoofin für dein Studio abzuschließen, aber die Zahlung ist noch offen.") +
-      p(`Falls etwas unklar war: Antworte einfach auf diese E-Mail. Und falls du lieber ohne Einrichtungsgebühr startest: Im Provisionsmodell zahlst du nur ${CFG.provisionProzent} % von Zahlungen, die über Tattoofin laufen.`),
+      p(`Falls etwas unklar war: Antworte einfach auf diese E-Mail. Und falls du lieber ohne Einrichtungsgebühr startest: Im Provisionsmodell zahlst du nur ${CFG.provisionProzent} % von Zahlungen, die über Tattoofin laufen, inklusive aller Zahlungsgebühren.`),
     cta: "Abschluss fortsetzen", ctaUrl: resumeUrl,
   }),
 

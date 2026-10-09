@@ -1,8 +1,8 @@
 // Geschäftslogik: Benachrichtigungen, Zahlungslinks, Kündigung, Monatsabrechnung.
-import { CFG, plattformgebuehr } from "./config.mjs";
+import { CFG, plattformgebuehr, netto } from "./config.mjs";
 import { sendMail } from "./mail.mjs";
 import { mails } from "./emails.mjs";
-import { stripe, taxRateId } from "./stripe.mjs";
+import { stripe, taxRateId, ensureCustomer } from "./stripe.mjs";
 import { allStudios, zahlungenVon, saveZahlung, getAbrechnung, saveAbrechnung, saveStudio, log, store } from "./store.mjs";
 import { monatsende, now, HttpError } from "./util.mjs";
 import { loginLink } from "./auth.mjs";
@@ -51,68 +51,95 @@ export function darfKassieren(s) {
   return s.stripe?.accountId && s.stripe?.chargesEnabled && ["einrichtung", "live", "gekuendigt"].includes(s.status);
 }
 
-// Checkout-Sitzung auf dem Stripe-Konto des Studios (Direct Charge). Provision = Plattformgebühr.
+// Provisions-Studios: Tattoofin kassiert als Plattform (Destination Charge), Stripe überweist den Rest an das Studio.
+export const plattformKassiert = (s) => s.modell === "provision";
+
+export const ANZAHLUNG_STANDARD = "Die Anzahlung sichert deinen Termin und wird mit dem Preis deines Tattoos verrechnet. "
+  + "Sagst du den Termin weniger als 48 Stunden vorher ab oder erscheinst du nicht, behält das Studio die Anzahlung ein. "
+  + "Verschieben ist nach Absprache möglich.";
+export const anzahlungsbedingungen = (s) => (s.anzahlungsbedingungen || ANZAHLUNG_STANDARD);
+export const istAnzahlung = (z) => z.art === "anzahlung" || Boolean(z.anzahlung);
+
+// Checkout-Sitzung für eine Kundenzahlung.
+//  Kauf:      auf dem eigenen Stripe-Konto des Studios (Direct Charge), keine Plattformgebühr.
+//  Provision: auf der Tattoofin-Plattform mit transfer_data → Konto des Studios und on_behalf_of (Studio ist Händler).
+//             application_fee_amount = 10 % vom Zahlbetrag. Stripe-Gebühren trägt Tattoofin aus diesen 10 %.
 export async function checkoutFuer(studio, z) {
   if (!darfKassieren(studio)) throw new HttpError(409, "Dieses Studio kann gerade keine Zahlungen annehmen.");
+  const plattform = plattformKassiert(studio);
   const fee = plattformgebuehr(z.betragCent, studio.modell);
+  const anzahlung = istAnzahlung(z);
+  const meta = { tattoofinZahlung: z.id, studioId: studio.id };
   const session = await stripe("POST", "/checkout/sessions", {
     mode: "payment", locale: "de", client_reference_id: z.id, payment_method_types: CFG.zahlarten,
-    line_items: [{ quantity: 1, price_data: { currency: "eur", unit_amount: z.betragCent, product_data: { name: z.beschreibung || "Tattoo-Projekt", description: `${studio.firma}${z.art === "anzahlung" ? " · Anzahlung" : ""}` } } }],
+    line_items: [{ quantity: 1, price_data: { currency: "eur", unit_amount: z.betragCent, product_data: { name: z.beschreibung || "Tattoo-Projekt", description: `${studio.firma}${anzahlung ? " · Anzahlung" : ""}` } } }],
     customer_email: z.email || undefined,
+    custom_text: anzahlung ? { submit: { message: ("Anzahlungsbedingungen: " + anzahlungsbedingungen(studio)).slice(0, 1200) } } : undefined,
     payment_intent_data: {
-      ...(fee.bruttoCent ? { application_fee_amount: fee.bruttoCent } : {}),
-      description: `${z.beschreibung || "Tattoo-Projekt"} (${z.kunde || "Kunde"})`,
-      metadata: { tattoofinZahlung: z.id, studioId: studio.id },
+      ...(plattform ? { application_fee_amount: fee.bruttoCent, on_behalf_of: studio.stripe.accountId, transfer_data: { destination: studio.stripe.accountId }, transfer_group: z.id } : {}),
+      description: `${z.beschreibung || "Tattoo-Projekt"} (${z.kunde || "Kunde"})${anzahlung ? " · Anzahlung" : ""}`,
+      metadata: meta,
     },
-    metadata: { tattoofinZahlung: z.id, studioId: studio.id },
+    metadata: meta,
     success_url: `${CFG.siteUrl}/bezahlt.html?z=${z.id}`,
     cancel_url: `${CFG.siteUrl}/zahlung.html?z=${z.id}&abbruch=1`,
-  }, { account: studio.stripe.accountId });
+  }, plattform ? {} : { account: studio.stripe.accountId });
   z.checkoutSessionId = session.id;
+  z.abwicklung = plattform ? "plattform" : "studio";
   z.gebuehrNettoCent = fee.nettoCent;
   z.gebuehrBruttoCent = fee.bruttoCent;
   await saveZahlung(z);
   return session.url;
 }
 
-// Monatsabrechnung Provision: Gebühren wurden bei der Zahlung schon einbehalten. Hier entsteht die Rechnung
-// (in Stripe als „außerhalb von Stripe bezahlt“ markiert) und die Übersicht per E-Mail.
+// Provision, die Tattoofin an einer Zahlung endgültig verdient (brutto, inkl. USt.)
+export function provisionVerdient(z) {
+  if (z.status === "rueckgebucht") return 0;
+  return Math.max(0, (z.gebuehrBruttoCent || 0) - (z.gebuehrErstattetCent || 0));
+}
+
+// Monatsabrechnung Provision: Die Provision wurde bei jeder Zahlung schon einbehalten. Hier entsteht die Rechnung
+// (Beträge inkl. USt., in Stripe als „außerhalb von Stripe bezahlt“ markiert) und die Übersicht per E-Mail.
 export async function monatsabrechnung(monat, { dryRun = false } = {}) {
   const ergebnis = [];
   for (const s of await allStudios()) {
     if (s.modell !== "provision" || !s.stripe?.accountId) continue;
     const vorhanden = await getAbrechnung(s.id, monat);
     if (vorhanden && !dryRun) { ergebnis.push({ studio: s.firma, monat, status: "schon abgerechnet" }); continue; }
-    // Erstattungen und verlorene Rückbuchungen mindern die Provision (die Gebühr wurde anteilig zurückgebucht)
-    const ust = 1 + CFG.ustProzent / 100;
+    // Erstattungen und verlorene Rückbuchungen mindern die Provision
     const zahlungen = (await zahlungenVon(s.id)).filter((z) => ["bezahlt", "erstattet", "rueckgebucht"].includes(z.status) && (z.bezahltAm || "").slice(0, 7) === monat);
-    const positionen = zahlungen.map((z) => ({
-      zahlungId: z.id, datum: z.bezahltAm, kunde: z.kunde, beschreibung: z.beschreibung,
-      betragCent: z.status === "rueckgebucht" ? 0 : z.betragCent - (z.erstattetCent || 0),
-      provisionNettoCent: Math.max(0, (z.gebuehrNettoCent || 0) - Math.round((z.gebuehrErstattetCent || 0) / ust)),
-    })).filter((p) => p.provisionNettoCent > 0 || p.betragCent > 0);
+    const positionen = zahlungen.map((z) => {
+      const betragCent = z.status === "rueckgebucht" ? 0 : z.betragCent - (z.erstattetCent || 0);
+      const provisionBruttoCent = provisionVerdient(z);
+      return {
+        zahlungId: z.id, datum: z.bezahltAm, kunde: z.kunde, beschreibung: z.beschreibung, art: z.art,
+        betragCent, provisionBruttoCent, auszahlungCent: betragCent - provisionBruttoCent,
+      };
+    }).filter((p) => p.provisionBruttoCent > 0 || p.betragCent > 0);
     const ab = {
       studioId: s.id, monat, positionen, createdAt: now(),
       umsatzCent: positionen.reduce((a, b) => a + b.betragCent, 0),
-      provisionNettoCent: positionen.reduce((a, b) => a + b.provisionNettoCent, 0),
+      provisionBruttoCent: positionen.reduce((a, b) => a + b.provisionBruttoCent, 0),
     };
-    ab.provisionBruttoCent = Math.round(ab.provisionNettoCent * (100 + CFG.ustProzent) / 100);
-    ab.status = ab.provisionNettoCent ? "einbehalten" : "nichts_faellig";
+    ab.provisionNettoCent = netto(ab.provisionBruttoCent);
+    ab.auszahlungCent = ab.umsatzCent - ab.provisionBruttoCent;
+    ab.status = ab.provisionBruttoCent ? "einbehalten" : "nichts_faellig";
     if (dryRun) { ergebnis.push({ studio: s.firma, ...ab }); continue; }
-    if (!ab.provisionNettoCent && s.status === "beendet") continue;
+    if (!ab.provisionBruttoCent && s.status === "beendet") continue;
 
     let rechnungUrl = "";
-    if (ab.provisionNettoCent > 0) {
-      const txr = await taxRateId();
+    if (ab.provisionBruttoCent > 0) {
+      if (!s.stripe.customerId) { const c = await ensureCustomer(s); s.stripe.customerId = c.id; await saveStudio(s); }
+      const txr = await taxRateId({ inklusive: true });
       await stripe("POST", "/invoiceitems", {
-        customer: s.stripe.customerId, currency: "eur", amount: ab.provisionNettoCent, tax_rates: [txr],
-        description: `Tattoofin-Provision ${CFG.provisionProzent} % auf ${positionen.length} Zahlung(en), Umsatz ${(ab.umsatzCent / 100).toFixed(2)} € (${monat})`,
+        customer: s.stripe.customerId, currency: "eur", amount: ab.provisionBruttoCent, tax_rates: [txr],
+        description: `Tattoofin-Provision ${CFG.provisionProzent} % vom Zahlbetrag (inkl. Zahlungsgebühren) auf ${positionen.length} Zahlung(en), Zahlbeträge ${(ab.umsatzCent / 100).toFixed(2)} € (${monat})`,
         metadata: { studioId: s.id, monat },
       }, { idempotencyKey: `ii-prov-${s.id}-${monat}` });
       const inv = await stripe("POST", "/invoices", {
         customer: s.stripe.customerId, collection_method: "send_invoice", days_until_due: 1, auto_advance: false,
         pending_invoice_items_behavior: "include", currency: "eur",
-        description: `Tattoofin-Provision ${monat}. Bereits bei den einzelnen Zahlungen als Plattformgebühr einbehalten.`,
+        description: `Tattoofin-Provision ${monat}. Bereits bei den einzelnen Zahlungen einbehalten, die Auszahlung an dich war entsprechend geringer.`,
         metadata: { studioId: s.id, typ: "provision", monat },
       }, { idempotencyKey: `inv-prov-${s.id}-${monat}` });
       const fin = await stripe("POST", `/invoices/${inv.id}/finalize`, {});
@@ -124,8 +151,8 @@ export async function monatsabrechnung(monat, { dryRun = false } = {}) {
     for (const z of zahlungen) { z.abgerechnet = monat; await saveZahlung(z); }
     await saveAbrechnung(ab);
     await notify(s, mails.monatsabrechnung(s, ab, { rechnungUrl }));
-    await log("abrechnung", { studioId: s.id, monat, provisionNettoCent: ab.provisionNettoCent });
-    ergebnis.push({ studio: s.firma, monat, umsatzCent: ab.umsatzCent, provisionNettoCent: ab.provisionNettoCent, zahlungen: positionen.length, rechnung: ab.rechnungNr });
+    await log("abrechnung", { studioId: s.id, monat, provisionBruttoCent: ab.provisionBruttoCent });
+    ergebnis.push({ studio: s.firma, monat, umsatzCent: ab.umsatzCent, provisionBruttoCent: ab.provisionBruttoCent, provisionNettoCent: ab.provisionNettoCent, auszahlungCent: ab.auszahlungCent, zahlungen: positionen.length, rechnung: ab.rechnungNr });
   }
   if (!dryRun && ergebnis.some((e) => e.status !== "schon abgerechnet")) await sendMail({
     to: CFG.adminEmail, subject: `[Tattoofin] Monatsabrechnung ${monat} erstellt`,

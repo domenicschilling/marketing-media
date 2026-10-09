@@ -6,13 +6,15 @@
 //   POST   /api/portal/kuendigung          { grund, garantie }
 //   DELETE /api/portal/kuendigung          Kündigung zurücknehmen
 //   POST   /api/portal/rechnungen          Stripe-Kundenportal (Tattoofin-Rechnungen)
-//   PATCH  /api/portal/kontakt             Benachrichtigungs-E-Mail ändern
+//   PATCH  /api/portal/kontakt             Benachrichtigungs-E-Mail bzw. Anzahlungsbedingungen ändern
+//   POST   /api/portal/erstattung/:id      Kundenzahlung (Provision) ganz oder teilweise erstatten { betrag }
+//   POST   /api/portal/stripe-dashboard    Login-Link ins Stripe-Express-Dashboard (Auszahlungen)
 import { CFG, plattformgebuehr } from "./_lib/config.mjs";
 import { json, fail, body, clean, id, now, handler, isEmail, parseBetrag } from "./_lib/util.mjs";
 import { saveStudio, zahlungenVon, getZahlung, saveZahlung, abrechnungenVon, log } from "./_lib/store.mjs";
 import { currentStudio } from "./_lib/auth.mjs";
-import { stripe } from "./_lib/stripe.mjs";
-import { notify, notifyAdmin, kuendigungsDatum, connectUrl, darfKassieren, STATUS } from "./_lib/domain.mjs";
+import { stripe, dashboardLink } from "./_lib/stripe.mjs";
+import { notify, notifyAdmin, kuendigungsDatum, connectUrl, darfKassieren, anzahlungsbedingungen, provisionVerdient, STATUS } from "./_lib/domain.mjs";
 import { mails } from "./_lib/emails.mjs";
 
 const zahlseite = (s) => `${CFG.siteUrl}/zahlen.html?s=${s.slug}`;
@@ -24,7 +26,8 @@ const oeffentlich = (s) => ({
   kuendigung: s.kuendigung || null, fragebogenAm: s.fragebogen?.updatedAt || null,
   benachrichtigung: { email: s.benachrichtigungEmail || s.email },
   garantieBis: s.modell === "kauf" ? (s.goLiveAt ? new Date(new Date(s.goLiveAt).getTime() + CFG.garantieTage * 864e5).toISOString() : "ab Go-live") : null,
-  stripe: { verbunden: Boolean(s.stripe?.accountId), freigegeben: Boolean(s.stripe?.chargesEnabled), auszahlungen: Boolean(s.stripe?.payoutsEnabled) },
+  stripe: { verbunden: Boolean(s.stripe?.accountId), freigegeben: Boolean(s.stripe?.chargesEnabled), auszahlungen: Boolean(s.stripe?.payoutsEnabled), express: s.stripe?.kontoTyp === "express" },
+  anzahlungsbedingungen: anzahlungsbedingungen(s),
   kannKassieren: Boolean(darfKassieren(s)), zahlseite: zahlseite(s), connectUrl: connectUrl(s),
 });
 
@@ -44,7 +47,8 @@ export default handler(async (req) => {
       studio: oeffentlich(s), zahlungen, abrechnungen: await abrechnungenVon(s.id),
       kpis: {
         umsatzMonatCent: imMonat.reduce((a, z) => a + z.betragCent, 0), zahlungenMonat: imMonat.length,
-        provisionMonatNettoCent: imMonat.reduce((a, z) => a + (z.gebuehrNettoCent || 0), 0),
+        provisionMonatBruttoCent: imMonat.reduce((a, z) => a + provisionVerdient(z), 0),
+        auszahlungMonatCent: imMonat.reduce((a, z) => a + z.betragCent - (z.erstattetCent || 0) - provisionVerdient(z), 0),
         umsatzGesamtCent: bezahlt.reduce((a, z) => a + z.betragCent, 0), offen: zahlungen.filter((z) => z.status === "offen").length,
         anteilKlarna: bezahlt.length ? Math.round(100 * bezahlt.filter((z) => z.zahlart === "klarna").length / bezahlt.length) : 0,
       },
@@ -131,6 +135,32 @@ export default handler(async (req) => {
     }
   }
 
+  // Erstattung bei Provision: Tattoofin hat kassiert, also läuft die Erstattung über die Plattform.
+  // reverse_transfer holt den Betrag anteilig vom Studio-Konto zurück; die Provision verrechnet der Webhook (charge.refunded).
+  if (bereich === "erstattung" && sub && req.method === "POST") {
+    const z = await getZahlung(s.id, sub);
+    if (!z) return fail("Nicht gefunden", 404);
+    if (z.abwicklung !== "plattform") return fail("Erstattungen machst du direkt in deinem Stripe-Dashboard.");
+    if (z.status !== "bezahlt") return fail("Nur bezahlte Zahlungen können erstattet werden.");
+    if (z.rueckbuchung && !z.rueckbuchung.abgeschlossenAm) return fail("Zu dieser Zahlung läuft eine Rückbuchung. Eine Erstattung ist erst nach Abschluss möglich.");
+    const b = await body(req);
+    const rest = z.betragCent - (z.erstattetCent || 0);
+    const betragCent = parseBetrag(b.betrag);
+    if (!(betragCent > 0 && betragCent <= rest)) return fail(`Bitte einen Betrag bis ${(rest / 100).toLocaleString("de-DE", { minimumFractionDigits: 2 })} € eingeben.`);
+    await stripe("POST", "/refunds", {
+      payment_intent: z.paymentIntentId, amount: betragCent, reverse_transfer: true, refund_application_fee: false,
+      metadata: { tattoofinZahlung: z.id, studioId: s.id, quelle: "portal" },
+    }, { idempotencyKey: `re-${z.id}-${z.erstattetCent || 0}-${betragCent}` });
+    // Status, Provision und E-Mail an das Studio aktualisiert der Webhook „charge.refunded“
+    await log("erstattung", { studioId: s.id, zahlungId: z.id, betragCent });
+    return json({ ok: true });
+  }
+
+  if (bereich === "stripe-dashboard" && req.method === "POST") {
+    if (!s.stripe?.accountId) return fail("Noch kein Stripe-Konto verbunden.", 409);
+    return json({ url: await dashboardLink(s) });
+  }
+
   if (bereich === "rechnungen" && req.method === "POST") {
     const ps = await stripe("POST", "/billing_portal/sessions", { customer: s.stripe.customerId, return_url: `${CFG.siteUrl}/portal.html#konto`, locale: "de" });
     return json({ url: ps.url });
@@ -139,6 +169,7 @@ export default handler(async (req) => {
   if (bereich === "kontakt" && req.method === "PATCH") {
     const b = await body(req);
     if (b.email !== undefined) { if (!isEmail(b.email)) return fail("Bitte gültige E-Mail"); s.benachrichtigungEmail = clean(b.email, 160); }
+    if (b.anzahlungsbedingungen !== undefined) s.anzahlungsbedingungen = clean(b.anzahlungsbedingungen, 1000) || null;
     await saveStudio(s);
     return json(oeffentlich(s));
   }

@@ -47,7 +47,8 @@
         </form>
         <div id="l-out"></div>
       </div>
-      <div class="panel"><h2>So sprichst du es an</h2><p class="muted">„Du kannst beim Bezahlen schauen, welche Zahlungsoptionen dir angeboten werden.“ Keine Raten oder Zinsen versprechen, das entscheidet allein der Zahlungsanbieter.</p></div>
+      <div class="panel"><h2>So sprichst du es an</h2><p class="muted">„Du kannst beim Bezahlen schauen, welche Zahlungsoptionen dir angeboten werden.“ Keine Raten oder Zinsen versprechen, das entscheidet allein der Zahlungsanbieter.</p>
+        <p class="muted"><b>Anzahlung vor dem Termin:</b> Art „Anzahlung“ wählen. Dein Kunde muss vor dem Bezahlen deine Anzahlungsbedingungen bestätigen (einstellbar unter „Konto“). Das schützt dich bei No-Shows und ist dein wichtigster Beleg, falls jemand die Zahlung später zurückbucht.</p></div>
     </section>
 
     <section data-tab="zahlungen" class="hidden">
@@ -57,7 +58,7 @@
           <select id="filter" style="width:auto"><option value="alle">Alle</option><option value="bezahlt">Bezahlt</option><option value="offen">Offen</option></select>
         </div>
         <div class="scroll" id="z-liste"></div>
-        <p class="muted" style="font-size:13px;margin-top:12px">Erstattungen machst du direkt in deinem Stripe-Dashboard. Die Tattoofin-Provision wird dabei automatisch anteilig zurückgebucht.</p>
+        <p class="muted" style="font-size:13px;margin-top:12px" id="z-hinweis"></p>
       </div>
     </section>
 
@@ -86,6 +87,10 @@
     <section data-tab="konto" class="hidden">
       <div class="panel"><h2>Stripe-Konto</h2><div id="stripe-info"></div></div>
       <div class="panel"><h2>Tattoofin-Rechnungen</h2><p class="muted">Rechnungen von Tattoofin an dein Studio (Setup bzw. monatliche Provision) herunterladen.</p><button class="btn dark" id="rechnungen">Rechnungen öffnen</button></div>
+      <div class="panel"><h2>Anzahlungsbedingungen</h2>
+        <p class="muted">Sieht dein Kunde bei jeder Anzahlung und muss sie bestätigen. Leer lassen = Standardtext.</p>
+        <div class="field"><textarea id="k-anz" rows="4" maxlength="1000"></textarea></div>
+        <button class="btn gold small" id="k-anz-save">Speichern</button></div>
       <div class="panel"><h2>Benachrichtigungen</h2>
         <div class="field"><label>E-Mail für Zahlungsbenachrichtigungen</label><input type="email" id="k-email"></div>
         <button class="btn gold small" id="k-save">Speichern</button></div>

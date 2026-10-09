@@ -37,7 +37,11 @@ export const CFG = {
   rechnungFaelligTage: Number(env("RECHNUNG_FAELLIG_TAGE", 14)),
   minBetragCent: Number(env("MIN_BETRAG_CENT", 5000)),       // kleinster Zahlungslink (50 €)
   maxBetragCent: Number(env("MAX_BETRAG_CENT", 2000000)),    // größter Zahlungslink (20.000 €)
-  vertragVersion: "2026-10",
+  // Rückbuchungsgebühr von Stripe je Dispute (wird bei Rückbuchungen vom Studio zurückgeholt, bei Gewinn zurückgegeben)
+  ruecklastGebuehrCent: Number(env("RUECKLAST_GEBUEHR_CENT", 2000)),
+  // Optional: Auszahlung an Provisions-Studios erst nach X Tagen (Puffer für Rückbuchungen). Leer = Stripe-Standard.
+  auszahlungTage: env("AUSZAHLUNG_TAGE", ""),
+  vertragVersion: "2026-10b",
   // Zahlarten im Checkout. Bewusst ohne SEPA-Lastschrift: Die kann der Kunde 8 Wochen lang ohne Grund zurückbuchen.
   zahlarten: env("ZAHLARTEN", "card,klarna").split(",").map((x) => x.trim()).filter(Boolean),
 };
@@ -51,12 +55,14 @@ export const SECRETS = {
   adminToken: env("ADMIN_TOKEN", ""),
 };
 
-// Provision als Plattformgebühr (brutto, inkl. USt.) für einen Zahlungsbetrag
+// Provision im Modell B: 10 % vom Zahlbetrag, alles inklusive (Gebühren der Zahlungsanbieter und USt. sind enthalten).
+// Beispiel: Kunde zahlt 3.000 € → 300 € Tattoofin (252,10 € netto + 47,90 € USt.) → 2.700 € gehen an das Studio.
 export function plattformgebuehr(betragCent, modell) {
   if (modell !== "provision") return { nettoCent: 0, bruttoCent: 0 };
-  const nettoCent = Math.round(betragCent * CFG.provisionProzent / 100);
-  return { nettoCent, bruttoCent: Math.round(nettoCent * (100 + CFG.ustProzent) / 100) };
+  const bruttoCent = Math.round(betragCent * CFG.provisionProzent / 100);
+  return { nettoCent: netto(bruttoCent), bruttoCent };
 }
+export const netto = (bruttoCent) => Math.round(bruttoCent * 100 / (100 + CFG.ustProzent));
 
 // Öffentlich sichtbare Werte für die Website (/api/config)
 export function publicConfig() {

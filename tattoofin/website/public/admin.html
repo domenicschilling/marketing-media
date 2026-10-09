@@ -41,12 +41,12 @@
     try { var list = await api("studios"); } catch (err) { if (err.status === 401) { $("login").classList.remove("hidden"); $("app").classList.add("hidden"); return; } msg(err.message, "err"); return; }
     $("login").classList.add("hidden"); $("app").classList.remove("hidden");
     var live = list.filter(function (s) { return s.status === "live"; });
-    $("kpis").innerHTML = [[list.length, "Studios gesamt"], [live.length, "live"], [TF.euro(list.reduce(function (a, s) { return a + s.umsatzCent; }, 0)), "Umsatz über Tattoofin"], [TF.euro(list.reduce(function (a, s) { return a + s.provisionNettoCent; }, 0)), "Provision gesamt (netto)"]]
+    $("kpis").innerHTML = [[list.length, "Studios gesamt"], [live.length, "live"], [TF.euro(list.reduce(function (a, s) { return a + s.umsatzCent; }, 0)), "Umsatz über Tattoofin"], [TF.euro(list.reduce(function (a, s) { return a + s.provisionNettoCent; }, 0)), "Provision gesamt (netto)"], [TF.euro(list.reduce(function (a, s) { return a + s.deckungsbeitragCent; }, 0)), "nach Stripe-Gebühren"]]
       .map(function (k) { return '<div class="kpi"><b>' + k[0] + "</b><span>" + k[1] + "</span></div>"; }).join("");
-    $("liste").innerHTML = '<table class="tbl"><tr><th>Studio</th><th>Modell</th><th>Status</th><th>Stripe</th><th>Seit</th><th>Zahlungen</th><th>Umsatz</th><th>Provision</th><th>Fragebogen</th></tr>' +
+    $("liste").innerHTML = '<table class="tbl"><tr><th>Studio</th><th>Modell</th><th>Status</th><th>Stripe</th><th>Seit</th><th>Zahlungen</th><th>Umsatz</th><th>Provision netto</th><th>nach Gebühren</th><th>Fragebogen</th></tr>' +
       list.map(function (s) {
         return '<tr data-id="' + e(s.id) + '"><td><b>' + e(s.firma) + "</b><br><small>" + e(s.ort || "") + " · " + e(s.email) + "</small></td><td>" + e(s.modell) + '</td><td><span class="tag ' + e(s.status) + '">' + e(s.statusText) + "</span></td><td>" + e(s.stripe) + "</td><td>" + TF.datum(s.createdAt) +
-          "</td><td>" + s.zahlungen + (s.offen ? " (+" + s.offen + " offen)" : "") + "</td><td>" + TF.euro(s.umsatzCent) + "</td><td>" + TF.euro(s.provisionNettoCent, true) + "</td><td>" + (s.fragebogen ? "✓" : "–") + "</td></tr>";
+          "</td><td>" + s.zahlungen + (s.offen ? " (+" + s.offen + " offen)" : "") + "</td><td>" + TF.euro(s.umsatzCent) + "</td><td>" + TF.euro(s.provisionNettoCent, true) + "</td><td>" + TF.euro(s.deckungsbeitragCent, true) + "</td><td>" + (s.fragebogen ? "✓" : "–") + "</td></tr>";
       }).join("") + "</table>";
     var mails = await api("mails");
     $("mails").innerHTML = '<table class="tbl"><tr><th>Zeit</th><th>An</th><th>Betreff</th></tr>' + mails.map(function (m) { return "<tr><td>" + new Date(m.at).toLocaleString("de-DE") + "</td><td>" + e(m.to) + "</td><td>" + e(m.subject) + "</td></tr>"; }).join("") + "</table>";

@@ -2,13 +2,16 @@
 //   GET  /api/pay?z=<zahlungId>   Infos zum Zahlungslink
 //   GET  /api/pay?s=<studioSlug>  Infos zur Zahlseite des Studios
 //   POST /api/pay { z }           Checkout für einen Zahlungslink starten
-//   POST /api/pay { s, betrag, kunde, email, beschreibung }  Zahlung über die Zahlseite starten
+//   POST /api/pay { s, betrag, kunde, email, beschreibung, anzahlung, bedingungen }  Zahlung über die Zahlseite starten
+// Bei Anzahlungen muss der Kunde die Anzahlungsbedingungen des Studios bestätigen (Beleg bei Rückbuchungen).
 import { CFG } from "./_lib/config.mjs";
 import { json, fail, body, clean, id, now, handler, isEmail, parseBetrag } from "./_lib/util.mjs";
 import { getStudio, studioBy, zahlungBy, saveZahlung } from "./_lib/store.mjs";
-import { checkoutFuer, darfKassieren } from "./_lib/domain.mjs";
+import { checkoutFuer, darfKassieren, anzahlungsbedingungen, istAnzahlung } from "./_lib/domain.mjs";
 
-const studioInfo = (s) => ({ firma: s.firma, ort: s.ort, slug: s.slug, aktiv: Boolean(darfKassieren(s)) });
+const studioInfo = (s) => ({ firma: s.firma, ort: s.ort, slug: s.slug, aktiv: Boolean(darfKassieren(s)), anzahlungsbedingungen: anzahlungsbedingungen(s) });
+const NICHT_BESTAETIGT = "Bitte bestätige die Anzahlungsbedingungen des Studios.";
+const bestaetigung = (s) => ({ akzeptiertAm: now(), text: anzahlungsbedingungen(s) });
 
 export default handler(async (req) => {
   const u = new URL(req.url);
@@ -32,6 +35,10 @@ export default handler(async (req) => {
     if (z.status === "bezahlt") return fail("Dieser Betrag ist bereits bezahlt. Danke!", 409);
     if (!["offen", "abgebrochen"].includes(z.status)) return fail("Dieser Zahlungslink ist nicht mehr gültig. Bitte frag im Studio nach einem neuen Link.", 410);
     const s = await getStudio(z.studioId);
+    if (istAnzahlung(z)) {
+      if (!b.bedingungen) return fail(NICHT_BESTAETIGT);
+      z.bedingungen = bestaetigung(s);
+    }
     return json({ url: await checkoutFuer(s, z) });
   }
 
@@ -43,7 +50,10 @@ export default handler(async (req) => {
   const kunde = clean(b.kunde, 80), email = clean(b.email, 160).toLowerCase();
   if (!kunde) return fail("Bitte gib deinen Namen an.");
   if (email && !isEmail(email)) return fail("Bitte gib eine gültige E-Mail-Adresse an.");
-  const z = { id: id("zl_"), studioId: s.id, createdAt: now(), art: "zahlseite", status: "offen", betragCent, kunde, email, beschreibung: clean(b.beschreibung, 120) || "Tattoo-Projekt" };
+  const anzahlung = Boolean(b.anzahlung);
+  if (anzahlung && !b.bedingungen) return fail(NICHT_BESTAETIGT);
+  const z = { id: id("zl_"), studioId: s.id, createdAt: now(), art: "zahlseite", anzahlung, status: "offen", betragCent, kunde, email, beschreibung: clean(b.beschreibung, 120) || (anzahlung ? "Anzahlung" : "Tattoo-Projekt") };
+  if (anzahlung) z.bedingungen = bestaetigung(s);
   await saveZahlung(z);
   return json({ url: await checkoutFuer(s, z) });
 });
