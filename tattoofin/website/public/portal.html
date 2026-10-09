@@ -1,15 +1,18 @@
 <!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Studio-Portal – Ted am Telefon</title><meta name="robots" content="noindex">
-<link rel="icon" href="/assets/logo.png"><link rel="stylesheet" href="/css/site.css">
+<title>Studio-Portal – Tattoofin</title><meta name="robots" content="noindex">
+<link rel="icon" href="/assets/figur.png"><link rel="stylesheet" href="/css/site.css">
 <style>
-.tbl input,.tbl select{padding:7px 9px;font-size:14px;border-radius:9px}
-.tbl input[type=date]{min-width:140px}.tbl input.preis{width:110px}
-.row-saved{animation:ok 1.2s}
-@keyframes ok{0%{background:#dff5e7}100%{background:transparent}}
+.link-out{display:grid;grid-template-columns:1fr 170px;gap:18px;align-items:center;background:var(--gold-soft);border:1px solid #f5d77a;border-radius:16px;padding:18px;margin-top:16px}
+.link-out input{font-size:14px}
+.link-out .qr{background:#fff;border-radius:12px;padding:8px}
+.link-out .qr img,.link-out .qr canvas{width:100%!important;height:auto!important}
+.row-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+@media (max-width:640px){.link-out{grid-template-columns:1fr}}
+.tag.bezahlt{background:#dff5e7;color:#14532d}.tag.in_pruefung{background:#e6effa;color:#1f3f66}.tag.storniert,.tag.abgebrochen,.tag.fehlgeschlagen{background:#eceae4;color:#5b6370}.tag.erstattet{background:#fde8e8;color:#8a1c1c}
 </style>
 </head><body>
-<header class="nav"><div class="wrap"><a class="brand" href="/"><img src="/assets/logo.png" alt=""> Ted am Telefon</a>
+<header class="nav"><div class="wrap"><a class="brand" href="/"><img src="/assets/figur.png" alt=""> Tattoofin</a>
   <nav class="links"><span id="who" style="color:#c9d1d9;font-size:14px"></span><a href="#" id="logout">Logout</a></nav></div></header>
 <main class="sec tight"><div class="wrap">
   <div id="alert"></div>
@@ -17,39 +20,58 @@
     <h1 style="font-size:34px;margin-bottom:4px" id="titel"></h1>
     <p class="muted" style="margin:0 0 20px" id="untertitel"></p>
     <nav class="tabs" id="tabs">
-      <a href="#uebersicht" class="on">Übersicht</a><a href="#anfragen">Anfragen</a><a href="#abrechnungen">Abrechnungen</a>
-      <a href="#materialien">Materialien</a><a href="#vertrag">Vertrag</a><a href="#zahlung">Zahlung &amp; Kontakt</a>
+      <a href="#uebersicht" class="on">Übersicht</a><a href="#anfordern">Zahlung anfordern</a><a href="#zahlungen">Zahlungen</a>
+      <a href="#abrechnungen">Abrechnungen</a><a href="#kit">Studio Kit</a><a href="#vertrag">Vertrag</a><a href="#konto">Konto</a>
     </nav>
 
     <section data-tab="uebersicht">
-      <div class="kpis" id="kpis"></div>
       <div id="todo"></div>
-      <div class="panel"><h2>Neueste Anfragen</h2><div class="scroll" id="neueste"></div></div>
+      <div class="kpis" id="kpis"></div>
+      <div class="panel"><h2>Letzte Zahlungen</h2><div class="scroll" id="neueste"></div></div>
     </section>
 
-    <section data-tab="anfragen" class="hidden">
+    <section data-tab="anfordern" class="hidden">
+      <div class="panel">
+        <h2>Zahlungslink erstellen</h2>
+        <p class="muted" style="margin-top:-4px">Betrag und Projekt eintragen, Link per WhatsApp schicken. Dein Kunde wählt beim Bezahlen, wie er zahlen möchte.</p>
+        <form id="f-link">
+          <div class="grid2">
+            <div class="field"><label>Betrag in €</label><input type="text" inputmode="decimal" id="l-betrag" placeholder="z. B. 1.500" required></div>
+            <div class="field"><label>Art</label><select id="l-art"><option value="gesamt">Projektpreis</option><option value="anzahlung">Anzahlung</option></select></div>
+            <div class="field"><label>Name des Kunden</label><input type="text" id="l-kunde" required></div>
+            <div class="field"><label>E-Mail des Kunden (optional, für die Bestätigung)</label><input type="email" id="l-email"></div>
+          </div>
+          <div class="field"><label>Projekt</label><input type="text" id="l-beschreibung" placeholder="z. B. Sleeve linker Arm, Japanese"></div>
+          <div id="l-fee" class="muted" style="font-size:14px;margin-bottom:12px"></div>
+          <button class="btn gold">Zahlungslink erstellen</button>
+        </form>
+        <div id="l-out"></div>
+      </div>
+      <div class="panel"><h2>So sprichst du es an</h2><p class="muted">„Du kannst beim Bezahlen schauen, welche Zahlungsoptionen dir angeboten werden.“ Keine Raten oder Zinsen versprechen, das entscheidet allein der Zahlungsanbieter.</p></div>
+    </section>
+
+    <section data-tab="zahlungen" class="hidden">
       <div class="panel">
         <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
-          <h2 style="margin:0">Anfragen von Ted</h2>
-          <div><select id="filter" style="width:auto"><option value="offen">Nur offene</option><option value="alle">Alle</option><option value="gebucht">Gebucht</option></select></div>
+          <h2 style="margin:0">Alle Zahlungen</h2>
+          <select id="filter" style="width:auto"><option value="alle">Alle</option><option value="bezahlt">Bezahlt</option><option value="offen">Offen</option></select>
         </div>
-        <p class="muted" id="anfragen-hinweis" style="font-size:14px;margin:0 0 12px"></p>
-        <div class="scroll" id="anfragen-liste"></div>
-        <details style="margin-top:16px"><summary>Anfrage fehlt? Nachtragen</summary>
-          <p>Kam ein Kunde über Ted, ist aber nicht in der Liste (z. B. Rückruf über WhatsApp)? Hier nachtragen.</p>
-          <div class="grid3"><input type="text" id="n-name" placeholder="Name"><input type="date" id="n-datum"><input type="text" id="n-motiv" placeholder="Motiv"></div>
-          <p><button class="btn dark small" id="n-add">Nachtragen</button></p>
-        </details>
+        <div class="scroll" id="z-liste"></div>
+        <p class="muted" style="font-size:13px;margin-top:12px">Erstattungen machst du direkt in deinem Stripe-Dashboard. Die Tattoofin-Provision wird dabei automatisch anteilig zurückgebucht.</p>
       </div>
     </section>
 
     <section data-tab="abrechnungen" class="hidden">
-      <div class="panel"><h2>Abrechnungen</h2><div id="vorschau"></div><div class="scroll" id="abr-liste"></div></div>
+      <div class="panel"><h2>Abrechnungen</h2><div id="abr"></div></div>
     </section>
 
-    <section data-tab="materialien" class="hidden">
-      <div class="panel"><h2>Materialien für dein Studio</h2>
-        <p class="muted">Mit deinem Studionamen und deiner Nummer. Öffnen → „Drucken / PDF“. Fensteraufkleber und Flyer schicken wir dir zum Go-live auch gedruckt.</p>
+    <section data-tab="kit" class="hidden">
+      <div class="panel"><h2>Deine Zahlseite</h2>
+        <p class="muted">Für Theke, Flyer und Aufkleber: Kunden scannen den QR-Code, tragen den mit dir abgestimmten Betrag ein und bezahlen.</p>
+        <div class="link-out"><div><input type="text" id="zs-url" readonly><div class="row-btns"><button class="btn dark small" data-copy="zs-url">Link kopieren</button><a class="btn ghost small" id="zs-open" target="_blank">Öffnen</a></div></div><div class="qr" id="zs-qr"></div></div>
+      </div>
+      <div class="panel"><h2>Studio Kit</h2>
+        <p class="muted">Mit deinem Studionamen und QR-Code zu deiner Zahlseite. Öffnen → „Drucken / PDF“.</p>
         <div class="cards" id="mat" style="margin-top:14px"></div>
       </div>
       <div class="panel"><h2>Fragebogen</h2><p class="muted" id="fb-status"></p><a class="btn gold small" href="/onboarding.html">Fragebogen öffnen</a></div>
@@ -61,16 +83,16 @@
       <div class="panel" id="kuendigen-panel"></div>
     </section>
 
-    <section data-tab="zahlung" class="hidden">
-      <div class="panel"><h2>Zahlungsmethode &amp; Rechnungen</h2>
-        <p class="muted">Zahlungsmethode ändern und alle Rechnungen herunterladen: sicher über Stripe.</p>
-        <button class="btn dark" id="stripe-portal">Zahlungen verwalten</button></div>
-      <div class="panel"><h2>Wohin sollen die Anfragen?</h2>
-        <div class="grid2"><div class="field"><label>E-Mail für Anfragen</label><input type="email" id="k-email"></div><div class="field"><label>WhatsApp-Nummer</label><input type="tel" id="k-wa"></div></div>
+    <section data-tab="konto" class="hidden">
+      <div class="panel"><h2>Stripe-Konto</h2><div id="stripe-info"></div></div>
+      <div class="panel"><h2>Tattoofin-Rechnungen</h2><p class="muted">Rechnungen von Tattoofin an dein Studio (Setup bzw. monatliche Provision) herunterladen.</p><button class="btn dark" id="rechnungen">Rechnungen öffnen</button></div>
+      <div class="panel"><h2>Benachrichtigungen</h2>
+        <div class="field"><label>E-Mail für Zahlungsbenachrichtigungen</label><input type="email" id="k-email"></div>
         <button class="btn gold small" id="k-save">Speichern</button></div>
     </section>
   </div>
 </div></main>
+<script src="/js/qrcode.min.js"></script>
 <script src="/js/common.js"></script>
 <script src="/js/portal.js"></script>
 </body></html>

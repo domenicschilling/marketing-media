@@ -1,4 +1,4 @@
-// End-to-End-Test aller Abläufe mit Stripe-Mock und echtem Browser (Playwright).
+// End-to-End-Test aller Abläufe mit Stripe-Nachbau (inkl. Connect) und echtem Browser (Playwright).
 //   node dev/e2e.mjs [screenshot-ordner]
 import fs from "node:fs";
 import os from "node:os";
@@ -11,16 +11,17 @@ let chromium;
 try { ({ chromium } = require("playwright")); } catch { ({ chromium } = require("/opt/node22/lib/node_modules/playwright")); }
 
 const PORT = 8899, BASE = `http://localhost:${PORT}`;
-const shots = process.argv[2] || path.join(os.tmpdir(), "ted-e2e");
+const shots = process.argv[2] || path.join(os.tmpdir(), "tf-e2e");
 fs.mkdirSync(shots, { recursive: true });
-const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "ted-data-"));
+const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "tf-data-"));
 await startDev({ port: PORT, mock: true, dataDir, quiet: true });
 
 let ok = 0, fail = 0;
 const check = (cond, name) => { if (cond) { ok++; console.log("  ✓", name); } else { fail++; console.log("  ✗", name); } };
 const admin = (p, opts = {}) => fetch(`${BASE}/api/admin/${p}`, { method: opts.body ? "POST" : "GET", ...opts, headers: { Authorization: "Bearer admin", "content-type": "application/json" }, body: opts.body ? JSON.stringify(opts.body) : undefined }).then((r) => r.json());
 const mailsAn = (to) => fs.readdirSync(dataDir).filter((f) => f.startsWith("mail%2F")).map((f) => JSON.parse(fs.readFileSync(path.join(dataDir, f)))).filter((m) => [].concat(m.to).includes(to));
-const loginUrlAus = (m) => (m.html.match(/href="([^"]*\/api\/auth\?token=[^"]+)"/) || [])[1]?.replace(/&amp;/g, "&");
+const linkAus = (m, re) => (m.html.match(re) || [])[1]?.replace(/&amp;/g, "&");
+const mock = (p) => fetch("http://localhost:12111/mock/" + p).then((r) => r.json());
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const browser = await chromium.launch();
@@ -44,164 +45,191 @@ async function signup({ modell, email, firma, code, zahlart }) {
   await page.click("#submit");
 }
 
+async function onboarding() {
+  await page.waitForURL(/localhost:12111\/onboard\//);
+  await page.click("#onboard");
+  await page.waitForURL(/danke\.html.*stripe=1/);
+  await page.waitForFunction(() => /freigegeben/.test(document.getElementById("msg").textContent), null, { timeout: 15000 });
+}
+
 try {
   console.log("Startseite");
   await page.goto(BASE + "/");
-  check((await page.textContent("h1")).includes("Ted geht ran"), "Hero lädt");
+  check((await page.textContent("h1")).includes("leichter bezahlbar"), "Hero lädt");
   await page.waitForFunction(() => document.getElementById("r-prov").textContent.includes("€"));
-  check((await page.textContent("#r-prov")).includes("225"), "Rechner: 30 Anfragen × 25 % × 300 € × 10 % = 225 €");
-  check((await page.textContent(".price .amount span[data-c='kaufNetto|euro']")).includes("1.499"), "Kaufpreis 1.499 € aus Server-Konfiguration");
+  check((await page.textContent("#r-prov")).includes("450"), "Rechner: 3 × 1.500 € × 10 % = 450 € Provision");
+  check((await page.textContent("#r-tipp")).includes("Kaufen"), "Rechner empfiehlt Kauf ab hohem Umsatz");
+  await page.waitForTimeout(1200);
   await page.screenshot({ path: path.join(shots, "landing.png"), fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.screenshot({ path: path.join(shots, "landing-mobil.png"), fullPage: true });
   await page.setViewportSize({ width: 1280, height: 900 });
 
-  console.log("Abschluss Provision (SEPA-Mandat)");
+  console.log("Abschluss Provision → Stripe-Konto verbinden");
   await signup({ modell: "provision", email: "prov@example.com", firma: "Ink Provision" });
-  await page.waitForURL(/localhost:12111\/pay\//);
-  await page.click("#pay");
-  await page.waitForURL(/danke\.html/);
-  await page.waitForFunction(() => /hinterlegt/.test(document.getElementById("msg").textContent), null, { timeout: 15000 });
-  check(true, "Danke-Seite bestätigt hinterlegte Zahlungsmethode");
+  await onboarding();
+  check(true, "Onboarding abgeschlossen, Danke-Seite meldet Freigabe");
   await page.screenshot({ path: path.join(shots, "danke.png") });
-  let list = await admin("studios");
-  const prov = list.find((s) => s.email === "prov@example.com");
-  check(prov?.status === "einrichtung", "Studio Provision im Status Einrichtung");
   const mProv = mailsAn("prov@example.com").map((m) => m.subject);
-  check(mProv.some((s) => s.startsWith("Willkommen")) && mProv.some((s) => s.includes("Zahlungsmethode hinterlegt")), "E-Mails: Willkommen + Mandat");
+  check(mProv.some((s) => s.startsWith("Willkommen")) && mProv.some((s) => s.includes("freigegeben")), "E-Mails: Willkommen + Konto freigegeben");
 
-  console.log("Abschluss Kauf mit Aktionscode (sofort)");
-  await signup({ modell: "kauf", email: "kauf@example.com", firma: "Ink Kauf", code: "TEDRUFT" });
+  console.log("Abschluss Kauf mit Aktionscode");
+  await signup({ modell: "kauf", email: "kauf@example.com", firma: "Ink Kauf", code: "RATENJA" });
   await page.waitForURL(/localhost:12111\/pay\//);
   check((await page.textContent("body")).includes("1486.31"), "Stripe-Betrag 1.249 € netto + 19 % = 1.486,31 €");
   await page.click("#pay");
   await page.waitForURL(/danke\.html/);
-  await page.waitForFunction(() => /Zahlung ist eingegangen/.test(document.getElementById("msg").textContent), null, { timeout: 15000 });
-  check(true, "Kauf bezahlt");
+  await page.waitForSelector("#connect:not(.hidden)");
   check(mailsAn("kauf@example.com").some((m) => m.subject.includes("Zahlung erhalten")), "E-Mail: Zahlung erhalten");
+  await page.click("#connect-btn");
+  await onboarding();
+  check(true, "Kauf-Studio hat Stripe-Konto verbunden");
 
-  console.log("Kauf auf Rechnung + Abbruch/Fortsetzen");
+  console.log("Kauf auf Rechnung, Abbruch, Fehlerfälle");
   await signup({ modell: "kauf", email: "rechnung@example.com", firma: "Ink Rechnung", zahlart: "rechnung" });
   await page.waitForURL(/danke\.html/);
-  list = await admin("studios");
-  check(list.find((s) => s.email === "rechnung@example.com")?.status === "zahlung_offen", "Rechnung offen");
+  check((await admin("studios")).find((s) => s.email === "rechnung@example.com")?.status === "zahlung_offen", "Rechnung offen");
   check(mailsAn("rechnung@example.com").some((m) => m.subject.includes("Rechnung")), "E-Mail: Rechnung");
-  await signup({ modell: "provision", email: "abbruch@example.com", firma: "Ink Abbruch" });
+  await signup({ modell: "kauf", email: "abbruch@example.com", firma: "Ink Abbruch" });
   await page.waitForURL(/localhost:12111\/pay\//);
   await page.click("#cancel");
   await page.waitForURL(/start\.html\?resume=/);
   await page.waitForFunction(() => document.getElementById("firma").value === "Ink Abbruch");
   check(true, "Nach Abbruch sind Angaben wieder da");
-  const dup = await fetch(`${BASE}/api/signup`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ modell: "provision", firma: "x", inhaber: "x", strasse: "x", plz: "1", ort: "x", email: "kauf@example.com", telefon: "1", studioTelefon: "1", unterzeichner: "x", akzeptiert: { vertrag: true, avv: true, unternehmer: true } }) });
-  check(dup.status === 409, "Doppelte Anmeldung wird abgelehnt");
-  const ohneAgb = await fetch(`${BASE}/api/signup`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ modell: "kauf", email: "neu@example.com" }) });
-  check(ohneAgb.status === 400, "Signup ohne Pflichtangaben abgelehnt");
+  const post = (b) => fetch(`${BASE}/api/signup`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(b) });
+  check((await post({ modell: "provision", firma: "x", inhaber: "x", strasse: "x", plz: "1", ort: "x", email: "kauf@example.com", telefon: "1", studioTelefon: "1", unterzeichner: "x", akzeptiert: { vertrag: true, avv: true, unternehmer: true } })).status === 409, "Doppelte Anmeldung abgelehnt");
+  check((await post({ modell: "kauf", email: "neu@example.com" })).status === 400, "Signup ohne Pflichtangaben abgelehnt");
 
   console.log("Login per Magic Link + Fragebogen");
-  const loginUrl = loginUrlAus(mailsAn("prov@example.com").find((m) => m.subject.startsWith("Willkommen")));
+  const loginUrl = linkAus(mailsAn("prov@example.com").find((m) => m.subject.startsWith("Willkommen")), /href="([^"]*\/api\/auth\?token=[^"]+)"/);
   check(Boolean(loginUrl), "Login-Link in Willkommens-Mail");
-  await page.goto(loginUrl);
+  await page.goto(loginUrl + "&next=/onboarding.html");
   await page.waitForURL(/onboarding\.html/);
-  await page.fill("input[name=zeit_di]", "11–19 Uhr");
-  await page.fill("textarea[name=faq]", "Macht ihr kleine Tattoos? – Ja, ab 5 cm.");
+  await page.fill("input[name=kontoauszug]", "INK PROVISION");
+  await page.fill("input[name=preis_gross]", "800 bis 2.500 €");
   await page.click("form#f button");
   await page.waitForSelector(".alert.ok");
   check(true, "Fragebogen gespeichert");
 
-  console.log("Ted-Anruf (ElevenLabs-Webhook) → Anfrage im Portal");
+  console.log("Live schalten + Zahlungslink (Provision, Klarna)");
   const provId = (await admin("studios")).find((s) => s.email === "prov@example.com").id;
-  await admin(`studio/${provId}`, { method: "PATCH", body: { agentId: "agent_test_1", tedNummer: "0951 99999" } });
   await admin(`studio/${provId}/live`, { body: {} });
-  check(mailsAn("prov@example.com").some((m) => m.subject.includes("live")), "E-Mail: Ted ist live");
-  const vor40 = Math.floor(Date.now() / 1000) - 40 * 86400;
-  const anruf = (conv, extra = {}) => fetch(`${BASE}/api/ted/anruf`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({
-    type: "post_call_transcription", data: { agent_id: "agent_test_1", conversation_id: conv,
-      metadata: { call_duration_secs: 134, start_time_unix_secs: vor40, phone_call: { external_number: "+491511234567" } },
-      analysis: { transcript_summary: "Kundin möchte Rosenranke.", data_collection_results: { name: { value: "Lena" }, rueckrufnummer: { value: "0151 1234567" }, motiv: { value: "Rosenranke" }, koerperstelle: { value: "Unterarm" }, groesse_cm: { value: "15" }, ...extra } } } }) });
-  check((await anruf("conv_1")).status === 200, "Anruf-Webhook angenommen");
-  check((await (await anruf("conv_1")).json()).doppelt === true, "Doppelte Zustellung wird erkannt");
-  await anruf("conv_2", { name: { value: "Tom" }, motiv: { value: "Cover-up" }, dringend: { value: "ja" } });
-  check(mailsAn("prov@example.com").some((m) => m.subject.includes("Neue Anfrage: Lena")), "E-Mail: neue Anfrage an Studio");
-
-  await page.goto(BASE + "/portal.html#anfragen");
-  await page.waitForSelector("#anfragen-liste table");
-  const row = page.locator("#anfragen-liste tr", { hasText: "Lena" });
-  const termin = new Date(Date.now() - 35 * 86400e3);
-  const terminStr = termin.toISOString().slice(0, 10);
-  await row.locator("select").selectOption("gebucht");
-  await row.locator("input[type=date]").fill(terminStr);
-  await row.locator("input.preis").fill("400");
-  await row.locator("[data-save]").click();
+  check(mailsAn("prov@example.com").some((m) => m.subject.includes("live")), "E-Mail: Tattoofin ist live");
+  await page.goto(BASE + "/portal.html#anfordern");
+  await page.waitForSelector("#f-link");
+  await page.fill("#l-betrag", "1.500"); await page.fill("#l-kunde", "Lena Beispiel"); await page.fill("#l-email", "lena@example.com"); await page.fill("#l-beschreibung", "Sleeve linker Arm");
+  check((await page.textContent("#l-fee")).includes("150,00"), "Hinweis: 150 € Provision netto");
+  await page.click("#f-link button");
+  await page.waitForSelector("#l-url");
+  const zahlLink = await page.inputValue("#l-url");
+  await page.screenshot({ path: path.join(shots, "portal-zahlungslink.png"), fullPage: true });
+  check(/zahlung\.html\?z=zl_/.test(zahlLink), "Zahlungslink erzeugt");
+  await page.goto(zahlLink);
+  await page.waitForFunction(() => document.getElementById("betrag").textContent.includes("1.500"));
+  await page.screenshot({ path: path.join(shots, "kunde-zahlungslink.png"), fullPage: true });
+  await page.click("#pay");
+  await page.waitForURL(/localhost:12111\/pay\//);
+  let state = await mock("state");
+  const sess = Object.values(state.sessions).find((s) => s.account && s.metadata?.tattoofinZahlung === zahlLink.split("z=")[1]);
+  check(sess?.payment_intent_data?.application_fee_amount === 17850, "Plattformgebühr 178,50 € (10 % + 19 % USt.) auf Stripe-Konto des Studios");
+  await page.click("#pay-klarna");
+  await page.waitForURL(/bezahlt\.html/);
+  await page.waitForFunction(() => /erhalten/.test(document.getElementById("msg").textContent), null, { timeout: 15000 });
+  check(true, "Kunde sieht Bestätigung");
+  check(mailsAn("prov@example.com").some((m) => m.subject.includes("Zahlung eingegangen: 1.500,00")), "E-Mail an Studio: Zahlung eingegangen");
+  check(mailsAn("lena@example.com").some((m) => m.subject.includes("Danke für deine Zahlung")), "E-Mail an Kundin: Bestätigung");
+  let det = await admin(`studio/${provId}`);
+  check(det.zahlungen.find((z) => z.kunde === "Lena Beispiel")?.zahlart === "klarna", "Zahlart Klarna erkannt");
+  await page.goto(zahlLink);
   await page.waitForSelector(".alert.ok");
-  check(true, "Termin mit Preis im Portal eingetragen");
-  await page.screenshot({ path: path.join(shots, "portal-anfragen.png"), fullPage: true });
-  await page.goto(BASE + "/portal.html#uebersicht");
-  await page.waitForSelector("#kpis .kpi");
-  await page.screenshot({ path: path.join(shots, "portal-uebersicht.png"), fullPage: true });
+  check(true, "Bereits bezahlter Link zeigt Hinweis statt erneuter Zahlung");
+
+  console.log("Studio-Zahlseite (QR)");
+  const slug = det.studio.slug;
+  await page.goto(`${BASE}/zahlen.html?s=${slug}`);
+  await page.waitForFunction(() => document.getElementById("studio").textContent === "Ink Provision");
+  await page.fill("#betrag", "300"); await page.fill("#kunde", "Tom"); await page.fill("#beschreibung", "Anzahlung Rückenstück");
+  await page.screenshot({ path: path.join(shots, "kunde-zahlseite.png"), fullPage: true });
+  await page.click("#pay");
+  await page.waitForURL(/localhost:12111\/pay\//);
+  await page.click("#pay");
+  await page.waitForURL(/bezahlt\.html/);
+  await page.waitForFunction(() => /erhalten/.test(document.getElementById("msg").textContent), null, { timeout: 15000 });
+  check(true, "Zahlung über Zahlseite");
+  const tooSmall = await fetch(`${BASE}/api/pay`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ s: slug, betrag: "5", kunde: "x" }) });
+  check(tooSmall.status === 400, "Mindestbetrag wird geprüft");
+
+  console.log("Erstattung → Provision anteilig zurück");
+  det = await admin(`studio/${provId}`);
+  const lena = det.zahlungen.find((z) => z.kunde === "Lena Beispiel");
+  await mock(`refund/${lena.paymentIntentId}?amount=75000`);
+  await wait(300);
+  state = await mock("state");
+  check(state.feeRefunds.some((r) => r.amount === 8925), "Hälfte erstattet → 89,25 € Provision zurückgebucht");
 
   console.log("Monatsabrechnung");
-  const monat = terminStr.slice(0, 7);
-  const probe = await admin("abrechnung", { body: { monat, dryRun: true } });
-  const pr = probe.find((x) => x.studio === "Ink Provision");
-  check(pr?.summeNetto === 4000, "Probelauf: 10 % von 400 € = 40 € Provision");
-  const echt = await admin("abrechnung", { body: { monat, dryRun: false } });
-  check(echt.find((x) => x.studio === "Ink Provision")?.rechnung?.startsWith("TEST-"), "Rechnung in Stripe erstellt");
-  await wait(1200);
-  const det = await admin(`studio/${provId}`);
-  check(det.abrechnungen[0]?.status === "bezahlt", "Einzug erfolgreich (invoice.paid)");
-  check(det.anfragen.find((a) => a.name === "Lena")?.abgerechnet === monat, "Anfrage als abgerechnet gesperrt");
+  const monat = new Date().toISOString().slice(0, 7);
+  const probe = (await admin("abrechnung", { body: { monat, dryRun: true } })).find((x) => x.studio === "Ink Provision");
+  check(probe?.provisionNettoCent === 18000, "Probelauf: 150 € + 30 € = 180 € Provision netto");
+  const echt = (await admin("abrechnung", { body: { monat, dryRun: false } })).find((x) => x.studio === "Ink Provision");
+  check(echt?.rechnung?.startsWith("TEST-"), "Rechnung erstellt (als bereits bezahlt markiert)");
+  state = await mock("state");
+  check(Object.values(state.invoices).some((i) => i.paid_out_of_band), "Rechnung außerhalb von Stripe als bezahlt markiert");
   check(mailsAn("prov@example.com").some((m) => m.subject.includes("Abrechnung")), "E-Mail: Monatsabrechnung");
-  const nochmal = await admin("abrechnung", { body: { monat, dryRun: false } });
-  check(nochmal.find((x) => x.studio === "Ink Provision")?.status === "schon abgerechnet", "Keine doppelte Abrechnung");
-  const gesperrt = await page.evaluate(async (id) => (await fetch("/api/portal/anfrage/" + id, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ preisNetto: "1" }) })).status, det.anfragen.find((a) => a.name === "Lena").id);
-  check(gesperrt === 409, "Abgerechnete Anfrage nicht mehr änderbar");
+  check((await admin("abrechnung", { body: { monat, dryRun: false } })).find((x) => x.studio === "Ink Provision")?.status === "schon abgerechnet", "Keine doppelte Abrechnung");
 
-  console.log("Kündigung & Rücknahme");
+  console.log("Kauf-Studio: keine Provision");
+  const kaufId = (await admin("studios")).find((s) => s.email === "kauf@example.com").id;
+  await admin(`studio/${kaufId}/live`, { body: {} });
+  const kaufLogin = (await admin(`studio/${kaufId}/login-link`, { body: {} })).url;
+  const ctx2 = await browser.newContext(); const p2 = await ctx2.newPage();
+  await p2.goto(kaufLogin);
+  const r2 = await p2.evaluate(async () => (await fetch("/api/portal/zahlung", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ betrag: "1000", kunde: "Kim" }) })).json());
+  check(r2.zahlung?.gebuehrBruttoCent === 0, "Kauf-Modell: Zahlungslink ohne Plattformgebühr");
+  await ctx2.close();
+
+  console.log("Kündigung & Rücknahme, Garantie");
   await page.goto(BASE + "/portal.html#vertrag");
   page.once("dialog", (d) => d.accept());
   await page.click("#k-btn");
   await page.waitForSelector("#k-zurueck");
   check(mailsAn("prov@example.com").some((m) => m.subject.includes("Kündigung ist eingegangen")), "E-Mail: Kündigungsbestätigung");
-  await page.screenshot({ path: path.join(shots, "portal-gekuendigt.png"), fullPage: true });
   await page.click("#k-zurueck");
   await page.waitForSelector("#k-btn");
   check(mailsAn("prov@example.com").some((m) => m.subject.includes("zurückgenommen")), "E-Mail: Kündigung zurückgenommen");
-
-  console.log("Garantie-Erstattung (Kauf)");
-  const kaufId = (await admin("studios")).find((s) => s.email === "kauf@example.com").id;
-  await admin(`studio/${kaufId}/live`, { body: {} });
   const ref = await admin(`studio/${kaufId}/erstattung`, { body: {} });
-  check(ref.status === "erstattet", "Kauf erstattet");
-  check(mailsAn("kauf@example.com").some((m) => m.subject.includes("Erstattung")), "E-Mail: Erstattung");
+  check(ref.status === "erstattet" && mailsAn("kauf@example.com").some((m) => m.subject.includes("Erstattung")), "Garantie-Erstattung Kauf + E-Mail");
 
   console.log("Sicherheit");
-  const bad = await fetch(`${BASE}/api/stripe-webhook`, { method: "POST", headers: { "stripe-signature": "t=1,v1=00" }, body: "{}" });
-  check(bad.status === 400, "Webhook mit falscher Signatur abgelehnt");
+  check((await fetch(`${BASE}/api/stripe-webhook`, { method: "POST", headers: { "stripe-signature": "t=1,v1=00" }, body: "{}" })).status === 400, "Webhook mit falscher Signatur abgelehnt");
   check((await fetch(`${BASE}/api/admin/studios`)).status === 401, "Admin ohne Token abgelehnt");
   check((await fetch(`${BASE}/api/portal`)).status === 401, "Portal ohne Login abgelehnt");
   const redir = await fetch(`${BASE}/api/auth?token=${encodeURIComponent(new URL(loginUrl).searchParams.get("token"))}&next=//evil.com`, { redirect: "manual" });
   check(redir.headers.get("location") === "/portal.html", "Kein offener Redirect");
+  const rechnungStudio = (await admin("studios")).find((s) => s.email === "rechnung@example.com");
+  const blocked = await fetch(`${BASE}/api/pay`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ s: rechnungStudio.slug, betrag: "500", kunde: "x" }) });
+  check(blocked.status === 409, "Studio ohne freigegebenes Konto kann nicht kassieren");
 
   console.log("Seiten");
-  for (const p of ["vertrag.html", "avv.html", "impressum.html", "datenschutz.html", "login.html", "admin.html"]) {
-    await page.goto(BASE + "/" + p);
-    await wait(300);
-    if (["vertrag.html", "datenschutz.html"].includes(p)) await page.screenshot({ path: path.join(shots, p.replace(".html", ".png")) });
-  }
-  const vertragText = await page.goto(BASE + "/vertrag.html").then(() => wait(500)).then(() => page.textContent("main"));
-  check(vertragText.includes("1.499") && vertragText.includes("10 %"), "Vertrag zeigt Preise aus der Server-Konfiguration");
+  await page.goto(BASE + "/portal.html#uebersicht");
+  await page.waitForSelector("#kpis .kpi");
+  await page.screenshot({ path: path.join(shots, "portal-uebersicht.png"), fullPage: true });
+  await page.goto(BASE + "/portal.html#kit");
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: path.join(shots, "portal-kit.png"), fullPage: true });
+  for (const p of ["vertrag.html", "avv.html", "impressum.html", "datenschutz.html", "login.html"]) { await page.goto(BASE + "/" + p); await wait(250); }
   await page.goto(BASE + "/admin.html");
   await page.fill("#token", "admin");
   await page.click("#login button");
   await page.waitForSelector("#liste table");
   await page.screenshot({ path: path.join(shots, "admin.png"), fullPage: true });
   check(true, "Admin-Oberfläche lädt");
-
-  // eine Beispiel-E-Mail als HTML ablegen
-  const beispiel = mailsAn("prov@example.com").find((m) => m.subject.includes("Abrechnung"));
-  fs.writeFileSync(path.join(shots, "mail-abrechnung.html"), beispiel.html);
-  await page.goto("file://" + path.join(shots, "mail-abrechnung.html"));
-  await page.screenshot({ path: path.join(shots, "mail-abrechnung.png"), fullPage: true });
+  for (const [n, re] of [["mail-zahlung", /Zahlung eingegangen/], ["mail-abrechnung", /Abrechnung/], ["mail-willkommen", /Willkommen/]]) {
+    const m = mailsAn("prov@example.com").find((x) => re.test(x.subject));
+    fs.writeFileSync(path.join(shots, n + ".html"), m.html.replaceAll(`${BASE}/assets/`, `file://${path.resolve("public/assets")}/`));
+    await page.goto("file://" + path.join(shots, n + ".html"));
+    await page.screenshot({ path: path.join(shots, n + ".png"), fullPage: true });
+  }
 } catch (e) {
   fail++;
   console.error("ABBRUCH:", e);

@@ -1,15 +1,15 @@
 <!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Jetzt starten – Ted am Telefon</title>
-<link rel="icon" href="/assets/logo.png">
+<title>Jetzt starten – Tattoofin</title>
+<link rel="icon" href="/assets/figur.png">
 <link rel="stylesheet" href="/css/site.css">
 <meta name="robots" content="noindex">
 </head><body>
-<header class="nav"><div class="wrap"><a class="brand" href="/"><img src="/assets/logo.png" alt=""> Ted am Telefon</a><nav class="links"><a href="/login.html">Login</a></nav></div></header>
+<header class="nav"><div class="wrap"><a class="brand" href="/"><img src="/assets/figur.png" alt=""> Tattoofin</a><nav class="links"><a href="/login.html">Login</a></nav></div></header>
 
 <main class="sec tight"><div class="wrap narrow">
-  <h1 style="font-size:clamp(30px,5vw,44px);margin-bottom:8px">Ted für dein Studio holen</h1>
-  <p class="muted" style="margin:0 0 24px">Dauert ca. 3 Minuten. Danach richten wir alles ein, und in ca. 5 Werktagen geht Ted ran.</p>
+  <h1 style="font-size:clamp(30px,5vw,44px);margin-bottom:8px">Tattoofin für dein Studio</h1>
+  <p class="muted" style="margin:0 0 24px">Dauert ca. 3 Minuten. Danach verbindest du das Stripe-Konto deines Studios, und wir richten alles ein.</p>
   <div class="steps-bar"><span data-s="1"></span><span data-s="2"></span><span data-s="3"></span><span data-s="4"></span></div>
   <div id="alert"></div>
 
@@ -19,8 +19,8 @@
       <h2 style="font-size:24px;margin-bottom:6px">1. Wie möchtest du bezahlen?</h2>
       <p class="muted" style="margin:0 0 18px">Gleiche Leistung, gleiche kostenlose Betreuung.</p>
       <div class="choice">
-        <label><input type="radio" name="modell" value="provision"><b>Provision · risikofrei</b><div class="p"><span data-c="provisionProzent">10</span> %</div><small>vom Tattoo-Preis, nur für Termine aus Ted-Anfragen. Keine Fixkosten, monatlich kündbar.</small></label>
-        <label><input type="radio" name="modell" value="kauf"><b>Kaufen</b><div class="p" id="kaufpreis"><span data-c="kaufNetto|euro"></span></div><small>einmalig netto. Keine monatlichen Kosten, <span data-c="garantieTage">30</span> Tage Geld-zurück-Garantie.</small></label>
+        <label><input type="radio" name="modell" value="provision"><b>Provision · risikofrei</b><div class="p"><span data-c="provisionProzent">10</span> %</div><small>vom Betrag jeder Zahlung über Tattoofin, zzgl. USt. Automatisch einbehalten, keine Fixkosten, monatlich kündbar.</small></label>
+        <label><input type="radio" name="modell" value="kauf"><b>Kaufen</b><div class="p" id="kaufpreis"><span data-c="kaufNetto|euro"></span></div><small>einmalig netto. Keine Grundgebühr, keine Provision, <span data-c="garantieTage">30</span> Tage Geld-zurück-Garantie.</small></label>
       </div>
       <div id="kauf-extra" class="hidden" style="margin-top:18px">
         <div class="field"><label>Zahlungsart</label>
@@ -49,11 +49,11 @@
       </div>
       <div class="grid2">
         <div class="field"><label for="email">E-Mail</label><input type="email" id="email" name="email" required autocomplete="email"><div class="hint">Für Login, Anfragen und Rechnungen.</div></div>
-        <div class="field"><label for="telefon">Handynummer (WhatsApp)</label><input type="tel" id="telefon" name="telefon" required autocomplete="tel"><div class="hint">Hierhin schickt Ted die Anfragen.</div></div>
+        <div class="field"><label for="telefon">Handynummer (WhatsApp)</label><input type="tel" id="telefon" name="telefon" required autocomplete="tel"><div class="hint">Für Rückfragen bei der Einrichtung.</div></div>
       </div>
       <div class="grid2">
-        <div class="field"><label for="studioTelefon">Studio-Telefonnummer</label><input type="tel" id="studioTelefon" name="studioTelefon" required><div class="hint">Die Nummer, die Kunden anrufen und die umgeleitet wird.</div></div>
-        <div class="field"><label for="artists">Anzahl Artists</label><select id="artists" name="artists"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option><option>6+</option></select></div>
+        <div class="field"><label for="studioTelefon">Studio-Telefonnummer</label><input type="tel" id="studioTelefon" name="studioTelefon" required><div class="hint">Erscheint auf Flyern und Aufklebern für deine Kunden.</div></div>
+        <div class="field"><label for="website">Website oder Instagram (optional)</label><input type="text" id="website" name="website"></div>
       </div>
       <div style="display:flex;justify-content:space-between;margin-top:20px"><button type="button" class="btn ghost" data-back>Zurück</button><button type="button" class="btn gold" data-next>Weiter</button></div>
     </section>
@@ -80,7 +80,7 @@
         <button type="button" class="btn ghost" data-back>Zurück</button>
         <button type="submit" class="btn gold" id="submit">Zahlungspflichtig abschließen</button>
       </div>
-      <p class="muted" style="font-size:13px;margin:16px 0 0">🔒 Die Zahlung bzw. das Hinterlegen der Zahlungsmethode läuft sicher über Stripe. Wir sehen keine Karten- oder Kontodaten.</p>
+      <p class="muted" style="font-size:13px;margin:16px 0 0">🔒 Zahlung und Kontoverbindung laufen sicher über Stripe. Wir sehen keine Karten- oder Kontodaten. Tattoofin ist kein Kreditgeber.</p>
     </section>
   </form>
 </div></main>

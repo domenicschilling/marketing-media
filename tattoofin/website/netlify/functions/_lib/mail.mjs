@@ -3,7 +3,7 @@ import { CFG } from "./config.mjs";
 import { store } from "./store.mjs";
 
 export async function sendMail({ to, subject, html, text, bcc, replyTo }) {
-  const msg = { from: CFG.mailFrom, to, subject, html, text, bcc, reply_to: replyTo || CFG.mailReplyTo };
+  const msg = { from: CFG.mailFrom, to, subject, html, text, bcc, reply_to: replyTo || CFG.mailReplyTo || undefined };
   try {
     if (process.env.RESEND_API_KEY) {
       const r = await fetch("https://api.resend.com/emails", {

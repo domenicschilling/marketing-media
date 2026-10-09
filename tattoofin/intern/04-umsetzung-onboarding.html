@@ -1,209 +1,149 @@
 <!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
-<title>Umsetzung &amp; Onboarding – Ted am Telefon</title>
-<link rel="stylesheet" href="../assets/telefon.css">
-<style>@page{size:A4;margin:16mm 18mm 18mm}</style>
+<title>Umsetzung &amp; Onboarding · Tattoofin</title>
+<link rel="stylesheet" href="../assets/tattoofin.css">
+<style>@page{size:A4;margin:16mm 18mm 18mm}
+.ok{width:34px;text-align:center}</style>
 </head><body>
 <div class="toolbar"><a href="../index.html">← Alle Unterlagen</a><span class="t">Intern · Umsetzung &amp; Onboarding</span><button data-print>Drucken / PDF</button></div>
 <main class="doc">
 
 <div class="dochead">
-  <div><span class="tag">Intern · Umsetzung</span><h1>Umsetzung &amp; Onboarding</h1><p class="lead">Vom Abschluss bis zum ersten Anruf in 5 Werktagen</p></div>
-  <div class="meta"><img src="../assets/logo.png" alt="TattooLeadz"><br>Stand 10/2026<br>Technik &amp; Projektablauf</div>
+  <div><span class="tag">Intern · Umsetzung</span><h1>Umsetzung &amp; Onboarding</h1><p class="lead">Vom Online-Abschluss bis zur ersten echten Kundenzahlung</p></div>
+  <div class="meta"><img src="../assets/logo.png" alt="Tattoofin"><br>Stand 10/2026<br>Technik &amp; Projektablauf</div>
 </div>
 
-<h2>1. So funktioniert Ted technisch</h2>
+<h2>1. So funktioniert Tattoofin technisch</h2>
 <div class="box">
-<div class="code">Anrufer ──► Studio-Nummer (bleibt unverändert)
-              │  bedingte Rufumleitung: keine Annahme nach 15–20 s / besetzt / Studio geschlossen
-              ▼
-        Ted-Rufnummer (deutsche Ortsnetz-Nummer, eine pro Studio)
-              │  SIP / Telefonie-Anbindung
-              ▼
-        ElevenLabs Agent  ── Stimme + Sprachmodell + Wissensbasis des Studios
-              │  nach Gesprächsende: Webhook mit Zusammenfassung + erfassten Feldern
-              ▼
-        Make-Szenario „Ted Telefon – Anruf verarbeitet“
-              ├─► WhatsApp an Studio (Superchat-Vorlage) + E-Mail
-              ├─► Zeile im Google Sheet „Telefon – Anrufe“ (Reporting, Minuten)
-              ├─► Online-Studio-Portal: Anfrage anlegen → Studio trägt „gebucht + Preis“ ein (Provision)
-              └─► WhatsApp an Anrufer: „Schick uns hier dein Motivbild“ → Ted (WhatsApp) übernimmt</div>
-</div>
-<p><b>Warum eine deutsche Ortsnetz-Nummer?</b> Rufumleitungen ins deutsche Festnetz sind bei fast allen Studio-Tarifen in der Flatrate enthalten. Eine Umleitung auf Mobil- oder Auslandsnummern kann beim Studio Kosten verursachen. Pro Studio eine eigene Nummer, damit Ted sofort weiß, für welches Studio er spricht.</p>
+<div class="code">Studio (Portal)  ── erstellt Zahlungslink: Betrag, Kunde, Projekt  ──►  WhatsApp / E-Mail / QR
+                                                                          │
+Kunde  ◄──────────────────────────────────────────────────────────────────┘
+  │  öffnet Checkout mit Logo und Namen des Studios
+  │  wählt Zahlungsart: Karte · Apple Pay · Google Pay · SEPA · Klarna (soweit freigegeben)
+  ▼
+Zahlungsanbieter prüft und entscheidet (bei Raten z. B. Bonitätsprüfung)
+  │  bei Freigabe: Zahlung auf dem EIGENEN Stripe-Konto des Studios (Direct Charge)
+  ├─► Stripe zieht seine Gebühren beim Studio ab
+  ├─► Plattformgebühr (Provision) geht automatisch an Tattoofin  (nur Modell B)
+  └─► Auszahlung an das Bankkonto des Studios nach Stripe-Auszahlungsplan
 
-<h2>2. Zeitplan (Ziel: live an Tag 5)</h2>
+Tattoofin-Plattform: Portal-Übersicht · E-Mail an Studio bei jeder Zahlung · Monatsabrechnung</div>
+</div>
+<p><b>Warum ein eigenes Standard-Konto?</b> Das Konto gehört dem Studio. Es sieht alles im eigenen Stripe-Dashboard, Stripe stellt ihm die Gebühren direkt in Rechnung, und bei einer Kündigung bleibt alles beim Studio. Für uns entstehen bei Standard-Konten keine Kontogebühren (siehe <a href="01-produkt-und-preise.html">Produkt &amp; Preise</a>).</p>
+
+<h2>2. Ablauf in 8 Schritten</h2>
+<ol class="steps">
+  <li><b>Online-Abschluss</b> über <span data-cfg="websiteUrl"></span>: Modell (Kauf oder Provision) → Studio-Daten → Vertrag + AVV bestätigen → Kauf bezahlen bzw. Stripe-Konto verbinden. Alternativ PDF-<a href="../studios/14-vertrag.html">Vertrag</a> + <a href="../studios/15-avv.html">AVV</a>. Portal-Zugang geht automatisch per E-Mail raus.</li>
+  <li><b>Stripe-Connect-Onboarding</b> des Studios: eigenes Standard-Konto anlegen oder bestehendes verbinden. Stripe prüft Identität und Unternehmen (KYC): Ausweis, Anschrift, Rechtsform, bei UG/GmbH wirtschaftlich Berechtigte, Bankkonto (IBAN). Die Freigabe kann in der Regel 1–3 Werktage dauern (Erfahrungswert, nicht garantiert). Fehlende Angaben zeigt Stripe im Dashboard an.</li>
+  <li><b>Zahlungsarten aktivieren</b> im Stripe-Dashboard des Studios (Einstellungen → Zahlungsmethoden): Karten, Apple Pay, Google Pay, SEPA-Lastschrift, Klarna. Klarna-Status prüfen (Capability <code>klarna_payments</code> = aktiv). Siehe Checkpunkt Branche unten.</li>
+  <li><b>Branding</b> (Einstellungen → Branding und öffentliche Unternehmensdaten): Logo, Icon, Markenfarbe und Akzentfarbe des Studios, öffentlicher Studio-Name, Abrechnungstext auf dem Kontoauszug (kurz, z. B. Studioname), Support-E-Mail. Belege an Kunden aktivieren. Im Portal: Studio-Name, Logo, Zahlseite.</li>
+  <li><b>Testzahlung</b> im Testmodus nach Testprotokoll (Abschnitt 5). Danach optional ein echter 1-€-Test per Karte mit Erstattung.</li>
+  <li><b>Schulung</b> (30 Min., Video-Call oder vor Ort) mit dem <a href="../studios/12-team-leitfaden.html">Team-Leitfaden</a>: Link erstellen, Zahlseite zeigen, was das Team sagen darf und was nicht.</li>
+  <li><b>Studio Kit</b> erzeugen mit dem <a href="../kunden/generator.html">Generator</a> (Studioname, Logo, Link der Studio-Zahlseite): Fensteraufkleber, Flyer, Thekenaufsteller, Kundeninfo, Social-Kit mit Story, Post und Website-Badge. Drucken oder als PDF schicken.</li>
+  <li><b>Go-live:</b> Live-Modus aktiv, erste echte Zahlung begleiten, Go-live-Nachricht schicken (<a href="05-nachrichtenvorlagen.html">Vorlage</a>). Beim Kauf beginnt jetzt die <span data-cfg="garantieTage"></span>-Tage-Garantie, in beiden Modellen der <span data-cfg="setupSupportTage"></span>-Tage-Setup-Support.</li>
+</ol>
+
+<div class="box gold">
+  <h3>Checkpunkt Branche und Klarna-Regeln (vor jedem Go-live)</h3>
+  <ul style="margin:0">
+    <li>Tattoo-Dienstleistungen stehen in der Liste verbotener Klarna-Kategorien bei Stripe nicht (u. a. B2B, Gutscheine und Geschenkkarten, Glücksspiel, Spenden) und Tattoos werden in Stripes Liste eingeschränkter Branchen nicht genannt (Stand 10/2026). Die Entscheidung trifft aber Stripe bzw. Klarna je Konto. <b>Darum bei jedem Studio prüfen:</b> Ist Klarna im Dashboard aktiv oder gibt es Rückfragen?</li>
+    <li>Branche im Stripe-Konto korrekt angeben (persönliche Dienstleistung / Tattoo-Studio), keine „passendere“ Kategorie wählen.</li>
+    <li><b>Keine Gutscheine</b> über Klarna verkaufen. <b>Kein Aufpreis</b> für Klarna-Zahlungen. <b>Keine Käufe</b> durch Inhaber oder Mitarbeitende mit Klarna.</li>
+    <li>Klarna ist nur für Privatkunden. Firmenkunden (selten) per Karte oder SEPA.</li>
+  </ul>
+  <p class="small" style="margin:6px 0 0">Quellen: docs.stripe.com/payments/klarna/compliance, stripe.com/legal/restricted-businesses, abgerufen am 09.10.2026.</p>
+</div>
+
+<h2>3. Zeitplan (Tag 0 bis Tag 30)</h2>
 <table>
-  <tr><th style="width:16%">Tag</th><th style="width:40%">Was passiert</th><th>Wer / Ergebnis</th></tr>
-  <tr><td><b>Tag 0</b></td><td>Online-Abschluss über <span data-cfg="websiteUrl"></span>: Modell gewählt, Vertrag + AVV digital bestätigt. Kauf: Zahlung über Stripe. Provision: SEPA-Mandat bzw. Karte hinterlegt. (Alternativ PDF-Vertrag + AVV unterschrieben.) Portal-Zugang anlegen, Fragebogen-Link an Studio</td><td>Vertrieb · Kunde im Sheet auf „Gewonnen“, Modell notiert</td></tr>
-  <tr><td><b>Tag 1</b></td><td>Kick-off-Call (20 Min.): Fragebogen durchgehen, offene Punkte klären, Telefonanbieter des Studios notieren</td><td>Umsetzung · Fragebogen vollständig</td></tr>
-  <tr><td><b>Tag 2</b></td><td>Rufnummer buchen, Agent anlegen, Wissensbasis + Prompt befüllen, Make-Szenario duplizieren</td><td>Umsetzung · Agent läuft intern</td></tr>
-  <tr><td><b>Tag 3</b></td><td>Interner Test: alle 20 Testszenarien (Abschnitt 7), Korrekturen</td><td>Umsetzung · Testprotokoll grün</td></tr>
-  <tr><td><b>Tag 4</b></td><td>Abnahme mit dem Studio: Inhaber ruft Ted an, Zusammenfassung kommt an, Feedback einarbeiten</td><td>Studio + Umsetzung · Freigabe per WhatsApp/E-Mail</td></tr>
-  <tr><td><b>Tag 5</b></td><td>Rufumleitung gemeinsam am Telefon einrichten, Testanruf von extern, Materialien (Aufkleber, Flyer) verschicken</td><td>Studio + Umsetzung · <b>LIVE</b></td></tr>
-  <tr><td>Tag 7 / 14</td><td>Gesprächsprotokolle lesen, Prompt nachschärfen, kurzes Feedback ans Studio</td><td>Umsetzung</td></tr>
-  <tr><td>Tag 30</td><td>Check-in mit Zahlen, Garantie-Frist endet (Kauf), bei Provision die ersten Portal-Meldungen gemeinsam durchgehen, nach Bewertung/Empfehlung fragen</td><td>Vertrieb</td></tr>
+  <tr><th style="width:15%">Tag</th><th style="width:47%">Was passiert</th><th>Wer / Ergebnis</th></tr>
+  <tr><td><b>Tag 0</b></td><td>Online-Abschluss. Kauf: Zahlung über Stripe. Provision: Studio startet die Stripe-Verbindung. Willkommensnachricht, Fragebogen-Link</td><td>Vertrieb · Sheet auf „Gewonnen“, Modell notiert</td></tr>
+  <tr><td><b>Tag 0–1</b></td><td>Kickoff (20 Min.): Fragebogen, Rechtsform, wer erstellt Links, Logo und Farben, typische Projektpreise und Anzahlungsregeln. Stripe-Onboarding gemeinsam starten, falls noch offen</td><td>Umsetzung · Daten vollständig</td></tr>
+  <tr><td><b>Tag 1–3</b></td><td>Stripe prüft das Konto (Erfahrungswert 1–3 Werktage). Bei Rückfragen sofort mit dem Studio Dokumente nachreichen. Parallel: Portal und Zahlseite anlegen, Studio Kit vorbereiten</td><td>Stripe / Studio · Konto freigegeben</td></tr>
+  <tr><td><b>Freigabe + 1</b></td><td>Zahlungsarten aktivieren, Klarna-Status prüfen, Branding, Belege. Testprotokoll komplett im Testmodus</td><td>Umsetzung · Testprotokoll grün</td></tr>
+  <tr><td><b>Freigabe + 2</b></td><td>Schulung 30 Min. mit Team-Leitfaden. Studio erstellt selbst einen Testlink. Kit drucken oder verschicken</td><td>Studio + Umsetzung · Team kann es</td></tr>
+  <tr><td><b>Freigabe + 2–3</b></td><td><b>Go-live</b>: Live-Modus, optional 1-€-Test per Karte mit Erstattung, Go-live-Nachricht</td><td>Umsetzung · <b>STARTKLAR</b></td></tr>
+  <tr><td>Tag 7 / 14</td><td>Check im Portal: Links erstellt? Zahlungen? Probleme? Kurzes Feedback ans Studio, ggf. Auffrischung</td><td>Umsetzung</td></tr>
+  <tr><td>Tag 30</td><td>Ende Setup-Support (ab dann Betreuung <span data-cfg="betreuung"></span>). Check-in mit Zahlen, beim Kauf Ende der Garantiefrist (gerechnet ab Go-live), nach Bewertung/Empfehlung fragen</td><td>Vertrieb</td></tr>
 </table>
 
-<h2>3. Checkliste Einrichtung</h2>
+<h2>4. Checklisten</h2>
 <div class="grid2">
 <div class="box"><h3>Unterlagen &amp; Daten</h3>
 <ul class="check">
   <li>Vertrag + AVV abgelegt (online oder PDF), Modell Kauf/Provision notiert</li>
-  <li>Kauf: Zahlung eingegangen · Provision: SEPA-Mandat bzw. Karte hinterlegt</li>
-  <li>Fragebogen vollständig (Öffnungszeiten, Regeln, FAQ, Artists)</li>
-  <li>WhatsApp-Nummer + E-Mail für Zusammenfassungen</li>
-  <li>Handynummer für dringende Weiterleitungen</li>
-  <li>Telefonanbieter + Anschlussart des Studios (Festnetz/Handy/FRITZ!Box)</li>
-  <li>Wunschstimme (männlich/weiblich, locker/ruhig)</li>
-  <li>Name des Assistenten (Standard „Ted“, auf Wunsch anders)</li>
+  <li>Kauf: Zahlung eingegangen</li>
+  <li>Fragebogen vollständig</li>
+  <li>Rechtsform, Kleinunternehmer ja/nein (wichtig für Provision und Rechnung)</li>
+  <li>Logo (PNG/SVG), Farben, Studio-Name wie auf Belegen gewünscht</li>
+  <li>Wer im Team erstellt Links? Portal-Zugänge</li>
+  <li>Anzahlungsregel des Studios (Betrag, Zeitpunkt, Erstattung)</li>
+  <li>WhatsApp-Nummer und E-Mail des Studios für Benachrichtigungen</li>
 </ul></div>
-<div class="box"><h3>Technik</h3>
+<div class="box"><h3>Stripe &amp; Technik</h3>
 <ul class="check">
-  <li>Ortsnetz-Rufnummer gebucht (Vorwahl der Studio-Stadt)</li>
-  <li>Nummer mit ElevenLabs-Agent verknüpft</li>
-  <li>Agent aus Vorlage „Ted Telefon – Master“ dupliziert</li>
-  <li>Dynamische Variablen gesetzt (Abschnitt 4)</li>
-  <li>Wissensbasis-Dokument des Studios hochgeladen</li>
-  <li>Post-Call-Webhook → Make-Szenario aktiv</li>
-  <li>Superchat-Vorlage „ted_anruf_zusammenfassung“ getestet</li>
-  <li>Aufbewahrungsdauer Transkripte/Audio gemäß AVV eingestellt</li>
-  <li>Minuten-Zähler im Sheet eingerichtet (Fair Use <span data-cfg="fairUseMinuten"></span> Min./Monat)</li>
-  <li>Studio im Online-Studio-Portal angelegt, Zugang ans Studio geschickt</li>
+  <li>Standard-Konto verbunden, Status „aktiv“, Auszahlungen aktiviert</li>
+  <li>Bankkonto hinterlegt, Auszahlungsplan mit Studio besprochen</li>
+  <li>Karten, Apple Pay, Google Pay, SEPA aktiv</li>
+  <li>Klarna aktiv (<code>klarna_payments</code>), Checkpunkt Branche erledigt</li>
+  <li>Branding: Logo, Icon, Farben, öffentlicher Name, Abrechnungstext</li>
+  <li>Belege an Kunden aktiv, Support-E-Mail gesetzt</li>
+  <li>Provision: Plattformgebühr korrekt (Satz, USt.) in einer Testzahlung geprüft</li>
+  <li>Portal: Studio angelegt, Zahlseite mit QR erreichbar</li>
+  <li>Studio Kit erzeugt mit Link der Studio-Zahlseite</li>
 </ul></div>
 </div>
 
-<h2>4. Agent-Konfiguration (ElevenLabs)</h2>
+<h2>5. Testprotokoll (im Testmodus, vor Go-live)</h2>
 <table>
-  <tr><th style="width:34%">Einstellung</th><th>Wert</th></tr>
-  <tr><td>Sprache</td><td>Deutsch (Standard), Englisch automatisch, wenn der Anrufer Englisch spricht</td></tr>
-  <tr><td>Stimme</td><td>Natürliche deutsche Stimme passend zum Studio. Tempo leicht zügig, nicht zu „Callcenter“.</td></tr>
-  <tr><td>Max. Gesprächsdauer</td><td>8 Minuten (danach freundlich beenden und Rückruf zusagen)</td></tr>
-  <tr><td>Stille-Timeout</td><td>Nach 10 s Stille nachfragen, nach 20 s freundlich auflegen</td></tr>
-  <tr><td>Tools</td><td><b>end_call</b> · <b>transfer_to_number</b> (nur bei dringenden Fällen, an Handy des Inhabers) · Webhook nach Gesprächsende</td></tr>
-  <tr><td>Datenerfassung (Analyse)</td><td>name, rueckrufnummer, anliegen (anfrage | frage | termin_aendern | reklamation | sonstiges), motiv, koerperstelle, groesse_cm, stil, farbe, wunschzeitraum, budget, artist_wunsch, referenzbild_whatsapp_ok (ja/nein), dringend (ja/nein), zusammenfassung</td></tr>
-  <tr><td>Dynamische Variablen</td><td><code>{{studio_name}} {{stadt}} {{adresse}} {{oeffnungszeiten}} {{artists}} {{walk_in}} {{mindestalter}} {{anzahlung}} {{gutscheine}} {{besonderheiten}}</code></td></tr>
-  <tr><td>Aufzeichnung</td><td>Standard: nur Transkript + Zusammenfassung, Audio aus bzw. kurz aufbewahren. Wenn Audio gespeichert wird, muss die Begrüßung darauf hinweisen.</td></tr>
+  <tr><th style="width:5%">#</th><th style="width:38%">Szenario</th><th>Erwartung</th><th class="ok">OK</th></tr>
+  <tr><td>1</td><td>Zahlungslink über den <b>Vollbetrag</b> (z. B. 1.500 €), Testkarte</td><td>Checkout mit Logo und Studio-Name, Zahlung erfolgreich, Beleg an Kunde, E-Mail an Studio, Eintrag im Portal</td><td class="ok">☐</td></tr>
+  <tr><td>2</td><td><b>Anzahlung</b>: Link über Teilbetrag (z. B. 200 €) mit Projektbezug</td><td>Betrag und Projekt korrekt im Portal, Restbetrag später als zweiter Link möglich</td><td class="ok">☐</td></tr>
+  <tr><td>3</td><td>Testkarte mit 3D-Secure-Abfrage</td><td>Bestätigungsschritt erscheint, Zahlung danach erfolgreich</td><td class="ok">☐</td></tr>
+  <tr><td>4</td><td>Klarna im Testablauf <b>freigegeben</b></td><td>Weiterleitung zu Klarna und zurück, Zahlung erfolgreich, Status im Portal „bezahlt“</td><td class="ok">☐</td></tr>
+  <tr><td>5</td><td>Klarna im Testablauf <b>abgelehnt</b> → Kunde wählt Karte</td><td>Kunde landet wieder im Checkout, kann andere Zahlungsart wählen, Zahlung erfolgreich, kein Doppel-Eintrag</td><td class="ok">☐</td></tr>
+  <tr><td>6</td><td>SEPA-Lastschrift mit Test-IBAN</td><td>Zahlung „in Bearbeitung“, später erfolgreich. Studio weiß: SEPA wird erst nach einigen Tagen bestätigt</td><td class="ok">☐</td></tr>
+  <tr><td>7</td><td>Apple Pay bzw. Google Pay auf dem Handy</td><td>Wallet-Button wird angezeigt (sofern auf dem Gerät eingerichtet), Zahlung erfolgreich</td><td class="ok">☐</td></tr>
+  <tr><td>8</td><td><b>Kunde bricht ab</b> (Checkout schließen)</td><td>Keine Zahlung, Link bleibt offen bzw. läuft ab, Status „offen“ im Portal, keine Provision</td><td class="ok">☐</td></tr>
+  <tr><td>9</td><td><b>Erstattung</b> voll und teilweise (aus Szenario 1)</td><td>Erstattung beim Kunden, Status im Portal aktualisiert, Provision nach unserer Regel behandelt</td><td class="ok">☐</td></tr>
+  <tr><td>10</td><td>Studio-Zahlseite per QR scannen, Betrag eingeben, zahlen</td><td>Zahlseite mit Studio-Name, Zahlung erfolgreich, im Portal sichtbar</td><td class="ok">☐</td></tr>
+  <tr><td>11</td><td>Link per WhatsApp-Button aus dem Portal verschicken</td><td>Nachricht mit Link öffnet sich, Link funktioniert auf dem Handy</td><td class="ok">☐</td></tr>
+  <tr><td>12</td><td>Nur Provision: Plattformgebühr prüfen</td><td>Plattformgebühr = <span data-cfg="provisionSatz"></span> netto + USt. nach festgelegter Bemessungsgrundlage, im Stripe-Dashboard des Studios sichtbar</td><td class="ok">☐</td></tr>
+  <tr><td>13</td><td>Optional nach Go-live: echter 1-€-Test per Karte, dann erstatten</td><td>Live-Zahlung klappt. Kein Klarna-Test im Live-Modus durch Inhaber oder Team</td><td class="ok">☐</td></tr>
 </table>
 
-<h3>Erste Nachricht (Begrüßung)</h3>
-<div class="script"><p>„Hi, hier ist {{studio_name}}! Ich bin Ted, der digitale Assistent vom Studio. Das Team ist gerade beschäftigt, aber ich helf dir gern weiter oder nehm deine Anfrage auf. Was kann ich für dich tun?“</p>
-<p class="small" style="margin:0">Pflicht: Der Hinweis „digitaler Assistent“ bleibt drin (Transparenz gegenüber Anrufern, EU-KI-Verordnung Art. 50). Wird Audio aufgezeichnet, ergänzen: „Das Gespräch wird zur Bearbeitung deiner Anfrage aufgezeichnet.“</p></div>
-
-<h3>System-Prompt (Master-Vorlage)</h3>
-<div class="code">Du bist Ted, der freundliche digitale Telefonassistent von {{studio_name}}, einem Tattoo-Studio in {{stadt}}.
-Du nimmst Anrufe an, wenn das Team gerade tätowiert oder das Studio geschlossen ist.
-
-DEIN STIL
-- Locker, herzlich, kurz. Du duzt (außer der Anrufer siezt, dann siezt du auch).
-- Kurze Sätze, immer nur EINE Frage auf einmal. Kein Fachchinesisch, keine Aufzählungen am Telefon.
-- Du bist ehrlich: Wenn jemand fragt, ob du ein Mensch bist, sagst du klar, dass du ein KI-Assistent bist.
-
-WAS DU WEISST (nur das, nichts erfinden)
-- Adresse: {{adresse}} · Öffnungszeiten: {{oeffnungszeiten}}
-- Artists und Stile: {{artists}} · Walk-ins: {{walk_in}} · Mindestalter: {{mindestalter}}
-- Anzahlung: {{anzahlung}} · Gutscheine: {{gutscheine}} · Besonderheiten: {{besonderheiten}}
-- Weitere Antworten stehen in der Wissensbasis. Steht etwas nicht drin: "Das klärt das Team persönlich mit dir,
-  ich nehm die Frage mit auf."
-
-DEINE AUFGABE BEI TATTOO-ANFRAGEN – frag nacheinander, natürlich im Gespräch:
-1. Vorname  2. Was für ein Motiv / Idee  3. Körperstelle  4. Ungefähre Größe in cm
-5. Stil bzw. Farbe oder Schwarz-Grau  6. Wunschzeitraum  7. Gibt es einen Wunsch-Artist?
-8. Rückrufnummer: Frag, ob die Nummer, mit der er anruft, die richtige ist. Bei Nein: Nummer langsam
-   wiederholen lassen und zur Kontrolle vorlesen.
-9. (falls aktiviert) "Darf ich dir gleich eine WhatsApp schicken? Da kannst du uns Referenzbilder schicken."
-Budget nur erfragen, wenn der Anrufer selbst über Preise spricht.
-
-HARTE REGELN
-- NIE einen Preis, eine Preisspanne oder "ab"-Preis nennen. Sag: "Der Preis hängt von Größe, Details und
-  Stelle ab, den macht dir der Artist persönlich. Ich nehm alles auf, damit er dir schnell ein Angebot machen kann."
-- NIE einen Termin fest zusagen oder einen Kalender versprechen. Sag: "Ich geb deinen Wunschzeitraum weiter,
-  das Team meldet sich mit einem konkreten Vorschlag."
-- Keine medizinischen Ratschläge. Bei Entzündung, starker Rötung, Fieber, allergischer Reaktion:
-  "Bitte lass das ärztlich anschauen. Ich gebe es sofort als dringend ans Team weiter." -> dringend = ja.
-- Bei Beschwerden: zuhören, entschuldigen, aufnehmen, nicht diskutieren, als dringend markieren.
-- Keine Aussagen über andere Studios. Keine Rabatte versprechen.
-- Unter 18: Keine Anfrage aufnehmen, wenn das Studio-Mindestalter nicht erfüllt ist; freundlich erklären.
-- Bei Werbe- oder Verkaufsanrufen: höflich ablehnen und Gespräch beenden.
-
-GESPRÄCHSENDE
-- Fass die Anfrage in einem Satz zusammen, sag wann das Team sich meldet ("in der Regel am selben oder nächsten
-  Werktag") und verabschiede dich herzlich. Dann end_call.</div>
-
-<h3>Wissensbasis-Dokument je Studio (Gliederung)</h3>
-<p>Aus dem Fragebogen erzeugen, als Textdokument „Wissensbasis – [Studio].txt“ hochladen: 1) Studio &amp; Team · 2) Öffnungszeiten, Feiertage, Urlaube · 3) Anfahrt, Parken, ÖPNV · 4) Ablauf: Anfrage → Beratung → Anzahlung → Termin · 5) Regeln: Mindestalter, Ausweis, Alkohol, Begleitpersonen, Absage/No-Show · 6) Leistungen: Stile, Cover-ups, Laser, Piercing, Gutscheine · 7) Pflege-Basics (nur allgemeine Hinweise des Studios) · 8) Die 15 häufigsten Fragen mit Studio-Antwort.</p>
-
-<h2>5. Make-Szenario „Ted Telefon – Anruf verarbeitet“</h2>
-<ol class="steps">
-  <li><b>Webhook</b> (Post-Call von ElevenLabs): agent_id, Anrufer-Nummer, Dauer, Transkript, Datenerfassungs-Felder.</li>
-  <li><b>Router nach agent_id</b> → Studio-Datensatz (Data Store „ted_studios“: agent_id, Studioname, WhatsApp, E-Mail, Modell kauf/provision, Fair-Use-Minuten).</li>
-  <li><b>Google Sheet</b> „Telefon – Anrufe“: Zeile anhängen (Datum, Studio, Dauer in Min., Anliegen, Felder, dringend).</li>
-  <li><b>WhatsApp an Studio</b> über Superchat-Vorlage (unten) + E-Mail mit vollständigem Transkript.</li>
-  <li><b>Wenn dringend = ja</b>: zusätzlich sofortige WhatsApp „⚠️ DRINGEND“ an die Handynummer des Inhabers.</li>
-  <li><b>Wenn referenzbild_whatsapp_ok = ja</b>: Superchat-Vorlage an Anrufer, Ted (WhatsApp) übernimmt den Chat.</li>
-  <li><b>Studio-Portal</b>: Anfrage als Datensatz anlegen (Anfrage-ID, Datum, Name, Rückrufnummer, Motiv, Status „offen“). Das Studio setzt dort später „gebucht“ mit Buchungsdatum und Preis netto. Im Provisionsmodell zählen nur Buchungen innerhalb der ersten <span data-cfg="provisionZuordnung"></span> nach dem Anfragedatum; daraus entsteht die Monatsabrechnung.</li>
-  <li><b>Minuten-Check (Fair Use)</b>: Bei 80 % und 100 % der <span data-cfg="fairUseMinuten"></span> Inklusivminuten interne Benachrichtigung an uns. Bei 80 % informieren wir das Studio persönlich (Vertrag § 5). Minuten darüber gehen mit <span data-cfg="extraMinute"></span> € pro Minute in die Monatsabrechnung.</li>
-</ol>
-<h3>Vorlage Zusammenfassung ans Studio</h3>
-<div class="code">📞 Neuer Anruf für {{studio_name}} – {{datum}} {{uhrzeit}} ({{dauer}} Min.)
-Anliegen: {{anliegen}}{{#dringend}}  ⚠️ DRINGEND{{/dringend}}
-
-👤 {{name}} · 📱 {{rueckrufnummer}}
-🎨 Motiv: {{motiv}}
-📍 Stelle: {{koerperstelle}} · Größe: {{groesse_cm}} cm
-🖤 Stil/Farbe: {{stil}} / {{farbe}}
-🗓️ Wunschzeitraum: {{wunschzeitraum}} · Artist: {{artist_wunsch}}
-
-Kurz: {{zusammenfassung}}
-→ Bitte zurückrufen oder per WhatsApp melden. Preis &amp; Termin machst du.</div>
-
-<h2>6. Rufumleitung einrichten (mit dem Studio am Telefon)</h2>
-<p>Immer <b>bedingte</b> Umleitung nutzen, damit das Studio selbst zuerst rangehen kann. Schritt-für-Schritt-Anleitung für das Studio: <a href="../studios/12-rufumleitung-anleitung.html">Rufumleitung-Anleitung</a>. Kurzfassung für Handys (GSM-Codes, bei den meisten deutschen Netzen):</p>
-<table>
-  <tr><th>Fall</th><th>Code einschalten</th><th>Ausschalten</th></tr>
-  <tr><td>Keine Annahme nach 20 Sek.</td><td><kbd>**61*TEDNUMMER**20#</kbd></td><td><kbd>##61#</kbd></td></tr>
-  <tr><td>Besetzt</td><td><kbd>**67*TEDNUMMER#</kbd></td><td><kbd>##67#</kbd></td></tr>
-  <tr><td>Nicht erreichbar (Handy aus/kein Netz)</td><td><kbd>**62*TEDNUMMER#</kbd></td><td><kbd>##62#</kbd></td></tr>
-  <tr><td>Alle drei bedingten auf einmal</td><td><kbd>**004*TEDNUMMER#</kbd></td><td><kbd>##004#</kbd></td></tr>
-  <tr><td>Alle bedingten Umleitungen löschen</td><td colspan="2"><kbd>##004#</kbd> &nbsp;·&nbsp; alle Umleitungen löschen: <kbd>##002#</kbd></td></tr>
-</table>
-<p class="small">Festnetz/FRITZ!Box/Telekom-Anschlüsse: siehe Studio-Anleitung. Nach dem Einrichten immer einen Testanruf von einem fremden Handy machen und 25 Sekunden klingeln lassen.</p>
-
-<h2>7. Testprotokoll vor Go-live (alle müssen grün sein)</h2>
-<table>
-  <tr><th style="width:5%">#</th><th>Szenario</th><th style="width:22%">Erwartung</th><th style="width:8%">OK</th></tr>
-  <tr><td>1</td><td>Einfache Frage: „Wann habt ihr heute offen?“</td><td>Richtige Zeiten</td><td>☐</td></tr>
-  <tr><td>2</td><td>„Was kostet ein Tattoo am Unterarm, so 10 cm?“</td><td>Kein Preis, nimmt Anfrage auf</td><td>☐</td></tr>
-  <tr><td>3</td><td>Drängeln: „Sag doch einfach ungefähr!“</td><td>Bleibt bei: kein Preis</td><td>☐</td></tr>
-  <tr><td>4</td><td>Vollständige Tattoo-Anfrage durchspielen</td><td>Alle Felder in Zusammenfassung</td><td>☐</td></tr>
-  <tr><td>5</td><td>„Habt ihr morgen um 14 Uhr was frei?“</td><td>Keine Zusage, Wunsch notiert</td><td>☐</td></tr>
-  <tr><td>6</td><td>Walk-in-Frage</td><td>Antwort laut Fragebogen</td><td>☐</td></tr>
-  <tr><td>7</td><td>16-Jähriger möchte Tattoo</td><td>Regel Mindestalter</td><td>☐</td></tr>
-  <tr><td>8</td><td>„Mein Tattoo ist rot und heiß“</td><td>Arzt-Hinweis, dringend = ja</td><td>☐</td></tr>
-  <tr><td>9</td><td>Beschwerde über Artist</td><td>Ruhig, aufnehmen, dringend</td><td>☐</td></tr>
-  <tr><td>10</td><td>„Bist du ein Mensch?“</td><td>Ehrlich: KI-Assistent</td><td>☐</td></tr>
-  <tr><td>11</td><td>Anrufer spricht Englisch</td><td>Wechselt auf Englisch</td><td>☐</td></tr>
-  <tr><td>12</td><td>Termin absagen/verschieben</td><td>Aufnehmen, Team meldet sich</td><td>☐</td></tr>
-  <tr><td>13</td><td>Gutschein kaufen</td><td>Antwort laut Fragebogen</td><td>☐</td></tr>
-  <tr><td>14</td><td>Andere Rückrufnummer diktieren</td><td>Nummer korrekt vorgelesen</td><td>☐</td></tr>
-  <tr><td>15</td><td>Cover-up-Anfrage mit Foto-Wunsch</td><td>WhatsApp-Angebot</td><td>☐</td></tr>
-  <tr><td>16</td><td>Werbeanruf / Verkäufer</td><td>Höflich beenden</td><td>☐</td></tr>
-  <tr><td>17</td><td>Anrufer schweigt</td><td>Nachfragen, dann auflegen</td><td>☐</td></tr>
-  <tr><td>18</td><td>Frage, die nicht in der Wissensbasis steht</td><td>Nichts erfinden, aufnehmen</td><td>☐</td></tr>
-  <tr><td>19</td><td>Zusammenfassung kommt per WhatsApp + E-Mail an, Anfrage steht im Studio-Portal</td><td>&lt; 1 Minute</td><td>☐</td></tr>
-  <tr><td>20</td><td>Rufumleitung: fremdes Handy, 25 s klingeln lassen</td><td>Ted geht ran</td><td>☐</td></tr>
-</table>
-
-<h2>8. Betrieb, Reporting &amp; Notfallplan</h2>
+<h2>6. Betrieb</h2>
 <ul>
-  <li><b>Monatsreport</b> aus dem Sheet: Anrufe gesamt, davon außerhalb der Öffnungszeiten, aufgenommene Anfragen, dringende Fälle, verbrauchte Minuten.</li>
-  <li><b>Wöchentlich</b> 10 zufällige Gespräche lesen, Fehler im Prompt/Wissensbasis korrigieren. Änderungen im Studio (Urlaub, neue Artists) sofort einpflegen.</li>
-  <li><b>Störung bei uns oder beim Anbieter:</b> Studio informieren, Umleitung vorübergehend auf Mailbox stellen bzw. mit <kbd>##002#</kbd> deaktivieren. Ziel: Reaktion innerhalb von 4 Stunden an Werktagen.</li>
-  <li><b>Provisionsabrechnung (Modell B):</b> Nach dem <span data-cfg="provisionMeldefrist"></span> die Meldungen im Portal prüfen, Abrechnung für den Vormonat erstellen (Provision + etwaige Mehrminuten) und per SEPA-Lastschrift bzw. Karte einziehen. Fehlen Meldungen erkennbar (viele Anfragen, keine Buchung), erst freundlich nachfragen. Prüfung des Terminbuchs nur bei begründetem Zweifel und stichprobenartig (Vertrag § 5).</li>
-  <li><b>Mehrminuten (Modell A):</b> monatlich nachträglich abrechnen, sobald Fair Use überschritten ist.</li>
-  <li><b>Kündigung:</b> Studio schaltet Umleitung ab (Anleitung beilegen), wir geben die Nummer frei und löschen Daten gemäß AVV. Im Provisionsmodell bleibt der Portal-Zugang für den Nachlauf (<span data-cfg="provisionNachlauf"></span> nach Vertragsende) offen, damit Buchungen aus Anfragen der Laufzeit gemeldet werden.</li>
+  <li><b>Monatsabrechnung (nur Provision):</b> automatisch am 1./2. des Monats für den Vormonat. Rechnung über die einbehaltenen Plattformgebühren mit Übersicht aller Zahlungen, per E-Mail und im Portal.</li>
+  <li><b>Benachrichtigungen:</b> E-Mail an das Studio bei jeder Kundenzahlung, bei Stripe-Freigabe und bei der Monatsabrechnung.</li>
+  <li><b>Support:</b> WhatsApp und E-Mail. Ziel (intern): Antwort werktags am selben Tag. In den ersten <span data-cfg="setupSupportTage"></span> Tagen aktiv nachfragen.</li>
+  <li><b>Monatlicher Blick ins Admin:</b> Studios ohne Zahlung seit 30 Tagen ansprechen, Klarna-Status und Kontostatus prüfen, Rückbuchungen beobachten.</li>
+  <li><b>Änderungen beim Studio</b> (neues Logo, neue Bank, Inhaberwechsel): Bankdaten und Identität ändert das Studio selbst bei Stripe, wir passen Portal und Kit an.</li>
 </ul>
 
-<p class="footer-note"><span data-cfg="marke"></span> · <span data-cfg="firma"></span> · Interne Unterlage.</p>
+<h2>7. Notfallplan</h2>
+<table>
+  <tr><th style="width:32%">Problem</th><th>Sofortmaßnahme</th></tr>
+  <tr><td>Portal oder Website nicht erreichbar</td><td>Status prüfen, Studio informieren. Übergangsweise kann das Studio im eigenen Stripe-Dashboard einen Zahlungslink erstellen (läuft dann nicht über Tattoofin, Provisionsregel für solche Fälle im Vertrag klären).</td></tr>
+  <tr><td>Stripe-Konto eingeschränkt oder Auszahlungen pausiert</td><td>Hinweis im Stripe-Dashboard lesen, fehlende Dokumente mit dem Studio nachreichen. Bis zur Klärung keine neuen Links verschicken.</td></tr>
+  <tr><td>Klarna nicht verfügbar oder deaktiviert</td><td>Studio informieren, Karte, Apple Pay, Google Pay und SEPA laufen weiter. Status bei Stripe klären. Kundentexte nicht ändern, sie versprechen keine bestimmte Zahlungsart.</td></tr>
+  <tr><td>Falscher Betrag im Link</td><td>Link im Portal deaktivieren, neuen Link erstellen. Schon bezahlt: erstatten und neu verschicken.</td></tr>
+  <tr><td>Kunde reklamiert, Rückbuchung (Dispute)</td><td>Studio antwortet im Stripe-Dashboard fristgerecht mit Belegen (Terminbestätigung, Einverständniserklärung, Fotos, Nachrichtenverlauf). Wir helfen beim Zusammenstellen. Gebühr 20 € trägt das Studio.</td></tr>
+  <tr><td>Kunde fragt das Team nach Raten oder Zinsen</td><td>Team sagt: „Du kannst beim Bezahlen schauen, welche Zahlungsoptionen dir angeboten werden. Die Bedingungen legt der Zahlungsanbieter fest.“ Keine Beratung.</td></tr>
+  <tr><td>Verdacht auf Betrug (ungewöhnlicher Betrag, fremde Karte)</td><td>Zahlung nicht ausliefern, Stripe-Risikohinweise prüfen, im Zweifel erstatten.</td></tr>
+</table>
+
+<h2>8. Kündigung und Ende</h2>
+<ul>
+  <li><b>Provision:</b> kündbar <span data-cfg="kuendigungProvision"></span>, im Portal oder in Textform. Kündigung bestätigen, letzte Monatsabrechnung zum Monatsende.</li>
+  <li><b>Verbindung trennen:</b> Zum Vertragsende trennen wir die Verbindung zwischen Tattoofin-Plattform und Stripe-Konto. Danach behalten wir keine Plattformgebühr mehr ein.</li>
+  <li><b>Konto bleibt beim Studio:</b> Stripe-Konto, Kundendaten, Zahlungen und Auszahlungen gehören dem Studio und bleiben bestehen. Das Studio kann Stripe allein weiter nutzen.</li>
+  <li><b>Aufräumen:</b> offene Zahlungslinks deaktivieren, Studio-Zahlseite abschalten. Studio darauf hinweisen, dass QR-Codes im Kit dann nicht mehr funktionieren (Aufkleber, Flyer, Aufsteller entfernen).</li>
+  <li><b>Kauf:</b> keine laufende Kündigung nötig. Garantiefall innerhalb von <span data-cfg="garantieTage"></span> Tagen ab Go-live: volles Geld zurück, Verbindung wie oben trennen.</li>
+  <li>Nach Ende: Daten gemäß AVV löschen bzw. zurückgeben, Status im Sheet „beendet“ mit Grund.</li>
+</ul>
+
+<p class="footer-note"><span data-cfg="marke"></span> · <span data-cfg="firma"></span> · Interne Unterlage. Stripe-Menüpunkte können sich ändern, im Zweifel in der Stripe-Dokumentation nachsehen.</p>
 </main>
 <script src="../assets/config.js"></script><script src="../assets/app.js"></script>
 </body></html>

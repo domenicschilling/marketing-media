@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Danke für deine Zahlung – Tattoofin</title><meta name="robots" content="noindex">
+<link rel="icon" href="/assets/figur.png"><link rel="stylesheet" href="/css/site.css">
+</head><body style="background:var(--cream)">
+<main class="sec tight"><div class="wrap">
+  <div class="paybox" style="text-align:center">
+    <img src="/assets/figur.png" alt="" style="width:110px;margin:0 auto">
+    <h1 style="font-size:30px;margin:12px 0 8px">Danke! 🖤</h1>
+    <p id="msg" class="muted" style="font-size:17px">Deine Zahlung wird bestätigt …</p>
+    <p class="fn">Den Beleg bekommst du vom Zahlungsanbieter per E-Mail. Bei Ratenzahlung oder späterem Bezahlen klärst du alle Fragen dazu direkt mit dem Anbieter.</p>
+  </div>
+</div></main>
+<script src="/js/common.js"></script>
+<script>
+(function () {
+  var z = new URLSearchParams(location.search).get("z"), n = 0, msg = document.getElementById("msg");
+  function check() {
+    TF.api("/api/pay?z=" + encodeURIComponent(z)).then(function (d) {
+      if (d.zahlung.status === "bezahlt") msg.textContent = d.studio.firma + " hat deine Zahlung über " + TF.euro(d.zahlung.betragCent, true) + " erhalten. Wir sehen uns im Studio!";
+      else if (d.zahlung.status === "in_pruefung") msg.textContent = "Deine Zahlung wird gerade vom Zahlungsanbieter bearbeitet. Das Studio bekommt automatisch Bescheid.";
+      else if (n++ < 10) setTimeout(check, 1500);
+      else msg.textContent = "Danke! Das Studio bekommt automatisch Bescheid, sobald die Zahlung bestätigt ist.";
+    }).catch(function () { msg.textContent = "Danke für deine Zahlung!"; });
+  }
+  check();
+})();
+</script>
+</body></html>

@@ -17,7 +17,7 @@ catch { ({ chromium } = require("/opt/node22/lib/node_modules/playwright")); }
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const args = process.argv.slice(2);
-const KEYS = ["studio", "tel", "stadt", "zeiten", "web", "logo", "adresse", "email", "vorname", "inhaber", "strasse", "ort", "check"];
+const KEYS = ["studio", "tel", "stadt", "zeiten", "web", "logo", "adresse", "email", "vorname", "inhaber", "strasse", "ort", "check", "zahlen", "insta"];
 const png = args.includes("--png") && args.splice(args.indexOf("--png"), 1);
 const params = {};
 for (const k of KEYS) { const i = args.indexOf("--" + k); if (i >= 0) params[k] = args.splice(i, 2)[1]; }
@@ -32,7 +32,7 @@ const DOCS = [
   "intern/05-nachrichtenvorlagen.html",
   "studios/10-onepager.html",
   "studios/11-so-funktionierts.html",
-  "studios/12-rufumleitung-anleitung.html",
+  "studios/12-team-leitfaden.html",
   "studios/13-direct-mail-brief.html",
   "studios/14-vertrag.html",
   "studios/15-avv.html",
@@ -42,8 +42,8 @@ const DOCS = [
   "kunden/20-fensteraufkleber.html",
   "kunden/21-flyer-a6.html",
   "kunden/22-thekenaufsteller-a5.html",
-  "kunden/23-datenschutzhinweis-anrufer.html",
-  "kunden/24-tuerschild-a4.html",
+  "kunden/23-kundeninfo.html",
+  "kunden/24-social-kit.html",
 ];
 
 const q = new URLSearchParams(params);

@@ -1,5 +1,5 @@
-// Gemeinsame Helfer für alle Seiten
-window.Ted = (function () {
+// Gemeinsame Helfer für alle Seiten (window.TF, Alias window.Ted)
+window.Ted = window.TF = (function () {
   var cfgPromise;
   function config() {
     if (!cfgPromise) cfgPromise = fetch("/api/config").then(function (r) { return r.json(); });

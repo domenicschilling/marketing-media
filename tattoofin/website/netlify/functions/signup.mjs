@@ -1,11 +1,11 @@
-// Online-Abschluss: Vertrag + AVV akzeptieren, Stripe-Kunde anlegen, Zahlung starten.
-// POST /api/signup   → { url } (Weiterleitung zu Stripe) oder { next } (Kauf auf Rechnung)
+// Online-Abschluss: Vertrag + AVV akzeptieren, Stripe-Kunde anlegen, Zahlung (Kauf) bzw. Stripe-Konto-Verbindung (Provision) starten.
+// POST /api/signup   → { url } (Stripe Checkout bzw. Stripe-Onboarding) oder { next } (Kauf auf Rechnung)
 // GET  /api/signup?id=…  → Status für Danke-Seite bzw. Fortsetzen
 import { CFG } from "./_lib/config.mjs";
 import { json, fail, body, clean, isEmail, id, now, handler, clientIp, brutto, addMonths } from "./_lib/util.mjs";
 import { getStudio, saveStudio, studioBy, store, log } from "./_lib/store.mjs";
 import { stripe, ensureCustomer, taxRateId } from "./_lib/stripe.mjs";
-import { notify, notifyAdmin, zaehleAktion } from "./_lib/domain.mjs";
+import { notify, notifyAdmin, zaehleAktion, slugify, connectUrl } from "./_lib/domain.mjs";
 import { mails } from "./_lib/emails.mjs";
 import { loginLink } from "./_lib/auth.mjs";
 
@@ -21,7 +21,7 @@ export default handler(async (req, context) => {
   if (req.method === "GET") {
     const s = await getStudio(new URL(req.url).searchParams.get("id"));
     if (!s) return fail("Nicht gefunden", 404);
-    const kurz = { id: s.id, status: s.status, modell: s.modell, zahlart: s.zahlart, firma: s.firma };
+    const kurz = { id: s.id, status: s.status, modell: s.modell, zahlart: s.zahlart, firma: s.firma, kontoVerbunden: Boolean(s.stripe?.chargesEnabled), kontoBegonnen: Boolean(s.stripe?.detailsSubmitted) };
     // Vollständige Angaben nur zum Fortsetzen eines nicht abgeschlossenen Entwurfs
     if (!["entwurf", "abgebrochen"].includes(s.status)) return json(kurz);
     return json({ ...kurz, email: s.email, inhaber: s.inhaber, strasse: s.strasse, plz: s.plz, ort: s.ort, telefon: s.telefon, studioTelefon: s.studioTelefon, ustid: s.ustid });
@@ -30,7 +30,7 @@ export default handler(async (req, context) => {
 
   const b = await body(req);
   const modell = b.modell === "provision" ? "provision" : b.modell === "kauf" ? "kauf" : null;
-  const zahlart = modell === "kauf" ? (b.zahlart === "rechnung" ? "rechnung" : "sofort") : "sepa";
+  const zahlart = modell === "kauf" ? (b.zahlart === "rechnung" ? "rechnung" : "sofort") : "provision";
   const d = {
     firma: clean(b.firma, 120), inhaber: clean(b.inhaber, 120), strasse: clean(b.strasse, 120), plz: clean(b.plz, 10),
     ort: clean(b.ort, 80), email: clean(b.email, 160).toLowerCase(), telefon: clean(b.telefon, 40),
@@ -66,6 +66,11 @@ export default handler(async (req, context) => {
     },
     stripe: s?.stripe || {},
   };
+  if (!s.slug) {
+    let slug = slugify(d.firma), n = 1;
+    while (await studioBy("slug", slug)) slug = slugify(d.firma) + "-" + (++n);
+    s.slug = slug;
+  }
   await saveStudio(s);
   await log("signup", { studioId: s.id, modell, zahlart });
 
@@ -79,11 +84,11 @@ export default handler(async (req, context) => {
       mode: "payment", customer: s.stripe.customerId, locale: "de", client_reference_id: s.id,
       line_items: [{
         quantity: 1, tax_rates: [await taxRateId()],
-        price_data: { currency: "eur", unit_amount: preisNetto, product_data: { name: "Ted am Telefon – Kaufpaket", description: "KI-Telefonassistent inkl. Einrichtung, Betrieb und Betreuung, keine monatlichen Kosten" } },
+        price_data: { currency: "eur", unit_amount: preisNetto, product_data: { name: "Tattoofin Setup", description: "Einrichtung der Zahlungsstruktur inkl. Studio Kit, Schulung und Betreuung, keine monatliche Grundgebühr" } },
       }],
-      invoice_creation: { enabled: true, invoice_data: { description: "Ted am Telefon – Kaufpaket", metadata: { studioId: s.id, typ: "kauf" }, footer: `${CFG.firma} · ${CFG.adresse} · ${CFG.ustid}` } },
+      invoice_creation: { enabled: true, invoice_data: { description: "Tattoofin Setup", metadata: { studioId: s.id, typ: "kauf" }, footer: `${CFG.firma} · ${CFG.adresse} · ${CFG.ustid}` } },
       customer_update: { address: "auto", name: "auto" }, tax_id_collection: { enabled: true },
-      payment_intent_data: { metadata: { studioId: s.id, typ: "kauf" }, description: "Ted am Telefon – Kaufpaket" },
+      payment_intent_data: { metadata: { studioId: s.id, typ: "kauf" }, description: "Tattoofin Setup" },
       metadata: { studioId: s.id, typ: "kauf" },
       success_url: `${base}/danke.html?id=${s.id}&sid={CHECKOUT_SESSION_ID}`,
       cancel_url: `${base}/start.html?resume=${s.id}&abbruch=1`,
@@ -97,12 +102,12 @@ export default handler(async (req, context) => {
     const txr = await taxRateId();
     await stripe("POST", "/invoiceitems", {
       customer: s.stripe.customerId, currency: "eur", amount: preisNetto, tax_rates: [txr],
-      description: "Ted am Telefon – Kaufpaket (Einrichtung, Betrieb und Betreuung inklusive)", metadata: { studioId: s.id },
+      description: "Tattoofin Setup (Einrichtung, Studio Kit, Schulung, Betreuung)", metadata: { studioId: s.id },
     }, { idempotencyKey: `ii-kauf-${s.id}` });
     const inv = await stripe("POST", "/invoices", {
       customer: s.stripe.customerId, collection_method: "send_invoice", days_until_due: CFG.rechnungFaelligTage,
       pending_invoice_items_behavior: "include", currency: "eur", auto_advance: true,
-      description: "Ted am Telefon – Kaufpaket", metadata: { studioId: s.id, typ: "kauf" },
+      description: "Tattoofin Setup", metadata: { studioId: s.id, typ: "kauf" },
     }, { idempotencyKey: `inv-kauf-${s.id}` });
     const fin = await stripe("POST", `/invoices/${inv.id}/finalize`, { auto_advance: true });
     await stripe("POST", `/invoices/${fin.id}/send`, {});
@@ -111,24 +116,18 @@ export default handler(async (req, context) => {
     if (aktion) await zaehleAktion();
     await saveStudio(s);
     const faellig = fin.due_date ? new Date(fin.due_date * 1000).toISOString() : addMonths(now(), 0);
-    await notify(s, mails.anmeldung(s, { loginUrl: loginLink(s.id) }));
+    await notify(s, mails.anmeldung(s, { loginUrl: loginLink(s.id), connectUrl: connectUrl(s) }));
     await notify(s, mails.rechnungVersendet(s, { betragCent: brutto(preisNetto), rechnungUrl: fin.hosted_invoice_url, faellig }));
     await notifyAdmin("Neuer Abschluss (Kauf auf Rechnung)", s, { Betrag: preisNetto / 100 + " € netto", Aktion: aktion ? "ja" : "nein" });
     return json({ next: `/danke.html?id=${s.id}` });
   }
 
-  // Provision: Zahlungsmethode (SEPA-Lastschrift oder Karte) für spätere Abrechnungen hinterlegen
-  const session = await stripe("POST", "/checkout/sessions", {
-    mode: "setup", customer: s.stripe.customerId, locale: "de", client_reference_id: s.id, currency: "eur",
-    payment_method_types: ["sepa_debit", "card"],
-    setup_intent_data: { metadata: { studioId: s.id, typ: "provision" }, description: "Ted am Telefon – Provisionsabrechnung" },
-    metadata: { studioId: s.id, typ: "provision" },
-    success_url: `${base}/danke.html?id=${s.id}&sid={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${base}/start.html?resume=${s.id}&abbruch=1`,
-  }, { idempotencyKey: `cs-${s.id}-${s.vertrag.akzeptiertAm}` });
-  s.stripe.checkoutSessionId = session.id;
+  // Provision: keine Zahlung nötig. Vertrag steht, weiter zur Verbindung des Stripe-Kontos.
+  s.status = "einrichtung";
   await saveStudio(s);
-  return json({ url: session.url });
+  await notify(s, mails.anmeldung(s, { loginUrl: loginLink(s.id), connectUrl: connectUrl(s) }));
+  await notifyAdmin("Neuer Abschluss (Provision) 🎉", s, {});
+  return json({ url: connectUrl(s) });
 });
 
 export const config = { path: "/api/signup" };

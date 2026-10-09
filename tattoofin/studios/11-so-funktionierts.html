@@ -1,112 +1,113 @@
 <!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>So funktioniert Ted am Telefon</title>
-<link rel="stylesheet" href="../assets/telefon.css">
+<title>So funktioniert Tattoofin</title>
+<link rel="stylesheet" href="../assets/tattoofin.css">
 <style>
 @page{size:A4;margin:14mm 16mm 16mm}
-.flow{display:grid;grid-template-columns:repeat(5,1fr);gap:2.5mm;margin:12px 0 16px}
-.flow div{background:var(--cream);border-radius:10px;padding:10px 9px;font-size:8.8pt;line-height:1.35;position:relative}
-.flow div b{display:block;font:700 10pt/1.2 var(--head);margin:4px 0 3px}
-.flow .ic{font-size:18pt;line-height:1}
-.flow div.t{background:var(--ink);color:#fff}
-.flow div.t b{color:var(--gold)}
-.dialog{display:grid;gap:6px;margin:8px 0 14px}
-.dialog p{margin:0;max-width:82%;padding:7px 11px;border-radius:12px;font-size:9.5pt;line-height:1.4}
-.dialog .ted{background:var(--ink);color:#fff;border-bottom-left-radius:3px}
-.dialog .ted::before{content:"Ted  ";font-weight:700;color:var(--gold)}
-.dialog .k{background:var(--cream);justify-self:end;border-bottom-right-radius:3px}
-.dialog .k::before{content:"Anruferin  ";font-weight:700;color:var(--muted)}
-.wa{background:#e7f7ef;border:1px solid #a6dcc0;border-radius:12px;padding:10px 13px;font-size:9.5pt;line-height:1.5;max-width:92mm}
+.dochead img{width:30mm;aspect-ratio:520/436;object-fit:cover;object-position:top}
+.flow{width:100%;border-collapse:separate;border-spacing:0 2mm;margin:6px 0 12px;font-size:9.2pt}
+.flow td,.flow th{border:0;padding:7px 10px;vertical-align:top;line-height:1.4}
+.flow th{background:none;font:700 8pt var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding-bottom:0}
+.flow td{background:var(--cream)}
+.flow td:first-child{border-radius:10px 0 0 10px;width:30%}
+.flow td:last-child{border-radius:0 10px 10px 0}
+.flow td:first-child b{display:block;font:700 10.5pt/1.25 var(--head)}
+.flow .n{display:inline-block;width:22px;height:22px;border-radius:50%;background:var(--ink);color:var(--gold);font:700 10pt/22px var(--head);text-align:center;margin-right:6px;vertical-align:1px}
+.flow tr.hl td{background:var(--gold-soft)}
+.chat{background:#efeae2;border-radius:14px;padding:12px;display:grid;gap:6px}
+.chat p{margin:0;max-width:86%;padding:7px 11px;border-radius:12px;font-size:9.3pt;line-height:1.4;background:#fff}
+.chat .me{justify-self:end;background:#d9fdd3}
+.chat .who{display:block;font:700 7.5pt var(--body);color:var(--muted);margin-bottom:1px}
+.chat .link{display:block;margin-top:5px;background:#fff;border:1px solid #cfe9c9;border-radius:8px;padding:6px 8px;font-size:8.6pt}
+.chat .link b{display:block;color:var(--ink)}
 .todo3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:8px 0 6px}
-.todo3 div{border:2px solid var(--ink);border-radius:12px;padding:12px}
-.todo3 .n{font:700 26pt/1 var(--head);color:var(--gold)}
+.todo3 div{border:2px solid var(--ink);border-radius:12px;padding:12px;font-size:9.4pt;line-height:1.45}
+.todo3 .n{font:700 26pt/1 var(--head);color:var(--orange)}
 .todo3 b{display:block;font:700 11pt var(--head);margin:4px 0}
 .qa{columns:2;column-gap:22px}
 .qa div{break-inside:avoid;margin:0 0 10px}
 .qa b{display:block;font:700 10.5pt/1.3 var(--head);margin-bottom:2px}
+.ex .big{font:700 14pt/1.2 var(--head);margin-bottom:4px}
+.grid2.avoid{break-inside:avoid}
+.ctabox{display:flex;justify-content:space-between;align-items:center;gap:16px}
+.ctabox .qr{width:26mm;flex:none}
 </style>
 </head><body>
 <div class="toolbar"><a href="../index.html">← Alle Unterlagen</a><span class="t">Für Studios · So funktioniert's</span><button data-print>Drucken / PDF</button></div>
 <main class="doc">
 
 <div class="dochead">
-  <div><span class="tag ext">Für Tattoo-Studios</span><h1>So funktioniert Ted am Telefon</h1><p class="lead">Einfach erklärt: was passiert, wenn bei dir das Telefon klingelt</p></div>
-  <div class="meta"><img src="../assets/logo.png" alt="TattooLeadz"></div>
+  <div><span class="tag ext">Für Tattoo-Studios</span><h1>So funktioniert Tattoofin</h1><p class="lead">Einfach erklärt: flexible Zahlung für große Tattoo-Projekte</p></div>
+  <div class="meta"><img src="../assets/logo.png" alt="Tattoofin"></div>
 </div>
 
-<p style="font-size:11.5pt"><b>Ted ist euer digitaler Telefonassistent.</b> Er geht ran, wenn ihr gerade nicht könnt: weil die Maschine läuft, weil schon jemand am Telefon ist oder weil Feierabend ist. Er beantwortet die üblichen Fragen, nimmt Tattoo-Anfragen auf und schickt euch alles sofort aufs Handy. <b>Preise und Termine machst weiterhin du.</b></p>
+<p style="font-size:11.5pt"><b>Tattoofin richtet deinem Studio eine professionelle Zahlungsstruktur ein.</b> Deine Kunden können damit flexibel bezahlen: per Karte, Apple Pay, Google Pay, SEPA oder auch in Raten über externe Zahlungsanbieter wie Klarna. Du schickst nur einen Zahlungslink. <b>Prüfung und Bedingungen übernimmt der Zahlungsanbieter.</b> Du bist kein Kreditgeber und musst niemanden beraten.</p>
 
-<h2>Ein Anruf, Schritt für Schritt</h2>
-<div class="flow">
-  <div><span class="ic">📱</span><b>1. Kunde ruft an</b>auf eurer ganz normalen Studio-Nummer.</div>
-  <div><span class="ic">🔔</span><b>2. Es klingelt bei euch</b>Wer kann, geht ran, wie immer.</div>
-  <div class="t"><span class="ic">🎧</span><b>3. Ted übernimmt</b>wenn nach ca. 20 Sek. keiner abhebt, besetzt ist oder ihr zu habt.</div>
-  <div><span class="ic">💬</span><b>4. Du bekommst alles</b>Sekunden später per WhatsApp und E-Mail.</div>
-  <div><span class="ic">🖤</span><b>5. Du meldest dich</b>wann es dir passt, mit Preis und Termin.</div>
-</div>
+<h2>Ein Projekt, Schritt für Schritt</h2>
+<table class="flow">
+  <tr><th></th><th>Dein Kunde</th><th>Dein Studio</th></tr>
+  <tr><td><b><span class="n">1</span>Beratung</b></td><td>Bespricht Motiv, Größe und Sitzungen. Hört den Preis und fragt vielleicht: „Kann ich das auch in Raten zahlen?“</td><td>Nennt den Preis wie immer und sagt: „Du kannst bei uns auch flexibel bezahlen.“</td></tr>
+  <tr><td><b><span class="n">2</span>Zahlungslink</b></td><td>Bekommt den Link per WhatsApp oder E-Mail. Oder scannt den QR-Code an der Theke.</td><td>Erstellt den Link im Studio-Portal in Sekunden: Betrag, Name, Projekt. Für die Anzahlung oder den ganzen Betrag.</td></tr>
+  <tr><td><b><span class="n">3</span>Zahlungsart wählen</b></td><td>Sieht im Checkout, welche Zahlungsarten angeboten werden, und wählt: Karte, Apple Pay, Ratenzahlung und mehr.</td><td>Nichts zu tun.</td></tr>
+  <tr class="hl"><td><b><span class="n">4</span>Prüfung</b></td><td>Der Zahlungsanbieter prüft, z. B. die Bonität bei Ratenzahlung, und zeigt die Bedingungen vor dem Abschluss an. Der Ratenvertrag kommt direkt mit dem Anbieter zustande.</td><td>Nichts zu tun. Keine Finanzierungsberatung, keine Zusagen.</td></tr>
+  <tr><td><b><span class="n">5</span>Bezahlt</b></td><td>Bekommt eine Bestätigung. Der Termin steht.</td><td>Bekommt eine E-Mail und sieht die Zahlung im Portal. Die Auszahlung kommt nach Freigabe über Stripe auf das Studiokonto, abzüglich der Gebühren des Zahlungsanbieters.</td></tr>
+</table>
 
-<div class="grid2">
+<div class="grid2 avoid">
   <div>
-    <h3 style="margin-top:0">So klingt ein Gespräch</h3>
-    <div class="dialog">
-      <p class="ted">Hi, hier ist Ink Studio! Ich bin Ted, der digitale Assistent. Das Team tätowiert gerade. Wie kann ich dir helfen?</p>
-      <p class="k">Hi, ich hätte gern ein Tattoo am Unterarm. Was kostet das ungefähr?</p>
-      <p class="ted">Cool! Der Preis hängt von Größe und Details ab, den macht dir der Artist persönlich. Ich nehm alles auf, damit du schnell ein Angebot bekommst. Was soll's denn werden?</p>
-      <p class="k">Eine feine Rosenranke, so 15 Zentimeter.</p>
-      <p class="ted">Schön! Eher Fineline in Schwarz-Grau oder mit Farbe? …</p>
+    <h3 style="margin-top:0">So sieht das im Chat aus</h3>
+    <div class="chat">
+      <p><span class="who">Kunde</span>Hey, der Entwurf fürs Sleeve ist mega! Kann ich das eigentlich auch in Raten zahlen?</p>
+      <p class="me"><span class="who">Studio</span>Freut uns! Ja, bei uns kannst du flexibel bezahlen. Ich schick dir gleich einen Zahlungslink. Da siehst du, welche Zahlungsarten dir angeboten werden.</p>
+      <p class="me"><span class="who">Studio</span>Hier ist der Link für deine Anzahlung:<span class="link"><b>Ink Studio · Sleeve linker Arm</b>Anzahlung 500,00 € · Jetzt bezahlen</span></p>
+      <p><span class="who">Kunde</span>Hat geklappt, danke! Bis zum ersten Termin 🖤</p>
+    </div>
+    <p class="small" style="margin-top:6px">Beispiel. Namen und Beträge sind erfunden.</p>
+  </div>
+  <div>
+    <h3 style="margin-top:0">Was das für dein Studio heißt</h3>
+    <ul class="check">
+      <li><b>Weniger verschobene Projekte:</b> Kunden müssen nicht erst monatelang sparen.</li>
+      <li><b>Ratenrisiko beim Anbieter:</b> Nach Freigabe bekommst du den Betrag über Stripe. Das Risiko der Ratenzahlung liegt in der Regel beim Zahlungsanbieter.</li>
+      <li><b>Dein eigenes Konto:</b> Das Stripe-Konto läuft auf dein Studio und bleibt bei dir.</li>
+      <li><b>Keine neue Hardware:</b> Zahlungslink und QR-Code reichen. Dein Kunde zahlt am eigenen Handy.</li>
+    </ul>
+    <div class="box gold ex">
+      <div class="big">1.500 € auf einmal oder z. B. 50 € im Monat</div>
+      <div class="small" style="color:var(--text)">Beispiel ohne Zinsen, Bedingungen je nach Zahlungsanbieter. Gegenüber deinen Kunden nennst du keine konkreten Raten.</div>
     </div>
   </div>
-  <div>
-    <h3 style="margin-top:0">Das landet bei dir auf dem Handy</h3>
-    <div class="wa">📞 <b>Neuer Anruf · Ink Studio</b> · Sa 21:47 · 2:14 Min.<br>
-    👤 Lena · 📱 0151 2345 678<br>
-    🎨 Motiv: feine Rosenranke<br>
-    📍 Unterarm innen · ca. 15 cm<br>
-    🖤 Fineline, schwarz-grau<br>
-    🗓️ Wunsch: November, am liebsten samstags<br>
-    🙋 Artist: egal<br><br>
-    <i>Fragt nach dem Preis. Schickt gern Referenzbilder.</i><br>
-    → Bitte zurückrufen. Preis &amp; Termin machst du.</div>
-    <p class="small" style="margin-top:6px">Beispielnachricht. Name und Nummer sind erfunden.</p>
-  </div>
-</div>
-
-<h2>Was Ted beantwortet und was nicht</h2>
-<div class="grid2">
-  <div class="box"><h3>✅ Ted beantwortet</h3><p style="margin:0">Öffnungszeiten · Adresse &amp; Parken · Walk-ins · Ablauf von Anfrage bis Termin · Mindestalter &amp; Ausweis · Anzahlung · Gutscheine · Cover-ups · Terminabsagen &amp; -verschiebungen (nimmt er auf) · alles, was ihr uns im Fragebogen mitgebt</p></div>
-  <div class="box"><h3>🚫 Ted sagt nie</h3><p style="margin:0">Preise oder „ab“-Preise · feste Termine · medizinische Ratschläge · Dinge, die er nicht sicher weiß. Bei allem anderen sagt er: „Das klärt das Team persönlich mit dir“ und schreibt die Frage für euch auf.</p></div>
 </div>
 
 <h2>Was ihr tun müsst: nur 3 Dinge</h2>
 <div class="todo3">
-  <div><span class="n">1</span><b>Fragebogen ausfüllen</b>Ca. 15 Minuten: Öffnungszeiten, Artists, eure Regeln, häufige Fragen. Daraus bauen wir Ted für euch.</div>
-  <div><span class="n">2</span><b>Einmal testen</b>Ihr ruft Ted an, stellt ihm fiese Fragen und sagt uns, was wir anpassen sollen.</div>
-  <div><span class="n">3</span><b>Rufumleitung an</b>Dauert 2 Minuten, wir machen es gemeinsam am Telefon. Eure Nummer bleibt gleich.</div>
+  <div><span class="n">1</span><b>Abschließen &amp; Fragebogen</b>Online oder per Vertrag. Dazu ein kurzer Fragebogen zu Studio, Preisen und Wunsch-Zahlungsarten.</div>
+  <div><span class="n">2</span><b>Stripe-Konto bestätigen</b>Firmendaten, Bankverbindung und Ausweis des Inhabers bei Stripe hinterlegen. Wir zeigen dir, wie.</div>
+  <div><span class="n">3</span><b>Team &amp; Theke startklar</b>Kurze Schulung mitmachen, QR-Code und Aufkleber aufstellen. Fertig.</div>
 </div>
-<p><b>Alles andere übernehmen wir:</b> Rufnummer, Stimme, Texte, Technik, Datenschutz-Unterlagen, Wartung. Und ihr bekommt Fensteraufkleber und Flyer für eure Kundschaft dazu.</p>
+<p><b>Alles andere übernehmen wir:</b> Verbindung des Kontos, Zahlungsarten, Branding, Test des Ablaufs, Studio-Portal, Zahlseite mit QR-Code und das Tattoofin Studio Kit mit Fensteraufkleber, Flyer, Aufsteller, Website-Badge, Instagram-Story und WhatsApp-Vorlagen.</p>
 
 <h2>Häufige Fragen</h2>
 <div class="qa">
-  <div><b>Muss ich eine neue Nummer bekommen?</b>Nein. Eure Nummer bleibt. Ted bekommt eine eigene Nummer im Hintergrund, auf die eure Anrufe nur umgeleitet werden, wenn ihr nicht rangeht.</div>
-  <div><b>Kann ich Ted ausschalten?</b>Jederzeit, mit einem kurzen Code am Telefon oder einem Klick in der FRITZ!Box. Dann klingelt es wieder nur bei euch.</div>
-  <div><b>Geht Ted immer ran oder nur, wenn wir nicht können?</b>Wie ihr wollt. Empfohlen: nur wenn ihr nach ca. 20 Sekunden nicht abnehmt, besetzt ist oder ihr geschlossen habt.</div>
-  <div><b>Merkt der Kunde, dass er mit einer KI spricht?</b>Ja. Ted stellt sich als digitaler Assistent vor. Das ist ehrlich und auch gesetzlich so vorgesehen.</div>
-  <div><b>Was, wenn ein Kunde unbedingt einen Menschen will?</b>Ted nimmt Name und Nummer auf und markiert den Rückruf als wichtig. Dringende Anrufe kann er direkt auf euer Handy weiterleiten.</div>
-  <div><b>Kostet die Rufumleitung extra?</b>Ted bekommt eine deutsche Festnetznummer. Umleitungen dorthin sind bei den meisten Tarifen in der Flatrate enthalten. Wir prüfen das mit euch beim Kickoff.</div>
-  <div><b>Was ist mit Datenschutz?</b>Wir schließen mit euch einen Auftragsverarbeitungsvertrag nach DSGVO ab. Ted erfasst nur, was ihr für die Anfrage braucht. Für eure Kunden gibt es einen fertigen Datenschutzhinweis.</div>
-  <div><b>Was kostet Ted?</b>Ihr wählt eins von zwei Modellen, die Leistung ist gleich. <b>Kaufen:</b> einmalig <span data-cfg="kaufPreis"></span> netto inklusive Einrichtung, Betrieb und Betreuung, keine monatlichen Kosten. <b>Provision:</b> keine Einrichtungs- und keine Monatsgebühr, nur <span data-cfg="provisionSatz"></span> vom Tattoo-Preis (netto) für Termine, die aus einer Ted-Anfrage entstehen.</div>
-  <div><b>Wie viele Minuten sind drin?</b>In beiden Modellen <span data-cfg="fairUseMinuten"></span> Gesprächsminuten pro Monat (Fair Use). Das reicht für die allermeisten Studios. Darüber kostet jede Minute <span data-cfg="extraMinute"></span> €, Ted läuft einfach weiter und ihr verliert keinen Anruf.</div>
-  <div><b>Wie schnell ist Ted startklar?</b>In der Regel 5 Werktage, nachdem wir euren Fragebogen haben.</div>
-  <div><b>Wie lange bin ich gebunden?</b>Beim Kauf gibt es keine Monatsraten und keine Bindung. In den ersten <span data-cfg="garantieTage"></span> Tagen bekommt ihr das Geld voll zurück, wenn ihr nicht zufrieden seid. Das Provisionsmodell ist <span data-cfg="kuendigungProvision"></span> kündbar.</div>
-  <div><b>Wie läuft die Provision ab?</b>Jede Ted-Anfrage landet in eurem Online-Studio-Portal. Wird daraus innerhalb der ersten <span data-cfg="provisionZuordnung"></span> ein Tattoo gebucht, tragt ihr Termin und Preis dort ein. Einmal im Monat rechnen wir ab, per SEPA-Lastschrift oder Karte.</div>
-  <div><b>Kostet die Betreuung extra?</b>Nein. Änderungen an Öffnungszeiten, Urlauben oder Regeln und Hilfe bei Fragen sind in beiden Modellen kostenlos.</div>
+  <div><b>Bin ich dann Kreditgeber?</b>Nein. Die Ratenzahlung bietet der externe Zahlungsanbieter an, der Vertrag kommt direkt zwischen ihm und deinem Kunden zustande. Tattoofin vermittelt keine Kredite.</div>
+  <div><b>Wer trägt das Risiko, wenn der Kunde nicht zahlt?</b>Bei Ratenzahlung in der Regel der Zahlungsanbieter. Er prüft vorher und zahlt nach Freigabe an dich aus.</div>
+  <div><b>Bekommt jeder Kunde Raten?</b>Nein. Der Anbieter entscheidet im Einzelfall. Klappt es nicht, wählt der Kunde einfach eine andere Zahlungsart.</div>
+  <div><b>Was kosten die Zahlungen?</b>Die Zahlungsanbieter berechnen pro Zahlung Gebühren, je nach Zahlungsart. Die sind nicht im Tattoofin-Preis enthalten und fallen bei deinem Studio an.</div>
+  <div><b>Anzahlung oder ganzer Betrag?</b>Beides geht. Du legst den Betrag im Zahlungslink fest. Bei großen Projekten ist der ganze Projektpreis oft sinnvoll, weil dann die Ratenzahlung den größten Unterschied macht.</div>
+  <div><b>Ich habe schon ein Stripe-Konto.</b>Perfekt. Wir verbinden dein bestehendes Konto mit der Tattoofin-Plattform. Das Konto bleibt deins.</div>
+  <div><b>Wie schnell bin ich startklar?</b>In der Regel in wenigen Werktagen, nachdem Stripe dein Konto freigegeben hat.</div>
+  <div><b>Was kostet Tattoofin?</b>Du wählst ein Modell, die Leistung ist gleich. <b style="display:inline">Kauf:</b> einmalig <span data-cfg="kaufPreis"></span> netto, keine Grundgebühr, keine Provision, <span data-cfg="garantieTage"></span> Tage Zufriedenheitsgarantie. <b style="display:inline">Provision:</b> 0 € Einrichtung, nur <span data-cfg="provisionSatz"></span> netto vom Betrag jeder Zahlung über Tattoofin, automatisch einbehalten und monatlich abgerechnet.</div>
+  <div><b>Wie lange bin ich gebunden?</b>Beim Kauf gibt es keine laufenden Kosten. Das Provisionsmodell ist <span data-cfg="kuendigungProvision"></span> kündbar. Endet der Vertrag, trennen wir nur die Plattformverbindung. Dein Stripe-Konto bleibt bei dir.</div>
+  <div><b>Und der Datenschutz?</b>Wir schließen einen Auftragsverarbeitungsvertrag nach DSGVO. Kartendaten sehen wir nie, die verarbeitet der Zahlungsanbieter. Für deine Kunden gibt es eine fertige Kundeninfo.</div>
+  <div><b>Kostet die Betreuung extra?</b>Nein. <span data-cfg="setupSupportTage"></span> Tage Setup-Support, danach Betreuung <span data-cfg="betreuung"></span>, in beiden Modellen.</div>
 </div>
 
-<div class="box dark" style="margin-top:14px;display:flex;justify-content:space-between;align-items:center;gap:16px">
-  <div><h3 style="margin:0 0 4px">Hör's dir selbst an</h3><p style="margin:0">Ruf Ted an und frag ihn, was du willst: <b class="tgold" data-cfg="demoNummer"></b><br><span style="color:#c9d1d9">Fragen? <span data-cfg="ansprechpartner"></span> · <span data-cfg="telefon"></span> · <span data-cfg="email"></span></span></p></div>
-  <div class="qr" style="width:24mm" data-qr="{videoSeite}?utm_source=erklaerung" data-size="90"></div>
+<div class="box dark ctabox" style="margin-top:14px">
+  <div><h3 style="margin:0 0 4px">Sieh dir das Video an</h3><p style="margin:0">QR-Code scannen oder <b class="tgold" data-cfg="web"></b> öffnen.<br><span style="color:#cdd6e3">Fragen? <span data-cfg="ansprechpartner"></span> · WhatsApp <span data-cfg="telefon"></span> · <span data-cfg="email"></span></span></p></div>
+  <div class="qr" data-qr="{videoSeite}?utm_source=erklaerung" data-size="100"></div>
 </div>
 
+<p class="footer-note">Tattoofin ist kein Kreditgeber, kein Kreditinstitut und vermittelt keine Kredite. Tattoofin richtet die technische Zahlungsstruktur ein. Ob eine Zahlungsart verfügbar ist und zu welchen Bedingungen (Raten, Laufzeit, Zinsen, Freigabe), legt allein der jeweilige Zahlungsanbieter fest. <span data-cfg="marke"></span> · <span data-cfg="firma"></span></p>
 </main>
 <script src="../assets/qrcode.min.js"></script><script src="../assets/config.js"></script><script src="../assets/app.js"></script>
 </body></html>

@@ -14,9 +14,8 @@
         firma: api.firma, adresse: api.adresse, registergericht: api.registergericht, ustid: api.ustid,
         geschaeftsfuehrer: api.geschaeftsfuehrer, ansprechpartner: api.geschaeftsfuehrer, telefon: api.telefon, email: api.email,
         gerichtsstand: api.gerichtsstand, kaufPreis: api.kaufNetto / 100, kaufAktionPreis: api.aktionNetto / 100,
-        provisionSatz: api.provisionProzent + " %", provisionZuordnung: api.zuordnungMonate + " Monate",
-        provisionNachlauf: api.nachlaufMonate + " Monate", provisionMeldefrist: api.meldeTag + ". des Folgemonats",
-        fairUseMinuten: api.fairUseMinuten, extraMinute: komma((api.extraMinuteCent / 100).toFixed(2)), garantieTage: api.garantieTage,
+        provisionSatz: api.provisionProzent + " %", garantieTage: api.garantieTage, setupSupportTage: api.setupSupportTage,
+        kuendigungProvision: "jederzeit zum Monatsende",
         vertragVersion: api.vertragVersion,
       });
     }

@@ -1,86 +1,89 @@
 // Studio-Portal (eingeloggt per Session-Cookie)
-//   GET    /api/portal                    Studio, Anfragen, Abrechnungen, Vorschau
-//   PATCH  /api/portal/anfrage/:id        { status, terminDatum, preisNetto, notiz }
-//   POST   /api/portal/anfrage            Anfrage nachtragen, die über Ted kam, aber fehlt
-//   GET/POST /api/portal/fragebogen       Onboarding-Fragebogen
-//   POST   /api/portal/kuendigung         { grund, garantie }
-//   DELETE /api/portal/kuendigung         Kündigung zurücknehmen
-//   POST   /api/portal/zahlung            Link zum Stripe-Kundenportal (Zahlungsmethode, Rechnungen)
-//   PATCH  /api/portal/kontakt            Benachrichtigungs-E-Mail / WhatsApp ändern
-import { CFG } from "./_lib/config.mjs";
-import { json, fail, body, clean, id, now, handler, isEmail } from "./_lib/util.mjs";
-import { saveStudio, anfragenVon, getAnfrage, saveAnfrage, abrechnungenVon, log } from "./_lib/store.mjs";
+//   GET    /api/portal                     Studio, Zahlungen, Abrechnungen, Kennzahlen
+//   POST   /api/portal/zahlung             Zahlungslink erstellen { betrag, kunde, email, beschreibung, art }
+//   DELETE /api/portal/zahlung/:id         offenen Zahlungslink stornieren
+//   GET/POST /api/portal/fragebogen        Onboarding-Fragebogen
+//   POST   /api/portal/kuendigung          { grund, garantie }
+//   DELETE /api/portal/kuendigung          Kündigung zurücknehmen
+//   POST   /api/portal/rechnungen          Stripe-Kundenportal (Tattoofin-Rechnungen)
+//   PATCH  /api/portal/kontakt             Benachrichtigungs-E-Mail ändern
+import { CFG, plattformgebuehr } from "./_lib/config.mjs";
+import { json, fail, body, clean, id, now, handler, isEmail, parseBetrag } from "./_lib/util.mjs";
+import { saveStudio, zahlungenVon, getZahlung, saveZahlung, abrechnungenVon, log } from "./_lib/store.mjs";
 import { currentStudio } from "./_lib/auth.mjs";
 import { stripe } from "./_lib/stripe.mjs";
-import { notify, notifyAdmin, kuendigungsDatum, provisionFuerMonat, mehrminuten, STATUS } from "./_lib/domain.mjs";
+import { notify, notifyAdmin, kuendigungsDatum, connectUrl, darfKassieren, STATUS } from "./_lib/domain.mjs";
 import { mails } from "./_lib/emails.mjs";
 
+const zahlseite = (s) => `${CFG.siteUrl}/zahlen.html?s=${s.slug}`;
 const oeffentlich = (s) => ({
   id: s.id, firma: s.firma, inhaber: s.inhaber, email: s.email, telefon: s.telefon, studioTelefon: s.studioTelefon,
-  strasse: s.strasse, plz: s.plz, ort: s.ort, modell: s.modell, zahlart: s.zahlart, preisNetto: s.preisNetto,
+  strasse: s.strasse, plz: s.plz, ort: s.ort, modell: s.modell, zahlart: s.zahlart, preisNetto: s.preisNetto, slug: s.slug,
   status: s.status, statusText: STATUS[s.status] || s.status, createdAt: s.createdAt, goLiveAt: s.goLiveAt,
-  tedNummer: s.tedNummer || "", vertrag: { version: s.vertrag?.version, akzeptiertAm: s.vertrag?.akzeptiertAm, name: s.vertrag?.name },
-  kuendigung: s.kuendigung || null, fragebogenAm: s.fragebogen?.updatedAt || null, minuten: s.minuten || {},
-  benachrichtigung: { email: s.benachrichtigungEmail || s.email, whatsapp: s.whatsapp || s.telefon },
+  vertrag: { version: s.vertrag?.version, akzeptiertAm: s.vertrag?.akzeptiertAm, name: s.vertrag?.name },
+  kuendigung: s.kuendigung || null, fragebogenAm: s.fragebogen?.updatedAt || null,
+  benachrichtigung: { email: s.benachrichtigungEmail || s.email },
   garantieBis: s.modell === "kauf" ? (s.goLiveAt ? new Date(new Date(s.goLiveAt).getTime() + CFG.garantieTage * 864e5).toISOString() : "ab Go-live") : null,
-  zahlungsmethode: Boolean(s.stripe?.paymentMethod),
+  stripe: { verbunden: Boolean(s.stripe?.accountId), freigegeben: Boolean(s.stripe?.chargesEnabled), auszahlungen: Boolean(s.stripe?.payoutsEnabled) },
+  kannKassieren: Boolean(darfKassieren(s)), zahlseite: zahlseite(s), connectUrl: connectUrl(s),
 });
 
 export default handler(async (req) => {
   const s = await currentStudio(req);
   if (!s) return fail("Bitte einloggen", 401);
   const url = new URL(req.url);
-  const teile = url.pathname.replace(/^\/api\/portal\/?/, "").split("/").filter(Boolean);
-  const [bereich, sub] = teile;
+  const [bereich, sub] = url.pathname.replace(/^\/api\/portal\/?/, "").split("/").filter(Boolean);
 
   if (!bereich && req.method === "GET") {
-    const anfragen = await anfragenVon(s.id);
-    const jetzt = new Date();
-    const monat = jetzt.toISOString().slice(0, 7);
-    const vormonat = new Date(Date.UTC(jetzt.getUTCFullYear(), jetzt.getUTCMonth() - 1, 1)).toISOString().slice(0, 7);
-    const vorschau = s.modell === "provision" ? {
-      [monat]: await provisionFuerMonat(s, monat),
-      [vormonat]: await provisionFuerMonat(s, vormonat),
-    } : null;
+    const zahlungen = await zahlungenVon(s.id);
+    const monat = new Date().toISOString().slice(0, 7);
+    const bezahlt = zahlungen.filter((z) => z.status === "bezahlt");
+    const imMonat = bezahlt.filter((z) => (z.bezahltAm || "").slice(0, 7) === monat);
+    const q = (extra = "") => `studio=${encodeURIComponent(s.firma)}&tel=${encodeURIComponent(s.studioTelefon || "")}&zahlen=${encodeURIComponent(zahlseite(s))}${extra}`;
     return json({
-      studio: oeffentlich(s), anfragen, abrechnungen: await abrechnungenVon(s.id), vorschau,
-      minuten: mehrminuten(s, monat),
+      studio: oeffentlich(s), zahlungen, abrechnungen: await abrechnungenVon(s.id),
+      kpis: {
+        umsatzMonatCent: imMonat.reduce((a, z) => a + z.betragCent, 0), zahlungenMonat: imMonat.length,
+        provisionMonatNettoCent: imMonat.reduce((a, z) => a + (z.gebuehrNettoCent || 0), 0),
+        umsatzGesamtCent: bezahlt.reduce((a, z) => a + z.betragCent, 0), offen: zahlungen.filter((z) => z.status === "offen").length,
+        anteilKlarna: bezahlt.length ? Math.round(100 * bezahlt.filter((z) => z.zahlart === "klarna").length / bezahlt.length) : 0,
+      },
       materialien: `${CFG.materialsUrl}generator.html`,
-      materialLinks: ["20-fensteraufkleber", "21-flyer-a6", "22-thekenaufsteller-a5", "24-tuerschild-a4", "23-datenschutzhinweis-anrufer"].map((n) => ({
-        name: n, url: `${CFG.materialsUrl}${n}.html?studio=${encodeURIComponent(s.firma)}&tel=${encodeURIComponent(s.studioTelefon || "")}&adresse=${encodeURIComponent(`${s.strasse}, ${s.plz} ${s.ort}`)}&email=${encodeURIComponent(s.email)}`,
-      })),
-      config: { provisionProzent: CFG.provisionProzent, fairUseMinuten: CFG.fairUseMinuten, meldeTag: CFG.meldeTag, garantieTage: CFG.garantieTage, zuordnungMonate: CFG.zuordnungMonate, nachlaufMonate: CFG.nachlaufMonate },
+      materialLinks: [
+        ["20-fensteraufkleber", "Fensteraufkleber"], ["21-flyer-a6", "Flyer A6"], ["22-thekenaufsteller-a5", "Thekenaufsteller A5"],
+        ["23-kundeninfo", "Kundeninfo"], ["24-social-kit", "Social-Kit (Story, Post, Badge)"],
+      ].map(([n, titel]) => ({ name: n, titel, url: `${CFG.materialsUrl}${n}.html?${q()}` })),
+      config: { provisionProzent: CFG.provisionProzent, ustProzent: CFG.ustProzent, garantieTage: CFG.garantieTage, minBetragCent: CFG.minBetragCent, maxBetragCent: CFG.maxBetragCent },
     });
   }
 
-  if (bereich === "anfrage") {
+  if (bereich === "zahlung") {
     if (req.method === "POST" && !sub) {
+      if (!darfKassieren(s)) return fail(s.stripe?.chargesEnabled ? "Dein Vertrag ist nicht aktiv." : "Dein Stripe-Konto ist noch nicht freigegeben. Sobald Stripe die Prüfung abgeschlossen hat, kannst du Zahlungslinks erstellen.", 409);
       const b = await body(req);
-      const a = {
-        id: id("an_"), studioId: s.id, createdAt: b.datum ? new Date(b.datum).toISOString() : now(), quelle: "manuell",
-        name: clean(b.name, 80), nummer: clean(b.nummer, 40), motiv: clean(b.motiv, 300), status: "offen",
+      const betragCent = parseBetrag(b.betrag);
+      if (!(betragCent >= CFG.minBetragCent && betragCent <= CFG.maxBetragCent)) return fail(`Bitte einen Betrag zwischen ${CFG.minBetragCent / 100} € und ${CFG.maxBetragCent / 100} € eingeben.`);
+      const email = clean(b.email, 160).toLowerCase();
+      if (email && !isEmail(email)) return fail("Bitte eine gültige E-Mail-Adresse eingeben oder das Feld leer lassen.");
+      const fee = plattformgebuehr(betragCent, s.modell);
+      const z = {
+        id: id("zl_"), studioId: s.id, createdAt: now(), art: b.art === "anzahlung" ? "anzahlung" : "gesamt", status: "offen",
+        betragCent, kunde: clean(b.kunde, 80), email, beschreibung: clean(b.beschreibung, 120) || "Tattoo-Projekt",
+        gebuehrNettoCent: fee.nettoCent, gebuehrBruttoCent: fee.bruttoCent,
       };
-      await saveAnfrage(a);
-      return json(a, 201);
+      await saveZahlung(z);
+      const link = `${CFG.siteUrl}/zahlung.html?z=${z.id}`;
+      const text = `Hi ${z.kunde ? z.kunde.split(" ")[0] : ""}, hier ist dein Zahlungslink für ${z.beschreibung} (${(betragCent / 100).toLocaleString("de-DE", { minimumFractionDigits: 2 })} €): ${link} . Beim Bezahlen siehst du, welche Zahlungsoptionen dir angeboten werden. Liebe Grüße, ${s.firma}`;
+      await log("zahlungslink", { studioId: s.id, zahlungId: z.id, betragCent });
+      return json({ zahlung: z, link, whatsappText: text }, 201);
     }
-    if (req.method === "PATCH" && sub) {
-      const a = await getAnfrage(s.id, sub);
-      if (!a) return fail("Anfrage nicht gefunden", 404);
-      if (a.abgerechnet) return fail("Diese Anfrage ist bereits abgerechnet und kann nicht mehr geändert werden.", 409);
-      const b = await body(req);
-      if (b.status && !["offen", "gebucht", "kein_termin"].includes(b.status)) return fail("Ungültiger Status");
-      if (b.status) a.status = b.status;
-      if (b.terminDatum !== undefined) a.terminDatum = /^\d{4}-\d{2}-\d{2}$/.test(b.terminDatum) ? b.terminDatum : null;
-      if (b.preisNetto !== undefined) {
-        const n = Number(String(b.preisNetto).replace(/\./g, "").replace(",", "."));
-        if (b.preisNetto !== "" && (!isFinite(n) || n < 0 || n > 100000)) return fail("Bitte einen gültigen Preis eintragen.");
-        a.preisNettoCent = b.preisNetto === "" ? null : Math.round(n * 100);
-      }
-      if (b.notiz !== undefined) a.notiz = clean(b.notiz, 500);
-      if (a.status === "gebucht" && s.modell === "provision" && (!a.terminDatum || !a.preisNettoCent)) return fail("Für gebuchte Termine bitte Datum und Preis eintragen.");
-      a.gemeldetAm = now();
-      await saveAnfrage(a);
-      return json(a);
+    if (req.method === "DELETE" && sub) {
+      const z = await getZahlung(s.id, sub);
+      if (!z) return fail("Nicht gefunden", 404);
+      if (z.status !== "offen" && z.status !== "abgebrochen") return fail("Nur offene Zahlungslinks können storniert werden.");
+      z.status = "storniert"; z.storniertAm = now();
+      await saveZahlung(z);
+      return json(z);
     }
   }
 
@@ -92,7 +95,6 @@ export default handler(async (req) => {
       const daten = {};
       for (const [k, v] of Object.entries(b || {})) if (typeof v === "string" || typeof v === "boolean") daten[clean(k, 60)] = typeof v === "string" ? clean(v, 4000) : v;
       s.fragebogen = { ...daten, updatedAt: now() };
-      if (daten.dringend_nummer) s.dringendNummer = daten.dringend_nummer;
       await saveStudio(s);
       if (erstes) await notify(s, mails.fragebogen(s));
       await notifyAdmin(erstes ? "Fragebogen eingegangen" : "Fragebogen geändert", s, daten);
@@ -104,15 +106,14 @@ export default handler(async (req) => {
     if (req.method === "POST") {
       if (["gekuendigt", "beendet", "erstattet"].includes(s.status)) return fail("Der Vertrag ist bereits gekündigt.");
       const b = await body(req);
-      const garantie = Boolean(b.garantie) && s.modell === "kauf" &&
+      const garantie = Boolean(b.garantie) && s.modell === "kauf" && s.stripe?.paymentIntentId &&
         (!s.goLiveAt || Date.now() - new Date(s.goLiveAt).getTime() <= CFG.garantieTage * 864e5);
-      s.kuendigung = { eingegangenAm: now(), zum: garantie ? now() : kuendigungsDatum(), grund: clean(b.grund, 1000), garantie, vorherStatus: s.status };
+      s.kuendigung = { eingegangenAm: now(), zum: garantie ? now() : kuendigungsDatum(), grund: clean(b.grund, 1000), garantie: Boolean(garantie), vorherStatus: s.status };
       s.status = "gekuendigt";
       await saveStudio(s);
       await log("kuendigung", { studioId: s.id, garantie });
-      if (garantie) {
-        await notifyAdmin("⚠️ Garantie-Erstattung angefordert: bitte im Admin erstatten", s, { Grund: s.kuendigung.grund });
-      } else {
+      if (garantie) await notifyAdmin("⚠️ Garantie-Erstattung angefordert: bitte im Admin erstatten", s, { Grund: s.kuendigung.grund });
+      else {
         await notify(s, mails.kuendigung(s, { zum: s.kuendigung.zum }));
         await notifyAdmin("Kündigung eingegangen", s, { zum: s.kuendigung.zum, Grund: s.kuendigung.grund });
       }
@@ -130,15 +131,14 @@ export default handler(async (req) => {
     }
   }
 
-  if (bereich === "zahlung" && req.method === "POST") {
-    const ps = await stripe("POST", "/billing_portal/sessions", { customer: s.stripe.customerId, return_url: `${CFG.siteUrl}/portal.html#zahlung`, locale: "de" });
+  if (bereich === "rechnungen" && req.method === "POST") {
+    const ps = await stripe("POST", "/billing_portal/sessions", { customer: s.stripe.customerId, return_url: `${CFG.siteUrl}/portal.html#konto`, locale: "de" });
     return json({ url: ps.url });
   }
 
   if (bereich === "kontakt" && req.method === "PATCH") {
     const b = await body(req);
     if (b.email !== undefined) { if (!isEmail(b.email)) return fail("Bitte gültige E-Mail"); s.benachrichtigungEmail = clean(b.email, 160); }
-    if (b.whatsapp !== undefined) s.whatsapp = clean(b.whatsapp, 40);
     await saveStudio(s);
     return json(oeffentlich(s));
   }

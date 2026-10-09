@@ -1,10 +1,10 @@
 @import url(fonts.css);
 :root{
-  --ink:#0d1117;--ink-2:#161b22;--ink-3:#21262d;--line-d:#2b3139;
-  --gold:#f5a50b;--gold-2:#ffc43d;--gold-soft:#fff4dc;
-  --cream:#f5f2ea;--paper:#fff;--text:#14161a;--muted:#5b6370;--muted-d:#9aa4ae;--line:#e4e1d8;
-  --red:#e5484d;--green:#1f9d55;
-  --head:'Space Grotesk',system-ui,sans-serif;--body:'Inter',system-ui,-apple-system,sans-serif;
+  --ink:#13243d;--ink-2:#1c3252;--ink-3:#264066;--line-d:#2e4566;
+  --gold:#ffbd16;--gold-2:#ffd25a;--gold-soft:#fff5d6;--orange:#ef721d;--blue:#2a5d8f;
+  --cream:#f7f7f4;--paper:#fff;--text:#14161a;--muted:#5b6370;--muted-d:#a9b6c6;--line:#e3e4df;
+  --red:#e5484d;--green:#4a9865;
+  --head:'Space Grotesk',system-ui,sans-serif;--body:'DM Sans',system-ui,-apple-system,sans-serif;
   --r:16px;
 }
 *{box-sizing:border-box}
@@ -28,10 +28,10 @@ h1,h2,h3{font-family:var(--head);letter-spacing:-.02em;line-height:1.1;margin:0}
 .dark .sec .sub,.sec.dark .sub{color:var(--muted-d)}
 
 /* Navigation */
-.nav{position:sticky;top:0;z-index:20;background:rgba(13,17,23,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line-d)}
+.nav{position:sticky;top:0;z-index:20;background:rgba(19,36,61,.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--line-d)}
 .nav .wrap{display:flex;align-items:center;justify-content:space-between;height:64px;gap:14px}
 .nav .brand{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none;font:700 17px var(--head)}
-.nav .brand img{height:38px;width:auto}
+.nav .brand img{height:40px;width:40px;object-fit:contain;background:#fff;border-radius:50%;padding:3px}
 .nav .links{display:flex;gap:22px;align-items:center}
 .nav .links a{color:#c9d1d9;text-decoration:none;font-weight:500;font-size:15px}
 .nav .links a:hover{color:#fff}
@@ -40,7 +40,7 @@ h1,h2,h3{font-family:var(--head);letter-spacing:-.02em;line-height:1.1;margin:0}
 /* Buttons */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;border:0;border-radius:99px;padding:14px 22px;font:700 16px var(--head);text-decoration:none;cursor:pointer;transition:transform .12s,box-shadow .12s;white-space:nowrap}
 .btn:hover{transform:translateY(-1px)}
-.btn.gold{background:var(--gold);color:var(--ink);box-shadow:0 8px 24px rgba(245,165,11,.25)}
+.btn.gold{background:var(--gold);color:var(--ink);box-shadow:0 8px 24px rgba(255,189,22,.28)}
 .btn.dark{background:var(--ink);color:#fff}
 .btn.ghost{background:transparent;border:1.5px solid currentColor;color:inherit}
 .btn.small{padding:9px 15px;font-size:14px}
@@ -56,7 +56,7 @@ h1,h2,h3{font-family:var(--head);letter-spacing:-.02em;line-height:1.1;margin:0}
 @media (max-width:900px){.hero .grid{grid-template-columns:1fr}.hero{padding-top:44px}}
 
 /* Phone mockup */
-.phone{max-width:330px;margin:0 auto;background:#0a0d12;border:10px solid #2b3139;border-radius:44px;padding:22px 16px;box-shadow:0 0 0 2px #3a414a,0 40px 80px rgba(0,0,0,.55)}
+.phone{max-width:330px;margin:0 auto;background:#fff;color:var(--text);border:10px solid #0e1b2e;border-radius:44px;padding:22px 16px;box-shadow:0 0 0 2px #3a414a,0 40px 80px rgba(0,0,0,.55)}
 .phone .call{text-align:center;padding:10px 0 18px;border-bottom:1px solid #222a33}
 .phone .av{width:62px;height:62px;border-radius:50%;background:var(--gold);color:var(--ink);font:700 28px/62px var(--head);margin:0 auto 8px}
 .phone .call b{display:block;font:700 19px var(--head)}
@@ -85,7 +85,7 @@ h1,h2,h3{font-family:var(--head);letter-spacing:-.02em;line-height:1.1;margin:0}
 /* Pricing */
 .prices{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:stretch}
 .price{background:var(--paper);border:2px solid var(--line);border-radius:22px;padding:30px;display:flex;flex-direction:column;position:relative}
-.price.hot{border-color:var(--gold);box-shadow:0 20px 50px rgba(245,165,11,.18)}
+.price.hot{border-color:var(--gold);box-shadow:0 20px 50px rgba(255,189,22,.2)}
 .price .badge{position:absolute;top:-14px;left:28px;background:var(--ink);color:var(--gold);font:700 12px var(--body);letter-spacing:.1em;text-transform:uppercase;padding:7px 12px;border-radius:99px}
 .price h3{font-size:24px}
 .price .amount{font:700 52px/1 var(--head);margin:16px 0 4px;letter-spacing:-.03em}
@@ -122,7 +122,7 @@ details p{margin:10px 0 0;color:var(--muted)}
 .field .hint{font-size:13px;color:var(--muted);margin-top:4px}
 input[type=text],input[type=email],input[type=tel],input[type=number],input[type=date],input[type=password],select,textarea{width:100%;font:16px var(--body);padding:12px 14px;border:1.5px solid #d6d1c6;border-radius:12px;background:#fff;color:var(--text)}
 textarea{min-height:90px;resize:vertical}
-input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(245,165,11,.2)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(255,189,22,.25)}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .grid3{display:grid;grid-template-columns:2fr 1fr 2fr;gap:14px}
 @media (max-width:640px){.grid2,.grid3{grid-template-columns:1fr}}
@@ -173,3 +173,19 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold);bo
 .dark details{background:var(--ink-2);border-color:var(--line-d);color:#fff}
 .dark details p{color:var(--muted-d)}
 .stat.text{font-size:30px;line-height:44px}
+
+/* Tattoofin: Checkout-Mockup, Sticker-Logo, Zahlseiten */
+.sticker{background:#fff;border-radius:50%;padding:14px;box-shadow:0 18px 40px rgba(0,0,0,.25);display:inline-block}
+.co h4{font:700 15px var(--head);margin:0 0 4px}
+.co .amt{font:700 30px var(--head);margin:4px 0 14px;color:var(--ink)}
+.co .opt{display:flex;justify-content:space-between;align-items:center;border:1.5px solid var(--line);border-radius:12px;padding:11px 13px;margin-bottom:8px;font-size:14px;font-weight:600;opacity:0;transform:translateY(8px);animation:in .5s forwards}
+.co .opt.on{border-color:var(--gold);background:var(--gold-soft)}
+.co .opt:nth-of-type(1){animation-delay:.2s}.co .opt:nth-of-type(2){animation-delay:.5s}.co .opt:nth-of-type(3){animation-delay:.8s}
+.co .pay{margin-top:12px;background:var(--ink);color:#fff;text-align:center;border-radius:99px;padding:11px;font-weight:700}
+.co small{display:block;color:var(--muted);font-size:11px;margin-top:10px;line-height:1.4}
+.fn{font-size:13px;color:var(--muted);margin-top:10px}
+.dark .fn{color:var(--muted-d)}
+.paybox{max-width:460px;margin:0 auto;background:#fff;border-radius:22px;padding:28px;border:1px solid var(--line);box-shadow:0 20px 60px rgba(19,36,61,.08)}
+.paybox .amt{font:700 44px/1 var(--head);margin:10px 0 6px}
+@media (prefers-reduced-motion:reduce){.co .opt{animation:none;opacity:1;transform:none}}
+.nav .links a.btn{color:var(--ink)}

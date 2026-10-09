@@ -33,17 +33,17 @@ function extract(file, { onlineHinweis, removeOrder }) {
 
 const page = (title, { style, main }) => `<!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${title} – Ted am Telefon</title>
+<title>${title} – Tattoofin</title>
 <link rel="stylesheet" href="/css/doc.css">
 <style>${style}
-body{background:#f5f2ea}.doc{margin:0 auto 40px}
+body{background:#f7f7f4}.doc{margin:0 auto 40px}
 .webnav{max-width:210mm;margin:0 auto;padding:14px 4px;display:flex;justify-content:space-between;align-items:center;font:600 14px Inter,system-ui,sans-serif}
 .webnav a{color:#14161a;text-decoration:none}.webnav button{background:#0d1117;color:#fff;border:0;border-radius:99px;padding:8px 14px;font:600 13px Inter,sans-serif;cursor:pointer}
 @media print{.webnav{display:none}}
 </style>
 </head><body>
 <!-- Automatisch erzeugt aus telefon/${title === "Vertrag" ? "studios/14-vertrag.html" : "studios/15-avv.html"} (tools/sync-website-docs.mjs). Nicht direkt bearbeiten. -->
-<nav class="webnav"><a href="/">← Ted am Telefon</a><button onclick="print()">Drucken / PDF</button></nav>
+<nav class="webnav"><a href="/">← Tattoofin</a><button onclick="print()">Drucken / PDF</button></nav>
 <main class="doc">
 ${main}
 </main>
@@ -63,7 +63,7 @@ fs.writeFileSync(path.join(pub, "avv.html"), page("AVV", extract("studios/15-avv
 })));
 
 // Styles der Druckvorlagen übernehmen (Fonts-Pfad anpassen)
-const css = fs.readFileSync(path.join(root, "assets", "telefon.css"), "utf8").replace("@import url(fonts.css);", "@import url(/css/fonts.css);");
+const css = fs.readFileSync(path.join(root, "assets", "tattoofin.css"), "utf8").replace("@import url(fonts.css);", "@import url(/css/fonts.css);");
 fs.writeFileSync(path.join(pub, "css", "doc.css"), css);
 fs.copyFileSync(path.join(root, "assets", "config.js"), path.join(pub, "js", "doc-defaults.js"));
 console.log("ok: vertrag.html, avv.html, css/doc.css, js/doc-defaults.js");

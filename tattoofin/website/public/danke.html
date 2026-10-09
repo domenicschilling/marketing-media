@@ -1,40 +1,48 @@
 <!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Danke! – Ted am Telefon</title><meta name="robots" content="noindex">
-<link rel="icon" href="/assets/logo.png"><link rel="stylesheet" href="/css/site.css">
+<title>Danke! – Tattoofin</title><meta name="robots" content="noindex">
+<link rel="icon" href="/assets/figur.png"><link rel="stylesheet" href="/css/site.css">
 </head><body>
-<header class="nav"><div class="wrap"><a class="brand" href="/"><img src="/assets/logo.png" alt=""> Ted am Telefon</a></div></header>
+<header class="nav"><div class="wrap"><a class="brand" href="/"><img src="/assets/figur.png" alt=""> Tattoofin</a></div></header>
 <main class="sec"><div class="wrap narrow">
   <div class="form" style="text-align:center">
-    <div style="font-size:54px">🎉</div>
-    <h1 style="font-size:38px;margin:8px 0 10px">Willkommen an Bord<span id="firma"></span>!</h1>
+    <img src="/assets/figur.png" alt="" style="width:110px;margin:0 auto">
+    <h1 style="font-size:36px;margin:12px 0 10px">Willkommen bei Tattoofin<span id="firma"></span>!</h1>
     <p id="msg" class="muted" style="font-size:18px">Wir prüfen gerade die Zahlung …</p>
+    <div id="connect" class="hidden" style="margin:22px auto 0;max-width:520px;text-align:left">
+      <div class="alert info"><b>Nächster Schritt: Stripe-Konto deines Studios verbinden.</b><br>Dauert ca. 10 Minuten. Halte Ausweis, Steuernummer bzw. USt-IdNr. und die Bankverbindung des Studios bereit. Das Konto gehört deinem Studio.</div>
+      <p style="text-align:center"><a class="btn gold" id="connect-btn" href="#">Stripe-Konto verbinden</a></p>
+    </div>
     <div style="text-align:left;max-width:520px;margin:26px auto 0">
       <ol class="muted" style="font-size:16px;line-height:1.8">
-        <li><b style="color:var(--text)">E-Mail checken:</b> Du bekommst gleich die Vertragsbestätigung mit deinem persönlichen Login-Link.</li>
-        <li><b style="color:var(--text)">Fragebogen ausfüllen</b> (ca. 15 Minuten), damit Ted dein Studio kennt.</li>
-        <li><b style="color:var(--text)">Kurzer Kickoff:</b> Wir melden uns, richten alles ein und stellen mit dir die Rufumleitung ein.</li>
+        <li><b style="color:var(--text)">E-Mail checken:</b> Vertragsbestätigung und dein persönlicher Login-Link sind unterwegs.</li>
+        <li><b style="color:var(--text)">Stripe-Konto verbinden</b> und Fragebogen ausfüllen.</li>
+        <li><b style="color:var(--text)">Wir richten alles ein,</b> testen den Ablauf mit dir und schulen dein Team. Dann bekommst du dein Studio Kit.</li>
       </ol>
     </div>
-    <p style="margin-top:22px"><a class="btn gold" href="/login.html">Zum Studio-Portal</a></p>
+    <p style="margin-top:22px"><a class="btn dark" href="/login.html">Zum Studio-Portal</a></p>
   </div>
 </div></main>
 <script src="/js/common.js"></script>
 <script>
 (function () {
   var q = new URLSearchParams(location.search), id = q.get("id"), n = 0;
-  if (!id) { document.getElementById("msg").textContent = "Danke für deine Bestellung!"; return; }
+  var msg = document.getElementById("msg");
+  if (!id) { msg.textContent = "Danke für deine Bestellung!"; return; }
+  function zeigeConnect() {
+    document.getElementById("connect").classList.remove("hidden");
+    document.getElementById("connect-btn").href = "/api/connect?id=" + encodeURIComponent(id);
+  }
   function check() {
-    Ted.api("/api/signup?id=" + encodeURIComponent(id)).then(function (s) {
+    TF.api("/api/signup?id=" + encodeURIComponent(id)).then(function (s) {
       document.getElementById("firma").textContent = s.firma ? ", " + s.firma : "";
-      var msg = document.getElementById("msg");
-      if (s.status === "einrichtung" || s.status === "live") msg.textContent = s.modell === "provision"
-        ? "Deine Zahlungsmethode ist hinterlegt. Abgebucht wird nur, wenn Ted dir Termine bringt."
-        : "Deine Zahlung ist eingegangen. Die Rechnung kommt per E-Mail.";
-      else if (s.status === "zahlung_offen") msg.textContent = "Dein Vertrag ist abgeschlossen. Die Rechnung ist per E-Mail unterwegs.";
+      if (s.kontoVerbunden) { msg.textContent = "Dein Stripe-Konto ist verbunden und freigegeben. Wir melden uns für Einrichtung, Test und Teamschulung."; return; }
+      if (q.get("stripe")) { msg.textContent = s.kontoBegonnen ? "Danke! Stripe prüft jetzt deine Angaben, meist innerhalb von 1 bis 3 Werktagen. Du bekommst eine E-Mail, sobald das Konto freigegeben ist." : "Die Verbindung mit Stripe ist noch nicht abgeschlossen."; if (!s.kontoBegonnen) zeigeConnect(); return; }
+      if (s.status === "einrichtung") { msg.textContent = s.modell === "provision" ? "Dein Vertrag ist abgeschlossen." : "Deine Zahlung ist eingegangen. Die Rechnung kommt per E-Mail."; zeigeConnect(); }
+      else if (s.status === "zahlung_offen") { msg.textContent = "Dein Vertrag ist abgeschlossen. Die Rechnung ist per E-Mail unterwegs."; zeigeConnect(); }
       else if (n++ < 15) { msg.textContent = "Wir warten noch auf die Bestätigung von Stripe …"; setTimeout(check, 2000); }
       else msg.textContent = "Die Bestätigung dauert etwas länger. Du bekommst eine E-Mail, sobald alles durch ist.";
-    }).catch(function () { document.getElementById("msg").textContent = "Danke für deine Bestellung!"; });
+    }).catch(function () { msg.textContent = "Danke für deine Bestellung!"; });
   }
   check();
 })();

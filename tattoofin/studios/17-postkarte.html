@@ -1,69 +1,93 @@
 <!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Postkarte – Ruf Ted an</title>
-<link rel="stylesheet" href="../assets/telefon.css">
+<title>Postkarte – Sparschwein in Rente</title>
+<link rel="stylesheet" href="../assets/tattoofin.css">
 <style>
 /* Postkarte A6 quer 148 × 105 mm + 2 mm Beschnitt */
 @page{size:152mm 109mm;margin:0}
 .sheet{width:152mm;height:109mm}
 .in{position:absolute;inset:0;padding:9mm 10mm}
-.front{display:grid;grid-template-columns:1fr 54mm;gap:7mm;align-items:center}
-.front h1{font:700 23pt/1.02 var(--head);letter-spacing:-.025em;margin:3mm 0 3mm}
-.front p{font-size:8.8pt;line-height:1.45;color:#c9d1d9;margin:0}
-.front .logo{width:16mm}
-.lock{background:#1c232c;border-radius:5mm;padding:3mm;box-shadow:0 2mm 6mm rgba(0,0,0,.4)}
-.lock .tm{text-align:center;font:600 20pt/1 var(--head);margin:1mm 0 2.5mm}
-.n{background:rgba(255,255,255,.1);border-radius:3mm;padding:2.4mm 2.8mm;font-size:7pt;line-height:1.35;margin-top:1.8mm}
-.n .r{display:flex;justify-content:space-between;color:#9aa4ae;font-size:6pt;margin-bottom:.8mm}
-.n b{font:700 8pt var(--head);color:#fff}
-.n.r1 b{color:#ff6b77}
+/* Vorderseite */
+.front{display:grid;grid-template-columns:1fr 58mm;gap:4mm;align-items:center}
+.front h1{font:700 23pt/1.02 var(--head);letter-spacing:-.025em;margin:3.5mm 0 3mm}
+.front p{font-size:8.6pt;line-height:1.42;color:#cdd6e3;margin:0}
+.front .fn{position:absolute;left:10mm;right:10mm;bottom:4.5mm;font-size:5.8pt;color:#8b98ab}
+.sticker{border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 .8mm var(--gold);width:17mm;height:17mm}
+.sticker img{width:80%;aspect-ratio:520/436;object-fit:cover;object-position:top}
+/* Sparschwein aus CSS: gelber Körper mit Navy-Outline wie das Logo */
+.pig{position:relative;width:58mm;height:52mm}
+.pig .body{position:absolute;left:6mm;top:12mm;width:44mm;height:31mm;border-radius:50%;background:var(--gold);border:1mm solid #0d1a2e}
+.pig .ear{position:absolute;left:30mm;top:7.5mm;width:9mm;height:9mm;background:var(--orange);border:1mm solid #0d1a2e;border-radius:1mm 7mm 1mm 7mm;transform:rotate(-12deg)}
+.pig .snout{position:absolute;left:46mm;top:22mm;width:9mm;height:11mm;border-radius:50%;background:var(--orange);border:1mm solid #0d1a2e}
+.pig .snout::before,.pig .snout::after{content:"";position:absolute;width:1.6mm;height:2.6mm;border-radius:50%;background:#0d1a2e;top:3mm}
+.pig .snout::before{left:1.6mm}.pig .snout::after{right:1.6mm}
+.pig .eye{position:absolute;left:39mm;top:19mm;width:2.4mm;height:1.2mm;border-bottom:.8mm solid #0d1a2e;border-radius:0 0 50% 50%}
+.pig .slot{position:absolute;left:19mm;top:13.4mm;width:11mm;height:1.6mm;border-radius:1mm;background:#0d1a2e}
+.pig .leg{position:absolute;top:39mm;width:6mm;height:7mm;background:var(--gold);border:1mm solid #0d1a2e;border-top:0;border-radius:0 0 1.5mm 1.5mm}
+.pig .tail{position:absolute;left:1.5mm;top:20mm;width:6mm;height:6mm;border:1mm solid #0d1a2e;border-color:#0d1a2e transparent transparent #0d1a2e;border-radius:50%;transform:rotate(-30deg)}
+.pig .ptag{position:absolute;left:13mm;top:24mm;margin:0;transform:rotate(-6deg);background:#fff;color:var(--ink);border:.6mm solid #0d1a2e;border-radius:1.6mm;padding:1.2mm 2mm;font:700 7pt/1.15 var(--head);letter-spacing:0;text-transform:none;white-space:nowrap}
+.pig .zz{position:absolute;left:44mm;top:1mm;font:700 10pt/1 var(--head);color:var(--gold);letter-spacing:.06em}
+.pig .zz small{font-size:7pt;opacity:.8}
+.pig .floor{position:absolute;left:3mm;right:2mm;top:46.5mm;height:.6mm;background:#2a3c5a;border-radius:1mm}
+/* Rückseite */
 .back{display:grid;grid-template-columns:1fr 1fr;gap:0;color:var(--text)}
-.back .l{padding-right:6mm;border-right:.3mm solid var(--line);display:flex;flex-direction:column}
+.back .l{padding-right:5.5mm;border-right:.3mm solid var(--line);display:flex;flex-direction:column}
 .back .r{padding-left:6mm;position:relative}
-.back h2{font:700 13pt/1.1 var(--head);margin:0 0 2mm}
-.back .demo{font:700 15pt/1.1 var(--head);background:var(--ink);color:var(--gold);border-radius:2mm;padding:2mm 3mm;display:inline-block;margin:1mm 0 2.5mm;white-space:nowrap}
-.back p{font-size:7.8pt;line-height:1.4;margin:0 0 2mm}
+.back h2{font:700 12pt/1.12 var(--head);margin:0 0 2mm}
+.back h2 span{color:var(--orange)}
+.back p{font-size:7.6pt;line-height:1.38;margin:0 0 1.8mm}
 .back .row{display:flex;gap:3mm;align-items:center;margin-top:auto}
 .back .qr{width:19mm;border:.3mm solid var(--line)}
-.back .code{font:700 10pt var(--head);border:.4mm dashed var(--gold);border-radius:1.5mm;padding:1mm 2mm;display:inline-block}
+.back .code{font:700 9.5pt var(--head);background:var(--ink);color:var(--gold);border-radius:1.5mm;padding:.6mm 2mm;display:inline-block}
+.back [data-cfg]{white-space:nowrap}
+.back .fn{font-size:5.6pt;line-height:1.3;color:var(--muted);margin:1.5mm 0 0}
 .stamp{position:absolute;top:0;right:0;width:20mm;height:24mm;border:.3mm dashed #bbb;font-size:6pt;color:#999;display:flex;align-items:center;justify-content:center;text-align:center}
-.lines{position:absolute;left:6mm;right:0;bottom:4mm}
-.lines div{border-bottom:.3mm solid #999;height:8mm}
+.lines{position:absolute;left:6mm;right:0;bottom:4mm;font-size:8.5pt}
+.lines div{border-bottom:.3mm solid #999;height:8mm;display:flex;align-items:flex-end;padding-bottom:.8mm}
 </style>
 </head><body>
-<div class="toolbar"><a href="../index.html">← Alle Unterlagen</a><span class="t">Für Studios · Postkarte A6 quer (Paketbeilage oder Einzelversand)</span><button data-print>Drucken / PDF</button></div>
+<div class="toolbar"><a href="../index.html">← Alle Unterlagen</a><span class="t">Für Studios · Postkarte A6 quer „Das Sparschwein geht in Rente“</span><button data-print>Drucken / PDF</button></div>
 
 <section class="sheet dark">
   <div class="in front">
     <div>
-      <img class="logo" src="../assets/logo.png" alt="TattooLeadz">
-      <h1>Hände voll?<br><span class="tgold">Ted geht ran.</span></h1>
-      <p>Der digitale Telefonassistent für Tattoo-Studios. Nimmt jeden Anruf an, den ihr gerade nicht annehmen könnt, und schickt euch die Anfrage aufs Handy.</p>
+      <div class="sticker"><img src="../assets/logo.png" alt="Tattoofin"></div>
+      <h1>Das Sparschwein geht <span class="tgold">in Rente.</span></h1>
+      <p>Eure Kunden müssen nicht mehr monatelang sparen, bevor sie zu euch kommen. Mit Tattoofin zahlen sie große Projekte flexibel, auch in Raten*.</p>
     </div>
-    <div class="lock">
-      <div class="tm">14:12</div>
-      <div class="n r1"><div class="r"><span>TELEFON</span><span>14:12</span></div><b>3 verpasste Anrufe</b><br>während der Session</div>
-      <div class="n"><div class="r"><span>WHATSAPP · TED</span><span>14:13</span></div><b>📞 Neue Anfrage</b><br>Jonas · Cover-up Oberarm · ca. 20 cm · ab Dezember</div>
-      <div class="n"><div class="r"><span>WHATSAPP · TED</span><span>14:31</span></div><b>📞 Neue Anfrage</b><br>Mia · Fineline Schriftzug · Walk-in?</div>
+    <div class="pig" aria-hidden="true">
+      <div class="zz">z<small>z</small>z</div>
+      <div class="tail"></div>
+      <div class="leg" style="left:13mm"></div><div class="leg" style="left:36mm"></div>
+      <div class="body"></div>
+      <div class="ear"></div>
+      <div class="slot"></div>
+      <div class="eye"></div>
+      <div class="snout"></div>
+      <div class="ptag">Ab heute in Rente.</div>
+      <div class="floor"></div>
     </div>
+    <div class="fn">*Über externe Zahlungsanbieter. Verfügbarkeit und Bedingungen nach Prüfung durch den Anbieter.</div>
   </div>
 </section>
 
 <section class="sheet">
   <div class="in back">
     <div class="l">
-      <h2>Ruf Ted an und teste ihn.</h2>
-      <div class="demo" data-cfg="demoNummer"></div>
-      <p>Frag, was Kunden euch fragen: Öffnungszeiten, Walk-ins, „Was kostet so ein Tattoo?“. Ted antwortet, nimmt die Anfrage auf und nennt nie einen Preis. Das macht ihr.</p>
-      <p>Mit Code <span class="code" data-cfg="aktionsCode"></span> kauft ihr Ted für <b><span data-cfg="kaufAktionPreis"></span></b> statt <span data-cfg="kaufPreis"></span><br><span style="color:var(--muted)">für die ersten <span data-cfg="aktionsPlaetze"></span> Studios bis <span data-cfg="aktionsFrist"></span>. Oder ohne Fixkosten: <span data-cfg="provisionSatz"></span> pro Termin aus Ted.</span></p>
-      <div class="row"><div class="qr" data-qr="{videoSeite}?utm_source=postkarte" data-size="80"></div><div style="font-size:7.5pt;line-height:1.35"><b>Video ansehen</b><br>QR scannen<br><span data-cfg="web"></span></div></div>
+      <h2>„Kann ich das auch in Raten zahlen?“ <span>Ja. Mit Tattoofin.</span></h2>
+      <p>Wir richten eurem Studio flexible Zahlungsoptionen ein: Zahlungslink per WhatsApp, QR-Code an der Theke, Ratenzahlung über externe Anbieter*. Ihr bekommt euer Geld nach Freigabe über Stripe.</p>
+      <p>Mit Code <span class="code" data-cfg="aktionsCode"></span> für <b><span data-cfg="kaufAktionPreis"></span></b> statt <span data-cfg="kaufPreis"></span> netto, für die ersten <span data-cfg="aktionsPlaetze"></span> Studios bis <span data-cfg="aktionsFrist"></span>. <b>Oder ohne Fixkosten:</b> nur <span data-cfg="provisionSatz"></span> pro Zahlung über Tattoofin.</p>
+      <div class="row"><div class="qr" data-qr="{videoSeite}?utm_source=postkarte" data-size="80"></div><div style="font-size:7.3pt;line-height:1.35"><b>Video ansehen:</b> QR scannen<br>WhatsApp: <b data-cfg="telefon"></b><br><span data-cfg="web"></span></div></div>
+      <p class="fn">*Verfügbarkeit und Bedingungen nach Prüfung durch den Anbieter. Tattoofin vermittelt keine Kredite. Preise zzgl. USt.</p>
     </div>
     <div class="r">
       <div class="stamp">Briefmarke<br>bzw. Frankier-<br>vermerk</div>
-      <div class="lines"><div></div><div></div><div></div><div></div></div>
+      <div class="lines"><div><b data-p="studio" data-hide-empty></b></div><div><span data-p="inhaber" data-hide-empty></span></div><div><span data-p="strasse" data-hide-empty></span></div><div><span data-p="ort" data-hide-empty></span></div></div>
     </div>
   </div>
 </section>
 
 <script src="../assets/qrcode.min.js"></script><script src="../assets/config.js"></script><script src="../assets/app.js"></script>
+<script>/* Adressfeld bleibt leer, wenn kein ?studio=… übergeben wurde (sonst stünde dort der Platzhalter) */
+if(!new URLSearchParams(location.search).get("studio"))document.querySelectorAll(".lines [data-p=studio]").forEach(function(e){e.textContent=""});</script>
 </body></html>

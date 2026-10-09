@@ -1,9 +1,9 @@
 <!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Studio-Login – Ted am Telefon</title><meta name="robots" content="noindex">
-<link rel="icon" href="/assets/logo.png"><link rel="stylesheet" href="/css/site.css">
+<title>Studio-Login – Tattoofin</title><meta name="robots" content="noindex">
+<link rel="icon" href="/assets/figur.png"><link rel="stylesheet" href="/css/site.css">
 </head><body>
-<header class="nav"><div class="wrap"><a class="brand" href="/"><img src="/assets/logo.png" alt=""> Ted am Telefon</a></div></header>
+<header class="nav"><div class="wrap"><a class="brand" href="/"><img src="/assets/figur.png" alt=""> Tattoofin</a></div></header>
 <main class="sec"><div class="wrap" style="max-width:480px">
   <form id="f" class="form">
     <h1 style="font-size:30px;margin-bottom:8px">Studio-Portal</h1>
@@ -22,9 +22,9 @@ document.getElementById("f").addEventListener("submit", async function (e) {
   e.preventDefault();
   var b = document.getElementById("btn"); b.disabled = true;
   try {
-    await Ted.api("/api/login", { body: { email: document.getElementById("email").value } });
+    await TF.api("/api/login", { body: { email: document.getElementById("email").value } });
     a.innerHTML = '<div class="alert ok">Wenn es zu dieser E-Mail ein Studio gibt, ist der Link unterwegs. Schau auch im Spam-Ordner nach.</div>';
-  } catch (err) { a.innerHTML = '<div class="alert err">' + Ted.esc(err.message) + "</div>"; }
+  } catch (err) { a.innerHTML = '<div class="alert err">' + TF.esc(err.message) + "</div>"; }
   b.disabled = false;
 });
 </script>

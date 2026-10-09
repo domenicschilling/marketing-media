@@ -4,7 +4,7 @@
   var step = 1, C = {}, resumeId = null;
   var q = new URLSearchParams(location.search);
 
-  function show(msg, type) { alertBox.innerHTML = msg ? '<div class="alert ' + (type || "err") + '">' + Ted.esc(msg) + "</div>" : ""; }
+  function show(msg, type) { alertBox.innerHTML = msg ? '<div class="alert ' + (type || "err") + '">' + TF.esc(msg) + "</div>" : ""; }
   function val(n) { var el = f.elements[n]; return el ? (el.type === "checkbox" ? el.checked : (el.value || "").trim()) : ""; }
   function modell() { var r = f.querySelector("input[name=modell]:checked"); return r ? r.value : ""; }
   function zahlart() { var r = f.querySelector("input[name=zahlart]:checked"); return r ? r.value : "sofort"; }
@@ -16,7 +16,7 @@
     if (n === 3) summary();
     if (n === 4) final();
     window.scrollTo({ top: 0, behavior: "smooth" });
-    try { sessionStorage.setItem("ted-start", JSON.stringify(daten())); } catch (e) {}
+    try { sessionStorage.setItem("tf-start", JSON.stringify(daten())); } catch (e) {}
   }
 
   function pruefe(n) {
@@ -34,26 +34,26 @@
   }
 
   function preisText() {
-    if (modell() === "provision") return C.provisionProzent + " % vom Tattoo-Preis (netto) für Termine aus Ted-Anfragen, monatliche Abrechnung, keine Fixkosten";
+    if (modell() === "provision") return C.provisionProzent + " % zzgl. USt. vom Betrag jeder Zahlung über Tattoofin, automatisch einbehalten, keine Einrichtungs- und keine Grundgebühr";
     var code = val("aktionscode");
-    return Ted.euro(code ? C.aktionNetto : C.kaufNetto) + " netto einmalig" + (code ? " (mit Aktionscode, wird geprüft)" : "") + " zzgl. " + C.ustProzent + " % USt.";
+    return "Setup " + TF.euro(code ? C.aktionNetto : C.kaufNetto) + " netto einmalig" + (code ? " (mit Aktionscode, wird geprüft)" : "") + " zzgl. " + C.ustProzent + " % USt., keine Grundgebühr, keine Provision";
   }
 
   function summary() {
-    document.getElementById("summary").innerHTML = "<b>" + Ted.esc(val("firma")) + "</b> · " +
-      (modell() === "kauf" ? "Kaufpaket" : "Provisionsmodell") + "<br>" + Ted.esc(preisText());
+    document.getElementById("summary").innerHTML = "<b>" + TF.esc(val("firma")) + "</b> · " +
+      (modell() === "kauf" ? "Kauf" : "Provision") + "<br>" + TF.esc(preisText());
   }
 
   function final() {
     var m = modell(), z = zahlart(), html;
     if (m === "provision") {
-      html = "<p>Du schließt das <b>Provisionsmodell</b> ab: " + Ted.esc(preisText()) + ".</p>" +
-        "<p>Im nächsten Schritt hinterlegst du bei Stripe eine Zahlungsmethode (SEPA-Lastschrift oder Karte). <b>Jetzt wird nichts abgebucht.</b> Abgebucht wird erst, wenn Ted dir Termine gebracht hat, einmal im Monat mit vorheriger Abrechnung.</p>";
-      document.getElementById("submit").textContent = "Vertrag abschließen & Zahlungsmethode hinterlegen";
+      html = "<p>Du schließt das <b>Provisionsmodell</b> ab: " + TF.esc(preisText()) + ".</p>" +
+        "<p><b>Jetzt wird nichts bezahlt.</b> Im nächsten Schritt verbindest du das eigene Stripe-Konto deines Studios (ca. 10 Minuten, Ausweis und Bankverbindung bereithalten). Die Provision wird später automatisch bei jeder Zahlung über Tattoofin einbehalten.</p>";
+      document.getElementById("submit").textContent = "Vertrag abschließen & Stripe-Konto verbinden";
     } else {
-      html = "<p>Du kaufst <b>Ted am Telefon</b>: " + Ted.esc(preisText()) + ".</p>" +
+      html = "<p>Du kaufst das <b>Tattoofin Setup</b>: " + TF.esc(preisText()) + ".</p>" +
         (z === "rechnung" ? "<p>Du bekommst die Rechnung sofort per E-Mail, zahlbar in 14 Tagen. Wir starten trotzdem schon mit der Einrichtung.</p>"
-          : "<p>Im nächsten Schritt bezahlst du sicher über Stripe (Karte, SEPA-Lastschrift u. a.). Die Rechnung kommt automatisch per E-Mail.</p>") +
+          : "<p>Im nächsten Schritt bezahlst du sicher über Stripe (Karte, SEPA-Lastschrift u. a.). Die Rechnung kommt automatisch per E-Mail. Danach verbindest du das Stripe-Konto deines Studios.</p>") +
         "<p>" + C.garantieTage + " Tage Geld-zurück-Garantie ab Go-live.</p>";
       document.getElementById("submit").textContent = z === "rechnung" ? "Zahlungspflichtig bestellen (Rechnung)" : "Zahlungspflichtig bestellen & bezahlen";
     }
@@ -64,7 +64,7 @@
     return {
       modell: modell(), zahlart: zahlart(), aktionscode: val("aktionscode"), firma: val("firma"), inhaber: val("inhaber"), ustid: val("ustid"),
       strasse: val("strasse"), plz: val("plz"), ort: val("ort"), email: val("email"), telefon: val("telefon"),
-      studioTelefon: val("studioTelefon"), artists: val("artists"), unterzeichner: val("unterzeichner"),
+      studioTelefon: val("studioTelefon"), website: val("website"), unterzeichner: val("unterzeichner"),
     };
   }
 
@@ -95,8 +95,8 @@
       var d = daten();
       d.akzeptiert = { vertrag: true, avv: true, unternehmer: true };
       if (resumeId) d.resumeId = resumeId;
-      var r = await Ted.api("/api/signup", { body: d });
-      try { sessionStorage.removeItem("ted-start"); } catch (e2) {}
+      var r = await TF.api("/api/signup", { body: d });
+      try { sessionStorage.removeItem("tf-start"); } catch (e2) {}
       location.href = r.url || r.next;
     } catch (err2) {
       show(err2.message); btn.disabled = false; btn.textContent = txt;
@@ -110,28 +110,28 @@
     var box = document.getElementById("vertrag-box");
     box.innerHTML = m ? m[1].replace(/<img[^>]*>/g, "") : "Vertrag konnte nicht geladen werden. Bitte über den Link öffnen.";
     box.querySelectorAll("[data-cfg]").forEach(function (el) { el.textContent = ""; });
-    Ted.config().then(function (c) {
-      var map = { kaufPreis: Ted.euro(c.kaufNetto), kaufAktionPreis: Ted.euro(c.aktionNetto), provisionSatz: c.provisionProzent + " %", fairUseMinuten: c.fairUseMinuten,
-        extraMinute: (c.extraMinuteCent / 100).toFixed(2).replace(".", ","), garantieTage: c.garantieTage, provisionZuordnung: c.zuordnungMonate + " Monate",
-        provisionNachlauf: c.nachlaufMonate + " Monate", provisionMeldefrist: c.meldeTag + ". des Folgemonats", firma: c.firma, adresse: c.adresse,
+    TF.config().then(function (c) {
+      var map = { kaufPreis: TF.euro(c.kaufNetto), kaufAktionPreis: TF.euro(c.aktionNetto), provisionSatz: c.provisionProzent + " %", 
+        garantieTage: c.garantieTage,
+        firma: c.firma, adresse: c.adresse,
         vertragVersion: c.vertragVersion, gerichtsstand: c.gerichtsstand, geschaeftsfuehrer: c.geschaeftsfuehrer, registergericht: c.registergericht, ustid: c.ustid,
-        email: c.email, marke: c.marke, produkt: c.produkt, kuendigungProvision: "jederzeit zum Monatsende", websiteUrl: location.origin };
+        email: c.email, marke: c.marke, produkt: c.produkt, kuendigungProvision: "jederzeit zum Monatsende", websiteUrl: location.origin, setupSupportTage: c.setupSupportTage, kuendigungProvision: "jederzeit zum Monatsende" };
       box.querySelectorAll("[data-cfg]").forEach(function (el) { if (map[el.dataset.cfg] !== undefined) el.textContent = map[el.dataset.cfg]; });
     });
   });
 
-  Ted.config().then(function (c) {
-    C = c; Ted.fill(c);
+  TF.config().then(function (c) {
+    C = c; TF.fill(c);
     if (!c.stripeAktiv) show("Hinweis: Die Zahlung ist auf dieser Umgebung noch nicht eingerichtet (STRIPE_SECRET_KEY fehlt).", "info");
   });
 
   // Vorbelegung: ?modell=…, gespeicherter Entwurf, ?resume=<id> nach Abbruch
-  try { setze(JSON.parse(sessionStorage.getItem("ted-start") || "{}")); } catch (e) {}
+  try { setze(JSON.parse(sessionStorage.getItem("tf-start") || "{}")); } catch (e) {}
   if (q.get("modell")) setze({ modell: q.get("modell") });
   if (q.get("code")) setze({ aktionscode: q.get("code") });
   if (q.get("resume")) {
     resumeId = q.get("resume");
-    Ted.api("/api/signup?id=" + encodeURIComponent(resumeId)).then(function (d) {
+    TF.api("/api/signup?id=" + encodeURIComponent(resumeId)).then(function (d) {
       setze(d);
       if (q.get("abbruch")) show("Die Zahlung wurde abgebrochen. Kein Problem: Deine Angaben sind gespeichert, du kannst direkt weitermachen.", "info");
     }).catch(function () { resumeId = null; });

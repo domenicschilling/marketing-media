@@ -3,7 +3,7 @@ import crypto from "node:crypto";
 import { SECRETS, CFG } from "./config.mjs";
 import { getStudio } from "./store.mjs";
 
-const COOKIE = "ted_session";
+const COOKIE = "tf_session";
 
 export function sign(payload) {
   const data = Buffer.from(JSON.stringify(payload)).toString("base64url");

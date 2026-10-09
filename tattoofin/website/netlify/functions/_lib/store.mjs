@@ -1,9 +1,10 @@
 // Datenspeicher: auf Netlify „Netlify Blobs“, lokal Dateien in website/.data/
 // Schlüssel:
 //   studio/<id>                      Studio-Datensatz
-//   anfrage/<studioId>/<id>          Ted-Anfrage (aus Anruf) inkl. Buchung/Preis
+//   zahlung/<studioId>/<id>          Zahlungslink bzw. Kundenzahlung über Tattoofin
 //   abrechnung/<studioId>/<YYYY-MM>  Monatsabrechnung Provision
-//   idx/email/<email>, idx/agent/<agentId>, idx/cus/<stripeCustomerId>  -> studioId
+//   idx/email/<email>, idx/slug/<slug>, idx/acct/<stripeAccountId>, idx/cus/<stripeCustomerId> -> studioId
+//   idx/zahlung/<id>, idx/cs/<checkoutSessionId>, idx/pi/<paymentIntentId> -> "studioId/zahlungId"
 //   meta/<name>                      z. B. Steuersatz-ID, Aktionszähler
 //   log/<zeit>-<id>                  Ereignis-Protokoll
 import fs from "node:fs/promises";
@@ -13,7 +14,7 @@ let backend;
 
 async function netlify() {
   const { getStore } = await import("@netlify/blobs");
-  const s = getStore({ name: "ted-telefon", consistency: "strong" });
+  const s = getStore({ name: "tattoofin", consistency: "strong" });
   return {
     get: (k) => s.get(k, { type: "json" }),
     set: (k, v) => s.setJSON(k, v),
@@ -73,7 +74,8 @@ export async function saveStudio(s) {
   s.updatedAt = new Date().toISOString();
   await store.set("studio/" + s.id, s);
   if (s.email) await store.set("idx/email/" + s.email.toLowerCase(), s.id);
-  if (s.agentId) await store.set("idx/agent/" + s.agentId, s.id);
+  if (s.slug) await store.set("idx/slug/" + s.slug, s.id);
+  if (s.stripe?.accountId) await store.set("idx/acct/" + s.stripe.accountId, s.id);
   if (s.stripe?.customerId) await store.set("idx/cus/" + s.stripe.customerId, s.id);
   return s;
 }
@@ -86,11 +88,24 @@ export async function studioBy(kind, value) {
 
 export const allStudios = () => store.all("studio/");
 
-// ---- Anfragen & Abrechnungen ----
-export const getAnfrage = (studioId, id) => store.get(`anfrage/${studioId}/${id}`);
-export const saveAnfrage = (a) => store.set(`anfrage/${a.studioId}/${a.id}`, a);
-export const anfragenVon = async (studioId) =>
-  (await store.all(`anfrage/${studioId}/`)).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+// ---- Zahlungen & Abrechnungen ----
+export const getZahlung = (studioId, id) => store.get(`zahlung/${studioId}/${id}`);
+export async function saveZahlung(z) {
+  await store.set(`zahlung/${z.studioId}/${z.id}`, z);
+  await store.set("idx/zahlung/" + z.id, `${z.studioId}/${z.id}`);
+  if (z.checkoutSessionId) await store.set("idx/cs/" + z.checkoutSessionId, `${z.studioId}/${z.id}`);
+  if (z.paymentIntentId) await store.set("idx/pi/" + z.paymentIntentId, `${z.studioId}/${z.id}`);
+  return z;
+}
+export async function zahlungBy(kind, value) {
+  if (!value) return null;
+  const ref = await store.get(`idx/${kind}/${value}`);
+  if (!ref) return null;
+  const [sid, zid] = ref.split("/");
+  return getZahlung(sid, zid);
+}
+export const zahlungenVon = async (studioId) =>
+  (await store.all(`zahlung/${studioId}/`)).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
 export const getAbrechnung = (studioId, monat) => store.get(`abrechnung/${studioId}/${monat}`);
 export const saveAbrechnung = (a) => store.set(`abrechnung/${a.studioId}/${a.monat}`, a);

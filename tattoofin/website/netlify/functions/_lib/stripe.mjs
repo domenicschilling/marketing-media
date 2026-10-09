@@ -14,7 +14,7 @@ function encode(obj, prefix, out = []) {
   return out;
 }
 
-export async function stripe(method, path, params, { idempotencyKey } = {}) {
+export async function stripe(method, path, params, { idempotencyKey, account } = {}) {
   if (!SECRETS.stripeKey) throw new Error("STRIPE_SECRET_KEY fehlt");
   const url = new URL(SECRETS.stripeApiBase + "/v1" + path);
   const headers = { Authorization: "Bearer " + SECRETS.stripeKey, "Stripe-Version": "2024-06-20" };
@@ -25,6 +25,7 @@ export async function stripe(method, path, params, { idempotencyKey } = {}) {
     headers["Content-Type"] = "application/x-www-form-urlencoded";
   }
   if (idempotencyKey) headers["Idempotency-Key"] = idempotencyKey;
+  if (account) headers["Stripe-Account"] = account;
   const res = await fetch(url, { method, headers, body: bodyStr });
   const data = await res.json();
   if (!res.ok) {
@@ -36,8 +37,16 @@ export async function stripe(method, path, params, { idempotencyKey } = {}) {
 }
 
 // Prüft die Stripe-Signatur (Header "Stripe-Signature": t=…,v1=…)
-export function verifyWebhook(payload, header, secret = SECRETS.stripeWebhookSecret, toleranceSec = 300) {
-  if (!secret) throw new Error("STRIPE_WEBHOOK_SECRET fehlt");
+// Plattform- und Connect-Webhooks dürfen unterschiedliche Secrets haben: beide werden geprüft.
+export function verifyWebhook(payload, header) {
+  const secrets = [SECRETS.stripeWebhookSecret, SECRETS.stripeConnectWebhookSecret].filter(Boolean);
+  if (!secrets.length) throw new Error("STRIPE_WEBHOOK_SECRET fehlt");
+  let last;
+  for (const sec of secrets) { try { return verifyOne(payload, header, sec); } catch (e) { last = e; } }
+  throw last;
+}
+
+function verifyOne(payload, header, secret, toleranceSec = 300) {
   const parts = Object.fromEntries((header || "").split(",").map((p) => p.split("=")).filter((p) => p.length === 2).map(([k, v]) => [k.trim(), v]));
   const sigs = (header || "").split(",").filter((p) => p.startsWith("v1=")).map((p) => p.slice(3));
   if (!parts.t || !sigs.length) throw new Error("Signatur fehlt");
@@ -72,4 +81,25 @@ export async function ensureCustomer(studio) {
     try { await stripe("POST", `/customers/${c.id}/tax_ids`, { type: "eu_vat", value: studio.ustid.replace(/\s/g, "") }); } catch { /* ungültige USt-ID ignorieren */ }
   }
   return c;
+}
+
+// Eigenes Stripe-Konto des Studios (Connect, Typ „standard“: das Konto gehört dem Studio)
+export async function ensureConnectedAccount(studio) {
+  if (studio.stripe?.accountId) return studio.stripe.accountId;
+  const acct = await stripe("POST", "/accounts", {
+    type: "standard", country: "DE", email: studio.email, default_currency: "eur",
+    business_profile: { name: studio.firma, product_description: "Tätowierungen und Tattoo-Projekte", url: studio.website || undefined },
+    metadata: { studioId: studio.id },
+  }, { idempotencyKey: "acct-" + studio.id });
+  studio.stripe = { ...(studio.stripe || {}), accountId: acct.id };
+  return acct.id;
+}
+
+export async function onboardingLink(studio, base) {
+  const link = await stripe("POST", "/account_links", {
+    account: studio.stripe.accountId, type: "account_onboarding",
+    refresh_url: `${base}/api/connect?id=${studio.id}&neu=1`,
+    return_url: `${base}/api/connect/zurueck?id=${studio.id}`,
+  });
+  return link.url;
 }
