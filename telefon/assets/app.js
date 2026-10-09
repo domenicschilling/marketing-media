@@ -1,6 +1,6 @@
 /*
  * Füllt alle Platzhalter in den Telefon-Unterlagen:
- *   <span data-cfg="startPreis"></span>       -> Wert aus config.js (Preise mit €)
+ *   <span data-cfg="kaufPreis"></span>        -> Wert aus config.js (Preise mit €)
  *   <span data-p="studio"></span>             -> Link-Parameter ?studio=… (sonst Platzhalter)
  *   <div data-qr="tel:{tel}"></div>           -> QR-Code, {studio}/{tel}/{telRaw}/{web} werden ersetzt
  * Setzt danach document.body.dataset.ready = "1" (für den PDF-Export).
@@ -8,7 +8,7 @@
 (function () {
   var C = window.CFG || {};
   var q = new URLSearchParams(location.search);
-  var euro = /^(setup|startPreis|profiPreis)$/;
+  var euro = /^(kaufPreis|kaufAktionPreis)$/;
 
   function fmt(key) {
     var v = C[key];

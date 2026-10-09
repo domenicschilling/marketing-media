@@ -28,17 +28,21 @@ window.CFG = {
   demoNummer: "[Demo-Nummer]",
   demoNummerTel: "",            // z. B. "+499511234567" (für QR-Code „Jetzt anrufen“)
 
-  // Preise (netto, zzgl. USt.)
-  setup: 299,
-  startPreis: 149,
-  startMinuten: 300,
-  profiPreis: 249,
-  profiMinuten: 800,
-  extraMinute: "0,25",
-  bundleRabatt: "20 %",
-  mindestlaufzeit: "3 Monate",
-  kuendigungsfrist: "1 Monat zum Monatsende",
+  // Preismodelle (netto, zzgl. USt.). Das Studio wählt EINES:
+  //  A) Kauf: einmalig, inkl. Einrichtung, Betrieb und Betreuung, keine monatlichen Kosten
+  //  B) Provision: keine Fixkosten, 10 % vom Tattoo-Preis für Termine aus Ted-Anfragen, Abrechnung monatlich
+  kaufPreis: 1499,
+  kaufAktionPreis: 1249,          // mit Aktionscode (Mailing)
+  provisionSatz: "10 %",
+  provisionZuordnung: "6 Monate", // Tattoo zählt, wenn es innerhalb dieser Zeit nach der Ted-Anfrage gebucht wird
+  provisionMeldefrist: "3. des Folgemonats",
+  provisionNachlauf: "3 Monate",  // nach Vertragsende noch provisionspflichtig (für Anfragen aus der Laufzeit)
+  fairUseMinuten: 500,            // Gesprächsminuten pro Monat inklusive (beide Modelle)
+  extraMinute: "0,15",
+  kuendigungProvision: "jederzeit zum Monatsende",
   garantieTage: 30,
+  betreuung: "kostenlos",
+  websiteUrl: "[Website-URL]",   // Adresse der Abschluss-Website (telefon/website), z. B. https://ted.tattooleadz.de
 
   // Direct-Mail-Aktion
   aktionsCode: "TEDRUFT",

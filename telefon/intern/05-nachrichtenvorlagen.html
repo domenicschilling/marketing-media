@@ -16,7 +16,7 @@
   <div class="meta"><img src="../assets/logo.png" alt="TattooLeadz"><br>Stand 10/2026</div>
 </div>
 
-<div class="box gold"><p style="margin:0"><b>So nutzen:</b> [eckige Klammern] ersetzen. Werbevideo immer <b>direkt als Video</b> anhängen (nicht nur als Link), weil es dann im Chat sofort abspielt. Für E-Mails das Video als Link (Drive/YouTube „nicht gelistet“) einfügen. Jede Nachricht persönlich anpassen: ein Satz zum Studio (Stil, aktuelles Werk, Google-Bewertung) wirkt Wunder.</p></div>
+<div class="box gold"><p style="margin:0"><b>So nutzen:</b> [eckige Klammern] ersetzen. Preise, Code und Abschluss-Link kommen automatisch aus <code>config.js</code> und sind beim Kopieren schon eingesetzt. Werbevideo immer <b>direkt als Video</b> anhängen (nicht nur als Link), weil es dann im Chat sofort abspielt. Für E-Mails das Video als Link (Drive/YouTube „nicht gelistet“) einfügen. Jede Nachricht persönlich anpassen: ein Satz zum Studio (Stil, aktuelles Werk, Google-Bewertung) wirkt Wunder.</p></div>
 
 <h2>1. Werbevideo verschicken: kurze Erklärtexte</h2>
 
@@ -64,7 +64,7 @@ Was Ted für euch macht:
 
 Für euch ändert sich fast nichts: Eure Nummer bleibt, ihr stellt nur eine Rufumleitung ein (dauert 2 Minuten, machen wir zusammen). Einrichtung, Texte und Technik übernehmen wir.
 
-Pakete ab [Startpreis] € im Monat, Mindestlaufzeit [Mindestlaufzeit], [Garantie]-Tage-Zufriedenheitsgarantie. Details im Anhang.
+Ein Paket mit allem drin und zwei Wege, es zu bezahlen: Ihr kauft Ted einmal für <span data-cfg="kaufPreis"></span> netto, ohne monatliche Kosten und mit <span data-cfg="garantieTage"></span> Tagen Geld-zurück-Garantie. Oder ihr startet risikofrei per Provision: keine Einrichtung, keine Monatsgebühr, nur <span data-cfg="provisionSatz"></span> vom Tattoo-Preis für Termine, die über Ted reinkommen. Details im Anhang.
 
 Testen kostet nichts: Ruf Ted unter [Demo-Nummer] an und frag ihn, was du willst.
 
@@ -87,7 +87,7 @@ Lust, ihn mal selbst anzurufen? [Demo-Nummer]</div>
 Soll ich dir eine 2-Minuten-Demo mit eurem Studionamen bauen? Dann hörst du direkt, wie Ted bei euch klingen würde.</div>
 
 <h3>Nachfassen 2 (Tag 14)</h3>
-<div class="code copy">Hey [Vorname], letzte Erinnerung, versprochen 😄 Der Aktionscode aus dem Paket ([Aktionscode]: Einrichtung gratis) gilt noch bis [Aktionsfrist] und nur für die ersten [Plätze] Studios.
+<div class="code copy">Hey [Vorname], letzte Erinnerung, versprochen 😄 Der Aktionscode aus dem Paket (<span data-cfg="aktionsCode"></span>: Ted für <span data-cfg="kaufAktionPreis"></span> statt <span data-cfg="kaufPreis"></span> kaufen) gilt noch bis <span data-cfg="aktionsFrist"></span> und nur für die ersten <span data-cfg="aktionsPlaetze"></span> Studios. Oder ihr startet ganz ohne Fixkosten mit dem Provisionsmodell.
 
 Kurz testen kostet nichts: [Demo-Nummer]. Wenn's gerade nicht passt, sag einfach Bescheid, dann lass ich dich in Ruhe 🙏</div>
 
@@ -99,7 +99,7 @@ Kurz testen kostet nichts: [Demo-Nummer]. Wenn's gerade nicht passt, sag einfach
 
 Wenn bei euch keiner rangeht, übernimmt Ted den Anruf, nimmt die Anfrage auf und schickt sie euch wie gewohnt. Wer Bilder schicken will, bekommt direkt eine WhatsApp, und es läuft weiter im bekannten Ablauf.
 
-Für bestehende Kunden: Einrichtung gratis + [Bundle-Rabatt] auf die Monatsgebühr. Video anbei, testen könnt ihr hier: [Demo-Nummer]. Soll ich's für euch einrichten?</div>
+Ihr könnt Ted einmal kaufen (<span data-cfg="kaufPreis"></span>, keine monatlichen Kosten) oder ohne Fixkosten starten und nur <span data-cfg="provisionSatz"></span> für Tattoo-Termine zahlen, die über Ted reinkommen. Video anbei, testen könnt ihr hier: [Demo-Nummer]. Soll ich's für euch einrichten?</div>
 
 <h2>3. Nach der Demo &amp; Abschluss</h2>
 
@@ -110,21 +110,25 @@ Hi [Vorname],
 
 danke für die Zeit vorhin! Wie besprochen:
 
-Paket: [Start/Profi] – [Preis] € netto im Monat, [Minuten] Minuten inklusive
-Einrichtung: [299 € netto / mit Code [Aktionscode] gratis]
-Laufzeit: [Mindestlaufzeit], danach monatlich kündbar
-Garantie: [Garantie] Tage – passt es nicht, bekommst du die Einrichtung zurück.
+Ted kommt als ein Paket mit allem: Anrufannahme, Anfragen per WhatsApp + E-Mail, WhatsApp an Anrufer für Motivbilder, Weiterleitung dringender Anrufe, Deutsch + Englisch, Wunschstimme, Monatsreport und dein Online-Studio-Portal. Die Betreuung ist immer kostenlos.
 
-Im Anhang: Vertrag, Auftragsverarbeitungsvertrag (Datenschutz) und der Fragebogen.
-1. Vertrag + AVV unterschreiben (digital oder Foto reicht)
-2. Fragebogen ausfüllen (ca. 15 Minuten)
-3. Wir melden uns für den 20-Minuten-Kickoff, und 5 Werktage später geht Ted ran.
+Du wählst, wie du zahlst:
+A) Kaufen: einmalig <span data-cfg="kaufPreis"></span> netto [mit Code <span data-cfg="aktionsCode"></span>: <span data-cfg="kaufAktionPreis"></span>], inklusive Einrichtung, Betrieb und Betreuung. Keine monatlichen Kosten. <span data-cfg="garantieTage"></span> Tage Zufriedenheitsgarantie: Passt es nicht, bekommst du dein Geld voll zurück.
+B) Provision (risikofrei): keine Einrichtungs- und keine Monatsgebühr. Nur <span data-cfg="provisionSatz"></span> vom Tattoo-Preis (netto) für Termine, die innerhalb der ersten <span data-cfg="provisionZuordnung"></span> nach einer Ted-Anfrage gebucht werden. Du trägst sie im Studio-Portal ein, wir rechnen einmal im Monat ab. Kündbar <span data-cfg="kuendigungProvision"></span>.
+In beiden Modellen sind <span data-cfg="fairUseMinuten"></span> Gesprächsminuten pro Monat drin (Fair Use), darüber <span data-cfg="extraMinute"></span> € pro Minute.
+
+Abschluss online: <span data-cfg="websiteUrl"></span>
+Dort wählst du das Modell, bestätigst Vertrag und Auftragsverarbeitungsvertrag (Datenschutz) und zahlst bzw. hinterlegst dein Zahlungsmittel über Stripe. Lieber auf Papier? Dann schicke ich dir Vertrag und AVV als PDF.
+
+Danach:
+1. Fragebogen ausfüllen (ca. 15 Minuten)
+2. Wir melden uns für den 20-Minuten-Kickoff, und 5 Werktage später geht Ted ran.
 
 Fragen? Ruf mich einfach an: [Telefon]
 [Name]</div>
 
 <h3>Willkommen / Kick-off-Termin</h3>
-<div class="code copy">Willkommen an Bord, [Vorname]! 🎉 Wir haben alles bekommen. Nächster Schritt: kurzer Kickoff (20 Min.), da gehen wir deinen Fragebogen durch und klären, über welchen Anschluss euer Telefon läuft. Passt [Tag, Uhrzeit]?</div>
+<div class="code copy">Willkommen an Bord, [Vorname]! 🎉 Dein Abschluss ist da, den Zugang zu deinem Studio-Portal bekommst du per E-Mail. Nächster Schritt: kurzer Kickoff (20 Min.), da gehen wir deinen Fragebogen durch und klären, über welchen Anschluss euer Telefon läuft. Passt [Tag, Uhrzeit]?</div>
 
 <h3>Abnahme (Tag 4)</h3>
 <div class="code copy">Ted ist bereit für euch! 🎧 Ruf bitte einmal an: [Ted-Nummer des Studios] und teste ihn mit einer typischen Anfrage (gern auch mit einer fiesen Preisfrage 😉). Die Zusammenfassung kommt ein paar Sekunden später hier im Chat an. Passt alles, oder sollen wir noch etwas anpassen?</div>
@@ -134,6 +138,8 @@ Fragen? Ruf mich einfach an: [Telefon]
 
 • Rufumleitung ausschalten, falls nötig: [Code / Anleitung]
 • Die Zusammenfassungen kommen hier per WhatsApp und an [E-Mail]
+• Jede Anfrage steht zusätzlich in eurem Studio-Portal
+• [Nur Provision:] Wird aus einer Anfrage ein Tattoo-Termin, tragt ihn dort mit Preis ein, spätestens bis zum <span data-cfg="provisionMeldefrist"></span>
 • Fensteraufkleber, Flyer und Thekenaufsteller sind unterwegs zu euch
 
 In 2 Wochen melde ich mich mit den ersten Zahlen. Viel Spaß beim Tätowieren, Ted hält euch den Rücken frei 🖤</div>
@@ -155,7 +161,7 @@ Also: einfach anrufen, auch nach Feierabend 🖤
 <h3>Hinweis für die Studio-Website (Kontakt-Seite)</h3>
 <div class="code copy">Telefon: [Nummer]. Wir sind telefonisch rund um die Uhr erreichbar. Wenn unser Team gerade tätowiert, nimmt unser digitaler Assistent deinen Anruf entgegen und gibt deine Anfrage direkt an uns weiter. Hinweise zum Datenschutz: [Link zur Datenschutzerklärung].</div>
 
-<p class="footer-note"><span data-cfg="marke"></span> · Interne Vorlagen · Aktuelle Werte: Startpreis <span data-cfg="startPreis"></span>, Profi <span data-cfg="profiPreis"></span>, Einrichtung <span data-cfg="setup"></span>, Aktionscode <span data-cfg="aktionsCode"></span> bis <span data-cfg="aktionsFrist"></span>, Demo-Nummer <span data-cfg="demoNummer"></span>.</p>
+<p class="footer-note"><span data-cfg="marke"></span> · Interne Vorlagen · Aktuelle Werte: Kauf <span data-cfg="kaufPreis"></span> (mit Code <span data-cfg="kaufAktionPreis"></span>), Provision <span data-cfg="provisionSatz"></span>, Fair Use <span data-cfg="fairUseMinuten"></span> Min./Monat, Mehrminute <span data-cfg="extraMinute"></span> €, Abschluss-Link <span data-cfg="websiteUrl"></span>, Aktionscode <span data-cfg="aktionsCode"></span> bis <span data-cfg="aktionsFrist"></span>, Demo-Nummer <span data-cfg="demoNummer"></span>.</p>
 </main>
 <script src="../assets/config.js"></script><script src="../assets/app.js"></script>
 <script>

@@ -8,7 +8,7 @@
 <main class="doc">
 
 <div class="dochead">
-  <div><span class="tag">Intern · Umsetzung</span><h1>Umsetzung &amp; Onboarding</h1><p class="lead">Vom unterschriebenen Vertrag bis zum ersten Anruf in 5 Werktagen</p></div>
+  <div><span class="tag">Intern · Umsetzung</span><h1>Umsetzung &amp; Onboarding</h1><p class="lead">Vom Abschluss bis zum ersten Anruf in 5 Werktagen</p></div>
   <div class="meta"><img src="../assets/logo.png" alt="TattooLeadz"><br>Stand 10/2026<br>Technik &amp; Projektablauf</div>
 </div>
 
@@ -26,31 +26,33 @@
         Make-Szenario „Ted Telefon – Anruf verarbeitet“
               ├─► WhatsApp an Studio (Superchat-Vorlage) + E-Mail
               ├─► Zeile im Google Sheet „Telefon – Anrufe“ (Reporting, Minuten)
-              └─► (Profi) WhatsApp an Anrufer: „Schick uns hier dein Motivbild“ → Ted (WhatsApp) übernimmt</div>
+              ├─► Online-Studio-Portal: Anfrage anlegen → Studio trägt „gebucht + Preis“ ein (Provision)
+              └─► WhatsApp an Anrufer: „Schick uns hier dein Motivbild“ → Ted (WhatsApp) übernimmt</div>
 </div>
 <p><b>Warum eine deutsche Ortsnetz-Nummer?</b> Rufumleitungen ins deutsche Festnetz sind bei fast allen Studio-Tarifen in der Flatrate enthalten. Eine Umleitung auf Mobil- oder Auslandsnummern kann beim Studio Kosten verursachen. Pro Studio eine eigene Nummer, damit Ted sofort weiß, für welches Studio er spricht.</p>
 
 <h2>2. Zeitplan (Ziel: live an Tag 5)</h2>
 <table>
   <tr><th style="width:16%">Tag</th><th style="width:40%">Was passiert</th><th>Wer / Ergebnis</th></tr>
-  <tr><td><b>Tag 0</b></td><td>Vertrag + AVV unterschrieben, Rechnung Einrichtung raus, Fragebogen-Link an Studio</td><td>Vertrieb · Kunde im Sheet auf „Gewonnen“</td></tr>
+  <tr><td><b>Tag 0</b></td><td>Online-Abschluss über <span data-cfg="websiteUrl"></span>: Modell gewählt, Vertrag + AVV digital bestätigt. Kauf: Zahlung über Stripe. Provision: SEPA-Mandat bzw. Karte hinterlegt. (Alternativ PDF-Vertrag + AVV unterschrieben.) Portal-Zugang anlegen, Fragebogen-Link an Studio</td><td>Vertrieb · Kunde im Sheet auf „Gewonnen“, Modell notiert</td></tr>
   <tr><td><b>Tag 1</b></td><td>Kick-off-Call (20 Min.): Fragebogen durchgehen, offene Punkte klären, Telefonanbieter des Studios notieren</td><td>Umsetzung · Fragebogen vollständig</td></tr>
   <tr><td><b>Tag 2</b></td><td>Rufnummer buchen, Agent anlegen, Wissensbasis + Prompt befüllen, Make-Szenario duplizieren</td><td>Umsetzung · Agent läuft intern</td></tr>
   <tr><td><b>Tag 3</b></td><td>Interner Test: alle 20 Testszenarien (Abschnitt 7), Korrekturen</td><td>Umsetzung · Testprotokoll grün</td></tr>
   <tr><td><b>Tag 4</b></td><td>Abnahme mit dem Studio: Inhaber ruft Ted an, Zusammenfassung kommt an, Feedback einarbeiten</td><td>Studio + Umsetzung · Freigabe per WhatsApp/E-Mail</td></tr>
   <tr><td><b>Tag 5</b></td><td>Rufumleitung gemeinsam am Telefon einrichten, Testanruf von extern, Materialien (Aufkleber, Flyer) verschicken</td><td>Studio + Umsetzung · <b>LIVE</b></td></tr>
   <tr><td>Tag 7 / 14</td><td>Gesprächsprotokolle lesen, Prompt nachschärfen, kurzes Feedback ans Studio</td><td>Umsetzung</td></tr>
-  <tr><td>Tag 30</td><td>Check-in mit Zahlen, Garantie-Frist endet, nach Bewertung/Empfehlung fragen</td><td>Vertrieb</td></tr>
+  <tr><td>Tag 30</td><td>Check-in mit Zahlen, Garantie-Frist endet (Kauf), bei Provision die ersten Portal-Meldungen gemeinsam durchgehen, nach Bewertung/Empfehlung fragen</td><td>Vertrieb</td></tr>
 </table>
 
 <h2>3. Checkliste Einrichtung</h2>
 <div class="grid2">
 <div class="box"><h3>Unterlagen &amp; Daten</h3>
 <ul class="check">
-  <li>Vertrag + AVV unterschrieben abgelegt</li>
+  <li>Vertrag + AVV abgelegt (online oder PDF), Modell Kauf/Provision notiert</li>
+  <li>Kauf: Zahlung eingegangen · Provision: SEPA-Mandat bzw. Karte hinterlegt</li>
   <li>Fragebogen vollständig (Öffnungszeiten, Regeln, FAQ, Artists)</li>
   <li>WhatsApp-Nummer + E-Mail für Zusammenfassungen</li>
-  <li>Handynummer für dringende Weiterleitungen (Profi)</li>
+  <li>Handynummer für dringende Weiterleitungen</li>
   <li>Telefonanbieter + Anschlussart des Studios (Festnetz/Handy/FRITZ!Box)</li>
   <li>Wunschstimme (männlich/weiblich, locker/ruhig)</li>
   <li>Name des Assistenten (Standard „Ted“, auf Wunsch anders)</li>
@@ -65,18 +67,19 @@
   <li>Post-Call-Webhook → Make-Szenario aktiv</li>
   <li>Superchat-Vorlage „ted_anruf_zusammenfassung“ getestet</li>
   <li>Aufbewahrungsdauer Transkripte/Audio gemäß AVV eingestellt</li>
-  <li>Minuten-Zähler im Sheet eingerichtet</li>
+  <li>Minuten-Zähler im Sheet eingerichtet (Fair Use <span data-cfg="fairUseMinuten"></span> Min./Monat)</li>
+  <li>Studio im Online-Studio-Portal angelegt, Zugang ans Studio geschickt</li>
 </ul></div>
 </div>
 
 <h2>4. Agent-Konfiguration (ElevenLabs)</h2>
 <table>
   <tr><th style="width:34%">Einstellung</th><th>Wert</th></tr>
-  <tr><td>Sprache</td><td>Deutsch (Standard), Englisch automatisch, wenn der Anrufer Englisch spricht (Profi)</td></tr>
+  <tr><td>Sprache</td><td>Deutsch (Standard), Englisch automatisch, wenn der Anrufer Englisch spricht</td></tr>
   <tr><td>Stimme</td><td>Natürliche deutsche Stimme passend zum Studio. Tempo leicht zügig, nicht zu „Callcenter“.</td></tr>
   <tr><td>Max. Gesprächsdauer</td><td>8 Minuten (danach freundlich beenden und Rückruf zusagen)</td></tr>
   <tr><td>Stille-Timeout</td><td>Nach 10 s Stille nachfragen, nach 20 s freundlich auflegen</td></tr>
-  <tr><td>Tools</td><td><b>end_call</b> · <b>transfer_to_number</b> (nur Profi, nur bei dringenden Fällen, an Handy des Inhabers) · Webhook nach Gesprächsende</td></tr>
+  <tr><td>Tools</td><td><b>end_call</b> · <b>transfer_to_number</b> (nur bei dringenden Fällen, an Handy des Inhabers) · Webhook nach Gesprächsende</td></tr>
   <tr><td>Datenerfassung (Analyse)</td><td>name, rueckrufnummer, anliegen (anfrage | frage | termin_aendern | reklamation | sonstiges), motiv, koerperstelle, groesse_cm, stil, farbe, wunschzeitraum, budget, artist_wunsch, referenzbild_whatsapp_ok (ja/nein), dringend (ja/nein), zusammenfassung</td></tr>
   <tr><td>Dynamische Variablen</td><td><code>{{studio_name}} {{stadt}} {{adresse}} {{oeffnungszeiten}} {{artists}} {{walk_in}} {{mindestalter}} {{anzahlung}} {{gutscheine}} {{besonderheiten}}</code></td></tr>
   <tr><td>Aufzeichnung</td><td>Standard: nur Transkript + Zusammenfassung, Audio aus bzw. kurz aufbewahren. Wenn Audio gespeichert wird, muss die Begrüßung darauf hinweisen.</td></tr>
@@ -132,12 +135,13 @@ GESPRÄCHSENDE
 <h2>5. Make-Szenario „Ted Telefon – Anruf verarbeitet“</h2>
 <ol class="steps">
   <li><b>Webhook</b> (Post-Call von ElevenLabs): agent_id, Anrufer-Nummer, Dauer, Transkript, Datenerfassungs-Felder.</li>
-  <li><b>Router nach agent_id</b> → Studio-Datensatz (Data Store „ted_studios“: agent_id, Studioname, WhatsApp, E-Mail, Paket, Minutenkontingent).</li>
+  <li><b>Router nach agent_id</b> → Studio-Datensatz (Data Store „ted_studios“: agent_id, Studioname, WhatsApp, E-Mail, Modell kauf/provision, Fair-Use-Minuten).</li>
   <li><b>Google Sheet</b> „Telefon – Anrufe“: Zeile anhängen (Datum, Studio, Dauer in Min., Anliegen, Felder, dringend).</li>
   <li><b>WhatsApp an Studio</b> über Superchat-Vorlage (unten) + E-Mail mit vollständigem Transkript.</li>
   <li><b>Wenn dringend = ja</b>: zusätzlich sofortige WhatsApp „⚠️ DRINGEND“ an die Handynummer des Inhabers.</li>
-  <li><b>Wenn referenzbild_whatsapp_ok = ja</b> (Profi): Superchat-Vorlage an Anrufer, Ted (WhatsApp) übernimmt den Chat.</li>
-  <li><b>Minuten-Check</b>: Bei 80 % und 100 % des Kontingents interne Benachrichtigung an uns (nicht automatisch ans Studio).</li>
+  <li><b>Wenn referenzbild_whatsapp_ok = ja</b>: Superchat-Vorlage an Anrufer, Ted (WhatsApp) übernimmt den Chat.</li>
+  <li><b>Studio-Portal</b>: Anfrage als Datensatz anlegen (Anfrage-ID, Datum, Name, Rückrufnummer, Motiv, Status „offen“). Das Studio setzt dort später „gebucht“ mit Buchungsdatum und Preis netto. Im Provisionsmodell zählen nur Buchungen innerhalb der ersten <span data-cfg="provisionZuordnung"></span> nach dem Anfragedatum; daraus entsteht die Monatsabrechnung.</li>
+  <li><b>Minuten-Check (Fair Use)</b>: Bei 80 % und 100 % der <span data-cfg="fairUseMinuten"></span> Inklusivminuten interne Benachrichtigung an uns. Bei 80 % informieren wir das Studio persönlich (Vertrag § 5). Minuten darüber gehen mit <span data-cfg="extraMinute"></span> € pro Minute in die Monatsabrechnung.</li>
 </ol>
 <h3>Vorlage Zusammenfassung ans Studio</h3>
 <div class="code">📞 Neuer Anruf für {{studio_name}} – {{datum}} {{uhrzeit}} ({{dauer}} Min.)
@@ -159,6 +163,7 @@ Kurz: {{zusammenfassung}}
   <tr><td>Keine Annahme nach 20 Sek.</td><td><kbd>**61*TEDNUMMER**20#</kbd></td><td><kbd>##61#</kbd></td></tr>
   <tr><td>Besetzt</td><td><kbd>**67*TEDNUMMER#</kbd></td><td><kbd>##67#</kbd></td></tr>
   <tr><td>Nicht erreichbar (Handy aus/kein Netz)</td><td><kbd>**62*TEDNUMMER#</kbd></td><td><kbd>##62#</kbd></td></tr>
+  <tr><td>Alle drei bedingten auf einmal</td><td><kbd>**004*TEDNUMMER#</kbd></td><td><kbd>##004#</kbd></td></tr>
   <tr><td>Alle bedingten Umleitungen löschen</td><td colspan="2"><kbd>##004#</kbd> &nbsp;·&nbsp; alle Umleitungen löschen: <kbd>##002#</kbd></td></tr>
 </table>
 <p class="small">Festnetz/FRITZ!Box/Telekom-Anschlüsse: siehe Studio-Anleitung. Nach dem Einrichten immer einen Testanruf von einem fremden Handy machen und 25 Sekunden klingeln lassen.</p>
@@ -176,24 +181,26 @@ Kurz: {{zusammenfassung}}
   <tr><td>8</td><td>„Mein Tattoo ist rot und heiß“</td><td>Arzt-Hinweis, dringend = ja</td><td>☐</td></tr>
   <tr><td>9</td><td>Beschwerde über Artist</td><td>Ruhig, aufnehmen, dringend</td><td>☐</td></tr>
   <tr><td>10</td><td>„Bist du ein Mensch?“</td><td>Ehrlich: KI-Assistent</td><td>☐</td></tr>
-  <tr><td>11</td><td>Anrufer spricht Englisch</td><td>Wechselt auf Englisch (Profi)</td><td>☐</td></tr>
+  <tr><td>11</td><td>Anrufer spricht Englisch</td><td>Wechselt auf Englisch</td><td>☐</td></tr>
   <tr><td>12</td><td>Termin absagen/verschieben</td><td>Aufnehmen, Team meldet sich</td><td>☐</td></tr>
   <tr><td>13</td><td>Gutschein kaufen</td><td>Antwort laut Fragebogen</td><td>☐</td></tr>
   <tr><td>14</td><td>Andere Rückrufnummer diktieren</td><td>Nummer korrekt vorgelesen</td><td>☐</td></tr>
-  <tr><td>15</td><td>Cover-up-Anfrage mit Foto-Wunsch</td><td>WhatsApp-Angebot (Profi)</td><td>☐</td></tr>
+  <tr><td>15</td><td>Cover-up-Anfrage mit Foto-Wunsch</td><td>WhatsApp-Angebot</td><td>☐</td></tr>
   <tr><td>16</td><td>Werbeanruf / Verkäufer</td><td>Höflich beenden</td><td>☐</td></tr>
   <tr><td>17</td><td>Anrufer schweigt</td><td>Nachfragen, dann auflegen</td><td>☐</td></tr>
   <tr><td>18</td><td>Frage, die nicht in der Wissensbasis steht</td><td>Nichts erfinden, aufnehmen</td><td>☐</td></tr>
-  <tr><td>19</td><td>Zusammenfassung kommt per WhatsApp + E-Mail an</td><td>&lt; 1 Minute</td><td>☐</td></tr>
+  <tr><td>19</td><td>Zusammenfassung kommt per WhatsApp + E-Mail an, Anfrage steht im Studio-Portal</td><td>&lt; 1 Minute</td><td>☐</td></tr>
   <tr><td>20</td><td>Rufumleitung: fremdes Handy, 25 s klingeln lassen</td><td>Ted geht ran</td><td>☐</td></tr>
 </table>
 
 <h2>8. Betrieb, Reporting &amp; Notfallplan</h2>
 <ul>
-  <li><b>Monatsreport</b> (Profi, Start in Kurzform) aus dem Sheet: Anrufe gesamt, davon außerhalb der Öffnungszeiten, aufgenommene Anfragen, dringende Fälle, verbrauchte Minuten.</li>
+  <li><b>Monatsreport</b> aus dem Sheet: Anrufe gesamt, davon außerhalb der Öffnungszeiten, aufgenommene Anfragen, dringende Fälle, verbrauchte Minuten.</li>
   <li><b>Wöchentlich</b> 10 zufällige Gespräche lesen, Fehler im Prompt/Wissensbasis korrigieren. Änderungen im Studio (Urlaub, neue Artists) sofort einpflegen.</li>
   <li><b>Störung bei uns oder beim Anbieter:</b> Studio informieren, Umleitung vorübergehend auf Mailbox stellen bzw. mit <kbd>##002#</kbd> deaktivieren. Ziel: Reaktion innerhalb von 4 Stunden an Werktagen.</li>
-  <li><b>Kündigung:</b> Studio schaltet Umleitung ab (Anleitung beilegen), wir geben die Nummer frei und löschen Daten gemäß AVV.</li>
+  <li><b>Provisionsabrechnung (Modell B):</b> Nach dem <span data-cfg="provisionMeldefrist"></span> die Meldungen im Portal prüfen, Abrechnung für den Vormonat erstellen (Provision + etwaige Mehrminuten) und per SEPA-Lastschrift bzw. Karte einziehen. Fehlen Meldungen erkennbar (viele Anfragen, keine Buchung), erst freundlich nachfragen. Prüfung des Terminbuchs nur bei begründetem Zweifel und stichprobenartig (Vertrag § 5).</li>
+  <li><b>Mehrminuten (Modell A):</b> monatlich nachträglich abrechnen, sobald Fair Use überschritten ist.</li>
+  <li><b>Kündigung:</b> Studio schaltet Umleitung ab (Anleitung beilegen), wir geben die Nummer frei und löschen Daten gemäß AVV. Im Provisionsmodell bleibt der Portal-Zugang für den Nachlauf (<span data-cfg="provisionNachlauf"></span> nach Vertragsende) offen, damit Buchungen aus Anfragen der Laufzeit gemeldet werden.</li>
 </ul>
 
 <p class="footer-note"><span data-cfg="marke"></span> · <span data-cfg="firma"></span> · Interne Unterlage.</p>

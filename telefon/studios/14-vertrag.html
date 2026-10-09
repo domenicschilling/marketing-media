@@ -6,7 +6,7 @@
 @page{size:A4;margin:16mm 18mm 18mm}
 .doc{font-size:9.6pt;line-height:1.5}
 .doc h2{font-size:11.5pt;margin:16px 0 5px}
-.doc ol.abs{padding-left:18px;margin:0 0 6px}
+.doc ol.abs{padding-left:22px;margin:0 0 6px}
 .doc ol.abs li{margin:0 0 3px}
 .parties{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0}
 .parties .box{margin:0}
@@ -19,7 +19,7 @@
 </head><body>
 <div class="toolbar"><a href="../index.html">← Alle Unterlagen</a><span class="t">Für Studios · Vertrag</span><button data-print>Drucken / PDF</button></div>
 <main class="doc">
-<div class="hint"><b>Interner Hinweis (wird nicht gedruckt):</b> Vertragsvorlage. Vor dem ersten Einsatz einmal anwaltlich prüfen lassen und die gelb markierten Firmendaten in <code>assets/config.js</code> ausfüllen. Gedruckt wird ohne diesen Hinweis.</div>
+<div class="hint"><b>Interner Hinweis (wird nicht gedruckt):</b> Vertragsvorlage. Vor dem ersten Einsatz einmal anwaltlich prüfen lassen und die gelb markierten Firmendaten in <code>assets/config.js</code> ausfüllen. Gedruckt wird ohne diesen Hinweis. Alternativ schließt das Studio online über <span data-cfg="websiteUrl"></span> ab (gleicher Vertragstext, AVV und Zahlung über Stripe).</div>
 
 <div class="dochead">
   <div><span class="tag ext">Vertrag</span><h1 style="font-size:20pt">Dienstleistungsvertrag<br>„<span data-cfg="produkt"></span>“</h1><p class="lead">KI-Telefonassistent für Tattoo-Studios</p></div>
@@ -40,14 +40,12 @@
 
 <h2>Bestellung</h2>
 <table class="form">
-  <tr><td>Paket</td><td><span class="opt"></span><b>Start</b>: <span data-cfg="startPreis"></span>/Monat, <span data-cfg="startMinuten"></span> Min. inkl. &nbsp;&nbsp; <span class="opt"></span><b>Profi</b>: <span data-cfg="profiPreis"></span>/Monat, <span data-cfg="profiMinuten"></span> Min. inkl.</td></tr>
-  <tr><td>Einrichtung (einmalig)</td><td><span data-cfg="setup"></span> &nbsp;&nbsp; <span class="opt"></span>entfällt wegen Aktionscode / Bestandskunde: __________</td></tr>
-  <tr><td>Rabatt</td><td><span class="opt"></span>TattooLeadz-Bestandskunde: <span data-cfg="bundleRabatt"></span> auf die Monatsvergütung &nbsp;&nbsp; <span class="opt"></span>Sonstiges: __________</td></tr>
-  <tr><td>Mehrminuten</td><td><span data-cfg="extraMinute"></span> € je angefangener Gesprächsminute über dem Inklusivkontingent</td></tr>
+  <tr><td>Vergütungsmodell (bitte eines wählen)</td><td><span class="opt"></span><b>Modell A · Kauf:</b> einmalig <span data-cfg="kaufPreis"></span>, inklusive Einrichtung, Betrieb und Betreuung, keine monatliche Vergütung<br><span style="display:inline-block;width:17px"></span><span class="opt"></span>mit Aktionscode __________: einmalig <span data-cfg="kaufAktionPreis"></span><br><span class="opt"></span><b>Modell B · Provision:</b> <span data-cfg="provisionSatz"></span> des Tattoo-Preises (netto) je provisionspflichtigem Tattoo-Termin nach § 5, keine Einrichtungs- und keine Monatsgebühr</td></tr>
+  <tr><td>Gesprächsminuten (beide Modelle)</td><td><span data-cfg="fairUseMinuten"></span> Minuten je Kalendermonat inklusive (Fair Use), darüber <span data-cfg="extraMinute"></span> € je angefangener Gesprächsminute</td></tr>
   <tr><td>Umzuleitende Studio-Rufnummer(n)</td><td></td></tr>
   <tr><td>Zusammenfassungen an (WhatsApp / E-Mail)</td><td></td></tr>
   <tr><td>Betriebsmodus</td><td><span class="opt"></span>nur bei Nichtannahme/besetzt/geschlossen (empfohlen) &nbsp; <span class="opt"></span>immer</td></tr>
-  <tr><td>Zahlungsart</td><td><span class="opt"></span>SEPA-Lastschrift (Anlage B) &nbsp;&nbsp; <span class="opt"></span>Überweisung nach Rechnung</td></tr>
+  <tr><td>Zahlungsart</td><td><span class="opt"></span>SEPA-Lastschrift (Anlage B) &nbsp;&nbsp; <span class="opt"></span>Kreditkarte (über Stripe) &nbsp;&nbsp; <span class="opt"></span>Überweisung nach Rechnung (nur Modell A)</td></tr>
 </table>
 <p class="small">Alle Preise netto zzgl. gesetzlicher Umsatzsteuer. Die Anlagen A (Leistungsbeschreibung), B (SEPA-Mandat, falls gewählt) und der Auftragsverarbeitungsvertrag (AVV) sind Bestandteil dieses Vertrags.</p>
 
@@ -55,13 +53,15 @@
 <ol class="abs">
   <li>Der Anbieter stellt dem Kunden einen KI-gestützten Telefonassistenten („Ted“) bereit, der eingehende Anrufe für das Studio des Kunden entgegennimmt, allgemeine Fragen anhand der vom Kunden bereitgestellten Informationen beantwortet, Anliegen und Tattoo-Anfragen aufnimmt und dem Kunden eine Zusammenfassung übermittelt. Einzelheiten ergeben sich aus Anlage A.</li>
   <li>Der Vertrag richtet sich ausschließlich an Unternehmer im Sinne von § 14 BGB. Der Kunde bestätigt, den Vertrag in Ausübung seiner gewerblichen oder selbständigen Tätigkeit zu schließen.</li>
+  <li>Der Kunde wählt bei Vertragsschluss eines der Vergütungsmodelle Kauf (Modell A) oder Provision (Modell B). Der Leistungsumfang nach Anlage A ist in beiden Modellen gleich.</li>
 </ol>
 
 <h2>§ 2 Leistungen des Anbieters</h2>
 <ol class="abs">
   <li><b>Einrichtung:</b> Der Anbieter richtet den Telefonassistenten auf Grundlage des vom Kunden ausgefüllten Fragebogens ein, stellt eine deutsche Rufnummer bereit, auf die der Kunde Anrufe umleitet, konfiguriert Begrüßung, Stimme, Wissensbasis und die Übermittlung der Zusammenfassungen und testet das System vor der Inbetriebnahme gemeinsam mit dem Kunden. Ziel ist eine Inbetriebnahme innerhalb von fünf Werktagen nach Eingang des vollständigen Fragebogens; dies ist ein unverbindlicher Richtwert.</li>
   <li><b>Betrieb:</b> Der Anbieter betreibt den Assistenten während der Vertragslaufzeit, pflegt Änderungen der Studio-Informationen ein, die der Kunde in Textform mitteilt (in der Regel innerhalb von zwei Werktagen), und überwacht die Funktion stichprobenartig.</li>
-  <li><b>Support:</b> Erreichbarkeit per E-Mail und WhatsApp an Werktagen (Mo–Fr, außer bundeseinheitliche Feiertage) von 9 bis 17 Uhr. Störungen, die den Betrieb ganz verhindern, bearbeitet der Anbieter vorrangig.</li>
+  <li><b>Studio-Portal:</b> Der Anbieter stellt dem Kunden für die Vertragsdauer ein Online-Studio-Portal bereit, in dem die vom Assistenten aufgenommenen Anfragen einsehbar sind und im Modell B Buchungen gemeldet werden.</li>
+  <li><b>Support:</b> Die Betreuung ist in beiden Modellen ohne gesonderte Vergütung enthalten. Erreichbarkeit per E-Mail und WhatsApp an Werktagen (Mo–Fr, außer bundeseinheitliche Feiertage) von 9 bis 17 Uhr. Störungen, die den Betrieb ganz verhindern, bearbeitet der Anbieter vorrangig.</li>
   <li><b>Verfügbarkeit:</b> Der Anbieter strebt eine Verfügbarkeit von 98 % im Monatsmittel an. Ausgenommen sind angekündigte Wartungen sowie Störungen, die außerhalb des Einflussbereichs des Anbieters liegen, insbesondere Störungen der Telefonnetze, des Anschlusses des Kunden oder eingesetzter Drittanbieter.</li>
   <li>Der Anbieter darf zur Leistungserbringung Unterauftragnehmer und technische Dienstleister einsetzen (z. B. Telefonie, Sprach- und KI-Dienste, Automatisierung). Für die Verarbeitung personenbezogener Daten gilt der AVV.</li>
 </ol>
@@ -84,25 +84,35 @@
 
 <h2>§ 5 Vergütung und Zahlung</h2>
 <ol class="abs">
-  <li>Die Einrichtungsgebühr wird mit Vertragsschluss fällig. Die monatliche Vergütung wird ab Inbetriebnahme monatlich im Voraus berechnet; der erste Monat wird zeitanteilig berechnet.</li>
-  <li>Das Inklusivkontingent gilt je Kalendermonat. Nicht genutzte Minuten verfallen am Monatsende. Gesprächsminuten über dem Kontingent werden je angefangene Minute zum vereinbarten Mehrminutenpreis nachträglich abgerechnet. Der Anbieter informiert den Kunden, wenn 80 % des Kontingents erreicht sind.</li>
-  <li>Rechnungen sind innerhalb von 7 Tagen ohne Abzug zahlbar bzw. werden per SEPA-Lastschrift eingezogen. Kosten einer vom Kunden verschuldeten Rücklastschrift trägt der Kunde.</li>
-  <li>Gerät der Kunde mit einem Betrag von mehr als einer Monatsvergütung in Verzug, darf der Anbieter den Assistenten nach vorheriger Ankündigung in Textform mit einer Frist von 7 Tagen vorübergehend deaktivieren. Die Vergütungspflicht bleibt bestehen.</li>
-  <li>Der Anbieter kann die Preise frühestens nach Ablauf der Mindestlaufzeit mit einer Ankündigungsfrist von sechs Wochen in Textform anpassen. Der Kunde kann in diesem Fall zum Zeitpunkt des Inkrafttretens der Änderung kündigen.</li>
+  <li><b>Modell A (Kauf):</b> Der Kunde zahlt eine einmalige Vergütung in Höhe von <span data-cfg="kaufPreis"></span> netto, bei Angabe eines gültigen Aktionscodes <span data-cfg="kaufAktionPreis"></span> netto. Damit sind Einrichtung, Betrieb und Betreuung abgegolten; eine monatliche Grundvergütung fällt nicht an. Die einmalige Vergütung wird mit Vertragsschluss fällig.</li>
+  <li><b>Modell B (Provision):</b> Der Kunde zahlt weder eine Einrichtungs- noch eine monatliche Grundvergütung. Er zahlt für jeden provisionspflichtigen Tattoo-Termin eine Provision in Höhe von <span data-cfg="provisionSatz"></span> der Bemessungsgrundlage.</li>
+  <li><b>Zuordnung:</b> Ted-Anfrage ist jede Anfrage eines Endkunden, die der Assistent aufgenommen und dem Kunden übermittelt hat; sie wird im Studio-Portal angezeigt. Ein Tattoo-Termin ist provisionspflichtig, wenn er mit dem Endkunden einer Ted-Anfrage innerhalb der ersten <span data-cfg="provisionZuordnung"></span> nach Eingang dieser Anfrage gebucht wird. Maßgeblich ist der Zeitpunkt der Buchung, nicht der Termin selbst. Findet ein gemeldeter Termin nicht statt und erhält der Kunde hierfür keine Vergütung, entfällt die Provision; der Kunde korrigiert die Meldung im Studio-Portal.</li>
+  <li><b>Bemessungsgrundlage</b> ist der mit dem Endkunden vereinbarte Tattoo-Preis netto, also ohne Umsatzsteuer und ohne Trinkgeld. Ändert sich der vereinbarte Preis, ist der geänderte Preis maßgeblich.</li>
+  <li><b>Meldepflicht:</b> Der Kunde trägt jeden provisionspflichtigen Tattoo-Termin mit Buchungsdatum und vereinbartem Preis im Studio-Portal ein, spätestens bis zum <span data-cfg="provisionMeldefrist"></span> für die im Vormonat gebuchten Termine. Nachträgliche Änderungen meldet er ebenso.</li>
+  <li><b>Nachweis und Prüfrecht:</b> Bestehen begründete Zweifel an der Vollständigkeit oder Richtigkeit der Meldungen, kann der Anbieter geeignete Nachweise verlangen, insbesondere eine stichprobenartige Einsicht in das Terminbuch für die betroffenen Ted-Anfragen. Der Kunde wirkt hieran in angemessener Frist mit. Personenbezogene Daten von Endkunden werden nur offengelegt, soweit dies für die Prüfung erforderlich ist. Nicht oder unzutreffend gemeldete provisionspflichtige Termine werden nachberechnet.</li>
+  <li><b>Abrechnung:</b> Der Anbieter rechnet die Provisionen auf Grundlage der Meldungen einmal im Monat für den Vormonat ab und zieht den Betrag per SEPA-Lastschrift oder über die hinterlegte Karte ein.</li>
+  <li><b>Fair Use (beide Modelle):</b> Je Kalendermonat sind <span data-cfg="fairUseMinuten"></span> Gesprächsminuten inklusive. Nicht genutzte Minuten verfallen am Monatsende. Gesprächsminuten darüber werden je angefangene Minute mit <span data-cfg="extraMinute"></span> € netto nachträglich monatlich abgerechnet. Der Anbieter informiert den Kunden, wenn 80 % der Inklusivminuten erreicht sind.</li>
+  <li>Rechnungen sind innerhalb von 7 Tagen ohne Abzug zahlbar, soweit der Betrag nicht per SEPA-Lastschrift oder Karte eingezogen wird. Kosten einer vom Kunden verschuldeten Rücklastschrift trägt der Kunde.</li>
+  <li>Gerät der Kunde mit fälligen Zahlungen in Verzug oder verletzt er die Meldepflicht nach Abs. 5 trotz Mahnung erheblich, darf der Anbieter den Assistenten nach vorheriger Ankündigung in Textform mit einer Frist von 7 Tagen vorübergehend deaktivieren. Die Zahlungspflichten bleiben bestehen.</li>
+  <li>Der Anbieter kann den Provisionssatz und den Preis für Mehrminuten mit einer Ankündigungsfrist von sechs Wochen in Textform anpassen. Der Kunde kann in diesem Fall zum Zeitpunkt des Inkrafttretens der Änderung kündigen. Die Anpassung gilt nicht für bereits gebuchte Termine und bereits angefallene Minuten. Die einmalige Vergütung im Modell A bleibt unberührt.</li>
 </ol>
 
-<h2>§ 6 Zufriedenheitsgarantie</h2>
+<h2>§ 6 Zufriedenheitsgarantie (Modell A)</h2>
 <ol class="abs">
-  <li>Der Kunde kann den Vertrag innerhalb von <span data-cfg="garantieTage"></span> Tagen ab Inbetriebnahme ohne Angabe von Gründen in Textform mit sofortiger Wirkung kündigen.</li>
-  <li>In diesem Fall erstattet der Anbieter die gezahlte Einrichtungsgebühr vollständig. Die Monatsvergütung wird nur zeitanteilig bis zur Kündigung berechnet; zu viel gezahlte Beträge werden erstattet. Mehrminuten werden nicht erstattet.</li>
+  <li>Im Modell A kann der Kunde den Vertrag innerhalb von <span data-cfg="garantieTage"></span> Tagen ab Inbetriebnahme ohne Angabe von Gründen in Textform mit sofortiger Wirkung kündigen.</li>
+  <li>In diesem Fall erstattet der Anbieter die gezahlte einmalige Vergütung vollständig, und der Vertrag endet mit Zugang der Kündigung. Bereits angefallene Mehrminuten werden nicht erstattet.</li>
+  <li>Im Modell B fallen keine festen Kosten an; die Kündigung richtet sich nach § 7 Abs. 3.</li>
 </ol>
 
-<h2>§ 7 Laufzeit, Kündigung und Paketwechsel</h2>
+<h2>§ 7 Laufzeit und Kündigung</h2>
 <ol class="abs">
-  <li>Der Vertrag beginnt mit Unterzeichnung. Die Mindestlaufzeit beträgt <span data-cfg="mindestlaufzeit"></span> ab Inbetriebnahme. Danach läuft der Vertrag auf unbestimmte Zeit und kann von beiden Seiten mit einer Frist von <span data-cfg="kuendigungsfrist"></span> gekündigt werden.</li>
+  <li>Der Vertrag beginnt mit Vertragsschluss (Unterzeichnung oder Online-Abschluss) und läuft auf unbestimmte Zeit.</li>
+  <li><b>Modell A:</b> Der Kunde kann den Vertrag jederzeit in Textform kündigen. Außerhalb von § 6 wird die einmalige Vergütung weder ganz noch anteilig erstattet. Der Anbieter kann ordentlich mit einer Frist von drei Monaten kündigen, frühestens jedoch zum Ablauf von 24 Monaten ab Inbetriebnahme.</li>
+  <li><b>Modell B:</b> Jede Partei kann den Vertrag <span data-cfg="kuendigungProvision"></span> in Textform kündigen.</li>
+  <li><b>Nachlauf (Modell B):</b> Für Ted-Anfragen, die während der Vertragslaufzeit eingegangen sind, besteht die Provisionspflicht für Buchungen fort, die innerhalb der ersten <span data-cfg="provisionNachlauf"></span> nach Vertragsende erfolgen, jeweils höchstens innerhalb des Zuordnungszeitraums nach § 5 Abs. 3. Meldepflicht, Prüfrecht und Abrechnung nach § 5 gelten insoweit fort; der Zugang zum Studio-Portal bleibt hierfür bestehen.</li>
+  <li>Ein Wechsel des Vergütungsmodells bedarf einer Vereinbarung in Textform.</li>
   <li>Das Recht zur außerordentlichen Kündigung aus wichtigem Grund bleibt unberührt.</li>
   <li>Kündigungen bedürfen der Textform (z. B. E-Mail).</li>
-  <li>Ein Wechsel in ein größeres Paket ist jederzeit zum nächsten Monatsersten möglich, ein Wechsel in ein kleineres Paket frühestens zum Ende der Mindestlaufzeit.</li>
 </ol>
 
 <h2>§ 8 Rufnummer und Vertragsende</h2>
@@ -128,7 +138,7 @@
 <h2>§ 11 Haftung</h2>
 <ol class="abs">
   <li>Der Anbieter haftet unbeschränkt bei Vorsatz und grober Fahrlässigkeit, bei Verletzung von Leben, Körper oder Gesundheit sowie nach dem Produkthaftungsgesetz.</li>
-  <li>Bei leicht fahrlässiger Verletzung einer wesentlichen Vertragspflicht (deren Erfüllung die ordnungsgemäße Durchführung des Vertrags überhaupt erst ermöglicht und auf deren Einhaltung der Kunde regelmäßig vertrauen darf) ist die Haftung auf den vertragstypischen, vorhersehbaren Schaden begrenzt, höchstens auf die vom Kunden in den letzten zwölf Monaten gezahlte Vergütung.</li>
+  <li>Bei leicht fahrlässiger Verletzung einer wesentlichen Vertragspflicht (deren Erfüllung die ordnungsgemäße Durchführung des Vertrags überhaupt erst ermöglicht und auf deren Einhaltung der Kunde regelmäßig vertrauen darf) ist die Haftung auf den vertragstypischen, vorhersehbaren Schaden begrenzt, höchstens auf die vom Kunden in den letzten zwölf Monaten vor dem Schadensereignis gezahlte Vergütung, im Modell A mindestens jedoch auf die Höhe der einmaligen Vergütung.</li>
   <li>Im Übrigen ist die Haftung für leichte Fahrlässigkeit ausgeschlossen. Dies gilt insbesondere für entgangenen Gewinn und nicht zustande gekommene Aufträge aufgrund nicht oder fehlerhaft angenommener Anrufe.</li>
 </ol>
 
@@ -151,22 +161,26 @@
 <!-- Anlage A -->
 <h2 class="pb" style="font-size:15pt">Anlage A · Leistungsbeschreibung</h2>
 <table>
-  <tr><th style="width:46%">Leistung</th><th style="text-align:center">Start</th><th style="text-align:center">Profi</th></tr>
-  <tr><td>Monatliche Vergütung (netto)</td><td style="text-align:center"><span data-cfg="startPreis"></span></td><td style="text-align:center"><span data-cfg="profiPreis"></span></td></tr>
-  <tr><td>Inklusive Gesprächsminuten je Kalendermonat</td><td style="text-align:center"><span data-cfg="startMinuten"></span></td><td style="text-align:center"><span data-cfg="profiMinuten"></span></td></tr>
-  <tr><td>Eigene deutsche Rufnummer für die Umleitung</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td></tr>
-  <tr><td>Anrufannahme 24/7 oder bei Nichtannahme/besetzt/geschlossen</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td></tr>
-  <tr><td>Begrüßung mit Studioname, KI-Kennzeichnung</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td></tr>
-  <tr><td>Beantwortung allgemeiner Fragen anhand der Wissensbasis</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td></tr>
-  <tr><td>Aufnahme von Tattoo-Anfragen, Absagen und Verschiebungswünschen</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td></tr>
-  <tr><td>Zusammenfassung per WhatsApp und E-Mail</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td></tr>
-  <tr><td>Pflege von Änderungen der Studio-Informationen</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td></tr>
-  <tr><td>Studio-Materialien digital (Fensteraufkleber, Flyer, Aufsteller, Datenschutzhinweis)</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td></tr>
-  <tr><td>WhatsApp an Anrufer zum Einsenden von Motivbildern (mit Zustimmung des Anrufers)</td><td style="text-align:center">–</td><td style="text-align:center">✓</td></tr>
-  <tr><td>Weiterleitung dringender Anrufe an eine Mobilnummer des Kunden</td><td style="text-align:center">–</td><td style="text-align:center">✓</td></tr>
-  <tr><td>Deutsch und Englisch</td><td style="text-align:center">Deutsch</td><td style="text-align:center">✓</td></tr>
-  <tr><td>Wahl der Stimme aus der Auswahl des Anbieters</td><td style="text-align:center">Standard</td><td style="text-align:center">✓</td></tr>
-  <tr><td>Monatsreport (Anrufe, Anfragen, Minuten) und Optimierung</td><td style="text-align:center">Kurzreport</td><td style="text-align:center">✓</td></tr>
+  <tr><th>Leistungen (in beiden Vergütungsmodellen enthalten)</th></tr>
+  <tr><td>Einrichtung auf Grundlage des Fragebogens, gemeinsamer Test vor Inbetriebnahme</td></tr>
+  <tr><td>Eigene deutsche Rufnummer für die Umleitung</td></tr>
+  <tr><td>Anrufannahme 24/7 oder bei Nichtannahme/besetzt/geschlossen</td></tr>
+  <tr><td>Begrüßung mit Studioname, KI-Kennzeichnung</td></tr>
+  <tr><td>Beantwortung allgemeiner Fragen anhand der Wissensbasis</td></tr>
+  <tr><td>Aufnahme von Tattoo-Anfragen, Absagen und Verschiebungswünschen</td></tr>
+  <tr><td>Zusammenfassung per WhatsApp und E-Mail</td></tr>
+  <tr><td>WhatsApp an Anrufer zum Einsenden von Motivbildern (mit Zustimmung des Anrufers)</td></tr>
+  <tr><td>Weiterleitung dringender Anrufe an eine Mobilnummer des Kunden</td></tr>
+  <tr><td>Deutsch und Englisch</td></tr>
+  <tr><td>Wahl der Stimme aus der Auswahl des Anbieters</td></tr>
+  <tr><td>Monatsreport (Anrufe, Anfragen, Minuten) und Optimierung</td></tr>
+  <tr><td>Pflege von Änderungen der Studio-Informationen, Betreuung ohne gesonderte Vergütung</td></tr>
+  <tr><td>Studio-Materialien digital (Fensteraufkleber, Flyer, Aufsteller, Datenschutzhinweis)</td></tr>
+  <tr><td>Online-Studio-Portal (Anfragen einsehen, im Modell B Buchungen melden)</td></tr>
+  <tr><th>Vergütungsmodelle (netto, zzgl. USt.)</th></tr>
+  <tr><td><b>Modell A · Kauf:</b> einmalig <span data-cfg="kaufPreis"></span> (mit Aktionscode <span data-cfg="kaufAktionPreis"></span>), inklusive Einrichtung, Betrieb und Betreuung, keine monatliche Vergütung, <span data-cfg="garantieTage"></span> Tage Zufriedenheitsgarantie nach § 6</td></tr>
+  <tr><td><b>Modell B · Provision:</b> keine Einrichtungs- und keine Monatsgebühr; <span data-cfg="provisionSatz"></span> des vereinbarten Tattoo-Preises (netto) für Termine, die innerhalb der ersten <span data-cfg="provisionZuordnung"></span> nach einer Ted-Anfrage gebucht werden; Meldung im Studio-Portal bis zum <span data-cfg="provisionMeldefrist"></span>, Abrechnung monatlich, Nachlauf <span data-cfg="provisionNachlauf"></span> nach Vertragsende</td></tr>
+  <tr><td><b>Beide Modelle:</b> <span data-cfg="fairUseMinuten"></span> Gesprächsminuten je Kalendermonat inklusive (Fair Use), darüber <span data-cfg="extraMinute"></span> € je angefangener Minute</td></tr>
 </table>
 <p class="small">Gesprächsminuten = Dauer der vom Assistenten angenommenen Gespräche, minutengenau aufgerundet je Gespräch. Nicht umfasst: Kosten des Telefonanschlusses des Kunden, Druck und Versand von Materialien über das Willkommenspaket hinaus, Rechtsberatung.</p>
 

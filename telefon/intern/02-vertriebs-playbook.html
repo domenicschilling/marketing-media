@@ -29,7 +29,7 @@
 <div class="grid2">
   <div class="box gold"><h3>Top-Priorität</h3>
     <ul>
-      <li><b>Bestehende TattooLeadz-Kunden</b>: Vertrauen ist schon da, Ted kennen sie bereits. Bundle-Rabatt <span data-cfg="bundleRabatt"></span>.</li>
+      <li><b>Bestehende TattooLeadz-Kunden</b>: Vertrauen ist schon da, Ted kennen sie bereits.</li>
       <li>Studios mit <b>1–6 Artists</b>, bei denen der Inhaber selbst tätowiert</li>
       <li>Studios mit <b>Telefonnummer prominent im Google-Profil</b> und vielen Bewertungen (= viele Anrufe)</li>
       <li>Walk-in-Studios in Innenstädten und Einkaufsstraßen</li>
@@ -55,27 +55,51 @@
   <tr><td><b>Fertige Anfragen statt Rückruf-Zettel</b></td><td>„Du bekommst nicht ‚Ruf mal zurück‘, sondern: Name, Nummer, Motiv, Stelle, Größe, Stil, Wunschzeitraum.“</td></tr>
   <tr><td><b>Klingt nach euch</b></td><td>„Ted begrüßt mit eurem Studionamen, kennt eure Öffnungszeiten, Regeln und Artists. Und er sagt offen, dass er ein digitaler Assistent ist.“</td></tr>
   <tr><td><b>Null Technik-Aufwand</b></td><td>„Wir richten alles ein. Du stellst nur eine Rufumleitung ein, das dauert 2 Minuten, und wir machen es mit dir zusammen.“</td></tr>
-  <tr><td><b>Kein Risiko</b></td><td>„<span data-cfg="garantieTage"></span> Tage Zufriedenheitsgarantie. Passt es nicht, bekommst du die Einrichtung zurück und bist raus.“</td></tr>
+  <tr><td><b>Keine Monatskosten</b></td><td>„Ein Paket, alles drin. Du kaufst Ted einmal für <span data-cfg="kaufPreis"></span> oder zahlst nur Provision. Eine Monatsgebühr gibt es in keinem Modell, die Betreuung ist immer kostenlos.“</td></tr>
+  <tr><td><b>Kein Risiko</b></td><td>„Mit dem Provisionsmodell zahlst du nur <span data-cfg="provisionSatz"></span> vom Tattoo-Preis, wenn aus einer Ted-Anfrage wirklich ein Termin wird. Keine Einrichtung, keine Grundgebühr. Kaufst du, hast du <span data-cfg="garantieTage"></span> Tage Zufriedenheitsgarantie mit vollem Geld zurück.“</td></tr>
 </table>
 
 <h3>Beispielrechnung für das Gespräch (immer als Beispiel kennzeichnen)</h3>
 <div class="box gold">
   <p style="margin:0 0 6px">Nur <b>1 verpasster Anruf pro Werktag</b> = ca. 22 im Monat. Wird daraus bei nur <b>jedem fünften</b> ein Termin mit einem durchschnittlichen Tattoo für <b>250 €</b>, sind das:</p>
-  <p class="kpi" style="margin:0">≈ 1.100 € Umsatz im Monat <small>Beispiel: 22 × 20 % × 250 €. Ted kostet ab <span data-cfg="startPreis"></span> im Monat. Mit den echten Zahlen des Studios rechnen und nichts versprechen.</small></p>
+  <p class="kpi" style="margin:0">≈ 1.100 € Umsatz im Monat <small>Beispiel: 22 × 20 % × 250 €. Mit den echten Zahlen des Studios rechnen und nichts versprechen.</small></p>
+  <ul style="margin:8px 0 0">
+    <li><b>Provision:</b> <span data-cfg="provisionSatz"></span> von 250 € = <b>25 € pro Termin</b>. Das Studio zahlt nur für Termine, die wirklich über Ted reinkommen.</li>
+    <li><b>Kauf:</b> <span data-cfg="kaufPreis"></span> einmalig entsprechen dem Umsatz von <b>ca. 6 Terminen à 250 €</b>. Danach kostet Ted nichts mehr (außer Mehrminuten über <span data-cfg="fairUseMinuten"></span> Minuten im Monat).</li>
+  </ul>
 </div>
 
-<h2>4. Ablauf vom ersten Kontakt bis zum Abschluss</h2>
+<h2>4. Welches Modell empfehlen?</h2>
+<div class="grid2">
+  <div class="box gold"><h3>Provision: der risikofreie Einstieg</h3>
+    <ul>
+      <li>Standard-Empfehlung für Studios, die zögern, neu sind oder „erst mal sehen“ wollen</li>
+      <li>Keine Einrichtungs- und keine Monatsgebühr, <span data-cfg="provisionSatz"></span> vom Tattoo-Preis (netto) nur für Termine aus Ted-Anfragen</li>
+      <li>Zuordnung: Buchung innerhalb der ersten <span data-cfg="provisionZuordnung"></span> nach der Anfrage. Das Studio trägt Termin und Preis im Studio-Portal ein, Meldung bis zum <span data-cfg="provisionMeldefrist"></span></li>
+      <li>Kündbar <span data-cfg="kuendigungProvision"></span>; für Anfragen aus der Laufzeit gilt die Provision noch <span data-cfg="provisionNachlauf"></span> nach Vertragsende</li>
+    </ul></div>
+  <div class="box"><h3>Kauf: für viele Anrufe und hohe Preise</h3>
+    <ul>
+      <li>Für Studios mit vielen Anrufen, mehreren Artists oder hohen Tattoo-Preisen (großflächig, Realistic, Cover-ups)</li>
+      <li>Einmalig <span data-cfg="kaufPreis"></span>, inklusive Einrichtung, Betrieb und Betreuung, danach keine laufenden Kosten</li>
+      <li>Mit Code <span data-cfg="aktionsCode"></span>: <span data-cfg="kaufAktionPreis"></span> für die ersten <span data-cfg="aktionsPlaetze"></span> Studios bis <span data-cfg="aktionsFrist"></span></li>
+      <li><span data-cfg="garantieTage"></span> Tage Zufriedenheitsgarantie: volles Geld zurück</li>
+    </ul></div>
+</div>
+<p><b>Faustregel:</b> Bringt Ted einem Studio mehr als ca. 6 Termine à 250 €, war der Kauf günstiger als die Provision. Wer unsicher ist, startet mit Provision. Ein späterer Wechsel wird in Textform vereinbart. In beiden Modellen gilt Fair Use: <span data-cfg="fairUseMinuten"></span> Gesprächsminuten pro Monat inklusive, darüber <span data-cfg="extraMinute"></span> € pro Minute.</p>
+
+<h2>5. Ablauf vom ersten Kontakt bis zum Abschluss</h2>
 <ol class="steps">
   <li><b>Recherche &amp; Verpasste-Anrufe-Check</b>: Studio im CRM-Sheet anlegen (Name, Inhaber, Stadt, Telefon, Insta, Google-Bewertungen, Check-Ergebnis).</li>
   <li><b>Direct-Mail-Paket</b> verschicken (siehe <a href="03-direct-mail-kampagne.html">Kampagnen-Konzept</a>). Im Paket: Brief, Demo-Nummer, QR zum Video, Aktionscode.</li>
   <li><b>Tag 3–4: Instagram-DM</b> mit dem Werbevideo (Vorlage in <a href="05-nachrichtenvorlagen.html">Nachrichtenvorlagen</a>).</li>
   <li><b>Tag 5–7: Nachfassen</b> per Anruf oder persönlich (siehe Skripte unten).</li>
   <li><b>Live-Demo (10–15 Min.)</b>: Der Inhaber ruft selbst die Demo-Nummer an. Am stärksten ist eine <b>personalisierte Demo</b> mit Studioname und echten Öffnungszeiten, die wir innerhalb von 24 h bauen.</li>
-  <li><b>Angebot &amp; Abschluss</b>: Paket wählen, <a href="../studios/14-vertrag.html">Vertrag</a> + <a href="../studios/15-avv.html">AVV</a> unterschreiben, <a href="../studios/16-onboarding-fragebogen.html">Fragebogen</a> ausfüllen.</li>
+  <li><b>Angebot &amp; Abschluss</b>: Modell wählen (Kauf oder Provision). Abschluss am besten <b>online über <span data-cfg="websiteUrl"></span></b>: Vertrag, AVV und Zahlung über Stripe in einem Durchgang. Alternativ klassisch per PDF: <a href="../studios/14-vertrag.html">Vertrag</a> + <a href="../studios/15-avv.html">AVV</a> unterschreiben. Danach <a href="../studios/16-onboarding-fragebogen.html">Fragebogen</a> ausfüllen.</li>
   <li><b>Übergabe an die Umsetzung</b>: Checkliste in der <a href="04-umsetzung-onboarding.html">Umsetzungs-Anleitung</a>. Ziel: live in 5 Werktagen.</li>
 </ol>
 
-<h2>5. Gesprächsskripte</h2>
+<h2>6. Gesprächsskripte</h2>
 
 <h3>a) Nachfass-Anruf nach dem Paket (60–90 Sekunden)</h3>
 <div class="script">
@@ -98,27 +122,30 @@
   <li><b>2 Min: Situation klären.</b> Wie viele Artists? Wer geht ans Telefon? Wie viele Anrufe am Tag, schätzungsweise? Was passiert mit verpassten Anrufen?</li>
   <li><b>5 Min: Inhaber ruft selbst die Demo an.</b> Vorschlag: Er spielt einen Kunden, der ein Cover-up möchte und nach dem Preis fragt. Dann sieht er, dass Ted keinen Preis nennt und sauber übergibt.</li>
   <li><b>2 Min: Zusammenfassung zeigen.</b> Die WhatsApp/E-Mail mit der aufgenommenen Anfrage live auf seinem Handy.</li>
-  <li><b>3 Min: Pakete &amp; Garantie.</b> Start oder Profi, Gründer-Aktion, <span data-cfg="garantieTage"></span>-Tage-Garantie.</li>
-  <li><b>Abschlussfrage:</b> „Sollen wir das für euch einrichten? Dann schicke ich dir heute Vertrag und Fragebogen, und nächste Woche geht Ted bei euch ans Telefon.“</li>
+  <li><b>3 Min: Modelle &amp; Garantie.</b> Kauf oder Provision (siehe Abschnitt 4), Gründer-Aktion mit Code <span data-cfg="aktionsCode"></span>, <span data-cfg="garantieTage"></span>-Tage-Garantie beim Kauf.</li>
+  <li><b>Abschlussfrage:</b> „Sollen wir das für euch einrichten? Dann schicke ich dir heute den Link zum Online-Abschluss, und nächste Woche geht Ted bei euch ans Telefon.“</li>
 </ol>
 
-<h2>6. Einwandbehandlung</h2>
+<h2>7. Einwandbehandlung</h2>
 <table>
   <tr><th style="width:30%">Einwand</th><th>Antwort</th></tr>
   <tr><td>„Meine Kunden wollen mit einem Menschen reden.“</td><td>„Absolut, und das tun sie auch: mit dir, sobald du Zeit hast. Die Alternative zu Ted ist ja nicht ‚du gehst ran‘, sondern ‚keiner geht ran‘. Ted sorgt dafür, dass der Kunde nicht beim nächsten Studio anruft.“</td></tr>
   <tr><td>„Wir gehen eigentlich immer ran.“</td><td>„Dann bist du die Ausnahme, Respekt! Machen wir einen Deal: Ted läuft nur, wenn nach 20 Sekunden keiner abnimmt oder ihr zu habt. Wenn er nie dran ist, hast du nichts verloren.“ (Garantie nennen)</td></tr>
-  <tr><td>„Zu teuer.“</td><td>„Verstehe. Wie viel ist bei euch ein durchschnittliches Tattoo wert? … Dann muss Ted dir im Monat ungefähr einen Termin retten, und er hat sich bezahlt. Und eine Aushilfe am Telefon kostet ein Vielfaches.“</td></tr>
+  <tr><td>„Zu teuer.“</td><td>„Dann starte mit Provision: keine Einrichtung, keine Monatsgebühr. Du zahlst nur <span data-cfg="provisionSatz"></span> vom Tattoo-Preis, wenn aus einer Ted-Anfrage ein Termin wird. Bringt Ted nichts, kostet er dich nichts. Und eine Aushilfe am Telefon kostet ein Vielfaches.“</td></tr>
   <tr><td>„KI klingt doch roboterhaft.“</td><td>„Ruf an und hör selbst, das ist der beste Beweis.“ (Demo-Nummer)</td></tr>
   <tr><td>„Was, wenn Ted Mist erzählt?“</td><td>„Ted spricht nur über das, was wir mit dir festlegen: Öffnungszeiten, Ablauf, Regeln. Bei allem anderen sagt er: ‚Das klärt das Team persönlich mit dir‘ und nimmt die Frage auf. Preise und Termine sagt er nie zu. Und du siehst jedes Gespräch als Zusammenfassung.“</td></tr>
   <tr><td>„Datenschutz?“</td><td>„Ist geregelt: Ted sagt am Anfang, dass er ein KI-Assistent ist, wir schließen mit dir einen Auftragsverarbeitungsvertrag ab, und es werden nur die Daten aufgenommen, die du für die Anfrage brauchst.“</td></tr>
   <tr><td>„Ich hab keine Zeit für die Einrichtung.“</td><td>„Brauchst du auch nicht. Du füllst einen Fragebogen aus (15 Minuten), wir machen den Rest. Die Rufumleitung stellen wir zusammen am Telefon ein, das dauert 2 Minuten.“</td></tr>
   <tr><td>„Ich hab doch einen Anrufbeantworter.“</td><td>„Und wie viele Leute sprechen da drauf? Die meisten legen auf. Ted führt ein echtes Gespräch und fragt alles ab, was du brauchst.“</td></tr>
-  <tr><td>„Ich will mich nicht lange binden.“</td><td>„Mindestlaufzeit ist nur <span data-cfg="mindestlaufzeit"></span>, danach monatlich kündbar. Plus <span data-cfg="garantieTage"></span> Tage Garantie.“</td></tr>
-  <tr><td>„Wir haben schon TattooLeadz / Ted auf WhatsApp.“</td><td>„Perfekt, dann ist Ted am Telefon die logische Ergänzung: Anrufer landen direkt im selben Ablauf, und du bekommst den Bundle-Rabatt.“</td></tr>
+  <tr><td>„Ich will mich nicht lange binden.“</td><td>„Musst du nicht. Das Provisionsmodell ist <span data-cfg="kuendigungProvision"></span> kündbar. Und beim Kauf gibt es gar keine Monatsraten, dafür <span data-cfg="garantieTage"></span> Tage Geld-zurück-Garantie.“</td></tr>
+  <tr><td>„<span data-cfg="kaufPreis"></span> auf einmal ist mir zu viel.“</td><td>„Verstehe ich. Dann nimm das Provisionsmodell, da zahlst du nichts vorab. Wenn Ted bei dir richtig viel bringt, rechnen wir später gern aus, ob sich der Kauf lohnt.“</td></tr>
+  <tr><td>„Warum Provision? Den Kunden gewinne ich doch selbst.“</td><td>„Stimmt, den Termin machst du. Aber ohne Ted hätte der Anrufer beim nächsten Studio angerufen. Du zahlst nur für Termine, die aus einer Ted-Anfrage entstehen, und nur vom Tattoo-Preis ohne Trinkgeld.“</td></tr>
+  <tr><td>„Wie wollt ihr das überhaupt prüfen?“</td><td>„Du trägst gebuchte Termine und den Preis selbst im Studio-Portal ein, jede Ted-Anfrage steht da schon drin. Wir vertrauen dir. Nur bei begründetem Zweifel schauen wir uns stichprobenartig das Terminbuch an, so steht es auch im Vertrag.“</td></tr>
+  <tr><td>„Wir haben schon TattooLeadz / Ted auf WhatsApp.“</td><td>„Perfekt, dann ist Ted am Telefon die logische Ergänzung: Anrufer landen direkt im selben Ablauf.“</td></tr>
   <tr><td>„Muss ich meine Nummer ändern?“</td><td>„Nein. Eure Nummer bleibt. Ihr stellt nur eine Rufumleitung ein, die jederzeit wieder ausgeschaltet werden kann.“</td></tr>
 </table>
 
-<h2>7. Was wir NICHT versprechen</h2>
+<h2>8. Was wir NICHT versprechen</h2>
 <div class="box">
   <ul style="margin:0">
     <li>Keine Umsatz- oder Terminzahlen garantieren. Beispielrechnungen immer als Beispiel kennzeichnen.</li>
@@ -128,32 +155,33 @@
   </ul>
 </div>
 
-<h2>8. Rechtlicher Rahmen der Akquise (Kurzfassung, keine Rechtsberatung)</h2>
+<h2>9. Rechtlicher Rahmen der Akquise (Kurzfassung, keine Rechtsberatung)</h2>
 <ul>
   <li><b>Briefe und Pakete</b> an Studios (Geschäftsadresse) sind als Werbung grundsätzlich zulässig. Ein Werbe-Stopp-Hinweis am Briefkasten wird beachtet.</li>
   <li><b>Werbe-Anrufe bei Unternehmen</b> brauchen nach § 7 Abs. 2 Nr. 1 UWG mindestens eine <i>mutmaßliche Einwilligung</i>. Am sichersten: anrufen, wenn das Studio reagiert hat (QR gescannt, DM beantwortet, Demo angerufen) oder Bestandskunde ist. Der „Verpasste-Anrufe-Check“ ist kein Werbeanruf, dabei nichts verkaufen und keine Mailbox-Werbung.</li>
   <li><b>Werbe-E-Mails/WhatsApp</b> nur mit Einwilligung oder an Bestandskunden. Instagram-DMs persönlich und einzeln schreiben, keine Massen-DMs.</li>
 </ul>
 
-<h2>9. Pipeline &amp; Kennzahlen</h2>
-<p>Ein Google Sheet „Telefon – Pipeline“ mit diesen Spalten: Studio · Stadt · Inhaber · Telefon · Instagram · Quelle · Check (verpasste Anrufe x/3) · Paket verschickt am · DM am · Nachgefasst am · Demo am · Status · Paket · Startdatum · Notizen.</p>
+<h2>10. Pipeline &amp; Kennzahlen</h2>
+<p>Ein Google Sheet „Telefon – Pipeline“ mit diesen Spalten: Studio · Stadt · Inhaber · Telefon · Instagram · Quelle · Check (verpasste Anrufe x/3) · Paket verschickt am · DM am · Nachgefasst am · Demo am · Status · Modell (Kauf/Provision) · Startdatum · Notizen.</p>
 <table>
   <tr><th>Status</th><th>Bedeutung</th><th class="r">Ziel-Quote</th></tr>
   <tr><td>1 Recherchiert</td><td>Daten vollständig, Check gemacht</td><td class="r">–</td></tr>
   <tr><td>2 Angeschrieben</td><td>Paket/Brief verschickt</td><td class="r">100 %</td></tr>
   <tr><td>3 Reagiert</td><td>QR gescannt, Demo angerufen, geantwortet</td><td class="r">15–25 %</td></tr>
   <tr><td>4 Demo</td><td>Live-Demo gemacht</td><td class="r">8–12 %</td></tr>
-  <tr><td>5 Gewonnen</td><td>Vertrag + AVV unterschrieben</td><td class="r">3–6 %</td></tr>
+  <tr><td>5 Gewonnen</td><td>Online abgeschlossen bzw. Vertrag + AVV unterschrieben</td><td class="r">3–6 %</td></tr>
   <tr><td>6 Live</td><td>Ted nimmt Anrufe an</td><td class="r">–</td></tr>
   <tr><td>X Verloren</td><td>Grund notieren!</td><td class="r">–</td></tr>
 </table>
 <p class="small">Ziel-Quoten sind Planwerte für die erste Welle und werden nach den ersten 50 Studios angepasst.</p>
 
-<h2>10. Nach dem Abschluss: Empfehlungen &amp; Upsell</h2>
+<h2>11. Nach dem Abschluss: Empfehlungen &amp; Upsell</h2>
 <ul>
-  <li>Nach 30 Tagen: kurzer Check-in-Anruf mit Zahlen (angenommene Anrufe, aufgenommene Anfragen). Wenn zufrieden: um Google-Bewertung und Empfehlung bitten. <b>Pro Empfehlung, die abschließt: 1 Monat gratis.</b></li>
+  <li>Nach 30 Tagen: kurzer Check-in-Anruf mit Zahlen (angenommene Anrufe, aufgenommene Anfragen). Wenn zufrieden: um Google-Bewertung und Empfehlung bitten.</li>
   <li>Studios ohne TattooLeadz-System: Anfragen-Volumen ansprechen, „Wenn Ted die Anrufe auffängt, sollen wir auch für mehr Anrufe sorgen?“</li>
-  <li>Minuten regelmäßig prüfen: Wer dauerhaft über dem Kontingent liegt, bekommt das Profi-Paket angeboten (günstiger als Mehrminuten).</li>
+  <li>Fair Use regelmäßig prüfen: Wer dauerhaft über <span data-cfg="fairUseMinuten"></span> Minuten im Monat liegt, rechtzeitig ansprechen, damit Mehrminuten keine Überraschung sind.</li>
+  <li>Provisions-Studios mit vielen Terminen: nach ein paar Monaten den Kauf vorrechnen (Wechsel in Textform vereinbaren).</li>
 </ul>
 
 <p class="footer-note"><span data-cfg="marke"></span> · <span data-cfg="firma"></span> · Interne Unterlage, nicht weitergeben.</p>
