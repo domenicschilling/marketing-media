@@ -1,5 +1,5 @@
 /*
- * Füllt alle Platzhalter in den Telefon-Unterlagen:
+ * Füllt alle Platzhalter in den Tattoofin-Unterlagen:
  *   <span data-cfg="kaufPreis"></span>        -> Wert aus config.js (Preise mit €)
  *   <span data-p="studio"></span>             -> Link-Parameter ?studio=… (sonst Platzhalter)
  *   <div data-qr="tel:{tel}"></div>           -> QR-Code, {studio}/{tel}/{telRaw}/{web} werden ersetzt

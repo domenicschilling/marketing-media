@@ -1,5 +1,5 @@
-// Erzeugt alle PDFs in telefon/pdf/ aus den HTML-Vorlagen.
-// Aufruf (im Ordner telefon/):  node tools/render-pdf.mjs            -> alle
+// Erzeugt alle PDFs in tattoofin/pdf/ aus den HTML-Vorlagen.
+// Aufruf (im Ordner tattoofin/):  node tools/render-pdf.mjs            -> alle
 //                               node tools/render-pdf.mjs vertrag     -> nur Dateien, deren Name "vertrag" enthält
 //                               node tools/render-pdf.mjs --png       -> zusätzlich PNG-Vorschau der 1. Seite
 // Für studio-spezifische Materialien (Kunden-Materialien + Mailing-Brief):

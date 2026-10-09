@@ -1,4 +1,4 @@
-# Netlify-Projekt „Ted am Telefon“ (Basisverzeichnis beim Verknüpfen: telefon/website)
+# Netlify-Projekt „Tattoofin“ (Basisverzeichnis beim Verknüpfen: tattoofin/website)
 [build]
   publish = "public"
   functions = "netlify/functions"

@@ -42,7 +42,7 @@ body{background:#f7f7f4}.doc{margin:0 auto 40px}
 @media print{.webnav{display:none}}
 </style>
 </head><body>
-<!-- Automatisch erzeugt aus telefon/${title === "Vertrag" ? "studios/14-vertrag.html" : "studios/15-avv.html"} (tools/sync-website-docs.mjs). Nicht direkt bearbeiten. -->
+<!-- Automatisch erzeugt aus tattoofin/${title === "Vertrag" ? "studios/14-vertrag.html" : "studios/15-avv.html"} (tools/sync-website-docs.mjs). Nicht direkt bearbeiten. -->
 <nav class="webnav"><a href="/">← Tattoofin</a><button onclick="print()">Drucken / PDF</button></nav>
 <main class="doc">
 ${main}
