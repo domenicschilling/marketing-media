@@ -256,6 +256,11 @@ try {
   await page.goto(BASE + "/portal.html#uebersicht");
   await page.waitForSelector("#kpis .kpi");
   await page.screenshot({ path: path.join(shots, "portal-uebersicht.png"), fullPage: true });
+  for (const t of ["zahlungen", "abrechnungen", "konto"]) {
+    await page.goto(BASE + "/portal.html#" + t);
+    await page.waitForTimeout(500);
+    await page.screenshot({ path: path.join(shots, `portal-${t}.png`), fullPage: true });
+  }
   await page.goto(BASE + "/portal.html#kit");
   await page.waitForTimeout(400);
   await page.screenshot({ path: path.join(shots, "portal-kit.png"), fullPage: true });

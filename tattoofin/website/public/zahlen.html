@@ -35,6 +35,7 @@
   } catch (e) { btn.disabled = true; err(e.message); }
   var anz = document.getElementById("anzahlung"), bedOk = document.getElementById("bed-ok");
   anz.onchange = function () { document.getElementById("bed").classList.toggle("hidden", !anz.checked); };
+  bedOk.onchange = function () { if (bedOk.checked) a.innerHTML = ""; };
   document.getElementById("f").addEventListener("submit", async function (ev) {
     ev.preventDefault();
     if (anz.checked && !bedOk.checked) return err("Bitte bestätige die Anzahlungsbedingungen.");

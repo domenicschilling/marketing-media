@@ -36,6 +36,7 @@
     else if (!["offen", "abgebrochen"].includes(d.zahlung.status)) { btn.classList.add("hidden"); err("Dieser Zahlungslink ist nicht mehr gültig. Bitte frag im Studio nach einem neuen Link."); }
     if (q.get("abbruch")) a.innerHTML = '<div class="alert info">Zahlung abgebrochen. Du kannst es jederzeit erneut versuchen.</div>';
   } catch (e) { btn.classList.add("hidden"); err(e.message); }
+  document.getElementById("bed-ok").onchange = function () { if (this.checked) a.innerHTML = ""; };
   btn.onclick = async function () {
     var bed = document.getElementById("bed-ok");
     if (!document.getElementById("bed").classList.contains("hidden") && !bed.checked) return err("Bitte bestätige die Anzahlungsbedingungen.");
