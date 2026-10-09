@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fensteraufkleber – Immer erreichbar</title>
+<link rel="stylesheet" href="../assets/telefon.css">
+<style>
+/* Druckformate inkl. 2 mm Beschnitt: rund Ø 200 mm, A4 hoch */
+@page rund{size:204mm 204mm;margin:0}
+@page rechteck{size:214mm 301mm;margin:0}
+.rund{page:rund;width:204mm;height:204mm;background:transparent;box-shadow:none}
+.rechteck{page:rechteck;width:214mm;height:301mm}
+.disc{position:absolute;inset:2mm;border-radius:50%;background:var(--ink);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:16mm}
+.disc::before{content:"";position:absolute;inset:5mm;border-radius:50%;border:1.2mm solid var(--gold)}
+.disc .sn{font:700 17pt/1.15 var(--head);letter-spacing:.16em;text-transform:uppercase;color:var(--gold);max-width:130mm}
+.disc .h{font:700 50pt/1 var(--head);margin:6mm 0 5mm;letter-spacing:-.02em}
+.disc .s{font-size:17pt;color:#c9d1d9;max-width:140mm;line-height:1.35}
+.disc .tel{font:700 40pt/1 var(--head);color:var(--gold);margin-top:8mm;white-space:nowrap}
+.disc .ic{width:22mm;height:22mm;border-radius:50%;background:var(--gold);color:var(--ink);display:flex;align-items:center;justify-content:center;font-size:34pt}
+.rechteck .in{position:absolute;inset:2mm;background:var(--ink);color:#fff;padding:20mm 18mm;display:flex;flex-direction:column}
+.rechteck .sn{font:700 14pt var(--head);letter-spacing:.2em;text-transform:uppercase;color:var(--gold)}
+.rechteck .logo{max-width:70mm;max-height:30mm;object-fit:contain;align-self:flex-start}
+.rechteck h1{font:700 60pt/0.98 var(--head);letter-spacing:-.03em;margin:18mm 0 12mm}
+.rechteck p{font-size:21pt;line-height:1.4;color:#c9d1d9;margin:0 0 8mm}
+.rsteps{display:grid;grid-template-columns:repeat(3,1fr);gap:6mm;margin-top:6mm}
+.rsteps div{border:.6mm solid #3a414a;border-radius:5mm;padding:6mm 5mm;font:600 14pt/1.3 var(--body)}
+.rsteps b{display:block;width:12mm;height:12mm;border-radius:50%;background:var(--gold);color:var(--ink);font:700 17pt/12mm var(--head);text-align:center;margin-bottom:4mm}
+.rechteck .tel{margin-top:auto;display:flex;justify-content:space-between;align-items:flex-end;gap:10mm;border-top:1mm solid var(--gold);padding-top:9mm}
+.rechteck .tel b{display:block;font:700 50pt/1 var(--head);color:var(--gold);white-space:nowrap}
+.rechteck .tel small{font-size:15pt;color:#9aa4ae}
+.rechteck .qr{width:42mm}
+.hinweis{max-width:210mm;margin:14px auto;background:#fff;border-radius:10px;padding:14px 18px;font-size:10pt}
+@media print{.hinweis{display:none}}
+</style>
+</head><body>
+<div class="toolbar"><a href="../index.html">← Alle Unterlagen</a><span class="t">Für Kunden im Studio · Fensteraufkleber</span><button data-print>Drucken / PDF</button></div>
+<div class="hinweis"><b>Für den Druck:</b> Seite 1 = runder Aufkleber Ø 20 cm, Seite 2 = Rechteck A4. Je 2 mm Beschnitt sind schon enthalten. In der Druckerei „Fensteraufkleber“ oder „Schaufensterfolie“ wählen. <b>Innen</b> an die Scheibe kleben → Option „innenklebend/spiegelverkehrt“ (die Druckerei spiegelt automatisch). <b>Außen</b> → „außenklebend, wetterfest“. Studio und Nummer kommen über den Link: <code>?studio=Name&amp;tel=0951 123456</code> (siehe <a href="generator.html">Generator</a>).</div>
+
+<section class="sheet rund">
+  <div class="disc">
+    <div class="ic">☎</div>
+    <div class="h">Immer erreichbar.</div>
+    <div class="s">Auch wenn wir gerade tätowieren oder geschlossen haben: Ruf an, wir nehmen deine Tattoo-Anfrage auf.</div>
+    <div class="tel" data-p="tel"></div>
+    <div class="sn" style="margin-top:4mm" data-p="studio"></div>
+  </div>
+</section>
+
+<section class="sheet rechteck">
+  <div class="in">
+    <img class="logo" data-logo alt=""><div class="sn" data-logo-alt data-p="studio"></div>
+    <h1>Geschlossen?<br><span class="tgold">Ruf trotzdem an.</span></h1>
+    <p>Wir nehmen deine Tattoo-Anfrage rund um die Uhr auf: Motiv, Stelle, Größe, Wunschtermin.</p>
+    <div class="rsteps"><div><b>1</b>Anrufen, auch abends und am Wochenende</div><div><b>2</b>Idee erzählen: Motiv, Stelle, Größe</div><div><b>3</b>Wir melden uns mit Angebot &amp; Termin</div></div>
+    <div class="tel">
+      <div><small>24/7 für deine Anfrage</small><b data-p="tel"></b></div>
+      <div class="qr" data-qr="tel:{telRaw}" data-size="150"></div>
+    </div>
+  </div>
+</section>
+
+<script src="../assets/qrcode.min.js"></script><script src="../assets/config.js"></script><script src="../assets/app.js"></script>
+</body></html>

@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fragebogen – Ted für dein Studio</title>
+<link rel="stylesheet" href="../assets/telefon.css">
+<style>
+@page{size:A4;margin:14mm 16mm 16mm}
+.doc{font-size:9.6pt}
+.doc h2{font-size:12.5pt;margin:18px 0 6px;display:flex;gap:8px;align-items:center}
+.doc h2 .n{display:inline-block;width:22px;height:22px;border-radius:50%;background:var(--ink);color:var(--gold);font:700 10pt/22px var(--head);text-align:center;flex:none}
+.f{display:grid;grid-template-columns:42% 1fr;gap:6px 10px;align-items:end;margin:0 0 4px}
+.f label{color:var(--muted);font-size:9pt;padding-bottom:3px}
+input,textarea{font:inherit;color:var(--text);border:0;border-bottom:1px solid #9a9a9a;background:transparent;width:100%;padding:3px 2px;outline:none}
+textarea{border:1px solid #bdbdbd;border-radius:6px;min-height:58px;resize:vertical;padding:6px}
+textarea.tall{min-height:110px}
+input:focus,textarea:focus{border-color:var(--gold);background:#fffaf0}
+.opts{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:9.3pt}
+.opts label{color:var(--text);padding:0;display:flex;align-items:center;gap:5px}
+.opts input{width:auto}
+table.t input{border-bottom:0}
+table.t td{padding:2px 6px;height:24px}
+.save{background:var(--gold-soft);border:1px solid #f3d79a;border-radius:8px;padding:9px 12px;font-size:9pt;margin-bottom:12px}
+@media print{.save{display:none}}
+</style>
+</head><body>
+<div class="toolbar"><a href="../index.html">← Alle Unterlagen</a><span class="t">Für Studios · Fragebogen</span><button data-print>Drucken / PDF</button></div>
+<main class="doc">
+<div class="dochead">
+  <div><span class="tag ext">Onboarding</span><h1 style="font-size:21pt">Fragebogen: Ted für dein Studio</h1><p class="lead">Ca. 15 Minuten. Je genauer, desto besser kennt Ted euer Studio.</p></div>
+  <div class="meta"><img src="../assets/logo.png" alt="TattooLeadz"></div>
+</div>
+<div class="save"><b>Am Bildschirm ausfüllen:</b> Einfach in die Felder tippen und dann oben auf „Drucken / PDF“ → „Als PDF speichern“. Das PDF schickst du uns per WhatsApp oder an <span data-cfg="email"></span>. Ausgedruckt geht's natürlich auch per Hand.</div>
+
+<h2><span class="n">1</span>Studio</h2>
+<div class="f"><label>Name des Studios (so soll Ted es aussprechen)</label><input></div>
+<div class="f"><label>Adresse</label><input></div>
+<div class="f"><label>Studio-Telefonnummer(n), die umgeleitet werden</label><input></div>
+<div class="f"><label>Website · Instagram</label><input></div>
+<div class="f"><label>Link Google-Profil (falls vorhanden)</label><input></div>
+
+<h2><span class="n">2</span>Wohin sollen die Anfragen?</h2>
+<div class="f"><label>WhatsApp-Nummer für Zusammenfassungen</label><input></div>
+<div class="f"><label>E-Mail für Zusammenfassungen</label><input></div>
+<div class="f"><label>Handynummer für DRINGENDE Fälle (Profi)</label><input></div>
+<div class="f"><label>Ansprechpartner für uns</label><input></div>
+
+<h2><span class="n">3</span>Öffnungszeiten</h2>
+<table class="t">
+  <tr><th style="width:18%">Tag</th><th>Geöffnet von – bis</th><th>Nur nach Termin?</th></tr>
+  <tr><td>Montag</td><td><input></td><td><input></td></tr>
+  <tr><td>Dienstag</td><td><input></td><td><input></td></tr>
+  <tr><td>Mittwoch</td><td><input></td><td><input></td></tr>
+  <tr><td>Donnerstag</td><td><input></td><td><input></td></tr>
+  <tr><td>Freitag</td><td><input></td><td><input></td></tr>
+  <tr><td>Samstag</td><td><input></td><td><input></td></tr>
+  <tr><td>Sonntag</td><td><input></td><td><input></td></tr>
+</table>
+<div class="f"><label>Betriebsurlaub / Conventions in nächster Zeit</label><input></div>
+
+<h2><span class="n">4</span>Team &amp; Artists</h2>
+<table class="t">
+  <tr><th style="width:24%">Name</th><th>Stile / Spezialgebiet</th><th style="width:22%">Tage im Studio</th><th style="width:16%">Neue Kunden?</th></tr>
+  <tr><td><input></td><td><input></td><td><input></td><td><input></td></tr>
+  <tr><td><input></td><td><input></td><td><input></td><td><input></td></tr>
+  <tr><td><input></td><td><input></td><td><input></td><td><input></td></tr>
+  <tr><td><input></td><td><input></td><td><input></td><td><input></td></tr>
+  <tr><td><input></td><td><input></td><td><input></td><td><input></td></tr>
+  <tr><td><input></td><td><input></td><td><input></td><td><input></td></tr>
+</table>
+
+<h2><span class="n">5</span>Leistungen</h2>
+<div class="opts" style="margin-bottom:6px">
+  <label><input type="checkbox"> Tattoos</label><label><input type="checkbox"> Cover-ups</label><label><input type="checkbox"> Nachstechen anderer Studios</label><label><input type="checkbox"> Laser / Entfernung</label><label><input type="checkbox"> Piercing</label><label><input type="checkbox"> Gutscheine</label><label><input type="checkbox"> Flash-Days / Aktionen</label><label><input type="checkbox"> Merch / Pflegeprodukte</label>
+</div>
+<div class="f"><label>Walk-ins möglich? Wann?</label><input></div>
+<div class="f"><label>Was macht ihr NICHT? (z. B. Gesicht/Hals, Namen von Ex-Partnern …)</label><input></div>
+
+<h2><span class="n">6</span>Eure Regeln</h2>
+<div class="f"><label>Mindestalter (und Ausnahmen)</label><input></div>
+<div class="f"><label>Anzahlung: wie viel, wie zu zahlen, wann verfällt sie?</label><input></div>
+<div class="f"><label>Absagen / Verschieben: bis wann, was passiert bei No-Show?</label><input></div>
+<div class="f"><label>Begleitpersonen, Kinder, Hunde, Essen?</label><input></div>
+<div class="f"><label>Wie läuft eine Anfrage bei euch ab? (Beratung vor Ort? Online?)</label><input></div>
+<div class="f"><label>Zahlungsarten im Studio</label><input></div>
+
+<h2><span class="n">7</span>Anfahrt</h2>
+<div class="f"><label>Parken · ÖPNV · Eingang (z. B. Hinterhof, 1. Stock)</label><input></div>
+
+<h2><span class="n">8</span>Die häufigsten Fragen am Telefon und eure Antwort</h2>
+<textarea class="tall" placeholder="z. B. „Macht ihr auch kleine Tattoos?“ – „Ja, ab ca. 5 cm, Minimum ist …“"></textarea>
+<p class="small">Tipp: Denkt an die letzten 20 Anrufe. Was wurde immer wieder gefragt?</p>
+
+<h2><span class="n">9</span>Wie soll Ted sein?</h2>
+<div class="f"><label>Name des Assistenten</label><div class="opts"><label><input type="radio" name="n" checked> Ted</label><label><input type="radio" name="n"> anderer Name: <input style="width:100px"></label></div></div>
+<div class="f"><label>Stimme</label><div class="opts"><label><input type="radio" name="s"> männlich</label><label><input type="radio" name="s"> weiblich</label><label><input type="radio" name="s"> egal</label></div></div>
+<div class="f"><label>Ansprache</label><div class="opts"><label><input type="radio" name="a" checked> Du</label><label><input type="radio" name="a"> Sie</label><label><input type="radio" name="a"> wie der Anrufer</label></div></div>
+<div class="f"><label>Wann soll Ted rangehen?</label><div class="opts"><label><input type="radio" name="m" checked> nur wenn wir nicht rangehen (empfohlen)</label><label><input type="radio" name="m"> immer</label></div></div>
+<div class="f"><label>Englisch (Profi)</label><div class="opts"><label><input type="radio" name="e"> ja</label><label><input type="radio" name="e"> nein</label></div></div>
+<div class="f"><label>WhatsApp an Anrufer für Motivbilder (Profi)</label><div class="opts"><label><input type="radio" name="w"> ja</label><label><input type="radio" name="w"> nein</label></div></div>
+<div class="f"><label>Das soll Ted auf keinen Fall sagen / tun</label><input></div>
+
+<h2><span class="n">10</span>Euer Telefonanschluss</h2>
+<div class="f"><label>Anbieter (Telekom, Vodafone, o2, 1&amp;1, sipgate …)</label><input></div>
+<div class="f"><label>Studio-Telefon ist ein …</label><div class="opts"><label><input type="checkbox"> Handy</label><label><input type="checkbox"> FRITZ!Box</label><label><input type="checkbox"> Router vom Anbieter</label><label><input type="checkbox"> Telefonanlage/Cloud</label><label><input type="checkbox"> weiß nicht</label></div></div>
+<div class="f"><label>Ist aktuell eine Mailbox/Umleitung aktiv?</label><input></div>
+
+<h2><span class="n">11</span>Für eure Materialien</h2>
+<div class="f"><label>Logo schicken wir per</label><div class="opts"><label><input type="checkbox"> WhatsApp</label><label><input type="checkbox"> E-Mail</label><label><input type="checkbox"> nehmt das von Instagram</label></div></div>
+<div class="f"><label>Fensteraufkleber für Scheibe innen oder außen?</label><div class="opts"><label><input type="radio" name="fa"> innen (von drinnen aufkleben)</label><label><input type="radio" name="fa"> außen</label></div></div>
+
+<div class="sig"><div>Ort, Datum</div><div>Name / Unterschrift</div></div>
+<p class="footer-note">Danke! Fragen? <span data-cfg="ansprechpartner"></span> · <span data-cfg="telefon"></span> · <span data-cfg="email"></span></p>
+</main>
+<script src="../assets/config.js"></script><script src="../assets/app.js"></script>
+</body></html>

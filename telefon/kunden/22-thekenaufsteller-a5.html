@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Thekenaufsteller A5 – Alle am Tätowieren?</title>
+<link rel="stylesheet" href="../assets/telefon.css">
+<style>
+/* A5 hoch 148 × 210 mm + 2 mm Beschnitt */
+@page{size:152mm 214mm;margin:0}
+.sheet{width:152mm;height:214mm}
+.in{position:absolute;inset:0;padding:13mm 13mm 12mm;display:flex;flex-direction:column}
+.sn{font:700 10pt/1.2 var(--head);letter-spacing:.2em;text-transform:uppercase;color:var(--gold)}
+.logo{max-width:52mm;max-height:20mm;object-fit:contain}
+h1{font:700 34pt/1 var(--head);letter-spacing:-.025em;margin:11mm 0 6mm}
+p{font-size:12pt;line-height:1.45;color:#c9d1d9;margin:0 0 4mm}
+.scan{margin-top:auto;display:flex;gap:7mm;align-items:center;background:var(--ink-2);border-radius:5mm;padding:6mm}
+.scan .qr{width:38mm;flex:none}
+.scan small{display:block;font-size:9.5pt;color:#9aa4ae;margin-bottom:1.5mm}
+.scan b{display:block;font:700 21pt/1.05 var(--head);color:var(--gold);white-space:nowrap}
+.scan .t{font:600 11pt/1.35 var(--body);color:#fff;margin-top:2.5mm}
+.b2 h1{color:var(--text)}
+.b2 p{color:var(--muted)}
+</style>
+</head><body>
+<div class="toolbar"><a href="../index.html">← Alle Unterlagen</a><span class="t">Für Kunden · Thekenaufsteller A5 (2 Motive)</span><button data-print>Drucken / PDF</button></div>
+
+<!-- Motiv 1: im Studio, wenn alle beschäftigt sind -->
+<section class="sheet dark">
+  <div class="in">
+    <img class="logo" data-logo alt=""><div class="sn" data-logo-alt data-p="studio"></div>
+    <h1>Alle gerade an der Maschine?</h1>
+    <p>Kein Problem, du musst nicht warten. Ruf uns einfach direkt von hier aus an.</p>
+    <p>Unser Telefonassistent nimmt deine Tattoo-Idee auf, und wir melden uns persönlich mit Angebot und Termin.</p>
+    <div class="scan">
+      <div class="qr" data-qr="tel:{telRaw}" data-size="140"></div>
+      <div><small>QR-Code scannen = anrufen</small><b data-p="tel"></b><div class="t">Dauert 2 Minuten. Rund um die Uhr.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- Motiv 2: hell, für Kasse / Wartebereich -->
+<section class="sheet b2">
+  <div class="in">
+    <img class="logo" data-logo alt=""><div class="sn" data-logo-alt data-p="studio" style="color:var(--text)"></div>
+    <h1>Nächstes Tattoo schon im Kopf?</h1>
+    <p>Erzähl uns davon, wann es dir passt: Wir sind telefonisch <b>24/7</b> für deine Anfrage erreichbar, auch nachts und am Wochenende.</p>
+    <p>Freunde, die auch eins wollen? Einfach Nummer weitergeben. 🖤</p>
+    <div class="scan">
+      <div class="qr" data-qr="tel:{telRaw}" data-size="140"></div>
+      <div><small>Scannen &amp; anrufen</small><b data-p="tel"></b><div class="t">Anfrage aufgeben, wir melden uns.</div></div>
+    </div>
+  </div>
+</section>
+
+<script src="../assets/qrcode.min.js"></script><script src="../assets/config.js"></script><script src="../assets/app.js"></script>
+</body></html>

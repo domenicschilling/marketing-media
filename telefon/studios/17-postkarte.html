@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Postkarte – Ruf Ted an</title>
+<link rel="stylesheet" href="../assets/telefon.css">
+<style>
+/* Postkarte A6 quer 148 × 105 mm + 2 mm Beschnitt */
+@page{size:152mm 109mm;margin:0}
+.sheet{width:152mm;height:109mm}
+.in{position:absolute;inset:0;padding:9mm 10mm}
+.front{display:grid;grid-template-columns:1fr 54mm;gap:7mm;align-items:center}
+.front h1{font:700 23pt/1.02 var(--head);letter-spacing:-.025em;margin:3mm 0 3mm}
+.front p{font-size:8.8pt;line-height:1.45;color:#c9d1d9;margin:0}
+.front .logo{width:16mm}
+.lock{background:#1c232c;border-radius:5mm;padding:3mm;box-shadow:0 2mm 6mm rgba(0,0,0,.4)}
+.lock .tm{text-align:center;font:600 20pt/1 var(--head);margin:1mm 0 2.5mm}
+.n{background:rgba(255,255,255,.1);border-radius:3mm;padding:2.4mm 2.8mm;font-size:7pt;line-height:1.35;margin-top:1.8mm}
+.n .r{display:flex;justify-content:space-between;color:#9aa4ae;font-size:6pt;margin-bottom:.8mm}
+.n b{font:700 8pt var(--head);color:#fff}
+.n.r1 b{color:#ff6b77}
+.back{display:grid;grid-template-columns:1fr 1fr;gap:0;color:var(--text)}
+.back .l{padding-right:6mm;border-right:.3mm solid var(--line);display:flex;flex-direction:column}
+.back .r{padding-left:6mm;position:relative}
+.back h2{font:700 13pt/1.1 var(--head);margin:0 0 2mm}
+.back .demo{font:700 15pt/1.1 var(--head);background:var(--ink);color:var(--gold);border-radius:2mm;padding:2mm 3mm;display:inline-block;margin:1mm 0 2.5mm;white-space:nowrap}
+.back p{font-size:7.8pt;line-height:1.4;margin:0 0 2mm}
+.back .row{display:flex;gap:3mm;align-items:center;margin-top:auto}
+.back .qr{width:19mm;border:.3mm solid var(--line)}
+.back .code{font:700 10pt var(--head);border:.4mm dashed var(--gold);border-radius:1.5mm;padding:1mm 2mm;display:inline-block}
+.stamp{position:absolute;top:0;right:0;width:20mm;height:24mm;border:.3mm dashed #bbb;font-size:6pt;color:#999;display:flex;align-items:center;justify-content:center;text-align:center}
+.lines{position:absolute;left:6mm;right:0;bottom:4mm}
+.lines div{border-bottom:.3mm solid #999;height:8mm}
+</style>
+</head><body>
+<div class="toolbar"><a href="../index.html">← Alle Unterlagen</a><span class="t">Für Studios · Postkarte A6 quer (Paketbeilage oder Einzelversand)</span><button data-print>Drucken / PDF</button></div>
+
+<section class="sheet dark">
+  <div class="in front">
+    <div>
+      <img class="logo" src="../assets/logo.png" alt="TattooLeadz">
+      <h1>Hände voll?<br><span class="tgold">Ted geht ran.</span></h1>
+      <p>Der digitale Telefonassistent für Tattoo-Studios. Nimmt jeden Anruf an, den ihr gerade nicht annehmen könnt, und schickt euch die Anfrage aufs Handy.</p>
+    </div>
+    <div class="lock">
+      <div class="tm">14:12</div>
+      <div class="n r1"><div class="r"><span>TELEFON</span><span>14:12</span></div><b>3 verpasste Anrufe</b><br>während der Session</div>
+      <div class="n"><div class="r"><span>WHATSAPP · TED</span><span>14:13</span></div><b>📞 Neue Anfrage</b><br>Jonas · Cover-up Oberarm · ca. 20 cm · ab Dezember</div>
+      <div class="n"><div class="r"><span>WHATSAPP · TED</span><span>14:31</span></div><b>📞 Neue Anfrage</b><br>Mia · Fineline Schriftzug · Walk-in?</div>
+    </div>
+  </div>
+</section>
+
+<section class="sheet">
+  <div class="in back">
+    <div class="l">
+      <h2>Ruf Ted an und teste ihn.</h2>
+      <div class="demo" data-cfg="demoNummer"></div>
+      <p>Frag, was Kunden euch fragen: Öffnungszeiten, Walk-ins, „Was kostet so ein Tattoo?“. Ted antwortet, nimmt die Anfrage auf und nennt nie einen Preis. Das macht ihr.</p>
+      <p>Einrichtung gratis mit Code <span class="code" data-cfg="aktionsCode"></span><br><span style="color:var(--muted)">für die ersten <span data-cfg="aktionsPlaetze"></span> Studios bis <span data-cfg="aktionsFrist"></span></span></p>
+      <div class="row"><div class="qr" data-qr="{videoSeite}?utm_source=postkarte" data-size="80"></div><div style="font-size:7.5pt;line-height:1.35"><b>Video ansehen</b><br>QR scannen<br><span data-cfg="web"></span></div></div>
+    </div>
+    <div class="r">
+      <div class="stamp">Briefmarke<br>bzw. Frankier-<br>vermerk</div>
+      <div class="lines"><div></div><div></div><div></div><div></div></div>
+    </div>
+  </div>
+</section>
+
+<script src="../assets/qrcode.min.js"></script><script src="../assets/config.js"></script><script src="../assets/app.js"></script>
+</body></html>

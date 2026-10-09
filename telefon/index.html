@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>Ted am Telefon – Alle Unterlagen</title>
+<link rel="stylesheet" href="assets/telefon.css">
+<style>
+body{background:var(--cream)}
+.wrap{max-width:1040px;margin:0 auto;padding:26px 16px 70px}
+.hero{display:flex;gap:18px;align-items:center;justify-content:space-between;background:var(--ink);color:#fff;border-radius:18px;padding:22px 24px}
+.hero h1{font:700 30px/1.08 var(--head);margin:6px 0 6px;letter-spacing:-.02em}
+.hero p{margin:0;color:#c9d1d9;max-width:620px}
+.hero img{width:86px;flex:none}
+h2{font:700 19px var(--head);margin:30px 0 10px;display:flex;align-items:center;gap:10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.item{background:#fff;border:1px solid var(--line);border-radius:14px;padding:15px 16px;display:flex;flex-direction:column;gap:6px}
+.item b{font:700 15.5px/1.25 var(--head)}
+.item span{font-size:13.5px;color:var(--muted);flex:1}
+.item .a{display:flex;gap:8px;margin-top:4px}
+.item .a a{font:600 13px var(--body);text-decoration:none;border-radius:99px;padding:6px 12px;background:var(--ink);color:#fff}
+.item .a a.pdf{background:var(--gold);color:var(--ink)}
+.todo-box{background:#fff;border:2px solid var(--gold);border-radius:14px;padding:16px 18px;margin-top:18px}
+.todo-box ol{margin:6px 0 0;padding-left:20px}
+.todo-box li{margin:3px 0}
+code{background:#f1eee6;border-radius:5px;padding:1px 5px;font-size:13px}
+@media (max-width:640px){.hero{flex-direction:column;align-items:flex-start}.hero h1{font-size:25px}}
+</style>
+</head><body>
+<div class="wrap">
+  <div class="hero">
+    <div><span class="pill">TattooLeadz · Telefon</span><h1>Ted am Telefon: alle Unterlagen</h1>
+    <p>Vertrieb, Umsetzung, Verträge, Mailing und Materialien für Studios und deren Kunden. Jedes Dokument gibt es als Webseite (zum Ansehen, Anpassen, Drucken) und als fertiges PDF.</p></div>
+    <img src="assets/logo.png" alt="TattooLeadz">
+  </div>
+
+  <div class="todo-box">
+    <b>Vor dem ersten Einsatz einmal erledigen:</b>
+    <ol>
+      <li>In <code>assets/config.js</code> die gelb markierten Werte ausfüllen: Firmenanschrift, Handelsregister, USt-IdNr., Gerichtsstand, <b>Demo-Nummer</b> von Ted. Preise prüfen. Alles wird automatisch in alle Dokumente übernommen.</li>
+      <li>Werbevideo als <code>assets/werbevideo.mp4</code> ablegen. Dann läuft es auf der <a href="video.html">Video-Seite</a>, auf die alle QR-Codes zeigen.</li>
+      <li>Vertrag und AVV einmal anwaltlich prüfen lassen (Vorlagen).</li>
+      <li>PDFs neu erzeugen: <code>cd telefon &amp;&amp; node tools/render-pdf.mjs</code></li>
+    </ol>
+  </div>
+
+  <h2><span class="tag" style="margin:0">Intern</span> Für uns</h2>
+  <div class="grid">
+    <div class="item"><b>Produkt, Pakete &amp; Kalkulation</b><span>Was Ted kann, Pakete, Preise, Kosten pro Minute, Marge, Break-even, Wettbewerb.</span><div class="a"><a href="intern/01-produkt-und-preise.html">Ansehen</a><a class="pdf" href="pdf/01-produkt-und-preise.pdf">PDF</a></div></div>
+    <div class="item"><b>Vertriebs-Playbook</b><span>Zielkunden, Verpasste-Anrufe-Check, Gesprächsskripte, Einwandbehandlung, Pipeline &amp; KPIs.</span><div class="a"><a href="intern/02-vertriebs-playbook.html">Ansehen</a><a class="pdf" href="pdf/02-vertriebs-playbook.pdf">PDF</a></div></div>
+    <div class="item"><b>Direct-Mail-Kampagne „Verpasster Anruf“</b><span>Konzept, 3 Paket-Varianten mit Werbegeschenk, Porto- und Druckpreise, Ablauf, Budget.</span><div class="a"><a href="intern/03-direct-mail-kampagne.html">Ansehen</a><a class="pdf" href="pdf/03-direct-mail-kampagne.pdf">PDF</a></div></div>
+    <div class="item"><b>Umsetzung &amp; Onboarding</b><span>Technik-Aufbau, 5-Tage-Plan, Agent-Prompt, Make-Szenario, Testprotokoll, Notfallplan.</span><div class="a"><a href="intern/04-umsetzung-onboarding.html">Ansehen</a><a class="pdf" href="pdf/04-umsetzung-onboarding.pdf">PDF</a></div></div>
+    <div class="item"><b>Nachrichtenvorlagen</b><span>Werbevideo verschicken, DMs, Follow-ups, Angebots- und Onboarding-Mails, Texte fürs Studio.</span><div class="a"><a href="intern/05-nachrichtenvorlagen.html">Ansehen</a><a class="pdf" href="pdf/05-nachrichtenvorlagen.pdf">PDF</a></div></div>
+  </div>
+
+  <h2><span class="tag ext" style="margin:0">Für Studios</span> Zum Verschicken &amp; Unterschreiben</h2>
+  <div class="grid">
+    <div class="item"><b>Überblick „Du tätowierst. Ted geht ran.“</b><span>Verkaufs-Flyer A4, 2 Seiten: Nutzen, Ablauf, Pakete, Garantie, FAQ.</span><div class="a"><a href="studios/10-onepager.html">Ansehen</a><a class="pdf" href="pdf/10-onepager.pdf">PDF</a></div></div>
+    <div class="item"><b>So funktioniert's (einfach erklärt)</b><span>Zum Mitschicken mit dem Werbevideo: Anruf Schritt für Schritt, Beispielgespräch, FAQ.</span><div class="a"><a href="studios/11-so-funktionierts.html">Ansehen</a><a class="pdf" href="pdf/11-so-funktionierts.pdf">PDF</a></div></div>
+    <div class="item"><b>Video-Seite</b><span>Mobile Seite mit Werbevideo, Demo-Anruf und WhatsApp-Button. Link zum Verschicken, Ziel der QR-Codes.</span><div class="a"><a href="video.html">Öffnen</a></div></div>
+    <div class="item"><b>Rufumleitung einrichten</b><span>Anleitung für Handy (Codes), FRITZ!Box, Festnetz, Telefonanlagen, inkl. Test &amp; Ausschalten.</span><div class="a"><a href="studios/12-rufumleitung-anleitung.html">Ansehen</a><a class="pdf" href="pdf/12-rufumleitung-anleitung.pdf">PDF</a></div></div>
+    <div class="item"><b>Mailing-Brief „Verpasster Anruf“</b><span>Anschreiben fürs Paket, DIN-Fensterumschlag, personalisierbar (Name, Adresse, Check ja/nein).</span><div class="a"><a href="studios/13-direct-mail-brief.html">Ansehen</a><a class="pdf" href="pdf/13-direct-mail-brief.pdf">PDF</a></div></div>
+    <div class="item"><b>Postkarte A6</b><span>Paketbeilage oder Einzelversand: Demo-Nummer, Aktionscode, QR zum Video.</span><div class="a"><a href="studios/17-postkarte.html">Ansehen</a><a class="pdf" href="pdf/17-postkarte.pdf">PDF</a></div></div>
+    <div class="item"><b>Dienstleistungsvertrag</b><span>Mit Bestellschein, Leistungsbeschreibung (Anlage A) und SEPA-Firmenlastschrift (Anlage B).</span><div class="a"><a href="studios/14-vertrag.html">Ansehen</a><a class="pdf" href="pdf/14-vertrag.pdf">PDF</a></div></div>
+    <div class="item"><b>Auftragsverarbeitungsvertrag (AVV)</b><span>DSGVO Art. 28 mit TOMs und Liste der Unterauftragsverarbeiter.</span><div class="a"><a href="studios/15-avv.html">Ansehen</a><a class="pdf" href="pdf/15-avv.pdf">PDF</a></div></div>
+    <div class="item"><b>Onboarding-Fragebogen</b><span>Am Bildschirm ausfüllbar oder zum Ausdrucken. Grundlage für Teds Wissen.</span><div class="a"><a href="studios/16-onboarding-fragebogen.html">Ausfüllen</a><a class="pdf" href="pdf/16-onboarding-fragebogen.pdf">PDF</a></div></div>
+  </div>
+
+  <h2><span class="tag kunde" style="margin:0">Für Kunden</span> Im Studio auslegen &amp; aufhängen</h2>
+  <div class="grid">
+    <div class="item" style="background:var(--ink);color:#fff;border-color:var(--ink)"><b style="color:var(--gold)">Generator: Materialien pro Studio</b><span style="color:#c9d1d9">Studioname, Nummer und Logo eintragen. Alle Materialien werden sofort personalisiert.</span><div class="a"><a class="pdf" href="kunden/generator.html">Generator öffnen</a></div></div>
+    <div class="item"><b>Fensteraufkleber</b><span>Rund Ø 20 cm „Immer erreichbar“ + A4 „Geschlossen? Ruf trotzdem an.“ Druckfertig mit Beschnitt.</span><div class="a"><a href="kunden/20-fensteraufkleber.html">Ansehen</a><a class="pdf" href="pdf/20-fensteraufkleber.pdf">PDF</a></div></div>
+    <div class="item"><b>Flyer A6</b><span>„Tattoo-Idee? Ruf einfach an.“ Vorder- und Rückseite, für Theke und Wartebereich.</span><div class="a"><a href="kunden/21-flyer-a6.html">Ansehen</a><a class="pdf" href="pdf/21-flyer-a6.pdf">PDF</a></div></div>
+    <div class="item"><b>Thekenaufsteller A5</b><span>2 Motive: „Alle gerade an der Maschine?“ und „Nächstes Tattoo schon im Kopf?“ mit Anruf-QR.</span><div class="a"><a href="kunden/22-thekenaufsteller-a5.html">Ansehen</a><a class="pdf" href="pdf/22-thekenaufsteller-a5.pdf">PDF</a></div></div>
+    <div class="item"><b>Türschild A4</b><span>„Gerade geschlossen. Trotzdem erreichbar.“ und „Wir tätowieren gerade.“ Für den Bürodrucker.</span><div class="a"><a href="kunden/24-tuerschild-a4.html">Ansehen</a><a class="pdf" href="pdf/24-tuerschild-a4.pdf">PDF</a></div></div>
+    <div class="item"><b>Datenschutzhinweis für Anrufer</b><span>Aushang im Studio + Textbaustein für die Datenschutzerklärung der Studio-Website.</span><div class="a"><a href="kunden/23-datenschutzhinweis-anrufer.html">Ansehen</a><a class="pdf" href="pdf/23-datenschutzhinweis-anrufer.pdf">PDF</a></div></div>
+  </div>
+  <p class="small" style="margin-top:28px">Stand 10/2026 · Alle Unterlagen sind Vorlagen. Preise netto zzgl. USt. · <span data-cfg="firma"></span></p>
+</div>
+<script src="assets/config.js"></script><script src="assets/app.js"></script>
+</body></html>

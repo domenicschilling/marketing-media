@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>Ted am Telefon – in 60 Sekunden erklärt</title>
+<meta name="description" content="Der digitale Telefonassistent für Tattoo-Studios: geht ran, wenn du nicht kannst.">
+<link rel="stylesheet" href="assets/fonts.css">
+<style>
+:root{--ink:#0d1117;--ink-2:#161b22;--gold:#f5a50b;--muted:#9aa4ae;--line:#2b3139}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ink);color:#fff;font:16px/1.55 'Inter',system-ui,sans-serif}
+.wrap{max-width:560px;margin:0 auto;padding:22px 16px 48px}
+header{display:flex;justify-content:space-between;align-items:center}
+header img{width:72px}
+.pill{border:1.5px solid var(--gold);color:var(--gold);border-radius:99px;padding:5px 11px;font:700 11px/1 'Inter';letter-spacing:.14em;text-transform:uppercase}
+h1{font:700 38px/1.04 'Space Grotesk',system-ui,sans-serif;letter-spacing:-.02em;margin:22px 0 10px}
+h1 span{color:var(--gold)}
+p.sub{color:#c9d1d9;margin:0 0 18px}
+video{width:100%;aspect-ratio:9/16;max-height:78vh;background:#000;border-radius:18px;display:block;object-fit:cover}
+.novideo{aspect-ratio:9/16;max-height:60vh;border:1px dashed var(--line);border-radius:18px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--muted);padding:24px}
+.btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;border-radius:99px;padding:15px 18px;font:700 17px 'Space Grotesk',sans-serif;text-decoration:none;margin-top:12px}
+.btn.gold{background:var(--gold);color:var(--ink)}
+.btn.line{border:1.5px solid var(--line);color:#fff}
+.steps{list-style:none;padding:0;margin:26px 0 0;display:grid;gap:12px;counter-reset:s}
+.steps li{counter-increment:s;background:var(--ink-2);border-radius:14px;padding:14px 14px 14px 54px;position:relative;color:#c9d1d9}
+.steps li::before{content:counter(s);position:absolute;left:14px;top:14px;width:28px;height:28px;border-radius:50%;background:var(--gold);color:var(--ink);font:700 15px/28px 'Space Grotesk';text-align:center}
+.steps b{color:#fff}
+.small{font-size:13px;color:var(--muted);margin-top:26px;text-align:center}
+.small a{color:var(--muted)}
+</style>
+</head><body>
+<div class="wrap">
+  <header><img src="assets/logo.png" alt="TattooLeadz"><span class="pill">Für Tattoo-Studios</span></header>
+  <h1>Du tätowierst.<br><span>Ted geht ran.</span></h1>
+  <p class="sub">Der digitale Telefonassistent, der jeden Anruf annimmt, den du gerade nicht annehmen kannst, und dir die Anfrage sofort aufs Handy schickt.</p>
+
+  <video id="v" src="assets/werbevideo.mp4" controls playsinline preload="metadata" poster=""></video>
+
+  <a class="btn gold" id="call" href="#">📞 Ted jetzt selbst anrufen</a>
+  <a class="btn line" id="wa" href="#">💬 Per WhatsApp melden</a>
+
+  <ol class="steps">
+    <li><b>Deine Nummer bleibt.</b> Wenn nach ca. 20 Sekunden keiner abhebt, besetzt ist oder ihr zu habt, übernimmt Ted.</li>
+    <li><b>Ted kennt dein Studio.</b> Öffnungszeiten, Artists, Walk-ins, eure Regeln. Er sagt offen, dass er ein digitaler Assistent ist.</li>
+    <li><b>Du bekommst fertige Anfragen.</b> Name, Nummer, Motiv, Stelle, Größe, Wunschzeitraum, per WhatsApp. Preis &amp; Termin machst du.</li>
+  </ol>
+
+  <a class="btn gold" id="web" href="#" style="margin-top:22px">Kostenloses Beratungsgespräch</a>
+  <p class="small">Live in 5 Werktagen · Zufriedenheitsgarantie · <a id="weblink" href="#">tattooleadz.de</a></p>
+</div>
+<script src="assets/config.js"></script>
+<script>
+var C=window.CFG||{};
+var v=document.getElementById('v');
+v.addEventListener('error',function(){var d=document.createElement('div');d.className='novideo';d.textContent='Video folgt in Kürze. Bis dahin: Ruf Ted einfach selbst an!';v.replaceWith(d)},true);
+var call=document.getElementById('call');
+if(C.demoNummerTel){call.href='tel:'+C.demoNummerTel;call.textContent='📞 Ted anrufen: '+C.demoNummer}else{call.style.display='none'}
+document.getElementById('wa').href=C.whatsappLink||'#';
+document.getElementById('web').href=(C.webUrl||'https://tattooleadz.de')+'/?utm_source=videoseite&utm_campaign=telefon';
+document.getElementById('weblink').href=C.webUrl||'#';
+</script>
+</body></html>

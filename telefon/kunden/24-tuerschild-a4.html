@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Türschild A4 – Zum Selberdrucken</title>
+<link rel="stylesheet" href="../assets/telefon.css">
+<style>
+/* A4 für den Bürodrucker, mit weißem Rand, damit nichts abgeschnitten wird */
+@page{size:A4;margin:0}
+.sheet{width:210mm;height:297mm;padding:10mm}
+.frame{position:absolute;inset:10mm;border:1.5mm solid var(--ink);border-radius:8mm;padding:16mm 15mm;display:flex;flex-direction:column}
+.sn{font:700 13pt var(--head);letter-spacing:.2em;text-transform:uppercase}
+.logo{max-width:60mm;max-height:24mm;object-fit:contain}
+h1{font:700 50pt/1 var(--head);letter-spacing:-.03em;margin:14mm 0 8mm}
+h1 span{background:var(--gold);padding:0 2mm;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+p{font-size:18pt;line-height:1.4;margin:0 0 6mm;color:#30363d}
+.zeiten{font-size:13pt;color:var(--muted);margin-top:2mm}
+.foot{margin-top:auto;display:flex;justify-content:space-between;align-items:flex-end;gap:10mm}
+.foot small{display:block;font-size:13pt;color:var(--muted)}
+.foot b{display:block;font:700 42pt/1 var(--head);white-space:nowrap}
+.foot .qr{width:45mm;border:.4mm solid var(--line)}
+</style>
+</head><body>
+<div class="toolbar"><a href="../index.html">← Alle Unterlagen</a><span class="t">Für Kunden · Türschild A4 (2 Varianten, Bürodrucker)</span><button data-print>Drucken / PDF</button></div>
+
+<section class="sheet">
+  <div class="frame">
+    <img class="logo" data-logo alt=""><div class="sn" data-logo-alt data-p="studio"></div>
+    <h1>Gerade <span>geschlossen.</span><br>Trotzdem erreichbar.</h1>
+    <p>Ruf an und erzähl uns von deiner Tattoo-Idee. Wir nehmen deine Anfrage rund um die Uhr auf und melden uns persönlich bei dir.</p>
+    <div class="zeiten" data-p="zeiten" data-hide-empty></div>
+    <div class="foot">
+      <div><small>Tattoo-Anfragen 24/7:</small><b data-p="tel"></b></div>
+      <div class="qr" data-qr="tel:{telRaw}" data-size="160"></div>
+    </div>
+  </div>
+</section>
+
+<section class="sheet">
+  <div class="frame">
+    <img class="logo" data-logo alt=""><div class="sn" data-logo-alt data-p="studio"></div>
+    <h1>Wir tätowieren <span>gerade.</span></h1>
+    <p>Bitte nicht klopfen, wir sind mitten in einer Session. Ruf uns einfach an: Deine Anfrage wird sofort aufgenommen, und wir melden uns, sobald die Maschine aus ist.</p>
+    <div class="foot">
+      <div><small>Einfach anrufen:</small><b data-p="tel"></b></div>
+      <div class="qr" data-qr="tel:{telRaw}" data-size="160"></div>
+    </div>
+  </div>
+</section>
+
+<script src="../assets/qrcode.min.js"></script><script src="../assets/config.js"></script><script src="../assets/app.js"></script>
+</body></html>

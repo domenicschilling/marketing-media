@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mailing-Brief – Verpasster Anruf</title>
+<link rel="stylesheet" href="../assets/telefon.css">
+<style>
+@page{size:A4;margin:0}
+.sheet{width:210mm;height:297mm;padding:0;font-size:10pt;line-height:1.5}
+/* DIN 5008 Form B: Anschriftfeld 45 mm von oben, 20 mm von links (passt in DL/C5/C6-Fensterumschläge) */
+.head{position:absolute;top:12mm;left:20mm;right:20mm;display:flex;justify-content:space-between;align-items:center}
+.head img{width:24mm}
+.head .s{font-size:8pt;color:var(--muted);text-align:right;line-height:1.4}
+.ret{position:absolute;top:45mm;left:20mm;width:85mm;font-size:6.5pt;color:var(--muted);border-bottom:.2mm solid #bbb;padding-bottom:.5mm}
+.addr{position:absolute;top:50mm;left:20mm;width:85mm;height:40mm;font-size:10.5pt;line-height:1.35}
+.side{position:absolute;top:50mm;left:125mm;width:65mm;font-size:8.5pt;color:var(--muted);line-height:1.5}
+.notif{position:absolute;top:50mm;right:20mm;width:62mm;background:var(--ink);color:#fff;border-radius:4mm;padding:3.5mm 4mm;font-size:8.5pt;line-height:1.35}
+.notif .r{display:flex;justify-content:space-between;color:#9aa4ae;font-size:7pt;margin-bottom:1.5mm}
+.notif b{font:700 10pt var(--head);color:#fff}
+.notif .red{color:var(--red);font-weight:700}
+.body{position:absolute;top:98mm;left:20mm;right:20mm}
+.body h1{font:700 17pt/1.15 var(--head);margin:0 0 4mm;letter-spacing:-.01em}
+.body p{margin:0 0 2.6mm}
+.body ul{margin:0 0 3mm;padding-left:5mm}
+.offer{display:flex;gap:5mm;align-items:center;background:var(--gold-soft);border:.4mm solid #f0cf86;border-radius:3mm;padding:3mm 4.5mm;margin:3mm 0}
+.offer .code{font:700 15pt var(--head);background:var(--ink);color:var(--gold);padding:2mm 4mm;border-radius:2mm;white-space:nowrap}
+.foot{position:absolute;left:20mm;right:20mm;bottom:11mm;border-top:.3mm solid var(--line);padding-top:2.5mm;font-size:7pt;color:var(--muted);display:flex;justify-content:space-between;gap:6mm}
+.fold{position:absolute;left:5mm;width:4mm;border-top:.2mm solid #999}
+@media print{.fold{border-color:#ccc}}
+</style>
+</head><body>
+<div class="toolbar"><a href="../index.html">← Alle Unterlagen</a><span class="t">Für Studios · Mailing-Brief (personalisierbar)</span><button data-print>Drucken / PDF</button></div>
+
+<section class="sheet">
+  <div class="fold" style="top:105mm"></div><div class="fold" style="top:148.5mm;width:6mm"></div><div class="fold" style="top:210mm"></div>
+  <div class="head"><img src="../assets/logo.png" alt="TattooLeadz"><div class="s"><b data-cfg="marke"></b> · Marketing nur für Tattoo-Studios<br><span data-cfg="web"></span> · <span data-cfg="telefon"></span></div></div>
+  <div class="ret"><span data-cfg="firma"></span> · <span data-cfg="adresse"></span></div>
+  <div class="addr"><b data-p="studio"></b><br><span data-p="inhaber" data-hide-empty></span><br><span data-p="strasse">[Straße Nr.]</span><br><span data-p="ort">[PLZ Ort]</span></div>
+  <div class="notif">
+    <div class="r"><span>📞 Telefon</span><span>jetzt</span></div>
+    <b>1 verpasster Anruf</b><br><span class="red">Neuer Kunde</span> · Unterarm, Fineline, ca. 15 cm<br><span style="color:#9aa4ae">Hat stattdessen beim nächsten Studio angerufen.</span>
+  </div>
+
+  <div class="body">
+    <h1>Hey <span data-p="vorname">zusammen</span>, ihr hattet einen verpassten Anruf.<br><span class="tgold">Von uns.</span></h1>
+    <p data-check="1">Wir haben euch an zwei Tagen während eurer Öffnungszeiten angerufen, und es ist niemand rangegangen. <b>Das ist kein Vorwurf.</b> Ihr steht an der Liege, die Handschuhe sind an, die Maschine läuft. Genau so soll es sein.</p>
+    <p data-check="0">Okay, nicht ganz: Das ist der Anruf, den ihr verpasst, während ihr an der Liege steht. Die Handschuhe sind an, die Maschine läuft, das Telefon klingelt ins Leere. <b>Das ist kein Vorwurf.</b> Genau so soll es sein.</p>
+    <p>Nur: Wer als neuer Kunde nicht durchkommt, ruft meistens nicht nochmal an, sondern beim nächsten Studio. Deshalb haben wir <b>Ted am Telefon</b> gebaut, einen digitalen Telefonassistenten nur für Tattoo-Studios:</p>
+    <ul>
+      <li>Ted geht ran, wenn ihr nicht könnt: während der Session, wenn besetzt ist, nach Feierabend.</li>
+      <li>Er beantwortet die Standardfragen und nimmt Tattoo-Anfragen komplett auf: Motiv, Stelle, Größe, Stil, Wunschzeitraum.</li>
+      <li>Ihr bekommt alles Sekunden später per WhatsApp. <b>Preise und Termine macht weiterhin ihr.</b></li>
+      <li>Eure Nummer bleibt. Einrichtung machen wir, live in 5 Werktagen.</li>
+    </ul>
+    <p><b>Glaubt mir kein Wort, ruft ihn an:</b> <span class="tgold" style="font-weight:700" data-cfg="demoNummer"></span>. Fragt ihn, was ihr wollt, auch nach Preisen. 😉 Das Video dazu findet ihr über den QR-Code auf der Karte.</p>
+    <div class="offer"><span class="code" data-cfg="aktionsCode"></span><div>Mit diesem Code entfällt die Einrichtungsgebühr (<span data-cfg="setup"></span>) für die ersten <b><span data-cfg="aktionsPlaetze"></span> Studios</b>, gültig bis <span data-cfg="aktionsFrist"></span>. Dazu <span data-cfg="garantieTage"></span> Tage Zufriedenheitsgarantie.</div></div>
+    <p>Ich melde mich in den nächsten Tagen kurz bei euch. Oder schreibt mir einfach vorher per WhatsApp an <b data-cfg="telefon"></b>.</p>
+    <p style="margin-top:5mm">Viele Grüße<br><b data-cfg="ansprechpartner"></b><br><span style="color:var(--muted)">TattooLeadz</span></p>
+    <p style="font-size:9pt;color:var(--muted)">P.S. Das kleine Geschenk im Paket ist für die Hände, die gerade nicht ans Telefon können. 🖤</p>
+  </div>
+  <div class="foot"><span><span data-cfg="firma"></span> · <span data-cfg="adresse"></span></span><span><span data-cfg="registergericht"></span> · Kein Interesse an weiterer Post? Kurze Nachricht genügt.</span></div>
+</section>
+
+<script src="../assets/config.js"></script><script src="../assets/app.js"></script>
+<script>/* ?check=0, wenn kein Verpasste-Anrufe-Check gemacht wurde → neutrale Formulierung */
+var ck=new URLSearchParams(location.search).get("check")==="0"?"0":"1";document.querySelectorAll("[data-check]").forEach(function(e){if(e.dataset.check!==ck)e.remove()});</script>
+</body></html>

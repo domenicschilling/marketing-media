@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>Studio-Materialien erzeugen</title>
+<link rel="stylesheet" href="../assets/telefon.css">
+<style>
+body{background:var(--cream)}
+.wrap{max-width:860px;margin:0 auto;padding:22px 16px 60px}
+h1{font:700 26px/1.15 var(--head);margin:6px 0 4px}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:16px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+label{display:block;font:600 13px var(--body);color:var(--muted);margin-bottom:4px}
+input{width:100%;font:15px var(--body);padding:10px 12px;border:1px solid #cfcac0;border-radius:10px;background:#fff;color:var(--text)}
+input:focus{outline:2px solid var(--gold);border-color:transparent}
+.links{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.links a{display:block;text-decoration:none;background:var(--ink);color:#fff;border-radius:12px;padding:14px}
+.links a b{display:block;font:700 15px var(--head);color:var(--gold)}
+.links a span{font-size:13px;color:#c9d1d9}
+code{display:block;background:#f4f2ee;border-radius:8px;padding:10px;font:13px/1.5 ui-monospace,Menlo,monospace;white-space:pre-wrap;word-break:break-all}
+@media (max-width:640px){.grid{grid-template-columns:1fr}}
+</style>
+</head><body>
+<div class="toolbar"><a href="../index.html">← Alle Unterlagen</a><span class="t">Generator · Materialien pro Studio</span><span></span></div>
+<div class="wrap">
+  <span class="tag kunde">Für Kunden im Studio</span>
+  <h1>Materialien für ein Studio erzeugen</h1>
+  <p style="color:var(--muted);margin:0">Daten eintragen → Material öffnen → „Drucken / PDF“ → als PDF speichern und an die Druckerei oder das Studio schicken.</p>
+
+  <div class="card">
+    <div class="grid">
+      <div><label>Studioname</label><input id="studio" placeholder="z. B. Ink Studio Bamberg"></div>
+      <div><label>Telefonnummer des Studios (die Kunden anrufen)</label><input id="tel" placeholder="z. B. 0951 1234567"></div>
+      <div><label>Website (optional)</label><input id="web" placeholder="z. B. inkstudio-bamberg.de"></div>
+      <div><label>Logo-URL (optional, PNG mit transparentem Hintergrund)</label><input id="logo" placeholder="https://…/logo.png"></div>
+      <div><label>Öffnungszeiten für Türschild (optional)</label><input id="zeiten" placeholder="Di–Fr 11–19 Uhr · Sa 11–16 Uhr"></div>
+      <div><label>Anschrift (für Datenschutzhinweis)</label><input id="adresse" placeholder="Musterstraße 1, 96047 Bamberg"></div>
+      <div><label>E-Mail des Studios (für Datenschutzhinweis)</label><input id="email" placeholder="info@…"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="links" id="links"></div>
+  </div>
+
+  <div class="card">
+    <b>Alle PDFs auf einmal (für Technik):</b>
+    <code id="cmd"></code>
+  </div>
+</div>
+<script>
+var items=[
+  ['20-fensteraufkleber.html','Fensteraufkleber','rund Ø 20 cm + A4, Druckerei'],
+  ['21-flyer-a6.html','Flyer A6','Vorder- & Rückseite, Druckerei'],
+  ['22-thekenaufsteller-a5.html','Thekenaufsteller A5','2 Motive, Druckerei oder Bürodrucker'],
+  ['24-tuerschild-a4.html','Türschild A4','2 Varianten, Bürodrucker'],
+  ['23-datenschutzhinweis-anrufer.html','Datenschutzhinweis','Aushang + Text für die Website']
+];
+var ids=['studio','tel','web','logo','zeiten','adresse','email'];
+function qs(){var p=new URLSearchParams();ids.forEach(function(i){var v=document.getElementById(i).value.trim();if(v)p.set(i,v)});return p.toString()}
+function upd(){
+  var q=qs();
+  document.getElementById('links').innerHTML=items.map(function(it){return '<a target="_blank" href="'+it[0]+(q?'?'+q:'')+'"><b>'+it[1]+' →</b><span>'+it[2]+'</span></a>'}).join('');
+  var s=document.getElementById('studio').value.trim()||'Studio Name',t=document.getElementById('tel').value.trim()||'0951 1234567';
+  document.getElementById('cmd').textContent='cd telefon && node tools/render-pdf.mjs kunden --studio "'+s+'" --tel "'+t+'"';
+}
+ids.forEach(function(i){document.getElementById(i).addEventListener('input',upd)});upd();
+</script>
+</body></html>

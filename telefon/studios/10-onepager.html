@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ted am Telefon – Überblick für Studios</title>
+<link rel="stylesheet" href="../assets/telefon.css">
+<style>
+@page{size:A4;margin:0}
+.sheet{width:210mm;height:297mm;padding:16mm 16mm 14mm}
+.top{display:flex;justify-content:space-between;align-items:center}
+.top img{width:22mm}
+.hero{margin-top:6mm;display:grid;grid-template-columns:1.15fr .85fr;gap:8mm;align-items:center}
+.hero p.sub{font-size:13pt;line-height:1.45;color:#c9d1d9;margin:6mm 0 0}
+.phone{background:#0a0d12;border:2.5mm solid #2b3139;border-radius:9mm;padding:5mm 4mm;box-shadow:0 0 0 .5mm #3a414a,0 8mm 20mm rgba(0,0,0,.5)}
+.call{text-align:center;padding:4mm 0 5mm;border-bottom:1px solid #222a33}
+.call .av{width:16mm;height:16mm;border-radius:50%;background:var(--gold);color:var(--ink);font:700 22pt/16mm var(--head);margin:0 auto 2mm}
+.call b{display:block;font:700 12pt var(--head)}
+.call span{font-size:8pt;color:#8b949e}
+.bubble{background:#1d2630;border-radius:3mm;padding:2.6mm 3mm;font-size:7.6pt;line-height:1.4;margin-top:3mm;color:#e6edf3}
+.bubble.wa{background:#0b3d2e;border:1px solid #13694f}
+.bubble .h{font-weight:700;color:var(--gold-2);display:block;margin-bottom:1mm}
+.feat{display:grid;grid-template-columns:repeat(3,1fr);gap:4mm;margin-top:7mm}
+.feat div{border:1.4px solid var(--gold);border-radius:4mm;padding:4mm;font-size:9.5pt;color:#c9d1d9}
+.feat b{display:block;color:#fff;font:700 11.5pt/1.2 var(--head);margin-bottom:1.5mm}
+.how{margin-top:7mm}
+.how h3{font:700 9pt var(--body);letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin:0 0 4mm}
+.how ol{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:5mm;counter-reset:h}
+.how li{counter-increment:h;font-size:9.5pt;color:#c9d1d9;position:relative;padding-top:10mm}
+.how li::before{content:counter(h);position:absolute;top:0;left:0;width:8mm;height:8mm;border-radius:50%;background:var(--gold);color:var(--ink);font:700 12pt/8mm var(--head);text-align:center}
+.how li b{color:#fff}
+.bottom{position:absolute;left:16mm;right:16mm;bottom:14mm;display:flex;justify-content:space-between;align-items:flex-end;gap:8mm;background:var(--ink-2);border-radius:5mm;padding:6mm}
+.bottom .demo{font:700 20pt/1.1 var(--head)}
+.bottom .small{font-size:8.5pt;color:#8b949e}
+.bottom .qr{width:26mm}
+/* Seite 2 */
+.p2 h2{font:700 19pt/1.1 var(--head);margin:0 0 5mm;letter-spacing:-.02em}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:6mm}
+.yes li,.no li{list-style:none;padding-left:6mm;position:relative;margin:0 0 1.4mm;font-size:9pt;line-height:1.4}
+.yes,.no{padding:0;margin:0}
+.yes li::before{content:"✓";position:absolute;left:0;color:var(--green);font-weight:800}
+.no li::before{content:"✕";position:absolute;left:0;color:var(--red);font-weight:800}
+.card{border:1px solid var(--line);border-radius:4mm;padding:4mm 5mm}
+.prices{display:grid;grid-template-columns:1fr 1fr;gap:5mm;margin-top:7mm}
+.price{border:1.5px solid var(--line);border-radius:5mm;padding:4.5mm 5mm;position:relative}
+.price.hot{border-color:var(--gold);background:var(--gold-soft)}
+.price .name{font:700 13pt var(--head)}
+.price .p{font:700 24pt/1 var(--head);margin:2mm 0 1mm}
+.price .p small{font:500 9pt var(--body);color:var(--muted)}
+.price ul{margin:3mm 0 0;padding-left:4.5mm;font-size:9pt}
+.price .badge{position:absolute;top:-3mm;right:5mm;background:var(--ink);color:var(--gold);font:700 7pt var(--body);letter-spacing:.1em;text-transform:uppercase;padding:1.6mm 3mm;border-radius:99px}
+.fine{font-size:8pt;color:var(--muted);margin-top:3mm}
+.guarantee{display:flex;gap:5mm;align-items:center;margin-top:5mm;background:var(--ink);color:#fff;border-radius:5mm;padding:5mm 6mm}
+.guarantee .seal{flex:none;width:22mm;height:22mm;border-radius:50%;border:1mm solid var(--gold);color:var(--gold);display:flex;flex-direction:column;align-items:center;justify-content:center;font:700 16pt/1 var(--head)}
+.guarantee .seal small{font:700 6pt var(--body);letter-spacing:.1em}
+.faq{display:grid;grid-template-columns:1fr 1fr;gap:3mm 6mm;margin-top:5mm;font-size:8.6pt;line-height:1.4}
+.faq b{display:block;font-family:var(--head);font-size:9.8pt}
+.contact{margin-top:6mm;display:flex;justify-content:space-between;align-items:center;border-top:2px solid var(--ink);padding-top:4mm;font-size:9pt}
+.contact img{width:14mm}
+</style>
+</head><body>
+<div class="toolbar"><a href="../index.html">← Alle Unterlagen</a><span class="t">Für Studios · Überblick (A4, 2 Seiten)</span><button data-print>Drucken / PDF</button></div>
+
+<section class="sheet dark">
+  <div class="top"><img src="../assets/logo.png" alt="TattooLeadz"><span class="pill">Für Tattoo-Studios</span></div>
+  <div class="hero">
+    <div>
+      <h1 class="h-xl">Du tätowierst.<br><span class="tgold">Ted</span> geht ran.</h1>
+      <p class="sub">Der digitale Telefonassistent, der jeden Anruf annimmt, den du gerade nicht annehmen kannst. Er beantwortet Fragen, nimmt Tattoo-Anfragen komplett auf und schickt sie dir sofort aufs Handy.</p>
+    </div>
+    <div class="phone">
+      <div class="call"><div class="av">T</div><b>Ted</b><span>nimmt ab für Ink Studio · 21:47</span></div>
+      <div class="bubble">„Hi, hier ist Ink Studio! Ich bin Ted, der digitale Assistent. Das Team ist gerade beschäftigt. Wie kann ich dir helfen?“</div>
+      <div class="bubble wa"><span class="h">📞 Neue Anfrage · 2:14 Min.</span>👤 Lena · 0151 …<br>🎨 Feine Rosenranke<br>📍 Unterarm · ca. 15 cm<br>🖤 Fineline, schwarz-grau<br>🗓️ Wunsch: November, Samstag</div>
+    </div>
+  </div>
+  <div class="feat">
+    <div><b>Geht immer ran</b>Während der Session, nach Feierabend, wenn besetzt ist. Kein Anrufer landet mehr beim nächsten Studio.</div>
+    <div><b>Fertige Anfragen</b>Motiv, Stelle, Größe, Stil, Wunschzeitraum und Rückrufnummer. Kein „Ruf mal zurück“-Zettel.</div>
+    <div><b>Du entscheidest</b>Ted nennt keine Preise und sagt keine Termine zu. Das machst immer du.</div>
+  </div>
+  <div class="how">
+    <h3>So einfach geht's</h3>
+    <ol>
+      <li><b>Deine Nummer bleibt.</b> Du stellst nur eine Rufumleitung ein: „wenn keiner rangeht“. Wir machen das mit dir zusammen.</li>
+      <li><b>Ted kennt dein Studio.</b> Öffnungszeiten, Artists, Regeln, Walk-ins. Wir richten alles für dich ein.</li>
+      <li><b>Du bekommst alles per WhatsApp.</b> Sekunden nach dem Anruf. Du rufst zurück, wann es dir passt.</li>
+    </ol>
+  </div>
+  <div class="bottom">
+    <div>
+      <div class="small">Hör selbst, wie Ted klingt. Ruf ihn an:</div>
+      <div class="demo tgold" data-cfg="demoNummer"></div>
+      <div class="small">Live in 5 Werktagen · <span data-cfg="garantieTage"></span> Tage Zufriedenheitsgarantie · <span data-cfg="web"></span></div>
+    </div>
+    <div class="qr" data-qr="{videoSeite}?utm_source=onepager" data-size="100"></div>
+  </div>
+</section>
+
+<section class="sheet p2">
+  <div class="cols">
+    <div class="card"><h2 style="font-size:14pt">Das macht Ted</h2>
+      <ul class="yes">
+        <li>Nimmt Anrufe an: rund um die Uhr oder nur, wenn ihr nicht könnt</li>
+        <li>Begrüßt mit eurem Studionamen und sagt offen, dass er ein digitaler Assistent ist</li>
+        <li>Beantwortet Fragen zu Öffnungszeiten, Anfahrt, Walk-ins, Ablauf, Mindestalter, Gutscheinen</li>
+        <li>Nimmt Tattoo-Anfragen auf: Motiv, Stelle, Größe, Stil, Farbe, Wunschzeitraum, Wunsch-Artist</li>
+        <li>Nimmt Terminabsagen und Verschiebungswünsche auf</li>
+        <li>Schickt dir jede Anfrage sofort per WhatsApp und E-Mail</li>
+        <li>Markiert Dringendes (z. B. Probleme beim Abheilen) und leitet es sofort weiter</li>
+      </ul></div>
+    <div class="card"><h2 style="font-size:14pt">Das macht Ted nicht</h2>
+      <ul class="no">
+        <li>Keine Preise oder Preisspannen nennen</li>
+        <li>Keine Termine fest zusagen</li>
+        <li>Keine medizinischen Ratschläge geben</li>
+        <li>Sich als Mensch ausgeben</li>
+        <li>Irgendetwas erfinden: Was er nicht weiß, nimmt er als Frage für euch auf</li>
+      </ul>
+      <p style="font-size:9.5pt;margin:5mm 0 0"><b>Kurz:</b> Ted ist dein Empfang, nicht dein Verkäufer. Den Kunden gewinnst weiterhin du, nur verlierst du ihn nicht mehr am Telefon.</p>
+    </div>
+  </div>
+
+  <div class="prices">
+    <div class="price"><div class="name">Start</div><div class="p"><span data-cfg="startPreis"></span><small> / Monat</small></div>
+      <div style="font-size:9pt;color:var(--muted)"><span data-cfg="startMinuten"></span> Gesprächsminuten inklusive</div>
+      <ul><li>Anrufannahme 24/7 oder bei Nichterreichbarkeit</li><li>Fragen beantworten + Anfragen aufnehmen</li><li>Zusammenfassung per WhatsApp + E-Mail</li><li>Einrichtung &amp; Pflege der Infos durch uns</li></ul></div>
+    <div class="price hot"><span class="badge">Empfohlen</span><div class="name">Profi</div><div class="p"><span data-cfg="profiPreis"></span><small> / Monat</small></div>
+      <div style="font-size:9pt;color:var(--muted)"><span data-cfg="profiMinuten"></span> Gesprächsminuten inklusive</div>
+      <ul><li>Alles aus Start</li><li>Anrufer bekommen eine WhatsApp für Motivbilder</li><li>Dringende Anrufe direkt auf dein Handy</li><li>Deutsch + Englisch, Wunschstimme</li><li>Monatsreport &amp; laufende Optimierung</li></ul></div>
+  </div>
+  <p class="fine">Alle Preise netto zzgl. USt. Einmalige Einrichtung <span data-cfg="setup"></span>. Weitere Minuten <span data-cfg="extraMinute"></span> €/Min. Mindestlaufzeit <span data-cfg="mindestlaufzeit"></span>, danach monatlich kündbar. TattooLeadz-Kunden: Einrichtung gratis + <span data-cfg="bundleRabatt"></span> Rabatt.</p>
+
+  <div class="guarantee">
+    <div class="seal"><span data-cfg="garantieTage"></span><small>TAGE</small></div>
+    <div><b style="font:700 13pt var(--head)">Zufriedenheitsgarantie</b><br><span style="font-size:9.5pt;color:#c9d1d9">Teste Ted <span data-cfg="garantieTage"></span> Tage im echten Studio-Alltag. Wenn du nicht zufrieden bist, sag Bescheid: Du bekommst die Einrichtungsgebühr zurück und der Vertrag endet sofort.</span></div>
+  </div>
+
+  <div class="faq">
+    <div><b>Muss ich meine Nummer ändern?</b>Nein. Ihr stellt nur eine Rufumleitung ein und könnt sie jederzeit ausschalten.</div>
+    <div><b>Merken Kunden, dass es eine KI ist?</b>Ja, Ted sagt es gleich zu Beginn. Die meisten finden es gut, dass überhaupt jemand rangeht.</div>
+    <div><b>Wie viel Arbeit habe ich?</b>15 Minuten Fragebogen und 2 Minuten Rufumleitung. Den Rest machen wir.</div>
+    <div><b>Und der Datenschutz?</b>Wir schließen mit dir einen Auftragsverarbeitungsvertrag (DSGVO) ab und erfassen nur, was für die Anfrage nötig ist.</div>
+  </div>
+
+  <div class="contact">
+    <img src="../assets/logo.png" alt="">
+    <div><b data-cfg="ansprechpartner"></b> · <span data-cfg="telefon"></span> · <span data-cfg="email"></span> · <b data-cfg="web"></b></div>
+  </div>
+</section>
+
+<script src="../assets/qrcode.min.js"></script><script src="../assets/config.js"></script><script src="../assets/app.js"></script>
+</body></html>

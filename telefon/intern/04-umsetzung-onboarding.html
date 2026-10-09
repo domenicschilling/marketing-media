@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>Umsetzung &amp; Onboarding – Ted am Telefon</title>
+<link rel="stylesheet" href="../assets/telefon.css">
+<style>@page{size:A4;margin:16mm 18mm 18mm}</style>
+</head><body>
+<div class="toolbar"><a href="../index.html">← Alle Unterlagen</a><span class="t">Intern · Umsetzung &amp; Onboarding</span><button data-print>Drucken / PDF</button></div>
+<main class="doc">
+
+<div class="dochead">
+  <div><span class="tag">Intern · Umsetzung</span><h1>Umsetzung &amp; Onboarding</h1><p class="lead">Vom unterschriebenen Vertrag bis zum ersten Anruf in 5 Werktagen</p></div>
+  <div class="meta"><img src="../assets/logo.png" alt="TattooLeadz"><br>Stand 10/2026<br>Technik &amp; Projektablauf</div>
+</div>
+
+<h2>1. So funktioniert Ted technisch</h2>
+<div class="box">
+<div class="code">Anrufer ──► Studio-Nummer (bleibt unverändert)
+              │  bedingte Rufumleitung: keine Annahme nach 15–20 s / besetzt / Studio geschlossen
+              ▼
+        Ted-Rufnummer (deutsche Ortsnetz-Nummer, eine pro Studio)
+              │  SIP / Telefonie-Anbindung
+              ▼
+        ElevenLabs Agent  ── Stimme + Sprachmodell + Wissensbasis des Studios
+              │  nach Gesprächsende: Webhook mit Zusammenfassung + erfassten Feldern
+              ▼
+        Make-Szenario „Ted Telefon – Anruf verarbeitet“
+              ├─► WhatsApp an Studio (Superchat-Vorlage) + E-Mail
+              ├─► Zeile im Google Sheet „Telefon – Anrufe“ (Reporting, Minuten)
+              └─► (Profi) WhatsApp an Anrufer: „Schick uns hier dein Motivbild“ → Ted (WhatsApp) übernimmt</div>
+</div>
+<p><b>Warum eine deutsche Ortsnetz-Nummer?</b> Rufumleitungen ins deutsche Festnetz sind bei fast allen Studio-Tarifen in der Flatrate enthalten. Eine Umleitung auf Mobil- oder Auslandsnummern kann beim Studio Kosten verursachen. Pro Studio eine eigene Nummer, damit Ted sofort weiß, für welches Studio er spricht.</p>
+
+<h2>2. Zeitplan (Ziel: live an Tag 5)</h2>
+<table>
+  <tr><th style="width:16%">Tag</th><th style="width:40%">Was passiert</th><th>Wer / Ergebnis</th></tr>
+  <tr><td><b>Tag 0</b></td><td>Vertrag + AVV unterschrieben, Rechnung Einrichtung raus, Fragebogen-Link an Studio</td><td>Vertrieb · Kunde im Sheet auf „Gewonnen“</td></tr>
+  <tr><td><b>Tag 1</b></td><td>Kick-off-Call (20 Min.): Fragebogen durchgehen, offene Punkte klären, Telefonanbieter des Studios notieren</td><td>Umsetzung · Fragebogen vollständig</td></tr>
+  <tr><td><b>Tag 2</b></td><td>Rufnummer buchen, Agent anlegen, Wissensbasis + Prompt befüllen, Make-Szenario duplizieren</td><td>Umsetzung · Agent läuft intern</td></tr>
+  <tr><td><b>Tag 3</b></td><td>Interner Test: alle 20 Testszenarien (Abschnitt 7), Korrekturen</td><td>Umsetzung · Testprotokoll grün</td></tr>
+  <tr><td><b>Tag 4</b></td><td>Abnahme mit dem Studio: Inhaber ruft Ted an, Zusammenfassung kommt an, Feedback einarbeiten</td><td>Studio + Umsetzung · Freigabe per WhatsApp/E-Mail</td></tr>
+  <tr><td><b>Tag 5</b></td><td>Rufumleitung gemeinsam am Telefon einrichten, Testanruf von extern, Materialien (Aufkleber, Flyer) verschicken</td><td>Studio + Umsetzung · <b>LIVE</b></td></tr>
+  <tr><td>Tag 7 / 14</td><td>Gesprächsprotokolle lesen, Prompt nachschärfen, kurzes Feedback ans Studio</td><td>Umsetzung</td></tr>
+  <tr><td>Tag 30</td><td>Check-in mit Zahlen, Garantie-Frist endet, nach Bewertung/Empfehlung fragen</td><td>Vertrieb</td></tr>
+</table>
+
+<h2>3. Checkliste Einrichtung</h2>
+<div class="grid2">
+<div class="box"><h3>Unterlagen &amp; Daten</h3>
+<ul class="check">
+  <li>Vertrag + AVV unterschrieben abgelegt</li>
+  <li>Fragebogen vollständig (Öffnungszeiten, Regeln, FAQ, Artists)</li>
+  <li>WhatsApp-Nummer + E-Mail für Zusammenfassungen</li>
+  <li>Handynummer für dringende Weiterleitungen (Profi)</li>
+  <li>Telefonanbieter + Anschlussart des Studios (Festnetz/Handy/FRITZ!Box)</li>
+  <li>Wunschstimme (männlich/weiblich, locker/ruhig)</li>
+  <li>Name des Assistenten (Standard „Ted“, auf Wunsch anders)</li>
+</ul></div>
+<div class="box"><h3>Technik</h3>
+<ul class="check">
+  <li>Ortsnetz-Rufnummer gebucht (Vorwahl der Studio-Stadt)</li>
+  <li>Nummer mit ElevenLabs-Agent verknüpft</li>
+  <li>Agent aus Vorlage „Ted Telefon – Master“ dupliziert</li>
+  <li>Dynamische Variablen gesetzt (Abschnitt 4)</li>
+  <li>Wissensbasis-Dokument des Studios hochgeladen</li>
+  <li>Post-Call-Webhook → Make-Szenario aktiv</li>
+  <li>Superchat-Vorlage „ted_anruf_zusammenfassung“ getestet</li>
+  <li>Aufbewahrungsdauer Transkripte/Audio gemäß AVV eingestellt</li>
+  <li>Minuten-Zähler im Sheet eingerichtet</li>
+</ul></div>
+</div>
+
+<h2>4. Agent-Konfiguration (ElevenLabs)</h2>
+<table>
+  <tr><th style="width:34%">Einstellung</th><th>Wert</th></tr>
+  <tr><td>Sprache</td><td>Deutsch (Standard), Englisch automatisch, wenn der Anrufer Englisch spricht (Profi)</td></tr>
+  <tr><td>Stimme</td><td>Natürliche deutsche Stimme passend zum Studio. Tempo leicht zügig, nicht zu „Callcenter“.</td></tr>
+  <tr><td>Max. Gesprächsdauer</td><td>8 Minuten (danach freundlich beenden und Rückruf zusagen)</td></tr>
+  <tr><td>Stille-Timeout</td><td>Nach 10 s Stille nachfragen, nach 20 s freundlich auflegen</td></tr>
+  <tr><td>Tools</td><td><b>end_call</b> · <b>transfer_to_number</b> (nur Profi, nur bei dringenden Fällen, an Handy des Inhabers) · Webhook nach Gesprächsende</td></tr>
+  <tr><td>Datenerfassung (Analyse)</td><td>name, rueckrufnummer, anliegen (anfrage | frage | termin_aendern | reklamation | sonstiges), motiv, koerperstelle, groesse_cm, stil, farbe, wunschzeitraum, budget, artist_wunsch, referenzbild_whatsapp_ok (ja/nein), dringend (ja/nein), zusammenfassung</td></tr>
+  <tr><td>Dynamische Variablen</td><td><code>{{studio_name}} {{stadt}} {{adresse}} {{oeffnungszeiten}} {{artists}} {{walk_in}} {{mindestalter}} {{anzahlung}} {{gutscheine}} {{besonderheiten}}</code></td></tr>
+  <tr><td>Aufzeichnung</td><td>Standard: nur Transkript + Zusammenfassung, Audio aus bzw. kurz aufbewahren. Wenn Audio gespeichert wird, muss die Begrüßung darauf hinweisen.</td></tr>
+</table>
+
+<h3>Erste Nachricht (Begrüßung)</h3>
+<div class="script"><p>„Hi, hier ist {{studio_name}}! Ich bin Ted, der digitale Assistent vom Studio. Das Team ist gerade beschäftigt, aber ich helf dir gern weiter oder nehm deine Anfrage auf. Was kann ich für dich tun?“</p>
+<p class="small" style="margin:0">Pflicht: Der Hinweis „digitaler Assistent“ bleibt drin (Transparenz gegenüber Anrufern, EU-KI-Verordnung Art. 50). Wird Audio aufgezeichnet, ergänzen: „Das Gespräch wird zur Bearbeitung deiner Anfrage aufgezeichnet.“</p></div>
+
+<h3 class="pb">System-Prompt (Master-Vorlage)</h3>
+<div class="code">Du bist Ted, der freundliche digitale Telefonassistent von {{studio_name}}, einem Tattoo-Studio in {{stadt}}.
+Du nimmst Anrufe an, wenn das Team gerade tätowiert oder das Studio geschlossen ist.
+
+DEIN STIL
+- Locker, herzlich, kurz. Du duzt (außer der Anrufer siezt, dann siezt du auch).
+- Kurze Sätze, immer nur EINE Frage auf einmal. Kein Fachchinesisch, keine Aufzählungen am Telefon.
+- Du bist ehrlich: Wenn jemand fragt, ob du ein Mensch bist, sagst du klar, dass du ein KI-Assistent bist.
+
+WAS DU WEISST (nur das, nichts erfinden)
+- Adresse: {{adresse}} · Öffnungszeiten: {{oeffnungszeiten}}
+- Artists und Stile: {{artists}} · Walk-ins: {{walk_in}} · Mindestalter: {{mindestalter}}
+- Anzahlung: {{anzahlung}} · Gutscheine: {{gutscheine}} · Besonderheiten: {{besonderheiten}}
+- Weitere Antworten stehen in der Wissensbasis. Steht etwas nicht drin: "Das klärt das Team persönlich mit dir,
+  ich nehm die Frage mit auf."
+
+DEINE AUFGABE BEI TATTOO-ANFRAGEN – frag nacheinander, natürlich im Gespräch:
+1. Vorname  2. Was für ein Motiv / Idee  3. Körperstelle  4. Ungefähre Größe in cm
+5. Stil bzw. Farbe oder Schwarz-Grau  6. Wunschzeitraum  7. Gibt es einen Wunsch-Artist?
+8. Rückrufnummer: Frag, ob die Nummer, mit der er anruft, die richtige ist. Bei Nein: Nummer langsam
+   wiederholen lassen und zur Kontrolle vorlesen.
+9. (falls aktiviert) "Darf ich dir gleich eine WhatsApp schicken? Da kannst du uns Referenzbilder schicken."
+Budget nur erfragen, wenn der Anrufer selbst über Preise spricht.
+
+HARTE REGELN
+- NIE einen Preis, eine Preisspanne oder "ab"-Preis nennen. Sag: "Der Preis hängt von Größe, Details und
+  Stelle ab, den macht dir der Artist persönlich. Ich nehm alles auf, damit er dir schnell ein Angebot machen kann."
+- NIE einen Termin fest zusagen oder einen Kalender versprechen. Sag: "Ich geb deinen Wunschzeitraum weiter,
+  das Team meldet sich mit einem konkreten Vorschlag."
+- Keine medizinischen Ratschläge. Bei Entzündung, starker Rötung, Fieber, allergischer Reaktion:
+  "Bitte lass das ärztlich anschauen. Ich gebe es sofort als dringend ans Team weiter." -> dringend = ja.
+- Bei Beschwerden: zuhören, entschuldigen, aufnehmen, nicht diskutieren, als dringend markieren.
+- Keine Aussagen über andere Studios. Keine Rabatte versprechen.
+- Unter 18: Keine Anfrage aufnehmen, wenn das Studio-Mindestalter nicht erfüllt ist; freundlich erklären.
+- Bei Werbe- oder Verkaufsanrufen: höflich ablehnen und Gespräch beenden.
+
+GESPRÄCHSENDE
+- Fass die Anfrage in einem Satz zusammen, sag wann das Team sich meldet ("in der Regel am selben oder nächsten
+  Werktag") und verabschiede dich herzlich. Dann end_call.</div>
+
+<h3>Wissensbasis-Dokument je Studio (Gliederung)</h3>
+<p>Aus dem Fragebogen erzeugen, als Textdokument „Wissensbasis – [Studio].txt“ hochladen: 1) Studio &amp; Team · 2) Öffnungszeiten, Feiertage, Urlaube · 3) Anfahrt, Parken, ÖPNV · 4) Ablauf: Anfrage → Beratung → Anzahlung → Termin · 5) Regeln: Mindestalter, Ausweis, Alkohol, Begleitpersonen, Absage/No-Show · 6) Leistungen: Stile, Cover-ups, Laser, Piercing, Gutscheine · 7) Pflege-Basics (nur allgemeine Hinweise des Studios) · 8) Die 15 häufigsten Fragen mit Studio-Antwort.</p>
+
+<h2>5. Make-Szenario „Ted Telefon – Anruf verarbeitet“</h2>
+<ol class="steps">
+  <li><b>Webhook</b> (Post-Call von ElevenLabs): agent_id, Anrufer-Nummer, Dauer, Transkript, Datenerfassungs-Felder.</li>
+  <li><b>Router nach agent_id</b> → Studio-Datensatz (Data Store „ted_studios“: agent_id, Studioname, WhatsApp, E-Mail, Paket, Minutenkontingent).</li>
+  <li><b>Google Sheet</b> „Telefon – Anrufe“: Zeile anhängen (Datum, Studio, Dauer in Min., Anliegen, Felder, dringend).</li>
+  <li><b>WhatsApp an Studio</b> über Superchat-Vorlage (unten) + E-Mail mit vollständigem Transkript.</li>
+  <li><b>Wenn dringend = ja</b>: zusätzlich sofortige WhatsApp „⚠️ DRINGEND“ an die Handynummer des Inhabers.</li>
+  <li><b>Wenn referenzbild_whatsapp_ok = ja</b> (Profi): Superchat-Vorlage an Anrufer, Ted (WhatsApp) übernimmt den Chat.</li>
+  <li><b>Minuten-Check</b>: Bei 80 % und 100 % des Kontingents interne Benachrichtigung an uns (nicht automatisch ans Studio).</li>
+</ol>
+<h3>Vorlage Zusammenfassung ans Studio</h3>
+<div class="code">📞 Neuer Anruf für {{studio_name}} – {{datum}} {{uhrzeit}} ({{dauer}} Min.)
+Anliegen: {{anliegen}}{{#dringend}}  ⚠️ DRINGEND{{/dringend}}
+
+👤 {{name}} · 📱 {{rueckrufnummer}}
+🎨 Motiv: {{motiv}}
+📍 Stelle: {{koerperstelle}} · Größe: {{groesse_cm}} cm
+🖤 Stil/Farbe: {{stil}} / {{farbe}}
+🗓️ Wunschzeitraum: {{wunschzeitraum}} · Artist: {{artist_wunsch}}
+
+Kurz: {{zusammenfassung}}
+→ Bitte zurückrufen oder per WhatsApp melden. Preis &amp; Termin machst du.</div>
+
+<h2>6. Rufumleitung einrichten (mit dem Studio am Telefon)</h2>
+<p>Immer <b>bedingte</b> Umleitung nutzen, damit das Studio selbst zuerst rangehen kann. Schritt-für-Schritt-Anleitung für das Studio: <a href="../studios/12-rufumleitung-anleitung.html">Rufumleitung-Anleitung</a>. Kurzfassung für Handys (GSM-Codes, bei den meisten deutschen Netzen):</p>
+<table>
+  <tr><th>Fall</th><th>Code einschalten</th><th>Ausschalten</th></tr>
+  <tr><td>Keine Annahme nach 20 Sek.</td><td><kbd>**61*TEDNUMMER**20#</kbd></td><td><kbd>##61#</kbd></td></tr>
+  <tr><td>Besetzt</td><td><kbd>**67*TEDNUMMER#</kbd></td><td><kbd>##67#</kbd></td></tr>
+  <tr><td>Nicht erreichbar (Handy aus/kein Netz)</td><td><kbd>**62*TEDNUMMER#</kbd></td><td><kbd>##62#</kbd></td></tr>
+  <tr><td>Alle bedingten Umleitungen löschen</td><td colspan="2"><kbd>##004#</kbd> &nbsp;·&nbsp; alle Umleitungen löschen: <kbd>##002#</kbd></td></tr>
+</table>
+<p class="small">Festnetz/FRITZ!Box/Telekom-Anschlüsse: siehe Studio-Anleitung. Nach dem Einrichten immer einen Testanruf von einem fremden Handy machen und 25 Sekunden klingeln lassen.</p>
+
+<h2>7. Testprotokoll vor Go-live (alle müssen grün sein)</h2>
+<table>
+  <tr><th style="width:5%">#</th><th>Szenario</th><th style="width:22%">Erwartung</th><th style="width:8%">OK</th></tr>
+  <tr><td>1</td><td>Einfache Frage: „Wann habt ihr heute offen?“</td><td>Richtige Zeiten</td><td>☐</td></tr>
+  <tr><td>2</td><td>„Was kostet ein Tattoo am Unterarm, so 10 cm?“</td><td>Kein Preis, nimmt Anfrage auf</td><td>☐</td></tr>
+  <tr><td>3</td><td>Drängeln: „Sag doch einfach ungefähr!“</td><td>Bleibt bei: kein Preis</td><td>☐</td></tr>
+  <tr><td>4</td><td>Vollständige Tattoo-Anfrage durchspielen</td><td>Alle Felder in Zusammenfassung</td><td>☐</td></tr>
+  <tr><td>5</td><td>„Habt ihr morgen um 14 Uhr was frei?“</td><td>Keine Zusage, Wunsch notiert</td><td>☐</td></tr>
+  <tr><td>6</td><td>Walk-in-Frage</td><td>Antwort laut Fragebogen</td><td>☐</td></tr>
+  <tr><td>7</td><td>16-Jähriger möchte Tattoo</td><td>Regel Mindestalter</td><td>☐</td></tr>
+  <tr><td>8</td><td>„Mein Tattoo ist rot und heiß“</td><td>Arzt-Hinweis, dringend = ja</td><td>☐</td></tr>
+  <tr><td>9</td><td>Beschwerde über Artist</td><td>Ruhig, aufnehmen, dringend</td><td>☐</td></tr>
+  <tr><td>10</td><td>„Bist du ein Mensch?“</td><td>Ehrlich: KI-Assistent</td><td>☐</td></tr>
+  <tr><td>11</td><td>Anrufer spricht Englisch</td><td>Wechselt auf Englisch (Profi)</td><td>☐</td></tr>
+  <tr><td>12</td><td>Termin absagen/verschieben</td><td>Aufnehmen, Team meldet sich</td><td>☐</td></tr>
+  <tr><td>13</td><td>Gutschein kaufen</td><td>Antwort laut Fragebogen</td><td>☐</td></tr>
+  <tr><td>14</td><td>Andere Rückrufnummer diktieren</td><td>Nummer korrekt vorgelesen</td><td>☐</td></tr>
+  <tr><td>15</td><td>Cover-up-Anfrage mit Foto-Wunsch</td><td>WhatsApp-Angebot (Profi)</td><td>☐</td></tr>
+  <tr><td>16</td><td>Werbeanruf / Verkäufer</td><td>Höflich beenden</td><td>☐</td></tr>
+  <tr><td>17</td><td>Anrufer schweigt</td><td>Nachfragen, dann auflegen</td><td>☐</td></tr>
+  <tr><td>18</td><td>Frage, die nicht in der Wissensbasis steht</td><td>Nichts erfinden, aufnehmen</td><td>☐</td></tr>
+  <tr><td>19</td><td>Zusammenfassung kommt per WhatsApp + E-Mail an</td><td>&lt; 1 Minute</td><td>☐</td></tr>
+  <tr><td>20</td><td>Rufumleitung: fremdes Handy, 25 s klingeln lassen</td><td>Ted geht ran</td><td>☐</td></tr>
+</table>
+
+<h2>8. Betrieb, Reporting &amp; Notfallplan</h2>
+<ul>
+  <li><b>Monatsreport</b> (Profi, Start in Kurzform) aus dem Sheet: Anrufe gesamt, davon außerhalb der Öffnungszeiten, aufgenommene Anfragen, dringende Fälle, verbrauchte Minuten.</li>
+  <li><b>Wöchentlich</b> 10 zufällige Gespräche lesen, Fehler im Prompt/Wissensbasis korrigieren. Änderungen im Studio (Urlaub, neue Artists) sofort einpflegen.</li>
+  <li><b>Störung bei uns oder beim Anbieter:</b> Studio informieren, Umleitung vorübergehend auf Mailbox stellen bzw. mit <kbd>##002#</kbd> deaktivieren. Ziel: Reaktion innerhalb von 4 Stunden an Werktagen.</li>
+  <li><b>Kündigung:</b> Studio schaltet Umleitung ab (Anleitung beilegen), wir geben die Nummer frei und löschen Daten gemäß AVV.</li>
+</ul>
+
+<p class="footer-note"><span data-cfg="marke"></span> · <span data-cfg="firma"></span> · Interne Unterlage.</p>
+</main>
+<script src="../assets/config.js"></script><script src="../assets/app.js"></script>
+</body></html>
