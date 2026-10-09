@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>Produkt, Pakete &amp; Kalkulation – Ted am Telefon</title>
+<link rel="stylesheet" href="../assets/telefon.css">
+<style>@page{size:A4;margin:16mm 18mm 18mm}</style>
+</head><body>
+<div class="toolbar"><a href="../index.html">← Alle Unterlagen</a><span class="t">Intern · Produkt, Pakete &amp; Kalkulation</span><button data-print>Drucken / PDF</button></div>
+<main class="doc">
+
+<div class="dochead">
+  <div><span class="tag">Intern · Produkt</span><h1>Produkt, Pakete &amp; Kalkulation</h1><p class="lead"><span data-cfg="produkt"></span>: Was wir verkaufen, zu welchem Preis und was davon übrig bleibt</p></div>
+  <div class="meta"><img src="../assets/logo.png" alt="TattooLeadz"><br>Stand 10/2026<br>Vertraulich</div>
+</div>
+
+<h2>1. Produkt auf einen Blick</h2>
+<table>
+  <tr><th style="width:28%">Name</th><td><b>Ted am Telefon</b> (Marke TattooLeadz). Ted ist bereits als WhatsApp-Assistent bekannt, das Telefon ist der zweite Kanal derselben Figur.</td></tr>
+  <tr><th>Claim</th><td>„Du tätowierst. Ted geht ran.“</td></tr>
+  <tr><th>Zielgruppe</th><td>Tattoo-Studios mit 1–6 Artists in Deutschland (später DACH/Dänemark), Inhaber tätowiert selbst, kein fester Empfang.</td></tr>
+  <tr><th>Problem</th><td>Anrufe während Sessions, bei besetzter Leitung und nach Feierabend gehen verloren. Rückrufe kommen spät, Mailboxen werden selten besprochen.</td></tr>
+  <tr><th>Lösung</th><td>KI-Telefonassistent auf eigener deutscher Rufnummer. Das Studio leitet per bedingter Rufumleitung um. Ted beantwortet Standardfragen, nimmt Anfragen strukturiert auf und schickt sie sofort per WhatsApp/E-Mail.</td></tr>
+  <tr><th>Abgrenzung</th><td>Keine Preise, keine Terminzusagen, keine medizinischen Aussagen. Ted ist Empfang, nicht Verkäufer. Das nimmt Studios die Angst vor Kontrollverlust.</td></tr>
+  <tr><th>Technik</th><td>ElevenLabs Agents (Stimme + Sprachmodell), Telefonie-Anbindung mit deutscher Ortsnetz-Nummer, Make für die Weiterleitung, Superchat für WhatsApp, Google Sheets fürs Reporting. Details: <a href="04-umsetzung-onboarding.html">Umsetzung</a>.</td></tr>
+</table>
+
+<h2>2. Pakete &amp; Preise (Listenpreise, netto)</h2>
+<table>
+  <tr><th></th><th class="r">Start</th><th class="r">Profi</th></tr>
+  <tr><td>Monatlich</td><td class="r"><b><span data-cfg="startPreis"></span></b></td><td class="r"><b><span data-cfg="profiPreis"></span></b></td></tr>
+  <tr><td>Inklusivminuten / Monat</td><td class="r"><span data-cfg="startMinuten"></span></td><td class="r"><span data-cfg="profiMinuten"></span></td></tr>
+  <tr><td>Einrichtung einmalig</td><td class="r"><span data-cfg="setup"></span></td><td class="r"><span data-cfg="setup"></span></td></tr>
+  <tr><td>Mehrminute</td><td class="r"><span data-cfg="extraMinute"></span> €</td><td class="r"><span data-cfg="extraMinute"></span> €</td></tr>
+  <tr><td>Kernleistungen</td><td class="r">Annahme, FAQ, Anfrage, Zusammenfassung</td><td class="r">+ WhatsApp an Anrufer, Weiterleitung, Englisch, Report</td></tr>
+</table>
+<ul>
+  <li><b>Laufzeit:</b> <span data-cfg="mindestlaufzeit"></span> Mindestlaufzeit, danach monatlich kündbar (<span data-cfg="kuendigungsfrist"></span>). <b>Garantie:</b> <span data-cfg="garantieTage"></span> Tage, Einrichtungsgebühr zurück.</li>
+  <li><b>Bundle TattooLeadz-Bestandskunden:</b> Einrichtung gratis + <span data-cfg="bundleRabatt"></span> auf die Monatsgebühr.</li>
+  <li><b>Gründer-Aktion (Mailing):</b> Code <span data-cfg="aktionsCode"></span>, Einrichtung gratis für die ersten <span data-cfg="aktionsPlaetze"></span> Studios bis <span data-cfg="aktionsFrist"></span>.</li>
+  <li><b>Empfehlung:</b> 1 Monat gratis für den Empfehlenden, wenn das empfohlene Studio abschließt.</li>
+  <li><b>Rabattgrenze im Gespräch:</b> Einrichtung darf entfallen. Monatspreis nicht unter Liste senken, lieber Minuten oder ein Profi-Feature dazugeben.</li>
+</ul>
+
+<!--KALKULATION-->
+
+<p class="footer-note"><span data-cfg="marke"></span> · <span data-cfg="firma"></span> · Vertraulich, nicht an Studios weitergeben. Preise änderbar in <code>assets/config.js</code>.</p>
+</main>
+<script src="../assets/config.js"></script><script src="../assets/app.js"></script>
+</body></html>

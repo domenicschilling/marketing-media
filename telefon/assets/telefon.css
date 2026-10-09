@@ -38,7 +38,8 @@ img{max-width:100%}
 .doc p{margin:0 0 9px}
 .doc ul,.doc ol{margin:0 0 10px;padding-left:20px}
 .doc li{margin:2px 0}
-.doc table{width:100%;border-collapse:collapse;margin:8px 0 14px;font-size:9.5pt;break-inside:avoid}
+.doc table{width:100%;border-collapse:collapse;margin:8px 0 14px;font-size:9.5pt}
+.doc tr{break-inside:avoid}
 .doc th,.doc td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
 .doc th{background:var(--cream);font-weight:700}
 .doc td.r,.doc th.r{text-align:right;white-space:nowrap}
@@ -83,7 +84,7 @@ img{max-width:100%}
 .fill td{height:26px}
 .todo{background:#ffe9a8;outline:1px dashed #d09a00;border-radius:2px}
 @media print{.todo{background:none;outline:0}}
-.code{font:600 9pt/1.45 ui-monospace,Menlo,Consolas,monospace;background:#f4f2ee;border-radius:8px;padding:10px 12px;white-space:pre-wrap;break-inside:avoid}
+.code{font:600 9pt/1.45 ui-monospace,Menlo,Consolas,monospace;background:#f4f2ee;border-radius:8px;padding:10px 12px;white-space:pre-wrap}
 kbd{font:700 10pt ui-monospace,Menlo,monospace;background:var(--ink);color:var(--gold);padding:2px 6px;border-radius:5px}
 .footer-note{margin-top:24px;padding-top:10px;border-top:1px solid var(--line);font-size:8pt;color:var(--muted)}
 .pb{break-before:page}
