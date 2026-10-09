@@ -6,7 +6,7 @@ export const img = (ctx, name, alt, { cls = '', eager = false, sizes = '(min-wid
   `<img class="${cls}" src="${ctx.a(`img/${name}.webp`)}" srcset="${ctx.a(`img/${name}-800.webp`)} 800w, ${ctx.a(`img/${name}.webp`)} 1400w" sizes="${sizes}" width="${w}" height="${h}" alt="${esc(alt)}" ${eager ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async">`;
 
 /* ---------- Seitenkopf für Unterseiten ---------- */
-export function pageHero(ctx, { eyebrow, title, lead, image, imageAlt, actions = true, crumbs = [] }) {
+export function pageHero(ctx, { eyebrow, title, lead, image, imageAlt, media, actions = true, crumbs = [] }) {
   const trail = [['Startseite', ''], ...crumbs];
   return `
 <section class="page-hero">
@@ -24,7 +24,7 @@ export function pageHero(ctx, { eyebrow, title, lead, image, imageAlt, actions =
         <a class="btn btn--ghost-light" href="tel:${SITE.tel}">${icon('phone')} ${SITE.phone}</a>
       </div>` : ''}
     </div>
-    ${image ? `<figure class="page-hero__media reveal">${img(ctx, image, imageAlt || '', { eager: true })}<span class="corner corner--tl"></span><span class="corner corner--br"></span></figure>` : ''}
+    ${media || ''}${image && !media ? `<figure class="page-hero__media reveal">${img(ctx, image, imageAlt || '', { eager: true })}<span class="corner corner--tl"></span><span class="corner corner--br"></span></figure>` : ''}
   </div>
 </section>`;
 }
@@ -269,7 +269,7 @@ export function inquiryForm(ctx) {
 
   <fieldset class="step is-active" data-step>
     <legend>Wobei dürfen wir Sie unterstützen?</legend>
-    ${radio('leistung', [['Fenster & Türen', 'window'], ['Glasfassade / Wintergarten', 'facade'], ['Sandwichpaneele', 'panel'], ['Industriemontage', 'factory'], ['Innenausbau', 'interior'], ['Montage- / Rückbauservice', 'tools'], ['Sonstiges', 'chat']])}
+    ${radio('leistung', [['Fenster & Türen', 'window'], ['Glasfassade / Wintergarten', 'facade'], ['Fassadenlamellen / -verkleidung', 'louvre'], ['Sandwichpaneele', 'panel'], ['Industriemontage', 'factory'], ['Trockenbau / Innenausbau', 'interior'], ['Montage- / Rückbauservice', 'tools'], ['Sonstiges', 'chat']])}
   </fieldset>
 
   <fieldset class="step" data-step>
@@ -383,4 +383,17 @@ export function residentialRefs(ctx, { limit = 8 } = {}) {
   ${RESIDENTIAL_REFS.slice(0, limit).map(([t, place, cc]) => `<li class="ref reveal"><span class="ref__cc">${cc}</span><div><b>${t}</b><small>${place}</small></div></li>`).join('\n  ')}
 </ul>
 <p class="fineprint">Herstellerreferenzen von MIRAL PVC. Alle Projekte mit Fotos: <a href="${SITE.miral.references}" target="_blank" rel="noopener">miral-pvc.com/reference</a></p>`;
+}
+
+/* ---------- Interaktive Lamellenfassade (CSS-3D, folgt Maus bzw. Scrollposition) ---------- */
+export function lamellaVisual() {
+  const group = (n) => `<div class="lamella-group">${'<span class="lamella"></span>'.repeat(n)}</div>`;
+  return `<figure class="page-hero__media lamella-visual reveal" data-lamellas aria-label="Animierte Lamellenfassade: Holzlamellen vor Balkonen und Glasflächen">
+    <div class="lamella-facade">
+      <div class="lamella-floors" aria-hidden="true">${'<span></span>'.repeat(5)}</div>
+      <div class="lamella-row" aria-hidden="true">${group(6)}${group(6)}${group(6)}${group(6)}</div>
+    </div>
+    <div class="scene-hud" aria-hidden="true"><span>Lamellenfassade</span><span>Maus bewegen</span></div>
+    <span class="corner corner--tl"></span><span class="corner corner--br"></span>
+  </figure>`;
 }

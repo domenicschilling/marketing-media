@@ -195,6 +195,18 @@ $$('form[data-steps]').forEach((form) => {
   show(0);
 });
 
+/* ---------- Lamellenfassade: Neigung folgt Maus bzw. Scrollposition ---------- */
+$$('[data-lamellas]').forEach((el) => {
+  const set = (deg) => el.style.setProperty('--a', `${deg.toFixed(1)}deg`);
+  if (reduced) return set(28);
+  let hover = false;
+  el.addEventListener('pointermove', (e) => { hover = true; const r = el.getBoundingClientRect(); set(((e.clientX - r.left) / r.width - 0.5) * 140); });
+  el.addEventListener('pointerleave', () => { hover = false; onScroll(); });
+  const onScroll = () => { if (hover) return; const r = el.getBoundingClientRect(); set(((r.top + r.height / 2) / innerHeight - 0.5) * -120 + 20); };
+  addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+});
+
 /* ---------- Jahr im Footer ---------- */
 $$('[data-year]').forEach((el) => (el.textContent = new Date().getFullYear()));
 

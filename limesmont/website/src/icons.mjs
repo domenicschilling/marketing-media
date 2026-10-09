@@ -11,6 +11,7 @@ const P = {
   menu: '<path d="M3 6h18M3 12h18M3 18h18"/>',
   close: '<path d="M6 6l12 12M18 6 6 18"/>',
   upload: '<path d="M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/>',
+  louvre: '<path d="M5 3v18M9.5 3v18M14 3v18M18.5 3v18"/><path d="M2 3h20M2 21h20"/>',
   window: '<rect x="4" y="3" width="16" height="18" rx="1"/><path d="M12 3v18M4 12h16"/>',
   facade: '<path d="M3 21V5l9-3 9 3v16"/><path d="M3 9h18M3 15h18M9 3.5V21M15 3.5V21"/>',
   panel: '<path d="M2 8l10-5 10 5-10 5z"/><path d="M2 12l10 5 10-5"/><path d="M2 16l10 5 10-5"/>',

@@ -616,3 +616,22 @@ html:not(.js) .inquiry__head{display:none}
   .nav__link{padding:10px 11px}
 }
 .hero__title{font-size:clamp(2.5rem,4.8vw,4.4rem)}
+
+/* ---------- Lamellenfassade (Seitenkopf Fassadenlamellen) ---------- */
+.lamella-visual{position:relative;margin:0;aspect-ratio:5/4;--a:25deg}
+.lamella-facade{position:absolute;inset:0;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-lg);
+  background:linear-gradient(180deg,#9fc4e3 0,#cfe2f1 9%,#f1efe9 9%,#f1efe9 100%);perspective:900px}
+.lamella-floors{position:absolute;inset:9% 0 0;display:grid;grid-template-rows:repeat(5,1fr)}
+.lamella-floors span{border-top:9px solid #f6f5f1;background:linear-gradient(180deg,rgba(0,0,0,.18),transparent 14%),linear-gradient(90deg,#1d2c33,#2c4049 30%,#22343c 70%,#30454e);box-shadow:inset 0 -3px 0 rgba(255,255,255,.08)}
+.lamella-floors span:nth-child(odd){background:linear-gradient(180deg,rgba(0,0,0,.18),transparent 14%),linear-gradient(90deg,#24363f,#33505b 40%,#263a43)}
+.lamella-row{position:absolute;inset:4% 3% 0;display:flex;justify-content:space-between;transform-style:preserve-3d}
+.lamella-group{display:flex;gap:1.6%;width:19%;height:100%;transform-style:preserve-3d}
+.lamella{flex:1;height:100%;border-radius:2px;transform:rotateY(var(--a));transition:transform .35s var(--ease);
+  background:repeating-linear-gradient(180deg,rgba(255,255,255,.05) 0 3px,rgba(0,0,0,.05) 3px 7px),linear-gradient(90deg,#7a3c1f,#b0623a 35%,#c97848 55%,#9a4f2b);
+  box-shadow:4px 0 8px rgba(0,0,0,.28)}
+.lamella-visual .scene-hud{color:rgba(15,26,21,.55);z-index:3}
+.lamella-visual .scene-hud span:last-child{color:var(--g800)}
+@media (prefers-reduced-motion:reduce){.lamella{transition:none}}
+.lamella-floors span{border-top:15px solid #f4f2ec;box-shadow:inset 0 10px 14px -8px rgba(0,0,0,.45)}
+.lamella-group{gap:3%;width:17%}
+.lamella-visual .scene-hud span{background:rgba(255,255,255,.88);padding:5px 9px;border-radius:999px}

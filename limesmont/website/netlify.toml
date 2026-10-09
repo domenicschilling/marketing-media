@@ -29,6 +29,12 @@
   [headers.values]
     Cache-Control = "public, max-age=86400"
 
+# Umbenannte Seiten
+[[redirects]]
+  from = "/leistungen/innenausbau/*"
+  to = "/leistungen/trockenbau-innenausbau/"
+  status = 301
+
 # Alte WordPress-Adressen auf die neue Seite umleiten
 [[redirects]]
   from = "/wp-admin/*"

@@ -1,6 +1,6 @@
 import { SITE, SERVICES, OWN_PROJECTS, waLink } from './config.mjs';
 import { icon } from './icons.mjs';
-import { pageHero, serviceCards, processSteps, faq, faqSchema, ctaBand, profileStory, panelConfigurator, areaMap, miralStats, inquiryForm, callbackForm, img, builderBenefits, residentialRefs } from './partials.mjs';
+import { pageHero, serviceCards, processSteps, faq, faqSchema, ctaBand, profileStory, panelConfigurator, areaMap, miralStats, inquiryForm, callbackForm, img, builderBenefits, residentialRefs, lamellaVisual } from './partials.mjs';
 
 const todo = (v, label) => (v ? v : `<mark class="todo">[${label} – vom Kunden zu ergänzen]</mark>`);
 
@@ -88,7 +88,7 @@ ${profileStory(ctx)}
     <div class="section-head reveal">
       <p class="eyebrow">Leistungen</p>
       <h2>Von der Wohnanlage bis zur Gewerbehalle.</h2>
-      <p class="lead">Unser Schwerpunkt sind Fenster, Türen und Fassaden im Objektbau. Dazu kommen Sandwichpaneele, Industriemontage und Innenausbau – alles aus einem Team.</p>
+      <p class="lead">Unser Schwerpunkt sind Fenster, Türen und Fassaden im Objektbau. Dazu kommen Fassadenlamellen und -verkleidungen, Trockenbau, Sandwichpaneele und Industriemontage – alles aus einem Team.</p>
     </div>
     ${serviceCards(ctx)}
   </div>
@@ -229,6 +229,8 @@ ${profileStory(ctx)}
         <li>${icon('check')} Rollläden, Raffstores und Insektenschutz</li>
         <li>${icon('check')} Balkon- und Treppengeländer aus Aluminium</li>
         <li>${icon('check')} Glasfassaden und Pfosten-Riegel-Konstruktionen</li>
+        <li>${icon('check')} Fassadenlamellen in Holzoptik und Fassadenverkleidungen</li>
+        <li>${icon('check')} Trockenbau: Ständerwände, Decken, Vorsatzschalen</li>
         <li>${icon('check')} Fensterbänke innen und außen</li>
       </ul>
       <a class="btn btn--dark" href="${ctx.r('miral-pvc/')}">Zum Produktprogramm ${icon('arrow')}</a>
@@ -289,7 +291,7 @@ ${ctaBand(ctx)}
 const services = {
   path: 'leistungen/',
   title: 'Leistungen – Fenster, Türen, Sandwichpaneele & Industriemontage',
-  description: 'Alle Leistungen von LIMES MONT: Fenster und Türen, Glasfassaden, Sandwichpaneele, Industriemontage, Innenausbau sowie Montage- und Rückbauservice in Wassertrüdingen und Umgebung.',
+  description: 'Alle Leistungen von LIMES MONT: Fenster und Türen, Glasfassaden, Fassadenlamellen und Fassadenverkleidung, Trockenbau und Innenausbau, Sandwichpaneele, Industriemontage sowie Montage- und Rückbauservice.',
   crumbs: [['Leistungen', 'leistungen/']],
   body: (ctx) => `
 ${pageHero(ctx, { eyebrow: 'Leistungen', title: 'Montage, die passt – vom Fenster bis zur Halle.', lead: 'Wir verbinden den Vertrieb hochwertiger Fenster-, Tür- und Fassadenelemente mit eigener Montage. Für private Bauherren, Gewerbe und Industrie.', image: 'dachmontage', imageAlt: 'Monteure bei der Dachmontage von Sandwichpaneelen', crumbs: [['Leistungen', 'leistungen/']] })}
@@ -408,25 +410,48 @@ const SERVICE_CONTENT = {
       ['Arbeiten Sie nach Leistungsverzeichnis?', 'Ja. Senden Sie uns LV, Pläne und Terminrahmen über das Anfrageformular – wir erstellen Ihnen ein Angebot.'],
     ],
   },
-  innenausbau: {
-    seo: 'Innenausbau & Montage von Fertigbausätzen',
-    description: 'Einbau von Fertigbausätzen, Küchen, Schranksystemen und vorgefertigten Innenausbau-Elementen – sauber und termingerecht. LIMES MONT, Wassertrüdingen.',
-    eyebrow: 'Innenausbau',
-    h1: 'Innenausbau und Montage – sauber und termingerecht.',
-    lead: 'Wir bauen Küchen, Schranksysteme, Möbel und vorgefertigte Innenausbau-Elemente ein und übernehmen Renovierungs- und Montagearbeiten im Innenbereich.',
+  'trockenbau-innenausbau': {
+    seo: 'Trockenbau & Innenausbau – Ständerwände, Decken, Dachgeschossausbau',
+    description: 'Trockenbau für Wohnanlagen und Gewerbe: Metallständerwände, abgehängte Decken, Vorsatzschalen und Dachgeschossausbau – dazu Einbau von Innentüren, Küchen und Schranksystemen. LIMES MONT, Wassertrüdingen.',
+    eyebrow: 'Trockenbau & Innenausbau',
+    h1: 'Trockenbau und Innenausbau – schnell, sauber, termingerecht.',
+    lead: 'Ständerwände, abgehängte Decken, Vorsatzschalen und Dachgeschossausbau: Wir bauen Wohnanlagen und Gewerbeflächen im Takt Ihrer Baustelle aus – auf Wunsch inklusive Innentüren, Küchen und Einbauten.',
     image: 'innenausbau',
     imageAlt: 'Innenraum mit Rahmenelementen in Dunkelgrün und Hellgrün und moderner Küche',
-    intro: ['Ob neue Küche, Einbauschrank oder Ausbau einer Gewerbefläche: Im Innenbereich entscheidet die Sorgfalt im Detail. Wir arbeiten sauber, schützen Böden und Möbel und hinterlassen die Räume besenrein.', 'Unser Schwerpunkt liegt auf der Montage industriell gefertigter Elemente und Bausätze – passgenau und nach Herstellervorgaben.'],
-    listTitle: 'Leistungen im Innenbereich',
-    list: ['Einbau von Küchen und Küchenbausätzen', 'Schranksysteme, Einbaumöbel und Möbelmontage', 'Innentüren und Zargen', 'Montage vorgefertigter Trennwand- und Innenausbau-Elemente', 'Sockelleisten, Profile und Abschlussleisten', 'Renovierungs- und Instandhaltungsarbeiten (ohne genehmigungspflichtige Bauleistungen)'],
+    intro: ['Trockenbau ist das Rückgrat des modernen Innenausbaus: schnell, flexibel und ohne lange Trocknungszeiten. Gerade bei Wohnanlagen mit vielen gleichen Einheiten zählen eingespielte Abläufe und verlässliche Termine – damit die Folgegewerke pünktlich weiterarbeiten können.', 'Wir arbeiten nach Plan und nach den Systemvorgaben der Hersteller und übernehmen auf Wunsch auch die anschließende Montage von Innentüren, Küchen und Einbauten. So haben Sie für den kompletten Innenausbau einen Ansprechpartner.'],
+    listTitle: 'Leistungen im Innenausbau',
+    list: ['Metallständerwände und Trennwände', 'Abgehängte Decken und Unterdecken', 'Vorsatzschalen und Installationswände', 'Dachgeschossausbau', 'Spachtelarbeiten in der gewünschten Oberflächenqualität', 'Innentüren und Zargen', 'Einbau von Küchen, Schranksystemen und Einbaumöbeln', 'Sockelleisten, Profile und Abschlussleisten'],
     features: [
-      ['ruler', 'Passgenau', 'Montage nach Herstellervorgaben, Ausrichtung und Anpassung vor Ort.'],
-      ['clock', 'Termintreu', 'Abgestimmte Termine – auch für Gewerbeflächen außerhalb der Öffnungszeiten.'],
-      ['leaf', 'Sauber', 'Abdecken, aufräumen, Verpackung mitnehmen – Sie merken nur das Ergebnis.'],
-      ['handshake', 'Fair', 'Klares Angebot, transparente Abrechnung ohne versteckte Kosten.'],
+      ['clock', 'Im Takt der Baustelle', 'Wohnung für Wohnung, Geschoss für Geschoss – abgestimmt mit Rohbau, Haustechnik und Malern.'],
+      ['ruler', 'Nach System', 'Ausführung nach Plan und den Systemvorgaben der Hersteller – inklusive der Schall- und Brandschutzanforderungen aus Ihrer Planung.'],
+      ['leaf', 'Sauber', 'Abdecken, aufräumen, Verschnitt mitnehmen – die Baustelle bleibt ordentlich.'],
+      ['handshake', 'Ein Team', 'Trockenbau, Türen und Einbauten aus einer Hand – weniger Schnittstellen für Ihre Bauleitung.'],
     ],
     faq: [
-      ['Bauen Sie auch Küchen ein, die ich selbst gekauft habe?', 'Ja, wir montieren auch Küchen und Möbel, die Sie bei einem Händler gekauft haben. Elektro- und Wasseranschlüsse müssen gegebenenfalls von einem zugelassenen Fachbetrieb ausgeführt werden.'],
+      ['Übernehmen Sie den Trockenbau für ganze Wohnanlagen?', 'Ja. Wir kalkulieren nach Plänen oder Leistungsverzeichnis und arbeiten Einheit für Einheit nach Ihrem Bauzeitenplan.'],
+      ['Bauen Sie auch Küchen ein, die selbst gekauft wurden?', 'Ja, wir montieren auch Küchen und Möbel, die bei einem Händler gekauft wurden. Elektro- und Wasseranschlüsse müssen gegebenenfalls von einem zugelassenen Fachbetrieb ausgeführt werden.'],
+    ],
+  },
+  fassadenlamellen: {
+    seo: 'Fassadenlamellen & Fassadenverkleidung – Lamellenfassade, VHF, Parkhausfassade',
+    description: 'Montage von Fassadenlamellen in Holzoptik, Lamellenfassaden aus Aluminium, Fassadenplatten als vorgehängte hinterlüftete Fassade und Parkhausfassaden – für Wohnanlagen, Hotels und Gewerbebauten.',
+    eyebrow: 'Fassadenlamellen & Fassadenverkleidung',
+    h1: 'Lamellenfassaden und Verkleidungen, die ein Gebäude prägen.',
+    lead: 'Senkrechte Lamellen in Holzoptik, großformatige Fassadenplatten und luftige Parkhausfassaden: Wir montieren Fassadenverkleidungen für Wohnanlagen, Hotels, Büro- und Parkhäuser.',
+    media: 'lamellas',
+    intro: ['Fassadenlamellen sind das Markenzeichen moderner Wohn- und Hotelbauten: Sie gliedern die Fassade, setzen warme Akzente in Holzoptik und spenden zugleich Schatten und Sichtschutz. An Parkhäusern sorgen Lamellen- und Streckmetallfassaden für natürliche Belüftung bei geschlossenem Erscheinungsbild.', 'Wir montieren Unterkonstruktion und Fassadenelemente nach Planung und Herstellervorgaben – abgestimmt mit der Fenster- und Geländermontage, damit an den Anschlüssen alles zusammenpasst.'],
+    listTitle: 'Systeme, die wir montieren',
+    list: ['Vertikale und horizontale Fassadenlamellen aus Aluminium – pulverbeschichtet oder in Holzdekor', 'Lamellen aus WPC und Holz', 'Fassadenplatten (z. B. HPL, Faserzement, Aluminium-Verbund) als vorgehängte hinterlüftete Fassade', 'Parkhausfassaden aus Lamellen, Streckmetall oder Lochblech', 'Sonnenschutz-Lamellen und feste Brise Soleil', 'Glas- und Aluminiumgeländer für Balkone und Loggien', 'Attika-, Laibungs- und Kantteile'],
+    features: [
+      ['louvre', 'Gestaltung', 'Lamellen in Holzoptik oder RAL-Farbe gliedern die Fassade und setzen Akzente – wie an modernen Wohnanlagen und Hotels.'],
+      ['leaf', 'Sonnen- & Sichtschutz', 'Lamellen verschatten Fenster und Loggien und schützen die Privatsphäre, ohne das Licht auszusperren.'],
+      ['factory', 'Für Parkhäuser', 'Offene Lamellen- und Streckmetallfassaden ermöglichen natürliche Belüftung bei geschlossener Optik.'],
+      ['handshake', 'Alles aus einer Hand', 'Fenster, Geländer und Fassadenverkleidung abgestimmt montiert – ohne Schnittstellenprobleme an den Anschlüssen.'],
+    ],
+    faq: [
+      ['Wie heißen die senkrechten „Holzlatten“ an modernen Fassaden?', 'Man spricht von Fassadenlamellen oder einer Lamellenfassade. Die Lamellen bestehen häufig aus pulverbeschichtetem Aluminium in Holzdekor – das sieht aus wie Holz, ist aber witterungsbeständig und pflegeleicht. Alternativen sind WPC oder echtes Holz.'],
+      ['Was ist eine vorgehängte hinterlüftete Fassade (VHF)?', 'Bei einer VHF werden Fassadenplatten mit Abstand auf einer Unterkonstruktion vor der Dämmung montiert. Der Luftspalt dahinter führt Feuchtigkeit ab – die Konstruktion ist langlebig und gestalterisch sehr flexibel.'],
+      ['Liefern Sie das Material auch?', 'Je nach Projekt beschaffen wir die Systeme über unsere Lieferanten – Sonnenschutz-Lamellen und Geländer auch direkt von MIRAL PVC – oder montieren bauseits gestelltes Material nach Ihrer Planung.'],
     ],
   },
   montageservice: {
@@ -459,13 +484,13 @@ function servicePage(s) {
     title: c.seo,
     description: c.description,
     crumbs: [['Leistungen', 'leistungen/'], [s.title, `leistungen/${s.slug}/`]],
-    preloadImg: `${c.image}-800.webp`,
+    preloadImg: c.image ? `${c.image}-800.webp` : undefined,
     schema: [
       { '@context': 'https://schema.org', '@type': 'Service', name: s.title, serviceType: s.title, description: c.description, provider: { '@id': SITE.url + '/#business' }, areaServed: 'Westmittelfranken, Nordschwaben, Deutschland' },
       ...(c.faq?.length ? [faqSchema(c.faq)] : []),
     ],
     body: (ctx) => `
-${pageHero(ctx, { eyebrow: c.eyebrow, title: c.h1, lead: c.lead, image: c.image, imageAlt: c.imageAlt, crumbs: [['Leistungen', 'leistungen/'], [s.title, `leistungen/${s.slug}/`]] })}
+${pageHero(ctx, { eyebrow: c.eyebrow, title: c.h1, lead: c.lead, image: c.image, imageAlt: c.imageAlt, media: c.media === 'lamellas' ? lamellaVisual() : undefined, crumbs: [['Leistungen', 'leistungen/'], [s.title, `leistungen/${s.slug}/`]] })}
 
 <section class="section">
   <div class="container split split--text">
@@ -502,7 +527,7 @@ ${c.extra === 'configurator' ? `
   </div>
 </section>` : ''}
 
-${['fenster-tueren', 'fassaden-wintergarten'].includes(s.slug) ? `
+${['fenster-tueren', 'fassaden-wintergarten', 'fassadenlamellen'].includes(s.slug) ? `
 <section class="section section--compact">
   <div class="container">
     <a class="partner-strip reveal" href="${ctx.r('miral-pvc/')}">
@@ -710,7 +735,7 @@ ${pageHero(ctx, { eyebrow: 'Über uns', title: 'Ein Team. Ein Anspruch: Montage,
   <div class="container split split--text">
     <div class="prose reveal">
       <h2>Wer wir sind</h2>
-      <p>Die LIMES MONT UG (haftungsbeschränkt) mit Sitz in Wassertrüdingen ist auf die Montage vorgefertigter Bauelemente spezialisiert: Fenster und Türen, Sandwichpaneele, Industrieelemente und Innenausbau. Unser Team aus Monteuren und Projektleitern arbeitet für private Bauherren ebenso wie für Gewerbebetriebe, Hallenbauer und Generalunternehmer.</p>
+      <p>Die LIMES MONT UG (haftungsbeschränkt) mit Sitz in Wassertrüdingen ist auf die Montage vorgefertigter Bauelemente spezialisiert: Fenster und Türen, Fassadenlamellen und -verkleidungen, Sandwichpaneele, Industrieelemente sowie Trockenbau und Innenausbau. Unser Team aus Monteuren und Projektleitern arbeitet für private Bauherren ebenso wie für Gewerbebetriebe, Hallenbauer und Generalunternehmer.</p>
       <p>Als Generalvertretung von MIRAL PVC für Deutschland verbinden wir zwei Welten: die Fertigungskompetenz eines großen europäischen Herstellers und den persönlichen Service eines regionalen Montagebetriebs.</p>
       <h2>Wofür wir stehen</h2>
       <ul class="values">
