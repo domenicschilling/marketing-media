@@ -15,28 +15,38 @@
 
 <h2>1. So funktioniert Tattoofin technisch</h2>
 <div class="box">
-<div class="code">Studio (Portal)  ── erstellt Zahlungslink: Betrag, Kunde, Projekt  ──►  WhatsApp / E-Mail / QR
-                                                                          │
-Kunde  ◄──────────────────────────────────────────────────────────────────┘
+<div class="code">Studio (Portal)  ── erstellt Link: Projekt oder Anzahlung  ──►  WhatsApp / E-Mail / QR
+                                                          │
+Kunde  ◄──────────────────────────────────────────────────┘
   │  öffnet Checkout mit Logo und Namen des Studios
-  │  wählt Zahlungsart: Karte · Apple Pay · Google Pay · SEPA · Klarna (soweit freigegeben)
+  │  bei Anzahlung: bestätigt vorher die Anzahlungsbedingungen des Studios
+  │  wählt Zahlungsart: Karte · Apple Pay · Google Pay · Klarna (soweit freigegeben)
   ▼
 Zahlungsanbieter prüft und entscheidet (bei Raten z. B. Bonitätsprüfung)
-  │  bei Freigabe: Zahlung auf dem EIGENEN Stripe-Konto des Studios (Direct Charge)
-  ├─► Stripe zieht seine Gebühren beim Studio ab
-  ├─► Plattformgebühr (Provision) geht automatisch an Tattoofin  (nur Modell B)
-  └─► Auszahlung an das Bankkonto des Studios nach Stripe-Auszahlungsplan
+  │
+  ├─ Modell B · Provision: Stripe Checkout auf der Tattoofin-Plattform
+  │    (Destination Charge, on_behalf_of = Studio, das Studio ist Händler)
+  │    ├─► 10 % vom Zahlbetrag bleiben als Plattformgebühr bei Tattoofin
+  │    │   (daraus zahlt Tattoofin die Stripe-/Klarna-Gebühren und die USt.)
+  │    └─► 90 % überweist Stripe automatisch auf das Express-Konto des Studios
+  │        → Auszahlung auf das Bankkonto des Studios nach Auszahlungsplan
+  │
+  └─ Modell A · Kauf: Zahlung direkt auf dem EIGENEN Standard-Konto des Studios
+       (Direct Charge). Stripe zieht seine Gebühren beim Studio ab.
+       → Auszahlung auf das Bankkonto des Studios nach Stripe-Auszahlungsplan
 
-Tattoofin-Plattform: Portal-Übersicht · E-Mail an Studio bei jeder Zahlung · Monatsabrechnung</div>
+Geld läuft nie über ein Bankkonto von DSX. Stripe ist das lizenzierte Zahlungsinstitut.
+Tattoofin-Plattform: Portal · E-Mail an Studio bei jeder Zahlung · Monatsabrechnung (B)</div>
 </div>
-<p><b>Warum ein eigenes Standard-Konto?</b> Das Konto gehört dem Studio. Es sieht alles im eigenen Stripe-Dashboard, Stripe stellt ihm die Gebühren direkt in Rechnung, und bei einer Kündigung bleibt alles beim Studio. Für uns entstehen bei Standard-Konten keine Kontogebühren (siehe <a href="01-produkt-und-preise.html">Produkt &amp; Preise</a>).</p>
+<p><b>Warum Express bei Provision?</b> Tattoofin kassiert als Plattform und kann so die <span data-cfg="provisionSatz"></span> wirklich „alles inklusive“ abrechnen: Das Studio bekommt keine Gebührenrechnung von Stripe. Das Express-Konto ist ein Stripe-Konto auf den Namen des Studios nur für Auszahlungen, in ca. 10 Min. mit Ausweis und Bankverbindung angelegt und über die Tattoofin-Plattform verwaltet. Stripe prüft die Identität (KYC), das Studio sieht Auszahlungen im Express-Dashboard (Login über das Portal). Erstattungen und Rückbuchungen steuern wir über die Plattform. Für uns kostet das Stripe-Gebühren je Zahlung und Connect-Gebühren je aktivem Konto und Auszahlung (siehe <a href="01-produkt-und-preise.html">Produkt &amp; Preise</a>).</p>
+<p><b>Warum Standard beim Kauf?</b> Das Konto gehört dem Studio. Es sieht alles im eigenen Stripe-Dashboard, Stripe stellt ihm die Gebühren direkt in Rechnung, und bei einer Kündigung bleibt alles beim Studio. Für uns entstehen bei Standard-Konten keine Kontogebühren.</p>
 
 <h2>2. Ablauf in 8 Schritten</h2>
 <ol class="steps">
-  <li><b>Online-Abschluss</b> über <span data-cfg="websiteUrl"></span>: Modell (Kauf oder Provision) → Studio-Daten → Vertrag + AVV bestätigen → Kauf bezahlen bzw. Stripe-Konto verbinden. Alternativ PDF-<a href="../studios/14-vertrag.html">Vertrag</a> + <a href="../studios/15-avv.html">AVV</a>. Portal-Zugang geht automatisch per E-Mail raus.</li>
-  <li><b>Stripe-Connect-Onboarding</b> des Studios: eigenes Standard-Konto anlegen oder bestehendes verbinden. Stripe prüft Identität und Unternehmen (KYC): Ausweis, Anschrift, Rechtsform, bei UG/GmbH wirtschaftlich Berechtigte, Bankkonto (IBAN). Die Freigabe kann in der Regel 1–3 Werktage dauern (Erfahrungswert, nicht garantiert). Fehlende Angaben zeigt Stripe im Dashboard an.</li>
-  <li><b>Zahlungsarten aktivieren</b> im Stripe-Dashboard des Studios (Einstellungen → Zahlungsmethoden): Karten, Apple Pay, Google Pay, SEPA-Lastschrift, Klarna. Klarna-Status prüfen (Capability <code>klarna_payments</code> = aktiv). Siehe Checkpunkt Branche unten.</li>
-  <li><b>Branding</b> (Einstellungen → Branding und öffentliche Unternehmensdaten): Logo, Icon, Markenfarbe und Akzentfarbe des Studios, öffentlicher Studio-Name, Abrechnungstext auf dem Kontoauszug (kurz, z. B. Studioname), Support-E-Mail. Belege an Kunden aktivieren. Im Portal: Studio-Name, Logo, Zahlseite.</li>
+  <li><b>Online-Abschluss</b> über <span data-cfg="websiteUrl"></span>: Modell (Kauf oder Provision) → Studio-Daten → Vertrag + AVV bestätigen → Kauf bezahlen und Stripe-Konto verbinden bzw. Stripe-Auszahlungskonto anlegen (Provision). Alternativ PDF-<a href="../studios/14-vertrag.html">Vertrag</a> + <a href="../studios/15-avv.html">AVV</a>. Portal-Zugang geht automatisch per E-Mail raus.</li>
+  <li><b>Stripe-Connect-Onboarding</b> des Studios: <b>Provision:</b> Express-Konto (Auszahlungskonto) über den Link im Portal anlegen, ca. 10 Min. <b>Kauf:</b> eigenes Standard-Konto anlegen oder bestehendes verbinden. Stripe prüft Identität und Unternehmen (KYC): Ausweis, Anschrift, Rechtsform, bei UG/GmbH wirtschaftlich Berechtigte, Bankkonto (IBAN). Die Freigabe kann in der Regel 1–3 Werktage dauern (Erfahrungswert, nicht garantiert). Fehlende Angaben zeigt Stripe im Dashboard an.</li>
+  <li><b>Zahlungsarten prüfen:</b> Karten, Apple Pay, Google Pay, Klarna (kein SEPA für Kundenzahlungen). <b>Provision:</b> Capabilities <code>card_payments</code>, <code>transfers</code> und <code>klarna_payments</code> am Express-Konto aktiv (Plattform-Dashboard → Verbundene Konten). <b>Kauf:</b> im Stripe-Dashboard des Studios (Einstellungen → Zahlungsmethoden). Siehe Checkpunkt Branche unten.</li>
+  <li><b>Branding:</b> Logo, Icon, Farben des Studios, öffentlicher Studio-Name, Abrechnungstext auf dem Kontoauszug (kurz, z. B. Studioname), Support-E-Mail. <b>Kauf:</b> im Dashboard des Studios (Einstellungen → Branding). <b>Provision:</b> setzen wir für das Express-Konto über die Plattform. Belege an Kunden aktivieren. Im Portal: Studio-Name, Logo, Zahlseite, Anzahlungsbedingungen.</li>
   <li><b>Testzahlung</b> im Testmodus nach Testprotokoll (Abschnitt 5). Danach optional ein echter 1-€-Test per Karte mit Erstattung.</li>
   <li><b>Schulung</b> (30 Min., Video-Call oder vor Ort) mit dem <a href="../studios/12-team-leitfaden.html">Team-Leitfaden</a>: Link erstellen, Zahlseite zeigen, was das Team sagen darf und was nicht.</li>
   <li><b>Studio Kit</b> erzeugen mit dem <a href="../kunden/generator.html">Generator</a> (Studioname, Logo, Link der Studio-Zahlseite): Fensteraufkleber, Flyer, Thekenaufsteller, Kundeninfo, Social-Kit mit Story, Post und Website-Badge. Drucken oder als PDF schicken.</li>
@@ -49,7 +59,7 @@ Tattoofin-Plattform: Portal-Übersicht · E-Mail an Studio bei jeder Zahlung · 
     <li>Tattoo-Dienstleistungen stehen in der Liste verbotener Klarna-Kategorien bei Stripe nicht (u. a. B2B, Gutscheine und Geschenkkarten, Glücksspiel, Spenden) und Tattoos werden in Stripes Liste eingeschränkter Branchen nicht genannt (Stand 10/2026). Die Entscheidung trifft aber Stripe bzw. Klarna je Konto. <b>Darum bei jedem Studio prüfen:</b> Ist Klarna im Dashboard aktiv oder gibt es Rückfragen?</li>
     <li>Branche im Stripe-Konto korrekt angeben (persönliche Dienstleistung / Tattoo-Studio), keine „passendere“ Kategorie wählen.</li>
     <li><b>Keine Gutscheine</b> über Klarna verkaufen. <b>Kein Aufpreis</b> für Klarna-Zahlungen. <b>Keine Käufe</b> durch Inhaber oder Mitarbeitende mit Klarna.</li>
-    <li>Klarna ist nur für Privatkunden. Firmenkunden (selten) per Karte oder SEPA.</li>
+    <li>Klarna ist nur für Privatkunden. Firmenkunden (selten) per Karte.</li>
   </ul>
   <p class="small" style="margin:6px 0 0">Quellen: docs.stripe.com/payments/klarna/compliance, stripe.com/legal/restricted-businesses, abgerufen am 09.10.2026.</p>
 </div>
@@ -57,10 +67,10 @@ Tattoofin-Plattform: Portal-Übersicht · E-Mail an Studio bei jeder Zahlung · 
 <h2>3. Zeitplan (Tag 0 bis Tag 30)</h2>
 <table>
   <tr><th style="width:15%">Tag</th><th style="width:47%">Was passiert</th><th>Wer / Ergebnis</th></tr>
-  <tr><td><b>Tag 0</b></td><td>Online-Abschluss. Kauf: Zahlung über Stripe. Provision: Studio startet die Stripe-Verbindung. Willkommensnachricht, Fragebogen-Link</td><td>Vertrieb · Sheet auf „Gewonnen“, Modell notiert</td></tr>
-  <tr><td><b>Tag 0–1</b></td><td>Kickoff (20 Min.): Fragebogen, Rechtsform, wer erstellt Links, Logo und Farben, typische Projektpreise und Anzahlungsregeln. Stripe-Onboarding gemeinsam starten, falls noch offen</td><td>Umsetzung · Daten vollständig</td></tr>
+  <tr><td><b>Tag 0</b></td><td>Online-Abschluss. Kauf: Zahlung über Stripe. Provision: Studio legt das Stripe-Auszahlungskonto an. Willkommensnachricht, Fragebogen-Link</td><td>Vertrieb · Sheet auf „Gewonnen“, Modell notiert</td></tr>
+  <tr><td><b>Tag 0–1</b></td><td>Kickoff (20 Min.): Fragebogen, Rechtsform, wer erstellt Links, Logo und Farben, typische Projektpreise, Anzahlungsbedingungen (Höhe, Absagefrist, No-Show). Stripe-Onboarding gemeinsam starten, falls noch offen</td><td>Umsetzung · Daten vollständig</td></tr>
   <tr><td><b>Tag 1–3</b></td><td>Stripe prüft das Konto (Erfahrungswert 1–3 Werktage). Bei Rückfragen sofort mit dem Studio Dokumente nachreichen. Parallel: Portal und Zahlseite anlegen, Studio Kit vorbereiten</td><td>Stripe / Studio · Konto freigegeben</td></tr>
-  <tr><td><b>Freigabe + 1</b></td><td>Zahlungsarten aktivieren, Klarna-Status prüfen, Branding, Belege. Testprotokoll komplett im Testmodus</td><td>Umsetzung · Testprotokoll grün</td></tr>
+  <tr><td><b>Freigabe + 1</b></td><td>Zahlungsarten und Klarna-Status prüfen, Branding, Belege, Anzahlungsbedingungen im Portal. Testprotokoll komplett im Testmodus</td><td>Umsetzung · Testprotokoll grün</td></tr>
   <tr><td><b>Freigabe + 2</b></td><td>Schulung 30 Min. mit Team-Leitfaden. Studio erstellt selbst einen Testlink. Kit drucken oder verschicken</td><td>Studio + Umsetzung · Team kann es</td></tr>
   <tr><td><b>Freigabe + 2–3</b></td><td><b>Go-live</b>: Live-Modus, optional 1-€-Test per Karte mit Erstattung, Go-live-Nachricht</td><td>Umsetzung · <b>STARTKLAR</b></td></tr>
   <tr><td>Tag 7 / 14</td><td>Check im Portal: Links erstellt? Zahlungen? Probleme? Kurzes Feedback ans Studio, ggf. Auffrischung</td><td>Umsetzung</td></tr>
@@ -77,18 +87,18 @@ Tattoofin-Plattform: Portal-Übersicht · E-Mail an Studio bei jeder Zahlung · 
   <li>Rechtsform, Kleinunternehmer ja/nein (wichtig für Provision und Rechnung)</li>
   <li>Logo (PNG/SVG), Farben, Studio-Name wie auf Belegen gewünscht</li>
   <li>Wer im Team erstellt Links? Portal-Zugänge</li>
-  <li>Anzahlungsregel des Studios (Betrag, Zeitpunkt, Erstattung)</li>
+  <li>Anzahlungsbedingungen des Studios (Betrag, Absagefrist, No-Show) im Portal unter „Konto“ eingetragen</li>
   <li>WhatsApp-Nummer und E-Mail des Studios für Benachrichtigungen</li>
 </ul></div>
 <div class="box"><h3>Stripe &amp; Technik</h3>
 <ul class="check">
-  <li>Standard-Konto verbunden, Status „aktiv“, Auszahlungen aktiviert</li>
+  <li>Provision: Express-Konto, Kauf: Standard-Konto verbunden. Status „aktiv“, Zahlungen und Auszahlungen aktiviert</li>
   <li>Bankkonto hinterlegt, Auszahlungsplan mit Studio besprochen</li>
-  <li>Karten, Apple Pay, Google Pay, SEPA aktiv</li>
+  <li>Karten, Apple Pay, Google Pay aktiv (kein SEPA)</li>
   <li>Klarna aktiv (<code>klarna_payments</code>), Checkpunkt Branche erledigt</li>
   <li>Branding: Logo, Icon, Farben, öffentlicher Name, Abrechnungstext</li>
   <li>Belege an Kunden aktiv, Support-E-Mail gesetzt</li>
-  <li>Provision: Plattformgebühr korrekt (Satz, USt.) in einer Testzahlung geprüft</li>
+  <li>Provision: Plattformgebühr = <span data-cfg="provisionSatz"></span> vom Zahlbetrag, Transfer an das Studio, <code>on_behalf_of</code> in einer Testzahlung geprüft</li>
   <li>Portal: Studio angelegt, Zahlseite mit QR erreichbar</li>
   <li>Studio Kit erzeugt mit Link der Studio-Zahlseite</li>
 </ul></div>
@@ -98,23 +108,24 @@ Tattoofin-Plattform: Portal-Übersicht · E-Mail an Studio bei jeder Zahlung · 
 <table>
   <tr><th style="width:5%">#</th><th style="width:38%">Szenario</th><th>Erwartung</th><th class="ok">OK</th></tr>
   <tr><td>1</td><td>Zahlungslink über den <b>Vollbetrag</b> (z. B. 1.500 €), Testkarte</td><td>Checkout mit Logo und Studio-Name, Zahlung erfolgreich, Beleg an Kunde, E-Mail an Studio, Eintrag im Portal</td><td class="ok">☐</td></tr>
-  <tr><td>2</td><td><b>Anzahlung</b>: Link über Teilbetrag (z. B. 200 €) mit Projektbezug</td><td>Betrag und Projekt korrekt im Portal, Restbetrag später als zweiter Link möglich</td><td class="ok">☐</td></tr>
+  <tr><td>2</td><td><b>Anzahlung</b>: Link mit Art „Anzahlung“ (z. B. 200 €) mit Projektbezug</td><td>Kunde muss die Anzahlungsbedingungen bestätigen, ohne Haken keine Zahlung. Bedingungen stehen auch im Stripe Checkout. Betrag und Projekt korrekt im Portal, Restbetrag später als zweiter Link möglich</td><td class="ok">☐</td></tr>
   <tr><td>3</td><td>Testkarte mit 3D-Secure-Abfrage</td><td>Bestätigungsschritt erscheint, Zahlung danach erfolgreich</td><td class="ok">☐</td></tr>
   <tr><td>4</td><td>Klarna im Testablauf <b>freigegeben</b></td><td>Weiterleitung zu Klarna und zurück, Zahlung erfolgreich, Status im Portal „bezahlt“</td><td class="ok">☐</td></tr>
   <tr><td>5</td><td>Klarna im Testablauf <b>abgelehnt</b> → Kunde wählt Karte</td><td>Kunde landet wieder im Checkout, kann andere Zahlungsart wählen, Zahlung erfolgreich, kein Doppel-Eintrag</td><td class="ok">☐</td></tr>
-  <tr><td>6</td><td>SEPA-Lastschrift mit Test-IBAN</td><td>Zahlung „in Bearbeitung“, später erfolgreich. Studio weiß: SEPA wird erst nach einigen Tagen bestätigt</td><td class="ok">☐</td></tr>
+  <tr><td>6</td><td>Zahlseite per QR mit Haken „Das ist eine Anzahlung“</td><td>Anzahlungsbedingungen erscheinen und müssen bestätigt werden, Zahlung im Portal als Anzahlung sichtbar</td><td class="ok">☐</td></tr>
   <tr><td>7</td><td>Apple Pay bzw. Google Pay auf dem Handy</td><td>Wallet-Button wird angezeigt (sofern auf dem Gerät eingerichtet), Zahlung erfolgreich</td><td class="ok">☐</td></tr>
   <tr><td>8</td><td><b>Kunde bricht ab</b> (Checkout schließen)</td><td>Keine Zahlung, Link bleibt offen bzw. läuft ab, Status „offen“ im Portal, keine Provision</td><td class="ok">☐</td></tr>
-  <tr><td>9</td><td><b>Erstattung</b> voll und teilweise (aus Szenario 1)</td><td>Erstattung beim Kunden, Status im Portal aktualisiert, Provision nach unserer Regel behandelt</td><td class="ok">☐</td></tr>
+  <tr><td>9</td><td><b>Erstattung</b> voll und teilweise über den Portal-Button „Erstatten“ (aus Szenario 1)</td><td>Erstattung beim Kunden, Status im Portal aktualisiert. Provision: Betrag per Reverse Transfer vom Studio-Konto zurückgeholt, Provision anteilig zurück, abzüglich Zahlungsgebühr (+ USt.)</td><td class="ok">☐</td></tr>
   <tr><td>10</td><td>Studio-Zahlseite per QR scannen, Betrag eingeben, zahlen</td><td>Zahlseite mit Studio-Name, Zahlung erfolgreich, im Portal sichtbar</td><td class="ok">☐</td></tr>
   <tr><td>11</td><td>Link per WhatsApp-Button aus dem Portal verschicken</td><td>Nachricht mit Link öffnet sich, Link funktioniert auf dem Handy</td><td class="ok">☐</td></tr>
-  <tr><td>12</td><td>Nur Provision: Plattformgebühr prüfen</td><td>Plattformgebühr = <span data-cfg="provisionSatz"></span> netto + USt. nach festgelegter Bemessungsgrundlage, im Stripe-Dashboard des Studios sichtbar</td><td class="ok">☐</td></tr>
+  <tr><td>12</td><td>Nur Provision: Zahlung im Plattform-Dashboard prüfen</td><td>Application Fee = <span data-cfg="provisionSatz"></span> vom Zahlbetrag (z. B. 300 € bei 3.000 €), Transfer von 90 % an das Express-Konto des Studios, <code>on_behalf_of</code> = Studio (Studioname auf Kontoauszug und Beleg)</td><td class="ok">☐</td></tr>
   <tr><td>13</td><td>Optional nach Go-live: echter 1-€-Test per Karte, dann erstatten</td><td>Live-Zahlung klappt. Kein Klarna-Test im Live-Modus durch Inhaber oder Team</td><td class="ok">☐</td></tr>
 </table>
 
 <h2>6. Betrieb</h2>
 <ul>
-  <li><b>Monatsabrechnung (nur Provision):</b> automatisch am 1./2. des Monats für den Vormonat. Rechnung über die einbehaltenen Plattformgebühren mit Übersicht aller Zahlungen, per E-Mail und im Portal.</li>
+  <li><b>Monatsabrechnung (nur Provision):</b> automatisch am 1./2. des Monats für den Vormonat. Rechnung über die einbehaltenen <span data-cfg="provisionSatz"></span> (z. B. 300 € = 252,10 € netto + 47,90 € USt.) mit Übersicht aller Zahlungen, per E-Mail und im Portal. Keine weiteren Gebühren für das Studio.</li>
+  <li><b>Erstattungen nur über das Portal</b> (Button „Erstatten“). Provision: Nie direkt im Stripe-Dashboard von Tattoofin erstatten, ohne „Überweisung rückgängig machen“ (Reverse Transfer) zu wählen. Sonst zahlt Tattoofin den Betrag aus eigener Tasche und das Studio behält die 90 %. Kauf: Das Studio kann auch im eigenen Dashboard erstatten, dann bitte im Portal prüfen.</li>
   <li><b>Benachrichtigungen:</b> E-Mail an das Studio bei jeder Kundenzahlung, bei Stripe-Freigabe und bei der Monatsabrechnung.</li>
   <li><b>Support:</b> WhatsApp und E-Mail. Ziel (intern): Antwort werktags am selben Tag. In den ersten <span data-cfg="setupSupportTage"></span> Tagen aktiv nachfragen.</li>
   <li><b>Monatlicher Blick ins Admin:</b> Studios ohne Zahlung seit 30 Tagen ansprechen, Klarna-Status und Kontostatus prüfen, Rückbuchungen beobachten.</li>
@@ -124,11 +135,12 @@ Tattoofin-Plattform: Portal-Übersicht · E-Mail an Studio bei jeder Zahlung · 
 <h2>7. Notfallplan</h2>
 <table>
   <tr><th style="width:32%">Problem</th><th>Sofortmaßnahme</th></tr>
-  <tr><td>Portal oder Website nicht erreichbar</td><td>Status prüfen, Studio informieren. Übergangsweise kann das Studio im eigenen Stripe-Dashboard einen Zahlungslink erstellen (läuft dann nicht über Tattoofin, Provisionsregel für solche Fälle im Vertrag klären).</td></tr>
+  <tr><td>Portal oder Website nicht erreichbar</td><td>Status prüfen, Studio informieren. Kauf: Übergangsweise kann das Studio im eigenen Stripe-Dashboard einen Zahlungslink erstellen. Provision: Das Express-Konto kann selbst nicht kassieren, also neue Links erst nach der Störung verschicken.</td></tr>
   <tr><td>Stripe-Konto eingeschränkt oder Auszahlungen pausiert</td><td>Hinweis im Stripe-Dashboard lesen, fehlende Dokumente mit dem Studio nachreichen. Bis zur Klärung keine neuen Links verschicken.</td></tr>
-  <tr><td>Klarna nicht verfügbar oder deaktiviert</td><td>Studio informieren, Karte, Apple Pay, Google Pay und SEPA laufen weiter. Status bei Stripe klären. Kundentexte nicht ändern, sie versprechen keine bestimmte Zahlungsart.</td></tr>
+  <tr><td>Klarna nicht verfügbar oder deaktiviert</td><td>Studio informieren, Karte, Apple Pay und Google Pay laufen weiter. Status bei Stripe klären. Kundentexte nicht ändern, sie versprechen keine bestimmte Zahlungsart.</td></tr>
   <tr><td>Falscher Betrag im Link</td><td>Link im Portal deaktivieren, neuen Link erstellen. Schon bezahlt: erstatten und neu verschicken.</td></tr>
-  <tr><td>Kunde reklamiert, Rückbuchung (Dispute)</td><td>Studio antwortet im Stripe-Dashboard fristgerecht mit Belegen (Terminbestätigung, Einverständniserklärung, Fotos, Nachrichtenverlauf). Wir helfen beim Zusammenstellen. Gebühr 20 € trägt das Studio.</td></tr>
+  <tr><td>Kunde reklamiert, Rückbuchung (Dispute), <b>Provision</b></td><td>DSX führt den Fall bei Stripe. Studio sofort um Belege bitten (<a href="05-nachrichtenvorlagen.html">Vorlage</a>): unterschriebene Einverständniserklärung, akzeptierte Anzahlungsbedingungen, Terminbestätigung, Chat, Foto vom fertigen Tattoo (ohne Gesicht), Rechnung. Wir reichen sie fristgerecht im Plattform-Dashboard ein. Solange der Fall läuft, werden Zahlbetrag minus anteilige Provision plus 20 € Gebühr vom Auszahlungskonto des Studios zurückgeholt. Gewonnen: alles zurück ans Studio. Verloren: keine Provision für diese Zahlung.</td></tr>
+  <tr><td>Rückbuchung (Dispute), <b>Kauf</b></td><td>Studio antwortet im eigenen Stripe-Dashboard fristgerecht mit denselben Belegen. Wir helfen beim Zusammenstellen. Gebühr 20 € trägt das Studio.</td></tr>
   <tr><td>Kunde fragt das Team nach Raten oder Zinsen</td><td>Team sagt: „Du kannst beim Bezahlen schauen, welche Zahlungsoptionen dir angeboten werden. Die Bedingungen legt der Zahlungsanbieter fest.“ Keine Beratung.</td></tr>
   <tr><td>Verdacht auf Betrug (ungewöhnlicher Betrag, fremde Karte)</td><td>Zahlung nicht ausliefern, Stripe-Risikohinweise prüfen, im Zweifel erstatten.</td></tr>
 </table>
@@ -136,8 +148,8 @@ Tattoofin-Plattform: Portal-Übersicht · E-Mail an Studio bei jeder Zahlung · 
 <h2>8. Kündigung und Ende</h2>
 <ul>
   <li><b>Provision:</b> kündbar <span data-cfg="kuendigungProvision"></span>, im Portal oder in Textform. Kündigung bestätigen, letzte Monatsabrechnung zum Monatsende.</li>
-  <li><b>Verbindung trennen:</b> Zum Vertragsende trennen wir die Verbindung zwischen Tattoofin-Plattform und Stripe-Konto. Danach behalten wir keine Plattformgebühr mehr ein.</li>
-  <li><b>Konto bleibt beim Studio:</b> Stripe-Konto, Kundendaten, Zahlungen und Auszahlungen gehören dem Studio und bleiben bestehen. Das Studio kann Stripe allein weiter nutzen.</li>
+  <li><b>Provision, Express-Konto abwickeln:</b> Zahlungslinks und Zahlseite zum Vertragsende deaktivieren, neue Zahlungen laufen nicht mehr über das Express-Konto. Offenes Guthaben wird voll ausgezahlt. Erst nach Ablauf der Rückbuchungsfristen (Richtwert 120 Tage nach der letzten Zahlung) das Express-Konto ablehnen bzw. schließen. Das Studio kann jederzeit ein eigenes Stripe-Konto eröffnen.</li>
+  <li><b>Kauf, Verbindung trennen:</b> Wir trennen die Verbindung zwischen Tattoofin-Plattform und Standard-Konto. Das Konto mit Kundendaten, Zahlungen und Auszahlungen gehört dem Studio und bleibt bestehen. Das Studio kann Stripe allein weiter nutzen.</li>
   <li><b>Aufräumen:</b> offene Zahlungslinks deaktivieren, Studio-Zahlseite abschalten. Studio darauf hinweisen, dass QR-Codes im Kit dann nicht mehr funktionieren (Aufkleber, Flyer, Aufsteller entfernen).</li>
   <li><b>Kauf:</b> keine laufende Kündigung nötig. Garantiefall innerhalb von <span data-cfg="garantieTage"></span> Tagen ab Go-live: volles Geld zurück, Verbindung wie oben trennen.</li>
   <li>Nach Ende: Daten gemäß AVV löschen bzw. zurückgeben, Status im Sheet „beendet“ mit Grund.</li>
