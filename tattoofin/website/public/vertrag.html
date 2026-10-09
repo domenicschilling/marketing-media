@@ -8,6 +8,7 @@
 .doc h2{font-size:11.5pt;margin:16px 0 5px}
 .doc ol.abs{padding-left:22px;margin:0 0 6px}
 .doc ol.abs li{margin:0 0 3px}
+.dochead .meta img{width:24mm;aspect-ratio:520/436;object-fit:cover;object-position:top}
 .parties{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0}
 .parties .box{margin:0}
 .form td{height:24px}
@@ -16,7 +17,7 @@
 .hint{background:#fff3cd;border:1px solid #e0b84b;border-radius:8px;padding:10px 12px;margin:0 0 14px;font-size:9pt}
 @media print{.hint{display:none}}
 
-body{background:#f5f2ea}.doc{margin:0 auto 40px}
+body{background:#f7f7f4}.doc{margin:0 auto 40px}
 .webnav{max-width:210mm;margin:0 auto;padding:14px 4px;display:flex;justify-content:space-between;align-items:center;font:600 14px Inter,system-ui,sans-serif}
 .webnav a{color:#14161a;text-decoration:none}.webnav button{background:#0d1117;color:#fff;border:0;border-radius:99px;padding:8px 14px;font:600 13px Inter,sans-serif;cursor:pointer}
 @media print{.webnav{display:none}}
@@ -29,8 +30,8 @@ body{background:#f5f2ea}.doc{margin:0 auto 40px}
 
 
 <div class="dochead">
-  <div><span class="tag ext">Vertrag</span><h1 style="font-size:20pt">Dienstleistungsvertrag<br>„<span data-cfg="produkt"></span>“</h1><p class="lead">KI-Telefonassistent für Tattoo-Studios</p></div>
-  <div class="meta"><img src="../assets/logo.png" alt="TattooLeadz"><br>Vertragsnr. ____________</div>
+  <div><span class="tag ext">Vertrag</span><h1 style="font-size:20pt">Dienstleistungsvertrag<br>„<span data-cfg="produkt"></span>“</h1><p class="lead">Einrichtung einer Zahlungsstruktur mit flexiblen Zahlungsoptionen für Tattoo-Studios</p></div>
+  <div class="meta"><img src="../assets/logo.png" alt="Tattoofin"><br>Vertragsnr. ____________</div>
 </div>
 
 <div class="parties">
@@ -40,101 +41,105 @@ body{background:#f5f2ea}.doc{margin:0 auto 40px}
 
 <h2>§ 1 Vertragsgegenstand</h2>
 <ol class="abs">
-  <li>Der Anbieter stellt dem Kunden einen KI-gestützten Telefonassistenten („Ted“) bereit, der eingehende Anrufe für das Studio des Kunden entgegennimmt, allgemeine Fragen anhand der vom Kunden bereitgestellten Informationen beantwortet, Anliegen und Tattoo-Anfragen aufnimmt und dem Kunden eine Zusammenfassung übermittelt. Einzelheiten ergeben sich aus Anlage A.</li>
-  <li>Der Vertrag richtet sich ausschließlich an Unternehmer im Sinne von § 14 BGB. Der Kunde bestätigt, den Vertrag in Ausübung seiner gewerblichen oder selbständigen Tätigkeit zu schließen.</li>
+  <li>Der Anbieter richtet für das Studio des Kunden eine Zahlungsstruktur ein, über die Endkunden des Kunden Zahlungen für Leistungen des Kunden, insbesondere Tattoo-Projekte und Anzahlungen, mit verschiedenen Zahlungsarten leisten können, darunter, soweit vom jeweiligen Zahlungsanbieter freigegeben, Ratenzahlung und späteres Bezahlen („Tattoofin-Zahlungsstruktur“). Der Anbieter stellt hierfür das Studio-Portal und die Studio-Materialien bereit. Einzelheiten ergeben sich aus Anlage A.</li>
+  <li>Die Zahlungsstruktur wird auf einem eigenen Konto des Kunden bei Stripe (Stripe Payments Europe, Ltd. bzw. das nach den Stripe-Bedingungen zuständige Stripe-Unternehmen, „Stripe“) eingerichtet. Dieses Konto wird über Stripe Connect mit der Plattform des Anbieters verbunden. Inhaber des Stripe-Kontos ist ausschließlich der Kunde.</li>
+  <li>Der Anbieter ist kein Kreditgeber, kein Kreditvermittler und kein Zahlungsdienstleister. Er erbringt keine Zahlungsdienste, nimmt keine Gelder der Endkunden entgegen und vermittelt oder empfiehlt keine Kredite oder Finanzierungen. Zahlungen der Endkunden werden nicht über Konten des Anbieters geleitet. Die Zahlungsabwicklung erfolgt ausschließlich durch Stripe und, je nach Zahlungsart, durch weitere Zahlungsanbieter (z. B. Klarna) nach deren jeweiligen Bedingungen.</li>
+  <li>Über die Nutzung von Stripe und der einzelnen Zahlungsarten schließt der Kunde eigene Verträge unmittelbar mit Stripe und gegebenenfalls weiteren Zahlungsanbietern. Verträge über Ratenzahlung, späteres Bezahlen oder sonstige Finanzierungen kommen ausschließlich zwischen dem Endkunden und dem jeweiligen Zahlungsanbieter zustande. Der Anbieter ist nicht Partei dieser Verträge.</li>
+  <li>Ob und in welchem Umfang Zahlungsarten für den Kunden freigeschaltet werden und ob ein Endkunde eine bestimmte Zahlungsart, insbesondere Ratenzahlung, nutzen kann, entscheidet allein der jeweilige Zahlungsanbieter. Der Anbieter schuldet die Einrichtung nach diesem Vertrag, nicht jedoch die Freischaltung bestimmter Zahlungsarten, die Freigabe einzelner Zahlungen oder einen bestimmten Umsatz.</li>
+  <li>Der Vertrag richtet sich ausschließlich an Unternehmer im Sinne von § 14 BGB. Der Kunde bestätigt, den Vertrag in Ausübung seiner gewerblichen oder selbständigen beruflichen Tätigkeit zu schließen.</li>
   <li>Der Kunde wählt bei Vertragsschluss eines der Vergütungsmodelle Kauf (Modell A) oder Provision (Modell B). Der Leistungsumfang nach Anlage A ist in beiden Modellen gleich.</li>
 </ol>
 
 <h2>§ 2 Leistungen des Anbieters</h2>
 <ol class="abs">
-  <li><b>Einrichtung:</b> Der Anbieter richtet den Telefonassistenten auf Grundlage des vom Kunden ausgefüllten Fragebogens ein, stellt eine deutsche Rufnummer bereit, auf die der Kunde Anrufe umleitet, konfiguriert Begrüßung, Stimme, Wissensbasis und die Übermittlung der Zusammenfassungen und testet das System vor der Inbetriebnahme gemeinsam mit dem Kunden. Ziel ist eine Inbetriebnahme innerhalb von fünf Werktagen nach Eingang des vollständigen Fragebogens; dies ist ein unverbindlicher Richtwert.</li>
-  <li><b>Betrieb:</b> Der Anbieter betreibt den Assistenten während der Vertragslaufzeit, pflegt Änderungen der Studio-Informationen ein, die der Kunde in Textform mitteilt (in der Regel innerhalb von zwei Werktagen), und überwacht die Funktion stichprobenartig.</li>
-  <li><b>Studio-Portal:</b> Der Anbieter stellt dem Kunden für die Vertragsdauer ein Online-Studio-Portal bereit, in dem die vom Assistenten aufgenommenen Anfragen einsehbar sind und im Modell B Buchungen gemeldet werden.</li>
-  <li><b>Support:</b> Die Betreuung ist in beiden Modellen ohne gesonderte Vergütung enthalten. Erreichbarkeit per E-Mail und WhatsApp an Werktagen (Mo–Fr, außer bundeseinheitliche Feiertage) von 9 bis 17 Uhr. Störungen, die den Betrieb ganz verhindern, bearbeitet der Anbieter vorrangig.</li>
-  <li><b>Verfügbarkeit:</b> Der Anbieter strebt eine Verfügbarkeit von 98 % im Monatsmittel an. Ausgenommen sind angekündigte Wartungen sowie Störungen, die außerhalb des Einflussbereichs des Anbieters liegen, insbesondere Störungen der Telefonnetze, des Anschlusses des Kunden oder eingesetzter Drittanbieter.</li>
-  <li>Der Anbieter darf zur Leistungserbringung Unterauftragnehmer und technische Dienstleister einsetzen (z. B. Telefonie, Sprach- und KI-Dienste, Automatisierung). Für die Verarbeitung personenbezogener Daten gilt der AVV.</li>
+  <li><b>Einrichtung:</b> Der Anbieter unterstützt den Kunden bei der Eröffnung eines Stripe-Kontos bzw. verbindet ein bestehendes Stripe-Konto des Kunden per Stripe Connect mit der Plattform. Er nimmt die Grundeinstellungen und das Branding vor (z. B. Logo, Farben, Bezeichnung auf dem Kontoauszug), beantragt bzw. aktiviert die vereinbarten Zahlungsarten, soweit sie für den Kunden verfügbar sind, und testet den Zahlungsablauf. Er führt eine kurze Schulung der vom Kunden benannten Mitarbeitenden mit Gesprächsbeispielen durch (online oder nach Absprache).</li>
+  <li><b>Inbetriebnahme („Go-live“):</b> Die Inbetriebnahme ist erfolgt, wenn der Anbieter dem Kunden nach erfolgreichem Test in Textform mitteilt, dass die Zahlungsstruktur einsatzbereit ist. Ziel ist eine Inbetriebnahme innerhalb weniger Werktage nach Freigabe des Stripe-Kontos durch Stripe und Eingang der erforderlichen Angaben des Kunden; dies ist ein unverbindlicher Richtwert.</li>
+  <li><b>Studio Kit:</b> Der Anbieter stellt dem Kunden digitale Vorlagen bereit: QR-Code und Zahlseite des Studios, Fensteraufkleber, Flyer, Thekenaufsteller, Website-Badge, Instagram-Story und WhatsApp-Vorlagen. Druck und Versand sind nicht enthalten, soweit nicht gesondert vereinbart.</li>
+  <li><b>Studio-Portal:</b> Der Anbieter stellt dem Kunden für die Vertragsdauer ein Online-Studio-Portal bereit, insbesondere zur Erstellung von Zahlungslinks, zur Übersicht der über die Tattoofin-Zahlungsstruktur abgewickelten Zahlungen und zum Abruf der Abrechnungen.</li>
+  <li><b>Setup-Support und Betreuung:</b> Für <span data-cfg="setupSupportTage"></span> Tage ab Inbetriebnahme unterstützt der Anbieter den Kunden bevorzugt bei Fragen und Anpassungen (Setup-Support). Danach ist die Betreuung in beiden Modellen ohne gesonderte Vergütung enthalten. Erreichbarkeit per E-Mail und WhatsApp an Werktagen (Mo bis Fr, außer bundeseinheitliche Feiertage) von 9 bis 17 Uhr.</li>
+  <li><b>Verfügbarkeit:</b> Der Anbieter strebt eine Verfügbarkeit des Studio-Portals und der Zahlseite von 98 % im Monatsmittel an. Ausgenommen sind angekündigte Wartungen sowie Störungen außerhalb des Einflussbereichs des Anbieters, insbesondere Störungen bei Stripe, weiteren Zahlungsanbietern, Hosting-Anbietern oder Telekommunikationsnetzen.</li>
+  <li>Der Anbieter darf zur Leistungserbringung Unterauftragnehmer und technische Dienstleister einsetzen (z. B. Hosting, E-Mail-Versand). Für die Verarbeitung personenbezogener Daten gilt der AVV.</li>
 </ol>
 
-<h2>§ 3 Funktionsweise und Grenzen des KI-Assistenten</h2>
+<h2>§ 3 Zahlungsabwicklung durch Stripe und weitere Zahlungsanbieter</h2>
 <ol class="abs">
-  <li>Der Assistent ist ein KI-System. Er gibt sich gegenüber Anrufern zu Beginn des Gesprächs als digitaler bzw. KI-Assistent zu erkennen. Der Kunde wird diese Kennzeichnung nicht entfernen lassen.</li>
-  <li>Der Assistent gibt keine verbindlichen Preise, Preisspannen oder Terminzusagen ab und schließt keine Verträge im Namen des Kunden. Verbindliche Absprachen trifft ausschließlich der Kunde.</li>
-  <li>Antworten des Assistenten beruhen auf den Informationen des Kunden und auf automatisierter Sprachverarbeitung. Trotz sorgfältiger Einrichtung können Missverständnisse, unvollständige oder fehlerhafte Angaben (z. B. falsch verstandene Namen oder Nummern) nicht ausgeschlossen werden. Der Kunde prüft die Zusammenfassungen und meldet erkennbare Fehler, damit der Anbieter nachbessern kann.</li>
-  <li>Der Assistent erteilt keine medizinische oder rechtliche Beratung. Hinweise auf gesundheitliche Beschwerden werden als dringend markiert und an den Kunden weitergeleitet.</li>
+  <li>Abwicklung, Prüfung (z. B. Identitäts- und Bonitätsprüfung), Freigabe, Auszahlung, Limits, Sicherheitseinbehalte, Rückbuchungen und Streitfälle richten sich ausschließlich nach den Bedingungen von Stripe und der weiteren Zahlungsanbieter. Auszahlungen erfolgen durch Stripe unmittelbar auf das vom Kunden hinterlegte Bankkonto.</li>
+  <li>Die Gebühren der Zahlungsanbieter für die einzelnen Zahlungen trägt der Kunde. Sie sind nicht in der Vergütung des Anbieters enthalten und werden nach den Bedingungen der Zahlungsanbieter berechnet bzw. einbehalten.</li>
+  <li>Der Anbieter hat keinen Einfluss auf Entscheidungen der Zahlungsanbieter, insbesondere über die Eröffnung, Freischaltung, Einschränkung oder Sperrung des Kontos des Kunden, die Freigabe oder Ablehnung einzelner Zahlungen, Änderungen von Gebühren und Bedingungen oder die Einstellung einzelner Zahlungsarten.</li>
+  <li>Erstattungen an Endkunden, Rückbelastungen (Chargebacks) und Reklamationen betreffen das Verhältnis zwischen Kunde, Endkunde und Zahlungsanbieter. Der Kunde bearbeitet sie selbst; der Anbieter unterstützt im Rahmen der Betreuung technisch.</li>
+  <li>Der Anbieter greift auf das Stripe-Konto des Kunden nur im Rahmen der über Stripe Connect erteilten Berechtigungen und nur, soweit dies zur Erbringung der vertraglichen Leistungen erforderlich ist.</li>
 </ol>
 
 <h2>§ 4 Mitwirkungspflichten des Kunden</h2>
 <ol class="abs">
-  <li>Der Kunde stellt die für die Einrichtung erforderlichen Informationen vollständig und richtig bereit und teilt Änderungen (Öffnungszeiten, Urlaube, Team, Regeln) rechtzeitig in Textform mit.</li>
-  <li>Der Kunde richtet die Rufumleitung bei seinem Telefonanbieter ein bzw. unterstützt den Anbieter dabei. Kosten des Telefonanschlusses und etwaige Kosten der Rufumleitung bei seinem Telefonanbieter trägt der Kunde.</li>
-  <li>Der Kunde ist für die Verarbeitung der Anruferdaten datenschutzrechtlich Verantwortlicher. Er informiert Anrufer in geeigneter Weise (z. B. in seiner Datenschutzerklärung und mit dem vom Anbieter bereitgestellten Aushang) über den Einsatz des Assistenten.</li>
-  <li>Der Kunde nutzt den Assistenten nur für den Betrieb seines Studios und nicht für rechtswidrige Zwecke, insbesondere nicht für unerlaubte Werbeanrufe.</li>
+  <li>Der Kunde stellt die für die Einrichtung erforderlichen Informationen (Onboarding-Fragebogen, Logo, gewünschte Zahlungsarten) vollständig und richtig bereit und teilt Änderungen rechtzeitig in Textform mit.</li>
+  <li>Der Kunde führt die von Stripe und den weiteren Zahlungsanbietern verlangte Identifizierung und Verifizierung (KYC) selbst durch, insbesondere Angaben zum Unternehmen, zu wirtschaftlich Berechtigten, Ausweisdokumente und Bankverbindung. Seine Angaben müssen wahrheitsgemäß, vollständig und aktuell sein.</li>
+  <li>Der Kunde hält die Bedingungen von Stripe und der weiteren Zahlungsanbieter ein, einschließlich deren Vorgaben zu zulässigen Geschäften und zur Verwendung von Marken und Logos.</li>
+  <li>Der Kunde wirbt gegenüber Verbrauchern nicht mit konkreten Raten, Monatsbeträgen, Zinssätzen, Laufzeiten oder Beispielrechnungen, es sei denn, er macht die hierfür gesetzlich vorgeschriebenen Pflichtangaben, insbesondere nach den Vorschriften der Preisangabenverordnung über die Werbung für Verbraucherdarlehen. Die vom Anbieter bereitgestellten Studio-Materialien enthalten keine solchen Angaben und dürfen nicht entsprechend ergänzt werden.</li>
+  <li>Der Kunde stellt sicher, dass seine Mitarbeitenden keine Kreditberatung oder Kreditvermittlung vornehmen, keine Zusagen über die Freigabe, Raten, Zinsen oder Laufzeiten machen und Endkunden für die Bedingungen auf den Checkout des Zahlungsanbieters verweisen.</li>
+  <li>Über die Tattoofin-Zahlungsstruktur dürfen nur Zahlungen für eigene Leistungen des Kunden abgewickelt werden. Für die Einhaltung der im Verhältnis zu seinen Endkunden geltenden Vorschriften (z. B. Preisangaben, Entgelte für die Nutzung von Zahlungsmitteln nach § 270a BGB, steuerliche Pflichten) ist der Kunde selbst verantwortlich.</li>
+  <li>Der Kunde ist für die Verarbeitung der Daten seiner Endkunden datenschutzrechtlich Verantwortlicher. Er informiert seine Endkunden in geeigneter Weise, insbesondere in seiner Datenschutzerklärung.</li>
+  <li>Der Kunde hält die Zugangsdaten zum Studio-Portal und zu seinem Stripe-Konto geheim und informiert den Anbieter unverzüglich bei Anhaltspunkten für einen Missbrauch.</li>
 </ol>
 
 <h2>§ 5 Vergütung und Zahlung</h2>
 <ol class="abs">
-  <li><b>Modell A (Kauf):</b> Der Kunde zahlt eine einmalige Vergütung in Höhe von <span data-cfg="kaufPreis"></span> netto, bei Angabe eines gültigen Aktionscodes <span data-cfg="kaufAktionPreis"></span> netto. Damit sind Einrichtung, Betrieb und Betreuung abgegolten; eine monatliche Grundvergütung fällt nicht an. Die einmalige Vergütung wird mit Vertragsschluss fällig.</li>
-  <li><b>Modell B (Provision):</b> Der Kunde zahlt weder eine Einrichtungs- noch eine monatliche Grundvergütung. Er zahlt für jeden provisionspflichtigen Tattoo-Termin eine Provision in Höhe von <span data-cfg="provisionSatz"></span> der Bemessungsgrundlage.</li>
-  <li><b>Zuordnung:</b> Ted-Anfrage ist jede Anfrage eines Endkunden, die der Assistent aufgenommen und dem Kunden übermittelt hat; sie wird im Studio-Portal angezeigt. Ein Tattoo-Termin ist provisionspflichtig, wenn er mit dem Endkunden einer Ted-Anfrage innerhalb der ersten <span data-cfg="provisionZuordnung"></span> nach Eingang dieser Anfrage gebucht wird. Maßgeblich ist der Zeitpunkt der Buchung, nicht der Termin selbst. Findet ein gemeldeter Termin nicht statt und erhält der Kunde hierfür keine Vergütung, entfällt die Provision; der Kunde korrigiert die Meldung im Studio-Portal.</li>
-  <li><b>Bemessungsgrundlage</b> ist der mit dem Endkunden vereinbarte Tattoo-Preis netto, also ohne Umsatzsteuer und ohne Trinkgeld. Ändert sich der vereinbarte Preis, ist der geänderte Preis maßgeblich.</li>
-  <li><b>Meldepflicht:</b> Der Kunde trägt jeden provisionspflichtigen Tattoo-Termin mit Buchungsdatum und vereinbartem Preis im Studio-Portal ein, spätestens bis zum <span data-cfg="provisionMeldefrist"></span> für die im Vormonat gebuchten Termine. Nachträgliche Änderungen meldet er ebenso.</li>
-  <li><b>Nachweis und Prüfrecht:</b> Bestehen begründete Zweifel an der Vollständigkeit oder Richtigkeit der Meldungen, kann der Anbieter geeignete Nachweise verlangen, insbesondere eine stichprobenartige Einsicht in das Terminbuch für die betroffenen Ted-Anfragen. Der Kunde wirkt hieran in angemessener Frist mit. Personenbezogene Daten von Endkunden werden nur offengelegt, soweit dies für die Prüfung erforderlich ist. Nicht oder unzutreffend gemeldete provisionspflichtige Termine werden nachberechnet.</li>
-  <li><b>Abrechnung:</b> Der Anbieter rechnet die Provisionen auf Grundlage der Meldungen einmal im Monat für den Vormonat ab und zieht den Betrag per SEPA-Lastschrift oder über die hinterlegte Karte ein.</li>
-  <li><b>Fair Use (beide Modelle):</b> Je Kalendermonat sind <span data-cfg="fairUseMinuten"></span> Gesprächsminuten inklusive. Nicht genutzte Minuten verfallen am Monatsende. Gesprächsminuten darüber werden je angefangene Minute mit <span data-cfg="extraMinute"></span> € netto nachträglich monatlich abgerechnet. Der Anbieter informiert den Kunden, wenn 80 % der Inklusivminuten erreicht sind.</li>
-  <li>Rechnungen sind innerhalb von 7 Tagen ohne Abzug zahlbar, soweit der Betrag nicht per SEPA-Lastschrift oder Karte eingezogen wird. Kosten einer vom Kunden verschuldeten Rücklastschrift trägt der Kunde.</li>
-  <li>Gerät der Kunde mit fälligen Zahlungen in Verzug oder verletzt er die Meldepflicht nach Abs. 5 trotz Mahnung erheblich, darf der Anbieter den Assistenten nach vorheriger Ankündigung in Textform mit einer Frist von 7 Tagen vorübergehend deaktivieren. Die Zahlungspflichten bleiben bestehen.</li>
-  <li>Der Anbieter kann den Provisionssatz und den Preis für Mehrminuten mit einer Ankündigungsfrist von sechs Wochen in Textform anpassen. Der Kunde kann in diesem Fall zum Zeitpunkt des Inkrafttretens der Änderung kündigen. Die Anpassung gilt nicht für bereits gebuchte Termine und bereits angefallene Minuten. Die einmalige Vergütung im Modell A bleibt unberührt.</li>
+  <li><b>Modell A (Kauf):</b> Der Kunde zahlt eine einmalige Vergütung in Höhe von <span data-cfg="kaufPreis"></span> netto, bei Angabe eines gültigen Aktionscodes <span data-cfg="kaufAktionPreis"></span> netto. Damit sind Einrichtung, Studio Kit, Studio-Portal, Setup-Support und Betreuung abgegolten. Eine monatliche Grundgebühr oder Provision fällt nicht an. Die einmalige Vergütung wird mit Vertragsschluss fällig.</li>
+  <li><b>Modell B (Provision):</b> Der Kunde zahlt weder eine Einrichtungs- noch eine Grundgebühr. Er zahlt für jede über die Tattoofin-Zahlungsstruktur abgewickelte Zahlung eine Provision in Höhe von <span data-cfg="provisionSatz"></span> des Bruttobetrags der Zahlung. Bruttobetrag ist der vom Endkunden gezahlte Betrag einschließlich Umsatzsteuer, vor Abzug der Gebühren der Zahlungsanbieter. Die Provision ist ein Nettobetrag; hinzu kommt die gesetzliche Umsatzsteuer. Über die Tattoofin-Zahlungsstruktur abgewickelt sind alle Zahlungen, die über einen im Studio-Portal erstellten Zahlungslink, über die Zahlseite des Studios oder sonst über die Plattform des Anbieters erfolgen.</li>
+  <li><b>Einbehalt:</b> Die Provision zuzüglich Umsatzsteuer wird bei jeder Zahlung automatisch als Plattformgebühr über Stripe Connect einbehalten. Der Kunde ist damit einverstanden, dass sich die Auszahlung von Stripe an ihn um diesen Betrag vermindert.</li>
+  <li><b>Abrechnung:</b> Der Anbieter erstellt einmal im Monat eine Abrechnung mit Rechnung und Übersicht der Zahlungen des Vormonats und stellt sie im Studio-Portal bereit sowie per E-Mail zu. Beträge, die nicht als Plattformgebühr einbehalten werden konnten, stellt der Anbieter mit dieser Abrechnung in Rechnung; sie werden über den in der Bestellung gewählten Zahlungsweg beglichen.</li>
+  <li><b>Erstattungen:</b> Erstattet der Kunde eine über die Tattoofin-Zahlungsstruktur abgewickelte Zahlung ganz oder teilweise an den Endkunden, erstattet der Anbieter die darauf entfallende Provision anteilig oder verrechnet sie mit der nächsten Abrechnung. Dies gilt entsprechend für Rückbelastungen, soweit der Betrag dem Kunden endgültig belastet bleibt.</li>
+  <li><b>Umgehungsverbot:</b> Der Kunde wird Zahlungen, die über die Tattoofin-Zahlungsstruktur angeboten oder angestoßen wurden, insbesondere durch Versand eines Zahlungslinks, nicht bewusst an der Struktur vorbeileiten, um die Provision zu vermeiden. Zahlungen, die ein Endkunde aus eigenem Wunsch auf anderem Weg leistet (z. B. bar, am Kartenterminal oder per Überweisung), bleiben unberührt. Bei einem schuldhaften Verstoß kann der Anbieter die Provision verlangen, die bei Abwicklung über die Tattoofin-Zahlungsstruktur angefallen wäre.</li>
+  <li>Rechnungen sind innerhalb von 7 Tagen ohne Abzug zahlbar, soweit der Betrag nicht einbehalten, per SEPA-Lastschrift oder per Karte eingezogen wird. Kosten einer vom Kunden verschuldeten Rücklastschrift trägt der Kunde.</li>
+  <li>Gerät der Kunde mit fälligen Zahlungen in Verzug, darf der Anbieter den Zugang zum Studio-Portal und die Erstellung neuer Zahlungslinks nach vorheriger Ankündigung in Textform mit einer Frist von 7 Tagen vorübergehend sperren. Die Zahlungspflichten bleiben bestehen. Das Stripe-Konto des Kunden bleibt davon unberührt.</li>
+  <li>Der Anbieter kann den Provisionssatz im Modell B mit einer Ankündigungsfrist von sechs Wochen in Textform anpassen. Der Kunde kann in diesem Fall zum Zeitpunkt des Inkrafttretens der Änderung kündigen. Die Anpassung gilt nicht für Zahlungen, die vor ihrem Inkrafttreten abgewickelt wurden. Die einmalige Vergütung im Modell A bleibt unberührt.</li>
 </ol>
 
 <h2>§ 6 Zufriedenheitsgarantie (Modell A)</h2>
 <ol class="abs">
   <li>Im Modell A kann der Kunde den Vertrag innerhalb von <span data-cfg="garantieTage"></span> Tagen ab Inbetriebnahme ohne Angabe von Gründen in Textform mit sofortiger Wirkung kündigen.</li>
-  <li>In diesem Fall erstattet der Anbieter die gezahlte einmalige Vergütung vollständig, und der Vertrag endet mit Zugang der Kündigung. Bereits angefallene Mehrminuten werden nicht erstattet.</li>
+  <li>In diesem Fall erstattet der Anbieter die gezahlte einmalige Vergütung vollständig, und der Vertrag endet mit Zugang der Kündigung. Gebühren der Zahlungsanbieter sind nicht Teil der Vergütung und werden nicht erstattet. § 7 Abs. 4 gilt entsprechend.</li>
   <li>Im Modell B fallen keine festen Kosten an; die Kündigung richtet sich nach § 7 Abs. 3.</li>
 </ol>
 
 <h2>§ 7 Laufzeit und Kündigung</h2>
 <ol class="abs">
   <li>Der Vertrag beginnt mit Vertragsschluss (Unterzeichnung oder Online-Abschluss) und läuft auf unbestimmte Zeit.</li>
-  <li><b>Modell A:</b> Der Kunde kann den Vertrag jederzeit in Textform kündigen. Außerhalb von § 6 wird die einmalige Vergütung weder ganz noch anteilig erstattet. Der Anbieter kann ordentlich mit einer Frist von drei Monaten kündigen, frühestens jedoch zum Ablauf von 24 Monaten ab Inbetriebnahme.</li>
+  <li><b>Modell A:</b> Der Kunde kann den Vertrag jederzeit in Textform kündigen. Außerhalb von § 6 und Abs. 5 wird die einmalige Vergütung weder ganz noch anteilig erstattet. Der Anbieter kann ordentlich mit einer Frist von drei Monaten kündigen, frühestens jedoch zum Ablauf von 24 Monaten ab Inbetriebnahme.</li>
   <li><b>Modell B:</b> Jede Partei kann den Vertrag <span data-cfg="kuendigungProvision"></span> in Textform kündigen.</li>
-  <li><b>Nachlauf (Modell B):</b> Für Ted-Anfragen, die während der Vertragslaufzeit eingegangen sind, besteht die Provisionspflicht für Buchungen fort, die innerhalb der ersten <span data-cfg="provisionNachlauf"></span> nach Vertragsende erfolgen, jeweils höchstens innerhalb des Zuordnungszeitraums nach § 5 Abs. 3. Meldepflicht, Prüfrecht und Abrechnung nach § 5 gelten insoweit fort; der Zugang zum Studio-Portal bleibt hierfür bestehen.</li>
+  <li><b>Vertragsende:</b> Mit Vertragsende trennt der Anbieter die Verbindung zwischen dem Stripe-Konto des Kunden und seiner Plattform. Zahlungslinks und Zahlseite werden deaktiviert, der Zugang zum Studio-Portal endet nach Bereitstellung der letzten Abrechnung. Das Stripe-Konto bleibt beim Kunden und kann von ihm nach den Bedingungen von Stripe weiter genutzt werden. Die Provision für Zahlungen, die bis zum Vertragsende über die Tattoofin-Zahlungsstruktur abgewickelt wurden, bleibt geschuldet; § 5 Abs. 5 gilt fort.</li>
+  <li><b>Keine Inbetriebnahme:</b> Lehnt Stripe die Eröffnung oder Verbindung des Kontos des Kunden endgültig ab, sodass eine Inbetriebnahme nicht möglich ist, kann jede Partei den Vertrag mit sofortiger Wirkung kündigen. Im Modell A erstattet der Anbieter in diesem Fall die gezahlte einmalige Vergütung vollständig, es sei denn, die Ablehnung beruht auf unzutreffenden Angaben oder einer Pflichtverletzung des Kunden.</li>
   <li>Ein Wechsel des Vergütungsmodells bedarf einer Vereinbarung in Textform.</li>
-  <li>Das Recht zur außerordentlichen Kündigung aus wichtigem Grund bleibt unberührt.</li>
+  <li>Das Recht zur außerordentlichen Kündigung aus wichtigem Grund bleibt unberührt. Ein wichtiger Grund für den Anbieter liegt insbesondere vor, wenn der Kunde die Tattoofin-Zahlungsstruktur für rechtswidrige Zwecke nutzt oder trotz Abmahnung gegen § 4 Abs. 4 bis 6 verstößt.</li>
   <li>Kündigungen bedürfen der Textform (z. B. E-Mail).</li>
 </ol>
 
-<h2>§ 8 Rufnummer und Vertragsende</h2>
+<h2>§ 8 Haftung</h2>
 <ol class="abs">
-  <li>Die für den Assistenten bereitgestellte Rufnummer ist dem Anbieter zugeteilt und wird dem Kunden nur für die Vertragsdauer zur Nutzung überlassen. Eine Portierung auf den Kunden ist ausgeschlossen. Die Studio-Rufnummer des Kunden bleibt unberührt.</li>
-  <li>Mit Vertragsende wird die Rufnummer abgeschaltet. Der Kunde deaktiviert die Rufumleitung rechtzeitig selbst. Der Anbieter weist den Kunden zwei Wochen vor Vertragsende darauf hin.</li>
-  <li>Nach Vertragsende löscht der Anbieter die Daten des Kunden nach Maßgabe des AVV.</li>
+  <li>Der Anbieter haftet unbeschränkt bei Vorsatz und grober Fahrlässigkeit, bei Verletzung von Leben, Körper oder Gesundheit sowie nach dem Produkthaftungsgesetz.</li>
+  <li>Bei leicht fahrlässiger Verletzung einer wesentlichen Vertragspflicht (deren Erfüllung die ordnungsgemäße Durchführung des Vertrags überhaupt erst ermöglicht und auf deren Einhaltung der Kunde regelmäßig vertrauen darf) ist die Haftung auf den vertragstypischen, vorhersehbaren Schaden begrenzt, höchstens auf die vom Kunden in den letzten zwölf Monaten vor dem Schadensereignis gezahlte Vergütung, im Modell A mindestens jedoch auf die Höhe der einmaligen Vergütung.</li>
+  <li>Im Übrigen ist die Haftung für leichte Fahrlässigkeit ausgeschlossen.</li>
+  <li>Leistungen, Entscheidungen und Ausfälle von Stripe und weiteren Zahlungsanbietern sind keine Leistungen des Anbieters. Der Anbieter steht insbesondere nicht ein für die Freischaltung von Zahlungsarten, die Freigabe oder Ablehnung einzelner Zahlungen, Prüfungen, Auszahlungsverzögerungen, Sicherheitseinbehalte, Kontosperrungen, Rückbelastungen, Zahlungsausfälle von Endkunden sowie Änderungen von Gebühren und Bedingungen der Zahlungsanbieter. Abs. 1 bleibt unberührt.</li>
+  <li>Der Anbieter erbringt keine Rechts-, Steuer- oder Finanzberatung. Hinweise in Schulungen und Materialien ersetzen keine individuelle Beratung.</li>
 </ol>
 
 <h2>§ 9 Datenschutz und Vertraulichkeit</h2>
 <ol class="abs">
-  <li>Soweit der Anbieter personenbezogene Daten im Auftrag des Kunden verarbeitet, gilt der als Anlage geschlossene Auftragsverarbeitungsvertrag nach Art. 28 DSGVO.</li>
-  <li>Gesprächsaufzeichnungen (Audio) werden nur erstellt, wenn dies vereinbart ist und die Anrufer zu Gesprächsbeginn darauf hingewiesen werden. Im Standard werden Transkript und Zusammenfassung verarbeitet.</li>
+  <li>Soweit der Anbieter personenbezogene Daten im Auftrag des Kunden verarbeitet, insbesondere Daten von Endkunden in Zahlungslinks und im Studio-Portal, gilt der als Anlage geschlossene Auftragsverarbeitungsvertrag nach Art. 28 DSGVO.</li>
+  <li>Für die Verarbeitung personenbezogener Daten durch Stripe und die weiteren Zahlungsanbieter im Rahmen der Zahlungsabwicklung gelten deren Bedingungen und Datenschutzbestimmungen im Verhältnis zum Kunden bzw. zum Endkunden. Insoweit ist der Anbieter nicht Auftragsverarbeiter. Zahlungskarten- und Bankdaten der Endkunden erhält der Anbieter nicht.</li>
   <li>Beide Parteien behandeln vertrauliche Informationen der jeweils anderen Partei vertraulich, auch über das Vertragsende hinaus.</li>
 </ol>
 
 <h2>§ 10 Rechte</h2>
 <ol class="abs">
-  <li>Konfigurationen, Prompts, Vorlagen, Skripte und Software des Anbieters bleiben dessen Eigentum. Der Kunde erhält für die Vertragsdauer ein einfaches, nicht übertragbares Recht zur Nutzung des Assistenten für sein Studio.</li>
-  <li>Der Kunde räumt dem Anbieter das Recht ein, Studioname, Logo und bereitgestellte Inhalte für die Einrichtung des Assistenten und die Erstellung der Studio-Materialien (z. B. Aufkleber, Flyer) zu nutzen. Eine Nennung als Referenz erfolgt nur mit Zustimmung des Kunden.</li>
+  <li>Software, Studio-Portal, Konfigurationen, Vorlagen und Materialien des Anbieters bleiben dessen Eigentum. Der Kunde erhält für die Vertragsdauer ein einfaches, nicht übertragbares Recht, das Studio-Portal und die Studio-Materialien für sein Studio zu nutzen. Nach Vertragsende entfernt der Kunde Hinweise auf flexible Zahlungsoptionen aus den Studio-Materialien, soweit er diese Zahlungsoptionen nicht mehr anbietet; QR-Codes zur Zahlseite des Studios verlieren ihre Funktion.</li>
+  <li>Der Kunde räumt dem Anbieter das Recht ein, Studioname, Logo und bereitgestellte Inhalte für die Einrichtung (z. B. Branding im Checkout) und die Erstellung der Studio-Materialien zu nutzen. Eine Nennung als Referenz erfolgt nur mit Zustimmung des Kunden.</li>
 </ol>
 
-<h2>§ 11 Haftung</h2>
-<ol class="abs">
-  <li>Der Anbieter haftet unbeschränkt bei Vorsatz und grober Fahrlässigkeit, bei Verletzung von Leben, Körper oder Gesundheit sowie nach dem Produkthaftungsgesetz.</li>
-  <li>Bei leicht fahrlässiger Verletzung einer wesentlichen Vertragspflicht (deren Erfüllung die ordnungsgemäße Durchführung des Vertrags überhaupt erst ermöglicht und auf deren Einhaltung der Kunde regelmäßig vertrauen darf) ist die Haftung auf den vertragstypischen, vorhersehbaren Schaden begrenzt, höchstens auf die vom Kunden in den letzten zwölf Monaten vor dem Schadensereignis gezahlte Vergütung, im Modell A mindestens jedoch auf die Höhe der einmaligen Vergütung.</li>
-  <li>Im Übrigen ist die Haftung für leichte Fahrlässigkeit ausgeschlossen. Dies gilt insbesondere für entgangenen Gewinn und nicht zustande gekommene Aufträge aufgrund nicht oder fehlerhaft angenommener Anrufe.</li>
-</ol>
+<h2>§ 11 Änderungen der Leistung</h2>
+<p>Der Anbieter darf die technische Umsetzung weiterentwickeln oder anpassen, insbesondere wenn Stripe oder weitere Zahlungsanbieter ihre Schnittstellen, Zahlungsarten oder Bedingungen ändern, sofern der vereinbarte Leistungsumfang im Wesentlichen erhalten bleibt und dies für den Kunden zumutbar ist. Wesentliche Änderungen werden mit angemessener Frist angekündigt. Stellt ein Zahlungsanbieter eine Zahlungsart ein, ist dies keine Leistungsänderung des Anbieters.</p>
 
-<h2>§ 12 Änderungen der Leistung</h2>
-<p>Der Anbieter darf die technische Umsetzung (z. B. eingesetzte Dienste, Stimmen, Sprachmodelle) weiterentwickeln oder austauschen, sofern der vereinbarte Leistungsumfang im Wesentlichen erhalten bleibt und dies für den Kunden zumutbar ist. Wesentliche Änderungen werden mit angemessener Frist angekündigt.</p>
-
-<h2>§ 13 Schlussbestimmungen</h2>
+<h2>§ 12 Schlussbestimmungen</h2>
 <ol class="abs">
   <li>Allgemeine Geschäftsbedingungen des Kunden finden keine Anwendung.</li>
   <li>Änderungen und Ergänzungen dieses Vertrags bedürfen der Textform.</li>
@@ -147,27 +152,20 @@ body{background:#f5f2ea}.doc{margin:0 auto 40px}
 <h2 class="pb" style="font-size:15pt">Anlage A · Leistungsbeschreibung</h2>
 <table>
   <tr><th>Leistungen (in beiden Vergütungsmodellen enthalten)</th></tr>
-  <tr><td>Einrichtung auf Grundlage des Fragebogens, gemeinsamer Test vor Inbetriebnahme</td></tr>
-  <tr><td>Eigene deutsche Rufnummer für die Umleitung</td></tr>
-  <tr><td>Anrufannahme 24/7 oder bei Nichtannahme/besetzt/geschlossen</td></tr>
-  <tr><td>Begrüßung mit Studioname, KI-Kennzeichnung</td></tr>
-  <tr><td>Beantwortung allgemeiner Fragen anhand der Wissensbasis</td></tr>
-  <tr><td>Aufnahme von Tattoo-Anfragen, Absagen und Verschiebungswünschen</td></tr>
-  <tr><td>Zusammenfassung per WhatsApp und E-Mail</td></tr>
-  <tr><td>WhatsApp an Anrufer zum Einsenden von Motivbildern (mit Zustimmung des Anrufers)</td></tr>
-  <tr><td>Weiterleitung dringender Anrufe an eine Mobilnummer des Kunden</td></tr>
-  <tr><td>Deutsch und Englisch</td></tr>
-  <tr><td>Wahl der Stimme aus der Auswahl des Anbieters</td></tr>
-  <tr><td>Monatsreport (Anrufe, Anfragen, Minuten) und Optimierung</td></tr>
-  <tr><td>Pflege von Änderungen der Studio-Informationen, Betreuung ohne gesonderte Vergütung</td></tr>
-  <tr><td>Studio-Materialien digital (Fensteraufkleber, Flyer, Aufsteller, Datenschutzhinweis)</td></tr>
-  <tr><td>Online-Studio-Portal (Anfragen einsehen, im Modell B Buchungen melden)</td></tr>
+  <tr><td>Unterstützung bei der Eröffnung eines Stripe-Kontos des Kunden bzw. Verbindung eines bestehenden Kontos mit der Plattform per Stripe Connect</td></tr>
+  <tr><td>Konfiguration und Grundeinstellungen, Branding (Logo, Farben, Bezeichnung auf dem Kontoauszug)</td></tr>
+  <tr><td>Beantragung bzw. Aktivierung der vereinbarten Zahlungsarten, z. B. Karte, Apple Pay, Google Pay, SEPA-Lastschrift, Klarna (Ratenkauf / später bezahlen), jeweils soweit vom Zahlungsanbieter für den Kunden freigegeben</td></tr>
+  <tr><td>Test des kompletten Zahlungsablaufs vor Inbetriebnahme</td></tr>
+  <tr><td>Kurze Schulung der vom Kunden benannten Mitarbeitenden mit Gesprächsbeispielen und Team-Leitfaden</td></tr>
+  <tr><td>Tattoofin Studio Kit (digital): QR-Code und Zahlseite, Fensteraufkleber, Flyer, Thekenaufsteller, Website-Badge, Instagram-Story, WhatsApp-Vorlagen, Kundeninfo</td></tr>
+  <tr><td>Studio-Portal: Zahlungslinks erstellen (inkl. Versand per WhatsApp/E-Mail und QR-Code), Zahlseite des Studios, Übersicht der abgewickelten Zahlungen, Abrechnungen</td></tr>
+  <tr><td>Automatische E-Mail-Benachrichtigungen, z. B. bei Kundenzahlungen und Monatsabrechnungen</td></tr>
+  <tr><td><span data-cfg="setupSupportTage"></span> Tage Setup-Support ab Inbetriebnahme, danach Betreuung ohne gesonderte Vergütung</td></tr>
   <tr><th>Vergütungsmodelle (netto, zzgl. USt.)</th></tr>
-  <tr><td><b>Modell A · Kauf:</b> einmalig <span data-cfg="kaufPreis"></span> (mit Aktionscode <span data-cfg="kaufAktionPreis"></span>), inklusive Einrichtung, Betrieb und Betreuung, keine monatliche Vergütung, <span data-cfg="garantieTage"></span> Tage Zufriedenheitsgarantie nach § 6</td></tr>
-  <tr><td><b>Modell B · Provision:</b> keine Einrichtungs- und keine Monatsgebühr; <span data-cfg="provisionSatz"></span> des vereinbarten Tattoo-Preises (netto) für Termine, die innerhalb der ersten <span data-cfg="provisionZuordnung"></span> nach einer Ted-Anfrage gebucht werden; Meldung im Studio-Portal bis zum <span data-cfg="provisionMeldefrist"></span>, Abrechnung monatlich, Nachlauf <span data-cfg="provisionNachlauf"></span> nach Vertragsende</td></tr>
-  <tr><td><b>Beide Modelle:</b> <span data-cfg="fairUseMinuten"></span> Gesprächsminuten je Kalendermonat inklusive (Fair Use), darüber <span data-cfg="extraMinute"></span> € je angefangener Minute</td></tr>
+  <tr><td><b>Modell A · Kauf:</b> einmalig <span data-cfg="kaufPreis"></span> (mit Aktionscode <span data-cfg="kaufAktionPreis"></span>), keine monatliche Grundgebühr, keine Provision, <span data-cfg="garantieTage"></span> Tage Zufriedenheitsgarantie nach § 6</td></tr>
+  <tr><td><b>Modell B · Provision:</b> keine Einrichtungs- und keine Grundgebühr; <span data-cfg="provisionSatz"></span> vom Bruttobetrag jeder über die Tattoofin-Zahlungsstruktur abgewickelten Zahlung, automatischer Einbehalt als Plattformgebühr über Stripe Connect, monatliche Abrechnung mit Rechnung, kündbar <span data-cfg="kuendigungProvision"></span></td></tr>
 </table>
-<p class="small">Gesprächsminuten = Dauer der vom Assistenten angenommenen Gespräche, minutengenau aufgerundet je Gespräch. Nicht umfasst: Kosten des Telefonanschlusses des Kunden, Druck und Versand von Materialien über das Willkommenspaket hinaus, Rechtsberatung.</p>
+<p class="small">Nicht umfasst: Gebühren von Stripe und weiteren Zahlungsanbietern, Kartenterminals und sonstige Hardware, Druck und Versand von Materialien, Rechts-, Steuer- und Finanzberatung, die Prüfung und Freigabe von Zahlungen (erfolgt ausschließlich durch die Zahlungsanbieter).</p>
 
 <p class="footer-note"><span data-cfg="marke"></span> · <span data-cfg="firma"></span> · Vertrag „<span data-cfg="produkt"></span>“ · Fassung 10/2026</p>
 

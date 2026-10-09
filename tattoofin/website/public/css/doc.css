@@ -1,21 +1,23 @@
 @import url(/css/fonts.css);
 
 :root{
-  --ink:#0d1117;          /* fast schwarz, Hintergrund der Dark-Designs */
-  --ink-2:#161b22;
-  --ink-3:#21262d;
-  --gold:#f5a50b;         /* Amber aus den TattooLeadz-Creatives */
-  --gold-2:#ffc43d;
-  --gold-soft:#fff4dc;
-  --cream:#f5f2ea;        /* Hintergrund tattooleadz.de */
+  --ink:#13243d;          /* Tattoofin-Navy */
+  --ink-2:#1c3252;
+  --ink-3:#264066;
+  --gold:#ffbd16;         /* Tattoofin-Gelb */
+  --gold-2:#ffd25a;
+  --gold-soft:#fff5d6;
+  --orange:#ef721d;
+  --blue:#2a5d8f;
+  --cream:#f7f7f4;        /* Hintergrund tattoofin.de */
   --paper:#ffffff;
   --text:#14161a;
   --muted:#5b6370;
   --line:#e4e1d8;
   --red:#ff3040;
-  --green:#1f9d55;
+  --green:#4a9865;
   --head:'Space Grotesk',system-ui,sans-serif;
-  --body:'Inter',system-ui,-apple-system,sans-serif;
+  --body:'DM Sans',system-ui,-apple-system,sans-serif;
 }
 *{box-sizing:border-box}
 html{-webkit-print-color-adjust:exact;print-color-adjust:exact}

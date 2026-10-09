@@ -8,10 +8,11 @@
 .doc h2{font-size:11.5pt;margin:15px 0 5px}
 .doc ol.abs{padding-left:18px;margin:0 0 6px}
 .doc ol.abs li{margin:0 0 3px}
+.dochead .meta img{width:24mm;aspect-ratio:520/436;object-fit:cover;object-position:top}
 .hint{background:#fff3cd;border:1px solid #e0b84b;border-radius:8px;padding:10px 12px;margin:0 0 14px;font-size:9pt}
 @media print{.hint{display:none}}
 
-body{background:#f5f2ea}.doc{margin:0 auto 40px}
+body{background:#f7f7f4}.doc{margin:0 auto 40px}
 .webnav{max-width:210mm;margin:0 auto;padding:14px 4px;display:flex;justify-content:space-between;align-items:center;font:600 14px Inter,system-ui,sans-serif}
 .webnav a{color:#14161a;text-decoration:none}.webnav button{background:#0d1117;color:#fff;border:0;border-radius:99px;padding:8px 14px;font:600 13px Inter,sans-serif;cursor:pointer}
 @media print{.webnav{display:none}}
@@ -25,7 +26,7 @@ body{background:#f5f2ea}.doc{margin:0 auto 40px}
 
 <div class="dochead">
   <div><span class="tag ext">Anlage zum Vertrag</span><h1 style="font-size:19pt">Vertrag zur Auftragsverarbeitung<br>gemäß Art. 28 DSGVO</h1><p class="lead">zum Dienstleistungsvertrag „<span data-cfg="produkt"></span>“</p></div>
-  <div class="meta"><img src="../assets/logo.png" alt="TattooLeadz"></div>
+  <div class="meta"><img src="../assets/logo.png" alt="Tattoofin"></div>
 </div>
 
 <p>zwischen dem <b>Kunden</b> (Studio) laut Dienstleistungsvertrag als <b>Verantwortlichem</b> („Auftraggeber“)</p>
@@ -33,14 +34,16 @@ body{background:#f5f2ea}.doc{margin:0 auto 40px}
 
 <h2>§ 1 Gegenstand und Dauer</h2>
 <ol class="abs">
-  <li>Der Auftragnehmer verarbeitet personenbezogene Daten im Auftrag des Auftraggebers im Rahmen des Betriebs eines KI-Telefonassistenten (Annahme von Anrufen, Gesprächsführung, Erstellung und Übermittlung von Zusammenfassungen). Einzelheiten zu Art und Zweck der Verarbeitung, Datenarten und betroffenen Personen enthält Anlage 1.</li>
+  <li>Der Auftragnehmer verarbeitet personenbezogene Daten im Auftrag des Auftraggebers im Rahmen der Bereitstellung der Tattoofin-Plattform: Erstellung und Bereitstellung von Zahlungslinks und der Zahlseite des Studios, Anzeige von Zahlungsinformationen im Studio-Portal, Versand von Benachrichtigungen sowie Support. Einzelheiten zu Art und Zweck der Verarbeitung, Datenarten und betroffenen Personen enthält Anlage 1.</li>
+  <li>Die Zahlungsabwicklung selbst erfolgt durch Stripe und, je nach Zahlungsart, durch weitere Zahlungsanbieter, mit denen der Auftraggeber bzw. der Endkunde eigene Verträge geschlossen hat. Diese verarbeiten personenbezogene Daten im Rahmen der Zahlungsabwicklung (z. B. Karten- und Bankdaten, Identitäts- und Bonitätsprüfung) in eigener Verantwortung bzw. als Vertragspartner des Auftraggebers nach ihren eigenen Bedingungen. Sie sind insoweit keine Unterauftragsverarbeiter des Auftragnehmers, und diese Verarbeitung ist nicht Gegenstand dieses Vertrags.</li>
+  <li>Soweit der Auftragnehmer über die Stripe-Connect-Schnittstelle Daten aus dem Stripe-Konto des Auftraggebers abruft oder dorthin übermittelt, um Zahlungslinks zu erstellen und Zahlungen im Studio-Portal anzuzeigen, gehört dies zur Verarbeitung nach diesem Vertrag.</li>
   <li>Die Dauer dieses Vertrags entspricht der Laufzeit des Dienstleistungsvertrags. Verpflichtungen zur Löschung und Vertraulichkeit gelten darüber hinaus fort.</li>
 </ol>
 
 <h2>§ 2 Weisungsbefugnis</h2>
 <ol class="abs">
   <li>Der Auftragnehmer verarbeitet die Daten nur auf dokumentierte Weisung des Auftraggebers, es sei denn, er ist gesetzlich zur Verarbeitung verpflichtet; in diesem Fall teilt er dem Auftraggeber die rechtlichen Anforderungen vor der Verarbeitung mit, sofern das Gesetz dies nicht verbietet.</li>
-  <li>Die Weisungen ergeben sich aus dem Dienstleistungsvertrag, dem ausgefüllten Fragebogen und diesem Vertrag. Weitere Weisungen erteilt der Auftraggeber in Textform.</li>
+  <li>Die Weisungen ergeben sich aus dem Dienstleistungsvertrag, den Einstellungen und Eingaben des Auftraggebers im Studio-Portal und diesem Vertrag. Weitere Weisungen erteilt der Auftraggeber in Textform.</li>
   <li>Ist der Auftragnehmer der Ansicht, dass eine Weisung gegen Datenschutzvorschriften verstößt, weist er den Auftraggeber unverzüglich darauf hin.</li>
 </ol>
 
@@ -48,11 +51,11 @@ body{background:#f5f2ea}.doc{margin:0 auto 40px}
 <ol class="abs">
   <li>Der Auftragnehmer verpflichtet alle Personen, die Zugang zu den Daten haben, zur Vertraulichkeit.</li>
   <li>Er trifft die technischen und organisatorischen Maßnahmen nach Art. 32 DSGVO gemäß Anlage 2 und passt sie dem Stand der Technik an, ohne das Schutzniveau zu unterschreiten.</li>
-  <li>Er unterstützt den Auftraggeber mit geeigneten Maßnahmen bei der Erfüllung der Rechte betroffener Personen (Art. 12–23 DSGVO), insbesondere bei Auskunft und Löschung. Anfragen von Betroffenen, die direkt beim Auftragnehmer eingehen, leitet er unverzüglich weiter.</li>
-  <li>Er unterstützt den Auftraggeber bei den Pflichten aus Art. 32–36 DSGVO (Sicherheit, Meldung von Datenschutzverletzungen, Datenschutz-Folgenabschätzung, vorherige Konsultation).</li>
+  <li>Er unterstützt den Auftraggeber mit geeigneten Maßnahmen bei der Erfüllung der Rechte betroffener Personen (Art. 12 bis 23 DSGVO), insbesondere bei Auskunft und Löschung. Anfragen von Betroffenen, die direkt beim Auftragnehmer eingehen, leitet er unverzüglich weiter.</li>
+  <li>Er unterstützt den Auftraggeber bei den Pflichten aus Art. 32 bis 36 DSGVO (Sicherheit, Meldung von Datenschutzverletzungen, Datenschutz-Folgenabschätzung, vorherige Konsultation).</li>
   <li>Verletzungen des Schutzes personenbezogener Daten meldet er dem Auftraggeber unverzüglich, möglichst innerhalb von 24 Stunden nach Bekanntwerden, mit den Informationen nach Art. 33 Abs. 3 DSGVO, soweit verfügbar.</li>
   <li>Er führt ein Verzeichnis der Verarbeitungstätigkeiten nach Art. 30 Abs. 2 DSGVO.</li>
-  <li>Er verwendet die Daten nicht für eigene Zwecke, insbesondere nicht zum Training eigener oder fremder KI-Modelle. Anonymisierte, nicht personenbezogene Nutzungsstatistiken (z. B. Anzahl und Dauer von Anrufen) darf er zur Abrechnung und Verbesserung des Dienstes verwenden.</li>
+  <li>Er verwendet die Daten nicht für eigene Zwecke. Zur Abrechnung seiner Vergütung nach dem Dienstleistungsvertrag nutzt er Zahlungsbeträge, Zeitpunkte und Referenzen der abgewickelten Zahlungen; Endkundendaten werden dafür nur verarbeitet, soweit sie zur Nachvollziehbarkeit der Abrechnung erforderlich sind. Anonymisierte, nicht personenbezogene Nutzungsstatistiken darf er zur Verbesserung des Dienstes verwenden.</li>
 </ol>
 
 <h2>§ 4 Unterauftragsverarbeiter</h2>
@@ -63,20 +66,21 @@ body{background:#f5f2ea}.doc{margin:0 auto 40px}
 </ol>
 
 <h2>§ 5 Übermittlung in Drittländer</h2>
-<p>Eine Verarbeitung außerhalb der EU/des EWR erfolgt nur, wenn die Voraussetzungen der Art. 44 ff. DSGVO erfüllt sind, insbesondere auf Grundlage eines Angemessenheitsbeschlusses (z. B. EU-US Data Privacy Framework für zertifizierte Empfänger) oder der EU-Standardvertragsklauseln. Der Auftragnehmer nutzt, soweit angeboten, Datenverarbeitung in der EU.</p>
+<p>Eine Verarbeitung außerhalb der EU bzw. des EWR erfolgt nur, wenn die Voraussetzungen der Art. 44 ff. DSGVO erfüllt sind, insbesondere auf Grundlage eines Angemessenheitsbeschlusses (z. B. EU-US Data Privacy Framework für zertifizierte Empfänger) oder der EU-Standardvertragsklauseln. Der Auftragnehmer nutzt, soweit angeboten, Datenverarbeitung in der EU.</p>
 
 <h2>§ 6 Kontrollrechte</h2>
 <p>Der Auftraggeber kann sich von der Einhaltung dieses Vertrags überzeugen, vorrangig durch Einholung von Auskünften und Nachweisen (z. B. Zertifikate und Berichte der Unterauftragsverarbeiter). Vor-Ort-Kontrollen sind nach rechtzeitiger Anmeldung (mindestens 14 Tage) während der Geschäftszeiten und ohne Störung des Betriebs möglich.</p>
 
 <h2>§ 7 Speicherdauer, Löschung und Rückgabe</h2>
 <ol class="abs">
-  <li>Soweit nicht anders vereinbart, gelten folgende Fristen: Audioaufnahmen (nur falls vereinbart) höchstens 30 Tage; Gesprächstranskripte und Zusammenfassungen in den Systemen des Auftragnehmers höchstens 90 Tage; Abrechnungsdaten ohne Gesprächsinhalte (Datum, Uhrzeit, Dauer, Anrufernummer gekürzt) bis zum Ablauf gesetzlicher Aufbewahrungsfristen.</li>
-  <li>An den Auftraggeber übermittelte Zusammenfassungen (WhatsApp, E-Mail) liegen in dessen Verantwortung.</li>
+  <li>Daten zu Zahlungslinks und Zahlungen werden für die Dauer des Dienstleistungsvertrags gespeichert, damit der Auftraggeber die Zahlungsübersicht im Studio-Portal nutzen kann. Auf Weisung des Auftraggebers löscht der Auftragnehmer einzelne Datensätze vorher, soweit keine Aufbewahrungspflicht entgegensteht.</li>
+  <li>Abrechnungsunterlagen des Auftragnehmers (Rechnungen und deren Grundlagen) bewahrt dieser im Rahmen der gesetzlichen Aufbewahrungsfristen auf. Insoweit handelt er als Verantwortlicher für die Erfüllung eigener gesetzlicher Pflichten.</li>
+  <li>An den Auftraggeber übermittelte Benachrichtigungen (z. B. E-Mails) sowie Daten im Stripe-Konto des Auftraggebers liegen in dessen Verantwortung.</li>
   <li>Nach Vertragsende löscht der Auftragnehmer alle personenbezogenen Daten des Auftraggebers innerhalb von 30 Tagen bzw. gibt sie auf Wunsch vorher heraus, sofern keine gesetzliche Pflicht zur Speicherung besteht. Die Löschung wird auf Anfrage bestätigt.</li>
 </ol>
 
 <h2>§ 8 Pflichten des Auftraggebers</h2>
-<p>Der Auftraggeber ist für die Rechtmäßigkeit der Verarbeitung verantwortlich, insbesondere für die Information der Anrufer (Art. 13 DSGVO), etwa in seiner Datenschutzerklärung und durch den bereitgestellten Aushang. Er informiert den Auftragnehmer unverzüglich, wenn er Fehler oder Unregelmäßigkeiten feststellt.</p>
+<p>Der Auftraggeber ist für die Rechtmäßigkeit der Verarbeitung verantwortlich, insbesondere für die Information seiner Endkunden (Art. 13 DSGVO), etwa in seiner Datenschutzerklärung und mit der bereitgestellten Kundeninfo. Er gibt in Zahlungslinks und Projektbeschreibungen nur die für die Zahlung erforderlichen Daten an, insbesondere keine Gesundheitsdaten oder sonstigen besonderen Kategorien personenbezogener Daten. Er informiert den Auftragnehmer unverzüglich, wenn er Fehler oder Unregelmäßigkeiten feststellt.</p>
 
 <h2>§ 9 Haftung und Schlussbestimmungen</h2>
 <p>Für die Haftung gilt Art. 82 DSGVO; im Übrigen gelten die Haftungsregeln des Dienstleistungsvertrags. Bei Widersprüchen geht dieser Vertrag dem Dienstleistungsvertrag in Fragen des Datenschutzes vor. Änderungen bedürfen der Textform. Es gilt deutsches Recht.</p>
@@ -84,33 +88,31 @@ body{background:#f5f2ea}.doc{margin:0 auto 40px}
 
 <h2 class="pb" style="font-size:14pt">Anlage 1 · Art, Zweck und Umfang der Verarbeitung</h2>
 <table>
-  <tr><th style="width:30%">Zweck</th><td>Annahme von Anrufen für das Studio des Auftraggebers, Beantwortung allgemeiner Fragen, Aufnahme von Anfragen, Übermittlung von Zusammenfassungen, optional Kontaktaufnahme per WhatsApp mit Zustimmung des Anrufers, Abrechnung der Gesprächsminuten.</td></tr>
-  <tr><th>Art der Verarbeitung</th><td>Entgegennahme und Weiterleitung von Telefonaten, automatisierte Spracherkennung und -erzeugung, Transkription, Zusammenfassung, Übermittlung per WhatsApp/E-Mail, Speicherung, Löschung.</td></tr>
-  <tr><th>Betroffene Personen</th><td>Anrufer (Interessenten, Kunden des Studios, sonstige Anrufer); Mitarbeitende des Auftraggebers als Empfänger von Zusammenfassungen.</td></tr>
-  <tr><th>Datenarten</th><td>Telefonnummer, Name, Gesprächsinhalt (Sprache, Transkript), Angaben zum Tattoo-Wunsch (Motiv, Körperstelle, Größe, Stil, Wunschzeitraum, Budget, Wunsch-Artist), Zeitpunkt und Dauer des Anrufs, ggf. Angaben zu Terminen.</td></tr>
-  <tr><th>Besondere Kategorien</th><td>Werden nicht gezielt erhoben. Anrufer können von sich aus Gesundheitsangaben machen (z. B. Heilungsprobleme). Diese werden nur zur Weiterleitung an den Auftraggeber verarbeitet und unterliegen den Löschfristen in § 7.</td></tr>
+  <tr><th style="width:30%">Zweck</th><td>Bereitstellung der Tattoofin-Zahlungsstruktur für das Studio des Auftraggebers: Erstellung und Bereitstellung von Zahlungslinks und der Zahlseite, Anzeige des Zahlungsstatus und der Zahlungsübersicht im Studio-Portal, Versand von Benachrichtigungen an den Auftraggeber und gegebenenfalls an Endkunden, Support, Abrechnung der Vergütung.</td></tr>
+  <tr><th>Art der Verarbeitung</th><td>Erfassung, Speicherung, Übermittlung an Stripe über die Stripe-Connect-Schnittstelle, Abruf des Zahlungsstatus, Anzeige, Versand per E-Mail, Löschung.</td></tr>
+  <tr><th>Betroffene Personen</th><td>Endkunden und Interessenten des Auftraggebers; Mitarbeitende des Auftraggebers mit Zugang zum Studio-Portal.</td></tr>
+  <tr><th>Datenarten</th><td><b>Endkunden:</b> Name, E-Mail-Adresse, gegebenenfalls Telefonnummer (soweit für den Versand eingegeben), Betrag, Projektbeschreibung (z. B. „Sleeve linker Arm, Anzahlung“), Zahlungsstatus, Zahlungszeitpunkt, gewählte Zahlungsart, technische Referenzen der Zahlung bei Stripe.<br><b>Mitarbeitende:</b> Name, E-Mail-Adresse, Zugangsdaten, Protokolldaten der Anmeldung.<br>Karten- und Bankdaten sowie Daten zur Bonitätsprüfung verarbeitet ausschließlich der jeweilige Zahlungsanbieter; der Auftragnehmer erhält sie nicht.</td></tr>
+  <tr><th>Besondere Kategorien</th><td>Werden nicht erhoben. Der Auftraggeber trägt in Projektbeschreibungen keine Gesundheitsdaten oder sonstigen besonderen Kategorien ein (§ 8).</td></tr>
 </table>
 
 <h2 style="font-size:14pt">Anlage 2 · Technische und organisatorische Maßnahmen (Art. 32 DSGVO)</h2>
 <table>
-  <tr><th style="width:30%">Zugangs- &amp; Zugriffskontrolle</th><td>Zugriff auf Konten der eingesetzten Dienste nur für benannte Mitarbeitende; personalisierte Zugänge; starke Passwörter und Zwei-Faktor-Authentifizierung, wo verfügbar; Rechte nach dem Need-to-know-Prinzip; Entzug der Zugänge bei Ausscheiden.</td></tr>
-  <tr><th>Weitergabekontrolle</th><td>Übertragung ausschließlich verschlüsselt (TLS); Zusammenfassungen nur an die vom Auftraggeber benannten Empfänger.</td></tr>
-  <tr><th>Eingabe- &amp; Auftragskontrolle</th><td>Protokollierung der Anrufe (Zeitpunkt, Dauer, Agent); dokumentierte Konfiguration je Studio; schriftliche Verträge mit Unterauftragsverarbeitern.</td></tr>
-  <tr><th>Datenminimierung</th><td>Der Assistent fragt nur Angaben ab, die für die Anfrage erforderlich sind; Audioaufzeichnung im Standard deaktiviert bzw. kurzfristig gelöscht; automatische Löschfristen gemäß § 7, soweit technisch einstellbar.</td></tr>
-  <tr><th>Verfügbarkeit &amp; Belastbarkeit</th><td>Einsatz etablierter Cloud-Dienste mit eigener Redundanz; Notfallplan (Deaktivierung der Umleitung, Rückfall auf Mailbox); Überwachung der Funktion.</td></tr>
-  <tr><th>Trennungsgebot</th><td>Eigener Agent, eigene Rufnummer und eigene Konfiguration je Auftraggeber.</td></tr>
+  <tr><th style="width:30%">Zugangs- &amp; Zugriffskontrolle</th><td>Zugriff auf Systeme und Konten der eingesetzten Dienste nur für benannte Personen; personalisierte Zugänge; starke Passwörter und Zwei-Faktor-Authentifizierung, wo verfügbar; Rechte nach dem Need-to-know-Prinzip; Entzug der Zugänge bei Ausscheiden. Zugang zum Studio-Portal nur mit persönlichen Zugangsdaten des Studios.</td></tr>
+  <tr><th>Weitergabekontrolle</th><td>Übertragung ausschließlich verschlüsselt (TLS); Kommunikation mit Stripe nur über die offizielle Schnittstelle mit geheimen Schlüsseln, die nicht im Browser gespeichert werden; Benachrichtigungen nur an die vom Auftraggeber hinterlegten Empfänger.</td></tr>
+  <tr><th>Eingabe- &amp; Auftragskontrolle</th><td>Protokollierung der Erstellung von Zahlungslinks und relevanter Systemereignisse; dokumentierte Konfiguration je Studio; schriftliche Verträge mit Unterauftragsverarbeitern.</td></tr>
+  <tr><th>Datenminimierung</th><td>Zahlungslinks enthalten nur die für die Zahlung erforderlichen Angaben; keine Speicherung von Karten- oder Bankdaten beim Auftragnehmer; Löschung nach § 7.</td></tr>
+  <tr><th>Verfügbarkeit &amp; Belastbarkeit</th><td>Einsatz etablierter Cloud-Dienste mit eigener Redundanz; Zahlungsdaten zusätzlich im Stripe-Konto des Auftraggebers verfügbar; Überwachung der Funktion.</td></tr>
+  <tr><th>Trennungsgebot</th><td>Logische Trennung der Daten je Auftraggeber; Zuordnung über eindeutige Studio-Kennungen und das jeweilige Stripe-Konto.</td></tr>
   <tr><th>Überprüfung</th><td>Regelmäßige Überprüfung der Maßnahmen und der Unterauftragsverarbeiter, mindestens jährlich.</td></tr>
 </table>
 
 <h2 style="font-size:14pt">Anlage 3 · Genehmigte Unterauftragsverarbeiter</h2>
 <table>
   <tr><th>Dienst</th><th>Anbieter</th><th>Zweck</th><th>Ort / Garantie</th></tr>
-  <tr><td>Sprach-KI / Telefonagent</td><td>ElevenLabs (Eleven Labs Inc. bzw. EU-Gesellschaft laut DPA)</td><td>Spracherkennung, Gesprächsführung, Sprachausgabe, Transkript</td><td>[laut DPA prüfen: EU-Datenresidenz bzw. SCC/DPF]</td></tr>
-  <tr><td>Sprachmodell</td><td>LLM-Anbieter gemäß Subprozessor-Liste von ElevenLabs</td><td>Verarbeitung des Gesprächsinhalts</td><td>[laut Subprozessor-Liste]</td></tr>
-  <tr><td>Telefonie / Rufnummer</td><td>[z. B. Twilio Ireland Ltd. oder sipgate GmbH, Düsseldorf]</td><td>Rufnummer, Durchleitung der Anrufe</td><td>[EU / SCC]</td></tr>
-  <tr><td>Automatisierung</td><td>Make (Celonis), [Firmierung laut DPA]</td><td>Weiterleitung der Zusammenfassung</td><td>[EU-Region]</td></tr>
-  <tr><td>WhatsApp-Versand</td><td>Superchat (SuperX GmbH, Berlin) und Meta Platforms Ireland Ltd.</td><td>Zustellung von WhatsApp-Nachrichten</td><td>EU / [SCC/DPF für Meta]</td></tr>
-  <tr><td>E-Mail &amp; Tabellen</td><td>Google Ireland Ltd. (Google Workspace)</td><td>E-Mail-Versand, Anruf-Protokoll für Abrechnung</td><td>EU / SCC/DPF</td></tr>
+  <tr><td>Hosting &amp; Datenspeicher</td><td>Netlify, Inc., San Francisco, USA</td><td>Betrieb von Website, Studio-Portal, Zahlseite und Datenspeicher</td><td>[laut DPA prüfen: Region, SCC/DPF]</td></tr>
+  <tr><td>E-Mail-Versand</td><td>[Anbieter laut Einsatz eintragen, z. B. Resend, Inc. oder SMTP-Dienst]</td><td>Versand automatischer Benachrichtigungen</td><td>[laut DPA prüfen]</td></tr>
+  <tr><td>E-Mail &amp; Büro</td><td>Google Ireland Ltd. (Google Workspace)</td><td>E-Mail-Kommunikation, Support, Ablage von Abrechnungsunterlagen</td><td>EU / SCC/DPF [laut DPA prüfen]</td></tr>
+  <tr><td>Plattformkonto Stripe Connect</td><td>Stripe Payments Europe, Ltd., Dublin, Irland</td><td>Nur soweit Daten im Plattformkonto des Auftragnehmers verarbeitet werden (z. B. Metadaten zu Zahlungslinks, Plattformgebühren). Die Zahlungsabwicklung selbst erfolgt im Vertragsverhältnis zwischen Auftraggeber und Stripe (§ 1 Abs. 2).</td><td>EU / [laut DPA prüfen]</td></tr>
 </table>
 <p class="small">Stand 10/2026. Änderungen werden nach § 4 Abs. 2 mitgeteilt.</p>
 
