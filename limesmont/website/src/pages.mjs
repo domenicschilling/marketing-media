@@ -1,6 +1,6 @@
 import { SITE, SERVICES, OWN_PROJECTS, waLink } from './config.mjs';
 import { icon } from './icons.mjs';
-import { pageHero, serviceCards, processSteps, faq, faqSchema, ctaBand, profileStory, panelConfigurator, areaMap, miralStats, inquiryForm, callbackForm, img, builderBenefits, residentialRefs, lamellaVisual } from './partials.mjs';
+import { pageHero, serviceCards, processSteps, faq, faqSchema, ctaBand, profileStory, panelConfigurator, areaMap, miralStats, inquiryForm, callbackForm, img, builderBenefits, residentialRefs, lamellaVisual, lamellaSection } from './partials.mjs';
 
 const todo = (v, label) => (v ? v : `<mark class="todo">[${label} – vom Kunden zu ergänzen]</mark>`);
 
@@ -93,6 +93,8 @@ ${profileStory(ctx)}
     ${serviceCards(ctx)}
   </div>
 </section>
+
+${lamellaSection(ctx)}
 
 <section class="section section--split">
   <div class="container split">
@@ -439,6 +441,7 @@ const SERVICE_CONTENT = {
     h1: 'Lamellenfassaden und Verkleidungen, die ein Gebäude prägen.',
     lead: 'Senkrechte Lamellen in Holzoptik, großformatige Fassadenplatten und luftige Parkhausfassaden: Wir montieren Fassadenverkleidungen für Wohnanlagen, Hotels, Büro- und Parkhäuser.',
     media: 'lamellas',
+    extra: 'lamellas3d',
     intro: ['Fassadenlamellen sind das Markenzeichen moderner Wohn- und Hotelbauten: Sie gliedern die Fassade, setzen warme Akzente in Holzoptik und spenden zugleich Schatten und Sichtschutz. An Parkhäusern sorgen Lamellen- und Streckmetallfassaden für natürliche Belüftung bei geschlossenem Erscheinungsbild.', 'Wir montieren Unterkonstruktion und Fassadenelemente nach Planung und Herstellervorgaben – abgestimmt mit der Fenster- und Geländermontage, damit an den Anschlüssen alles zusammenpasst.'],
     listTitle: 'Systeme, die wir montieren',
     list: ['Vertikale und horizontale Fassadenlamellen aus Aluminium – pulverbeschichtet oder in Holzdekor', 'Lamellen aus WPC und Holz', 'Fassadenplatten (z. B. HPL, Faserzement, Aluminium-Verbund) als vorgehängte hinterlüftete Fassade', 'Parkhausfassaden aus Lamellen, Streckmetall oder Lochblech', 'Sonnenschutz-Lamellen und feste Brise Soleil', 'Glas- und Aluminiumgeländer für Balkone und Loggien', 'Attika-, Laibungs- und Kantteile'],
@@ -515,6 +518,7 @@ ${pageHero(ctx, { eyebrow: c.eyebrow, title: c.h1, lead: c.lead, image: c.image,
 </section>
 
 ${c.extra === 'story' ? profileStory(ctx) : ''}
+${c.extra === 'lamellas3d' ? lamellaSection(ctx, { standalone: false }) : ''}
 ${c.extra === 'configurator' ? `
 <section class="section">
   <div class="container">

@@ -130,6 +130,25 @@ $$('[data-configurator]').forEach((box) => {
   emit();
 });
 
+/* ---------- Lamellenfassade 3D: Winkel, Oberfläche, Montage neu ---------- */
+$$('[data-lamconfig]').forEach((box) => {
+  const stage = $('[data-scene]', box), out = $('[data-angle-out]', box), name = $('[data-finish-name]', box);
+  const state = { angle: 0, finish: 'zeder', replay: 0 };
+  const emit = () => { stage.dataset.config = JSON.stringify(state); stage.dispatchEvent(new CustomEvent('config', { detail: { ...state } })); };
+  $('[data-angle]', box).addEventListener('input', (e) => { state.angle = +e.target.value; out.textContent = `${state.angle}°`; emit(); });
+  box.addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    if (b.dataset.finish) {
+      state.finish = b.dataset.finish; name.textContent = b.dataset.name;
+      $$('[data-finish]', box).forEach((x) => { x.classList.toggle('is-active', x === b); x.setAttribute('aria-pressed', x === b); });
+    } else if ('replay' in b.dataset) state.replay++;
+    else return;
+    emit();
+  });
+  emit();
+});
+
 /* ---------- Referenzen filtern ---------- */
 $$('.ref-filter').forEach((bar) => {
   const items = $$('.ref');
