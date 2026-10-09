@@ -45,3 +45,30 @@ export const SERVICES = [
 // Eigene Referenzprojekte – leer lassen, bis echte Fotos vorliegen. Abschnitt erscheint automatisch.
 // Beispiel: { title: 'Gewerbehalle', place: 'Gunzenhausen', service: 'Sandwichpaneele', text: '1.200 m² Wandpaneele', img: 'projekt-halle' }
 export const OWN_PROJECTS = [];
+
+// Herstellerreferenzen MIRAL PVC mit Fotos (Freigabe durch MIRAL PVC liegt vor)
+// cat: Wohnen | Hotel | Gewerbe | Fassade  ·  cc: Ländercode
+export const REFERENCES = [
+  { img: 'ref/gelsenkirchen', title: 'Mehrfamilienhaus', place: 'Gelsenkirchen', cc: 'DE', cat: 'Wohnen', note: 'Fenster und Balkontüren – im Ausbau' },
+  { img: 'ref/gelsenkirchen-montage', title: 'Mehrfamilienhaus – Bauphase', place: 'Gelsenkirchen', cc: 'DE', cat: 'Wohnen', note: 'Montage im laufenden Ausbau' },
+  { img: 'ref/geschaeftshaus-de', title: 'Wohn- und Geschäftshaus', place: 'Deutschland', cc: 'DE', cat: 'Wohnen', note: 'Fenster und Eingangselemente' },
+  { img: 'ref/liberty-novalja', title: 'Hotel Liberty', place: 'Novalja, Kroatien', cc: 'HR', cat: 'Hotel', note: 'Lamellenfassade, Fenster und Glasbrüstungen' },
+  { img: 'ref/wohngebaeude-schweiz', title: 'Wohngebäude', place: 'Schweiz', cc: 'CH', cat: 'Wohnen', note: 'Großflächige Fensterelemente' },
+  { img: 'ref/wohngebaeude-schweiz-2', title: 'Mehrfamilienhaus', place: 'Schweiz', cc: 'CH', cat: 'Wohnen', note: 'Fenster und Balkonanlagen' },
+  { img: 'ref/wohnanlage-zadar', title: 'Wohnanlage', place: 'Zadar, Kroatien', cc: 'HR', cat: 'Wohnen', note: 'Mehrere Wohnhäuser' },
+  { img: 'ref/wohnkomplex-zadar', title: 'Wohnkomplex – Bauphase', place: 'Zadar, Kroatien', cc: 'HR', cat: 'Wohnen', note: 'Wohnquartier mit mehreren Bauabschnitten' },
+  { img: 'ref/wohngebaeude-kroatien', title: 'Wohngebäude', place: 'Kroatien', cc: 'HR', cat: 'Wohnen', note: 'Fenster und Balkontüren' },
+  { img: 'ref/wohnanlage-dubrovnik', title: 'Wohnanlage', place: 'Dubrovnik, Kroatien', cc: 'HR', cat: 'Wohnen', note: 'Mehrfamilienhäuser' },
+  { img: 'ref/wohnhochhaus-zagreb', title: 'Wohnhochhaus', place: 'Zagreb, Kroatien', cc: 'HR', cat: 'Wohnen', note: 'Fenster für alle Geschosse' },
+  { img: 'ref/wohngebaeude-bih', title: 'Wohngebäude', place: 'Bosnien und Herzegowina', cc: 'BA', cat: 'Wohnen', note: 'Neubau mit Balkonen' },
+  { img: 'ref/wohnsiedlung', title: 'Wohnsiedlung mit 14 Gebäuden', place: 'Kroatien', cc: 'HR', cat: 'Wohnen', note: '14 Wohngebäude' },
+  { img: 'ref/hotel-split', title: 'Hotel Amphora', place: 'Split, Kroatien', cc: 'HR', cat: 'Hotel', note: 'Hotelhochhaus' },
+  { img: 'ref/hotel-eraclea', title: 'Hotel Eraclea', place: 'Caorle, Italien', cc: 'IT', cat: 'Hotel', note: 'Fenster, Balkone, Glasflächen' },
+  { img: 'ref/hotel-marina', title: 'Hotel Marina', place: 'Caorle, Italien', cc: 'IT', cat: 'Hotel', note: 'Strandhotel' },
+  { img: 'ref/hotel-crikvenica', title: 'Hotel', place: 'Crikvenica, Kroatien', cc: 'HR', cat: 'Hotel', note: 'Fenster und Balkonanlagen' },
+  { img: 'ref/kolmix-trespa', title: 'Verwaltungsgebäude Kolmix', place: 'Bosnien und Herzegowina', cc: 'BA', cat: 'Fassade', note: 'Vorgehängte Fassade aus HPL-Platten' },
+  { img: 'ref/karlic-trespa', title: 'Firmengebäude Karlić', place: 'Istrien, Kroatien', cc: 'HR', cat: 'Fassade', note: 'HPL-Fassade mit Glasfront' },
+  { img: 'ref/kolmix-glasfassade', title: 'Glasfassade Kolmix', place: 'Bosnien und Herzegowina', cc: 'BA', cat: 'Fassade', note: 'Pfosten-Riegel-Glasfassade' },
+  { img: 'ref/bf-komerc-glasfassade', title: 'Gewerbebau BF Komerc', place: 'Bosnien und Herzegowina', cc: 'BA', cat: 'Gewerbe', note: 'Glasfassade' },
+  { img: 'ref/miral-verwaltung', title: 'Verwaltungsgebäude MIRAL PVC', place: 'Velika Kladuša', cc: 'BA', cat: 'Gewerbe', note: 'Firmensitz des Herstellers' },
+];

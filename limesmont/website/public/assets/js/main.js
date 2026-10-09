@@ -84,26 +84,40 @@ if (!reduced && matchMedia('(hover: hover) and (pointer: fine)').matches) {
   });
 }
 
-/* ---------- Scroll-Story: Fortschritt & Schritte ---------- */
+/* ---------- Fenster-Story: Schritte laufen automatisch durch (kein Scroll-Festhalten) ---------- */
 $$('[data-story]').forEach((story) => {
   const steps = $$('.story__step', story), labels = $$('.scene-label', story), hud = $('[data-hud-step]', story);
-  let last = -1;
-  const update = () => {
-    const r = story.getBoundingClientRect(), total = r.height - innerHeight;
-    const p = Math.min(1, Math.max(0, -r.top / total));
-    story.style.setProperty('--p', p.toFixed(4));
-    story.dataset.progress = p;
-    const active = Math.min(steps.length - 1, Math.floor(p * steps.length * 0.999));
-    if (active !== last) {
-      last = active;
-      steps.forEach((s, i) => s.classList.toggle('is-active', i === active));
-      labels.forEach((l) => l.classList.toggle('is-on', active >= +l.dataset.from));
-      if (hud) hud.textContent = `0${active + 1} / 0${steps.length}`;
-    }
+  const TARGET = [0.06, 0.4, 0.66, 0.96]; // Zerlegungsgrad je Schritt (passt zur 3D-Szene)
+  const STEP_MS = 3400;
+  let active = -1, visible = false, pausedUntil = 0, timer = 0, last = performance.now();
+  const go = (i) => {
+    active = (i + steps.length) % steps.length;
+    story.dataset.progress = TARGET[active];
+    steps.forEach((st, k) => { st.classList.toggle('is-active', k === active); st.setAttribute('aria-current', k === active ? 'step' : 'false'); });
+    labels.forEach((l) => l.classList.toggle('is-on', active >= +l.dataset.from));
+    if (hud) hud.textContent = `0${active + 1} / 0${steps.length}`;
+    timer = 0;
   };
-  addEventListener('scroll', update, { passive: true });
-  addEventListener('resize', update);
-  update();
+  steps.forEach((st, k) => {
+    st.tabIndex = 0;
+    st.setAttribute('role', 'button');
+    const pick = () => { go(k); pausedUntil = performance.now() + 9000; };
+    st.addEventListener('click', pick);
+    st.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
+  });
+  new IntersectionObserver(([e]) => { visible = e.isIntersecting; }, { threshold: 0.35 }).observe(story);
+  const bar = $('.story__progress span', story);
+  const tick = (now) => {
+    const dt = now - last; last = now;
+    if (visible && !reduced && now > pausedUntil && !document.hidden) {
+      timer += dt;
+      if (timer >= STEP_MS) go(active + 1);
+    }
+    if (bar) bar.style.width = `${((active + Math.min(1, timer / STEP_MS)) / steps.length) * 100}%`;
+    requestAnimationFrame(tick);
+  };
+  go(0);
+  requestAnimationFrame(tick);
 });
 
 /* ---------- Sandwich-Konfigurator (UI, funktioniert auch ohne WebGL) ---------- */
@@ -151,14 +165,33 @@ $$('[data-lamconfig]').forEach((box) => {
 
 /* ---------- Referenzen filtern ---------- */
 $$('.ref-filter').forEach((bar) => {
-  const items = $$('.ref');
+  const items = $$('.ref-card');
   bar.addEventListener('click', (e) => {
     const b = e.target.closest('[data-filter]');
     if (!b) return;
     $$('[data-filter]', bar).forEach((x) => { x.classList.toggle('is-active', x === b); x.setAttribute('aria-pressed', x === b); });
-    items.forEach((it) => { it.hidden = b.dataset.filter !== 'Alle' && it.dataset.cat !== b.dataset.filter; });
+    const f = b.dataset.filter;
+    items.forEach((it) => { it.hidden = !(f === 'Alle' || (f === 'Deutschland' ? it.dataset.cc === 'DE' : it.dataset.cat === f)); if (!it.hidden) it.classList.add('in'); });
   });
 });
+
+/* ---------- Großansicht für Referenzfotos ---------- */
+if ($('[data-lightbox]')) {
+  const dlg = document.createElement('dialog');
+  dlg.className = 'lightbox';
+  dlg.innerHTML = '<button type="button" aria-label="Schließen"><svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button><img alt=""><p></p>';
+  document.body.append(dlg);
+  const im = $('img', dlg), cap = $('p', dlg);
+  $('button', dlg).addEventListener('click', () => dlg.close());
+  dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('[data-lightbox]');
+    if (!a || !dlg.showModal) return;
+    e.preventDefault();
+    im.src = a.href; im.alt = a.dataset.caption; cap.textContent = a.dataset.caption;
+    dlg.showModal();
+  });
+}
 
 /* ---------- Mehrstufiges Anfrageformular ---------- */
 $$('form[data-steps]').forEach((form) => {

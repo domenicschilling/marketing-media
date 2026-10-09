@@ -1,4 +1,5 @@
-import { SITE, SERVICES, waLink } from './config.mjs';
+import { readFileSync } from 'node:fs';
+import { SITE, SERVICES, REFERENCES, waLink } from './config.mjs';
 import { icon } from './icons.mjs';
 import { esc } from './layout.mjs';
 
@@ -139,7 +140,7 @@ export function profileStory(ctx) {
             .join('\n          ')}
         </ol>
         <div class="story__progress" aria-hidden="true"><span></span></div>
-        <p class="story__hint" aria-hidden="true">Scrollen, um das Fenster zu zerlegen</p>
+        <p class="story__hint" aria-hidden="true">Automatischer Ablauf · Schritt anklicken zum Anhalten</p>
       </div>
       <div class="story__stage scene" data-scene="window-profile">
         ${img(ctx, 'fenster-haus', 'Fensterprofil im Querschnitt vor einem modernen Wohnhaus', { cls: 'scene-fallback' })}
@@ -201,31 +202,37 @@ export function panelConfigurator(ctx) {
 </div>`;
 }
 
-/* ---------- Einsatzgebiet ---------- */
-export function areaMap() {
-  const towns = [
-    ['Ansbach', 292, 146], ['Feuchtwangen', 222, 205], ['Gunzenhausen', 345, 228], ['Dinkelsbühl', 218, 248],
-    ['Weißenburg', 409, 265], ['Oettingen', 302, 300], ['Treuchtlingen', 390, 300], ['Nördlingen', 268, 345],
-    ['Donauwörth', 352, 404], ['Nürnberg', 440, 78],
-  ];
+/* ---------- Einsatzgebiet: Deutschlandkarte (Umriss: Natural Earth, gemeinfrei) ---------- */
+const DE = JSON.parse(readFileSync(new URL('./germany.json', import.meta.url), 'utf8'));
+export function germanyMap() {
+  const [hx, hy] = DE.cities['Wassertrüdingen'];
+  const show = ['Hamburg', 'Bremen', 'Berlin', 'Hannover', 'Gelsenkirchen', 'Köln', 'Leipzig', 'Dresden', 'Kassel', 'Erfurt', 'Frankfurt', 'Nürnberg', 'Stuttgart', 'München', 'Freiburg', 'Rostock'];
+  const label = { Kassel: false, Erfurt: false, Freiburg: false, Rostock: false };
+  const arcs = show.map((n, i) => {
+    const [x, y] = DE.cities[n];
+    const mx = (hx + x) / 2, my = (hy + y) / 2, dx = x - hx, dy = y - hy, len = Math.hypot(dx, dy);
+    const cx = mx - (dy / len) * len * 0.18, cy = my + (dx / len) * len * 0.18 - len * 0.08;
+    const d = `M${hx},${hy} Q${cx.toFixed(1)},${cy.toFixed(1)} ${x},${y}`;
+    const ref = n === 'Gelsenkirchen';
+    return `<g class="city${ref ? ' city--ref' : ''}" style="--d:${300 + i * 90}ms">
+      <path class="arc" d="${d}" pathLength="1"/><path class="arc-flow" d="${d}" pathLength="1"/>
+      <circle cx="${x}" cy="${y}" r="${ref ? 6 : 4.5}"/>
+      ${label[n] === false ? '' : `<text x="${x + (x > 420 ? -10 : 10)}" y="${y + 5}"${x > 420 ? ' text-anchor="end"' : ''}>${n}${ref ? ' · Referenz' : ''}</text>`}
+    </g>`;
+  }).join('\n    ');
   return `
-<figure class="area-map" aria-label="Einsatzgebiet rund um Wassertrüdingen">
-  <svg viewBox="0 0 600 500" role="img">
-    <title>Einsatzgebiet: Radius rund um Wassertrüdingen</title>
-    <defs>
-      <radialGradient id="glow"><stop offset="0" stop-color="#9BC04F" stop-opacity=".35"/><stop offset="1" stop-color="#9BC04F" stop-opacity="0"/></radialGradient>
-    </defs>
-    <circle cx="300" cy="250" r="200" fill="url(#glow)"/>
-    <circle class="ring" cx="300" cy="250" r="100"/>
-    <circle class="ring ring--outer" cx="300" cy="250" r="200"/>
-    <text class="ring-label" x="226" y="172">25 km</text>
-    <text class="ring-label" x="155" y="102">50 km</text>
-    ${towns.map(([n, x, y]) => `<g class="town"><line x1="300" y1="250" x2="${x}" y2="${y - 10}"/><circle cx="${x}" cy="${y - 10}" r="4"/><text x="${x + 8}" y="${y - 6}">${n}</text></g>`).join('')}
-    <g class="home"><circle class="pulse" cx="300" cy="250" r="10"/><circle cx="300" cy="250" r="7"/><text x="300" y="281" text-anchor="middle">Wassertrüdingen</text></g>
+<figure class="de-map reveal" aria-label="Einsatzgebiet: ganz Deutschland, Firmensitz Wassertrüdingen">
+  <svg viewBox="0 0 ${DE.w} ${DE.h}" role="img">
+    <title>Deutschlandweit im Einsatz – Firmensitz Wassertrüdingen</title>
+    <defs><radialGradient id="deglow" cx="${hx / DE.w}" cy="${hy / DE.h}" r=".7"><stop offset="0" stop-color="#9BC04F" stop-opacity=".28"/><stop offset="1" stop-color="#9BC04F" stop-opacity=".04"/></radialGradient></defs>
+    ${DE.paths.map((d) => `<path class="land" d="${d}"/>`).join('')}
+    ${arcs}
+    <g class="home"><circle class="pulse" cx="${hx}" cy="${hy}" r="10"/><circle class="pulse pulse--2" cx="${hx}" cy="${hy}" r="10"/><circle cx="${hx}" cy="${hy}" r="8"/><text x="${hx + 14}" y="${hy + 24}">Wassertrüdingen</text></g>
   </svg>
-  <figcaption>Firmensitz Wassertrüdingen · Industrieprojekte deutschlandweit auf Anfrage</figcaption>
+  <figcaption>Firmensitz Wassertrüdingen · Montage in ganz Deutschland</figcaption>
 </figure>`;
 }
+export const areaMap = germanyMap;
 
 /* ---------- MIRAL-Kennzahlen ---------- */
 export function miralStats() {
@@ -365,24 +372,30 @@ export function builderBenefits() {
 </div>`;
 }
 
-/* ---------- Herstellerreferenzen Wohnungsbau ---------- */
-export const RESIDENTIAL_REFS = [
-  ['Wohnsiedlung mit 14 Gebäuden', 'Kroatien', 'HR'],
-  ['Wohnkomplex', 'Zadar, Kroatien', 'HR'],
-  ['Wohnhochhaus', 'Zagreb, Kroatien', 'HR'],
-  ['Wohngebäude', 'Split, Kroatien', 'HR'],
-  ['Wohn- und Geschäftshaus', 'Cazin, Bosnien und Herzegowina', 'BA'],
-  ['Wohngebäude', 'Schweiz', 'CH'],
-  ['Seniorenheim', 'Köln', 'DE'],
-  ['Wohnanlagen', 'Dubrovnik, Kroatien', 'HR'],
-];
+/* ---------- Referenzfotos (MIRAL PVC) ---------- */
+const CC = { DE: 'Deutschland', CH: 'Schweiz', HR: 'Kroatien', IT: 'Italien', BA: 'Bosnien-Herzegowina' };
+export const refsBy = (pred) => REFERENCES.filter(pred);
 
-export function residentialRefs(ctx, { limit = 8 } = {}) {
-  return `
-<ul class="refs refs--compact">
-  ${RESIDENTIAL_REFS.slice(0, limit).map(([t, place, cc]) => `<li class="ref reveal"><span class="ref__cc">${cc}</span><div><b>${t}</b><small>${place}</small></div></li>`).join('\n  ')}
-</ul>
-<p class="fineprint">Herstellerreferenzen von MIRAL PVC. Alle Projekte mit Fotos: <a href="${SITE.miral.references}" target="_blank" rel="noopener">miral-pvc.com/reference</a></p>`;
+export function refCard(ctx, r, i = 0) {
+  return `<figure class="ref-card reveal" style="--d:${(i % 3) * 70}ms" data-cat="${r.cat}" data-cc="${r.cc}">
+    <a class="ref-card__media" href="${ctx.a(`img/${r.img}.webp`)}" data-lightbox data-caption="${esc(`${r.title} · ${r.place} – ${r.note}`)}">
+      ${img(ctx, r.img, `${r.title}, ${r.place}`, { sizes: '(min-width: 1100px) 33vw, (min-width: 640px) 50vw, 100vw', w: 1400, h: 933 })}
+      <span class="ref-card__cc" title="${CC[r.cc] || r.cc}">${r.cc}</span>
+    </a>
+    <figcaption><b>${r.title}</b><span>${r.place}</span><small>${r.note}</small></figcaption>
+  </figure>`;
+}
+
+export function refGrid(ctx, list) {
+  return `<div class="ref-grid">\n  ${list.map((r, i) => refCard(ctx, r, i)).join('\n  ')}\n</div>`;
+}
+
+// Auswahl für Startseite und Bauträger-Seite: Wohnbau, Deutschland zuerst
+export function residentialRefs(ctx, { limit = 6 } = {}) {
+  const pick = ['ref/gelsenkirchen', 'ref/wohngebaeude-schweiz', 'ref/wohnanlage-zadar', 'ref/liberty-novalja', 'ref/geschaeftshaus-de', 'ref/wohnanlage-dubrovnik'];
+  const list = pick.map((k) => REFERENCES.find((r) => r.img === k)).filter(Boolean).slice(0, limit);
+  return `${refGrid(ctx, list)}
+<p class="fineprint">Herstellerreferenzen von MIRAL PVC, Fotos mit freundlicher Genehmigung. <a href="${ctx.r('referenzen/')}">Alle Referenzen ansehen</a></p>`;
 }
 
 /* ---------- 3D-Sektion Lamellenfassade ---------- */

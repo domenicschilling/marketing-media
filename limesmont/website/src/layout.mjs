@@ -134,7 +134,7 @@ export function businessSchema() {
     email: SITE.email,
     address: { '@type': 'PostalAddress', streetAddress: SITE.street, postalCode: SITE.zip, addressLocality: SITE.city, addressRegion: SITE.region, addressCountry: SITE.country },
     geo: { '@type': 'GeoCoordinates', latitude: SITE.geo.lat, longitude: SITE.geo.lng },
-    areaServed: ['Wassertrüdingen', 'Landkreis Ansbach', 'Gunzenhausen', 'Dinkelsbühl', 'Nördlingen', 'Weißenburg in Bayern', 'Deutschland'],
+    areaServed: { '@type': 'Country', name: 'Deutschland' },
     founder: { '@type': 'Person', name: SITE.ceo, jobTitle: 'Geschäftsführer' },
     knowsAbout: ['Fenster und Türen für Bauträger', 'Objektgeschäft Wohnungsbau', 'Fenstermontage', 'Türmontage', 'Sandwichpaneele', 'Industriemontage', 'Glasfassaden', 'Fassadenlamellen', 'Vorgehängte hinterlüftete Fassade', 'Trockenbau', 'Innenausbau'],
   };

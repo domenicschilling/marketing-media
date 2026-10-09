@@ -1,6 +1,6 @@
-import { SITE, SERVICES, OWN_PROJECTS, waLink } from './config.mjs';
+import { SITE, SERVICES, OWN_PROJECTS, REFERENCES, waLink } from './config.mjs';
 import { icon } from './icons.mjs';
-import { pageHero, serviceCards, processSteps, faq, faqSchema, ctaBand, profileStory, panelConfigurator, areaMap, miralStats, inquiryForm, callbackForm, img, builderBenefits, residentialRefs, lamellaHero, lamellaSection } from './partials.mjs';
+import { pageHero, serviceCards, processSteps, faq, faqSchema, ctaBand, profileStory, panelConfigurator, areaMap, miralStats, inquiryForm, callbackForm, img, builderBenefits, residentialRefs, lamellaHero, lamellaSection, refGrid, refsBy } from './partials.mjs';
 
 const todo = (v, label) => (v ? v : `<mark class="todo">[${label} – vom Kunden zu ergänzen]</mark>`);
 
@@ -20,14 +20,14 @@ const HOME_FAQ = [
   BUILDER_FAQ[1],
   BUILDER_FAQ[2],
   ['Montieren Sie auch Bauelemente, die nicht bei Ihnen gekauft wurden?', 'In vielen Fällen ja – wir montieren genormte Fenster, Türen, Paneele und vorgefertigte Bauelemente aus Kunststoff, Aluminium oder Holz. Sprechen Sie uns mit den Produktdaten an, dann prüfen wir Ihr Vorhaben.'],
-  ['In welchem Gebiet sind Sie tätig?', 'Unser Sitz ist in Wassertrüdingen. Wir sind vor allem in Westmittelfranken und Nordschwaben im Einsatz – etwa in Gunzenhausen, Dinkelsbühl, Ansbach, Nördlingen und Weißenburg. Industrie- und Gewerbeprojekte übernehmen wir auf Anfrage deutschlandweit.'],
+  ['In welchem Gebiet sind Sie tätig?', 'Deutschlandweit. Unser Firmensitz ist in Wassertrüdingen (Bayern), unsere Montageteams sind in ganz Deutschland im Einsatz – von Hamburg bis München, von Köln bis Dresden. Die Elemente werden direkt vom Werk auf Ihre Baustelle geliefert.'],
   ['Welche Arbeiten führen Sie nicht aus?', 'Wir führen keine zulassungspflichtigen Handwerksarbeiten aus und nehmen keine Eingriffe in die Statik von Bauwerken vor. Unser Schwerpunkt ist der fachgerechte Einbau vorgefertigter, genormter Bauelemente.'],
 ];
 
 const home = {
   path: '',
-  title: 'LIMES MONT – Fenster & Türen für Bauträger, direkt vom Hersteller | Wassertrüdingen',
-  description: 'Fenster, Türen und Fassaden für Wohnanlagen und Gewerbebauten: Angebot nach Plänen oder LV, Fertigung bei MIRAL PVC, Montage nach Bauzeitenplan. LIMES MONT – Generalvertretung Deutschland.',
+  title: 'LIMES MONT – Fenster & Türen für Bauträger, direkt vom Hersteller | deutschlandweit',
+  description: 'Fenster, Türen und Fassaden für Wohnanlagen und Gewerbebauten: Angebot nach Plänen oder LV, Fertigung bei MIRAL PVC, Montage nach Bauzeitenplan – deutschlandweit. LIMES MONT, Generalvertretung Deutschland.',
   dark: true,
   bodyClass: 'is-home',
   schema: [faqSchema(HOME_FAQ)],
@@ -36,7 +36,7 @@ const home = {
   <div class="hero__bg" aria-hidden="true"></div>
   <div class="container hero__grid">
     <div class="hero__text">
-      <p class="eyebrow eyebrow--light hero__eyebrow"><span class="dot"></span> Für Bauträger &amp; Generalunternehmer</p>
+      <p class="eyebrow eyebrow--light hero__eyebrow"><span class="dot"></span> Für Bauträger &amp; Generalunternehmer · deutschlandweit</p>
       <h1 class="hero__title">Fenster &amp; Türen für Ihr Bauprojekt. <span>Direkt vom Hersteller.</span></h1>
       <p class="hero__lead">Als Generalvertretung von MIRAL PVC liefern und montieren wir Fenster, Türen und Fassaden für Mehrfamilienhäuser, Wohnanlagen und Gewerbebauten – kalkuliert nach Ihren Plänen, montiert nach Ihrem Bauzeitenplan.</p>
       <div class="actions">
@@ -47,6 +47,7 @@ const home = {
         <li>${icon('check')} Angebot nach Plänen oder LV</li>
         <li>${icon('check')} Montage nach Bauzeitenplan</li>
         <li>${icon('check')} Ein Ansprechpartner bis zur Abnahme</li>
+        <li>${icon('check')} Deutschlandweit im Einsatz</li>
       </ul>
     </div>
     <div class="hero__stage scene" data-scene="hero-house">
@@ -164,10 +165,15 @@ ${lamellaSection(ctx)}
   <div class="container split split--area">
     <div class="split__text reveal">
       <p class="eyebrow eyebrow--light">Einsatzgebiet</p>
-      <h2>Zuhause in Wassertrüdingen. Unterwegs in der ganzen Region.</h2>
-      <p>Kurze Wege, schnelle Termine: Wir betreuen Bauträger, Generalunternehmer, Gewerbe- und Privatkunden in Westmittelfranken und Nordschwaben. Für größere Wohnbau-, Gewerbe- und Industrieprojekte sind wir auf Anfrage deutschlandweit im Einsatz.</p>
+      <h2>Sitz in Wassertrüdingen. Im Einsatz in ganz Deutschland.</h2>
+      <p>Wir liefern und montieren deutschlandweit – für Bauträger, Generalunternehmer, Gewerbe und Industrie. Die Elemente kommen direkt aus dem Werk von MIRAL PVC auf Ihre Baustelle, unsere Montageteams reisen zum Projekt und arbeiten nach Ihrem Bauzeitenplan.</p>
+      <ul class="check-list check-list--dark">
+        <li>${icon('check')} Montageteams für Projekte in ganz Deutschland</li>
+        <li>${icon('check')} Lieferung direkt vom Werk auf die Baustelle</li>
+        <li>${icon('check')} Ein fester Ansprechpartner – egal wo Ihr Projekt liegt</li>
+      </ul>
       <ul class="tag-list">
-        <li>Wassertrüdingen</li><li>Gunzenhausen</li><li>Dinkelsbühl</li><li>Ansbach</li><li>Feuchtwangen</li><li>Oettingen</li><li>Nördlingen</li><li>Weißenburg</li><li>Treuchtlingen</li><li>Donauwörth</li>
+        <li>Berlin</li><li>Hamburg</li><li>München</li><li>Köln</li><li>Frankfurt</li><li>Stuttgart</li><li>Düsseldorf</li><li>Leipzig</li><li>Dresden</li><li>Hannover</li><li>Nürnberg</li><li>Gelsenkirchen</li><li>und überall dazwischen</li>
       </ul>
     </div>
     <div class="reveal">${areaMap()}</div>
@@ -196,13 +202,13 @@ const builders = {
   title: 'Fenster & Türen für Bauträger – Objektgeschäft direkt vom Hersteller',
   description: 'Für Bauträger und Generalunternehmer: Fenster, Türen und Fassaden für Wohnanlagen und Mehrfamilienhäuser – Angebot nach Plänen oder LV, Fertigung bei MIRAL PVC, Montage nach Bauzeitenplan.',
   crumbs: [['Für Bauträger', 'bautraeger/']],
-  preloadImg: 'fenster-haus-800.webp',
+  preloadImg: 'ref/wohngebaeude-kroatien-800.webp',
   schema: [
     { '@context': 'https://schema.org', '@type': 'Service', name: 'Fenster und Türen für Bauträger', serviceType: 'Lieferung und Montage von Fenstern, Türen und Fassaden im Objektbau', audience: { '@type': 'BusinessAudience', name: 'Bauträger, Projektentwickler und Generalunternehmer' }, provider: { '@id': SITE.url + '/#business' }, areaServed: 'Deutschland' },
     faqSchema(BUILDER_FAQ),
   ],
   body: (ctx) => `
-${pageHero(ctx, { eyebrow: 'Für Bauträger & Generalunternehmer', title: 'Fenster, Türen und Fassaden für Ihre Wohnanlage.', lead: 'Ein Werk, ein Ansprechpartner, Ihr ganzes Projekt: Wir kalkulieren nach Ihren Plänen, lassen bei MIRAL PVC nach Maß fertigen und montieren im Takt Ihrer Baustelle.', image: 'fenster-haus', imageAlt: 'Modernes Wohngebäude mit großflächigen Fenstern und Fensterprofil im Querschnitt', crumbs: [['Für Bauträger', 'bautraeger/']] })}
+${pageHero(ctx, { eyebrow: 'Für Bauträger & Generalunternehmer', title: 'Fenster, Türen und Fassaden für Ihre Wohnanlage.', lead: 'Ein Werk, ein Ansprechpartner, Ihr ganzes Projekt: Wir kalkulieren nach Ihren Plänen, lassen bei MIRAL PVC nach Maß fertigen und montieren im Takt Ihrer Baustelle.', image: 'ref/wohngebaeude-kroatien', imageAlt: 'Neu gebautes Wohngebäude mit Balkonen – Herstellerreferenz MIRAL PVC', crumbs: [['Für Bauträger', 'bautraeger/']] })}
 
 <section class="section">
   <div class="container">
@@ -321,13 +327,14 @@ ${ctaBand(ctx)}
    ===================================================================== */
 const SERVICE_CONTENT = {
   'fenster-tueren': {
-    seo: 'Fenster & Türen kaufen und montieren lassen – Wassertrüdingen',
+    seo: 'Fenster & Türen kaufen und montieren lassen – deutschlandweit',
     description: 'PVC- und Aluminiumfenster, Haustüren und Hebe-Schiebe-Türen von MIRAL PVC – Beratung, Aufmaß, Lieferung und Montage aus einer Hand. Für Neubau und Sanierung.',
     eyebrow: 'Fenster & Türen',
     h1: 'Neue Fenster und Türen – geliefert vom Hersteller, eingebaut von uns.',
     lead: 'Kunststoff- oder Aluminiumfenster, Hauseingangs-, Balkon- und Hebe-Schiebe-Türen für Wohnanlagen, Mehrfamilienhäuser und Sanierungen – kalkuliert nach Plänen, gefertigt bei MIRAL PVC, montiert von uns.',
-    image: 'fenster-haus',
-    imageAlt: 'Modernes Wohnhaus mit großen Glasflächen und Fensterprofil im Querschnitt',
+    image: 'ref/wohngebaeude-schweiz',
+    imageAlt: 'Wohngebäude in der Schweiz mit großflächigen Fenstern – Herstellerreferenz MIRAL PVC',
+    refs: ['ref/gelsenkirchen', 'ref/wohngebaeude-schweiz-2', 'ref/wohnhochhaus-zagreb'],
     intro: ['Ob Wohnanlage mit mehreren Häusern, Mehrfamilienhaus oder einzelne Sanierung: Fenster und Türen entscheiden über Energiebedarf, Schallschutz und Wohnkomfort – und bei Bauträgerprojekten über Kosten und Termine. Damit alles passt, müssen Produkt, Kalkulation und Einbau zusammenspielen. Genau darum kümmern wir uns.', 'Als Generalvertretung von MIRAL PVC haben wir direkten Zugang zu modernen Mehrkammer-Profilsystemen aus Kunststoff und Aluminium. Sie bekommen Fenster und Türen nach Maß – und einen Ansprechpartner, der von der Beratung bis zur Abnahme für Sie da ist.'],
     listTitle: 'Was wir für Sie einbauen',
     list: ['Komplette Fensterpakete für Wohnanlagen und Mehrfamilienhäuser', 'Kunststofffenster (PVC) in Weiß, Farbe oder Holzdekor', 'Aluminiumfenster und -türen', 'Haustüren aus PVC und Aluminium', 'Balkon- und Terrassentüren', 'Hebe-Schiebe- und Schiebetüren für große Glasflächen', 'Austausch alter Fenster inkl. Ausbau und Entsorgung', 'Fensterbänke innen und außen, Rollläden, Insektenschutz'],
@@ -350,9 +357,10 @@ const SERVICE_CONTENT = {
     eyebrow: 'Glasfassaden & Wintergärten',
     h1: 'Glasfassaden und Wintergärten, die Räume öffnen.',
     lead: 'Pfosten-Riegel-Fassaden, Wintergärten, Innen-Trennwände und Geländer aus Aluminium – für Gewerbe, Büro und anspruchsvolle Wohnhäuser.',
-    image: 'fenster-haus',
-    imageAlt: 'Wohnhaus mit großen Glasfassaden in Aluminium',
-    intro: ['Große Glasflächen bringen Licht in Gebäude und prägen ihre Architektur. Damit sie dauerhaft dicht, sicher und energieeffizient sind, braucht es durchdachte Aluminiumsysteme und eine präzise Montage.', 'Über MIRAL PVC liefern wir Fassaden-, Wintergarten-, Trennwand- und Geländersysteme aus eigener Fertigung des Herstellers. Wir übernehmen Aufmaß, Abstimmung mit Planern und die Montage auf der Baustelle.'],
+    image: 'ref/kolmix-glasfassade',
+    imageAlt: 'Pfosten-Riegel-Glasfassade am Verwaltungsgebäude Kolmix – Herstellerreferenz MIRAL PVC',
+    refs: ['ref/kolmix-glasfassade', 'ref/bf-komerc-glasfassade', 'ref/miral-verwaltung'],
+    intro: ['Große Glasflächen bringen Licht in Gebäude und prägen ihre Architektur. Damit sie dauerhaft dicht, sicher und energieeffizient sind, braucht es durchdachte Aluminiumsysteme und eine präzise Montage.', 'Über MIRAL PVC liefern wir Fassaden-, Wintergarten-, Trennwand- und Geländersysteme aus eigener Fertigung des Herstellers. Wir übernehmen Aufmaß, Abstimmung mit Planern und die Montage auf der Baustelle – deutschlandweit.'],
     listTitle: 'Systeme im Überblick',
     list: ['Pfosten-Riegel-Glasfassaden (z. B. Systeme 50 FK und 60 K)', 'Fassadenbekleidungen aus Aluminium', 'Wintergärten – selbsttragend, voll verglast und wärmegedämmt', 'Innen-Trennwände mit Türen (z. B. System PF 100 S)', 'Geländer- und Brüstungssysteme (z. B. OF 60 / OF 80 / OF 100)', 'Sonnenschutz: Raffstores, Brise Soleil, Alu-Klappläden'],
     features: [
@@ -398,14 +406,14 @@ const SERVICE_CONTENT = {
     lead: 'Wir montieren vorgefertigte Industrieelemente und Komponenten für Produktions- und Gewerbeobjekte – als zuverlässiger Partner für Betreiber, Hallenbauer und Generalunternehmer.',
     image: 'paneelmontage',
     imageAlt: 'Monteure mit Kran bei der Montage von Fassadenelementen an einer Industriehalle',
-    intro: ['Auf Industriebaustellen greifen viele Gewerke ineinander. Wer hier montiert, muss Pläne lesen, Toleranzen einhalten, Sicherheitsvorgaben leben und sich nahtlos in den Bauablauf einfügen.', 'Unser Team aus Monteuren und Projektleitern übernimmt die Montage vorgefertigter Elemente – von Paneelen und Bauelementen bis zu industriellen Montagekomponenten. Auch Zweigniederlassungen und Projekteinsätze außerhalb der Region sind möglich.'],
+    intro: ['Auf Industriebaustellen greifen viele Gewerke ineinander. Wer hier montiert, muss Pläne lesen, Toleranzen einhalten, Sicherheitsvorgaben leben und sich nahtlos in den Bauablauf einfügen.', 'Unser Team aus Monteuren und Projektleitern übernimmt die Montage vorgefertigter Elemente – von Paneelen und Bauelementen bis zu industriellen Montagekomponenten. Wir sind deutschlandweit im Einsatz und können bei Bedarf auch Zweigniederlassungen einrichten.'],
     listTitle: 'Typische Aufgaben',
-    list: ['Montage vorgefertigter Industrie- und Bauelemente', 'Hallen- und Fassadenelemente, Sandwichpaneele', 'Fenster, Türen, Tore und Lichtbänder im Objektbau', 'Montage industrieller Komponenten nach Plan', 'Demontage- und Rückbauarbeiten (zulassungsfrei)', 'Montageteams für Projekteinsätze außerhalb der Region'],
+    list: ['Montage vorgefertigter Industrie- und Bauelemente', 'Hallen- und Fassadenelemente, Sandwichpaneele', 'Fenster, Türen, Tore und Lichtbänder im Objektbau', 'Montage industrieller Komponenten nach Plan', 'Demontage- und Rückbauarbeiten (zulassungsfrei)', 'Montageteams für Projekteinsätze in ganz Deutschland'],
     features: [
       ['shield', 'Arbeitssicherheit', 'Arbeit nach den geltenden Sicherheits- und Industriestandards, eingewiesenes Personal.'],
       ['clock', 'Termintreue', 'Realistische Planung und klare Kommunikation, wenn sich auf der Baustelle etwas ändert.'],
       ['ruler', 'Präzision', 'Montage nach Plan und Toleranz – mit Dokumentation und gemeinsamer Abnahme.'],
-      ['globe', 'Flexibel im Einsatz', 'Projekte in der Region und auf Anfrage deutschlandweit.'],
+      ['globe', 'Deutschlandweit im Einsatz', 'Unsere Montageteams arbeiten auf Baustellen in ganz Deutschland.'],
     ],
     faq: [
       ['Wie kurzfristig können Sie starten?', 'Das hängt von Projektumfang und Auslastung ab. Melden Sie sich möglichst früh mit Zeitraum und Leistungsumfang – wir sagen Ihnen schnell, was möglich ist.'],
@@ -441,6 +449,8 @@ const SERVICE_CONTENT = {
     h1: 'Lamellenfassaden und Verkleidungen, die ein Gebäude prägen.',
     lead: 'Senkrechte Lamellen in Holzoptik, großformatige Fassadenplatten und luftige Parkhausfassaden: Wir montieren Fassadenverkleidungen für Wohnanlagen, Hotels, Büro- und Parkhäuser.',
     media: 'lamellas',
+    refs: ['ref/liberty-novalja', 'ref/kolmix-trespa', 'ref/karlic-trespa'],
+    refsTitle: 'Lamellen und vorgehängte Fassaden in der Praxis',
     extra: 'lamellas3d',
     intro: ['Fassadenlamellen sind das Markenzeichen moderner Wohn- und Hotelbauten: Sie gliedern die Fassade, setzen warme Akzente in Holzoptik und spenden zugleich Schatten und Sichtschutz. An Parkhäusern sorgen Lamellen- und Streckmetallfassaden für natürliche Belüftung bei geschlossenem Erscheinungsbild.', 'Wir montieren Unterkonstruktion und Fassadenelemente nach Planung und Herstellervorgaben – abgestimmt mit der Fenster- und Geländermontage, damit an den Anschlüssen alles zusammenpasst.'],
     listTitle: 'Systeme, die wir montieren',
@@ -489,7 +499,7 @@ function servicePage(s) {
     crumbs: [['Leistungen', 'leistungen/'], [s.title, `leistungen/${s.slug}/`]],
     preloadImg: c.image ? `${c.image}-800.webp` : undefined,
     schema: [
-      { '@context': 'https://schema.org', '@type': 'Service', name: s.title, serviceType: s.title, description: c.description, provider: { '@id': SITE.url + '/#business' }, areaServed: 'Westmittelfranken, Nordschwaben, Deutschland' },
+      { '@context': 'https://schema.org', '@type': 'Service', name: s.title, serviceType: s.title, description: c.description, provider: { '@id': SITE.url + '/#business' }, areaServed: { '@type': 'Country', name: 'Deutschland' } },
       ...(c.faq?.length ? [faqSchema(c.faq)] : []),
     ],
     body: (ctx) => `
@@ -543,6 +553,15 @@ ${['fenster-tueren', 'fassaden-wintergarten', 'fassadenlamellen'].includes(s.slu
   </div>
 </section>` : ''}
 
+${c.refs ? `
+<section class="section">
+  <div class="container">
+    <div class="section-head reveal"><p class="eyebrow">Herstellerreferenzen MIRAL PVC</p><h2>${c.refsTitle || 'So sieht es in der Praxis aus'}</h2></div>
+    ${refGrid(ctx, c.refs.map((k) => REFERENCES.find((r) => r.img === k)).filter(Boolean))}
+    <p class="fineprint">Fotos: MIRAL PVC d.o.o., mit freundlicher Genehmigung. <a href="${ctx.r('referenzen/')}">Alle Referenzen</a></p>
+  </div>
+</section>` : ''}
+
 <section class="section${c.extra === 'story' ? '' : ' section--tint'}">
   <div class="container">
     <div class="section-head reveal"><p class="eyebrow">Ablauf</p><h2>So einfach geht's.</h2></div>
@@ -580,7 +599,7 @@ const miral = {
   crumbs: [['MIRAL PVC', 'miral-pvc/']],
   dark: false,
   body: (ctx) => `
-${pageHero(ctx, { eyebrow: 'Herstellerpartner', title: 'MIRAL PVC – Generalvertretung für Deutschland.', lead: 'Fenster, Türen, Fassaden und Sonnenschutz aus eigener Fertigung des Herstellers – mit LIMES MONT als deutschem Ansprechpartner für Beratung, Aufmaß, Bestellung und Montage.', image: 'fenster-haus', imageAlt: 'Modernes Haus mit großflächiger Verglasung', crumbs: [['MIRAL PVC', 'miral-pvc/']] })}
+${pageHero(ctx, { eyebrow: 'Herstellerpartner', title: 'MIRAL PVC – Generalvertretung für Deutschland.', lead: 'Fenster, Türen, Fassaden und Sonnenschutz aus eigener Fertigung des Herstellers – mit LIMES MONT als deutschem Ansprechpartner für Beratung, Aufmaß, Bestellung und Montage.', image: 'ref/hotel-eraclea', imageAlt: 'Hotel Eraclea in Caorle – Herstellerreferenz MIRAL PVC', crumbs: [['MIRAL PVC', 'miral-pvc/']] })}
 
 <section class="section">
   <div class="container split split--text">
@@ -653,6 +672,14 @@ ${pageHero(ctx, { eyebrow: 'Herstellerpartner', title: 'MIRAL PVC – Generalver
   </div>
 </section>
 
+<section class="section section--tint">
+  <div class="container">
+    <div class="section-head reveal"><p class="eyebrow">Referenzen</p><h2>Projekte mit Produkten von MIRAL PVC</h2></div>
+    ${refGrid(ctx, ['ref/gelsenkirchen', 'ref/liberty-novalja', 'ref/hotel-eraclea', 'ref/wohnanlage-zadar', 'ref/kolmix-trespa', 'ref/hotel-split'].map((k) => REFERENCES.find((r) => r.img === k)))}
+    <div class="actions actions--center"><a class="btn btn--dark" href="${ctx.r('referenzen/')}">Alle Referenzen ansehen ${icon('arrow')}</a></div>
+  </div>
+</section>
+
 ${ctaBand(ctx, { title: 'Fenster & Türen von MIRAL PVC anfragen.', text: 'Wir beraten Sie zu Profilsystem, Verglasung und Ausführung und erstellen Ihnen ein Angebot inklusive Montage.' })}
 `,
 };
@@ -660,36 +687,13 @@ ${ctaBand(ctx, { title: 'Fenster & Türen von MIRAL PVC anfragen.', text: 'Wir b
 /* =====================================================================
    REFERENZEN
    ===================================================================== */
-const MIRAL_REFS = [
-  ['Wohnsiedlung mit 14 Gebäuden', 'Kroatien', 'HR', 'Wohnen'],
-  ['Wohnanlagen', 'Dubrovnik', 'HR', 'Wohnen'],
-  ['Wohngebäude', 'Split', 'HR', 'Wohnen'],
-  ['Wohn- und Geschäftshaus', 'Cazin', 'BA', 'Wohnen'],
-  ['Seniorenheim', 'Köln', 'DE', 'Öffentlich'],
-  ['Hotel Eraclea', 'Caorle', 'IT', 'Hotel'],
-  ['Hotel Marina', 'Caorle', 'IT', 'Hotel'],
-  ['Hotel Austria', 'Caorle', 'IT', 'Hotel'],
-  ['Wohngebäude', 'Schweiz', 'CH', 'Wohnen'],
-  ['Sportfachgeschäft', 'Schweiz', 'CH', 'Gewerbe'],
-  ['Hotel Liberty', 'Novalja', 'HR', 'Hotel'],
-  ['Hotel Amphora', 'Split', 'HR', 'Hotel'],
-  ['Wohnhochhaus', 'Zagreb', 'HR', 'Wohnen'],
-  ['Wohnkomplex', 'Zadar', 'HR', 'Wohnen'],
-  ['Grundschule Središće', 'Zagreb', 'HR', 'Öffentlich'],
-  ['Gründerzentrum', 'Novalja', 'HR', 'Gewerbe'],
-  ['Aquaestil', 'Karlovac', 'HR', 'Gewerbe'],
-  ['Verwaltungsgebäude Kolmix', 'Bosnien und Herzegowina', 'BA', 'Gewerbe'],
-  ['Wohnhaus', 'Kanada', 'CA', 'Wohnen'],
-  ['Glasfassade Werk MIRAL PVC', 'Velika Kladuša', 'BA', 'Gewerbe'],
-];
-
 const refs = {
   path: 'referenzen/',
   title: 'Referenzen – Projekte mit Fenstern, Fassaden & Montage',
   description: 'Referenzen von LIMES MONT und Herstellerreferenzen von MIRAL PVC: Hotels, Wohn- und Gewerbebauten, Schulen und Fassaden in ganz Europa.',
   crumbs: [['Referenzen', 'referenzen/']],
   body: (ctx) => `
-${pageHero(ctx, { eyebrow: 'Referenzen', title: 'Projekte, die für sich sprechen.', lead: 'Von der Wohnsiedlung mit 14 Gebäuden bis zum Seniorenheim in Köln: Fenster, Türen und Fassaden unseres Herstellerpartners MIRAL PVC sind in ganz Europa verbaut.', image: 'paneelmontage', imageAlt: 'Montage von Fassadenelementen an einer Gewerbehalle', crumbs: [['Referenzen', 'referenzen/']] })}
+${pageHero(ctx, { eyebrow: 'Referenzen', title: 'Projekte, die für sich sprechen.', lead: 'Vom Mehrfamilienhaus in Gelsenkirchen bis zur Wohnanlage an der Adria: Fenster, Türen und Fassaden unseres Herstellerpartners MIRAL PVC sind in ganz Europa verbaut.', image: 'ref/wohnkomplex-zadar', imageAlt: 'Wohnkomplex in Zadar während der Bauphase – Herstellerreferenz MIRAL PVC', crumbs: [['Referenzen', 'referenzen/']] })}
 
 ${OWN_PROJECTS.length ? `
 <section class="section">
@@ -705,17 +709,16 @@ ${OWN_PROJECTS.length ? `
   <div class="container">
     <div class="section-head reveal">
       <p class="eyebrow">Herstellerreferenzen MIRAL PVC</p>
-      <h2>Fenster, Türen und Fassaden in ganz Europa.</h2>
-      <p class="lead">Eine Auswahl von Objekten, die mit Produkten von MIRAL PVC ausgestattet wurden. Alle Projekte mit Bildern finden Sie auf der Website des Herstellers.</p>
+      <h2>Wohnanlagen, Hotels und Fassaden in ganz Europa.</h2>
+      <p class="lead">Eine Auswahl von Objekten, die mit Fenstern, Türen und Fassaden unseres Herstellerpartners MIRAL PVC ausgestattet wurden – von Gelsenkirchen bis an die Adria. Klicken Sie auf ein Foto für die Großansicht.</p>
     </div>
     <div class="ref-filter reveal" role="group" aria-label="Referenzen filtern">
-      ${['Alle', 'Wohnen', 'Hotel', 'Gewerbe', 'Öffentlich'].map((f, i) => `<button type="button" class="chip${i === 0 ? ' is-active' : ''}" data-filter="${f}" aria-pressed="${i === 0}">${f}</button>`).join('')}
+      ${['Alle', 'Deutschland', 'Wohnen', 'Hotel', 'Fassade', 'Gewerbe'].map((f, i) => `<button type="button" class="chip${i === 0 ? ' is-active' : ''}" data-filter="${f}" aria-pressed="${i === 0}">${f}</button>`).join('')}
     </div>
-    <ul class="refs">
-      ${MIRAL_REFS.map(([t, place, cc, cat]) => `<li class="ref reveal" data-cat="${cat}"><span class="ref__cc">${cc}</span><div><b>${t}</b><small>${place} · ${cat}</small></div></li>`).join('\n      ')}
-    </ul>
+    ${refGrid(ctx, REFERENCES)}
+    <p class="fineprint">Fotos: MIRAL PVC d.o.o., Verwendung mit freundlicher Genehmigung.</p>
     <div class="actions actions--center">
-      <a class="btn btn--dark" href="${SITE.miral.references}" target="_blank" rel="noopener">Alle Referenzen mit Fotos auf miral-pvc.com ${icon('external')}</a>
+      <a class="btn btn--dark" href="${SITE.miral.references}" target="_blank" rel="noopener">Weitere Referenzen auf miral-pvc.com ${icon('external')}</a>
     </div>
   </div>
 </section>
@@ -763,9 +766,9 @@ ${pageHero(ctx, { eyebrow: 'Über uns', title: 'Ein Team. Ein Anspruch: Montage,
 <section class="section section--area">
   <div class="container split split--area">
     <div class="split__text reveal">
-      <p class="eyebrow eyebrow--light">Standort</p>
-      <h2>Wassertrüdingen – mitten zwischen Franken und Schwaben.</h2>
-      <p>Von hier aus erreichen wir schnell den Landkreis Ansbach, Weißenburg-Gunzenhausen und Donau-Ries. Für Industrie- und Gewerbeprojekte sind wir auf Anfrage deutschlandweit im Einsatz – und können bei Bedarf auch Niederlassungen im In- und Ausland einrichten.</p>
+      <p class="eyebrow eyebrow--light">Standort &amp; Einsatzgebiet</p>
+      <h2>Aus Wassertrüdingen – für ganz Deutschland.</h2>
+      <p>Unser Firmensitz liegt in Wassertrüdingen in Bayern. Unsere Montageteams sind deutschlandweit im Einsatz – und bei Bedarf richten wir auch Niederlassungen im In- und Ausland ein.</p>
       <address class="address-block">${icon('pin')} ${SITE.name}<br>${SITE.street} · ${SITE.zip} ${SITE.city}</address>
     </div>
     <div class="reveal">${areaMap()}</div>
@@ -904,7 +907,7 @@ const imprint = {
     <h2>Haftung für Links</h2>
     <p>Unser Angebot enthält Links zu externen Websites Dritter, auf deren Inhalte wir keinen Einfluss haben. Für diese fremden Inhalte übernehmen wir keine Gewähr; verantwortlich ist stets der jeweilige Anbieter oder Betreiber der Seiten. Bei Bekanntwerden von Rechtsverletzungen entfernen wir derartige Links umgehend.</p>
     <h2>Bildnachweis</h2>
-    <p>Visualisierungen und Stimmungsbilder auf dieser Website wurden teilweise mit KI-Werkzeugen erstellt und zeigen keine konkreten Kundenprojekte. 3D-Darstellungen: eigene Erstellung.</p>
+    <p>Projektfotos der Referenzen: MIRAL PVC d.o.o., Velika Kladuša – Verwendung mit freundlicher Genehmigung. Einzelne Stimmungsbilder wurden mit KI-Werkzeugen erstellt und zeigen keine konkreten Kundenprojekte. 3D-Darstellungen: eigene Erstellung.</p>
   </div>
 </section>`,
 };
