@@ -45,9 +45,11 @@ table.t td{padding:2px 6px;height:24px}
 <div class="f"><label>E-Mail für Benachrichtigungen über Zahlungen</label><input></div>
 <div class="f"><label>Wann bist du am besten erreichbar?</label><input></div>
 
-<h2><span class="n">3</span>Stripe-Konto</h2>
-<div class="f"><label>Hast du schon ein Stripe-Konto?</label><div class="opts"><label><input type="radio" name="st"> ja, Konto-E-Mail: <input class="w"></label><label><input type="radio" name="st"> nein, bitte neu eröffnen</label><label><input type="radio" name="st"> weiß nicht</label></div></div>
+<h2><span class="n">3</span>Modell &amp; Stripe</h2>
+<div class="f"><label>Gewähltes Modell</label><div class="opts"><label><input type="radio" name="mo"> Provision (Stripe-Auszahlungskonto, ca. 10 Min.)</label><label><input type="radio" name="mo"> Kauf (eigenes Stripe-Konto)</label></div></div>
+<div class="f"><label>Nur Kauf: Hast du schon ein Stripe-Konto?</label><div class="opts"><label><input type="radio" name="st"> ja, Konto-E-Mail: <input class="w"></label><label><input type="radio" name="st"> nein, bitte neu eröffnen</label><label><input type="radio" name="st"> weiß nicht</label></div></div>
 <div class="f"><label>Rechtsform</label><div class="opts"><label><input type="radio" name="rf"> Einzelunternehmen</label><label><input type="radio" name="rf"> GbR</label><label><input type="radio" name="rf"> UG / GmbH</label><label><input type="radio" name="rf"> andere: <input class="w"></label></div></div>
+<div class="f"><label>Kleinunternehmer nach § 19 UStG?</label><div class="opts"><label><input type="radio" name="ku"> ja</label><label><input type="radio" name="ku"> nein</label></div></div>
 <div class="f"><label>Inhaber bzw. Geschäftsführer (Name, wie im Ausweis)</label><input></div>
 <div class="f"><label>Das liegt bereit (Checkliste für die Stripe-Verifizierung)</label><div class="opts"><label><input type="checkbox"> Geschäftskonto / IBAN für Auszahlungen</label><label><input type="checkbox"> Ausweis des Inhabers bzw. Geschäftsführers</label><label><input type="checkbox"> Handelsregisterauszug bzw. Gewerbeanmeldung</label></div></div>
 <p class="small">Diese Daten gibst du direkt bei Stripe ein, nicht bei uns. Wir zeigen dir beim Setup, wo.</p>
@@ -55,25 +57,31 @@ table.t td{padding:2px 6px;height:24px}
 <h2><span class="n">4</span>Eure Projekte</h2>
 <div class="f"><label>Typische Preise (kleine Tattoos · große Projekte)</label><input></div>
 <div class="f"><label>Anteil großer Projekte (Sleeve, Rücken, mehrere Sitzungen)</label><div class="opts"><label><input type="radio" name="ap"> unter 20 %</label><label><input type="radio" name="ap"> 20 bis 50 %</label><label><input type="radio" name="ap"> über 50 %</label></div></div>
-<div class="f"><label>Wie handhabt ihr Anzahlungen? (Höhe, wie bezahlt, wann verfällt sie?)</label><input></div>
 <div class="f"><label>Wie zahlen Kunden heute? (bar, Karte, PayPal, Überweisung …)</label><input></div>
 <div class="f"><label>Kartenterminal vorhanden?</label><div class="opts"><label><input type="radio" name="kt"> ja, Anbieter: <input class="w"></label><label><input type="radio" name="kt"> nein</label></div></div>
 <div class="f"><label>Wie oft fragen Kunden nach Raten oder verschieben wegen des Preises?</label><input></div>
 
-<h2><span class="n">5</span>Gewünschte Zahlungsarten</h2>
+<h2><span class="n">5</span>Anzahlungsbedingungen</h2>
+<p class="small" style="margin-bottom:4px">Dein Kunde bestätigt sie vor jeder Anzahlung. Sie sind dein wichtigster Beleg bei No-Shows und Rückbuchungen. Ändern kannst du sie jederzeit im Portal unter „Konto“.</p>
+<div class="f"><label>Typische Anzahlung (Betrag oder % vom Preis)</label><input></div>
+<div class="f"><label>Bis wann kann der Kunde kostenlos absagen oder verschieben?</label><div class="opts"><label><input type="radio" name="af"> 48 Stunden vorher</label><label><input type="radio" name="af"> 7 Tage vorher</label><label><input type="radio" name="af"> andere: <input class="w"></label></div></div>
+<div class="f"><label>Bei späterer Absage oder No-Show</label><div class="opts"><label><input type="radio" name="ns"> Studio behält die Anzahlung</label><label><input type="radio" name="ns"> teilweise: <input class="w"></label></div></div>
+<div class="f"><label>Eigene Formulierung (leer = unser Standardtext: wird mit dem Tattoo-Preis verrechnet, Absage unter 48 Std. oder No-Show: Studio behält sie, Verschieben nach Absprache)</label><textarea></textarea></div>
+
+<h2><span class="n">6</span>Gewünschte Zahlungsarten</h2>
 <div class="opts" style="margin-bottom:4px">
-  <label><input type="checkbox" checked> Karte</label><label><input type="checkbox" checked> Apple Pay / Google Pay</label><label><input type="checkbox"> SEPA-Lastschrift</label><label><input type="checkbox" checked> Klarna (Ratenkauf / später bezahlen)</label><label><input type="checkbox"> weitere: <input class="w"></label>
+  <label><input type="checkbox" checked> Karte</label><label><input type="checkbox" checked> Apple Pay / Google Pay</label><label><input type="checkbox" checked> Klarna (Ratenkauf / später bezahlen)</label><label><input type="checkbox"> weitere: <input class="w"></label>
 </div>
 <p class="small">Verfügbarkeit und Freigabe hängen vom jeweiligen Zahlungsanbieter ab. Wir aktivieren, was für dein Studio möglich ist.</p>
 <div class="f"><label>Wofür wollt ihr Zahlungslinks vor allem nutzen?</label><div class="opts"><label><input type="checkbox"> Anzahlungen</label><label><input type="checkbox"> ganzer Projektpreis</label><label><input type="checkbox"> pro Sitzung</label><label><input type="checkbox"> Gutscheine</label></div></div>
 
-<h2><span class="n">6</span>Branding</h2>
+<h2><span class="n">7</span>Branding</h2>
 <div class="f"><label>Logo schicken wir per</label><div class="opts"><label><input type="checkbox"> WhatsApp</label><label><input type="checkbox"> E-Mail</label><label><input type="checkbox"> nehmt das von Instagram</label></div></div>
 <div class="f"><label>Studiofarben (z. B. Schwarz / Gold, HEX-Werte falls bekannt)</label><input></div>
 <div class="f"><label>Name auf dem Kontoauszug des Kunden (max. 22 Zeichen, z. B. INK STUDIO BAMBERG)</label><input></div>
 <div class="f"><label>Wie sollen Kunden euch im Checkout sehen? (Studioname, ggf. Slogan)</label><input></div>
 
-<h2><span class="n">7</span>Team</h2>
+<h2><span class="n">8</span>Team</h2>
 <p class="small" style="margin-bottom:4px">Wer soll an der kurzen Schulung teilnehmen und Zahlungslinks erstellen?</p>
 <table class="t">
   <tr><th style="width:30%">Name</th><th>Rolle (Artist, Theke, Leitung)</th><th style="width:30%">E-Mail für Portal-Zugang</th></tr>
@@ -84,7 +92,7 @@ table.t td{padding:2px 6px;height:24px}
 </table>
 <div class="f"><label>Wann passt die Schulung? (Tag, Uhrzeit, online oder vor Ort)</label><input></div>
 
-<h2><span class="n">8</span>Materialien</h2>
+<h2><span class="n">9</span>Materialien</h2>
 <div class="f"><label>Fensteraufkleber</label><div class="opts"><label><input type="radio" name="fa"> innen (von drinnen auf die Scheibe)</label><label><input type="radio" name="fa"> außen</label><label><input type="radio" name="fa"> brauchen wir nicht</label></div></div>
 <div class="f"><label>Format</label><div class="opts"><label><input type="checkbox"> rund Ø 20 cm</label><label><input type="checkbox"> A4 hoch</label></div></div>
 <div class="f"><label>Anzahl Flyer A6</label><div class="opts"><label><input type="radio" name="fl"> 250</label><label><input type="radio" name="fl"> 500</label><label><input type="radio" name="fl"> 1.000</label><label><input type="radio" name="fl"> drucken wir selbst</label></div></div>
