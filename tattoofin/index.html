@@ -1,81 +1,83 @@
 <!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
-<title>Ted am Telefon – Alle Unterlagen</title>
+<title>Tattoofin · Alle Unterlagen</title>
+<link rel="icon" href="assets/figur.png">
 <link rel="stylesheet" href="assets/tattoofin.css">
 <style>
 body{background:var(--cream)}
 .wrap{max-width:1040px;margin:0 auto;padding:26px 16px 70px}
 .hero{display:flex;gap:18px;align-items:center;justify-content:space-between;background:var(--ink);color:#fff;border-radius:18px;padding:22px 24px}
 .hero h1{font:700 30px/1.08 var(--head);margin:6px 0 6px;letter-spacing:-.02em}
-.hero p{margin:0;color:#c9d1d9;max-width:620px}
-.hero img{width:86px;flex:none}
-h2{font:700 19px var(--head);margin:30px 0 10px;display:flex;align-items:center;gap:10px}
+.hero p{margin:0;color:#d6deea;max-width:620px}
+.hero .sticker{width:104px;height:104px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;flex:none}
+.hero .sticker img{width:84px}
+h2{font:700 19px var(--head);margin:30px 0 10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
 .item{background:#fff;border:1px solid var(--line);border-radius:14px;padding:15px 16px;display:flex;flex-direction:column;gap:6px}
 .item b{font:700 15.5px/1.25 var(--head)}
 .item span{font-size:13.5px;color:var(--muted);flex:1}
-.item .a{display:flex;gap:8px;margin-top:4px}
+.item .a{display:flex;gap:8px;margin-top:4px;flex-wrap:wrap}
 .item .a a{font:600 13px var(--body);text-decoration:none;border-radius:99px;padding:6px 12px;background:var(--ink);color:#fff}
 .item .a a.pdf{background:var(--gold);color:var(--ink)}
 .todo-box{background:#fff;border:2px solid var(--gold);border-radius:14px;padding:16px 18px;margin-top:18px}
 .todo-box ol{margin:6px 0 0;padding-left:20px}
 .todo-box li{margin:3px 0}
 code{background:#f1eee6;border-radius:5px;padding:1px 5px;font-size:13px}
-@media (max-width:640px){.hero{flex-direction:column;align-items:flex-start}.hero h1{font-size:25px}}
+@media (max-width:640px){.hero{flex-direction:column-reverse;align-items:flex-start}.hero h1{font-size:25px}.grid{grid-template-columns:1fr}}
 </style>
 </head><body>
 <div class="wrap">
   <div class="hero">
-    <div><span class="pill">TattooLeadz · Telefon</span><h1>Ted am Telefon: alle Unterlagen</h1>
+    <div><span class="pill">Tattoofin · Unterlagen</span><h1>Tattoofin: alle Unterlagen</h1>
     <p>Vertrieb, Umsetzung, Verträge, Mailing und Materialien für Studios und deren Kunden. Jedes Dokument gibt es als Webseite (zum Ansehen, Anpassen, Drucken) und als fertiges PDF.</p></div>
-    <img src="assets/logo.png" alt="TattooLeadz">
+    <span class="sticker"><img src="assets/logo.png" alt="Tattoofin"></span>
   </div>
 
   <div class="todo-box">
     <b>Vor dem ersten Einsatz einmal erledigen:</b>
     <ol>
-      <li>In <code>assets/config.js</code> die gelb markierten Werte ausfüllen: Firmenanschrift, Handelsregister, USt-IdNr., Gerichtsstand, <b>Demo-Nummer</b> von Ted. Preise prüfen. Alles wird automatisch in alle Dokumente übernommen.</li>
-      <li>Werbevideo als <code>assets/werbevideo.mp4</code> ablegen. Dann läuft es auf der <a href="video.html">Video-Seite</a>, auf die alle QR-Codes zeigen.</li>
-      <li>Vertrag und AVV einmal anwaltlich prüfen lassen (Vorlagen).</li>
-      <li>PDFs neu erzeugen: <code>cd telefon &amp;&amp; node tools/render-pdf.mjs</code></li>
+      <li>In <code>assets/config.js</code> die gelb markierten Werte ausfüllen: Firmenanschrift, Handelsregister, USt-IdNr., E-Mail, Gerichtsstand, <b>Adresse der Abschluss-Website</b> (<code>websiteUrl</code>). Preise prüfen. Alles wird automatisch in alle Dokumente übernommen.</li>
+      <li>Werbevideo als <code>assets/werbevideo.mp4</code> ablegen. Dann läuft es auf der <a href="video.html">Video-Seite</a>, auf die alle QR-Codes im Mailing zeigen.</li>
+      <li>Vertrag und AVV einmal anwaltlich prüfen lassen (Vorlagen), ebenso die Formulierungen zur Ratenzahlung in den Kundenmaterialien.</li>
+      <li>PDFs neu erzeugen: <code>cd tattoofin &amp;&amp; node tools/render-pdf.mjs</code></li>
     </ol>
   </div>
 
-  <div class="item" style="margin-top:18px;background:var(--ink);color:#fff;border-color:var(--ink)"><b style="color:var(--gold);font-size:18px">Website mit Online-Abschluss, Stripe &amp; Studio-Portal</b><span style="color:#c9d1d9">Landingpage mit Preisrechner, Abschluss in 4 Schritten (Vertrag + AVV + Stripe), Kauf oder Provision, Studio-Portal mit Anfragen und Monatsabrechnung, Admin, alle Automatik-E-Mails. Liegt in <code style="background:#21262d;color:#fff">telefon/website</code>, Einrichtung auf Netlify siehe README dort.</span></div>
+  <div class="item" style="margin-top:18px;background:var(--ink);color:#fff;border-color:var(--ink)"><b style="color:var(--gold);font-size:18px">Website mit Online-Abschluss, Stripe &amp; Studio-Portal</b><span style="color:#d6deea">Landingpage mit Rechner, Online-Abschluss mit Stripe (Modell → Studio-Daten → Vertrag + AVV → Kauf bezahlen bzw. Stripe-Konto verbinden), Studio-Portal mit Zahlungslinks (WhatsApp-Button und QR), Studio-Zahlseite, Übersicht aller Zahlungen, automatische Provisionsabrechnung jeden Monat, Materialien, Kündigung und alle Automatik-E-Mails. Liegt in <code style="background:#264066;color:#fff">tattoofin/website</code>, Einrichtung siehe README dort.</span></div>
 
   <h2><span class="tag" style="margin:0">Intern</span> Für uns</h2>
   <div class="grid">
-    <div class="item"><b>Produkt, Preise &amp; Kalkulation</b><span>Was Ted kann, Kauf- und Provisionsmodell, Kosten pro Minute, Marge, Break-even, Wettbewerb.</span><div class="a"><a href="intern/01-produkt-und-preise.html">Ansehen</a><a class="pdf" href="pdf/01-produkt-und-preise.pdf">PDF</a></div></div>
-    <div class="item"><b>Vertriebs-Playbook</b><span>Zielkunden, Verpasste-Anrufe-Check, Modell-Empfehlung, Gesprächsskripte, Einwandbehandlung, Pipeline &amp; KPIs.</span><div class="a"><a href="intern/02-vertriebs-playbook.html">Ansehen</a><a class="pdf" href="pdf/02-vertriebs-playbook.pdf">PDF</a></div></div>
-    <div class="item"><b>Direct-Mail-Kampagne „Verpasster Anruf“</b><span>Konzept, 3 Paket-Varianten mit Werbegeschenk, Porto- und Druckpreise, Ablauf, Budget.</span><div class="a"><a href="intern/03-direct-mail-kampagne.html">Ansehen</a><a class="pdf" href="pdf/03-direct-mail-kampagne.pdf">PDF</a></div></div>
-    <div class="item"><b>Umsetzung &amp; Onboarding</b><span>Technik-Aufbau, 5-Tage-Plan, Agent-Prompt, Make-Szenario, Testprotokoll, Notfallplan.</span><div class="a"><a href="intern/04-umsetzung-onboarding.html">Ansehen</a><a class="pdf" href="pdf/04-umsetzung-onboarding.pdf">PDF</a></div></div>
-    <div class="item"><b>Nachrichtenvorlagen</b><span>Werbevideo verschicken, DMs, Follow-ups, Angebots-Mail mit Online-Abschluss, Onboarding, Texte fürs Studio.</span><div class="a"><a href="intern/05-nachrichtenvorlagen.html">Ansehen</a><a class="pdf" href="pdf/05-nachrichtenvorlagen.pdf">PDF</a></div></div>
+    <div class="item"><b>Produkt, Preise &amp; Kalkulation</b><span>Was Tattoofin ist, Kauf- und Provisionsmodell, Stripe- und Klarna-Gebühren, Kosten je Studio, Rechenbeispiele, Break-even, Wettbewerb, offene Entscheidungen.</span><div class="a"><a href="intern/01-produkt-und-preise.html">Ansehen</a><a class="pdf" href="pdf/01-produkt-und-preise.pdf">PDF</a></div></div>
+    <div class="item"><b>Vertriebs-Playbook</b><span>Zielkunden und Kaufsignale, Kernbotschaften, Ablauf bis zum Abschluss, Demo, Gesprächsskripte, Einwände, Was wir nicht sagen, Akquise-Recht, Pipeline &amp; KPIs.</span><div class="a"><a href="intern/02-vertriebs-playbook.html">Ansehen</a><a class="pdf" href="pdf/02-vertriebs-playbook.pdf">PDF</a></div></div>
+    <div class="item"><b>Direct-Mail-Kampagne „Das Sparschwein geht in Rente“</b><span>Konzept, Mini-Sparschwein-Recherche, 3 Paket-Varianten mit Kosten, Welle 1, Zeitplan, Packliste, KPIs, Rechtliches, Bestell-Links.</span><div class="a"><a href="intern/03-direct-mail-kampagne.html">Ansehen</a><a class="pdf" href="pdf/03-direct-mail-kampagne.pdf">PDF</a></div></div>
+    <div class="item"><b>Umsetzung &amp; Onboarding</b><span>Stripe-Connect-Onboarding, Zahlungsarten, Branding, Testprotokoll, Schulung, Studio Kit, Zeitplan Tag 0–30, Betrieb, Notfallplan, Kündigung.</span><div class="a"><a href="intern/04-umsetzung-onboarding.html">Ansehen</a><a class="pdf" href="pdf/04-umsetzung-onboarding.pdf">PDF</a></div></div>
+    <div class="item"><b>Nachrichtenvorlagen</b><span>Werbevideo verschicken, DMs, Nachfassen, Angebot nach der Demo mit Online-Abschluss, Willkommen, Go-live, Texte fürs Studio an seine Kunden.</span><div class="a"><a href="intern/05-nachrichtenvorlagen.html">Ansehen</a><a class="pdf" href="pdf/05-nachrichtenvorlagen.pdf">PDF</a></div></div>
   </div>
 
   <h2><span class="tag ext" style="margin:0">Für Studios</span> Zum Verschicken &amp; Unterschreiben</h2>
   <div class="grid">
-    <div class="item"><b>Überblick „Du tätowierst. Ted geht ran.“</b><span>Verkaufs-Flyer A4, 2 Seiten: Nutzen, Ablauf, Kauf oder Provision, Garantie, FAQ.</span><div class="a"><a href="studios/10-onepager.html">Ansehen</a><a class="pdf" href="pdf/10-onepager.pdf">PDF</a></div></div>
-    <div class="item"><b>So funktioniert's (einfach erklärt)</b><span>Zum Mitschicken mit dem Werbevideo: Anruf Schritt für Schritt, Beispielgespräch, FAQ.</span><div class="a"><a href="studios/11-so-funktionierts.html">Ansehen</a><a class="pdf" href="pdf/11-so-funktionierts.pdf">PDF</a></div></div>
-    <div class="item"><b>Video-Seite</b><span>Mobile Seite mit Werbevideo, Demo-Anruf und WhatsApp-Button. Link zum Verschicken, Ziel der QR-Codes.</span><div class="a"><a href="video.html">Öffnen</a></div></div>
-    <div class="item"><b>Rufumleitung einrichten</b><span>Anleitung für Handy (Codes), FRITZ!Box, Festnetz, Telefonanlagen, inkl. Test &amp; Ausschalten.</span><div class="a"><a href="studios/12-rufumleitung-anleitung.html">Ansehen</a><a class="pdf" href="pdf/12-rufumleitung-anleitung.pdf">PDF</a></div></div>
-    <div class="item"><b>Mailing-Brief „Verpasster Anruf“</b><span>Anschreiben fürs Paket, DIN-Fensterumschlag, personalisierbar (Name, Adresse, Check ja/nein).</span><div class="a"><a href="studios/13-direct-mail-brief.html">Ansehen</a><a class="pdf" href="pdf/13-direct-mail-brief.pdf">PDF</a></div></div>
-    <div class="item"><b>Postkarte A6</b><span>Paketbeilage oder Einzelversand: Demo-Nummer, Aktionscode (Kauf zum Aktionspreis), QR zum Video.</span><div class="a"><a href="studios/17-postkarte.html">Ansehen</a><a class="pdf" href="pdf/17-postkarte.pdf">PDF</a></div></div>
-    <div class="item"><b>Paket-Aufkleber</b><span>„1 verpasster Anruf“ für die Versandbox und „Hände voll? Ted geht ran.“ für die Handschuh-Box. Etikettenbogen 105 × 74 mm.</span><div class="a"><a href="studios/18-paket-aufkleber.html">Ansehen</a><a class="pdf" href="pdf/18-paket-aufkleber.pdf">PDF</a></div></div>
-    <div class="item"><b>Dienstleistungsvertrag</b><span>Mit Bestellschein (Kauf oder Provision), Leistungsbeschreibung (Anlage A) und SEPA-Firmenlastschrift (Anlage B).</span><div class="a"><a href="studios/14-vertrag.html">Ansehen</a><a class="pdf" href="pdf/14-vertrag.pdf">PDF</a></div></div>
+    <div class="item"><b>Überblick „Mach große Tattoo-Projekte leichter bezahlbar.“</b><span>Verkaufs-Flyer A4: Nutzen, Ablauf, Kauf oder Provision, Garantie, FAQ.</span><div class="a"><a href="studios/10-onepager.html">Ansehen</a><a class="pdf" href="pdf/10-onepager.pdf">PDF</a></div></div>
+    <div class="item"><b>So funktioniert's (einfach erklärt)</b><span>Zum Mitschicken mit dem Werbevideo: vom Zahlungslink bis zur Auszahlung, Schritt für Schritt, FAQ.</span><div class="a"><a href="studios/11-so-funktionierts.html">Ansehen</a><a class="pdf" href="pdf/11-so-funktionierts.pdf">PDF</a></div></div>
+    <div class="item"><b>Team-Leitfaden</b><span>Für die Schulung: Link erstellen, Zahlseite zeigen, Gesprächsbeispiele, was das Team sagen darf und was nicht.</span><div class="a"><a href="studios/12-team-leitfaden.html">Ansehen</a><a class="pdf" href="pdf/12-team-leitfaden.pdf">PDF</a></div></div>
+    <div class="item"><b>Video-Seite</b><span>Mobile Seite mit Werbevideo, WhatsApp-Button und Link zur Website. Zum Verschicken und Ziel der QR-Codes.</span><div class="a"><a href="video.html">Öffnen</a></div></div>
+    <div class="item"><b>Mailing-Brief „Das Sparschwein geht in Rente“</b><span>Anschreiben fürs Paket, DIN-Fensterumschlag, personalisierbar (Name, Adresse).</span><div class="a"><a href="studios/13-direct-mail-brief.html">Ansehen</a><a class="pdf" href="pdf/13-direct-mail-brief.pdf">PDF</a></div></div>
+    <div class="item"><b>Postkarte A6</b><span>Paketbeilage: QR zum Werbevideo, Aktionscode, Provision ohne Fixkosten, WhatsApp-Kontakt.</span><div class="a"><a href="studios/17-postkarte.html">Ansehen</a><a class="pdf" href="pdf/17-postkarte.pdf">PDF</a></div></div>
+    <div class="item"><b>Paket-Aufkleber</b><span>„Kann ich das auch in Raten zahlen?“ für die Versandbox und „Ab heute in Rente.“ fürs Sparschwein.</span><div class="a"><a href="studios/18-paket-aufkleber.html">Ansehen</a><a class="pdf" href="pdf/18-paket-aufkleber.pdf">PDF</a></div></div>
+    <div class="item"><b>Dienstleistungsvertrag</b><span>Mit Bestellschein (Kauf oder Provision) und Leistungsbeschreibung.</span><div class="a"><a href="studios/14-vertrag.html">Ansehen</a><a class="pdf" href="pdf/14-vertrag.pdf">PDF</a></div></div>
     <div class="item"><b>Auftragsverarbeitungsvertrag (AVV)</b><span>DSGVO Art. 28 mit TOMs und Liste der Unterauftragsverarbeiter.</span><div class="a"><a href="studios/15-avv.html">Ansehen</a><a class="pdf" href="pdf/15-avv.pdf">PDF</a></div></div>
-    <div class="item"><b>Onboarding-Fragebogen</b><span>Am Bildschirm ausfüllbar oder zum Ausdrucken. Grundlage für Teds Wissen.</span><div class="a"><a href="studios/16-onboarding-fragebogen.html">Ausfüllen</a><a class="pdf" href="pdf/16-onboarding-fragebogen.pdf">PDF</a></div></div>
+    <div class="item"><b>Onboarding-Fragebogen</b><span>Am Bildschirm ausfüllbar oder zum Ausdrucken. Grundlage für Einrichtung, Branding und Studio Kit.</span><div class="a"><a href="studios/16-onboarding-fragebogen.html">Ausfüllen</a><a class="pdf" href="pdf/16-onboarding-fragebogen.pdf">PDF</a></div></div>
   </div>
 
-  <h2><span class="tag kunde" style="margin:0">Für Kunden</span> Im Studio auslegen &amp; aufhängen</h2>
+  <h2><span class="tag kunde" style="margin:0">Für Kunden</span> Im Studio auslegen, aufhängen &amp; posten</h2>
   <div class="grid">
-    <div class="item" style="background:var(--ink);color:#fff;border-color:var(--ink)"><b style="color:var(--gold)">Generator: Materialien pro Studio</b><span style="color:#c9d1d9">Studioname, Nummer und Logo eintragen. Alle Materialien werden sofort personalisiert.</span><div class="a"><a class="pdf" href="kunden/generator.html">Generator öffnen</a></div></div>
-    <div class="item"><b>Fensteraufkleber</b><span>Rund Ø 20 cm „Immer erreichbar“ + A4 „Geschlossen? Ruf trotzdem an.“ Druckfertig mit Beschnitt.</span><div class="a"><a href="kunden/20-fensteraufkleber.html">Ansehen</a><a class="pdf" href="pdf/20-fensteraufkleber.pdf">PDF</a></div></div>
-    <div class="item"><b>Flyer A6</b><span>„Tattoo-Idee? Ruf einfach an.“ Vorder- und Rückseite, für Theke und Wartebereich.</span><div class="a"><a href="kunden/21-flyer-a6.html">Ansehen</a><a class="pdf" href="pdf/21-flyer-a6.pdf">PDF</a></div></div>
-    <div class="item"><b>Thekenaufsteller A5</b><span>2 Motive: „Alle gerade an der Maschine?“ und „Nächstes Tattoo schon im Kopf?“ mit Anruf-QR.</span><div class="a"><a href="kunden/22-thekenaufsteller-a5.html">Ansehen</a><a class="pdf" href="pdf/22-thekenaufsteller-a5.pdf">PDF</a></div></div>
-    <div class="item"><b>Türschild A4</b><span>„Gerade geschlossen. Trotzdem erreichbar.“ und „Wir tätowieren gerade.“ Für den Bürodrucker.</span><div class="a"><a href="kunden/24-tuerschild-a4.html">Ansehen</a><a class="pdf" href="pdf/24-tuerschild-a4.pdf">PDF</a></div></div>
-    <div class="item"><b>Datenschutzhinweis für Anrufer</b><span>Aushang im Studio + Textbaustein für die Datenschutzerklärung der Studio-Website.</span><div class="a"><a href="kunden/23-datenschutzhinweis-anrufer.html">Ansehen</a><a class="pdf" href="pdf/23-datenschutzhinweis-anrufer.pdf">PDF</a></div></div>
+    <div class="item" style="background:var(--ink);color:#fff;border-color:var(--ink)"><b style="color:var(--gold)">Generator: Studio Kit pro Studio</b><span style="color:#d6deea">Studioname, Logo und Link der Studio-Zahlseite eintragen. Alle Kundenmaterialien werden sofort personalisiert, mit QR-Code zur Zahlseite.</span><div class="a"><a class="pdf" href="kunden/generator.html">Generator öffnen</a></div></div>
+    <div class="item"><b>Fensteraufkleber</b><span>„Ratenzahlung möglich*“ für Tür und Schaufenster. Druckfertig mit Beschnitt.</span><div class="a"><a href="kunden/20-fensteraufkleber.html">Ansehen</a><a class="pdf" href="pdf/20-fensteraufkleber.pdf">PDF</a></div></div>
+    <div class="item"><b>Flyer A6</b><span>„Dein Tattoo. Flexibel bezahlt.“ Vorder- und Rückseite mit QR zur Zahlseite, für Theke und Wartebereich.</span><div class="a"><a href="kunden/21-flyer-a6.html">Ansehen</a><a class="pdf" href="pdf/21-flyer-a6.pdf">PDF</a></div></div>
+    <div class="item"><b>Thekenaufsteller A5</b><span>„Kann ich das auch in Raten zahlen? Ja.*“ mit QR-Code zur Studio-Zahlseite.</span><div class="a"><a href="kunden/22-thekenaufsteller-a5.html">Ansehen</a><a class="pdf" href="pdf/22-thekenaufsteller-a5.pdf">PDF</a></div></div>
+    <div class="item"><b>Kundeninfo „Flexibel bezahlen“</b><span>So läuft das Bezahlen per Link oder QR, welche Zahlungsarten es gibt, mit Pflicht-Fußnote. Zum Mitgeben oder Verschicken.</span><div class="a"><a href="kunden/23-kundeninfo.html">Ansehen</a><a class="pdf" href="pdf/23-kundeninfo.pdf">PDF</a></div></div>
+    <div class="item"><b>Social-Kit</b><span>Instagram-Story, Instagram-Post und Website-Badge „Ratenzahlung möglich*“ für die Studio-Website.</span><div class="a"><a href="kunden/24-social-kit.html">Ansehen</a><a class="pdf" href="pdf/24-social-kit.pdf">PDF</a></div></div>
   </div>
-  <p class="small" style="margin-top:28px">Stand 10/2026 · Alle Unterlagen sind Vorlagen. Preise netto zzgl. USt. · <span data-cfg="firma"></span></p>
+  <p class="small" style="margin-top:28px">Stand 10/2026 · Alle Unterlagen sind Vorlagen. Preise netto zzgl. USt. · Tattoofin ist kein Kreditgeber und vermittelt keine Kredite. · <span data-cfg="firma"></span></p>
 </div>
 <script src="assets/config.js"></script><script src="assets/app.js"></script>
 </body></html>

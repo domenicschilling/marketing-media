@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Social Kit – Flexibel bezahlen</title>
+<link rel="stylesheet" href="../assets/tattoofin.css">
+<style>
+/* Pixelformate für den Export: Instagram-Story 1080 × 1920, Instagram-Post 1080 × 1350, Website-Badge 600 × 200 */
+@page story{size:1080px 1920px;margin:0}
+@page post{size:1080px 1350px;margin:0}
+@page badge{size:600px 200px;margin:0}
+.story{page:story;width:1080px;height:1920px}
+.post{page:post;width:1080px;height:1350px}
+.badge{page:badge;width:600px;height:200px}
+.in{position:absolute;inset:0;display:flex;flex-direction:column}
+.sn{font:700 30px/1.2 var(--head);letter-spacing:.2em;text-transform:uppercase;color:var(--gold)}
+.logo{max-width:340px;max-height:140px;object-fit:contain;align-self:flex-start}
+.fn{font-size:24px;line-height:1.35}
+/* Story */
+.story .in{padding:150px 90px 120px}
+.story h1{font:700 112px/1.0 var(--head);letter-spacing:-.03em;margin:100px 0 50px}
+.story h1 .st{display:block;color:#fff}
+.story p{font-size:44px;line-height:1.4;color:#cdd6e3;margin:0 0 50px}
+.story .pill{align-self:flex-start;font-size:30px;padding:16px 30px;border-width:3px;margin-bottom:60px}
+.story .steps3{margin-top:auto;display:grid;gap:22px}
+.story .steps3 div{display:flex;gap:28px;align-items:center;background:var(--ink-2);border-radius:28px;padding:28px 34px;font:600 36px/1.25 var(--body)}
+.story .steps3 b{flex:none;width:72px;height:72px;border-radius:50%;background:var(--gold);color:var(--ink);font:700 38px/72px var(--head);text-align:center}
+.story .fn{color:#aab5c5;margin-top:46px}
+/* Post */
+.post{background:var(--cream)}
+.post .in{padding:90px 90px 70px}
+.post .sn{color:var(--ink)}
+.post h1{font:700 104px/1.0 var(--head);letter-spacing:-.03em;color:var(--ink);margin:90px 0 46px}
+.post h1 .hl{color:var(--orange)}
+.post p{font-size:40px;line-height:1.4;color:var(--muted);margin:0}
+.post .band{margin-top:auto;background:var(--ink);color:#fff;border-radius:36px;padding:44px 50px;display:flex;justify-content:space-between;align-items:center;gap:30px}
+.post .band b{font:700 52px/1.1 var(--head);color:var(--gold)}
+.post .band span{font-size:32px;line-height:1.35;color:#cdd6e3;max-width:420px;text-align:right}
+.post .fn{color:var(--muted);margin-top:30px}
+/* Badge */
+.badge .in{padding:22px 30px;flex-direction:row;align-items:center;gap:24px}
+.badge .ic{flex:none;width:112px;height:112px;border-radius:50%;background:var(--gold);position:relative}
+.badge .ic i{position:absolute;left:26px;top:34px;width:60px;height:42px;border-radius:8px;background:var(--ink)}
+.badge .ic i::before{content:"";position:absolute;left:0;right:0;top:9px;height:8px;background:var(--gold)}
+.badge .ic i::after{content:"";position:absolute;left:8px;bottom:7px;width:20px;height:5px;border-radius:2px;background:#fff}
+.badge small{display:block;font:600 19px/1.2 var(--body);color:#cdd6e3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:410px}
+.badge b{display:block;font:700 42px/1.05 var(--head);color:#fff;margin:6px 0 8px}
+.badge b span{color:var(--gold)}
+.badge .fn{font-size:12.5px;line-height:1.3;color:#aab5c5}
+.hinweis{max-width:1080px;margin:14px auto;background:#fff;border-radius:10px;padding:14px 18px;font-size:10pt}
+@media print{.hinweis{display:none}}
+@media screen{.story,.post{zoom:.5}}
+</style>
+</head><body>
+<div class="toolbar"><a href="../index.html">← Alle Unterlagen</a><span class="t">Für Kunden · Social Kit (Story, Post, Website-Badge)</span><button data-print>Drucken / PDF</button></div>
+<div class="hinweis"><b>Export:</b> Seite 1 = Instagram-Story 1080 × 1920 px, Seite 2 = Instagram-Post 1080 × 1350 px, Seite 3 = Website-Badge 600 × 200 px. Als PDF speichern und die Seiten als PNG exportieren (z. B. <code>pdftoppm -r 96 -png</code> ergibt genau diese Pixelmaße). Studio kommt über den Link: <code>?studio=…&amp;logo=…</code>. Beim Posten keine konkreten Raten, Zinsen oder Beispielbeträge in die Caption schreiben und die Fußnote stehen lassen.</div>
+
+<section class="sheet dark story">
+  <div class="in">
+    <img class="logo" data-logo alt=""><div class="sn" data-logo-alt data-p="studio"></div>
+    <h1><span class="st">Jetzt bei <span data-p="studio"></span>:</span><span class="tgold">flexibel bezahlen.*</span></h1>
+    <p>Großes Tattoo geplant? Du musst nicht erst monatelang sparen. Bezahl per Karte, Apple Pay oder in Raten*.</p>
+    <span class="pill solid">Ratenzahlung möglich*</span>
+    <div class="steps3">
+      <div><b>1</b>Projekt mit uns besprechen</div>
+      <div><b>2</b>Zahlungslink bekommen oder QR scannen</div>
+      <div><b>3</b>Zahlungsart wählen</div>
+    </div>
+    <div class="fn">*Über externe Zahlungsanbieter. Verfügbarkeit und Bedingungen nach Prüfung durch den Anbieter.</div>
+  </div>
+</section>
+
+<section class="sheet post">
+  <div class="in">
+    <img class="logo" data-logo alt=""><div class="sn" data-logo-alt data-p="studio"></div>
+    <h1>Jetzt bei <span data-p="studio"></span>: <span class="hl">flexibel bezahlen.*</span></h1>
+    <p>Sleeve, Rückenstück oder mehrere Sitzungen: Dein Wunsch-Tattoo muss nicht warten, bis das Sparschwein voll ist.</p>
+    <div class="band"><b>Ratenzahlung möglich*</b><span>Frag uns bei deiner Beratung oder per DM.</span></div>
+    <div class="fn">*Über externe Zahlungsanbieter. Verfügbarkeit und Bedingungen nach Prüfung durch den Anbieter.</div>
+  </div>
+</section>
+
+<section class="sheet dark badge">
+  <div class="in">
+    <div class="ic"><i></i></div>
+    <div><small>Jetzt bei <span data-p="studio"></span>:</small><b>Flexibel <span>bezahlen.*</span></b><div class="fn">*Über externe Zahlungsanbieter. Verfügbarkeit und Bedingungen nach Prüfung durch den Anbieter.</div></div>
+  </div>
+</section>
+
+<script src="../assets/config.js"></script><script src="../assets/app.js"></script>
+</body></html>

@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kundeninfo – Flexibel bezahlen</title>
+<link rel="stylesheet" href="../assets/tattoofin.css">
+<style>
+@page{size:A4;margin:12mm 15mm 12mm}
+.doc{font-size:9.4pt;line-height:1.48}
+.doc h1{font-size:21pt}
+.doc h2{font-size:12pt;margin:12px 0 4px}
+.doc li{margin:1px 0 3px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;border-bottom:3px solid var(--ink);padding-bottom:8px;margin-bottom:10px}
+.top .logo{max-width:46mm;max-height:20mm;object-fit:contain}
+.top .sn{font:700 12pt var(--head);letter-spacing:.16em;text-transform:uppercase}
+.doc h1 span{color:var(--orange)}
+.flow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:8px 0 6px}
+.flow div{background:var(--cream);border-radius:10px;padding:8px 10px;font-size:8.9pt;line-height:1.38}
+.flow b{display:block;font:700 10.5pt/1.25 var(--head);margin:4px 0 3px}
+.flow .n{display:inline-block;width:24px;height:24px;border-radius:50%;background:var(--ink);color:var(--gold);font:700 10.5pt/24px var(--head);text-align:center}
+.ways{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 4px}
+.ways span{border:1.5px solid var(--ink);border-radius:99px;padding:4px 11px;font:600 9.5pt var(--body)}
+.tr{display:flex;gap:12px;align-items:flex-start;text-align:right}
+.tr .qr{width:22mm;border:1px solid var(--line)}
+.qrt{font-size:7pt;color:var(--muted);text-align:center;margin-top:2px}
+.ask{margin:10px 0 0;padding:8px 12px}
+.ask .sep::before{content:" · "}
+.comma::before{content:", "}
+.doc .footer-note{margin-top:10px;padding-top:6px}
+.hint{background:#fff3cd;border:1px solid #e0b84b;border-radius:8px;padding:10px 12px;margin:0 0 14px;font-size:9pt}
+@media print{.hint{display:none}}
+</style>
+</head><body>
+<div class="toolbar"><a href="../index.html">← Alle Unterlagen</a><span class="t">Für Kunden · Kundeninfo A4</span><button data-print>Drucken / PDF</button></div>
+<main class="doc">
+<div class="hint"><b>Für das Studio (wird nicht gedruckt):</b> Als Aushang an der Theke, zum Mitgeben oder als PDF zum Verschicken. Studio-Angaben kommen über den Link: <code>?studio=…&amp;adresse=…&amp;email=…&amp;tel=…&amp;zahlen=…</code> (siehe <a href="generator.html">Generator</a>). Den Datenschutz-Abschnitt bitte mit der eigenen Datenschutzerklärung abgleichen. Keine konkreten Raten, Zinsen oder Beispielbeträge ergänzen.</div>
+
+<div class="top">
+  <div><span class="tag kunde">Info für unsere Kunden</span><h1>Flexibel bezahlen bei <span data-p="studio"></span>: So geht's</h1><p class="lead">Großes Projekt? Du musst nicht erst monatelang sparen.</p></div>
+  <div class="tr"><div><img class="logo" data-logo alt=""><div class="sn" data-logo-alt data-p="studio"></div></div><div><div class="qr" data-qr="{zahlen}" data-size="90"></div><div class="qrt">Scannen &amp; bezahlen</div></div></div>
+</div>
+
+<p style="font-size:10.4pt">Bei uns kannst du dein Tattoo flexibel bezahlen, auch in Raten*. Die Zahlung läuft über externe Zahlungsanbieter. Welche Zahlungsarten dir angeboten werden, siehst du direkt beim Bezahlen.</p>
+
+<h2>So läuft's ab</h2>
+<div class="flow">
+  <div><span class="n">1</span><b>Beratung</b>Wir besprechen dein Projekt und nennen dir den Preis, für die Anzahlung oder das ganze Projekt.</div>
+  <div><span class="n">2</span><b>Zahlungslink</b>Du bekommst einen Link per WhatsApp oder E-Mail. Oder du scannst unseren QR-Code im Studio.</div>
+  <div><span class="n">3</span><b>Zahlungsart wählen</b>Du siehst, welche Zahlungsarten dir angeboten werden, und wählst eine aus.</div>
+  <div><span class="n">4</span><b>Fertig</b>Nach erfolgreicher Zahlung bekommst du eine Bestätigung. Wir sehen die Zahlung ebenfalls.</div>
+</div>
+
+<h2>Welche Zahlungsarten möglich sein können</h2>
+<div class="ways"><span>Kredit- und Debitkarte</span><span>Apple Pay</span><span>Google Pay</span><span>SEPA-Lastschrift</span><span>Ratenzahlung*</span><span>Später bezahlen*</span></div>
+<p class="small">Welche Zahlungsarten im Einzelfall angezeigt werden, hängt vom Betrag, deinem Gerät und der Prüfung durch den Zahlungsanbieter ab.</p>
+
+<h2>Gut zu wissen</h2>
+<ul>
+  <li><b>Prüfung durch den Anbieter:</b> Bei Ratenzahlung oder späterem Bezahlen prüft der Zahlungsanbieter deine Anfrage, zum Beispiel deine Bonität. Er entscheidet allein, ob und zu welchen Bedingungen er dir die Zahlungsart anbietet.</li>
+  <li><b>Vertrag mit dem Zahlungsanbieter:</b> Ein Vertrag über Raten oder späteres Bezahlen kommt direkt zwischen dir und dem Zahlungsanbieter zustande, nicht mit uns.</li>
+  <li><b>Bedingungen vor dem Abschluss:</b> Raten, Laufzeit und mögliche Kosten zeigt dir der Anbieter im Checkout an, bevor du etwas abschließt. Lies sie in Ruhe durch.</li>
+  <li><b>Keine Finanzierungsberatung:</b> Wir sind ein Tattoo-Studio. Wir beraten nicht zu Krediten oder Finanzierungen und können keine Zusagen zu Raten oder Freigaben machen.</li>
+  <li><b>Hat nicht geklappt?</b> Kein Problem. Du kannst einfach eine andere Zahlungsart wählen oder uns ansprechen.</li>
+</ul>
+
+<h2>Datenschutz in Kürze</h2>
+<p>Verantwortlich für die Verarbeitung deiner Daten im Rahmen deines Auftrags ist <b data-p="studio"></b><span class="comma" data-p="adresse" data-hide-empty></span>. Für den Zahlungslink verarbeiten wir die nötigen Angaben (z. B. Name, E-Mail, Betrag, Projekt, Zahlungsstatus); dafür nutzen wir einen technischen Dienstleister. Die Zahlung selbst wird über Stripe (Stripe Payments Europe, Ltd., Dublin) und gegebenenfalls weitere Zahlungsanbieter abgewickelt. Deine Karten- und Bankdaten sowie Angaben für eine Bonitätsprüfung erhebt und verarbeitet der jeweilige Zahlungsanbieter nach seinen eigenen Datenschutzhinweisen, die du im Checkout findest. Wir erhalten diese Daten nicht. Mehr dazu in unserer Datenschutzerklärung oder auf Nachfrage im Studio.</p>
+
+<div class="box gold ask"><b>Fragen? Sprich uns an:</b> <b data-p="studio"></b> <span class="sep" data-p="tel"></span> <span class="sep" data-p="email" data-hide-empty></span> <span class="sep" data-p="web" data-hide-empty></span></div>
+
+<p class="footer-note">*Über externe Zahlungsanbieter. Verfügbarkeit und Bedingungen nach Prüfung durch den Anbieter.</p>
+</main>
+<script src="../assets/qrcode.min.js"></script><script src="../assets/config.js"></script><script src="../assets/app.js"></script>
+</body></html>

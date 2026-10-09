@@ -1,31 +1,35 @@
 <!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Flyer A6 – Tattoo-Anfrage per Telefon</title>
+<title>Flyer A6 – Flexibel bezahlen</title>
 <link rel="stylesheet" href="../assets/tattoofin.css">
 <style>
 /* A6 hoch 105 × 148 mm + 2 mm Beschnitt rundum */
 @page{size:109mm 152mm;margin:0}
 .sheet{width:109mm;height:152mm}
-.in{position:absolute;inset:0;padding:9mm 9mm 8mm;display:flex;flex-direction:column}
+.in{position:absolute;inset:0;padding:9mm 9mm 7mm;display:flex;flex-direction:column}
 .sn{font:700 8.5pt/1.2 var(--head);letter-spacing:.2em;text-transform:uppercase;color:var(--gold)}
-.logo{max-width:40mm;max-height:16mm;object-fit:contain}
-.front h1{font:700 27pt/1 var(--head);letter-spacing:-.025em;margin:9mm 0 5mm}
-.front p{font-size:10pt;line-height:1.45;color:#c9d1d9;margin:0}
-.front .tel{margin-top:auto}
-.front .tel small{font-size:8pt;color:#9aa4ae;display:block;margin-bottom:1mm}
-.front .tel b{font:700 20pt/1 var(--head);color:var(--gold);white-space:nowrap}
-.front .badge{display:inline-block;margin-top:5mm;border:.4mm solid var(--gold);color:var(--gold);border-radius:99px;padding:1.4mm 3mm;font:700 7pt var(--body);letter-spacing:.12em;text-transform:uppercase;align-self:flex-start}
+.logo{max-width:40mm;max-height:16mm;object-fit:contain;align-self:flex-start}
+.front h1{font:700 28pt/1.02 var(--head);letter-spacing:-.025em;margin:12mm 0 6mm}
+.front p{font-size:9.8pt;line-height:1.45;color:#cdd6e3;margin:0}
+.front .pill{align-self:flex-start;margin-top:6mm}
+.front .bottom{margin-top:auto}
+.front .bottom b{display:block;font:700 13pt/1.2 var(--head);color:#fff;margin-bottom:2mm}
+.fn{font-size:6.2pt;line-height:1.35}
+.front .fn{color:#aab5c5}
 .back{color:var(--text)}
 .back h2{font:700 14pt/1.15 var(--head);margin:0 0 4mm}
-.back ol{list-style:none;padding:0;margin:0 0 4mm;counter-reset:f}
-.back li{counter-increment:f;position:relative;padding-left:9mm;margin:0 0 3mm;font-size:9pt;line-height:1.4}
+.back ol{list-style:none;padding:0;margin:0 0 3mm;counter-reset:f}
+.back li{counter-increment:f;position:relative;padding-left:9mm;margin:0 0 2.6mm;font-size:8.8pt;line-height:1.38}
 .back li::before{content:counter(f);position:absolute;left:0;top:0;width:6mm;height:6mm;border-radius:50%;background:var(--ink);color:var(--gold);font:700 8.5pt/6mm var(--head);text-align:center}
 .back li b{display:block;font:700 9.5pt var(--head)}
-.back .note{font-size:7.6pt;line-height:1.4;color:var(--muted);background:var(--cream);border-radius:2mm;padding:2.5mm 3mm}
-.back .foot{margin-top:auto;display:flex;justify-content:space-between;align-items:flex-end;gap:4mm;border-top:.4mm solid var(--ink);padding-top:3.5mm}
-.back .foot b{font:700 14pt/1.1 var(--head);white-space:nowrap}
-.back .foot small{display:block;font-size:7.5pt;color:var(--muted)}
-.back .qr{width:22mm;border:.3mm solid var(--line)}
+.back .note{font-size:7.3pt;line-height:1.4;color:var(--muted);background:var(--cream);border-radius:2mm;padding:2.3mm 3mm}
+.back .note b{color:var(--text)}
+.back .foot{margin-top:auto;display:flex;justify-content:space-between;align-items:flex-end;gap:4mm;border-top:.4mm solid var(--ink);padding-top:3mm}
+.back .foot b{display:block;font:700 11pt/1.2 var(--head)}
+.back .foot small{display:block;font-size:7.5pt;color:var(--muted);line-height:1.4}
+.back .qr{width:22mm;flex:none;border:.3mm solid var(--line)}
+.back .qrt{font-size:6.3pt;text-align:center;color:var(--muted);margin-top:.8mm}
+.back .fn{color:var(--muted);margin-top:2mm}
 </style>
 </head><body>
 <div class="toolbar"><a href="../index.html">← Alle Unterlagen</a><span class="t">Für Kunden · Flyer A6 (Vorder- &amp; Rückseite)</span><button data-print>Drucken / PDF</button></div>
@@ -33,26 +37,27 @@
 <section class="sheet dark front">
   <div class="in">
     <img class="logo" data-logo alt=""><div class="sn" data-logo-alt data-p="studio"></div>
-    <h1>Tattoo-Idee?<br><span class="tgold">Ruf einfach an.</span></h1>
-    <p>Rund um die Uhr, auch abends und am Wochenende. Wir nehmen deine Anfrage auf und melden uns persönlich bei dir.</p>
-    <span class="badge">24/7 erreichbar</span>
-    <div class="tel"><small>Deine Tattoo-Anfrage:</small><b data-p="tel"></b></div>
+    <h1>Großes Tattoo geplant? <span class="tgold">Bezahl flexibel.*</span></h1>
+    <p>Sleeve, Rückenstück oder mehrere Sitzungen: Bei uns musst du nicht erst monatelang sparen. Du kannst flexibel bezahlen, auch in Raten*.</p>
+    <span class="pill">Ratenzahlung möglich*</span>
+    <div class="bottom"><b>Frag uns bei deiner Beratung.</b><div class="fn">*Über externe Zahlungsanbieter. Verfügbarkeit und Bedingungen nach Prüfung durch den Anbieter.</div></div>
   </div>
 </section>
 
 <section class="sheet back">
   <div class="in">
-    <h2>So kommst du zu deinem Termin</h2>
+    <h2>So einfach geht's</h2>
     <ol>
-      <li><b>Anrufen</b>Wann es dir passt. Wenn wir gerade tätowieren, geht unser digitaler Telefonassistent für dich ran.</li>
-      <li><b>Idee erzählen</b>Motiv, Körperstelle, ungefähre Größe, Stil und wann du Zeit hast.</li>
-      <li><b>Wir melden uns</b>Ein Artist meldet sich persönlich mit Angebot und Terminvorschlag.</li>
+      <li><b>Beratung</b>Wir besprechen Motiv, Größe und Sitzungen und nennen dir den Preis.</li>
+      <li><b>Zahlungslink oder QR-Code</b>Du bekommst einen Link per WhatsApp oder E-Mail. Oder du scannst unseren QR-Code.</li>
+      <li><b>Zahlungsart wählen</b>Karte, Apple Pay, Ratenzahlung* und mehr. Du siehst alle Bedingungen, bevor du abschließt.</li>
     </ol>
-    <div class="note">Hinweis: Außerhalb unserer Zeit am Telefon spricht ein KI-Assistent mit dir. Er nimmt deine Angaben auf und gibt sie an unser Team weiter. Infos zum Datenschutz bekommst du im Studio und auf unserer Website.</div>
+    <div class="note"><b>Gut zu wissen:</b> Ratenzahlung bietet ein externer Zahlungsanbieter an. Er prüft deine Anfrage und schließt den Vertrag direkt mit dir. Wir beraten nicht zu Finanzierungen und kennen die Bedingungen nicht im Voraus.</div>
     <div class="foot">
-      <div><small data-p="studio"></small><b data-p="tel"></b><small data-p="web" data-hide-empty></small></div>
-      <div class="qr" data-qr="tel:{telRaw}" data-size="90"></div>
+      <div><b data-p="studio"></b><small data-p="tel"></small><small data-p="web" data-hide-empty></small><small data-p="insta" data-hide-empty></small></div>
+      <div><div class="qr" data-qr="{zahlen}" data-size="90"></div><div class="qrt">Scannen &amp; bezahlen</div></div>
     </div>
+    <div class="fn">*Über externe Zahlungsanbieter. Verfügbarkeit und Bedingungen nach Prüfung durch den Anbieter.</div>
   </div>
 </section>
 

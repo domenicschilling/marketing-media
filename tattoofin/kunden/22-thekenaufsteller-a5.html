@@ -1,52 +1,59 @@
 <!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Thekenaufsteller A5 – Alle am Tätowieren?</title>
+<title>Thekenaufsteller A5 – Flexibel bezahlen</title>
 <link rel="stylesheet" href="../assets/tattoofin.css">
 <style>
 /* A5 hoch 148 × 210 mm + 2 mm Beschnitt */
 @page{size:152mm 214mm;margin:0}
 .sheet{width:152mm;height:214mm}
-.in{position:absolute;inset:0;padding:13mm 13mm 12mm;display:flex;flex-direction:column}
+.in{position:absolute;inset:0;padding:13mm 13mm 9mm;display:flex;flex-direction:column}
 .sn{font:700 10pt/1.2 var(--head);letter-spacing:.2em;text-transform:uppercase;color:var(--gold)}
-.logo{max-width:52mm;max-height:20mm;object-fit:contain}
-h1{font:700 34pt/1 var(--head);letter-spacing:-.025em;margin:11mm 0 6mm}
-p{font-size:12pt;line-height:1.45;color:#c9d1d9;margin:0 0 4mm}
+.logo{max-width:52mm;max-height:20mm;object-fit:contain;align-self:flex-start}
+h1{font:700 33pt/1.02 var(--head);letter-spacing:-.025em;margin:11mm 0 6mm}
+p{font-size:12pt;line-height:1.45;color:#cdd6e3;margin:0 0 4mm}
 .scan{margin-top:auto;display:flex;gap:7mm;align-items:center;background:var(--ink-2);border-radius:5mm;padding:6mm}
 .scan .qr{width:38mm;flex:none}
-.scan small{display:block;font-size:9.5pt;color:#9aa4ae;margin-bottom:1.5mm}
-.scan b{display:block;font:700 21pt/1.05 var(--head);color:var(--gold);white-space:nowrap}
-.scan .t{font:600 11pt/1.35 var(--body);color:#fff;margin-top:2.5mm}
-.b2 h1{color:var(--text)}
+.scan small{display:block;font-size:9.5pt;color:#aab5c5;margin-bottom:1.5mm}
+.scan b{display:block;font:700 18pt/1.1 var(--head);color:var(--gold)}
+.scan .t{font:600 10.5pt/1.35 var(--body);color:#fff;margin-top:2.5mm}
+.fn{font-size:7.4pt;line-height:1.35;color:#aab5c5;margin-top:4mm}
+.b2{background:var(--cream)}
+.b2 .sn{color:var(--ink)}
+.b2 h1{color:var(--ink)}
+.b2 h1 span{color:var(--orange)}
 .b2 p{color:var(--muted)}
+.b2 .scan{background:var(--ink)}
+.b2 .fn{color:var(--muted)}
 </style>
 </head><body>
 <div class="toolbar"><a href="../index.html">← Alle Unterlagen</a><span class="t">Für Kunden · Thekenaufsteller A5 (2 Motive)</span><button data-print>Drucken / PDF</button></div>
 
-<!-- Motiv 1: im Studio, wenn alle beschäftigt sind -->
+<!-- Motiv 1: dunkel, Frage aufgreifen -->
 <section class="sheet dark">
   <div class="in">
     <img class="logo" data-logo alt=""><div class="sn" data-logo-alt data-p="studio"></div>
-    <h1>Alle gerade an der Maschine?</h1>
-    <p>Kein Problem, du musst nicht warten. Ruf uns einfach direkt von hier aus an.</p>
-    <p>Unser Telefonassistent nimmt deine Tattoo-Idee auf, und wir melden uns persönlich mit Angebot und Termin.</p>
+    <h1>Kann ich das auch in Raten zahlen? <span class="tgold">Frag uns.*</span></h1>
+    <p>Großes Projekt, großer Preis? Bei uns kannst du flexibel bezahlen. Welche Zahlungsoptionen dir angeboten werden, siehst du direkt beim Bezahlen.</p>
     <div class="scan">
-      <div class="qr" data-qr="tel:{telRaw}" data-size="140"></div>
-      <div><small>QR-Code scannen = anrufen</small><b data-p="tel"></b><div class="t">Dauert 2 Minuten. Rund um die Uhr.</div></div>
+      <div class="qr" data-qr="{zahlen}" data-size="140"></div>
+      <div><small>QR-Code scannen</small><b>Flexibel bezahlen*</b><div class="t">Betrag mit uns abstimmen, scannen, Zahlungsart wählen.</div></div>
     </div>
+    <div class="fn">*Über externe Zahlungsanbieter. Verfügbarkeit und Bedingungen nach Prüfung durch den Anbieter.</div>
   </div>
 </section>
 
 <!-- Motiv 2: hell, für Kasse / Wartebereich -->
 <section class="sheet b2">
   <div class="in">
-    <img class="logo" data-logo alt=""><div class="sn" data-logo-alt data-p="studio" style="color:var(--text)"></div>
-    <h1>Nächstes Tattoo schon im Kopf?</h1>
-    <p>Erzähl uns davon, wann es dir passt: Wir sind telefonisch <b>24/7</b> für deine Anfrage erreichbar, auch nachts und am Wochenende.</p>
-    <p>Freunde, die auch eins wollen? Einfach Nummer weitergeben. 🖤</p>
+    <img class="logo" data-logo alt=""><div class="sn" data-logo-alt data-p="studio"></div>
+    <h1>Jetzt stechen, <span>flexibel bezahlen.*</span></h1>
+    <p>Dein Wunsch-Tattoo muss nicht warten, bis das Sparschwein voll ist. Bezahl per Karte, Apple Pay oder in Raten*.</p>
+    <p>Frag uns einfach bei der Beratung oder an der Theke.</p>
     <div class="scan">
-      <div class="qr" data-qr="tel:{telRaw}" data-size="140"></div>
-      <div><small>Scannen &amp; anrufen</small><b data-p="tel"></b><div class="t">Anfrage aufgeben, wir melden uns.</div></div>
+      <div class="qr" data-qr="{zahlen}" data-size="140"></div>
+      <div><small>Scannen &amp; bezahlen</small><b>Ratenzahlung möglich*</b><div class="t">Du siehst alle Bedingungen, bevor du abschließt.</div></div>
     </div>
+    <div class="fn">*Über externe Zahlungsanbieter. Verfügbarkeit und Bedingungen nach Prüfung durch den Anbieter.</div>
   </div>
 </section>
 

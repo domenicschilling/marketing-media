@@ -1,60 +1,92 @@
 <!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
-<title>Ted am Telefon – in 60 Sekunden erklärt</title>
-<meta name="description" content="Der digitale Telefonassistent für Tattoo-Studios: geht ran, wenn du nicht kannst.">
+<title>Tattoofin in 60 Sekunden</title>
+<meta name="description" content="Tattoofin für Tattoo-Studios: große Projekte leichter bezahlbar machen, mit flexiblen Zahlungsoptionen und Ratenzahlung über externe Anbieter.">
+<meta name="theme-color" content="#13243d">
+<link rel="icon" href="assets/figur.png">
 <link rel="stylesheet" href="assets/fonts.css">
 <style>
-:root{--ink:#0d1117;--ink-2:#161b22;--gold:#f5a50b;--muted:#9aa4ae;--line:#2b3139}
+:root{--ink:#13243d;--ink-2:#1c3252;--ink-3:#264066;--gold:#ffbd16;--cream:#f7f7f4;--muted:#a9b6c8;--line:#34507a;--green:#4a9865}
 *{box-sizing:border-box}
-body{margin:0;background:var(--ink);color:#fff;font:16px/1.55 'Inter',system-ui,sans-serif}
-.wrap{max-width:560px;margin:0 auto;padding:22px 16px 48px}
-header{display:flex;justify-content:space-between;align-items:center}
-header img{width:72px}
-.pill{border:1.5px solid var(--gold);color:var(--gold);border-radius:99px;padding:5px 11px;font:700 11px/1 'Inter';letter-spacing:.14em;text-transform:uppercase}
-h1{font:700 38px/1.04 'Space Grotesk',system-ui,sans-serif;letter-spacing:-.02em;margin:22px 0 10px}
+html,body{background:var(--ink)}
+body{margin:0;color:#fff;font:16px/1.55 'DM Sans',system-ui,-apple-system,sans-serif}
+.wrap{max-width:560px;margin:0 auto;padding:20px 16px 48px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.sticker{width:76px;height:76px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;flex:none;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.sticker img{width:62px;height:auto;display:block}
+.pill{border:1.5px solid var(--gold);color:var(--gold);border-radius:99px;padding:6px 11px;font:700 11px/1 'DM Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;white-space:nowrap}
+h1{font:700 36px/1.05 'Space Grotesk',system-ui,sans-serif;letter-spacing:-.02em;margin:22px 0 10px}
 h1 span{color:var(--gold)}
-p.sub{color:#c9d1d9;margin:0 0 18px}
+p.sub{color:#d6deea;margin:0 0 18px}
 video{width:100%;aspect-ratio:9/16;max-height:78vh;background:#000;border-radius:18px;display:block;object-fit:cover}
-.novideo{aspect-ratio:9/16;max-height:60vh;border:1px dashed var(--line);border-radius:18px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--muted);padding:24px}
-.btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;border-radius:99px;padding:15px 18px;font:700 17px 'Space Grotesk',sans-serif;text-decoration:none;margin-top:12px}
+.novideo{aspect-ratio:9/16;max-height:60vh;width:100%;border:1.5px dashed var(--line);border-radius:18px;display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:center;text-align:center;color:#d6deea;padding:24px;background:var(--ink-2)}
+.novideo b{font:700 22px/1.15 'Space Grotesk',sans-serif;color:#fff}
+.btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;border-radius:99px;padding:15px 18px;font:700 17px 'Space Grotesk',sans-serif;text-decoration:none;margin-top:12px;text-align:center}
 .btn.gold{background:var(--gold);color:var(--ink)}
 .btn.line{border:1.5px solid var(--line);color:#fff}
-.steps{list-style:none;padding:0;margin:26px 0 0;display:grid;gap:12px;counter-reset:s}
-.steps li{counter-increment:s;background:var(--ink-2);border-radius:14px;padding:14px 14px 14px 54px;position:relative;color:#c9d1d9}
-.steps li::before{content:counter(s);position:absolute;left:14px;top:14px;width:28px;height:28px;border-radius:50%;background:var(--gold);color:var(--ink);font:700 15px/28px 'Space Grotesk';text-align:center}
+h2{font:700 20px/1.2 'Space Grotesk',sans-serif;margin:30px 0 0}
+.steps{list-style:none;padding:0;margin:14px 0 0;display:grid;gap:12px;counter-reset:s}
+.steps li{counter-increment:s;background:var(--ink-2);border-radius:14px;padding:14px 14px 14px 56px;position:relative;color:#d6deea}
+.steps li::before{content:counter(s);position:absolute;left:14px;top:14px;width:28px;height:28px;border-radius:50%;background:var(--gold);color:var(--ink);font:700 15px/28px 'Space Grotesk',sans-serif;text-align:center}
 .steps b{color:#fff}
+.models{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.models div{background:var(--ink-2);border-radius:14px;padding:14px;color:#d6deea;font-size:14px}
+.models b{display:block;color:var(--gold);font:700 17px/1.2 'Space Grotesk',sans-serif;margin-bottom:4px}
+.note{font-size:12.5px;color:var(--muted);margin-top:16px;line-height:1.5}
 .small{font-size:13px;color:var(--muted);margin-top:26px;text-align:center}
 .small a{color:var(--muted)}
+@media (max-width:380px){h1{font-size:30px}.models{grid-template-columns:1fr}}
 </style>
 </head><body>
 <div class="wrap">
-  <header><img src="assets/logo.png" alt="TattooLeadz"><span class="pill">Für Tattoo-Studios</span></header>
-  <h1>Du tätowierst.<br><span>Ted geht ran.</span></h1>
-  <p class="sub">Der digitale Telefonassistent, der jeden Anruf annimmt, den du gerade nicht annehmen kannst, und dir die Anfrage sofort aufs Handy schickt.</p>
+  <header><span class="sticker"><img src="assets/logo.png" alt="Tattoofin"></span><span class="pill">Für Tattoo-Studios</span></header>
+  <h1>Kann ich das auch in Raten zahlen?<br><span>Ja. Mit Tattoofin.</span></h1>
+  <p class="sub">Mach große Tattoo-Projekte leichter bezahlbar. Deine Kunden zahlen flexibel, auch in Raten über externe Zahlungsanbieter. Du schickst einen Link und bekommst dein Geld nach Freigabe ausgezahlt.</p>
 
-  <video id="v" src="assets/werbevideo.mp4" controls playsinline preload="metadata" poster=""></video>
+  <video id="v" src="assets/werbevideo.mp4" controls playsinline preload="metadata"></video>
 
-  <a class="btn gold" id="call" href="#">📞 Ted jetzt selbst anrufen</a>
-  <a class="btn line" id="wa" href="#">💬 Per WhatsApp melden</a>
+  <a class="btn gold" id="wa" href="#">💬 Per WhatsApp melden</a>
+  <a class="btn line" id="web" href="#">Mehr erfahren &amp; online starten</a>
 
+  <h2>So funktioniert's</h2>
   <ol class="steps">
-    <li><b>Deine Nummer bleibt.</b> Wenn nach ca. 20 Sekunden keiner abhebt, besetzt ist oder ihr zu habt, übernimmt Ted.</li>
-    <li><b>Ted kennt dein Studio.</b> Öffnungszeiten, Artists, Walk-ins, eure Regeln. Er sagt offen, dass er ein digitaler Assistent ist.</li>
-    <li><b>Du bekommst fertige Anfragen.</b> Name, Nummer, Motiv, Stelle, Größe, Wunschzeitraum, per WhatsApp. Preis &amp; Termin machst du.</li>
+    <li><b>Wir richten alles ein.</b> Dein eigenes Stripe-Konto, Zahlungsarten wie Karte, Apple Pay, Google Pay, SEPA und Ratenzahlung über externe Anbieter, dein Logo im Checkout.</li>
+    <li><b>Du schickst einen Zahlungslink.</b> Betrag, Kunde, Projekt eingeben und per WhatsApp verschicken. Oder dein Kunde scannt den QR-Code an der Theke.</li>
+    <li><b>Du bekommst dein Geld.</b> Der Zahlungsanbieter prüft und entscheidet. Nach Freigabe wird dir der Betrag ausgezahlt, abzüglich seiner Gebühren. Das Risiko der Raten trägt der Anbieter.</li>
   </ol>
 
-  <a class="btn gold" id="web" href="#" style="margin-top:22px">Kostenloses Beratungsgespräch</a>
-  <p class="small">Live in 5 Werktagen · Zufriedenheitsgarantie · <a id="weblink" href="#">tattooleadz.de</a></p>
+  <div class="models">
+    <div><b>Provision</b>0 € Einrichtung, keine Grundgebühr. Nur <span data-cfg="provisionSatz"></span> netto von Zahlungen über Tattoofin.</div>
+    <div><b>Kauf</b>Einmalig <span data-cfg="kaufPreis"></span> netto. Mit Code <span data-cfg="aktionsCode"></span> nur <span data-cfg="kaufAktionPreis"></span>.</div>
+  </div>
+
+  <p class="note">Tattoofin ist kein Kreditgeber und vermittelt keine Kredite. Raten, Laufzeiten, Zinsen und Freigabe legt allein der jeweilige Zahlungsanbieter fest. Nicht jede Zahlungsoption ist jederzeit für jeden Kunden verfügbar. Gebühren der Zahlungsanbieter sind nicht im Tattoofin-Preis enthalten. Preise zzgl. USt.</p>
+  <p class="small">Startklar in wenigen Werktagen · Betreuung <span data-cfg="betreuung"></span> · <a id="weblink" href="#"><span data-cfg="web"></span></a></p>
 </div>
 <script src="assets/config.js"></script>
 <script>
-var C=window.CFG||{};
-var v=document.getElementById('v');
-v.addEventListener('error',function(){var d=document.createElement('div');d.className='novideo';d.textContent='Video folgt in Kürze. Bis dahin: Ruf Ted einfach selbst an!';v.replaceWith(d)},true);
-var call=document.getElementById('call');
-if(C.demoNummerTel){call.href='tel:'+C.demoNummerTel;call.textContent='📞 Ted anrufen: '+C.demoNummer}else{call.style.display='none'}
-document.getElementById('wa').href=C.whatsappLink||'#';
-document.getElementById('web').href=(C.webUrl||'https://tattooleadz.de')+'/?utm_source=videoseite&utm_campaign=telefon';
-document.getElementById('weblink').href=C.webUrl||'#';
+(function(){
+  var C=window.CFG||{};
+  var euro=/^(kaufPreis|kaufAktionPreis)$/;
+  document.querySelectorAll('[data-cfg]').forEach(function(el){
+    var v=C[el.dataset.cfg]; if(v===undefined) return;
+    el.textContent=euro.test(el.dataset.cfg)?String(v).replace(/\B(?=(\d{3})+(?!\d))/g,'.')+' €':String(v);
+  });
+  var v=document.getElementById('v');
+  function fallback(){
+    if(!v.parentNode) return;
+    var d=document.createElement('div');d.className='novideo';
+    d.innerHTML='<b>Video folgt in Kürze.</b><span>Bis dahin: Schreib uns einfach per WhatsApp, wir zeigen dir Tattoofin in 10 Min.</span>';
+    v.replaceWith(d);
+  }
+  v.addEventListener('error',fallback,true);
+  var src=v.querySelector('source')||v; if(src.error) fallback();
+  var site=(C.websiteUrl&&!/^\[/.test(C.websiteUrl))?C.websiteUrl:(C.webUrl||'https://tattoofin.de');
+  var q=new URLSearchParams(location.search);
+  var utm='utm_source='+encodeURIComponent(q.get('utm_source')||'videoseite')+'&utm_campaign='+encodeURIComponent(q.get('utm_campaign')||'sparschwein');
+  document.getElementById('web').href=site+(site.indexOf('?')>=0?'&':'?')+utm;
+  document.getElementById('wa').href=C.whatsappLink||'#';
+  document.getElementById('weblink').href=C.webUrl||site;
+})();
 </script>
 </body></html>
