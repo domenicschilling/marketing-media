@@ -28,6 +28,13 @@ Lokale Vorschau: `cd public && python3 -m http.server 8000` → http://localhost
 Startseite · Leistungen (Übersicht + 6 Unterseiten) · MIRAL PVC · Referenzen · Über uns · Kontakt · Danke · Impressum · Datenschutz · 404.
 Dazu `sitemap.xml`, `robots.txt`, Web-Manifest, Open-Graph-Bild und JSON-LD (LocalBusiness, Service, FAQ, Breadcrumbs).
 
+## Vorschau bei Netlify
+
+- Projekt: **limesmont-relaunch** – https://limesmont-relaunch.netlify.app
+- Verwaltung: https://app.netlify.com/projects/limesmont-relaunch (Site-ID `da5b4a3f-2c9e-4628-8995-87546a6ad6d7`)
+- Formulare „anfrage“ und „rueckruf“ sind aktiv. E-Mail-Benachrichtigung unter *Forms → Form notifications* einrichten.
+- Achtung: Das ältere Netlify-Projekt **limes-mont** enthält eine andere, parallel entstandene Version und wurde nicht verändert.
+
 ## Go-live-Checkliste
 
 - [ ] **Impressum:** `register` (Registergericht + HRB) und `vatId` in `src/config.mjs` eintragen. Der Build warnt, solange sie fehlen.
