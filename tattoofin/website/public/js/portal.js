@@ -2,7 +2,7 @@
   var D = null, alertBox = document.getElementById("alert");
   var $ = function (id) { return document.getElementById(id); };
   var e = TF.esc, euro = TF.euro, dat = TF.datum;
-  var STATUS = { offen: "offen", in_pruefung: "in Prüfung", bezahlt: "bezahlt", storniert: "storniert", abgebrochen: "abgebrochen", fehlgeschlagen: "fehlgeschlagen", erstattet: "erstattet" };
+  var STATUS = { offen: "offen", in_pruefung: "in Prüfung", bezahlt: "bezahlt", storniert: "storniert", abgebrochen: "abgebrochen", fehlgeschlagen: "fehlgeschlagen", erstattet: "erstattet", rueckgebucht: "rückgebucht" };
   function msg(t, type) { alertBox.innerHTML = t ? '<div class="alert ' + (type || "ok") + '">' + e(t) + "</div>" : ""; if (t && type !== "err") setTimeout(function () { alertBox.innerHTML = ""; }, 5000); }
   function qr(el, text) { el.innerHTML = ""; if (window.QRCode) new QRCode(el, { text: text, width: 300, height: 300, colorDark: "#13243d", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M }); }
 

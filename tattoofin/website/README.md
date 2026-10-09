@@ -18,7 +18,8 @@ Keine Build-Schritte, kein Framework.
 | `/admin.html` | Studios, Stripe-Status, Umsätze, Provision, Live schalten, Login-Link, Garantie-Erstattung, Monatsabrechnung (Probe/echt), E-Mail-Protokoll |
 | Monatlich (1., 06:00 UTC) | Provisionsrechnung des Vormonats (in Stripe als bereits bezahlt markiert, da schon einbehalten) + E-Mail-Übersicht |
 | Täglich (07:00 UTC) | Erinnerung bei abgebrochenem Abschluss, Erinnerung „Stripe-Konto verbinden“ (nach 2 und 7 Tagen), Vertragsende |
-| Erstattungen | Erstattet das Studio im eigenen Stripe-Dashboard, bucht Tattoofin die Provision automatisch anteilig zurück (`charge.refunded`) |
+| Erstattungen / Rückbuchungen | Erstattung im Stripe-Dashboard → Provision anteilig zurück (`charge.refunded`). Rückbuchung → E-Mail mit Belege-Checkliste, bei Verlust Provision komplett zurück (`charge.dispute.*`) |
+| Zahlarten | Standard `ZAHLARTEN=card,klarna` (Karte inkl. Apple/Google Pay, Klarna). SEPA bewusst nicht, wegen 8 Wochen Rückgaberecht ohne Grund |
 
 ### Automatische E-Mails
 Willkommen + Vertragsbestätigung (mit Login- und Stripe-Link) · Zahlung erhalten (Setup) · Rechnung (Setup auf Rechnung) · Erinnerung Stripe-Konto ·
@@ -49,7 +50,7 @@ Garantie-Erstattung · Abschluss abgebrochen · interne Meldungen an `ADMIN_EMAI
    - Zwei Webhook-Endpoints auf `https://<SITE_URL>/api/stripe-webhook`:
      „Ihr Konto“: `checkout.session.completed`, `checkout.session.expired`, `invoice.paid`, `invoice.payment_failed`;
      „Verbundene Konten“: `account.updated`, `checkout.session.completed`, `checkout.session.async_payment_succeeded`,
-     `checkout.session.async_payment_failed`, `checkout.session.expired`, `charge.refunded`.
+     `checkout.session.async_payment_failed`, `checkout.session.expired`, `charge.refunded`, `charge.dispute.created`, `charge.dispute.closed`.
    - Kundenportal aktivieren (für Tattoofin-Rechnungen an Studios), Rechnungs-E-Mails an Kunden einschalten.
    - **Vor dem Start prüfen:** ob Tattoo-Dienstleistungen bei Stripe und Klarna zulässig sind und Klarna für die Studio-Konten freigeschaltet wird
      (in jedem Studio-Konto unter Einstellungen → Zahlungsmethoden aktivieren).

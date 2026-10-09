@@ -30,6 +30,7 @@ const DOCS = [
   "intern/03-direct-mail-kampagne.html",
   "intern/04-umsetzung-onboarding.html",
   "intern/05-nachrichtenvorlagen.html",
+  "intern/06-risiken-recht.html",
   "studios/10-onepager.html",
   "studios/11-so-funktionierts.html",
   "studios/12-team-leitfaden.html",

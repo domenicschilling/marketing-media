@@ -56,7 +56,7 @@ export async function checkoutFuer(studio, z) {
   if (!darfKassieren(studio)) throw new HttpError(409, "Dieses Studio kann gerade keine Zahlungen annehmen.");
   const fee = plattformgebuehr(z.betragCent, studio.modell);
   const session = await stripe("POST", "/checkout/sessions", {
-    mode: "payment", locale: "de", client_reference_id: z.id,
+    mode: "payment", locale: "de", client_reference_id: z.id, payment_method_types: CFG.zahlarten,
     line_items: [{ quantity: 1, price_data: { currency: "eur", unit_amount: z.betragCent, product_data: { name: z.beschreibung || "Tattoo-Projekt", description: `${studio.firma}${z.art === "anzahlung" ? " · Anzahlung" : ""}` } } }],
     customer_email: z.email || undefined,
     payment_intent_data: {
@@ -83,8 +83,14 @@ export async function monatsabrechnung(monat, { dryRun = false } = {}) {
     if (s.modell !== "provision" || !s.stripe?.accountId) continue;
     const vorhanden = await getAbrechnung(s.id, monat);
     if (vorhanden && !dryRun) { ergebnis.push({ studio: s.firma, monat, status: "schon abgerechnet" }); continue; }
-    const zahlungen = (await zahlungenVon(s.id)).filter((z) => z.status === "bezahlt" && (z.bezahltAm || "").slice(0, 7) === monat);
-    const positionen = zahlungen.map((z) => ({ zahlungId: z.id, datum: z.bezahltAm, kunde: z.kunde, beschreibung: z.beschreibung, betragCent: z.betragCent, provisionNettoCent: z.gebuehrNettoCent || 0 }));
+    // Erstattungen und verlorene Rückbuchungen mindern die Provision (die Gebühr wurde anteilig zurückgebucht)
+    const ust = 1 + CFG.ustProzent / 100;
+    const zahlungen = (await zahlungenVon(s.id)).filter((z) => ["bezahlt", "erstattet", "rueckgebucht"].includes(z.status) && (z.bezahltAm || "").slice(0, 7) === monat);
+    const positionen = zahlungen.map((z) => ({
+      zahlungId: z.id, datum: z.bezahltAm, kunde: z.kunde, beschreibung: z.beschreibung,
+      betragCent: z.status === "rueckgebucht" ? 0 : z.betragCent - (z.erstattetCent || 0),
+      provisionNettoCent: Math.max(0, (z.gebuehrNettoCent || 0) - Math.round((z.gebuehrErstattetCent || 0) / ust)),
+    })).filter((p) => p.provisionNettoCent > 0 || p.betragCent > 0);
     const ab = {
       studioId: s.id, monat, positionen, createdAt: now(),
       umsatzCent: positionen.reduce((a, b) => a + b.betragCent, 0),

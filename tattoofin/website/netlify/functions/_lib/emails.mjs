@@ -128,6 +128,15 @@ export const mails = {
     footerNote: `Diese E-Mail wurde im Auftrag von ${esc(s.firma)} über Tattoofin versendet.`,
   }),
 
+  rueckbuchung: (s, z) => mk(`⚠️ Rückbuchung: ${euro(z.betragCent)} von ${z.kunde || "Kunde"}`, {
+    preheader: "Bitte Belege bei Stripe einreichen.",
+    title: "Ein Kunde hat eine Zahlung zurückgebucht",
+    body: hallo(s) + p(`für die Zahlung von <b>${esc(z.kunde || "Kunde")}</b> über <b>${euro(z.betragCent)}</b> (${esc(z.beschreibung || "Tattoo-Projekt")}) wurde eine Rückbuchung bzw. Reklamation eröffnet. Grund laut Bank/Anbieter: <b>${esc(z.rueckbuchung?.grund || "nicht angegeben")}</b>.`) +
+      box(`<b>Was du jetzt tun solltest:</b> Im Stripe-Dashboard unter „Zahlungen → Angefochten“ Belege einreichen${z.rueckbuchung?.faelligBis ? `, spätestens bis <b>${datum(z.rueckbuchung.faelligBis)}</b>` : ""}: unterschriebene Einverständniserklärung, Terminbestätigung, Chatverlauf, Foto vom fertigen Tattoo (ohne Gesicht), Rechnung.`) +
+      p("Wird die Rückbuchung endgültig zu deinen Lasten entschieden, buchen wir die Tattoofin-Provision automatisch zurück."),
+    cta: "Zum Stripe-Dashboard", ctaUrl: "https://dashboard.stripe.com/disputes",
+  }),
+
   monatsabrechnung: (s, ab, { rechnungUrl }) => mk(`Deine Tattoofin-Abrechnung ${monatName(ab.monat)}`, {
     preheader: ab.provisionNettoCent ? `${ab.positionen.length} Zahlungen · Umsatz ${euro(ab.umsatzCent)}` : "Diesen Monat fällt keine Provision an.",
     title: `Abrechnung ${monatName(ab.monat)}`,

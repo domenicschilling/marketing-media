@@ -167,10 +167,19 @@ try {
   state = await mock("state");
   check(state.feeRefunds.some((r) => r.amount === 8925), "Hälfte erstattet → 89,25 € Provision zurückgebucht");
 
+  console.log("Rückbuchung (Dispute) verloren → Provision komplett zurück");
+  const tom = det.zahlungen.find((z) => z.kunde === "Tom");
+  await mock(`dispute/${tom.paymentIntentId}?status=lost`);
+  await wait(300);
+  state = await mock("state");
+  check(state.feeRefunds.some((r) => r.amount === 3570), "Verlorene Rückbuchung → 35,70 € Provision zurückgebucht");
+  check(mailsAn("prov@example.com").some((m) => m.subject.includes("Rückbuchung")), "E-Mail an Studio: Rückbuchung mit Belege-Checkliste");
+  check(Object.values(state.sessions).filter((x) => x.account).every((x) => !x.payment_method_types.includes("sepa_debit")), "Checkout ohne SEPA-Lastschrift");
+
   console.log("Monatsabrechnung");
   const monat = new Date().toISOString().slice(0, 7);
   const probe = (await admin("abrechnung", { body: { monat, dryRun: true } })).find((x) => x.studio === "Ink Provision");
-  check(probe?.provisionNettoCent === 18000, "Probelauf: 150 € + 30 € = 180 € Provision netto");
+  check(probe?.provisionNettoCent === 7500, "Probelauf: Lena 150 € minus halbe Erstattung, Tom rückgebucht = 75 € Provision netto");
   const echt = (await admin("abrechnung", { body: { monat, dryRun: false } })).find((x) => x.studio === "Ink Provision");
   check(echt?.rechnung?.startsWith("TEST-"), "Rechnung erstellt (als bereits bezahlt markiert)");
   state = await mock("state");

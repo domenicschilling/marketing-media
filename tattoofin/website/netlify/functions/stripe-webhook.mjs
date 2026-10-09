@@ -3,7 +3,8 @@
 // In Stripe zwei Endpoints auf <SITE_URL>/api/stripe-webhook anlegen:
 //   1) „Ihr Konto“: checkout.session.completed, checkout.session.expired, invoice.paid, invoice.payment_failed
 //   2) „Verbundene Konten“: account.updated, checkout.session.completed, checkout.session.async_payment_succeeded,
-//      checkout.session.async_payment_failed, checkout.session.expired, charge.refunded
+//      checkout.session.async_payment_failed, checkout.session.expired, charge.refunded,
+//      charge.dispute.created, charge.dispute.closed
 //   Secrets: STRIPE_WEBHOOK_SECRET (1) und STRIPE_CONNECT_WEBHOOK_SECRET (2)
 import { json, fail, now, brutto, handler } from "./_lib/util.mjs";
 import { stripe, verifyWebhook } from "./_lib/stripe.mjs";
@@ -53,6 +54,30 @@ async function connectEreignis(event) {
       if (event.type === "checkout.session.async_payment_failed") { z.status = "fehlgeschlagen"; await saveZahlung(z); break; }
       if (o.payment_status === "paid" || event.type === "checkout.session.async_payment_succeeded") await zahlungBezahlt(z, account);
       else { z.status = "in_pruefung"; await saveZahlung(z); }
+      break;
+    }
+    case "charge.dispute.created":
+    case "charge.dispute.closed": {
+      const z = await zahlungBy("pi", o.payment_intent);
+      if (!z) break;
+      const s = await getStudio(z.studioId);
+      if (event.type === "charge.dispute.created") {
+        z.rueckbuchung = { status: "offen", grund: o.reason, betragCent: o.amount, am: now(), faelligBis: o.evidence_details?.due_by ? new Date(o.evidence_details.due_by * 1000).toISOString() : null };
+        await saveZahlung(z);
+        await notify(s, mails.rueckbuchung(s, z));
+        await notifyAdmin("Rückbuchung (Dispute) eingegangen", s, { Zahlung: z.id, Grund: o.reason, Betrag: (o.amount / 100).toFixed(2) + " €" });
+        break;
+      }
+      z.rueckbuchung = { ...(z.rueckbuchung || {}), status: o.status, abgeschlossenAm: now() };
+      // Verloren: Geld ist beim Studio weg → Provision vollständig zurück (Vertrag § 5)
+      if (o.status === "lost" && (z.gebuehrBruttoCent || 0) > (z.gebuehrErstattetCent || 0) && z.applicationFeeId) {
+        const rest = z.gebuehrBruttoCent - (z.gebuehrErstattetCent || 0);
+        await stripe("POST", `/application_fees/${z.applicationFeeId}/refunds`, { amount: rest }, { idempotencyKey: `afr-dispute-${z.id}` });
+        z.gebuehrErstattetCent = z.gebuehrBruttoCent;
+        z.status = "rueckgebucht";
+        if (z.abgerechnet) await notifyAdmin("Verlorene Rückbuchung nach Monatsabrechnung: Gutschrift prüfen", s, { Zahlung: z.id, Monat: z.abgerechnet });
+      }
+      await saveZahlung(z);
       break;
     }
     case "charge.refunded": {

@@ -95,6 +95,13 @@ export function startStripeMock({ port = 12111, webhookUrl, webhookSecret, log =
         if (parts[1] === "pay-invoice") return send(200, { status: await payInvoice(inv, true) });
         if (parts[1] === "fail-invoice") return send(200, { status: await payInvoice(inv, false) });
         if (parts[1] === "state") return send(200, db);
+        if (parts[1] === "dispute") {
+          const pi = db.paymentIntents[parts[2]];
+          const d = { id: rid("dp"), object: "dispute", payment_intent: pi.id, charge: pi.latest_charge.id, amount: pi.amount, reason: "product_not_received", status: "needs_response", evidence_details: { due_by: Math.floor(Date.now() / 1000) + 7 * 86400 } };
+          await webhook("charge.dispute.created", d, pi.account);
+          const status = url.searchParams.get("status") || "lost";
+          return send(200, { status: await webhook("charge.dispute.closed", { ...d, status }, pi.account) });
+        }
         if (parts[1] === "refund") {
           const pi = db.paymentIntents[parts[2]];
           const amount = Number(url.searchParams.get("amount") || pi.amount);
