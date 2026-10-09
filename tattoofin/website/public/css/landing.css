@@ -193,6 +193,7 @@
 .final .sunburst{left:50%;top:40%}
 .final img{width:260px;margin:0 auto 6px;position:relative;animation:bob 3s ease-in-out infinite}
 .final h2{font-size:clamp(44px,7vw,96px);position:relative}
+.final .wrap{position:relative;z-index:1}
 .final p{position:relative;font-size:20px;font-weight:600;max-width:620px;margin:16px auto 30px}
 .foot .wm{height:30px;width:auto;margin-bottom:8px}
 
@@ -202,3 +203,21 @@
   .hero .ctas .btn{width:100%}
   .problem h2 .ja{margin-left:0}
 }
+
+/* Mobil-Feinschliff */
+.nw{white-space:nowrap}
+@media (max-width:560px){
+  .badge-round{display:none}
+  .coin{right:-2%;bottom:40px}
+  .scene{height:520px;margin-bottom:-60px}
+  .hero{padding-bottom:70px}
+  .band{font-size:26px;padding:12px 0}
+  .iso{height:360px;margin:0 -20px}
+  .iso-plane{scale:.42}
+  .legend div{font-size:14px}
+  .money .box{padding:20px}
+  .coin3d{width:130px;height:130px}
+  .coin3d .f{font-size:36px}
+  .sec{padding:70px 0}
+}
+@media (max-width:560px){.paid{right:22px}}

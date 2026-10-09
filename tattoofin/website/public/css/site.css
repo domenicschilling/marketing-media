@@ -64,7 +64,8 @@ h3{font-family:var(--round);letter-spacing:0;line-height:1.15}
 .nav .links a{color:var(--ink);text-decoration:none;font-weight:700;font-size:15px;padding:8px 12px;border-radius:99px}
 .nav .links a:not(.btn):hover{background:var(--yellow-soft)}
 .nav .links #who{color:var(--muted)!important}
-@media (max-width:820px){.nav .links a.hide-m{display:none}.nav .brand .wm{display:none}}
+@media (max-width:820px){.nav .links a.hide-m{display:none}.nav .brand .wm{height:20px}}
+@media (max-width:400px){.nav .brand .wm{display:none}}
 
 /* Buttons: dicke Kontur, harter Schatten, drücken beim Klick */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;border:var(--bw) solid var(--ink);border-radius:99px;padding:14px 24px;
@@ -199,7 +200,8 @@ input:focus,select:focus,textarea:focus{outline:none;box-shadow:4px 4px 0 var(--
 /* Footer */
 .foot{background:var(--ink);color:var(--muted-d);padding:46px 0;font-size:14px;border-top:var(--bw) solid var(--ink)}
 .foot .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:center}
-.foot a{color:#fff;text-decoration:none;margin-right:16px;font-weight:600}
+.foot a{color:#fff;text-decoration:none;margin-right:16px;font-weight:600;display:inline-block;padding:6px 0}
+@media (max-width:560px){.foot .wrap>div:last-child{display:flex;flex-wrap:wrap;gap:4px 18px}.foot a{margin:0;padding:8px 0}}
 .foot a:hover{color:var(--yellow)}
 
 /* Zahlseiten */
@@ -226,3 +228,5 @@ input:focus,select:focus,textarea:focus{outline:none;box-shadow:4px 4px 0 var(--
 .paybox::after{content:"";position:absolute;right:-34px;top:-50px;width:96px;height:99px;background:url(../assets/figur.png) center/contain no-repeat;transform:rotate(9deg);pointer-events:none}
 @media (max-width:520px){.paybox::after{right:-6px;top:-56px;width:74px;height:76px}}
 @media (max-width:560px){.calc .res b{font-size:20px}.price .amount{font-size:62px}}
+.calc>div{min-width:0}
+@media (max-width:560px){.calc h3{font-size:24px!important}.calc .val{float:none;display:block;margin-top:2px}.price .amount small{display:inline-block}}

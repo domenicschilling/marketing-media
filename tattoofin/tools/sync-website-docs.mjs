@@ -36,10 +36,20 @@ const page = (title, { style, main }) => `<!doctype html>
 <title>${title} – Tattoofin</title>
 <link rel="stylesheet" href="/css/doc.css">
 <style>${style}
-body{background:#f7f7f4}.doc{margin:0 auto 40px}
-.webnav{max-width:210mm;margin:0 auto;padding:14px 4px;display:flex;justify-content:space-between;align-items:center;font:600 14px Inter,system-ui,sans-serif}
-.webnav a{color:#14161a;text-decoration:none}.webnav button{background:#0d1117;color:#fff;border:0;border-radius:99px;padding:8px 14px;font:600 13px Inter,sans-serif;cursor:pointer}
-@media print{.webnav{display:none}}
+body{background:#fbb316 radial-gradient(rgba(31,61,92,.13) 1.3px,transparent 1.6px) 0 0/18px 18px}
+.doc{margin:0 auto 40px;border:3px solid #1f3d5c;border-radius:18px;box-shadow:8px 8px 0 #1f3d5c}
+.webnav{max-width:210mm;margin:0 auto;padding:14px 4px;display:flex;justify-content:space-between;align-items:center;gap:10px;font:700 15px 'DM Sans',system-ui,sans-serif}
+.webnav a{color:#1f3d5c;text-decoration:none;background:#fff;border:3px solid #1f3d5c;border-radius:99px;padding:9px 16px;box-shadow:3px 3px 0 #1f3d5c}
+.webnav button{background:#1f3d5c;color:#fbb316;border:3px solid #1f3d5c;border-radius:99px;padding:9px 16px;font:700 14px 'DM Sans',sans-serif;cursor:pointer;box-shadow:3px 3px 0 #0c1a29}
+@media (max-width:700px){
+  .webnav{padding:12px}
+  .doc{width:auto;margin:0 10px 30px;padding:20px 16px;font-size:10.5pt;border-radius:14px;box-shadow:5px 5px 0 #1f3d5c}
+  .dochead{flex-direction:column-reverse;gap:8px}.dochead .meta{text-align:left}.dochead .meta img{width:64px}
+  .parties{grid-template-columns:1fr}
+  .doc table{display:block;overflow-x:auto}
+  .form td:first-child{width:auto}
+}
+@media print{.webnav{display:none}body{background:#fff}.doc{border:0;box-shadow:none}}
 </style>
 </head><body>
 <!-- Automatisch erzeugt aus tattoofin/${title === "Vertrag" ? "studios/14-vertrag.html" : "studios/15-avv.html"} (tools/sync-website-docs.mjs). Nicht direkt bearbeiten. -->
