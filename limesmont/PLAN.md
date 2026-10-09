@@ -234,3 +234,11 @@ Dateien in [`visitenkarten/`](visitenkarten/):
 - [ ] Einsatzgebiet, Öffnungs-/Erreichbarkeitszeiten, WhatsApp-Nummer
 - [ ] Wer bekommt die Formular-Anfragen (E-Mail-Adresse/n)?
 - [ ] Antworten auf die Visitenkarten-Fragen aus Abschnitt 13
+
+---
+
+## Status (09.10.2026)
+
+- ✅ Visitenkarten-Entwurf fertig (`visitenkarten/`)
+- ✅ **Website gebaut** (`website/`): 16 Seiten, 3D-Hero, 3D-Scroll-Story „Fensterprofil“, 3D-Paneel-Konfigurator, mehrstufiges Anfrageformular mit Foto-Upload, Rückruf-Formular, mobile Schnellkontakt-Leiste, Partnerseite MIRAL PVC mit Links auf miral-pvc.com, SEO und strukturierte Daten. Details und Go-live-Checkliste: [`website/README.md`](website/README.md)
+- ⏳ Offen: Kundendaten fürs Impressum, Freigaben (Texte, MIRAL), echte Fotos, Netlify-Setup und DNS-Umzug
