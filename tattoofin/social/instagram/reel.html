@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><title>Tattoofin · Reels</title>
+<link rel="stylesheet" href="insta.css">
+<style>
+html,body{width:1080px;height:1920px;overflow:hidden;background:#000}
+#stage{position:absolute;left:0;top:0;width:1080px;height:1920px;overflow:hidden}
+.pn{position:absolute!important;left:0;top:0;width:1080px;height:1920px}
+.ab{position:absolute}
+.c{position:absolute;left:72px;right:72px}
+.stamp{font:400 120px/1 'Luckiest Guy';color:var(--or);border:14px solid var(--or);border-radius:26px;padding:26px 40px 10px;letter-spacing:.04em;background:rgba(255,253,246,.85)}
+.strike{position:absolute;left:-14px;top:50%;height:16px;border-radius:9px;background:var(--or);transform-origin:left center}
+.chat{position:absolute;left:0;right:0;top:0;bottom:0;background:#efe7dc;background-image:radial-gradient(rgba(31,61,92,.06) 2.4px,transparent 2.8px);background-size:30px 30px}
+.chathead{position:absolute;left:0;right:0;top:0;height:250px;background:var(--ink);color:#fff;display:flex;align-items:flex-end;gap:26px;padding:0 60px 34px;font:800 40px 'DM Sans'}
+.chathead .av{width:96px;height:96px;border-radius:50%;background:var(--y);border:5px solid #0c1a29;display:grid;place-items:center;font:400 46px 'Titan One';color:var(--ink)}
+.chathead small{display:block;font:500 26px 'DM Sans';opacity:.75}
+.bub{position:absolute;max-width:800px;font:500 46px/1.38 'DM Sans';color:#10261c;background:#fff;border:6px solid var(--ink);border-radius:40px 40px 40px 12px;padding:30px 38px;box-shadow:9px 9px 0 var(--ink)}
+.bub.me{background:var(--wa);border-radius:40px 40px 12px 40px}
+.bub .t{display:block;text-align:right;font-size:24px;color:#5d7a68;margin-top:6px}
+.bub .lnk{display:flex;align-items:center;gap:18px;margin-top:18px;background:#fff;border:5px solid var(--ink);border-radius:24px;padding:18px 22px;font:800 34px 'DM Sans';color:var(--ink)}
+.bub .lnk img{width:70px}
+.typing{position:absolute;background:#fff;border:6px solid var(--ink);border-radius:40px 40px 40px 12px;padding:26px 34px;display:flex;gap:12px;box-shadow:9px 9px 0 var(--ink)}
+.typing i{width:20px;height:20px;border-radius:50%;background:var(--muted)}
+.ph{position:absolute;background:var(--ink);border-radius:84px;padding:22px;box-shadow:26px 26px 0 rgba(31,61,92,.3)}
+.dark .ph,.ph.sh2{box-shadow:26px 26px 0 rgba(0,0,0,.35)}
+.ph .scr{background:#fff;border-radius:64px;height:100%;padding:44px 40px;overflow:hidden;position:relative;color:var(--ink)}
+.ph .notch{width:170px;height:38px;margin:-18px auto 30px}
+.ph .opt{font-size:38px;padding:24px 28px;margin-bottom:18px;border-width:6px;border-radius:28px}
+.ph .opt em{font-size:24px;padding:6px 14px}
+.fld{border:6px solid var(--ink);border-radius:26px;padding:16px 26px;margin-bottom:22px;background:#fff}
+.fld small{display:block;font:700 24px 'DM Sans';color:var(--muted)}
+.fld span{display:block;font:800 50px/1.25 'DM Sans';min-height:62px}
+.cur{display:inline-block;width:4px;height:44px;background:var(--ink);vertical-align:-6px;margin-left:4px}
+.pbtn{background:var(--ink);color:var(--y);border-radius:99px;text-align:center;padding:28px;font:400 36px 'Titan One'}
+.terms{background:var(--ys);border:6px solid var(--ink);border-radius:28px;padding:26px;font:500 30px/1.45 'DM Sans'}
+.terms b{font-weight:800}
+.chk{width:54px;height:54px;border:6px solid var(--ink);border-radius:12px;background:#fff;display:grid;place-items:center;font:800 36px 'DM Sans';flex:none}
+.timer{position:absolute;right:60px;top:250px;background:#fff;border:7px solid var(--ink);border-radius:99px;padding:14px 34px;font:400 58px 'Luckiest Guy';box-shadow:8px 8px 0 var(--ink);display:flex;gap:16px;align-items:center}
+.timer i{width:26px;height:26px;border-radius:50%;background:var(--or);border:5px solid var(--ink)}
+.chip{display:inline-block;color:var(--ink);background:#fff;border:6px solid var(--ink);border-radius:99px;padding:16px 30px;font:400 38px 'Titan One';box-shadow:7px 7px 0 var(--ink)}
+.dark .chip{border-color:#0c1a29;box-shadow:7px 7px 0 #0c1a29}
+.qrsign{position:absolute;background:var(--paper);border:8px solid var(--ink);border-radius:40px;box-shadow:18px 18px 0 var(--ink);padding:40px;text-align:center}
+.qrsign canvas,.qrsign img{display:block;margin:0 auto}
+.scan{position:absolute;left:0;right:0;height:10px;background:var(--or);box-shadow:0 0 30px 8px rgba(242,104,42,.6);border-radius:6px}
+.fnote{position:absolute;left:72px;right:200px;bottom:330px;font:600 25px/1.35 'DM Sans';opacity:.85}
+.dark .fnote{color:#fff}
+</style></head><body>
+<div id="stage"></div>
+<script src="../../assets/qrcode.min.js"></script>
+<script>
+"use strict";
+// ---------- Mini-Animations-Engine: Keyframes nach absoluter Zeit, Seek für den Frame-Export ----------
+const stage = document.getElementById("stage");
+let tracks, hooks, SFX, DUR;
+const FIG = "../../assets/figur.png", WORT = "../../assets/wortmarke.png";
+const WARN = "*Über externe Anbieter wie Klarna, nach deren Prüfung. Tattoofin ist kein Kreditgeber. Achtung! Kreditaufnahme kostet Geld.";
+const OUT = "cubic-bezier(.2,.8,.2,1)", BOUNCE = "cubic-bezier(.34,1.56,.64,1)", INOUT = "cubic-bezier(.65,0,.35,1)";
+
+function el(html, parent) {
+  const d = document.createElement("div"); d.innerHTML = html.trim();
+  const e = d.firstElementChild; (parent || stage).appendChild(e); return e;
+}
+function at(e, t, props, ease) {
+  if (!tracks.has(e)) tracks.set(e, []);
+  tracks.get(e).push({ t, props, ease }); return e;
+}
+const B = (e) => e.dataset.b || "";                 // Grund-Transform (z. B. Drehung) des Elements
+function hide(e, t) { return at(e, t, { opacity: 0 }); }
+function pop(e, t, s = true) {
+  at(e, 0, { opacity: 0, transform: "scale(.4) " + B(e) });
+  at(e, t, { opacity: 0, transform: "scale(.4) " + B(e) });
+  at(e, t + 0.16, { opacity: 1, transform: "scale(1.07) " + B(e) }, OUT);
+  at(e, t + 0.32, { opacity: 1, transform: "scale(1) " + B(e) }, "ease-in-out");
+  if (s) sfx(t, "pop"); return e;
+}
+function rise(e, t, dy = 90, d = 0.45) {
+  at(e, 0, { opacity: 0, transform: `translateY(${dy}px) ` + B(e) });
+  at(e, t, { opacity: 0, transform: `translateY(${dy}px) ` + B(e) });
+  at(e, t + d, { opacity: 1, transform: "translateY(0px) " + B(e) }, OUT); return e;
+}
+function out(e, t, d = 0.3) {
+  at(e, t, { opacity: 1, transform: "translateY(0px) scale(1) " + B(e) });
+  at(e, t + d, { opacity: 0, transform: "translateY(-50px) scale(.96) " + B(e) }, "ease-in"); return e;
+}
+function press(e, t) {
+  at(e, t, { transform: "scale(1) " + B(e) });
+  at(e, t + 0.1, { transform: "scale(.92) " + B(e) }, "ease-out");
+  at(e, t + 0.25, { transform: "scale(1) " + B(e) }, BOUNCE); sfx(t, "tick"); return e;
+}
+// Neues Panel (Szene): wischt als Kreis von einem Punkt aus über das vorherige
+function panel(cls, t, x = 50, y = 50) {
+  const p = el(`<div class="frame pn ${cls || ""}"></div>`);
+  if (t > 0) {
+    at(p, 0, { clipPath: `circle(0% at ${x}% ${y}%)` });
+    at(p, t, { clipPath: `circle(0% at ${x}% ${y}%)` });
+    at(p, t + 0.5, { clipPath: `circle(150% at ${x}% ${y}%)` }, INOUT);
+    sfx(t, "whoosh");
+  }
+  return p;
+}
+function sun(p, size = 3200, x = -1060, y = -640, op = 1) {
+  const s = el(`<div class="sun" style="width:${size}px;height:${size}px;left:${x}px;top:${y}px;opacity:${op}"></div>`, p);
+  at(s, 0, { transform: "rotate(0deg)" }); at(s, DUR, { transform: "rotate(30deg)" }); return s;
+}
+// Mehrzeilige Überschrift im Fluss: Zeilen überlappen nie, jede Zeile fliegt nacheinander ein
+function lines(p, top, list, t0, step = 0.35, cls = "") {
+  const box = el(`<div class="c ${cls}" style="top:${top}px"></div>`, p);
+  list.forEach(([html, size, extra], i) => rise(el(`<div class="h" style="font-size:${size}px;${extra || ""}">${html}</div>`, box), t0 + i * step));
+  return box;
+}
+function sfx(t, name) { SFX.push([+t.toFixed(3), name]); }
+function type(span, text, t0, t1, cursor = true) {   // Text erscheint Zeichen für Zeichen
+  hooks.push((t) => {
+    const n = t < t0 ? 0 : t >= t1 ? text.length : Math.round(((t - t0) / (t1 - t0)) * text.length);
+    span.innerHTML = text.slice(0, n) + (cursor && t >= t0 - 0.3 && t < t1 + 0.4 ? '<i class="cur"></i>' : "");
+  });
+  for (let k = 0; k < text.length; k += 2) sfx(t0 + ((t1 - t0) * k) / text.length, "type");
+}
+function typing(parent, x, y, t0, t1) {
+  const d = el(`<div class="typing" style="left:${x}px;top:${y}px"><i></i><i></i><i></i></div>`, parent);
+  at(d, 0, { opacity: 0 }); at(d, t0, { opacity: 0 }); at(d, t0 + 0.15, { opacity: 1 }); at(d, t1, { opacity: 1 }); at(d, t1 + 0.05, { opacity: 0 });
+  [...d.children].forEach((i, k) => {
+    for (let t = t0; t < t1; t += 0.6) { at(i, t + k * 0.12, { transform: "translateY(0px)" }); at(i, t + k * 0.12 + 0.15, { transform: "translateY(-12px)" }, "ease-out"); at(i, t + k * 0.12 + 0.3, { transform: "translateY(0px)" }, "ease-in"); }
+  });
+  return d;
+}
+function toast(parent, html, x, y, t, rot = -3) {
+  const e = el(`<div class="toast ab" data-b="rotate(${rot}deg)" style="left:${x}px;top:${y}px;font-size:46px;padding:28px 38px">${html}</div>`, parent);
+  pop(e, t, false); sfx(t, "ding"); return e;
+}
+function endcard(t, warn) {
+  const p = panel("dark", t, 50, 60);
+  sun(p, 3400, -1160, -900, 0.45);
+  const f = el(`<img class="ab" src="${FIG}" style="width:420px;left:330px;top:300px">`, p); pop(f, t + 0.45);
+  const w = el(`<img class="ab" src="${WORT}" style="height:96px;left:50%;top:790px;margin-left:-216px">`, p); rise(w, t + 0.7, 60);
+  const h = el(`<p class="c h" style="top:950px;text-align:center;font-size:84px;color:#fff">Zahlungen fürs Studio.<br><span class="hl">Ganz entspannt.</span></p>`, p); rise(h, t + 0.9);
+  const b = el(`<div class="c" style="top:1200px;text-align:center"><span class="btn" style="font-size:52px;padding:28px 60px">Link in Bio</span></div>`, p); pop(b, t + 1.3);
+  const s = el(`<p class="c p" style="top:1370px;text-align:center;font-size:34px;font-weight:700">0 € Einrichtung · 10 % pro Zahlung · alles inklusive</p>`, p); rise(s, t + 1.5, 40);
+  if (warn) el(`<p class="fnote" style="right:72px;text-align:center;left:72px">${WARN}</p>`, p);
+  return p;
+}
+
+// Kompakte Endkarte für Werbe-Reels
+function adEnd(t, warn) {
+  const p = panel("dark", t, 50, 60); sun(p, 3400, -1160, -900, 0.45);
+  pop(el(`<img class="ab" src="${FIG}" style="width:360px;left:360px;top:330px">`, p), t + 0.4);
+  rise(el(`<img class="ab" src="${WORT}" style="height:90px;left:50%;top:740px;margin-left:-202px">`, p), t + 0.6, 60);
+  rise(el(`<p class="c h" style="top:890px;text-align:center;font-size:80px;color:#fff">${warn ? 'Zahlungslinks, Anzahlung &amp; <span class="hl">Raten über Klarna*</span> fürs Studio.' : 'Zahlungslinks &amp; Anzahlungen <span class="hl">fürs Tattoo-Studio.</span>'}</p>`, p), t + 0.8);
+  pop(el(`<div class="c" style="top:1180px;text-align:center"><span class="btn" style="font-size:50px;padding:28px 60px">Jetzt ansehen</span></div>`, p), t + 1.2);
+  rise(el(`<p class="c p" style="top:1350px;text-align:center;font-size:34px;font-weight:700">0 € Einrichtung · 10 % pro Zahlung · alles inklusive</p>`, p), t + 1.4, 40);
+  if (warn) el(`<p class="fnote" style="left:72px;right:72px;text-align:center">${WARN}</p>`, p);
+  return p;
+}
+
+// ---------- Die sechs Reels ----------
+const REELS = [
+// R1 · Der teuerste Satz in deinem Studio
+{ id: "2026-10-13", dauer: 17.5, cover: 1.6, build() {
+  const p1 = panel("", 0); sun(p1);
+  pop(el(`<span class="stk ab" data-b="rotate(-2.5deg)" style="left:72px;top:420px;font-size:40px">Studio-Wahrheit</span>`, p1), 0.15);
+  lines(p1, 540, [["Der teuerste", 150], ["Satz in", 150], ['<span class="out">deinem Studio:</span>', 132, "margin-top:14px"]], 0.35);
+  rise(el(`<img class="ab" src="${FIG}" style="width:460px;right:40px;top:1180px;transform:rotate(6deg)">`, p1), 1.0, 200);
+
+  const p2 = panel("", 3.0, 50, 20);
+  el(`<div class="chat"></div>`, p2);
+  el(`<div class="chathead"><div class="av">J</div><div>Jonas<small>Sleeve-Anfrage</small></div></div>`, p2);
+  typing(p2, 72, 420, 3.5, 4.2);
+  pop(el(`<div class="bub" style="left:72px;top:400px">Mega Entwurf! 😍 Ich meld mich, wenn ich das Geld zusammen hab.<span class="t">18:42</span></div>`, p2), 4.2);
+  rise(el(`<p class="c h" style="top:900px;font-size:110px">Spoiler:</p>`, p2), 5.6);
+  rise(el(`<p class="c h" style="top:1020px;font-size:110px"><span class="out">Da kommt nichts mehr.</span></p>`, p2), 6.0);
+  const st = el(`<div class="ab stamp" data-b="rotate(-9deg)" style="left:150px;top:1360px">NIE GEBUCHT</div>`, p2);
+  at(st, 0, { opacity: 0, transform: "scale(2.2) " + B(st) }); at(st, 7.1, { opacity: 0, transform: "scale(2.2) " + B(st) });
+  at(st, 7.3, { opacity: 1, transform: "scale(1) " + B(st) }, "ease-in"); sfx(7.3, "stamp");
+  rise(el(`<p class="c p" style="top:1620px;font-weight:800;font-size:42px">Sleeve · 1.800 € · einfach weg.</p>`, p2), 7.6, 40);
+
+  const p3 = panel("", 9.0, 80, 30); sun(p3, 3200, -1060, -400);
+  rise(el(`<p class="c h" style="top:300px;font-size:84px">Ab jetzt antwortest du so:</p>`, p3), 9.3);
+  pop(el(`<div class="bub me" style="right:72px;top:540px;max-width:860px">Musst du nicht. Hier ist dein Link, zahl so, wie es für dich passt 👇<div class="lnk"><img src="${FIG}">Ink Studio · Sleeve · 1.800 €</div><span class="t">18:44 ✓✓</span></div>`, p3), 9.8);
+  const ph = el(`<div class="ph" style="left:150px;top:1080px;width:780px;height:1000px"><div class="scr"><div class="notch"></div>
+    <p style="font:800 34px 'DM Sans'">Ink Studio · Sleeve</p><p class="lg" style="font-size:110px;margin:10px 0 30px">1.800 €</p>
+    <div class="opt">Karte <span>›</span></div><div class="opt k">Klarna <em>In Raten*</em></div><div class="opt">Apple Pay <span>›</span></div></div></div>`, p3);
+  rise(ph, 11.0, 500, 0.6);
+  const k = ph.querySelector(".k");
+  at(k, 12.0, { background: "#ffffff", transform: "rotate(0deg) scale(1)", boxShadow: "0 0 0 var(--ink)" });
+  at(k, 12.2, { background: "#fbb316", transform: "rotate(-1.5deg) scale(1.04)", boxShadow: "8px 8px 0 #1f3d5c" }, OUT); sfx(12.0, "tick");
+  toast(p3, "✓ Bezahlt · 1.800 €<small>Termin steht.</small>", 120, 1640, 12.9);
+  rise(el(`<p class="fnote" style="bottom:auto;top:1010px;right:72px;font-size:24px">${WARN}</p>`, p3), 11.0, 20);
+  endcard(14.6, true);
+}},
+
+// R2 · Zahlungslink in unter 10 Sekunden
+{ id: "2026-10-15", dauer: 17, cover: 1.4, build() {
+  const p1 = panel("", 0); sun(p1);
+  pop(el(`<span class="stk ab" data-b="rotate(-2.5deg)" style="left:72px;top:440px;font-size:40px">Live-Demo</span>`, p1), 0.15);
+  const hb = lines(p1, 560, [["Zahlungslink in", 130], ['<span class="out">unter 10</span>', 200, "margin-top:20px"], ['<span class="out">Sekunden.</span>', 200, "margin-top:10px"]], 0.35, 0.25);
+  rise(el(`<p class="p" style="margin-top:50px;font-size:44px;font-weight:700">Stoppuhr läuft. Ohne Schnitt.</p>`, hb), 1.3, 40);
+
+  const p2 = panel("", 2.8, 50, 50); sun(p2, 3200, -1060, -400, .6);
+  const tm = el(`<div class="timer"><i></i><span>0,0 s</span></div>`, p2); pop(tm, 3.2);
+  const T0 = 3.4, T1 = 8.0;
+  hooks.push((t) => { const v = t < T0 ? 0 : Math.min(t, T1) - T0; tm.querySelector("span").textContent = v.toFixed(1).replace(".", ",") + " s"; });
+  at(tm.querySelector("i"), T1, { opacity: 1 }); at(tm.querySelector("i"), T1 + 0.01, { opacity: 0.25 });
+  const ph = el(`<div class="ph" style="left:110px;top:400px;width:860px;height:1060px"><div class="scr" style="padding:44px 44px"><div class="notch"></div>
+    <p class="rd" style="font-size:56px;margin-bottom:34px">Neuer Zahlungslink</p>
+    <div class="fld"><small>Betrag</small><span class="a"></span></div>
+    <div class="fld"><small>Kunde</small><span class="b"></span></div>
+    <div class="fld"><small>Projekt</small><span class="c2"></span></div>
+    <div class="pbtn" style="margin-top:36px">Link erstellen</div></div></div>`, p2);
+  rise(ph, 3.0, 400, 0.5);
+  type(ph.querySelector(".a"), "1.500 €", 3.6, 4.3);
+  type(ph.querySelector(".b"), "Lena", 4.6, 5.0);
+  type(ph.querySelector(".c2"), "Rückenstück, Sitzung 1", 5.3, 6.4);
+  press(ph.querySelector(".pbtn"), 6.8);
+  const sent = el(`<div class="bub me" style="right:72px;top:1240px;max-width:860px;font-size:42px">Hi Lena, hier ist dein Zahlungslink fürs Rückenstück 👇<div class="lnk"><img src="${FIG}">Ink Studio · 1.500 €</div><span class="t">Gesendet ✓✓</span></div>`, p2);
+  pop(sent, 7.4);
+  toast(p2, `Link raus in 4,6 s`, 120, 250, 8.0, -2);
+
+  const p3 = panel("paper", 9.6, 50, 70);
+  rise(el(`<p class="c h" style="top:300px;font-size:84px">Und bei Lena:</p>`, p3), 9.9);
+  const ph2 = el(`<div class="ph" style="left:150px;top:470px;width:780px;height:900px"><div class="scr"><div class="notch"></div>
+    <p style="font:800 34px 'DM Sans'">Ink Studio · Rückenstück</p><p class="lg" style="font-size:110px;margin:10px 0 30px">1.500 €</p>
+    <div class="opt">Karte <span>›</span></div><div class="opt">Apple Pay <span>›</span></div><div class="opt k">Klarna <span>›</span></div></div></div>`, p3);
+  rise(ph2, 10.1, 400, 0.5);
+  const k = ph2.querySelector(".k");
+  at(k, 11.0, { background: "#ffffff", transform: "rotate(0deg) scale(1)", boxShadow: "0 0 0 var(--ink)" });
+  at(k, 11.2, { background: "#fbb316", transform: "rotate(-1.5deg) scale(1.04)", boxShadow: "8px 8px 0 #1f3d5c" }, OUT); sfx(11.0, "tick");
+  toast(p3, "✓ Zahlung eingegangen<small>An dich: 1.350 € (nach 10 %, alles inklusive)</small>", 100, 1300, 11.9);
+  endcard(14.0, false);
+}},
+
+// R3 · POV: „Geht das auch in Raten?“
+{ id: "2026-10-17", dauer: 17.5, cover: 1.5, build() {
+  const p1 = panel("", 0); sun(p1);
+  pop(el(`<span class="stk ab" data-b="rotate(-2.5deg)" style="left:72px;top:400px;font-size:44px">POV</span>`, p1), 0.15);
+  rise(el(`<h1 class="c h" style="top:520px;font-size:100px">Kunde fragt nach dem Entwurf:</h1>`, p1), 0.35);
+  pop(el(`<div class="bub" style="left:72px;top:860px;font-size:64px;padding:40px 50px">Geht das auch in Raten? 🙏</div>`, p1), 1.0);
+  rise(el(`<img class="ab" src="${FIG}" style="width:440px;right:50px;top:1180px;transform:scaleX(-1) rotate(-6deg)">`, p1), 1.3, 200);
+
+  const p2 = panel("dark", 3.4, 20, 50);
+  pop(el(`<span class="stk ab" data-b="rotate(-2.5deg)" style="left:72px;top:330px;font-size:48px">Früher</span>`, p2), 3.7);
+  const qs = ["„Ähm … PayPal Freunde?“", "„Bar, in drei Teilen?“", "„Meld dich, wenn du's zusammen hast.“"];
+  qs.forEach((q, i) => {
+    const e = el(`<div class="quote no ab" data-b="rotate(${i % 2 ? 1.5 : -1.5}deg)" style="left:72px;right:72px;top:${520 + i * 290}px;font-size:54px;padding:36px 44px">${q}<i class="strike" style="right:-14px"></i></div>`, p2);
+    pop(e, 4.1 + i * 0.75);
+    const s = e.querySelector(".strike");
+    at(s, 0, { transform: "scaleX(0)" }); at(s, 6.9 + i * 0.25, { transform: "scaleX(0)" }); at(s, 7.15 + i * 0.25, { transform: "scaleX(1)" }, OUT);
+    sfx(6.9 + i * 0.25, "swipe");
+  });
+  rise(el(`<p class="c h" style="top:1420px;font-size:80px;color:#fff">Unangenehm für beide.</p>`, p2), 7.8);
+
+  const p3 = panel("", 9.2, 80, 50); sun(p3, 3200, -1060, -400);
+  pop(el(`<span class="stk ab" data-b="rotate(-2.5deg)" style="left:72px;top:330px;font-size:48px">Heute</span>`, p3), 9.5);
+  pop(el(`<div class="bub me" style="right:72px;top:480px;max-width:880px;font-size:50px">Klar, schick ich dir als Link 👇<div class="lnk"><img src="${FIG}">Ink Studio · 2.400 €</div><span class="t">✓✓</span></div>`, p3), 9.9);
+  const ph = el(`<div class="ph" style="left:150px;top:950px;width:780px;height:760px"><div class="scr"><div class="notch"></div>
+    <p style="font:800 34px 'DM Sans'">Ink Studio · Rückenstück</p><p class="lg" style="font-size:110px;margin:10px 0 30px">2.400 €</p>
+    <div class="opt">Karte <span>›</span></div><div class="opt k">Klarna <em>In Raten*</em></div></div></div>`, p3);
+  rise(ph, 10.8, 500, 0.6);
+  const k = ph.querySelector(".k");
+  at(k, 11.7, { background: "#ffffff", transform: "rotate(0deg) scale(1)", boxShadow: "0 0 0 var(--ink)" });
+  at(k, 11.9, { background: "#fbb316", transform: "rotate(-1.5deg) scale(1.04)", boxShadow: "8px 8px 0 #1f3d5c" }, OUT); sfx(11.7, "tick");
+  toast(p3, "✓ Bezahlt<small>Du bekommst den Betrag. Die Raten laufen über den Anbieter.</small>", 90, 1560, 12.5);
+  rise(el(`<p class="fnote" style="bottom:auto;top:860px;right:72px;font-size:24px">${WARN}</p>`, p3), 10.8, 20);
+  endcard(14.6, true);
+}},
+
+// R4 · 3.000 € rein, 2.700 € bei dir
+{ id: "2026-10-20", dauer: 16, cover: 1.4, build() {
+  const p1 = panel("", 0); sun(p1);
+  pop(el(`<span class="stk ab" data-b="rotate(-2.5deg)" style="left:72px;top:420px;font-size:40px">Provisionsmodell</span>`, p1), 0.15);
+  const hb = lines(p1, 560, [['<span class="out">3.000 €</span>', 200], ["rein.", 140], ['<span class="out">2.700 €</span>', 200, "margin-top:30px"], ["bei dir.", 140]], 0.35, 0.25);
+  rise(el(`<p class="p" style="margin-top:50px;font-size:46px;font-weight:700">Und wohin gehen die 300 €? 👇</p>`, hb), 1.5, 40);
+
+  const p2 = panel("paper", 3.0, 50, 30);
+  rise(el(`<p class="c rd" style="top:300px;font-size:46px">Kunde zahlt</p>`, p2), 3.3, 40);
+  const top = el(`<div class="card ab" style="left:72px;right:72px;top:380px;padding:40px 56px"><span class="big" style="font-size:190px">3.000 €</span></div>`, p2); pop(top, 3.4);
+  const ar = el(`<p class="ab lg" style="left:500px;top:690px;font-size:120px;color:var(--or)">↓</p>`, p2); rise(ar, 4.2, -60);
+  const you = el(`<div class="card ab" data-b="rotate(-1.5deg)" style="left:72px;right:72px;top:860px;padding:40px 56px;background:var(--ink);color:var(--y)"><div class="rd" style="font-size:40px;color:#fff;margin-bottom:18px">Auf dein Konto</div><span class="big" style="font-size:190px">2.700 €</span></div>`, p2); pop(you, 4.6);
+  const fee = el(`<div class="badge" data-b="rotate(6deg)" style="right:60px;top:1300px;font-size:34px"><b style="font-size:84px">300 €</b>10 % Tattoofin</div>`, p2); pop(fee, 5.4);
+  rise(el(`<p class="c rd" style="top:1360px;font-size:46px;right:460px">Da ist alles drin:</p>`, p2), 6.2, 30);
+  ["Stripe-Gebühren", "Klarna", "Umsatzsteuer", "Einrichtung", "Betreuung"].forEach((c, i) => {
+    const e = el(`<span class="chip ab" data-b="rotate(${i % 2 ? 2 : -2}deg)" style="left:${[72, 500, 72, 470, 72][i]}px;top:${[1480, 1480, 1600, 1600, 1720][i]}px;font-size:42px">${c}</span>`, p2);
+    pop(e, 6.6 + i * 0.3);
+  });
+
+  const p3 = panel("dark", 10.0, 50, 50); sun(p3, 3200, -1060, -500, .35);
+  rise(el(`<p class="c h" style="top:420px;font-size:120px;color:#fff">Keine Fixkosten. <span class="hl">Kein Risiko.</span></p>`, p3), 10.3);
+  ["0 € Einrichtung", "Keine Grundgebühr", "Monatlich kündbar"].forEach((c, i) => pop(el(`<span class="chip ab" data-b="rotate(${i % 2 ? 2 : -2}deg)" style="left:72px;top:${860 + i * 140}px;font-size:52px">✓ ${c}</span>`, p3), 10.9 + i * 0.35));
+  endcard(13.2, false);
+}},
+
+// R5 · Anzahlung per QR an der Theke
+{ id: "2026-10-22", dauer: 17, cover: 1.4, build() {
+  const p1 = panel("", 0); sun(p1);
+  pop(el(`<span class="stk ab" data-b="rotate(-2.5deg)" style="left:72px;top:420px;font-size:40px">An der Theke</span>`, p1), 0.15);
+  lines(p1, 560, [["Anzahlung?", 150], ['<span class="out">Einfach</span>', 150, "margin-top:20px"], ['<span class="out">scannen lassen.</span>', 130, "margin-top:10px"]], 0.35);
+  rise(el(`<img class="ab" src="${FIG}" style="width:440px;right:40px;top:1200px;transform:rotate(6deg)">`, p1), 1.1, 200);
+
+  const p2 = panel("paper", 3.0, 50, 50);
+  const sign = el(`<div class="qrsign" data-b="rotate(-2deg)" style="left:190px;top:330px;width:700px"><img src="${FIG}" style="width:120px"><p class="rd" style="font-size:46px;margin:10px 0 24px">Anzahlung hier zahlen</p><div class="qr"></div><p style="font:700 28px 'DM Sans';margin-top:22px;color:var(--muted)">Karte · Apple Pay · Google Pay · Klarna</p></div>`, p2);
+  new QRCode(sign.querySelector(".qr"), { text: "https://tattoofin.de", width: 420, height: 420, colorDark: "#1f3d5c", colorLight: "#fffdf6" });
+  pop(sign, 3.4);
+  const scan = el(`<div class="scan" style="left:250px;right:250px;top:560px"></div>`, p2);
+  at(scan, 0, { opacity: 0, transform: "translateY(0px)" }); at(scan, 4.3, { opacity: 0, transform: "translateY(0px)" });
+  at(scan, 4.4, { opacity: 1, transform: "translateY(0px)" }); at(scan, 5.0, { opacity: 1, transform: "translateY(420px)" }, INOUT);
+  at(scan, 5.6, { opacity: 1, transform: "translateY(0px)" }, INOUT); at(scan, 5.7, { opacity: 0, transform: "translateY(0px)" }); sfx(4.4, "scan");
+  const ph = el(`<div class="ph" style="left:150px;top:700px;width:780px;height:1180px"><div class="scr"><div class="notch"></div>
+    <p style="font:800 34px 'DM Sans'">Ink Studio Bamberg</p><p style="font:500 30px 'DM Sans';color:var(--muted);margin-top:8px">Anzahlung · Rückenstück</p>
+    <p class="lg" style="font-size:120px;margin:10px 0 26px">150 €</p>
+    <div class="terms"><b>Anzahlungsbedingungen</b><br>Wird mit dem Tattoo verrechnet. Bei Absage unter 48 Stunden oder Nichterscheinen behält das Studio sie ein.
+      <div style="display:flex;gap:16px;align-items:center;margin-top:20px;font-weight:800"><span class="chk"><b class="hk" style="opacity:0">✓</b></span>Einverstanden</div></div>
+    <div class="pbtn" style="margin-top:30px">Weiter zur Zahlung</div></div></div>`, p2);
+  rise(ph, 5.9, 900, 0.6);
+  const chk = ph.querySelector(".chk"), hk = ph.querySelector(".hk");
+  at(hk, 7.4, { opacity: 0 }); at(hk, 7.5, { opacity: 1 }); at(chk, 7.4, { background: "#ffffff" }); at(chk, 7.5, { background: "#fbb316" }); press(chk, 7.4);
+  press(ph.querySelector(".pbtn"), 8.3);
+  toast(p2, "✓ Anzahlung bezahlt<small>Bedingungen bestätigt · 14:32 Uhr</small>", 110, 1640, 9.0);
+
+  const p3 = panel("dark", 10.8, 50, 60); sun(p3, 3200, -1060, -500, .35);
+  rise(el(`<p class="c h" style="top:480px;font-size:150px;color:#fff">No-Show?</p>`, p3), 11.1);
+  rise(el(`<p class="c h" style="top:650px;font-size:150px"><span class="hl">Geregelt.</span></p>`, p3), 11.4);
+  rise(el(`<p class="c p" style="top:900px;font-size:46px">Die Zustimmung zu deinen Bedingungen wird mit Zeitpunkt gespeichert. Keine Diskussion mehr.</p>`, p3), 11.8, 40);
+  endcard(14.2, false);
+}},
+
+// R6 · 3 Sätze, die du nie wieder sagen musst
+{ id: "2026-10-24", dauer: 17.5, cover: 1.4, build() {
+  const p1 = panel("dark", 0); sun(p1, 3200, -1060, -640, .35);
+  lines(p1, 480, [['<span class="hl">3 Sätze,</span>', 240], ["die du nie", 130, "color:#fff;margin-top:20px"], ["wieder sagen", 130, "color:#fff"], ["musst.", 130, "color:#fff"]], 0.2, 0.25);
+  rise(el(`<img class="ab" src="${FIG}" style="width:400px;right:50px;top:1230px">`, p1), 1.0, 200);
+
+  const p2 = panel("", 3.0, 50, 50); sun(p2, 3200, -1060, -400, .6);
+  const qs = ["„Bar oder Überweisung, was anderes geht nicht.“", "„Hast du die Anzahlung schon überwiesen?“", "„Ratenzahlung bieten wir leider nicht an.“"];
+  qs.forEach((q, i) => {
+    const t = 3.4 + i * 2.1;
+    const n = el(`<div class="num ab" style="left:72px;top:${290 + i * 450}px;font-size:130px">0${i + 1}</div>`, p2); pop(n, t, false);
+    const e = el(`<div class="quote ab" data-b="rotate(${i % 2 ? 1.2 : -1.2}deg)" style="left:72px;right:72px;top:${420 + i * 450}px;font-size:58px;padding:38px 46px">${q}<i class="strike" style="right:-14px"></i></div>`, p2);
+    pop(e, t + 0.15);
+    const s = e.querySelector(".strike");
+    at(s, 0, { transform: "scaleX(0)" }); at(s, t + 1.4, { transform: "scaleX(0)" }); at(s, t + 1.65, { transform: "scaleX(1)" }, OUT);
+    at(e, t + 1.4, { background: "#ffffff" }); at(e, t + 1.6, { background: "#ffe1dc" }); sfx(t + 1.4, "swipe");
+  });
+  el(`<p class="fnote" style="bottom:300px;right:72px">${WARN}</p>`, p2);
+
+  const p3 = panel("", 10.2, 50, 50); sun(p3);
+  rise(el(`<p class="c h" style="top:430px;font-size:120px">Ab jetzt:</p>`, p3), 10.5);
+  rise(el(`<p class="c h" style="top:600px;font-size:170px"><span class="out">Link raus.</span></p>`, p3), 10.8);
+  rise(el(`<p class="c h" style="top:820px;font-size:170px"><span class="out y">Geld rein.</span></p>`, p3), 11.2);
+  toast(p3, "✓ Zahlung eingegangen", 120, 1120, 12.0);
+  endcard(14.4, true);
+}},
+// ---------- Werbe-Reels (9 Sekunden) für creatives/2026-10-13/c1–c4 ----------
+{ id: "creatives/2026-10-13/c1", dauer: 9.5, cover: 3.2, build() {
+  const p1 = panel("", 0); sun(p1);
+  pop(el(`<span class="stk ab" data-b="rotate(-2.5deg)" style="left:72px;top:300px;font-size:40px">Für Tattoo-Studios</span>`, p1), 0.1);
+  pop(el(`<div class="bub" style="left:72px;top:440px;font-size:62px;padding:40px 50px">Kann ich das auch in Raten zahlen? 🙏</div>`, p1), 0.4);
+  lines(p1, 720, [["Ab jetzt:", 140], ['<span class="out y">Ja.*</span>', 200]], 1.4, 0.4);
+  const ph = el(`<div class="ph" style="left:330px;top:1200px;width:680px;height:640px"><div class="scr"><div class="notch"></div>
+    <p style="font:800 30px 'DM Sans'">Ink Studio · Sleeve</p><p class="lg" style="font-size:96px;margin:8px 0 24px">1.500 €</p>
+    <div class="opt">Karte <span>›</span></div><div class="opt k">Klarna <em>In Raten*</em></div></div></div>`, p1);
+  rise(ph, 2.4, 600, 0.6);
+  const k = ph.querySelector(".k");
+  at(k, 3.3, { background: "#ffffff", transform: "rotate(0deg) scale(1)", boxShadow: "0 0 0 var(--ink)" });
+  at(k, 3.5, { background: "#fbb316", transform: "rotate(-1.5deg) scale(1.04)", boxShadow: "8px 8px 0 #1f3d5c" }, OUT); sfx(3.3, "tick");
+  toast(p1, "✓ Bezahlt · 1.500 €", 72, 1600, 4.1);
+  rise(el(`<p class="fnote" style="bottom:auto;top:1095px;left:72px;right:72px;font-size:24px">${WARN}</p>`, p1), 2.4, 20);
+  adEnd(5.6, true);
+}},
+{ id: "creatives/2026-10-13/c2", dauer: 9.5, cover: 3.0, build() {
+  const p1 = panel("dark", 0); sun(p1, 3200, -1060, -640, .3);
+  pop(el(`<span class="stk ab" data-b="rotate(-2.5deg)" style="left:72px;top:300px;font-size:40px">Studio-Mathe</span>`, p1), 0.1);
+  lines(p1, 440, [["Zwei No-Shows", 120, "color:#fff"], ["im Monat", 120, "color:#fff"], ["kosten dich", 120, "color:#fff"]], 0.3, 0.3);
+  const card = el(`<div class="card ab" data-b="rotate(-2deg)" style="left:72px;top:900px;padding:50px 60px;background:var(--y)"><span class="big cnt" style="font-size:210px">0 €</span></div>`, p1);
+  pop(card, 1.4);
+  const cnt = card.querySelector(".cnt");
+  hooks.push((t) => { const v = Math.round(12480 * Math.min(1, Math.max(0, (t - 1.6) / 1.4)) ** 0.6); cnt.textContent = v.toLocaleString("de-DE") + " €"; });
+  for (let t = 1.6; t < 3.0; t += 0.1) sfx(t, "tick");
+  rise(el(`<p class="c h" style="top:1230px;font-size:110px;color:#fff">im Jahr.*</p>`, p1), 3.1);
+  toast(p1, "✓ Anzahlung bezahlt<small>Bedingungen bestätigt · No-Show? Geregelt.</small>", 72, 1400, 3.9);
+  el(`<p class="fnote" style="left:72px;right:72px">*Beispiel: 4-Stunden-Termin à 130 € pro Stunde, 2 Ausfälle im Monat.</p>`, p1);
+  adEnd(5.6, false);
+}},
+{ id: "creatives/2026-10-13/c3", dauer: 9.5, cover: 2.6, build() {
+  const p1 = panel("", 0); sun(p1, 3200, -1060, -640, .6);
+  pop(el(`<span class="stk ab" data-b="rotate(-2.5deg)" style="left:72px;top:300px;font-size:40px">Provisionsmodell</span>`, p1), 0.1);
+  rise(el(`<p class="c h" style="top:430px;font-size:100px">Kunde zahlt</p>`, p1), 0.3);
+  pop(el(`<div class="card ab" style="left:72px;right:72px;top:560px;padding:40px 56px"><span class="big" style="font-size:200px">3.000 €</span></div>`, p1), 0.6);
+  rise(el(`<p class="c h" style="top:900px;font-size:100px">Du bekommst</p>`, p1), 1.4);
+  pop(el(`<div class="card ab" data-b="rotate(-1.5deg)" style="left:72px;right:72px;top:1030px;padding:40px 56px;background:var(--ink)"><span class="big" style="font-size:200px;color:var(--y)">2.700 €</span></div>`, p1), 1.8);
+  pop(el(`<div class="badge" data-b="rotate(7deg)" style="right:40px;top:960px;font-size:28px"><b style="font-size:64px">10 %</b>alles inklusive</div>`, p1), 2.5);
+  ["0 € Einrichtung", "Keine Grundgebühr", "Monatlich kündbar"].forEach((c, i) => pop(el(`<span class="chip ab" data-b="rotate(${i % 2 ? 2 : -2}deg)" style="left:${[72, 500, 72][i]}px;top:${[1400, 1400, 1510][i]}px">${c}</span>`, p1), 3.2 + i * 0.3));
+  adEnd(5.6, false);
+}},
+{ id: "creatives/2026-10-13/c4", dauer: 9.5, cover: 3.6, build() {
+  const p1 = panel("", 0); sun(p1);
+  pop(el(`<span class="stk ab" data-b="rotate(-2.5deg)" style="left:72px;top:300px;font-size:40px">Neu für Tattoo-Studios</span>`, p1), 0.1);
+  lines(p1, 430, [["Anzahlung per Link.", 110], ['<span class="out">Bedingungen</span>', 130, "margin-top:12px"], ['<span class="out">inklusive.</span>', 130]], 0.3, 0.3);
+  const ph = el(`<div class="ph" style="left:150px;top:960px;width:780px;height:900px"><div class="scr"><div class="notch"></div>
+    <p style="font:800 32px 'DM Sans'">Ink Studio Bamberg · Anzahlung</p>
+    <p class="lg" style="font-size:110px;margin:8px 0 22px">150 €</p>
+    <div class="terms"><b>Anzahlungsbedingungen</b><br>Wird mit dem Tattoo verrechnet. Bei Absage unter 48 Stunden oder Nichterscheinen behält das Studio sie ein.
+      <div style="display:flex;gap:16px;align-items:center;margin-top:20px;font-weight:800"><span class="chk"><b class="hk" style="opacity:0">✓</b></span>Einverstanden</div></div></div></div>`, p1);
+  rise(ph, 1.4, 700, 0.6);
+  const chk = ph.querySelector(".chk"), hk = ph.querySelector(".hk");
+  at(hk, 2.9, { opacity: 0 }); at(hk, 3.0, { opacity: 1 }); at(chk, 2.9, { background: "#ffffff" }); at(chk, 3.0, { background: "#fbb316" }); press(chk, 2.9);
+  toast(p1, "✓ Anzahlung bezahlt<small>Bedingungen bestätigt · 14:32 Uhr</small>", 72, 1560, 3.8);
+  adEnd(5.6, false);
+}},
+];
+window.REELS = REELS;
+
+// ---------- Aufbau & Seek ----------
+function build(r) {
+  stage.innerHTML = ""; tracks = new Map(); hooks = []; SFX = []; DUR = r.dauer;
+  r.build();
+  for (const [e, list] of tracks) {
+    list.sort((a, b) => a.t - b.t);
+    const keys = [...new Set(list.flatMap((k) => Object.keys(k.props)))];
+    const first = {}; for (const k of keys) first[k] = list.find((x) => k in x.props).props[k];
+    let cur = { ...first }; const frames = [];
+    list.forEach((k, i) => {
+      cur = { ...cur, ...k.props };
+      if (k.ease && frames.length) frames[frames.length - 1].easing = k.ease;
+      frames.push({ ...cur, offset: Math.min(1, Math.max(0, k.t / DUR)) });
+    });
+    if (frames[0].offset > 0) frames.unshift({ ...frames[0], offset: 0, easing: "linear" });
+    if (frames[frames.length - 1].offset < 1) frames.push({ ...cur, offset: 1 });
+    e.animate(frames, { duration: DUR * 1000, fill: "both" }).pause();
+  }
+  r.sfx = SFX.sort((a, b) => a[0] - b[0]);
+}
+window.seek = (ms) => {
+  document.getAnimations().forEach((a) => { a.pause(); a.currentTime = Math.min(ms, DUR * 1000 - 1); });
+  hooks.forEach((h) => h(ms / 1000));
+};
+window.load = (id) => { const r = REELS.find((x) => x.id === id) || REELS[0]; build(r); window.seek(0); return { id: r.id, dauer: r.dauer, cover: r.cover, sfx: r.sfx }; };
+window.load(location.hash.slice(1));
+// Vorschau im Browser: ?play abspielen
+if (location.search.includes("play")) { const t0 = performance.now(); (function f() { window.seek((performance.now() - t0) % (DUR * 1000)); requestAnimationFrame(f); })(); }
+</script>
+</body></html>

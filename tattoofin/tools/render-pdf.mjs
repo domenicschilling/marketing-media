@@ -40,12 +40,14 @@ const DOCS = [
   "studios/16-onboarding-fragebogen.html",
   "studios/17-postkarte.html",
   "studios/18-paket-aufkleber.html",
+  "studios/19-muster-anzahlungsbedingungen.html",
   "kunden/20-fensteraufkleber.html",
   "kunden/21-flyer-a6.html",
   "kunden/22-thekenaufsteller-a5.html",
   "kunden/23-kundeninfo.html",
   "kunden/24-social-kit.html",
   "social/facebook/30-facebook-seite.html",
+  "social/instagram/31-instagram-strategie.html",
 ];
 
 const q = new URLSearchParams(params);
