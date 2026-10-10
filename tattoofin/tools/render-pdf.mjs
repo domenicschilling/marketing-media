@@ -45,6 +45,7 @@ const DOCS = [
   "kunden/22-thekenaufsteller-a5.html",
   "kunden/23-kundeninfo.html",
   "kunden/24-social-kit.html",
+  "social/facebook/30-facebook-seite.html",
 ];
 
 const q = new URLSearchParams(params);
