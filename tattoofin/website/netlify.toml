@@ -56,3 +56,8 @@
   to = "https://tattoofin.de/:splat"
   status = 301
   force = true
+# Kurzlink für den Instagram-Lead-Magnet („ANZAHLUNG“)
+[[redirects]]
+  from = "/anzahlung"
+  to = "/muster-anzahlungsbedingungen.pdf"
+  status = 302

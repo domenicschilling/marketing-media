@@ -4,7 +4,7 @@
 //           Musik und Soundeffekte erzeugt tools/reel-sound.py (selbst synthetisiert, keine Lizenzfragen)
 // Aufruf (im Ordner tattoofin/):
 //   node tools/render-instagram.mjs            alles
-//   node tools/render-instagram.mjs bilder     nur Bilder
+//   node tools/render-instagram.mjs bilder [start|statisch]  nur Bilder (optional nur eine Vorlage)
 //   node tools/render-instagram.mjs reels [id] nur Reels (optional ein einzelnes, z. B. 2026-10-13)
 //   node tools/render-instagram.mjs vorschau   nur Kontaktbögen der Reels (je 8 Einzelbilder) nach social/instagram/export/
 import { createRequire } from "module";
@@ -27,14 +27,17 @@ const browser = await chromium.launch();
 
 async function bilder() {
   const page = await browser.newPage({ viewport: { width: 1200, height: 2000 }, deviceScaleFactor: 1 });
-  await page.goto("file://" + path.join(root, "social/instagram/statisch.html"));
-  await page.evaluate(() => document.fonts.ready);
-  await page.waitForTimeout(500);
-  for (const el of await page.$$("[data-out]")) {
-    const ziel = path.join(root, await el.getAttribute("data-out"));
-    fs.mkdirSync(path.dirname(ziel), { recursive: true });
-    await el.screenshot({ path: ziel, type: "jpeg", quality: 90 });
-    console.log("ok:", path.relative(root, ziel));
+  for (const datei of ["statisch.html", "start.html", "wochen.html"]) {
+    if (nur && !datei.startsWith(nur)) continue;
+    await page.goto("file://" + path.join(root, "social/instagram", datei));
+    await page.evaluate(() => document.fonts.ready);
+    await page.waitForTimeout(500);
+    for (const el of await page.$$("[data-out]")) {
+      const ziel = path.join(root, await el.getAttribute("data-out"));
+      fs.mkdirSync(path.dirname(ziel), { recursive: true });
+      await el.screenshot({ path: ziel, type: "jpeg", quality: 90 });
+      console.log("ok:", path.relative(root, ziel));
+    }
   }
   await page.close();
 }
