@@ -96,7 +96,8 @@ for (const w of WERBEMITTEL) {
   const [, datum, id] = w.ordner.split("/");
   const quelle = path.join(root, w.ordner);
   const dir = path.join(content, "creatives", datum, id);
-  const files = { square: "square.jpg", feed: "feed.jpg", story: "story.jpg", reel: "reel.mp4", cover: "cover.jpg" };
+  // Nur vorhandene Dateien: Produkt-Statics haben kein Reel, der Verkaufs-Spot hat nur Reel + Cover
+  const files = Object.fromEntries(Object.entries({ square: "square.jpg", feed: "feed.jpg", story: "story.jpg", reel: "reel.mp4", cover: "cover.jpg" }).filter(([, f]) => fs.existsSync(path.join(quelle, f))));
   for (const f of Object.values(files)) copy(path.join(quelle, f), path.join(dir, f));
   fs.writeFileSync(path.join(dir, "creative.json"), JSON.stringify({
     id: `${datum}/${id}`, date: datum, brand: "tattoofin", angle: w.name, hook: w.titel, theme: "light",
@@ -104,6 +105,7 @@ for (const w of WERBEMITTEL) {
     specialAdCategory: w.sonderkategorie ? "FINANCIAL_PRODUCTS_SERVICES" : null,
     why: w.sonderkategorie ? "Erwähnt Raten: als Sonderkategorie Finanzprodukte anlegen." : "Erwähnt keine Raten.",
     files,
+    ...(files.reel && !files.feed ? { defaultFormat: "video" } : {}),
   }, null, 2) + "\n");
   console.log(`✓ Werbemittel ${datum}/${id} (${w.name})`);
 }
@@ -114,7 +116,7 @@ for (const w of WERBEMITTEL) {
     const [, datum, id] = w.ordner.split("/");
     const k = `${datum}/${id}`;
     return `<article id="${datum}-${id}"><header><b>${k}</b><span>${esc(w.name)}</span>${w.sonderkategorie ? '<em>Sonderkategorie Finanzen</em>' : ""}</header>
-<div class="m"><img loading="lazy" src="${k}/feed.jpg" alt="Feed 4:5"><img loading="lazy" src="${k}/square.jpg" alt="Quadrat 1:1"><img loading="lazy" src="${k}/story.jpg" alt="Story 9:16"><video src="${k}/reel.mp4" poster="${k}/cover.jpg" controls playsinline preload="none"></video></div>
+<div class="m">${["feed", "square", "story"].filter((f) => fs.existsSync(path.join(root, w.ordner, f + ".jpg"))).map((f) => `<img loading="lazy" src="${k}/${f}.jpg" alt="${f}">`).join("")}${fs.existsSync(path.join(root, w.ordner, "reel.mp4")) ? `<video src="${k}/reel.mp4" poster="${k}/cover.jpg" controls playsinline preload="none"></video>` : ""}</div>
 <dl><dt>Primärtext</dt><dd>${esc(w.primaer).replace(/\n/g, "<br>")}</dd><dt>Überschrift</dt><dd>${esc(w.titel)}</dd><dt>Beschreibung</dt><dd>${esc(w.beschreibung)}</dd><dt>Button</dt><dd>${esc(w.button)}</dd></dl></article>`;
   }).join("\n");
   fs.writeFileSync(path.join(content, "creatives/index.html"), `<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">

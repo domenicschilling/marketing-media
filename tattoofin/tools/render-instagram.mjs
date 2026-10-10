@@ -27,7 +27,7 @@ const browser = await chromium.launch();
 
 async function bilder() {
   const page = await browser.newPage({ viewport: { width: 1200, height: 2000 }, deviceScaleFactor: 1 });
-  for (const datei of ["statisch.html", "start.html", "wochen.html", "werbemittel.html"]) {
+  for (const datei of ["statisch.html", "start.html", "wochen.html", "werbemittel.html", "produkt.html"]) {
     if (nur && !datei.startsWith(nur)) continue;
     await page.goto("file://" + path.join(root, "social/instagram", datei));
     await page.evaluate(() => document.fonts.ready);

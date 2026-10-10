@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><title>Tattoofin · Verkaufs-Spot</title>
+<link rel="stylesheet" href="insta.css">
+<style>
+html,body{width:1080px;height:1920px;overflow:hidden;background:#000}
+#stage{position:absolute;left:0;top:0;width:1080px;height:1920px;overflow:hidden}
+.pn{position:absolute!important;left:0;top:0;width:1080px;height:1920px}
+.ab{position:absolute}
+.c{position:absolute;left:72px;right:72px}
+.stamp{font:400 120px/1 'Luckiest Guy';color:var(--or);border:14px solid var(--or);border-radius:26px;padding:26px 40px 10px;letter-spacing:.04em;background:rgba(255,253,246,.85)}
+.strike{position:absolute;left:-14px;top:50%;height:16px;border-radius:9px;background:var(--or);transform-origin:left center}
+.chat{position:absolute;left:0;right:0;top:0;bottom:0;background:#efe7dc;background-image:radial-gradient(rgba(31,61,92,.06) 2.4px,transparent 2.8px);background-size:30px 30px}
+.chathead{position:absolute;left:0;right:0;top:0;height:250px;background:var(--ink);color:#fff;display:flex;align-items:flex-end;gap:26px;padding:0 60px 34px;font:800 40px 'DM Sans'}
+.chathead .av{width:96px;height:96px;border-radius:50%;background:var(--y);border:5px solid #0c1a29;display:grid;place-items:center;font:400 46px 'Titan One';color:var(--ink)}
+.chathead small{display:block;font:500 26px 'DM Sans';opacity:.75}
+.bub{position:absolute;max-width:800px;font:500 46px/1.38 'DM Sans';color:#10261c;background:#fff;border:6px solid var(--ink);border-radius:40px 40px 40px 12px;padding:30px 38px;box-shadow:9px 9px 0 var(--ink)}
+.bub.me{background:var(--wa);border-radius:40px 40px 12px 40px}
+.bub .t{display:block;text-align:right;font-size:24px;color:#5d7a68;margin-top:6px}
+.bub .lnk{display:flex;align-items:center;gap:18px;margin-top:18px;background:#fff;border:5px solid var(--ink);border-radius:24px;padding:18px 22px;font:800 34px 'DM Sans';color:var(--ink)}
+.bub .lnk img{width:70px}
+.typing{position:absolute;background:#fff;border:6px solid var(--ink);border-radius:40px 40px 40px 12px;padding:26px 34px;display:flex;gap:12px;box-shadow:9px 9px 0 var(--ink)}
+.typing i{width:20px;height:20px;border-radius:50%;background:var(--muted)}
+.ph{position:absolute;background:var(--ink);border-radius:84px;padding:22px;box-shadow:26px 26px 0 rgba(31,61,92,.3)}
+.dark .ph,.ph.sh2{box-shadow:26px 26px 0 rgba(0,0,0,.35)}
+.ph .scr{background:#fff;border-radius:64px;height:100%;padding:44px 40px;overflow:hidden;position:relative;color:var(--ink)}
+.ph .notch{width:170px;height:38px;margin:-18px auto 30px}
+.ph .opt{font-size:38px;padding:24px 28px;margin-bottom:18px;border-width:6px;border-radius:28px}
+.ph .opt em{font-size:24px;padding:6px 14px}
+.fld{border:6px solid var(--ink);border-radius:26px;padding:16px 26px;margin-bottom:22px;background:#fff}
+.fld small{display:block;font:700 24px 'DM Sans';color:var(--muted)}
+.fld span{display:block;font:800 50px/1.25 'DM Sans';min-height:62px}
+.cur{display:inline-block;width:4px;height:44px;background:var(--ink);vertical-align:-6px;margin-left:4px}
+.pbtn{background:var(--ink);color:var(--y);border-radius:99px;text-align:center;padding:28px;font:400 36px 'Titan One'}
+.terms{background:var(--ys);border:6px solid var(--ink);border-radius:28px;padding:26px;font:500 30px/1.45 'DM Sans'}
+.terms b{font-weight:800}
+.chk{width:54px;height:54px;border:6px solid var(--ink);border-radius:12px;background:#fff;display:grid;place-items:center;font:800 36px 'DM Sans';flex:none}
+.timer{position:absolute;right:60px;top:250px;background:#fff;border:7px solid var(--ink);border-radius:99px;padding:14px 34px;font:400 58px 'Luckiest Guy';box-shadow:8px 8px 0 var(--ink);display:flex;gap:16px;align-items:center}
+.timer i{width:26px;height:26px;border-radius:50%;background:var(--or);border:5px solid var(--ink)}
+.chip{display:inline-block;color:var(--ink);background:#fff;border:6px solid var(--ink);border-radius:99px;padding:16px 30px;font:400 38px 'Titan One';box-shadow:7px 7px 0 var(--ink)}
+.dark .chip{border-color:#0c1a29;box-shadow:7px 7px 0 #0c1a29}
+.qrsign{position:absolute;background:var(--paper);border:8px solid var(--ink);border-radius:40px;box-shadow:18px 18px 0 var(--ink);padding:40px;text-align:center}
+.qrsign canvas,.qrsign img{display:block;margin:0 auto}
+.scan{position:absolute;left:0;right:0;height:10px;background:var(--or);box-shadow:0 0 30px 8px rgba(242,104,42,.6);border-radius:6px}
+.fnote{position:absolute;left:72px;right:200px;bottom:330px;font:600 25px/1.35 'DM Sans';opacity:.85}
+.dark .fnote{color:#fff}
+.vig{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.35) 0%,rgba(0,0,0,0) 22%,rgba(0,0,0,0) 55%,rgba(0,0,0,.55) 100%)}
+.cap{position:absolute;left:60px;right:60px;bottom:420px;text-align:center;z-index:5}
+.cap span{display:inline-block;background:rgba(15,32,50,.88);color:#fff;font:800 54px/1.25 'DM Sans';padding:18px 32px;border-radius:26px;box-shadow:0 8px 0 rgba(0,0,0,.25)}
+.cap b{color:var(--y);font-weight:800}
+.bug{position:absolute;right:60px;top:300px;height:52px;filter:brightness(0) invert(1) drop-shadow(0 2px 6px rgba(0,0,0,.5));opacity:.95}
+</style></head><body>
+<div id="stage"></div>
+<script>
+"use strict";
+// ---------- Mini-Animations-Engine: Keyframes nach absoluter Zeit, Seek für den Frame-Export ----------
+const stage = document.getElementById("stage");
+let tracks, hooks, SFX, DUR;
+const FIG = "../../assets/figur.png", WORT = "../../assets/wortmarke.png";
+const WARN = "*Über externe Anbieter wie Klarna, nach deren Prüfung. Tattoofin ist kein Kreditgeber. Achtung! Kreditaufnahme kostet Geld.";
+const OUT = "cubic-bezier(.2,.8,.2,1)", BOUNCE = "cubic-bezier(.34,1.56,.64,1)", INOUT = "cubic-bezier(.65,0,.35,1)";
+
+function el(html, parent) {
+  const d = document.createElement("div"); d.innerHTML = html.trim();
+  const e = d.firstElementChild; (parent || stage).appendChild(e); return e;
+}
+function at(e, t, props, ease) {
+  if (!tracks.has(e)) tracks.set(e, []);
+  tracks.get(e).push({ t, props, ease }); return e;
+}
+const B = (e) => e.dataset.b || "";                 // Grund-Transform (z. B. Drehung) des Elements
+function hide(e, t) { return at(e, t, { opacity: 0 }); }
+function pop(e, t, s = true) {
+  at(e, 0, { opacity: 0, transform: "scale(.4) " + B(e) });
+  at(e, t, { opacity: 0, transform: "scale(.4) " + B(e) });
+  at(e, t + 0.16, { opacity: 1, transform: "scale(1.07) " + B(e) }, OUT);
+  at(e, t + 0.32, { opacity: 1, transform: "scale(1) " + B(e) }, "ease-in-out");
+  if (s) sfx(t, "pop"); return e;
+}
+function rise(e, t, dy = 90, d = 0.45) {
+  at(e, 0, { opacity: 0, transform: `translateY(${dy}px) ` + B(e) });
+  at(e, t, { opacity: 0, transform: `translateY(${dy}px) ` + B(e) });
+  at(e, t + d, { opacity: 1, transform: "translateY(0px) " + B(e) }, OUT); return e;
+}
+function out(e, t, d = 0.3) {
+  at(e, t, { opacity: 1, transform: "translateY(0px) scale(1) " + B(e) });
+  at(e, t + d, { opacity: 0, transform: "translateY(-50px) scale(.96) " + B(e) }, "ease-in"); return e;
+}
+function press(e, t) {
+  at(e, t, { transform: "scale(1) " + B(e) });
+  at(e, t + 0.1, { transform: "scale(.92) " + B(e) }, "ease-out");
+  at(e, t + 0.25, { transform: "scale(1) " + B(e) }, BOUNCE); sfx(t, "tick"); return e;
+}
+// Neues Panel (Szene): wischt als Kreis von einem Punkt aus über das vorherige
+function panel(cls, t, x = 50, y = 50) {
+  const p = el(`<div class="frame pn ${cls || ""}"></div>`);
+  if (t > 0) {
+    at(p, 0, { clipPath: `circle(0% at ${x}% ${y}%)` });
+    at(p, t, { clipPath: `circle(0% at ${x}% ${y}%)` });
+    at(p, t + 0.5, { clipPath: `circle(150% at ${x}% ${y}%)` }, INOUT);
+    sfx(t, "whoosh");
+  }
+  return p;
+}
+function sun(p, size = 3200, x = -1060, y = -640, op = 1) {
+  const s = el(`<div class="sun" style="width:${size}px;height:${size}px;left:${x}px;top:${y}px;opacity:${op}"></div>`, p);
+  at(s, 0, { transform: "rotate(0deg)" }); at(s, DUR, { transform: "rotate(30deg)" }); return s;
+}
+// Mehrzeilige Überschrift im Fluss: Zeilen überlappen nie, jede Zeile fliegt nacheinander ein
+function lines(p, top, list, t0, step = 0.35, cls = "") {
+  const box = el(`<div class="c ${cls}" style="top:${top}px"></div>`, p);
+  list.forEach(([html, size, extra], i) => rise(el(`<div class="h" style="font-size:${size}px;${extra || ""}">${html}</div>`, box), t0 + i * step));
+  return box;
+}
+function sfx(t, name) { SFX.push([+t.toFixed(3), name]); }
+function type(span, text, t0, t1, cursor = true) {   // Text erscheint Zeichen für Zeichen
+  hooks.push((t) => {
+    const n = t < t0 ? 0 : t >= t1 ? text.length : Math.round(((t - t0) / (t1 - t0)) * text.length);
+    span.innerHTML = text.slice(0, n) + (cursor && t >= t0 - 0.3 && t < t1 + 0.4 ? '<i class="cur"></i>' : "");
+  });
+  for (let k = 0; k < text.length; k += 2) sfx(t0 + ((t1 - t0) * k) / text.length, "type");
+}
+function typing(parent, x, y, t0, t1) {
+  const d = el(`<div class="typing" style="left:${x}px;top:${y}px"><i></i><i></i><i></i></div>`, parent);
+  at(d, 0, { opacity: 0 }); at(d, t0, { opacity: 0 }); at(d, t0 + 0.15, { opacity: 1 }); at(d, t1, { opacity: 1 }); at(d, t1 + 0.05, { opacity: 0 });
+  [...d.children].forEach((i, k) => {
+    for (let t = t0; t < t1; t += 0.6) { at(i, t + k * 0.12, { transform: "translateY(0px)" }); at(i, t + k * 0.12 + 0.15, { transform: "translateY(-12px)" }, "ease-out"); at(i, t + k * 0.12 + 0.3, { transform: "translateY(0px)" }, "ease-in"); }
+  });
+  return d;
+}
+function toast(parent, html, x, y, t, rot = -3) {
+  const e = el(`<div class="toast ab" data-b="rotate(${rot}deg)" style="left:${x}px;top:${y}px;font-size:46px;padding:28px 38px">${html}</div>`, parent);
+  pop(e, t, false); sfx(t, "ding"); return e;
+}
+function endcard(t, warn) {
+  const p = panel("dark", t, 50, 60);
+  sun(p, 3400, -1160, -900, 0.45);
+  const f = el(`<img class="ab" src="${FIG}" style="width:420px;left:330px;top:300px">`, p); pop(f, t + 0.45);
+  const w = el(`<img class="ab" src="${WORT}" style="height:96px;left:50%;top:790px;margin-left:-216px">`, p); rise(w, t + 0.7, 60);
+  const h = el(`<p class="c h" style="top:950px;text-align:center;font-size:84px;color:#fff">Zahlungen fürs Studio.<br><span class="hl">Ganz entspannt.</span></p>`, p); rise(h, t + 0.9);
+  const b = el(`<div class="c" style="top:1200px;text-align:center"><span class="btn" style="font-size:52px;padding:28px 60px">Link in Bio</span></div>`, p); pop(b, t + 1.3);
+  const s = el(`<p class="c p" style="top:1370px;text-align:center;font-size:34px;font-weight:700">0 € Einrichtung · 10 % pro Zahlung · alles inklusive</p>`, p); rise(s, t + 1.5, 40);
+  if (warn) el(`<p class="fnote" style="right:72px;text-align:center;left:72px">${WARN}</p>`, p);
+  return p;
+}
+
+// Kompakte Endkarte für Werbe-Reels
+function adEnd(t, warn) {
+  const p = panel("dark", t, 50, 60); sun(p, 3400, -1160, -900, 0.45);
+  pop(el(`<img class="ab" src="${FIG}" style="width:360px;left:360px;top:330px">`, p), t + 0.4);
+  rise(el(`<img class="ab" src="${WORT}" style="height:90px;left:50%;top:740px;margin-left:-202px">`, p), t + 0.6, 60);
+  rise(el(`<p class="c h" style="top:890px;text-align:center;font-size:80px;color:#fff">${warn ? 'Zahlungslinks, Anzahlung &amp; <span class="hl">Raten über Klarna*</span> fürs Studio.' : 'Zahlungslinks &amp; Anzahlungen <span class="hl">fürs Tattoo-Studio.</span>'}</p>`, p), t + 0.8);
+  pop(el(`<div class="c" style="top:1180px;text-align:center"><span class="btn" style="font-size:50px;padding:28px 60px">Jetzt ansehen</span></div>`, p), t + 1.2);
+  rise(el(`<p class="c p" style="top:1350px;text-align:center;font-size:34px;font-weight:700">0 € Einrichtung · 10 % pro Zahlung · alles inklusive</p>`, p), t + 1.4, 40);
+  if (warn) el(`<p class="fnote" style="left:72px;right:72px;text-align:center">${WARN}</p>`, p);
+  return p;
+}
+
+
+// ---------- Verkaufs-Spot (≈40 s): Studio-Szenen aus Higgsfield (Kling 3.0) + Produkt-Animationen + Sprecher ----------
+// Hintergrund-Clips liegen als Einzelbilder in spot/frames/<name>/0001.jpg … (30 fps, 1080×1920, erzeugt von tools/render-spot.mjs)
+const FPS = 30;
+const CLIPS = {};          // name -> [Image]
+const LOADS = [];
+function clipFrames(name, n) {
+  if (CLIPS[name]) return CLIPS[name];
+  const arr = []; for (let i = 1; i <= n; i++) { const im = new Image(); im.src = `spot/frames/${name}/${String(i).padStart(4, "0")}.jpg`; arr.push(im); LOADS.push(im.decode().catch(() => {})); }
+  return (CLIPS[name] = arr);
+}
+// Live-Szene als harter Schnitt: Clip ab Sekunde `von` im Clip, sichtbar ab t0
+function szene(name, n, t0, von = 0, tempo = 1) {
+  const p = el(`<div class="frame pn dark" style="background:#000"><canvas width="1080" height="1920" style="position:absolute;inset:0;width:1080px;height:1920px"></canvas><div class="vig"></div></div>`);
+  at(p, 0, { opacity: 0 }); at(p, t0 - 0.001, { opacity: 0 }); at(p, t0, { opacity: 1 });
+  const cv = p.querySelector("canvas"), ctx = cv.getContext("2d"), fr = clipFrames(name, n);
+  hooks.push((t) => {
+    if (t < t0) return;
+    const i = Math.min(fr.length - 1, Math.max(0, Math.floor((von + (t - t0) * tempo) * FPS)));
+    if (fr[i].complete && fr[i].naturalWidth) ctx.drawImage(fr[i], 0, 0, 1080, 1920);
+  });
+  return p;
+}
+// Untertitel (Sprechertext), immer über der Instagram-Bedienleiste
+function cap(html, t0, t1, parent) {
+  const e = el(`<div class="cap"><span>${html}</span></div>`, parent || stage);
+  at(e, 0, { opacity: 0, transform: "translateY(20px)" }); at(e, t0, { opacity: 0, transform: "translateY(20px)" });
+  at(e, t0 + 0.18, { opacity: 1, transform: "translateY(0px)" }, OUT); at(e, t1 - 0.12, { opacity: 1, transform: "translateY(0px)" }); at(e, t1, { opacity: 0, transform: "translateY(0px)" });
+  return e;
+}
+function bug(parent) { el(`<img class="bug" src="${WORT}">`, parent); }
+
+const VO = [ // Start (s) und Text je Sprecherzeile, Tempo 1,08
+  [0.3, "vo0"], [4.65, "vo1"], [6.6, "vo2"], [12.0, "vo3"], [18.5, "vo4"], [22.45, "vo5"], [27.0, "vo6"], [33.1, "vo7"],
+];
+
+const SPOT = { id: "creatives/2026-10-10/spot", dauer: 39.6, cover: 5.6, vo: VO, build() {
+  // 1 · Haken: Stechen (Makro), dann die zögernde Kundin
+  const s1 = szene("s1", 150, 0, 0.4); bug(s1);
+  pop(el(`<span class="stk ab" data-b="rotate(-2.5deg)" style="left:60px;top:290px;font-size:38px">Für Tattoo-Studios</span>`, s1), 0.15, false);
+  cap("Deine Kundin will den <b>großen Sleeve.</b>", 0.3, 2.35, s1);
+  const s2 = szene("s2", 150, 2.3, 0.6); bug(s2);
+  cap('Aber nicht <b>2.000 € auf einmal</b> zahlen?', 2.4, 4.6, s2);
+
+  // 2 · Auflösung: Marke
+  const p3 = panel("", 4.65, 50, 50); sun(p3);
+  pop(el(`<img class="ab" src="${FIG}" style="width:460px;left:310px;top:430px">`, p3), 4.9);
+  rise(el(`<img class="ab" src="${WORT}" style="height:120px;left:50%;top:960px;margin-left:-270px">`, p3), 5.1, 60);
+  lines(p3, 1130, [['Dafür gibt’s', 110, "text-align:center"], ['<span class="out">Tattoofin.</span>', 150, "text-align:center"]], 5.3, 0.25);
+
+  // 3 · Zahlungslink in 10 Sekunden
+  const s4 = szene("k1", 150, 6.6, 0.2); bug(s4);
+  cap("Betrag eintippen, <b>Link per WhatsApp</b> schicken.", 6.7, 8.75, s4);
+  const p5 = panel("", 8.75, 80, 40); sun(p5, 3200, -1060, -400, .6);
+  const tm = el(`<div class="timer"><i></i><span>0,0 s</span></div>`, p5); pop(tm, 8.95);
+  hooks.push((t) => { const v = t < 9.1 ? 0 : Math.min(t, 11.3) - 9.1; tm.querySelector("span").textContent = v.toFixed(1).replace(".", ",") + " s"; });
+  const ph = el(`<div class="ph" style="left:110px;top:380px;width:860px;height:760px"><div class="scr" style="padding:44px"><div class="notch"></div>
+    <p class="rd" style="font-size:52px;margin-bottom:30px">Neuer Zahlungslink</p>
+    <div class="fld"><small>Betrag</small><span class="a"></span></div>
+    <div class="fld"><small>Kundin · Projekt</small><span class="b"></span></div>
+    <div class="pbtn" style="margin-top:30px">Per WhatsApp senden</div></div></div>`, p5);
+  rise(ph, 8.85, 400, 0.45);
+  type(ph.querySelector(".a"), "1.800 €", 9.2, 9.7);
+  type(ph.querySelector(".b"), "Lena · Sleeve", 9.9, 10.5);
+  press(ph.querySelector(".pbtn"), 10.75);
+  pop(el(`<div class="bub me" style="right:60px;top:1150px;max-width:880px;font-size:40px">Hi Lena, hier ist dein Link fürs Sleeve 👇<div class="lnk"><img src="${FIG}">Ink Studio · 1.800 €</div><span class="t">Gesendet ✓✓</span></div>`, p5), 11.1);
+  cap("Dauert <b>10 Sekunden.</b>", 10.6, 11.95, p5);
+
+  // 4 · Kundin zahlt, wie sie will
+  const s3 = szene("s3", 150, 12.0, 0.2); bug(s3);
+  cap("Sie zahlt, <b>wie sie will:</b>", 12.1, 14.15, s3);
+  const p7 = panel("", 14.2, 50, 70); sun(p7);
+  const pay = el(`<div class="ph" style="left:150px;top:300px;width:780px;height:1000px"><div class="scr"><div class="notch"></div>
+    <p style="font:800 32px 'DM Sans'">Ink Studio · Sleeve</p><p class="lg" style="font-size:120px;margin:10px 0 34px">1.800 €</p>
+    <div class="opt o1">Karte <span>›</span></div><div class="opt o2">Apple Pay <span>›</span></div><div class="opt o3">Klarna <em>In Raten*</em></div></div></div>`, p7);
+  rise(pay, 14.25, 500, 0.5);
+  [[".o1", 15.0], [".o2", 15.7], [".o3", 16.5]].forEach(([s, t], i) => {
+    const o = pay.querySelector(s);
+    at(o, 0, { background: "#ffffff", transform: "rotate(0deg) scale(1)", boxShadow: "0 0 0 #1f3d5c" });
+    at(o, t, { background: "#ffffff", transform: "rotate(0deg) scale(1)", boxShadow: "0 0 0 #1f3d5c" });
+    at(o, t + 0.2, { background: "#fbb316", transform: "rotate(-1.5deg) scale(1.04)", boxShadow: "8px 8px 0 #1f3d5c" }, OUT);
+    if (i < 2) { at(o, t + 0.65, { background: "#fbb316", transform: "rotate(-1.5deg) scale(1.04)", boxShadow: "8px 8px 0 #1f3d5c" }); at(o, t + 0.8, { background: "#ffffff", transform: "rotate(0deg) scale(1)", boxShadow: "0 0 0 #1f3d5c" }); }
+    sfx(t, "tick");
+  });
+  cap('Karte, Apple Pay oder <b>in Raten*</b>', 14.9, 18.4, p7);
+  el(`<p class="fnote" style="left:72px;right:72px;bottom:auto;top:1330px;font-size:26px">${WARN}</p>`, p7);
+
+  // 5 · Geld kommt auf einmal
+  const s5 = szene("s4", 150, 18.5, 0.1); bug(s5);
+  toast(s5, "✓ Zahlung eingegangen<small>Auf einmal, nicht in Raten</small>", 72, 1010, 19.3);
+  cap("Du bekommst dein Geld <b>auf einmal.</b>", 18.6, 20.4, s5);
+  cap("<b>Automatisch</b> aufs Konto.", 20.4, 22.4, s5);
+
+  // 6 · Anzahlung mit Bedingungen
+  const p9 = panel("dark", 22.45, 50, 50); sun(p9, 3200, -1060, -640, .3);
+  pop(el(`<span class="stk ab" data-b="rotate(-2.5deg)" style="left:72px;top:290px;font-size:40px">Anzahlung</span>`, p9), 22.7);
+  const an = el(`<div class="ph sh2" style="left:110px;top:400px;width:860px;height:900px"><div class="scr"><div class="notch"></div>
+    <p style="font:800 32px 'DM Sans'">Ink Studio · Anzahlung</p>
+    <p class="lg" style="font-size:110px;margin:8px 0 22px">200 €</p>
+    <div class="terms"><b>Anzahlungsbedingungen</b><br>Wird mit dem Tattoo verrechnet. Bei Absage unter 48 Stunden oder Nichterscheinen behält das Studio sie ein.
+      <div style="display:flex;gap:16px;align-items:center;margin-top:20px;font-weight:800"><span class="chk"><b class="hk" style="opacity:0">✓</b></span>Einverstanden</div></div></div></div>`, p9);
+  rise(an, 22.6, 600, 0.5);
+  const chk = an.querySelector(".chk"), hk = an.querySelector(".hk");
+  at(hk, 23.9, { opacity: 0 }); at(hk, 24.0, { opacity: 1 }); at(chk, 23.9, { background: "#ffffff" }); at(chk, 24.0, { background: "#fbb316" }); press(chk, 23.9);
+  toast(p9, "✓ Anzahlung bezahlt<small>Bedingungen bestätigt · 14:32 Uhr</small>", 72, 1180, 24.6);
+  cap("Anzahlungen mit <b>deinen Bedingungen.</b>", 22.6, 25.0, p9);
+  cap("No-Show? <b>Geregelt.</b>", 25.0, 26.95, p9);
+
+  // 7 · Service + Angebot
+  const s6 = szene("s5", 150, 27.0, 0.3); bug(s6);
+  cap("Wir richten <b>alles für dich ein.</b>", 27.1, 29.75, s6);
+  const p11 = panel("", 29.8, 50, 50); sun(p11);
+  lines(p11, 300, [["Das kostet’s:", 110]], 29.95);
+  [["0 €", "Einrichtung", -2], ["10 %", "pro Zahlung", 1.5], ["0 €", "Grundgebühr", -1]].forEach(([big, txt, r], i) => {
+    pop(el(`<div class="card ab" data-b="rotate(${r}deg)" style="left:72px;right:72px;top:${470 + i * 250}px;padding:26px 46px;display:flex;align-items:center;justify-content:space-between"><span class="big" style="font-size:150px">${big}</span><span class="rd" style="font-size:52px">${txt}</span></div>`, p11), 30.2 + i * 0.45);
+  });
+  pop(el(`<div class="toast ab" data-b="rotate(-2deg)" style="left:72px;top:1250px;font-size:44px;background:var(--ink);color:var(--y)">Alles inklusive<small style="color:#fff">Stripe, Klarna, USt. &amp; Betreuung · monatlich kündbar</small></div>`, p11), 31.7);
+
+  // 8 · Endcard
+  const p12 = panel("dark", 33.1, 50, 60); sun(p12, 3400, -1160, -900, 0.45);
+  pop(el(`<img class="ab" src="${FIG}" style="width:400px;left:340px;top:300px">`, p12), 33.4);
+  rise(el(`<img class="ab" src="${WORT}" style="height:100px;left:50%;top:760px;margin-left:-225px">`, p12), 33.6, 60);
+  rise(el(`<p class="c h" style="top:910px;text-align:center;font-size:84px;color:#fff">Zahlungen fürs<br><span class="hl">Tattoo-Studio.</span></p>`, p12), 33.8);
+  pop(el(`<div class="c" style="top:1150px;text-align:center"><span class="btn" style="font-size:50px;padding:28px 56px">Jetzt starten: tattoofin.de</span></div>`, p12), 34.4);
+  rise(el(`<p class="c p" style="top:1320px;text-align:center;font-size:34px;font-weight:700">In 3 Minuten online abgeschlossen</p>`, p12), 34.8, 40);
+  el(`<p class="fnote" style="left:72px;right:72px;text-align:center">${WARN}</p>`, p12);
+}};
+
+
+function build(r) {
+  stage.innerHTML = ""; tracks = new Map(); hooks = []; SFX = []; DUR = r.dauer;
+  r.build();
+  for (const [e, list] of tracks) {
+    list.sort((a, b) => a.t - b.t);
+    const keys = [...new Set(list.flatMap((k) => Object.keys(k.props)))];
+    const first = {}; for (const k of keys) first[k] = list.find((x) => k in x.props).props[k];
+    let cur = { ...first }; const frames = [];
+    list.forEach((k, i) => {
+      cur = { ...cur, ...k.props };
+      if (k.ease && frames.length) frames[frames.length - 1].easing = k.ease;
+      frames.push({ ...cur, offset: Math.min(1, Math.max(0, k.t / DUR)) });
+    });
+    if (frames[0].offset > 0) frames.unshift({ ...frames[0], offset: 0, easing: "linear" });
+    if (frames[frames.length - 1].offset < 1) frames.push({ ...cur, offset: 1 });
+    e.animate(frames, { duration: DUR * 1000, fill: "both" }).pause();
+  }
+  r.sfx = SFX.sort((a, b) => a[0] - b[0]);
+}
+window.seek = (ms) => {
+  document.getAnimations().forEach((a) => { a.pause(); a.currentTime = Math.min(ms, DUR * 1000 - 1); });
+  hooks.forEach((h) => h(ms / 1000));
+};
+window.load = () => { build(SPOT); window.seek(0); return Promise.all(LOADS).then(() => ({ id: SPOT.id, dauer: SPOT.dauer, cover: SPOT.cover, sfx: SPOT.sfx, vo: SPOT.vo })); };
+if (location.search.includes("play")) { window.load().then(() => { const t0 = performance.now(); (function f() { window.seek((performance.now() - t0) % (DUR * 1000)); requestAnimationFrame(f); })(); }); }
+</script>
+</body></html>

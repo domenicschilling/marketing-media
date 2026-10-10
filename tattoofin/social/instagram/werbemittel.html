@@ -81,16 +81,16 @@ const hd = (f, zeilen) => `<div class="hd">${zeilen.map(([t, g, extra]) => `<spa
 const bar = (btn) => `<div class="bar"><div class="brand"><img class="f" src="${FIG}"><img class="w" src="${WORT}"></div><span class="btn">${btn}</span></div>`;
 
 const MOTIVE = {
-  // c1 · Voller Betrag (Raten → Sonderkategorie)
+  // c1 · Geld auf einmal (Raten → Sonderkategorie)
   c1: { dark: false, sun: true, btn: "Mehr dazu", fn: true, build: (f) => `
     <span class="stk">Für Tattoo-Studios</span>
-    ${hd(f, [["Dein Kunde zahlt", [100, 92, 108]], ['<span class="out">in Raten.*</span>', [130, 118, 140], "margin-top:.08em"], ["Du bekommst alles.", [100, 92, 108], "margin-top:.12em"]])}
+    ${hd(f, [["Dein Kunde zahlt", [100, 92, 108]], ['<span class="out">in Raten.*</span>', [130, 118, 140], "margin-top:.08em"], ["Du: alles auf einmal.", [100, 92, 108], "margin-top:.12em"]])}
     <div class="vis e">
       <div class="row">
         <div class="card" style="flex:1;transform:rotate(-2deg)"><div class="lbl">Kunde zahlt</div><b class="lg" style="font-size:6.4em;display:block">in Raten*</b></div>
-        <div class="card" style="flex:1.25;background:var(--ink);color:var(--y);transform:rotate(1.5deg)"><div class="lbl" style="color:#fff">Du bekommst</div><b class="lg" style="font-size:8.6em;display:block">1.500 €</b></div>
+        <div class="card" style="flex:1.25;background:var(--ink);color:var(--y);transform:rotate(1.5deg)"><div class="lbl" style="color:#fff">Du bekommst</div><b class="lg" style="font-size:6.2em;display:block">alles auf einmal</b></div>
       </div>
-      <div class="toast" style="transform:rotate(-2deg)">✓ Voller Betrag, auf einmal<small>Stripe zahlt automatisch auf dein Konto aus</small></div>
+      <div class="toast" style="transform:rotate(-2deg)">✓ Kein Warten auf Raten<small>Stripe zahlt automatisch auf dein Konto aus</small></div>
     </div>` },
 
   // c2 · Nicht dein Risiko (Raten → Sonderkategorie)
@@ -99,7 +99,7 @@ const MOTIVE = {
     <div class="vis e" style="gap:3.4em">
       <div class="quote" style="transform:rotate(-1.5deg);font-size:${f === "sq" ? 4.4 : 4.9}em">„Und wenn der Kunde seine Raten* nicht zahlt?“</div>
       ${hd(f, [["Dann ist das", [104, 96, 116], "color:#fff"], ['<span class="out y">nicht dein Problem.</span>', [112, 100, 124], "margin-top:.1em"]])}
-      <p class="p" style="font-size:3.6em;color:#dfe8f1">Den Ratenvertrag schließt dein Kunde mit Klarna. Nach der Freigabe trägt der Anbieter das Ausfallrisiko, dein Studio bekommt den Betrag in der Regel vollständig.</p>
+      <p class="p" style="font-size:3.6em;color:#dfe8f1">Den Ratenvertrag schließt dein Kunde mit Klarna. Nach der Freigabe trägt der Anbieter das Ausfallrisiko, dein Studio bekommt sein Geld in der Regel auf einmal.</p>
     </div>` },
 
   // c3 · Sleeve statt Sparen (Raten → Sonderkategorie)
@@ -109,7 +109,7 @@ const MOTIVE = {
     <div class="vis e">
       <div class="quote no" style="transform:rotate(-1.5deg);align-self:flex-start;max-width:88%"><span class="x">„Ich meld mich, wenn ich das Geld zusammen hab.“</span></div>
       <div class="cal" style="transform:rotate(1.2deg)"><div class="top2">Sleeve · 4 Sitzungen</div>
-        <div class="body"><div><b>Start: nächste Woche</b><small>Kunde zahlt in Raten*, du bekommst alles</small></div><span class="pill ok">✓ Bezahlt</span></div></div>
+        <div class="body"><div><b>Start: nächste Woche</b><small>Kunde zahlt in Raten*, du dein Geld auf einmal</small></div><span class="pill ok">✓ Bezahlt</span></div></div>
     </div>` },
 
   // c4 · Kein Hinterherlaufen
@@ -177,7 +177,7 @@ const MOTIVE = {
     <span class="stk">Kurz erklärt</span>
     ${hd(f, [['Die <span class="hl">3 Fragen</span>, die jeder', [86, 76, 98], "color:#fff"], ["Studio-Inhaber stellt.", [86, 76, 98], "color:#fff"]])}
     <div class="vis e" style="gap:${f === "sq" ? 1.6 : 2.2}em">
-      ${[["Wann kommt mein Geld?", "Automatisch aufs Konto. Bei Raten* den vollen Betrag, auf einmal."],
+      ${[["Wann kommt mein Geld?", "Automatisch aufs Konto. Bei Raten* trotzdem auf einmal."],
          ["Und wenn der Kunde nicht zahlt?", "Bei Raten* trägt der Anbieter das Risiko. Gegen No-Shows: Anzahlung."],
          ["Was kostet mich das?", "10 % pro Zahlung, alles inklusive. 0 € Einrichtung."]]
         .map(([q, a], i) => `<div class="qa" style="transform:rotate(${[-1, 1, -0.5][i]}deg);${f === "sq" ? "font-size:.86em;padding:1em 1.5em" : ""}"><b>${q}</b><span>${a}</span></div>`).join("")}
