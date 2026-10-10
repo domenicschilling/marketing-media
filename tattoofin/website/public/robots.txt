@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /portal.html
+Disallow: /admin.html
+Disallow: /onboarding.html
+
+Sitemap: https://tattoofin.de/sitemap.xml

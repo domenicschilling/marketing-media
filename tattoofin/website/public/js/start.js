@@ -52,7 +52,7 @@
       document.getElementById("submit").textContent = "Vertrag abschließen & Stripe-Konto verbinden";
     } else {
       html = "<p>Du kaufst das <b>Tattoofin Setup</b>: " + TF.esc(preisText()) + ".</p>" +
-        (z === "rechnung" ? "<p>Du bekommst die Rechnung sofort per E-Mail, zahlbar in 14 Tagen. Wir starten trotzdem schon mit der Einrichtung.</p>"
+        (z === "rechnung" ? "<p>Du bekommst die Rechnung sofort per E-Mail, zahlbar in 7 Tagen. Sobald die Zahlung eingegangen ist, starten wir mit der Einrichtung. Schneller geht es mit Karte: dann legen wir sofort los.</p>"
           : "<p>Im nächsten Schritt bezahlst du sicher über Stripe (Karte, SEPA-Lastschrift u. a.). Die Rechnung kommt automatisch per E-Mail. Danach verbindest du das Stripe-Konto deines Studios.</p>") +
         "<p>" + C.garantieTage + " Tage Geld-zurück-Garantie ab Go-live.</p>";
       document.getElementById("submit").textContent = z === "rechnung" ? "Zahlungspflichtig bestellen (Rechnung)" : "Zahlungspflichtig bestellen & bezahlen";

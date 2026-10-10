@@ -65,7 +65,7 @@ export const mails = {
     preheader: `Rechnung über ${euro(betragCent)}, fällig am ${datum(faellig)}.`,
     title: "Deine Rechnung ist da",
     body: hallo(s) + p(`hier ist deine Rechnung über <b>${euro(betragCent)}</b> (inkl. USt.), zahlbar bis <b>${datum(faellig)}</b>. Du kannst per Überweisung oder direkt online bezahlen.`) +
-      p("Mit der Einrichtung fangen wir trotzdem schon an, damit keine Zeit verloren geht."),
+      p("Sobald die Zahlung eingegangen ist, starten wir mit der Einrichtung und melden uns bei dir."),
     cta: "Rechnung ansehen & bezahlen", ctaUrl: rechnungUrl,
   }),
 

@@ -8,19 +8,19 @@ export const CFG = {
   firma: env("FIRMA", "DSX Media Solutions UG (haftungsbeschränkt)"),
   marke: "Tattoofin",
   produkt: "Tattoofin",
-  adresse: env("FIRMA_ADRESSE", "[Straße Nr., PLZ Ort]"),
-  registergericht: env("FIRMA_REGISTER", "[Amtsgericht, HRB-Nr.]"),
-  ustid: env("FIRMA_USTID", "[USt-IdNr.]"),
+  adresse: env("FIRMA_ADRESSE", "Am Weingarten 9, 96117 Memmelsdorf"),
+  registergericht: env("FIRMA_REGISTER", "Amtsgericht Bamberg, HRB 12150"),
+  ustid: env("FIRMA_USTID", "DE456133925"),
   geschaeftsfuehrer: env("FIRMA_GF", "Domenic Schilling"),
   telefon: env("KONTAKT_TELEFON", "0174 1682157"),
-  email: env("KONTAKT_EMAIL", "[E-Mail Tattoofin]"),
-  gerichtsstand: env("GERICHTSSTAND", "[Sitz des Anbieters]"),
+  email: env("KONTAKT_EMAIL", "info@tattoofin.de"),
+  gerichtsstand: env("GERICHTSSTAND", "Bamberg"),
   whatsapp: env("KONTAKT_WHATSAPP", "491741682157"),
   videoUrl: env("VIDEO_URL", ""),       // z. B. /assets/werbevideo.mp4 oder YouTube-Datei-URL; leer = Videobereich ausgeblendet
   materialsUrl: env("MATERIALS_URL", "https://domenicschilling.github.io/marketing-media/tattoofin/kunden/"),
 
   // E-Mail
-  mailFrom: env("MAIL_FROM", "Tattoofin <info@dsxmediasolutions.de>"),
+  mailFrom: env("MAIL_FROM", "Tattoofin <info@tattoofin.de>"),
   mailReplyTo: env("MAIL_REPLY_TO", ""),
   adminEmail: env("ADMIN_EMAIL", "domenicschilling@gmail.com"),
 
@@ -34,7 +34,7 @@ export const CFG = {
   ustProzent: Number(env("UST_PROZENT", 19)),
   garantieTage: Number(env("GARANTIE_TAGE", 30)),
   setupSupportTage: Number(env("SETUP_SUPPORT_TAGE", 30)),
-  rechnungFaelligTage: Number(env("RECHNUNG_FAELLIG_TAGE", 14)),
+  rechnungFaelligTage: Number(env("RECHNUNG_FAELLIG_TAGE", 7)),
   minBetragCent: Number(env("MIN_BETRAG_CENT", 5000)),       // kleinster Zahlungslink (50 €)
   maxBetragCent: Number(env("MAX_BETRAG_CENT", 2000000)),    // größter Zahlungslink (20.000 €)
   // Rückbuchungsgebühr von Stripe je Dispute (wird bei Rückbuchungen vom Studio zurückgeholt, bei Gewinn zurückgegeben)
