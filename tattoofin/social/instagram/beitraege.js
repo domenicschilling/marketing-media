@@ -492,6 +492,108 @@ ${STERN}
 #tattoostudio #ratenzahlung #klarna #tattoobusiness #tattoofin`,
       alt: "Animiertes Video: Drei verbotene Werbesätze werden durchgestrichen und durch korrekte ersetzt, zum Beispiel „0 % Zinsen!“ durch „Raten über Klarna möglich*“. Zum Schluss der Pflichthinweis „Achtung! Kreditaufnahme kostet Geld.“",
     },
+    // ---------- Woche 44 (27.–31.10.) ----------
+    {
+      datum: "2026-10-27", uhrzeit: "12:00", format: "Reel", ordner: "2026-10-27_jede-groesse", slot: "2026-10-27",
+      thema: "Mythos: Lohnt sich nur für Sleeves – Zahlungslink für jede Größe",
+      saeule: "Klartext",
+      text: `„Lohnt sich nur für Sleeves.“ Falsch. 🙅
+
+Walk-in, kleines Motiv: 80 € per QR-Code an der Theke, bezahlt mit Apple Pay.
+Anzahlung fürs Unterarm-Projekt: 150 € per Link, Bedingungen bestätigt.
+Sleeve, Sitzung 1: 1.800 € per Klarna, je nach Freigabe in Raten.*
+
+Ein System für jede Größe. Und für Kunden, die einfach kein Bargeld mehr dabeihaben.
+
+Was ist bei dir der häufigste Betrag? 👇
+
+Link in Bio.
+
+${STERN}
+
+#tattoostudio #tattoobusiness #walkin #tätowierer #tattoofin`,
+      alt: "Animiertes Video: „Lohnt sich nur für Sleeves? Falsch.“ Drei Beispiele mit großen Beträgen: Walk-in 80 € per QR-Code, Anzahlung 150 € per Link, Sleeve-Sitzung 1.800 € per Klarna, jeweils mit der Meldung „Bezahlt“.",
+    },
+    {
+      datum: "2026-10-28", uhrzeit: "18:00", format: "Slider", ordner: "2026-10-28_drei-saetze", slot: "2026-10-28_abend",
+      thema: "Ratenzahlung erklären in 3 Sätzen – für Theke und Team",
+      saeule: "Klartext",
+      text: `Ratenzahlung erklären in 3 Sätzen. Zum Auswendiglernen für dich und dein Team. 💬
+
+1. Das Wie: „Du bekommst von uns einen Zahlungslink und wählst beim Bezahlen selbst, wie du zahlen willst.“
+2. Das Wer: „Die Raten laufen über Klarna. Ob das klappt und zu welchen Bedingungen, zeigt dir Klarna direkt.“
+3. Das Wichtige: „Der Preis bleibt gleich. Lies dir die Bedingungen in Ruhe durch, Kredit kostet Geld.“
+
+Und was du nie sagst: „Klappt bei jedem“, „Sind ja nur 50 € im Monat“, „Kostet dich nichts extra“.
+
+Speichern und ans Team schicken. 📌
+
+${STERN}
+
+#tattoostudio #ratenzahlung #klarna #studioalltag #tattoofin`,
+      alt: "Karussell: Drei Sätze, um Ratenzahlung an der Theke zu erklären (das Wie, das Wer, das Wichtige), und drei Sätze, die man nie sagen sollte.",
+      story: "Umfrage-Story „Wer erklärt bei euch das Bezahlen?“ (story.jpg)",
+    },
+    {
+      datum: "2026-10-29", uhrzeit: "12:00", format: "Reel", ordner: "2026-10-29_fehler", slot: "2026-10-29",
+      thema: "3 Fehler bei Anzahlungen",
+      saeule: "Studio-Mathe",
+      text: `3 Fehler bei Anzahlungen. Nummer 2 machen fast alle. 👀
+
+1. Keine Frist: Ohne klare Frist hast du keine Antwort auf „Kann ich auch noch einen Tag vorher absagen?“
+2. Nur mündlich: Was nicht vor der Zahlung bestätigt wurde, ist im Streitfall schwer zu belegen.
+3. Bar „die Tage“: Die Anzahlung kommt später, der Termin wackelt schon jetzt.
+
+Die Lösung für alle drei: Anzahlung per Link, Bedingungen vor dem Bezahlen bestätigt, sofort bei der Buchung.
+
+Unsere Muster-Anzahlungsbedingungen gibt's kostenlos unter tattoofin.de/anzahlung.
+
+#tattoostudio #anzahlung #noshow #studioinhaber #tattoofin`,
+      alt: "Animiertes Video: „3 Fehler bei Anzahlungen“: keine Frist, nur mündlich, bar „die Tage“, jeweils mit der richtigen Lösung. Zum Schluss der Link tattoofin.de/anzahlung für kostenlose Muster-Bedingungen.",
+    },
+    {
+      datum: "2026-10-30", uhrzeit: "18:00", format: "Slider", ordner: "2026-10-30_checkliste", slot: "2026-10-30_abend",
+      thema: "Checkliste: Bist du bereit für Ratenzahlung?",
+      saeule: "Klartext",
+      text: `Bist du bereit für Ratenzahlung? Die Checkliste in 5 Punkten. ✅
+
+1. Ein geprüftes Zahlungskonto fürs Studio
+2. Werbung mit Pflichthinweis: „Achtung! Kreditaufnahme kostet Geld.“
+3. Ein geschultes Team, das nichts verspricht
+4. Klare Anzahlungsbedingungen
+5. Ein fairer Preis ohne Aufschlag für Karte oder Ratenkauf
+
+Wie viele Punkte hakst du ab? Schreib die Zahl in die Kommentare. 👇
+
+Nicht alles abgehakt? Machen wir: Konto, Aufkleber und Flyer mit Pflichthinweis und die Team-Schulung sind in der Einrichtung drin. Link in Bio.
+
+${STERN}
+
+#tattoostudio #ratenzahlung #tattoobusiness #studioinhaber #tattoofin`,
+      alt: "Karussell: Checkliste „Bist du bereit für Ratenzahlung?“ mit fünf Punkten: Zahlungskonto, Werbung mit Pflichthinweis, geschultes Team, klare Anzahlungsbedingungen, fairer Preis ohne Aufschlag.",
+      story: "Selbsttest-Story „Wie viele der 5 Punkte hakst du ab?“ (story.jpg)",
+    },
+    {
+      datum: "2026-10-31", uhrzeit: "12:00", format: "Reel", ordner: "2026-10-31_halloween", slot: "2026-10-31",
+      thema: "Halloween: Die 3 gruseligsten Sätze im Studio",
+      saeule: "Studio-Alltag",
+      text: `Die 3 gruseligsten Sätze im Studio. Happy Halloween! 🎃
+
+#3 „Ich hab das Geld leider doch nicht zusammen.“
+#2 „Kann ich die Anzahlung zurück? Ich hab's mir anders überlegt.“ (einen Tag vorher)
+#1 „PayPal Freunde ist doch okay, oder?“
+
+Weniger gruselig wird's mit Zahlungslink, Raten über Klarna* und Anzahlungsbedingungen, die dein Kunde vor dem Bezahlen bestätigt.
+
+Welcher Satz gruselt dich am meisten? Ab in die Kommentare. 👻
+
+Link in Bio.
+
+${STERN}
+
+#tattoostudio #halloween #studioalltag #tattooartist #tattoofin`,
+      alt: "Animiertes Video im dunklen Halloween-Look: die drei gruseligsten Sätze im Studio als rote Sprechblasen mit Geist, Totenkopf und Spinne. Zum Schluss: Weniger gruselig mit Link, Raten und Bedingungen.",
+    },
   ];
 
   // Werbemittel (creatives/2026-10-13): Anzeigentexte für Meta Ads

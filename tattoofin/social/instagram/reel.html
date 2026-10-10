@@ -528,6 +528,76 @@ const REELS = [
   endcard(15.6, true);
 }},
 
+// ---------- Woche 44 (27.–31.10.) ----------
+// R13 · Zahlungslink für jede Größe
+{ id: "2026-10-27_jede-groesse", dauer: 16.5, cover: 1.4, build() {
+  const p1 = panel("", 0); sun(p1);
+  pop(el(`<span class="stk ab" data-b="rotate(-2.5deg)" style="left:72px;top:420px;font-size:40px">Mythos</span>`, p1), 0.15);
+  lines(p1, 560, [["„Lohnt sich nur", 120], ["für Sleeves.“", 120], ['<span class="out">Falsch.</span>', 200, "margin-top:20px"]], 0.35, 0.35);
+  rise(el(`<img class="ab" src="${FIG}" style="width:420px;right:50px;top:1240px;transform:scaleX(-1) rotate(-6deg)">`, p1), 1.4, 200);
+  const faelle = [["Walk-in, kleines Motiv", "80 €", "QR-Code an der Theke, Apple Pay"], ["Anzahlung, Unterarm", "150 €", "Link per WhatsApp, Bedingungen bestätigt"], ["Sleeve, Sitzung 1", "1.800 €", "Klarna, je nach Freigabe in Raten*"]];
+  faelle.forEach(([titel, betrag, wie], i) => {
+    const t = 3.0 + i * 2.8;
+    const p = panel(i % 2 ? "dark" : "paper", t, i % 2 ? 80 : 20, 50);
+    rise(el(`<p class="c h" style="top:420px;font-size:96px;${i % 2 ? "color:#fff" : ""}">${titel}</p>`, p), t + 0.3);
+    pop(el(`<div class="card ab" data-b="rotate(${i % 2 ? 1.5 : -1.5}deg)" style="left:72px;right:72px;top:640px;padding:50px 60px;${i % 2 ? "background:var(--y)" : ""}"><span class="big" style="font-size:260px">${betrag}</span></div>`, p), t + 0.6);
+    rise(el(`<p class="c p" style="top:1080px;font-size:50px">${wie}</p>`, p), t + 1.0, 40);
+    toast(p, "✓ Bezahlt", 72, 1300, t + 1.6);
+    if (wie.includes("*")) el(`<p class="fnote" style="right:72px">${WARN}</p>`, p);
+  });
+  endcard(11.9 + 1.4, true);
+}},
+
+// R14 · 3 Fehler bei Anzahlungen
+{ id: "2026-10-29_fehler", dauer: 17.5, cover: 1.4, build() {
+  const p1 = panel("dark", 0); sun(p1, 3200, -1060, -640, .35);
+  pop(el(`<span class="stk ab" data-b="rotate(-2.5deg)" style="left:72px;top:420px;font-size:40px">Studio-Wissen</span>`, p1), 0.15);
+  lines(p1, 560, [['<span class="hl">3 Fehler</span>', 190, ""], ["bei Anzahlungen", 120, "color:#fff;margin-top:16px"]], 0.35, 0.35);
+  rise(el(`<p class="c p" style="top:1000px;font-size:46px;font-weight:700">Nummer 2 machen fast alle.</p>`, p1), 1.2, 40);
+  const fehler = [
+    ["Keine Frist", "„Kann ich auch noch einen Tag vorher absagen?“ Ohne Frist hast du keine Antwort.", "Klare Frist, z. B. 48 Stunden"],
+    ["Nur mündlich", "Was nicht vor der Zahlung bestätigt wurde, ist im Streitfall schwer zu belegen.", "Bedingungen vor dem Bezahlen bestätigen lassen"],
+    ["Bar „die Tage“", "Die Anzahlung kommt später, der Termin wackelt schon jetzt.", "Anzahlung per Link, sofort bei der Buchung"],
+  ];
+  fehler.forEach(([titel, text, fix], i) => {
+    const t = 2.8 + i * 3.2;
+    const p = panel(i % 2 ? "paper" : "", t, i % 2 ? 80 : 20, 50);
+    pop(el(`<span class="stk ab" data-b="rotate(-2.5deg)" style="left:72px;top:330px;font-size:44px">Fehler ${i + 1}</span>`, p), t + 0.2);
+    rise(el(`<p class="c h" style="top:460px;font-size:130px">${titel}</p>`, p), t + 0.4);
+    rise(el(`<p class="c p" style="top:640px;font-size:46px">${text}</p>`, p), t + 0.7, 40);
+    pop(el(`<div class="quote yes ab" data-b="rotate(1.2deg)" style="left:72px;right:72px;top:1000px;font-size:52px;padding:36px 44px">✓ ${fix}</div>`, p), t + 1.6);
+  });
+  const p5 = panel("dark", 12.6, 50, 50); sun(p5, 3200, -1060, -500, .35);
+  rise(el(`<p class="c h" style="top:420px;font-size:110px;color:#fff">Das Muster für <span class="hl">alle drei</span>:</p>`, p5), 12.9);
+  pop(el(`<div class="c" style="top:760px"><span class="btn" style="font-size:56px;padding:30px 56px">tattoofin.de/anzahlung</span></div>`, p5), 13.4);
+  rise(el(`<p class="c p" style="top:940px;font-size:44px">Kostenlose Muster-Anzahlungsbedingungen zum Anpassen.</p>`, p5), 13.7, 40);
+  endcard(15.0, false);
+}},
+
+// R15 · Halloween: Die 3 gruseligsten Sätze im Studio
+{ id: "2026-10-31_halloween", dauer: 17, cover: 1.4, build() {
+  const p1 = panel("dark", 0); sun(p1, 3200, -1060, -640, .35);
+  pop(el(`<span class="stk ab" data-b="rotate(-2.5deg)" style="left:72px;top:420px;font-size:44px;background:#f2682a;color:#fff">Halloween 🎃</span>`, p1), 0.15);
+  lines(p1, 560, [["Die 3", 150, "color:#fff"], ['<span class="hl">gruseligsten</span>', 150], ["Sätze im Studio.", 110, "color:#fff;margin-top:16px"]], 0.35, 0.3);
+  const saetze = [
+    "„Ich hab das Geld leider doch nicht zusammen.“",
+    "„Kann ich die Anzahlung zurück? Ich hab's mir anders überlegt.“ (einen Tag vorher)",
+    "„PayPal Freunde ist doch okay, oder?“",
+  ];
+  saetze.forEach((q, i) => {
+    const t = 3.0 + i * 2.8;
+    const p = panel("dark", t, i % 2 ? 80 : 20, 50);
+    rise(el(`<p class="c lg" style="top:340px;font-size:200px;color:var(--or)">#${3 - i}</p>`, p), t + 0.2);
+    pop(el(`<div class="quote no ab" data-b="rotate(${i % 2 ? 1.5 : -1.5}deg)" style="left:72px;right:72px;top:640px;font-size:58px;padding:44px 50px">${q}</div>`, p), t + 0.5);
+    pop(el(`<p class="ab" style="right:90px;top:1180px;font-size:160px">${["👻", "💀", "🕷️"][i]}</p>`, p), t + 1.2);
+  });
+  const p5 = panel("", 11.4, 50, 50); sun(p5);
+  lines(p5, 460, [["Weniger gruselig", 120], ['<span class="out">mit Link,</span>', 140, "margin-top:16px"], ['<span class="out">Raten* und Bedingungen.</span>', 96]], 11.7, 0.3);
+  rise(el(`<p class="c p" style="top:1060px;font-size:44px;font-weight:700">Und welcher Satz gruselt dich am meisten? Ab in die Kommentare. 🎃</p>`, p5), 12.6, 40);
+  el(`<p class="fnote" style="right:72px">${WARN}</p>`, p5);
+  endcard(14.4, true);
+}},
+
 // ---------- Werbe-Reels (9 Sekunden) für creatives/2026-10-13/c1–c4 ----------
 { id: "creatives/2026-10-13/c1", dauer: 9.5, cover: 3.2, build() {
   const p1 = panel("", 0); sun(p1);
