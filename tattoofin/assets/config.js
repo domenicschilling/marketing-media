@@ -22,7 +22,7 @@ window.CFG = {
   // Seite mit dem Werbevideo (Ziel der QR-Codes im Mailing). Video als assets/werbevideo.mp4 ablegen.
   videoSeite: "https://domenicschilling.github.io/marketing-media/tattoofin/video.html",
   whatsappLink: "https://wa.me/491741682157?text=Hi%2C%20ich%20interessiere%20mich%20f%C3%BCr%20Tattoofin!",
-  websiteUrl: "[Website-URL]",   // Adresse der Abschluss-Website (tattoofin/website), z. B. https://start.tattoofin.de
+  websiteUrl: "https://tattoofin.de",   // Adresse der Website mit Online-Abschluss (tattoofin/website)
 
   // Preismodelle. Das Studio wählt EINES:
   //  A) Kauf: einmalige Einrichtung (netto zzgl. USt.), keine Grundgebühr, keine Provision; Zahlungsgebühren zahlt das Studio
