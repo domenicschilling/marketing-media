@@ -43,7 +43,7 @@ td.k{width:28%;font-weight:700}
   <ul style="margin:0">
     <li><b>Zielgruppe sind Studioinhaber</b>, Studiomanager und selbstständige Artists. Keine Endkunden. Jeder Beitrag beantwortet eine Frage, die sich ein Studio stellt.</li>
     <li><b>Positionierung:</b> Der Kumpel, der sich mit Zahlungen auskennt. Ehrlich rechnen statt verkaufen, Studio-Sprache statt Fintech-Sprech, Humor wie unser Maskottchen.</li>
-    <li><b>Rhythmus:</b> 3 Reels (Di, Do, Sa um 12:00) und 2 Karussells (Mi, Fr um 19:30) pro Woche, dazu Stories.</li>
+    <li><b>Rhythmus:</b> 3 Reels (Di, Do, Sa um 12:00) und 2 Karussells (Mi, Fr um 18:00) pro Woche, dazu Stories.</li>
     <li><b>Fertig produziert:</b> 6 Reels, 4 Karussells mit Story, 4 Werbemittel in allen Formaten inklusive Video und dazu alle Texte. Die Medien liegen in der Marketing-Maschine.</li>
     <li><b>Lead-Magnet:</b> Kommentar-Stichwort „ANZAHLUNG“ → Muster-Anzahlungsbedingungen per DM → Gespräch → Abschluss.</li>
   </ul>
@@ -89,7 +89,7 @@ td.k{width:28%;font-weight:700}
 <table class="week">
   <tr><th></th><th>Di</th><th>Mi</th><th>Do</th><th>Fr</th><th>Sa</th></tr>
   <tr><td><b>12:00</b><br>Mittagspause zwischen zwei Sitzungen</td><td>Reel</td><td></td><td>Reel</td><td></td><td>Reel</td></tr>
-  <tr><td><b>19:30</b><br>nach Feierabend, Zeit für Büro-Themen</td><td></td><td>Karussell + Story</td><td></td><td>Karussell + Story</td><td></td></tr>
+  <tr><td><b>18:00</b><br>Feierabend, Zeit für Büro-Themen</td><td></td><td>Karussell + Story</td><td></td><td>Karussell + Story</td><td></td></tr>
 </table>
 <ul>
   <li><b>Reels (15 bis 18 Sekunden):</b> Aufmacher in der ersten Sekunde, alles als Text im Bild, damit es auch ohne Ton funktioniert. Eigene Musik, keine Lizenzprobleme. Endkarte mit „Link in Bio“. Ziel: Reichweite bei Nicht-Followern.</li>
@@ -193,8 +193,8 @@ Raten über Klarna* · 0 € Einrichtung
 <h2>13. Technik und Ablauf</h2>
 <ul>
   <li><b>Medien:</b> <code>tattoofin/JJJJ-MM-TT/</code> (Reel: <code>reel.mp4</code>, <code>cover.jpg</code>), <code>tattoofin/JJJJ-MM-TT_abend/</code> (<code>slide-1…7.jpg</code>, <code>story.jpg</code>), <code>tattoofin/creatives/2026-10-13/c1…c4/</code>.</li>
-  <li><b>Live in der Marketing-Maschine</b> sind die Medien erst nach dem Zusammenführen in den Hauptzweig und sobald das Instagram-Konto verknüpft ist. Texte ins Google Sheet übernehmen (CSV-Import).</li>
-  <li><b>Achtung:</b> Die Maschine legt für andere Marken eine Postingplan-Seite als <code>index.html</code> im Markenordner an. Unter <code>tattoofin/index.html</code> liegt die Übersicht dieser Unterlagen. Bitte prüfen, dass sie beim Einrichten der Marke nicht überschrieben wird.</li>
+  <li><b>Marketing-Maschine:</b> Tattoofin ist dort als eigene Marke angelegt (<code>brands/tattoofin</code>) mit <code>autoContent: false</code>: Die Maschine gestaltet für Tattoofin nichts selbst, sondern postet genau diese Beiträge. Übertragen mit <code>node tools/export-marketingmaschine.mjs &lt;pfad-zur-marketing-maschine&gt;</code> nach <code>content/tattoofin/</code>, die Maschine veröffentlicht die Medien selbst über GitHub Pages.</li>
+  <li><b>Posten</b> startet, sobald das Instagram-Konto in der Maschine verbunden ist (Actions → „Instagram verbinden“, Marke <code>tattoofin</code>, Benutzer <code>tattoofin.de</code>) und die Marke auf <code>active: true</code> steht. Mittags-Beiträge laufen um 12:00, Abend-Slots (<code>_abend</code>) um 18:00.</li>
   <li><b>Neu erzeugen:</b> Bilder und Videos mit <code>node tools/render-instagram.mjs</code> (Vorlagen <code>social/instagram/statisch.html</code> und <code>reel.html</code>, Musik <code>tools/reel-sound.py</code>), Texte mit <code>node tools/export-instagram-texte.mjs</code>.</li>
 </ul>
 

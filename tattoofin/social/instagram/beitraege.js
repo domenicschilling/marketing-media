@@ -24,7 +24,7 @@ ${STERN}
       alt: "Animiertes Video: Ein Kunde schreibt im Chat „Ich meld mich, wenn ich das Geld zusammen hab“, der Termin wird nie gebucht. Danach schickt das Studio einen Zahlungslink, der Kunde wählt Klarna und zahlt.",
     },
     {
-      datum: "2026-10-14", uhrzeit: "19:30", format: "Slider", ordner: "2026-10-14_abend",
+      datum: "2026-10-14", uhrzeit: "18:00", format: "Slider", ordner: "2026-10-14_abend",
       thema: "Was kostet dich ein No-Show wirklich? Rechnung in 7 Folien plus Muster-Anzahlungsbedingungen als Lead-Magnet",
       saeule: "Studio-Mathe",
       text: `Ein No-Show kostet dich mehr als den einen Termin. 🪑
@@ -61,7 +61,7 @@ Alle Infos: Link in Bio.
       alt: "Bildschirmaufnahme im Comic-Stil: Im Portal werden Betrag 1.500 €, Kundin Lena und Projekt Rückenstück eingetragen, eine Stoppuhr läuft. Der Link geht per WhatsApp raus, die Kundin zahlt, 1.350 € gehen an das Studio.",
     },
     {
-      datum: "2026-10-16", uhrzeit: "19:30", format: "Slider", ordner: "2026-10-16_abend",
+      datum: "2026-10-16", uhrzeit: "18:00", format: "Slider", ordner: "2026-10-16_abend",
       thema: "Ratenzahlung im Studio: 5 Dinge, die du wissen musst (Klartext, Recht ab 20.11.2026)",
       saeule: "Klartext",
       text: `Ratenzahlung im Studio klingt nach Bank, Papierkram und Risiko. Ist es nicht. 🏦❌
@@ -121,7 +121,7 @@ Link in Bio.
       alt: "Animiertes Video: Eine Karte mit 3.000 € teilt sich in 2.700 € auf das Studiokonto und 300 € für Tattoofin. Darunter erscheinen die enthaltenen Posten: Stripe-Gebühren, Klarna, Umsatzsteuer, Einrichtung, Betreuung.",
     },
     {
-      datum: "2026-10-21", uhrzeit: "19:30", format: "Slider", ordner: "2026-10-21_abend",
+      datum: "2026-10-21", uhrzeit: "18:00", format: "Slider", ordner: "2026-10-21_abend",
       thema: "Anzahlung über PayPal „Freunde“? 5 Gründe, damit aufzuhören",
       saeule: "Klartext",
       text: `Anzahlung über PayPal „Freunde und Familie“? Machen viele. Sollte trotzdem niemand. 🙈
@@ -160,7 +160,7 @@ Link in Bio.
       alt: "Animiertes Video: Ein Handy scannt den QR-Code auf einem Thekenaufsteller. Auf der Zahlseite erscheinen 150 € Anzahlung und die Anzahlungsbedingungen, der Haken wird gesetzt, Meldung „Anzahlung bezahlt, Bedingungen bestätigt 14:32 Uhr“.",
     },
     {
-      datum: "2026-10-23", uhrzeit: "19:30", format: "Slider", ordner: "2026-10-23_abend",
+      datum: "2026-10-23", uhrzeit: "18:00", format: "Slider", ordner: "2026-10-23_abend",
       thema: "Kaufen oder Provision? Ehrliche Rechnung mit Grenze bei etwa 25.000 €",
       saeule: "Studio-Mathe",
       text: `Kaufen oder Provision? Wir rechnen ehrlich, auch wenn die Antwort oft „Provision“ heißt. 🧮
