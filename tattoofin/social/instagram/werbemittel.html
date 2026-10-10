@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><title>Tattoofin · Werbemittel</title>
+<link rel="stylesheet" href="insta.css">
+<style>
+body{padding:40px;display:flex;flex-wrap:wrap;gap:30px;align-items:flex-start}
+/* Drei Formate. Alle Größen in em, die Schriftgröße des Rahmens skaliert das ganze Motiv. */
+.frame.s{width:1080px;height:1350px;font-size:10px}
+.frame.sq{width:1080px;height:1080px;font-size:8.2px}
+.frame.st{width:1080px;height:1920px;font-size:10.6px}
+.ad{display:flex;flex-direction:column;padding:7.2em 7.2em 4.6em}
+.frame.sq.ad{padding:7em 7em 4.4em}
+/* Story/Reel: oben und unten Platz für die Bedienelemente von Instagram */
+.frame.st.ad{padding:250px 72px 300px}
+.ad>*{position:relative;z-index:1}
+.ad .stk{font-size:3.2em;align-self:flex-start}
+.ad .hd{margin-top:.45em}
+.ad .hd .h{display:block;line-height:.98}
+.ad .vis{flex:1;display:flex;flex-direction:column;justify-content:center;gap:2.6em;min-height:0}
+.ad .bar{display:flex;align-items:center;justify-content:space-between;gap:2em}
+.ad .bar .brand{display:flex;align-items:center;gap:1.2em}
+.ad .bar .brand img.f{height:9em}
+.ad .bar .brand img.w{height:3.6em}
+.dark.ad .bar .brand img.w{filter:brightness(0) invert(1)}
+.ad .bar .btn{font-size:3.6em;padding:.55em 1.1em}
+.ad .fn{font-size:2.1em;margin-top:1.4em}
+.dark.ad .fn{color:#fff}
+.ad .sun{z-index:0}
+.mascot{position:absolute;pointer-events:none;z-index:2}
+.ad .card{padding:1.2em 1.5em}
+.e .quote{font-size:3.9em;padding:.75em .95em}
+.e .toast{font-size:3.6em;align-self:flex-start;padding:.6em .85em}
+.e .toast small{font-size:.62em}
+.e .list li{font-size:3.6em;gap:.6em}
+.e .list li::before{width:1.5em;height:1.5em;font-size:.8em}
+.e .list{gap:.55em}
+.lbl{font:400 2.8em/1 'Titan One';text-transform:uppercase;letter-spacing:.03em;opacity:.8;margin-bottom:.45em}
+.arrow{font:400 9em/1 'Luckiest Guy';color:var(--ink);margin:-.2em 0 -.25em .25em}
+.dark .arrow{color:var(--y)}
+.row{display:flex;gap:2.2em;align-items:stretch}
+.qa{background:#fff;border:6px solid var(--ink);border-radius:30px;box-shadow:9px 9px 0 var(--ink);padding:1.4em 1.8em;color:var(--ink)}
+.dark .qa{border-color:#0c1a29;box-shadow:9px 9px 0 #0c1a29}
+.qa b{display:block;font:400 4em/1.05 'Luckiest Guy'}
+.qa span{display:block;font:600 3.1em/1.32 'DM Sans';margin-top:.35em}
+.zero{flex:1;text-align:center;padding:1.3em .6em 1.1em!important}
+.zero .big{font-size:13em;display:block}
+.zero span{display:block;font:400 2.9em/1.1 'Titan One';margin-top:.4em}
+.x{position:relative;display:block}
+.x::after{content:"";position:absolute;left:-.3em;right:-.3em;top:50%;height:.2em;margin-top:-.1em;background:var(--or);opacity:.9;border-radius:.2em;transform:rotate(-3deg)}
+.stamp{display:inline-block;font:400 7em/1 'Luckiest Guy';color:var(--or);border:.12em solid var(--or);border-radius:.25em;padding:.25em .4em .08em;background:rgba(255,253,246,.92);letter-spacing:.03em;transform:rotate(-6deg)}
+.cal{background:#fff;border:6px solid var(--ink);border-radius:30px;box-shadow:12px 12px 0 var(--ink);overflow:hidden;color:var(--ink)}
+.cal .top2{background:var(--ink);color:var(--y);font:400 3.2em/1 'Titan One';padding:.6em .8em}
+.cal .body{padding:1.6em 2em;display:flex;justify-content:space-between;align-items:center;gap:1.5em}
+.cal .body b{font:400 5.2em/1 'Luckiest Guy'}
+.cal .body small{display:block;font:600 2.8em/1.3 'DM Sans';color:var(--muted);margin-top:.3em}
+.pill{font:400 2.8em/1 'Titan One';border:5px solid var(--ink);border-radius:99px;padding:.45em .8em;white-space:nowrap}
+.pill.off{background:#ffe1dc}.pill.ok{background:#d6f5e3}
+.timer2{font:400 22em/.9 'Luckiest Guy';color:var(--ink);text-align:center}
+.steps{display:flex;gap:1.2em;flex-wrap:wrap;justify-content:center}
+.steps .stk{font-size:3em;transform:none}
+.steps .stk:nth-child(2){transform:rotate(2deg)}.steps .stk:nth-child(3){transform:rotate(-2deg);background:var(--mint);color:#fff}
+.lnk2{display:flex;align-items:center;gap:.6em;margin-top:.5em;background:#fff;border:4px solid var(--ink);border-radius:20px;padding:.45em .6em;font-weight:800;color:var(--ink)}
+.lnk2 img{width:2.2em}
+.pay{background:#fff;border:6px solid var(--ink);border-radius:36px;box-shadow:14px 14px 0 var(--ink);padding:2.2em 2.4em;color:var(--ink)}
+.pay .logo{display:flex;align-items:center;gap:.8em;font:400 3.4em/1 'Titan One'}
+.pay .logo i{width:2.1em;height:2.1em;border-radius:50%;background:var(--ink);color:var(--y);display:grid;place-items:center;font:400 .9em 'Luckiest Guy';font-style:normal}
+.pay .amt{font:400 9em/1 'Luckiest Guy';margin:.25em 0 .2em}
+.pay .opt{font-size:3em}
+</style></head><body>
+<script src="beitraege.js"></script>
+<script>
+"use strict";
+// Werbemittel-Serie 2 (creatives/2026-10-10/c1–c10): Zielgruppe Studio-Inhaber und Tätowierer.
+// Jedes Motiv in drei Formaten: feed (4:5), square (1:1), story (9:16). Texte für Meta stehen in beitraege.js (WERBEMITTEL).
+const FIG = "../../assets/figur.png", WORT = "../../assets/wortmarke.png";
+const STERN = "*Ratenzahlung über externe Anbieter wie Klarna, nach deren Prüfung. Tattoofin ist kein Kreditgeber. Achtung! Kreditaufnahme kostet Geld.";
+const STERN_KURZ = "*Über externe Anbieter wie Klarna, nach deren Prüfung. Tattoofin ist kein Kreditgeber. Achtung! Kreditaufnahme kostet Geld.";
+const ORDNER = "creatives/2026-10-10";
+
+// f = Format: "s" (Feed 4:5), "sq" (1:1), "st" (Story 9:16)
+const hd = (f, zeilen) => `<div class="hd">${zeilen.map(([t, g, extra]) => `<span class="h" style="font-size:${g[f === "s" ? 0 : f === "sq" ? 1 : 2] / 10}em;${extra || ""}">${t}</span>`).join("")}</div>`;
+const bar = (btn) => `<div class="bar"><div class="brand"><img class="f" src="${FIG}"><img class="w" src="${WORT}"></div><span class="btn">${btn}</span></div>`;
+
+const MOTIVE = {
+  // c1 · Voller Betrag (Raten → Sonderkategorie)
+  c1: { dark: false, sun: true, btn: "Mehr dazu", fn: true, build: (f) => `
+    <span class="stk">Für Tattoo-Studios</span>
+    ${hd(f, [["Dein Kunde zahlt", [100, 92, 108]], ['<span class="out">in Raten.*</span>', [130, 118, 140], "margin-top:.08em"], ["Du bekommst alles.", [100, 92, 108], "margin-top:.12em"]])}
+    <div class="vis e">
+      <div class="row">
+        <div class="card" style="flex:1;transform:rotate(-2deg)"><div class="lbl">Kunde zahlt</div><b class="lg" style="font-size:6.4em;display:block">in Raten*</b></div>
+        <div class="card" style="flex:1.25;background:var(--ink);color:var(--y);transform:rotate(1.5deg)"><div class="lbl" style="color:#fff">Du bekommst</div><b class="lg" style="font-size:8.6em;display:block">1.500 €</b></div>
+      </div>
+      <div class="toast" style="transform:rotate(-2deg)">✓ Voller Betrag, auf einmal<small>Stripe zahlt automatisch auf dein Konto aus</small></div>
+    </div>` },
+
+  // c2 · Nicht dein Risiko (Raten → Sonderkategorie)
+  c2: { dark: true, sun: true, btn: "Mehr dazu", fn: true, build: (f) => `
+    <span class="stk">Die häufigste Frage</span>
+    <div class="vis e" style="gap:3.4em">
+      <div class="quote" style="transform:rotate(-1.5deg);font-size:${f === "sq" ? 4.4 : 4.9}em">„Und wenn der Kunde seine Raten* nicht zahlt?“</div>
+      ${hd(f, [["Dann ist das", [104, 96, 116], "color:#fff"], ['<span class="out y">nicht dein Problem.</span>', [112, 100, 124], "margin-top:.1em"]])}
+      <p class="p" style="font-size:3.6em;color:#dfe8f1">Den Ratenvertrag schließt dein Kunde mit Klarna. Nach der Freigabe trägt der Anbieter das Ausfallrisiko, dein Studio bekommt den Betrag in der Regel vollständig.</p>
+    </div>` },
+
+  // c3 · Sleeve statt Sparen (Raten → Sonderkategorie)
+  c3: { dark: false, sun: true, btn: "Mehr dazu", fn: true, build: (f) => `
+    <span class="stk">Studio-Wahrheit</span>
+    ${hd(f, [["Der Sleeve scheitert", [96, 86, 100]], ["nicht am Motiv.", [96, 86, 100]], ['<span class="out">Sondern am Konto.</span>', [104, 94, 108], "margin-top:.12em"]])}
+    <div class="vis e">
+      <div class="quote no" style="transform:rotate(-1.5deg);align-self:flex-start;max-width:88%"><span class="x">„Ich meld mich, wenn ich das Geld zusammen hab.“</span></div>
+      <div class="cal" style="transform:rotate(1.2deg)"><div class="top2">Sleeve · 4 Sitzungen</div>
+        <div class="body"><div><b>Start: nächste Woche</b><small>Kunde zahlt in Raten*, du bekommst alles</small></div><span class="pill ok">✓ Bezahlt</span></div></div>
+    </div>` },
+
+  // c4 · Kein Hinterherlaufen
+  c4: { dark: false, sun: true, btn: "Mehr dazu", fn: false, build: (f) => `
+    <span class="stk">Kennst du?</span>
+    <div class="vis e" style="gap:3em">
+      <div class="quote no" style="transform:rotate(-1.5deg);align-self:flex-start;font-size:${f === "sq" ? 4.6 : 5}em"><span class="x">„Ich überweis dir das morgen.“ 🙏</span></div>
+      ${hd(f, [["Schluss mit", [118, 104, 132]], ['<span class="out">Geld hinterherlaufen.</span>', [96, 88, 92], "margin-top:.1em"]])}
+      <div class="wa" style="align-self:flex-end;max-width:86%;font-size:3.4em;transform:rotate(1deg)">Kein Stress, hier dein Link 👇<span class="lnk2"><img src="${FIG}">Ink Studio · 480 €</span><span class="t">14:02 ✓✓</span></div>
+      <div class="toast" style="transform:rotate(-2deg)">✓ Bezahlt · 480 €<small>14:05 · Karte</small></div>
+    </div>` },
+
+  // c5 · Erst Anzahlung, dann Termin
+  c5: { dark: true, sun: false, btn: "Mehr dazu", fn: false, build: (f) => `
+    <span class="stk">Studio-Regel</span>
+    ${hd(f, [["Kein Termin", [126, 110, 140], "color:#fff"], ['<span class="out y">ohne Anzahlung.</span>', [112, 98, 124], "margin-top:.1em"]])}
+    <div class="vis e">
+      <div class="cal" style="transform:rotate(-1.5deg)"><div class="top2">Freitag · 12:00 · Rückenstück</div>
+        <div class="body"><div><b>Anzahlung 150 €</b><small>Per Link oder QR-Code an der Theke</small></div><span class="pill ok">✓ Bezahlt</span></div></div>
+      <div class="toast" style="transform:rotate(-2deg)">✓ Bedingungen bestätigt<small>Mit Zeitpunkt gespeichert · No-Show? Geregelt.</small></div>
+    </div>` },
+
+  // c6 · Service: Wir richten alles ein
+  c6: { dark: false, sun: true, btn: "Mehr dazu", fn: false, mascot: true, build: (f) => `
+    <span class="stk">Rundum-Service</span>
+    ${hd(f, [["Du tätowierst.", [118, 104, 132]], ['<span class="out">Wir machen den Rest.</span>', [100, 88, 112], "margin-top:.1em"]])}
+    <div class="vis e">
+      <div class="card" style="transform:rotate(-1deg);margin-right:${f === "s" ? 22 : 30}%">
+        <ul class="list">${["Zahlungsarten eingerichtet", "Branding mit deinem Logo", "QR-Code für die Theke", "Testzahlung & Team-Schulung", "Betreuung per WhatsApp"].map((x) => `<li>${x}</li>`).join("")}</ul></div>
+    </div>` },
+
+  // c7 · Zeit: 10 Sekunden
+  c7: { dark: false, sun: true, btn: "Mehr dazu", fn: false, build: (f) => `
+    <span class="stk">Zeit ist Geld</span>
+    ${hd(f, [["Zahlungslink", [118, 104, 132]], ['<span class="out">in 10 Sekunden.</span>', [112, 100, 124], "margin-top:.1em"]])}
+    <div class="vis e" style="align-items:center">
+      <div class="card" style="transform:rotate(-2deg);padding:1.2em 2.2em .9em"><div class="timer2">0:10</div></div>
+      <div class="steps"><span class="stk">Betrag tippen</span><span class="stk">Link schicken</span><span class="stk">✓ Bezahlt</span></div>
+    </div>` },
+
+  // c8 · Qualität: Profi-Auftritt
+  c8: { dark: true, sun: false, btn: "Mehr dazu", fn: false, build: (f) => `
+    <span class="stk">Ehrliche Frage</span>
+    ${hd(f, [["Deine Arbeit ist Premium.", [92, 82, 104], "color:#fff"], ['<span class="out y">Dein Bezahlen auch?</span>', [104, 92, 116], "margin-top:.12em"]])}
+    <div class="vis e">
+      <div class="row" style="align-items:center">
+        <div style="flex:1;display:flex;flex-direction:column;gap:1.1em;font-size:${f === "sq" ? .8 : .9}em">
+          ${["IBAN per WhatsApp", "PayPal Freunde", "Bargeld im Umschlag"].map((x, i) => `<div class="quote no" style="transform:rotate(${i % 2 ? 1.5 : -1.5}deg)"><span class="x">${x}</span></div>`).join("")}</div>
+        <div class="pay" style="flex:1.05;transform:rotate(2deg);font-size:${f === "sq" ? .8 : .9}em"><div class="logo"><i>IS</i>Ink Studio</div><div class="amt">480 €</div>
+          <div class="opt on">Karte <span>›</span></div><div class="opt">Apple Pay <span>›</span></div><div class="opt">Google Pay <span>›</span></div></div>
+      </div>
+    </div>` },
+
+  // c9 · Risikofrei starten
+  c9: { dark: false, sun: true, btn: "Mehr dazu", fn: false, build: (f) => `
+    <span class="stk">Risikofrei starten</span>
+    ${hd(f, [["Läuft nichts,", [124, 110, 138]], ['<span class="out">zahlst du nichts.</span>', [112, 100, 124], "margin-top:.1em"]])}
+    <div class="vis e">
+      <div class="row">${[["Einrichtung", -2], ["Grundgebühr", 1.5], ["Fixkosten", -1]].map(([t, r]) => `<div class="card zero" style="transform:rotate(${r}deg)"><span class="big">0 €</span><span>${t}</span></div>`).join("")}</div>
+      <div class="toast" style="background:var(--ink);color:var(--y);transform:rotate(-1.5deg)">10 % nur pro Zahlung<small style="color:#fff">Stripe, Klarna, USt. und Betreuung inklusive · monatlich kündbar</small></div>
+    </div>` },
+
+  // c10 · Die 3 Fragen (Raten → Sonderkategorie)
+  c10: { dark: true, sun: false, btn: "Mehr dazu", fn: true, build: (f) => `
+    <span class="stk">Kurz erklärt</span>
+    ${hd(f, [['Die <span class="hl">3 Fragen</span>, die jeder', [86, 76, 98], "color:#fff"], ["Studio-Inhaber stellt.", [86, 76, 98], "color:#fff"]])}
+    <div class="vis e" style="gap:${f === "sq" ? 1.6 : 2.2}em">
+      ${[["Wann kommt mein Geld?", "Automatisch aufs Konto. Bei Raten* den vollen Betrag, auf einmal."],
+         ["Und wenn der Kunde nicht zahlt?", "Bei Raten* trägt der Anbieter das Risiko. Gegen No-Shows: Anzahlung."],
+         ["Was kostet mich das?", "10 % pro Zahlung, alles inklusive. 0 € Einrichtung."]]
+        .map(([q, a], i) => `<div class="qa" style="transform:rotate(${[-1, 1, -0.5][i]}deg);${f === "sq" ? "font-size:.86em;padding:1em 1.5em" : ""}"><b>${q}</b><span>${a}</span></div>`).join("")}
+    </div>` },
+};
+
+for (const [id, m] of Object.entries(MOTIVE)) {
+  for (const [f, datei] of [["s", "feed"], ["sq", "square"], ["st", "story"]]) {
+    const d = document.createElement("div");
+    d.className = `frame ad ${f}${m.dark ? " dark" : ""}`;
+    d.dataset.out = `${ORDNER}/${id}/${datei}.jpg`;
+    d.innerHTML = (m.sun ? `<div class="sun" style="position:absolute;width:2800px;height:2800px;left:-900px;top:-700px;opacity:${m.dark ? .3 : 1}"></div>` : "")
+      + m.build(f)
+      + (m.mascot ? `<img class="mascot" src="${FIG}" style="width:${f === "sq" ? 300 : f === "s" ? 340 : 380}px;right:${f === "st" ? 40 : 30}px;bottom:${f === "st" ? 560 : f === "s" ? 230 : 190}px;transform:rotate(6deg)">` : "")
+      + bar(m.btn)
+      + (m.fn ? `<p class="fn">${f === "sq" ? STERN_KURZ : STERN}</p>` : "");
+    document.body.appendChild(d);
+  }
+}
+</script>
+</body></html>

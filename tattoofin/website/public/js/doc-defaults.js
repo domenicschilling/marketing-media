@@ -21,7 +21,7 @@ window.CFG = {
   gerichtsstand: "Bamberg",
   // Seite mit dem Werbevideo (Ziel der QR-Codes im Mailing). Video als assets/werbevideo.mp4 ablegen.
   videoSeite: "https://domenicschilling.github.io/marketing-media/tattoofin/video.html",
-  whatsappLink: "https://wa.me/491741682157?text=Hi%2C%20ich%20interessiere%20mich%20f%C3%BCr%20Tattoofin!",
+  whatsappLink: "https://wa.me/491624502375?text=Hi%2C%20ich%20interessiere%20mich%20f%C3%BCr%20Tattoofin!",
   websiteUrl: "https://tattoofin.de",   // Adresse der Website mit Online-Abschluss (tattoofin/website)
 
   // Preismodelle. Das Studio wählt EINES:

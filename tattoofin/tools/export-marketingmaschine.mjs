@@ -83,7 +83,10 @@ for (const b of BEITRAEGE) {
     const reihenfolge = ["so-gehts", "preise", "anzahlung", "fragen"];
     files.sort((a, b) => reihenfolge.indexOf(a.replace(/-\d+\.jpg$/, "")) - reihenfolge.indexOf(b.replace(/-\d+\.jpg$/, "")) || a.localeCompare(b));
     for (const f of files) copy(path.join(quelle, f), path.join(dir, f));
-    fs.writeFileSync(path.join(dir, "stories.json"), JSON.stringify({ brand: "tattoofin", stories: files, highlights: reihenfolge }, null, 2) + "\n");
+    // Bereits gepostete Stories (posted) bleiben erhalten, sonst würden sie beim nächsten Serien-Lauf erneut gepostet
+    const altJson = path.join(dir, "stories.json");
+    const posted = fs.existsSync(altJson) ? JSON.parse(fs.readFileSync(altJson, "utf8")).posted : undefined;
+    fs.writeFileSync(altJson, JSON.stringify({ brand: "tattoofin", stories: files, highlights: reihenfolge, ...(posted ? { posted } : {}) }, null, 2) + "\n");
     console.log(`✓ ${files.length} Highlight-Stories`);
   }
 }
@@ -103,5 +106,30 @@ for (const w of WERBEMITTEL) {
     files,
   }, null, 2) + "\n");
   console.log(`✓ Werbemittel ${datum}/${id} (${w.name})`);
+}
+// Auswahlseite für die Werbemittel (GitHub Pages: …/tattoofin/creatives/): alle Motive mit Bildern, Reel und Anzeigentexten
+{
+  const esc = (t) => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const reihen = [...WERBEMITTEL].reverse().map((w) => {
+    const [, datum, id] = w.ordner.split("/");
+    const k = `${datum}/${id}`;
+    return `<article id="${datum}-${id}"><header><b>${k}</b><span>${esc(w.name)}</span>${w.sonderkategorie ? '<em>Sonderkategorie Finanzen</em>' : ""}</header>
+<div class="m"><img loading="lazy" src="${k}/feed.jpg" alt="Feed 4:5"><img loading="lazy" src="${k}/square.jpg" alt="Quadrat 1:1"><img loading="lazy" src="${k}/story.jpg" alt="Story 9:16"><video src="${k}/reel.mp4" poster="${k}/cover.jpg" controls playsinline preload="none"></video></div>
+<dl><dt>Primärtext</dt><dd>${esc(w.primaer).replace(/\n/g, "<br>")}</dd><dt>Überschrift</dt><dd>${esc(w.titel)}</dd><dt>Beschreibung</dt><dd>${esc(w.beschreibung)}</dd><dt>Button</dt><dd>${esc(w.button)}</dd></dl></article>`;
+  }).join("\n");
+  fs.writeFileSync(path.join(content, "creatives/index.html"), `<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>Tattoofin · Werbemittel</title><style>
+:root{--y:#fbb316;--ink:#1f3d5c}*{box-sizing:border-box}body{margin:0;font:16px/1.5 system-ui,sans-serif;background:#fff8e6;color:var(--ink)}
+h1{margin:0;padding:20px 16px;background:var(--y);font-size:22px}p.i{padding:0 16px;max-width:900px}
+article{background:#fff;margin:16px;border:3px solid var(--ink);border-radius:16px;overflow:hidden;max-width:1200px}
+header{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 16px;background:var(--ink);color:#fff}header b{color:var(--y)}
+em{font-style:normal;background:#f2682a;border-radius:99px;padding:2px 10px;font-size:13px}
+.m{display:flex;gap:10px;overflow-x:auto;padding:12px}.m img,.m video{height:340px;border-radius:10px;border:2px solid #0002;flex:none}
+dl{margin:0;padding:0 16px 16px}dt{font-weight:700;margin-top:10px}dd{margin:0}
+</style></head><body><h1>Tattoofin · Werbemittel zur Auswahl</h1>
+<p class="i">Jedes Motiv gibt es als Feed (4:5), Quadrat (1:1), Story (9:16) und Reel. Für die Kampagne einfach die Nummern nennen, z. B. <b>2026-10-10/c4</b>. Motive mit „Sonderkategorie Finanzen“ erwähnen Raten und laufen bei Meta in der Kategorie Finanzprodukte (ohne Alters-/Geschlechter-Eingrenzung).</p>
+${reihen}</body></html>
+`);
+  console.log("✓ Auswahlseite creatives/index.html");
 }
 console.log(`\n${n} Beiträge und ${WERBEMITTEL.length} Werbemittel nach ${path.relative(process.cwd(), content) || content} übertragen.`);

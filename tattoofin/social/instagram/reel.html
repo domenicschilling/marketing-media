@@ -655,6 +655,138 @@ const REELS = [
   toast(p1, "✓ Anzahlung bezahlt<small>Bedingungen bestätigt · 14:32 Uhr</small>", 72, 1560, 3.8);
   adEnd(5.6, false);
 }},
+
+// ---------- Werbe-Reels Serie 2 (9,5 Sekunden) für creatives/2026-10-10/c1–c10 ----------
+{ id: "creatives/2026-10-10/c1", dauer: 9.5, cover: 3.4, build() {
+  const p1 = panel("", 0); sun(p1);
+  pop(el(`<span class="stk ab" data-b="rotate(-2.5deg)" style="left:72px;top:290px;font-size:40px">Für Tattoo-Studios</span>`, p1), 0.1);
+  lines(p1, 410, [["Dein Kunde zahlt", 110], ['<span class="out">in Raten.*</span>', 160, "margin-top:10px"]], 0.3, 0.35);
+  pop(el(`<div class="card ab" data-b="rotate(-2deg)" style="left:72px;top:800px;padding:34px 46px"><p class="label">Kunde zahlt</p><span class="lg" style="font-size:90px">in Raten*</span></div>`, p1), 1.4);
+  rise(el(`<p class="c h" style="top:1040px;font-size:96px">Du bekommst:</p>`, p1), 2.1);
+  const card = el(`<div class="card ab" data-b="rotate(1.5deg)" style="left:72px;right:72px;top:1150px;padding:34px 56px;background:var(--ink)"><span class="big cnt" style="font-size:180px;color:var(--y)">0 €</span></div>`, p1);
+  pop(card, 2.5);
+  const cnt = card.querySelector(".cnt");
+  hooks.push((t) => { const v = Math.round(1500 * Math.min(1, Math.max(0, (t - 2.7) / 1.0)) ** 0.6); cnt.textContent = v.toLocaleString("de-DE") + " €"; });
+  for (let t = 2.7; t < 3.7; t += 0.1) sfx(t, "tick");
+  toast(p1, "✓ Voller Betrag, auf einmal<small>Stripe zahlt automatisch auf dein Konto aus</small>", 72, 1420, 4.0);
+  el(`<p class="fnote" style="left:72px;right:72px;bottom:250px">${WARN}</p>`, p1);
+  adEnd(5.6, true);
+}},
+{ id: "creatives/2026-10-10/c2", dauer: 9.5, cover: 3.2, build() {
+  const p1 = panel("dark", 0); sun(p1, 3200, -1060, -640, .3);
+  pop(el(`<span class="stk ab" data-b="rotate(-2.5deg)" style="left:72px;top:290px;font-size:40px">Die häufigste Frage</span>`, p1), 0.1);
+  pop(el(`<div class="bub" style="left:72px;right:72px;top:420px;font-size:56px;padding:40px 50px">Und wenn der Kunde seine Raten* nicht zahlt? 😬</div>`, p1), 0.4);
+  lines(p1, 820, [["Dann ist das", 120, "color:#fff"], ['<span class="out y">nicht dein</span>', 150, "margin-top:10px"], ['<span class="out y">Problem.</span>', 150]], 1.6, 0.35);
+  rise(el(`<p class="c p" style="top:1330px;font-size:42px;color:#dfe8f1">Den Ratenvertrag schließt dein Kunde mit Klarna. Nach der Freigabe trägt <b style="color:var(--y)">der Anbieter das Ausfallrisiko.</b></p>`, p1), 3.2, 40);
+  el(`<p class="fnote" style="left:72px;right:72px;bottom:250px">${WARN}</p>`, p1);
+  adEnd(5.6, true);
+}},
+{ id: "creatives/2026-10-10/c3", dauer: 9.5, cover: 4.0, build() {
+  const p1 = panel("", 0); sun(p1);
+  pop(el(`<span class="stk ab" data-b="rotate(-2.5deg)" style="left:72px;top:290px;font-size:40px">Studio-Wahrheit</span>`, p1), 0.1);
+  const q = el(`<div class="quote no ab" data-b="rotate(-1.5deg)" style="left:72px;right:72px;top:420px;font-size:52px;padding:36px 44px">„Ich meld mich, wenn ich das Geld zusammen hab.“<i class="strike" style="right:-14px"></i></div>`, p1);
+  pop(q, 0.3);
+  const s = q.querySelector(".strike");
+  at(s, 0, { transform: "scaleX(0)" }); at(s, 1.6, { transform: "scaleX(0)" }); at(s, 1.85, { transform: "scaleX(1)" }, OUT); sfx(1.6, "swipe");
+  lines(p1, 760, [["Mit Raten*", 120], ['<span class="out">startet der Sleeve</span>', 104, "margin-top:10px"], ['<span class="out">nächste Woche.</span>', 104]], 2.1, 0.3);
+  toast(p1, "✓ Sleeve bezahlt · 2.400 €<small>Kunde zahlt in Raten*, du bekommst alles</small>", 72, 1330, 3.8);
+  el(`<p class="fnote" style="left:72px;right:72px;bottom:250px">${WARN}</p>`, p1);
+  adEnd(5.6, true);
+}},
+{ id: "creatives/2026-10-10/c4", dauer: 9.5, cover: 4.2, build() {
+  const p1 = panel("", 0);
+  el(`<div class="chat"></div>`, p1);
+  el(`<div class="chathead"><div class="av">M</div><div>Marco<small>Oberarm, Freitag</small></div></div>`, p1);
+  const b1 = el(`<div class="bub" style="left:60px;top:360px">Ich überweis dir das morgen 🙏<span class="t">Mo 19:12</span></div>`, p1); pop(b1, 0.2);
+  const b2 = el(`<div class="bub" style="left:60px;top:600px">Sorry, morgen dann wirklich 😅<span class="t">Mi 21:40</span></div>`, p1); pop(b2, 0.9);
+  const st = el(`<div class="stamp ab" data-b="rotate(-8deg)" style="left:150px;top:860px">Kennst du?</div>`, p1); pop(st, 1.6);
+  const p2 = panel("", 2.6, 50, 70); sun(p2);
+  lines(p2, 300, [["Schluss mit", 130], ['<span class="out">Geld hinter-</span>', 130, "margin-top:10px"], ['<span class="out">herlaufen.</span>', 130]], 2.9, 0.3);
+  pop(el(`<div class="bub me" style="right:72px;top:860px;max-width:860px;font-size:44px">Kein Stress, hier dein Link 👇<div class="lnk"><img src="${FIG}">Ink Studio · 480 €</div><span class="t">✓✓</span></div>`, p2), 3.9);
+  toast(p2, "✓ Bezahlt · 480 €<small>3 Minuten später, per Karte</small>", 72, 1340, 4.7);
+  adEnd(5.9, false);
+}},
+{ id: "creatives/2026-10-10/c5", dauer: 9.5, cover: 3.6, build() {
+  const p1 = panel("dark", 0); sun(p1, 3200, -1060, -640, .3);
+  pop(el(`<span class="stk ab" data-b="rotate(-2.5deg)" style="left:72px;top:290px;font-size:40px">Studio-Regel</span>`, p1), 0.1);
+  lines(p1, 410, [["Kein Termin", 140, "color:#fff"], ['<span class="out y">ohne</span>', 150, "margin-top:10px"], ['<span class="out y">Anzahlung.</span>', 150]], 0.3, 0.3);
+  const cal = el(`<div class="card ab" data-b="rotate(-1.5deg)" style="left:72px;right:72px;top:960px;padding:0;overflow:hidden">
+    <div style="background:var(--ink);color:var(--y);font:400 38px 'Titan One';padding:24px 40px">Freitag · 12:00 · Rückenstück</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:34px 40px"><div><span class="lg" style="font-size:66px">Anzahlung 150 €</span><p style="font:600 30px 'DM Sans';color:var(--muted);margin-top:8px">Per Link oder QR-Code an der Theke</p></div>
+    <span class="st" style="font:400 32px 'Titan One';border:5px solid var(--ink);border-radius:99px;padding:14px 24px;background:#ffe1dc;white-space:nowrap">offen</span></div></div>`, p1);
+  pop(cal, 1.5);
+  hooks.push((t) => { const x = cal.querySelector(".st"); if (t >= 3.2) { x.textContent = "✓ Bezahlt"; x.style.background = "#d6f5e3"; } else { x.textContent = "offen"; x.style.background = "#ffe1dc"; } });
+  sfx(3.2, "ding");
+  toast(p1, "✓ Bedingungen bestätigt<small>Mit Zeitpunkt gespeichert · No-Show? Geregelt.</small>", 72, 1350, 3.8);
+  adEnd(5.6, false);
+}},
+{ id: "creatives/2026-10-10/c6", dauer: 9.5, cover: 3.6, build() {
+  const p1 = panel("", 0); sun(p1);
+  pop(el(`<span class="stk ab" data-b="rotate(-2.5deg)" style="left:72px;top:290px;font-size:40px">Rundum-Service</span>`, p1), 0.1);
+  lines(p1, 410, [["Du tätowierst.", 130], ['<span class="out">Wir machen</span>', 130, "margin-top:10px"], ['<span class="out">den Rest.</span>', 130]], 0.3, 0.3);
+  const items = ["Zahlungsarten eingerichtet", "Branding mit deinem Logo", "QR-Code für die Theke", "Testzahlung & Team-Schulung", "Betreuung per WhatsApp"];
+  items.forEach((x, i) => {
+    const e = el(`<div class="chip ab" data-b="rotate(${i % 2 ? 1.5 : -1.5}deg)" style="left:72px;top:${930 + i * 112}px;font-size:36px">✓ ${x}</div>`, p1);
+    pop(e, 1.5 + i * 0.4);
+  });
+  rise(el(`<img class="ab" src="${FIG}" style="width:250px;right:24px;top:1250px;transform:rotate(6deg)">`, p1), 1.6, 200);
+  adEnd(5.6, false);
+}},
+{ id: "creatives/2026-10-10/c7", dauer: 9.5, cover: 4.3, build() {
+  const p1 = panel("", 0); sun(p1, 3200, -1060, -400, .6);
+  pop(el(`<span class="stk ab" data-b="rotate(-2.5deg)" style="left:72px;top:290px;font-size:40px">Zeit ist Geld</span>`, p1), 0.1);
+  lines(p1, 410, [["Zahlungslink", 130], ['<span class="out">in 10 Sekunden.</span>', 124, "margin-top:10px"]], 0.3, 0.3);
+  const card = el(`<div class="card ab" data-b="rotate(-2deg)" style="left:190px;right:190px;top:760px;padding:30px 0 10px;text-align:center"><span class="big tm" style="font-size:260px">0:00</span></div>`, p1);
+  pop(card, 1.0);
+  hooks.push((t) => { const v = Math.min(10, Math.max(0, Math.floor((t - 1.4) / 0.28))); card.querySelector(".tm").textContent = "0:" + String(v).padStart(2, "0"); });
+  for (let k = 0; k < 10; k++) sfx(1.4 + k * 0.28, "tick");
+  [["Betrag tippen", 72, 1150, -2], ["Link schicken", 300, 1270, 2], ["✓ Bezahlt", 560, 1390, -2]].forEach(([x, l, tp, r], i) => {
+    const e = el(`<span class="chip ab" data-b="rotate(${r}deg)" style="left:${l}px;top:${tp}px;${i === 2 ? "background:var(--mint);color:#fff" : ""}">${x}</span>`, p1);
+    pop(e, 1.7 + i * 0.9);
+  });
+  adEnd(5.6, false);
+}},
+{ id: "creatives/2026-10-10/c8", dauer: 9.5, cover: 4.6, build() {
+  const p1 = panel("dark", 0); sun(p1, 3200, -1060, -640, .3);
+  pop(el(`<span class="stk ab" data-b="rotate(-2.5deg)" style="left:72px;top:290px;font-size:40px">Ehrliche Frage</span>`, p1), 0.1);
+  lines(p1, 410, [["Deine Arbeit", 120, "color:#fff"], ["ist Premium.", 120, "color:#fff"], ['<span class="out y">Dein Bezahlen auch?</span>', 96, "margin-top:14px"]], 0.3, 0.3);
+  ["IBAN per WhatsApp", "PayPal Freunde", "Bargeld im Umschlag"].forEach((x, i) => {
+    const e = el(`<div class="quote no ab" data-b="rotate(${i % 2 ? 1.5 : -1.5}deg)" style="left:72px;width:520px;top:${930 + i * 170}px;font-size:42px;padding:26px 34px">${x}<i class="strike" style="right:-14px;height:9px;margin-top:-4px"></i></div>`, p1);
+    pop(e, 1.4 + i * 0.3);
+    const s = e.querySelector(".strike");
+    at(s, 0, { transform: "scaleX(0)" }); at(s, 2.6 + i * 0.2, { transform: "scaleX(0)" }); at(s, 2.85 + i * 0.2, { transform: "scaleX(1)" }, OUT); sfx(2.6 + i * 0.2, "swipe");
+  });
+  const ph = el(`<div class="ph sh2" style="left:600px;top:880px;width:420px;height:620px"><div class="scr" style="padding:34px 26px"><div class="notch"></div>
+    <p style="font:400 30px 'Titan One';display:flex;gap:12px;align-items:center"><span style="width:52px;height:52px;border-radius:50%;background:var(--ink);color:var(--y);display:grid;place-items:center;font:400 24px 'Luckiest Guy'">IS</span>Ink Studio</p>
+    <p class="lg" style="font-size:80px;margin:16px 0 20px">480 €</p>
+    <div class="opt" style="font-size:28px;padding:16px 20px">Karte <span>›</span></div><div class="opt" style="font-size:28px;padding:16px 20px">Apple Pay <span>›</span></div><div class="opt" style="font-size:28px;padding:16px 20px">Google Pay <span>›</span></div></div></div>`, p1);
+  rise(ph, 3.4, 500, 0.6);
+  adEnd(5.8, false);
+}},
+{ id: "creatives/2026-10-10/c9", dauer: 9.5, cover: 3.4, build() {
+  const p1 = panel("", 0); sun(p1);
+  pop(el(`<span class="stk ab" data-b="rotate(-2.5deg)" style="left:72px;top:290px;font-size:40px">Risikofrei starten</span>`, p1), 0.1);
+  lines(p1, 410, [["Läuft nichts,", 140], ['<span class="out">zahlst du</span>', 140, "margin-top:10px"], ['<span class="out">nichts.</span>', 140]], 0.3, 0.3);
+  [["Einrichtung", -2], ["Grundgebühr", 1.5], ["Fixkosten", -1]].forEach(([x, r], i) => {
+    const e = el(`<div class="card ab" data-b="rotate(${r}deg)" style="left:${72 + i * 322}px;width:290px;top:1000px;padding:30px 10px 24px;text-align:center"><span class="big" style="font-size:130px">0 €</span><p style="font:400 30px 'Titan One';margin-top:8px">${x}</p></div>`, p1);
+    pop(e, 1.5 + i * 0.4);
+  });
+  toast(p1, "10 % nur pro Zahlung<small>Stripe, Klarna, USt. und Betreuung inklusive</small>", 72, 1350, 3.4);
+  adEnd(5.6, false);
+}},
+{ id: "creatives/2026-10-10/c10", dauer: 10.5, cover: 4.4, build() {
+  const p1 = panel("dark", 0); sun(p1, 3200, -1060, -640, .3);
+  pop(el(`<span class="stk ab" data-b="rotate(-2.5deg)" style="left:72px;top:290px;font-size:40px">Kurz erklärt</span>`, p1), 0.1);
+  lines(p1, 400, [['Die <span class="hl">3 Fragen</span>,', 110, "color:#fff"], ["die jeder Studio-", 96, "color:#fff"], ["Inhaber stellt.", 96, "color:#fff"]], 0.3, 0.3);
+  [["Wann kommt mein Geld?", "Automatisch aufs Konto. Bei Raten* den vollen Betrag, auf einmal."],
+   ["Und wenn der Kunde nicht zahlt?", "Bei Raten* trägt der Anbieter das Risiko. Gegen No-Shows: Anzahlung."],
+   ["Was kostet mich das?", "10 % pro Zahlung, alles inklusive. 0 € Einrichtung."]].forEach(([q, a], i) => {
+    const e = el(`<div class="card ab" data-b="rotate(${[-1, 1, -0.5][i]}deg)" style="left:72px;right:72px;top:${790 + i * 250}px;padding:26px 36px"><p class="lg" style="font-size:50px">${q}</p><p style="font:600 34px/1.3 'DM Sans';margin-top:8px">${a}</p></div>`, p1);
+    pop(e, 1.4 + i * 1.1);
+  });
+  el(`<p class="fnote" style="left:72px;right:72px;bottom:250px">${WARN}</p>`, p1);
+  adEnd(6.6, true);
+}},
 ];
 window.REELS = REELS;
 

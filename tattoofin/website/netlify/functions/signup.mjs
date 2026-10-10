@@ -21,7 +21,7 @@ export default handler(async (req, context) => {
   if (req.method === "GET") {
     const s = await getStudio(new URL(req.url).searchParams.get("id"));
     if (!s) return fail("Nicht gefunden", 404);
-    const kurz = { id: s.id, status: s.status, modell: s.modell, zahlart: s.zahlart, firma: s.firma, kontoVerbunden: Boolean(s.stripe?.chargesEnabled), kontoBegonnen: Boolean(s.stripe?.detailsSubmitted) };
+    const kurz = { id: s.id, status: s.status, modell: s.modell, zahlart: s.zahlart, firma: s.firma, preisNetto: s.preisNetto || null, kontoVerbunden: Boolean(s.stripe?.chargesEnabled), kontoBegonnen: Boolean(s.stripe?.detailsSubmitted) };
     // Vollständige Angaben nur zum Fortsetzen eines nicht abgeschlossenen Entwurfs
     if (!["entwurf", "abgebrochen"].includes(s.status)) return json(kurz);
     return json({ ...kurz, email: s.email, inhaber: s.inhaber, strasse: s.strasse, plz: s.plz, ort: s.ort, telefon: s.telefon, studioTelefon: s.studioTelefon, ustid: s.ustid });

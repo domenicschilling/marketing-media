@@ -82,7 +82,11 @@
 
   f.addEventListener("change", function (e) { if (e.target.name === "modell") toggleKauf(); });
   f.addEventListener("click", function (e) {
-    if (e.target.matches("[data-next]")) { var err = pruefe(step); show(err); if (!err) go(step + 1); }
+    if (e.target.matches("[data-next]")) {
+      var err = pruefe(step); show(err);
+      if (!err && step === 1 && window.TFTrack) TFTrack.track("InitiateCheckout", { content_name: modell() === "kauf" ? "Kauf" : "Provisionsmodell" }, "ic-" + new Date().toISOString().slice(0, 10));
+      if (!err) go(step + 1);
+    }
     if (e.target.matches("[data-back]")) { show(""); go(step - 1); }
   });
 

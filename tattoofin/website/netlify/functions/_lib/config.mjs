@@ -15,7 +15,7 @@ export const CFG = {
   telefon: env("KONTAKT_TELEFON", "0174 1682157"),
   email: env("KONTAKT_EMAIL", "info@tattoofin.de"),
   gerichtsstand: env("GERICHTSSTAND", "Bamberg"),
-  whatsapp: env("KONTAKT_WHATSAPP", "491741682157"),
+  whatsapp: env("KONTAKT_WHATSAPP", "491624502375"),
   videoUrl: env("VIDEO_URL", ""),       // z. B. /assets/werbevideo.mp4 oder YouTube-Datei-URL; leer = Videobereich ausgeblendet
   materialsUrl: env("MATERIALS_URL", "https://domenicschilling.github.io/marketing-media/tattoofin/kunden/"),
 

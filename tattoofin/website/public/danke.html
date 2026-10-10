@@ -24,6 +24,7 @@
   </div>
 </div></main>
 <script src="/js/common.js"></script>
+<script src="/js/tf-track.js"></script>
 <script>
 (function () {
   var q = new URLSearchParams(location.search), id = q.get("id"), n = 0;
@@ -38,6 +39,11 @@
       document.getElementById("firma").textContent = s.firma ? ", " + s.firma : "";
       if (s.kontoVerbunden) { msg.textContent = "Dein Stripe-Konto ist verbunden und freigegeben. Wir melden uns für Einrichtung, Test und Teamschulung."; return; }
       if (q.get("stripe")) { msg.textContent = s.kontoBegonnen ? "Danke! Stripe prüft jetzt deine Angaben, meist innerhalb von 1 bis 3 Werktagen. Du bekommst eine E-Mail, sobald das Konto freigegeben ist." : "Die Verbindung mit Stripe ist noch nicht abgeschlossen."; if (!s.kontoBegonnen) zeigeConnect(); return; }
+      // Meta-Pixel (nur mit Einwilligung, pro Abschluss einmal): Provision → CompleteRegistration, Kauf bezahlt → Purchase
+      if (window.TFTrack && (s.status === "einrichtung" || s.status === "zahlung_offen")) {
+        if (s.modell === "kauf" && s.status === "einrichtung") TFTrack.track("Purchase", { value: (s.preisNetto || 149900) / 100, currency: "EUR", content_name: "Tattoofin Setup (Kauf)" }, "kauf-" + s.id);
+        else TFTrack.track("CompleteRegistration", { content_name: s.modell === "kauf" ? "Kauf auf Rechnung" : "Provisionsmodell", status: s.status }, "abschluss-" + s.id);
+      }
       if (s.status === "einrichtung") { msg.textContent = s.modell === "provision" ? "Dein Vertrag ist abgeschlossen." : "Deine Zahlung ist eingegangen. Die Rechnung kommt per E-Mail."; zeigeConnect(); }
       else if (s.status === "zahlung_offen") { msg.textContent = "Dein Vertrag ist abgeschlossen. Die Rechnung ist per E-Mail unterwegs. Sobald die Zahlung eingegangen ist, starten wir mit der Einrichtung."; zeigeConnect(); }
       else if (n++ < 15) { msg.textContent = "Wir warten noch auf die Bestätigung von Stripe …"; setTimeout(check, 2000); }
