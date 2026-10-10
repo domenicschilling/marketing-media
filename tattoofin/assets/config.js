@@ -17,7 +17,7 @@ window.CFG = {
   email: "info@tattoofin.de",
   web: "tattoofin.de",
   webUrl: "https://tattoofin.de",
-  instagram: "@tattoofin",
+  instagram: "@tattoofin.de",
   gerichtsstand: "Bamberg",
   // Seite mit dem Werbevideo (Ziel der QR-Codes im Mailing). Video als assets/werbevideo.mp4 ablegen.
   videoSeite: "https://domenicschilling.github.io/marketing-media/tattoofin/video.html",

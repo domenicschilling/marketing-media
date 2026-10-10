@@ -469,7 +469,7 @@ body{padding:40px;display:flex;flex-wrap:wrap;gap:30px;align-items:flex-start}
 document.querySelectorAll(".car").forEach(function (f) {
   var i = +f.dataset.i, n = +f.dataset.n;
   var top = document.createElement("div"); top.className = "top";
-  top.innerHTML = '<span class="brand"><img class="f" src="../../assets/figur.png"><img class="w" src="../../assets/wortmarke.png"></span><span>@tattoofin</span>';
+  top.innerHTML = '<span class="brand"><img class="f" src="../../assets/figur.png"><img class="w" src="../../assets/wortmarke.png"></span><span>@tattoofin.de</span>';
   var foot = document.createElement("div"); foot.className = "foot";
   var dots = ""; for (var k = 1; k <= n; k++) dots += '<i' + (k === i ? ' class="on"' : "") + "></i>";
   foot.innerHTML = '<span class="dots">' + dots + "</span>" + (i < n ? '<span class="swipe">Wischen →</span>' : '<span class="swipe">tattoofin.de</span>');

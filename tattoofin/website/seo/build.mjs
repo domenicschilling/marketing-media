@@ -15,6 +15,7 @@ const ORG = {
   "@type": "Organization", "@id": SITE + "/#org", name: "Tattoofin", legalName: "DSX Media Solutions UG (haftungsbeschränkt)",
   url: SITE + "/", logo: SITE + "/assets/logo.png", email: "info@tattoofin.de", telephone: "+491741682157",
   address: { "@type": "PostalAddress", streetAddress: "Am Weingarten 9", postalCode: "96117", addressLocality: "Memmelsdorf", addressCountry: "DE" },
+  sameAs: ["https://www.instagram.com/tattoofin.de/"],
 };
 
 const nav = `<header class="nav"><div class="wrap">
@@ -24,7 +25,7 @@ const nav = `<header class="nav"><div class="wrap">
 
 const footer = `<footer class="foot"><div class="wrap">
   <div><img class="wm" src="/assets/wortmarke.png" alt="Tattoofin" width="135" height="30"><div>© ${new Date().getFullYear()} DSX Media Solutions UG (haftungsbeschränkt) · Tattoofin ist kein Kreditinstitut.</div></div>
-  <div><a href="/ratgeber.html">Ratgeber</a><a href="/impressum.html">Impressum</a><a href="/datenschutz.html">Datenschutz</a><a href="/vertrag.html">Vertrag</a><a href="/login.html">Studio-Login</a></div>
+  <div><a href="/ratgeber.html">Ratgeber</a><a href="/impressum.html">Impressum</a><a href="/datenschutz.html">Datenschutz</a><a href="/vertrag.html">Vertrag</a><a href="/login.html">Studio-Login</a><a href="https://www.instagram.com/tattoofin.de/" rel="me noopener" target="_blank">Instagram</a></div>
 </div></footer>`;
 
 function head({ title, description, url, type = "website", jsonld }) {
