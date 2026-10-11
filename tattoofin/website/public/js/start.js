@@ -13,8 +13,7 @@
     step = n;
     document.querySelectorAll("[data-step]").forEach(function (s) { s.classList.toggle("hidden", +s.dataset.step !== n); });
     document.querySelectorAll(".steps-bar span").forEach(function (s) { s.classList.toggle("on", +s.dataset.s <= n); });
-    if (n === 3) summary();
-    if (n === 4) final();
+    if (n === 3) final();
     window.scrollTo({ top: 0, behavior: "smooth" });
     try { sessionStorage.setItem("tf-start", JSON.stringify(daten())); } catch (e) {}
   }
@@ -27,37 +26,47 @@
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(val("email"))) { f.elements.email.focus(); return "Bitte gib eine gültige E-Mail-Adresse ein."; }
     }
     if (n === 3) {
-      if (!val("ak_vertrag") || !val("ak_avv") || !val("ak_unternehmer")) return "Bitte bestätige Vertrag, AVV und dass du als Unternehmer bestellst.";
-      if (!val("unterzeichner")) { f.elements.unterzeichner.focus(); return "Bitte gib deinen Namen als Unterzeichner an."; }
+      if (!val("ak_alle")) return "Bitte setze den Haken bei Vertrag und AVV.";
+      if (!val("unterzeichner")) { f.elements.unterzeichner.focus(); return "Bitte gib deinen Namen ein (gilt als Unterschrift)."; }
     }
     return "";
   }
 
   function preisText() {
-    if (modell() === "provision") return C.provisionProzent + " % vom Zahlbetrag jeder Zahlung über Tattoofin, alles inklusive (Gebühren der Zahlungsanbieter und USt.), Auszahlung von " + (100 - C.provisionProzent) + " % automatisch durch Stripe, keine Einrichtungs- und keine Grundgebühr";
+    if (modell() === "provision") return C.provisionProzent + " % vom Zahlbetrag jeder Zahlung über Tattoofin, alles inklusive (Zahlungsgebühren und USt.), " + (100 - C.provisionProzent) + " % kommen automatisch auf dein Konto, keine Einrichtungs- und keine Grundgebühr";
     var code = val("aktionscode");
     return "Setup " + TF.euro(code ? C.aktionNetto : C.kaufNetto) + " netto einmalig" + (code ? " (mit Aktionscode, wird geprüft)" : "") + " zzgl. " + C.ustProzent + " % USt., keine Grundgebühr, keine Provision";
-  }
-
-  function summary() {
-    document.getElementById("summary").innerHTML = "<b>" + TF.esc(val("firma")) + "</b> · " +
-      (modell() === "kauf" ? "Kauf" : "Provision") + "<br>" + TF.esc(preisText());
   }
 
   function final() {
     var m = modell(), z = zahlart(), html;
     if (m === "provision") {
-      html = "<p>Du schließt das <b>Provisionsmodell</b> ab: " + TF.esc(preisText()) + ".</p>" +
-        "<p><b>Jetzt wird nichts bezahlt.</b> Im nächsten Schritt richtest du bei Stripe das Auszahlungskonto deines Studios ein (ca. 10 Minuten, Ausweis und Bankverbindung bereithalten). Darauf zahlt Stripe dir später automatisch " + (100 - C.provisionProzent) + " % jeder Kundenzahlung aus.</p>";
-      document.getElementById("submit").textContent = "Vertrag abschließen & Stripe-Konto verbinden";
+      html = "<p><b>Provisionsmodell</b> · " + C.provisionProzent + " % pro Zahlung, alles inklusive</p>" +
+        "<p style=\"margin-bottom:0\"><b>Jetzt wird nichts bezahlt.</b> Danach legst du in ca. 10 Minuten dein Auszahlungskonto an. Halte Ausweis und Bankverbindung bereit.</p>";
+      document.getElementById("submit").textContent = "Kostenlos starten";
     } else {
       html = "<p>Du kaufst das <b>Tattoofin Setup</b>: " + TF.esc(preisText()) + ".</p>" +
         (z === "rechnung" ? "<p>Du bekommst die Rechnung sofort per E-Mail, zahlbar in 7 Tagen. Sobald die Zahlung eingegangen ist, starten wir mit der Einrichtung. Schneller geht es mit Karte: dann legen wir sofort los.</p>"
-          : "<p>Im nächsten Schritt bezahlst du sicher über Stripe (Karte, SEPA-Lastschrift u. a.). Die Rechnung kommt automatisch per E-Mail. Danach verbindest du das Stripe-Konto deines Studios.</p>") +
+          : "<p>Im nächsten Schritt bezahlst du sicher per Karte, SEPA-Lastschrift u. a. Die Rechnung kommt automatisch per E-Mail. Danach legst du das Auszahlungskonto deines Studios an.</p>") +
         "<p>" + C.garantieTage + " Tage Geld-zurück-Garantie ab Go-live.</p>";
       document.getElementById("submit").textContent = z === "rechnung" ? "Zahlungspflichtig bestellen (Rechnung)" : "Zahlungspflichtig bestellen & bezahlen";
     }
-    document.getElementById("final").innerHTML = html;
+    document.getElementById("final").innerHTML = "<p style=\"margin-top:0\"><b>" + TF.esc(val("firma")) + "</b></p>" + html;
+    var kurz = m === "provision" ? [
+      "Keine Einrichtungsgebühr, keine Grundgebühr: Jetzt wird nichts bezahlt.",
+      C.provisionProzent + " % nur, wenn über Tattoofin Geld reinkommt. Alles inklusive, auch Zahlungsgebühren, Klarna und USt.",
+      "Der Rest kommt automatisch aufs Konto deines Studios.",
+      "Jederzeit zum Monatsende kündbar, mit einem Klick im Portal.",
+      "Wir richten alles für dich ein und sind per WhatsApp und E-Mail für dich da.",
+    ] : [
+      "Einmalig " + TF.euro(val("aktionscode") ? C.aktionNetto : C.kaufNetto) + " netto, danach keine Grundgebühr und keine Provision.",
+      C.garantieTage + " Tage Geld-zurück-Garantie ab Go-live.",
+      "Alles läuft über dein eigenes Zahlungskonto.",
+      z === "rechnung" ? "Die Einrichtung startet nach Zahlungseingang." : "Nach der Zahlung legen wir sofort los.",
+      "Wir richten alles für dich ein und sind per WhatsApp und E-Mail für dich da.",
+    ];
+    kurz.push("Deine Daten und die deiner Kunden verarbeiten wir DSGVO-konform (Auftragsverarbeitungsvertrag).");
+    document.getElementById("kurz").innerHTML = kurz.map(function (x) { return "<li>" + TF.esc(x) + "</li>"; }).join("");
   }
 
   function daten() {

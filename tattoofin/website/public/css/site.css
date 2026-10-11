@@ -173,6 +173,12 @@ input:focus,select:focus,textarea:focus{outline:none;box-shadow:4px 4px 0 var(--
 .steps-bar{display:flex;gap:8px;margin:0 0 24px}
 .steps-bar span{flex:1;height:12px;border-radius:99px;background:#fff;border:2.5px solid var(--ink)}
 .steps-bar span.on{background:var(--ink)}
+.kurz{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+.kurz li{position:relative;padding-left:30px;font-size:15px}
+.kurz li::before{content:"✓";position:absolute;left:0;top:0;width:22px;height:22px;border-radius:50%;background:var(--yellow);border:2px solid var(--ink);display:grid;place-items:center;font-size:12px;font-weight:800}
+.vdetails{margin-top:16px;border:2px dashed rgba(31,61,92,.35);border-radius:14px;padding:10px 14px}
+.vdetails summary{cursor:pointer;font-weight:700}
+.vdetails[open] summary{margin-bottom:10px}
 .vbox{height:240px;overflow:auto;border:2.5px solid var(--ink);border-radius:14px;padding:12px 14px;font-size:13px;background:#fff}
 .vbox h2{font-size:15px;margin:12px 0 4px;font-family:var(--round)}
 

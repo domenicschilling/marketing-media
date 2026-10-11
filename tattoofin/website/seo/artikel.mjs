@@ -65,7 +65,7 @@ export const artikel = [
     faq: [
       ["Trägt mein Studio das Risiko, wenn ein Kunde seine Raten nicht zahlt?", "Nein, wenn die Ratenzahlung über einen Anbieter wie Klarna läuft. Der Kunde schließt den Vertrag mit dem Anbieter, dein Studio bekommt den Betrag nach Freigabe ausgezahlt. Das Ausfallrisiko der Raten liegt beim Anbieter."],
       ["Brauche ich eine Erlaubnis als Kreditvermittler?", "Nicht, solange du keine Kredite vermittelst oder berätst, sondern nur eine Zahlungsart anbietest, deren Bedingungen der Anbieter festlegt. Wichtig: keine eigenen Ratenpläne versprechen, keine Zinsen oder Raten zusagen und den Kunden für die Bedingungen auf den Checkout verweisen."],
-      ["Was kostet Ratenzahlung fürs Studio?", "Bei Tattoofin im Provisionsmodell 10 % vom Zahlbetrag, alles inklusive: Stripe, Klarna, Umsatzsteuer und Betreuung. Kunde zahlt 3.000 €, du bekommst 2.700 €. Alternativ einmal 1.499 € netto, dann zahlst du die Gebühren des Zahlungsanbieters direkt."],
+      ["Was kostet Ratenzahlung fürs Studio?", "Bei Tattoofin im Provisionsmodell 10 % vom Zahlbetrag, alles inklusive: Zahlungsgebühren, Klarna, Umsatzsteuer und Betreuung. Kunde zahlt 3.000 €, du bekommst 2.700 €. Alternativ einmal 1.499 € netto, dann zahlst du die Gebühren des Zahlungsanbieters direkt."],
       ["Darf ich für Ratenzahlung einen Aufpreis verlangen?", "Nein. Für die Nutzung bestimmter Zahlungsarten darfst du von Verbrauchern grundsätzlich keinen Aufschlag verlangen, und auch die Bedingungen der Anbieter verbieten das in der Regel."],
       ["Was ändert sich ab 20.11.2026?", "Mit der neuen EU-Verbraucherkreditrichtlinie fallen auch kurze Ratenkäufe unter das Verbraucherkreditrecht. Die Pflichten (Prüfung, Informationen) liegen beim Anbieter. Für Studios wichtig: Werbung mit Raten braucht den Hinweis „Achtung! Kreditaufnahme kostet Geld.“ und konkrete Zahlen nur mit Pflichtangaben."],
     ],
@@ -81,11 +81,11 @@ export const artikel = [
 </ul>
 
 <h2 id="wie">So funktioniert es technisch</h2>
-<p>Dein Studio bekommt eine Zahlungsstruktur über <b>Stripe</b>, einen der größten Zahlungsanbieter. Darüber laufen Karte, Apple Pay, Google Pay und <b>Klarna</b>. Klarna bietet Kunden je nach Prüfung „später bezahlen“, „in 3 Raten“ oder eine Finanzierung an. In Deutschland sind laut Stripe zum Beispiel 3 Raten für Beträge von 1 bis 5.000 € und Finanzierungen von 25 bis 10.000 € möglich (Stand 10/2026).</p>
+<p>Dein Studio bekommt eine Zahlungsstruktur über einen der größten regulierten Zahlungsanbieter. Darüber laufen Karte, Apple Pay, Google Pay und <b>Klarna</b>. Klarna bietet Kunden je nach Prüfung „später bezahlen“, „in 3 Raten“ oder eine Finanzierung an. In Deutschland sind laut Stripe zum Beispiel 3 Raten für Beträge von 1 bis 5.000 € und Finanzierungen von 25 bis 10.000 € möglich (Stand 10/2026).</p>
 <ol>
 <li>Du erstellst im Portal einen Zahlungslink mit Betrag und Projekt, oder dein Kunde scannt den QR-Code deiner Zahlseite.</li>
 <li>Der Kunde wählt im Checkout, wie er zahlen will. Prüfung und Bedingungen übernimmt der Anbieter.</li>
-<li>Du siehst sofort, dass bezahlt ist. Stripe zahlt automatisch auf dein Konto aus.</li>
+<li>Du siehst sofort, dass bezahlt ist. Das Geld kommt automatisch auf dein Konto.</li>
 </ol>
 <div class="tip">Das gleiche System nimmt auch <a href="/tattoo-anzahlung.html">Anzahlungen vor dem Termin</a> an, mit Anzahlungsbedingungen, die der Kunde vor dem Bezahlen bestätigt.</div>
 
@@ -175,10 +175,10 @@ export const artikel = [
     lead: "Klarna ist für Onlineshops gebaut. Mit Zahlungslink und QR-Zahlseite geht es aber auch im Tattoostudio, ganz ohne Shop und ohne Technik-Wissen.",
     stand: "2026-10-10",
     faq: [
-      ["Kann ich Klarna im Tattoostudio ohne Onlineshop nutzen?", "Ja, zum Beispiel über Stripe mit Zahlungslinks und einer Zahlseite mit QR-Code. Der Kunde zahlt im Checkout per Klarna, du brauchst keinen Shop."],
+      ["Kann ich Klarna im Tattoostudio ohne Onlineshop nutzen?", "Ja, zum Beispiel mit Zahlungslinks und einer Zahlseite mit QR-Code. Der Kunde zahlt im Checkout per Klarna, du brauchst keinen Shop."],
       ["Welche Klarna-Optionen bekommen meine Kunden?", "Je nach Betrag und Prüfung z. B. später bezahlen, in 3 Raten oder eine Finanzierung. Welche Optionen ein Kunde sieht, entscheidet Klarna."],
-      ["Was kostet Klarna fürs Studio?", "Über Stripe ab 2,99 % + 0,35 € pro Zahlung, wenn du die Gebühren selbst zahlst (Kaufmodell). Im Tattoofin-Provisionsmodell ist das in den 10 % enthalten."],
-      ["Bekomme ich das Geld sofort, auch wenn der Kunde in Raten zahlt?", "Nach Freigabe durch Klarna wird dir der Betrag über Stripe ausgezahlt. Die Raten zahlt der Kunde an Klarna, das Ausfallrisiko trägt Klarna."],
+      ["Was kostet Klarna fürs Studio?", "Je nach Zahlungsanbieter ab 2,99 % + 0,35 € pro Zahlung, wenn du die Gebühren selbst zahlst (Kaufmodell). Im Tattoofin-Provisionsmodell ist das in den 10 % enthalten."],
+      ["Bekomme ich das Geld sofort, auch wenn der Kunde in Raten zahlt?", "Nach Freigabe durch Klarna wird dir der Betrag automatisch ausgezahlt. Die Raten zahlt der Kunde an Klarna, das Ausfallrisiko trägt Klarna."],
     ],
     inhalt: `
 <div class="toc"><b>Inhalt</b><ol><li><a href="#optionen">Klarna-Optionen und Grenzen</a></li><li><a href="#ablauf">So läuft es im Studio</a></li><li><a href="#kosten">Kosten</a></li><li><a href="#regeln">Regeln, die du kennen musst</a></li><li><a href="#faq">Häufige Fragen</a></li></ol></div>
@@ -197,12 +197,12 @@ export const artikel = [
 <li><b>Zahlungslink:</b> Betrag und Projekt im Portal eintippen, Link per WhatsApp schicken.</li>
 <li><b>Oder QR-Code:</b> Kunde scannt an der Theke, gibt den abgesprochenen Betrag ein.</li>
 <li><b>Checkout:</b> Der Kunde wählt Klarna, Karte, Apple Pay oder Google Pay.</li>
-<li><b>Auszahlung:</b> Stripe zahlt automatisch auf das Konto deines Studios aus.</li>
+<li><b>Auszahlung:</b> automatisch auf das Konto deines Studios.</li>
 </ol>
 
 <h2 id="kosten">Kosten</h2>
 <ul>
-<li><b>Tattoofin Provision:</b> 10 % vom Zahlbetrag, alles inklusive (Klarna, Stripe, USt.). Kunde zahlt 3.000 €, du bekommst 2.700 €.</li>
+<li><b>Tattoofin Provision:</b> 10 % vom Zahlbetrag, alles inklusive (Zahlungsgebühren, Klarna, USt.). Kunde zahlt 3.000 €, du bekommst 2.700 €.</li>
 <li><b>Tattoofin Kauf:</b> 1.499 € netto einmalig, die Klarna-Gebühr (über Stripe ab 2,99 % + 0,35 €) zahlst du direkt.</li>
 </ul>
 

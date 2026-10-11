@@ -11,8 +11,8 @@
 
 <main class="sec tight"><div class="wrap narrow">
   <h1 style="font-size:clamp(30px,5vw,44px);margin-bottom:8px">Tattoofin für dein Studio</h1>
-  <p class="muted" style="margin:0 0 24px">Dauert ca. 3 Minuten. Danach verbindest du das Stripe-Konto deines Studios, und wir richten alles ein.</p>
-  <div class="steps-bar"><span data-s="1"></span><span data-s="2"></span><span data-s="3"></span><span data-s="4"></span></div>
+  <p class="muted" style="margin:0 0 24px">Dauert ca. 3 Minuten. Danach legst du in ca. 10 Minuten dein Auszahlungskonto an, und wir richten alles für dich ein.</p>
+  <div class="steps-bar"><span data-s="1"></span><span data-s="2"></span><span data-s="3"></span></div>
   <div id="alert"></div>
 
   <form id="f" class="form" novalidate>
@@ -21,7 +21,7 @@
       <h2 style="font-size:24px;margin-bottom:6px">1. Wie möchtest du bezahlen?</h2>
       <p class="muted" style="margin:0 0 18px">Gleiche Leistung, gleiche kostenlose Betreuung.</p>
       <div class="choice">
-        <label><input type="radio" name="modell" value="provision"><b>Provision · risikofrei</b><div class="p"><span data-c="provisionProzent">10</span> %</div><small>vom Zahlbetrag jeder Zahlung über Tattoofin, alles inklusive (Zahlungsgebühren und USt.). Stripe zahlt dir automatisch den Rest aus. Keine Fixkosten, monatlich kündbar.</small></label>
+        <label><input type="radio" name="modell" value="provision"><b>Provision · risikofrei</b><div class="p"><span data-c="provisionProzent">10</span> %</div><small>vom Zahlbetrag jeder Zahlung über Tattoofin, alles inklusive (Zahlungsgebühren und USt.). Der Rest kommt automatisch auf dein Konto. Keine Fixkosten, monatlich kündbar.</small></label>
         <label><input type="radio" name="modell" value="kauf"><b>Kaufen</b><div class="p" id="kaufpreis"><span data-c="kaufNetto|euro"></span></div><small>einmalig netto. Keine Grundgebühr, keine Provision, <span data-c="garantieTage">30</span> Tage Geld-zurück-Garantie.</small></label>
       </div>
       <div id="kauf-extra" class="hidden" style="margin-top:18px">
@@ -62,27 +62,22 @@
 
     <!-- Schritt 3 -->
     <section data-step="3" class="hidden">
-      <h2 style="font-size:24px;margin-bottom:6px">3. Vertrag &amp; Datenschutz</h2>
-      <p class="muted" style="margin:0 0 14px">Bitte lies den Vertrag und den Auftragsverarbeitungsvertrag (AVV). Du bekommst beides nach dem Abschluss per E-Mail.</p>
-      <div id="summary" class="alert info"></div>
-      <div class="vbox" id="vertrag-box">Vertrag wird geladen …</div>
-      <p style="font-size:14px;margin:8px 0 0"><a href="/vertrag.html" target="_blank">Vertrag in neuem Fenster</a> · <a href="/avv.html" target="_blank">AVV öffnen</a> · <a href="/datenschutz.html" target="_blank">Datenschutzerklärung</a></p>
-      <label class="check"><input type="checkbox" name="ak_vertrag"> <span>Ich habe den <a href="/vertrag.html" target="_blank">Dienstleistungsvertrag</a> (Version <span data-c="vertragVersion"></span>) gelesen und schließe ihn mit dem gewählten Modell ab.</span></label>
-      <label class="check"><input type="checkbox" name="ak_avv"> <span>Ich schließe den <a href="/avv.html" target="_blank">Auftragsverarbeitungsvertrag</a> nach Art. 28 DSGVO ab.</span></label>
-      <label class="check"><input type="checkbox" name="ak_unternehmer"> <span>Ich bestelle als Unternehmer/in (§ 14 BGB) für mein Studio und bin berechtigt, es zu vertreten.</span></label>
-      <div class="field" style="margin-top:14px"><label for="unterzeichner">Name des Unterzeichners (gilt als Unterschrift in Textform)</label><input type="text" id="unterzeichner" name="unterzeichner" required></div>
-      <div style="display:flex;justify-content:space-between;margin-top:20px"><button type="button" class="btn ghost" data-back>Zurück</button><button type="button" class="btn gold" data-next>Weiter</button></div>
-    </section>
-
-    <!-- Schritt 4 -->
-    <section data-step="4" class="hidden">
-      <h2 style="font-size:24px;margin-bottom:12px">4. Abschließen</h2>
-      <div id="final"></div>
+      <h2 style="font-size:24px;margin-bottom:12px">3. Prüfen &amp; starten</h2>
+      <div id="final" class="alert info"></div>
+      <h3 style="font-size:18px;margin:18px 0 8px">Das Wichtigste in Kürze</h3>
+      <ul class="kurz" id="kurz"></ul>
+      <details class="vdetails">
+        <summary>Vertrag und AVV vollständig lesen</summary>
+        <div class="vbox" id="vertrag-box">Vertrag wird geladen …</div>
+        <p style="font-size:14px;margin:8px 0 0"><a href="/vertrag.html" target="_blank">Vertrag in neuem Fenster</a> · <a href="/avv.html" target="_blank">AVV</a> · <a href="/datenschutz.html" target="_blank">Datenschutz</a> · Beides bekommst du nach dem Abschluss auch per E-Mail.</p>
+      </details>
+      <label class="check" style="margin-top:18px"><input type="checkbox" name="ak_alle"> <span>Ich akzeptiere den <a href="/vertrag.html" target="_blank">Vertrag</a> (Version <span data-c="vertragVersion"></span>) und den <a href="/avv.html" target="_blank">AVV</a> und bestelle als Unternehmer/in für mein Studio.</span></label>
+      <div class="field" style="margin-top:10px"><label for="unterzeichner">Dein Name (gilt als Unterschrift)</label><input type="text" id="unterzeichner" name="unterzeichner" required autocomplete="name"></div>
       <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:22px">
         <button type="button" class="btn ghost" data-back>Zurück</button>
-        <button type="submit" class="btn gold" id="submit">Zahlungspflichtig abschließen</button>
+        <button type="submit" class="btn gold" id="submit">Jetzt starten</button>
       </div>
-      <p class="muted" style="font-size:13px;margin:16px 0 0">🔒 Zahlung und Kontoverbindung laufen sicher über Stripe. Wir sehen keine Karten- oder Kontodaten. Tattoofin ist kein Kreditgeber.</p>
+      <p class="muted" style="font-size:13px;margin:16px 0 0">🔒 Zahlungen laufen über einen zertifizierten Zahlungspartner. Wir sehen keine Karten- oder Kontodaten. Fragen? <a href="https://wa.me/491624502375" target="_blank" rel="noopener">WhatsApp 0162 4502375</a></p>
     </section>
   </form>
 </div></main>

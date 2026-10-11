@@ -5,7 +5,7 @@ import { CFG } from "./_lib/config.mjs";
 import { handler } from "./_lib/util.mjs";
 import { getStudio, saveStudio } from "./_lib/store.mjs";
 import { stripe, ensureConnectedAccount, onboardingLink } from "./_lib/stripe.mjs";
-import { kontoAbgleichen } from "./_lib/domain.mjs";
+import { kontoAbgleichen, notifyAdmin } from "./_lib/domain.mjs";
 
 const redirect = (to) => new Response(null, { status: 302, headers: { Location: to } });
 
@@ -19,9 +19,16 @@ export default handler(async (req) => {
     return redirect(`/danke.html?id=${s.id}&stripe=1`);
   }
   if (s.stripe?.chargesEnabled) return redirect("/portal.html");
-  await ensureConnectedAccount(s);
-  await saveStudio(s);
-  return redirect(await onboardingLink(s, CFG.siteUrl));
+  try {
+    await ensureConnectedAccount(s);
+    await saveStudio(s);
+    return redirect(await onboardingLink(s, CFG.siteUrl));
+  } catch (e) {
+    // Kein roher Stripe-Fehler im Browser: Studio landet auf der Danke-Seite, wir bekommen eine Mail und melden uns
+    console.error("[connect]", e.message);
+    await notifyAdmin("Stripe-Konto konnte nicht angelegt werden – bitte prüfen und Studio kontaktieren", s, { Fehler: e.message });
+    return redirect(`/danke.html?id=${s.id}&connect=spaeter`);
+  }
 });
 
 export const config = { path: ["/api/connect", "/api/connect/zurueck"] };
