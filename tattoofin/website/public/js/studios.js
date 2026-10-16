@@ -1,7 +1,7 @@
 // Kampagnen-Landingpage /studios: UTM-Parameter an „Jetzt starten“ weitergeben und
 // Klick auf „Starten“ oder WhatsApp als Meta-Ereignis „Lead“ messen (Optimierungsziel der Kampagne).
 // Einwilligung wie überall über tf-track.js: ohne „Einverstanden“ wird nichts gesendet.
-// Mit Einwilligung zusätzlich serverseitig über /api/capi (gleiche event_id → Meta dedupliziert).
+// Mit Einwilligung zusätzlich serverseitig über /api/capi (in tf-track.js, gleiche event_id → Meta dedupliziert).
 (function () {
   var j = document.getElementById("jahr");
   if (j) j.textContent = new Date().getFullYear();
@@ -16,35 +16,30 @@
   });
 
   function consent() { try { return localStorage.getItem("tf_consent"); } catch (e) { return null; } }
-  function cookie(n) { var m = document.cookie.match("(?:^|; )" + n + "=([^;]*)"); return m ? decodeURIComponent(m[1]) : ""; }
   function schonGezaehlt(key) {
     try { if (localStorage.getItem("tf_ev_" + key)) return true; localStorage.setItem("tf_ev_" + key, "1"); } catch (e) {}
     return false;
   }
 
-  function lead(art) {
-    if (schonGezaehlt("lp-lead-" + new Date().toISOString().slice(0, 10))) return;
-    var params = { content_name: art === "whatsapp" ? "WhatsApp (Kampagnen-Seite)" : "Jetzt starten (Kampagnen-Seite)", content_category: "Tattoo-Studio" };
-    // Pixel geladen (Einwilligung liegt vor): direkt senden + Server-Kopie
-    if (consent() === "ja" && window.fbq) {
-      var id = "tf-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8);
-      window.fbq("track", "Lead", params, { eventID: id });
-      try {
-        var fbc = cookie("_fbc") || (q.get("fbclid") ? "fb.1." + Date.now() + "." + q.get("fbclid") : "");
-        fetch("/api/capi", { method: "POST", keepalive: true, headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ event_name: "Lead", event_id: id, url: location.href.split("#")[0], fbp: cookie("_fbp"), fbc: fbc, content_name: params.content_name }) }).catch(function () {});
-      } catch (e) {}
-    } else if (window.TFTrack) {
-      // Banner noch offen: vormerken, wird bei Zustimmung gesendet (bei Ablehnung verworfen)
-      window.TFTrack.track("Lead", params);
+  function lead(art, a) {
+    if (consent() === "nein" || schonGezaehlt("lp-lead-" + new Date().toISOString().slice(0, 10))) return;
+    // Banner noch offen und Klick auf „Starten“: Die Seite wechselt sofort, der vorgemerkte Lead ginge verloren.
+    // Deshalb als ?tf_lead=start mitgeben – /start.html sendet ihn, sobald dort „Einverstanden“ geklickt wird.
+    if (consent() !== "ja" && art === "start") {
+      var u = new URL(a.getAttribute("href"), location.origin);
+      u.searchParams.set("tf_lead", "start");
+      a.setAttribute("href", u.pathname + u.search);
+      return;
     }
+    // Sonst über tf-track.js: mit Einwilligung sofort (Pixel + Server-Kopie), sonst vorgemerkt bis zur Zustimmung
+    if (window.TFTrack) window.TFTrack.track("Lead", { content_name: art === "whatsapp" ? "WhatsApp (Kampagnen-Seite)" : "Jetzt starten (Kampagnen-Seite)", content_category: "Tattoo-Studio" });
   }
 
   document.addEventListener("click", function (e) {
     var a = e.target.closest && e.target.closest("a[href]");
     if (!a) return;
     var h = a.getAttribute("href") || "";
-    if (a.dataset.lp === "start" || /^\/start(\.html)?(\?|$)/.test(h)) lead("start");
-    else if (/wa\.me|api\.whatsapp\.com/.test(h)) lead("whatsapp");
+    if (a.dataset.lp === "start" || /^\/start(\.html)?(\?|$)/.test(h)) lead("start", a);
+    else if (/wa\.me|api\.whatsapp\.com/.test(h)) lead("whatsapp", a);
   }, true);
 })();

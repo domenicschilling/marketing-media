@@ -2,6 +2,7 @@
 // Nur auf Seiten für Studios einbinden, NIE auf den Zahlseiten der Endkunden (zahlen, zahlung, bezahlt) oder im Portal.
 // Events: PageView (jede Seite) · Contact (WhatsApp-Klick) · Lead (Muster-Anzahlungsbedingungen) ·
 //         InitiateCheckout (start.html, erster Schritt weiter) · CompleteRegistration (Provision abgeschlossen) · Purchase (Kauf bezahlt)
+// Lead, CompleteRegistration und Purchase gehen mit Einwilligung zusätzlich über /api/capi (Conversions API).
 window.TFTrack = (function () {
   var PIXEL_ID = "1628016302128524";
   var WA_NUMMER = "491624502375", WA_ANZEIGE = "0162 4502375";
@@ -11,6 +12,20 @@ window.TFTrack = (function () {
 
   function lies() { try { return localStorage.getItem(KEY); } catch (e) { return null; } }
   function speichere(v) { try { localStorage.setItem(KEY, v); } catch (e) {} }
+  // Diese Ereignisse gehen mit Einwilligung zusätzlich über unseren Server an Meta (gleiche event_id → keine Doppelzählung)
+  var CAPI = { Lead: 1, CompleteRegistration: 1, Purchase: 1 };
+  function cookie(n) { var m = document.cookie.match("(?:^|; )" + n + "=([^;]*)"); return m ? decodeURIComponent(m[1]) : ""; }
+  function capi(name, params, id) {
+    if (!CAPI[name]) return;
+    try {
+      var fbclid = new URLSearchParams(location.search).get("fbclid");
+      var p = params || {};
+      fetch("/api/capi", { method: "POST", keepalive: true, headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ event_name: name, event_id: id, url: location.href.split("#")[0], fbp: cookie("_fbp"),
+          fbc: cookie("_fbc") || (fbclid ? "fb.1." + Date.now() + "." + fbclid : ""), content_name: p.content_name, value: p.value, currency: p.currency }) }).catch(function () {});
+    } catch (e) {}
+  }
+  function sende(name, params, id) { window.fbq("track", name, params || {}, { eventID: id }); capi(name, params, id); }
   function eventId() { return "tf-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8); }
 
   function ladePixel() {
@@ -21,14 +36,14 @@ window.TFTrack = (function () {
     /* eslint-enable */
     window.fbq("init", PIXEL_ID);
     window.fbq("track", "PageView", {}, { eventID: eventId() });
-    queue.splice(0).forEach(function (a) { window.fbq("track", a[0], a[1] || {}, { eventID: a[2] }); });
+    queue.splice(0).forEach(function (a) { sende(a[0], a[1], a[2]); });
   }
 
   // Event senden (oder vormerken, bis zugestimmt wurde). once: Schlüssel, damit z. B. ein Kauf beim Neuladen nicht doppelt zählt
   function track(name, params, once) {
     if (once) { try { if (localStorage.getItem("tf_ev_" + once)) return; localStorage.setItem("tf_ev_" + once, "1"); } catch (e) {} }
     var id = eventId();
-    if (geladen && window.fbq) window.fbq("track", name, params || {}, { eventID: id });
+    if (geladen && window.fbq) sende(name, params, id);
     else if (lies() !== "nein") queue.push([name, params, id]);
   }
 
@@ -40,13 +55,16 @@ window.TFTrack = (function () {
     ".tf-wa{position:fixed;right:16px;bottom:16px;z-index:9998;display:flex;align-items:center;gap:8px;background:#25d366;color:#fff;text-decoration:none;border:3px solid #1f3d5c;border-radius:99px;box-shadow:4px 4px 0 #1f3d5c;padding:10px 16px 10px 12px;font:700 15px 'DM Sans',system-ui,sans-serif}" +
     ".tf-wa svg{width:24px;height:24px;flex:none}.tf-wa small{display:block;font-weight:500;font-size:11px;opacity:.9}" +
     "@media (max-width:600px){.tf-wa span{display:none}.tf-wa{padding:12px}}" +
-    "body.tf-cc-offen .tf-wa{display:none}";
+    "body.tf-cc-offen .tf-wa{display:none}.tf-cc .kurz{display:none}" +
+    "@media (max-width:600px){.tf-cc{left:8px;right:8px;bottom:8px;padding:10px 12px;font-size:13.5px;line-height:1.4;box-shadow:4px 4px 0 #1f3d5c;border-width:2px}" +
+    ".tf-cc b{display:none}.tf-cc .lang{display:none}.tf-cc .kurz{display:inline}" +
+    ".tf-cc .r{margin-top:8px;gap:8px;flex-wrap:nowrap}.tf-cc button{min-width:0;padding:8px 6px;font-size:14px;border-width:2px}}";
 
   function banner() {
     if (document.querySelector(".tf-cc")) return;
     var d = document.createElement("div");
     d.className = "tf-cc"; d.setAttribute("role", "dialog"); d.setAttribute("aria-label", "Cookie-Einstellungen");
-    d.innerHTML = "<b>Cookies für unsere Werbung</b>Wir möchten mit dem Meta-Pixel messen, ob unsere Anzeigen auf Facebook und Instagram funktionieren. Dafür setzen wir Cookies, aber nur mit deiner Zustimmung. Du kannst sie jederzeit im Fußbereich widerrufen. <a href=\"/datenschutz.html#meta\">Mehr erfahren</a>" +
+    d.innerHTML = "<b>Cookies für unsere Werbung</b><span class=\"kurz\">Dürfen wir mit dem Meta-Pixel messen, ob unsere Werbung wirkt? Nur mit deiner Zustimmung. </span><span class=\"lang\">Wir möchten mit dem Meta-Pixel messen, ob unsere Anzeigen auf Facebook und Instagram funktionieren. Dafür setzen wir Cookies, aber nur mit deiner Zustimmung. Du kannst sie jederzeit im Fußbereich widerrufen. </span><a href=\"/datenschutz.html#meta\">Mehr erfahren</a>" +
       "<div class=\"r\"><button type=\"button\" class=\"nein\">Nur notwendige</button><button type=\"button\" class=\"ja\">Einverstanden</button></div>";
     document.body.appendChild(d);
     document.body.classList.add("tf-cc-offen");
@@ -79,6 +97,13 @@ window.TFTrack = (function () {
     }, true);
     // „Cookie-Einstellungen“-Links im Fußbereich öffnen das Banner wieder
     document.querySelectorAll("[data-cookies]").forEach(function (l) { l.addEventListener("click", function (e) { e.preventDefault(); banner(); }); });
+    try {
+      var u = new URL(location.href), vorgemerkt = u.searchParams.get("tf_lead");
+      if (vorgemerkt) {
+        u.searchParams.delete("tf_lead"); history.replaceState(null, "", u.pathname + u.search + u.hash);
+        track("Lead", { content_name: vorgemerkt === "whatsapp" ? "WhatsApp (Kampagnen-Seite)" : "Jetzt starten (Kampagnen-Seite)", content_category: "Tattoo-Studio" });
+      }
+    } catch (e) {}
     var c = lies();
     if (c === "ja") ladePixel();
     else if (c !== "nein") banner();

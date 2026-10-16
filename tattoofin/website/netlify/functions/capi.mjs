@@ -1,4 +1,4 @@
-// POST /api/capi – Meta Conversions API (serverseitig) für die Kampagnen-Landingpage /studios.
+// POST /api/capi – Meta Conversions API (serverseitig): Lead (/studios, /start), CompleteRegistration und Purchase (danke.html).
 // Leitet ein Ereignis mit derselben event_id wie das Pixel an Meta weiter (Deduplizierung).
 // Wird von der Seite nur nach Cookie-Einwilligung aufgerufen.
 // Zugriffsschlüssel: Netlify-Umgebungsvariable META_CAPI_TOKEN (nur im Netlify-Dashboard, nie im Code).
@@ -6,7 +6,7 @@
 import { createHash } from "node:crypto";
 
 const PIXEL_ID = "1628016302128524";
-const ALLOWED = new Set(["Lead"]);
+const ALLOWED = new Set(["Lead", "CompleteRegistration", "Purchase"]);
 const sha = (v) => createHash("sha256").update(v).digest("hex");
 
 export default async (req, context) => {
@@ -31,7 +31,10 @@ export default async (req, context) => {
       fbc: typeof b.fbc === "string" && b.fbc ? b.fbc.slice(0, 300) : undefined,
       country: [sha("de")],
     },
-    custom_data: { content_name: String(b.content_name || "Kampagnen-Seite").slice(0, 100), content_category: "Tattoo-Studio" },
+    custom_data: {
+      content_name: String(b.content_name || "Kampagnen-Seite").slice(0, 100), content_category: "Tattoo-Studio",
+      ...(b.event_name === "Purchase" && Number(b.value) > 0 && Number(b.value) <= 5000 ? { value: Number(b.value), currency: "EUR" } : {}),
+    },
   };
   const body = { data: [event], ...(process.env.META_TEST_CODE ? { test_event_code: process.env.META_TEST_CODE } : {}) };
   const res = await fetch(`https://graph.facebook.com/v24.0/${PIXEL_ID}/events?access_token=${encodeURIComponent(token)}`, {
