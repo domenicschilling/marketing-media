@@ -29,8 +29,11 @@ export default handler(async (req, context) => {
   if (req.method !== "POST") return fail("Methode nicht erlaubt", 405);
 
   const b = await body(req);
-  const modell = b.modell === "provision" ? "provision" : b.modell === "kauf" ? "kauf" : null;
-  const zahlart = modell === "kauf" ? (b.zahlart === "rechnung" ? "rechnung" : "sofort") : "provision";
+  // Geschenk-Einladung (Admin): eigenes Stripe-Konto wie beim Kauf, aber 0 € Einrichtung und keine Provision
+  const geschenk = b.geschenk ? await store.get(`geschenk/${clean(b.geschenk, 40)}`) : null;
+  if (b.geschenk && (!geschenk || geschenk.benutzt)) return fail("Diese Einladung ist ungültig oder wurde schon benutzt. Bitte melde dich bei uns.");
+  const modell = geschenk ? "kauf" : b.modell === "provision" ? "provision" : b.modell === "kauf" ? "kauf" : null;
+  const zahlart = geschenk ? "geschenk" : modell === "kauf" ? (b.zahlart === "rechnung" ? "rechnung" : "sofort") : "provision";
   const d = {
     firma: clean(b.firma, 120), inhaber: clean(b.inhaber, 120), strasse: clean(b.strasse, 120), plz: clean(b.plz, 10),
     ort: clean(b.ort, 80), email: clean(b.email, 160).toLowerCase(), telefon: clean(b.telefon, 40),
@@ -49,8 +52,10 @@ export default handler(async (req, context) => {
   if (s && !["entwurf", "abgebrochen"].includes(s.status)) return fail("Für diese E-Mail gibt es schon einen Vertrag. Bitte logge dich im Studio-Portal ein.", 409);
   if (s && s.email !== d.email && b.resumeId) s = null;
 
+  if (geschenk && geschenk.email !== d.email) return fail(`Diese Einladung gilt für ${geschenk.email}. Bitte nutze diese E-Mail-Adresse.`);
   let preisNetto = null, aktion = false;
-  if (modell === "kauf") {
+  if (geschenk) preisNetto = 0;
+  else if (modell === "kauf") {
     aktion = await aktionGueltig(clean(b.aktionscode, 30));
     if (b.aktionscode && !aktion) return fail("Der Aktionscode ist ungültig oder nicht mehr verfügbar.");
     preisNetto = aktion ? CFG.aktionNetto : CFG.kaufNetto;
@@ -79,6 +84,14 @@ export default handler(async (req, context) => {
   await saveStudio(s);
 
   const base = CFG.siteUrl;
+  if (geschenk) {
+    s.status = "einrichtung";
+    await saveStudio(s);
+    await store.set(`geschenk/${geschenk.code}`, { ...geschenk, benutzt: now(), studioId: s.id });
+    await notify(s, mails.anmeldung(s, { loginUrl: loginLink(s.id), connectUrl: connectUrl(s) }));
+    await notifyAdmin("Neuer Abschluss (Geschenk-Einladung) 🎁", s, { Einladung: geschenk.firma });
+    return json({ url: connectUrl(s) });
+  }
   if (modell === "kauf" && zahlart === "sofort") {
     const session = await stripe("POST", "/checkout/sessions", {
       mode: "payment", customer: s.stripe.customerId, locale: "de", client_reference_id: s.id,

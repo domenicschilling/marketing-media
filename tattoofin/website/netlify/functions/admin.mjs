@@ -9,6 +9,7 @@
 //   POST  /api/admin/abrechnung               { monat: "YYYY-MM", dryRun }
 //   POST  /api/admin/jobs                     tägliche Jobs sofort ausführen
 //   GET   /api/admin/mails                    letzte E-Mails
+//   POST  /api/admin/einladen                 { email, firma } → Geschenk-Einladung (0 € Einrichtung, 0 % Provision) per E-Mail
 import { CFG, netto } from "./_lib/config.mjs";
 import { json, fail, body, clean, now, handler } from "./_lib/util.mjs";
 import { allStudios, getStudio, saveStudio, zahlungenVon, abrechnungenVon, store, log } from "./_lib/store.mjs";
@@ -16,11 +17,26 @@ import { isAdmin, loginLink } from "./_lib/auth.mjs";
 import { stripe } from "./_lib/stripe.mjs";
 import { notify, monatsabrechnung, taeglicheJobs, kontoAbgleichen, provisionVerdient, STATUS } from "./_lib/domain.mjs";
 import { mails } from "./_lib/emails.mjs";
+import { sendMail } from "./_lib/mail.mjs";
+import { randomBytes } from "node:crypto";
 
 export default handler(async (req) => {
   if (!isAdmin(req)) return fail("Nicht berechtigt", 401);
   const teile = new URL(req.url).pathname.replace(/^\/api\/admin\/?/, "").split("/").filter(Boolean);
   const [bereich, sid, aktion] = teile;
+
+  if (bereich === "einladen" && req.method === "POST") {
+    const b = await body(req);
+    const email = clean(b.email, 160).toLowerCase(), firma = clean(b.firma, 120);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email) || !firma) return fail("E-Mail und Studio-Name angeben.");
+    const code = randomBytes(9).toString("base64url");
+    await store.set(`geschenk/${code}`, { code, email, firma, erstellt: now(), benutzt: null });
+    const link = `${CFG.siteUrl}/start.html?modell=kauf&geschenk=${code}`;
+    const m = mails.geschenkEinladung({ firma, link });
+    if (b.senden !== false) await sendMail({ to: email, subject: m.subject, html: m.html, text: m.text });
+    await log("einladung", { email, firma });
+    return json({ ok: true, link, gesendet: b.senden !== false });
+  }
 
   if (bereich === "studios" && req.method === "GET") {
     const list = await allStudios();

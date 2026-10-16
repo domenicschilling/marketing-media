@@ -30,12 +30,26 @@ const rows = (pairs) => `<table role="presentation" cellpadding="0" cellspacing=
   .filter(([, v]) => v !== undefined && v !== null && v !== "")
   .map(([k, v]) => `<tr><td style="padding:5px 0;color:#5b6370;width:44%;vertical-align:top">${esc(k)}</td><td style="padding:5px 0;font-weight:600">${v}</td></tr>`).join("")}</table>`;
 const hallo = (s) => p(`Hey ${esc(s.inhaber?.split(" ")[0] || s.firma)},`);
-const modellText = (s) => (s.modell === "kauf"
+const modellText = (s) => (s.zahlart === "geschenk"
+  ? "Geschenk: keine Einrichtungsgebühr, keine Grundgebühr, keine Provision. Du zahlst nur die normalen Gebühren von Stripe (bzw. Klarna) direkt an Stripe, Tattoofin verdient nichts daran."
+  : s.modell === "kauf"
   ? `Kauf: Einrichtung ${euro(s.preisNetto)} netto einmalig (${euro(brutto(s.preisNetto))} brutto), keine monatliche Grundgebühr, keine Provision`
   : `Provision: ${CFG.provisionProzent} % vom Zahlbetrag jeder Zahlung über Tattoofin, alles inklusive (Zahlungsgebühren und USt.), keine Einrichtungs- und keine Grundgebühr`);
 const mk = (subject, l) => ({ subject, ...layout(l) });
 
 export const mails = {
+  // Persönliche Einladung (Geschenk): Link zur Anmeldung ohne Einrichtung und ohne Provision
+  geschenkEinladung: ({ firma, link }) => mk(`Deine Einladung zu Tattoofin – für ${firma} geschenkt`, {
+    preheader: "Tattoofin für dein Studio: ohne Einrichtungsgebühr und ohne Provision.",
+    title: "Du bist eingeladen 🎁",
+    body: p("Hey,") + p(`wir schenken <b>${esc(firma)}</b> Tattoofin: Zahlungslinks per WhatsApp, QR-Zahlseite an der Theke, Anzahlungen mit deinen Bedingungen und Ratenzahlung über Klarna* für deine Kunden.`) + rows([
+      ["Einrichtung", "0 €"], ["Grundgebühr", "0 €"], ["Provision", "0 % – Tattoofin verdient nichts daran"],
+      ["Du zahlst nur", "die normalen Gebühren von Stripe bzw. Klarna, direkt an Stripe"], ["Dein Geld", "landet direkt auf dem Konto deines Studios"],
+    ]) + p("So geht's: Link öffnen, Studio-Daten eintragen, Vertrag bestätigen, dann das Zahlungskonto deines Studios verbinden (ca. 10 Minuten, Ausweis und Bankverbindung bereithalten). Wir richten den Rest mit dir ein.") +
+      p('<span style="color:#5b6370;font-size:13px">*Ratenzahlung über Klarna nach deren Prüfung. Tattoofin ist kein Kreditgeber.</span>'),
+    cta: "Einladung annehmen", ctaUrl: link,
+  }),
+
   // 1) direkt nach dem Online-Abschluss
   anmeldung: (s, { loginUrl, connectUrl }) => mk(`Willkommen bei Tattoofin, ${s.firma}`, {
     preheader: "Dein Vertrag ist abgeschlossen. Jetzt das Stripe-Konto deines Studios verbinden.",
