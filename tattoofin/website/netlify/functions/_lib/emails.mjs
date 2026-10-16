@@ -38,6 +38,16 @@ const modellText = (s) => (s.zahlart === "geschenk"
 const mk = (subject, l) => ({ subject, ...layout(l) });
 
 export const mails = {
+  // Einrichtungs-Anleitung (PDF auf tattoofin.de) für neue Studios
+  anleitung: ({ firma }) => mk(`So richtest du Tattoofin ein – Anleitung für ${firma}`, {
+    preheader: "Schritt für Schritt: Einladung annehmen, Zahlungskonto verbinden, erste Zahlung anfordern.",
+    title: "Deine Anleitung 📋",
+    body: p("Hey,") + p(`damit der Start für <b>${esc(firma)}</b> ganz einfach wird, hier die Anleitung Schritt für Schritt – in ca. 20 Minuten bist du startklar:`) +
+      `<ol style="margin:0 0 14px;padding-left:20px"><li><b>Einladung annehmen</b> (Link aus der Einladungs-Mail, mit genau dieser E-Mail-Adresse)</li><li><b>Zahlungskonto bei Stripe verbinden</b> – Ausweis, IBAN und Steuernummer bereitlegen</li><li><b>Fragebogen</b> im Studio-Portal ausfüllen</li><li><b>Erste Zahlung anfordern</b> und den Link per WhatsApp schicken</li><li><b>QR-Code</b> für die Theke ausdrucken</li></ol>` +
+      p("Alle Details mit Bildschirm-Erklärungen stehen in der Anleitung (PDF). Bei Fragen schreib uns einfach per WhatsApp an 0162 4502375."),
+    cta: "Anleitung öffnen (PDF)", ctaUrl: `${CFG.siteUrl}/einrichtung-anleitung.pdf`,
+  }),
+
   // Persönliche Einladung (Geschenk): Link zur Anmeldung ohne Einrichtung und ohne Provision
   geschenkEinladung: ({ firma, link }) => mk(`Deine Einladung zu Tattoofin – für ${firma} geschenkt`, {
     preheader: "Tattoofin für dein Studio: ohne Einrichtungsgebühr und ohne Provision.",

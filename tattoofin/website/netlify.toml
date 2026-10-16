@@ -23,6 +23,10 @@
   [headers.values]
     X-Robots-Tag = "noindex"
 [[headers]]
+  for = "/einrichtung-anleitung.pdf"
+  [headers.values]
+    X-Robots-Tag = "noindex"
+[[headers]]
   for = "/api/*"
   [headers.values]
     X-Robots-Tag = "noindex"

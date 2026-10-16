@@ -9,6 +9,7 @@
 //   POST  /api/admin/abrechnung               { monat: "YYYY-MM", dryRun }
 //   POST  /api/admin/jobs                     tägliche Jobs sofort ausführen
 //   GET   /api/admin/mails                    letzte E-Mails
+//   POST  /api/admin/anleitung                { email, firma } → Einrichtungs-Anleitung per E-Mail
 //   POST  /api/admin/einladen                 { email, firma } → Geschenk-Einladung (0 € Einrichtung, 0 % Provision) per E-Mail
 import { CFG, netto } from "./_lib/config.mjs";
 import { json, fail, body, clean, now, handler } from "./_lib/util.mjs";
@@ -24,6 +25,16 @@ export default handler(async (req) => {
   if (!isAdmin(req)) return fail("Nicht berechtigt", 401);
   const teile = new URL(req.url).pathname.replace(/^\/api\/admin\/?/, "").split("/").filter(Boolean);
   const [bereich, sid, aktion] = teile;
+
+  if (bereich === "anleitung" && req.method === "POST") {
+    const b = await body(req);
+    const email = clean(b.email, 160).toLowerCase(), firma = clean(b.firma, 120);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email) || !firma) return fail("E-Mail und Studio-Name angeben.");
+    const m = mails.anleitung({ firma });
+    await sendMail({ to: email, subject: m.subject, html: m.html, text: m.text });
+    await log("anleitung", { email, firma });
+    return json({ ok: true });
+  }
 
   if (bereich === "einladen" && req.method === "POST") {
     const b = await body(req);
