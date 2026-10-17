@@ -164,6 +164,9 @@ export async function monatsabrechnung(monat, { dryRun = false } = {}) {
 // Läuft täglich: Erinnerungen, Vertragsende
 export async function taeglicheJobs(heute = new Date()) {
   const out = [];
+  // Kurz-Anfragen von /studios nach 6 Monaten löschen (Datenschutzerklärung, Abschnitt Anfrageformular)
+  const grenze = new Date(Date.now() - 183 * 864e5).toISOString();
+  for (const k of await store.list("anfrage/")) if (k.slice(8) < grenze) { await store.del(k); out.push(["anfrage-geloescht", k]); }
   for (const s of await allStudios()) {
     const alterStd = (Date.now() - new Date(s.createdAt).getTime()) / 3600e3;
     if (s.status === "entwurf" && !s.erinnertAbbruch && alterStd > 20) {

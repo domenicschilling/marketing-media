@@ -1,152 +1,221 @@
 <!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Tattoofin für Tattoo-Studios – Raten* für Kunden, dein Geld auf einmal</title>
-<meta name="description" content="Zahlungslinks per WhatsApp, QR-Zahlseite, Anzahlungen und Raten über Klarna* für dein Tattoo-Studio. 0 € Einrichtung, 10 % pro Zahlung alles inklusive, monatlich kündbar.">
+<meta name="description" content="Zahlungslink per WhatsApp, Anzahlung mit deinen Bedingungen und Raten über Klarna* für dein Tattoo-Studio. 0 € Einrichtung, 10 % pro Zahlung alles inklusive, monatlich kündbar.">
 <meta name="robots" content="noindex,follow">
 <link rel="canonical" href="https://tattoofin.de/">
 <meta property="og:type" content="website"><meta property="og:locale" content="de_DE"><meta property="og:site_name" content="Tattoofin">
 <meta property="og:title" content="Tattoofin – Raten* für deine Kunden, dein Geld auf einmal">
-<meta property="og:description" content="Zahlungslinks, QR-Zahlseite, Anzahlungen und Raten über Klarna* für Tattoo-Studios. 0 € Einrichtung.">
+<meta property="og:description" content="Zahlungslink per WhatsApp, Anzahlung per Link und Raten über Klarna* für Tattoo-Studios. 0 € Einrichtung.">
 <meta property="og:url" content="https://tattoofin.de/studios"><meta property="og:image" content="https://tattoofin.de/assets/og.jpg">
 <meta name="theme-color" content="#fbb316">
 <link rel="icon" href="/favicon.png" type="image/png"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preload" href="/assets/fonts/LuckiestGuy.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/css/site.css">
-<link rel="stylesheet" href="/css/landing.css">
-<style>
-  /* Kampagnen-Landingpage: kurz, eine Handlung (Starten), WhatsApp für Fragen */
-  .lp-hero{position:relative;overflow:hidden;padding:40px 0 80px}
-  .lp-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:34px;align-items:center;position:relative}
-  .lp-hero h1{font-size:clamp(44px,6.6vw,96px);line-height:.95;margin:0 0 22px}
-  .lp-hero h1 .outline{display:inline-block;transform:rotate(-2deg);margin-top:6px}
-  .lp-cta{display:flex;gap:14px;flex-wrap:wrap;margin-top:28px;align-items:center}
-  .btn.wab{background:#25d366;color:#fff}
-  .btn.wab svg{width:22px;height:22px;flex:none}
-  .lp-hint{margin:12px 0 0;font-weight:600;font-size:15px}
-  .lp-card{background:#fff;border:var(--bw) solid var(--ink);border-radius:28px;box-shadow:var(--sh-lg);padding:22px 22px 18px;max-width:360px;margin:0 auto;transform:rotate(2deg);position:relative}
-  .lp-card .who{display:flex;align-items:center;gap:10px;font-weight:800}
-  .lp-card .who b{width:34px;height:34px;border-radius:50%;background:var(--ink);color:var(--yellow);display:grid;place-items:center;font:400 18px var(--head)}
-  .lp-card .proj{color:var(--muted);font-size:14px;margin-top:10px}
-  .lp-card .sum{font:400 46px/1.1 var(--head);margin:4px 0 12px}
-  .lp-card .o{display:flex;justify-content:space-between;align-items:center;border:2.5px solid var(--ink);border-radius:14px;padding:9px 12px;margin-bottom:8px;font-weight:700}
-  .lp-card .o.on{background:var(--yellow-soft)}
-  .lp-card .o em{font-style:normal;font-size:13px;background:var(--ink);color:var(--yellow);border-radius:99px;padding:2px 9px}
-  .lp-card small{display:block;color:var(--muted);font-size:11.5px;line-height:1.35;margin-top:8px}
-  .lp-card .paid{position:absolute;right:-18px;bottom:-26px;background:var(--ink);color:var(--yellow);border:var(--bw) solid var(--ink);border-radius:18px;padding:10px 14px;font:400 20px/1.1 var(--head);box-shadow:5px 5px 0 #0c1a29;transform:rotate(-4deg)}
-  .lp-card .paid span{display:block;font:600 12px var(--body);color:#fff}
-  .lp-mascot{position:absolute;width:110px;right:-34px;top:-70px;transform:rotate(10deg)}
-  .lp-points{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
-  .lp-points .card{background:#fff;border:var(--bw) solid var(--ink);border-radius:22px;padding:24px;box-shadow:var(--sh-lg)}
-  .lp-points h3,.dark .lp-points h3{font-size:22px;margin:0 0 8px;color:var(--ink)}
-  .lp-points p,.dark .lp-points p{margin:0;color:var(--muted);font-size:16px}
-  .lp-wa-box{display:flex;gap:22px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:#fff;border:var(--bw) solid var(--ink);border-radius:26px;padding:24px 26px;box-shadow:var(--sh-lg);color:var(--ink)}
-  .lp-wa-box h3,.dark .lp-wa-box h3{font-size:26px;margin:0 0 6px;color:var(--ink)}
-  .lp-wa-box p{margin:0;color:var(--muted);max-width:560px}
-  .lp-wa-box .btn{flex:none;white-space:nowrap}
-  .lp-foot-fn{font-size:13px;opacity:.85;max-width:760px;margin:22px auto 0}
-  @media (max-width:900px){.lp-grid{grid-template-columns:1fr}.lp-points{grid-template-columns:1fr}.lp-card{margin-top:30px}.lp-mascot{width:84px;right:-8px;top:-56px}.lp-card .paid{right:-6px}}
-  @media (max-width:520px){.lp-cta .btn{width:100%}}
-</style>
-</head><body>
+<link rel="preload" href="/assets/fonts/DMSans.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/lp/zahlungslink-poster.webp" as="image" fetchpriority="high">
+<link rel="stylesheet" href="/css/studios.css">
+<!-- Umami: cookielose Besucherzählung, nur auf tattoofin.de (Vorschau-Adressen zählen nicht) -->
+<script defer src="https://cloud.umami.is/script.js" data-website-id="507b740f-264e-4ba1-a7d0-9dbe49db75af" data-domains="tattoofin.de"></script>
+</head><body data-wa="aus">
+<a class="skip" href="#inhalt">Zum Inhalt springen</a>
 
-<header class="nav"><div class="wrap">
-  <a class="brand" href="/"><img src="/assets/figur.png" alt=""><img class="wm" src="/assets/wortmarke.png" alt="Tattoofin"></a>
-  <nav class="links">
-    <a class="hide-m" href="#so-gehts">So geht's</a><a class="hide-m" href="#fragen">Fragen</a>
-    <a class="btn dark small" href="/start.html?modell=provision" data-lp="start">Jetzt starten</a>
+<header class="kopf"><div class="rahmen kopf-in">
+  <a class="marke" href="/" aria-label="Tattoofin Startseite"><img src="/assets/figur.png" alt="" width="44" height="44"><img class="wm" src="/assets/wortmarke.png" alt="Tattoofin" width="132" height="28"></a>
+  <nav class="kopf-nav" aria-label="Seite">
+    <a class="nur-gross" href="#ablauf">So läuft's</a>
+    <a class="nur-gross" href="#kosten">Kosten</a>
+    <a class="nur-gross" href="#fragen">Fragen</a>
+    <a class="knopf knopf-klein" href="#anfrage" data-cta="kopf"><span class="nur-gross">Einrichtung</span> anfragen</a>
   </nav>
 </div></header>
 
-<!-- HERO -->
-<section class="lp-hero" id="top">
-  <div class="sunburst" aria-hidden="true"></div>
-  <div class="wrap lp-grid">
+<main id="inhalt">
+
+<!-- 1 · Versprechen + echtes Produkt -->
+<section class="held" aria-labelledby="h-held">
+  <div class="rahmen held-raster">
+    <div class="held-text">
+      <p class="blase"><span>„Kann ich das Tattoo auch in Raten* zahlen?“</span><small>Kundin, 21:47</small></p>
+      <h1 id="h-held">Raten* für deine Kunden. Dein Geld auf einmal.</h1>
+      <p class="einstieg">Du schickst einen Zahlungslink per WhatsApp. Dein Kunde zahlt per Karte, Apple&nbsp;Pay oder in Raten über Klarna.* Du bekommst den Betrag abzüglich 10&nbsp;% auf einmal, automatisch aufs Konto.</p>
+      <div class="held-cta">
+        <a class="knopf knopf-gross" href="#anfrage" data-cta="held">Kostenlos einrichten lassen</a>
+        <a class="wa-link" href="https://wa.me/491624502375?text=Hi%2C%20ich%20habe%20eure%20Anzeige%20gesehen%20und%20eine%20Frage%20zu%20Tattoofin%20f%C3%BCr%20mein%20Studio." target="_blank" rel="noopener" data-lp="whatsapp"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-wa"/></svg>Erst fragen? WhatsApp</a>
+      </div>
+      <dl class="fakten">
+        <div><dt>Einrichtung</dt><dd>0&nbsp;<span class="eur">€</span></dd></div>
+        <div><dt>pro Zahlung, alles inklusive</dt><dd>10&nbsp;%</dd></div>
+        <div><dt>Grundgebühr, monatlich kündbar</dt><dd>0&nbsp;<span class="eur">€</span></dd></div>
+      </dl>
+      <p class="pflicht">*Ratenzahlung über externe Anbieter wie Klarna, nach deren Prüfung. Tattoofin ist kein Kreditgeber. Achtung! Kreditaufnahme kostet Geld.</p>
+    </div>
+
+    <figure class="held-bild">
+      <picture>
+        <source media="(min-width: 700px)" srcset="/assets/lp/studio-nadel-960.webp">
+        <img class="foto" src="/assets/lp/studio-nadel-600.webp" alt="Tätowierer mit schwarzen Handschuhen sticht ein großes Drachen-Motiv auf einen Arm" width="600" height="750">
+      </picture>
+      <div class="handy">
+        <video class="handy-film" src="/assets/lp/zahlungslink.mp4" poster="/assets/lp/zahlungslink-poster.webp" muted playsinline loop preload="none" width="540" height="1168" aria-label="Aufnahme aus der Tattoofin-App: Das Studio tippt 2.000 Euro für Lena ein und erstellt den Zahlungslink"></video>
+      </div>
+      <p class="stempel"><b>1.800&nbsp;<span class="eur">€</span> an dich</b><span>von 2.000&nbsp;€, auf einmal aufs Konto</span></p>
+      <figcaption>Echte Aufnahme aus der Tattoofin-App, mit Beispieldaten.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 2 · Ablauf einer Zahlung, mit echten Bildschirmen -->
+<section class="ablauf" id="ablauf" aria-labelledby="h-ablauf">
+  <div class="rahmen">
+    <h2 id="h-ablauf">So läuft eine Zahlung</h2>
+    <p class="unter">Kein Kartenterminal, keine App für deinen Kunden. Ein Link reicht.</p>
+    <ol class="schritte">
+      <li>
+        <figure class="schirm schirm-karte"><img src="/assets/lp/zahlungslink-whatsapp.webp" alt="Tattoofin-Portal: Zahlungslink für Lena über 2.000 Euro mit den Knöpfen Per WhatsApp senden und Link kopieren" width="296" height="230" loading="lazy"></figure>
+        <h3>Du schickst den Link</h3>
+        <p>Betrag und Projekt eintippen, Link per WhatsApp schicken. Fertig in unter einer Minute.</p>
+      </li>
+      <li>
+        <figure class="schirm schirm-handy"><img src="/assets/lp/handy-kunde.webp" alt="Zahlseite für die Kundin: Hi Lena, hier ist dein Zahlungslink, 2.000 Euro, Sleeve linker Arm, Knopf Weiter zur Zahlung" width="300" height="649" loading="lazy"></figure>
+        <h3>Dein Kunde wählt, wie er zahlt</h3>
+        <p>Karte, Apple Pay, Google Pay oder Klarna.* Ob und welche Raten möglich sind, prüft und entscheidet Klarna.</p>
+      </li>
+      <li>
+        <figure class="schirm schirm-tabelle">
+          <picture><img src="/assets/lp/portal-zahlungen-schmal.webp" alt="Tattoofin-Portal, Liste bezahlter Zahlungen mit den Spalten Betrag, Zahlart, Tattoofin 10 Prozent und an dich. Beispiel: 1.200 Euro per Klarna, davon 1.080 Euro an dich" width="500" height="352" loading="lazy"></picture>
+        </figure>
+        <h3>Dein Geld kommt auf einmal</h3>
+        <p>90&nbsp;% jeder Zahlung gehen automatisch auf dein Konto. Im Portal siehst du, wer was bezahlt hat.</p>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<!-- 3 · Anzahlung gegen No-Shows -->
+<section class="anzahlung" aria-labelledby="h-anz">
+  <div class="rahmen anz-raster">
+    <div class="anz-text">
+      <h2 id="h-anz">Anzahlung per Link. Mit deinen Bedingungen.</h2>
+      <p class="unter">Termin vorbereitet, und der Kunde kommt nicht? Hol dir die Anzahlung vorher, per Link oder per QR-Code an der Theke.</p>
+      <ul class="haken">
+        <li>Dein Kunde bestätigt deine Anzahlungsbedingungen, bevor er zahlt. Gespeichert mit Zeitpunkt.</li>
+        <li>Das ist dein Beleg, falls jemand nicht erscheint oder die Zahlung später zurückbucht.</li>
+        <li>Muster-Bedingungen bekommst du von uns. Anpassen kannst du sie jederzeit im Portal.</li>
+      </ul>
+    </div>
+    <figure class="schirm schirm-handy anz-handy"><img src="/assets/lp/handy-anzahlung.webp" alt="Zahlseite für eine Anzahlung von 150 Euro, mit Anzahlungsbedingungen und bestätigtem Häkchen" width="300" height="649" loading="lazy"></figure>
+  </div>
+</section>
+
+<!-- 4 · Kosten mit Rechner -->
+<section class="kosten" id="kosten" aria-labelledby="h-kosten">
+  <div class="rahmen kosten-raster">
     <div>
-      <span class="stk">✦ Für Tattoo-Studios</span>
-      <h1>Raten* für deine Kunden. <span class="outline white">Dein Geld auf einmal.</span></h1>
-      <p class="lead">Zahlungslink per WhatsApp, QR-Code an der Theke, Anzahlung vor dem Termin. Dein Kunde zahlt per Karte, Apple Pay oder in Raten über Klarna.* Du bekommst dein Geld auf einmal, automatisch aufs Konto.</p>
-      <div class="lp-cta">
-        <a class="btn dark big" href="/start.html?modell=provision" data-lp="start">Kostenlos starten →</a>
-        <a class="btn wab big" href="https://wa.me/491624502375?text=Hi%2C%20ich%20habe%20eure%20Anzeige%20gesehen%20und%20eine%20Frage%20zu%20Tattoofin%20f%C3%BCr%20mein%20Studio." target="_blank" rel="noopener" data-lp="whatsapp"><svg viewBox="0 0 32 32" aria-hidden="true"><path fill="#fff" d="M16 3a13 13 0 0 0-11.3 19.4L3 29l6.8-1.8A13 13 0 1 0 16 3zm0 23.7c-2 0-3.9-.5-5.6-1.5l-.4-.2-4 1 1.1-3.9-.3-.4A10.7 10.7 0 1 1 16 26.7zm5.9-8c-.3-.2-1.9-.9-2.2-1-.3-.1-.5-.2-.7.2l-1 1.2c-.2.2-.4.2-.7.1a8.8 8.8 0 0 1-4.4-3.8c-.3-.6.3-.5 1-1.7.1-.2 0-.4 0-.6l-1-2.4c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4-.3.3-1.2 1.1-1.2 2.8s1.2 3.2 1.4 3.4c.2.2 2.4 3.6 5.7 5 2.1.9 2.9 1 4 .8.6-.1 1.9-.8 2.2-1.5.3-.8.3-1.4.2-1.5l-.6-.3z"/></svg>Fragen? WhatsApp</a>
-      </div>
-      <p class="lp-hint">Abschluss in 3 Minuten, jetzt wird nichts bezahlt. Fragen vorab: WhatsApp 0162 4502375 (nur Nachrichten, wir antworten persönlich).</p>
-      <div class="chips"><span>0 € Einrichtung</span><span>10 % pro Zahlung, alles inklusive</span><span>Monatlich kündbar</span><span>Wir richten alles ein</span></div>
-      <p class="fn">*Ratenzahlung über externe Anbieter wie Klarna, nach deren Prüfung. Tattoofin ist kein Kreditgeber. Achtung! Kreditaufnahme kostet Geld.</p>
+      <h2 id="h-kosten">Was es kostet</h2>
+      <p class="unter">10&nbsp;% von jeder Zahlung über Tattoofin. Darin steckt alles: Zahlungsgebühren, auch für Klarna, Umsatzsteuer, Einrichtung und Betreuung.</p>
+      <ul class="null">
+        <li><b>0&nbsp;<span class="eur">€</span></b> Einrichtung</li>
+        <li><b>0&nbsp;<span class="eur">€</span></b> Grundgebühr</li>
+        <li><b>0&nbsp;<span class="eur">€</span></b> in Monaten ohne Zahlung</li>
+      </ul>
     </div>
-    <div aria-hidden="true">
-      <div class="lp-card">
-        <img class="lp-mascot" src="/assets/figur.png" alt="">
-        <div class="who"><b>I</b> Ink Studio Bamberg</div>
-        <div class="proj">Sleeve · linker Arm</div>
-        <div class="sum">2.000,00 €</div>
-        <div class="o">Apple Pay <span>›</span></div>
-        <div class="o">Karte <span>›</span></div>
-        <div class="o on">Klarna <em>In Raten*</em></div>
-        <small>*Verfügbarkeit und Bedingungen nach Prüfung durch den Anbieter.</small>
-        <div class="paid">1.800 € an dich<span>auf einmal, automatisch aufs Konto</span></div>
-      </div>
+    <form class="rechner" aria-labelledby="h-rechner" onsubmit="return false">
+      <h3 id="h-rechner">Rechne mit deinem Projekt</h3>
+      <label for="r-betrag">Dein Kunde zahlt</label>
+      <div class="betrag-feld"><input id="r-betrag" type="text" inputmode="decimal" autocomplete="off" value="2.000"><span class="eur" aria-hidden="true">€</span></div>
+      <input id="r-regler" type="range" min="100" max="6000" step="50" value="2000" aria-label="Betrag mit dem Regler wählen">
+      <dl class="rechnung" aria-live="polite">
+        <div><dt>Tattoofin, 10&nbsp;% alles inklusive</dt><dd id="r-fee">200,00&nbsp;€</dd></div>
+        <div class="an-dich"><dt>Auf dein Konto, auf einmal</dt><dd id="r-du">1.800,00&nbsp;<span class="eur">€</span></dd></div>
+      </dl>
+      <p class="klein">Lieber einmal zahlen statt Provision? Kauf für 1.499&nbsp;€ netto, danach ohne Provision. Steht im <a href="/start?modell=kauf" data-cta="kauf">Online-Abschluss</a>.</p>
+    </form>
+  </div>
+</section>
+
+<!-- 5 · Ehrliche Antworten -->
+<section class="fragen" id="fragen" aria-labelledby="h-fragen">
+  <div class="rahmen fragen-raster">
+    <div class="fragen-kopf">
+      <h2 id="h-fragen">Ehrliche Antworten</h2>
+      <p class="unter">Was Studio-Inhaber vor dem Start wissen wollen.</p>
+    </div>
+    <div class="fragen-liste">
+      <details><summary>Ist Tattoofin der Kreditgeber?</summary><p>Nein. Tattoofin ist kein Kreditgeber und kein Kreditinstitut. Den Ratenvertrag schließt dein Kunde direkt mit dem Zahlungsanbieter, zum Beispiel Klarna. Der Anbieter prüft und legt die Bedingungen fest. Nicht jede Zahlungsart ist für jeden Kunden verfügbar.</p></details>
+      <details><summary>Und wenn mein Kunde seine Raten nicht zahlt?</summary><p>Nach der Freigabe durch den Anbieter bekommt dein Studio sein Geld in der Regel auf einmal. Das Ausfallrisiko der Raten liegt dann beim Anbieter, nicht bei dir.</p></details>
+      <details><summary>Wie viel Arbeit habe ich damit?</summary><p>Wenig. Wir richten Zahlungsarten, dein Logo auf der Zahlseite und den QR-Code für die Theke ein, machen eine Testzahlung und zeigen deinem Team in einer kurzen Schulung, wie es geht. Du legst nur einmal dein Auszahlungskonto an, das dauert etwa 10 Minuten.</p></details>
+      <details><summary>Wie lange dauert es, bis es läuft?</summary><p>Der Online-Abschluss dauert 3 Minuten. Danach prüft unser Zahlungspartner Stripe Identität und Bankverbindung, meist in 1 bis 3 Werktagen. Dann richten wir alles ein und testen es mit dir.</p></details>
+      <details><summary>Was brauche ich dafür?</summary><p>Dein Studio als Unternehmen, ein Bankkonto für die Auszahlungen und deinen Ausweis für die Prüfung durch Stripe. Ein Kartenterminal brauchst du nicht.</p></details>
+      <details><summary>Darf ich mit „Ratenzahlung“ werben?</summary><p>Ja, mit dem Pflichthinweis, dass die Raten von einem externen Anbieter nach dessen Prüfung kommen. Konkrete Raten, Zinsen oder Laufzeiten nennst du nicht, die legt der Anbieter fest. Fertige Texte für Flyer, Aufkleber und Instagram mit diesem Hinweis bekommst du von uns.</p></details>
+      <details><summary>Wie komme ich wieder raus?</summary><p>Das Provisionsmodell kannst du jederzeit in Textform kündigen. Es gibt keine Mindestlaufzeit und keine Grundgebühr.</p></details>
     </div>
   </div>
 </section>
 
-<!-- WARUM -->
-<section class="sec dark" id="warum" style="padding:76px 0"><div class="wrap">
-  <span class="eyebrow">Warum Studios Tattoofin nutzen</span>
-  <h2>Der Preis ist nicht mehr <span style="color:#fff">die erste Hürde.</span></h2>
-  <div class="lp-points" style="margin-top:34px">
-    <div class="card"><h3>Mehr große Projekte</h3><p>„Ich meld mich, wenn ich das Geld zusammen hab“ wird seltener. Dein Kunde kann in Raten zahlen,* du bekommst dein Geld auf einmal.</p></div>
-    <div class="card"><h3>Anzahlung per Link</h3><p>Dein Kunde bestätigt vor dem Bezahlen deine Anzahlungsbedingungen, gespeichert mit Zeitpunkt. Hilft gegen No-Shows und Rückbuchungen.</p></div>
-    <div class="card"><h3>Kein Hinterherlaufen</h3><p>Betrag eintippen, Link per WhatsApp schicken. Karte, Apple Pay, Google Pay oder Klarna. Im Portal siehst du, was bezahlt ist.</p></div>
-  </div>
-</div></section>
+<!-- 6 · Anfrage: kurz, ohne Vertrag -->
+<section class="anfrage" id="anfrage" aria-labelledby="h-anfrage">
+  <div class="sonne" aria-hidden="true"></div>
+  <div class="rahmen anfrage-raster">
+    <div class="anfrage-text">
+      <h2 id="h-anfrage">Lass dir Tattoofin kostenlos einrichten.</h2>
+      <p class="unter">Drei Angaben, dann melden wir uns persönlich per WhatsApp und gehen alles mit dir durch. Die Anfrage kostet nichts und ist kein Vertrag.</p>
+      <div class="wer">
+        <img src="/assets/figur.png" alt="" width="72" height="72" loading="lazy">
+        <p>Tattoofin ist ein Angebot der DSX Media Solutions UG aus Memmelsdorf bei Bamberg. Dein Ansprechpartner ist Domenic Schilling.</p>
+      </div>
+    </div>
 
-<!-- SO GEHT'S -->
-<section class="sec" id="so-gehts" style="padding:80px 0 70px"><div class="wrap">
-  <span class="stk">✦ So geht's</span>
-  <h2>Du tätowierst. <span class="outline white">Wir machen den Rest.</span></h2>
-  <div class="steps" style="margin-top:60px">
-    <div class="step"><div class="n">1</div><h3>3 Minuten online abschließen</h3><p>Provisionsmodell wählen, Vertrag bestätigen. Danach in ca. 10 Minuten dein Auszahlungskonto anlegen.</p></div>
-    <div class="step"><div class="n">2</div><h3>Wir richten alles ein</h3><p>Zahlungsarten, dein Logo auf der Zahlseite, QR-Code für die Theke, Testzahlung und eine kurze Schulung fürs Team.</p></div>
-    <div class="step"><div class="n">3</div><h3>Link raus, Geld rein</h3><p>Kunde zahlt, wie er will. 90 % jeder Zahlung kommen automatisch auf dein Konto.</p></div>
-  </div>
-  <div class="money" style="margin-top:64px">
-    <div class="box"><small>Dein Kunde zahlt</small><big>3.000 €</big></div>
-    <div style="font:400 40px var(--head)" aria-hidden="true">→</div>
-    <div class="box you"><small>Auf deinem Konto</small><big>2.700 €</big></div>
-  </div>
-  <p class="money-note">In den 10 % steckt alles: Zahlungsgebühren, Klarna, Umsatzsteuer, Einrichtung und Betreuung. Keine Einrichtungsgebühr, keine Grundgebühr. Läuft nichts, zahlst du nichts.</p>
-  <div style="text-align:center;margin-top:30px"><a class="btn dark big" href="/start.html?modell=provision" data-lp="start">Kostenlos starten →</a></div>
-</div></section>
-
-<!-- FRAGEN -->
-<section class="sec dark" id="fragen" style="padding:76px 0"><div class="wrap narrow">
-  <h2 style="margin-bottom:26px">Kurz gefragt</h2>
-  <details><summary>Ist Tattoofin der Kreditgeber?</summary><p>Nein. Tattoofin ist kein Kreditgeber und kein Kreditinstitut. Den Ratenvertrag schließt dein Kunde mit dem Zahlungsanbieter (z. B. Klarna), der auch prüft und die Bedingungen festlegt. Nicht jede Zahlungsoption ist für jeden Kunden verfügbar.</p></details>
-  <details><summary>Und wenn der Kunde seine Raten nicht zahlt?</summary><p>Nach erfolgreicher Freigabe durch den Anbieter bekommt dein Studio sein Geld in der Regel auf einmal. Das Ausfallrisiko der Raten liegt dann beim Anbieter, nicht bei dir.</p></details>
-  <details><summary>Was kostet mich das?</summary><p>Im Provisionsmodell 10 % pro Zahlung über Tattoofin, alles inklusive (Zahlungsgebühren, auch Klarna, und Umsatzsteuer). Keine Einrichtungs- und keine Grundgebühr, jederzeit zum Monatsende kündbar. Alternativ gibt es den Kauf: einmalig 1.499 € netto, danach keine Provision.</p></details>
-  <details><summary>Wie lange dauert es, bis es läuft?</summary><p>Der Abschluss dauert 3 Minuten, das Auszahlungskonto ca. 10 Minuten. Unser Zahlungspartner prüft Identität und Bankverbindung, meist in 1 bis 3 Werktagen. Danach richten wir alles ein und testen es mit dir.</p></details>
-  <div class="lp-wa-box" style="margin-top:34px">
-    <div><h3>Noch Fragen?</h3><p>Schreib uns einfach auf WhatsApp. Wir antworten persönlich, ohne Verkaufsgespräch: 0162 4502375 (nur Nachrichten).</p></div>
-    <a class="btn wab big" href="https://wa.me/491624502375?text=Hi%2C%20ich%20habe%20eure%20Anzeige%20gesehen%20und%20eine%20Frage%20zu%20Tattoofin%20f%C3%BCr%20mein%20Studio." target="_blank" rel="noopener" data-lp="whatsapp"><svg viewBox="0 0 32 32" aria-hidden="true"><path fill="#fff" d="M16 3a13 13 0 0 0-11.3 19.4L3 29l6.8-1.8A13 13 0 1 0 16 3zm0 23.7c-2 0-3.9-.5-5.6-1.5l-.4-.2-4 1 1.1-3.9-.3-.4A10.7 10.7 0 1 1 16 26.7zm5.9-8c-.3-.2-1.9-.9-2.2-1-.3-.1-.5-.2-.7.2l-1 1.2c-.2.2-.4.2-.7.1a8.8 8.8 0 0 1-4.4-3.8c-.3-.6.3-.5 1-1.7.1-.2 0-.4 0-.6l-1-2.4c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4-.3.3-1.2 1.1-1.2 2.8s1.2 3.2 1.4 3.4c.2.2 2.4 3.6 5.7 5 2.1.9 2.9 1 4 .8.6-.1 1.9-.8 2.2-1.5.3-.8.3-1.4.2-1.5l-.6-.3z"/></svg>Auf WhatsApp fragen</a>
-  </div>
-</div></section>
-
-<!-- SCHLUSS -->
-<section class="final" style="padding:80px 0 90px">
-  <div class="sunburst" aria-hidden="true"></div>
-  <div class="wrap">
-    <img src="/assets/figur.png" alt="" style="width:200px">
-    <h2><span class="outline white">Mach den Preis nicht</span><br>zur ersten Hürde.</h2>
-    <p>Abschluss in 3 Minuten, komplett online. Jetzt wird nichts bezahlt.</p>
-    <a class="btn dark big" href="/start.html?modell=provision" data-lp="start">Kostenlos starten →</a>
-    <p class="lp-foot-fn">*Ratenzahlung über externe Anbieter wie Klarna, nach deren Prüfung. Tattoofin ist kein Kreditgeber. Achtung! Kreditaufnahme kostet Geld.</p>
+    <div class="formular-karte">
+      <form id="anfrage-form" novalidate>
+        <div class="feld">
+          <label for="a-vorname">Dein Vorname</label>
+          <input id="a-vorname" name="vorname" type="text" autocomplete="given-name" autocapitalize="words" enterkeyhint="next" required maxlength="60" aria-describedby="a-vorname-f">
+          <p class="fehler" id="a-vorname-f" hidden></p>
+        </div>
+        <div class="feld">
+          <label for="a-studio">Studio und Ort</label>
+          <input id="a-studio" name="studio" type="text" autocomplete="organization" autocapitalize="words" enterkeyhint="next" required maxlength="120" placeholder="z. B. Ink Studio, Bamberg" aria-describedby="a-studio-f">
+          <p class="fehler" id="a-studio-f" hidden></p>
+        </div>
+        <div class="feld">
+          <label for="a-telefon">Handynummer für WhatsApp</label>
+          <input id="a-telefon" name="telefon" type="tel" inputmode="tel" autocomplete="tel" enterkeyhint="send" required maxlength="40" placeholder="0151 23456789" aria-describedby="a-telefon-h a-telefon-f">
+          <p class="hinweis" id="a-telefon-h">Wir schreiben dir nur zu deiner Anfrage.</p>
+          <p class="fehler" id="a-telefon-f" hidden></p>
+        </div>
+        <div class="honig" aria-hidden="true"><label for="a-web">Firmenwebsite</label><input id="a-web" name="firmenwebsite" type="text" tabindex="-1" autocomplete="off"></div>
+        <button class="knopf knopf-gross knopf-voll" type="submit" id="a-senden">Einrichtung anfragen</button>
+        <p class="status" id="a-status" role="status" aria-live="polite"></p>
+        <p class="klein">Mit dem Absenden verarbeiten wir deine Angaben, um dich zu kontaktieren. Mehr in der <a href="/datenschutz#anfrage">Datenschutzerklärung</a>.</p>
+      </form>
+      <div class="danke" id="a-danke" hidden tabindex="-1">
+        <img src="/assets/figur.png" alt="" width="88" height="88">
+        <h3>Danke, deine Anfrage ist angekommen.</h3>
+        <p>Wir melden uns persönlich per WhatsApp bei dir. Bis dahin musst du nichts vorbereiten.</p>
+      </div>
+      <p class="sofort">Lieber sofort selbst loslegen? <a href="/start?modell=provision" data-lp="start">Online abschließen, 3 Minuten</a></p>
+    </div>
   </div>
 </section>
 
-<footer class="foot"><div class="wrap">
-  <div><img class="wm" src="/assets/wortmarke.png" alt="Tattoofin"><div>© <span id="jahr"></span> DSX Media Solutions UG (haftungsbeschränkt) · Tattoofin ist kein Kreditinstitut.</div></div>
-  <div><a href="/">Startseite</a><a href="/impressum.html">Impressum</a><a href="/datenschutz.html">Datenschutz</a><a href="/vertrag.html">Vertrag</a><a href="/login.html">Studio-Login</a><a href="#" data-cookies>Cookie-Einstellungen</a></div>
+</main>
+
+<footer class="fuss"><div class="rahmen fuss-raster">
+  <div>
+    <img class="wm" src="/assets/wortmarke.png" alt="Tattoofin" width="132" height="28" loading="lazy">
+    <p>© <span id="jahr">2026</span> DSX Media Solutions UG (haftungsbeschränkt). Tattoofin ist kein Kreditinstitut.</p>
+    <p class="pflicht">*Ratenzahlung über externe Anbieter wie Klarna, nach deren Prüfung. Tattoofin ist kein Kreditgeber. Achtung! Kreditaufnahme kostet Geld.</p>
+  </div>
+  <nav aria-label="Rechtliches"><a href="/">Startseite</a><a href="/impressum">Impressum</a><a href="/datenschutz">Datenschutz</a><a href="/vertrag">Vertrag</a><a href="/login">Studio-Login</a><a href="#" data-cookies>Cookie-Einstellungen</a></nav>
 </div></footer>
+
+<!-- Handy: Leiste unten, sobald der Startbereich verlassen ist -->
+<div class="leiste" id="leiste" hidden>
+  <a class="knopf" href="#anfrage" data-cta="leiste">Kostenlos einrichten lassen</a>
+  <a class="leiste-wa" href="https://wa.me/491624502375?text=Hi%2C%20ich%20habe%20eure%20Anzeige%20gesehen%20und%20eine%20Frage%20zu%20Tattoofin%20f%C3%BCr%20mein%20Studio." target="_blank" rel="noopener" data-lp="whatsapp" aria-label="Fragen per WhatsApp"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-wa"/></svg></a>
+</div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="i-wa" viewBox="0 0 32 32"><path fill="currentColor" d="M16 3a13 13 0 0 0-11.3 19.4L3 29l6.8-1.8A13 13 0 1 0 16 3zm0 23.7c-2 0-3.9-.5-5.6-1.5l-.4-.2-4 1 1.1-3.9-.3-.4A10.7 10.7 0 1 1 16 26.7zm5.9-8c-.3-.2-1.9-.9-2.2-1-.3-.1-.5-.2-.7.2l-1 1.2c-.2.2-.4.2-.7.1a8.8 8.8 0 0 1-4.4-3.8c-.3-.6.3-.5 1-1.7.1-.2 0-.4 0-.6l-1-2.4c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4-.3.3-1.2 1.1-1.2 2.8s1.2 3.2 1.4 3.4c.2.2 2.4 3.6 5.7 5 2.1.9 2.9 1 4 .8.6-.1 1.9-.8 2.2-1.5.3-.8.3-1.4.2-1.5l-.6-.3z"/></symbol></svg>
 
 <script src="/js/tf-track.js"></script>
 <script src="/js/studios.js"></script>

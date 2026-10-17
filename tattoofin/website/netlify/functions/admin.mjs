@@ -11,6 +11,7 @@
 //   GET   /api/admin/mails                    letzte E-Mails
 //   POST  /api/admin/anleitung                { email, firma } → Einrichtungs-Anleitung per E-Mail
 //   POST  /api/admin/einladen                 { email, firma } → Geschenk-Einladung (0 € Einrichtung, 0 % Provision) per E-Mail
+//   GET   /api/admin/anfragen                 Kurz-Anfragen von /studios (neueste zuerst)
 import { CFG, netto } from "./_lib/config.mjs";
 import { json, fail, body, clean, now, handler } from "./_lib/util.mjs";
 import { allStudios, getStudio, saveStudio, zahlungenVon, abrechnungenVon, store, log } from "./_lib/store.mjs";
@@ -117,6 +118,12 @@ export default handler(async (req) => {
     const keys = (await store.list("mail/")).slice(-50).reverse();
     const out = [];
     for (const k of keys) { const m = await store.get(k); out.push({ at: m.at, to: m.to, subject: m.subject }); }
+    return json(out);
+  }
+  if (bereich === "anfragen" && req.method === "GET") {
+    const keys = (await store.list("anfrage/")).slice(-200).reverse();
+    const out = [];
+    for (const k of keys) { const a = await store.get(k); if (a) out.push(a); }
     return json(out);
   }
   if (bereich === "info" && req.method === "GET") return json({ siteUrl: CFG.siteUrl, aktion: await store.get("meta/aktion-zaehler") });

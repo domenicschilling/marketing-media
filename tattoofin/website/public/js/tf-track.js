@@ -9,14 +9,16 @@ window.TFTrack = (function () {
   var WA_TEXT = "Hi, ich habe eine Frage zu Tattoofin für mein Studio.";
   var KEY = "tf_consent";
   var queue = [], geladen = false;
+  // Nur auf der echten Domain an Meta senden – Vorschau-Adressen (Netlify-Entwürfe) und lokale Tests zählen nie mit
+  var ECHT = location.hostname === "tattoofin.de";
 
   function lies() { try { return localStorage.getItem(KEY); } catch (e) { return null; } }
   function speichere(v) { try { localStorage.setItem(KEY, v); } catch (e) {} }
   // Diese Ereignisse gehen mit Einwilligung zusätzlich über unseren Server an Meta (gleiche event_id → keine Doppelzählung)
   var CAPI = { Lead: 1, CompleteRegistration: 1, Purchase: 1 };
   function cookie(n) { var m = document.cookie.match("(?:^|; )" + n + "=([^;]*)"); return m ? decodeURIComponent(m[1]) : ""; }
-  function capi(name, params, id) {
-    if (!CAPI[name]) return;
+  function capi(name, params, id, nurPixel) {
+    if (!CAPI[name] || nurPixel || !ECHT) return;
     try {
       var fbclid = new URLSearchParams(location.search).get("fbclid");
       var p = params || {};
@@ -25,26 +27,29 @@ window.TFTrack = (function () {
           fbc: cookie("_fbc") || (fbclid ? "fb.1." + Date.now() + "." + fbclid : ""), content_name: p.content_name, value: p.value, currency: p.currency }) }).catch(function () {});
     } catch (e) {}
   }
-  function sende(name, params, id) { window.fbq("track", name, params || {}, { eventID: id }); capi(name, params, id); }
+  function sende(name, params, id, nurPixel) { window.fbq("track", name, params || {}, { eventID: id }); capi(name, params, id, nurPixel); }
   function eventId() { return "tf-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8); }
 
   function ladePixel() {
     if (geladen || !/^\d{10,20}$/.test(PIXEL_ID)) return;
+    if (!ECHT) { if (window.console) console.info("[Tattoofin] Vorschau: Meta-Pixel bleibt aus (nur auf tattoofin.de aktiv)."); return; }
     geladen = true;
     /* eslint-disable */
     !function (f, b, e, v, n, t, s) { if (f.fbq) return; n = f.fbq = function () { n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments); }; if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = "2.0"; n.queue = []; t = b.createElement(e); t.async = !0; t.src = v; s = b.getElementsByTagName(e)[0]; s.parentNode.insertBefore(t, s); }(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js");
     /* eslint-enable */
     window.fbq("init", PIXEL_ID);
     window.fbq("track", "PageView", {}, { eventID: eventId() });
-    queue.splice(0).forEach(function (a) { sende(a[0], a[1], a[2]); });
+    queue.splice(0).forEach(function (a) { sende(a[0], a[1], a[2], a[3]); });
   }
 
-  // Event senden (oder vormerken, bis zugestimmt wurde). once: Schlüssel, damit z. B. ein Kauf beim Neuladen nicht doppelt zählt
-  function track(name, params, once) {
+  // Event senden (oder vormerken, bis zugestimmt wurde). once: Schlüssel, damit z. B. ein Kauf beim Neuladen nicht doppelt zählt.
+  // opt.id: eigene event_id (z. B. wenn der Server dasselbe Ereignis meldet), opt.nurPixel: keine Server-Kopie über /api/capi
+  function track(name, params, once, opt) {
+    opt = opt || {};
     if (once) { try { if (localStorage.getItem("tf_ev_" + once)) return; localStorage.setItem("tf_ev_" + once, "1"); } catch (e) {} }
-    var id = eventId();
-    if (geladen && window.fbq) sende(name, params, id);
-    else if (lies() !== "nein") queue.push([name, params, id]);
+    var id = opt.id || eventId();
+    if (geladen && window.fbq) sende(name, params, id, opt.nurPixel);
+    else if (lies() !== "nein") queue.push([name, params, id, opt.nurPixel]);
   }
 
   var CSS = ".tf-cc{position:fixed;left:12px;right:12px;bottom:12px;z-index:9999;max-width:560px;margin:0 auto;background:#fff;color:#1f3d5c;border:3px solid #1f3d5c;border-radius:18px;box-shadow:6px 6px 0 #1f3d5c;padding:16px 18px;font:15px/1.45 'DM Sans',system-ui,sans-serif}" +
@@ -56,6 +61,8 @@ window.TFTrack = (function () {
     ".tf-wa svg{width:24px;height:24px;flex:none}.tf-wa small{display:block;font-weight:500;font-size:11px;opacity:.9}" +
     "@media (max-width:600px){.tf-wa span{display:none}.tf-wa{padding:12px}}" +
     "body.tf-cc-offen .tf-wa{display:none}.tf-cc .kurz{display:none}" +
+    // Platz unter dem Seitenende, damit das Fenster keine Knöpfe (z. B. „Weiter“ auf /start) verdeckt
+    "body.tf-cc-offen{padding-bottom:190px}@media (max-width:600px){body.tf-cc-offen{padding-bottom:150px}}" +
     "@media (max-width:600px){.tf-cc{left:8px;right:8px;bottom:8px;padding:10px 12px;font-size:13.5px;line-height:1.4;box-shadow:4px 4px 0 #1f3d5c;border-width:2px}" +
     ".tf-cc b{display:none}.tf-cc .lang{display:none}.tf-cc .kurz{display:inline}" +
     ".tf-cc .r{margin-top:8px;gap:8px;flex-wrap:nowrap}.tf-cc button{min-width:0;padding:8px 6px;font-size:14px;border-width:2px}}";
@@ -110,5 +117,5 @@ window.TFTrack = (function () {
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 
-  return { track: track, waLink: waLink, wa: WA_ANZEIGE, banner: banner };
+  return { track: track, waLink: waLink, wa: WA_ANZEIGE, banner: banner, eventId: eventId, einwilligung: lies, cookie: cookie };
 })();
