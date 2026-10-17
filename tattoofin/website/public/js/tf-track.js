@@ -63,6 +63,8 @@ window.TFTrack = (function () {
     "body.tf-cc-offen .tf-wa{display:none}.tf-cc .kurz{display:none}" +
     // Platz unter dem Seitenende, damit das Fenster keine Knöpfe (z. B. „Weiter“ auf /start) verdeckt
     "body.tf-cc-offen{padding-bottom:190px}@media (max-width:600px){body.tf-cc-offen{padding-bottom:150px}}" +
+    // Am großen Bildschirm unten rechts statt mittig, damit der Hauptknopf links frei bleibt
+    "@media (min-width:1000px){.tf-cc{left:auto;right:20px;bottom:20px;max-width:430px;margin:0}}" +
     "@media (max-width:600px){.tf-cc{left:8px;right:8px;bottom:8px;padding:10px 12px;font-size:13.5px;line-height:1.4;box-shadow:4px 4px 0 #1f3d5c;border-width:2px}" +
     ".tf-cc b{display:none}.tf-cc .lang{display:none}.tf-cc .kurz{display:inline}" +
     ".tf-cc .r{margin-top:8px;gap:8px;flex-wrap:nowrap}.tf-cc button{min-width:0;padding:8px 6px;font-size:14px;border-width:2px}}";
