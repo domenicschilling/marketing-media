@@ -1,0 +1,231 @@
+diff --git a/netlify/functions/api.mjs b/netlify/functions/api.mjs
+--- a/netlify/functions/api.mjs	2026-10-17 00:41:58
++++ b/netlify/functions/api.mjs	2026-10-17 02:23:23
+@@ -105,6 +105,8 @@
+   if (lead.phone.replace(/\D/g, "").length < 6) fail(422, "Bitte gib eine gültige Telefonnummer an.");
+   if (!lead.addons.every((a) => ADDONS[a] || a === AKTION.key)) fail(422, "Unbekanntes Zusatzpaket.");
+   if (!["stripe", "invoice"].includes(lead.payment_method)) fail(422, "Bitte wähle eine Zahlungsart.");
++  // Angebot nur für Unternehmer (B2B): eigener Pflicht-Haken im Bestellformular
++  if (body.b2b_confirmed !== true) fail(422, "Bitte bestätige, dass du als Unternehmer bestellst – unser Angebot gilt nur für Unternehmer (B2B).");
+   if (body.terms_accepted !== true) fail(422, "Bitte bestätige die AGB und die Datenschutzerklärung.");
+   lead.terms_accepted_at = new Date().toISOString();
+   // Rechnungsadresse: Pflicht bei Kauf auf Rechnung, bei Online-Zahlung optional (z. B. für Reverse Charge im EU-Ausland)
+@@ -124,13 +126,22 @@
+   return lead;
+ };
+ 
+-// Gründer-Aktion: wie viele der 10 Plätze sind noch frei? (stornierte Bestellungen zählen nicht)
+-const aktionFrei = async () => {
+-  const { count, error } = await db().from("leads").select("id", { count: "exact", head: true }).contains("addons", [AKTION.key]).neq("status", "cancelled");
+-  if (error) throw error;
+-  return Math.max(0, AKTION.plaetze - (count || 0));
++// Gründer-Aktion: wie viele der 10 Plätze sind noch frei? Kein Startwert – es zählen nur echte Aufträge:
++// • bezahlt (paid / in_progress / live) – online oder auf Rechnung
++// • auf Rechnung verbindlich bestellt („Zahlungspflichtig bestellen“, Status new / invoice_sent)
++// Nicht gezählt: storniert, Online-Zahlung gestartet aber nicht bezahlt (new / checkout_started),
++// Tests (source „claude-test“ oder …@example.com/.org/.net). Papier-Aufträge (Auftragszettel) zählen erst, wenn sie im System angelegt sind.
++const aktionZaehlt = (l) => !isTestLead(l.email, l.source)
++  && (DONE.includes(l.status) || (l.payment_method === "invoice" && ["new", "invoice_sent"].includes(l.status)));
++const aktionVergeben = async () => {
++  const rows = must(await db().from("leads").select("status, payment_method, source, email").contains("addons", [AKTION.key]));
++  return rows.filter(aktionZaehlt).length;
+ };
+-const aktionInfo = async () => json({ key: AKTION.key, preis: AKTION.price, statt: 499, plaetze: AKTION.plaetze, frei: await aktionFrei() });
++const aktionFrei = async () => Math.max(0, AKTION.plaetze - (await aktionVergeben()));
++const aktionInfo = async () => {
++  const vergeben = await aktionVergeben();
++  return json({ key: AKTION.key, preis: AKTION.price, statt: 499, plaetze: AKTION.plaetze, vergeben, frei: Math.max(0, AKTION.plaetze - vergeben) });
++};
+ 
+ const createLead = async (req) => {
+   const body = await readJson(req);
+diff --git a/netlify/functions/lib/email-templates.mjs b/netlify/functions/lib/email-templates.mjs
+--- a/netlify/functions/lib/email-templates.mjs	2026-10-17 00:41:58
++++ b/netlify/functions/lib/email-templates.mjs	2026-10-17 02:24:10
+@@ -413,7 +413,7 @@
+     unsub: (a) => `Keine weiteren E-Mails zu diesem Entwurf? ${a("Hier abmelden")}.`, unsubText: "Keine weiteren E-Mails zu diesem Entwurf", questions: "Fragen? Antworte einfach auf diese E-Mail.", bye: "Viele Grüße\nDein GastroSite24-Team",
+     readySubject: (n) => `Dein kostenloser Website-Entwurf für ${n} · GastroSite24`,
+     readyPre: (n) => `Dein kostenloser Website-Entwurf für ${n} ist fertig.`, readyEyebrow: "Dein Entwurf ist fertig",
+-    aktion: (p, statt, frei) => `Gründer-Aktion: Die ersten 10 Restaurants bekommen ihre Website für ${p} statt ${statt}. Aktuell sind noch ${frei} von 10 Plätzen frei.`,
++    aktion: (p, statt, frei) => `Gründer-Aktion: Die ersten 10 Restaurants bekommen ihre Website für ${p} statt ${statt}. Aktuell sind noch ${frei} von 10 Plätzen frei. Preise zzgl. MwSt., Angebot nur für Unternehmer (B2B).`,
+     readyNote: "Gut zu wissen: Das ist ein erster Entwurf, damit du ein Gefühl für Aufbau und Stil bekommst. Fotos und Öffnungszeiten sind Platzhalter – in der fertigen Website verwenden wir eure echten Bilder, eure Speisekarte und eure Infos und passen Farben und Texte an eure Wünsche an.",
+     readyH1: (name) => `So könnte eure Website aussehen${name ? `, ${name}` : ""}!`,
+     readyForm: (b, city) => `Du hast über Facebook bzw. Instagram einen kostenlosen Website-Entwurf angefordert – hier ist er: unser erster Entwurf für <strong>${b}</strong>${city ? ` in ${city}` : ""}. Schau ihn dir in Ruhe an – am besten auf dem Handy, so wie eure Gäste.`,
+@@ -444,7 +444,7 @@
+     unsub: (a) => `No more emails about this draft? ${a("Unsubscribe here")}.`, unsubText: "No more emails about this draft", questions: "Questions? Just reply to this email.", bye: "Best regards\nYour GastroSite24 team",
+     readySubject: (n) => `Your free website draft for ${n} · GastroSite24`,
+     readyPre: (n) => `Your free website draft for ${n} is ready.`, readyEyebrow: "Your draft is ready",
+-    aktion: (p, statt, frei) => `Founder offer: the first 10 restaurants get their website for ${p} instead of ${statt}. ${frei} of 10 places are still available.`,
++    aktion: (p, statt, frei) => `Founder offer: the first 10 restaurants get their website for ${p} instead of ${statt}. ${frei} of 10 places are still available. Businesses only (B2B).`,
+     readyNote: "Good to know: this is a first draft to give you a feel for the layout and style. Photos and opening hours are placeholders – the finished website uses your real photos, your menu and your details, and we adapt colours and texts to your wishes.",
+     readyH1: (name) => `This is how your website could look${name ? `, ${name}` : ""}!`,
+     readyForm: (b, city) => `You requested a free website draft via Facebook or Instagram – here it is: our first draft for <strong>${b}</strong>${city ? ` in ${city}` : ""}. Take your time – ideally on your phone, just like your guests.`,
+@@ -475,7 +475,7 @@
+     unsub: (a) => `¿No quieres más correos sobre este diseño? ${a("Darse de baja aquí")}.`, unsubText: "No recibir más correos sobre este diseño", questions: "¿Preguntas? Responde simplemente a este correo.", bye: "Un saludo\nEl equipo de GastroSite24",
+     readySubject: (n) => `Tu diseño web gratuito para ${n} · GastroSite24`,
+     readyPre: (n) => `Tu diseño web gratuito para ${n} está listo.`, readyEyebrow: "Tu diseño está listo",
+-    aktion: (p, statt, frei) => `Oferta de lanzamiento: los 10 primeros restaurantes tienen su web por ${p} en lugar de ${statt}. Quedan ${frei} de 10 plazas.`,
++    aktion: (p, statt, frei) => `Oferta de lanzamiento: los 10 primeros restaurantes tienen su web por ${p} en lugar de ${statt}. Quedan ${frei} de 10 plazas. Solo para empresas (B2B).`,
+     readyNote: "Para que lo sepas: es un primer diseño para que te hagas una idea de la estructura y el estilo. Las fotos y el horario son de ejemplo – en la web final usamos vuestras fotos, vuestra carta y vuestros datos, y adaptamos colores y textos a lo que queráis.",
+     readyH1: (name) => `¡Así podría ser vuestra web${name ? `, ${name}` : ""}!`,
+     readyForm: (b, city) => `Has solicitado un diseño web gratuito a través de Facebook o Instagram – aquí lo tienes: nuestro primer diseño para <strong>${b}</strong>${city ? ` en ${city}` : ""}. Míralo con calma – mejor en el móvil, igual que tus clientes.`,
+@@ -506,7 +506,7 @@
+     unsub: (a) => `No vols més correus sobre aquest disseny? ${a("Donar-se de baixa aquí")}.`, unsubText: "No rebre més correus sobre aquest disseny", questions: "Preguntes? Respon simplement a aquest correu.", bye: "Salutacions\nL'equip de GastroSite24",
+     readySubject: (n) => `El teu disseny web gratuït per a ${n} · GastroSite24`,
+     readyPre: (n) => `El teu disseny web gratuït per a ${n} ja està llest.`, readyEyebrow: "El teu disseny està llest",
+-    aktion: (p, statt, frei) => `Oferta de llançament: els 10 primers restaurants tenen la seva web per ${p} en lloc de ${statt}. Queden ${frei} de 10 places.`,
++    aktion: (p, statt, frei) => `Oferta de llançament: els 10 primers restaurants tenen la seva web per ${p} en lloc de ${statt}. Queden ${frei} de 10 places. Només per a empreses (B2B).`,
+     readyNote: "Perquè ho sàpigues: és un primer disseny perquè et facis una idea de l'estructura i l'estil. Les fotos i l'horari són d'exemple – a la web final fem servir les vostres fotos, la vostra carta i les vostres dades, i adaptem colors i textos al que vulgueu.",
+     readyH1: (name) => `Així podria ser la vostra web${name ? `, ${name}` : ""}!`,
+     readyForm: (b, city) => `Has sol·licitat un disseny web gratuït a través de Facebook o Instagram – aquí el tens: el nostre primer disseny per a <strong>${b}</strong>${city ? ` a ${city}` : ""}. Mira'l amb calma – millor al mòbil, com els teus clients.`,
+diff --git a/src/components/gs/AktionBanner.jsx b/src/components/gs/AktionBanner.jsx
+--- a/src/components/gs/AktionBanner.jsx	2026-10-17 00:41:58
++++ b/src/components/gs/AktionBanner.jsx	2026-10-17 02:24:10
+@@ -1,4 +1,5 @@
+-// Gründer-Aktion oben auf der Seite – nur solange Plätze frei sind (Zähler vom Server).
++// Gründer-Aktion oben auf der Seite – nur solange Plätze frei sind (Zähler vom Server, zählt nur echte Aufträge).
++// „Noch X Plätze“ kommt ausschließlich aus dem Zähler; kein Enddatum, kein Countdown. Preis immer mit „netto zzgl. MwSt.“ und B2B-Hinweis.
+ // Mallorca: Paket 440 € statt 690 € (gleicher Rabatt von 250 €), Text in der Seitensprache.
+ import { useFunnel } from "../../lib/funnel";
+ import { AKTION_PREIS, NORMAL_PREIS, useAktion } from "../../lib/aktion";
+@@ -19,12 +20,12 @@
+       className="relative mt-16 block w-full bg-red px-4 py-2.5 text-center text-[13.5px] font-semibold leading-snug text-white sm:text-[14.5px]">
+       {market === "mallorca"
+         ? tr({
+-          de: <>Gründer-Aktion: Die ersten 10 Restaurants bekommen ihr Mallorca-Paket für {MALLORCA_AKTION} € statt {strike(`${MALLORCA_PREIS} €`)} netto. Noch {n} {n === 1 ? "Platz" : "Plätze"} frei – <span className="underline underline-offset-2">jetzt sichern</span></>,
+-          en: <>Founder offer: the first 10 restaurants get their Mallorca package for €{MALLORCA_AKTION} instead of {strike(`€${MALLORCA_PREIS}`)} net. {n} {n === 1 ? "place" : "places"} left – <span className="underline underline-offset-2">claim yours</span></>,
+-          es: <>Oferta de lanzamiento: los 10 primeros restaurantes tienen su paquete Mallorca por {MALLORCA_AKTION} € en lugar de {strike(`${MALLORCA_PREIS} €`)} netos. {n === 1 ? "Queda 1 plaza" : `Quedan ${n} plazas`} – <span className="underline underline-offset-2">reserva la tuya</span></>,
+-          ca: <>Oferta de llançament: els 10 primers restaurants tenen el seu paquet Mallorca per {MALLORCA_AKTION} € en lloc de {strike(`${MALLORCA_PREIS} €`)} nets. {n === 1 ? "Queda 1 plaça" : `Queden ${n} places`} – <span className="underline underline-offset-2">reserva la teva</span></>,
++          de: <>Gründer-Aktion: Die ersten 10 Restaurants bekommen ihr Mallorca-Paket für {MALLORCA_AKTION} € statt {strike(`${MALLORCA_PREIS} €`)} netto zzgl. MwSt. – nur für Unternehmer (B2B). Noch {n} {n === 1 ? "Platz" : "Plätze"} frei – <span className="underline underline-offset-2">jetzt sichern</span></>,
++          en: <>Founder offer: the first 10 restaurants get their Mallorca package for €{MALLORCA_AKTION} instead of {strike(`€${MALLORCA_PREIS}`)} net plus VAT – businesses only (B2B). {n} {n === 1 ? "place" : "places"} left – <span className="underline underline-offset-2">claim yours</span></>,
++          es: <>Oferta de lanzamiento: los 10 primeros restaurantes tienen su paquete Mallorca por {MALLORCA_AKTION} € en lugar de {strike(`${MALLORCA_PREIS} €`)} netos más IVA – solo para empresas (B2B). {n === 1 ? "Queda 1 plaza" : `Quedan ${n} plazas`} – <span className="underline underline-offset-2">reserva la tuya</span></>,
++          ca: <>Oferta de llançament: els 10 primers restaurants tenen el seu paquet Mallorca per {MALLORCA_AKTION} € en lloc de {strike(`${MALLORCA_PREIS} €`)} nets més IVA – només per a empreses (B2B). {n === 1 ? "Queda 1 plaça" : `Queden ${n} places`} – <span className="underline underline-offset-2">reserva la teva</span></>,
+         })
+-        : <>Gründer-Aktion: Die ersten 10 Restaurants bekommen ihre Website für {AKTION_PREIS} € statt {strike(`${NORMAL_PREIS} €`)} netto. Noch {n} {n === 1 ? "Platz" : "Plätze"} frei – <span className="underline underline-offset-2">jetzt sichern</span></>}
++        : <>Gründer-Aktion: Die ersten 10 Restaurants bekommen ihre Website für {AKTION_PREIS} € statt {strike(`${NORMAL_PREIS} €`)} netto zzgl. MwSt. – nur für Unternehmer (B2B). Noch {n} {n === 1 ? "Platz" : "Plätze"} frei – <span className="underline underline-offset-2">jetzt sichern</span></>}
+     </button>
+   );
+ };
+diff --git a/src/components/gs/Funnel.jsx b/src/components/gs/Funnel.jsx
+--- a/src/components/gs/Funnel.jsx	2026-10-17 00:41:58
++++ b/src/components/gs/Funnel.jsx	2026-10-17 02:23:42
+@@ -31,6 +31,7 @@
+   const [b, setB] = useState(mallorca ? { ...EMPTY_BILLING, country: "ES" } : EMPTY_BILLING);
+   const [method, setMethod] = useState("stripe");
+   const [consent, setConsent] = useState(false);
++  const [b2b, setB2b] = useState(false);
+   const [busy, setBusy] = useState(false);
+   const set = (k) => (e) => setF((p) => ({ ...p, [k]: e.target.value }));
+   const setBill = (k) => (e) => setB((p) => ({ ...p, [k]: e.target.value }));
+@@ -43,7 +44,7 @@
+   // Mallorca: Rechnungsadresse auch bei Online-Zahlung (für korrekte Umsatzsteuer / Reverse Charge)
+   const needBilling = method === "invoice" || mallorca;
+   const billingOk = !needBilling || ((method === "stripe" || EU.includes(b.country)) && b.street.trim().length >= 3 && b.zip.trim().length >= 3 && b.city.trim().length >= 2 && (b.country === "DE" || method === "stripe" || b.vat_id.replace(/\s/g, "").length >= 8));
+-  const valid = [contactOk, billingOk && consent];
++  const valid = [contactOk, billingOk && b2b && consent];
+ 
+   const goStep2 = () => {
+     setStep(1);
+@@ -58,7 +59,7 @@
+     track("AddPaymentInfo", { payment_method: method, value: total, currency: "EUR" });
+     trackEvent("funnel_submit", method);
+     try {
+-      const payload = { ...f, addons: addonsGesamt, payment_method: method, source: source || "", billing: needBilling ? b : null, market, terms_accepted: consent, visit_id: getVisitId(), meta: metaContext(), ...(draftToken ? { draft: draftToken } : {}) };
++      const payload = { ...f, addons: addonsGesamt, payment_method: method, source: source || "", billing: needBilling ? b : null, market, b2b_confirmed: b2b, terms_accepted: consent, visit_id: getVisitId(), meta: metaContext(), ...(draftToken ? { draft: draftToken } : {}) };
+       const lead = await axios.post(`${API}/leads`, payload);
+       const leadId = lead.data?.lead_id;
+       if (method === "stripe") {
+@@ -130,7 +131,7 @@
+                       <div className="font-display text-[17px] font-bold tracking-[-0.02em] text-ink">{mallorca ? tr({ de: "Mallorca-Paket", en: "Mallorca package", es: "Paquete Mallorca", ca: "Paquet Mallorca" }) : "Komplette Gastro-Website"}</div>
+                       <div className="truncate text-[13px] text-mute">{mallorca ? tr({ de: "4 Sprachen · Google-Profil · QR-Speisekarte · ", en: "4 languages · Google profile · QR menu · ", es: "4 idiomas · perfil de Google · carta QR · ", ca: "4 idiomes · perfil de Google · carta QR · " }) : ""}{tr({ de: "für", en: "for", es: "para", ca: "per a" })} {f.business_name}</div>
+                     </div>
+-                    <div className="text-right font-display text-[18px] font-bold text-ink">{aktion ? <><span className="mr-1.5 text-[13px] font-medium text-mute line-through">{mallorca ? "690 €" : "499 €"}</span>{mallorca ? `${AKTION_PREIS + 191} €` : `${AKTION_PREIS} €`}<span className="block text-[11px] font-semibold text-red">{tr({ de: `Gründer-Aktion · noch ${aktion.frei} von 10 Plätzen`, en: `Founder offer · ${aktion.frei} of 10 spots left`, es: `Oferta fundadores · quedan ${aktion.frei} de 10`, ca: `Oferta fundadors · en queden ${aktion.frei} de 10` })}</span></> : (mallorca ? "690 €" : "499 €")}</div>
++                    <div className="text-right font-display text-[18px] font-bold text-ink">{aktion ? <><span className="mr-1.5 text-[13px] font-medium text-mute line-through">{mallorca ? "690 €" : "499 €"}</span>{mallorca ? `${AKTION_PREIS + 191} €` : `${AKTION_PREIS} €`}<span className="block text-[11px] font-medium text-mute">{tr({ de: "netto zzgl. MwSt.", en: "net plus VAT", es: "neto más IVA", ca: "net més IVA" })}</span><span className="block text-[11px] font-semibold text-red">{tr({ de: `Gründer-Aktion · noch ${aktion.frei} von 10 Plätzen`, en: `Founder offer · ${aktion.frei} of 10 spots left`, es: `Oferta fundadores · quedan ${aktion.frei} de 10`, ca: `Oferta fundadors · en queden ${aktion.frei} de 10` })}</span></> : (mallorca ? "690 €" : "499 €")}</div>
+                   </div>
+                   <div className="mt-3 border-t border-ink/10 pt-3">
+                     <div className="mb-2 text-[12px] font-medium text-mute">{tr({ de: "Optional dazubuchen", en: "Optional extras", es: "Extras opcionales", ca: "Extres opcionals" })}</div>
+@@ -138,7 +139,7 @@
+                     <BundleHint addons={f.addons} />
+                   </div>
+                   <div className="mt-3 flex items-baseline justify-between border-t border-ink/10 pt-3">
+-                    <span className="text-[13px] text-mute">{tr({ de: "Gesamt netto, einmalig", en: "Total net, one-off", es: "Total neto, pago único", ca: "Total net, pagament únic" })} <span className="block text-[11px]">{tr({ de: "zzgl. gesetzl. MwSt. (entfällt bei Reverse Charge)", en: "plus VAT where applicable (not with reverse charge)", es: "más IVA si procede (no con inversión del sujeto pasivo)", ca: "més IVA si escau (no amb inversió del subjecte passiu)" })}</span></span>
++                    <span className="text-[13px] text-mute">{tr({ de: "Gesamt netto, einmalig", en: "Total net, one-off", es: "Total neto, pago único", ca: "Total net, pagament únic" })} <span className="block text-[11px]">{tr({ de: "zzgl. gesetzl. MwSt. (entfällt bei Reverse Charge)", en: "plus VAT where applicable (not with reverse charge)", es: "más IVA si procede (no con inversión del sujeto pasivo)", ca: "més IVA si escau (no amb inversió del subjecte passiu)" })}</span> <span data-testid="funnel-b2b-hint" className="block text-[11px] font-semibold">{tr({ de: "Angebot nur für Unternehmer (B2B)", en: "Offer for businesses only (B2B)", es: "Oferta solo para empresas (B2B)", ca: "Oferta només per a empreses (B2B)" })}</span></span>
+                     <span data-testid="funnel-total" className="font-display text-[26px] font-extrabold tracking-[-0.03em] text-ink">{total.toLocaleString("de-DE")} €</span>
+                   </div>
+                   <div data-testid="funnel-guarantee" className="mt-3 flex items-start gap-2 rounded-xl bg-red/5 px-3 py-2.5 text-[12.5px] leading-snug text-ink">
+@@ -152,11 +153,15 @@
+                 </div>
+                 {needBilling && <BillingFields b={b} set={setBill} vatOptional={method === "stripe"} />}
+                 <label className="flex cursor-pointer items-start gap-3 text-[13px] leading-snug text-ink">
++                  <input type="checkbox" data-testid="funnel-b2b" required checked={b2b} onChange={(e) => setB2b(e.target.checked)} className="mt-0.5 h-5 w-5 shrink-0 accent-[#B3261E]" />
++                  <span><strong>{tr({ de: "Ich bestelle als Unternehmer", en: "I am ordering as a business", es: "Contrato como empresa", ca: "Contracto com a empresa" })}</strong> {tr({ de: "(z. B. für mein Restaurant, Café oder meinen Imbiss). Das Angebot gilt nur für Unternehmer (B2B), nicht für Verbraucher.", en: "(e.g. for my restaurant, café or takeaway). This offer is for businesses only (B2B), not for consumers.", es: "(p. ej. para mi restaurante, cafetería o bar). La oferta es solo para empresas (B2B), no para consumidores.", ca: "(p. ex. per al meu restaurant, cafeteria o bar). L'oferta és només per a empreses (B2B), no per a consumidors." })}</span>
++                </label>
++                <label className="flex cursor-pointer items-start gap-3 text-[13px] leading-snug text-ink">
+                   <input type="checkbox" data-testid="funnel-consent" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 h-5 w-5 shrink-0 accent-[#B3261E]" />
+                   {lang === "de" ? (
+-                  <span>Ich bestelle als Unternehmer und akzeptiere die <a href="/agb" target="_blank" rel="noreferrer" className="underline" onClick={(e) => e.stopPropagation()}>AGB</a> und die <a href="/leistungen" target="_blank" rel="noreferrer" className="underline" onClick={(e) => e.stopPropagation()}>Leistungsbeschreibung</a>. Die <a href="/datenschutz" target="_blank" rel="noreferrer" className="underline" onClick={(e) => e.stopPropagation()}>Datenschutzerklärung</a> habe ich zur Kenntnis genommen.</span>
++                  <span>Ich akzeptiere die <a href="/agb" target="_blank" rel="noreferrer" className="underline" onClick={(e) => e.stopPropagation()}>AGB</a> und die <a href="/leistungen" target="_blank" rel="noreferrer" className="underline" onClick={(e) => e.stopPropagation()}>Leistungsbeschreibung</a>. Die <a href="/datenschutz" target="_blank" rel="noreferrer" className="underline" onClick={(e) => e.stopPropagation()}>Datenschutzerklärung</a> habe ich zur Kenntnis genommen.</span>
+                   ) : (
+-                  <span>{tr({ en: "I’m ordering as a business and accept the", es: "Contrato como empresa y acepto las", ca: "Contracto com a empresa i accepto les" })} <a href="/agb" target="_blank" rel="noreferrer" className="underline" onClick={(e) => e.stopPropagation()}>{tr({ en: "terms (AGB)", es: "condiciones (AGB)", ca: "condicions (AGB)" })}</a> {tr({ en: "and the", es: "y la", ca: "i la" })} <a href="/leistungen" target="_blank" rel="noreferrer" className="underline" onClick={(e) => e.stopPropagation()}>{tr({ en: "service description", es: "descripción del servicio", ca: "descripció del servei" })}</a>. {tr({ en: "I have read the", es: "He leído la", ca: "He llegit la" })} <a href="/datenschutz" target="_blank" rel="noreferrer" className="underline" onClick={(e) => e.stopPropagation()}>{tr({ en: "privacy policy", es: "política de privacidad", ca: "política de privacitat" })}</a>. {tr({ en: "The contract language and legal texts are German.", es: "El idioma del contrato y de los textos legales es el alemán.", ca: "La llengua del contracte i dels textos legals és l'alemany." })}</span>
++                  <span>{tr({ en: "I accept the", es: "Acepto las", ca: "Accepto les" })} <a href="/agb" target="_blank" rel="noreferrer" className="underline" onClick={(e) => e.stopPropagation()}>{tr({ en: "terms (AGB)", es: "condiciones (AGB)", ca: "condicions (AGB)" })}</a> {tr({ en: "and the", es: "y la", ca: "i la" })} <a href="/leistungen" target="_blank" rel="noreferrer" className="underline" onClick={(e) => e.stopPropagation()}>{tr({ en: "service description", es: "descripción del servicio", ca: "descripció del servei" })}</a>. {tr({ en: "I have read the", es: "He leído la", ca: "He llegit la" })} <a href="/datenschutz" target="_blank" rel="noreferrer" className="underline" onClick={(e) => e.stopPropagation()}>{tr({ en: "privacy policy", es: "política de privacidad", ca: "política de privacitat" })}</a>. {tr({ en: "The contract language and legal texts are German.", es: "El idioma del contrato y de los textos legales es el alemán.", ca: "La llengua del contracte i dels textos legals és l'alemany." })}</span>
+                   )}
+                 </label>
+               </>
+diff --git a/src/components/gs/Hero.jsx b/src/components/gs/Hero.jsx
+--- a/src/components/gs/Hero.jsx	2026-10-17 00:41:58
++++ b/src/components/gs/Hero.jsx	2026-10-17 02:24:10
+@@ -223,7 +223,7 @@
+             )}
+           </motion.div>
+           <motion.div initial={PRERENDERED ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.9, delay: 0.95 }} className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 lg:mt-6">
+-            {(v.checks ? (aktion && variant.startsWith("mallorca") ? [MALLORCA_AKTION_CHECK[lang] || MALLORCA_AKTION_CHECK.de, ...v.checks.slice(1)] : v.checks) : [aktion ? `Gründer-Aktion: ${AKTION_PREIS} € statt 499 €` : "499 € netto einmalig", "Fertig in 7 Werktagen"]).map((c, i) => (
++            {(v.checks ? (aktion && variant.startsWith("mallorca") ? [MALLORCA_AKTION_CHECK[lang] || MALLORCA_AKTION_CHECK.de, ...v.checks.slice(1)] : v.checks) : [aktion ? `Gründer-Aktion: ${AKTION_PREIS} € statt 499 € netto` : "499 € netto einmalig", "Fertig in 7 Werktagen"]).map((c, i) => (
+               <span key={c} data-testid={i === 0 ? "hero-price-note" : undefined} className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-ink">
+                 <Check size={15} className="text-red" /> {c}
+               </span>
+@@ -231,6 +231,7 @@
+             <button data-testid="hero-cta-examples-mobile" onClick={() => scrollToId("beispiele")} className="text-[13px] font-semibold text-ink underline decoration-ink/30 underline-offset-4 sm:hidden">
+               {tr({ de: "Beispiele ansehen", en: "See examples", es: "Ver ejemplos", ca: "Veure exemples" })}
+             </button>
++            <span data-testid="hero-b2b-note" className="w-full text-[12px] text-mute">{tr({ de: "Alle Preise netto zzgl. MwSt. · Angebot nur für Unternehmer (B2B)", en: "All prices net plus VAT · businesses only (B2B)", es: "Todos los precios netos más IVA · solo para empresas (B2B)", ca: "Tots els preus nets més IVA · només per a empreses (B2B)" })}</span>
+             <span className="hidden w-full text-[12.5px] text-mute sm:block">{tr({ de: "Ideal für Restaurants, Imbisse, Pizzerien, Cafés & Lieferdienste", en: "Ideal for restaurants, snack bars, pizzerias, cafés & delivery", es: "Ideal para restaurantes, bares, pizzerías, cafeterías y reparto", ca: "Ideal per a restaurants, bars, pizzeries, cafeteries i repartiment" })}</span>
+           </motion.div>
+         </div>
+diff --git a/src/components/gs/MallorcaSection.jsx b/src/components/gs/MallorcaSection.jsx
+--- a/src/components/gs/MallorcaSection.jsx	2026-10-17 00:41:58
++++ b/src/components/gs/MallorcaSection.jsx	2026-10-17 02:24:10
+@@ -106,7 +106,8 @@
+                 {tr({ de: `Gründer-Aktion für die ersten 10 Restaurants · noch ${aktion.frei} frei`, en: `Founder offer for the first 10 restaurants · ${aktion.frei} left`, es: `Oferta de lanzamiento para los 10 primeros restaurantes · quedan ${aktion.frei}`, ca: `Oferta de llançament per als 10 primers restaurants · en queden ${aktion.frei}` })}
+               </div>
+             )}
+-            <div className="mt-3 font-mono text-[13px] uppercase tracking-[0.24em] text-mute">{tr({ de: "einmalig · netto", en: "one-off · net", es: "pago único · neto", ca: "pagament únic · net" })}</div>
++            <div className="mt-3 font-mono text-[13px] uppercase tracking-[0.24em] text-mute">{tr({ de: "einmalig · netto zzgl. MwSt.", en: "one-off · net plus VAT", es: "pago único · neto más IVA", ca: "pagament únic · net més IVA" })}</div>
++            <div data-testid="mallorca-b2b" className="mt-2 text-[13px] font-semibold text-ink">{tr({ de: "Angebot nur für Unternehmer (B2B)", en: "Offer for businesses only (B2B)", es: "Oferta solo para empresas (B2B)", ca: "Oferta només per a empreses (B2B)" })}</div>
+             <p className="mt-4 max-w-[460px] text-[14px] text-mute">
+               {tr({
+                 de: "Im 1. Jahr keine laufenden Kosten. Ab dem 2. Jahr 299 € netto pro Jahr für Hosting, Domain und Betreuung – jederzeit zum Ende des Vertragsjahres kündbar. Mit spanischer USt-IdNr. ohne deutsche Umsatzsteuer (Reverse Charge).",
+diff --git a/src/components/gs/Pricing.jsx b/src/components/gs/Pricing.jsx
+--- a/src/components/gs/Pricing.jsx	2026-10-17 00:41:58
++++ b/src/components/gs/Pricing.jsx	2026-10-17 02:24:10
+@@ -29,7 +29,8 @@
+                 {aktion ? AKTION_PREIS : 499}<span className="ml-1 align-top text-[0.42em] tracking-[-0.03em] text-red">€</span>
+               </div>
+               {aktion && <div data-testid="price-aktion" className="mt-3 text-[16px] font-semibold text-red">Gründer-Aktion: statt <span className="line-through">499 €</span> – nur für die ersten 10 Restaurants, noch {aktion.frei} frei.</div>}
+-              <div data-testid="price-terms" className="mt-4 font-mono text-[13px] uppercase tracking-[0.24em] text-mute">einmalig · netto</div>
++              <div data-testid="price-terms" className="mt-4 font-mono text-[13px] uppercase tracking-[0.24em] text-mute">einmalig · netto zzgl. MwSt.</div>
++              <div data-testid="price-b2b" className="mt-2 text-[13px] font-semibold text-ink">Angebot nur für Unternehmer (B2B)</div>
+               <div className="mt-6 font-display text-[24px] font-bold tracking-[-0.03em] text-ink sm:text-[30px]">Deine komplette Gastro-Website.</div>
+               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+                 <MagneticButton data-testid="pricing-cta" onClick={() => draft("pricing")} className="w-full sm:w-auto">
+diff --git a/src/pages/Draft.jsx b/src/pages/Draft.jsx
+--- a/src/pages/Draft.jsx	2026-10-17 00:41:58
++++ b/src/pages/Draft.jsx	2026-10-17 02:24:10
+@@ -356,7 +356,7 @@
+           )}
+           {!d.ordered && (
+             <button type="button" data-testid="draft-order" onClick={order} className="flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-red px-4 text-[14.5px] font-semibold text-white sm:flex-none sm:px-5">
+-              {bar.order} · {aktion ? (d.market === "mallorca" ? "440 €" : "249 €") : (d.market === "mallorca" ? "690 €" : "499 €")} <ArrowRight size={16} />
++              {bar.order} · {aktion ? (d.market === "mallorca" ? "440 €" : "249 €") : (d.market === "mallorca" ? "690 €" : "499 €")} <span className="text-[11px] font-medium opacity-80">{{ en: "+ VAT", es: "+ IVA", ca: "+ IVA" }[lang] || "zzgl. MwSt."}</span> <ArrowRight size={16} />
+             </button>
+           )}
+         </div>

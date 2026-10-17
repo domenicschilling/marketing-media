@@ -1,0 +1,16 @@
+--- a/netlify/functions/api.mjs
++++ b/netlify/functions/api.mjs
+@@ -124,9 +124,11 @@
+   return lead;
+ };
+ 
+-// Gründer-Aktion: wie viele der 10 Plätze sind noch frei? (stornierte Bestellungen zählen nicht)
++// Gründer-Aktion: wie viele der 10 Plätze sind noch frei? Es zählen nur echte Verkäufe: bezahlt (Stripe)
++// oder Kauf auf Rechnung (Rechnung ausgestellt). Offene/abgebrochene Online-Zahlungen und Stornos zählen nicht.
++const AKTION_VERKAUFT = ["invoice_sent", "paid", "in_progress", "live"];
+ const aktionFrei = async () => {
+-  const { count, error } = await db().from("leads").select("id", { count: "exact", head: true }).contains("addons", [AKTION.key]).neq("status", "cancelled");
++  const { count, error } = await db().from("leads").select("id", { count: "exact", head: true }).contains("addons", [AKTION.key]).in("status", AKTION_VERKAUFT);
+   if (error) throw error;
+   return Math.max(0, AKTION.plaetze - (count || 0));
+ };

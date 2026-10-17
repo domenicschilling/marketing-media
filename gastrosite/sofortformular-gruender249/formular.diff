@@ -1,0 +1,35 @@
+--- live: plans/gs-sofortformular.json (leadForm)
++++ entwurf: plans/gs-sofortformular-gruender249.json (leadForm)
+@@ -1,4 +1,4 @@
+ {
+-  "name": "GS Gratis-Entwurf Sofortformular Okt26",
++  "name": "GS Gratis-Entwurf Gründer249 Prüffrage Okt26",
+   "locale": "de_DE",
+   "higherIntent": true,
+@@ -10,9 +10,25 @@
+       "Wir bauen einen Website-Entwurf für dein Lokal – kostenlos und unverbindlich.",
+       "Du bekommst den Link in ca. 2 Stunden per E-Mail.",
+-      "Gefällt er dir: 499 € netto einmalig. Wenn nicht: einfach ignorieren."
++      "Gründer-Aktion: 249 € statt 499 € netto – nur für die ersten 10 Lokale.",
++      "Gefällt er dir nicht: einfach ignorieren."
+     ],
+     "button_text": "Weiter"
+   },
+   "questions": [
++    {
++      "type": "CUSTOM",
++      "key": "gastro_check",
++      "label": "Betreibst du ein Restaurant, Café oder Imbiss?",
++      "options": [
++        {
++          "key": "ja",
++          "value": "Ja"
++        },
++        {
++          "key": "nein",
++          "value": "Nein"
++        }
++      ]
++    },
+     {
+       "type": "CUSTOM",

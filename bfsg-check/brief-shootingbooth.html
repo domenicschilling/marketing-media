@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><title>Musterbrief Website-Check Shootingbooth</title>
+<style>
+@page { size: A4; margin: 0; }
+* { box-sizing: border-box; }
+body { margin: 0; font: 10.6pt/1.5 Helvetica, Arial, sans-serif; color: #1b2027; }
+.seite { width: 210mm; height: 297mm; position: relative; padding: 0 20mm 0 25mm; page-break-after: always; overflow: hidden; }
+.entwurf { position: absolute; top: 8mm; right: 12mm; font-size: 8pt; color: #c62828; border: 1px solid #c62828; border-radius: 4px; padding: 2px 6px; }
+.kopf { position: absolute; top: 14mm; left: 25mm; right: 20mm; display: flex; justify-content: space-between; align-items: flex-start; }
+.marke b { font-size: 13pt; letter-spacing: .02em; } .marke span { display: block; font-size: 8.5pt; color: #5b6470; }
+.ruecksende { position: absolute; top: 45mm; left: 25mm; font-size: 7pt; color: #5b6470; border-bottom: .5px solid #9aa3ad; }
+.anschrift { position: absolute; top: 50mm; left: 25mm; width: 85mm; font-size: 10.5pt; line-height: 1.4; }
+.info { position: absolute; top: 50mm; left: 125mm; font-size: 8.5pt; color: #5b6470; line-height: 1.5; }
+.inhalt { position: absolute; top: 90mm; left: 25mm; right: 20mm; }
+.betreff { font-weight: 700; font-size: 11pt; margin: 0 0 14px; }
+p { margin: 0 0 9px; }
+.box { display: grid; grid-template-columns: 1fr 34mm; gap: 12px; align-items: center; background: #f5f6f8; border-radius: 10px; padding: 10px 14px; margin: 12px 0; }
+.qr { width: 30mm; height: 30mm; border: 1.5px dashed #9aa3ad; border-radius: 6px; display: grid; place-items: center; text-align: center; font-size: 7.5pt; color: #5b6470; }
+.fuss { position: absolute; bottom: 10mm; left: 25mm; right: 20mm; font-size: 7.2pt; color: #7b8896; border-top: .5px solid #c9ced4; padding-top: 5px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+/* Beiblatt */
+.blatt { padding: 22mm 20mm 0 25mm; }
+.titel { font-size: 16pt; font-weight: 700; margin: 0 0 2px; }
+.unter { color: #5b6470; margin-bottom: 14px; }
+.wert { display: flex; align-items: center; gap: 16px; margin: 10px 0 16px; }
+.ring { flex-shrink: 0; width: 30mm; height: 30mm; border-radius: 50%; background: conic-gradient(#e5a100 0 78%, #e3e6ea 78% 100%); display: grid; place-items: center; }
+.ring div { width: 24mm; height: 24mm; border-radius: 50%; background: #fff; display: grid; place-items: center; font-size: 20pt; font-weight: 700; }
+.ring small { display: block; font-size: 7.5pt; color: #5b6470; font-weight: 400; text-align: center; margin-top: -4px; }
+.problem { border: 1px solid #e3e6ea; border-radius: 10px; padding: 9px 12px; margin: 8px 0; }
+.problem b { display: block; font-size: 10.8pt; }
+.problem .wer { font-size: 9pt; color: #5b6470; }
+.bildplatz { height: 22mm; border: 1.5px dashed #c9ced4; border-radius: 6px; margin-top: 6px; display: grid; place-items: center; font-size: 8pt; color: #9aa3ad; }
+.hinweis { font-size: 8.5pt; color: #5b6470; margin-top: 14px; }
+</style></head><body>
+
+<!-- Seite 1: Brief -->
+<div class="seite">
+  <div class="entwurf">MUSTER – Entwurf, nicht versenden</div>
+  <div class="kopf">
+    <div class="marke"><b>DSX Media Solutions</b><span>Websites, die Anfragen bringen · Bamberg</span></div>
+    <div style="font-size:8.5pt;color:#5b6470;text-align:right">Am Weingarten 9 · 96117 Memmelsdorf<br>info@dsxmediasolutions.de</div>
+  </div>
+  <div class="ruecksende">DSX Media Solutions UG (haftungsbeschränkt) · Am Weingarten 9 · 96117 Memmelsdorf</div>
+  <div class="anschrift">Hofmann InnoTech GmbH<br>Shootingbooth<br>Frau Carolin Hofmann<br>Kunigundendamm 78<br>96050 Bamberg</div>
+  <div class="info">Ihr Ansprechpartner<br><b style="color:#1b2027">Domenic Schilling</b><br>WhatsApp 0174 1682157<br><br>Datum<br><b style="color:#1b2027">[Datum]</b></div>
+
+  <div class="inhalt">
+    <p class="betreff">Shootingbooth am Handy: Ihre Startseite braucht 15 Sekunden</p>
+    <p>Sehr geehrte Frau Hofmann,</p>
+    <p>die meisten Paare und Firmen suchen ihre Fotobox heute am Handy – oft zwischen zwei Terminen. Wer dann zu lange auf eine Seite wartet, tippt auf den nächsten Anbieter.</p>
+    <p>Wir sind ein Bamberger Team für Websites, die Anfragen bringen. Wir haben uns <b>shootingbooth.de</b> mit dem Prüf-Werkzeug von Google angesehen – so, wie ein Kunde sie am Handy erlebt. Ihre Angebote, Pakete und Bilder überzeugen. Ein Punkt kostet Sie aber wahrscheinlich Anfragen:</p>
+    <ul style="margin:0 0 9px 18px;padding:0">
+      <li><b>Das große Startbild erscheint erst nach rund 15 Sekunden.</b> Google empfiehlt höchstens 2,5 Sekunden. Viele Besucher sind bis dahin schon weg.</li>
+      <li><b>Ladezeit-Wert 60 von 100</b> – die Ursachen sind meist zu große Bilder und Videos, die sich gut beheben lassen.</li>
+      <li><b>Kleinigkeiten bei der Bedienbarkeit:</b> Knöpfe ohne Namen und zu wenig Kontrast – unwichtig für die Optik, aber wichtig für Google und für Kunden mit Seh-Einschränkung.</li>
+    </ul>
+    <div class="box">
+      <div><b>Ihren vollständigen Website-Check</b> mit allen vier Werten (Ladezeit, Bedienbarkeit, Google, Technik), Bildschirmfotos und einer einfachen Erklärung finden Sie kostenlos über den QR-Code.</div>
+      <div class="qr">QR-Code<br>zum persönlichen<br>Bericht</div>
+    </div>
+    <p>Wenn Sie möchten, zeigen wir Ihnen in 15 Minuten, was es bringt und was es kostet, die Seite schnell zu machen – unverbindlich, am Telefon oder bei Ihnen in Bamberg.</p>
+    <p>Mit freundlichen Grüßen aus Memmelsdorf</p>
+    <p style="margin-top:14px"><b>Domenic Schilling</b><br><span style="color:#5b6470;font-size:9.5pt">Geschäftsführer, DSX Media Solutions</span></p>
+    <p style="font-size:7.6pt;color:#7b8896;margin-top:14px">Hinweis: Der Test ist automatisch (Google Lighthouse, Handy-Ansicht) und kann je nach Messzeitpunkt leicht schwanken. Ihre Adresse stammt aus dem öffentlichen Impressum Ihrer Website. Wenn Sie keine weiteren Schreiben von uns wünschen, genügt eine kurze Nachricht an info@dsxmediasolutions.de.</p>
+  </div>
+
+  <div class="fuss">
+    <div>DSX Media Solutions UG (haftungsbeschränkt)<br>Am Weingarten 9 · 96117 Memmelsdorf</div>
+    <div>Geschäftsführer: Domenic Schilling<br>Amtsgericht Bamberg · HRB 12150</div>
+    <div>info@dsxmediasolutions.de<br>WhatsApp 0174 1682157</div>
+  </div>
+</div>
+
+<!-- Seite 2: Beiblatt mit Ergebnis -->
+<div class="seite blatt">
+  <div class="entwurf">MUSTER</div>
+  <div class="titel">Ihr Website-Check auf einen Blick</div>
+  <div class="unter">shootingbooth.de · Google Lighthouse, Handy-Ansicht · Test vom 16.10.2026</div>
+  <table style="width:100%;border-collapse:collapse;margin:6px 0 14px">
+    <tr>
+      <td style="text-align:center;padding:6px"><div class="ring" style="margin:auto;background:conic-gradient(#c62828 0 60%,#e3e6ea 60% 100%)"><div><span>60<small>Ladezeit</small></span></div></div></td>
+      <td style="text-align:center;padding:6px"><div class="ring" style="margin:auto;background:conic-gradient(#2bb673 0 88%,#e3e6ea 88% 100%)"><div><span>88<small>Bedienbarkeit</small></span></div></div></td>
+      <td style="text-align:center;padding:6px"><div class="ring" style="margin:auto;background:conic-gradient(#2bb673 0 92%,#e3e6ea 92% 100%)"><div><span>92<small>Google</small></span></div></div></td>
+      <td style="text-align:center;padding:6px"><div class="ring" style="margin:auto;background:conic-gradient(#e5a100 0 61%,#e3e6ea 61% 100%)"><div><span>61<small>Technik</small></span></div></div></td>
+    </tr>
+  </table>
+  <div class="problem"><b>1 · Das Startbild braucht rund 15 Sekunden</b>
+    <div class="wer">Betrifft: alle Besucher am Handy – also die meisten Ihrer Kunden.</div>
+    Google misst, wann das größte Element sichtbar ist. Empfohlen sind höchstens 2,5 Sekunden. Meist helfen kleinere, moderne Bildformate und ein späteres Laden von Videos.
+    <div class="bildplatz">[Bildschirmfoto: Ladeverlauf am Handy]</div></div>
+  <div class="problem"><b>2 · Erste Inhalte erst nach 3,5 Sekunden</b>
+    <div class="wer">Betrifft: den ersten Eindruck.</div>
+    So lange sieht ein Besucher eine leere Seite. Ziel: unter 1,8 Sekunden.
+    <div class="bildplatz">[Bildschirmfoto der Stelle]</div></div>
+  <div class="problem"><b>3 · Knöpfe ohne Namen, zu wenig Kontrast</b>
+    <div class="wer">Betrifft: Kunden mit Seh-Einschränkung und Google.</div>
+    Einige Knöpfe werden nur als „Taste“ vorgelesen, manche Texte sind schwer lesbar. Schnell behoben.
+    <div class="bildplatz">[Bildschirmfoto der Stelle]</div></div>
+  <div class="hinweis"><b>Was jetzt?</b> Im kostenlosen Online-Bericht (QR-Code im Brief) sehen Sie alle Punkte. Auf Wunsch machen wir Ihre Seite schnell – zum Festpreis, ohne dass sich an Ihrem Design etwas ändert.</div>
+  <div class="fuss" style="left:25mm">
+    <div>DSX Media Solutions UG (haftungsbeschränkt)</div><div>Automatischer Test · Werte können schwanken</div><div>info@dsxmediasolutions.de</div>
+  </div>
+</div>
+</body></html>

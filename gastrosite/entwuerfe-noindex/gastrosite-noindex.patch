@@ -1,0 +1,79 @@
+diff -ruN a/netlify.toml b/netlify.toml
+--- a/netlify.toml	2026-10-17 02:03:31
++++ b/netlify.toml	2026-10-17 02:03:45
+@@ -47,12 +47,27 @@
+   [headers.values]
+     X-Robots-Tag = "noindex, nofollow"
+ # Kostenlose Entwürfe: privat, nicht indexieren, nicht einbettbar
++# (kein Disallow in robots.txt, sonst kann Google das noindex nicht lesen)
+ [[headers]]
++  for = "/entwurf"
++  [headers.values]
++    X-Robots-Tag = "noindex, nofollow"
++[[headers]]
+   for = "/entwurf/*"
+   [headers.values]
+     X-Robots-Tag = "noindex, nofollow"
+     X-Frame-Options = "DENY"
+     Referrer-Policy = "no-referrer"
++
++# Vorschauen: Route gibt es (noch) nicht – falls sie kommt, ist sie sofort privat
++[[headers]]
++  for = "/vorschau"
++  [headers.values]
++    X-Robots-Tag = "noindex, nofollow"
++[[headers]]
++  for = "/vorschau/*"
++  [headers.values]
++    X-Robots-Tag = "noindex, nofollow"
+ 
+ # Kampagnen-Landingpages (Duplikat der Startseite) nicht indexieren
+ [[headers]]
+diff -ruN a/src/lib/useNoindex.js b/src/lib/useNoindex.js
+--- a/src/lib/useNoindex.js	1970-01-01 01:00:00
++++ b/src/lib/useNoindex.js	2026-10-17 02:03:31
+@@ -0,0 +1,12 @@
++import { useEffect } from "react";
++
++// Private Seiten (z. B. Entwürfe mit Restaurantnamen): Robots-Meta auf noindex setzen, beim Verlassen zurückstellen.
++// Der Header X-Robots-Tag aus netlify.toml gilt zusätzlich; das Meta-Tag deckt die gerenderte Seite ab.
++export const useNoindex = () => {
++  useEffect(() => {
++    const meta = document.querySelector('meta[name="robots"]') || document.head.appendChild(Object.assign(document.createElement("meta"), { name: "robots" }));
++    const prev = meta.getAttribute("content");
++    meta.setAttribute("content", "noindex, nofollow");
++    return () => { if (prev) meta.setAttribute("content", prev); else meta.remove(); };
++  }, []);
++};
+diff -ruN a/src/pages/Draft.jsx b/src/pages/Draft.jsx
+--- a/src/pages/Draft.jsx	2026-10-17 02:03:31
++++ b/src/pages/Draft.jsx	2026-10-17 02:03:31
+@@ -9,6 +9,7 @@
+ import { track } from "../lib/pixel";
+ import { trackEvent } from "../lib/analytics";
+ import { useTitle } from "../lib/useTitle";
++import { useNoindex } from "../lib/useNoindex";
+ import { LangContext } from "../lib/i18n";
+ import { useAktion } from "../lib/aktion";
+ 
+@@ -251,6 +252,7 @@
+   const internal = useMemo(() => new URLSearchParams(window.location.search).get("intern") === "1", []);
+   const hidden = useProtection();
+   useTitle(d?.business_name ? `Entwurf: ${d.business_name}` : "Dein Website-Entwurf");
++  useNoindex();
+ 
+   useEffect(() => {
+     let timer;
+diff -ruN a/vite.config.js b/vite.config.js
+--- a/vite.config.js	2026-10-17 02:03:31
++++ b/vite.config.js	2026-10-17 02:03:31
+@@ -35,6 +35,9 @@
+   closeBundle() {
+     const today = new Date().toISOString().slice(0, 10);
+     const pages = [["/", "1.0", "weekly"], ["/mallorca", "0.8", "weekly"], ["/mallorca/en", "0.6", "weekly"], ["/mallorca/es", "0.6", "weekly"], ["/mallorca/ca", "0.5", "weekly"], ["/leistungen", "0.6", "monthly"], ["/agb", "0.2", "yearly"], ["/datenschutz", "0.2", "yearly"], ["/impressum", "0.2", "yearly"]];
++    // Private Seiten (Entwürfe mit Restaurantnamen, Admin, Verträge …) dürfen nie in die Sitemap
++    const privat = pages.filter(([p]) => /^\/(entwurf|vorschau|admin|unterlagen|vertrag|payment|bestellung)(\/|$)/.test(p));
++    if (privat.length) throw new Error(`Sitemap: private Seiten entfernen: ${privat.map(([p]) => p).join(", ")}`);
+     const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${pages.map(([p, prio, freq]) => `  <url><loc>${SITE_URL}${p}</loc><lastmod>${today}</lastmod><changefreq>${freq}</changefreq><priority>${prio}</priority></url>`).join("\n")}\n</urlset>\n`;
+     if (fs.existsSync("dist")) fs.writeFileSync("dist/sitemap.xml", xml);
+   },

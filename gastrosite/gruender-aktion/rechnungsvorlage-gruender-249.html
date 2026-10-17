@@ -1,0 +1,121 @@
+<!doctype html>
+<!--
+  ENTWURF – Rechnungsvorlage GastroSite24 Gründer-Aktion: 249,00 € netto + 19 % USt. 47,31 € = 296,31 € brutto
+  Angelegt 16.10.2026 (Ultron-Auftrag mvbhnegq-153). Kein Zahlungslink, nichts versendet.
+
+  ENTSCHEIDUNG DOMENIC (vor erster Nutzung):
+    Rechnungssteller = DSX Media Solutions UG (haftungsbeschränkt)  ODER  Einzelunternehmen Domenic Schilling.
+    - Die AGB auf gastrosite24.de nennen derzeit die DSX UG als Anbieter.
+    - Falls Einzelunternehmen mit Kleinunternehmerregelung (§ 19 UStG): KEINE USt. ausweisen – dann stimmen 47,31 € / 296,31 € nicht,
+      Vorlage muss angepasst werden (Hinweis „Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.“).
+  Danach den gelben Entwurfs-Balken löschen und alle [ … ]-Platzhalter ersetzen.
+
+  Pflichtangaben § 14 Abs. 4 UStG – alle in der Vorlage vorhanden:
+    1 Name + Anschrift Rechnungssteller und Kunde   2 Steuernummer oder USt-IdNr. des Rechnungsstellers
+    3 Rechnungsdatum   4 fortlaufende, einmalige Rechnungsnummer   5 Menge + Art der Leistung
+    6 Leistungsdatum   7 Entgelt netto   8 Steuersatz + Steuerbetrag   (Bruttobetrag zusätzlich)
+  Rechnungsnummer IMMER aus derselben Nummernfolge des gewählten Rechnungsstellers (keine Lücken, keine Doppelung).
+  Drucken: im Browser öffnen → Drucken → „Als PDF sichern“ (A4, ohne Kopf-/Fußzeilen).
+-->
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Rechnung [RECHNUNGSNUMMER] – GastroSite24 Gründer-Aktion</title>
+<style>
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; }
+  :root { --text:#17181C; --muted:#5F6470; --accent:#E3242B; --line:rgba(23,24,28,.12); }
+  html, body { margin: 0; }
+  body { font: 10.2pt/1.45 -apple-system, "Helvetica Neue", Arial, sans-serif; color: var(--text); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .seite { width: 210mm; height: 297mm; padding: 13mm 18mm 12mm 20mm; display: flex; flex-direction: column; overflow: hidden; }
+  .entwurf { background: #FFE45C; border: 1.5px solid #C9A800; border-radius: 3mm; padding: 2mm 3.5mm; font-size: 8.8pt; margin-bottom: 5mm; }
+  .ph { background: #FFF3A6; padding: 0 1mm; border-radius: 1mm; }
+  .kopf { display: flex; justify-content: space-between; align-items: flex-start; }
+  .marke { font-size: 18pt; font-weight: 800; letter-spacing: -.02em; }
+  .marke span { color: var(--accent); }
+  .klein { font-size: 8.4pt; color: var(--muted); }
+  .absender-klein { font-size: 7.4pt; color: var(--muted); border-bottom: 1px solid #999; display: inline-block; margin: 9mm 0 2mm; }
+  .adresse { min-height: 30mm; }
+  .meta { font-size: 9.4pt; border-collapse: collapse; }
+  .meta td { padding: .6mm 0 .6mm 8mm; }
+  .meta td:first-child { color: var(--muted); padding-left: 0; }
+  h1 { font-size: 16pt; margin: 7mm 0 3mm; }
+  table.pos { width: 100%; border-collapse: collapse; margin-top: 4mm; }
+  table.pos th { text-align: left; font-size: 8.8pt; color: var(--muted); border-bottom: 1.5px solid var(--text); padding: 2mm 1mm; }
+  table.pos td { border-bottom: 1px solid var(--line); padding: 2.5mm 1mm; vertical-align: top; }
+  .r { text-align: right; white-space: nowrap; }
+  table.summe { margin-left: auto; margin-top: 4mm; border-collapse: collapse; }
+  table.summe td { padding: 1.2mm 1mm 1.2mm 10mm; }
+  table.summe tr.gesamt td { font-weight: 700; border-top: 1.5px solid var(--text); font-size: 11.5pt; }
+  .fuss { margin-top: auto; padding-top: 3mm; border-top: 1px solid var(--line); display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; font-size: 7.8pt; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="seite">
+
+  <div class="entwurf"><strong>ENTWURF – Entscheider: Domenic.</strong> Rechnungssteller festlegen (DSX UG oder Einzelunternehmen), dann diesen Balken löschen und alle gelben Felder ausfüllen. Kein Zahlungslink – Bezahlung per Überweisung.</div>
+
+  <div class="kopf">
+    <div class="marke">Gastro<span>Site</span>24</div>
+    <div class="klein" style="text-align:right">
+      <span class="ph">[DSX UG ODER EINZELUNTERNEHMEN – Domenic entscheidet]</span><br>
+      <span class="ph">[Straße Nr.]</span> · <span class="ph">[PLZ Ort]</span><br>
+      info@gastrosite24.de · gastrosite24.de
+    </div>
+  </div>
+
+  <div class="absender-klein"><span class="ph">[DSX UG ODER EINZELUNTERNEHMEN – Domenic entscheidet]</span> · <span class="ph">[Straße Nr.]</span> · <span class="ph">[PLZ Ort]</span></div>
+
+  <div style="display:flex; justify-content:space-between; gap:10mm">
+    <div class="adresse">
+      <span class="ph">[KUNDE: Name des Betriebs]</span><br>
+      <span class="ph">[KUNDE: Inhaber / Ansprechpartner]</span><br>
+      <span class="ph">[KUNDE: Straße Nr.]</span><br>
+      <span class="ph">[KUNDE: PLZ Ort]</span><br>
+      <span class="klein">USt-IdNr. Kunde (falls vorhanden): <span class="ph">[…]</span></span>
+    </div>
+    <table class="meta">
+      <tr><td>Rechnungsnummer</td><td><strong class="ph">[RECHNUNGSNUMMER]</strong></td></tr>
+      <tr><td>Rechnungsdatum</td><td><span class="ph">[TT.MM.JJJJ]</span></td></tr>
+      <tr><td>Leistungsdatum</td><td><span class="ph">[LEISTUNGSDATUM]</span></td></tr>
+      <tr><td>Auftrag vom</td><td><span class="ph">[Datum Auftragszettel]</span></td></tr>
+    </table>
+  </div>
+
+  <h1>Rechnung</h1>
+  <p>Hallo <span class="ph">[Vorname]</span>,<br>vielen Dank für deinen Auftrag im Rahmen der GastroSite24-Gründer-Aktion. Wir berechnen dir folgende Leistung:</p>
+
+  <table class="pos">
+    <thead><tr><th style="width:9mm">Pos.</th><th>Leistung</th><th class="r">Menge</th><th class="r">Einzelpreis</th><th class="r">Gesamt</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td>
+          <strong>GastroSite24 Website – Komplettpaket, Gründer-Aktion</strong><br>
+          <span class="klein">Website für <span class="ph">[Name des Betriebs]</span> (ein Standort): Design und Texte, digitale Speisekarte, Anfahrt mit Google Maps, Einrichtung des Google-Unternehmensprofils, Domain <span class="ph">[wunschname.de]</span>, Hosting und Betreuung im 1. Vertragsjahr. Regulärer Preis 499,00 € netto, Gründer-Aktion für die ersten 10 Betriebe.</span>
+        </td>
+        <td class="r">1</td>
+        <td class="r">249,00 €</td>
+        <td class="r">249,00 €</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <table class="summe">
+    <tr><td>Summe netto</td><td class="r">249,00 €</td></tr>
+    <tr><td>zzgl. 19 % Umsatzsteuer</td><td class="r">47,31 €</td></tr>
+    <tr class="gesamt"><td>Rechnungsbetrag brutto</td><td class="r">296,31 €</td></tr>
+  </table>
+
+  <p style="margin-top:8mm">Bitte überweise den Rechnungsbetrag bis zum <strong class="ph">[FÄLLIG AM = Rechnungsdatum + 14 Tage]</strong> unter Angabe der Rechnungsnummer <strong class="ph">[RECHNUNGSNUMMER]</strong>.</p>
+  <p class="klein">Ab dem 2. Vertragsjahr: Betreuung, Hosting und Domain 299,00 € netto pro Jahr, jährlich kündbar zum Ende des Vertragsjahres. Es gelten die AGB und die Leistungsbeschreibung auf gastrosite24.de/agb.</p>
+
+  <div class="fuss">
+    <div><span class="ph">[DSX UG ODER EINZELUNTERNEHMEN – Domenic entscheidet]</span><br><span class="ph">[Straße Nr.]</span><br><span class="ph">[PLZ Ort]</span></div>
+    <div>Steuernummer: <span class="ph">[STEUERNUMMER]</span><br>USt-IdNr.: <span class="ph">[falls vorhanden]</span><br><span class="ph">[nur bei DSX UG: GF, Amtsgericht, HRB]</span></div>
+    <div>Bank: <span class="ph">[BANK]</span><br>IBAN: <span class="ph">[IBAN]</span><br>BIC: <span class="ph">[BIC]</span></div>
+  </div>
+
+</div>
+</body>
+</html>

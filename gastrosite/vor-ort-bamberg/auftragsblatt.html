@@ -1,0 +1,118 @@
+<!doctype html>
+<!--
+  Auftragsblatt GastroSite24 – Gründer-Aktion 249 € (Vor-Ort-Besuche Bamberg, 17.10.2026)
+  Ultron-Auftrag mvboc22m-150 (von anwalt). PDF bauen: node _baue-auftragsblatt.mjs
+  Anbieter-Angaben wie im Impressum von gastrosite24.de (GastroSite src/components/gs/data.js, live geprüft 17.10.2026).
+  Leistungen, Folgejahr 299 €, Zahlungsziel 14 Tage, Rechte an Inhalten: wie AGB §§ 6, 7, 9 und Leistungsbeschreibung auf gastrosite24.de.
+  Der Zählerstand wird beim Bauen live aus https://gastrosite24.de/api/aktion eingesetzt (id="zaehler").
+  Gelb markierte Felder = Platzhalter, vor Ort von Hand ausfüllen.
+-->
+<html lang="de"><head><meta charset="utf-8"><title>Auftragsblatt GastroSite24 – Gründer-Aktion</title>
+<style>
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; }
+  :root { --text:#17181C; --muted:#5F6470; --accent:#E3242B; --line:rgba(23,24,28,.14); --gelb:#FFF6C2; }
+  html, body { margin: 0; }
+  body { font: 8.9pt/1.36 -apple-system, "Helvetica Neue", Arial, sans-serif; color: var(--text); }
+  .seite { width: 210mm; height: 297mm; padding: 10mm 15mm 8mm 17mm; display: flex; flex-direction: column; overflow: hidden; }
+  .kopf { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1.5px solid var(--text); padding-bottom: 2.5mm; }
+  .marke { font-size: 16pt; font-weight: 800; letter-spacing: -.02em; }
+  .marke span { color: var(--accent); }
+  h1 { font-size: 13pt; margin: 3mm 0 0; }
+  .klein { font-size: 7.6pt; color: var(--muted); }
+  h2 { font-size: 9.6pt; margin: 2.6mm 0 1mm; text-transform: uppercase; letter-spacing: .04em; }
+  .zwei { display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; }
+  .feld { display: flex; align-items: flex-end; gap: 2mm; margin: 1.6mm 0; }
+  .feld b { font-weight: 600; white-space: nowrap; min-width: 26mm; }
+  .linie { flex: 1; border-bottom: 1px solid #777; background: var(--gelb); height: 5.6mm; }
+  .kasten { border: 1px solid var(--line); border-radius: 2mm; padding: 2mm 3mm; }
+  ul { margin: 0; padding-left: 4.5mm; }
+  li { margin: .35mm 0; }
+  .preis { display: grid; grid-template-columns: 1fr auto; gap: .8mm 6mm; }
+  .preis .gross { font-size: 11pt; font-weight: 800; }
+  .ja { display: flex; gap: 2.5mm; align-items: flex-start; margin: 1.4mm 0; }
+  .box { flex: none; width: 4.2mm; height: 4.2mm; border: 1.3px solid var(--text); border-radius: .6mm; margin-top: .2mm; background: #fff; }
+  .gelb { background: var(--gelb); padding: 0 1mm; }
+  .unterschrift { display: grid; grid-template-columns: 1fr 1fr; column-gap: 10mm; margin-top: 4mm; }
+  .unterschrift .datum { border-top: none; padding-top: 0; }
+  .unterschrift div { border-top: 1px solid var(--text); padding-top: 1mm; line-height: 1.5; font-size: 7.8pt; color: var(--muted); }
+  .intern { margin-top: 3mm; border: 1px dashed #999; border-radius: 2mm; padding: 1.4mm 3mm; font-size: 7.6pt; color: var(--muted); }
+  .fuss { margin-top: auto; padding-top: 2mm; border-top: 1px solid var(--line); display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; font-size: 7pt; color: var(--muted); }
+</style></head><body><div class="seite">
+
+  <div class="kopf">
+    <div>
+      <div class="marke">GastroSite<span>24</span></div>
+      <h1>Auftragsblatt Website – Gründer-Aktion</h1>
+    </div>
+    <div class="klein" style="text-align:right">
+      <b style="color:var(--text)">Anbieter:</b> DSX Media Solutions UG (haftungsbeschränkt)<br>
+      Am Weingarten 9 · 96117 Memmelsdorf<br>
+      Tel./WhatsApp +49 162 4502375 · info@gastrosite24.de
+    </div>
+  </div>
+
+  <h2>Kunde</h2>
+  <div class="zwei">
+    <div>
+      <div class="feld"><b>Firma / Lokal</b><span class="linie"></span></div>
+      <div class="feld"><b>Inhaber/in</b><span class="linie"></span></div>
+      <div class="feld"><b>Straße, Nr.</b><span class="linie"></span></div>
+      <div class="feld"><b>PLZ, Ort</b><span class="linie"></span></div>
+    </div>
+    <div>
+      <div class="feld"><b>E-Mail</b><span class="linie"></span></div>
+      <div class="feld"><b>Telefon</b><span class="linie"></span></div>
+      <div class="feld"><b>USt-IdNr.</b><span class="linie"></span></div>
+      <div class="klein" style="margin-top:-.6mm">USt-IdNr. freiwillig, falls vorhanden.</div>
+      <div class="feld"><b>Wunsch-Domain</b><span class="linie"></span></div>
+    </div>
+  </div>
+  <div class="ja" style="margin-top:2.2mm"><span class="box"></span><span><b>Ich bestelle als Unternehmer (§ 14 BGB)</b> für meinen Gastronomiebetrieb. Das Angebot gilt nur für Unternehmer, nicht für Verbraucher.</span></div>
+
+  <h2>Leistung: Komplettpaket Website (ein Standort)</h2>
+  <div class="kasten">
+    <ul>
+      <li><b>Domain</b> nach Wahl mit Standard-Endung (z. B. .de), sofern frei. Hosting mit SSL im 1. Jahr inklusive.</li>
+      <li><b>Website</b> als Onepager (bis 7 Abschnitte) oder bis 3 Unterseiten, für Handy, Tablet und PC, Texte schreiben wir.</li>
+      <li><b>Digitale Speisekarte</b> mit bis zu 80 Positionen, <b>Öffnungszeiten</b>, <b>Kontakt</b>.</li>
+      <li><b>Anruf-Button</b> und <b>WhatsApp-Button</b>, <b>Anfahrt mit Link zu Google Maps</b>, <b>Bestelllink</b> zu Lieferdienst oder eigenem Bestellshop.</li>
+      <li><b>Google-Unternehmensprofil</b> einrichten oder verbessern. Die Bestätigung bei Google (Postkarte/Video) macht der Kunde selbst.</li>
+      <li>2 Korrekturrunden, Fertigstellung in der Regel ca. 7 Werktage nach Eingang aller Unterlagen.</li>
+    </ul>
+    <div class="klein" style="margin-top:1mm">Verbindlich ist die Leistungsbeschreibung auf gastrosite24.de/leistungen in der Fassung vom Tag der Bestellung.</div>
+  </div>
+
+  <h2>Preis</h2>
+  <div class="kasten preis">
+    <div class="gross">Gründer-Aktion: 249,00 € netto</div><div class="gross" style="text-align:right">einmalig</div>
+    <div>zzgl. 19 % USt. (47,31 €) = <b>296,31 € brutto</b></div><div class="klein" style="text-align:right">regulär 499,00 € netto</div>
+    <div class="klein" style="grid-column:1/-1">Ab dem 2. Vertragsjahr: Hosting, Domain und Betreuung für 299 € netto pro Jahr zzgl. USt. Verlängert sich jährlich, kündbar zum Ende jedes Vertragsjahres (AGB § 7).
+      Aktion für die ersten 10 Aufträge. Freie Plätze laut Zähler auf gastrosite24.de: <span id="zaehler" class="gelb">____ von 10 frei (vor Ort prüfen)</span>.
+      Platz-Nr. dieses Auftrags: <span class="gelb">&nbsp;____&nbsp;</span></div>
+  </div>
+
+  <h2>Zahlung</h2>
+  <div class="ja"><span class="box"></span><span><b>Auf Rechnung:</b> zahlbar innerhalb von 14 Tagen ab Rechnungsdatum ohne Abzug. Rechnung kommt als PDF per E-Mail.</span></div>
+  <div class="ja"><span class="box"></span><span><b>Per Zahlungslink:</b> Online-Zahlung über gastrosite24.de (Karte, Apple Pay, Google Pay, SEPA-Lastschrift).</span></div>
+
+  <h2>Bestätigungen des Kunden</h2>
+  <div class="ja"><span class="box"></span><span><b>Rechte an Inhalten:</b> Ich habe die Rechte an allen Fotos, Logos, Speisekarten und Texten, die ich liefere, und darf sie veröffentlichen lassen. Rechte Dritter werden nicht verletzt (AGB § 9).</span></div>
+  <div class="ja"><span class="box"></span><span><b>Kein Erfolgsversprechen:</b> Mir ist klar, dass es keine Garantie für mehr Umsatz, Gäste, Bestellungen oder eine bestimmte Platzierung bei Google gibt.</span></div>
+  <div class="ja"><span class="box"></span><span><b>AGB:</b> Es gelten die AGB von GastroSite24 (gastrosite24.de/agb) mit der Leistungsbeschreibung. Ich habe sie erhalten oder konnte sie einsehen. Datenschutz: gastrosite24.de/datenschutz.</span></div>
+
+  <div class="unterschrift">
+    <div class="datum">Ort, Datum: <span style="color:var(--text)">Bamberg, ____.____.2026</span></div>
+    <div class="datum">Ort, Datum: <span style="color:var(--text)">Bamberg, ____.____.2026</span></div>
+    <div style="margin-top:7mm">Unterschrift Kunde · Name in Druckschrift</div>
+    <div style="margin-top:7mm">Unterschrift Anbieter · DSX Media Solutions UG (haftungsbeschränkt)</div>
+  </div>
+
+  <div class="intern"><b>Nur intern:</b> Auftrag im System auf gastrosite24.de angelegt am ________ · Zählerstand danach ____ frei · Rechnungs-Nr. RE-2026-______ (Nummer kommt aus dem System, nicht von Hand vergeben)</div>
+
+  <div class="fuss">
+    <div>DSX Media Solutions UG (haftungsbeschränkt)<br>Am Weingarten 9<br>96117 Memmelsdorf</div>
+    <div>Geschäftsführer: Domenic Schilling<br>Amtsgericht Bamberg · HRB 12150<br>USt-IdNr.: DE456133925</div>
+    <div>Tel./WhatsApp +49 162 4502375<br>info@gastrosite24.de<br>gastrosite24.de</div>
+  </div>
+</div></body></html>

@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>YouTube-Kinderkanal – Investorenbericht</title>
+<style>
+  @page { size: A4; margin: 17mm 17mm 18mm 17mm; }
+  :root {
+    --ink: #1f2328;
+    --muted: #5b6470;
+    --line: #d9dde3;
+    --soft: #f4f6f8;
+    --accent: #1d5c63;
+    --accent-soft: #e6f0f1;
+    --red: #a23b2a;
+    --red-soft: #f8ebe8;
+    --amber: #8a6100;
+    --amber-soft: #fbf3e0;
+    --green: #2d6a3e;
+    --green-soft: #e9f3ec;
+    --star: #c98a00;
+  }
+  * { box-sizing: border-box; }
+  html, body { background: #fff; }
+  body {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    font-size: 9.6pt;
+    line-height: 1.4;
+    margin: 0;
+  }
+  h1 { font-size: 22pt; line-height: 1.15; margin: 0 0 4mm; letter-spacing: -0.01em; }
+  h2 {
+    font-size: 14pt; margin: 0 0 3mm; color: var(--accent);
+    border-bottom: 1.5px solid var(--accent); padding-bottom: 1.5mm;
+  }
+  h3 { font-size: 10.5pt; margin: 4mm 0 1.6mm; }
+  p { margin: 0 0 2.5mm; }
+  ul, ol { margin: 0 0 3mm; padding-left: 5mm; }
+  li { margin-bottom: 1.2mm; }
+  .page { break-before: page; }
+  .kicker { font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 2mm; }
+  .muted { color: var(--muted); }
+  .small { font-size: 8.5pt; }
+  .tiny { font-size: 7.6pt; }
+  table { width: 100%; border-collapse: collapse; margin: 0 0 3mm; font-size: 8.5pt; }
+  th, td { border-bottom: 1px solid var(--line); padding: 1.15mm 1.8mm; vertical-align: top; text-align: left; }
+  th { background: var(--soft); font-weight: 600; }
+  td.num, th.num { text-align: right; white-space: nowrap; }
+  tr.total td { font-weight: 700; border-top: 1.5px solid var(--ink); }
+  .box { border: 1px solid var(--line); border-radius: 2mm; padding: 3mm 4mm; margin: 0 0 4mm; background: var(--soft); }
+  .box.accent { background: var(--accent-soft); border-color: #b9d3d6; }
+  .box.red { background: var(--red-soft); border-color: #e6c3bc; }
+  .box.amber { background: var(--amber-soft); border-color: #ead7a8; }
+  .box.green { background: var(--green-soft); border-color: #bfdcc7; }
+  .box h3 { margin-top: 0; }
+  .verdict {
+    display: grid; grid-template-columns: 62mm 1fr; gap: 6mm; align-items: center;
+    border: 1.5px solid var(--ink); border-radius: 3mm; padding: 5mm 6mm; margin: 4mm 0 5mm;
+  }
+  .stars { position: relative; display: inline-block; font-size: 26pt; line-height: 1; letter-spacing: 1mm; color: #d4d7dc; }
+  .stars .fill { position: absolute; left: 0; top: 0; overflow: hidden; white-space: nowrap; color: var(--star); }
+  .stars.sm { font-size: 11pt; letter-spacing: 0.4mm; }
+  .score { font-size: 11pt; margin-top: 2mm; }
+  .no { display: inline-block; background: var(--red); color: #fff; font-weight: 700; padding: 1mm 3mm; border-radius: 1.5mm; font-size: 12pt; margin-top: 3mm; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 3mm; }
+  .stat { border: 1px solid var(--line); border-radius: 2mm; padding: 2.5mm 3mm; }
+  .stat b { display: block; font-size: 15pt; color: var(--accent); line-height: 1.1; margin-bottom: 1mm; }
+  .stat span { font-size: 8.4pt; color: var(--muted); }
+  .tag { display: inline-block; font-size: 7.8pt; font-weight: 600; padding: 0.3mm 1.8mm; border-radius: 1mm; }
+  .tag.red { background: var(--red-soft); color: var(--red); }
+  .tag.amber { background: var(--amber-soft); color: var(--amber); }
+  .tag.green { background: var(--green-soft); color: var(--green); }
+  .src { font-size: 7.6pt; color: var(--muted); }
+  .sources li { font-size: 8pt; margin-bottom: 1.3mm; word-break: break-all; }
+  .sources li span { word-break: normal; }
+  .note { font-size: 8.4pt; color: var(--muted); border-left: 2px solid var(--line); padding-left: 3mm; margin: 2mm 0 3mm; }
+  .keep { break-inside: avoid; }
+</style>
+</head>
+<body>
+
+<!-- ============ SEITE 1: URTEIL ============ -->
+<div class="kicker">Investorenbericht · Stand 17.10.2026 · für Domenic</div>
+<h1>KI-YouTube-Kanal für Kinder:<br>Würde ich mein Geld reinstecken?</h1>
+<p class="muted">Ich prüfe deine Idee so, als müsste ich selbst Geld einsetzen: hart, aber fair. Alle Zahlen sind hergeleitet, Annahmen sind als Annahmen markiert. Die Quellen stehen am Ende (Nr. in eckigen Klammern).</p>
+
+<div class="verdict">
+  <div>
+    <div class="stars"><span>★★★★★</span><span class="fill" style="width:30%">★★★★★</span></div>
+    <div class="score"><b>1,5 von 5 Sternen</b></div>
+    <div class="no">Investieren: NEIN</div>
+  </div>
+  <div>
+    <p><b>1.</b> Mit Kinder-Videos verdient man auf YouTube fast nichts: Bei Kinder-Inhalten kommen im Mittel nur <b>0,33 $ pro 1.000 Aufrufe</b> an, um nur die KI-Kosten (ca. 160 € im Monat) zu decken, bräuchte der Kanal rund <b>560.000 bezahlte Aufrufe jeden Monat</b> [1].</p>
+    <p><b>2.</b> KI-Kindervideos stehen 2026 unter Beschuss: Die New York Times hat sie angeprangert, über 200 Organisationen fordern ein Verbot, und YouTube hat genau solche Kanäle aus dem Bezahlprogramm geworfen [6][7].</p>
+    <p style="margin:0"><b>3.</b> Ab 1.2.2027 muss ein neuer Kanal doppelt so viel Sehzeit sammeln, bevor er überhaupt Geld bekommt (8.000 Stunden), und in meiner Rechnung verliert man im Durchschnitt Geld und rund 100 Stunden deiner Zeit [3].</p>
+  </div>
+</div>
+
+<h3>Die drei geprüften Varianten auf einen Blick</h3>
+<table>
+  <tr><th>Variante</th><th>Sterne</th><th class="num">Erwartetes Ergebnis 12 Monate*</th><th class="num">Deine Zeit</th><th>Urteil</th></tr>
+  <tr><td><b>A</b> · Sprachfreie KI-Kinder-Animation (deine Idee)</td>
+      <td><span class="stars sm"><span>★★★★★</span><span class="fill" style="width:30%">★★★★★</span></span> 1,5</td>
+      <td class="num">ca. −770 €</td><td class="num">~100 h</td><td><span class="tag red">Nein</span></td></tr>
+  <tr><td><b>B</b> · Gute-Nacht-Musik (YouTube + Spotify &amp; Co.)</td>
+      <td><span class="stars sm"><span>★★★★★</span><span class="fill" style="width:40%">★★★★★</span></span> 2</td>
+      <td class="num">ca. +640 €</td><td class="num">~60 h</td><td><span class="tag amber">Nur als Mini-Test</span></td></tr>
+  <tr><td><b>C</b> · Eltern-Nische mit eigenem Produkt (sprachfreie Ausmal- und Rätselhefte zum Herunterladen)</td>
+      <td><span class="stars sm"><span>★★★★★</span><span class="fill" style="width:50%">★★★★★</span></span> 2,5</td>
+      <td class="num">ca. +900 €</td><td class="num">~85 h</td><td><span class="tag amber">Beste Variante, 30-Tage-Test</span></td></tr>
+</table>
+<p class="tiny muted">* „Erwartetes Ergebnis“ = Durchschnitt aus vorsichtigem, realistischem und optimistischem Fall, gewichtet mit meiner Einschätzung, wie wahrscheinlich jeder Fall ist. Deine Zeit ist darin noch nicht als Geld abgezogen. Herleitung ab Seite 4.</p>
+
+<div class="box accent keep">
+  <b>Meine ehrliche Empfehlung in einem Satz:</b> Variante A lassen. Wenn du unbedingt etwas „für Kinder“ machen willst, dann Variante C als 30-Tage-Test mit höchstens 150 € und 10 Stunden. Sonst steckt Ultron die Zeit besser in deine bestehenden Geschäfte: Ein einziger GastroSite-Kunde (249 €) bringt mehr als der realistische Fall von Variante A in einem ganzen Jahr (ca. 95 €).
+</div>
+
+<!-- ============ SEITE 2: IDEE + MARKT ============ -->
+<div class="page"></div>
+<h2>Die Idee in einem Satz</h2>
+<div class="box">
+  Ultron produziert weitgehend automatisch kurze und lange Zeichentrick-Videos für kleine Kinder, die ohne Sprache auskommen (Musik, Geräusche, Bilder), damit sie überall auf der Welt funktionieren, und YouTube zahlt dafür Werbegeld.
+</div>
+<p><b>Was du dir davon wünschst:</b> Geld verdienen, möglichst passiv, wenig eigene Zeit, kein Kundenkontakt. Diese vier Wünsche sind mein Maßstab. Variante A erfüllt drei davon (passiv, wenig Zeit, kein Kundenkontakt), scheitert aber am wichtigsten Punkt: am Geld.</p>
+
+<h2 style="margin-top:6mm">Markt: riesiges Publikum, winziges Geld pro Zuschauer</h2>
+<div class="grid3" style="margin-bottom:4mm">
+  <div class="stat"><b>~202 Mio.</b><span>Abonnenten hat Cocomelon (Kinderlieder-Animation), Platz 3 der Welt, Juli 2026 [16]</span></div>
+  <div class="stat"><b>&gt; 40 %</b><span>der Empfehlungen nach einem Kinderlied-Video zeigten KI-Spuren (Test der New York Times, Feb. 2026) [7]</span></div>
+  <div class="stat"><b>&gt; 4,25 Mio. $</b><span>Jahresumsatz schätzt Fairplay für die größten KI-Kinderkanäle zusammen (April 2026) [6]</span></div>
+</div>
+<h3>Was das bedeutet</h3>
+<ul>
+  <li><b>Die Nachfrage ist echt.</b> Kinder schauen Unmengen an Animation, und sprachfreie Formate reisen tatsächlich weltweit. Dein Grundgedanke stimmt.</li>
+  <li><b>Der Markt ist aber schon überflutet, und zwar genau mit dem, was du bauen willst.</b> Die New York Times hat im Februar 2026 über 1.000 empfohlene Kindervideos ausgewertet: viele KI-Clips mit verzerrten Gesichtern, zusätzlichen Körperteilen und sinnlosen Geschichten, oft mehrmals am Tag hochgeladen [7].</li>
+  <li><b>Gegenwind ist da.</b> Über 200 Organisationen und Fachleute (u. a. Jonathan Haidt) forderten am 1.4.2026 von Google: KI-Inhalte in YouTube Kids verbieten, KI-Kinderinhalte nicht mehr empfehlen, Eltern einen Aus-Schalter geben [6]. YouTube hat das bisher nicht umgesetzt, sagt aber: In der YouTube-Kids-App ist KI-Inhalt auf „eine kleine Zahl hochwertiger Kanäle“ begrenzt [6].</li>
+  <li><b>YouTube greift durch.</b> Nachdem die Times fünf KI-Kinderkanäle vorlegte, flogen sie aus dem Partnerprogramm (= YouTube zahlt kein Werbegeld mehr) [7]. Im Januar 2026 entzog YouTube Kanälen mit zusammen 35 Mio. Abonnenten das Werbegeld wegen „inauthentic content“ (= massenhaft gleichförmige Videos ohne eigene Leistung) [5].</li>
+  <li><b>Erfolgreiche Beispiele sind Studios, keine Automaten.</b> Cocomelon, ChuChu TV oder Masha und der Bär sind Firmen mit Teams, wiedererkennbaren Figuren und jahrelangem Aufbau. Für einen rein KI-gebauten Kinderkanal mit belegtem Gewinn habe ich keine verlässliche Quelle gefunden, nur hochgerechnete Schätzungen von Statistikseiten.</li>
+</ul>
+<div class="note">Kurz gesagt: Du würdest nicht in eine Lücke stoßen, sondern dich hinten an eine lange Schlange von KI-Kanälen stellen, die YouTube gerade loswerden will.</div>
+
+<!-- ============ SEITE 3: GELDQUELLEN ============ -->
+<div class="page"></div>
+<h2>Wie verdient man mit einem Kinderkanal Geld?</h2>
+<p>Wichtigster Begriff: <b>RPM</b> (= was am Ende pro 1.000 Aufrufe bei dir ankommt, nach YouTubes Anteil). Alle Videos für Kinder müssen als <b>„Made for Kids“</b> markiert werden (= Kinder-Kennzeichnung). Das verlangt das US-Kinderschutzgesetz <b>COPPA</b>, und es gilt auch für dich, sobald US-Kinder zuschauen [8][9][10].</p>
+
+<table>
+  <tr><th style="width:24%">Geldquelle</th><th>Was 2026 gilt</th><th style="width:16%">Für dich realistisch?</th></tr>
+  <tr><td><b>Werbung auf langen Videos</b></td>
+      <td>Kinder &amp; Teens: Mittelwert <b>0,33 $ pro 1.000 Aufrufe</b> (die mittlere Hälfte liegt zwischen 0,16 und 0,88 $). Zum Vergleich: Bildung 10,22 $, Lifestyle 2,98 $. Nur 32 % der Kinder-Aufrufe zeigen überhaupt Werbung, weil keine persönliche Werbung erlaubt ist [1].</td>
+      <td><span class="tag red">sehr wenig</span></td></tr>
+  <tr><td><b>Werbung auf Shorts</b> (Kurzvideos)</td>
+      <td>Bei großen Kinderkanälen bringen 2.156 Shorts-Aufrufe so viel wie 1.000 lange Aufrufe, also grob 0,05–0,15 $ pro 1.000 [2]. <b>Ab 1.2.2027 gibt es Shorts-Geld nur noch ab 10 Mio. Shorts-Aufrufen in 90 Tagen</b> [3].</td>
+      <td><span class="tag red">praktisch nichts</span></td></tr>
+  <tr><td><b>Freischaltung</b> (Partnerprogramm, „YPP“)</td>
+      <td>Heute: 1.000 Abonnenten + 4.000 Stunden Sehzeit in 12 Monaten oder 10 Mio. Shorts-Aufrufe in 90 Tagen. <b>Für neue Kanäle ab 1.2.2027: 8.000 Stunden oder 20 Mio. Shorts-Aufrufe</b> (offiziell angekündigt am 10.8.2026) [3][4]. Danach prüft ein Mensch den Kanal, das dauert 1–30 Tage [15].</td>
+      <td><span class="tag amber">frühestens nach 6–12 Monaten</span></td></tr>
+  <tr><td><b>Mitglieder, Merch-Regal, Kommentare, Glocke, Endkarten</b></td>
+      <td>Bei „Made for Kids“ alle abgeschaltet. Zuschauer bekommen also keine Benachrichtigung, wenn du ein neues Video hochlädst [9].</td>
+      <td><span class="tag red">gesperrt</span></td></tr>
+  <tr><td><b>Sponsoren / Produktwerbung</b></td>
+      <td>YouTube stuft Kindervideos, die vor allem Produkte zeigen, als „minderwertig“ ein, mit weniger oder gar keiner Werbung [12]. In Deutschland ist eine direkte Kaufaufforderung an Kinder immer verboten (UWG, Anhang Nr. 28) [20].</td>
+      <td><span class="tag red">kaum möglich</span></td></tr>
+  <tr><td><b>Spotify, Apple Music &amp; Co.</b> (für Lieder/Musik)</td>
+      <td>Grob 0,003–0,005 $ pro Stream. Spotify zahlt nur für Titel mit mindestens 1.000 Streams im Jahr (seit 1.4.2024) und hat im Jahr bis Sept. 2025 über 75 Mio. Spam-Titel gelöscht. Der Filter zielt auf Massen-Uploads und künstlich kurze Titel [13]. Verteilung z. B. über DistroKid ab ca. 23–25 $ im Jahr [22].</td>
+      <td><span class="tag amber">möglich, sehr voll</span></td></tr>
+  <tr><td><b>YouTube-Kids-App</b></td>
+      <td>KI-Inhalte nur von „einer kleinen Zahl hochwertiger Kanäle“ [6].</td>
+      <td><span class="tag red">für Neue zu</span></td></tr>
+  <tr><td><b>Bücher, Malhefte, Downloads</b></td>
+      <td>Amazon KDP: KI-Inhalte müssen angegeben werden, höchstens 3 neue Titel pro Tag [18]. Etsy: KI erlaubt, wenn gekennzeichnet; Gebühren ca. 0,20 $ pro Angebot + 6,5 % + Zahlungsgebühr [17].</td>
+      <td><span class="tag green">ja, eigenes Produkt</span></td></tr>
+  <tr><td><b>Lizenzen</b> (TV, Apps, Spielzeug)</td>
+      <td>Gibt es nur für bekannte Figuren mit Fangemeinde. Das dauert Jahre.</td>
+      <td><span class="tag red">nicht in 12 Monaten</span></td></tr>
+</table>
+
+<div class="box red keep">
+  <b>Die Rechnung, die alles entscheidet:</b> 0,33 $ ≈ 0,28 € pro 1.000 Aufrufe (Annahme: 1 $ ≈ 0,86 €). Für <b>1.000 € Gewinn im Monat</b> nach 160 € KI-Kosten braucht ein Kinderkanal rund <b>4 Millionen bezahlte Aufrufe auf langen Videos, jeden Monat</b>. Das schaffen nur die oberen paar Prozent aller Kinderkanäle.
+</div>
+
+<!-- ============ SEITE 4: ZAHLEN VARIANTE A ============ -->
+<div class="page"></div>
+<h2>Zahlen und Szenarien: Variante A (deine Idee)</h2>
+<p class="small">12 Monate ab Start im November 2026. Kaum ein neuer Kanal schafft bis 31.1.2027 4.000 Stunden, darum rechne ich mit der neuen Hürde von <b>8.000 Stunden</b>. <b>Break-even</b> = der Punkt, ab dem die Einnahmen die Kosten decken.</p>
+
+<h3>So entstehen die Kosten pro Video (Herleitung)</h3>
+<p class="small">Higgsfield 2026: Starter ca. 15–19 $ für 200–270 Credits, Plus ca. 47–59 $ für 1.000–1.200, Ultra ca. 99–129 $ für 3.000 [14], also ca. 4,3–4,9 Cent pro Credit im größeren Paket. Dazu Musik-KI mit Nutzungsrechten ca. 10 € und Ultron-Tokens ca. 5 € pro Monat (Annahme).</p>
+<table>
+  <tr><th>Baustein</th><th>Annahme</th><th class="num">Credits</th><th class="num">Kosten</th></tr>
+  <tr><td>Bewegter Clip (5 Sek., Kling 3.0, 720p)</td><td>7–10 Credits [14], im Schnitt 2 Versuche, weil Fehlversuche auch Credits kosten</td><td class="num">~16</td><td class="num">~0,70 $</td></tr>
+  <tr><td>Langes Video, 4 Min., Sparbauweise</td><td>40 Standbilder (je ~3 Credits, Annahme, ×1,5 Versuche) + 8 bewegte Clips; Bewegung sonst lokal mit ffmpeg/rembg (kostenlos)</td><td class="num">~310</td><td class="num">~14 $</td></tr>
+  <tr><td>Langes Video, 4 Min., alles bewegt</td><td>48 Clips × 8 Credits × 2,5 Versuche</td><td class="num">~960</td><td class="num">~44 $</td></tr>
+  <tr><td>Short (30 Sek.)</td><td>6 Bilder + 2 Clips</td><td class="num">~60</td><td class="num">~2,80 $</td></tr>
+</table>
+
+<h3>Drei Szenarien über 12 Monate</h3>
+<table>
+  <tr><th style="width:30%"></th><th class="num">Vorsichtig</th><th class="num">Realistisch</th><th class="num">Optimistisch</th></tr>
+  <tr><td>Videos pro Woche</td><td class="num">1 lang + 3 Shorts</td><td class="num">2 lang + 5 Shorts<br>+ 1 Zusammenschnitt</td><td class="num">3 lang + 7 Shorts<br>+ 1 Zusammenschnitt</td></tr>
+  <tr><td>Aufrufe gesamt (12 Mon.)<br><span class="small muted">davon lange Videos</span></td><td class="num">120.000<br><span class="small muted">30.000</span></td><td class="num">2,4 Mio.<br><span class="small muted">600.000</span></td><td class="num">40 Mio.<br><span class="small muted">14 Mio.</span></td></tr>
+  <tr><td>Sehzeit lange Videos (Ø 2–3 Min.)</td><td class="num">~1.000 h</td><td class="num">~30.000 h</td><td class="num">~700.000 h</td></tr>
+  <tr><td>Werbung freigeschaltet ab</td><td class="num">nie</td><td class="num">Monat 9</td><td class="num">Monat 4</td></tr>
+  <tr><td>Aufrufe mit Werbegeld</td><td class="num">0</td><td class="num">270.000 lang<br><span class="small muted">Shorts: 0 (unter 10 Mio.)</span></td><td class="num">12 Mio. lang<br>+ 22 Mio. Shorts</td></tr>
+  <tr><td>Werbeerlös YouTube</td><td class="num">0 €</td><td class="num">~77 €<br><span class="small muted">RPM 0,33 $</span></td><td class="num">~10.970 €<br><span class="small muted">RPM 0,88 $ lang, 0,10 $ Shorts</span></td></tr>
+  <tr><td>Musik auf Spotify &amp; Co.</td><td class="num">0 €</td><td class="num">~20 €</td><td class="num">~1.500 €</td></tr>
+  <tr class="total"><td>Einnahmen gesamt <span class="small muted">(Merch, Sponsoren, Lizenzen: 0 €)</span></td><td class="num">0 €</td><td class="num">~95 €</td><td class="num">~12.500 €</td></tr>
+  <tr><td>Kosten 12 Monate (KI pro Monat ~90 / ~160 / ~230 €, inkl. DistroKid)</td><td class="num">~1.080 €</td><td class="num">~1.945 €</td><td class="num">~2.785 €</td></tr>
+  <tr><td>Deine Zeit (Prüfen jedes Videos, Steuern, Einrichten)</td><td class="num">~80 h<br><span class="small muted">≈ 1,3 h/Woche</span></td><td class="num">~140 h<br><span class="small muted">≈ 2,5 h/Woche</span></td><td class="num">~190 h<br><span class="small muted">≈ 3,5 h/Woche</span></td></tr>
+  <tr class="total"><td>Ergebnis (ohne deine Zeit)</td><td class="num">−1.080 €</td><td class="num">−1.850 €</td><td class="num">+9.700 €</td></tr>
+  <tr><td>Ergebnis, wenn deine Stunde 50 € wert ist (Annahme)</td><td class="num">−5.080 €</td><td class="num">−8.850 €</td><td class="num">+200 €</td></tr>
+  <tr><td>Break-even</td><td class="num">nie</td><td class="num">nie</td><td class="num">ca. Monat 7</td></tr>
+  <tr><td><b>Wie wahrscheinlich? (mein Urteil)</b></td><td class="num"><b>65 %</b></td><td class="num"><b>30 %</b></td><td class="num"><b>5 %</b></td></tr>
+</table>
+<p class="small"><b>Erwartungswert</b> (= Durchschnitt, gewichtet nach Wahrscheinlichkeit): Einnahmen ca. 650 €, Kosten ca. 1.420 €, also <b>ca. −770 € und rund 100 Stunden deiner Zeit</b>. Das optimistische Szenario setzt voraus, dass ein Format „zündet“ und YouTube den Kanal trotz KI als „original“ einstuft. Beides kannst du nicht steuern.</p>
+
+<!-- ============ SEITE 5: ZAHLEN B + C ============ -->
+<div class="page"></div>
+<h2>Zahlen und Szenarien: Varianten B und C</h2>
+
+<h3>Variante B: Gute-Nacht-Musik (Spieluhr-Melodien, Sternenhimmel, 1–3 Stunden lang) + Streaming</h3>
+<p class="small">Produktion: 2 lange Schleifen-Videos pro Woche + 1 Album mit 8 Titeln pro Monat (bewusst wenige, wegen des Spam-Filters bei Spotify). Kosten: Musik-KI ca. 10–25 €, wenige Bilder ca. 15 €, Tokens 5 €, also ca. 45 € pro Monat + DistroKid ca. 23 € im Jahr. Vorteil: Lange Einschlaf-Videos sammeln Sehzeit schnell, 8.000 Stunden sind realistisch erreichbar.</p>
+<table>
+  <tr><th style="width:30%"></th><th class="num">Vorsichtig</th><th class="num">Realistisch</th><th class="num">Optimistisch</th></tr>
+  <tr><td>YouTube-Aufrufe 12 Monate</td><td class="num">60.000</td><td class="num">500.000 (Ø 20 Min.)</td><td class="num">5 Mio.</td></tr>
+  <tr><td>Werbung freigeschaltet ab</td><td class="num">nie</td><td class="num">Monat 5</td><td class="num">Monat 3</td></tr>
+  <tr><td>YouTube-Werbeerlös</td><td class="num">0 €</td><td class="num">~110 €<br><span class="small muted">380.000 × 0,33 $</span></td><td class="num">~3.400 €<br><span class="small muted">4,5 Mio. × 0,88 $</span></td></tr>
+  <tr><td>Streams (Spotify, Apple &amp; Co.)</td><td class="num">30.000</td><td class="num">250.000</td><td class="num">5 Mio.</td></tr>
+  <tr><td>Streaming-Erlös (0,0035 $/Stream)</td><td class="num">~15 €<br><span class="small muted">viele Titel unter 1.000</span></td><td class="num">~750 €</td><td class="num">~15.000 €</td></tr>
+  <tr class="total"><td>Einnahmen gesamt</td><td class="num">~15 €</td><td class="num">~860 €</td><td class="num">~18.400 €</td></tr>
+  <tr><td>Kosten 12 Monate</td><td class="num">~565 €</td><td class="num">~600 €</td><td class="num">~800 €</td></tr>
+  <tr><td>Deine Zeit</td><td class="num">~60 h</td><td class="num">~60 h</td><td class="num">~70 h</td></tr>
+  <tr class="total"><td>Ergebnis (ohne Zeit)</td><td class="num">−550 €</td><td class="num">+260 €</td><td class="num">+17.600 €</td></tr>
+  <tr><td>Break-even</td><td class="num">nie</td><td class="num">ca. Monat 10</td><td class="num">ca. Monat 4</td></tr>
+  <tr><td><b>Wahrscheinlichkeit</b></td><td class="num"><b>60 %</b></td><td class="num"><b>35 %</b></td><td class="num"><b>5 %</b></td></tr>
+</table>
+<p class="small">Erwartungswert: Einnahmen ca. 1.230 €, Kosten ca. 590 €, also <b>ca. +640 €</b> bei rund 60 Stunden. Fast der ganze Gewinn hängt am seltenen Glücksfall, dass ein Titel in große Schlaf-Playlists kommt. Dass es Nachfrage gibt, zeigt ein einziges Babyschlaf-Rauschen mit 2 Mrd. Streams auf Spotify [23]. Genau deshalb ist dieser Bereich aber auch einer der vollsten für KI-Musik.</p>
+
+<h3>Variante C: Eltern-Nische mit eigenem Produkt</h3>
+<p class="small">Produkt: sprachfreie Ausmal-, Labyrinth- und Suchbild-Hefte als PDF zum Ausdrucken (z. B. „30 Dinos zum Ausmalen“, „Regentag-Rettung“), 4,90 € pro Heft. Bilder macht KI gut, Sprache braucht man keine, also weltweit verkäuflich. Verkauf über Etsy oder einen eigenen Shop. Werbung dafür über Pinterest-Pins und kurze Videos <b>für Eltern</b> (nicht „Made for Kids“, also normale Werbung erlaubt). Pro Verkauf bleiben nach Etsy-Gebühren und Umsatzsteuer ca. <b>3,10 €</b> (Annahme). Kosten ca. 70–120 € im Monat für Bilder und Tokens.</p>
+<table>
+  <tr><th style="width:30%"></th><th class="num">Vorsichtig</th><th class="num">Realistisch</th><th class="num">Optimistisch</th></tr>
+  <tr><td>Neue Hefte pro Woche</td><td class="num">2</td><td class="num">3</td><td class="num">3 + 1 Druckbuch (KDP)</td></tr>
+  <tr><td>Verkäufe 12 Monate</td><td class="num">100<br><span class="small muted">ab Monat 3, ~10/Monat</span></td><td class="num">600<br><span class="small muted">steigt auf ~120/Monat</span></td><td class="num">3.000<br><span class="small muted">steigt auf ~600/Monat</span></td></tr>
+  <tr class="total"><td>Einnahmen gesamt</td><td class="num">~310 €</td><td class="num">~1.860 €</td><td class="num">~9.600 €</td></tr>
+  <tr><td>Kosten 12 Monate</td><td class="num">~840 €</td><td class="num">~1.120 €</td><td class="num">~1.500 €</td></tr>
+  <tr><td>Deine Zeit</td><td class="num">~70 h</td><td class="num">~90 h</td><td class="num">~120 h</td></tr>
+  <tr class="total"><td>Ergebnis (ohne Zeit)</td><td class="num">−530 €</td><td class="num">+740 €</td><td class="num">+8.100 €</td></tr>
+  <tr><td>Break-even</td><td class="num">nie</td><td class="num">ca. Monat 9</td><td class="num">ca. Monat 5</td></tr>
+  <tr><td><b>Wahrscheinlichkeit</b></td><td class="num"><b>45 %</b></td><td class="num"><b>45 %</b></td><td class="num"><b>10 %</b></td></tr>
+</table>
+<p class="small">Erwartungswert: Einnahmen ca. 1.940 €, Kosten ca. 1.030 €, also <b>ca. +900 €</b> bei rund 85 Stunden. Das sind etwa 10 € pro Stunde deiner Zeit, also wenig. Der Vorteil: Jedes fertige Heft bleibt ein Produkt, das weiter verkauft, auch wenn YouTube die Regeln ändert.</p>
+
+<!-- ============ SEITE 6: VARIANTEN-VERGLEICH ============ -->
+<div class="page"></div>
+<h2>Varianten-Vergleich</h2>
+<table>
+  <tr><th style="width:26%">Kriterium</th><th>A · Sprachfreie Animation</th><th>B · Gute-Nacht-Musik</th><th>C · Eltern + eigenes Produkt</th></tr>
+  <tr><td>Wer zahlt?</td><td>YouTube-Werbung (Kinder-Satz 0,33 $)</td><td>Spotify &amp; Co. + etwas YouTube</td><td>Eltern kaufen ein Produkt</td></tr>
+  <tr><td>Geld pro 1.000 Zuschauer</td><td>~0,28 €</td><td>~3 € pro 1.000 Streams</td><td>Ein Kauf bringt 3,10 € (Annahme: 1–2 % der Besucher kaufen)</td></tr>
+  <tr><td>Ab wann Geld?</td><td>erst nach 8.000 h Sehzeit</td><td>Streaming ab dem 1. Monat (ab 1.000 Streams je Titel)</td><td>ab dem ersten Verkauf</td></tr>
+  <tr><td>Weltweit ohne Sprache?</td><td><span class="tag green">ja</span></td><td><span class="tag green">ja</span></td><td><span class="tag green">Produkt ja</span>, Werbetexte in DE/EN</td></tr>
+  <tr><td>Ultron kann es alleine</td><td>~80 % (Figuren gleich halten ist schwer)</td><td>~90 %</td><td>~80 %</td></tr>
+  <tr><td>Passiv / wenig Zeit</td><td>mittel: jedes Video muss ein Mensch prüfen</td><td><span class="tag green">am passivsten</span></td><td>mittel</td></tr>
+  <tr><td>Kundenkontakt</td><td>keiner</td><td>keiner</td><td>wenig (Shop-Nachrichten, Ultron entwirft Antworten)</td></tr>
+  <tr><td>Abhängig von YouTube-Laune</td><td><span class="tag red">komplett</span></td><td><span class="tag amber">teilweise</span></td><td><span class="tag green">gering</span></td></tr>
+  <tr><td>KI-Gegenwind</td><td><span class="tag red">stark</span> (Kinder + KI im Fokus)</td><td><span class="tag amber">mittel</span> (Spam-Filter)</td><td><span class="tag amber">mittel</span> (viele KI-Malbücher)</td></tr>
+  <tr><td>Bleibender Wert</td><td>Kanal, der jederzeit das Werbegeld verlieren kann</td><td>Musik-Katalog</td><td>Produkt-Katalog, Käufer-Bewertungen</td></tr>
+  <tr><td>Erwartetes Ergebnis 12 Mon.</td><td><b>ca. −770 €</b></td><td><b>ca. +640 €</b></td><td><b>ca. +900 €</b></td></tr>
+  <tr><td>Sterne</td>
+      <td><span class="stars sm"><span>★★★★★</span><span class="fill" style="width:30%">★★★★★</span></span> 1,5</td>
+      <td><span class="stars sm"><span>★★★★★</span><span class="fill" style="width:40%">★★★★★</span></span> 2</td>
+      <td><span class="stars sm"><span>★★★★★</span><span class="fill" style="width:50%">★★★★★</span></span> 2,5</td></tr>
+</table>
+
+<h3>Und das „Gute-Nacht-Format“ mit Geschichten?</h3>
+<p>Geschichten brauchen Sprache, damit gibt es den Weltmarkt-Vorteil nicht mehr. Auf Deutsch (mit Pixie) wäre das Publikum viel kleiner, ähnlich wie beim verworfenen Franken-Kanal. Als eigenes Produkt gibt es das schon als Idee „Hörgeschichte mit eigenem Namen“ (2,5 Sterne). Dort heikel: Kinder-Namen sind persönliche Daten.</p>
+
+<h3>Was müsste wahr sein, damit Variante A doch funktioniert?</h3>
+<ol>
+  <li>YouTube verbietet KI-Kinderinhalte nicht (die Forderung liegt seit April 2026 auf dem Tisch) [6].</li>
+  <li>Ultron baut Figuren, die in jedem Video gleich aussehen, ohne KI-Fehler wie sechs Finger oder verzerrte Gesichter. Das ist Studio-Qualität.</li>
+  <li>Die Prüfer beim Partnerprogramm stufen den Kanal als „original“ ein und nicht als „inauthentic“ oder „minderwertig“ [5][12].</li>
+  <li>Der Kanal schafft 8.000 Stunden Sehzeit in unter 6 Monaten, ohne Glocke und ohne Kommentare.</li>
+  <li>Danach kommen dauerhaft mehr als 560.000 bezahlte lange Aufrufe pro Monat, sonst sind nicht einmal die KI-Kosten gedeckt.</li>
+</ol>
+<p>Jeder Punkt für sich ist möglich. Dass alle fünf gleichzeitig eintreten, halte ich für unter 5 % wahrscheinlich.</p>
+
+<!-- ============ SEITE 7: RISIKEN ============ -->
+<div class="page"></div>
+<h2>Risiken, die gefährlichsten zuerst</h2>
+<table>
+  <tr><th style="width:4%">#</th><th style="width:28%">Risiko</th><th>Was passieren kann</th><th style="width:14%">Gilt für</th></tr>
+  <tr><td>1</td><td><span class="tag red">Killer</span> <b>Kein Werbegeld oder Rauswurf</b></td><td>YouTube stuft KI-Kindervideos als „inauthentic“ (gleichförmig, ohne eigene Leistung) oder als „minderwertig“ ein. Dann gibt es keine Freischaltung oder später den Entzug, wie bei den fünf Kanälen aus dem Times-Bericht [5][7][12].</td><td>A, B</td></tr>
+  <tr><td>2</td><td><span class="tag red">Killer</span> <b>Zu wenig Geld pro Aufruf</b></td><td>0,33 $ pro 1.000 Aufrufe. Selbst ein guter Kanal deckt kaum die Kosten (siehe Seite 3) [1].</td><td>A</td></tr>
+  <tr><td>3</td><td><span class="tag red">Killer</span> <b>Regeln werden strenger</b></td><td>Über 200 Organisationen fordern ein Verbot von KI-Kinderinhalten auf YouTube Kids und ein Ende der Empfehlungen an Minderjährige [6]. Wird das ganz oder teilweise umgesetzt, ist Variante A über Nacht wertlos.</td><td>A</td></tr>
+  <tr><td>4</td><td><span class="tag amber">Hoch</span> <b>Doppelte Hürde ab Februar 2027</b></td><td>Neue Kanäle brauchen 8.000 statt 4.000 Stunden. Shorts bringen erst ab 10 Mio. Aufrufen in 90 Tagen Geld [3].</td><td>A, B</td></tr>
+  <tr><td>5</td><td><span class="tag amber">Hoch</span> <b>Ruf-Schaden für deine anderen Marken</b></td><td>Wird bekannt, dass derselbe Betreiber „KI-Schrott für Kleinkinder“ macht, schadet das deinem Namen bei Kunden von TattooLeadz, GastroSite und Co.</td><td>A</td></tr>
+  <tr><td>6</td><td><span class="tag amber">Hoch</span> <b>Falsche Kinder-Kennzeichnung</b></td><td>Wer Kindervideos nicht als „Made for Kids“ markiert, um mehr Werbegeld zu bekommen, riskiert Strafen. Disney zahlte dafür im September 2025 10 Mio. $ an die US-Handelsbehörde FTC [10].</td><td>A, B</td></tr>
+  <tr><td>7</td><td><span class="tag amber">Hoch</span> <b>Spam-Filter bei Spotify</b></td><td>Massen-Uploads und künstlich kurze Titel werden nicht mehr empfohlen oder gelöscht [13]. DistroKid prüft KI-Musik streng [22].</td><td>B</td></tr>
+  <tr><td>8</td><td><span class="tag amber">Mittel</span> <b>Keine Schutzrechte</b></td><td>Rein KI-erzeugte Bilder und Musik sind in Deutschland meist nicht urheberrechtlich geschützt (es fehlt die „persönliche geistige Schöpfung“). Jeder darf deine Figuren nachbauen.</td><td>A, B, C</td></tr>
+  <tr><td>9</td><td><span class="tag amber">Mittel</span> <b>Qualitätsfehler der KI</b></td><td>Verzerrte Körper, falsche Zahlen in „Lern“-Videos. Bei Kindern doppelt heikel, darum muss ein Mensch jedes Stück ansehen. Das kostet deine Zeit.</td><td>A, C</td></tr>
+  <tr><td>10</td><td><span class="tag green">Kleiner</span> <b>Gebühren und Konkurrenz im Shop</b></td><td>Bei 4,90 € fressen Gebühren ca. 20 %. Etsy ist voll von KI-Malbüchern, Etsy prüft die KI-Kennzeichnung [17].</td><td>C</td></tr>
+</table>
+
+<!-- ============ SEITE 8: RECHT ============ -->
+<div class="page"></div>
+<h2>Recht: was du beachten musst</h2>
+<p class="small muted">Keine Rechtsberatung. Ich fasse den Stand vom 17.10.2026 nach den genannten Quellen zusammen. Vor dem Start einmal von einem Anwalt oder deinem Steuerberater prüfen lassen.</p>
+
+<h3>YouTube-Regeln</h3>
+<ul>
+  <li><b>Kinder-Kennzeichnung „Made for Kids“ ist Pflicht</b> für alles, was sich an Kinder richtet, pro Video oder für den ganzen Kanal. Folge: keine persönliche Werbung, keine Kommentare, keine Glocke, kein Merch-Regal [9].</li>
+  <li><b>Qualitätsregeln für Kinderinhalte</b>: „Minderwertig“ sind zum Beispiel stark werbliche Videos, Videos, die nur so tun, als wären sie lehrreich, und wirre Videos ohne klare Geschichte. Folge: weniger oder keine Werbung, im schlimmsten Fall Rauswurf aus dem Partnerprogramm [12].</li>
+  <li><b>„Inauthentic content“</b> (seit 15.7.2025 so benannt): Massenhaft gleichförmige Videos, auch KI-Videos ohne eigene schöpferische Leistung, bekommen kein Werbegeld [5].</li>
+  <li><b>KI-Hinweis bei YouTube</b>: Pflicht bei realistisch wirkenden KI-Inhalten. Klar erkennbare Animation ist meist ausgenommen. Seit Mai 2026 setzt YouTube selbst Hinweise, wenn es nicht gekennzeichnete KI-Inhalte erkennt [5][21].</li>
+</ul>
+
+<h3>USA: COPPA (Kinderschutzgesetz)</h3>
+<ul>
+  <li>Gilt auch für Kanalbetreiber außerhalb der USA, wenn sich Inhalte an Kinder unter 13 richten. Die verschärfte Fassung gilt seit 22.4.2026 [11]. Wichtigste Regel für dich: <b>keine Daten von Kindern sammeln</b> (keine Gewinnspiele, keine Links zu Formularen in Kindervideos) und ehrlich kennzeichnen [10].</li>
+</ul>
+
+<h3>EU und Deutschland</h3>
+<ul>
+  <li><b>EU-KI-Verordnung (AI Act), Artikel 50</b>: Die Transparenzpflichten gelten seit 2.8.2026. Täuschend echte KI-Inhalte („Deepfakes“) müssen sichtbar gekennzeichnet werden. Die technische Markierung durch die KI-Anbieter (z. B. Higgsfield) ist für bereits angebotene Werkzeuge bis 2.12.2026 verschoben [19]. Bei Fantasie-Zeichentrick ist ein Deepfake-Hinweis meist nicht nötig. <b>Meine Bedingung trotzdem: sichtbarer Hinweis „Mit KI erstellt“</b> in Kanal-Info und Beschreibung, weil Eltern genau darauf achten.</li>
+  <li><b>Impressum (§ 5 DDG)</b>: Ein Kanal mit Werbegeld oder Shop-Links ist „geschäftsmäßig“. Er braucht ein leicht auffindbares Impressum mit Name, Anschrift, E-Mail und einem zweiten Kontaktweg. Bußgeld bis 50.000 €, dazu Abmahnungen durch Mitbewerber [20].</li>
+  <li><b>Keine Kaufaufforderung an Kinder</b> (UWG, Anhang Nr. 28): Sätze wie „Hol dir das Heft!“ oder „Sag Mama, sie soll es kaufen“ in Kindervideos sind immer verboten. Laut Rechtsprechung kann das auch über Produkt-Links passieren [20]. Bei Variante C richtet sich die Werbung deshalb nur an Eltern.</li>
+  <li><b>Jugendmedienschutz (JMStV)</b>: Für harmlose Kinderinhalte brauchst du keinen Jugendschutzbeauftragten, den braucht nur, wer entwicklungsbeeinträchtigende Inhalte verbreitet. Werbung, die sich an Kinder richtet, darf ihnen nicht schaden [24].</li>
+  <li><b>Urheberrecht</b>: Keine bekannten Figuren nachahmen (Peppa Wutz, Paw Patrol usw.). Eigene KI-Figuren sind kaum geschützt (siehe Risiko 8). Nutzungsrechte der KI-Werkzeuge prüfen (bezahltes Paket mit kommerzieller Nutzung).</li>
+  <li><b>Datenschutz (DSGVO)</b>: Keine Kinderdaten erheben. Bei Variante C nur Käuferdaten der Eltern über den Shop.</li>
+  <li><b>Stimmen</b>: Falls doch eine Stimme nötig ist, nur Pixie, Benji, Barrett oder Gideon über elevenlabs_v4 (deine feste Regel).</li>
+  <li><b>Firma und Steuern</b>: Vorher festlegen, ob DSX UG oder dein Einzelunternehmen verkauft. Einnahmen von Google, Spotify oder Etsy kommen aus dem Ausland, das mit dem Steuerberater klären.</li>
+</ul>
+
+<!-- ============ SEITE 9: BEDINGUNGEN + NÄCHSTE SCHRITTE ============ -->
+<div class="page"></div>
+<h2>Was ich als Investor verlangen würde</h2>
+<p>Für Variante A gebe ich kein Geld. Für einen <b>Test von Variante C</b> (oder B, wenn dir „ganz passiv“ wichtiger ist als Geld) nur zu diesen Bedingungen:</p>
+<ol>
+  <li><b>Deckel:</b> höchstens 150 € Kosten und 10 Stunden deiner Zeit in 30 Tagen. Danach wird entschieden, nicht verlängert.</li>
+  <li><b>Harte Abbruch-Grenzen</b> (siehe unten). Werden sie verfehlt, ist Schluss, ohne „noch einen Monat“.</li>
+  <li><b>Ein Mensch prüft jedes Stück</b>, bevor es live geht. Bei Kindern gibt es keine Ausnahme.</li>
+  <li><b>Ehrlich kennzeichnen:</b> „Mit KI erstellt“ sichtbar, keine falschen Lern-Versprechen, keine Kaufaufforderung an Kinder.</li>
+  <li><b>Eigenes Produkt vor Werbegeld:</b> Das Geld muss von Käufern kommen, nicht vom Werbesatz für Kinder.</li>
+  <li><b>Vorrang für bestehende Geschäfte:</b> Der Test darf keine Ultron-Zeit von TattooLeadz, GastroSite oder Tattookalender abziehen.</li>
+  <li><b>Monatlicher Zahlenbericht von Ultron:</b> Aufrufe, Klicks, Verkäufe, Kosten, deine Stunden, alles auf einer Seite.</li>
+  <li><b>Firma festlegen</b> und Impressum vor dem ersten Verkauf.</li>
+</ol>
+
+<h3>Was in den ersten 30 Tagen bewiesen werden muss (Variante C)</h3>
+<table>
+  <tr><th style="width:12%">Wann</th><th>Meilenstein</th><th style="width:36%">Abbruch, wenn …</th></tr>
+  <tr><td>Tag 7</td><td>10 Hefte fertig (je 20–30 Seiten, sprachfrei), von dir geprüft (höchstens 1 Stunde)</td><td>mehr als jede fünfte Seite KI-Fehler hat (Finger, Gesichter, unsaubere Linien)</td></tr>
+  <tr><td>Tag 14</td><td>Shop live mit Impressum und KI-Hinweis, 60 Pinterest-Pins + 10 kurze Videos für Eltern veröffentlicht</td><td>nach 7 Tagen weniger als 300 Klicks auf die Shop-Seite</td></tr>
+  <tr><td>Tag 30</td><td>mindestens 25 Verkäufe, mindestens 1 Heft mit 5 oder mehr Verkäufen, Kosten unter 150 €, deine Zeit unter 10 h</td><td>weniger als 10 Verkäufe, <b>oder</b> mehr als 15 Stunden deiner Zeit, <b>oder</b> mehr als 150 € Kosten</td></tr>
+</table>
+<p class="small">Falls du trotz allem Variante A testen willst: 8 lange Videos + 20 Shorts in 30 Tagen. Abbruch bei weniger als 25.000 Aufrufen gesamt, bei durchschnittlich unter 2 Minuten Sehdauer pro langem Video oder wenn Ultron keine Figur hinbekommt, die in allen Videos gleich aussieht.</p>
+
+<h2 style="margin-top:6mm">Nächste 3 Schritte</h2>
+<div class="box green keep">
+  <ol style="margin:0">
+    <li><b>Du entscheidest (1 Minute):</b> Variante A ablegen. Dann Variante C testen, oder gar nichts und die Zeit in die laufenden Geschäfte stecken.</li>
+    <li><b>Ultron bereitet vor, ohne etwas zu veröffentlichen:</b> Auswertung der 50 meistverkauften Ausmal-Hefte auf Etsy (Preise, Themen, Bewertungen) und 3 Muster-Hefte als PDF mit vorhandenen Credits. Du schaust sie dir an.</li>
+    <li><b>Du gibst frei:</b> welche Firma verkauft, 150 € Testbudget, Etsy oder eigener Shop. Erst danach startet der 30-Tage-Test mit den Abbruch-Grenzen oben.</li>
+  </ol>
+</div>
+
+<!-- ============ SEITE 10: QUELLEN ============ -->
+<div class="page"></div>
+<h2>Quellen</h2>
+<p class="small muted">Abgerufen am 17.10.2026. Viele Zahlen stammen von Dienstleistern und Blogs, nicht von YouTube selbst. Das ist jeweils vermerkt. Nicht belegte Werte sind im Text als „Annahme“ markiert.</p>
+<ol class="sources">
+  <li><span>AIR Media-Tech: YouTube RPM nach Nische 2026 (300 Kanäle, Studio-Daten Mai 2025–Mai 2026), Stand 01.07.2026 (Dienstleister)</span> – air.io/en/air-data-findings/which-youtube-niche-makes-the-most-money-in-2026-ranked-by-real-rpm-and-cpm</li>
+  <li><span>AIR Media-Tech: Shorts-RPM vs. lange Videos, 274 Kanäle, 2026 (Dienstleister)</span> – air.io/en/air-data-findings/youtube-shorts-rpm-vs-long-form-how-much-do-shorts-earn-in-2026</li>
+  <li><span>YouTube Official Blog: Partnerprogramm-Änderungen 2027, 10.08.2026 (offiziell)</span> – blog.youtube/news-and-events/youtube-partner-program-updates-2027-new-opportunities-earn/</li>
+  <li><span>Shacknews: YouTube erhöht Mindest-Sehzeit und Shorts-Aufrufe, 10.08.2026</span> – shacknews.com/article/150324/youtube-partner-program-minimum-qualified-public-watch-hours-shorts-views</li>
+  <li><span>AIR Media-Tech: Monetarisierungs-Änderungen 2026, Zeitleiste (inkl. Januar-2026-Welle, Inauthentic Content 15.07.2025, KI-Labels 27.05.2026)</span> – air.io/en/monetization/youtube-monetization-policy-changes-2026-a-complete-dated-timeline</li>
+  <li><span>Fortune: „AI slop is flooding YouTube Kids“, Fairplay-Brief mit über 200 Unterzeichnern, 01.04.2026</span> – fortune.com/2026/04/01/ai-slop-200-organizations-letter-youtube-google/ · <span>Brief selbst:</span> fairplayforkids.org/wp-content/uploads/2026/03/YouTube-Letter-AI-Slop.pdf</li>
+  <li><span>New York Times, Bericht vom ca. 26.02.2026, zusammengefasst von Digital Trends und OECD AI Incident Monitor (26.02.2026)</span> – digitaltrends.com/social-media/investigation-finds-youtube-is-serving-mindless-ai-slop-to-toddlers-and-preschoolers · oecd.ai/en/incidents/2026-02-26-abd8</li>
+  <li><span>vidIQ: Made for Kids – Geld verdienen 2026</span> – vidiq.com/blog/post/make-money-kids-youtube-channel/</li>
+  <li><span>YouTube-Hilfe: Zielgruppe festlegen / Auswirkungen von „Made for Kids“ (offiziell)</span> – support.google.com/youtube/answer/9610285 · support.google.com/youtube/answer/9632097</li>
+  <li><span>NBC News: Disney zahlt 10 Mio. $ an FTC wegen falsch gekennzeichneter YouTube-Videos, 02.09.2025</span> – nbcnews.com/business/business-news/disney-pay-10-million-settle-ftc-complaint-collection-childrens-person-rcna228786</li>
+  <li><span>Federal Register: geänderte COPPA-Regel, 22.04.2025 (gültig ab 23.06.2025, Pflicht ab 22.04.2026, offiziell)</span> – federalregister.gov/documents/2025/04/22/2025-05904/childrens-online-privacy-protection-rule</li>
+  <li><span>YouTube-Hilfe: Best Practices / Qualitätsprinzipien für Kinder- und Familieninhalte (offiziell) · TechCrunch 25.10.2021</span> – support.google.com/youtube/answer/10774223 · techcrunch.com/2021/10/25/youtube-warns-creators-it-will-start-to-demonetize-low-quality-kids-videos-next-month</li>
+  <li><span>TechCrunch: Spotify KI-Richtlinie und Spam-Filter, 25.09.2025 · Music Business Worldwide: 1.000-Streams-Regel ab 01.04.2024</span> – techcrunch.com/2025/09/25/spotify-updates-ai-policy-to-label-tracks-cut-down-on-spam · musicbusinessworldwide.com/changes-to-spotifys-royalty-model-including-the-1000-annual-streams-royalty-policy-are-officially-live</li>
+  <li><span>Higgsfield-Preise 2026: Creatify-Blog und Scopeful (Drittanbieter, Preise weichen voneinander ab)</span> – creatify.ai/blog/higgsfield-pricing-(2026)-plans-and-what-you-ll-actually-pay · scopeful.org/tools/higgsfield</li>
+  <li><span>vidIQ: Wie lange dauert die Monetarisierung 2026?</span> – vidiq.com/blog/post/get-monetized-youtube</li>
+  <li><span>OutlierKit: meistabonnierte Kanäle, Juli 2026</span> – outlierkit.com/resources/top-youtubers/</li>
+  <li><span>Etsy-Gebühren 2026 (checkoutpage.com) · Etsy Creativity Standards / KI-Kennzeichnung (listadum.com, 2026; Drittanbieter)</span> – checkoutpage.com/blog/etsy-fees · listadum.com/blog/etsy-creativity-standards</li>
+  <li><span>Authors Guild: Amazon KDP KI-Richtlinie und Upload-Grenze (2023)</span> – authorsguild.org/news/amazon-adds-to-kdp-generative-ai-policy-caps-daily-self-publishing-uploads/</li>
+  <li><span>Ropes &amp; Gray: EU AI Act Transparenzpflichten, 08/2026 · Cloud Security Alliance Research Note Art. 50, 29.07.2026</span> – ropesgray.com/en/insights/viewpoints/2026/08/102nfqm/you-talkin-to-me-operationalising-the-eu-ai-acts-transparency-obligations · labs.cloudsecurityalliance.org/wp-content/uploads/2026/07/CSA_research_note_eu_ai_act_article_50_transparency_20260729-csa-styled-1.pdf</li>
+  <li><span>IT-Recht Kanzlei: Impressumspflicht (§ 5 DDG) · Omsels: UWG Schwarze Liste Nr. 28 (Kaufaufforderung an Kinder) · WBS Legal: BGH zur an Kinder gerichteten Werbung</span> – it-recht-kanzlei.de/impressum.html · omsels.info/die-verbote-oder-was-darf-ich-nicht/schwarze-liste/6-schwarze-liste-nr-28 · wbs.legal/wettbewerbsrecht/bundesgerichtshof-zur-zulaessigkeit-einer-kinder-gerichteten-werbung-17192/</li>
+  <li><span>AIR Media-Tech: YouTube-Regeln zur KI-Kennzeichnung · Android Central (2024): Animation ausgenommen</span> – air.io/en/youtube-glossary/what-is-youtubes-ai-content-disclosure-policy · androidcentral.com/apps-software/youtube-ai-synthetic-content-disclosure</li>
+  <li><span>DistroKid-Preise und KI-Prüfung 2026 (Drittanbieter-Test)</span> – sunowatermark.com/blog/distrokid-review-2026/</li>
+  <li><span>Soapcentral: „Clean Baby Sleep White Noise“ erreicht 2 Mrd. Spotify-Streams</span> – soapcentral.com/music/clean-baby-sleep-white-noise-loopable-dream-supplier-hits-2-billion-streams-spotify</li>
+  <li><span>Jugendmedienschutz-Staatsvertrag (JMStV), aktuelle Fassung (Bayern.Recht, offiziell)</span> – gesetze-bayern.de/Content/Pdf/JMStV-G1</li>
+</ol>
+<p class="tiny muted">Eigene Annahmen (ohne Quelle): Wechselkurs 1 $ ≈ 0,86 €; Credits pro Standbild (~3); Zahl der Fehlversuche; Aufrufzahlen, Kaufquoten und Wahrscheinlichkeiten der Szenarien (mein Urteil als Investor); Wert deiner Stunde 50 €; Netto pro Heft 3,10 €.</p>
+
+</body>
+</html>

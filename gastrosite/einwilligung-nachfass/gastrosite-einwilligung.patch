@@ -1,0 +1,582 @@
+diff -ruN a/netlify/functions/api.mjs b/netlify/functions/api.mjs
+--- a/netlify/functions/api.mjs	2026-10-16 20:26:49
++++ b/netlify/functions/api.mjs	2026-10-16 20:26:49
+@@ -13,7 +13,7 @@
+ import { BUSINESS_TYPES, CATEGORIES, CUISINES, DRAFT_DAYS, SERVICES, aiEnabled, extractMenu, templateContent, themeCategory, translateDraftContent } from "./lib/drafts.mjs";
+ import { notifyEmail, sendMail as smtpSend } from "./lib/mail.mjs";
+ import {
+-  LEAD_FIELDS, LEAD_KINDS, LEAD_PAGE_ID, LEAD_SYNC_SECRET, consentGiven, decryptToken, encryptToken, formMarket, graphGet, kindFromAnswer, parseFieldData,
++  LEAD_FIELDS, LEAD_KINDS, LEAD_PAGE_ID, LEAD_SYNC_SECRET, consentGiven, decryptToken, encryptToken, formMarket, graphGet, kindFromAnswer, marketingRequested, parseFieldData,
+ } from "./lib/meta-leads.mjs";
+ import {
+   cancellationEmail, contractEndedEmail, creditNoteEmail, draftCallbackConfirmEmail, draftCallbackOwnerEmail, draftFollowupEmail, draftOwnerEmail, draftReadyEmail, invoiceEmail, invoiceReminderEmail, logoAttachment, ownerEmail,
+@@ -1347,6 +1347,8 @@
+   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.email)) fail(422, "Bitte gib eine gültige E-Mail-Adresse an.");
+   if (draft.phone.replace(/\D/g, "").length < 6) fail(422, "Bitte gib eine gültige Telefonnummer an.");
+   if (body.consent !== true) fail(422, "Bitte bestätige, dass wir dich zu deinem Entwurf kontaktieren dürfen.");
++  // Freiwillig: „Tipps und Erinnerungen per E-Mail“ – gilt erst nach Bestätigung per Link (Double-Opt-in, siehe draftMarketingConfirm)
++  const marketing = body.marketing === true;
+ 
+   // Missbrauchsschutz: max. 3 Entwürfe pro E-Mail/Telefon und 6 pro Anschluss und Tag
+   const since = new Date(Date.now() - 864e5).toISOString();
+@@ -1361,6 +1363,7 @@
+   const row = must(await db().from("drafts").insert({
+     ...draft, token: crypto.randomBytes(24).toString("hex"), ip_hash: hash, ready_mail_after: mailAt.toISOString(),
+     expires_at: new Date(mailAt.getTime() + DRAFT_DAYS * 864e5).toISOString(), consent_contact_at: new Date().toISOString(),
++    marketing_requested_at: marketing ? new Date().toISOString() : null,
+   }).select("*").single());
+ 
+   // Erstellung im Hintergrund anstoßen (Speisekarte auslesen bzw. übersetzen dauert bis zu ~1 Minute); die Mail geht zeitversetzt raus
+@@ -1427,11 +1430,17 @@
+   return { url, orderUrl: `${url}?bestellen=1`, callbackUrl: `${url}?rueckruf=1`, unsubscribeUrl: `${url}?abmelden=1` };
+ };
+ 
++/** Nachfass-Mails nur mit bestätigter Einwilligung (Double-Opt-in) und ohne Abmeldung. */
++export const followupAllowed = (d) => !!d.marketing_consent_at && !d.unsubscribed_at;
++
+ /** Schickt die „Entwurf ist fertig“-Mail genau einmal (ready_mail_at wird vorher gesetzt). */
+ const sendDraftReadyMail = async (d) => {
+   const claimed = must(await db().from("drafts").update({ ready_mail_at: new Date().toISOString() }).eq("id", d.id).is("ready_mail_at", null).select("id"));
+   if (!claimed.length) return false;
+-  return sendMail({ to: d.email, ...draftReadyEmail({ draft: d, ...draftLinks(d) }) });
++  const links = draftLinks(d);
++  // Wer „Tipps und Erinnerungen“ angekreuzt, aber noch nicht bestätigt hat, bekommt in dieser (angeforderten) Mail den Bestätigungslink
++  const optinUrl = d.marketing_requested_at && !d.marketing_consent_at ? `${links.url}?einwilligung=1` : null;
++  return sendMail({ to: d.email, ...draftReadyEmail({ draft: d, ...links, optinUrl }) });
+ };
+ 
+ const getDraft = async (token, { internal = false } = {}) => {
+@@ -1441,6 +1450,7 @@
+   const base = {
+     business_name: d.business_name, category: d.category, business_type: d.business_type, cuisine: d.cuisine, services: d.services || [], market: d.market, lang: d.lang, city: d.city, expires_at: d.expires_at, ordered: !!d.lead_id,
+     callback: d.callback ? { day: d.callback.day, slot: d.callback.slot } : null, unsubscribed: !!d.unsubscribed_at,
++    marketing: d.marketing_consent_at && !d.unsubscribed_at ? "confirmed" : d.marketing_requested_at ? "requested" : null,
+   };
+   if (new Date(d.expires_at) < new Date() && !d.lead_id) return json({ ...base, status: "expired" }, 410);
+   if (d.status !== "ready") return json({ ...base, status: "generating" });
+@@ -1453,7 +1463,7 @@
+   });
+ };
+ 
+-// Nachfass-Mails (Zeitplan): 2 Tage nach dem Entwurf und am Tag vor Ablauf; Aufräumen nach 90 Tagen
++// Nachfass-Mails (Zeitplan): 2 Tage nach dem Entwurf und am Tag vor Ablauf – nur mit bestätigter Einwilligung „Tipps und Erinnerungen“; Aufräumen nach 90 Tagen
+ const runDraftReminders = async () => {
+   const now = Date.now();
+   // Hängengebliebene Entwürfe (Hintergrund-Funktion ausgefallen) nach 5 Minuten mit Vorlage fertigstellen
+@@ -1467,15 +1477,18 @@
+     .lte("ready_mail_after", new Date(now).toISOString()).is("unsubscribed_at", null).gt("expires_at", new Date(now).toISOString()).limit(20));
+   let readySent = 0;
+   for (const d of due) if (await sendDraftReadyMail(d)) readySent += 1;
+-  // Nachfassen nur, wenn die erste Mail raus ist und der Kunde sich nicht abgemeldet hat
++  // Nachfassen nur, wenn die erste Mail raus ist, die Einwilligung per Link bestätigt wurde und der Kunde sich nicht abgemeldet hat.
++  // Ohne Einwilligung bleibt es bei der angeforderten Entwurfs-Mail (und ggf. der Bestätigung eines Rückruf-Wunschs).
+   const base = () => db().from("drafts").select("*").eq("status", "ready").is("lead_id", null).is("unsubscribed_at", null)
++    .not("marketing_consent_at", "is", null)
+     .or("ready_mail_after.is.null,ready_mail_at.not.is.null").gt("expires_at", new Date(now).toISOString());
+-  const first = must(await base().is("followup1_at", null).lt("created_at", new Date(now - 2 * 864e5).toISOString()).gt("expires_at", new Date(now + 1.5 * 864e5).toISOString()).limit(20));
++  const first = must(await base().is("followup1_at", null).lt("created_at", new Date(now - 2 * 864e5).toISOString()).gt("expires_at", new Date(now + 1.5 * 864e5).toISOString()).limit(20))
++    .filter(followupAllowed);
+   for (const d of first) {
+     await db().from("drafts").update({ followup1_at: new Date().toISOString() }).eq("id", d.id);
+     await sendMail({ to: d.email, ...draftFollowupEmail({ draft: d, ...draftLinks(d), last: false }) });
+   }
+-  const last = must(await base().is("followup2_at", null).lt("expires_at", new Date(now + 864e5).toISOString()).limit(20));
++  const last = must(await base().is("followup2_at", null).lt("expires_at", new Date(now + 864e5).toISOString()).limit(20)).filter(followupAllowed);
+   for (const d of last) {
+     await db().from("drafts").update({ followup2_at: new Date().toISOString(), followup1_at: d.followup1_at || new Date().toISOString() }).eq("id", d.id);
+     await sendMail({ to: d.email, ...draftFollowupEmail({ draft: d, ...draftLinks(d), last: true }) });
+@@ -1489,7 +1502,7 @@
+ };
+ 
+ const adminDrafts = async () => {
+-  const rows = must(await db().from("drafts").select("id, created_at, token, status, market, source, business_name, category, business_type, cuisine, services, about, city, contact_name, email, phone, wishes, content_source, expires_at, opened_at, views, lead_id, ordered_at, ready_mail_after, ready_mail_at, callback, callback_at, unsubscribed_at").order("created_at", { ascending: false }).limit(200));
++  const rows = must(await db().from("drafts").select("id, created_at, token, status, market, source, business_name, category, business_type, cuisine, services, about, city, contact_name, email, phone, wishes, content_source, expires_at, opened_at, views, lead_id, ordered_at, ready_mail_after, ready_mail_at, callback, callback_at, unsubscribed_at, marketing_requested_at, marketing_consent_at").order("created_at", { ascending: false }).limit(200));
+   return json({ drafts: rows.map((d) => ({ ...d, url: draftInternalUrl(d), category_label: d.business_type ? `${BUSINESS_TYPES[d.business_type]} · ${CUISINES[d.cuisine] || ""}` : CATEGORIES[d.category]?.label || d.category, wishes: d.about || d.wishes, expired: new Date(d.expires_at) < new Date() })) });
+ };
+ 
+@@ -1537,13 +1550,27 @@
+   return json({ ok: true });
+ };
+ 
++/**
++ * Double-Opt-in „Tipps und Erinnerungen per E-Mail“: Der Link steht in der Entwurfs-Mail (?einwilligung=1), bestätigt wird erst per Klick
++ * auf der Entwurfsseite (POST), damit Mail-Scanner nichts automatisch bestätigen. Nur wer das Kästchen angekreuzt hat, kann bestätigen.
++ * Eine erneute Bestätigung nach einer Abmeldung gilt als neue Einwilligung.
++ */
++const draftMarketingConfirm = async (token) => {
++  const d = await loadDraftByToken(token);
++  if (!d.marketing_requested_at) fail(409, "Für diesen Entwurf wurden keine Tipps und Erinnerungen angefordert.");
++  if (d.marketing_consent_at && !d.unsubscribed_at) return json({ ok: true, marketing: "confirmed" });
++  must(await db().from("drafts").update({ marketing_consent_at: new Date().toISOString(), unsubscribed_at: null }).eq("id", d.id).select("id"));
++  return json({ ok: true, marketing: "confirmed" });
++};
++
+ // ---------- Meta-Sofortformular (Lead Ads) → Entwurf ----------
+ 
+ const isTestLead = (email, source) => source === "claude-test" || TEST_ADDRESS.test(email || "");
+ 
+ /**
+  * Legt aus einem Formular-Lead einen Entwurf an (Erstellung startet sofort, Mail nach 2–3 Stunden, nachts erst morgens).
+- * lead = { id, created_time, form_id, ad_id, fields: {business_name, kind, city, contact_name, email, phone}, consent, source?, market?, lang? }
++ * lead = { id, created_time, form_id, ad_id, fields: {business_name, kind, city, contact_name, email, phone}, consent, marketing?, source?, market?, lang? }
++ * marketing = freiwilliges Kästchen „Tipps und Erinnerungen“ angekreuzt → Bestätigungslink in der Entwurfs-Mail (Double-Opt-in).
+  * market/lang kommen aus dem Formular (formMarket): Mallorca-Formulare → Markt mallorca (690 €, mehrsprachiger Entwurf), Sprache des Formulars.
+  */
+ export const ingestMetaLead = async (lead) => {
+@@ -1579,6 +1606,7 @@
+   const { data: row, error } = await db().from("drafts").insert({
+     ...draft, token: crypto.randomBytes(24).toString("hex"),
+     expires_at: new Date(mailAt.getTime() + DRAFT_DAYS * 864e5).toISOString(), consent_contact_at: created.toISOString(),
++    marketing_requested_at: lead.marketing === true ? created.toISOString() : null,
+     ready_mail_after: mailAt.toISOString(),
+   }).select("*").single();
+   if (error) {
+@@ -1636,6 +1664,7 @@
+     ...formMarket({ meta: s?.form_meta?.[formId], name: info.name, locale: info.locale }),
+     id: lead.id, created_time: lead.created_time, form_id: lead.form_id, ad_id: lead.ad_id, source: str(lead.source, 32) || null,
+     fields: lead.fields || parseFieldData(lead.field_data), consent: lead.field_data ? consentGiven(lead) : lead.consent !== false,
++    marketing: lead.field_data ? marketingRequested(lead) : lead.marketing === true,
+   });
+   return json(result);
+ };
+@@ -1688,7 +1717,7 @@
+       for (let i = 0; i < 10 && page; i += 1) {
+         for (const lead of page.data || []) {
+           out.leads += 1;
+-          const r = await ingestMetaLead({ ...marketOf(String(lead.form_id || formId)), id: lead.id, created_time: lead.created_time, form_id: lead.form_id || formId, ad_id: lead.ad_id, fields: parseFieldData(lead.field_data), consent: consentGiven(lead) });
++          const r = await ingestMetaLead({ ...marketOf(String(lead.form_id || formId)), id: lead.id, created_time: lead.created_time, form_id: lead.form_id || formId, ad_id: lead.ad_id, fields: parseFieldData(lead.field_data), consent: consentGiven(lead), marketing: marketingRequested(lead) });
+           if (r.status === "created") out.created += 1; else if (r.status === "duplicate") out.duplicate += 1; else { out.other += 1; console.warn("[meta-lead]", lead.id, r.reason); }
+         }
+         page = page.paging?.next ? await fetch(page.paging.next, { signal: AbortSignal.timeout(15000) }).then((r) => r.json()) : null;
+@@ -1888,6 +1917,7 @@
+   if (m === "GET" && (p = path.match(/^\/drafts\/([^/]+)$/))) return getDraft(p[1], { internal: url.searchParams.get("intern") === "1" });
+   if (m === "POST" && (p = path.match(/^\/drafts\/([^/]+)\/callback$/))) return draftCallback(req, p[1]);
+   if (m === "POST" && (p = path.match(/^\/drafts\/([^/]+)\/unsubscribe$/))) return draftUnsubscribe(p[1]);
++  if (m === "POST" && (p = path.match(/^\/drafts\/([^/]+)\/marketing$/))) return draftMarketingConfirm(p[1]);
+   if (m === "POST" && path === "/meta-lead") return metaLeadWebhook(req);
+   if (m === "POST" && path === "/meta-lead/connect") return metaLeadConnect(req);
+   if (m === "POST" && path === "/leads") return createLead(req);
+diff -ruN a/netlify/functions/lib/email-templates.mjs b/netlify/functions/lib/email-templates.mjs
+--- a/netlify/functions/lib/email-templates.mjs	2026-10-16 20:26:49
++++ b/netlify/functions/lib/email-templates.mjs	2026-10-16 20:26:49
+@@ -427,6 +427,9 @@
+     cbP: (day, slot, phone, b) => `Wir rufen dich am <strong>${day}</strong> zwischen <strong>${slot}</strong> unter <strong>${phone}</strong> an und sprechen über den Entwurf für <strong>${b}</strong>.`,
+     cbSmall: "Passt der Termin doch nicht? Antworte einfach auf diese E-Mail.", cbView: "Entwurf noch einmal ansehen", cbOrder: (price) => `Direkt bestellen – ${price}`,
+     cbText: (name, day, slot, phone, b, url) => `Hallo ${name},\n\ndanke! Wir rufen dich am ${day} zwischen ${slot} unter ${phone} an und sprechen über den Entwurf für ${b}.\n\nPasst der Termin nicht? Antworte einfach auf diese E-Mail.\n\nDein Entwurf: ${url}`,
++    optinTitle: "Tipps und Erinnerungen per E-Mail – bitte kurz bestätigen",
++    optinP: "Du hast angekreuzt, dass wir dir Tipps und Erinnerungen zu deinem Entwurf schicken dürfen (höchstens zwei E-Mails, bis der Entwurf abläuft). Bitte bestätige das mit einem Klick. Ohne Bestätigung bekommst du von uns nach dieser E-Mail nichts weiter.",
++    optinButton: "Ja, Tipps und Erinnerungen bestätigen", optinText: "Tipps und Erinnerungen per E-Mail bestätigen",
+     hello: "Hallo",
+   },
+   en: {
+@@ -457,6 +460,9 @@
+     cbP: (day, slot, phone, b) => `We will call you on <strong>${day}</strong> between <strong>${slot}</strong> at <strong>${phone}</strong> to talk about the draft for <strong>${b}</strong>.`,
+     cbSmall: "The time doesn't suit you after all? Just reply to this email.", cbView: "View the draft again", cbOrder: (price) => `Order directly – ${price}`,
+     cbText: (name, day, slot, phone, b, url) => `Hello ${name},\n\nthank you! We will call you on ${day} between ${slot} at ${phone} to talk about the draft for ${b}.\n\nThe time doesn't suit you? Just reply to this email.\n\nYour draft: ${url}`,
++    optinTitle: "Tips and reminders by email – please confirm",
++    optinP: "You ticked the box to receive tips and reminders about your draft (at most two emails, until the draft expires). Please confirm with one click. Without confirmation, you won't receive anything further from us after this email.",
++    optinButton: "Yes, confirm tips and reminders", optinText: "Confirm tips and reminders by email",
+     hello: "Hello",
+   },
+   es: {
+@@ -487,6 +493,9 @@
+     cbP: (day, slot, phone, b) => `Te llamaremos el <strong>${day}</strong> entre las <strong>${slot}</strong> al <strong>${phone}</strong> para hablar del diseño para <strong>${b}</strong>.`,
+     cbSmall: "¿Al final no te va bien la hora? Responde simplemente a este correo.", cbView: "Ver el diseño otra vez", cbOrder: (price) => `Contratar directamente – ${price}`,
+     cbText: (name, day, slot, phone, b, url) => `Hola ${name}:\n\n¡gracias! Te llamaremos el ${day} entre las ${slot} al ${phone} para hablar del diseño para ${b}.\n\n¿No te va bien la hora? Responde simplemente a este correo.\n\nTu diseño: ${url}`,
++    optinTitle: "Consejos y recordatorios por email – confírmalo, por favor",
++    optinP: "Has marcado que podemos enviarte consejos y recordatorios sobre tu diseño (como máximo dos correos, hasta que caduque el diseño). Confírmalo con un clic. Sin confirmación no recibirás nada más de nosotros después de este correo.",
++    optinButton: "Sí, confirmar consejos y recordatorios", optinText: "Confirmar consejos y recordatorios por email",
+     hello: "Hola",
+   },
+   ca: {
+@@ -517,6 +526,9 @@
+     cbP: (day, slot, phone, b) => `Et trucarem el <strong>${day}</strong> entre les <strong>${slot}</strong> al <strong>${phone}</strong> per parlar del disseny per a <strong>${b}</strong>.`,
+     cbSmall: "Al final no et va bé l'hora? Respon simplement a aquest correu.", cbView: "Tornar a veure el disseny", cbOrder: (price) => `Contractar directament – ${price}`,
+     cbText: (name, day, slot, phone, b, url) => `Hola ${name}:\n\ngràcies! Et trucarem el ${day} entre les ${slot} al ${phone} per parlar del disseny per a ${b}.\n\nNo et va bé l'hora? Respon simplement a aquest correu.\n\nEl teu disseny: ${url}`,
++    optinTitle: "Consells i recordatoris per correu – confirma-ho, si us plau",
++    optinP: "Has marcat que et podem enviar consells i recordatoris sobre el teu disseny (com a màxim dos correus, fins que caduqui el disseny). Confirma-ho amb un clic. Sense confirmació no rebràs res més de nosaltres després d'aquest correu.",
++    optinButton: "Sí, confirmar consells i recordatoris", optinText: "Confirmar consells i recordatoris per correu",
+     hello: "Hola",
+   },
+ };
+@@ -538,8 +550,18 @@
+   unsubscribeUrl ? `\n${t.unsubText}: ${unsubscribeUrl}` : "",
+ ].filter((x, i) => x || i > 1).join("\n");
+ 
++// Bitte um Bestätigung „Tipps und Erinnerungen“ (Double-Opt-in) – nur wenn das Kästchen angekreuzt, aber noch nicht bestätigt ist
++const optinBox = (t, optinUrl) => `
++  ${spacer(18)}
++  <div style="padding:16px 18px;border:1px solid ${C.line};border-radius:14px;">
++    <div style="font-family:${FONT};font-size:14px;line-height:20px;font-weight:700;color:${C.ink};">${t.optinTitle}</div>
++    <div style="margin-top:6px;font-family:${FONT};font-size:13px;line-height:19px;color:${C.mute};">${t.optinP}</div>
++    ${spacer(12)}
++    ${button(optinUrl, t.optinButton, { bg: C.soft, color: C.ink })}
++  </div>`;
++
+ /** An den Kunden: Entwurf ist fertig (mit persönlichem Link, 7 Tage gültig) – geht 2–3 Std. nach der Anfrage raus (nachts erst morgens). Gibt auch den Betreff zurück. */
+-export const draftReadyEmail = ({ draft, url, orderUrl = null, callbackUrl = null, unsubscribeUrl = null }) => {
++export const draftReadyEmail = ({ draft, url, orderUrl = null, callbackUrl = null, unsubscribeUrl = null, optinUrl = null }) => {
+   const lang = draftLang(draft);
+   const t = DT[lang];
+   const price = draftPrice(draft, lang);
+@@ -559,9 +581,11 @@
+       ${small(t.valid(date), "text-align:center;")}
+       ${p(t.like(price))}
+       ${draftActions({ t, price, orderUrl, callbackUrl })}
++      ${optinUrl ? optinBox(t, optinUrl) : ""}
+       ${draftFooter(t, unsubscribeUrl)}`,
+   });
+-  const text = `${t.readyText(name || draft.contact_name, draft.business_name, url, date, price)}\n${draftTextLinks({ t, price, orderUrl, callbackUrl, unsubscribeUrl })}`;
++  const optin = optinUrl ? `\n\n${t.optinP}\n${t.optinText}: ${optinUrl}` : "";
++  const text = `${t.readyText(name || draft.contact_name, draft.business_name, url, date, price)}${optin}\n${draftTextLinks({ t, price, orderUrl, callbackUrl, unsubscribeUrl })}`;
+   return { subject: t.readySubject(draft.business_name), html, text };
+ };
+ 
+@@ -632,7 +656,7 @@
+       ${orderUrl ? `${spacer(10)}${button(orderUrl, t.cbOrder(price), { bg: C.ink })}` : ""}
+       ${draftFooter(t, unsubscribeUrl)}`,
+   });
+-  const text = `${t.cbText(name || draft.contact_name, day, slot, callback.phone, draft.business_name, url)}\n\n${t.bye}`;
++  const text = `${t.cbText(name || draft.contact_name, day, slot, callback.phone, draft.business_name, url)}\n\n${t.bye}${unsubscribeUrl ? `\n\n${t.unsubText}: ${unsubscribeUrl}` : ""}`;
+   return { subject: t.cbSubject(day, slot), html, text };
+ };
+ 
+diff -ruN a/netlify/functions/lib/meta-leads.mjs b/netlify/functions/lib/meta-leads.mjs
+--- a/netlify/functions/lib/meta-leads.mjs	2026-10-16 20:26:49
++++ b/netlify/functions/lib/meta-leads.mjs	2026-10-16 20:26:49
+@@ -104,9 +104,20 @@
+ 
+ export const LEAD_FIELDS = "id,created_time,field_data,ad_id,form_id,is_organic,custom_disclaimer_responses";
+ 
+-/** Einwilligung aus custom_disclaimer_responses (Pflicht-Kästchen im Formular). Fehlt die Angabe, gilt sie als erteilt (Pflichtfeld). */
++// Freiwilliges Kästchen „Tipps und Erinnerungen per E-Mail“ im Sofortformular (Schlüssel wie in plans/gs-sofortformular.json der Marketing-Maschine)
++export const MARKETING_CHECKBOX_KEY = "tipps";
++const unchecked = (x) => x.is_checked === false || x.is_checked === "0" || x.is_checked === 0;
++const checked = (x) => x.is_checked === true || x.is_checked === "1" || x.is_checked === 1;
++
++/** Einwilligung aus custom_disclaimer_responses (Pflicht-Kästchen im Formular). Fehlt die Angabe, gilt sie als erteilt (Pflichtfeld). Das freiwillige Tipps-Kästchen zählt hier nicht. */
+ export const consentGiven = (lead) => {
+   const r = lead?.custom_disclaimer_responses;
+   if (!Array.isArray(r) || !r.length) return true;
+-  return !r.some((x) => x.is_checked === false || x.is_checked === "0" || x.is_checked === 0);
++  return !r.some((x) => x.checkbox_key !== MARKETING_CHECKBOX_KEY && unchecked(x));
++};
++
++/** Hat die Person im Sofortformular „Tipps und Erinnerungen per E-Mail“ angekreuzt? Nur dann fragen wir per Bestätigungslink nach (Double-Opt-in). */
++export const marketingRequested = (lead) => {
++  const r = lead?.custom_disclaimer_responses;
++  return Array.isArray(r) && r.some((x) => x.checkbox_key === MARKETING_CHECKBOX_KEY && checked(x));
+ };
+diff -ruN a/src/components/gs/DraftDialog.jsx b/src/components/gs/DraftDialog.jsx
+--- a/src/components/gs/DraftDialog.jsx	2026-10-16 20:26:49
++++ b/src/components/gs/DraftDialog.jsx	2026-10-16 20:26:49
+@@ -95,6 +95,7 @@
+   const [menu, setMenu] = useState(null);
+   const [logo, setLogo] = useState(null);
+   const [consent, setConsent] = useState(false);
++  const [marketing, setMarketing] = useState(false); // freiwillig: Tipps und Erinnerungen per E-Mail (Double-Opt-in)
+   const [phase, setPhase] = useState("form"); // form | sending | done
+   const [mailToday, setMailToday] = useState(true);
+   const set = (k) => (e) => setF((p) => ({ ...p, [k]: e.target.value }));
+@@ -109,7 +110,7 @@
+     trackEvent("draft_submit", `${f.business_type}/${f.cuisine}`);
+     try {
+       const [menu_path, logo_path] = await Promise.all([menu ? upload("menu", menu) : null, logo ? upload("logo", logo) : null]);
+-      const { data } = await axios.post(`${API}/drafts`, { ...f, menu_path, logo_path, consent, market, lang, source: source || "", visit_id: getVisitId(), meta: metaContext() });
++      const { data } = await axios.post(`${API}/drafts`, { ...f, menu_path, logo_path, consent, marketing, market, lang, source: source || "", visit_id: getVisitId(), meta: metaContext() });
+       track("Lead", { content_name: "Kostenloser Entwurf", lead_type: "draft" }, `draft-${data.id}`);
+       setMailToday(!data.mail_at || sameBerlinDay(new Date(data.mail_at), new Date()));
+       setPhase("done");
+@@ -120,7 +121,7 @@
+   };
+ 
+   return (
+-    <Dialog open={open} onOpenChange={(o) => { if (phase === "form") { onOpenChange(o); if (!o) trackEvent("draft_close", "form"); } else if (phase === "done" && !o) { onOpenChange(false); setPhase("form"); setF(EMPTY); setMenu(null); setLogo(null); setConsent(false); } }}>
++    <Dialog open={open} onOpenChange={(o) => { if (phase === "form") { onOpenChange(o); if (!o) trackEvent("draft_close", "form"); } else if (phase === "done" && !o) { onOpenChange(false); setPhase("form"); setF(EMPTY); setMenu(null); setLogo(null); setConsent(false); setMarketing(false); } }}>
+       <DialogContent
+         data-lenis-prevent
+         data-testid="draft-dialog"
+@@ -144,7 +145,7 @@
+                 : tr({ de: `Wir erstellen jetzt euren persönlichen Website-Entwurf für ${f.business_name.trim()}. Du bekommst ihn morgen Vormittag per E-Mail an ${f.email.trim()}.`, en: `We are now creating your personal website draft for ${f.business_name.trim()}. You will receive it tomorrow morning by email at ${f.email.trim()}.`, es: `Ahora preparamos vuestro diseño web personal para ${f.business_name.trim()}. Lo recibirás mañana por la mañana por email en ${f.email.trim()}.`, ca: `Ara preparem el vostre disseny web personal per a ${f.business_name.trim()}. El rebràs demà al matí per correu a ${f.email.trim()}.` })}
+             </DialogDescription>
+             <p className="mt-4 max-w-[380px] text-[13px] text-mute">{tr({ de: "Nichts angekommen? Schau bitte auch im Spam-Ordner nach oder schreib uns per WhatsApp.", en: "Nothing arrived? Please check your spam folder or message us on WhatsApp.", es: "¿No te ha llegado? Revisa la carpeta de spam o escríbenos por WhatsApp.", ca: "No t'ha arribat? Revisa la carpeta de correu brossa o escriu-nos per WhatsApp." })}</p>
+-            <button type="button" onClick={() => { onOpenChange(false); setPhase("form"); setF(EMPTY); setMenu(null); setLogo(null); setConsent(false); }} className="mt-8 h-12 rounded-full bg-ink px-8 font-semibold text-paper">
++            <button type="button" onClick={() => { onOpenChange(false); setPhase("form"); setF(EMPTY); setMenu(null); setLogo(null); setConsent(false); setMarketing(false); }} className="mt-8 h-12 rounded-full bg-ink px-8 font-semibold text-paper">
+               {tr({ de: "Fertig", en: "Done", es: "Listo", ca: "Fet" })}
+             </button>
+           </div>
+@@ -184,6 +185,10 @@
+               <label className="flex cursor-pointer items-start gap-3 text-[13px] leading-snug text-ink">
+                 <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} data-testid="draft-consent" className="mt-0.5 h-5 w-5 shrink-0 accent-[#B3261E]" />
+                 <span>{tr({ de: "Ich frage für meinen Betrieb an und bin einverstanden, dass ihr mir den Entwurf per E-Mail schickt und mich dazu per E-Mail, Telefon oder WhatsApp kontaktiert. Infos in der", en: "I’m asking on behalf of my business and agree that you email me the draft and contact me about it by email, phone or WhatsApp. Details in the", es: "Lo solicito para mi negocio y acepto que me enviéis el diseño por email y me contactéis por email, teléfono o WhatsApp. Más información en la", ca: "Ho sol·licito per al meu negoci i accepto que m'envieu el disseny per correu i em contacteu per correu, telèfon o WhatsApp. Més informació a la" })} <a href="/datenschutz#entwurf" target="_blank" rel="noreferrer" className="underline">{tr({ de: "Datenschutzerklärung", en: "privacy policy (German)", es: "política de privacidad (alemán)", ca: "política de privacitat (alemany)" })}</a>.</span>
++              </label>
++              <label className="flex cursor-pointer items-start gap-3 text-[13px] leading-snug text-ink">
++                <input type="checkbox" checked={marketing} onChange={(e) => setMarketing(e.target.checked)} data-testid="draft-marketing" className="mt-0.5 h-5 w-5 shrink-0 accent-[#B3261E]" />
++                <span><strong>{tr({ de: "Tipps und Erinnerungen per E-Mail", en: "Tips and reminders by email", es: "Consejos y recordatorios por email", ca: "Consells i recordatoris per correu" })}</strong> {tr({ de: "(freiwillig): Ihr dürft mich per E-Mail an meinen Entwurf erinnern und mir Tipps zur Website schicken – höchstens zwei E-Mails, bis der Entwurf abläuft. Ich bestätige das noch einmal per Link in der Entwurfs-Mail und kann mich jederzeit abmelden.", en: "(optional): You may remind me about my draft by email and send me website tips – at most two emails, until the draft expires. I’ll confirm this via a link in the draft email and can unsubscribe at any time.", es: "(opcional): Podéis recordarme mi diseño por email y enviarme consejos sobre la web – como máximo dos correos, hasta que caduque el diseño. Lo confirmo con un enlace en el correo del diseño y puedo darme de baja en cualquier momento.", ca: "(opcional): Em podeu recordar el meu disseny per correu i enviar-me consells sobre la web – com a màxim dos correus, fins que caduqui el disseny. Ho confirmo amb un enllaç al correu del disseny i em puc donar de baixa en qualsevol moment." })}</span>
+               </label>
+             </div>
+             <div className="border-t border-ink/10 px-5 py-4 sm:px-6" style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}>
+diff -ruN a/src/components/gs/legal.js b/src/components/gs/legal.js
+--- a/src/components/gs/legal.js	2026-10-16 20:26:49
++++ b/src/components/gs/legal.js	2026-10-16 20:26:49
+@@ -75,9 +75,10 @@
+     id: "entwurf",
+     title: "4a. Kostenloser Website-Entwurf",
+     body: [
+-      "Wenn du einen kostenlosen Website-Entwurf anforderst, verarbeiten wir die Angaben aus dem Formular: Name und Art deines Betriebs, Stadt, deinen Namen, E-Mail-Adresse, Telefonnummer, optional deine Wünsche sowie – falls hochgeladen – Speisekarte und Logo. Daraus erstellen wir auf Grundlage unserer Vorlagen einen Entwurf, den du über einen persönlichen Link 7 Tage lang abrufen kannst. Wir senden dir den Link innerhalb weniger Stunden per E-Mail, erinnern dich bis zu zweimal per E-Mail an deinen Entwurf und melden uns ggf. per Telefon, E-Mail oder WhatsApp, um ihn mit dir zu besprechen – dem stimmst du beim Absenden zu.",
+-      "Anfrage über ein Sofortformular auf Facebook oder Instagram: Forderst du den Entwurf direkt in einer unserer Anzeigen über ein Formular von Meta an, erhalten wir von Meta die Angaben, die du dort eingibst bzw. bestätigst (Name und Art deines Lokals, Stadt, Vorname, E-Mail-Adresse, Handynummer, deine Einwilligung) sowie technische Kennungen der Anfrage (Lead-, Formular- und Anzeigen-ID). Wir rufen diese Daten automatisch über die Schnittstelle von Meta ab, erstellen daraus deinen Entwurf und schicken dir den Link nach einigen Stunden per E-Mail; danach gilt alles in diesem Abschnitt Gesagte. Für die Verarbeitung innerhalb von Facebook bzw. Instagram ist Meta verantwortlich (https://www.facebook.com/privacy/policy).",
++      "Wenn du einen kostenlosen Website-Entwurf anforderst, verarbeiten wir die Angaben aus dem Formular: Name und Art deines Betriebs, Stadt, deinen Namen, E-Mail-Adresse, Telefonnummer, optional deine Wünsche sowie – falls hochgeladen – Speisekarte und Logo. Daraus erstellen wir auf Grundlage unserer Vorlagen einen Entwurf, den du über einen persönlichen Link 7 Tage lang abrufen kannst. Wir senden dir den Link innerhalb weniger Stunden per E-Mail und melden uns ggf. per Telefon, E-Mail oder WhatsApp, um ihn mit dir zu besprechen – dem stimmst du beim Absenden zu. Weitere E-Mails (Erinnerungen) schicken wir nur, wenn du sie zusätzlich bestellst (siehe „Tipps und Erinnerungen per E-Mail“).",
++      "Anfrage über ein Sofortformular auf Facebook oder Instagram: Forderst du den Entwurf direkt in einer unserer Anzeigen über ein Formular von Meta an, erhalten wir von Meta die Angaben, die du dort eingibst bzw. bestätigst (Name und Art deines Lokals, Stadt, Vorname, E-Mail-Adresse, Handynummer, deine Einwilligung zur Kontaktaufnahme und – falls angekreuzt – deinen Wunsch nach Tipps und Erinnerungen per E-Mail) sowie technische Kennungen der Anfrage (Lead-, Formular- und Anzeigen-ID). Wir rufen diese Daten automatisch über die Schnittstelle von Meta ab, erstellen daraus deinen Entwurf und schicken dir den Link nach einigen Stunden per E-Mail; danach gilt alles in diesem Abschnitt Gesagte. Für die Verarbeitung innerhalb von Facebook bzw. Instagram ist Meta verantwortlich (https://www.facebook.com/privacy/policy).",
+       "Telefontermin: Wählst du in deinem Entwurf einen Wunschtermin für einen Rückruf, speichern wir Tag, Zeitfenster, Telefonnummer und deine optionale Notiz beim Entwurf, informieren unser Team per E-Mail und schicken dir eine Bestätigung. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO. Weitere E-Mails zu deinem Entwurf kannst du jederzeit über den Abmeldelink in jeder E-Mail abbestellen.",
++      "Tipps und Erinnerungen per E-Mail (freiwillig): Kreuzt du im Formular – auf unserer Website oder im Sofortformular auf Facebook/Instagram – zusätzlich „Tipps und Erinnerungen per E-Mail“ an, schicken wir dir bis zum Ablauf deines Entwurfs höchstens zwei weitere E-Mails: eine Nachfrage, wie dir der Entwurf gefällt, und eine Erinnerung kurz vor Ablauf, jeweils mit Tipps zu deiner Website und unserem Angebot. Damit niemand eine fremde Adresse eintragen kann, gilt das erst, wenn du es über den Bestätigungslink in der E-Mail mit deinem Entwurf bestätigst (Double-Opt-in). Wir speichern dazu den Zeitpunkt deiner Anmeldung und deiner Bestätigung. Ohne Bestätigung bekommst du nur die angeforderte E-Mail mit deinem Entwurf und – falls du einen Telefontermin wählst – dessen Bestätigung. Rechtsgrundlage ist deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO, § 7 Abs. 2 Nr. 2 UWG). Du kannst sie jederzeit ohne Angabe von Gründen widerrufen – über den Abmeldelink in jeder E-Mail oder per E-Mail an info@gastrosite24.de. Die Rechtmäßigkeit der bis dahin verschickten E-Mails bleibt davon unberührt. Ob du ankreuzt oder nicht, spielt für deinen Entwurf keine Rolle.",
+       "Lädst du eine Speisekarte hoch, lesen wir Gerichte und Preise mit Hilfe eines KI-Modells der Anthropic aus (Claude, betrieben von Anthropic, PBC, 548 Market Street, San Francisco, CA 94104, USA bzw. deren europäischen Gesellschaften); bei Entwürfen für Mallorca übersetzen wir die Texte damit zusätzlich ins Englische, Spanische und Katalanische. Dazu übermitteln wir die hochgeladene Speisekarte bzw. die Texte des Entwurfs (mit Name und Stadt deines Betriebs); deine Kontaktdaten (E-Mail, Telefon, dein Name) geben wir dabei nicht weiter. Anthropic verarbeitet die Daten als Auftragsverarbeiter und verwendet sie nach eigenen Angaben nicht zum Training seiner Modelle. Soweit Daten in die USA übermittelt werden, erfolgt dies auf Grundlage der EU-Standardvertragsklauseln. Weitere Informationen: https://www.anthropic.com/legal/privacy",
+       "Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Durchführung vorvertraglicher Maßnahmen auf deine Anfrage) sowie für die Kontaktaufnahme deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO), die du jederzeit widerrufen kannst. Zum Schutz vor Missbrauch speichern wir einen nicht umkehrbaren, täglich wechselnden Kurzwert (Hash) deiner IP-Adresse. Entwürfe ohne anschließende Bestellung löschen wir samt hochgeladener Dateien spätestens 90 Tage nach der Anfrage. Bestellst du, gelten die Angaben in Abschnitt 4. Hast du im Cookie-Hinweis eingewilligt, melden wir die Anfrage außerdem pseudonymisiert an Meta (siehe Abschnitt 10).",
+     ],
+diff -ruN a/src/pages/Draft.jsx b/src/pages/Draft.jsx
+--- a/src/pages/Draft.jsx	2026-10-16 20:26:49
++++ b/src/pages/Draft.jsx	2026-10-16 20:26:49
+@@ -192,6 +192,33 @@
+   );
+ };
+ 
++// Bestätigung „Tipps und Erinnerungen per E-Mail“ (Double-Opt-in, Link aus der Entwurfs-Mail: ?einwilligung=1)
++const OPTIN = {
++  de: { title: "Tipps und Erinnerungen per E-Mail", ask: (b) => `Du hast angekreuzt, dass wir dir zum Entwurf für ${b} Tipps und Erinnerungen per E-Mail schicken dürfen – höchstens zwei E-Mails, bis der Entwurf abläuft. Bitte bestätige das hier.`, go: "Ja, bestätigen", doneTitle: "Danke, bestätigt!", done: "Wir schicken dir bis zum Ablauf des Entwurfs höchstens zwei E-Mails. Abmelden kannst du dich jederzeit über den Link in jeder E-Mail.", none: "Für diesen Entwurf wurden keine Tipps und Erinnerungen angefordert.", err: "Das hat nicht geklappt. Bitte versuch es noch einmal.", back: "Zum Entwurf" },
++  en: { title: "Tips and reminders by email", ask: (b) => `You ticked the box to receive tips and reminders by email about the draft for ${b} – at most two emails, until the draft expires. Please confirm here.`, go: "Yes, confirm", doneTitle: "Thank you, confirmed!", done: "We will send you at most two emails until the draft expires. You can unsubscribe at any time via the link in every email.", none: "No tips and reminders were requested for this draft.", err: "That didn't work. Please try again.", back: "Back to the draft" },
++  es: { title: "Consejos y recordatorios por email", ask: (b) => `Has marcado que podemos enviarte consejos y recordatorios por email sobre el diseño para ${b} – como máximo dos correos, hasta que caduque el diseño. Confírmalo aquí.`, go: "Sí, confirmar", doneTitle: "¡Gracias, confirmado!", done: "Te enviaremos como máximo dos correos hasta que caduque el diseño. Puedes darte de baja en cualquier momento con el enlace de cada correo.", none: "No se han solicitado consejos ni recordatorios para este diseño.", err: "No ha funcionado. Inténtalo de nuevo.", back: "Ir al diseño" },
++  ca: { title: "Consells i recordatoris per correu", ask: (b) => `Has marcat que et podem enviar consells i recordatoris per correu sobre el disseny per a ${b} – com a màxim dos correus, fins que caduqui el disseny. Confirma-ho aquí.`, go: "Sí, confirmar", doneTitle: "Gràcies, confirmat!", done: "T'enviarem com a màxim dos correus fins que caduqui el disseny. Et pots donar de baixa en qualsevol moment amb l'enllaç de cada correu.", none: "No s'han sol·licitat consells ni recordatoris per a aquest disseny.", err: "No ha funcionat. Torna-ho a provar.", back: "Tornar al disseny" },
++};
++const OptinDialog = ({ token, d, lang = "de", onClose, onDone }) => {
++  const o = OPTIN[lang] || OPTIN.de;
++  const [state, setState] = useState(d.marketing === "confirmed" ? "done" : d.marketing === "requested" ? "ask" : "none");
++  const go = async () => {
++    setState("busy");
++    try { await axios.post(`${API}/drafts/${token}/marketing`); setState("done"); onDone(); } catch { setState("error"); }
++  };
++  return (
++    <Modal onClose={onClose} closeLabel={(CB[lang] || CB.de).close}>
++      <div className="grid h-14 w-14 place-items-center rounded-full bg-ink/5"><Check size={26} /></div>
++      <h2 className="mt-5 font-display text-[24px] font-extrabold tracking-[-0.03em]">{state === "done" ? o.doneTitle : o.title}</h2>
++      <p className="mt-2 text-[15px] leading-relaxed text-mute">{state === "done" ? o.done : state === "none" ? o.none : o.ask(d.business_name)}</p>
++      {state === "error" && <p className="mt-3 text-[14px] font-semibold text-red">{o.err}</p>}
++      {state === "done" || state === "none"
++        ? <button type="button" onClick={onClose} className="mt-7 h-12 w-full rounded-full bg-ink font-semibold text-paper">{o.back}</button>
++        : <button type="button" onClick={go} disabled={state === "busy"} data-testid="draft-optin-confirm" className="mt-7 h-12 w-full rounded-full bg-ink font-semibold text-paper disabled:opacity-60">{o.go}</button>}
++    </Modal>
++  );
++};
++
+ const UnsubscribeDialog = ({ token, d, lang = "de", onClose, onDone }) => {
+   const c = CB[lang] || CB.de;
+   const [state, setState] = useState(d.unsubscribed ? "done" : "ask");
+@@ -247,7 +274,7 @@
+   const [funnel, setFunnel] = useState(false);
+   const [funnelLoaded, setFunnelLoaded] = useState(false);
+   const [lang, setLang] = useState("de");
+-  const [dialog, setDialog] = useState(null); // "welcome" | "callback" | "unsubscribe"
++  const [dialog, setDialog] = useState(null); // "welcome" | "callback" | "unsubscribe" | "optin"
+   const internal = useMemo(() => new URLSearchParams(window.location.search).get("intern") === "1", []);
+   const hidden = useProtection();
+   useTitle(d?.business_name ? `Entwurf: ${d.business_name}` : "Dein Website-Entwurf");
+@@ -264,15 +291,16 @@
+         setState(r.data.status);
+         if (r.data.status === "ready") {
+           if (!internal) trackEvent("draft_view", r.data.category);
+-          // Direktlinks aus der E-Mail: ?bestellen=1 · ?rueckruf=1 · ?abmelden=1 (danach aus der Adresse entfernen)
++          // Direktlinks aus der E-Mail: ?bestellen=1 · ?rueckruf=1 · ?abmelden=1 · ?einwilligung=1 (danach aus der Adresse entfernen)
+           const q = new URLSearchParams(window.location.search);
+           let seen = true;
+           try { seen = !!localStorage.getItem(seenKey(token)); } catch { /* ohne Speicher: Hinweis zeigen */ seen = false; }
+           if (q.has("rueckruf")) setDialog("callback");
+           else if (q.has("abmelden")) setDialog("unsubscribe");
++          else if (q.has("einwilligung")) setDialog("optin");
+           else if (q.has("bestellen") && !r.data.ordered) setTimeout(() => orderRef.current?.(), 400);
+           else if (!seen) setDialog("welcome");
+-          if ([...q.keys()].some((k) => ["rueckruf", "abmelden", "bestellen"].includes(k))) window.history.replaceState(null, "", window.location.pathname);
++          if ([...q.keys()].some((k) => ["rueckruf", "abmelden", "bestellen", "einwilligung"].includes(k))) window.history.replaceState(null, "", window.location.pathname);
+         }
+       } catch {
+         setState("error");
+@@ -363,6 +391,7 @@
+       </div>
+       {dialog === "welcome" && <WelcomeDialog d={d} lang={lang} onClose={() => { setDialog(null); try { localStorage.setItem(seenKey(token), "1"); } catch { /* egal */ } }} />}
+       {dialog === "callback" && <CallbackDialog token={token} d={d} lang={lang} onClose={() => setDialog(null)} onDone={(cb) => setD((x) => ({ ...x, callback: cb }))} />}
++      {dialog === "optin" && <OptinDialog token={token} d={d} lang={lang} onClose={() => setDialog(null)} onDone={() => setD((x) => ({ ...x, marketing: "confirmed", unsubscribed: false }))} />}
+       {dialog === "unsubscribe" && <UnsubscribeDialog token={token} d={d} lang={lang} onClose={() => setDialog(null)} onDone={() => setD((x) => ({ ...x, unsubscribed: true }))} />}
+       {funnelLoaded && <Suspense fallback={null}><Funnel open={funnel} onOpenChange={setFunnel} source="draft" prefill={d.prefill} draftToken={token} market={d.market || "de"} /></Suspense>}
+       <Consent />
+diff -ruN a/supabase/migrations/20261016_drafts_marketing_optin.sql b/supabase/migrations/20261016_drafts_marketing_optin.sql
+--- a/supabase/migrations/20261016_drafts_marketing_optin.sql	1970-01-01 01:00:00
++++ b/supabase/migrations/20261016_drafts_marketing_optin.sql	2026-10-16 20:26:49
+@@ -0,0 +1,10 @@
++-- Einwilligung „Tipps und Erinnerungen per E-Mail“ (Double-Opt-in) für Nachfass-Mails zum Gratis-Entwurf.
++-- VOR dem Deploy des Codes einspielen – sonst schlagen neue Entwurfsanfragen fehl (unbekannte Spalte).
++-- marketing_requested_at: Kästchen angekreuzt (Website-Formular oder Meta-Sofortformular)
++-- marketing_consent_at:   per Link aus der Entwurfs-Mail bestätigt – nur dann gehen Nachfass-Mails raus
++alter table public.drafts
++  add column if not exists marketing_requested_at timestamptz,
++  add column if not exists marketing_consent_at timestamptz;
++
++comment on column public.drafts.marketing_requested_at is 'Tipps und Erinnerungen per E-Mail angekreuzt (noch nicht bestätigt)';
++comment on column public.drafts.marketing_consent_at is 'Tipps und Erinnerungen per Bestätigungslink bestätigt (Double-Opt-in) – Voraussetzung für Nachfass-Mails';
+diff -ruN a/tests/draft-followups.test.mjs b/tests/draft-followups.test.mjs
+--- a/tests/draft-followups.test.mjs	1970-01-01 01:00:00
++++ b/tests/draft-followups.test.mjs	2026-10-16 20:26:49
+@@ -0,0 +1,157 @@
++// Test: Nachfass-Mails zum Gratis-Entwurf nur mit bestätigter Einwilligung „Tipps und Erinnerungen“ (Double-Opt-in).
++// Läuft ohne echte Datenbank und ohne Mailversand (Supabase und Mail werden ersetzt):
++//   node --test --experimental-test-module-mocks tests/draft-followups.test.mjs
++import { test, mock } from "node:test";
++import assert from "node:assert/strict";
++
++process.env.SUPABASE_URL = "https://fake.supabase.test";
++process.env.SUPABASE_SERVICE_ROLE_KEY = "fake";
++process.env.PUBLIC_SITE = "https://gastrosite24.de";
++process.env.LEAD_SYNC_SECRET = "";
++
++// ---------- Mini-Datenbank im Speicher (nur was die Entwurfs-Abläufe brauchen) ----------
++const tables = { drafts: [] };
++const rows = (t) => (tables[t] ??= []);
++const parseVal = (v) => (v === "null" ? null : v);
++const orPart = (part) => {
++  const [col, ...rest] = part.split(".");
++  const neg = rest[0] === "not";
++  const [op, val] = neg ? rest.slice(1) : rest;
++  const test1 = (r) => (op === "is" ? (r[col] ?? null) === parseVal(val) : op === "neq" ? r[col] !== val : r[col] === val);
++  return (r) => (neg ? !test1(r) : test1(r));
++};
++const query = (table) => {
++  const filters = [];
++  let action = "select";
++  let payload = null;
++  let head = false;
++  let single = null;
++  let limit = Infinity;
++  const q = {
++    select: (_c, opts) => { if (action === "select") head = !!opts?.head; return q; },
++    insert: (v) => { action = "insert"; payload = v; return q; },
++    update: (v) => { action = "update"; payload = v; return q; },
++    delete: () => { action = "delete"; return q; },
++    eq: (c, v) => { filters.push((r) => r[c] === v); return q; },
++    neq: (c, v) => { filters.push((r) => r[c] !== v); return q; },
++    is: (c, v) => { filters.push((r) => (r[c] ?? null) === v); return q; },
++    not: (c, op, v) => { filters.push((r) => (op === "is" ? (r[c] ?? null) !== v : true)); return q; },
++    in: (c, vs) => { filters.push((r) => vs.includes(r[c])); return q; },
++    gt: (c, v) => { filters.push((r) => r[c] != null && r[c] > v); return q; },
++    gte: (c, v) => { filters.push((r) => r[c] != null && r[c] >= v); return q; },
++    lt: (c, v) => { filters.push((r) => r[c] != null && r[c] < v); return q; },
++    lte: (c, v) => { filters.push((r) => r[c] != null && r[c] <= v); return q; },
++    or: (s) => { const parts = s.split(",").map(orPart); filters.push((r) => parts.some((f) => f(r))); return q; },
++    order: () => q,
++    limit: (n) => { limit = n; return q; },
++    single: () => { single = "single"; return q; },
++    maybeSingle: () => { single = "maybe"; return q; },
++    then: (ok, ko) => Promise.resolve().then(run).then(ok, ko),
++  };
++  const run = () => {
++    const all = rows(table);
++    const match = () => all.filter((r) => filters.every((f) => f(r))).slice(0, limit);
++    let data;
++    if (action === "insert") {
++      const r = { id: crypto.randomUUID(), created_at: new Date().toISOString(), status: "generating", views: 0, ...payload };
++      all.push(r);
++      data = [r];
++    } else if (action === "update") {
++      data = match();
++      data.forEach((r) => Object.assign(r, payload));
++    } else if (action === "delete") {
++      data = match();
++      tables[table] = all.filter((r) => !data.includes(r));
++    } else data = match();
++    if (head) return { count: data.length, error: null };
++    if (single) return { data: data[0] ?? null, error: single === "single" && !data[0] ? { message: "keine Zeile" } : null };
++    return { data: data.map((r) => ({ ...r })), error: null };
++  };
++  return q;
++};
++const fakeClient = { from: query, storage: { from: () => ({ remove: async () => ({}), download: async () => ({}), createSignedUrl: async () => ({ data: null }) }) } };
++
++const sent = [];
++mock.module("@supabase/supabase-js", { namedExports: { createClient: () => fakeClient } });
++mock.module(new URL("../netlify/functions/lib/mail.mjs", import.meta.url).href, {
++  namedExports: { sendMail: async (m) => { sent.push(m); return true; }, notifyEmail: "team@gastrosite24.test" },
++});
++globalThis.fetch = async () => new Response("{}"); // Hintergrund-Funktion / Meta nicht wirklich aufrufen
++
++const api = await import("../netlify/functions/api.mjs");
++const { consentGiven, marketingRequested } = await import("../netlify/functions/lib/meta-leads.mjs");
++
++const lead = (id, email, marketing) => ({
++  id, created_time: new Date().toISOString(), form_id: "1", ad_id: "2", consent: true, marketing,
++  fields: { business_name: `Pizzeria ${id}`, kind: "pizzeria", city: "Bamberg", contact_name: "Mia", email, phone: "+49 951 123456" },
++});
++// Entwurf „fertig“ und Entwurfs-Mail vor 3 Tagen verschickt, läuft in 3 Tagen ab → fällig für Nachfass-Mail 1
++const makeDue = (id) => {
++  const d = rows("drafts").find((r) => r.meta_lead_id === id);
++  Object.assign(d, {
++    status: "ready", created_at: new Date(Date.now() - 3 * 864e5).toISOString(), ready_mail_after: new Date(Date.now() - 3 * 864e5).toISOString(),
++    ready_mail_at: new Date(Date.now() - 3 * 864e5).toISOString(), expires_at: new Date(Date.now() + 3 * 864e5).toISOString(),
++  });
++  return d;
++};
++const followupsTo = (email) => sent.filter((m) => m.to === email && /gefällt dir dein Entwurf|läuft morgen ab/.test(m.subject || ""));
++
++test("Sofortformular: Pflicht-Kästchen zählt, freiwilliges Tipps-Kästchen nicht", () => {
++  const r = (kontakt, tipps) => ({ custom_disclaimer_responses: [{ checkbox_key: "kontakt", is_checked: kontakt }, { checkbox_key: "tipps", is_checked: tipps }] });
++  assert.equal(consentGiven(r("1", "0")), true, "Tipps nicht angekreuzt darf den Lead nicht verwerfen");
++  assert.equal(consentGiven(r("0", "1")), false);
++  assert.equal(marketingRequested(r("1", "1")), true);
++  assert.equal(marketingRequested(r("1", "0")), false);
++  assert.equal(marketingRequested({}), false);
++});
++
++test("Ohne Einwilligung keine Nachfass-Mail, mit bestätigter Einwilligung schon", async () => {
++  await api.ingestMetaLead(lead("1001", "ohne@kunde.test", false));
++  await api.ingestMetaLead(lead("1002", "angekreuzt@kunde.test", true));
++  await api.ingestMetaLead(lead("1003", "bestaetigt@kunde.test", true));
++  const ohne = makeDue("1001");
++  const angekreuzt = makeDue("1002");
++  const bestaetigt = makeDue("1003");
++  assert.equal(ohne.marketing_requested_at, null);
++  assert.ok(angekreuzt.marketing_requested_at);
++
++  // Bestätigung per Klick auf der Entwurfsseite (Double-Opt-in)
++  const res = await api.default(new Request(`https://gastrosite24.de/api/drafts/${bestaetigt.token}/marketing`, { method: "POST" }));
++  assert.equal(res.status, 200);
++  assert.ok(bestaetigt.marketing_consent_at);
++  // Ohne angekreuztes Kästchen lässt sich nichts bestätigen
++  const res2 = await api.default(new Request(`https://gastrosite24.de/api/drafts/${ohne.token}/marketing`, { method: "POST" }));
++  assert.equal(res2.status, 409);
++  assert.equal(ohne.marketing_consent_at ?? null, null);
++
++  sent.length = 0;
++  const r = await api.runReminders();
++  assert.equal(r.drafts.followup1, 1, JSON.stringify(r.drafts));
++  assert.equal(followupsTo("ohne@kunde.test").length, 0, "kein Häkchen → keine Nachfass-Mail");
++  assert.equal(followupsTo("angekreuzt@kunde.test").length, 0, "angekreuzt, aber nicht bestätigt → keine Nachfass-Mail");
++  assert.equal(followupsTo("bestaetigt@kunde.test").length, 1, "bestätigt → Nachfass-Mail");
++  assert.match(followupsTo("bestaetigt@kunde.test")[0].html, /abmelden=1/, "Abmeldelink in der Nachfass-Mail");
++
++  // Abgemeldet → auch die letzte Erinnerung nicht mehr
++  await api.default(new Request(`https://gastrosite24.de/api/drafts/${bestaetigt.token}/unsubscribe`, { method: "POST" }));
++  bestaetigt.expires_at = new Date(Date.now() + 0.5 * 864e5).toISOString();
++  sent.length = 0;
++  const r2 = await api.runReminders();
++  assert.equal(r2.drafts.followup2, 0);
++  assert.equal(sent.filter((m) => m.to?.endsWith("@kunde.test")).length, 0);
++});
++
++test("Entwurfs-Mail: Bestätigungslink nur bei angekreuztem Kästchen, Abmeldelink immer", async () => {
++  await api.ingestMetaLead(lead("2001", "mail-ohne@kunde.test", false));
++  await api.ingestMetaLead(lead("2002", "mail-mit@kunde.test", true));
++  for (const id of ["2001", "2002"]) Object.assign(rows("drafts").find((r) => r.meta_lead_id === id), { status: "ready", ready_mail_after: new Date(Date.now() - 60e3).toISOString() });
++  sent.length = 0;
++  await api.runReminders();
++  const ohne = sent.find((m) => m.to === "mail-ohne@kunde.test");
++  const mit = sent.find((m) => m.to === "mail-mit@kunde.test");
++  assert.ok(ohne && mit, "beide bekommen die angeforderte Entwurfs-Mail");
++  assert.doesNotMatch(ohne.html, /einwilligung=1/);
++  assert.match(mit.html, /einwilligung=1/);
++  assert.match(mit.text, /einwilligung=1/);
++  for (const m of [ohne, mit]) { assert.match(m.html, /abmelden=1/); assert.match(m.text, /abmelden=1/); }
++});
