@@ -14,6 +14,18 @@ function encode(obj, prefix, out = []) {
   return out;
 }
 
+// Eigenes Checkout-Branding für Sitzungen auf dem DSX-Plattformkonto (das Konto teilen sich mehrere Marken,
+// das Konto-Logo ist neutral „DSX Media Solutions“). NUR für Tattoofins eigene Verkäufe (Kauf-Setup) verwenden,
+// NIE für Studio-Zahlungen (Connect: on_behalf_of bzw. Stripe-Account) – dort muss der Kunde das Studio sehen.
+// Absolute URLs, damit Stripe die Bilder auch bei lokalen Tests laden kann.
+export const TATTOOFIN_BRANDING = {
+  display_name: "Tattoofin",
+  logo: { type: "url", url: "https://tattoofin.de/assets/logo.png" },
+  icon: { type: "url", url: "https://tattoofin.de/apple-touch-icon.png" },
+  button_color: "#1f3d5c",
+  background_color: "#fbb316",
+};
+
 export async function stripe(method, path, params, { idempotencyKey, account } = {}) {
   if (!SECRETS.stripeKey) throw new Error("STRIPE_SECRET_KEY fehlt");
   const url = new URL(SECRETS.stripeApiBase + "/v1" + path);

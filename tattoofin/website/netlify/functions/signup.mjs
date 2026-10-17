@@ -4,7 +4,7 @@
 import { CFG } from "./_lib/config.mjs";
 import { json, fail, body, clean, isEmail, id, now, handler, clientIp, brutto, addMonths } from "./_lib/util.mjs";
 import { getStudio, saveStudio, studioBy, store, log } from "./_lib/store.mjs";
-import { stripe, ensureCustomer, taxRateId } from "./_lib/stripe.mjs";
+import { stripe, ensureCustomer, taxRateId, TATTOOFIN_BRANDING } from "./_lib/stripe.mjs";
 import { notify, notifyAdmin, zaehleAktion, slugify, connectUrl } from "./_lib/domain.mjs";
 import { mails } from "./_lib/emails.mjs";
 import { loginLink } from "./_lib/auth.mjs";
@@ -95,6 +95,7 @@ export default handler(async (req, context) => {
   if (modell === "kauf" && zahlart === "sofort") {
     const session = await stripe("POST", "/checkout/sessions", {
       mode: "payment", customer: s.stripe.customerId, locale: "de", client_reference_id: s.id,
+      branding_settings: TATTOOFIN_BRANDING,
       line_items: [{
         quantity: 1, tax_rates: [await taxRateId()],
         price_data: { currency: "eur", unit_amount: preisNetto, product_data: { name: "Tattoofin Setup", description: "Einrichtung der Zahlungsstruktur inkl. Studio Kit, Schulung und Betreuung, keine monatliche Grundgebühr" } },
