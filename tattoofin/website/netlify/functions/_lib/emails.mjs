@@ -1,5 +1,5 @@
 // Alle automatischen E-Mails (an Studios, Endkunden und intern). Jede Funktion liefert { subject, html, text }.
-import { CFG } from "./config.mjs";
+import { CFG, provisionSatz, paketVon } from "./config.mjs";
 import { esc, euro, brutto, datum, monatName } from "./util.mjs";
 
 const gelb = "#ffbd16", navy = "#13243d";
@@ -34,7 +34,7 @@ const modellText = (s) => (s.zahlart === "geschenk"
   ? "Geschenk: keine Einrichtungsgebühr, keine Grundgebühr, keine Provision. Du zahlst nur die normalen Gebühren von Stripe (bzw. Klarna) direkt an Stripe, Tattoofin verdient nichts daran."
   : s.modell === "kauf"
   ? `Kauf: Einrichtung ${euro(s.preisNetto)} netto einmalig (${euro(brutto(s.preisNetto))} brutto), keine monatliche Grundgebühr, keine Provision`
-  : `Provision: ${CFG.provisionProzent} % vom Zahlbetrag jeder Zahlung über Tattoofin, alles inklusive (Zahlungsgebühren und USt.), keine Einrichtungs- und keine Grundgebühr`);
+  : `Paket ${paketVon(s).name}: ${provisionSatz(s)} % vom Zahlbetrag jeder Zahlung über Tattoofin, alles inklusive (Zahlungsgebühren und USt.)${s.preisNetto ? `, Einrichtung ${euro(s.preisNetto)} netto einmalig` : ", keine Einrichtungsgebühr"}${s.gruender ? " (Gründer-Aktion)" : ""}, keine Grundgebühr`);
 const mk = (subject, l) => ({ subject, ...layout(l) });
 
 export const mails = {
@@ -70,7 +70,7 @@ export const mails = {
       ["Vertragstext", `<a href="${CFG.siteUrl}/vertrag.html">Vertrag</a> · <a href="${CFG.siteUrl}/avv.html">AVV</a>`],
     ]) + p("<b>So geht's weiter:</b>") +
       `<ol style="margin:0 0 14px;padding-left:20px">
-      <li><b>Stripe-Konto verbinden</b> (ca. 10 Minuten): ${s.modell === "provision" ? "Über dieses Konto zahlt Stripe dir automatisch " + (100 - CFG.provisionProzent) + " % jeder Kundenzahlung auf das Bankkonto deines Studios aus." : "Das Konto gehört deinem Studio."} Stripe prüft Identität und Bankverbindung, das dauert meist 1 bis 3 Werktage.</li>
+      <li><b>Stripe-Konto verbinden</b> (ca. 10 Minuten): ${s.modell === "provision" ? "Über dieses Konto zahlt Stripe dir automatisch " + (100 - provisionSatz(s)) + " % jeder Kundenzahlung auf das Bankkonto deines Studios aus." : "Das Konto gehört deinem Studio."} Stripe prüft Identität und Bankverbindung, das dauert meist 1 bis 3 Werktage.</li>
       <li><b>Fragebogen ausfüllen</b>, damit wir Branding und Zahlungsarten passend einrichten.</li>
       <li>Wir richten alles ein, testen den Ablauf und schulen dein Team. Dann bekommst du dein Studio Kit mit QR-Code, Aufklebern und Vorlagen.</li></ol>` +
       p(`Über dein Studio-Portal kommst du jederzeit an alles ran: <a href="${esc(loginUrl)}">zum Portal</a>.`),
@@ -124,12 +124,12 @@ export const mails = {
     preheader: "Ab jetzt können deine Kunden flexibel bezahlen.",
     title: "Tattoofin ist live in deinem Studio 🚀",
     body: hallo(s) + p("ab sofort kannst du im Portal Zahlungslinks erstellen und deinen Kunden zusätzliche Zahlungsoptionen anbieten, je nach Freigabe auch Ratenzahlung.") + rows([
-      ["Zahlungslink erstellen", `<a href="${CFG.siteUrl}/portal.html#anfordern">im Portal</a> (Betrag, Kunde, Projekt, fertig)`],
-      ["Deine Zahlseite mit QR", `<a href="${CFG.siteUrl}/zahlen.html?s=${esc(s.slug)}">${CFG.siteUrl}/zahlen.html?s=${esc(s.slug)}</a>`],
+      ["Zahlungslink erstellen", `<a href="${CFG.siteUrl}/app.html#link">in deiner Tattoofin-App</a> (Betrag, Kunde, Projekt, fertig)`],
+      ["Deine Zahlseite mit QR", `<a href="${CFG.siteUrl}/zahlen/${esc(s.slug)}">${CFG.siteUrl}/zahlen/${esc(s.slug)}</a>`],
       ["Studio Kit", "Fensteraufkleber, Flyer, Aufsteller und Social-Vorlagen im Portal unter „Studio Kit“"],
-      [s.modell === "kauf" ? "Zufriedenheitsgarantie" : "Abrechnung", s.modell === "kauf" ? `bis ${datum(new Date(Date.now() + CFG.garantieTage * 864e5).toISOString())}` : `Stripe zahlt dir automatisch ${100 - CFG.provisionProzent} % jeder Zahlung aus, die Rechnung über die ${CFG.provisionProzent} % kommt einmal im Monat`],
+      [s.modell === "kauf" ? "Zufriedenheitsgarantie" : "Abrechnung", s.modell === "kauf" ? `bis ${datum(new Date(Date.now() + CFG.garantieTage * 864e5).toISOString())}` : `Stripe zahlt dir automatisch ${100 - provisionSatz(s)} % jeder Zahlung aus, die Rechnung über die ${provisionSatz(s)} % kommt einmal im Monat`],
     ]) + box("Wichtig fürs Team: keine Raten oder Zinsen versprechen. Einfach sagen: „Du kannst beim Bezahlen schauen, welche Zahlungsoptionen dir angeboten werden.“"),
-    cta: "Zum Studio-Portal", ctaUrl: `${CFG.siteUrl}/portal.html`,
+    cta: "Zur Tattoofin-App", ctaUrl: `${CFG.siteUrl}/app.html`,
   }),
 
   zahlungEingegangen: (s, z) => mk(`💸 Zahlung eingegangen: ${euro(z.betragCent)} von ${z.kunde || "Kunde"}`, {
@@ -138,12 +138,20 @@ export const mails = {
     body: rows([
       ["Kunde", esc(z.kunde)], ["Projekt", esc(z.beschreibung)], ["Betrag", euro(z.betragCent)],
       ["Zahlungsart", esc(z.zahlartText || z.zahlart || "")],
-      ["Tattoofin " + CFG.provisionProzent + " % (alles inklusive)", z.abwicklung === "plattform" ? euro(z.gebuehrBruttoCent) : ""],
+      ["Tattoofin " + provisionSatz(s) + " % (alles inklusive)", z.abwicklung === "plattform" ? euro(z.gebuehrBruttoCent) : ""],
       ["Auszahlung an dich", z.abwicklung === "plattform" ? "<b>" + euro(z.betragCent - z.gebuehrBruttoCent) + "</b>" : ""],
     ]) + p(z.abwicklung === "plattform"
-      ? "Stripe überweist den Betrag automatisch auf das Bankkonto deines Studios. Weitere Gebühren fallen für dich nicht an: Die Kosten des Zahlungsanbieters sind in den " + CFG.provisionProzent + " % enthalten."
+      ? "Stripe überweist den Betrag automatisch auf das Bankkonto deines Studios. Weitere Gebühren fallen für dich nicht an: Die Kosten des Zahlungsanbieters sind in den " + provisionSatz(s) + " % enthalten."
       : "Die Auszahlung auf dein Konto übernimmt Stripe nach deinem Auszahlungsplan. Gebühren des Zahlungsanbieters siehst du im Stripe-Dashboard."),
-    cta: "Im Portal ansehen", ctaUrl: `${CFG.siteUrl}/portal.html#zahlungen`,
+    cta: "In der App ansehen", ctaUrl: `${CFG.siteUrl}/app.html#zahlungen`,
+  }),
+
+  leistungBestaetigt: (s, z) => mk(`✍️ Leistungsbestätigung von ${z.leistung?.name || z.kunde || "Kunde"}`, {
+    preheader: `${z.beschreibung || "Tattoo-Projekt"} · ${euro(z.betragCent)}`,
+    title: "Dein Kunde hat die Sitzung bestätigt",
+    body: hallo(s) + p(`<b>${esc(z.leistung?.name || z.kunde || "Dein Kunde")}</b> hat bestätigt, dass die Sitzung (${esc(z.beschreibung || "Tattoo-Projekt")}) am ${datum((z.leistung?.datum || "") + "T12:00:00Z")} stattgefunden hat${z.leistung?.hatFoto ? ", mit Foto" : ""}.`) +
+      p("Die Bestätigung liegt in deiner Tattoofin-App bei der Zahlung. Dort kannst du sie jederzeit als PDF speichern, zum Beispiel falls es später eine Rückbuchung gibt."),
+    cta: "In der App ansehen", ctaUrl: `${CFG.siteUrl}/app.html#zahlungen`,
   }),
 
   zahlungKunde: (s, z) => mk(`Danke für deine Zahlung bei ${s.firma}`, {
@@ -183,7 +191,7 @@ export const mails = {
           ? p(`die Bank bzw. der Zahlungsanbieter hat die Rückbuchung zur Zahlung von <b>${esc(z.kunde || "Kunde")}</b> über <b>${euro(z.betragCent)}</b> zugunsten des Kunden entschieden. Der Betrag geht an den Kunden zurück.`) +
             (z.abwicklung === "plattform" ? p("Für diese Zahlung verlangen wir keine Provision. Tipp für die Zukunft: Anzahlungsbedingungen und Einverständniserklärung immer unterschreiben bzw. bestätigen lassen, das sind die stärksten Belege.") : "")
           : p(`der Rückbuchungsfall zur Zahlung von <b>${esc(z.kunde || "Kunde")}</b> ist abgeschlossen (Status: ${esc(st || "")}).`)),
-      cta: "Im Portal ansehen", ctaUrl: `${CFG.siteUrl}/portal.html#zahlungen`,
+      cta: "In der App ansehen", ctaUrl: `${CFG.siteUrl}/app.html#zahlungen`,
     });
   },
 
@@ -191,7 +199,7 @@ export const mails = {
     title: "Erstattung ausgelöst",
     body: hallo(s) + p(`du hast <b>${euro(betragCent)}</b> an <b>${esc(z.kunde || "Kunde")}</b> erstattet (${esc(z.beschreibung || "Tattoo-Projekt")}). Der Kunde bekommt das Geld über die ursprüngliche Zahlungsart zurück, meist innerhalb von 5 bis 10 Werktagen.`) +
       p(`Der Betrag wird von deinem Studio-Konto bei Stripe zurückgeholt. Die Tattoofin-Provision bekommst du anteilig zurück (${provisionZurueckCent != null ? euro(provisionZurueckCent) : "wird gleich verrechnet"}), abzüglich der Gebühr des Zahlungsanbieters, die bei Erstattungen nicht zurückkommt.`),
-    cta: "Im Portal ansehen", ctaUrl: `${CFG.siteUrl}/portal.html#zahlungen`,
+    cta: "In der App ansehen", ctaUrl: `${CFG.siteUrl}/app.html#zahlungen`,
   }),
 
   monatsabrechnung: (s, ab, { rechnungUrl }) => mk(`Deine Tattoofin-Abrechnung ${monatName(ab.monat)}`, {
@@ -201,11 +209,11 @@ export const mails = {
       ? p(`im ${monatName(ab.monat)} haben deine Kunden <b>${ab.positionen.length} Zahlung${ab.positionen.length === 1 ? "" : "en"}</b> über Tattoofin geleistet, zusammen <b>${euro(ab.umsatzCent)}</b>. 🖤`) +
         rows([
           ["Zahlungen deiner Kunden", euro(ab.umsatzCent)],
-          ["Tattoofin " + CFG.provisionProzent + " % (alles inklusive)", euro(ab.provisionBruttoCent)],
+          ["Tattoofin " + provisionSatz(s) + " % (alles inklusive)", euro(ab.provisionBruttoCent)],
           ["davon netto", euro(ab.provisionNettoCent)],
           ["davon USt. " + CFG.ustProzent + " %", euro(ab.provisionBruttoCent - ab.provisionNettoCent)],
           ["An dich ausgezahlt", "<b>" + euro(ab.auszahlungCent ?? ab.umsatzCent - ab.provisionBruttoCent) + "</b>"],
-        ]) + p(`Die Provision wurde bei jeder Zahlung automatisch einbehalten, Stripe hat dir den Rest ausgezahlt. Du musst nichts überweisen. In den ${CFG.provisionProzent} % sind die Gebühren der Zahlungsanbieter schon enthalten. Die Rechnung ist für deine Buchhaltung (Vorsteuer).`)
+        ]) + p(`Die Provision wurde bei jeder Zahlung automatisch einbehalten, Stripe hat dir den Rest ausgezahlt. Du musst nichts überweisen. In den ${provisionSatz(s)} % sind die Gebühren der Zahlungsanbieter schon enthalten. Die Rechnung ist für deine Buchhaltung (Vorsteuer).`)
       : p(`im ${monatName(ab.monat)} liefen keine Zahlungen über Tattoofin. Es fällt keine Provision an.`)),
     cta: ab.provisionBruttoCent && rechnungUrl ? "Rechnung ansehen" : "Zum Portal", ctaUrl: ab.provisionBruttoCent && rechnungUrl ? rechnungUrl : `${CFG.siteUrl}/portal.html#abrechnungen`,
   }),
@@ -251,7 +259,7 @@ export const mails = {
   anmeldungAbgebrochen: (s, { resumeUrl }) => mk("Fast geschafft: dein Abschluss ist noch offen", {
     title: "Du warst fast fertig 🙂", preheader: "Mit einem Klick weitermachen.",
     body: hallo(s) + p("du hast gestern angefangen, Tattoofin für dein Studio abzuschließen, aber die Zahlung ist noch offen.") +
-      p(`Falls etwas unklar war: Antworte einfach auf diese E-Mail. Und falls du lieber ohne Einrichtungsgebühr startest: Im Provisionsmodell zahlst du nur ${CFG.provisionProzent} % von Zahlungen, die über Tattoofin laufen, inklusive aller Zahlungsgebühren.`),
+      p(`Falls etwas unklar war: Antworte einfach auf diese E-Mail. Und falls du lieber ohne Einrichtungsgebühr startest: Im Paket Start zahlst du nur ${CFG.provisionProzent} % von Zahlungen, die über Tattoofin laufen, inklusive aller Zahlungsgebühren.`),
     cta: "Abschluss fortsetzen", ctaUrl: resumeUrl,
   }),
 

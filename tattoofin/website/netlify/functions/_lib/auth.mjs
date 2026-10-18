@@ -1,7 +1,17 @@
 // Login per Magic Link (kein Passwort) + signiertes Session-Cookie. Admin über ADMIN_TOKEN.
 import crypto from "node:crypto";
 import { SECRETS, CFG } from "./config.mjs";
-import { getStudio } from "./store.mjs";
+import { getStudio, store } from "./store.mjs";
+import { randomBytes } from "node:crypto";
+
+// Vorschau: Sitzungs-Geheimnis zufällig erzeugen und im (eigenen) Vorschau-Speicher ablegen, statt einen Schlüssel zu hinterlegen
+export async function vorschauVorbereiten() {
+  if (!CFG.vorschau || process.env.SESSION_SECRET) return;
+  if (SECRETS.sessionSecret && SECRETS.sessionSecret.startsWith("vorschau-")) return;
+  let m = await store.get("meta/session-secret");
+  if (!m?.v) { m = { v: "vorschau-" + randomBytes(32).toString("hex") }; await store.set("meta/session-secret", m); }
+  SECRETS.sessionSecret = m.v;
+}
 
 const COOKIE = "tf_session";
 
@@ -27,8 +37,10 @@ export function verify(token, type) {
 export const loginLink = (studioId, minutes = 60 * 24) =>
   `${CFG.siteUrl}/api/auth?token=${sign({ t: "login", sid: studioId, exp: Date.now() + minutes * 60000 })}`;
 
-export function sessionCookie(studioId) {
-  const val = sign({ t: "session", sid: studioId, exp: Date.now() + 30 * 864e5 });
+// Sitzung 30 Tage. „sv“ = Sitzungsversion des Studios: „Auf allen Geräten abmelden“ zählt sie hoch, alte Cookies verfallen.
+export function sessionCookie(studioOderId) {
+  const s = typeof studioOderId === "object" ? studioOderId : { id: studioOderId };
+  const val = sign({ t: "session", sid: s.id, sv: s.sessionVersion || 0, exp: Date.now() + 30 * 864e5 });
   const secure = CFG.siteUrl.startsWith("https") ? "; Secure" : "";
   return `${COOKIE}=${val}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${30 * 86400}${secure}`;
 }
@@ -43,7 +55,10 @@ function readCookie(req) {
 
 export async function currentStudio(req) {
   const p = verify(readCookie(req), "session");
-  return p ? getStudio(p.sid) : null;
+  if (!p) return null;
+  const s = await getStudio(p.sid);
+  if (!s || (p.sv || 0) !== (s.sessionVersion || 0)) return null;
+  return s;
 }
 
 export function isAdmin(req) {

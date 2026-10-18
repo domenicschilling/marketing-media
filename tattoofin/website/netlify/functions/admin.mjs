@@ -13,12 +13,12 @@
 //   POST  /api/admin/einladen                 { email, firma } → Geschenk-Einladung (0 € Einrichtung, 0 % Provision) per E-Mail
 //   GET   /api/admin/anfragen                 Kurz-Anfragen von /studios (neueste zuerst)
 //   POST  /api/admin/checkout-test            unbezahlte Test-Sitzung (1 €) mit Tattoofin-Branding → { id, url }; { expire: "cs_…" } beendet sie
-import { CFG, netto } from "./_lib/config.mjs";
+import { CFG, netto, paketVon, provisionSatz } from "./_lib/config.mjs";
 import { json, fail, body, clean, now, handler } from "./_lib/util.mjs";
 import { allStudios, getStudio, saveStudio, zahlungenVon, abrechnungenVon, store, log } from "./_lib/store.mjs";
 import { isAdmin, loginLink } from "./_lib/auth.mjs";
 import { stripe, TATTOOFIN_BRANDING } from "./_lib/stripe.mjs";
-import { notify, monatsabrechnung, taeglicheJobs, kontoAbgleichen, provisionVerdient, STATUS } from "./_lib/domain.mjs";
+import { notify, monatsabrechnung, taeglicheJobs, kontoAbgleichen, provisionVerdient, gruenderStand, STATUS } from "./_lib/domain.mjs";
 import { mails } from "./_lib/emails.mjs";
 import { sendMail } from "./_lib/mail.mjs";
 import { randomBytes } from "node:crypto";
@@ -66,6 +66,8 @@ export default handler(async (req) => {
         deckungsbeitragCent: abgerechnet.reduce((a, x) => a + netto(provisionVerdient(x)) - (x.stripeGebuehrCent || 0), 0),
         stripe: s.stripe?.chargesEnabled ? "freigegeben" : s.stripe?.accountId ? "in Prüfung" : "nicht verbunden",
         fragebogen: Boolean(s.fragebogen), slug: s.slug,
+        paket: paketVon(s).name, provisionProzent: provisionSatz(s), gruender: Boolean(s.gruender),
+        recht: s.recht ? `${s.recht.version} (${s.recht.am.slice(0, 10)})` : "", extras: Object.keys(s.extras || {}).join(", "),
       });
     }
     return json(out.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || "")));
@@ -139,7 +141,7 @@ export default handler(async (req) => {
     for (const k of keys) { const a = await store.get(k); if (a) out.push(a); }
     return json(out);
   }
-  if (bereich === "info" && req.method === "GET") return json({ siteUrl: CFG.siteUrl, aktion: await store.get("meta/aktion-zaehler") });
+  if (bereich === "info" && req.method === "GET") return json({ siteUrl: CFG.siteUrl, aktion: await store.get("meta/aktion-zaehler"), gruender: await gruenderStand(), vorschau: CFG.vorschau });
   return fail("Nicht gefunden", 404);
 });
 

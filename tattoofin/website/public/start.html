@@ -6,33 +6,48 @@
 <link rel="icon" href="/assets/figur.png">
 <link rel="stylesheet" href="/css/site.css">
 <meta name="robots" content="noindex">
+<style>
+.pakete{grid-template-columns:repeat(3,1fr)}
+.pakete .empf{border-width:4px}
+.pk-badge{position:absolute;top:-14px;left:16px;background:var(--ink);color:var(--yellow);font:400 13px/1 var(--round);border-radius:99px;padding:6px 10px}
+.gruender-badge{display:block;margin-top:10px;background:var(--mint);color:#fff;font-weight:800;font-size:13px;border-radius:10px;padding:6px 10px}
+@media (max-width:820px){.pakete{grid-template-columns:1fr}}
+</style>
 </head><body>
 <header class="nav"><div class="wrap"><a class="brand" href="/"><img src="/assets/figur.png" alt=""><img class="wm" src="/assets/wortmarke.png" alt="Tattoofin"></a><nav class="links"><a href="/login.html">Login</a></nav></div></header>
 
 <main class="sec tight"><div class="wrap narrow">
   <h1 style="font-size:clamp(30px,5vw,44px);margin-bottom:8px">Tattoofin für dein Studio</h1>
-  <p class="muted" style="margin:0 0 24px">Dauert ca. 3 Minuten. Danach legst du in ca. 10 Minuten dein Auszahlungskonto an, und wir richten alles für dich ein.</p>
+  <p class="muted" style="margin:0 0 24px">Dauert ca. 3 Minuten. Danach landest du direkt in deinem Studio-Bereich und richtest dort in ca. 10 Minuten dein Zahlungskonto ein.</p>
   <div class="steps-bar"><span data-s="1"></span><span data-s="2"></span><span data-s="3"></span></div>
   <div id="alert"></div>
 
   <form id="f" class="form" novalidate>
     <!-- Schritt 1 -->
     <section data-step="1">
-      <h2 style="font-size:24px;margin-bottom:6px">1. Wie möchtest du bezahlen?</h2>
-      <p class="muted" style="margin:0 0 18px">Gleiche Leistung, gleiche kostenlose Betreuung.</p>
-      <div class="choice">
-        <label><input type="radio" name="modell" value="provision"><b>Provision · risikofrei</b><div class="p"><span data-c="provisionProzent">10</span> %</div><small>vom Zahlbetrag jeder Zahlung über Tattoofin, alles inklusive (Zahlungsgebühren und USt.). Der Rest kommt automatisch auf dein Konto. Keine Fixkosten, monatlich kündbar.</small></label>
-        <label><input type="radio" name="modell" value="kauf"><b>Kaufen</b><div class="p" id="kaufpreis"><span data-c="kaufNetto|euro"></span></div><small>einmalig netto. Keine Grundgebühr, keine Provision, <span data-c="garantieTage">30</span> Tage Geld-zurück-Garantie.</small></label>
+      <h2 style="font-size:24px;margin-bottom:6px">1. Welches Paket passt zu dir?</h2>
+      <p class="muted" style="margin:0 0 18px">Gleiche App, gleiche Betreuung. Du kannst später wechseln.</p>
+      <div id="geschenk-info" class="alert info hidden"></div>
+      <div class="choice pakete" id="pakete">
+        <label><input type="radio" name="paket" value="start"><b>Start</b><div class="p"><span data-c="provisionProzent">10</span> %</div><small>pro Zahlung, alles inklusive. 0 € Einrichtung, keine Grundgebühr. Ideal zum Ausprobieren.</small></label>
+        <label class="empf"><span class="pk-badge">⭐ Empfohlen</span><input type="radio" name="paket" value="studio"><b>Studio</b><div class="p"><span data-c="studioProvisionProzent">7</span> %</div><small>pro Zahlung, alles inklusive. Einmalig <span data-c="studioNetto|euro">299 €</span> netto Einrichtung. Lohnt sich ab ca. 10.000 € Zahlungen im Jahr.</small><span class="gruender-badge hidden" id="gruender-badge"></span></label>
+        <label><input type="radio" name="paket" value="profi"><b>Profi</b><div class="p" id="kaufpreis"><span data-c="kaufNetto|euro"></span></div><small>einmalig netto. Eigenes Zahlungskonto, 0 % Provision. Die Gebühren des Zahlungsanbieters zahlst du direkt. <span data-c="garantieTage">30</span> Tage Geld-zurück-Garantie.</small></label>
+      </div>
+      <div id="gruender" class="hidden" style="margin-top:18px">
+        <div class="alert info"><b>🎉 Gründer-Aktion:</b> Die ersten <span data-c="gruenderMax">10</span> Studios bekommen das Paket Studio <b>ohne Einrichtungsgebühr</b>. <span id="gruender-stand"></span></div>
+        <label class="check"><input type="checkbox" name="gruender" id="gruender-ja" checked> <span>Ja, ich möchte die Gründer-Aktion nutzen (0 € Einrichtung).</span></label>
+        <label class="check" id="video-l"><input type="checkbox" name="videoEinwilligung" id="video-ok"> <span>Als Gegenleistung nehme ich nach den ersten Wochen ein kurzes Erfahrungsvideo (ca. 30–60 Sekunden, Handy reicht) auf. Tattoofin darf es auf der Website und bei Social Media zeigen. Diese Einwilligung kann ich jederzeit widerrufen.</span></label>
       </div>
       <div id="kauf-extra" class="hidden" style="margin-top:18px">
-        <div class="field"><label>Zahlungsart</label>
+        <div class="field"><label>Einrichtung bezahlen</label>
           <div class="choice">
-            <label><input type="radio" name="zahlart" value="sofort" checked><b style="font-size:16px">Jetzt bezahlen</b><small>Karte, SEPA-Lastschrift u. a. über Stripe</small></label>
+            <label><input type="radio" name="zahlart" value="sofort" checked><b style="font-size:16px">Jetzt bezahlen</b><small>Karte u. a. über Stripe</small></label>
             <label><input type="radio" name="zahlart" value="rechnung"><b style="font-size:16px">Auf Rechnung</b><small>Zahlbar in 7 Tagen per Überweisung. Die Einrichtung startet nach Zahlungseingang.</small></label>
           </div>
         </div>
-        <div class="field"><label for="aktionscode">Aktionscode (optional)</label><input type="text" id="aktionscode" name="aktionscode" autocomplete="off" placeholder="z. B. aus unserem Brief"></div>
+        <div class="field" id="aktion-feld"><label for="aktionscode">Aktionscode (optional)</label><input type="text" id="aktionscode" name="aktionscode" autocomplete="off" placeholder="z. B. aus unserem Brief"></div>
       </div>
+      <p class="muted" style="font-size:13px;margin:14px 0 0">*Raten für deine Kunden über externe Anbieter wie Klarna, nach deren Prüfung. Tattoofin ist kein Kreditgeber. Achtung! Kreditaufnahme kostet Geld.</p>
       <div style="display:flex;justify-content:flex-end;margin-top:20px"><button type="button" class="btn gold" data-next>Weiter</button></div>
     </section>
 

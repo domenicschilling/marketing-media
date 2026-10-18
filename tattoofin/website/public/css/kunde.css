@@ -1,0 +1,20 @@
+/* Seiten für Endkunden der Studios (Zahlseite, Zahlungslink, Leistungsbestätigung). Baut auf site.css + app.css auf. */
+body.kunde{padding-bottom:30px}
+.kunde-kopf{text-align:center;margin:8px 0 16px}
+.kunde-kopf small{display:block;font-weight:700;color:var(--muted);font-size:14px}
+.kunde-kopf h1{font:400 34px/1.05 var(--head)!important;margin:4px 0 2px!important}
+.kunde-kopf .ort{color:var(--muted);font-size:14px}
+.summe{text-align:center;margin:0 0 14px}
+.summe .amt{font:400 48px/1 var(--head);color:var(--ink)}
+.bed{background:var(--yellow-soft);border:2px solid var(--ink);border-radius:14px;padding:12px 14px;font-size:14.5px;margin:0 0 14px}
+.bed p{margin:6px 0 10px}
+.fuss{font-size:12.5px;line-height:1.5;color:var(--muted);margin:14px 0 0}
+.powered{display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;color:var(--muted);margin-top:14px}
+.powered img{width:24px}
+.alert-a{border-radius:14px;padding:12px 14px;margin:0 0 14px;font-weight:600;font-size:15px}
+.alert-a.err{background:#fde8e8;color:#8a1c1c;border:2px solid #d93a3a}
+.alert-a.ok{background:#dff5e7;color:#14532d;border:2px solid #2f8f5b}
+.alert-a.info{background:#e6effa;color:#1f3f66;border:2px solid #2a587a}
+.sig{background:#fff;border:2px dashed var(--ink);border-radius:14px;touch-action:none;width:100%;height:190px;display:block}
+.foto-vorschau{max-width:100%;border-radius:12px;margin:8px 0;border:2px solid var(--ink)}
+.schritt-tag{display:inline-block;background:var(--ink);color:var(--yellow);font-weight:800;font-size:12px;border-radius:99px;padding:3px 10px;margin-bottom:8px}

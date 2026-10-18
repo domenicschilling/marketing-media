@@ -5,7 +5,8 @@ import { CFG } from "./_lib/config.mjs";
 import { handler } from "./_lib/util.mjs";
 import { getStudio, saveStudio } from "./_lib/store.mjs";
 import { stripe, ensureConnectedAccount, onboardingLink } from "./_lib/stripe.mjs";
-import { kontoAbgleichen, notifyAdmin } from "./_lib/domain.mjs";
+import { kontoAbgleichen, notifyAdmin, eingebettet } from "./_lib/domain.mjs";
+import { currentStudio } from "./_lib/auth.mjs";
 
 const redirect = (to) => new Response(null, { status: 302, headers: { Location: to } });
 
@@ -18,7 +19,9 @@ export default handler(async (req) => {
     if (s.stripe?.accountId) await kontoAbgleichen(s, await stripe("GET", "/accounts/" + s.stripe.accountId));
     return redirect(`/danke.html?id=${s.id}&stripe=1`);
   }
-  if (s.stripe?.chargesEnabled) return redirect("/portal.html");
+  if (s.stripe?.chargesEnabled) return redirect("/app.html");
+  // Eingeloggt und eingebettete Einrichtung verfügbar → im Dashboard bleiben statt zu Stripe wechseln
+  if (eingebettet() && (await currentStudio(req))?.id === s.id) return redirect("/app.html#einrichtung");
   try {
     await ensureConnectedAccount(s);
     await saveStudio(s);

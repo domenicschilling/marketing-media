@@ -64,7 +64,10 @@ export function clientIp(req, context) {
 
 // Fehler abfangen und als JSON zurückgeben
 export const handler = (fn) => async (req, context) => {
-  try { return await fn(req, context); }
+  try {
+    if (CFG.vorschau) await (await import("./auth.mjs")).vorschauVorbereiten();
+    return await fn(req, context);
+  }
   catch (e) {
     if (!e.status) console.error(e);
     return json({ error: e.stripe?.message || e.message || "Unbekannter Fehler" }, e.status || 500);

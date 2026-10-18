@@ -8,16 +8,47 @@
 //   POST   /api/portal/rechnungen          Stripe-Kundenportal (Tattoofin-Rechnungen)
 //   PATCH  /api/portal/kontakt             Benachrichtigungs-E-Mail bzw. Anzahlungsbedingungen ändern
 //   POST   /api/portal/erstattung/:id      Kundenzahlung (Provision) ganz oder teilweise erstatten { betrag }
-//   POST   /api/portal/stripe-dashboard    Login-Link ins Stripe-Express-Dashboard (Auszahlungen)
-import { CFG, plattformgebuehr } from "./_lib/config.mjs";
-import { json, fail, body, clean, id, now, handler, isEmail, parseBetrag } from "./_lib/util.mjs";
-import { saveStudio, zahlungenVon, getZahlung, saveZahlung, abrechnungenVon, log } from "./_lib/store.mjs";
-import { currentStudio } from "./_lib/auth.mjs";
-import { stripe, dashboardLink } from "./_lib/stripe.mjs";
-import { notify, notifyAdmin, kuendigungsDatum, connectUrl, darfKassieren, anzahlungsbedingungen, provisionVerdient, STATUS } from "./_lib/domain.mjs";
+//   POST   /api/portal/stripe-dashboard    Login-Link ins Stripe-Express-Dashboard (Auszahlungen) – nur noch Notlösung
+//   POST   /api/portal/stripe-session      Sitzung für eingebettete Stripe-Bausteine (Einrichtung, Auszahlungen, Konto)
+//   POST   /api/portal/konto-status        Stripe-Konto neu abfragen (nach der eingebetteten Einrichtung)
+//   POST   /api/portal/bestaetigung/:id    Link/QR für die Leistungsbestätigung nach dem Termin erzeugen
+//   GET    /api/portal/nachweis/:id        Alle Nachweise zu einer Zahlung (für PDF/Druck)
+//   POST   /api/portal/recht               { version } „Deine rechtliche Lage“ gelesen (Zeitstempel + Version)
+//   POST   /api/portal/extra               { extra, nachricht } Interesse an einem Extra (Anfrage, keine Abrechnung)
+//   POST   /api/portal/checkliste          { punkt, erledigt } Einrichtungs-Checkliste (manuelle Punkte)
+//   POST   /api/portal/abmelden            Auf allen Geräten abmelden (Sitzungsversion hochzählen)
+// Mandantentrennung: Jede Abfrage nutzt ausschließlich das Studio aus dem Session-Cookie; Zahlungen werden
+// über zahlung/<studioId>/<id> gelesen, fremde IDs ergeben immer 404.
+import { CFG, plattformgebuehr, provisionSatz, paketVon, BAUSTEINE_SIMULIERT } from "./_lib/config.mjs";
+import { json, fail, body, clean, id, now, handler, isEmail, parseBetrag, clientIp } from "./_lib/util.mjs";
+import { saveStudio, zahlungenVon, getZahlung, saveZahlung, abrechnungenVon, getLeistung, store, log } from "./_lib/store.mjs";
+import { currentStudio, clearCookie } from "./_lib/auth.mjs";
+import { stripe, dashboardLink, accountSession, ensureConnectedAccount } from "./_lib/stripe.mjs";
+import { notify, notifyAdmin, kuendigungsDatum, connectUrl, darfKassieren, anzahlungsbedingungen, provisionVerdient, kontoAbgleichen, eingebettet, STATUS } from "./_lib/domain.mjs";
+import { randomBytes } from "node:crypto";
+
+// Extras (Zusatzangebote): nur Anzeige + Anfrage, keine Abrechnung. Preise sind Vorschläge.
+export const EXTRAS = [
+  { id: "insta-aktion", titel: "Instagram-Werbeaktion für dein Studio", preis: "ab 149 € einmalig + Werbebudget",
+    text: "Wir bauen dir eine fertige Werbeaktion: Video oder Bilder, Texte, Zielgruppe in deiner Stadt. Du gibst nur das Okay.", icon: "📣" },
+  { id: "gutscheine", titel: "Gutscheine verkaufen", preis: "Vorschlag: im Paket enthalten, Provision wie bei Zahlungen",
+    text: "Tattoo-Gutscheine über deine Zahlseite verkaufen, mit schöner Gutschein-Karte zum Ausdrucken oder Verschicken. Perfekt für Weihnachten und Geburtstage.", icon: "🎁" },
+  { id: "no-show", titel: "Termin-Erinnerung & No-Show-Schutz", preis: "Vorschlag: 19 € im Monat",
+    text: "Dein Kunde bekommt vor dem Termin automatisch eine Erinnerung per WhatsApp oder E-Mail, mit Link zur Anzahlung. Weniger leere Termine.", icon: "⏰" },
+];
+
+// Manuelle Punkte der Einrichtungs-Checkliste (die übrigen erkennt das System selbst)
+const CHECK_MANUELL = ["app", "werbung", "theke"];
 import { mails } from "./_lib/emails.mjs";
 
-const zahlseite = (s) => `${CFG.siteUrl}/zahlen.html?s=${s.slug}`;
+const zahlseite = (s) => `${CFG.siteUrl}/zahlen/${s.slug}`;
+// Zahlung für die Ausgabe an das Studio (ohne interne Werte wie den Client-Schlüssel des Bezahlfelds, IP/Browser des Kunden)
+const fuerStudio = (z) => {
+  const { clientSecret, betragFuerPi, leistungToken, ...rest } = z;
+  if (rest.kundeBestaetigt) rest.kundeBestaetigt = { am: rest.kundeBestaetigt.am, inhalt: rest.kundeBestaetigt.inhalt, version: rest.kundeBestaetigt.version };
+  if (leistungToken) rest.leistungLink = `${CFG.siteUrl}/bestaetigung.html?t=${leistungToken.t}`;
+  return rest;
+};
 const oeffentlich = (s) => ({
   id: s.id, firma: s.firma, inhaber: s.inhaber, email: s.email, telefon: s.telefon, studioTelefon: s.studioTelefon,
   strasse: s.strasse, plz: s.plz, ort: s.ort, modell: s.modell, zahlart: s.zahlart, preisNetto: s.preisNetto, slug: s.slug,
@@ -26,7 +57,10 @@ const oeffentlich = (s) => ({
   kuendigung: s.kuendigung || null, fragebogenAm: s.fragebogen?.updatedAt || null,
   benachrichtigung: { email: s.benachrichtigungEmail || s.email },
   garantieBis: s.modell === "kauf" ? (s.goLiveAt ? new Date(new Date(s.goLiveAt).getTime() + CFG.garantieTage * 864e5).toISOString() : "ab Go-live") : null,
-  stripe: { verbunden: Boolean(s.stripe?.accountId), freigegeben: Boolean(s.stripe?.chargesEnabled), auszahlungen: Boolean(s.stripe?.payoutsEnabled), express: s.stripe?.kontoTyp === "express" },
+  stripe: { verbunden: Boolean(s.stripe?.accountId), freigegeben: Boolean(s.stripe?.chargesEnabled), auszahlungen: Boolean(s.stripe?.payoutsEnabled), express: s.stripe?.kontoTyp === "express", angabenGemacht: Boolean(s.stripe?.detailsSubmitted), kontoTyp: s.stripe?.kontoTyp || (s.modell === "provision" ? "express" : "standard") },
+  paket: paketVon(s).id, paketName: paketVon(s).name, provisionProzent: provisionSatz(s), gruender: Boolean(s.gruender),
+  recht: s.recht ? { version: s.recht.version, am: s.recht.am, aktuell: s.recht.version === CFG.rechtVersion } : null,
+  checkliste: s.checkliste || {}, extrasAngefragt: Object.keys(s.extras || {}), eingebettet: eingebettet(), simulation: BAUSTEINE_SIMULIERT,
   anzahlungsbedingungen: anzahlungsbedingungen(s),
   kannKassieren: Boolean(darfKassieren(s)), zahlseite: zahlseite(s), connectUrl: connectUrl(s),
 });
@@ -38,13 +72,14 @@ export default handler(async (req) => {
   const [bereich, sub] = url.pathname.replace(/^\/api\/portal\/?/, "").split("/").filter(Boolean);
 
   if (!bereich && req.method === "GET") {
-    const zahlungen = await zahlungenVon(s.id);
+    // Abgebrochene Versuche über die Zahlseite (Kunde hat das Bezahlfeld geöffnet, aber nicht bezahlt) nach 2 Stunden ausblenden
+    const zahlungen = (await zahlungenVon(s.id)).filter((z) => !(z.art === "zahlseite" && ["offen", "abgebrochen"].includes(z.status) && Date.now() - new Date(z.createdAt).getTime() > 2 * 3600e3));
     const monat = new Date().toISOString().slice(0, 7);
     const bezahlt = zahlungen.filter((z) => z.status === "bezahlt");
     const imMonat = bezahlt.filter((z) => (z.bezahltAm || "").slice(0, 7) === monat);
     const q = (extra = "") => `studio=${encodeURIComponent(s.firma)}&tel=${encodeURIComponent(s.studioTelefon || "")}&zahlen=${encodeURIComponent(zahlseite(s))}${extra}`;
     return json({
-      studio: oeffentlich(s), zahlungen, abrechnungen: await abrechnungenVon(s.id),
+      studio: oeffentlich(s), zahlungen: zahlungen.map(fuerStudio), abrechnungen: await abrechnungenVon(s.id), extras: EXTRAS,
       kpis: {
         umsatzMonatCent: imMonat.reduce((a, z) => a + z.betragCent, 0), zahlungenMonat: imMonat.length,
         provisionMonatBruttoCent: imMonat.reduce((a, z) => a + provisionVerdient(z), 0),
@@ -57,7 +92,7 @@ export default handler(async (req) => {
         ["20-fensteraufkleber", "Fensteraufkleber"], ["21-flyer-a6", "Flyer A6"], ["22-thekenaufsteller-a5", "Thekenaufsteller A5"],
         ["23-kundeninfo", "Kundeninfo"], ["24-social-kit", "Social-Kit (Story, Post, Badge)"],
       ].map(([n, titel]) => ({ name: n, titel, url: `${CFG.materialsUrl}${n}.html?${q()}` })),
-      config: { provisionProzent: CFG.provisionProzent, ustProzent: CFG.ustProzent, garantieTage: CFG.garantieTage, minBetragCent: CFG.minBetragCent, maxBetragCent: CFG.maxBetragCent },
+      config: { provisionProzent: provisionSatz(s), ustProzent: CFG.ustProzent, rechtVersion: CFG.rechtVersion, ruecklastGebuehrCent: CFG.ruecklastGebuehrCent, garantieTage: CFG.garantieTage, minBetragCent: CFG.minBetragCent, maxBetragCent: CFG.maxBetragCent },
     });
   }
 
@@ -69,17 +104,17 @@ export default handler(async (req) => {
       if (!(betragCent >= CFG.minBetragCent && betragCent <= CFG.maxBetragCent)) return fail(`Bitte einen Betrag zwischen ${CFG.minBetragCent / 100} € und ${CFG.maxBetragCent / 100} € eingeben.`);
       const email = clean(b.email, 160).toLowerCase();
       if (email && !isEmail(email)) return fail("Bitte eine gültige E-Mail-Adresse eingeben oder das Feld leer lassen.");
-      const fee = plattformgebuehr(betragCent, s.modell);
+      const fee = plattformgebuehr(betragCent, s);
       const z = {
         id: id("zl_"), studioId: s.id, createdAt: now(), art: b.art === "anzahlung" ? "anzahlung" : "gesamt", status: "offen",
-        betragCent, kunde: clean(b.kunde, 80), email, beschreibung: clean(b.beschreibung, 120) || "Tattoo-Projekt",
+        betragCent, kunde: clean(b.kunde, 80), email, beschreibung: clean(b.beschreibung, 120) || "Tattoo-Projekt", sitzungen: clean(b.sitzungen, 60),
         gebuehrNettoCent: fee.nettoCent, gebuehrBruttoCent: fee.bruttoCent,
       };
       await saveZahlung(z);
       const link = `${CFG.siteUrl}/zahlung.html?z=${z.id}`;
       const text = `Hi ${z.kunde ? z.kunde.split(" ")[0] : ""}, hier ist dein Zahlungslink für ${z.beschreibung} (${(betragCent / 100).toLocaleString("de-DE", { minimumFractionDigits: 2 })} €): ${link} . Beim Bezahlen siehst du, welche Zahlungsoptionen dir angeboten werden. Liebe Grüße, ${s.firma}`;
       await log("zahlungslink", { studioId: s.id, zahlungId: z.id, betragCent });
-      return json({ zahlung: z, link, whatsappText: text }, 201);
+      return json({ zahlung: fuerStudio(z), link, whatsappText: text }, 201);
     }
     if (req.method === "DELETE" && sub) {
       const z = await getZahlung(s.id, sub);
@@ -87,7 +122,7 @@ export default handler(async (req) => {
       if (z.status !== "offen" && z.status !== "abgebrochen") return fail("Nur offene Zahlungslinks können storniert werden.");
       z.status = "storniert"; z.storniertAm = now();
       await saveZahlung(z);
-      return json(z);
+      return json(fuerStudio(z));
     }
   }
 
@@ -172,6 +207,85 @@ export default handler(async (req) => {
     if (b.anzahlungsbedingungen !== undefined) s.anzahlungsbedingungen = clean(b.anzahlungsbedingungen, 1000) || null;
     await saveStudio(s);
     return json(oeffentlich(s));
+  }
+
+  // ---- Eingebettete Stripe-Bausteine ----
+  if (bereich === "stripe-session" && req.method === "POST") {
+    if (["entwurf", "abgebrochen", "beendet", "erstattet"].includes(s.status)) return fail("Dein Vertrag ist nicht aktiv.", 409);
+    if (!eingebettet()) return json({ modus: "weiterleitung", url: connectUrl(s) });
+    if (!s.stripe?.accountId) { await ensureConnectedAccount(s); await saveStudio(s); }
+    if (BAUSTEINE_SIMULIERT) return json({ modus: "simulation", konto: s.stripe.accountId, kontoTyp: s.stripe.kontoTyp });
+    const as = await accountSession(s);
+    return json({ modus: "stripe", publishableKey: CFG.stripePublishableKey, clientSecret: as.client_secret, kontoTyp: s.stripe.kontoTyp });
+  }
+  if (bereich === "konto-status" && req.method === "POST") {
+    if (!s.stripe?.accountId) return json(oeffentlich(s));
+    await kontoAbgleichen(s, await stripe("GET", "/accounts/" + s.stripe.accountId));
+    return json(oeffentlich(s));
+  }
+
+  // ---- Leistungsbestätigung nach dem Termin (Link/QR für den Kunden) ----
+  if (bereich === "bestaetigung" && sub && req.method === "POST") {
+    const z = await getZahlung(s.id, sub);
+    if (!z) return fail("Nicht gefunden", 404);
+    if (!["bezahlt", "in_pruefung"].includes(z.status)) return fail("Eine Leistungsbestätigung gibt es für bezahlte Zahlungen, nach dem Termin.");
+    if (!z.leistungToken || z.leistungToken.benutzt) {
+      if (z.leistung) return fail("Diese Sitzung ist schon bestätigt.", 409);
+      const t = randomBytes(18).toString("base64url");
+      z.leistungToken = { t, erstellt: now(), ablauf: new Date(Date.now() + 30 * 864e5).toISOString() };
+      await store.set("idx/bst/" + t, `${s.id}/${z.id}`);
+      await saveZahlung(z);
+    }
+    const link = `${CFG.siteUrl}/bestaetigung.html?t=${z.leistungToken.t}`;
+    const text = `Hi ${z.kunde ? z.kunde.split(" ")[0] : ""}, danke für deinen Besuch! Bitte bestätige kurz, dass deine Sitzung stattgefunden hat (dauert 30 Sekunden): ${link} – ${s.firma}`;
+    return json({ link, whatsappText: text });
+  }
+  if (bereich === "nachweis" && sub && req.method === "GET") {
+    const z = await getZahlung(s.id, sub);
+    if (!z) return fail("Nicht gefunden", 404);
+    const l = await getLeistung(s.id, z.id);
+    return json({
+      studio: { firma: s.firma, inhaber: s.inhaber, strasse: s.strasse, plz: s.plz, ort: s.ort },
+      zahlung: { ...fuerStudio(z), kundeBestaetigt: z.kundeBestaetigt || null },
+      leistung: l ? { ...l, ua: undefined } : null, version: CFG.bestaetigungVersion, erstellt: now(),
+    });
+  }
+
+  // ---- „Deine rechtliche Lage – einfach erklärt“ gelesen ----
+  if (bereich === "recht" && req.method === "POST") {
+    const b = await body(req);
+    if (b.version !== CFG.rechtVersion) return fail("Bitte lade die Seite neu, das Blatt wurde aktualisiert.", 409);
+    if (b.gelesen !== true) return fail("Bitte setze das Häkchen.");
+    s.recht = { version: CFG.rechtVersion, am: now(), name: clean(b.name, 100) || s.inhaber, ip: clientIp(req), ua: (req.headers.get("user-agent") || "").slice(0, 200) };
+    s.rechtHistorie = [...(s.rechtHistorie || []), s.recht];
+    await saveStudio(s);
+    await log("recht-gelesen", { studioId: s.id, version: CFG.rechtVersion });
+    return json(oeffentlich(s));
+  }
+
+  // ---- Extras: Interesse melden ----
+  if (bereich === "extra" && req.method === "POST") {
+    const b = await body(req);
+    const ex = EXTRAS.find((e) => e.id === b.extra);
+    if (!ex) return fail("Unbekanntes Extra");
+    s.extras = { ...(s.extras || {}), [ex.id]: { am: now(), nachricht: clean(b.nachricht, 500) } };
+    await saveStudio(s);
+    await notifyAdmin(`Extra angefragt: ${ex.titel}`, s, { Nachricht: clean(b.nachricht, 500) || "–", Telefon: s.telefon });
+    return json({ ok: true });
+  }
+
+  if (bereich === "checkliste" && req.method === "POST") {
+    const b = await body(req);
+    if (!CHECK_MANUELL.includes(b.punkt)) return fail("Unbekannter Punkt");
+    s.checkliste = { ...(s.checkliste || {}), [b.punkt]: b.erledigt ? now() : null };
+    await saveStudio(s);
+    return json(oeffentlich(s));
+  }
+
+  if (bereich === "abmelden" && req.method === "POST") {
+    s.sessionVersion = (s.sessionVersion || 0) + 1;
+    await saveStudio(s);
+    return json({ ok: true }, 200, { "Set-Cookie": clearCookie() });
   }
 
   return fail("Nicht gefunden", 404);

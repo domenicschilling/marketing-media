@@ -1,0 +1,161 @@
+/* Tattoofin Studio-App (Dashboard). Handy zuerst, große Knöpfe, wenig Text. Baut auf site.css auf. */
+body.app{background-color:var(--cream);background-image:none;padding-bottom:calc(84px + env(safe-area-inset-bottom));min-height:100vh}
+.app-top{position:sticky;top:0;z-index:40;display:flex;align-items:center;justify-content:space-between;gap:10px;
+  background:var(--ink);color:#fff;padding:calc(10px + env(safe-area-inset-top)) 16px 10px}
+.app-brand{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--yellow);font:400 19px/1.1 var(--head);min-width:0}
+.app-brand img{width:34px;height:34px;object-fit:contain;flex:none}
+.app-brand span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.app-top-r{font-size:12.5px;font-weight:700;background:var(--yellow);color:var(--ink);border-radius:99px;padding:4px 10px;white-space:nowrap}
+.app-top-r.warn{background:#fff;color:var(--ink)}
+.sim-hinweis{background:var(--orange);color:#fff;font-weight:700;font-size:13px;text-align:center;padding:6px 12px}
+.offline{background:var(--ink-2);color:#fff;font-size:13px;text-align:center;padding:6px 12px}
+.app-main{max-width:620px;margin:0 auto;padding:16px 16px 24px}
+.app-main h1{font:400 30px/1.05 var(--head);margin:6px 0 12px;color:var(--ink)}
+.app-main h2{font:400 18px/1.2 var(--round);margin:0 0 10px;color:var(--ink)}
+.klein{font-size:14px;line-height:1.5}
+.w100{width:100%}
+.laden{text-align:center;padding:60px 0;color:var(--muted)}
+.laden img{width:70px;margin:0 auto 10px;animation:wackel 1.2s ease-in-out infinite}
+@keyframes wackel{50%{transform:rotate(-8deg)}}
+.zurueck{display:inline-block;margin:0 0 6px;font-weight:700;text-decoration:none;color:var(--muted);font-size:15px;padding:6px 0}
+.hallo{font-size:26px!important}
+
+/* Karten */
+.card-a{background:#fff;border:var(--bw) solid var(--ink);border-radius:18px;box-shadow:4px 4px 0 var(--ink);padding:16px;margin:0 0 16px}
+.card-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.card-h a{font-weight:700;font-size:14px;color:var(--ink)}
+
+/* Großer Hauptknopf */
+.big-cta{display:flex;align-items:center;gap:14px;background:var(--yellow);color:var(--ink);text-decoration:none;border:var(--bw) solid var(--ink);
+  border-radius:20px;box-shadow:5px 5px 0 var(--ink);padding:18px 18px;margin:0 0 18px;font:400 22px/1.1 var(--round);transition:transform .1s}
+.big-cta:active{transform:translate(3px,3px);box-shadow:2px 2px 0 var(--ink)}
+.big-cta small{display:block;font:500 14px/1.3 var(--body);margin-top:4px;color:var(--ink)}
+.big-cta .plus{flex:none;width:52px;height:52px;border-radius:50%;background:var(--ink);color:var(--yellow);display:grid;place-items:center;font:400 34px/1 var(--head)}
+
+/* Checkliste */
+.check-a{list-style:none;margin:0;padding:0}
+.check-a li{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-top:1px dashed #cdd6df}
+.check-a li:first-child{border-top:0}
+.check-a .ic{flex:none;width:28px;height:28px;border-radius:50%;border:2px solid var(--ink);display:grid;place-items:center;font-weight:800;font-size:15px;background:#fff}
+.check-a li.ok .ic{background:var(--mint);color:#fff;border-color:var(--mint)}
+.check-a li.wait .ic{background:var(--yellow-soft)}
+.check-a b{display:block;font-size:15.5px}
+.check-a small{color:var(--muted);font-size:13.5px;line-height:1.4;display:block}
+.check-a a.btn,.check-a button{margin-top:6px}
+.fortschritt{height:10px;background:#e6ebf0;border-radius:99px;overflow:hidden;margin:4px 0 8px}
+.fortschritt i{display:block;height:100%;background:var(--mint);border-radius:99px}
+
+/* Zahlungsliste */
+.zl{list-style:none;margin:0;padding:0}
+.zl a{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid #e6ebf0;text-decoration:none;color:var(--text)}
+.zl li:first-child a{border-top:0}
+.zl .wer{flex:1;min-width:0}
+.zl .wer b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.zl .wer small{color:var(--muted);font-size:13px}
+.zl .betrag{text-align:right;font-weight:800;white-space:nowrap}
+.zl .betrag small{display:block;font-weight:600;font-size:12px;color:var(--muted)}
+.chip{display:inline-block;font-size:12px;font-weight:700;border-radius:99px;padding:2px 9px;background:#eceae4;color:#5b6370;white-space:nowrap}
+.chip.bezahlt{background:#dff5e7;color:#14532d}.chip.offen{background:var(--yellow-soft);color:var(--brown)}.chip.in_pruefung{background:#e6effa;color:#1f3f66}
+.chip.erstattet,.chip.rueckgebucht{background:#fde8e8;color:#8a1c1c}.chip.ok{background:#dff5e7;color:#14532d}
+.leer{color:var(--muted);text-align:center;padding:14px 0}
+
+/* Formulare */
+.form-a input[type=text],.form-a input[type=email],.form-a input[type=date],.form-a textarea,.app-main textarea,.app-main input[type=email],.app-main input[type=text]{
+  width:100%;font:500 17px var(--body);color:var(--ink);background:#fff;border:2px solid var(--ink);border-radius:14px;padding:13px 14px;margin:0 0 14px;outline:none}
+.form-a input:focus,.app-main textarea:focus{box-shadow:0 0 0 3px var(--yellow)}
+.lbl{display:block;font-weight:700;font-size:14.5px;margin:0 0 6px}
+.betrag-feld{display:flex;align-items:center;background:#fff;border:var(--bw) solid var(--ink);border-radius:18px;padding:4px 16px;margin:0 0 6px;box-shadow:4px 4px 0 var(--ink)}
+.betrag-feld input{border:0!important;box-shadow:none!important;margin:0!important;padding:8px 0!important;font:400 44px/1.1 var(--head)!important;color:var(--ink);min-width:0}
+.betrag-feld span{font:400 34px var(--head);color:var(--ink)}
+.fee{font-size:14px;color:var(--muted);min-height:20px;margin:0 0 12px}
+.seg{display:flex;background:#fff;border:2px solid var(--ink);border-radius:99px;padding:3px;margin:0 0 16px;gap:3px}
+.seg label{flex:1;text-align:center;cursor:pointer;position:relative}
+.seg input{position:absolute;left:0;top:0;width:1px;height:1px;margin:0;opacity:0;pointer-events:none}
+.seg span{display:block;padding:10px 6px;border-radius:99px;font-weight:700;font-size:15px}
+.seg input:checked+span{background:var(--ink);color:var(--yellow)}
+.seg input:focus-visible+span{outline:3px solid var(--yellow)}
+.btn.big{font-size:18px;padding:16px 22px}
+.row-a{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.haken{display:flex;gap:10px;align-items:flex-start;font-size:15px;line-height:1.45;margin:0 0 14px;cursor:pointer}
+.haken input{width:24px;height:24px;flex:none;margin:1px 0 0;accent-color:var(--ink)}
+
+/* Ergebnis Zahlungslink */
+.link-ok{background:var(--yellow-soft);border:var(--bw) solid var(--ink);border-radius:18px;padding:16px;margin-top:6px;text-align:center}
+.link-ok .qr{background:#fff;border-radius:12px;padding:10px;width:200px;margin:12px auto}
+.link-ok .qr img,.link-ok .qr canvas,.zs .qr img,.zs .qr canvas{width:100%!important;height:auto!important}
+.btn.wa{background:#25d366;color:#fff;border-color:var(--ink)}
+
+/* Detail */
+.detail-kopf{text-align:center;margin:4px 0 16px}
+.detail-kopf .amt{font:400 46px/1 var(--head);color:var(--ink);margin:6px 0}
+.tbl-a{width:100%;border-collapse:collapse;font-size:15px}
+.tbl-a th{text-align:left;font-weight:600;color:var(--muted);padding:7px 10px 7px 0;vertical-align:top;width:42%}
+.tbl-a td{padding:7px 0;font-weight:700;vertical-align:top}
+.nachweis-ok{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px dashed #cdd6df;font-size:14.5px}
+.nachweis-ok:first-of-type{border-top:0}
+.nachweis-ok .ic{flex:none}
+
+/* Stripe-Bausteine */
+.stripe-box{min-height:120px;margin:0 0 16px}
+.stripe-box:empty::before{content:"Wird geladen …";display:block;color:var(--muted);text-align:center;padding:30px 0}
+.sim-box{background:#fff;border:2px dashed var(--ink-3);border-radius:16px;padding:16px;margin:0 0 16px}
+.sim-box .sim-tag{display:inline-block;background:var(--orange);color:#fff;font-size:11.5px;font-weight:800;border-radius:6px;padding:2px 7px;margin-bottom:8px;letter-spacing:.03em}
+.sim-box input{width:100%;font:500 16px var(--body);border:1px solid #b9c4cf;border-radius:10px;padding:11px 12px;margin:0 0 12px;color:var(--ink)}
+.sim-box label{display:block;font-size:13.5px;font-weight:600;margin:0 0 4px;color:#30475e}
+.sim-schritte{display:flex;gap:6px;margin:0 0 14px}
+.sim-schritte i{flex:1;height:5px;border-radius:9px;background:#e1e7ee}
+.sim-schritte i.on{background:var(--ink)}
+.geld-zahl{font:400 34px/1.1 var(--head);color:var(--ink)}
+.geld-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:6px 0 14px}
+.geld-grid div{background:var(--cream);border-radius:14px;padding:12px}
+.geld-grid small{display:block;color:var(--muted);font-size:13px;font-weight:600}
+
+/* Werbung */
+.kit-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.kit-item{background:#fff;border:var(--bw) solid var(--ink);border-radius:16px;box-shadow:4px 4px 0 var(--ink);padding:10px;display:flex;flex-direction:column;gap:8px}
+.kit-item canvas,.kit-item img{width:100%;height:auto;border-radius:10px;border:1px solid #d9e0e7;background:var(--yellow)}
+.kit-item b{font-size:14px;line-height:1.3}
+.kit-item .btn{width:100%;font-size:14px;padding:9px 10px}
+.caption{background:var(--cream);border-radius:12px;padding:10px 12px;font-size:13.5px;line-height:1.45;white-space:pre-wrap;margin:0}
+.zs{display:grid;grid-template-columns:110px 1fr;gap:12px;align-items:center}
+.zs .qr{background:#fff;border:1px solid #d9e0e7;border-radius:10px;padding:6px}
+.zs input{margin:0!important;font-size:14px!important;padding:10px!important}
+.liste-links{display:flex;flex-direction:column;gap:8px}
+.liste-links a{display:block;background:#fff;border:2px solid var(--ink);border-radius:14px;padding:12px 14px;text-decoration:none;color:var(--ink);font-weight:700}
+.liste-links a small{display:block;font-weight:500;color:var(--muted);font-size:13px;margin-top:2px}
+.liste-links.gross a{border-width:var(--bw);box-shadow:3px 3px 0 var(--ink)}
+.liste-links.gross b{font-size:16.5px}
+
+/* Extras */
+.extra{display:flex;gap:14px}
+.extra .em{font-size:32px;line-height:1}
+.extra .preis{font-weight:800;font-size:14px;color:var(--brown);margin:4px 0 6px}
+
+/* Recht */
+.recht-text h1{margin-top:0}
+.recht-text h2{font:400 20px/1.2 var(--round)!important;margin:22px 0 8px!important}
+.recht-text p,.recht-text li{font-size:16px;line-height:1.55}
+.recht-text .entwurf{background:var(--orange);color:#fff;font-weight:800;border-radius:12px;padding:10px 12px;font-size:14.5px}
+.recht-text .wer{display:grid;gap:10px;margin:10px 0}
+.recht-text .wer div{background:#fff;border:2px solid var(--ink);border-radius:14px;padding:10px 12px}
+
+/* Hinweis „Zum Startbildschirm“ */
+.install{background:var(--ink);color:#fff;border-color:var(--ink)}
+.install h2{color:var(--yellow)}
+.install p{font-size:14.5px;margin:0 0 10px}
+.install .row-a .btn.ghost{background:transparent;color:#fff;border-color:#fff;box-shadow:none}
+
+/* Toast */
+.toast{position:fixed;left:16px;right:16px;bottom:calc(92px + env(safe-area-inset-bottom));z-index:60;max-width:560px;margin:0 auto;background:var(--ink);color:#fff;border-radius:14px;padding:12px 16px;font-weight:600;box-shadow:4px 4px 0 rgba(0,0,0,.25)}
+.toast.err{background:var(--red)}
+
+/* Untere Leiste */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:50;display:flex;justify-content:space-around;align-items:flex-end;background:#fff;border-top:var(--bw) solid var(--ink);
+  padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+.tabbar a{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;text-decoration:none;color:var(--muted);font-size:11.5px;font-weight:700;padding:4px 0;min-height:48px;justify-content:center}
+.tabbar a span{font-size:21px;line-height:1}
+.tabbar a.on{color:var(--ink)}
+.tabbar a.on span{transform:scale(1.12)}
+.tabbar .plus-tab span{width:54px;height:54px;border-radius:50%;background:var(--yellow);border:var(--bw) solid var(--ink);box-shadow:3px 3px 0 var(--ink);display:grid;place-items:center;font:400 32px/1 var(--head);color:var(--ink);margin-top:-26px}
+@media (min-width:900px){.app-main{padding-top:28px}}
+@media print{.app-top,.tabbar,.sim-hinweis,.toast{display:none!important}}

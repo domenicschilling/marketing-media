@@ -1,9 +1,9 @@
 // Geschäftslogik: Benachrichtigungen, Zahlungslinks, Kündigung, Monatsabrechnung.
-import { CFG, plattformgebuehr, netto } from "./config.mjs";
+import { CFG, plattformgebuehr, netto, provisionSatz, BAUSTEINE_SIMULIERT } from "./config.mjs";
 import { sendMail } from "./mail.mjs";
 import { mails } from "./emails.mjs";
 import { stripe, taxRateId, ensureCustomer } from "./stripe.mjs";
-import { allStudios, zahlungenVon, saveZahlung, getAbrechnung, saveAbrechnung, saveStudio, log, store } from "./store.mjs";
+import { allStudios, zahlungenVon, saveZahlung, getAbrechnung, saveAbrechnung, saveStudio, getStudio, log, store } from "./store.mjs";
 import { monatsende, now, HttpError } from "./util.mjs";
 import { loginLink } from "./auth.mjs";
 
@@ -31,6 +31,17 @@ export async function notifyAdmin(titel, studio, details) {
 }
 
 export const connectUrl = (s) => `${CFG.siteUrl}/api/connect?id=${s.id}`;
+// Eingebettete Einrichtung im Dashboard möglich? (öffentlicher Stripe-Schlüssel gesetzt oder Simulation)
+// TF_EINBETTEN=aus schaltet zurück auf die Weiterleitung (Stripe-Onboarding/Checkout), z. B. für Tests oder als Notlösung
+export const eingebettet = () => process.env.TF_EINBETTEN !== "aus" && (BAUSTEINE_SIMULIERT || Boolean(CFG.stripePublishableKey));
+// Link aus E-Mails: mit Login direkt in die Einrichtung im Dashboard (sonst wie bisher Stripe-Seite)
+export const einrichtungUrl = (s) => (eingebettet() ? `${loginLink(s.id)}&next=${encodeURIComponent("/app.html#einrichtung")}` : connectUrl(s));
+
+// Gründer-Aktion: echter Zähler aus echten Anmeldungen (Studios mit Gründer-Platz, Abschluss nicht abgebrochen)
+export async function gruenderStand() {
+  const vergeben = (await allStudios()).filter((s) => s.gruender && !["entwurf", "abgebrochen"].includes(s.status)).length;
+  return { max: CFG.gruenderMax, vergeben, frei: Math.max(0, CFG.gruenderMax - vergeben) };
+}
 
 export function kuendigungsDatum(date = new Date()) {
   return monatsende(date);
@@ -67,7 +78,7 @@ export const istAnzahlung = (z) => z.art === "anzahlung" || Boolean(z.anzahlung)
 export async function checkoutFuer(studio, z) {
   if (!darfKassieren(studio)) throw new HttpError(409, "Dieses Studio kann gerade keine Zahlungen annehmen.");
   const plattform = plattformKassiert(studio);
-  const fee = plattformgebuehr(z.betragCent, studio.modell);
+  const fee = plattformgebuehr(z.betragCent, studio);
   const anzahlung = istAnzahlung(z);
   const meta = { tattoofinZahlung: z.id, studioId: studio.id };
   const session = await stripe("POST", "/checkout/sessions", {
@@ -90,6 +101,63 @@ export async function checkoutFuer(studio, z) {
   z.gebuehrBruttoCent = fee.bruttoCent;
   await saveZahlung(z);
   return session.url;
+}
+
+// Eingebettetes Bezahlfeld (Payment Element) auf tattoofin.de statt Weiterleitung zum Stripe-Checkout.
+// Gleiche Abwicklung wie checkoutFuer: Provision → Destination Charge (application_fee, on_behalf_of, transfer_data),
+// Kauf/Profi → Direct Charge auf dem Konto des Studios (Stripe-Account-Header, ohne Plattformgebühr).
+// Klarna leitet zur Bestätigung kurz zu Klarna weiter und dann zurück auf /bezahlt.html (das ist bei Klarna immer so).
+export async function bezahlfeldFuer(studio, z) {
+  if (!darfKassieren(studio)) throw new HttpError(409, "Dieses Studio kann gerade keine Zahlungen annehmen.");
+  const plattform = plattformKassiert(studio);
+  const fee = plattformgebuehr(z.betragCent, studio);
+  const anzahlung = istAnzahlung(z);
+  const meta = { tattoofinZahlung: z.id, studioId: studio.id };
+  // Bestehenden, noch offenen PaymentIntent wiederverwenden (Kunde lädt die Seite neu), sonst neu anlegen
+  if (z.paymentIntentId && z.clientSecret && z.betragFuerPi === z.betragCent) {
+    return { clientSecret: z.clientSecret, stripeAccount: plattform ? null : studio.stripe.accountId };
+  }
+  const pi = await stripe("POST", "/payment_intents", {
+    amount: z.betragCent, currency: "eur", payment_method_types: CFG.zahlarten,
+    description: `${z.beschreibung || "Tattoo-Projekt"} (${z.kunde || "Kunde"})${anzahlung ? " · Anzahlung" : ""}`,
+    receipt_email: z.email || undefined, metadata: meta,
+    ...(plattform ? { application_fee_amount: fee.bruttoCent, on_behalf_of: studio.stripe.accountId, transfer_data: { destination: studio.stripe.accountId }, transfer_group: z.id } : {}),
+  }, { idempotencyKey: `pi-${z.id}-${z.betragCent}`, ...(plattform ? {} : { account: studio.stripe.accountId }) });
+  z.paymentIntentId = pi.id;
+  z.clientSecret = pi.client_secret;
+  z.betragFuerPi = z.betragCent;
+  z.abwicklung = plattform ? "plattform" : "studio";
+  z.weg = "bezahlfeld";
+  z.gebuehrNettoCent = fee.nettoCent;
+  z.gebuehrBruttoCent = fee.bruttoCent;
+  await saveZahlung(z);
+  return { clientSecret: pi.client_secret, stripeAccount: plattform ? null : studio.stripe.accountId };
+}
+
+const objId = (x) => (x && typeof x === "object" ? x.id : x || "");
+
+// Zahlung als bezahlt markieren (Webhook oder Abgleich nach der Rückkehr auf /bezahlt.html)
+export async function zahlungBezahlt(z, account) {
+  if (z.status === "bezahlt") return;
+  const s = await getStudio(z.studioId);
+  let pi = null;
+  try { pi = await stripe("GET", `/payment_intents/${z.paymentIntentId}`, { expand: ["latest_charge.balance_transaction"] }, { account }); } catch { /* Details optional */ }
+  const charge = pi?.latest_charge && typeof pi.latest_charge === "object" ? pi.latest_charge : null;
+  z.zahlart = charge?.payment_method_details?.type || pi?.payment_method_types?.[0] || "";
+  z.zahlartText = ZAHLART[z.zahlart] || z.zahlart;
+  z.chargeId = charge?.id || "";
+  z.applicationFeeId = objId(charge?.application_fee);
+  z.transferId = objId(charge?.transfer);
+  // Provision: Stripe-Gebühr zahlt Tattoofin. Merken, weil sie bei Erstattungen nicht zurückkommt.
+  const bt = charge?.balance_transaction;
+  if (z.abwicklung === "plattform" && bt && typeof bt === "object") z.stripeGebuehrCent = bt.fee || 0;
+  z.status = "bezahlt";
+  z.bezahltAm = now();
+  delete z.clientSecret;
+  await saveZahlung(z);
+  await notify(s, mails.zahlungEingegangen(s, z));
+  if (z.email) await notify(s, mails.zahlungKunde(s, z), z.email);
+  await log("kundenzahlung", { studioId: s.id, zahlungId: z.id, betragCent: z.betragCent, gebuehrBruttoCent: z.gebuehrBruttoCent, stripeGebuehrCent: z.stripeGebuehrCent });
 }
 
 // Provision, die Tattoofin an einer Zahlung endgültig verdient (brutto, inkl. USt.)
@@ -133,7 +201,7 @@ export async function monatsabrechnung(monat, { dryRun = false } = {}) {
       const txr = await taxRateId({ inklusive: true });
       await stripe("POST", "/invoiceitems", {
         customer: s.stripe.customerId, currency: "eur", amount: ab.provisionBruttoCent, tax_rates: [txr],
-        description: `Tattoofin-Provision ${CFG.provisionProzent} % vom Zahlbetrag (inkl. Zahlungsgebühren) auf ${positionen.length} Zahlung(en), Zahlbeträge ${(ab.umsatzCent / 100).toFixed(2)} € (${monat})`,
+        description: `Tattoofin-Provision ${provisionSatz(s)} % vom Zahlbetrag (inkl. Zahlungsgebühren) auf ${positionen.length} Zahlung(en), Zahlbeträge ${(ab.umsatzCent / 100).toFixed(2)} € (${monat})`,
         metadata: { studioId: s.id, monat },
       }, { idempotencyKey: `ii-prov-${s.id}-${monat}` });
       const inv = await stripe("POST", "/invoices", {
@@ -180,7 +248,7 @@ export async function taeglicheJobs(heute = new Date()) {
       const stufe = seit > 7 ? 2 : seit > 2 ? 1 : 0;
       if (stufe > (s.connectErinnert || 0)) {
         s.connectErinnert = stufe; await saveStudio(s);
-        await notify(s, mails.connectErinnerung(s, { connectUrl: connectUrl(s) }));
+        await notify(s, mails.connectErinnerung(s, { connectUrl: einrichtungUrl(s) }));
         if (stufe === 2) await notifyAdmin("Stripe-Konto seit 7 Tagen nicht fertig: bitte anrufen", s, {});
         out.push(["connect-erinnerung", s.firma, stufe]);
       }

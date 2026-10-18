@@ -1,49 +1,83 @@
 <!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Bezahlen – Tattoofin</title><meta name="robots" content="noindex">
-<link rel="icon" href="/assets/figur.png"><link rel="stylesheet" href="/css/site.css">
-</head><body>
-<main class="sec tight"><div class="wrap">
-  <form class="paybox" id="f">
-    <div class="muted" style="font-weight:600">Bezahlen bei</div>
-    <h1 style="font-size:28px;margin:4px 0 14px" id="studio">…</h1>
-    <div id="alert"></div>
-    <div class="field"><label for="betrag">Betrag in € (wie mit dem Studio abgesprochen)</label><input type="text" inputmode="decimal" id="betrag" required placeholder="z. B. 1.500"></div>
-    <div class="field"><label for="kunde">Dein Name</label><input type="text" id="kunde" required autocomplete="name"></div>
-    <div class="field"><label for="email">Deine E-Mail (für die Bestätigung)</label><input type="email" id="email" autocomplete="email"></div>
-    <div class="field"><label for="beschreibung">Wofür? (optional)</label><input type="text" id="beschreibung" placeholder="z. B. Rückenstück, Sitzung 2"></div>
-    <label style="display:flex;gap:8px;align-items:center;margin:0 0 12px;font-size:15px"><input type="checkbox" id="anzahlung" style="width:auto"> Das ist eine Anzahlung für einen Termin</label>
-    <div id="bed" class="hidden" style="margin:0 0 14px;background:var(--gold-soft);border:1px solid #f5d77a;border-radius:12px;padding:12px 14px;font-size:14px">
-      <b>Anzahlungsbedingungen</b><p id="bed-text" style="margin:6px 0 10px"></p>
-      <label style="display:flex;gap:8px;align-items:flex-start"><input type="checkbox" id="bed-ok" style="width:auto;margin-top:3px"> <span>Ich habe die Anzahlungsbedingungen gelesen und bin einverstanden.</span></label>
+<title>Bezahlen – Tattoofin</title><meta name="robots" content="noindex"><meta name="theme-color" content="#1f3d5c">
+<link rel="icon" href="/favicon.png" type="image/png">
+<link rel="stylesheet" href="/css/site.css"><link rel="stylesheet" href="/css/app.css"><link rel="stylesheet" href="/css/kunde.css">
+</head><body class="app kunde">
+<main class="app-main">
+  <div class="kunde-kopf"><small>Bezahlen bei</small><h1 id="studio">…</h1><span class="ort" id="ort"></span></div>
+  <div id="alert"></div>
+
+  <form id="schritt1" class="form-a card-a" autocomplete="on" novalidate>
+    <span class="schritt-tag">Schritt 1 von 2</span>
+    <div class="seg" role="radiogroup" aria-label="Wofür zahlst du?">
+      <label><input type="radio" name="art" value="gesamt" checked><span>Tattoo bezahlen</span></label>
+      <label><input type="radio" name="art" value="anzahlung"><span>Anzahlung</span></label>
     </div>
-    <button class="btn gold" id="pay" style="width:100%">Weiter zur Zahlung</button>
-    <p class="fn">Beim Bezahlen siehst du, welche Zahlungsoptionen dir angeboten werden, je nach Prüfung durch den Zahlungsanbieter auch Ratenzahlung oder späteres Bezahlen. Die Bedingungen legt allein der Zahlungsanbieter fest. <b>Achtung! Kreditaufnahme kostet Geld.</b></p>
-    <p class="fn" style="margin-top:14px;display:flex;align-items:center;gap:8px"><img src="/assets/figur.png" alt="" style="width:26px"> Sichere Zahlung über Stripe · bereitgestellt von Tattoofin</p>
+    <label class="lbl" for="betrag">Betrag (wie mit dem Studio abgesprochen)</label>
+    <div class="betrag-feld"><input type="text" inputmode="decimal" id="betrag" name="betrag" placeholder="0" required autocomplete="transaction-amount" enterkeyhint="next"><span>€</span></div>
+    <div style="height:14px"></div>
+    <label class="lbl" for="kunde">Dein Name</label>
+    <input type="text" id="kunde" name="name" required autocomplete="name" autocapitalize="words" enterkeyhint="next">
+    <label class="lbl" for="email">Deine E-Mail (für die Quittung)</label>
+    <input type="email" id="email" name="email" autocomplete="email" inputmode="email" enterkeyhint="next">
+    <label class="lbl" for="beschreibung">Motiv / Projekt</label>
+    <input type="text" id="beschreibung" name="beschreibung" autocomplete="off" placeholder="z. B. Rückenstück" enterkeyhint="next">
+    <label class="lbl" for="sitzungen">Sitzung (optional)</label>
+    <input type="text" id="sitzungen" name="sitzungen" autocomplete="off" placeholder="z. B. Sitzung 2 von 3" enterkeyhint="done">
+    <div id="bed" class="bed hidden"><b>Anzahlungsbedingungen des Studios</b><p id="bed-text"></p>
+      <label class="haken"><input type="checkbox" id="bed-ok"> <span>Ich habe die Anzahlungsbedingungen gelesen und bin einverstanden.</span></label></div>
+    <label class="haken"><input type="checkbox" id="inhalt-ok"> <span id="inhalt-text">Ich zahle den Betrag an das Studio. Das ist so mit dem Studio abgesprochen.</span></label>
+    <button class="btn gold big w100" id="weiter" disabled>Weiter zum Bezahlen</button>
   </form>
-</div></main>
+
+  <div id="schritt2" class="card-a hidden">
+    <span class="schritt-tag">Schritt 2 von 2</span>
+    <div class="summe" id="s2-summe"></div>
+    <div id="bezahlfeld"></div>
+    <p class="klein" style="text-align:center;margin:12px 0 0"><a href="" id="aendern">Angaben ändern</a></p>
+  </div>
+
+  <p class="fuss">Beim Bezahlen siehst du, welche Zahlungsoptionen dir angeboten werden, je nach Prüfung durch den Zahlungsanbieter auch Ratenzahlung* oder späteres Bezahlen. Die Bedingungen legt allein der Zahlungsanbieter fest.<br>*Ratenzahlung über externe Anbieter wie Klarna, nach deren Prüfung. Tattoofin ist kein Kreditgeber. <b>Achtung! Kreditaufnahme kostet Geld.</b></p>
+  <p class="powered"><img src="/assets/figur.png" alt=""> Sichere Zahlung über Stripe · bereitgestellt von Tattoofin</p>
+</main>
 <script src="/js/common.js"></script>
+<script src="/js/stripe-bausteine.js"></script>
+<script src="/js/bezahlen.js"></script>
 <script>
 (async function () {
-  var slug = new URLSearchParams(location.search).get("s"), a = document.getElementById("alert"), btn = document.getElementById("pay");
-  function err(t) { a.innerHTML = '<div class="alert err">' + TF.esc(t) + "</div>"; }
+  var $ = function (id) { return document.getElementById(id); }, B = TFBezahlen;
+  // Formular nie „normal“ abschicken (sonst lädt die Seite ohne Angaben neu), Knopf erst nach dem Laden aktiv
+  $("schritt1").addEventListener("submit", function (ev) { ev.preventDefault(); });
+  var q = new URLSearchParams(location.search);
+  var m = location.pathname.match(/^\/zahlen\/([^/?#]+)/);
+  var slug = m ? decodeURIComponent(m[1]) : q.get("s");
+  var studio = null;
+  if (q.get("betrag")) $("betrag").value = q.get("betrag");
   try {
-    var d = await TF.api("/api/pay?s=" + encodeURIComponent(slug));
-    document.getElementById("studio").textContent = d.studio.firma;
-    document.getElementById("bed-text").textContent = d.studio.anzahlungsbedingungen;
-    if (!d.studio.aktiv) { btn.disabled = true; err("Bei diesem Studio ist die Online-Zahlung gerade nicht verfügbar."); }
-  } catch (e) { btn.disabled = true; err(e.message); }
-  var anz = document.getElementById("anzahlung"), bedOk = document.getElementById("bed-ok");
-  anz.onchange = function () { document.getElementById("bed").classList.toggle("hidden", !anz.checked); };
-  bedOk.onchange = function () { if (bedOk.checked) a.innerHTML = ""; };
-  document.getElementById("f").addEventListener("submit", async function (ev) {
+    var d = await TF.api("/api/pay?s=" + encodeURIComponent(slug || ""));
+    studio = d.studio;
+    $("studio").textContent = studio.firma; $("ort").textContent = studio.ort || "";
+    document.title = "Bezahlen bei " + studio.firma;
+    $("bed-text").textContent = studio.anzahlungsbedingungen;
+    $("weiter").disabled = false;
+    if (!studio.aktiv) { $("weiter").disabled = true; B.meldung("Bei diesem Studio ist die Online-Zahlung gerade nicht verfügbar."); }
+  } catch (err) { $("weiter").disabled = true; $("studio").textContent = "Studio nicht gefunden"; B.meldung(err.message); return; }
+
+  var f = $("schritt1");
+  function anzahlung() { return f.art.value === "anzahlung"; }
+  function info() { return { firma: studio.firma, betragCent: B.betragCent($("betrag").value), beschreibung: $("beschreibung").value.trim(), sitzungen: $("sitzungen").value.trim(), anzahlung: anzahlung(), kunde: $("kunde").value.trim(), email: $("email").value.trim() }; }
+  function text() { $("inhalt-text").textContent = B.inhaltText(info()); $("bed").classList.toggle("hidden", !anzahlung()); }
+  f.addEventListener("input", text); f.addEventListener("change", text); text();
+  $("aendern").onclick = function (ev) { ev.preventDefault(); location.reload(); };
+  f.addEventListener("submit", function (ev) {
     ev.preventDefault();
-    if (anz.checked && !bedOk.checked) return err("Bitte bestätige die Anzahlungsbedingungen.");
-    btn.disabled = true; btn.textContent = "Einen Moment …";
-    try {
-      var r = await TF.api("/api/pay", { body: { s: slug, betrag: document.getElementById("betrag").value, kunde: document.getElementById("kunde").value, email: document.getElementById("email").value, beschreibung: document.getElementById("beschreibung").value, anzahlung: anz.checked, bedingungen: anz.checked && bedOk.checked } });
-      location.href = r.url;
-    } catch (e) { err(e.message); btn.disabled = false; btn.textContent = "Weiter zur Zahlung"; }
+    var i = info();
+    if (!i.betragCent) { $("betrag").focus(); return B.meldung("Bitte gib den Betrag ein."); }
+    if (!i.kunde) { $("kunde").focus(); return B.meldung("Bitte gib deinen Namen ein."); }
+    if (i.anzahlung && !$("bed-ok").checked) return B.meldung("Bitte bestätige die Anzahlungsbedingungen.");
+    if (!$("inhalt-ok").checked) return B.meldung("Bitte bestätige kurz, dass Studio, Projekt und Betrag stimmen.");
+    B.starte({ s: slug, betrag: $("betrag").value, kunde: i.kunde, email: i.email, beschreibung: i.beschreibung, sitzungen: i.sitzungen, anzahlung: i.anzahlung, bedingungen: i.anzahlung && $("bed-ok").checked, inhaltOk: true }, i);
   });
 })();
 </script>

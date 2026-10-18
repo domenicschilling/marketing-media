@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Tattoofin – Dein Studio</title><meta name="robots" content="noindex">
+<meta name="theme-color" content="#1f3d5c">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/favicon.png" type="image/png"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Tattoofin">
+<link rel="stylesheet" href="/css/site.css"><link rel="stylesheet" href="/css/app.css">
+</head><body class="app">
+<header class="app-top">
+  <a class="app-brand" href="#start"><img src="/assets/figur.png" alt=""><span id="top-firma">Tattoofin</span></a>
+  <span class="app-top-r" id="top-status"></span>
+</header>
+<div id="sim-hinweis" class="sim-hinweis hidden">Vorschau – keine echten Zahlungen. Stripe ist hier nur simuliert.</div>
+<div id="offline" class="offline hidden">Du bist offline. Zahlungslinks und Zahlungen brauchen Internet.</div>
+<div id="stripe-banner"></div>
+<div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+<main class="app-main" id="app" aria-busy="true">
+  <div class="laden" id="laden"><img src="/assets/figur.png" alt=""><p>Einen Moment …</p></div>
+
+  <!-- START -->
+  <section data-view="start" class="hidden">
+    <h1 class="hallo" id="hallo"></h1>
+    <a class="big-cta" href="#link"><span class="plus">+</span><span>Zahlungslink erstellen<small>Betrag eintragen, per WhatsApp schicken</small></span></a>
+    <div id="checkliste"></div>
+    <div class="card-a"><div class="card-h"><h2>Letzte Zahlungen</h2><a href="#zahlungen">Alle</a></div><div id="letzte"></div></div>
+    <div class="card-a" id="geld-kurz"></div>
+    <div id="install" class="card-a install hidden"></div>
+  </section>
+
+  <!-- EINRICHTUNG -->
+  <section data-view="einrichtung" class="hidden">
+    <a class="zurueck" href="#start">← Zurück</a>
+    <h1>Zahlungskonto einrichten</h1>
+    <p class="muted klein" id="einr-text">Damit das Geld deiner Kunden auf dein Bankkonto kommt. Dauert ca. 10 Minuten. Halte deinen Ausweis und die Bankverbindung (IBAN) bereit.</p>
+    <div id="einr-status"></div>
+    <div id="einr-box" class="stripe-box"></div>
+    <p class="muted klein">Die Angaben prüft unser Zahlungspartner Stripe (gesetzlich vorgeschrieben). Tattoofin sieht keine Ausweis- oder Kontodaten.</p>
+  </section>
+
+  <!-- ZAHLUNGSLINK -->
+  <section data-view="link" class="hidden">
+    <a class="zurueck" href="#start">← Zurück</a>
+    <h1>Zahlungslink erstellen</h1>
+    <div id="link-gesperrt"></div>
+    <form id="f-link" class="form-a" autocomplete="off">
+      <label class="lbl" for="l-betrag">Betrag</label>
+      <div class="betrag-feld"><input type="text" inputmode="decimal" id="l-betrag" name="betrag" placeholder="0" required autocomplete="transaction-amount" enterkeyhint="next"><span>€</span></div>
+      <div id="l-fee" class="fee"></div>
+      <div class="seg" role="radiogroup" aria-label="Art der Zahlung">
+        <label><input type="radio" name="art" value="gesamt" checked><span>Projektpreis</span></label>
+        <label><input type="radio" name="art" value="anzahlung"><span>Anzahlung</span></label>
+      </div>
+      <label class="lbl" for="l-kunde">Name des Kunden</label>
+      <input type="text" id="l-kunde" name="kunde" required autocomplete="off" autocapitalize="words" enterkeyhint="next" placeholder="z. B. Lena Beispiel">
+      <label class="lbl" for="l-beschreibung">Motiv / Projekt</label>
+      <input type="text" id="l-beschreibung" name="beschreibung" autocomplete="off" enterkeyhint="next" placeholder="z. B. Sleeve linker Arm, Japanese">
+      <label class="lbl" for="l-sitzungen">Sitzungen (optional)</label>
+      <input type="text" id="l-sitzungen" name="sitzungen" autocomplete="off" enterkeyhint="next" placeholder="z. B. 3 Sitzungen à 5 Std.">
+      <label class="lbl" for="l-email">E-Mail des Kunden (optional, für die Quittung)</label>
+      <input type="email" id="l-email" name="email" inputmode="email" autocomplete="off" enterkeyhint="done" placeholder="kunde@beispiel.de">
+      <button class="btn gold big w100" id="l-btn">Link erstellen</button>
+      <p class="muted klein">Dein Kunde bestätigt vor dem Bezahlen Betrag und Projekt, bei Anzahlungen auch deine Bedingungen. So hast du später einen Beleg.</p>
+    </form>
+    <div id="l-out"></div>
+  </section>
+
+  <!-- ZAHLUNGEN -->
+  <section data-view="zahlungen" class="hidden">
+    <h1>Zahlungen</h1>
+    <div class="seg filter" id="filter">
+      <label><input type="radio" name="filter" value="alle" checked><span>Alle</span></label>
+      <label><input type="radio" name="filter" value="bezahlt"><span>Bezahlt</span></label>
+      <label><input type="radio" name="filter" value="offen"><span>Offen</span></label>
+    </div>
+    <div id="z-liste"></div>
+  </section>
+
+  <!-- ZAHLUNG (Detail) -->
+  <section data-view="zahlung" class="hidden">
+    <a class="zurueck" href="#zahlungen">← Zahlungen</a>
+    <div id="z-detail"></div>
+  </section>
+
+  <!-- GELD -->
+  <section data-view="geld" class="hidden">
+    <h1>Dein Geld</h1>
+    <p class="muted klein" id="geld-text"></p>
+    <div id="geld-box" class="stripe-box"></div>
+  </section>
+
+  <!-- WERBUNG -->
+  <section data-view="werbung" class="hidden">
+    <h1>Werbung für dein Studio</h1>
+    <p class="muted klein">Fertige Bilder für Instagram, mit deinem Studionamen und dem QR-Code zu deiner Zahlseite. Antippen, speichern, posten.</p>
+    <div id="kit"></div>
+    <div class="card-a"><h2>Deine Zahlseite</h2><p class="muted klein">Für Theke, Flyer und Bio-Link. Kunden scannen, tragen den abgesprochenen Betrag ein und bezahlen.</p>
+      <div class="zs"><div class="qr" id="zs-qr"></div><div><input type="text" id="zs-url" readonly aria-label="Link zu deiner Zahlseite"><div class="row-a"><button class="btn dark small" data-copy="zs-url">Link kopieren</button><a class="btn ghost small" id="zs-open" target="_blank" rel="noopener">Ansehen</a></div></div></div>
+    </div>
+    <div class="card-a"><h2>Zum Ausdrucken</h2><p class="muted klein">Fensteraufkleber, Flyer und Aufsteller aus deinem Studio Kit.</p><div id="mat" class="liste-links"></div></div>
+  </section>
+
+  <!-- MEHR -->
+  <section data-view="mehr" class="hidden">
+    <h1>Mehr</h1>
+    <nav class="liste-links gross">
+      <a href="#werbung"><b>📣 Werbung &amp; QR-Code</b><small>Instagram-Bilder, Zahlseite, Studio Kit</small></a>
+      <a href="#recht"><b>⚖️ Deine rechtliche Lage</b><small id="mehr-recht">Wer trägt welches Risiko? Einfach erklärt.</small></a>
+      <a href="#extras"><b>✨ Extras für dein Studio</b><small>Mehr Kunden, weniger No-Shows</small></a>
+      <a href="#konto"><b>🏦 Bankkonto &amp; Daten</b><small>Bankverbindung, Firmendaten, Auszahlungen</small></a>
+      <a href="#einstellungen"><b>⚙️ Einstellungen</b><small>Anzahlungsbedingungen, E-Mail für Benachrichtigungen</small></a>
+      <a href="/portal.html#vertrag"><b>📄 Vertrag, Abrechnungen, Kündigung</b><small>Ausführliche Ansicht</small></a>
+      <a href="/onboarding.html"><b>📝 Fragebogen</b><small id="mehr-fb"></small></a>
+      <a href="https://wa.me/491624502375" target="_blank" rel="noopener"><b>💬 Hilfe per WhatsApp</b><small>0162 4502375 · Mo–Fr 9–17 Uhr</small></a>
+    </nav>
+    <div class="row-a" style="margin-top:18px"><button class="btn ghost small" id="logout">Abmelden</button><button class="btn ghost small" id="logout-alle">Auf allen Geräten abmelden</button></div>
+    <p class="muted klein" id="mehr-paket" style="margin-top:14px"></p>
+  </section>
+
+  <!-- RECHT -->
+  <section data-view="recht" class="hidden">
+    <a class="zurueck" href="#mehr">← Mehr</a>
+    <div id="recht-inhalt" class="recht-text"></div>
+    <div class="card-a" id="recht-ok"></div>
+  </section>
+
+  <!-- EXTRAS -->
+  <section data-view="extras" class="hidden">
+    <a class="zurueck" href="#mehr">← Mehr</a>
+    <h1>Extras</h1>
+    <p class="muted klein">Zusatzangebote für dein Studio. Tippe auf „Interesse“, dann melden wir uns persönlich. Es wird nichts automatisch gebucht oder berechnet.</p>
+    <div id="extras-liste"></div>
+  </section>
+
+  <!-- KONTO -->
+  <section data-view="konto" class="hidden">
+    <a class="zurueck" href="#mehr">← Mehr</a>
+    <h1>Bankkonto &amp; Daten</h1>
+    <div id="konto-box" class="stripe-box"></div>
+  </section>
+
+  <!-- EINSTELLUNGEN -->
+  <section data-view="einstellungen" class="hidden">
+    <a class="zurueck" href="#mehr">← Mehr</a>
+    <h1>Einstellungen</h1>
+    <div class="card-a"><h2>Anzahlungsbedingungen</h2><p class="muted klein">Sieht dein Kunde bei jeder Anzahlung und muss sie bestätigen. Leer lassen = Standardtext.</p>
+      <label class="lbl" for="k-anz">Deine Bedingungen</label><textarea id="k-anz" rows="5" maxlength="1000" autocomplete="off"></textarea>
+      <button class="btn gold small" id="k-anz-save">Speichern</button></div>
+    <div class="card-a"><h2>Benachrichtigungen</h2>
+      <label class="lbl" for="k-email">E-Mail für Zahlungsbenachrichtigungen</label><input type="email" id="k-email" autocomplete="email" inputmode="email">
+      <button class="btn gold small" id="k-save">Speichern</button></div>
+  </section>
+</main>
+
+<nav class="tabbar" id="tabbar" aria-label="Hauptmenü">
+  <a href="#start" data-tab="start"><span>🏠</span>Start</a>
+  <a href="#zahlungen" data-tab="zahlungen"><span>💳</span>Zahlungen</a>
+  <a href="#link" data-tab="link" class="plus-tab" aria-label="Zahlungslink erstellen"><span>+</span></a>
+  <a href="#geld" data-tab="geld"><span>💶</span>Geld</a>
+  <a href="#mehr" data-tab="mehr"><span>☰</span>Mehr</a>
+</nav>
+
+<script src="/js/qrcode.min.js"></script>
+<script src="/js/common.js"></script>
+<script src="/js/stripe-bausteine.js"></script>
+<script src="/js/app-kit.js"></script>
+<script src="/js/app.js"></script>
+</body></html>

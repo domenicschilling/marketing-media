@@ -1,7 +1,22 @@
 // Schlanker Stripe-Client über die REST-API (keine SDK-Abhängigkeit).
 import crypto from "node:crypto";
-import { SECRETS, CFG } from "./config.mjs";
+import { SECRETS, CFG, SIMULATION } from "./config.mjs";
 import { store } from "./store.mjs";
+import { createSim, leereDb, nest, sendeWebhook } from "./stripe-sim.mjs";
+
+// Vorschau ohne Test-Schlüssel: Stripe-Nachbau im Prozess, Zustand im Vorschau-Speicher, Webhooks an die eigene Site.
+// Das Webhook-Geheimnis wird aus dem (zufälligen) Vorschau-Sitzungsgeheimnis abgeleitet.
+export const simWebhookSecret = () => "whsec_sim_" + crypto.createHash("sha256").update(SECRETS.sessionSecret + ":webhook").digest("hex").slice(0, 32);
+let simInstanz;
+export function simulation() {
+  if (!simInstanz) simInstanz = createSim({
+    load: async () => (await store.get("sim/db")) || leereDb(),
+    save: (db) => store.set("sim/db", db),
+    pageBase: `${CFG.siteUrl}/api/sim`,
+    webhook: (type, object, account) => sendeWebhook(`${CFG.siteUrl}/api/stripe-webhook`, simWebhookSecret(), type, object, account),
+  });
+  return simInstanz;
+}
 
 function encode(obj, prefix, out = []) {
   for (const [k, v] of Object.entries(obj)) {
@@ -27,6 +42,8 @@ export const TATTOOFIN_BRANDING = {
 };
 
 export async function stripe(method, path, params, { idempotencyKey, account } = {}) {
+  // Parameter wie bei einem echten HTTP-Aufruf umwandeln (Texte statt Zahlen/Booleans), damit die Simulation gleich reagiert
+  if (SIMULATION) return simulation().call(method, path, params ? nest(encode(params)) : {}, { idempotencyKey, account });
   if (!SECRETS.stripeKey) throw new Error("STRIPE_SECRET_KEY fehlt");
   const url = new URL(SECRETS.stripeApiBase + "/v1" + path);
   const headers = { Authorization: "Bearer " + SECRETS.stripeKey, "Stripe-Version": "2024-06-20" };
@@ -51,7 +68,7 @@ export async function stripe(method, path, params, { idempotencyKey, account } =
 // Prüft die Stripe-Signatur (Header "Stripe-Signature": t=…,v1=…)
 // Plattform- und Connect-Webhooks dürfen unterschiedliche Secrets haben: beide werden geprüft.
 export function verifyWebhook(payload, header) {
-  const secrets = [SECRETS.stripeWebhookSecret, SECRETS.stripeConnectWebhookSecret].filter(Boolean);
+  const secrets = SIMULATION ? [simWebhookSecret()] : [SECRETS.stripeWebhookSecret, SECRETS.stripeConnectWebhookSecret].filter(Boolean);
   if (!secrets.length) throw new Error("STRIPE_WEBHOOK_SECRET fehlt");
   let last;
   for (const sec of secrets) { try { return verifyOne(payload, header, sec); } catch (e) { last = e; } }
@@ -121,6 +138,30 @@ export async function ensureConnectedAccount(studio) {
 export async function dashboardLink(studio) {
   if (studio.stripe?.kontoTyp !== "express") return "https://dashboard.stripe.com/";
   return (await stripe("POST", `/accounts/${studio.stripe.accountId}/login_links`, {})).url;
+}
+
+// Eingebettete Stripe-Bausteine (Connect Embedded Components) für das Studio-Dashboard.
+// Erlaubt sind sie für Express (Paket Start/Studio) UND Standard (Profi/Geschenk). Unterschiede:
+//  - Express: Erstattungen/Rückbuchungen laufen über Tattoofin (Provision wird verrechnet) → in „payments“ ausgeschaltet.
+//  - Standard: Das Studio ist selbst Händler mit eigenem Konto → Erstattungen und Streitfälle direkt im Baustein.
+//  - Bei beiden sammelt Stripe die Pflichtangaben (requirement_collection = stripe). Für Bankdaten/Konto-Änderungen
+//    verlangt Stripe dann eine kurze Stripe-Anmeldung im Pop-up (Stripe-Benutzerauthentifizierung, nicht abschaltbar).
+export function bausteine(studio) {
+  const express = studio.stripe?.kontoTyp === "express";
+  const ext = { external_account_collection: true };
+  return {
+    account_onboarding: { enabled: true, features: ext },
+    notification_banner: { enabled: true, features: ext },
+    account_management: { enabled: true, features: ext },
+    payouts: { enabled: true, features: { ...ext, instant_payouts: false, standard_payouts: true, edit_payout_schedule: !express } },
+    payments: { enabled: true, features: express
+      ? { refund_management: false, dispute_management: false, capture_payments: false, destination_on_behalf_of_charge_management: true }
+      : { refund_management: true, dispute_management: true, capture_payments: true } },
+  };
+}
+
+export async function accountSession(studio) {
+  return stripe("POST", "/account_sessions", { account: studio.stripe.accountId, components: bausteine(studio) });
 }
 
 export async function onboardingLink(studio, base) {

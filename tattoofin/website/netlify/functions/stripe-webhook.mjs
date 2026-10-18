@@ -13,7 +13,7 @@ import { CFG } from "./_lib/config.mjs";
 import { json, fail, now, brutto, handler } from "./_lib/util.mjs";
 import { stripe, verifyWebhook } from "./_lib/stripe.mjs";
 import { getStudio, saveStudio, studioBy, store, log, zahlungBy, saveZahlung } from "./_lib/store.mjs";
-import { notify, notifyAdmin, zaehleAktion, connectUrl, kontoAbgleichen, provisionVerdient, ZAHLART } from "./_lib/domain.mjs";
+import { notify, notifyAdmin, zaehleAktion, einrichtungUrl, kontoAbgleichen, provisionVerdient, zahlungBezahlt } from "./_lib/domain.mjs";
 import { mails } from "./_lib/emails.mjs";
 import { loginLink } from "./_lib/auth.mjs";
 
@@ -22,28 +22,6 @@ const id = (x) => (x && typeof x === "object" ? x.id : x || "");
 
 async function studioFuer(obj) {
   return (await getStudio(obj?.metadata?.studioId || obj?.client_reference_id)) || (await studioBy("cus", obj?.customer));
-}
-
-async function zahlungBezahlt(z, account) {
-  if (z.status === "bezahlt") return;
-  const s = await getStudio(z.studioId);
-  let pi = null;
-  try { pi = await stripe("GET", `/payment_intents/${z.paymentIntentId}`, { expand: ["latest_charge.balance_transaction"] }, { account }); } catch { /* Details optional */ }
-  const charge = pi?.latest_charge && typeof pi.latest_charge === "object" ? pi.latest_charge : null;
-  z.zahlart = charge?.payment_method_details?.type || pi?.payment_method_types?.[0] || "";
-  z.zahlartText = ZAHLART[z.zahlart] || z.zahlart;
-  z.chargeId = charge?.id || "";
-  z.applicationFeeId = id(charge?.application_fee);
-  z.transferId = id(charge?.transfer);
-  // Provision: Stripe-Gebühr zahlt Tattoofin. Merken, weil sie bei Erstattungen nicht zurückkommt.
-  const bt = charge?.balance_transaction;
-  if (z.abwicklung === "plattform" && bt && typeof bt === "object") z.stripeGebuehrCent = bt.fee || 0;
-  z.status = "bezahlt";
-  z.bezahltAm = now();
-  await saveZahlung(z);
-  await notify(s, mails.zahlungEingegangen(s, z));
-  if (z.email) await notify(s, mails.zahlungKunde(s, z), z.email);
-  await log("kundenzahlung", { studioId: s.id, zahlungId: z.id, betragCent: z.betragCent, gebuehrBruttoCent: z.gebuehrBruttoCent, stripeGebuehrCent: z.stripeGebuehrCent });
 }
 
 // Checkout, Erstattungen und Rückbuchungen von Kundenzahlungen (beide Modelle)
@@ -61,6 +39,19 @@ async function kundenEreignis(event) {
       if (event.type === "checkout.session.async_payment_failed") { z.status = "fehlgeschlagen"; await saveZahlung(z); break; }
       if (o.payment_status === "paid" || event.type === "checkout.session.async_payment_succeeded") await zahlungBezahlt(z, account);
       else { z.status = "in_pruefung"; await saveZahlung(z); }
+      break;
+    }
+
+    // Eingebettetes Bezahlfeld (Payment Element) auf tattoofin.de
+    case "payment_intent.succeeded":
+    case "payment_intent.processing":
+    case "payment_intent.payment_failed": {
+      const z = (await zahlungBy("pi", o.id)) || (await zahlungBy("zahlung", o.metadata?.tattoofinZahlung));
+      if (!z || z.status === "bezahlt") break;
+      z.paymentIntentId = o.id;
+      if (event.type === "payment_intent.succeeded") await zahlungBezahlt(z, account);
+      else if (event.type === "payment_intent.processing") { z.status = "in_pruefung"; await saveZahlung(z); }
+      else { z.letzterFehler = { am: now(), text: String(o.last_payment_error?.message || "").slice(0, 200) }; await saveZahlung(z); }
       break;
     }
 
@@ -168,7 +159,7 @@ async function connectEreignis(event) {
   return kundenEreignis(event);
 }
 
-const KUNDEN_EREIGNISSE = /^(checkout\.session\.|charge\.)/;
+const KUNDEN_EREIGNISSE = /^(checkout\.session\.|charge\.|payment_intent\.)/;
 
 export default handler(async (req) => {
   if (req.method !== "POST") return fail("Methode nicht erlaubt", 405);
@@ -198,7 +189,7 @@ export default handler(async (req) => {
         }
         await saveStudio(s);
         if (s.aktion) await zaehleAktion();
-        await notify(s, mails.anmeldung(s, { loginUrl: loginLink(s.id), connectUrl: connectUrl(s) }));
+        await notify(s, mails.anmeldung(s, { loginUrl: loginLink(s.id), connectUrl: einrichtungUrl(s) }));
         await notify(s, mails.kaufBezahlt(s, { betragCent: o.amount_total ?? brutto(s.preisNetto), rechnungUrl }));
         await notifyAdmin("Neuer Kauf bezahlt 🎉", s, { Betrag: euroText(o.amount_total || 0) + " brutto" });
         await log("kauf.bezahlt", { studioId: s.id });
@@ -211,7 +202,7 @@ export default handler(async (req) => {
       }
       case "invoice.paid": {
         const s = await studioFuer(o);
-        if (s && o.metadata?.typ === "kauf" && s.status === "zahlung_offen") {
+        if (s && ["kauf", "setup"].includes(o.metadata?.typ) && s.status === "zahlung_offen") {
           s.status = "einrichtung";
           s.bezahltAm = now();
           s.stripe.paymentIntentId = o.payment_intent;

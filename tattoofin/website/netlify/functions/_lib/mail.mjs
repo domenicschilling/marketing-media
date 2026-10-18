@@ -5,7 +5,10 @@ import { store } from "./store.mjs";
 export async function sendMail({ to, subject, html, text, bcc, replyTo }) {
   const msg = { from: CFG.mailFrom, to, subject, html, text, bcc, reply_to: replyTo || CFG.mailReplyTo || undefined };
   try {
-    if (process.env.RESEND_API_KEY) {
+    if (CFG.vorschau) {
+      // Vorschau: nie echte E-Mails verschicken. Die Mail landet nur im Vorschau-Postfach (/vorschau.html).
+      console.log(`[mail/vorschau] an ${to}: ${subject}`);
+    } else if (process.env.RESEND_API_KEY) {
       const r = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: { Authorization: "Bearer " + process.env.RESEND_API_KEY, "Content-Type": "application/json" },

@@ -9,12 +9,14 @@
 //   log/<zeit>-<id>                  Ereignis-Protokoll
 import fs from "node:fs/promises";
 import path from "node:path";
+import { CFG } from "./config.mjs";
 
 let backend;
 
 async function netlify() {
   const { getStore } = await import("@netlify/blobs");
-  const s = getStore({ name: "tattoofin", consistency: "strong" });
+  // Vorschau-Site: eigener Speicher, damit nie echte Daten berührt werden
+  const s = getStore({ name: CFG.vorschau ? "tattoofin-vorschau" : "tattoofin", consistency: "strong" });
   return {
     get: (k) => s.get(k, { type: "json" }),
     set: (k, v) => s.setJSON(k, v),
@@ -111,6 +113,10 @@ export const getAbrechnung = (studioId, monat) => store.get(`abrechnung/${studio
 export const saveAbrechnung = (a) => store.set(`abrechnung/${a.studioId}/${a.monat}`, a);
 export const abrechnungenVon = async (studioId) =>
   (await store.all(`abrechnung/${studioId}/`)).sort((a, b) => b.monat.localeCompare(a.monat));
+
+// ---- Nachweise (Leistungsbestätigung mit Unterschrift/Foto, getrennt vom Zahlungsdatensatz, weil groß) ----
+export const getLeistung = (studioId, zahlungId) => store.get(`leistung/${studioId}/${zahlungId}`);
+export const saveLeistung = (studioId, zahlungId, v) => store.set(`leistung/${studioId}/${zahlungId}`, v);
 
 export async function log(type, data = {}) {
   const t = new Date().toISOString();

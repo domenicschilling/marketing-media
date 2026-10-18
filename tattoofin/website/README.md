@@ -30,6 +30,20 @@ Stripe-Konto freigegeben · Login-Link · Fragebogen erhalten · Tattoofin ist l
 Monatsabrechnung · Zahlung fehlgeschlagen · Kündigung bestätigt · Kündigung zurückgenommen · Vertragsende in 7 Tagen · Vertrag beendet ·
 Garantie-Erstattung · Abschluss abgebrochen · Rückbuchung (Belege) · Rückbuchung entschieden · Erstattung ausgelöst · interne Meldungen an `ADMIN_EMAIL`. Texte: `netlify/functions/_lib/emails.mjs`.
 
+## Portal v2 (Branch `claude/tattoofin-portal-v2`, Stand 18.10.2026 – nur Vorschau, nicht live)
+
+| Bereich | Funktion |
+|---|---|
+| Pakete | `start` (0 € + 10 %), `studio` (299 € netto + 7 %, Gründer-Aktion: erste 10 ohne Einrichtung gegen Erfahrungsvideo), `profi` (= Kauf, 1.290 € netto, eigenes Konto, 0 %). `PAKETE` in `_lib/config.mjs`, Satz je Studio in `studio.provisionProzent`. Env: `STUDIO_NETTO_CENT`, `PROVISION_STUDIO_PROZENT`, `GRUENDER_MAX`, `KAUF_NETTO_CENT` |
+| `/app.html` | Studio-Dashboard als Web-App (PWA: `manifest.webmanifest`, `sw.js`, `offline.html`, Icons `assets/app/`). Nach Abschluss/Einladung direkt eingeloggt (Session-Cookie aus `/api/signup`), Login-Links führen hierher |
+| Stripe eingebettet | Connect Embedded Components (`/api/portal/stripe-session` → Account Session; `js/stripe-bausteine.js`): Einrichtung, Auszahlungen, Konto, Hinweise, im Tattoofin-Look. Braucht `STRIPE_PUBLISHABLE_KEY` (pk_…). Ohne pk: wie bisher Weiterleitung zu Stripe. Notschalter `TF_EINBETTEN=aus` |
+| Zahlseite | `tattoofin.de/zahlen/<studio>` + `/zahlung.html?z=…` mit eingebettetem Payment Element (Destination Charge wie Checkout). Webhook zusätzlich: `payment_intent.succeeded`, `payment_intent.processing`, `payment_intent.payment_failed` (in beiden Stripe-Endpoints ergänzen!) |
+| Absicherung | Vor dem Bezahlen: Häkchen „Inhalt stimmt“ (+ Anzahlungsbedingungen), gespeichert mit Zeit/IP. Nach dem Termin: Leistungsbestätigung `/bestaetigung.html?t=…` (Name, Datum, Unterschrift, optional Foto), Nachweis-PDF `/nachweis.html?z=…`. Entwurf, Rechtsprüfung offen |
+| `/recht.html` | „Deine rechtliche Lage – einfach erklärt“ (Entwurf), Zustimmung mit Version/Zeitstempel (`CFG.rechtVersion`) |
+| Extras | Anfrage-Knopf im Dashboard (`EXTRAS` in `portal.mjs`), keine Abrechnung |
+| Vorschau | Eigene Site `tattoofin-vorschau.netlify.app` (Env nur `TF_VORSCHAU=1`, `SITE_URL`): eigener Speicher, keine Mails, kein Tracking, Stripe-Simulation (`_lib/stripe-sim.mjs`, `/api/sim/*`), Steuerseite `/vorschau.html`. Bauen + veröffentlichen: `node dev/vorschau-deploy.mjs --deploy` |
+| Tests | `NODE_PATH=… node dev/e2e.mjs [ordner] [handy-ordner]` – 100 Prüfungen inkl. Mandantentrennung, Zahlseite, Leistungsbestätigung, Handy-Screenshots |
+
 ## Einrichtung auf Netlify
 
 1. Neues Netlify-Projekt aus diesem Repo, **Base directory: `tattoofin/website`** (Publish `public`, Functions `netlify/functions` stehen in `netlify.toml`).

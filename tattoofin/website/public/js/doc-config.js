@@ -14,7 +14,7 @@
         firma: api.firma, adresse: api.adresse, registergericht: api.registergericht, ustid: api.ustid,
         geschaeftsfuehrer: api.geschaeftsfuehrer, ansprechpartner: api.geschaeftsfuehrer, telefon: api.telefon, email: api.email,
         gerichtsstand: api.gerichtsstand, kaufPreis: api.kaufNetto / 100, kaufAktionPreis: api.aktionNetto / 100,
-        provisionSatz: api.provisionProzent + " %", garantieTage: api.garantieTage, setupSupportTage: api.setupSupportTage,
+        provisionSatz: api.provisionProzent + " %", studioSatz: api.studioProvisionProzent + " %", studioPreis: api.studioNetto / 100, garantieTage: api.garantieTage, setupSupportTage: api.setupSupportTage,
         kuendigungProvision: "jederzeit zum Monatsende",
         vertragVersion: api.vertragVersion,
       });
@@ -23,7 +23,7 @@
     document.querySelectorAll("[data-cfg]").forEach(function (el) {
       var k = el.dataset.cfg, v = C[k];
       if (v === undefined) return;
-      if (/^(kaufPreis|kaufAktionPreis)$/.test(k)) v = Number(v).toLocaleString("de-DE") + " €";
+      if (/^(kaufPreis|kaufAktionPreis|studioPreis)$/.test(k)) v = Number(v).toLocaleString("de-DE") + " €";
       el.textContent = v;
     });
   });

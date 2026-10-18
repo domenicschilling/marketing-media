@@ -11,6 +11,7 @@ const sha = (v) => createHash("sha256").update(v).digest("hex");
 
 export default async (req, context) => {
   if (req.method !== "POST") return new Response("", { status: 405 });
+  if (process.env.TF_VORSCHAU === "1") return new Response(null, { status: 204 }); // Vorschau: kein Tracking
   const token = (process.env.META_CAPI_TOKEN || "").trim().replace(/^["']|["']$/g, "");
   if (!token) return new Response(null, { status: 204 });
   let b;

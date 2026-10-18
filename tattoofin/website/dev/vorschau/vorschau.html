@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vorschau-Steuerung – Tattoofin</title><meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="/css/site.css"><link rel="stylesheet" href="/css/app.css">
+</head><body class="app" style="padding-bottom:30px">
+<main class="app-main">
+  <h1>Tattoofin-Vorschau</h1>
+  <p class="klein">Hier kannst du alles gefahrlos durchklicken. <b>Es fließt kein echtes Geld, es geht keine E-Mail raus, Stripe ist nur simuliert.</b> Bitte nur Testdaten eingeben – diese Seite ist für jeden mit dem Link erreichbar.</p>
+  <div class="card-a"><h2>1. Geschenk-Einladung erzeugen</h2>
+    <form id="f" class="form-a" autocomplete="on">
+      <label class="lbl" for="firma">Studio-Name (Test)</label><input type="text" id="firma" autocomplete="organization" value="Nadelwerk Studio">
+      <label class="lbl" for="email">E-Mail (Test, es wird nichts verschickt)</label><input type="email" id="email" autocomplete="email" inputmode="email" value="">
+      <button class="btn gold w100">Einladungslink erzeugen</button>
+    </form>
+    <div id="out"></div>
+  </div>
+  <div class="card-a"><h2>2. Oder normal anmelden</h2><p class="klein">Mit einem der drei Pakete, wie ein neues Studio.</p>
+    <div class="row-a"><a class="btn dark small" href="/start.html?paket=start">Start</a><a class="btn gold small" href="/start.html?paket=studio">Studio ⭐</a><a class="btn dark small" href="/start.html?paket=profi">Profi</a></div></div>
+  <div class="card-a"><h2>3. Vorschau-Postfach</h2><p class="klein">Alle E-Mails, die verschickt worden wären (z. B. Login-Links). Antippen zum Öffnen.</p><button class="btn ghost small" id="neu">Aktualisieren</button><div id="mails" style="margin-top:10px"></div></div>
+  <div class="card-a"><h2>Weitere Seiten</h2><div class="liste-links"><a href="/">Startseite mit Paketen</a><a href="/app.html">Studio-App (nach Login)</a><a href="/recht.html">Deine rechtliche Lage</a><a href="/login.html">Login</a></div></div>
+</main>
+<script src="/js/common.js"></script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  $("email").value = "test+" + Math.random().toString(36).slice(2, 7) + "@example.com";
+  $("f").addEventListener("submit", async function (ev) {
+    ev.preventDefault();
+    try { var r = await TF.api("/api/vorschau/einladen", { body: { firma: $("firma").value, email: $("email").value } });
+      $("out").innerHTML = '<p class="klein">Einladung für <b>' + TF.esc($("email").value) + '</b> (diese E-Mail bei der Anmeldung verwenden):</p><a class="btn gold w100" href="' + TF.esc(r.link) + '">Einladung öffnen</a>';
+    } catch (err) { $("out").innerHTML = '<p class="klein" style="color:var(--red)">' + TF.esc(err.message) + "</p>"; }
+  });
+  async function mails() {
+    var l = await TF.api("/api/vorschau/mails").catch(function () { return []; });
+    $("mails").innerHTML = l.length ? l.map(function (m, i) { return '<details style="border-top:1px solid #dde3ea;padding:8px 0"><summary><b>' + TF.esc(m.subject) + '</b><br><small class="muted">an ' + TF.esc([].concat(m.to).join(", ")) + " · " + new Date(m.at).toLocaleString("de-DE") + '</small></summary><iframe data-i="' + i + '" style="width:100%;height:520px;border:1px solid #dde3ea;border-radius:10px;margin-top:8px"></iframe></details>'; }).join("") : '<p class="leer">Noch keine E-Mails.</p>';
+    $("mails").querySelectorAll("iframe").forEach(function (f) { f.srcdoc = l[+f.dataset.i].html.replace(/<a /g, '<a target="_top" '); });
+  }
+  $("neu").onclick = mails; mails();
+})();
+</script>
+</body></html>

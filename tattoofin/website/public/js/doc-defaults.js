@@ -28,9 +28,11 @@ window.CFG = {
   //  A) Kauf: einmalige Einrichtung (netto zzgl. USt.), keine Grundgebühr, keine Provision; Zahlungsgebühren zahlt das Studio
   //  B) Provision: keine Einrichtungsgebühr, 10 % vom Zahlbetrag jeder Zahlung über Tattoofin (auch Anzahlungen),
   //     alles inklusive (Zahlungsgebühren + USt.). Tattoofin kassiert über Stripe, das Studio bekommt 90 %. Abrechnung monatlich
-  kaufPreis: 1499,
+  kaufPreis: 1290,
   kaufAktionPreis: 1249,          // mit Aktionscode (Mailing)
   provisionSatz: "10 %",
+  studioSatz: "7 %",
+  studioPreis: 299,
   kuendigungProvision: "jederzeit zum Monatsende",
   garantieTage: 30,
   setupSupportTage: 30,

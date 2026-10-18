@@ -19,6 +19,33 @@
   [headers.values]
     X-Robots-Tag = "noindex"
 [[headers]]
+  for = "/app.html"
+  [headers.values]
+    X-Robots-Tag = "noindex"
+[[headers]]
+  for = "/bestaetigung.html"
+  [headers.values]
+    X-Robots-Tag = "noindex"
+[[headers]]
+  for = "/nachweis.html"
+  [headers.values]
+    X-Robots-Tag = "noindex"
+[[headers]]
+  for = "/zahlen/*"
+  [headers.values]
+    X-Robots-Tag = "noindex"
+# Web-App (PWA): Service Worker und Manifest nie lange zwischenspeichern
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+    Service-Worker-Allowed = "/"
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+    Cache-Control = "public, max-age=3600"
+[[headers]]
   for = "/admin.html"
   [headers.values]
     X-Robots-Tag = "noindex"
@@ -36,6 +63,11 @@
   for = "/assets/fonts/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
+    Access-Control-Allow-Origin = "*"
+[[headers]]
+  for = "/css/fonts-stripe.css"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
 [[headers]]
   for = "/assets/*"
   [headers.values]
@@ -65,3 +97,14 @@
   from = "/anzahlung"
   to = "/muster-anzahlungsbedingungen.pdf"
   status = 302
+
+# Eigene Zahlseite je Studio: tattoofin.de/zahlen/<studio> (alte Adresse /zahlen.html?s=… funktioniert weiter)
+[[redirects]]
+  from = "/zahlen/*"
+  to = "/zahlen.html"
+  status = 200
+# Studio-Dashboard (Web-App)
+[[redirects]]
+  from = "/app"
+  to = "/app.html"
+  status = 200
