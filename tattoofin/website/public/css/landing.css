@@ -221,3 +221,26 @@
   .sec{padding:70px 0}
 }
 @media (max-width:560px){.paid{right:22px}}
+
+/* Weniger No-Shows (18.10.2026): zweiter Hauptnutzen im Hero + eigener Abschnitt */
+.noshow-hero{display:flex;gap:12px;align-items:flex-start;margin:22px 0 0;max-width:560px;background:#fff;border:var(--bw) solid var(--ink);border-radius:18px;
+  padding:13px 16px 12px;box-shadow:var(--sh);font-size:17px;line-height:1.45;font-weight:500;color:var(--ink)}
+.noshow-hero svg{flex:none;width:30px;height:30px;margin-top:1px}
+.noshow-hero b{font-weight:800}
+.sec.hell{background:#fff;border-block:var(--bw) solid var(--ink)}
+.hell .deposit{align-items:start}
+.hell .dphone-wrap{margin-top:40px}
+.ns-schritte{list-style:none;margin:6px 0 0;padding:0;counter-reset:ns;display:grid;gap:20px;max-width:560px}
+.ns-schritte li{counter-increment:ns;display:grid;grid-template-columns:44px minmax(0,1fr);column-gap:14px;align-items:start}
+.ns-schritte li::before{content:counter(ns);grid-row:1 / span 2;display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:var(--yellow);
+  border:var(--bw) solid var(--ink);box-shadow:3px 3px 0 var(--ink);font:400 21px/1 var(--head);padding-top:3px;color:var(--ink)}
+.ns-schritte h3{font-size:21px;margin:8px 0 4px}
+.ns-schritte p{margin:0;font-size:17px;line-height:1.5;color:var(--muted)}
+.ns-hinweis{margin:26px 0 0;font-size:15px;line-height:1.5;color:var(--muted);max-width:560px}
+.ns-hinweis a,.problem .card p a{color:var(--ink);font-weight:700;text-underline-offset:3px}
+@media (max-width:560px){
+  .noshow-hero{font-size:16px;padding:12px 14px 11px;margin-top:18px}
+  .noshow-hero svg{width:26px;height:26px}
+  .ns-schritte h3{font-size:19px}
+  .hell .dphone-wrap{margin-top:10px}
+}
