@@ -16,14 +16,17 @@ let backend;
 async function netlify() {
   const { getStore } = await import("@netlify/blobs");
   // Vorschau-Site: eigener Speicher, damit nie echte Daten berührt werden
-  const s = getStore({ name: CFG.vorschau ? "tattoofin-vorschau" : "tattoofin", consistency: "strong" });
+  // Store bei JEDEM Zugriff neu holen: Der Zugangs-Token der Blobs kommt pro Aufruf; ein im Modul gemerkter Store
+  // behielt in lange laufenden Funktions-Exemplaren den abgelaufenen Token („Failed to decode token: Token expired“, 18.10.2026).
+  const st = () => getStore({ name: CFG.vorschau ? "tattoofin-vorschau" : "tattoofin", consistency: "strong" });
   return {
-    get: (k) => s.get(k, { type: "json" }),
-    set: (k, v) => s.setJSON(k, v),
-    del: (k) => s.delete(k),
+    get: (k) => st().get(k, { type: "json" }),
+    set: (k, v) => st().setJSON(k, v),
+    del: (k) => st().delete(k),
     list: async (prefix) => {
       const out = [];
       let cursor;
+      const s = st();
       do {
         const r = await s.list({ prefix, paginate: false, cursor });
         out.push(...r.blobs.map((b) => b.key));
