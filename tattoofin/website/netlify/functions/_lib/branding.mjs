@@ -114,7 +114,31 @@ export async function stripeBrandingSetzen(s) {
   if (b.akzent) settings.branding.secondary_color = b.akzent;
   if (b.kurzbezeichnung) settings.payments = { statement_descriptor: b.kurzbezeichnung };
   if (!Object.keys(settings.branding).length) delete settings.branding;
-  const a = await stripe("POST", "/accounts/" + acct, { settings });
+  let a;
+  try { a = await stripe("POST", "/accounts/" + acct, { settings }); }
+  catch (e) {
+    // Live 18.10.2026: „No such file upload“ – Dateien des verbundenen Kontos sind für accounts.update vom Plattform-Konto
+    // aus nicht sichtbar. Rückfall: Bilder auf dem Plattform-Konto hochladen und erneut setzen.
+    if (!/No such file upload/i.test(e.message || "") || !settings.branding) throw e;
+    for (const art of ["icon", "logo"]) {
+      if (!settings.branding[art]) continue;
+      const { typ, buf } = bildAusDataUrl((await ladeBild(s.id, art)).src);
+      const f = await stripeDatei({ buf, typ }, art === "icon" ? "business_icon" : "business_logo", null, `${s.slug}-${art}.${typ === "image/png" ? "png" : "jpg"}`);
+      settings.branding[art] = f.id; dateien[art] = f.id + " (Plattform)";
+    }
+    try { a = await stripe("POST", "/accounts/" + acct, { settings }); }
+    catch (e2) {
+      if (!/No such file upload/i.test(e2.message || "")) throw e2;
+      // Zweiter Rückfall: Dateien auf dem verbundenen Konto und Update im Namen des Kontos (Stripe-Account-Header)
+      for (const art of ["icon", "logo"]) {
+        if (!settings.branding[art]) continue;
+        const { typ, buf } = bildAusDataUrl((await ladeBild(s.id, art)).src);
+        const f = await stripeDatei({ buf, typ }, art === "icon" ? "business_icon" : "business_logo", acct, `${s.slug}-${art}.${typ === "image/png" ? "png" : "jpg"}`);
+        settings.branding[art] = f.id; dateien[art] = f.id + " (Konto, Update im Namen des Kontos)";
+      }
+      a = await stripe("POST", "/account", { settings }, { account: acct });
+    }
+  }
   s.branding.stripeAm = now();
   delete s.branding.stripeFehler;
   s.branding.stripeDateien = dateien;
