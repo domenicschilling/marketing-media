@@ -138,7 +138,7 @@ try {
   let state = await mock("state");
   const sess = Object.values(state.sessions).find((s) => s.metadata?.tattoofinZahlung === zahlLink.split("z=")[1]);
   const provAcct = Object.values(state.accounts).find((a) => a.email === "prov@example.com");
-  check(provAcct?.type === "express" && provAcct?.capabilities?.klarna_payments?.requested === "true", "Provisions-Studio: Express-Konto mit Karte + Klarna");
+  check(!provAcct?.type && provAcct?.controller?.stripe_dashboard?.type === "express" && provAcct?.controller?.losses?.payments === "application" && provAcct?.controller?.fees?.payer === "application" && provAcct?.controller?.requirement_collection === "stripe" && provAcct?.capabilities?.klarna_payments?.requested === "true", "Provisions-Studio: Express-Konto (Controller-Eigenschaften) mit Karte + Klarna");
   check(!sess?.account && sess?.payment_intent_data?.transfer_data?.destination === provAcct.id && sess?.payment_intent_data?.on_behalf_of === provAcct.id, "Tattoofin kassiert als Plattform, Ziel = Konto des Studios, Studio ist Händler");
   check(sess?.payment_intent_data?.application_fee_amount === 15000, "Provision 150 € = 10 % vom Zahlbetrag, alles inklusive → 1.350 € an das Studio");
   await page.click("#pay-klarna");
