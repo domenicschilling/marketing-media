@@ -73,7 +73,13 @@ export function startStripeMock({ port = 12111, webhookUrl, webhookSecret, log =
           res.writeHead(303, { Location: s.success_url.replace("{CHECKOUT_SESSION_ID}", s.id) });
           return res.end();
         }
-        if (s.mode === "payment") {
+        if (s.mode === "subscription") {
+          // Paket Monatlich: Abo + erste Rechnung (bezahlt)
+          const sub = { id: rid("sub"), object: "subscription", customer: s.customer, status: "active", cancel_at_period_end: false, metadata: s.subscription_data?.metadata || {}, current_period_end: Math.floor(Date.now() / 1000) + 30 * 86400 };
+          db.subscriptions = db.subscriptions || {}; db.subscriptions[sub.id] = sub;
+          const inv = { id: rid("in"), object: "invoice", customer: s.customer, subscription: sub.id, number: "TEST-" + invoiceNr++, status: "paid", amount_due: s.amount_total, amount_paid: s.amount_total, hosted_invoice_url: "http://localhost:" + port + "/invoice", metadata: {} };
+          db.invoices[inv.id] = inv; s.invoice = inv.id; s.subscription = sub.id; s.payment_status = "paid";
+        } else if (s.mode === "payment") {
           s.payment_intent = rid("pi");
           if (s.invoice_creation?.enabled === "true") {
             const inv = { id: rid("in"), object: "invoice", customer: s.customer, number: "TEST-" + invoiceNr++, status: "paid", amount_due: s.amount_total, amount_paid: s.amount_total, hosted_invoice_url: "http://localhost:" + port + "/invoice", metadata: s.invoice_creation.invoice_data?.metadata || {}, payment_intent: s.payment_intent };
@@ -145,7 +151,7 @@ export function startStripeMock({ port = 12111, webhookUrl, webhookSecret, log =
       if (res1 === "checkout" && id1 === "sessions") {
         const s = { id: rid("cs"), object: "checkout.session", ...p, url: `http://localhost:${port}/pay/`, status: "open", account: acctHdr || null };
         s.url += s.id;
-        if (s.mode === "payment") {
+        if (s.mode === "payment" || s.mode === "subscription") {
           const li = p.line_items[0];
           const net = Number(li.price_data.unit_amount);
           s.amount_total = li.tax_rates ? Math.round(net * 1.19) : net;
@@ -153,6 +159,12 @@ export function startStripeMock({ port = 12111, webhookUrl, webhookSecret, log =
         }
         db.sessions[s.id] = s;
         return done(s);
+      }
+      if (res1 === "subscriptions") {
+        const sub = (db.subscriptions || {})[id1];
+        if (!sub) return send(404, { error: { message: "Abo fehlt" } });
+        if (req.method === "POST") sub.cancel_at_period_end = p.cancel_at_period_end === "true";
+        return send(200, sub);
       }
       if (res1 === "setup_intents") return send(200, db.setupIntents[id1]);
       if (res1 === "invoiceitems") { const it = { id: rid("ii"), ...p, amount: Number(p.amount) }; db.items.push(it); return done(it); }

@@ -34,7 +34,7 @@ export async function startDev({ port = PORT, mock = !process.env.STRIPE_SECRET_
     for (const p of paths) routes.push({ re: new RegExp("^" + p.replace(/\*/g, ".*") + "$"), fn: mod.default, name: f });
   }
 
-  const types = { ".html": "text/html; charset=utf-8", ".css": "text/css", ".js": "text/javascript", ".png": "image/png", ".woff2": "font/woff2", ".mp4": "video/mp4", ".json": "application/json", ".svg": "image/svg+xml" };
+  const types = { ".html": "text/html; charset=utf-8", ".css": "text/css", ".js": "text/javascript", ".png": "image/png", ".webmanifest": "application/manifest+json", ".pdf": "application/pdf", ".webp": "image/webp", ".jpg": "image/jpeg", ".woff2": "font/woff2", ".mp4": "video/mp4", ".json": "application/json", ".svg": "image/svg+xml" };
 
   const server = http.createServer(async (req, res) => {
     const url = new URL(req.url, `http://localhost:${port}`);
@@ -54,7 +54,9 @@ export async function startDev({ port = PORT, mock = !process.env.STRIPE_SECRET_
       } catch (e) { console.error(e); res.writeHead(500); res.end(String(e)); }
       return;
     }
-    let p = path.join(root, "public", decodeURIComponent(url.pathname));
+    // Umschreibungen wie in netlify.toml
+    const pfad = /^\/zahlen\/[^/]+$/.test(url.pathname) ? "/zahlen.html" : url.pathname;
+    let p = path.join(root, "public", decodeURIComponent(pfad));
     if (url.pathname.endsWith("/")) p = path.join(p, "index.html");
     try {
       const data = await fs.readFile(p);

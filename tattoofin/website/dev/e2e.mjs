@@ -37,17 +37,17 @@ async function cookiesAblehnen(p = page) {
   if (nein) await nein.click();
 }
 
-async function signup({ modell, email, firma, code, zahlart, geschenk }) {
-  await page.goto(`${BASE}/start.html?modell=${modell}${geschenk ? "&geschenk=" + geschenk : ""}`);
+// paket: risikofrei | monatlich | einmal; alternativ modell (alte Links: provision → risikofrei, kauf → einmal)
+async function signup({ modell, paket, email, firma, zahlart, geschenk }) {
+  await page.goto(`${BASE}/start.html?${paket ? "paket=" + paket : "modell=" + modell}${geschenk ? "&geschenk=" + geschenk : ""}`);
   await cookiesAblehnen();
-  if (code) await page.fill("#aktionscode", code);
   if (zahlart) await page.check(`input[name=zahlart][value=${zahlart}]`, { force: true });
   await page.click("section[data-step='1'] [data-next]");
   for (const [k, v] of Object.entries({ firma, inhaber: "Alex Muster", strasse: "Musterstr. 1", plz: "96047", ort: "Bamberg", email, telefon: "0151 1234567", studioTelefon: "0951 123456" })) await page.fill("#" + k, v);
   await page.click("section[data-step='2'] [data-next]");
   await page.check("input[name=ak_alle]");
   await page.fill("#unterzeichner", "Alex Muster");
-  await page.screenshot({ path: path.join(shots, `start-${modell}-schritt3.png`), fullPage: true });
+  await page.screenshot({ path: path.join(shots, `start-${paket || modell}-schritt3.png`), fullPage: true });
   await page.click("#submit");
 }
 
@@ -62,9 +62,17 @@ try {
   console.log("Startseite");
   await page.goto(BASE + "/");
   check((await page.textContent("h1")).includes("leichter bezahlbar"), "Hero lädt");
-  await page.waitForFunction(() => document.getElementById("r-prov").textContent.includes("€"));
-  check((await page.textContent("#r-prov")).includes("450"), "Rechner: 3 × 1.500 € × 10 % = 450 € Provision");
-  check((await page.textContent("#r-tipp")).includes("Kaufen"), "Rechner empfiehlt Kauf ab hohem Umsatz");
+  await page.waitForFunction(() => document.getElementById("r-risiko").textContent.includes("€"));
+  check((await page.textContent("#r-risiko")).includes("150"), "Rechner: 1.500 € × 10 % = 150 € (Risikofrei)");
+  check((await page.textContent("#r-monat")).includes("99"), "Rechner: 49 € + 3,3 % von 1.500 € ≈ 99 € (Monatlich)");
+  check((await page.textContent("#r-tipp")).includes("Monatlich"), "Rechner empfiehlt Monatlich bei 1.500 €/Monat");
+  await page.fill("#volumen", "500"); await page.dispatchEvent("#volumen", "input");
+  check((await page.textContent("#r-tipp")).includes("Risikofrei"), "Rechner empfiehlt Risikofrei bei 500 €/Monat");
+  const preise = await page.textContent("#preise");
+  check(preise.includes("999") && preise.includes("49") && preise.includes("Empfohlen") && !preise.includes("1.499"), "Drei Pakete mit 10 %, 49 €, 999 €, Monatlich empfohlen, kein 1.499 € mehr");
+  check((await page.textContent("#aufsteller")).includes("KI-Visualisierung"), "QR-Aufsteller-Abschnitt mit KI-Kennzeichnung");
+  const ld = JSON.parse(await page.textContent('script[type="application/ld+json"]'));
+  check(JSON.stringify(ld).includes("Paket Monatlich") && !JSON.stringify(ld).includes("1499"), "Strukturierte Daten: drei Pakete");
   await page.waitForTimeout(1200);
   await page.screenshot({ path: path.join(shots, "landing.png"), fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
@@ -79,20 +87,58 @@ try {
   const mProv = mailsAn("prov@example.com").map((m) => m.subject);
   check(mProv.some((s) => s.startsWith("Willkommen")) && mProv.some((s) => s.includes("freigegeben")), "E-Mails: Willkommen + Konto freigegeben");
 
-  console.log("Abschluss Kauf mit Aktionscode");
-  await signup({ modell: "kauf", email: "kauf@example.com", firma: "Ink Kauf", code: "RATENJA" });
+  console.log("Abschluss Einmalzahlung (alter Link ?modell=kauf)");
+  await signup({ modell: "kauf", email: "kauf@example.com", firma: "Ink Kauf" });
   await page.waitForURL(/localhost:12111\/pay\//);
-  check((await page.textContent("body")).includes("1486.31"), "Stripe-Betrag 1.249 € netto + 19 % = 1.486,31 €");
+  check((await page.textContent("body")).includes("1188.81"), "Stripe-Betrag 999 € netto + 19 % = 1.188,81 €");
   await page.click("#pay");
   await page.waitForURL(/danke\.html/);
   await page.waitForSelector("#connect:not(.hidden)");
   check(mailsAn("kauf@example.com").some((m) => m.subject.includes("Zahlung erhalten")), "E-Mail: Zahlung erhalten");
+  const mAdminKauf = mailsAn("domenicschilling@gmail.com").find((m) => m.subject.includes("Einmalzahlung bezahlt") && m.subject.includes("Ink Kauf"));
+  check(mAdminKauf && mAdminKauf.html.includes("/aufsteller.html?s=ink-kauf") && mAdminKauf.html.includes("Einmalzahlung"), "Admin-Mail Einmalzahlung: Paket + QR-Aufsteller bestellen mit Gravurdatei-Link");
+  const aufApi = await fetch(`${BASE}/api/aufsteller?s=ink-kauf`).then((r) => r.json());
+  check(aufApi.zahlseite?.endsWith("/zahlen/ink-kauf") && aufApi.firma === "Ink Kauf", "Aufsteller-API: Zahlseite /zahlen/<studio>");
   await page.click("#connect-btn");
   await onboarding();
   check(true, "Kauf-Studio hat Stripe-Konto verbunden");
 
-  console.log("Kauf auf Rechnung, Abbruch, Fehlerfälle");
-  await signup({ modell: "kauf", email: "rechnung@example.com", firma: "Ink Rechnung", zahlart: "rechnung" });
+  console.log("Abschluss Monatlich (Abo auf dem DSX-Konto)");
+  await signup({ paket: "monatlich", email: "abo@example.com", firma: "Ink Abo" });
+  await page.waitForURL(/localhost:12111\/pay\//);
+  const kasse = await page.textContent("body");
+  check(kasse.includes("subscription") && kasse.includes("58.31"), "Stripe-Abo: 49 € netto + 19 % = 58,31 €");
+  const sessAbo = Object.values((await mock("state")).sessions).find((x) => x.mode === "subscription");
+  check(sessAbo?.line_items?.[0]?.price_data?.recurring?.interval === "month" && sessAbo?.metadata?.paket === "monatlich", "Abo monatlich, Metadaten Paket");
+  check(/USt-IdNr\. DE456133925/.test(Object.values((await mock("state")).customers).find((c) => c.email === "abo@example.com")?.invoice_settings?.footer || ""), "Rechnungsfuß mit DSX + USt-IdNr.");
+  await page.click("#pay");
+  await page.waitForURL(/danke\.html/);
+  await page.waitForSelector("#connect:not(.hidden)");
+  check((await page.textContent("#msg")).includes("Monatlich"), "Danke-Seite: Paket Monatlich läuft");
+  const aboStudio = (await admin("studios")).find((s) => s.email === "abo@example.com");
+  check(aboStudio?.status === "einrichtung" && aboStudio?.paket === "Monatlich", "Abo-Studio in Einrichtung, Paket Monatlich");
+  check(mailsAn("abo@example.com").some((m) => m.subject.includes("Monatlich")), "E-Mail: Paket Monatlich gestartet");
+  check(mailsAn("domenicschilling@gmail.com").some((m) => m.subject.includes("Paket Monatlich") && m.html.includes("aufsteller.html?s=ink-abo")), "Admin-Mail Monatlich mit QR-Aufsteller-Link");
+  await page.click("#connect-btn");
+  await onboarding();
+  check(Object.values((await mock("state")).accounts).find((a) => a.email === "abo@example.com")?.type === "standard", "Monatlich: eigenes Standard-Konto");
+  const aboLogin = (await admin(`studio/${aboStudio.id}/login-link`, { body: {} })).url;
+  const pAbo = await ctx.newPage();
+  await pAbo.goto(aboLogin);
+  await pAbo.waitForURL(/portal\.html/);
+  const kAbo = await pAbo.evaluate(() => fetch("/api/portal/kuendigung", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ grund: "Test", garantie: true }) }).then((r) => r.json()));
+  const subAbo = Object.values((await mock("state")).subscriptions || {})[0];
+  check(kAbo.status === "gekuendigt" && !kAbo.kuendigung?.garantie && subAbo?.cancel_at_period_end === true, "Kündigung Monatlich: keine Garantie, Abo endet zum Periodenende");
+  const zAbo = await pAbo.evaluate(() => fetch("/api/portal/kuendigung", { method: "DELETE" }).then((r) => r.json()));
+  check(zAbo.status !== "gekuendigt" && Object.values((await mock("state")).subscriptions)[0].cancel_at_period_end === false, "Kündigung zurückgenommen: Abo läuft weiter");
+  await pAbo.close();
+  check((await fetch(`${BASE}/api/aufsteller?s=gibt-es-nicht`)).status === 404, "Aufsteller-API: unbekanntes Studio 404");
+  await page.goto(`${BASE}/aufsteller.html?s=ink-abo`);
+  await page.waitForFunction(() => document.getElementById("auf-img").src.startsWith("data:image/png"), null, { timeout: 15000 });
+  check((await page.textContent("#auf-qr")).includes("/zahlen/ink-abo"), "Hersteller-Seite QR-Aufsteller mit Gravurvorschau");
+
+  console.log("Einmalzahlung auf Rechnung, Abbruch, Fehlerfälle");
+  await signup({ paket: "einmal", email: "rechnung@example.com", firma: "Ink Rechnung", zahlart: "rechnung" });
   await page.waitForURL(/danke\.html/);
   check((await admin("studios")).find((s) => s.email === "rechnung@example.com")?.status === "zahlung_offen", "Rechnung offen");
   check(mailsAn("rechnung@example.com").some((m) => m.subject.includes("Rechnung")), "E-Mail: Rechnung");
@@ -105,6 +151,8 @@ try {
   const post = (b) => fetch(`${BASE}/api/signup`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(b) });
   check((await post({ modell: "provision", firma: "x", inhaber: "x", strasse: "x", plz: "1", ort: "x", email: "kauf@example.com", telefon: "1", studioTelefon: "1", unterzeichner: "x", akzeptiert: { vertrag: true, avv: true, unternehmer: true } })).status === 409, "Doppelte Anmeldung abgelehnt");
   check((await post({ modell: "kauf", email: "neu@example.com" })).status === 400, "Signup ohne Pflichtangaben abgelehnt");
+  const aktionsVersuch = await post({ paket: "einmal", aktionscode: "RATENJA", firma: "Ink Code", inhaber: "x", strasse: "x", plz: "1", ort: "x", email: "code@example.com", telefon: "1", studioTelefon: "1", unterzeichner: "x", akzeptiert: { vertrag: true, avv: true, unternehmer: true } }).then((r) => r.json());
+  check(aktionsVersuch.url && !Object.values((await mock("state")).sessions).some((x) => x.amount_total === 148631), "Aktionscode RATENJA abgeschaltet (Preis bleibt 999 €)");
 
   console.log("Login per Magic Link + Fragebogen");
   const loginUrl = linkAus(mailsAn("prov@example.com").find((m) => m.subject.startsWith("Willkommen")), /href="([^"]*\/api\/auth\?token=[^"]+)"/);
@@ -155,7 +203,7 @@ try {
 
   console.log("Studio-Zahlseite (QR)");
   const slug = det.studio.slug;
-  await page.goto(`${BASE}/zahlen.html?s=${slug}`);
+  await page.goto(`${BASE}/zahlen/${slug}`);
   await page.waitForFunction(() => document.getElementById("studio").textContent === "Ink Provision");
   await page.fill("#betrag", "300"); await page.fill("#kunde", "Tom"); await page.fill("#beschreibung", "Rückenstück");
   await page.check("#anzahlung");

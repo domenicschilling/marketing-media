@@ -35,7 +35,7 @@ const page = (title, { style, main }) => `<!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${title} – Tattoofin</title>
 <link rel="canonical" href="https://tattoofin.de/${title === "Vertrag" ? "vertrag" : "avv"}.html"><link rel="icon" href="/favicon.png" type="image/png">
-<meta name="description" content="${title === "Vertrag" ? "Dienstleistungsvertrag Tattoofin für Tattoo-Studios: Leistungen, Vergütungsmodelle Kauf und Provision, Zahlungsabwicklung über Stripe." : "Auftragsverarbeitungsvertrag (AVV) nach Art. 28 DSGVO für Tattoo-Studios, die Tattoofin nutzen."}">
+<meta name="description" content="${title === "Vertrag" ? "Dienstleistungsvertrag Tattoofin für Tattoo-Studios: Leistungen, Pakete Risikofrei, Monatlich und Einmalzahlung, Zahlungsabwicklung über Stripe." : "Auftragsverarbeitungsvertrag (AVV) nach Art. 28 DSGVO für Tattoo-Studios, die Tattoofin nutzen."}">
 <link rel="stylesheet" href="/css/doc.css">
 <style>${style}
 body{background:#fbb316 radial-gradient(rgba(31,61,92,.13) 1.3px,transparent 1.6px) 0 0/18px 18px}
@@ -67,7 +67,7 @@ const hinweis = (t) => `<p class="small" style="background:#fff4dc;border:1px so
 
 fs.writeFileSync(path.join(pub, "vertrag.html"), page("Vertrag", extract("studios/14-vertrag.html", {
   removeOrder: true,
-  onlineHinweis: hinweis("Online-Fassung, Version <span data-cfg=\"vertragVersion\"></span>. Der Vertrag kommt durch die Online-Bestellung zustande: Modell, Kundendaten und Zahlungsart werden dort gewählt, die Zahlung läuft über Stripe. Eine Bestätigung mit allen Angaben kommt per E-Mail."),
+  onlineHinweis: hinweis("Online-Fassung, Version <span data-cfg=\"vertragVersion\"></span>. Der Vertrag kommt durch die Online-Bestellung zustande: Paket, Kundendaten und Zahlungsart werden dort gewählt, die Zahlung läuft über Stripe. Eine Bestätigung mit allen Angaben kommt per E-Mail."),
 })));
 fs.writeFileSync(path.join(pub, "avv.html"), page("AVV", extract("studios/15-avv.html", {
   removeOrder: false,

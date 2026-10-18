@@ -105,19 +105,23 @@
       v.src = c.videoUrl;
       v.addEventListener("loadedmetadata", function () { $("video-wrap").classList.remove("hidden"); });
     }
+    // Paket-Rechner: Kosten pro Monat je nach Zahlungen über Tattoofin.
+    // Annahme Zahlungsgebühr bei Monatlich/Einmalzahlung: ca. 3,3 % (vorsichtig, Klarna 2,99 % + 0,35 €; Karte meist günstiger).
+    var GEBUEHR = 0.033;
     function rechne() {
-      var n = +$("proj").value, b = +$("betrag").value;
-      var umsatz = n * b, prov = umsatz * c.provisionProzent / 100;
-      $("v-proj").textContent = n; $("v-betrag").textContent = b.toLocaleString("de-DE") + " €";
-      $("r-umsatz").textContent = TF.euro(umsatz * 100);
-      $("r-prov").textContent = TF.euro(prov * 100);
-      // Vergleich: Provision netto (ohne USt.) gegen eigene Zahlungsgebühren beim Kauf (≈ 2,3 %)
-      var ersparnis = umsatz * (c.provisionProzent / (100 + c.ustProzent) - 0.023);
-      var monate = ersparnis > 0 ? Math.ceil(c.kaufNetto / 100 / ersparnis) : 0;
-      $("r-amort").textContent = monate ? (monate === 1 ? "1 Monat" : monate + " Monaten") : "–";
-      $("r-tipp").textContent = monate && monate <= 12 ? "Kaufen lohnt sich" : "Provision";
+      var v = +$("volumen").value;
+      $("v-volumen").textContent = v.toLocaleString("de-DE") + " €";
+      var risiko = v * c.provisionProzent / 100, gebuehr = v * GEBUEHR, monat = c.monatNetto / 100 + gebuehr;
+      $("r-risiko").textContent = TF.euro(Math.round(risiko) * 100);
+      $("r-monat").textContent = TF.euro(Math.round(monat) * 100);
+      $("r-einmal").textContent = "ca. " + TF.euro(Math.round(gebuehr) * 100);
+      var monatBesser = monat < risiko;
+      $("r-tipp").textContent = monatBesser ? "Monatlich ⭐" : "Risikofrei";
+      $("r-tipp-text").textContent = monatBesser
+        ? "Ab ca. 20 Monaten Laufzeit ist die Einmalzahlung noch günstiger als Monatlich."
+        : "Bei diesem Betrag zahlst du mit Risikofrei am wenigsten, ganz ohne Fixkosten.";
     }
-    ["proj", "betrag"].forEach(function (id) { $(id).addEventListener("input", rechne); });
+    $("volumen").addEventListener("input", rechne);
     rechne();
   });
 })();

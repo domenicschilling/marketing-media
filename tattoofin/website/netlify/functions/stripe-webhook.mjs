@@ -8,12 +8,14 @@
 //      charge.dispute.funds_withdrawn, charge.dispute.funds_reinstated, charge.dispute.closed
 //   2) „Verbundene Konten“: account.updated, checkout.session.completed, checkout.session.async_payment_succeeded,
 //      checkout.session.async_payment_failed, checkout.session.expired, charge.refunded, charge.dispute.created, charge.dispute.closed
+//      Für das Paket Monatlich (Abo) zusätzlich empfohlen: customer.subscription.deleted (Abo von Stripe beendet,
+//      z. B. nach endgültig fehlgeschlagenen Zahlungen) – wird unten verarbeitet, sobald das Ereignis abonniert ist.
 //   Secrets: STRIPE_WEBHOOK_SECRET (1) und STRIPE_CONNECT_WEBHOOK_SECRET (2)
 import { CFG } from "./_lib/config.mjs";
 import { json, fail, now, brutto, handler } from "./_lib/util.mjs";
 import { stripe, verifyWebhook } from "./_lib/stripe.mjs";
 import { getStudio, saveStudio, studioBy, store, log, zahlungBy, saveZahlung } from "./_lib/store.mjs";
-import { notify, notifyAdmin, zaehleAktion, connectUrl, kontoAbgleichen, provisionVerdient, ZAHLART } from "./_lib/domain.mjs";
+import { notify, notifyAdmin, zaehleAktion, connectUrl, kontoAbgleichen, provisionVerdient, ZAHLART, paketDetails } from "./_lib/domain.mjs";
 import { mails } from "./_lib/emails.mjs";
 import { loginLink } from "./_lib/auth.mjs";
 
@@ -186,6 +188,22 @@ export default handler(async (req) => {
     switch (event.type) {
       case "checkout.session.completed": {
         const s = await studioFuer(o);
+        // Paket Monatlich: Abo gestartet (erste Monatsrechnung ist bezahlt bzw. bei Lastschrift eingeleitet)
+        if (s && o.mode === "subscription" && s.status === "entwurf") {
+          s.status = "einrichtung";
+          s.bezahltAm = now();
+          s.stripe.subscriptionId = id(o.subscription);
+          let rechnungUrl = "";
+          if (o.invoice) {
+            try { const inv = await stripe("GET", "/invoices/" + id(o.invoice)); s.stripe.invoiceId = inv.id; rechnungUrl = inv.hosted_invoice_url || ""; } catch { /* Rechnung optional */ }
+          }
+          await saveStudio(s);
+          await notify(s, mails.anmeldung(s, { loginUrl: loginLink(s.id), connectUrl: connectUrl(s) }));
+          await notify(s, mails.aboGestartet(s, { betragCent: o.amount_total ?? brutto(s.monatNetto || CFG.monatNetto), rechnungUrl }));
+          await notifyAdmin("Neuer Abschluss (Paket Monatlich) 🎉 – QR-Aufsteller bestellen", s, { ...paketDetails(s, { aufsteller: true }), Erste_Zahlung: euroText(o.amount_total || 0) + " brutto", Abo: s.stripe.subscriptionId });
+          await log("abo.gestartet", { studioId: s.id, subscriptionId: s.stripe.subscriptionId });
+          break;
+        }
         if (!s || o.mode !== "payment") break;
         s.status = "einrichtung";
         s.bezahltAm = now();
@@ -200,7 +218,7 @@ export default handler(async (req) => {
         if (s.aktion) await zaehleAktion();
         await notify(s, mails.anmeldung(s, { loginUrl: loginLink(s.id), connectUrl: connectUrl(s) }));
         await notify(s, mails.kaufBezahlt(s, { betragCent: o.amount_total ?? brutto(s.preisNetto), rechnungUrl }));
-        await notifyAdmin("Neuer Kauf bezahlt 🎉", s, { Betrag: euroText(o.amount_total || 0) + " brutto" });
+        await notifyAdmin(s.paket === "einmal" ? "Einmalzahlung bezahlt 🎉 – QR-Aufsteller bestellen" : "Neuer Kauf bezahlt 🎉", s, { ...paketDetails(s, { aufsteller: true }), Betrag: euroText(o.amount_total || 0) + " brutto" });
         await log("kauf.bezahlt", { studioId: s.id });
         break;
       }
@@ -217,8 +235,18 @@ export default handler(async (req) => {
           s.stripe.paymentIntentId = o.payment_intent;
           await saveStudio(s);
           await notify(s, mails.kaufBezahlt(s, { betragCent: o.amount_paid, rechnungUrl: o.hosted_invoice_url }));
-          await notifyAdmin("Rechnung Setup bezahlt", s, { Betrag: (o.amount_paid / 100).toFixed(2) + " €" });
+          await notifyAdmin(s.paket === "einmal" ? "Rechnung Einmalzahlung bezahlt – QR-Aufsteller bestellen" : "Rechnung Setup bezahlt", s, { ...paketDetails(s, { aufsteller: true }), Betrag: (o.amount_paid / 100).toFixed(2) + " €" });
         }
+        break;
+      }
+      // Paket Monatlich: Stripe hat das Abo beendet (Kündigung zum Periodenende oder endgültig fehlgeschlagene Zahlung)
+      case "customer.subscription.deleted": {
+        const s = (await getStudio(o.metadata?.studioId)) || (await studioBy("cus", o.customer));
+        if (!s || s.stripe?.subscriptionId !== o.id) break;
+        s.stripe.aboBeendetAm = now();
+        await saveStudio(s);
+        if (!["gekuendigt", "beendet", "erstattet"].includes(s.status)) await notifyAdmin("⚠️ Abo Monatlich von Stripe beendet (ohne Kündigung im Portal) – bitte Studio kontaktieren", s, { Abo: o.id, Grund: o.cancellation_details?.reason || "" });
+        await log("abo.beendet", { studioId: s.id, subscriptionId: o.id });
         break;
       }
       case "invoice.payment_failed": {

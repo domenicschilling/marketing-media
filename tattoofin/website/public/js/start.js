@@ -6,7 +6,11 @@
 
   function show(msg, type) { alertBox.innerHTML = msg ? '<div class="alert ' + (type || "err") + '">' + TF.esc(msg) + "</div>" : ""; }
   function val(n) { var el = f.elements[n]; return el ? (el.type === "checkbox" ? el.checked : (el.value || "").trim()) : ""; }
-  function modell() { var r = f.querySelector("input[name=modell]:checked"); return r ? r.value : ""; }
+  // Paket: risikofrei | monatlich | einmal (alte Links ?modell=provision → risikofrei, ?modell=kauf → einmal)
+  var ALIAS = { provision: "risikofrei", kauf: "einmal", risikofrei: "risikofrei", monatlich: "monatlich", einmal: "einmal", einmalzahlung: "einmal" };
+  var NAMEN = { risikofrei: "Risikofrei", monatlich: "Monatlich", einmal: "Einmalzahlung" };
+  function paket() { var r = f.querySelector("input[name=paket]:checked"); return r ? r.value : ""; }
+  function modell() { var p = paket(); return p === "risikofrei" ? "provision" : p ? "kauf" : ""; }
   function zahlart() { var r = f.querySelector("input[name=zahlart]:checked"); return r ? r.value : "sofort"; }
 
   function go(n) {
@@ -19,7 +23,7 @@
   }
 
   function pruefe(n) {
-    if (n === 1 && !modell()) return "Bitte wähle Provision oder Kauf.";
+    if (n === 1 && !paket() && !geschenk) return "Bitte wähle ein Paket.";
     if (n === 2) {
       var fehlt = ["firma", "inhaber", "strasse", "plz", "ort", "email", "telefon", "studioTelefon"].filter(function (k) { return !val(k); });
       if (fehlt.length) { f.elements[fehlt[0]].focus(); return "Bitte fülle alle Pflichtfelder aus."; }
@@ -33,55 +37,58 @@
   }
 
   var geschenk = new URLSearchParams(location.search).get("geschenk") || "";
-  function preisText() {
-    if (geschenk) return "Geschenk: 0 € Einrichtung, keine Grundgebühr, keine Provision – du zahlst nur die normalen Gebühren von Stripe bzw. Klarna direkt an Stripe";
-    if (modell() === "provision") return C.provisionProzent + " % vom Zahlbetrag jeder Zahlung über Tattoofin, alles inklusive (Zahlungsgebühren und USt.), " + (100 - C.provisionProzent) + " % kommen automatisch auf dein Konto, keine Einrichtungs- und keine Grundgebühr";
-    var code = val("aktionscode");
-    return "Setup " + TF.euro(code ? C.aktionNetto : C.kaufNetto) + " netto einmalig" + (code ? " (mit Aktionscode, wird geprüft)" : "") + " zzgl. " + C.ustProzent + " % USt., keine Grundgebühr, keine Provision";
-  }
-
   function final() {
-    var m = modell(), z = zahlart(), html;
+    var p = paket(), z = zahlart(), html, kurz;
+    var fin = document.getElementById("final"), sub = document.getElementById("submit");
     if (geschenk) {
-      html = "<p><b>Tattoofin als Geschenk</b> · " + TF.esc(preisText()) + ".</p>" +
+      html = "<p><b>Tattoofin als Geschenk</b> · 0 € Einrichtung, keine Grundgebühr, keine Provision – du zahlst nur die normalen Gebühren von Stripe bzw. Klarna direkt an Stripe.</p>" +
         "<p style=\"margin-bottom:0\"><b>Jetzt wird nichts bezahlt.</b> Danach legst du in ca. 10 Minuten das Zahlungskonto deines Studios an. Halte Ausweis und Bankverbindung bereit.</p>";
-      document.getElementById("submit").textContent = "Einladung annehmen";
-      document.getElementById("final").innerHTML = "<p style=\"margin-top:0\"><b>" + TF.esc(val("firma")) + "</b></p>" + html;
-      document.getElementById("kurz").innerHTML = ["Keine Einrichtungsgebühr, keine Grundgebühr, keine Provision.", "Du zahlst nur die normalen Gebühren von Stripe bzw. Klarna, direkt an Stripe.", "Das Geld deiner Kunden landet direkt auf dem Konto deines Studios.", "Wir richten alles mit dir ein.", "Deine Daten und die deiner Kunden verarbeiten wir DSGVO-konform (Auftragsverarbeitungsvertrag)."].map(function (x) { return "<li>" + TF.esc(x) + "</li>"; }).join("");
-      return;
-    }
-    if (m === "provision") {
-      html = "<p><b>Provisionsmodell</b> · " + C.provisionProzent + " % pro Zahlung, alles inklusive</p>" +
+      sub.textContent = "Einladung annehmen";
+      kurz = ["Keine Einrichtungsgebühr, keine Grundgebühr, keine Provision.", "Du zahlst nur die normalen Gebühren von Stripe bzw. Klarna, direkt an Stripe.", "Das Geld deiner Kunden landet direkt auf dem Konto deines Studios.", "Wir richten alles mit dir ein."];
+    } else if (p === "risikofrei") {
+      html = "<p><b>Paket Risikofrei</b> · " + C.provisionProzent + " % auf alle Zahlungen, inkl. der Zahlungsgebühr</p>" +
         "<p style=\"margin-bottom:0\"><b>Jetzt wird nichts bezahlt.</b> Danach legst du in ca. 10 Minuten dein Auszahlungskonto an. Halte Ausweis und Bankverbindung bereit.</p>";
-      document.getElementById("submit").textContent = "Kostenlos starten";
+      sub.textContent = "Kostenlos starten";
+      kurz = [
+        "Keine Einrichtungsgebühr, keine Fixkosten: Jetzt wird nichts bezahlt.",
+        C.provisionProzent + " % nur, wenn über Tattoofin Geld reinkommt. Alles inklusive, auch Zahlungsgebühren, Klarna und USt.",
+        "Der Rest kommt automatisch aufs Konto deines Studios. Beispiel: Kunde zahlt 1.000 €, du bekommst 900 €.",
+        "Digitaler QR-Code für deine Zahlseite inklusive.",
+        "Monatlich kündbar, mit einem Klick im Portal.",
+      ];
+    } else if (p === "monatlich") {
+      html = "<p><b>Paket Monatlich</b> · " + TF.esc(TF.euro(C.monatNetto)) + " netto im Monat zzgl. " + C.ustProzent + " % USt. (" + TF.esc(TF.euro(Math.round(C.monatNetto * (100 + C.ustProzent) / 100), true)) + " brutto)</p>" +
+        "<p>Im nächsten Schritt startest du das Abo sicher über Stripe (Karte, SEPA-Lastschrift u. a.). Die Rechnung kommt jeden Monat automatisch per E-Mail. Danach legst du das Zahlungskonto deines Studios an.</p>";
+      sub.textContent = "Zahlungspflichtig bestellen & Abo starten";
+      kurz = [
+        TF.euro(C.monatNetto) + " netto im Monat, keine Einrichtungsgebühr.",
+        "Danach nur die Zahlungsgebühren von Stripe (ca. 1,5–3 % je nach Zahlart), die du direkt an Stripe zahlst. 0 % Tattoofin-Provision.",
+        "Alles läuft über dein eigenes Zahlungskonto bei Stripe.",
+        "Inklusive QR-Aufsteller aus Holz für deine Theke und digitalem QR-Code.",
+        "Monatlich kündbar zum Ende des laufenden Abrechnungsmonats, keine Mindestlaufzeit.",
+      ];
     } else {
-      html = "<p>Du kaufst das <b>Tattoofin Setup</b>: " + TF.esc(preisText()) + ".</p>" +
+      html = "<p><b>Paket Einmalzahlung</b> · " + TF.esc(TF.euro(C.kaufNetto)) + " netto einmalig zzgl. " + C.ustProzent + " % USt.</p>" +
         (z === "rechnung" ? "<p>Du bekommst die Rechnung sofort per E-Mail, zahlbar in 7 Tagen. Sobald die Zahlung eingegangen ist, starten wir mit der Einrichtung. Schneller geht es mit Karte: dann legen wir sofort los.</p>"
-          : "<p>Im nächsten Schritt bezahlst du sicher per Karte, SEPA-Lastschrift u. a. Die Rechnung kommt automatisch per E-Mail. Danach legst du das Auszahlungskonto deines Studios an.</p>") +
-        "<p>" + C.garantieTage + " Tage Geld-zurück-Garantie ab Go-live.</p>";
-      document.getElementById("submit").textContent = z === "rechnung" ? "Zahlungspflichtig bestellen (Rechnung)" : "Zahlungspflichtig bestellen & bezahlen";
+          : "<p>Im nächsten Schritt bezahlst du sicher per Karte, SEPA-Lastschrift u. a. Die Rechnung kommt automatisch per E-Mail. Danach legst du das Zahlungskonto deines Studios an.</p>");
+      sub.textContent = z === "rechnung" ? "Zahlungspflichtig bestellen (Rechnung)" : "Zahlungspflichtig bestellen & bezahlen";
+      kurz = [
+        "Einmalig " + TF.euro(C.kaufNetto) + " netto. Danach keine Tattoofin-Gebühr mehr, nur die Zahlungsgebühren, die du direkt an Stripe zahlst.",
+        "Inklusive QR-Aufsteller aus Holz für deine Theke und digitalem QR-Code.",
+        C.garantieTage + " Tage Geld-zurück-Garantie ab Go-live.",
+        "Alles läuft über dein eigenes Zahlungskonto bei Stripe.",
+        z === "rechnung" ? "Die Einrichtung startet nach Zahlungseingang." : "Nach der Zahlung legen wir sofort los.",
+      ];
     }
-    document.getElementById("final").innerHTML = "<p style=\"margin-top:0\"><b>" + TF.esc(val("firma")) + "</b></p>" + html;
-    var kurz = m === "provision" ? [
-      "Keine Einrichtungsgebühr, keine Grundgebühr: Jetzt wird nichts bezahlt.",
-      C.provisionProzent + " % nur, wenn über Tattoofin Geld reinkommt. Alles inklusive, auch Zahlungsgebühren, Klarna und USt.",
-      "Der Rest kommt automatisch aufs Konto deines Studios.",
-      "Jederzeit zum Monatsende kündbar, mit einem Klick im Portal.",
-      "Wir richten alles für dich ein und sind per WhatsApp und E-Mail für dich da.",
-    ] : [
-      "Einmalig " + TF.euro(val("aktionscode") ? C.aktionNetto : C.kaufNetto) + " netto, danach keine Grundgebühr und keine Provision.",
-      C.garantieTage + " Tage Geld-zurück-Garantie ab Go-live.",
-      "Alles läuft über dein eigenes Zahlungskonto.",
-      z === "rechnung" ? "Die Einrichtung startet nach Zahlungseingang." : "Nach der Zahlung legen wir sofort los.",
-      "Wir richten alles für dich ein und sind per WhatsApp und E-Mail für dich da.",
-    ];
+    fin.innerHTML = "<p style=\"margin-top:0\"><b>" + TF.esc(val("firma")) + "</b></p>" + html;
+    kurz.push("Wir richten alles für dich ein und sind per WhatsApp und E-Mail für dich da.");
     kurz.push("Deine Daten und die deiner Kunden verarbeiten wir DSGVO-konform (Auftragsverarbeitungsvertrag).");
     document.getElementById("kurz").innerHTML = kurz.map(function (x) { return "<li>" + TF.esc(x) + "</li>"; }).join("");
   }
 
   function daten() {
     return {
-      modell: modell(), zahlart: zahlart(), aktionscode: val("aktionscode"), geschenk: geschenk || undefined, firma: val("firma"), inhaber: val("inhaber"), ustid: val("ustid"),
+      paket: paket(), modell: modell(), zahlart: zahlart(), geschenk: geschenk || undefined, firma: val("firma"), inhaber: val("inhaber"), ustid: val("ustid"),
       strasse: val("strasse"), plz: val("plz"), ort: val("ort"), email: val("email"), telefon: val("telefon"),
       studioTelefon: val("studioTelefon"), website: val("website"), unterzeichner: val("unterzeichner"),
     };
@@ -96,14 +103,16 @@
     });
     toggleKauf();
   }
+  // Paket aus Paket- oder Modell-Angabe setzen (Aliase)
+  function setzePaket(x) { var p = ALIAS[String(x || "").toLowerCase()]; if (p) setze({ paket: p }); }
 
-  function toggleKauf() { document.getElementById("kauf-extra").classList.toggle("hidden", modell() !== "kauf" || !!geschenk); }
+  function toggleKauf() { document.getElementById("kauf-extra").classList.toggle("hidden", paket() !== "einmal" || !!geschenk); }
 
-  f.addEventListener("change", function (e) { if (e.target.name === "modell") toggleKauf(); });
+  f.addEventListener("change", function (e) { if (e.target.name === "paket") toggleKauf(); });
   f.addEventListener("click", function (e) {
     if (e.target.matches("[data-next]")) {
       var err = pruefe(step); show(err);
-      if (!err && step === 1 && window.TFTrack) TFTrack.track("InitiateCheckout", { content_name: modell() === "kauf" ? "Kauf" : "Provisionsmodell" }, "ic-" + new Date().toISOString().slice(0, 10));
+      if (!err && step === 1 && window.TFTrack) TFTrack.track("InitiateCheckout", { content_name: "Paket " + (NAMEN[paket()] || "Geschenk") }, "ic-" + new Date().toISOString().slice(0, 10));
       if (!err) go(step + 1);
     }
     if (e.target.matches("[data-back]")) { show(""); go(step - 1); }
@@ -134,11 +143,12 @@
     box.innerHTML = m ? m[1].replace(/<img[^>]*>/g, "") : "Vertrag konnte nicht geladen werden. Bitte über den Link öffnen.";
     box.querySelectorAll("[data-cfg]").forEach(function (el) { el.textContent = ""; });
     TF.config().then(function (c) {
-      var map = { kaufPreis: TF.euro(c.kaufNetto), kaufAktionPreis: TF.euro(c.aktionNetto), provisionSatz: c.provisionProzent + " %", 
+      var map = { kaufPreis: TF.euro(c.kaufNetto), provisionSatz: c.provisionProzent + " %", 
         garantieTage: c.garantieTage,
         firma: c.firma, adresse: c.adresse,
         vertragVersion: c.vertragVersion, gerichtsstand: c.gerichtsstand, geschaeftsfuehrer: c.geschaeftsfuehrer, registergericht: c.registergericht, ustid: c.ustid,
-        email: c.email, marke: c.marke, produkt: c.produkt, kuendigungProvision: "jederzeit zum Monatsende", websiteUrl: location.origin, setupSupportTage: c.setupSupportTage, kuendigungProvision: "jederzeit zum Monatsende" };
+        email: c.email, marke: c.marke, produkt: c.produkt, kuendigungProvision: "jederzeit zum Monatsende", websiteUrl: location.origin, setupSupportTage: c.setupSupportTage,
+        monatPreis: TF.euro(c.monatNetto), nutzungJahre: c.nutzungJahre };
       box.querySelectorAll("[data-cfg]").forEach(function (el) { if (map[el.dataset.cfg] !== undefined) el.textContent = map[el.dataset.cfg]; });
     });
   });
@@ -149,14 +159,14 @@
   });
 
   // Vorbelegung: ?modell=…, gespeicherter Entwurf, ?resume=<id> nach Abbruch
-  try { setze(JSON.parse(sessionStorage.getItem("tf-start") || "{}")); } catch (e) {}
-  if (q.get("modell")) setze({ modell: q.get("modell") });
-  if (q.get("code")) setze({ aktionscode: q.get("code") });
-  if (geschenk) { setze({ modell: "kauf" }); show("Du bist eingeladen: Tattoofin ist für dein Studio ein Geschenk – ohne Einrichtung und ohne Provision.", "info"); }
+  try { var alt = JSON.parse(sessionStorage.getItem("tf-start") || "{}"); setze(alt); if (!alt.paket && alt.modell) setzePaket(alt.modell); } catch (e) {}
+  if (q.get("modell")) setzePaket(q.get("modell"));
+  if (q.get("paket")) setzePaket(q.get("paket"));
+  if (geschenk) { document.querySelector("[data-step='1'] .choice.pakete").classList.add("hidden"); document.querySelector("[data-step='1'] h2").textContent = "1. Deine Einladung"; document.querySelector("[data-step='1'] h2 + p").textContent = "Eigenes Zahlungskonto deines Studios, keine Einrichtungsgebühr, keine Provision."; show("Du bist eingeladen: Tattoofin ist für dein Studio ein Geschenk – ohne Einrichtung und ohne Provision.", "info"); }
   if (q.get("resume")) {
     resumeId = q.get("resume");
     TF.api("/api/signup?id=" + encodeURIComponent(resumeId)).then(function (d) {
-      setze(d);
+      setze(d); if (d.paket) setzePaket(d.paket);
       if (q.get("abbruch")) show("Die Zahlung wurde abgebrochen. Kein Problem: Deine Angaben sind gespeichert, du kannst direkt weitermachen.", "info");
     }).catch(function () { resumeId = null; });
   }

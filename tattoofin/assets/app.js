@@ -8,7 +8,7 @@
 (function () {
   var C = window.CFG || {};
   var q = new URLSearchParams(location.search);
-  var euro = /^(kaufPreis|kaufAktionPreis)$/;
+  var euro = /^(kaufPreis|kaufPreisAlt|kaufAktionPreis|monatPreis)$/;
 
   function fmt(key) {
     var v = C[key];

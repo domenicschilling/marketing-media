@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Tattoofin für Tattoo-Studios – Raten* für Kunden, dein Geld auf einmal</title>
-<meta name="description" content="Zahlungslink per WhatsApp, Anzahlung vorab per Link gegen No-Shows und Raten über Klarna* für dein Tattoo-Studio. 0 € Einrichtung, 10 % pro Zahlung alles inklusive, monatlich kündbar.">
+<meta name="description" content="Zahlungslink per WhatsApp, Anzahlung vorab per Link gegen No-Shows und Raten über Klarna* für dein Tattoo-Studio. Paket Risikofrei: 0 € Einrichtung, 10 % pro Zahlung alles inklusive. Oder 49 € im Monat bzw. einmalig 999 € netto, inkl. QR-Aufsteller aus Holz.">
 <meta name="robots" content="noindex,follow">
 <link rel="canonical" href="https://tattoofin.de/">
 <meta property="og:type" content="website"><meta property="og:locale" content="de_DE"><meta property="og:site_name" content="Tattoofin">
@@ -272,6 +272,23 @@ body.tf-cc-offen .leiste{display:none}
   .fuss nav{justify-content:flex-start}
 }
 @media (min-width:981px){.leiste{display:none!important}}
+
+/* Drei Pakete + QR-Aufsteller (18.10.2026) */
+.pakete-kurz{padding:var(--abstand) 0 0}
+.pk-raster{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:34px}
+.pk{background:var(--weiss);border:var(--rand);border-radius:var(--r-gross);box-shadow:var(--schatten);padding:26px 22px 22px;position:relative;display:flex;flex-direction:column;gap:10px}
+.pk h3{font:400 26px/1 var(--kopf)}
+.pk-preis{font:400 44px/1 var(--kopf)}
+.pk-preis small{font:700 15px var(--text)}
+.pk p{font-size:16px;line-height:1.5}
+.pk-bsp{font-weight:700}
+.pk .knopf{margin-top:auto;align-self:flex-start}
+.pk-tipp{background:var(--gelb-hell)}
+.pk-badge{position:absolute;top:-16px;right:18px;background:var(--navy);color:var(--gelb);font:400 14px var(--kopf);padding:8px 14px 6px;border-radius:99px}
+.pk-aufsteller{display:grid;grid-template-columns:220px 1fr;gap:24px;align-items:center;margin-top:34px;background:var(--weiss);border:var(--rand);border-radius:var(--r-gross);padding:18px}
+.pk-aufsteller img{border-radius:14px}
+.pk-aufsteller h3{margin-bottom:8px}
+@media (max-width:900px){.pk-raster{grid-template-columns:1fr}.pk-aufsteller{grid-template-columns:1fr}.pk-aufsteller img{max-width:260px}}
 </style>
 <!-- Umami: cookielose Besucherzählung, nur auf tattoofin.de (Vorschau-Adressen zählen nicht) -->
 <script defer src="https://cloud.umami.is/script.js" data-website-id="507b740f-264e-4ba1-a7d0-9dbe49db75af" data-domains="tattoofin.de"></script>
@@ -283,7 +300,7 @@ body.tf-cc-offen .leiste{display:none}
   <nav class="kopf-nav" aria-label="Seite">
     <a class="nur-gross" href="#no-shows">No-Shows</a>
     <a class="nur-gross" href="#ablauf">So läuft's</a>
-    <a class="nur-gross" href="#kosten">Kosten</a>
+    <a class="nur-gross" href="#pakete">Pakete</a>
     <a class="nur-gross" href="#fragen">Fragen</a>
     <a class="knopf knopf-klein" href="#anfrage" data-cta="kopf"><span class="nur-gross">Einrichtung</span>anfragen</a>
   </nav>
@@ -390,8 +407,25 @@ body.tf-cc-offen .leiste{display:none}
         <div><dt>Tattoofin, 10&nbsp;% alles inklusive</dt><dd id="r-fee">200,00&nbsp;€</dd></div>
         <div class="an-dich"><dt>Auf dein Konto, auf einmal</dt><dd id="r-du">1.800,00&nbsp;<span class="eur">€</span></dd></div>
       </dl>
-      <p class="klein">Lieber einmal zahlen statt Provision? Kauf für 1.499&nbsp;€ netto, danach ohne Provision. Steht im <a href="/start?modell=kauf" data-cta="kauf">Online-Abschluss</a>.</p>
+      <p class="klein">Das ist unser Paket Risikofrei. Läuft bei dir mehr über Tattoofin, rechnen sich die anderen beiden Pakete (siehe unten).</p>
     </form>
+  </div>
+</section>
+
+<!-- 4b · Drei Pakete -->
+<section class="pakete-kurz" id="pakete" aria-labelledby="h-pakete">
+  <div class="rahmen">
+    <h2 id="h-pakete">Drei Pakete. Du wählst.</h2>
+    <p class="unter">Gleiche Einrichtung, gleiche Betreuung. Je mehr über Tattoofin läuft, desto eher lohnt sich ein Fixpreis.</p>
+    <div class="pk-raster">
+      <article class="pk"><h3>Risikofrei</h3><p class="pk-preis">10&nbsp;%<small> auf alle Zahlungen</small></p><p>Inkl. der Zahlungsgebühr. Keine Fixkosten, monatlich kündbar. Digitaler QR-Code inklusive.</p><p class="pk-bsp">Kunde zahlt 1.000&nbsp;€, du bekommst 900&nbsp;€.</p><a class="knopf knopf-klein" href="/start?paket=risikofrei" data-lp="start">Risikofrei starten</a></article>
+      <article class="pk pk-tipp"><span class="pk-badge">⭐ Empfohlen</span><h3>Monatlich</h3><p class="pk-preis">49&nbsp;<span class="eur">€</span><small> netto im Monat</small></p><p>Danach nur die Zahlungsgebühren von Stripe (ca. 1,5–3&nbsp;% je nach Zahlart, direkt an Stripe). 0&nbsp;% Tattoofin-Provision. Inkl. QR-Aufsteller aus Holz und digitalem QR-Code. Monatlich kündbar.</p><p class="pk-bsp">Lohnt sich ab ca. 730&nbsp;€ Zahlungen im Monat.</p><a class="knopf knopf-klein" href="/start?paket=monatlich" data-lp="start">Monatlich wählen</a></article>
+      <article class="pk"><h3>Einmalzahlung</h3><p class="pk-preis">999&nbsp;<span class="eur">€</span><small> netto einmalig</small></p><p>Einmal zahlen, keine Tattoofin-Gebühr mehr, nur die Zahlungsgebühr an Stripe. Inkl. QR-Aufsteller aus Holz und digitalem QR-Code. 30 Tage Geld-zurück-Garantie.</p><p class="pk-bsp">Günstiger als Monatlich nach ca. 20 Monaten.</p><a class="knopf knopf-klein" href="/start?paket=einmal" data-lp="start">Einmalzahlung wählen</a></article>
+    </div>
+    <div class="pk-aufsteller">
+      <img src="/assets/lp/aufsteller-theke-480.webp" width="480" height="596" loading="lazy" alt="KI-Visualisierung: QR-Aufsteller aus Holz mit Studioname und QR-Code auf einer Studio-Theke">
+      <div><h3>Der QR-Aufsteller aus Holz</h3><p>Dein Studioname und der QR-Code deiner Zahlseite, eingraviert. Kunde scannt an der Theke und zahlt Tattoo oder Anzahlung, auch in Raten.* Bei Monatlich und Einmalzahlung inklusive.</p><p class="klein">Bild: KI-Visualisierung. Rechnung zu „lohnt sich ab“: 10&nbsp;% von 730&nbsp;€ = 73&nbsp;€; Monatlich 49&nbsp;€ + ca. 3,3&nbsp;% Zahlungsgebühr (24&nbsp;€) = ca. 73&nbsp;€. 999&nbsp;€ ÷ 49&nbsp;€ ≈ 20 Monate. Vereinfacht (10&nbsp;% inkl. USt., Fixpreise netto), keine Garantie.</p></div>
+    </div>
   </div>
 </section>
 
@@ -409,7 +443,7 @@ body.tf-cc-offen .leiste{display:none}
       <details><summary>Wie lange dauert es, bis es läuft?</summary><p>Der Online-Abschluss dauert 3 Minuten. Danach prüft unser Zahlungspartner Stripe Identität und Bankverbindung, meist in 1 bis 3 Werktagen. Dann richten wir alles ein und testen es mit dir.</p></details>
       <details><summary>Was brauche ich dafür?</summary><p>Dein Studio als Unternehmen, ein Bankkonto für die Auszahlungen und deinen Ausweis für die Prüfung durch Stripe. Ein Kartenterminal brauchst du nicht.</p></details>
       <details><summary>Darf ich mit „Ratenzahlung“ werben?</summary><p>Ja, mit dem Pflichthinweis, dass die Raten von einem externen Anbieter nach dessen Prüfung kommen. Konkrete Raten, Zinsen oder Laufzeiten nennst du nicht, die legt der Anbieter fest. Fertige Texte für Flyer, Aufkleber und Instagram mit diesem Hinweis bekommst du von uns.</p></details>
-      <details><summary>Wie komme ich wieder raus?</summary><p>Das Provisionsmodell kannst du jederzeit in Textform kündigen. Es gibt keine Mindestlaufzeit und keine Grundgebühr.</p></details>
+      <details><summary>Wie komme ich wieder raus?</summary><p>Risikofrei und Monatlich kannst du monatlich kündigen, ohne Mindestlaufzeit, mit einem Klick im Portal. Bei der Einmalzahlung gibt es 30 Tage Geld-zurück-Garantie ab Go-live.</p></details>
     </div>
   </div>
 </section>
@@ -455,7 +489,7 @@ body.tf-cc-offen .leiste{display:none}
         <h3>Danke, deine Anfrage ist angekommen.</h3>
         <p>Wir melden uns persönlich per WhatsApp bei dir. Bis dahin musst du nichts vorbereiten.</p>
       </div>
-      <p class="sofort">Lieber sofort selbst loslegen? <a href="/start?modell=provision" data-lp="start">Online abschließen, 3 Minuten</a></p>
+      <p class="sofort">Lieber sofort selbst loslegen? <a href="/start?paket=risikofrei" data-lp="start">Online abschließen, 3 Minuten</a></p>
     </div>
   </div>
 </section>

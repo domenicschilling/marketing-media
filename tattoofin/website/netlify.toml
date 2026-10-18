@@ -19,6 +19,18 @@
   [headers.values]
     X-Robots-Tag = "noindex"
 [[headers]]
+  for = "/aufsteller.html"
+  [headers.values]
+    X-Robots-Tag = "noindex"
+[[headers]]
+  for = "/vertrag-2026-10b.html"
+  [headers.values]
+    X-Robots-Tag = "noindex"
+[[headers]]
+  for = "/zahlen/*"
+  [headers.values]
+    X-Robots-Tag = "noindex"
+[[headers]]
   for = "/admin.html"
   [headers.values]
     X-Robots-Tag = "noindex"
@@ -60,6 +72,12 @@
   to = "https://tattoofin.de/:splat"
   status = 301
   force = true
+# Eigene Zahlseite je Studio: tattoofin.de/zahlen/<studio> (Ziel des QR-Codes auf dem Holz-Aufsteller).
+# Die alte Adresse /zahlen.html?s=<studio> funktioniert weiter.
+[[redirects]]
+  from = "/zahlen/*"
+  to = "/zahlen.html"
+  status = 200
 # Kurzlink für den Instagram-Lead-Magnet („ANZAHLUNG“)
 [[redirects]]
   from = "/anzahlung"

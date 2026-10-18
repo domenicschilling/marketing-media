@@ -13,7 +13,7 @@
 //   POST  /api/admin/einladen                 { email, firma } → Geschenk-Einladung (0 € Einrichtung, 0 % Provision) per E-Mail
 //   GET   /api/admin/anfragen                 Kurz-Anfragen von /studios (neueste zuerst)
 //   POST  /api/admin/checkout-test            unbezahlte Test-Sitzung (1 €) mit Tattoofin-Branding → { id, url }; { expire: "cs_…" } beendet sie
-import { CFG, netto } from "./_lib/config.mjs";
+import { CFG, netto, paketVon } from "./_lib/config.mjs";
 import { json, fail, body, clean, now, handler } from "./_lib/util.mjs";
 import { allStudios, getStudio, saveStudio, zahlungenVon, abrechnungenVon, store, log } from "./_lib/store.mjs";
 import { isAdmin, loginLink } from "./_lib/auth.mjs";
@@ -59,7 +59,7 @@ export default handler(async (req) => {
       const bezahlt = z.filter((x) => x.status === "bezahlt");
       const abgerechnet = z.filter((x) => ["bezahlt", "erstattet", "rueckgebucht"].includes(x.status));
       out.push({
-        id: s.id, firma: s.firma, ort: s.ort, email: s.email, modell: s.modell, status: s.status, statusText: STATUS[s.status],
+        id: s.id, firma: s.firma, ort: s.ort, email: s.email, modell: s.modell, paket: paketVon(s).name, status: s.status, statusText: STATUS[s.status],
         createdAt: s.createdAt, goLiveAt: s.goLiveAt, zahlungen: bezahlt.length, offen: z.filter((x) => x.status === "offen").length,
         umsatzCent: bezahlt.reduce((a, x) => a + x.betragCent, 0), provisionNettoCent: abgerechnet.reduce((a, x) => a + netto(provisionVerdient(x)), 0),
         // Deckungsbeitrag Provision: Provision netto minus Stripe-Gebühren, die Tattoofin bei Provision trägt

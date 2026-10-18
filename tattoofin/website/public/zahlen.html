@@ -25,7 +25,7 @@
 <script src="/js/common.js"></script>
 <script>
 (async function () {
-  var slug = new URLSearchParams(location.search).get("s"), a = document.getElementById("alert"), btn = document.getElementById("pay");
+  var pfad = location.pathname.match(/^\/zahlen\/([^/?#]+)/), slug = pfad ? decodeURIComponent(pfad[1]) : new URLSearchParams(location.search).get("s"), a = document.getElementById("alert"), btn = document.getElementById("pay");
   function err(t) { a.innerHTML = '<div class="alert err">' + TF.esc(t) + "</div>"; }
   try {
     var d = await TF.api("/api/pay?s=" + encodeURIComponent(slug));

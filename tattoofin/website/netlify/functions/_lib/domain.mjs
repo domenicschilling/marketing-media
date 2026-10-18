@@ -1,5 +1,5 @@
 // Geschäftslogik: Benachrichtigungen, Zahlungslinks, Kündigung, Monatsabrechnung.
-import { CFG, plattformgebuehr, netto } from "./config.mjs";
+import { CFG, plattformgebuehr, netto, paketVon, aufstellerInklusive } from "./config.mjs";
 import { sendMail } from "./mail.mjs";
 import { mails } from "./emails.mjs";
 import { stripe, taxRateId, ensureCustomer } from "./stripe.mjs";
@@ -31,6 +31,32 @@ export async function notifyAdmin(titel, studio, details) {
 }
 
 export const connectUrl = (s) => `${CFG.siteUrl}/api/connect?id=${s.id}`;
+
+// Zahlseite des Studios. Kurze Adresse /zahlen/<studio> (für QR-Codes, v. a. den gravierten Holz-Aufsteller);
+// die alte Adresse /zahlen.html?s=<studio> funktioniert weiter.
+export const zahlseiteUrl = (s) => `${CFG.siteUrl}/zahlen/${encodeURIComponent(s.slug)}`;
+// Hersteller-Seite für den QR-Aufsteller (Gravurdatei als PDF/SVG/PNG)
+export const aufstellerUrl = (s) => `${CFG.siteUrl}/aufsteller.html?s=${encodeURIComponent(s.slug)}`;
+// Zusatzzeilen für Admin-Mails: Paket und – bei Monatlich/Einmalzahlung – „QR-Aufsteller bestellen“ mit Gravurdatei
+export function paketDetails(s, { aufsteller = false } = {}) {
+  const d = { Paket: paketVon(s).name };
+  if (aufsteller && aufstellerInklusive(s)) {
+    d["QR-Aufsteller bestellen"] = "im Paket enthalten – bitte beim Hersteller bestellen (Holz hell, mit Studioname), Versand nach Go-live";
+    d.Gravurdatei = aufstellerUrl(s);
+    d.Lieferadresse = [s.firma, s.strasse, [s.plz, s.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ");
+    d["QR-Code zeigt auf"] = zahlseiteUrl(s);
+  }
+  return d;
+}
+
+// Paket Monatlich: Abo auf dem DSX-Konto zum Ende des laufenden Abrechnungsmonats beenden (bzw. Kündigung zurücknehmen).
+// Liefert das Vertragsende (ISO) oder null, wenn es kein Abo gibt.
+export async function aboKuendigen(s, kuendigen = true) {
+  const subId = s.stripe?.subscriptionId;
+  if (!subId) return null;
+  const sub = await stripe("POST", `/subscriptions/${subId}`, { cancel_at_period_end: kuendigen ? "true" : "false" });
+  return sub.current_period_end ? new Date(sub.current_period_end * 1000).toISOString() : null;
+}
 
 export function kuendigungsDatum(date = new Date()) {
   return monatsende(date);

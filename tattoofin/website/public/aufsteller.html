@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>QR-Aufsteller – Dateien für die Gravur</title><meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="/favicon.png" type="image/png">
+<link rel="stylesheet" href="/css/site.css">
+<style>
+  body{background:#f6f3ee}
+  .auf-wrap{max-width:760px;margin:0 auto;padding:24px 16px 48px}
+  .auf-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}
+  .auf-bild{background:#fff;border:2px solid #13243d;border-radius:16px;padding:14px}
+  .auf-bild img{display:block;width:100%;height:auto}
+  .auf-knoepfe{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+  .auf-wrap table{border-collapse:collapse;width:100%;font-size:14.5px}
+  .auf-wrap td{border-bottom:1px solid #ddd6ca;padding:7px 4px;vertical-align:top}
+  .auf-wrap td:first-child{font-weight:700;width:38%}
+  .klein{font-size:13px;color:#5b6370}
+  @media (max-width:640px){.auf-grid{grid-template-columns:1fr}}
+</style>
+</head><body>
+<main class="auf-wrap">
+  <h1 style="margin:0 0 4px">QR-Aufsteller</h1>
+  <p id="auf-titel" class="klein">Einen Moment …</p>
+  <div class="auf-grid">
+    <div class="auf-bild"><img id="auf-img" alt="Vorschau des QR-Aufstellers"></div>
+    <div>
+      <h2 style="margin-top:0">Dateien für die Gravur</h2>
+      <div class="auf-knoepfe">
+        <button class="btn dark small" data-auf="pdf">PDF</button>
+        <button class="btn dark small" data-auf="svg">SVG</button>
+        <button class="btn ghost small" data-auf="png">PNG (600 dpi)</button>
+      </div>
+      <table>
+        <tr><td>Format</td><td>100 × 150 mm, Hochformat, Maßstab 1:1, Ecken 4 mm Radius</td></tr>
+        <tr><td>Material</td><td id="auf-holz">Sperrholz/Birke hell, 3–5 mm</td></tr>
+        <tr><td>Gravur</td><td>einfarbig, Flächengravur: Schwarz = gravieren. Schriften sind in Pfade umgewandelt.</td></tr>
+        <tr><td>Kontur</td><td>Rote Haarlinie (0,1 mm) = Außenkontur/Schnitt</td></tr>
+        <tr><td>Fuß</td><td>kleiner Holzfuß mit Schlitz; untere 12 mm des Schilds sind frei</td></tr>
+        <tr><td>QR-Code</td><td id="auf-qr"></td></tr>
+      </table>
+      <p class="klein">Bitte den QR-Code nicht verkleinern und nicht invertieren. Vor dem Versand einmal mit dem Handy scannen.</p>
+    </div>
+  </div>
+</main>
+<script src="/js/qrcode.min.js"></script>
+<script src="/js/aufsteller.js"></script>
+<script>
+(async function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var slug = new URLSearchParams(location.search).get("s") || "";
+  try {
+    var r = await fetch("/api/aufsteller?s=" + encodeURIComponent(slug)), d = await r.json();
+    if (!r.ok) throw new Error(d.error || "Studio nicht gefunden");
+    await TFAufsteller.laden();
+    var o = { url: d.zahlseite, firma: d.firma, variante: d.variante, logo: d.logo };
+    $("auf-titel").textContent = d.firma + " · " + (d.variante === "logo" ? "mit Studio-Logo" : "mit Studioname") + " · Holz " + (d.holz === "dunkel" ? "dunkel" : "hell");
+    $("auf-holz").textContent = d.holz === "dunkel" ? "Walnuss (dunkel), 3–5 mm" : "Sperrholz Birke/Buche (hell), 3–5 mm";
+    var info = TFAufsteller.bauen(o);
+    $("auf-qr").textContent = d.zahlseite + " · " + info.qr.mm + " mm Kantenlänge, Modul " + info.qr.modulMm.toFixed(2).replace(".", ",") + " mm";
+    $("auf-img").src = (await TFAufsteller.vorschau(o, d.holz, 720)).toDataURL("image/png");
+    var name = "tattoofin-qr-aufsteller-" + d.slug + (d.variante === "logo" ? "-logo" : "");
+    var laden = function (blob, n) { var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = n; document.body.appendChild(a); a.click(); a.remove(); };
+    document.querySelectorAll("[data-auf]").forEach(function (b) {
+      b.onclick = async function () {
+        var art = b.dataset.auf;
+        if (art === "svg") laden(new Blob([TFAufsteller.svg(o)], { type: "image/svg+xml" }), name + ".svg");
+        else if (art === "pdf") laden(new Blob([TFAufsteller.pdf(o)], { type: "application/pdf" }), name + ".pdf");
+        else (await TFAufsteller.png(o)).toBlob(function (bl) { laden(bl, name + "-600dpi.png"); }, "image/png");
+      };
+    });
+  } catch (err) { $("auf-titel").textContent = err.message; }
+})();
+</script>
+</body></html>
