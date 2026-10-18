@@ -72,10 +72,21 @@ export const store = {
 // ---- Studios ----
 export const getStudio = (id) => (id ? store.get("studio/" + id) : null);
 
+// E-Mail für den Vergleich normalisieren: Leerzeichen weg, Groß/Klein egal, googlemail.com = gmail.com,
+// bei Gmail außerdem Punkte und „+Zusatz“ im lokalen Teil ignorieren (Gmail stellt diese Varianten gleich zu).
+export function normEmail(e) {
+  let [lokal, domain] = String(e || "").replace(/\s+/g, "").toLowerCase().split("@");
+  if (!lokal || !domain) return String(e || "").replace(/\s+/g, "").toLowerCase();
+  if (domain === "googlemail.com") domain = "gmail.com";
+  if (domain === "gmail.com") lokal = lokal.split("+")[0].replace(/\./g, "");
+  return lokal + "@" + domain;
+}
+
 export async function saveStudio(s) {
   s.updatedAt = new Date().toISOString();
   await store.set("studio/" + s.id, s);
   if (s.email) await store.set("idx/email/" + s.email.toLowerCase(), s.id);
+  if (s.email) await store.set("idx/emailn/" + normEmail(s.email), s.id);
   if (s.slug) await store.set("idx/slug/" + s.slug, s.id);
   if (s.stripe?.accountId) await store.set("idx/acct/" + s.stripe.accountId, s.id);
   if (s.stripe?.customerId) await store.set("idx/cus/" + s.stripe.customerId, s.id);
@@ -84,11 +95,41 @@ export async function saveStudio(s) {
 
 export async function studioBy(kind, value) {
   if (!value) return null;
-  const sid = await store.get(`idx/${kind}/${kind === "email" ? value.toLowerCase() : value}`);
+  if (kind === "email") {
+    const exakt = await store.get("idx/email/" + String(value).replace(/\s+/g, "").toLowerCase());
+    if (exakt) return getStudio(exakt);
+    const n = normEmail(value);
+    const sid = await store.get("idx/emailn/" + n);
+    if (sid) return getStudio(sid);
+    // Ältere Datensätze ohne normalisierten Index: einmal durchsuchen (wenige Studios)
+    const treffer = (await allStudios()).find((x) => x.email && normEmail(x.email) === n);
+    if (treffer) await store.set("idx/emailn/" + n, treffer.id);
+    return treffer || null;
+  }
+  const sid = await store.get(`idx/${kind}/${value}`);
   return sid ? getStudio(sid) : null;
 }
 
 export const allStudios = () => store.all("studio/");
+
+// Einfache Begrenzung (Rate-Limit): zählt einen Versuch unter key; true = noch innerhalb von max pro Fenster
+export async function zaehleVersuch(key, max, fensterMs) {
+  const jetzt = Date.now();
+  const alt = ((await store.get(key))?.t || []).filter((t) => jetzt - t < fensterMs);
+  alt.push(jetzt);
+  await store.set(key, { t: alt.slice(-100) });
+  return alt.length <= max;
+}
+
+// Alle Studios zu einer E-Mail-Adresse (normalisiert). Der Index idx/email zeigt nur auf den zuletzt gespeicherten
+// Datensatz – bei mehreren Anmeldungen mit derselben Adresse (z. B. Test-Abschlüsse) kann das ein Entwurf sein.
+export const AKTIV = (s) => s && !["entwurf", "abgebrochen"].includes(s.status);
+export async function studiosPerEmail(email) {
+  const n = normEmail(email);
+  if (!n) return [];
+  return (await allStudios()).filter((x) => x.email && normEmail(x.email) === n)
+    .sort((a, b) => (b.updatedAt || b.createdAt || "").localeCompare(a.updatedAt || a.createdAt || ""));
+}
 
 // ---- Zahlungen & Abrechnungen ----
 export const getZahlung = (studioId, id) => store.get(`zahlung/${studioId}/${id}`);

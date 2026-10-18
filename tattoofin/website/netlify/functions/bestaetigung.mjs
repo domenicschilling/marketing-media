@@ -1,4 +1,4 @@
-// Digitale Leistungsbestätigung NACH dem Termin (Entwurf – vor Livegang rechtlich prüfen lassen).
+// Digitale Leistungsbestätigung NACH dem Termin (Texte konservativ formuliert; anwaltliche Prüfung empfohlen).
 // Das Studio erzeugt im Dashboard je Zahlung einen Link/QR (POST /api/portal/bestaetigung/:id). Der Kunde öffnet
 // /bestaetigung.html?t=<token>, bestätigt mit Name, Datum, Häkchen und Unterschrift (Finger), optional Foto.
 // Bewusst NICHT vor der Leistung: Eine Bestätigung „Leistung erhalten“ vor dem Termin wäre unwirksam und irreführend.

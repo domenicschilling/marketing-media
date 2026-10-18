@@ -20,12 +20,12 @@
 //   POST   /api/portal/abmelden            Auf allen Geräten abmelden (Sitzungsversion hochzählen)
 // Mandantentrennung: Jede Abfrage nutzt ausschließlich das Studio aus dem Session-Cookie; Zahlungen werden
 // über zahlung/<studioId>/<id> gelesen, fremde IDs ergeben immer 404.
-import { CFG, plattformgebuehr, provisionSatz, paketVon, BAUSTEINE_SIMULIERT } from "./_lib/config.mjs";
+import { CFG, plattformgebuehr, provisionSatz, paketVon, aufstellerInklusive, BAUSTEINE_SIMULIERT } from "./_lib/config.mjs";
 import { json, fail, body, clean, id, now, handler, isEmail, parseBetrag, clientIp } from "./_lib/util.mjs";
 import { saveStudio, zahlungenVon, getZahlung, saveZahlung, abrechnungenVon, getLeistung, store, log } from "./_lib/store.mjs";
 import { currentStudio, clearCookie } from "./_lib/auth.mjs";
 import { stripe, dashboardLink, accountSession, ensureConnectedAccount } from "./_lib/stripe.mjs";
-import { notify, notifyAdmin, kuendigungsDatum, connectUrl, darfKassieren, anzahlungsbedingungen, provisionVerdient, kontoAbgleichen, eingebettet, STATUS } from "./_lib/domain.mjs";
+import { notify, notifyAdmin, kuendigungsDatum, connectUrl, darfKassieren, anzahlungsbedingungen, provisionVerdient, kontoAbgleichen, eingebettet, STATUS, aboKuendigen, aufstellerUrl } from "./_lib/domain.mjs";
 import { randomBytes } from "node:crypto";
 
 // Extras (Zusatzangebote): nur Anzeige + Anfrage, keine Abrechnung. Preise sind Vorschläge.
@@ -42,6 +42,8 @@ export const EXTRAS = [
 const CHECK_MANUELL = ["app", "werbung", "theke"];
 import { mails } from "./_lib/emails.mjs";
 
+// Geld-zurück-Garantie: nur Einmalzahlung (und Altverträge „Kauf“), nicht Monatlich und nicht Geschenk
+const hatGarantie = (s) => s.modell === "kauf" && ["einmal"].includes(paketVon(s).id);
 const zahlseite = (s) => `${CFG.siteUrl}/zahlen/${s.slug}`;
 // Zahlung für die Ausgabe an das Studio (ohne interne Werte wie den Client-Schlüssel des Bezahlfelds, IP/Browser des Kunden)
 const fuerStudio = (z) => {
@@ -57,9 +59,9 @@ const oeffentlich = (s) => ({
   vertrag: { version: s.vertrag?.version, akzeptiertAm: s.vertrag?.akzeptiertAm, name: s.vertrag?.name },
   kuendigung: s.kuendigung || null, fragebogenAm: s.fragebogen?.updatedAt || null,
   benachrichtigung: { email: s.benachrichtigungEmail || s.email },
-  garantieBis: s.modell === "kauf" ? (s.goLiveAt ? new Date(new Date(s.goLiveAt).getTime() + CFG.garantieTage * 864e5).toISOString() : "ab Go-live") : null,
+  garantieBis: hatGarantie(s) ? (s.goLiveAt ? new Date(new Date(s.goLiveAt).getTime() + CFG.garantieTage * 864e5).toISOString() : "ab Go-live") : null,
   stripe: { verbunden: Boolean(s.stripe?.accountId), freigegeben: Boolean(s.stripe?.chargesEnabled), auszahlungen: Boolean(s.stripe?.payoutsEnabled), express: s.stripe?.kontoTyp === "express", angabenGemacht: Boolean(s.stripe?.detailsSubmitted), kontoTyp: s.stripe?.kontoTyp || (s.modell === "provision" ? "express" : "standard") },
-  paket: paketVon(s).id, paketName: paketVon(s).name, provisionProzent: provisionSatz(s), gruender: Boolean(s.gruender),
+  paket: paketVon(s).id, paketName: paketVon(s).name, provisionProzent: provisionSatz(s), monatNetto: s.monatNetto || null, aufstellerInklusive: aufstellerInklusive(s),
   recht: s.recht ? { version: s.recht.version, am: s.recht.am, aktuell: s.recht.version === CFG.rechtVersion } : null,
   checkliste: s.checkliste || {}, extrasAngefragt: Object.keys(s.extras || {}), eingebettet: eingebettet(), simulation: BAUSTEINE_SIMULIERT,
   anzahlungsbedingungen: anzahlungsbedingungen(s),
@@ -72,6 +74,12 @@ export default handler(async (req) => {
   if (!s) return fail("Bitte einloggen", 401);
   const url = new URL(req.url);
   const [bereich, sub] = url.pathname.replace(/^\/api\/portal\/?/, "").split("/").filter(Boolean);
+  // Admin-Ansicht („Dashboard ansehen“): nur lesen. Keine Änderungen, kein Geld bewegen, nichts an Kunden schicken.
+  if (s._ansicht) {
+    if (bereich === "stripe-session") return json({ modus: "ansicht", hinweis: "In der Admin-Ansicht werden die Stripe-Bausteine nicht geladen (sie würden echte Änderungen am Konto des Studios erlauben). Den Stripe-Status siehst du oben und im Admin." });
+    if (req.method !== "GET") return fail("Admin-Ansicht: nur lesend. Diese Aktion ist hier gesperrt.", 403);
+    if (!bereich) await log("admin-ansicht-zugriff", { admin: s._ansicht.admin, studioId: s.id });
+  }
 
   if (!bereich && req.method === "GET") {
     // Abgebrochene Versuche über die Zahlseite (Kunde hat das Bezahlfeld geöffnet, aber nicht bezahlt) nach 2 Stunden ausblenden
@@ -81,6 +89,7 @@ export default handler(async (req) => {
     const imMonat = bezahlt.filter((z) => (z.bezahltAm || "").slice(0, 7) === monat);
     const q = (extra = "") => `studio=${encodeURIComponent(s.firma)}&tel=${encodeURIComponent(s.studioTelefon || "")}&zahlen=${encodeURIComponent(zahlseite(s))}${extra}`;
     return json({
+      adminAnsicht: s._ansicht ? { admin: s._ansicht.admin } : null,
       studio: oeffentlich(s), zahlungen: zahlungen.map(fuerStudio), abrechnungen: await abrechnungenVon(s.id), extras: EXTRAS,
       kpis: {
         umsatzMonatCent: imMonat.reduce((a, z) => a + z.betragCent, 0), zahlungenMonat: imMonat.length,
@@ -147,9 +156,15 @@ export default handler(async (req) => {
     if (req.method === "POST") {
       if (["gekuendigt", "beendet", "erstattet"].includes(s.status)) return fail("Der Vertrag ist bereits gekündigt.");
       const b = await body(req);
-      const garantie = Boolean(b.garantie) && s.modell === "kauf" && s.stripe?.paymentIntentId &&
+      const garantie = Boolean(b.garantie) && hatGarantie(s) && s.stripe?.paymentIntentId &&
         (!s.goLiveAt || Date.now() - new Date(s.goLiveAt).getTime() <= CFG.garantieTage * 864e5);
-      s.kuendigung = { eingegangenAm: now(), zum: garantie ? now() : kuendigungsDatum(), grund: clean(b.grund, 1000), garantie: Boolean(garantie), vorherStatus: s.status };
+      // Paket Monatlich: Ende des laufenden Abrechnungsmonats des Abos (Stripe beendet das Abo dann selbst)
+      let zum = garantie ? now() : kuendigungsDatum();
+      if (!garantie && s.paket === "monatlich" && s.stripe?.subscriptionId) {
+        try { zum = (await aboKuendigen(s, true)) || zum; }
+        catch (e) { await notifyAdmin("⚠️ Abo konnte bei Stripe nicht gekündigt werden – bitte im Stripe-Dashboard zum Periodenende kündigen", s, { Abo: s.stripe.subscriptionId, Fehler: e.message }); }
+      }
+      s.kuendigung = { eingegangenAm: now(), zum, grund: clean(b.grund, 1000), garantie: Boolean(garantie), vorherStatus: s.status };
       s.status = "gekuendigt";
       await saveStudio(s);
       await log("kuendigung", { studioId: s.id, garantie });
@@ -162,6 +177,11 @@ export default handler(async (req) => {
     }
     if (req.method === "DELETE") {
       if (s.status !== "gekuendigt" || s.kuendigung?.garantie) return fail("Keine offene Kündigung, die zurückgenommen werden kann.");
+      if (s.paket === "monatlich" && s.stripe?.subscriptionId) {
+        if (s.stripe.aboBeendetAm || new Date(s.kuendigung.zum) <= new Date()) return fail("Dein Abo ist schon beendet. Bitte melde dich bei uns, dann starten wir es neu.", 409);
+        try { await aboKuendigen(s, false); }
+        catch (e) { return fail("Die Kündigung konnte gerade nicht zurückgenommen werden. Bitte versuch es gleich noch einmal oder schreib uns.", 502); }
+      }
       s.status = s.kuendigung.vorherStatus || (s.goLiveAt ? "live" : "einrichtung");
       s.kuendigungHistorie = [...(s.kuendigungHistorie || []), { ...s.kuendigung, zurueckgenommenAm: now() }];
       s.kuendigung = null;
@@ -297,7 +317,7 @@ export default handler(async (req) => {
       await notifyAdmin(`QR-Aufsteller ${inklusive ? "bestellen (im Paket enthalten)" : "angefragt (nicht im Paket)"}`, s, {
         Paket: paketVon(s).name, Holz: holz === "dunkel" ? "dunkel (Walnuss)" : "hell (Birke/Buche)", Variante: variante === "logo" ? "mit Studio-Logo" : "mit Studioname",
         Lieferadresse: [s.firma, s.strasse, [s.plz, s.ort].filter(Boolean).join(" ")].filter(Boolean).join(", "),
-        Dateien: `${CFG.siteUrl}/aufsteller.html?s=${encodeURIComponent(s.slug)}`, Telefon: s.telefon,
+        Dateien: aufstellerUrl(s), Telefon: s.telefon,
       });
       await log("aufsteller-angefordert", { studioId: s.id, inklusive, holz, variante });
     }

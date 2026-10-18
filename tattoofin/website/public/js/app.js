@@ -19,6 +19,9 @@
     try { D = await TF.api("/api/portal"); geladenAm = Date.now(); }
     catch (err) { if (err.status === 401) { location.href = "/login.html?app=1"; return; } $("laden").innerHTML = "<p>" + e(err.message) + "</p>"; return; }
     $("laden").classList.add("hidden"); $("app").setAttribute("aria-busy", "false");
+    if (D.adminAnsicht && !document.getElementById("admin-ansicht")) {
+      document.body.insertAdjacentHTML("afterbegin", '<div id="admin-ansicht" role="status" style="position:sticky;top:0;z-index:200;background:#a8231a;color:#fff;font:700 14px/1.4 system-ui,sans-serif;padding:8px 12px;display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap"><span>Admin-Ansicht: ' + e(D.studio.firma) + ' · nur lesen</span><a href="/api/admin-ansicht/ende" style="color:#fff;background:rgba(0,0,0,.25);padding:4px 10px;border-radius:99px;text-decoration:none">Zurück zum Admin</a></div>');
+    }
     kopf(); route();
   }
 
@@ -67,7 +70,7 @@
   }
   function banner() {
     if (!D.studio.eingebettet || !D.studio.stripe.verbunden) return;
-    stripeSitzung().then(function (s) { if (s.modus !== "weiterleitung") TFStripe.zeige($("stripe-banner"), "notification-banner", { offen: !D.studio.stripe.freigegeben && D.studio.stripe.angabenGemacht }); }).catch(function () {});
+    stripeSitzung().then(function (s) { if (s.modus !== "weiterleitung" && s.modus !== "ansicht") TFStripe.zeige($("stripe-banner"), "notification-banner", { offen: !D.studio.stripe.freigegeben && D.studio.stripe.angabenGemacht }); }).catch(function () {});
   }
 
   // ---------- Start ----------
@@ -87,7 +90,7 @@
   function checkliste() {
     var s = D.studio, c = s.checkliste || {};
     var punkte = [
-      { ok: true, t: "Vertrag abgeschlossen", s: "Paket " + s.paketName + (s.provisionProzent ? " · " + s.provisionProzent + " % pro Zahlung, alles inklusive" : " · keine Provision") },
+      { ok: true, t: "Vertrag abgeschlossen", s: "Paket " + s.paketName + (s.provisionProzent ? " · " + s.provisionProzent + " % pro Zahlung, alles inklusive" : s.paket === "monatlich" ? " · " + TF.euro(s.monatNetto || 4900) + " netto im Monat, keine Provision" : " · keine Provision") },
       { ok: s.stripe.freigegeben, warte: s.stripe.angabenGemacht && !s.stripe.freigegeben, t: "Zahlungskonto einrichten",
         s: s.stripe.freigegeben ? "Freigegeben. Das Geld deiner Kunden kommt auf dein Bankkonto." : s.stripe.angabenGemacht ? "Stripe prüft deine Angaben, meist 1 bis 3 Werktage." : "Ca. 10 Minuten. Ausweis und IBAN bereithalten.",
         knopf: s.stripe.freigegeben || s.stripe.angabenGemacht ? null : ["#einrichtung", "Jetzt einrichten", "gold"] },
@@ -194,7 +197,7 @@
       zeile(Boolean(z.leistung), "Leistungsbestätigung nach dem Termin", z.leistung ? e(z.leistung.name) + " · Termin " + dat(z.leistung.datum + "T12:00:00Z") + (z.leistung.hatFoto ? " · mit Foto" : "") : bez ? "Nach dem Termin: Kunde bestätigt mit Unterschrift, dass die Sitzung stattgefunden hat." : "Möglich, sobald bezahlt ist.") +
       (bez && !z.leistung ? '<button class="btn gold w100" id="lb-btn" style="margin-top:10px">Bestätigung vom Kunden holen</button><div id="lb-out"></div>' : "") +
       (bez ? '<a class="btn dark small" style="margin-top:12px" target="_blank" href="/nachweis.html?z=' + e(z.id) + '">Nachweis als PDF</a>' : "") +
-      '<p class="muted klein" style="margin:10px 0 0">Hilft dir, falls jemand die Zahlung später zurückbucht. Entwurf – rechtliche Prüfung läuft.</p></div>';
+      '<p class="muted klein" style="margin:10px 0 0">Hilft dir, falls jemand die Zahlung später zurückbucht. Eine Garantie, dass du einen Streitfall gewinnst, gibt es nicht.</p></div>';
     var aktionen = "";
     if (z.status === "offen") aktionen = '<div class="row-a"><a class="btn wa small" target="_blank" rel="noopener" href="https://wa.me/?text=' + encodeURIComponent("Hier ist dein Zahlungslink: " + zl) + '">WhatsApp</a><button class="btn dark small" data-copytext="' + e(zl) + '">Link kopieren</button><button class="btn ghost small" id="z-storno">Stornieren</button></div>';
     var erstattbar = prov() && z.abwicklung === "plattform" && z.status === "bezahlt" && rest > 0 && !(z.rueckbuchung && !z.rueckbuchung.abgeschlossenAm);
@@ -230,7 +233,7 @@
     if (!s.stripe.freigegeben) { box.innerHTML = '<div class="card-a"><b>Noch kein Zahlungskonto freigegeben.</b><p class="klein muted">Sobald es eingerichtet ist, siehst du hier deine Auszahlungen.</p>' + (s.stripe.angabenGemacht ? "" : '<a class="btn gold small" href="#einrichtung">Jetzt einrichten</a>') + "</div>"; return; }
     if (!s.eingebettet) { box.innerHTML = '<div class="card-a"><p class="klein">Deine Auszahlungen zeigt Stripe auf einer eigenen Seite.</p><button class="btn dark" id="dash">Auszahlungen ansehen</button></div>'; $("dash").onclick = dashboard; return; }
     box.innerHTML = "";
-    stripeSitzung().then(function () { TFStripe.zeige(box, "payouts", { zahlungen: D.zahlungen }); }).catch(function (err) { box.innerHTML = '<p class="leer">' + e(err.message) + "</p>"; });
+    stripeSitzung().then(function (r) { if (r.modus === "ansicht") { box.innerHTML = '<p class="leer">' + e(r.hinweis) + "</p>"; return; } TFStripe.zeige(box, "payouts", { zahlungen: D.zahlungen }); }).catch(function (err) { box.innerHTML = '<p class="leer">' + e(err.message) + "</p>"; });
   }
   async function dashboard() { try { window.open((await TF.api("/api/portal/stripe-dashboard", { body: {} })).url, "_blank"); } catch (err) { toast(err.message, true); } }
 
@@ -241,6 +244,7 @@
     st.innerHTML = s.stripe.angabenGemacht ? '<div class="card-a"><b>Danke! Stripe prüft deine Angaben.</b><p class="klein muted">Meist dauert das 1 bis 3 Werktage. Du bekommst eine E-Mail. Falls Stripe noch etwas braucht, steht es unten.</p></div>' : "";
     box.innerHTML = "";
     stripeSitzung().then(function (r) {
+      if (r.modus === "ansicht") { box.innerHTML = '<div class="card-a"><p class="klein">' + e(r.hinweis) + "</p></div>"; return; }
       if (r.modus === "weiterleitung") { box.innerHTML = '<div class="card-a"><p class="klein">Die Einrichtung läuft auf einer sicheren Seite unseres Zahlungspartners Stripe. Danach kommst du automatisch zurück.</p><a class="btn gold big w100" href="' + e(r.url) + '">Weiter zur Einrichtung</a></div>'; return; }
       TFStripe.zeige(box, "account-onboarding", { firma: s.firma, inhaber: s.inhaber, fertig: async function () {
         try { D.studio = await TF.api("/api/portal/konto-status", { body: {} }); } catch (x) {}
@@ -353,7 +357,7 @@
     var s = D.studio;
     $("mehr-recht").textContent = s.recht && s.recht.aktuell ? "Gelesen am " + dat(s.recht.am) + " ✓" : "Wer trägt welches Risiko? Einfach erklärt.";
     $("mehr-fb").textContent = s.fragebogenAm ? "Ausgefüllt am " + dat(s.fragebogenAm) : "Hilft uns bei der Einrichtung (10 Minuten)";
-    $("mehr-paket").textContent = "Dein Paket: " + s.paketName + (s.provisionProzent ? " · " + s.provisionProzent + " % pro Zahlung, alles inklusive" : " · keine Provision") + (s.gruender ? " · Gründer-Aktion" : "") + " · Angemeldet als " + s.email;
+    $("mehr-paket").textContent = "Dein Paket: " + s.paketName + (s.provisionProzent ? " · " + s.provisionProzent + " % pro Zahlung, alles inklusive" : s.paket === "monatlich" ? " · " + TF.euro(s.monatNetto || 4900) + " netto im Monat, keine Provision" : " · keine Provision") + " · Angemeldet als " + s.email;
   }
 
   // ---------- Recht ----------
@@ -370,7 +374,7 @@
     }
     var s = D.studio, box = $("recht-ok");
     if (s.recht && s.recht.aktuell) { box.innerHTML = "<b>✓ Gelesen und bestätigt</b><p class=\"klein muted\">am " + dat(s.recht.am) + " · Version " + e(s.recht.version) + '</p><div class="row-a"><a class="btn dark small" href="/recht.html?druck=1" target="_blank">Als PDF speichern</a></div>'; return; }
-    box.innerHTML = '<h2>Bestätigen</h2><label class="haken"><input type="checkbox" id="r-ok"> <span>Ich habe das Blatt gelesen und verstanden. Mir ist klar, dass es ein Entwurf und keine Rechtsberatung ist.</span></label>' +
+    box.innerHTML = '<h2>Bestätigen</h2><label class="haken"><input type="checkbox" id="r-ok"> <span>Ich habe das Blatt gelesen und verstanden. Mir ist klar, dass es keine Rechtsberatung ist.</span></label>' +
       '<label class="lbl" for="r-name">Dein Name</label><input type="text" id="r-name" autocomplete="name" value="' + e(s.inhaber || "") + '">' +
       '<div class="row-a"><button class="btn gold" id="r-btn">Bestätigen</button><a class="btn ghost small" href="/recht.html?druck=1" target="_blank">Als PDF speichern</a></div>';
     $("r-btn").onclick = async function () {
@@ -394,7 +398,7 @@
     var s = D.studio, box = $("konto-box");
     if (!s.stripe.verbunden || !s.eingebettet) { box.innerHTML = '<div class="card-a"><p class="klein">' + (s.stripe.verbunden ? "Deine Bank- und Firmendaten verwaltet Stripe auf einer eigenen Seite." : "Noch kein Zahlungskonto.") + "</p>" + (s.stripe.verbunden ? '<button class="btn dark" id="dash2">Bei Stripe ansehen</button>' : '<a class="btn gold small" href="#einrichtung">Jetzt einrichten</a>') + "</div>"; var d2 = $("dash2"); if (d2) d2.onclick = dashboard; return; }
     box.innerHTML = "";
-    stripeSitzung().then(function () { TFStripe.zeige(box, "account-management", { firma: s.firma, adresse: s.strasse + ", " + s.plz + " " + s.ort }); }).catch(function (err) { box.innerHTML = '<p class="leer">' + e(err.message) + "</p>"; });
+    stripeSitzung().then(function (r) { if (r.modus === "ansicht") { box.innerHTML = '<p class="leer">' + e(r.hinweis) + "</p>"; return; } TFStripe.zeige(box, "account-management", { firma: s.firma, adresse: s.strasse + ", " + s.plz + " " + s.ort }); }).catch(function (err) { box.innerHTML = '<p class="leer">' + e(err.message) + "</p>"; });
   }
 
   function einstellungen() { $("k-email").value = D.studio.benachrichtigung.email || ""; $("k-anz").value = D.studio.anzahlungsbedingungen || ""; }

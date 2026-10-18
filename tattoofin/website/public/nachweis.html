@@ -34,7 +34,7 @@ body.app{background:#fff;padding-bottom:20px}
   var Z = d.zahlung, L = d.leistung, S = d.studio, K = Z.kundeBestaetigt;
   var reihe = function (k, v) { return v ? "<tr><th>" + k + "</th><td>" + v + "</td></tr>" : ""; };
   document.getElementById("inhalt").innerHTML =
-    '<p class="entwurf">Entwurf – keine Rechtsberatung. Die Formulare werden vor dem Livegang rechtlich geprüft.</p>' +
+    '<p class="entwurf">Zusammenstellung der in Tattoofin gespeicherten Nachweise. Keine Rechtsberatung; ob sie im Einzelfall ausreichen, entscheiden Bank bzw. Zahlungsanbieter.</p>' +
     "<h1>Nachweis zur Zahlung</h1><p class=\"muted\">Erstellt am " + zeit(d.erstellt) + " mit Tattoofin · Zahlungs-Nr. " + e(Z.id) + "</p>" +
     "<h2>Studio</h2><table>" + reihe("Studio", e(S.firma)) + reihe("Inhaber/in", e(S.inhaber)) + reihe("Adresse", e(S.strasse + ", " + S.plz + " " + S.ort)) + "</table>" +
     "<h2>Zahlung</h2><table>" + reihe("Kunde", e(Z.kunde || "–")) + reihe("E-Mail", e(Z.email || "")) + reihe("Betrag", "<b>" + euro(Z.betragCent, true) + "</b>") +

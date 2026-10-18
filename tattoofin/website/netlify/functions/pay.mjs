@@ -4,13 +4,13 @@
 //   POST /api/pay { z, inhaltOk, bedingungen }                                       Zahlung für einen Zahlungslink starten
 //   POST /api/pay { s, betrag, kunde, email, beschreibung, sitzungen, anzahlung, inhaltOk, bedingungen }  Zahlung über die Zahlseite
 // Antwort: { clientSecret, publishableKey, stripeAccount, simulation } → eingebettetes Bezahlfeld auf tattoofin.de
-//      oder { url } → Weiterleitung zum Stripe-Checkout (wenn kein öffentlicher Stripe-Schlüssel hinterlegt ist)
-// Absicherung fürs Studio (Entwurf, Rechtsprüfung offen): Der Kunde bestätigt vor dem Bezahlen per Häkchen den Inhalt
+//      oder { url } → Weiterleitung zum Stripe-Checkout (Standard live, solange TF_BEZAHLFELD nicht „an“ ist – siehe domain.mjs)
+// Absicherung fürs Studio (Rechtsprüfung durch Anwalt empfohlen): Der Kunde bestätigt vor dem Bezahlen per Häkchen den Inhalt
 // (Studio, Motiv/Projekt, Sitzungen, Betrag) und bei Anzahlungen die Anzahlungsbedingungen. Gespeichert mit Zeitstempel.
 import { CFG, BAUSTEINE_SIMULIERT } from "./_lib/config.mjs";
 import { json, fail, body, clean, id, now, handler, isEmail, parseBetrag, euro, clientIp } from "./_lib/util.mjs";
 import { getStudio, studioBy, zahlungBy, saveZahlung } from "./_lib/store.mjs";
-import { checkoutFuer, bezahlfeldFuer, darfKassieren, anzahlungsbedingungen, istAnzahlung, eingebettet, zahlungBezahlt, plattformKassiert } from "./_lib/domain.mjs";
+import { checkoutFuer, bezahlfeldFuer, darfKassieren, anzahlungsbedingungen, istAnzahlung, bezahlfeld, zahlungBezahlt, plattformKassiert } from "./_lib/domain.mjs";
 import { stripe } from "./_lib/stripe.mjs";
 
 const studioInfo = (s) => ({ firma: s.firma, ort: s.ort, slug: s.slug, aktiv: Boolean(darfKassieren(s)), anzahlungsbedingungen: anzahlungsbedingungen(s) });
@@ -33,7 +33,7 @@ function bestaetigen(req, context, s, z) {
 }
 
 async function starte(s, z) {
-  if (eingebettet()) {
+  if (bezahlfeld()) {
     const r = await bezahlfeldFuer(s, z);
     return json({ ...r, publishableKey: CFG.stripePublishableKey || null, simulation: BAUSTEINE_SIMULIERT, zahlung: z.id, betragCent: z.betragCent });
   }

@@ -25,7 +25,7 @@
     var s = D.studio, prov = s.modell === "provision", k = D.kpis;
     $("who").textContent = s.email;
     $("titel").textContent = s.firma;
-    $("untertitel").innerHTML = '<span class="tag ' + e(s.status) + '">' + e(s.statusText) + "</span> · " + (prov ? D.config.provisionProzent + " % Provision, alles inklusive" : "Setup gekauft") +
+    $("untertitel").innerHTML = '<span class="tag ' + e(s.status) + '">' + e(s.statusText) + "</span> · " + (prov ? "Paket Risikofrei · " + D.config.provisionProzent + " % alles inklusive" : "Paket " + (s.paketName || "Einmalzahlung")) +
       " · Stripe: " + (s.stripe.freigegeben ? "freigegeben ✓" : s.stripe.verbunden ? "in Prüfung" : "nicht verbunden");
 
     var todo = [];
@@ -49,7 +49,7 @@
     $("fb-status").textContent = s.fragebogenAm ? "Zuletzt gespeichert am " + dat(s.fragebogenAm) + ". Änderungen jederzeit möglich." : "Noch nicht ausgefüllt.";
 
     $("vertrag-info").innerHTML = '<table class="tbl">' +
-      "<tr><th>Modell</th><td>" + (prov ? "Provision: " + D.config.provisionProzent + " % vom Zahlbetrag jeder Zahlung über Tattoofin, alles inklusive (Zahlungsgebühren und USt.). Stripe zahlt dir automatisch " + (100 - D.config.provisionProzent) + " % aus." : "Kauf: Setup " + euro(s.preisNetto) + " netto einmalig, keine Provision") + "</td></tr>" +
+      "<tr><th>Paket</th><td>" + (prov ? "Risikofrei: " + D.config.provisionProzent + " % vom Zahlbetrag jeder Zahlung über Tattoofin, alles inklusive (Zahlungsgebühren und USt.). Stripe zahlt dir automatisch " + (100 - D.config.provisionProzent) + " % aus." : s.paket === "monatlich" ? "Monatlich: " + euro(s.monatNetto || 4900) + " netto im Monat, keine Provision. Zahlungsgebühren zahlst du direkt an Stripe. Rechnungen unter „Konto“." : (s.paket === "geschenk" ? "Geschenk: keine Einrichtung, keine Provision" : (s.paketName || "Einmalzahlung") + ": " + euro(s.preisNetto) + " netto einmalig, keine Provision")) + "</td></tr>" +
       "<tr><th>Abgeschlossen</th><td>" + dat(s.vertrag.akzeptiertAm) + " von " + e(s.vertrag.name) + " (Version " + e(s.vertrag.version) + ")</td></tr>" +
       "<tr><th>Live seit</th><td>" + (s.goLiveAt ? dat(s.goLiveAt) : "noch in Einrichtung") + "</td></tr>" +
       (s.garantieBis ? "<tr><th>Geld-zurück-Garantie</th><td>" + (s.goLiveAt ? "bis " + dat(s.garantieBis) : D.config.garantieTage + " Tage ab Go-live") + "</td></tr>" : "") +
@@ -115,8 +115,8 @@
       return;
     }
     if (["beendet", "erstattet"].includes(s.status)) { p.innerHTML = '<h2>Vertrag beendet</h2><p class="muted">Der Vertrag ist beendet.' + (s.modell === "provision" ? " Offene Auszahlungen überweist Stripe weiterhin an dich." : " Dein Stripe-Konto bleibt bei dir.") + '</p>'; return; }
-    var garantie = s.modell === "kauf" && s.garantieBis && (s.garantieBis === "ab Go-live" || new Date(s.garantieBis) > new Date());
-    p.innerHTML = "<h2>Kündigen</h2><p class=\"muted\">Du kannst jederzeit zum Monatsende kündigen. " + (s.modell === "provision" ? "Offene Auszahlungen bekommst du auch nach dem Ende vollständig." : "Dein Stripe-Konto bleibt bei deinem Studio.") + (garantie ? " Du bist noch in der Garantiezeit: Mit der Geld-zurück-Garantie erstatten wir dir den vollen Setup-Preis." : "") + "</p>" +
+    var garantie = s.garantieBis && (s.garantieBis === "ab Go-live" || new Date(s.garantieBis) > new Date());
+    p.innerHTML = "<h2>Kündigen</h2><p class=\"muted\">" + (s.paket === "monatlich" ? "Du kannst jederzeit zum Ende des laufenden Abrechnungsmonats kündigen. " : "Du kannst jederzeit zum Monatsende kündigen. ") + (s.modell === "provision" ? "Offene Auszahlungen bekommst du auch nach dem Ende vollständig." : "Dein Stripe-Konto bleibt bei deinem Studio.") + (garantie ? " Du bist noch in der Garantiezeit: Mit der Geld-zurück-Garantie erstatten wir dir den vollen Setup-Preis." : "") + "</p>" +
       '<div class="field"><label>Was hat nicht gepasst? (optional, hilft uns sehr)</label><textarea id="k-grund"></textarea></div>' +
       (garantie ? '<label class="check"><input type="checkbox" id="k-garantie"> <span>Geld-zurück-Garantie nutzen (Vertrag endet sofort)</span></label>' : "") +
       '<button class="btn ghost" id="k-btn" style="color:var(--red)">Vertrag kündigen</button>';

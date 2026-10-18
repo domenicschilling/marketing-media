@@ -1,7 +1,7 @@
 // Login per Magic Link (kein Passwort) + signiertes Session-Cookie. Admin über ADMIN_TOKEN.
 import crypto from "node:crypto";
 import { SECRETS, CFG } from "./config.mjs";
-import { getStudio, store } from "./store.mjs";
+import { getStudio, store, normEmail } from "./store.mjs";
 import { randomBytes } from "node:crypto";
 
 // Vorschau: Sitzungs-Geheimnis zufällig erzeugen und im (eigenen) Vorschau-Speicher ablegen, statt einen Schlüssel zu hinterlegen
@@ -34,6 +34,11 @@ export function verify(token, type) {
   } catch { return null; }
 }
 
+// Zweck-gebundene, signierte Links (HMAC mit SESSION_SECRET), z. B. „connect“ (Stripe-Einrichtung) oder „resume“
+// (Abschluss fortsetzen). Nur per Mail an die hinterlegte Studio-Adresse bzw. an den eigenen Browser ausgeben.
+export const zweckToken = (studioId, zweck, stunden = 24) => sign({ t: zweck, sid: studioId, exp: Date.now() + stunden * 3600e3 });
+export const zweckOk = (token, zweck, studioId) => { const p = verify(token, zweck); return Boolean(p && studioId && p.sid === studioId); };
+
 export const loginLink = (studioId, minutes = 60 * 24) =>
   `${CFG.siteUrl}/api/auth?token=${sign({ t: "login", sid: studioId, exp: Date.now() + minutes * 60000 })}`;
 
@@ -47,23 +52,58 @@ export function sessionCookie(studioOderId) {
 
 export const clearCookie = () => `${COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`;
 
-function readCookie(req) {
+function readCookie(req, name = COOKIE) {
   const raw = req.headers.get("cookie") || "";
-  const m = raw.match(new RegExp("(?:^|;\\s*)" + COOKIE + "=([^;]+)"));
+  const m = raw.match(new RegExp("(?:^|;\\s*)" + name + "=([^;]+)"));
   return m ? m[1] : null;
 }
 
+// Studio aus dem Sitzungs-Cookie. Admin-Ansicht („Dashboard ansehen“): Cookie mit ro=true und admin=<E-Mail>;
+// das Studio-Objekt bekommt dann die (nicht gespeicherte) Eigenschaft _ansicht = { admin }.
 export async function currentStudio(req) {
   const p = verify(readCookie(req), "session");
   if (!p) return null;
   const s = await getStudio(p.sid);
-  if (!s || (p.sv || 0) !== (s.sessionVersion || 0)) return null;
+  if (!s) return null;
+  if (p.ro) {
+    if (!p.admin) return null;
+    Object.defineProperty(s, "_ansicht", { value: { admin: p.admin, nurLesen: true }, enumerable: false });
+    return s;
+  }
+  if ((p.sv || 0) !== (s.sessionVersion || 0)) return null;
   return s;
 }
 
+// ---- Admin ----
+// Admin-Adressen: ADMIN_EMAILS (Komma-getrennt) oder ADMIN_EMAIL, Standard domenicschilling@gmail.com (gmail = googlemail)
+export const adminEmails = () => String(process.env.ADMIN_EMAILS || CFG.adminEmail || "").split(",").map((x) => normEmail(x)).filter(Boolean);
+export const istAdminEmail = (email) => Boolean(email) && adminEmails().includes(normEmail(email));
+const ADMIN_COOKIE = "tf_admin";
+export const adminLoginLink = (email) => `${CFG.siteUrl}/api/admin-login?token=${sign({ t: "adminlogin", email: normEmail(email), exp: Date.now() + 30 * 60000 })}`;
+export function adminCookie(email) {
+  const val = sign({ t: "admin", email: normEmail(email), exp: Date.now() + 12 * 3600e3 });
+  const secure = CFG.siteUrl.startsWith("https") ? "; Secure" : "";
+  return `${ADMIN_COOKIE}=${val}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${12 * 3600}${secure}`;
+}
+export const clearAdminCookie = () => `${ADMIN_COOKIE}=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0`;
+// E-Mail des eingeloggten Admins (Cookie) – nur, solange die Adresse noch in der Admin-Liste steht
+export function adminVonCookie(req) {
+  const p = verify(readCookie(req, ADMIN_COOKIE), "admin");
+  return p && istAdminEmail(p.email) ? p.email : null;
+}
+// Admin-Ansicht eines Studios: nur lesend, 2 Stunden
+export function ansichtCookie(studioId, adminEmail) {
+  const val = sign({ t: "session", sid: studioId, ro: true, admin: adminEmail, exp: Date.now() + 2 * 3600e3 });
+  const secure = CFG.siteUrl.startsWith("https") ? "; Secure" : "";
+  return `${COOKIE}=${val}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${2 * 3600}${secure}`;
+}
+
+// Admin: entweder ADMIN_TOKEN (Bearer, Rückfall) oder Admin-Sitzung per E-Mail-Login
 export function isAdmin(req) {
   const h = req.headers.get("authorization") || "";
   const t = h.startsWith("Bearer ") ? h.slice(7) : "";
-  return Boolean(SECRETS.adminToken) && t.length === SECRETS.adminToken.length &&
+  const perToken = Boolean(SECRETS.adminToken) && t.length === SECRETS.adminToken.length &&
     crypto.timingSafeEqual(Buffer.from(t), Buffer.from(SECRETS.adminToken));
+  return perToken || Boolean(adminVonCookie(req));
 }
+export const adminName = (req) => adminVonCookie(req) || "admin-token";

@@ -31,6 +31,10 @@
   [headers.values]
     X-Robots-Tag = "noindex"
 [[headers]]
+  for = "/vertrag-2026-10b.html"
+  [headers.values]
+    X-Robots-Tag = "noindex"
+[[headers]]
   for = "/zahlen/*"
   [headers.values]
     X-Robots-Tag = "noindex"

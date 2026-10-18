@@ -2,6 +2,7 @@
 import crypto from "node:crypto";
 import { SECRETS, CFG, SIMULATION } from "./config.mjs";
 import { store } from "./store.mjs";
+import { zweckToken } from "./auth.mjs";
 import { createSim, leereDb, nest, sendeWebhook } from "./stripe-sim.mjs";
 
 // Vorschau ohne Test-Schlüssel: Stripe-Nachbau im Prozess, Zustand im Vorschau-Speicher, Webhooks an die eigene Site.
@@ -114,8 +115,14 @@ export async function ensureCustomer(studio) {
 
 // Stripe-Konto des Studios über Connect.
 //  Kauf (Modell A):      Typ „standard“. Eigenes, vollwertiges Konto des Studios, Zahlungen laufen direkt dort (Direct Charges).
-//  Provision (Modell B): Typ „express“. Tattoofin kassiert als Plattform (Destination Charges), Stripe überweist
+//  Provision (Modell B): Express-Verhalten über Controller-Eigenschaften (statt type=express, Stripe-Doku
+//                        „migrate-to-controller-properties“): Plattform haftet für Verluste + zahlt Stripe-Gebühren,
+//                        Stripe sammelt die Nachweise ein, Studio bekommt das Express-Dashboard (login_links).
+//                        Tattoofin kassiert als Plattform (Destination Charges), Stripe überweist
 //                        automatisch 90 % auf das Konto des Studios. Das Studio ist Händler (on_behalf_of).
+//                        kontoTyp bleibt „express“ (Portal/dashboardLink prüfen darauf).
+//  Idempotenz-Schlüssel „acct2-…“: Stripe speichert die Antwort zum alten Schlüssel „acct-…“ 24 h – auch den
+//  Fehler „review the responsibilities of managing losses“ vom 18.10. – und lehnt geänderte Parameter ab.
 export async function ensureConnectedAccount(studio) {
   if (studio.stripe?.accountId) return studio.stripe.accountId;
   const express = studio.modell === "provision";
@@ -125,11 +132,14 @@ export async function ensureConnectedAccount(studio) {
   } : undefined;
   const delay = Number(CFG.auszahlungTage);
   const acct = await stripe("POST", "/accounts", {
-    type: express ? "express" : "standard", country: "DE", email: studio.email, default_currency: "eur", capabilities,
+    ...(express
+      ? { controller: { losses: { payments: "application" }, fees: { payer: "application" }, stripe_dashboard: { type: "express" }, requirement_collection: "stripe" } }
+      : { type: "standard" }),
+    country: "DE", email: studio.email, default_currency: "eur", capabilities,
     business_profile: { name: studio.firma, mcc: express ? "7299" : undefined, product_description: "Tätowierungen und Tattoo-Projekte", url: studio.website || undefined },
     settings: express && delay > 0 ? { payouts: { schedule: { interval: "daily", delay_days: delay } } } : undefined,
     metadata: { studioId: studio.id, modell: studio.modell },
-  }, { idempotencyKey: "acct-" + studio.id });
+  }, { idempotencyKey: "acct2-" + studio.id });
   studio.stripe = { ...(studio.stripe || {}), accountId: acct.id, kontoTyp: express ? "express" : "standard" };
   return acct.id;
 }
@@ -167,8 +177,8 @@ export async function accountSession(studio) {
 export async function onboardingLink(studio, base) {
   const link = await stripe("POST", "/account_links", {
     account: studio.stripe.accountId, type: "account_onboarding",
-    refresh_url: `${base}/api/connect?id=${studio.id}&neu=1`,
-    return_url: `${base}/api/connect/zurueck?id=${studio.id}`,
+    refresh_url: `${base}/api/connect?id=${studio.id}&neu=1&t=${zweckToken(studio.id, "connect", 24)}`,
+    return_url: `${base}/api/connect/zurueck?id=${studio.id}&t=${zweckToken(studio.id, "connect", 24)}`,
   });
   return link.url;
 }

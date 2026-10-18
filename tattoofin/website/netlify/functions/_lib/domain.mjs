@@ -1,11 +1,12 @@
 // Geschäftslogik: Benachrichtigungen, Zahlungslinks, Kündigung, Monatsabrechnung.
-import { CFG, plattformgebuehr, netto, provisionSatz, BAUSTEINE_SIMULIERT } from "./config.mjs";
+import crypto from "node:crypto";
+import { CFG, plattformgebuehr, netto, provisionSatz, BAUSTEINE_SIMULIERT, paketVon, aufstellerInklusive } from "./config.mjs";
 import { sendMail } from "./mail.mjs";
 import { mails } from "./emails.mjs";
 import { stripe, taxRateId, ensureCustomer } from "./stripe.mjs";
 import { allStudios, zahlungenVon, saveZahlung, getAbrechnung, saveAbrechnung, saveStudio, getStudio, log, store } from "./store.mjs";
 import { monatsende, now, HttpError } from "./util.mjs";
-import { loginLink } from "./auth.mjs";
+import { loginLink, zweckToken } from "./auth.mjs";
 
 export const STATUS = {
   entwurf: "Abschluss begonnen",
@@ -26,21 +27,55 @@ export async function notify(studio, mail, to) {
 
 export async function notifyAdmin(titel, studio, details) {
   if (!CFG.adminEmail) return;
+  // Gleiche Meldung (Titel, Studio, Details) höchstens einmal in 30 Minuten – schont das Mail-Limit (18.10.: 6 gleiche Fehler-Mails)
+  const key = "rl/admin-mail/" + crypto.createHash("sha256").update(JSON.stringify([titel, studio?.id || "", details || {}])).digest("hex").slice(0, 32);
+  const zuletzt = await store.get(key);
+  if (zuletzt?.am && Date.now() - new Date(zuletzt.am).getTime() < 30 * 60e3) return;
+  await store.set(key, { am: new Date().toISOString() });
   const m = mails.intern(titel, studio, details);
   return sendMail({ to: CFG.adminEmail, subject: m.subject, html: m.html, text: m.text });
 }
 
-export const connectUrl = (s) => `${CFG.siteUrl}/api/connect?id=${s.id}`;
+// Stripe-Einrichtung per Weiterleitung: nur mit signiertem Link (24 h, an Studio + Zweck gebunden) oder Sitzung
+export const connectUrl = (s) => `${CFG.siteUrl}/api/connect?id=${s.id}&t=${zweckToken(s.id, "connect", 24)}`;
+// Abschluss fortsetzen (Erinnerungs-Mail, Abbruch im Checkout): signiert, 7 Tage
+export const resumeUrl = (s) => `${CFG.siteUrl}/start.html?resume=${s.id}&t=${zweckToken(s.id, "resume", 24 * 7)}`;
 // Eingebettete Einrichtung im Dashboard möglich? (öffentlicher Stripe-Schlüssel gesetzt oder Simulation)
 // TF_EINBETTEN=aus schaltet zurück auf die Weiterleitung (Stripe-Onboarding/Checkout), z. B. für Tests oder als Notlösung
 export const eingebettet = () => process.env.TF_EINBETTEN !== "aus" && (BAUSTEINE_SIMULIERT || Boolean(CFG.stripePublishableKey));
+// Eingebettetes Bezahlfeld (Payment Element) für Endkunden: braucht die Webhook-Ereignisse payment_intent.succeeded/
+// .processing/.payment_failed an BEIDEN Stripe-Endpoints („Ihr Konto“ und „Verbundene Konten“). Solange die nicht
+// abonniert sind, bleibt live der bewährte Stripe-Checkout (Weiterleitung). Einschalten: Netlify-Env TF_BEZAHLFELD=an.
+// In der Vorschau/Simulation und lokal mit Stripe-Nachbau ist es immer an.
+export const bezahlfeld = () => eingebettet() && process.env.TF_BEZAHLFELD !== "aus" && (BAUSTEINE_SIMULIERT || process.env.TF_BEZAHLFELD === "an");
 // Link aus E-Mails: mit Login direkt in die Einrichtung im Dashboard (sonst wie bisher Stripe-Seite)
 export const einrichtungUrl = (s) => (eingebettet() ? `${loginLink(s.id)}&next=${encodeURIComponent("/app.html#einrichtung")}` : connectUrl(s));
 
-// Gründer-Aktion: echter Zähler aus echten Anmeldungen (Studios mit Gründer-Platz, Abschluss nicht abgebrochen)
-export async function gruenderStand() {
-  const vergeben = (await allStudios()).filter((s) => s.gruender && !["entwurf", "abgebrochen"].includes(s.status)).length;
-  return { max: CFG.gruenderMax, vergeben, frei: Math.max(0, CFG.gruenderMax - vergeben) };
+// Zahlseite des Studios. Kurze Adresse /zahlen/<studio> (für QR-Codes, v. a. den gravierten Holz-Aufsteller);
+// die alte Adresse /zahlen.html?s=<studio> funktioniert weiter.
+export const zahlseiteUrl = (s) => `${CFG.siteUrl}/zahlen/${encodeURIComponent(s.slug)}`;
+// Hersteller-Seite für den QR-Aufsteller (Gravurdatei als PDF/SVG/PNG)
+// Signiert (90 Tage), damit Logo/Gravurdaten nicht allein über den (erratbaren) Studionamen abrufbar sind
+export const aufstellerUrl = (s) => `${CFG.siteUrl}/aufsteller.html?s=${encodeURIComponent(s.slug)}&t=${zweckToken(s.id, "aufsteller", 24 * 90)}`;
+// Zusatzzeilen für Admin-Mails: Paket und – bei Monatlich/Einmalzahlung – „QR-Aufsteller bestellen“ mit Gravurdatei
+export function paketDetails(s, { aufsteller = false } = {}) {
+  const d = { Paket: paketVon(s).name };
+  if (aufsteller && aufstellerInklusive(s)) {
+    d["QR-Aufsteller bestellen"] = "im Paket enthalten – Gravurdatei unten (Standard: Holz hell, mit Studioname). Das Studio kann in der App unter Werbung → QR-Aufsteller Holzton/Logo wählen und anfordern; spätestens nach Go-live bestellen.";
+    d.Gravurdatei = aufstellerUrl(s);
+    d.Lieferadresse = [s.firma, s.strasse, [s.plz, s.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ");
+    d["QR-Code zeigt auf"] = zahlseiteUrl(s);
+  }
+  return d;
+}
+
+// Paket Monatlich: Abo auf dem DSX-Konto zum Ende des laufenden Abrechnungsmonats beenden (bzw. Kündigung zurücknehmen).
+// Liefert das Vertragsende (ISO) oder null, wenn es kein Abo gibt.
+export async function aboKuendigen(s, kuendigen = true) {
+  const subId = s.stripe?.subscriptionId;
+  if (!subId) return null;
+  const sub = await stripe("POST", `/subscriptions/${subId}`, { cancel_at_period_end: kuendigen ? "true" : "false" });
+  return sub.current_period_end ? new Date(sub.current_period_end * 1000).toISOString() : null;
 }
 
 export function kuendigungsDatum(date = new Date()) {
@@ -239,7 +274,7 @@ export async function taeglicheJobs(heute = new Date()) {
     const alterStd = (Date.now() - new Date(s.createdAt).getTime()) / 3600e3;
     if (s.status === "entwurf" && !s.erinnertAbbruch && alterStd > 20) {
       s.erinnertAbbruch = now(); await saveStudio(s);
-      await notify(s, mails.anmeldungAbgebrochen(s, { resumeUrl: `${CFG.siteUrl}/start.html?resume=${s.id}` }));
+      await notify(s, mails.anmeldungAbgebrochen(s, { resumeUrl: resumeUrl(s) }));
       out.push(["abbruch-erinnerung", s.firma]);
     }
     // Stripe-Konto nach 2 und 7 Tagen noch nicht freigegeben → erinnern

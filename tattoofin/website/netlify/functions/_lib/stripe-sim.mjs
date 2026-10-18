@@ -5,7 +5,7 @@
 // Seiten (Bezahlseite, Onboarding, Express-Dashboard) liegen unter pageBase (lokal :12111, Vorschau /api/sim).
 import crypto from "node:crypto";
 
-export const leereDb = () => ({ customers: {}, sessions: {}, invoices: {}, items: [], setupIntents: {}, refunds: [], taxRates: {}, accounts: {}, paymentIntents: {}, feeRefunds: [], transfers: [], reversals: [], accountSessions: [], idem: {}, invoiceNr: 1000 });
+export const leereDb = () => ({ subscriptions: {}, customers: {}, sessions: {}, invoices: {}, items: [], setupIntents: {}, refunds: [], taxRates: {}, accounts: {}, paymentIntents: {}, feeRefunds: [], transfers: [], reversals: [], accountSessions: [], idem: {}, invoiceNr: 1000 });
 
 // Stripe-Gebühren im Nachbau: Karte EWR 1,5 % + 0,25 €, Klarna 2,99 % + 0,35 €
 const gebuehr = (betrag, pm) => (pm === "klarna" ? Math.round(betrag * 0.0299) + 35 : Math.round(betrag * 0.015) + 25);
@@ -109,7 +109,7 @@ export function createSim({ load, save, pageBase, webhook }) {
         }
         const s = { id: rid("cs"), object: "checkout.session", ...p, status: "open", account: account || null };
         s.url = `${pageBase}/pay/${s.id}`;
-        if (s.mode === "payment") {
+        if (s.mode === "payment" || s.mode === "subscription") {
           const li = p.line_items[0];
           const net = Number(li.price_data.unit_amount);
           s.amount_total = li.tax_rates ? Math.round(net * 1.19) : net;
@@ -117,6 +117,13 @@ export function createSim({ load, save, pageBase, webhook }) {
         }
         db.sessions[s.id] = s;
         return done(s);
+      }
+      // Paket Monatlich: Abo lesen bzw. Kündigung zum Periodenende setzen/zurücknehmen
+      if (res1 === "subscriptions") {
+        const sub = (db.subscriptions || {})[id1];
+        if (!sub) throw new SimFehler(404, "Abo fehlt");
+        if (method === "POST" && p.cancel_at_period_end !== undefined) sub.cancel_at_period_end = String(p.cancel_at_period_end) === "true";
+        return sub;
       }
       if (res1 === "setup_intents") return db.setupIntents[id1];
       if (res1 === "invoiceitems") { const it = { id: rid("ii"), ...p, amount: Number(p.amount) }; db.items.push(it); return done(it); }
@@ -188,7 +195,13 @@ export function createSim({ load, save, pageBase, webhook }) {
           emit("checkout.session.completed", s, s.account || undefined);
           return { redirect: s.success_url.replace("{CHECKOUT_SESSION_ID}", s.id) };
         }
-        if (s.mode === "payment") {
+        if (s.mode === "subscription") {
+          // Paket Monatlich: Abo + erste Monatsrechnung (bezahlt)
+          const sub = { id: rid("sub"), object: "subscription", customer: s.customer, status: "active", cancel_at_period_end: false, metadata: s.subscription_data?.metadata || {}, current_period_end: Math.floor(Date.now() / 1000) + 30 * 86400 };
+          db.subscriptions = db.subscriptions || {}; db.subscriptions[sub.id] = sub;
+          const inv = { id: rid("in"), object: "invoice", customer: s.customer, subscription: sub.id, number: "TEST-" + db.invoiceNr++, status: "paid", amount_due: s.amount_total, amount_paid: s.amount_total, hosted_invoice_url: `${pageBase}/invoice`, metadata: {} };
+          db.invoices[inv.id] = inv; s.invoice = inv.id; s.subscription = sub.id; s.payment_status = "paid";
+        } else if (s.mode === "payment") {
           s.payment_intent = rid("pi"); s.payment_status = "paid";
           if (String(s.invoice_creation?.enabled) === "true") {
             const inv = { id: rid("in"), object: "invoice", customer: s.customer, number: "TEST-" + db.invoiceNr++, status: "paid", amount_due: s.amount_total, amount_paid: s.amount_total, hosted_invoice_url: `${pageBase}/invoice`, metadata: s.invoice_creation.invoice_data?.metadata || {}, payment_intent: s.payment_intent };

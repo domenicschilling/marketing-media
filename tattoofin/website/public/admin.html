@@ -7,8 +7,14 @@
 <header class="nav"><div class="wrap"><a class="brand" href="/admin.html"><img src="/assets/figur.png" alt=""><img class="wm" src="/assets/wortmarke.png" alt="Tattoofin"> Admin</a><nav class="links"><a href="#" id="out">Abmelden</a></nav></div></header>
 <main class="sec tight"><div class="wrap">
   <div id="alert"></div>
-  <form id="login" class="form hidden" style="max-width:420px"><h2 style="font-size:24px;margin-bottom:12px">Admin-Login</h2>
-    <div class="field"><label>Admin-Token (Netlify-Variable ADMIN_TOKEN)</label><input type="password" id="token"></div><button class="btn gold">Anmelden</button></form>
+  <div id="login" class="hidden" style="max-width:440px">
+    <form id="login-mail" class="form"><h2 style="font-size:24px;margin-bottom:12px">Admin-Login</h2>
+      <div class="field"><label for="admin-email">E-Mail</label><input type="email" id="admin-email" name="email" autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false" required></div>
+      <button class="btn gold">Login-Link schicken</button>
+      <p class="muted" style="font-size:13px;margin:10px 0 0">Nur für hinterlegte Admin-Adressen. Der Link ist 30 Minuten gültig, danach bleibst du 12 Stunden angemeldet.</p></form>
+    <details style="margin-top:18px"><summary>Anmeldung mit Admin-Token</summary>
+      <form id="login-token" class="form" style="margin-top:10px"><div class="field"><label for="token">Admin-Token (Netlify-Variable ADMIN_TOKEN)</label><input type="password" id="token" autocomplete="current-password"></div><button class="btn dark small">Anmelden</button></form></details>
+  </div>
 
   <div id="app" class="hidden">
     <div class="kpis" id="kpis"></div>
@@ -32,7 +38,7 @@
 (function () {
   var $ = function (i) { return document.getElementById(i); }, e = TF.esc;
   var token = sessionStorage.getItem("tf-admin") || "";
-  function api(p, o) { o = o || {}; o.headers = { Authorization: "Bearer " + token }; return TF.api("/api/admin/" + p, o); }
+  function api(p, o) { o = o || {}; if (token) o.headers = { Authorization: "Bearer " + token }; return TF.api("/api/admin/" + p, o); }
   function msg(t, ty) { $("alert").innerHTML = t ? '<div class="alert ' + (ty || "ok") + '">' + e(t) + "</div>" : ""; }
   function zeig(x) { $("out-json").textContent = JSON.stringify(x, null, 2); }
   var vm = new Date(); vm.setMonth(vm.getMonth() - 1); $("monat").value = vm.toISOString().slice(0, 7);
@@ -45,7 +51,7 @@
       .map(function (k) { return '<div class="kpi"><b>' + k[0] + "</b><span>" + k[1] + "</span></div>"; }).join("");
     $("liste").innerHTML = '<table class="tbl"><tr><th>Studio</th><th>Modell</th><th>Status</th><th>Stripe</th><th>Seit</th><th>Zahlungen</th><th>Umsatz</th><th>Provision netto</th><th>nach Gebühren</th><th>Fragebogen</th></tr>' +
       list.map(function (s) {
-        return '<tr data-id="' + e(s.id) + '"><td><b>' + e(s.firma) + "</b><br><small>" + e(s.ort || "") + " · " + e(s.email) + "</small></td><td>" + e(s.paket || s.modell) + (s.provisionProzent ? " · " + e(s.provisionProzent) + " %" : "") + (s.gruender ? " · Gründer" : "") + (s.recht ? "<br><small>Recht ✓ " + e(s.recht) + "</small>" : "") + (s.extras ? "<br><small>Extras: " + e(s.extras) + "</small>" : "") + '</td><td><span class="tag ' + e(s.status) + '">' + e(s.statusText) + "</span></td><td>" + e(s.stripe) + "</td><td>" + TF.datum(s.createdAt) +
+        return '<tr data-id="' + e(s.id) + '"><td><b>' + e(s.firma) + "</b><br><small>" + e(s.ort || "") + " · " + e(s.email) + "</small></td><td>" + e(s.paket || s.modell) + (s.provisionProzent ? " · " + e(s.provisionProzent) + " %" : "") + (s.recht ? "<br><small>Recht ✓ " + e(s.recht) + "</small>" : "") + (s.extras ? "<br><small>Extras: " + e(s.extras) + "</small>" : "") + '</td><td><span class="tag ' + e(s.status) + '">' + e(s.statusText) + "</span></td><td>" + e(s.stripe) + "</td><td>" + TF.datum(s.createdAt) +
           "</td><td>" + s.zahlungen + (s.offen ? " (+" + s.offen + " offen)" : "") + "</td><td>" + TF.euro(s.umsatzCent) + "</td><td>" + TF.euro(s.provisionNettoCent, true) + "</td><td>" + TF.euro(s.deckungsbeitragCent, true) + "</td><td>" + (s.fragebogen ? "✓" : "–") + "</td></tr>";
       }).join("") + "</table>";
     var mails = await api("mails");
@@ -58,16 +64,17 @@
     location.hash = id;
     p.classList.remove("hidden");
     p.innerHTML = "<h2>" + e(s.firma) + "</h2>" +
-      '<div class="grid2"><div><table class="tbl">' + [["Inhaber", s.inhaber], ["E-Mail", s.email], ["Handy", s.telefon], ["Studio-Tel.", s.studioTelefon], ["Adresse", s.strasse + ", " + s.plz + " " + s.ort], ["Paket", (s.paket || s.modell) + (s.provisionProzent ? " · " + s.provisionProzent + " %" : "") + (s.preisNetto ? " · " + TF.euro(s.preisNetto) : "") + (s.gruender ? " · Gründer-Aktion (Video-Einwilligung " + TF.datum(s.gruender.am) + ")" : "")], ["Zahlart", s.zahlart], ["Vertrag", (s.vertrag || {}).version + " · " + TF.datum((s.vertrag || {}).akzeptiertAm) + " · " + ((s.vertrag || {}).name || "") + " · IP " + ((s.vertrag || {}).ip || "")], ["Stripe-Konto", ((s.stripe || {}).accountId || "–") + ((s.stripe || {}).chargesEnabled ? " · freigegeben" : " · nicht freigegeben")], ["Zahlseite", location.origin + "/zahlen/" + s.slug], ["Live seit", TF.datum(s.goLiveAt)], ["Kündigung", s.kuendigung ? TF.datum(s.kuendigung.zum) + (s.kuendigung.garantie ? " (GARANTIE)" : "") + " · " + (s.kuendigung.grund || "") : "–"]]
+      '<div class="grid2"><div><table class="tbl">' + [["Inhaber", s.inhaber], ["E-Mail", s.email], ["Handy", s.telefon], ["Studio-Tel.", s.studioTelefon], ["Adresse", s.strasse + ", " + s.plz + " " + s.ort], ["Paket", (s.paket || s.modell) + (s.provisionProzent ? " · " + s.provisionProzent + " %" : "") + (s.preisNetto ? " · " + TF.euro(s.preisNetto) : "") + (s.monatNetto ? " · " + TF.euro(s.monatNetto) + "/Monat" : "") + (s.paket === "monatlich" || s.paket === "einmal" ? " · QR-Aufsteller: " + (d.aufstellerLink || "") : "")], ["Zahlart", s.zahlart], ["Vertrag", (s.vertrag || {}).version + " · " + TF.datum((s.vertrag || {}).akzeptiertAm) + " · " + ((s.vertrag || {}).name || "") + " · IP " + ((s.vertrag || {}).ip || "")], ["Stripe-Konto", ((s.stripe || {}).accountId || "–") + ((s.stripe || {}).chargesEnabled ? " · freigegeben" : " · nicht freigegeben")], ["Zahlseite", location.origin + "/zahlen/" + s.slug], ["Live seit", TF.datum(s.goLiveAt)], ["Kündigung", s.kuendigung ? TF.datum(s.kuendigung.zum) + (s.kuendigung.garantie ? " (GARANTIE)" : "") + " · " + (s.kuendigung.grund || "") : "–"]]
         .map(function (r) { return "<tr><th>" + r[0] + "</th><td>" + e(r[1] || "–") + "</td></tr>"; }).join("") + "</table></div><div>" +
       '<div class="field"><label>Notiz</label><textarea id="d-notiz">' + e(s.notiz || "") + "</textarea></div>" +
       '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn dark small" id="d-save">Speichern</button><button class="btn gold small" id="d-live">Live schalten + E-Mail</button>' +
-      '<button class="btn ghost small" id="d-konto">Stripe-Status abfragen</button><button class="btn ghost small" id="d-link">Login-Link</button>' +
+      '<button class="btn ghost small" id="d-konto">Stripe-Status abfragen</button><button class="btn ghost small" id="d-link">Login-Link</button><button class="btn dark small" id="d-ansehen">Dashboard ansehen</button>' +
       (s.modell === "kauf" && s.stripe && s.stripe.paymentIntentId ? '<button class="btn ghost small" id="d-refund" style="color:var(--red)">Garantie erstatten</button>' : "") + "</div></div></div>" +
       "<h2 style='margin-top:20px;font-size:18px'>Fragebogen</h2><pre>" + e(JSON.stringify(s.fragebogen || {}, null, 2)) + "</pre>" +
       "<h2 style='font-size:18px'>Zahlungen (" + d.zahlungen.length + ")</h2><pre>" + e(d.zahlungen.map(function (z) { return TF.datum(z.bezahltAm || z.createdAt) + " · " + z.status + " · " + TF.euro(z.betragCent, true) + " · " + (z.kunde || "") + " · " + (z.zahlartText || "") + (z.gebuehrNettoCent ? " · Provision " + TF.euro(z.gebuehrNettoCent, true) : "") + (z.abgerechnet ? " [abgerechnet " + z.abgerechnet + "]" : ""); }).join("\n")) + "</pre>" +
       "<h2 style='font-size:18px'>Abrechnungen</h2><pre>" + e(JSON.stringify(d.abrechnungen.map(function (a) { return { monat: a.monat, umsatz: a.umsatzCent, provisionNetto: a.provisionNettoCent, rechnung: a.rechnungNr }; }), null, 2)) + "</pre>";
     $("d-save").onclick = async function () { zeig(await api("studio/" + id, { method: "PATCH", body: { notiz: $("d-notiz").value } })); msg("Gespeichert."); };
+    $("d-ansehen").onclick = async function () { try { var r = await api("studio/" + id + "/ansehen", { body: {} }); location.href = r.url; } catch (err) { msg(err.message, "err"); } };
     $("d-live").onclick = async function () { if (!confirm("Live schalten und Go-live-E-Mail senden?")) return; try { zeig(await api("studio/" + id + "/live", { body: {} })); msg("Live geschaltet."); start(); } catch (err) { msg(err.message, "err"); } };
     $("d-konto").onclick = async function () { try { zeig(await api("studio/" + id + "/konto", { body: {} })); start(); } catch (err) { msg(err.message, "err"); } };
     $("d-link").onclick = async function () { var r = await api("studio/" + id + "/login-link", { body: {} }); zeig(r); };
@@ -79,8 +86,15 @@
   $("abr-test").onclick = async function () { zeig(await api("abrechnung", { body: { monat: $("monat").value, dryRun: true } })); };
   $("abr-los").onclick = async function () { if (!confirm("Abrechnung für " + $("monat").value + " wirklich erstellen? Rechnungen werden erzeugt und eingezogen.")) return; try { zeig(await api("abrechnung", { body: { monat: $("monat").value, dryRun: false } })); msg("Abrechnung erstellt."); } catch (err) { msg(err.message, "err"); } };
   $("jobs").onclick = async function () { zeig(await api("jobs", { body: {} })); };
-  $("login").addEventListener("submit", function (ev) { ev.preventDefault(); token = $("token").value; sessionStorage.setItem("tf-admin", token); start(); });
-  $("out").onclick = function (ev) { ev.preventDefault(); sessionStorage.removeItem("tf-admin"); location.reload(); };
+  $("login-token").addEventListener("submit", function (ev) { ev.preventDefault(); token = $("token").value; sessionStorage.setItem("tf-admin", token); start(); });
+  $("login-mail").addEventListener("submit", async function (ev) {
+    ev.preventDefault();
+    try { await TF.api("/api/admin-login", { body: { email: $("admin-email").value } }); msg("Wenn die Adresse als Admin hinterlegt ist, ist der Login-Link unterwegs. Schau auch im Spam-Ordner nach."); } catch (err) { msg(err.message, "err"); }
+  });
+  $("out").onclick = async function (ev) { ev.preventDefault(); sessionStorage.removeItem("tf-admin"); try { await TF.api("/api/admin-login/abmelden", { body: {} }); } catch (x) {} location.reload(); };
+  var qa = new URLSearchParams(location.search);
+  if (qa.get("abgelaufen")) msg("Der Admin-Link ist abgelaufen oder ungültig. Fordere einfach einen neuen an.", "err");
+  if (qa.get("ansicht") === "abgelaufen") msg("Der Link für die Dashboard-Ansicht ist abgelaufen. Bitte erneut auf „Dashboard ansehen“ klicken.", "err");
   start();
 })();
 </script>

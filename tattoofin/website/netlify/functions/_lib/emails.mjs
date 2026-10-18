@@ -30,11 +30,15 @@ const rows = (pairs) => `<table role="presentation" cellpadding="0" cellspacing=
   .filter(([, v]) => v !== undefined && v !== null && v !== "")
   .map(([k, v]) => `<tr><td style="padding:5px 0;color:#5b6370;width:44%;vertical-align:top">${esc(k)}</td><td style="padding:5px 0;font-weight:600">${v}</td></tr>`).join("")}</table>`;
 const hallo = (s) => p(`Hey ${esc(s.inhaber?.split(" ")[0] || s.firma)},`);
-const modellText = (s) => (s.zahlart === "geschenk"
-  ? "Geschenk: keine Einrichtungsgebühr, keine Grundgebühr, keine Provision. Du zahlst nur die normalen Gebühren von Stripe (bzw. Klarna) direkt an Stripe, Tattoofin verdient nichts daran."
-  : s.modell === "kauf"
-  ? `Kauf: Einrichtung ${euro(s.preisNetto)} netto einmalig (${euro(brutto(s.preisNetto))} brutto), keine monatliche Grundgebühr, keine Provision`
-  : `Paket ${paketVon(s).name}: ${provisionSatz(s)} % vom Zahlbetrag jeder Zahlung über Tattoofin, alles inklusive (Zahlungsgebühren und USt.)${s.preisNetto ? `, Einrichtung ${euro(s.preisNetto)} netto einmalig` : ", keine Einrichtungsgebühr"}${s.gruender ? " (Gründer-Aktion)" : ""}, keine Grundgebühr`);
+const modellText = (s) => {
+  const p = paketVon(s);
+  if (p.id === "geschenk") return "Geschenk: keine Einrichtungsgebühr, keine Grundgebühr, keine Provision. Du zahlst nur die normalen Gebühren von Stripe (bzw. Klarna) direkt an Stripe, Tattoofin verdient nichts daran.";
+  if (p.id === "monatlich") return `Paket Monatlich: ${euro(CFG.monatNetto)} netto im Monat (${euro(brutto(CFG.monatNetto))} inkl. USt.), danach nur die Zahlungsgebühren, die du direkt an Stripe zahlst. Keine Tattoofin-Provision, monatlich kündbar. Inklusive QR-Aufsteller aus Holz und digitalem QR-Code.`;
+  if (p.id === "einmal" && s.paket === "einmal") return `Paket Einmalzahlung: ${euro(s.preisNetto)} netto einmalig (${euro(brutto(s.preisNetto))} inkl. USt.), danach keine Tattoofin-Gebühr mehr, nur die Zahlungsgebühren, die du direkt an Stripe zahlst. Inklusive QR-Aufsteller aus Holz und digitalem QR-Code.`;
+  if (s.modell === "kauf") return `Kauf: Einrichtung ${euro(s.preisNetto)} netto einmalig (${euro(brutto(s.preisNetto))} brutto), keine monatliche Grundgebühr, keine Provision`;
+  return `Paket Risikofrei: ${CFG.provisionProzent} % vom Zahlbetrag jeder Zahlung über Tattoofin, alles inklusive (Zahlungsgebühren und USt.), keine Einrichtungs- und keine Grundgebühr, monatlich kündbar. Digitaler QR-Code inklusive.`;
+};
+const wert = (v) => (typeof v === "string" && /^https?:\/\/\S+$/.test(v) ? `<a href="${esc(v)}">${esc(v)}</a>` : esc(typeof v === "object" ? JSON.stringify(v) : v));
 const mk = (subject, l) => ({ subject, ...layout(l) });
 
 export const mails = {
@@ -65,7 +69,7 @@ export const mails = {
     preheader: "Dein Vertrag ist abgeschlossen. Jetzt das Stripe-Konto deines Studios verbinden.",
     title: "Willkommen bei Tattoofin! 🎉",
     body: hallo(s) + p("schön, dass du dabei bist. Hier ist die Zusammenfassung deines Vertrags:") + rows([
-      ["Studio", esc(s.firma)], ["Modell", esc(modellText(s))],
+      ["Studio", esc(s.firma)], ["Paket", esc(modellText(s))],
       ["Vertrag / AVV", `Version ${esc(s.vertrag.version)}, akzeptiert am ${datum(s.vertrag.akzeptiertAm)} von ${esc(s.vertrag.name)}`],
       ["Vertragstext", `<a href="${CFG.siteUrl}/vertrag.html">Vertrag</a> · <a href="${CFG.siteUrl}/avv.html">AVV</a>`],
     ]) + p("<b>So geht's weiter:</b>") +
@@ -78,11 +82,20 @@ export const mails = {
   }),
 
   kaufBezahlt: (s, { betragCent, rechnungUrl }) => mk("Zahlung erhalten. Danke!", {
-    preheader: "Deine Zahlung für das Tattoofin Setup ist eingegangen.",
+    preheader: s.paket === "einmal" ? "Deine Einmalzahlung für Tattoofin ist eingegangen." : "Deine Zahlung für das Tattoofin Setup ist eingegangen.",
     title: "Zahlung erhalten ✅",
-    body: hallo(s) + p(`wir haben deine Zahlung über <b>${euro(betragCent)}</b> erhalten. Es gibt keine monatliche Grundgebühr und keine Provision. Die Betreuung bleibt kostenlos.`) +
+    body: hallo(s) + p(`wir haben deine Zahlung über <b>${euro(betragCent)}</b> erhalten. ${s.paket === "einmal" ? "Ab jetzt gibt es keine Tattoofin-Gebühr mehr, du zahlst nur noch die Zahlungsgebühren direkt an Stripe. Dein QR-Aufsteller aus Holz ist inklusive, wir schicken ihn dir nach dem Go-live." : "Es gibt keine monatliche Grundgebühr und keine Provision."} Die Betreuung bleibt kostenlos.`) +
       (rechnungUrl ? p(`Deine Rechnung: <a href="${esc(rechnungUrl)}">ansehen / herunterladen</a>`) : "") +
       box(`<b>Zufriedenheitsgarantie:</b> ${CFG.garantieTage} Tage ab Go-live. Passt es nicht, bekommst du dein Geld zurück.`),
+  }),
+
+  aboGestartet: (s, { betragCent, rechnungUrl }) => mk("Dein Paket Monatlich läuft. Danke!", {
+    preheader: "Deine erste Monatszahlung ist eingegangen.",
+    title: "Paket Monatlich gestartet ✅",
+    body: hallo(s) + p(`danke! Deine erste Monatszahlung über <b>${euro(betragCent)}</b> (inkl. USt.) ist da. Ab jetzt zahlst du ${euro(CFG.monatNetto)} netto im Monat und sonst nur die Zahlungsgebühren deiner Kunden-Zahlungen, direkt an Stripe. Tattoofin nimmt keine Provision.`) +
+      (rechnungUrl ? p(`Deine Rechnung: <a href="${esc(rechnungUrl)}">ansehen / herunterladen</a>. Jeden Monat bekommst du automatisch eine neue Rechnung per E-Mail.`) : "") +
+      box("<b>Dein QR-Aufsteller aus Holz</b> ist inklusive. Wir schicken ihn dir nach dem Go-live an die Studio-Adresse.") +
+      p("Kündigen kannst du jederzeit zum Ende des laufenden Monats, mit einem Klick im Studio-Portal."),
   }),
 
   rechnungVersendet: (s, { betragCent, rechnungUrl, faellig }) => mk("Deine Rechnung für das Tattoofin Setup", {
@@ -107,7 +120,7 @@ export const mails = {
     body: hallo(s) + p("gute Nachrichten: Stripe hat das Konto deines Studios geprüft und freigegeben. Wir richten jetzt Zahlungsarten, Branding und den Ablauf ein und melden uns für Test und Teamschulung."),
   }),
 
-  login: (s, { url }) => mk("Dein Login-Link für das Tattoofin-Portal", {
+  login: (s, { url }) => mk(`Dein Login-Link für das Tattoofin-Portal (${s.firma})`, {
     preheader: "Einfach klicken, kein Passwort nötig.",
     title: "Dein Login-Link",
     body: hallo(s) + p("hier ist dein persönlicher Link zum Studio-Portal. Er ist 60 Minuten gültig und funktioniert nur für dich. Wenn du ihn nicht angefordert hast, kannst du diese E-Mail ignorieren."),
@@ -127,6 +140,7 @@ export const mails = {
       ["Zahlungslink erstellen", `<a href="${CFG.siteUrl}/app.html#link">in deiner Tattoofin-App</a> (Betrag, Kunde, Projekt, fertig)`],
       ["Deine Zahlseite mit QR", `<a href="${CFG.siteUrl}/zahlen/${esc(s.slug)}">${CFG.siteUrl}/zahlen/${esc(s.slug)}</a>`],
       ["Studio Kit", "Fensteraufkleber, Flyer, Aufsteller und Social-Vorlagen im Portal unter „Studio Kit“"],
+      s.paket === "monatlich" ? ["Abrechnung", `${euro(CFG.monatNetto)} netto im Monat, die Rechnung kommt automatisch per E-Mail. Zahlungsgebühren zahlst du direkt an Stripe.`] :
       [s.modell === "kauf" ? "Zufriedenheitsgarantie" : "Abrechnung", s.modell === "kauf" ? `bis ${datum(new Date(Date.now() + CFG.garantieTage * 864e5).toISOString())}` : `Stripe zahlt dir automatisch ${100 - provisionSatz(s)} % jeder Zahlung aus, die Rechnung über die ${provisionSatz(s)} % kommt einmal im Monat`],
     ]) + box("Wichtig fürs Team: keine Raten oder Zinsen versprechen. Einfach sagen: „Du kannst beim Bezahlen schauen, welche Zahlungsoptionen dir angeboten werden.“"),
     cta: "Zur Tattoofin-App", ctaUrl: `${CFG.siteUrl}/app.html`,
@@ -229,7 +243,8 @@ export const mails = {
     preheader: `Tattoofin läuft noch bis ${datum(zum)}.`,
     title: "Schade, aber verstanden. Kündigung bestätigt.",
     body: hallo(s) + p(`wir bestätigen deine Kündigung zum <b>${datum(zum)}</b>. Bis dahin funktionieren Zahlungslinks und Zahlseite ganz normal.`) +
-      box("Dein Stripe-Konto gehört deinem Studio und bleibt bestehen. Nach Vertragsende trennen wir nur die Verbindung zu Tattoofin. Bitte entferne dann Aufkleber und QR-Codes, die auf die Tattoofin-Zahlseite zeigen.") +
+      (s.paket === "monatlich" ? p("Dein Monatsbetrag wird ab dann nicht mehr abgebucht. Bereits gezahlte Monate werden nicht anteilig erstattet.") : "") +
+      box(s.modell === "provision" ? "Offene Auszahlungen bekommst du auch nach dem Ende vollständig. Bitte entferne nach dem Vertragsende Aufkleber und QR-Codes, die auf die Tattoofin-Zahlseite zeigen." : "Dein Stripe-Konto gehört deinem Studio und bleibt bestehen. Nach Vertragsende trennen wir nur die Verbindung zu Tattoofin. Bitte entferne dann Aufkleber und QR-Codes, die auf die Tattoofin-Zahlseite zeigen.") +
       p("Falls du es dir anders überlegst: Im Portal kannst du die Kündigung bis zum Stichtag mit einem Klick zurücknehmen."),
     cta: "Kündigung zurücknehmen", ctaUrl: `${CFG.siteUrl}/portal.html#vertrag`,
   }),
@@ -259,7 +274,7 @@ export const mails = {
   anmeldungAbgebrochen: (s, { resumeUrl }) => mk("Fast geschafft: dein Abschluss ist noch offen", {
     title: "Du warst fast fertig 🙂", preheader: "Mit einem Klick weitermachen.",
     body: hallo(s) + p("du hast gestern angefangen, Tattoofin für dein Studio abzuschließen, aber die Zahlung ist noch offen.") +
-      p(`Falls etwas unklar war: Antworte einfach auf diese E-Mail. Und falls du lieber ohne Einrichtungsgebühr startest: Im Paket Start zahlst du nur ${CFG.provisionProzent} % von Zahlungen, die über Tattoofin laufen, inklusive aller Zahlungsgebühren.`),
+      p(`Falls etwas unklar war: Antworte einfach auf diese E-Mail. Und falls du lieber ohne Fixkosten startest: Im Paket Risikofrei zahlst du nur ${CFG.provisionProzent} % von Zahlungen, die über Tattoofin laufen, inklusive aller Zahlungsgebühren.`),
     cta: "Abschluss fortsetzen", ctaUrl: resumeUrl,
   }),
 
@@ -268,8 +283,8 @@ export const mails = {
     title: esc(titel),
     body: rows([
       ["Studio", esc(s?.firma)], ["Inhaber", esc(s?.inhaber)], ["E-Mail", esc(s?.email)], ["Telefon", esc(s?.telefon)],
-      ["Modell", esc(s?.modell)], ["Status", esc(s?.status)], ["Stripe-Konto", esc(s?.stripe?.accountId)],
-      ...Object.entries(details).map(([k, v]) => [k, esc(typeof v === "object" ? JSON.stringify(v) : v)]),
+      ["Paket", s ? esc(paketVon(s).name) + (s.zahlart ? ` (${esc(s.zahlart)})` : "") : ""], ["Modell", esc(s?.modell)], ["Status", esc(s?.status)], ["Stripe-Konto", esc(s?.stripe?.accountId)],
+      ...Object.entries(details).map(([k, v]) => [k, wert(v)]),
     ]),
     cta: "Admin öffnen", ctaUrl: `${CFG.siteUrl}/admin.html#${s?.id || ""}`,
   }),

@@ -105,30 +105,23 @@
       v.src = c.videoUrl;
       v.addEventListener("loadedmetadata", function () { $("video-wrap").classList.remove("hidden"); });
     }
-    // Paket-Rechner: Kosten im ersten Jahr je nach Zahlungsvolumen über Tattoofin
-    var gruenderFrei = 0;
+    // Paket-Rechner: Kosten pro Monat je nach Zahlungen über Tattoofin.
+    // Annahme Zahlungsgebühr bei Monatlich/Einmalzahlung: ca. 3,3 % (vorsichtig, Klarna 2,99 % + 0,35 €; Karte meist günstiger).
+    var GEBUEHR = 0.033;
     function rechne() {
       var v = +$("volumen").value;
       $("v-volumen").textContent = v.toLocaleString("de-DE") + " €";
-      var kosten = {
-        start: v * c.provisionProzent / 100,
-        studio: (gruenderFrei > 0 ? 0 : c.studioNetto / 100) + v * c.studioProvisionProzent / 100,
-        profi: c.kaufNetto / 100 + v * 0.03,
-      };
-      var best = Object.keys(kosten).sort(function (a, b) { return kosten[a] - kosten[b]; })[0];
-      Object.keys(kosten).forEach(function (k) {
-        $("r-" + k).textContent = TF.euro(Math.round(kosten[k]) * 100) + (k === "studio" && gruenderFrei > 0 ? " (Gründer)" : "");
-        document.querySelector('#r-pakete [data-p="' + k + '"]').classList.toggle("best", k === best);
-      });
-      $("r-tipp").textContent = { start: "Start", studio: "Studio", profi: "Profi" }[best];
+      var risiko = v * c.provisionProzent / 100, gebuehr = v * GEBUEHR, monat = c.monatNetto / 100 + gebuehr;
+      $("r-risiko").textContent = TF.euro(Math.round(risiko) * 100);
+      $("r-monat").textContent = TF.euro(Math.round(monat) * 100);
+      $("r-einmal").textContent = "ca. " + TF.euro(Math.round(gebuehr) * 100);
+      var monatBesser = monat < risiko;
+      $("r-tipp").textContent = monatBesser ? "Monatlich ⭐" : "Risikofrei";
+      $("r-tipp-text").textContent = monatBesser
+        ? "Ab ca. 20 Monaten Laufzeit ist die Einmalzahlung noch günstiger als Monatlich."
+        : "Bei diesem Betrag zahlst du mit Risikofrei am wenigsten, ganz ohne Fixkosten.";
     }
     $("volumen").addEventListener("input", rechne);
-    TF.api("/api/signup?pakete=1").then(function (r) {
-      var g = r.gruender || {};
-      gruenderFrei = g.frei || 0;
-      if (gruenderFrei > 0) { $("gruender-band").classList.remove("hidden"); $("gruender-frei").textContent = "Noch " + g.frei + " von " + g.max + " Plätzen frei."; }
-      rechne();
-    }).catch(function () {});
     rechne();
   });
 })();

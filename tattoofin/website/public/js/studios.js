@@ -34,7 +34,7 @@
     if (/wa\.me|api\.whatsapp\.com/.test(h)) {
       u("whatsapp", { ort: a.closest(".leiste") ? "leiste" : a.closest(".held") ? "held" : "seite" });
       if (consent() !== "nein" && einmalHeute("lp-wa") && window.TFTrack) TFTrack.track("Lead", { content_name: "WhatsApp (Kampagnen-Seite)", content_category: "Tattoo-Studio" });
-    } else if (/^\/start/.test(h)) u("online-start", { modell: /kauf/.test(h) ? "kauf" : "provision" });
+    } else if (/^\/start/.test(h)) u("online-start", { paket: (h.match(/paket=(\w+)/) || [])[1] || "risikofrei" });
     else if (a.dataset.cta) u("cta-klick", { ort: a.dataset.cta });
   }, true);
 

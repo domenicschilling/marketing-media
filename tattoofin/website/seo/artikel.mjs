@@ -65,7 +65,7 @@ export const artikel = [
     faq: [
       ["Trägt mein Studio das Risiko, wenn ein Kunde seine Raten nicht zahlt?", "Nein, wenn die Ratenzahlung über einen Anbieter wie Klarna läuft. Der Kunde schließt den Vertrag mit dem Anbieter, dein Studio bekommt den Betrag nach Freigabe ausgezahlt. Das Ausfallrisiko der Raten liegt beim Anbieter."],
       ["Brauche ich eine Erlaubnis als Kreditvermittler?", "Nicht, solange du keine Kredite vermittelst oder berätst, sondern nur eine Zahlungsart anbietest, deren Bedingungen der Anbieter festlegt. Wichtig: keine eigenen Ratenpläne versprechen, keine Zinsen oder Raten zusagen und den Kunden für die Bedingungen auf den Checkout verweisen."],
-      ["Was kostet Ratenzahlung fürs Studio?", "Bei Tattoofin im Provisionsmodell 10 % vom Zahlbetrag, alles inklusive: Zahlungsgebühren, Klarna, Umsatzsteuer und Betreuung. Kunde zahlt 3.000 €, du bekommst 2.700 €. Alternativ einmal 1.499 € netto, dann zahlst du die Gebühren des Zahlungsanbieters direkt."],
+      ["Was kostet Ratenzahlung fürs Studio?", "Bei Tattoofin im Paket Risikofrei 10 % vom Zahlbetrag, alles inklusive: Zahlungsgebühren, Klarna, Umsatzsteuer und Betreuung. Kunde zahlt 3.000 €, du bekommst 2.700 €. Alternativ 49 € netto im Monat oder einmalig 999 € netto (inklusive QR-Aufsteller aus Holz), dann zahlst du nur die Gebühren des Zahlungsanbieters direkt an Stripe."],
       ["Darf ich für Ratenzahlung einen Aufpreis verlangen?", "Nein. Für die Nutzung bestimmter Zahlungsarten darfst du von Verbrauchern grundsätzlich keinen Aufschlag verlangen, und auch die Bedingungen der Anbieter verbieten das in der Regel."],
       ["Was ändert sich ab 20.11.2026?", "Mit der neuen EU-Verbraucherkreditrichtlinie fallen auch kurze Ratenkäufe unter das Verbraucherkreditrecht. Die Pflichten (Prüfung, Informationen) liegen beim Anbieter. Für Studios wichtig: Werbung mit Raten braucht den Hinweis „Achtung! Kreditaufnahme kostet Geld.“ und konkrete Zahlen nur mit Pflichtangaben."],
     ],
@@ -91,13 +91,14 @@ export const artikel = [
 
 <h2 id="kosten">Was es kostet</h2>
 <table>
-<tr><th></th><th>Provision (risikofrei)</th><th>Kauf</th></tr>
-<tr><td>Einrichtung</td><td>0 €</td><td>1.499 € netto einmalig</td></tr>
-<tr><td>Pro Zahlung</td><td>10 % vom Zahlbetrag, alles inklusive</td><td>Gebühren des Zahlungsanbieters (z. B. Karte ab 1,5 % + 0,25 €, Klarna ab 2,99 % + 0,35 €)</td></tr>
-<tr><td>Beispiel 3.000 €</td><td>2.700 € an dich</td><td>abzüglich Anbietergebühr</td></tr>
-<tr><td>Laufzeit</td><td>monatlich kündbar</td><td>30 Tage Geld-zurück-Garantie</td></tr>
+<tr><th></th><th>Risikofrei</th><th>Monatlich</th><th>Einmalzahlung</th></tr>
+<tr><td>An Tattoofin</td><td>10 % vom Zahlbetrag, alles inklusive</td><td>49 € netto im Monat</td><td>999 € netto einmalig</td></tr>
+<tr><td>Zahlungsgebühr</td><td>in den 10 % enthalten</td><td colspan="2">direkt an Stripe, ca. 1,5–3 % je nach Zahlart (z. B. Karte ab 1,5 % + 0,25 €, Klarna ab 2,99 % + 0,35 €)</td></tr>
+<tr><td>Beispiel 1.000 €</td><td>900 € an dich</td><td colspan="2">ca. 970–985 € an dich</td></tr>
+<tr><td>QR-Aufsteller aus Holz</td><td>–</td><td>inklusive</td><td>inklusive</td></tr>
+<tr><td>Laufzeit</td><td>monatlich kündbar</td><td>monatlich kündbar</td><td>30 Tage Geld-zurück-Garantie</td></tr>
 </table>
-<p>Ab etwa 25.000 € Zahlungsvolumen über Tattoofin rechnet sich für regelbesteuerte Studios der Kauf. Den genauen Vergleich zeigt der <a href="/#rechner">Rechner auf der Startseite</a>.</p>
+<p>Faustregel: Ab ca. 730 € Zahlungen im Monat über Tattoofin lohnt sich Monatlich statt Risikofrei, die Einmalzahlung ist gegenüber Monatlich nach ca. 20 Monaten günstiger. Die Rechnung zeigt der <a href="/#lohnt">Vergleich auf der Startseite</a>.</p>
 
 <h2 id="recht">Rechtliches: Was Studios beachten müssen</h2>
 <ul>
@@ -177,7 +178,7 @@ export const artikel = [
     faq: [
       ["Kann ich Klarna im Tattoostudio ohne Onlineshop nutzen?", "Ja, zum Beispiel mit Zahlungslinks und einer Zahlseite mit QR-Code. Der Kunde zahlt im Checkout per Klarna, du brauchst keinen Shop."],
       ["Welche Klarna-Optionen bekommen meine Kunden?", "Je nach Betrag und Prüfung z. B. später bezahlen, in 3 Raten oder eine Finanzierung. Welche Optionen ein Kunde sieht, entscheidet Klarna."],
-      ["Was kostet Klarna fürs Studio?", "Je nach Zahlungsanbieter ab 2,99 % + 0,35 € pro Zahlung, wenn du die Gebühren selbst zahlst (Kaufmodell). Im Tattoofin-Provisionsmodell ist das in den 10 % enthalten."],
+      ["Was kostet Klarna fürs Studio?", "Je nach Zahlungsanbieter ab 2,99 % + 0,35 € pro Zahlung, wenn du die Gebühren selbst zahlst (Tattoofin Monatlich oder Einmalzahlung). Im Tattoofin-Paket Risikofrei ist das in den 10 % enthalten."],
       ["Bekomme ich das Geld sofort, auch wenn der Kunde in Raten zahlt?", "Nach Freigabe durch Klarna wird dir der Betrag automatisch ausgezahlt. Die Raten zahlt der Kunde an Klarna, das Ausfallrisiko trägt Klarna."],
     ],
     inhalt: `
@@ -203,7 +204,7 @@ export const artikel = [
 <h2 id="kosten">Kosten</h2>
 <ul>
 <li><b>Tattoofin Provision:</b> 10 % vom Zahlbetrag, alles inklusive (Zahlungsgebühren, Klarna, USt.). Kunde zahlt 3.000 €, du bekommst 2.700 €.</li>
-<li><b>Tattoofin Kauf:</b> 1.499 € netto einmalig, die Klarna-Gebühr (über Stripe ab 2,99 % + 0,35 €) zahlst du direkt.</li>
+<li><b>Tattoofin Monatlich oder Einmalzahlung:</b> 49 € netto im Monat oder einmalig 999 € netto, die Klarna-Gebühr (über Stripe ab 2,99 % + 0,35 €) zahlst du direkt an Stripe.</li>
 </ul>
 
 <h2 id="regeln">Regeln, die du kennen musst</h2>

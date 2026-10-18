@@ -19,6 +19,7 @@
 <script src="/js/common.js"></script>
 <script>
 var a = document.getElementById("alert");
+if (new URLSearchParams(location.search).get("weiter") === "einrichtung") a.innerHTML = '<div class="alert info">Bitte melde dich kurz an. Danach geht es mit der Einrichtung deines Zahlungskontos weiter.</div>';
 if (new URLSearchParams(location.search).get("abgelaufen")) a.innerHTML = '<div class="alert err">Der Link ist abgelaufen oder ungültig. Fordere einfach einen neuen an.</div>';
 document.getElementById("f").addEventListener("submit", async function (e) {
   e.preventDefault();

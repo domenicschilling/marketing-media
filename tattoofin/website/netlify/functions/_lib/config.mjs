@@ -36,12 +36,13 @@ export const CFG = {
   mailReplyTo: env("MAIL_REPLY_TO", ""),
   adminEmail: env("ADMIN_EMAIL", "domenicschilling@gmail.com"),
 
-  // Preise (Cent, netto)
-  kaufNetto: Number(env("KAUF_NETTO_CENT", 129000)),
-  aktionNetto: Number(env("AKTION_NETTO_CENT", 124900)),
-  aktionCode: env("AKTION_CODE", "RATENJA").toUpperCase(),
-  aktionMax: Number(env("AKTION_MAX", 20)),
-  aktionBis: env("AKTION_BIS", "2026-11-30"),
+  // Preise (Cent, netto). Drei Pakete seit 18.10.2026 (Entscheidung Domenic), siehe PAKETE unten.
+  // Einmalzahlung (früher „Kauf“ 1.499 € bzw. 1.249 € mit Aktionscode RATENJA – Aktionscode ist abgeschaltet)
+  kaufNetto: Number(env("KAUF_NETTO_CENT", 99900)),
+  // Monatlich: Abo auf dem DSX-Konto (Stripe Billing), zzgl. USt.
+  monatNetto: Number(env("MONAT_NETTO_CENT", 4900)),
+  // Einmalzahlung: Nutzungszusage (Anbieter kündigt ordentlich frühestens nach so vielen Jahren ab Inbetriebnahme)
+  nutzungJahre: Number(env("NUTZUNG_JAHRE", 5)),
   provisionProzent: Number(env("PROVISION_PROZENT", 10)),
   ustProzent: Number(env("UST_PROZENT", 19)),
   garantieTage: Number(env("GARANTIE_TAGE", 30)),
@@ -53,19 +54,15 @@ export const CFG = {
   ruecklastGebuehrCent: Number(env("RUECKLAST_GEBUEHR_CENT", 2000)),
   // Optional: Auszahlung an Provisions-Studios erst nach X Tagen (Puffer für Rückbuchungen). Leer = Stripe-Standard.
   auszahlungTage: env("AUSZAHLUNG_TAGE", ""),
+  // 2026-10c (18.10.2026): drei Pakete Risikofrei / Monatlich / Einmalzahlung. Ältere Fassung: /vertrag-2026-10b.html
   vertragVersion: "2026-10c",
   // Blatt „Deine rechtliche Lage“ und Leistungsbestätigung: Version bei inhaltlichen Änderungen hochzählen (wird mit der Zustimmung gespeichert)
-  rechtVersion: "2026-10-entwurf-1",
-  bestaetigungVersion: "2026-10-entwurf-1",
-  // Paket „Studio“: einmalige Einrichtung + reduzierte Provision (alles inklusive). Siehe PAKETE unten.
-  studioNetto: Number(env("STUDIO_NETTO_CENT", 29900)),
-  studioProvisionProzent: Number(env("PROVISION_STUDIO_PROZENT", 7)),
-  // Gründer-Aktion: die ersten N Studios bekommen „Studio“ ohne Einrichtungsgebühr (Gegenleistung: kurzes Erfahrungsvideo)
-  gruenderMax: Number(env("GRUENDER_MAX", 10)),
+  rechtVersion: "2026-10a",
+  bestaetigungVersion: "2026-10a",
   // Zahlarten im Checkout. Bewusst ohne SEPA-Lastschrift: Die kann der Kunde 8 Wochen lang ohne Grund zurückbuchen.
   zahlarten: env("ZAHLARTEN", "card,klarna").split(",").map((x) => x.trim()).filter(Boolean),
-  // QR-Aufsteller aus Holz: in diesen Paketen inklusive (später z. B. "profi,studio"); alle anderen können ihn anfragen
-  aufstellerPakete: env("AUFSTELLER_PAKETE", "profi").split(",").map((x) => x.trim()).filter(Boolean),
+  // QR-Aufsteller aus Holz: in diesen Paketen inklusive (digitaler QR-Code ist in allen Paketen dabei); andere können ihn anfragen
+  aufstellerPakete: env("AUFSTELLER_PAKETE", "monatlich,einmal").split(",").map((x) => x.trim()).filter(Boolean),
 };
 
 export const SECRETS = {
@@ -83,22 +80,24 @@ export const SIMULATION = VORSCHAU && !STRIPE_KEY;
 const LOKALER_NACHBAU = /^http:\/\/localhost:\d+$/.test(env("STRIPE_API_BASE", ""));
 export const BAUSTEINE_SIMULIERT = SIMULATION || LOKALER_NACHBAU;
 
-// Drei Pakete. „modell“ steuert die Zahlungsabwicklung:
-//   provision = Tattoofin kassiert als Plattform (Express-Konto, Destination Charge, Provision wird einbehalten)
-//   kauf      = eigenes Stripe-Konto des Studios (Standard, Direct Charge), keine Provision
-// Paket „Studio“ (7 %): Rechnung mit den Stripe-Listenpreisen DE (stripe.com/de/pricing und /de/connect/pricing, Stand 18.10.2026):
-//   Klarna ab 2,99 % + 0,35 €, ausländische Karten 3,15 % + 0,25 €, Connect „Sie übernehmen die Preisgestaltung“:
-//   2 € je aktivem Konto/Monat + 0,25 % + 0,10 € je Auszahlung (+ ggf. 0,25 % Fund Routing).
-//   Beispiel 1.000 € per Klarna, 1 Zahlung/Monat: Kosten ca. 37,35 € (3,7 %). 7 % brutto = 58,82 € netto → Marge ca. 2,1 %.
-//   6,5 % ergäbe nur ca. 1,7 % → daher 7 % als Vorschlag. Pro Studio gespeichert (studio.provisionProzent).
+// Drei Pakete (seit 18.10.2026, Entscheidung Domenic). „modell“ steuert die Zahlungsabwicklung:
+//   provision = Tattoofin kassiert als Plattform (Express-Verhalten, Destination Charge, Provision wird einbehalten)
+//   kauf      = eigenes Stripe-Konto des Studios (Standard, Direct Charge), 0 % Provision, Gebühren zahlt das Studio an Stripe
+// „zahlart“ beim Abschluss: provision (nichts zu zahlen) | abo (Monatlich, Stripe-Billing-Abo auf dem DSX-Konto) |
+//   sofort/rechnung (Einmalzahlung) | geschenk (Admin-Einladung, eigenes Konto, 0 €)
 export const PAKETE = {
-  start: { id: "start", name: "Start", modell: "provision", einrichtungNetto: 0, provisionProzent: CFG.provisionProzent },
-  studio: { id: "studio", name: "Studio", modell: "provision", einrichtungNetto: CFG.studioNetto, provisionProzent: CFG.studioProvisionProzent, empfohlen: true },
-  profi: { id: "profi", name: "Profi", modell: "kauf", einrichtungNetto: CFG.kaufNetto, provisionProzent: 0 },
+  risikofrei: { id: "risikofrei", name: "Risikofrei", modell: "provision", einrichtungNetto: 0, einmalNetto: 0, monatNetto: 0, provisionProzent: CFG.provisionProzent },
+  monatlich: { id: "monatlich", name: "Monatlich", modell: "kauf", einrichtungNetto: 0, einmalNetto: 0, monatNetto: CFG.monatNetto, provisionProzent: 0, empfohlen: true },
+  einmal: { id: "einmal", name: "Einmalzahlung", modell: "kauf", einrichtungNetto: CFG.kaufNetto, einmalNetto: CFG.kaufNetto, monatNetto: 0, provisionProzent: 0 },
 };
-
-// Paket eines Studios (ältere Datensätze ohne „paket“: provision → start, kauf → profi)
-export const paketVon = (s) => PAKETE[s?.paket] || (s?.modell === "kauf" ? PAKETE.profi : PAKETE.start);
+// URL-/Formular-Aliase: ?modell=provision → Risikofrei, ?modell=kauf → Einmalzahlung (auch alte Vorschau-Namen start/profi)
+export const PAKET_ALIAS = { provision: "risikofrei", kauf: "einmal", risikofrei: "risikofrei", monatlich: "monatlich", einmal: "einmal", einmalzahlung: "einmal", start: "risikofrei", profi: "einmal" };
+// Paket eines Studios. Ältere Datensätze ohne „paket“: provision → Risikofrei, kauf → Einmalzahlung (Altvertrag „Kauf“).
+export function paketVon(s) {
+  if (s?.zahlart === "geschenk") return { id: "geschenk", name: "Geschenk (eigenes Konto)", modell: "kauf", einrichtungNetto: 0, einmalNetto: 0, monatNetto: 0, provisionProzent: 0 };
+  return PAKETE[s?.paket] || (s?.modell === "kauf" ? PAKETE.einmal : PAKETE.risikofrei);
+}
+export const aufstellerInklusive = (s) => CFG.aufstellerPakete.includes(paketVon(s).id);
 
 // Provisionssatz eines Studios in Prozent (0 bei Kauf/Profi)
 export function provisionSatz(s) {
@@ -107,7 +106,7 @@ export function provisionSatz(s) {
 }
 
 // Provision: X % vom Zahlbetrag, alles inklusive (Gebühren der Zahlungsanbieter und USt. sind enthalten).
-// Beispiel Start: Kunde zahlt 3.000 € → 300 € Tattoofin (252,10 € netto + 47,90 € USt.) → 2.700 € gehen an das Studio.
+// Beispiel Risikofrei: Kunde zahlt 3.000 € → 300 € Tattoofin (252,10 € netto + 47,90 € USt.) → 2.700 € gehen an das Studio.
 // Zweites Argument: Studio-Datensatz (bevorzugt) oder – für alte Aufrufe – das Modell als Text.
 export function plattformgebuehr(betragCent, studioOderModell) {
   const prozent = typeof studioOderModell === "string"
@@ -126,13 +125,12 @@ export function publicConfig() {
     produkt: c.produkt, marke: c.marke, firma: c.firma, adresse: c.adresse, registergericht: c.registergericht,
     ustid: c.ustid, geschaeftsfuehrer: c.geschaeftsfuehrer, telefon: c.telefon, email: c.email,
     gerichtsstand: c.gerichtsstand, whatsapp: c.whatsapp, videoUrl: c.videoUrl,
-    kaufNetto: c.kaufNetto, aktionNetto: c.aktionNetto, aktionBis: c.aktionBis,
+    kaufNetto: c.kaufNetto, monatNetto: c.monatNetto, nutzungJahre: c.nutzungJahre, aufstellerPakete: c.aufstellerPakete,
+    pakete: Object.values(PAKETE).map(({ id, name, modell, einmalNetto, monatNetto, provisionProzent, empfohlen }) => ({ id, name, modell, einmalNetto, monatNetto, provisionProzent, empfohlen: Boolean(empfohlen) })),
     provisionProzent: c.provisionProzent, ustProzent: c.ustProzent, garantieTage: c.garantieTage,
     setupSupportTage: c.setupSupportTage, vertragVersion: c.vertragVersion,
     minBetragCent: c.minBetragCent, maxBetragCent: c.maxBetragCent,
     stripeAktiv: Boolean(SECRETS.stripeKey) || SIMULATION, vorschau: c.vorschau, simulation: BAUSTEINE_SIMULIERT,
-    studioNetto: c.studioNetto, studioProvisionProzent: c.studioProvisionProzent, gruenderMax: c.gruenderMax,
     ruecklastGebuehrCent: c.ruecklastGebuehrCent, rechtVersion: c.rechtVersion,
-    pakete: Object.values(PAKETE).map(({ id, name, modell, einrichtungNetto, provisionProzent, empfohlen }) => ({ id, name, modell, einrichtungNetto, provisionProzent, empfohlen: Boolean(empfohlen) })),
   };
 }

@@ -52,23 +52,19 @@ async function cookiesAblehnen(p) {
   if (nein) await nein.click();
 }
 
-async function signup(p, { paket, email, firma, code, zahlart, geschenk, gruender, shot }) {
-  await p.goto(`${BASE}/start.html?${geschenk ? "geschenk=" + geschenk : "paket=" + paket}`);
+// paket: risikofrei | monatlich | einmal; alternativ modell (alte Links: provision → risikofrei, kauf → einmal)
+async function signup(p, { paket, modell, email, firma, zahlart, geschenk, shot }) {
+  await p.goto(`${BASE}/start.html?${geschenk ? "geschenk=" + geschenk : paket ? "paket=" + paket : "modell=" + modell}`);
   await cookiesAblehnen(p);
   if (shot) await p.screenshot({ path: path.join(shot, "01-einladung.png"), fullPage: true });
-  if (code) await p.fill("#aktionscode", code);
   if (zahlart) await p.check(`input[name=zahlart][value=${zahlart}]`, { force: true });
-  if (paket === "studio") {
-    await p.waitForSelector("#gruender:not(.hidden)");
-    if (gruender) await p.check("#video-ok"); else await p.uncheck("#gruender-ja");
-  }
   await p.click("section[data-step='1'] [data-next]");
   for (const [k, v] of Object.entries({ firma, inhaber: "Alex Muster", strasse: "Musterstr. 1", plz: "96047", ort: "Bamberg", email, telefon: "0151 1234567", studioTelefon: "0951 123456" })) await p.fill("#" + k, v);
   if (shot) await p.screenshot({ path: path.join(shot, "02-einladung-daten.png"), fullPage: true });
   await p.click("section[data-step='2'] [data-next]");
   await p.check("input[name=ak_alle]");
   await p.fill("#unterzeichner", "Alex Muster");
-  await p.screenshot({ path: path.join(shot || shots, shot ? "03-einladung-vertrag.png" : `start-${paket || "geschenk"}-schritt3.png`), fullPage: true });
+  await p.screenshot({ path: path.join(shot || shots, shot ? "03-einladung-vertrag.png" : `start-${paket || modell || "geschenk"}-schritt3.png`), fullPage: true });
   await p.click("#submit");
 }
 
@@ -99,23 +95,31 @@ async function signatur(p) {
 
 try {
   // ---------------------------------------------------------------- Startseite
-  console.log("Startseite: drei Pakete + Rechner");
+  console.log("Startseite: drei Pakete (Risikofrei, Monatlich, Einmalzahlung) + Rechner + QR-Aufsteller");
   const p0 = await neueSeite();
   await p0.goto(BASE + "/");
   check((await p0.textContent("h1")).includes("leichter bezahlbar"), "Hero lädt");
   check(await p0.locator(".prices.drei .price").count() === 3, "Drei Pakete auf der Startseite");
-  await p0.waitForFunction(() => document.getElementById("r-tipp").textContent.length > 0);
-  check((await p0.textContent("#r-tipp")) === "Studio" && (await p0.textContent("#r-start")).includes("1.500"), "Rechner 15.000 €/Jahr: Start 1.500 €, empfohlen Studio (Gründer-Aktion)");
-  await p0.locator("#volumen").evaluate((el) => { el.value = 40000; el.dispatchEvent(new Event("input")); });
-  check((await p0.textContent("#r-tipp")) === "Profi", "Rechner 40.000 €/Jahr: Profi am günstigsten");
-  check(await p0.isVisible("#gruender-band"), "Gründer-Aktion mit echtem Zähler sichtbar");
+  await p0.waitForFunction(() => document.getElementById("r-risiko").textContent.includes("€"));
+  check((await p0.textContent("#r-risiko")).includes("150") && (await p0.textContent("#r-monat")).includes("99"), "Rechner 1.500 €/Monat: Risikofrei 150 €, Monatlich 49 € + 3,3 % ≈ 99 €");
+  check((await p0.textContent("#r-tipp")).includes("Monatlich"), "Rechner empfiehlt Monatlich bei 1.500 €/Monat");
+  await p0.locator("#volumen").evaluate((el) => { el.value = 500; el.dispatchEvent(new Event("input")); });
+  check((await p0.textContent("#r-tipp")).includes("Risikofrei"), "Rechner empfiehlt Risikofrei bei 500 €/Monat");
+  const preise = await p0.textContent("#preise");
+  check(preise.includes("999") && preise.includes("49") && preise.includes("Empfohlen") && preise.includes("730") && preise.includes("20 Monaten") && !preise.includes("1.499") && !/Gründer|Profi\b/.test(preise), "Pakete 10 % / 49 € / 999 €, Monatlich empfohlen, Lohnt-sich-Rechnung, keine alten Preise");
+  check((await p0.textContent("#aufsteller")).includes("KI-Visualisierung"), "QR-Aufsteller-Abschnitt mit KI-Kennzeichnung");
+  const ld = await p0.textContent('script[type="application/ld+json"]');
+  check(ld.includes("Paket Monatlich") && ld.includes("Paket Einmalzahlung") && !ld.includes("1499"), "Strukturierte Daten: drei Pakete");
   await p0.waitForTimeout(1000);
   await p0.screenshot({ path: path.join(shots, "landing.png"), fullPage: true });
+  const pS = await neueSeite();
+  await pS.goto(BASE + "/studios.html");
+  check((await pS.textContent("#pakete")).includes("Monatlich") && (await pS.content()).includes("paket=risikofrei"), "/studios: drei Pakete, Start-Link Risikofrei");
 
   // ---------------------------------------------------------------- A: Paket Start
-  console.log("Paket Start: Abschluss → direkt ins Dashboard → eingebettete Einrichtung");
+  console.log("Paket Risikofrei (alter Link ?modell=provision): Abschluss → direkt ins Dashboard → eingebettete Einrichtung");
   const pA = await neueSeite();
-  await signup(pA, { paket: "start", email: "prov@example.com", firma: "Ink Provision" });
+  await signup(pA, { modell: "provision", email: "prov@example.com", firma: "Ink Provision" });
   await einrichtungEingebettet(pA);
   check(true, "Nach dem Abschluss eingeloggt im Dashboard, Einrichtung eingebettet abgeschlossen");
   const mProv = mailsAn("prov@example.com");
@@ -124,57 +128,87 @@ try {
   check(/api\/auth\?token=[^"]+next=%2Fapp\.html%23einrichtung/.test(willkommen.html), "Willkommens-Mail führt mit Login direkt in die Einrichtung im Dashboard");
   let state = await mock("state");
   const provAcct = Object.values(state.accounts).find((a) => a.email === "prov@example.com");
-  check(provAcct?.type === "express" && provAcct?.capabilities?.klarna_payments?.requested === "true", "Paket Start: Express-Konto mit Karte + Klarna");
+  check(!provAcct?.type && provAcct?.controller?.stripe_dashboard?.type === "express" && provAcct?.controller?.losses?.payments === "application" && provAcct?.controller?.fees?.payer === "application" && provAcct?.capabilities?.klarna_payments?.requested === "true", "Risikofrei: Express-Verhalten über Controller-Eigenschaften (Hotfix) mit Karte + Klarna");
+  check(mailsAn("domenicschilling@gmail.com").some((m) => m.subject.includes("Paket Risikofrei") && !m.html.includes("aufsteller.html")), "Admin-Mail Risikofrei: Paket, ohne Aufsteller");
   check(state.accountSessions.some((s) => s.account === provAcct.id) === false, "Simulation: keine echte Account Session nötig");
 
   // ---------------------------------------------------------------- B: Paket Profi
-  console.log("Paket Profi (Kauf) mit Aktionscode");
+  console.log("Paket Einmalzahlung (alter Link ?modell=kauf)");
   const pB = await neueSeite();
-  await signup(pB, { paket: "profi", email: "kauf@example.com", firma: "Ink Kauf", code: "RATENJA" });
+  await signup(pB, { modell: "kauf", email: "kauf@example.com", firma: "Ink Kauf" });
   await pB.waitForURL(/localhost:12111\/pay\//);
-  check((await pB.textContent("body")).includes("1486.31"), "Stripe-Betrag 1.249 € netto + 19 % = 1.486,31 €");
+  check((await pB.textContent("body")).includes("1188.81"), "Stripe-Betrag 999 € netto + 19 % = 1.188,81 €");
   await pB.click("#pay");
   await einrichtungEingebettet(pB);
   check(mailsAn("kauf@example.com").some((m) => m.subject.includes("Zahlung erhalten")), "E-Mail: Zahlung erhalten; danach direkt ins Dashboard");
+  const mAdminKauf = mailsAn("domenicschilling@gmail.com").find((m) => m.subject.includes("Einmalzahlung bezahlt") && m.subject.includes("Ink Kauf"));
+  check(mAdminKauf && mAdminKauf.html.includes("/aufsteller.html?s=ink-kauf") && mAdminKauf.html.includes("Einmalzahlung"), "Admin-Mail Einmalzahlung: Paket + „QR-Aufsteller bestellen“ mit Link zur Gravurdatei");
 
   console.log("Rechnung, Abbruch, Fehlerfälle");
   const pC = await neueSeite();
-  await signup(pC, { paket: "profi", email: "rechnung@example.com", firma: "Ink Rechnung", zahlart: "rechnung" });
+  await signup(pC, { paket: "einmal", email: "rechnung@example.com", firma: "Ink Rechnung", zahlart: "rechnung" });
   await pC.waitForURL(/app\.html/, { timeout: 15000 });
   check((await studioPer("rechnung@example.com"))?.status === "zahlung_offen", "Rechnung offen, trotzdem schon im Dashboard");
   check(mailsAn("rechnung@example.com").some((m) => m.subject.includes("Rechnung")), "E-Mail: Rechnung");
   const pC2 = await neueSeite();
-  await signup(pC2, { paket: "profi", email: "abbruch@example.com", firma: "Ink Abbruch" });
+  await signup(pC2, { paket: "einmal", email: "abbruch@example.com", firma: "Ink Abbruch" });
   await pC2.waitForURL(/localhost:12111\/pay\//);
   await pC2.click("#cancel");
   await pC2.waitForURL(/start\.html\?resume=/);
   await pC2.waitForFunction(() => document.getElementById("firma").value === "Ink Abbruch");
   check(true, "Nach Abbruch sind Angaben wieder da");
   const basis = { firma: "x", inhaber: "x", strasse: "x", plz: "1", ort: "x", telefon: "1", studioTelefon: "1", unterzeichner: "x", akzeptiert: { vertrag: true, avv: true, unternehmer: true } };
-  check((await post("/api/signup", { ...basis, paket: "start", email: "kauf@example.com" })).status === 409, "Doppelte Anmeldung abgelehnt");
-  check((await post("/api/signup", { paket: "profi", email: "neu@example.com" })).status === 400, "Signup ohne Pflichtangaben abgelehnt");
+  check((await post("/api/signup", { ...basis, paket: "risikofrei", email: "kauf@example.com" })).status === 409, "Doppelte Anmeldung abgelehnt");
+  check((await post("/api/signup", { paket: "einmal", email: "neu@example.com" })).status === 400, "Signup ohne Pflichtangaben abgelehnt");
+  await post("/api/signup", { ...basis, paket: "einmal", aktionscode: "RATENJA", email: "code@example.com" });
+  check(!Object.values((await mock("state")).sessions).some((x) => x.amount_total === 148631), "Aktionscode RATENJA abgeschaltet (Preis bleibt 999 €)");
 
-  // ---------------------------------------------------------------- D: Paket Studio + Gründer
-  console.log("Paket Studio: Gründer-Aktion (0 € Einrichtung, Video-Einwilligung), 7 %");
-  check((await post("/api/signup", { ...basis, paket: "studio", gruender: true, email: "ohnevideo@example.com" })).status === 400, "Gründer-Aktion ohne Video-Einwilligung abgelehnt");
+  // ---------------------------------------------------------------- D: Paket Monatlich (Abo)
+  console.log("Paket Monatlich: Abo 49 € netto auf dem DSX-Konto → Dashboard → eigenes Standard-Konto");
   const pD = await neueSeite();
-  await signup(pD, { paket: "studio", email: "studio@example.com", firma: "Ink Studio", gruender: true });
-  await einrichtungEingebettet(pD);
-  const dStudio = await admin(`studio/${(await studioPer("studio@example.com")).id}`);
-  check(dStudio.studio.paket === "studio" && dStudio.studio.provisionProzent === 7 && dStudio.studio.preisNetto === 0 && dStudio.studio.gruender?.videoEinwilligung === true, "Studio gespeichert: Paket Studio, 7 %, 0 € Einrichtung, Video-Einwilligung mit Text");
-  check((await (await fetch(BASE + "/api/signup?pakete=1")).json()).gruender.vergeben === 1, "Gründer-Zähler zählt echte Anmeldungen (1 von 10)");
-  const studioOhne = await (await post("/api/signup", { ...basis, paket: "studio", email: "studio2@example.com", zahlart: "sofort" })).json();
+  await signup(pD, { paket: "monatlich", email: "abo@example.com", firma: "Ink Abo" });
+  await pD.waitForURL(/localhost:12111\/pay\//);
+  const kasse = await pD.textContent("body");
+  check(kasse.includes("subscription") && kasse.includes("58.31"), "Stripe-Abo: 49 € netto + 19 % = 58,31 €");
   state = await mock("state");
-  const csStudio = Object.values(state.sessions).find((s) => s.metadata?.typ === "setup");
-  check(/localhost:12111\/pay\//.test(studioOhne.url) && Number(csStudio?.line_items?.[0]?.price_data?.unit_amount) === 29900, "Paket Studio ohne Gründer-Platz: 299 € netto Einrichtung über Checkout");
+  const sessAbo = Object.values(state.sessions).find((x) => x.mode === "subscription");
+  check(sessAbo?.line_items?.[0]?.price_data?.recurring?.interval === "month" && sessAbo?.metadata?.paket === "monatlich" && !sessAbo.account, "Abo monatlich auf dem DSX-Konto, Metadaten Paket");
+  check(/USt-IdNr\. DE456133925/.test(Object.values(state.customers).find((c) => c.email === "abo@example.com")?.invoice_settings?.footer || ""), "Rechnungsfuß mit DSX + USt-IdNr.");
+  await pD.click("#pay");
+  await einrichtungEingebettet(pD);
+  const aboStudio = await studioPer("abo@example.com");
+  check(aboStudio?.status === "einrichtung" && aboStudio?.paket === "Monatlich" && aboStudio?.provisionProzent === 0, "Abo-Studio in Einrichtung, Paket Monatlich, 0 % Provision");
+  check(mailsAn("abo@example.com").some((m) => m.subject.includes("Monatlich")), "E-Mail: Paket Monatlich gestartet");
+  check(mailsAn("domenicschilling@gmail.com").some((m) => m.subject.includes("Paket Monatlich") && m.html.includes("aufsteller.html?s=ink-abo")), "Admin-Mail Monatlich: „QR-Aufsteller bestellen“ mit Gravurdatei-Link");
+  check(Object.values((await mock("state")).accounts).find((a) => a.email === "abo@example.com")?.type === "standard", "Monatlich: eigenes Standard-Konto");
+  const kAbo = await api(pD, "/api/portal/kuendigung", { method: "POST", body: { grund: "Test", garantie: true } });
+  check(kAbo.data.status === "gekuendigt" && !kAbo.data.kuendigung?.garantie && Object.values((await mock("state")).subscriptions)[0]?.cancel_at_period_end === true, "Kündigung Monatlich: keine Garantie, Abo endet zum Periodenende");
+  const zAbo = await api(pD, "/api/portal/kuendigung", { method: "DELETE" });
+  check(zAbo.data.status !== "gekuendigt" && Object.values((await mock("state")).subscriptions)[0]?.cancel_at_period_end === false, "Kündigung zurückgenommen: Abo läuft weiter");
+  const aufApi = (await api(pD, "/api/aufsteller?s=ink-abo")).data;
+  check(aufApi.zahlseite?.endsWith("/zahlen/ink-abo") && aufApi.firma === "Ink Abo", "Aufsteller-API (eigene Sitzung): Zahlseite /zahlen/<studio>");
+  check((await fetch(`${BASE}/api/aufsteller?s=ink-abo`)).status === 403, "Aufsteller-API ohne Sitzung/signierten Link: 403");
+  const aufLink = (await admin(`studio/${aboStudio.id}`)).aufstellerLink;
+  check(/aufsteller\.html\?s=ink-abo&t=/.test(aufLink || "") && (await fetch(`${BASE}/api/aufsteller?s=ink-abo&t=${new URL(aufLink).searchParams.get("t")}`)).status === 200, "Signierter Aufsteller-Link (Admin) funktioniert");
+  const inklAbo = await api(pD, "/api/portal");
+  check(inklAbo.data.studio.aufsteller.inklusive === true && inklAbo.data.studio.paketName === "Monatlich", "App: Aufsteller im Paket Monatlich inklusive");
 
   // ---------------------------------------------------------------- E: Notlösung ohne Einbettung
   console.log("Notlösung: ohne öffentlichen Stripe-Schlüssel wie bisher zu Stripe weiterleiten");
   process.env.TF_EINBETTEN = "aus";
-  const fb = await post("/api/signup", { ...basis, paket: "start", email: "fallback@example.com" });
+  const fb = await post("/api/signup", { ...basis, paket: "risikofrei", email: "fallback@example.com" });
   const fbId = (await studioPer("fallback@example.com")).id;
-  const fbConnect = await fetch(`${BASE}/api/connect?id=${fbId}`, { redirect: "manual" });
-  check(fb.status === 200 && /localhost:12111\/onboard\//.test(fbConnect.headers.get("location") || ""), "Ohne Einbettung: Stripe-Onboarding per Weiterleitung");
+  const fbMailLink = linkAus(mailsAn("fallback@example.com").find((m) => m.subject.startsWith("Willkommen")), /href="([^"]*\/api\/connect\?id=[^"]+)"/);
+  const fbConnect = await fetch(fbMailLink, { redirect: "manual" });
+  check(fb.status === 200 && /&t=/.test(fbMailLink || "") && /localhost:12111\/onboard\//.test(fbConnect.headers.get("location") || ""), "Ohne Einbettung: Stripe-Onboarding per signiertem Mail-Link");
+  const ohneToken = await fetch(`${BASE}/api/connect?id=${fbId}`, { redirect: "manual" });
+  check(/\/login\.html/.test(ohneToken.headers.get("location") || ""), "Sicherheit: /api/connect nur mit Studio-ID → Login statt Stripe-Link");
+  const falschToken = await fetch(`${BASE}/api/connect?id=${(await studioPer("prov@example.com")).id}&t=${new URL(fbMailLink).searchParams.get("t")}`, { redirect: "manual" });
+  check(/\/login\.html/.test(falschToken.headers.get("location") || ""), "Sicherheit: Link eines anderen Studios gilt nicht");
+  const zurueckOhne = await fetch(`${BASE}/api/connect/zurueck?id=${fbId}`, { redirect: "manual" });
+  check(/\/login\.html/.test(zurueckOhne.headers.get("location") || ""), "Sicherheit: /api/connect/zurueck ohne Token → Login");
+  const fbStatus = await (await fetch(`${BASE}/api/signup?id=${fbId}`)).json();
+  check(Object.keys(fbStatus).sort().join() === "id,status", "Sicherheit: /api/signup?id= ohne Sitzung liefert nur den Status, keine Studio-Daten");
   delete process.env.TF_EINBETTEN;
 
   // ---------------------------------------------------------------- Login + Fragebogen
@@ -261,6 +295,11 @@ try {
   const alt = await (await post("/api/pay", { s: slug, betrag: "200", kunde: "Alt", inhaltOk: true })).json();
   check(/localhost:12111\/pay\//.test(alt.url || ""), "Notlösung: ohne Einbettung weiter Stripe-Checkout");
   delete process.env.TF_EINBETTEN;
+  process.env.TF_BEZAHLFELD = "aus";
+  const live = await (await post("/api/pay", { s: slug, betrag: "200", kunde: "Live", inhaltOk: true })).json();
+  const liveSession = await api(pA, "/api/portal/stripe-session", { method: "POST", body: {} });
+  check(/localhost:12111\/pay\//.test(live.url || "") && !live.clientSecret && liveSession.data.modus !== "weiterleitung", "Live-Einstellung ohne payment_intent-Webhooks (TF_BEZAHLFELD aus): Kunde zahlt im Stripe-Checkout, Einrichtung bleibt eingebettet");
+  delete process.env.TF_BEZAHLFELD;
 
   // ---------------------------------------------------------------- I/J: Erstattung + Rückbuchung
   console.log("Erstattung (Portal) → Betrag vom Studio zurück, Provision anteilig abzüglich Stripe-Gebühr");
@@ -311,20 +350,20 @@ try {
   check((await admin("abrechnung", { body: { monat, dryRun: false } })).find((x) => x.studio === "Ink Provision")?.status === "schon abgerechnet", "Keine doppelte Abrechnung");
 
   // ---------------------------------------------------------------- L: Profi + Studio-Satz
-  console.log("Profi: keine Provision, Zahlung direkt auf dem eigenen Konto; Studio: 7 %");
+  console.log("Einmalzahlung/Monatlich: keine Provision, Zahlung direkt auf dem eigenen Konto");
   const kaufId = (await studioPer("kauf@example.com")).id;
   await admin(`studio/${kaufId}/live`, { body: {} });
   const rKauf = await api(pB, "/api/portal/zahlung", { method: "POST", body: { betrag: "1000", kunde: "Kim" } });
-  check(rKauf.data.zahlung?.gebuehrBruttoCent === 0, "Profi: Zahlungslink ohne Plattformgebühr");
+  check(rKauf.data.zahlung?.gebuehrBruttoCent === 0, "Einmalzahlung: Zahlungslink ohne Plattformgebühr");
   const kaufAcct = Object.values((await mock("state")).accounts).find((a) => a.email === "kauf@example.com");
-  check(kaufAcct?.type === "standard", "Profi: eigenes Standard-Konto");
+  check(kaufAcct?.type === "standard", "Einmalzahlung: eigenes Standard-Konto");
   const rKim = await (await post("/api/pay", { z: rKauf.data.zahlung.id, inhaltOk: true })).json();
   const piKim = (await mock("state")).paymentIntents[rKim.clientSecret.split("_secret_")[0]];
-  check(rKim.stripeAccount === kaufAcct.id && piKim.account === kaufAcct.id && !piKim.application_fee_amount, "Profi: Bezahlfeld direkt auf dem Studio-Konto (Direct Charge, Stripe-Account), keine Gebühr für Tattoofin");
-  const studioId = (await studioPer("studio@example.com")).id;
-  await admin(`studio/${studioId}/live`, { body: {} });
-  const rStudio = await api(pD, "/api/portal/zahlung", { method: "POST", body: { betrag: "1000", kunde: "Sam" } });
-  check(rStudio.data.zahlung?.gebuehrBruttoCent === 7000, "Paket Studio: 1.000 € → 70 € Tattoofin (7 %), 930 € an das Studio");
+  check(rKim.stripeAccount === kaufAcct.id && piKim.account === kaufAcct.id && !piKim.application_fee_amount, "Einmalzahlung: Bezahlfeld direkt auf dem Studio-Konto (Direct Charge, Stripe-Account), keine Gebühr für Tattoofin");
+  const aboId = (await studioPer("abo@example.com")).id;
+  await admin(`studio/${aboId}/live`, { body: {} });
+  const rAbo = await api(pD, "/api/portal/zahlung", { method: "POST", body: { betrag: "1000", kunde: "Sam" } });
+  check(rAbo.data.zahlung?.gebuehrBruttoCent === 0, "Paket Monatlich: Zahlungslink ohne Tattoofin-Provision");
 
   // ---------------------------------------------------------------- M: Leistungsbestätigung
   console.log("Leistungsbestätigung nach dem Termin");
@@ -360,7 +399,7 @@ try {
   check(mailsAn("prov@example.com").some((m) => m.subject.includes("Leistungsbestätigung")), "E-Mail an Studio: Leistungsbestätigung");
   await pA.goto(`${BASE}/nachweis.html?z=${lenaId}`);
   await pA.waitForSelector("img.sig");
-  check((await pA.textContent("body")).includes("Entwurf") && (await pA.textContent("body")).includes("Bestätigung beim Bezahlen"), "Nachweis-Seite (PDF) mit beiden Stufen und Entwurfs-Hinweis");
+  check((await pA.textContent("body")).includes("Keine Rechtsberatung") && !(await pA.textContent("body")).includes("Entwurf") && (await pA.textContent("body")).includes("Bestätigung beim Bezahlen"), "Nachweis-Seite (PDF) mit beiden Stufen, sachlicher Hinweis ohne „Entwurf“");
   await pA.pdf?.({ path: path.join(shots, "nachweis.pdf") }).catch(() => {});
   await pA.screenshot({ path: path.join(shots, "nachweis.png"), fullPage: true });
 
@@ -420,6 +459,51 @@ try {
   check(redir.headers.get("location") === "/app.html", "Kein offener Redirect (Standardziel: Dashboard)");
   const blocked = await post("/api/pay", { s: (await studioPer("rechnung@example.com")).slug, betrag: "500", kunde: "x", inhaltOk: true });
   check(blocked.status === 409, "Studio ohne freigegebenes Konto kann nicht kassieren");
+  check((await fetch(`${BASE}/api/vorschau/mails`)).status === 404 && (await post("/api/vorschau/einladen", { email: "x@example.com", firma: "x" })).status === 404, "Vorschau-Endpunkte außerhalb der Vorschau: 404");
+  const vorLogin = mailsAn("prov@example.com").filter((m) => /Login-Link/.test(m.subject)).length;
+  for (let i = 0; i < 6; i++) check((await (await post("/api/login", { email: "prov@example.com" })).json()).ok === true, "Login-Antwort immer gleich (" + (i + 1) + ")");
+  check(mailsAn("prov@example.com").filter((m) => /Login-Link/.test(m.subject)).length - vorLogin === 3, "Rate-Limit: höchstens 3 Login-Mails pro Adresse in 15 Minuten");
+  // E-Mail-Vergleich normalisiert (gmail = googlemail, Groß/Klein, Leerzeichen, Punkte/+ bei Gmail)
+  await post("/api/signup", { ...basis, paket: "risikofrei", email: "Test.Gmail+abc@googlemail.com" });
+  await post("/api/login", { email: " testgmail@GMAIL.com " });
+  check(mailsAn("test.gmail+abc@googlemail.com").some((m) => /Login-Link/.test(m.subject)), "Login: gmail/googlemail, Punkte, +Zusatz und Groß/Klein werden gleich behandelt");
+  check((await post("/api/signup", { ...basis, paket: "einmal", email: "testgmail@gmail.com" })).status === 409, "Keine Dublette mit Gmail-Variante derselben Adresse");
+
+  console.log("Admin-Login per E-Mail + Dashboard ansehen (nur lesend)");
+  check((await (await post("/api/admin-login", { email: "fremd@example.com" })).json()).ok === true && !mailsAn("fremd@example.com").length, "Admin-Login: fremde Adresse bekommt keine Mail (Antwort gleich)");
+  await post("/api/admin-login", { email: "domenicschilling@googlemail.com" });
+  const adminMail = mailsAn("domenicschilling@googlemail.com").find((m) => /Admin-Login/.test(m.subject));
+  const adminLink = adminMail && (adminMail.html.match(/href="([^"]*\/api\/admin-login\?token=[^"]+)"/) || [])[1];
+  check(Boolean(adminLink), "Admin-Login-Link an domenicschilling@googlemail.com (gmail/googlemail normalisiert)");
+  const aResp = await fetch(adminLink, { redirect: "manual" });
+  const aCookie = (aResp.headers.get("set-cookie") || "").split(";")[0];
+  check(aResp.headers.get("location") === "/admin.html" && /^tf_admin=/.test(aCookie) && /HttpOnly/i.test(aResp.headers.get("set-cookie")), "Admin-Sitzung als httpOnly-Cookie");
+  const aStudios = await fetch(`${BASE}/api/admin/studios`, { headers: { cookie: aCookie } });
+  check(aStudios.status === 200 && (await aStudios.json()).length > 3, "Admin-Sitzung hat Admin-Rechte (Studios-Liste)");
+  check((await fetch(`${BASE}/api/admin/studios`, { headers: { cookie: "tf_admin=gefaelscht.x" } })).status === 401, "Gefälschtes Admin-Cookie abgelehnt");
+  const pAdmA = await neueSeite();
+  await pAdmA.context().addCookies([{ name: "tf_admin", value: aCookie.split("=").slice(1).join("="), url: BASE }]);
+  await pAdmA.goto(BASE + "/admin.html#" + provId);
+  await pAdmA.waitForSelector("#d-ansehen");
+  await pAdmA.click("#d-ansehen");
+  await pAdmA.waitForURL(/app\.html/);
+  await pAdmA.waitForSelector("#admin-ansicht");
+  check((await pAdmA.textContent("#admin-ansicht")).includes("Admin-Ansicht: Ink Provision"), "Dashboard ansehen: Banner „Admin-Ansicht: <Studio>“ mit Zurück-Link");
+  await appShot(pAdmA, path.join(shots, "admin-ansicht.png"));
+  const ro = await api(pAdmA, "/api/portal/zahlung", { method: "POST", body: { betrag: "100", kunde: "x" } });
+  check(ro.status === 403, "Admin-Ansicht: Zahlungslink erstellen gesperrt");
+  check((await api(pAdmA, "/api/portal/erstattung/x", { method: "POST", body: { betrag: "1" } })).status === 403 && (await api(pAdmA, "/api/portal/kuendigung", { method: "POST", body: {} })).status === 403, "Admin-Ansicht: Erstattung und Kündigung gesperrt");
+  check((await api(pAdmA, "/api/portal/stripe-session", { method: "POST", body: {} })).data.modus === "ansicht", "Admin-Ansicht: keine Stripe-Bausteine, stattdessen Hinweis");
+  const roPortal = await api(pAdmA, "/api/portal");
+  check(roPortal.status === 200 && roPortal.data.adminAnsicht && roPortal.data.zahlungen.length > 0, "Admin-Ansicht: Zahlungen sichtbar");
+  const roCookie = (await pAdmA.context().cookies()).filter((c) => c.name === "tf_session").map((c) => `${c.name}=${c.value}`).join("; ");
+  const roConnect = await fetch(`${BASE}/api/connect?id=${provId}`, { redirect: "manual", headers: { cookie: roCookie } });
+  check(Boolean(roCookie) && /\/login\.html/.test(roConnect.headers.get("location") || ""), "Admin-Ansicht startet keine Stripe-Einrichtung (Weiterleitung zum Login)");
+  const logs = fs.readdirSync(dataDir).filter((f) => f.startsWith("log%2F")).map((f) => JSON.parse(fs.readFileSync(path.join(dataDir, f))));
+  check(logs.some((l) => (l.type || l.typ) === "admin-ansicht" && JSON.stringify(l).includes("domenicschilling@gmail.com") && JSON.stringify(l).includes(provId)), "Admin-Ansicht protokolliert (wer, wann, welches Studio)");
+  await pAdmA.click("#admin-ansicht a");
+  await pAdmA.waitForURL(/admin\.html/);
+  check(true, "Zurück zum Admin");
 
   console.log("Web-App (PWA)");
   const man = await (await fetch(BASE + "/manifest.webmanifest")).json();
@@ -432,8 +516,9 @@ try {
   for (const p of ["vertrag.html", "avv.html", "impressum.html", "datenschutz.html", "login.html", "recht.html"]) { await pA.goto(BASE + "/" + p); await wait(250); }
   const pAdm = await neueSeite();
   await pAdm.goto(BASE + "/admin.html");
+  await pAdm.click("#login details summary");
   await pAdm.fill("#token", "admin");
-  await pAdm.click("#login button");
+  await pAdm.click("#login-token button");
   await pAdm.waitForSelector("#liste table");
   await pAdm.screenshot({ path: path.join(shots, "admin.png"), fullPage: true });
   check(true, "Admin-Oberfläche lädt");
@@ -525,7 +610,7 @@ try {
   await h.click('label:has(> input[name="auf-var"][value="logo"])');
   await h.setInputFiles("#auf-logo", path.join(root, "public/assets/wortmarke.png"));
   await h.waitForFunction(() => /Logo gespeichert/.test(document.getElementById("toast").textContent), null, { timeout: 10000 });
-  const oeff = await (await fetch(`${BASE}/api/aufsteller?s=${nwSlug}`)).json();
+  const oeff = (await api(h, `/api/aufsteller?s=${nwSlug}`)).data;
   check(oeff.variante === "logo" && /^data:image\/jpeg;base64,/.test(oeff.logo?.src || "") && oeff.zahlseite.endsWith("/zahlen/" + nwSlug), "Aufsteller: Logo hochgeladen (schwarz/weiß) und gespeichert");
   const pdfL = await runter('[data-auf="pdf"]');
   check(/\/Subtype \/Image/.test(pdfL.buf.toString("latin1")) && pdfL.name.includes("-logo"), "Aufsteller: PDF mit Logo");
@@ -539,7 +624,7 @@ try {
   const doppelt = await h.evaluate(() => fetch("/api/portal/aufsteller", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ anfordern: true }) }).then((r) => r.status));
   check(doppelt === 409, "Aufsteller: nicht doppelt anforderbar");
   const hH = await neueSeite();
-  await hH.goto(`${BASE}/aufsteller.html?s=${nwSlug}`);
+  await hH.goto((await admin(`studio/${nwId}`)).aufstellerLink);
   await hH.waitForFunction(() => (document.getElementById("auf-img").getAttribute("src") || "").startsWith("data:image/png"), null, { timeout: 15000 });
   check((await hH.textContent("#auf-titel")).includes("Nadelwerk Studio") && (await hH.textContent("#auf-qr")).includes("/zahlen/" + nwSlug), "Hersteller-Seite /aufsteller.html zeigt Vorlage + Dateien");
   await hH.screenshot({ path: path.join(S, "18c-aufsteller-hersteller.png"), fullPage: true });

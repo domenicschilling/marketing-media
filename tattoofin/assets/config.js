@@ -24,19 +24,23 @@ window.CFG = {
   whatsappLink: "https://wa.me/491624502375?text=Hi%2C%20ich%20interessiere%20mich%20f%C3%BCr%20Tattoofin!",
   websiteUrl: "https://tattoofin.de",   // Adresse der Website mit Online-Abschluss (tattoofin/website)
 
-  // Preismodelle. Das Studio wählt EINES:
-  //  A) Kauf: einmalige Einrichtung (netto zzgl. USt.), keine Grundgebühr, keine Provision; Zahlungsgebühren zahlt das Studio
-  //  B) Provision: keine Einrichtungsgebühr, 10 % vom Zahlbetrag jeder Zahlung über Tattoofin (auch Anzahlungen),
-  //     alles inklusive (Zahlungsgebühren + USt.). Tattoofin kassiert über Stripe, das Studio bekommt 90 %. Abrechnung monatlich
-  kaufPreis: 1499,
-  kaufAktionPreis: 1249,          // mit Aktionscode (Mailing)
+  // Drei Pakete (seit 18.10.2026). Das Studio wählt EINES:
+  //  Risikofrei (Modell B): 10 % vom Zahlbetrag jeder Zahlung, alles inklusive (Zahlungsgebühren + USt.), monatlich kündbar
+  //  Monatlich (Modell A): 49 € netto im Monat, eigenes Stripe-Konto, Zahlungsgebühren direkt an Stripe, inkl. QR-Aufsteller
+  //  Einmalzahlung (Modell A): einmalig 999 € netto, danach nur Zahlungsgebühren an Stripe, inkl. QR-Aufsteller, Nutzungszusage 5 Jahre
+  kaufPreis: 999,                 // Einmalzahlung
+  monatPreis: 49,                 // Monatlich
+  nutzungJahre: 5,
+  // Nur noch für die alten Mailing-Vorlagen (Postkarte, Brief) – Aktion RATENJA ist seit 18.10.2026 abgeschaltet
+  kaufPreisAlt: 1499,
+  kaufAktionPreis: 1249,
   provisionSatz: "10 %",
   kuendigungProvision: "jederzeit zum Monatsende",
   garantieTage: 30,
   setupSupportTage: 30,
   betreuung: "kostenlos",
 
-  // Direct-Mail-Aktion
+  // Direct-Mail-Aktion (abgeschaltet seit 18.10.2026, Code wird online nicht mehr angenommen)
   aktionsCode: "RATENJA",
   aktionsPlaetze: 20,
   aktionsFrist: "30.11.2026",

@@ -45,6 +45,19 @@ Garantie-Erstattung · Abschluss abgebrochen · Rückbuchung (Belege) · Rückbu
 | Vorschau | Eigene Site `tattoofin-vorschau.netlify.app` (Env nur `TF_VORSCHAU=1`, `SITE_URL`): eigener Speicher, keine Mails, kein Tracking, Stripe-Simulation (`_lib/stripe-sim.mjs`, `/api/sim/*`), Steuerseite `/vorschau.html`. Bauen + veröffentlichen: `node dev/vorschau-deploy.mjs --deploy` |
 | Tests | `NODE_PATH=… node dev/e2e.mjs [ordner] [handy-ordner]` – 100 Prüfungen inkl. Mandantentrennung, Zahlseite, Leistungsbestätigung, Handy-Screenshots |
 
+## Stand 18.10.2026: drei Pakete, Portal v2 live, Sicherheit
+
+| Thema | Kurz |
+|---|---|
+| Pakete | `risikofrei` (10 % inkl. Zahlungsgebühr, modell provision) · `monatlich` (49 € netto Abo auf dem DSX-Konto, Stripe Billing, eigenes Standard-Konto, 0 %) · `einmal` (999 € netto, eigenes Standard-Konto, 0 %, Garantie 30 Tage, Nutzungszusage 5 Jahre). Alte Links `?modell=provision|kauf` funktionieren. Aktionscode RATENJA aus. Vertrag 2026-10c, alte Fassung `/vertrag-2026-10b.html`. |
+| QR-Aufsteller | inklusive bei Monatlich/Einmalzahlung (`AUFSTELLER_PAKETE`), Admin-Mail mit signiertem Link auf `/aufsteller.html` (Gravurdatei PDF/SVG/PNG). |
+| Eingebettete Einrichtung | mit `STRIPE_PUBLISHABLE_KEY` im Dashboard (`/app.html#einrichtung`); `TF_EINBETTEN=aus` = Notlösung Weiterleitung. |
+| Bezahlfeld für Endkunden | nur mit `TF_BEZAHLFELD=an` UND den Webhook-Ereignissen `payment_intent.succeeded`, `payment_intent.processing`, `payment_intent.payment_failed` an beiden Endpoints. Sonst Stripe-Checkout (Standard). |
+| Abo Monatlich | Kündigung im Portal = `cancel_at_period_end`. Empfohlen: Ereignis `customer.subscription.deleted` am Endpoint „Ihr Konto“. |
+| Sicherheit | `/api/connect` nur mit Sitzung oder signiertem Link (24 h), `/api/signup?id=` ohne Sitzung nur Status, `/api/aufsteller` nur signiert, Login-Rate-Limit, E-Mail-Vergleich normalisiert (gmail = googlemail). |
+| Admin | Login per E-Mail-Link (`ADMIN_EMAILS`/`ADMIN_EMAIL`, 12 h Sitzung) oder `ADMIN_TOKEN`. „Dashboard ansehen“ = Studio-Dashboard nur lesend, protokolliert. |
+| Mails | Vorübergehende Fehler (z. B. IONOS „450 Mail send limit exceeded“) → Warteschlange, `mail-nachsenden.mjs` alle 10 Min. Gleiche Admin-Meldung max. 1×/30 Min. |
+
 ## Einrichtung auf Netlify
 
 1. Neues Netlify-Projekt aus diesem Repo, **Base directory: `tattoofin/website`** (Publish `public`, Functions `netlify/functions` stehen in `netlify.toml`).
@@ -86,7 +99,7 @@ Garantie-Erstattung · Abschluss abgebrochen · Rückbuchung (Belege) · Rückbu
 cd tattoofin/website
 npm install
 node dev/server.mjs     # http://localhost:8888 mit Stripe-Nachbau inkl. Connect (Admin-Token: admin)
-node dev/e2e.mjs        # kompletter Durchlauf im Browser (59 Prüfungen)
+node dev/e2e.mjs        # kompletter Durchlauf im Browser (156 Prüfungen)
 ```
 
 Mit echtem Stripe-Testkonto: `STRIPE_SECRET_KEY=sk_test_… STRIPE_WEBHOOK_SECRET=whsec_… STRIPE_CONNECT_WEBHOOK_SECRET=whsec_… node dev/server.mjs`
