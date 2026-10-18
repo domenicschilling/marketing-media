@@ -126,7 +126,7 @@ export function kuendigungsDatum(date = new Date()) {
 
 export function slugify(name) {
   return (name || "studio").toLowerCase().replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss")
-    .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "studio";
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40).replace(/-+$/, "") || "studio";
 }
 
 export async function zaehleAktion() {
@@ -142,9 +142,14 @@ export function darfKassieren(s) {
 // Provisions-Studios: Tattoofin kassiert als Plattform (Destination Charge), Stripe überweist den Rest an das Studio.
 export const plattformKassiert = (s) => s.modell === "provision";
 
+// Standard-Anzahlungsbedingungen (Verbraucher-AGB des Studios, Fassung 18.10.2026): Pauschale nur bei kurzfristiger Absage/
+// Nichterscheinen, Nachweis eines geringeren Schadens ausdrücklich möglich (§ 309 Nr. 5 BGB), Rückzahlung bei Absage durch das Studio.
 export const ANZAHLUNG_STANDARD = "Die Anzahlung sichert deinen Termin und wird mit dem Preis deines Tattoos verrechnet. "
-  + "Sagst du den Termin weniger als 48 Stunden vorher ab oder erscheinst du nicht, behält das Studio die Anzahlung ein. "
-  + "Verschieben ist nach Absprache möglich.";
+  + "Sagst du mindestens 48 Stunden vorher ab, kannst du den Termin nach Absprache verschieben, die Anzahlung wird dann angerechnet. "
+  + "Möchtest du keinen neuen Termin, bekommst du die Anzahlung zurück, abzüglich des Werts schon erbrachter Leistungen (z. B. eines bereits gezeichneten Entwurfs). "
+  + "Sagst du weniger als 48 Stunden vorher ab oder erscheinst du nicht, behält das Studio die Anzahlung als Ausgleich für den freigehaltenen Termin ein. "
+  + "Du kannst nachweisen, dass dem Studio kein oder ein deutlich geringerer Schaden entstanden ist; dann wird entsprechend weniger einbehalten. "
+  + "Sagt das Studio den Termin ab, bekommst du die Anzahlung zurück oder auf Wunsch einen neuen Termin.";
 export const anzahlungsbedingungen = (s) => (s.anzahlungsbedingungen || ANZAHLUNG_STANDARD);
 export const istAnzahlung = (z) => z.art === "anzahlung" || Boolean(z.anzahlung);
 

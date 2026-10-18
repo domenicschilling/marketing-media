@@ -54,11 +54,12 @@ export const CFG = {
   ruecklastGebuehrCent: Number(env("RUECKLAST_GEBUEHR_CENT", 2000)),
   // Optional: Auszahlung an Provisions-Studios erst nach X Tagen (Puffer für Rückbuchungen). Leer = Stripe-Standard.
   auszahlungTage: env("AUSZAHLUNG_TAGE", ""),
-  // 2026-10c (18.10.2026): drei Pakete Risikofrei / Monatlich / Einmalzahlung. Ältere Fassung: /vertrag-2026-10b.html
-  vertragVersion: "2026-10c",
+  // 2026-10d (18.10.2026): Rechtsdurchsicht (Stripe-Bedingungen, QR-Aufsteller einzeln im Paket Risikofrei, Haftung, Kündigung,
+  // Vertragsschluss online). Ältere Fassungen: /vertrag-2026-10c.html, /vertrag-2026-10b.html
+  vertragVersion: "2026-10d",
   // Blatt „Deine rechtliche Lage“ und Leistungsbestätigung: Version bei inhaltlichen Änderungen hochzählen (wird mit der Zustimmung gespeichert)
-  rechtVersion: "2026-10a",
-  bestaetigungVersion: "2026-10a",
+  rechtVersion: "2026-10b",
+  bestaetigungVersion: "2026-10b",
   // Zahlarten im Checkout. Bewusst ohne SEPA-Lastschrift: Die kann der Kunde 8 Wochen lang ohne Grund zurückbuchen.
   zahlarten: env("ZAHLARTEN", "card,klarna").split(",").map((x) => x.trim()).filter(Boolean),
   // QR-Aufsteller aus Holz: in diesen Paketen inklusive (digitaler QR-Code ist in allen Paketen dabei); andere können ihn anfragen

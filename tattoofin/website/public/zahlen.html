@@ -26,8 +26,8 @@
     <label class="lbl" for="sitzungen">Sitzung (optional)</label>
     <input type="text" id="sitzungen" name="sitzungen" autocomplete="off" placeholder="z. B. Sitzung 2 von 3" enterkeyhint="done">
     <div id="bed" class="bed hidden"><b>Anzahlungsbedingungen des Studios</b><p id="bed-text"></p>
-      <label class="haken"><input type="checkbox" id="bed-ok"> <span>Ich habe die Anzahlungsbedingungen gelesen und bin einverstanden.</span></label></div>
-    <label class="haken"><input type="checkbox" id="inhalt-ok"> <span id="inhalt-text">Ich zahle den Betrag an das Studio. Das ist so mit dem Studio abgesprochen.</span></label>
+      <label class="haken"><input type="checkbox" id="bed-ok"> <span>Ich bin mit den Anzahlungsbedingungen des Studios einverstanden.</span></label></div>
+    <label class="haken"><input type="checkbox" id="inhalt-ok"> <span id="inhalt-text">Ich zahle den Betrag an das Studio. Betrag und Projekt sind so mit dem Studio abgesprochen.</span></label>
     <button class="btn gold big w100" id="weiter" disabled>Weiter zum Bezahlen</button>
   </form>
 
@@ -38,8 +38,8 @@
     <p class="klein" style="text-align:center;margin:12px 0 0"><a href="" id="aendern">Angaben ändern</a></p>
   </div>
 
-  <p class="fuss">Beim Bezahlen siehst du, welche Zahlungsoptionen dir angeboten werden, je nach Prüfung durch den Zahlungsanbieter auch Ratenzahlung* oder späteres Bezahlen. Die Bedingungen legt allein der Zahlungsanbieter fest.<br>*Ratenzahlung über externe Anbieter wie Klarna, nach deren Prüfung. Tattoofin ist kein Kreditgeber. <b>Achtung! Kreditaufnahme kostet Geld.</b></p>
-  <p class="powered"><img src="/assets/figur.png" alt=""> Sichere Zahlung über Stripe · bereitgestellt von Tattoofin</p>
+  <p class="fuss">Beim Bezahlen siehst du, welche Zahlungsoptionen dir angeboten werden, je nach Prüfung durch den Zahlungsanbieter auch Ratenzahlung* oder späteres Bezahlen. Die Bedingungen legt allein der Zahlungsanbieter fest. Dein Vertrag über das Tattoo besteht nur mit dem Studio; Tattoofin stellt nur die Technik bereit. Deine gesetzlichen Rechte bleiben von den Häkchen unberührt.<br>*Ratenzahlung über externe Anbieter wie Klarna, nach deren Prüfung. Tattoofin ist kein Kreditgeber. <b>Achtung! Kreditaufnahme kostet Geld.</b></p>
+  <p class="powered"><img src="/assets/figur.png" alt=""> Sichere Zahlung über Stripe · bereitgestellt von Tattoofin · <a href="/impressum.html" target="_blank">Impressum</a> · <a href="/datenschutz.html#zahlseiten" target="_blank">Datenschutz</a></p>
 </main>
 <script src="/js/common.js"></script>
 <script src="/js/stripe-bausteine.js"></script>
@@ -61,8 +61,16 @@
     document.title = "Bezahlen bei " + studio.firma;
     $("bed-text").textContent = studio.anzahlungsbedingungen;
     $("weiter").disabled = false;
-    if (!studio.aktiv) { $("weiter").disabled = true; B.meldung("Bei diesem Studio ist die Online-Zahlung gerade nicht verfügbar."); }
-  } catch (err) { $("weiter").disabled = true; $("studio").textContent = "Studio nicht gefunden"; B.meldung(err.message); return; }
+    if (!studio.aktiv) {
+      $("weiter").disabled = true; $("schritt1").classList.add("hidden");
+      $("alert").innerHTML = '<div class="alert info"><b>Online-Zahlung bei ' + TF.esc(studio.firma) + ' gerade nicht möglich.</b><br>Das Studio richtet die Zahlung noch ein. Bitte wende dich direkt an das Studio, dort bekommst du einen Zahlungslink oder zahlst vor Ort.</div>';
+      return;
+    }
+  } catch (err) {
+    $("weiter").disabled = true; $("schritt1").classList.add("hidden"); $("studio").textContent = "Studio nicht gefunden";
+    $("alert").innerHTML = '<div class="alert err"><b>Diese Zahlseite gibt es nicht.</b><br>Bitte prüfe den Link oder scanne den QR-Code im Studio noch einmal. Den richtigen Link bekommst du direkt vom Studio.</div>';
+    return;
+  }
 
   var f = $("schritt1");
   function anzahlung() { return f.art.value === "anzahlung"; }

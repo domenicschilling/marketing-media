@@ -7,7 +7,7 @@ window.TFBezahlen = (function () {
   // Text des Inhalts-Häkchens (gleich wie auf dem Server gespeichert)
   function inhaltText(d) {
     return "Ich zahle " + (d.betragCent ? TF.euro(d.betragCent, true) : "den Betrag") + " an " + d.firma + " für: " + (d.beschreibung || "Tattoo-Projekt") +
-      (d.sitzungen ? ", " + d.sitzungen : "") + (d.anzahlung ? " – als Anzahlung, die mit dem Preis verrechnet wird" : "") + ". Das ist so mit dem Studio abgesprochen.";
+      (d.sitzungen ? ", " + d.sitzungen : "") + (d.anzahlung ? " – als Anzahlung, die mit dem Preis verrechnet wird" : "") + ". Betrag und Projekt sind so mit dem Studio abgesprochen.";
   }
   async function starte(body, info) {
     var btn = $("weiter"); btn.disabled = true; btn.textContent = "Einen Moment …";

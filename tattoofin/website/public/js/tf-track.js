@@ -44,9 +44,15 @@ window.TFTrack = (function () {
 
   // Event senden (oder vormerken, bis zugestimmt wurde). once: Schlüssel, damit z. B. ein Kauf beim Neuladen nicht doppelt zählt.
   // opt.id: eigene event_id (z. B. wenn der Server dasselbe Ereignis meldet), opt.nurPixel: keine Server-Kopie über /api/capi
+  track.mem = {};
   function track(name, params, once, opt) {
     opt = opt || {};
-    if (once) { try { if (localStorage.getItem("tf_ev_" + once)) return; localStorage.setItem("tf_ev_" + once, "1"); } catch (e) {} }
+    // Merker im Browser-Speicher erst mit Einwilligung (§ 25 TDDDG); ohne Einwilligung nur für diese Seite merken
+    if (once) {
+      try { if (localStorage.getItem("tf_ev_" + once)) return; } catch (e) {}
+      if (track.mem[once]) return; track.mem[once] = 1;
+      if (lies() === "ja") { try { localStorage.setItem("tf_ev_" + once, "1"); } catch (e) {} }
+    }
     var id = opt.id || eventId();
     if (geladen && window.fbq) sende(name, params, id, opt.nurPixel);
     else if (lies() !== "nein") queue.push([name, params, id, opt.nurPixel]);

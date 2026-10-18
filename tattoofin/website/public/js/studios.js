@@ -20,9 +20,12 @@
   });
 
   function consent() { try { return localStorage.getItem("tf_consent"); } catch (e) { return null; } }
+  einmalHeute.mem = {};
   function einmalHeute(key) {
     var k = "tf_ev_" + key + "-" + new Date().toISOString().slice(0, 10);
-    try { if (localStorage.getItem(k)) return false; localStorage.setItem(k, "1"); } catch (e) {}
+    // Merker erst mit Einwilligung im Browser speichern (§ 25 TDDDG), sonst nur für diesen Seitenaufruf
+    if (einmalHeute.mem[k]) return false; einmalHeute.mem[k] = 1;
+    try { if (localStorage.getItem(k)) return false; if (consent() === "ja") localStorage.setItem(k, "1"); } catch (e) {}
     return true;
   }
 
@@ -65,7 +68,7 @@
   var gerechnet = false;
   function merk() { if (!gerechnet) { gerechnet = true; u("rechner"); } }
   if (rb && rr) {
-    rb.addEventListener("input", function () { var n = zahl(rb.value); rechne(n); if (n >= 100 && n <= 6000) rr.value = n; merk(); });
+    rb.addEventListener("input", function () { var n = zahl(rb.value); rechne(n); if (n > 0) rr.value = Math.min(6000, Math.max(100, n)); merk(); });
     rr.addEventListener("input", function () { var n = Number(rr.value); rb.value = n.toLocaleString("de-DE"); rechne(n); merk(); });
     rb.addEventListener("focus", function () { rb.select(); });
   }

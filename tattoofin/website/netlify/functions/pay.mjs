@@ -21,7 +21,7 @@ const INHALT_FEHLT = "Bitte bestätige kurz, dass Studio, Projekt und Betrag sti
 export function inhaltText(s, z) {
   return `Ich zahle ${euro(z.betragCent)} an ${s.firma}${z.kunde ? ` (Name: ${z.kunde})` : ""} für: ${z.beschreibung || "Tattoo-Projekt"}` +
     `${z.sitzungen ? `, ${z.sitzungen}` : ""}${istAnzahlung(z) ? " – als Anzahlung, die mit dem Preis verrechnet wird" : ""}. ` +
-    "Das ist so mit dem Studio abgesprochen.";
+    "Betrag und Projekt sind so mit dem Studio abgesprochen.";
 }
 
 function bestaetigen(req, context, s, z) {

@@ -31,7 +31,7 @@
     }
     if (n === 3) {
       if (!val("ak_alle")) return "Bitte setze den Haken bei Vertrag und AVV.";
-      if (!val("unterzeichner")) { f.elements.unterzeichner.focus(); return "Bitte gib deinen Namen ein (gilt als Unterschrift)."; }
+      if (!val("unterzeichner")) { f.elements.unterzeichner.focus(); return "Bitte gib deinen Vor- und Nachnamen ein."; }
     }
     return "";
   }
@@ -48,41 +48,43 @@
     } else if (p === "risikofrei") {
       html = "<p><b>Paket Risikofrei</b> · " + C.provisionProzent + " % auf alle Zahlungen, inkl. der Zahlungsgebühr</p>" +
         "<p style=\"margin-bottom:0\"><b>Jetzt wird nichts bezahlt.</b> Danach richtest du in deinem Studio-Bereich in ca. 10 Minuten dein Auszahlungskonto ein. Halte Ausweis und Bankverbindung bereit.</p>";
-      sub.textContent = "Kostenlos starten";
+      sub.textContent = "Jetzt verbindlich starten";
       kurz = [
         "Keine Einrichtungsgebühr, keine Fixkosten: Jetzt wird nichts bezahlt.",
         C.provisionProzent + " % nur, wenn über Tattoofin Geld reinkommt. Alles inklusive, auch Zahlungsgebühren, Klarna und USt.",
         "Der Rest kommt automatisch aufs Konto deines Studios. Beispiel: Kunde zahlt 1.000 €, du bekommst 900 €.",
-        "Digitaler QR-Code für deine Zahlseite inklusive.",
-        "Monatlich kündbar, mit einem Klick in der App.",
+        "Bei einer Rückbuchung holen wir den Betrag (ohne unsere Provision) plus " + TF.euro(C.ruecklastGebuehrCent || 2000) + " Rückbuchungsgebühr von deinem Auszahlungskonto zurück. Gewinnst du den Fall, bekommst du beides zurück.",
+        "Digitaler QR-Code für deine Zahlseite inklusive, QR-Aufsteller aus Holz für " + TF.euro(C.aufstellerPreisNetto || 2900) + " netto zzgl. USt. im Portal bestellbar.",
+        "Keine Mindestlaufzeit, jederzeit zum Monatsende kündbar, mit einem Klick in der App.",
       ];
     } else if (p === "monatlich") {
       html = "<p><b>Paket Monatlich</b> · " + TF.esc(TF.euro(C.monatNetto)) + " netto im Monat zzgl. " + C.ustProzent + " % USt. (" + TF.esc(TF.euro(Math.round(C.monatNetto * (100 + C.ustProzent) / 100), true)) + " brutto)</p>" +
-        "<p>Im nächsten Schritt startest du das Abo sicher über Stripe (Karte, SEPA-Lastschrift u. a.). Die Rechnung kommt jeden Monat automatisch per E-Mail. Danach richtest du in deinem Studio-Bereich das Zahlungskonto deines Studios ein.</p>";
+        "<p>Im nächsten Schritt startest du das Abo sicher über Stripe (z. B. per Karte). Die Rechnung kommt jeden Monat automatisch per E-Mail. Danach richtest du in deinem Studio-Bereich das Zahlungskonto deines Studios ein.</p>";
       sub.textContent = "Zahlungspflichtig bestellen & Abo starten";
       kurz = [
         TF.euro(C.monatNetto) + " netto im Monat, keine Einrichtungsgebühr.",
-        "Danach nur die Zahlungsgebühren von Stripe (ca. 1,5–3 % je nach Zahlart), die du direkt an Stripe zahlst. 0 % Tattoofin-Provision.",
-        "Alles läuft über dein eigenes Zahlungskonto bei Stripe.",
+        "Danach nur die Zahlungsgebühren von Stripe (je nach Zahlart ca. 1,5–3 % plus fester Betrag je Zahlung, laut Preisliste von Stripe), die du direkt an Stripe zahlst. 0 % Tattoofin-Provision.",
+        "Alles läuft über dein eigenes Zahlungskonto bei Stripe. Rückbuchungen und ihre Gebühren laufen direkt über dieses Konto.",
         "Inklusive QR-Aufsteller aus Holz für deine Theke (Wert 29 €) und digitalem QR-Code.",
-        "Monatlich kündbar zum Ende des laufenden Abrechnungsmonats, keine Mindestlaufzeit.",
+        "Monatlich kündbar zum Ende des laufenden Abrechnungsmonats, keine Mindestlaufzeit. Bereits bezahlte Monate werden nicht anteilig erstattet.",
       ];
     } else {
       html = "<p><b>Paket Einmalzahlung</b> · " + TF.esc(TF.euro(C.kaufNetto)) + " netto einmalig zzgl. " + C.ustProzent + " % USt.</p>" +
         (z === "rechnung" ? "<p>Du bekommst die Rechnung sofort per E-Mail, zahlbar in 7 Tagen. Sobald die Zahlung eingegangen ist, starten wir mit der Einrichtung. Schneller geht es mit Karte: dann legen wir sofort los.</p>"
-          : "<p>Im nächsten Schritt bezahlst du sicher per Karte, SEPA-Lastschrift u. a. Die Rechnung kommt automatisch per E-Mail. Danach richtest du in deinem Studio-Bereich das Zahlungskonto deines Studios ein.</p>");
+          : "<p>Im nächsten Schritt bezahlst du sicher über Stripe, z. B. per Karte. Die Rechnung kommt automatisch per E-Mail. Danach richtest du in deinem Studio-Bereich das Zahlungskonto deines Studios ein.</p>");
       sub.textContent = z === "rechnung" ? "Zahlungspflichtig bestellen (Rechnung)" : "Zahlungspflichtig bestellen & bezahlen";
       kurz = [
         "Einmalig " + TF.euro(C.kaufNetto) + " netto. Danach keine Tattoofin-Gebühr mehr, nur die Zahlungsgebühren, die du direkt an Stripe zahlst.",
         "Inklusive QR-Aufsteller aus Holz für deine Theke (Wert 29 €) und digitalem QR-Code.",
-        C.garantieTage + " Tage Geld-zurück-Garantie ab Go-live.",
-        "Alles läuft über dein eigenes Zahlungskonto bei Stripe.",
+        C.garantieTage + " Tage Geld-zurück-Garantie ab Go-live (Kündigung in dieser Zeit, § 6 Vertrag).",
+        "Alles läuft über dein eigenes Zahlungskonto bei Stripe. Rückbuchungen und ihre Gebühren laufen direkt über dieses Konto.",
         z === "rechnung" ? "Die Einrichtung startet nach Zahlungseingang." : "Nach der Zahlung legen wir sofort los.",
       ];
     }
     fin.innerHTML = "<p style=\"margin-top:0\"><b>" + TF.esc(val("firma")) + "</b></p>" + html;
     kurz.push("Wir richten alles für dich ein und sind per WhatsApp und E-Mail für dich da.");
-    kurz.push("Deine Daten und die deiner Kunden verarbeiten wir DSGVO-konform (Auftragsverarbeitungsvertrag).");
+    kurz.push("Für die Daten deiner Kunden schließen wir mit dir einen Auftragsverarbeitungsvertrag (AVV) nach Art. 28 DSGVO.");
+    kurz.push("Nur für Unternehmer (§ 14 BGB), deshalb kein Widerrufsrecht wie für Verbraucher.");
     document.getElementById("kurz").innerHTML = kurz.map(function (x) { return "<li>" + TF.esc(x) + "</li>"; }).join("");
   }
 
@@ -148,7 +150,7 @@
         firma: c.firma, adresse: c.adresse,
         vertragVersion: c.vertragVersion, gerichtsstand: c.gerichtsstand, geschaeftsfuehrer: c.geschaeftsfuehrer, registergericht: c.registergericht, ustid: c.ustid,
         email: c.email, marke: c.marke, produkt: c.produkt, kuendigungProvision: "jederzeit zum Monatsende", websiteUrl: location.origin, setupSupportTage: c.setupSupportTage,
-        monatPreis: TF.euro(c.monatNetto), nutzungJahre: c.nutzungJahre };
+        monatPreis: TF.euro(c.monatNetto), nutzungJahre: c.nutzungJahre, aufstellerPreis: TF.euro(c.aufstellerPreisNetto || 2900) };
       box.querySelectorAll("[data-cfg]").forEach(function (el) { if (map[el.dataset.cfg] !== undefined) el.textContent = map[el.dataset.cfg]; });
     });
   });
@@ -167,7 +169,11 @@
     resumeId = q.get("resume");
     TF.api("/api/signup?id=" + encodeURIComponent(resumeId) + (q.get("t") ? "&t=" + encodeURIComponent(q.get("t")) : "")).then(function (d) {
       setze(d); if (d.paket) setzePaket(d.paket);
-      if (q.get("abbruch")) show("Die Zahlung wurde abgebrochen. Kein Problem: Deine Angaben sind gespeichert, du kannst direkt weitermachen.", "info");
+      if (q.get("abbruch")) {
+        // Direkt zurück zum letzten Schritt (Angaben sind vorbelegt; Vertrag muss nur erneut bestätigt werden)
+        if (!pruefe(1) && !pruefe(2)) go(3);
+        show("Die Zahlung wurde abgebrochen. Kein Problem: Deine Angaben sind gespeichert. Bestätige unten kurz den Vertrag, dann geht es weiter zur Zahlung.", "info");
+      }
     }).catch(function () { resumeId = null; });
   }
   go(1);

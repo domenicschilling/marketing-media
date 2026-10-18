@@ -60,7 +60,7 @@ export const mails = {
       ["Einrichtung", "0 €"], ["Grundgebühr", "0 €"], ["Provision", "0 % – Tattoofin verdient nichts daran"],
       ["Du zahlst nur", "die normalen Gebühren von Stripe bzw. Klarna, direkt an Stripe"], ["Dein Geld", "landet direkt auf dem Konto deines Studios"],
     ]) + p("So geht's: Link öffnen, Studio-Daten eintragen, Vertrag bestätigen, dann das Zahlungskonto deines Studios verbinden (ca. 10 Minuten, Ausweis und Bankverbindung bereithalten). Wir richten den Rest mit dir ein.") +
-      p('<span style="color:#5b6370;font-size:13px">*Ratenzahlung über Klarna nach deren Prüfung. Tattoofin ist kein Kreditgeber.</span>'),
+      p('<span style="color:#5b6370;font-size:13px">*Ratenzahlung über externe Anbieter wie Klarna, nach deren Prüfung. Tattoofin ist kein Kreditgeber. Achtung! Kreditaufnahme kostet Geld.</span>'),
     cta: "Einladung annehmen", ctaUrl: link,
   }),
 
@@ -136,12 +136,13 @@ export const mails = {
   live: (s) => mk("🚀 Tattoofin ist live!", {
     preheader: "Ab jetzt können deine Kunden flexibel bezahlen.",
     title: "Tattoofin ist live in deinem Studio 🚀",
-    body: hallo(s) + p("ab sofort kannst du im Portal Zahlungslinks erstellen und deinen Kunden zusätzliche Zahlungsoptionen anbieten, je nach Freigabe auch Ratenzahlung.") + rows([
+    body: hallo(s) + p("ab sofort kannst du im Portal Zahlungslinks erstellen und deinen Kunden zusätzliche Zahlungsoptionen anbieten, je nach Freigabe durch den Anbieter auch Ratenzahlung*.") + rows([
       ["Zahlungslink erstellen", `<a href="${CFG.siteUrl}/app.html#link">in deiner Tattoofin-App</a> (Betrag, Kunde, Projekt, fertig)`],
       ["Deine Zahlseite mit QR", `<a href="${CFG.siteUrl}/zahlen/${esc(s.slug)}">${CFG.siteUrl}/zahlen/${esc(s.slug)}</a>`],
       ["Studio Kit", "Fensteraufkleber, Flyer, Aufsteller und Social-Vorlagen im Portal unter „Studio Kit“"],
+      s.zahlart === "geschenk" ? ["Abrechnung", "Keine Tattoofin-Gebühr. Zahlungsgebühren zahlst du direkt an Stripe."] :
       s.paket === "monatlich" ? ["Abrechnung", `${euro(CFG.monatNetto)} netto im Monat, die Rechnung kommt automatisch per E-Mail. Zahlungsgebühren zahlst du direkt an Stripe.`] :
-      [s.modell === "kauf" ? "Zufriedenheitsgarantie" : "Abrechnung", s.modell === "kauf" ? `bis ${datum(new Date(Date.now() + CFG.garantieTage * 864e5).toISOString())}` : `Stripe zahlt dir automatisch ${100 - provisionSatz(s)} % jeder Zahlung aus, die Rechnung über die ${provisionSatz(s)} % kommt einmal im Monat`],
+      [s.modell === "kauf" && s.zahlart !== "geschenk" && s.paket !== "monatlich" ? "Geld-zurück-Garantie" : "Abrechnung", s.modell === "kauf" && s.zahlart !== "geschenk" && s.paket !== "monatlich" ? `bis ${datum(new Date(Date.now() + CFG.garantieTage * 864e5).toISOString())}` : `Stripe zahlt dir automatisch ${100 - provisionSatz(s)} % jeder Zahlung aus, die Rechnung über die ${provisionSatz(s)} % kommt einmal im Monat`],
     ]) + box("Wichtig fürs Team: keine Raten oder Zinsen versprechen. Einfach sagen: „Du kannst beim Bezahlen schauen, welche Zahlungsoptionen dir angeboten werden.“"),
     cta: "Zur Tattoofin-App", ctaUrl: `${CFG.siteUrl}/app.html`,
   }),
@@ -244,7 +245,7 @@ export const mails = {
     title: "Schade, aber verstanden. Kündigung bestätigt.",
     body: hallo(s) + p(`wir bestätigen deine Kündigung zum <b>${datum(zum)}</b>. Bis dahin funktionieren Zahlungslinks und Zahlseite ganz normal.`) +
       (s.paket === "monatlich" ? p("Dein Monatsbetrag wird ab dann nicht mehr abgebucht. Bereits gezahlte Monate werden nicht anteilig erstattet.") : "") +
-      box(s.modell === "provision" ? "Offene Auszahlungen bekommst du auch nach dem Ende vollständig. Bitte entferne nach dem Vertragsende Aufkleber und QR-Codes, die auf die Tattoofin-Zahlseite zeigen." : "Dein Stripe-Konto gehört deinem Studio und bleibt bestehen. Nach Vertragsende trennen wir nur die Verbindung zu Tattoofin. Bitte entferne dann Aufkleber und QR-Codes, die auf die Tattoofin-Zahlseite zeigen.") +
+      box(s.modell === "provision" ? "Offene Auszahlungen bekommst du auch nach dem Ende, abzüglich späterer Rückbuchungen. Bitte entferne nach dem Vertragsende Aufkleber und QR-Codes, die auf die Tattoofin-Zahlseite zeigen." : "Dein Stripe-Konto gehört deinem Studio und bleibt bestehen. Nach Vertragsende trennen wir nur die Verbindung zu Tattoofin. Bitte entferne dann Aufkleber und QR-Codes, die auf die Tattoofin-Zahlseite zeigen.") +
       p("Falls du es dir anders überlegst: Im Portal kannst du die Kündigung bis zum Stichtag mit einem Klick zurücknehmen."),
     cta: "Kündigung zurücknehmen", ctaUrl: `${CFG.siteUrl}/portal.html#vertrag`,
   }),

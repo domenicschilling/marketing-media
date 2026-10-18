@@ -13,24 +13,24 @@ body.app{background:#fff;padding-bottom:20px}
 <div class="blatt">
 <div class="knopf"><button class="btn gold" onclick="print()">Als PDF speichern / drucken</button> <a class="btn ghost small" href="/app.html#recht">Zur App</a></div>
 <main id="recht" class="recht-text">
-<p class="entwurf">Allgemeine Information, keine Rechtsberatung. Bei Fragen zu deinem konkreten Fall wende dich an eine Anwältin bzw. einen Anwalt. Stand: Version <span data-c="rechtVersion">2026-10a</span>.</p>
+<p class="entwurf">Allgemeine Information, keine Rechtsberatung im Einzelfall. Stand: Version <span data-c="rechtVersion">2026-10b</span>.</p>
 <h1>Deine rechtliche Lage – einfach erklärt</h1>
-<p>Hier steht ehrlich, wer bei Tattoofin wofür zuständig ist und welches Risiko wo liegt. Kurz, ohne Fachchinesisch.</p>
+<p>Hier steht ehrlich, wer bei Tattoofin wofür zuständig ist und welches Risiko wo liegt. Kurz, ohne Fachchinesisch. Verbindlich sind dein Vertrag mit Tattoofin und die Bedingungen von Stripe und Klarna.</p>
 
 <h2>1. Wer macht was?</h2>
 <div class="wer">
-  <div><b>Du (dein Studio)</b><br>Du bist der Verkäufer. Du machst das Tattoo und bist für die Leistung verantwortlich.</div>
+  <div><b>Du (dein Studio)</b><br>Du bist der Verkäufer. Der Tattoo-Vertrag besteht nur zwischen dir und deinem Kunden. Du machst das Tattoo und bist für die Leistung verantwortlich.</div>
   <div><b>Dein Kunde</b><br>Er bezahlt dich – per Karte, Apple Pay, Google Pay oder über Klarna.</div>
-  <div><b>Stripe</b><br>Ein zugelassener Zahlungsdienst. Stripe wickelt die Zahlung ab und zahlt das Geld auf dein Bankkonto aus.</div>
-  <div><b>Klarna</b><br>Bietet deinem Kunden „später bezahlen“ oder Raten* an. Klarna entscheidet selbst, wem es das anbietet.</div>
-  <div><b>Tattoofin</b><br>Stellt die Technik bereit: Zahlungslinks, Zahlseite, App, Einrichtung. Tattoofin ist kein Kreditgeber und keine Bank und vermittelt keine Kredite.</div>
+  <div><b>Stripe</b><br>Ein zugelassener Zahlungsdienstleister. Stripe wickelt die Zahlung ab, verwahrt das Geld und zahlt es auf dein Bankkonto aus. Dafür hast du eigene Verträge mit Stripe.</div>
+  <div><b>Klarna</b><br>Bietet deinem Kunden „später bezahlen“ oder Raten* an. Klarna prüft selbst und entscheidet selbst, wem es das anbietet.</div>
+  <div><b>Tattoofin</b><br>Stellt die Technik bereit: Zahlungslinks, Zahlseite, App, Einrichtung. Tattoofin ist kein Kreditgeber, keine Bank und kein Zahlungsdienstleister und vermittelt keine Kredite. Das Geld deiner Kunden läuft nie über ein Bankkonto von Tattoofin.</div>
 </div>
 
 <h2>2. Raten* über Klarna: Wer trägt das Risiko?</h2>
 <ul>
   <li>Wenn dein Kunde mit Klarna bezahlt, schließt <b>er</b> einen Vertrag mit <b>Klarna</b>. Du bist an diesem Vertrag nicht beteiligt.</li>
   <li>Klarna prüft den Kunden selbst. Ob er Raten* bekommt, entscheidet nur Klarna.</li>
-  <li>Zahlt dein Kunde seine Raten später nicht, ist das <b>das Problem von Klarna</b>, nicht deins. Das Ausfallrisiko der Raten trägt Klarna.</li>
+  <li>Nach der Freigabe durch Klarna bekommst du dein Geld in der Regel auf einmal. Zahlt dein Kunde seine Raten später nicht, trägt dieses Ausfallrisiko nach den Bedingungen von Klarna grundsätzlich Klarna, nicht du.</li>
   <li><b>Aber ehrlich:</b> Wenn der Kunde sagt „Ich habe die Leistung nicht bekommen“ oder „Das war nicht vereinbart“, kann er bei Klarna reklamieren. Dann kann eine Zahlung zurückgeholt werden – genau wie bei einer Karte (siehe Punkt 3). Deshalb sind deine Nachweise wichtig (Punkt 4).</li>
 </ul>
 
@@ -38,13 +38,13 @@ body.app{background:#fff;padding-bottom:20px}
 <ul>
   <li>Ein Kunde kann über seine Bank eine Kartenzahlung zurückbuchen lassen („Chargeback“), oft noch Wochen bis Monate später.</li>
   <li>Dann prüfen Bank bzw. Zahlungsanbieter den Fall. <b>Sie entscheiden</b> – nicht Tattoofin und nicht du. Niemand kann garantieren, dass du gewinnst.</li>
-  <li>Stripe verlangt pro Rückbuchung eine Gebühr von <b><span data-c="ruecklastGebuehrCent|cent2">20,00 €</span></b>.</li>
+  <li>Stripe berechnet pro Rückbuchung eine Gebühr, derzeit <b><span data-c="ruecklastGebuehrCent|cent2">20,00 €</span></b>.</li>
 </ul>
-<p><b>Paket Risikofrei</b> (Tattoofin kassiert für dich, Provision <span data-c="provisionProzent">10</span> %):</p>
+<p><b>Paket Risikofrei</b> (die Zahlung läuft über das Plattformkonto von Tattoofin bei Stripe, Provision <span data-c="provisionProzent">10</span> %):</p>
 <ul>
   <li>Stripe bucht den Betrag und die Gebühr zuerst bei Tattoofin ab.</li>
-  <li>Tattoofin holt sich dann von deinem Auszahlungskonto zurück: den Betrag <b>minus</b> der Provision für diese Zahlung <b>plus</b> die <span data-c="ruecklastGebuehrCent|cent2">20,00 €</span> Rückbuchungsgebühr.</li>
-  <li><b>Gewinnst du den Fall</b>, bekommst du alles zurück, auch die Gebühr.</li>
+  <li>Tattoofin holt sich dann von deinem Auszahlungskonto zurück: den Betrag <b>minus</b> der Provision für diese Zahlung <b>plus</b> die <span data-c="ruecklastGebuehrCent|cent2">20,00 €</span> Rückbuchungsgebühr. Du bekommst dazu eine E-Mail.</li>
+  <li><b>Gewinnst du den Fall</b>, bekommst du alles zurück, auch die Gebühr, sobald Stripe den Betrag wieder gutgeschrieben hat.</li>
   <li><b>Verlierst du den Fall</b>, geht das Geld an den Kunden zurück. Tattoofin verlangt für diese Zahlung dann keine Provision.</li>
   <li>Tattoofin reicht deine Nachweise bei Stripe ein. Du schickst sie uns schnell (meist hat man nur wenige Tage Zeit).</li>
 </ul>
@@ -52,26 +52,29 @@ body.app{background:#fff;padding-bottom:20px}
 
 <h2>4. Was du selbst absichern solltest</h2>
 <ul>
-  <li><b>Anzahlungsbedingungen:</b> Schreib klar auf, was bei Absage oder Nichterscheinen passiert. In Tattoofin bestätigt der Kunde sie vor dem Bezahlen per Häkchen. Du kannst sie in der App ändern.</li>
+  <li><b>Anzahlungsbedingungen:</b> Schreib klar auf, was bei Absage oder Nichterscheinen passiert. In Tattoofin bestätigt der Kunde sie vor dem Bezahlen per Häkchen. Du kannst sie in der App ändern. Hast du keine eigenen hinterlegt, sieht der Kunde unsere Standardbedingungen – prüf einmal, ob sie zu deinem Studio passen.</li>
   <li><b>Inhalt beim Bezahlen:</b> Der Kunde bestätigt Studio, Motiv/Projekt, Sitzungen und Betrag. Trag diese Angaben deshalb beim Zahlungslink ordentlich ein.</li>
-  <li><b>Leistungsbestätigung nach dem Termin:</b> Lass den Kunden nach der Sitzung per Link/QR-Code bestätigen, dass sie stattgefunden hat (Name, Datum, Unterschrift, auf Wunsch Foto). <b>Nicht vorher</b> – eine Bestätigung vor dem Termin wäre wertlos.</li>
-  <li><b>Fotos:</b> Mach Fotos vom fertigen Tattoo – aber nur mit Einverständnis des Kunden.</li>
-  <li><b>Einverständniserklärung und Aufklärung</b> vor dem Stechen, Terminbestätigungen, Chats und Rechnungen: aufbewahren.</li>
-  <li><b>Keine Versprechen</b> zu Raten oder Zinsen. Sag einfach: „Beim Bezahlen siehst du, welche Möglichkeiten dir angeboten werden.“ In deiner Werbung immer „Raten*“ mit dem Hinweis unten.</li>
+  <li><b>Leistungsbestätigung nach dem Termin:</b> Bitte den Kunden nach der Sitzung per Link/QR-Code, freiwillig zu bestätigen, dass sie stattgefunden hat (Name, Datum, Unterschrift, auf Wunsch Foto). <b>Nicht vorher</b> – eine Bestätigung vor dem Termin wäre wertlos. Kein Druck: Die Bestätigung ist freiwillig und kein Verzicht des Kunden auf seine Rechte. Sie hilft dir als Beweis, ersetzt aber keine anderen Belege.</li>
+  <li><b>Fotos:</b> Mach Fotos vom fertigen Tattoo – aber nur mit Einverständnis des Kunden und möglichst ohne Gesicht.</li>
+  <li><b>Einverständniserklärung und Aufklärung</b> vor dem Stechen, Terminbestätigungen, Chats und Rechnungen: aufbewahren, am besten mindestens 18 Monate.</li>
+  <li><b>Keine Versprechen</b> zu Raten oder Zinsen. Sag einfach: „Beim Bezahlen siehst du, welche Möglichkeiten dir angeboten werden.“ Nenne keine konkreten Raten, Zinsen oder Laufzeiten und sag nicht „zinsfrei“. In deiner Werbung immer „Raten*“ mit dem Hinweis unten.</li>
 </ul>
 
-<h2>5. Was du noch prüfen lassen solltest</h2>
+<h2>5. Was für dich gegenüber deinen Kunden gilt</h2>
 <ul>
-  <li><b>Widerrufsrecht:</b> Wenn ein Kunde online (z. B. per Link) bezahlt, ohne vorher im Studio gewesen zu sein, kann ein Widerrufsrecht gelten. Ob und wie das bei dir greift (z. B. bei Anzahlungen), lass bitte von deiner Steuerberatung oder einem Anwalt prüfen.</li>
-  <li><b>Höhe der Anzahlung und Einbehalt:</b> Ein Einbehalt bei Absage muss angemessen sein. Lass deine Bedingungen einmal prüfen.</li>
-  <li><b>Datenschutz:</b> Unterschrift und Fotos sind persönliche Daten. Speichere sie nur so lange, wie du sie als Nachweis brauchst.</li>
+  <li><b>Widerrufsrecht:</b> Dein Kunde ist Verbraucher. Wird der Tattoo-Vertrag nur aus der Ferne geschlossen – also nur per WhatsApp, Instagram, Telefon, E-Mail oder Link, ohne dass ihr euch vorher im Studio gesehen habt –, hat er in der Regel 14 Tage Widerrufsrecht. Dann musst du ihn darüber informieren (Widerrufsbelehrung, gesetzliches Muster). Ohne Belehrung verlängert sich die Frist auf 12 Monate und 14 Tage. Soll die Sitzung innerhalb der 14 Tage stattfinden, lass dir das vom Kunden ausdrücklich bestätigen. Habt ihr den Termin im Studio vereinbart, gilt dieses Widerrufsrecht nicht.</li>
+  <li><b>Anzahlung und Einbehalt:</b> Ein Einbehalt bei kurzfristiger Absage oder Nichterscheinen ist eine Pauschale. Sie muss angemessen sein, also nicht höher als der Schaden, der dir üblicherweise entsteht. Dein Kunde muss nachweisen dürfen, dass dir kein oder ein deutlich geringerer Schaden entstanden ist. Sagst du selbst den Termin ab, bekommt der Kunde seine Anzahlung zurück. Unsere Standardbedingungen sind so formuliert.</li>
+  <li><b>Pflichtangaben:</b> Dein Kunde muss erkennen können, mit wem er den Vertrag schließt (Name und Anschrift deines Studios), was er bekommt und was es kostet. Auf Website und Instagram brauchst du ein Impressum.</li>
+  <li><b>Datenschutz:</b> Du bist für die Daten deiner Kunden verantwortlich. Erwähne Tattoofin, Stripe und Klarna in deiner Datenschutzerklärung. Unterschrift und Fotos sind persönliche Daten: Speichere sie nur so lange, wie du sie als Nachweis brauchst.</li>
+  <li>Bei Fragen zu deinem konkreten Fall helfen dir zum Beispiel deine Industrie- und Handelskammer oder dein Fachverband weiter.</li>
 </ul>
 
 <h2>6. Was Tattoofin nicht kann</h2>
 <ul>
   <li>Tattoofin kann nicht versprechen, dass jede Rückbuchung zu deinen Gunsten ausgeht.</li>
   <li>Tattoofin entscheidet nicht, wer Raten* bekommt – das macht allein Klarna.</li>
-  <li>Dieses Blatt ersetzt keine Rechtsberatung.</li>
+  <li>Tattoofin kann nicht garantieren, dass Stripe oder Klarna dein Konto freischalten oder dauerhaft offen lassen.</li>
+  <li>Dieses Blatt ist eine allgemeine Information und ersetzt keine Rechtsberatung im Einzelfall.</li>
 </ul>
 <p class="klein muted">*Ratenzahlung über externe Anbieter wie Klarna, nach deren Prüfung. Tattoofin ist kein Kreditgeber. Achtung! Kreditaufnahme kostet Geld.</p>
 </main>

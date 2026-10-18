@@ -32,11 +32,11 @@ import { randomBytes } from "node:crypto";
 
 // Extras (Zusatzangebote): nur Anzeige + Anfrage, keine Abrechnung. Preise sind Vorschläge.
 export const EXTRAS = [
-  { id: "insta-aktion", titel: "Instagram-Werbeaktion für dein Studio", preis: "ab 149 € einmalig + Werbebudget",
+  { id: "insta-aktion", titel: "Instagram-Werbeaktion für dein Studio", preis: "ab 149 € netto einmalig, zzgl. Werbebudget",
     text: "Wir bauen dir eine fertige Werbeaktion: Video oder Bilder, Texte, Zielgruppe in deiner Stadt. Du gibst nur das Okay.", icon: "📣" },
-  { id: "gutscheine", titel: "Gutscheine verkaufen", preis: "Vorschlag: im Paket enthalten, Provision wie bei Zahlungen",
+  { id: "gutscheine", titel: "Gutscheine verkaufen", preis: "in deinem Paket enthalten (bei Risikofrei mit der normalen Provision)",
     text: "Tattoo-Gutscheine über deine Zahlseite verkaufen, mit schöner Gutschein-Karte zum Ausdrucken oder Verschicken. Perfekt für Weihnachten und Geburtstage.", icon: "🎁" },
-  { id: "no-show", titel: "Termin-Erinnerung & No-Show-Schutz", preis: "Vorschlag: 19 € im Monat",
+  { id: "no-show", titel: "Termin-Erinnerung & No-Show-Schutz", preis: "geplant: ca. 19 € netto im Monat",
     text: "Dein Kunde bekommt vor dem Termin automatisch eine Erinnerung per WhatsApp oder E-Mail, mit Link zur Anzahlung. Weniger leere Termine.", icon: "⏰" },
 ];
 

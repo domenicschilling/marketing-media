@@ -8,6 +8,14 @@ import { fileURLToPath } from "url";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const pub = path.join(root, "website", "public");
 
+// Schutz (18.10.2026): Vertrag 2026-10d / AVV wurden direkt in website/public überarbeitet (Rechtsdurchsicht).
+// Ist die Website-Fassung neuer als die Druckvorlage, NICHT überschreiben – erst die Druckvorlage angleichen.
+const fassung = (f) => Number((fs.readFileSync(f, "utf8").match(/Fassung 10\/2026 \((\d+)\)/) || [, 0])[1]);
+if (!process.argv.includes("--erzwingen") && fassung(path.join(pub, "vertrag.html")) > fassung(path.join(root, "studios/14-vertrag.html"))) {
+  console.error("Abbruch: website/public/vertrag.html ist neuer als studios/14-vertrag.html (Fassung). Erst die Druckvorlagen (14-vertrag.html, 15-avv.html) auf den Website-Stand bringen. Überschreiben trotzdem: --erzwingen");
+  process.exit(1);
+}
+
 const cut = (s, startRe, endRe) => {
   const a = s.search(startRe);
   if (a < 0) return s;

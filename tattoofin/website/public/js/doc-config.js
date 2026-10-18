@@ -18,12 +18,13 @@
         kuendigungProvision: "jederzeit zum Monatsende",
         vertragVersion: api.vertragVersion,
       });
+      if (api.aufstellerPreisNetto) C.aufstellerPreis = api.aufstellerPreisNetto / 100;
     }
     C.websiteUrl = location.origin;
     document.querySelectorAll("[data-cfg]").forEach(function (el) {
       var k = el.dataset.cfg, v = C[k];
       if (v === undefined) return;
-      if (/^(kaufPreis|monatPreis)$/.test(k)) v = Number(v).toLocaleString("de-DE") + " €";
+      if (/^(kaufPreis|monatPreis|aufstellerPreis)$/.test(k)) v = Number(v).toLocaleString("de-DE") + " €";
       el.textContent = v;
     });
   });

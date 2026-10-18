@@ -119,7 +119,7 @@
       $("r-tipp").textContent = monatBesser ? "Monatlich ⭐" : "Risikofrei";
       $("r-tipp-text").textContent = monatBesser
         ? "Ab ca. 20 Monaten Laufzeit ist die Einmalzahlung noch günstiger als Monatlich."
-        : "Bei diesem Betrag zahlst du mit Risikofrei am wenigsten, ganz ohne Fixkosten.";
+        : "Bei diesem Betrag zahlst du mit Risikofrei am wenigsten, ganz ohne Fixkosten. Die Einmalzahlung kostet vorab 999 € netto und lohnt sich erst über mehrere Jahre.";
     }
     $("volumen").addEventListener("input", rechne);
     rechne();
