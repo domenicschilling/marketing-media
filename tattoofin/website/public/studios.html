@@ -1,12 +1,12 @@
 <!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Tattoofin für Tattoo-Studios – Raten* für Kunden, dein Geld auf einmal</title>
-<meta name="description" content="Zahlungslink per WhatsApp, Anzahlung mit deinen Bedingungen und Raten über Klarna* für dein Tattoo-Studio. 0 € Einrichtung, 10 % pro Zahlung alles inklusive, monatlich kündbar.">
+<meta name="description" content="Zahlungslink per WhatsApp, Anzahlung vorab per Link gegen No-Shows und Raten über Klarna* für dein Tattoo-Studio. 0 € Einrichtung, 10 % pro Zahlung alles inklusive, monatlich kündbar.">
 <meta name="robots" content="noindex,follow">
 <link rel="canonical" href="https://tattoofin.de/">
 <meta property="og:type" content="website"><meta property="og:locale" content="de_DE"><meta property="og:site_name" content="Tattoofin">
 <meta property="og:title" content="Tattoofin – Raten* für deine Kunden, dein Geld auf einmal">
-<meta property="og:description" content="Zahlungslink per WhatsApp, Anzahlung per Link und Raten über Klarna* für Tattoo-Studios. 0 € Einrichtung.">
+<meta property="og:description" content="Zahlungslink per WhatsApp, Anzahlung vorab per Link gegen No-Shows und Raten über Klarna* für Tattoo-Studios. 0 € Einrichtung.">
 <meta property="og:url" content="https://tattoofin.de/studios"><meta property="og:image" content="https://tattoofin.de/assets/og.jpg">
 <meta name="theme-color" content="#fbb316">
 <link rel="icon" href="/favicon.png" type="image/png"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -88,6 +88,11 @@ p{margin:0}
 .fakten dd{margin:0;font:400 34px/1 var(--kopf)}
 .fakten dt{font-size:14px;font-weight:600;line-height:1.3;margin-top:6px;max-width:11em}
 .held .pflicht{margin-top:28px}
+/* Zweiter Hauptnutzen: weniger No-Shows (18.10.2026) */
+.noshow{display:flex;gap:12px;align-items:flex-start;margin-top:22px;max-width:31em;background:var(--weiss);border:var(--rand);border-radius:var(--r);
+  padding:14px 18px 13px;box-shadow:4px 4px 0 var(--navy);font-size:17px;line-height:1.45;font-weight:500}
+.noshow svg{flex:none;width:30px;height:30px;margin-top:1px}
+.noshow b{font-weight:800}
 
 .held-bild{position:relative;margin:0 0 0 auto;padding:0 0 0 64px;max-width:500px;width:100%}
 .held-bild .foto{width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:var(--r-gross);border:var(--rand);box-shadow:var(--schatten);background:var(--navy-tief)}
@@ -136,6 +141,14 @@ p{margin:0}
 .haken li::before{content:"";position:absolute;left:0;top:3px;width:24px;height:24px;border-radius:50%;background:var(--gelb) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 12.5l4 4 8-9' fill='none' stroke='%2313283d' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/16px no-repeat}
 .schirm.anz-handy{height:auto;background:none;border:0;border-radius:0;justify-content:center}
 .anz-handy img{width:min(320px,80%);margin-top:0;border-color:var(--gelb);box-shadow:none}
+.anz-schritte{list-style:none;margin:40px 0 0;padding:0;counter-reset:a;display:grid;gap:24px;max-width:32em}
+.anz-schritte li{counter-increment:a;display:grid;grid-template-columns:42px minmax(0,1fr);column-gap:16px;align-items:start}
+.anz-schritte li::before{content:counter(a);grid-row:1 / span 2;display:grid;place-items:center;width:42px;height:42px;border-radius:50%;background:var(--gelb);color:var(--navy-tief);
+  font:400 20px/1 var(--kopf);padding-top:3px}
+.anz-schritte h3{color:var(--weiss);margin-top:9px}
+.anz-schritte p{margin-top:6px;color:#dfe7ee;font-size:17px}
+.anz-hinweis{margin-top:30px;font-size:15px;line-height:1.5;color:#c9d4de;max-width:36em}
+.anz-hinweis a{color:var(--gelb);font-weight:700;text-underline-offset:3px}
 
 /* 4 · Kosten */
 .kosten{padding:var(--abstand) 0}
@@ -236,6 +249,8 @@ body.tf-cc-offen .leiste{display:none}
   .held h1{font-size:clamp(40px,11.4vw,52px)}
   .einstieg{margin-top:18px}
   .held-cta{margin-top:24px}
+  .noshow{font-size:16px;padding:12px 14px 11px;margin-top:18px}
+  .noshow svg{width:26px;height:26px}
   .held-cta .knopf{width:100%;font-size:19px;padding:20px 16px 17px}
   .fakten{grid-template-columns:repeat(3,minmax(0,1fr));margin-top:30px}
   .fakten div{padding:0 12px}
@@ -266,6 +281,7 @@ body.tf-cc-offen .leiste{display:none}
 <header class="kopf"><div class="rahmen kopf-in">
   <a class="marke" href="/" aria-label="Tattoofin Startseite"><img src="/assets/figur.png" alt="" width="44" height="45"><img class="wm" src="/assets/wortmarke.png" alt="Tattoofin" width="132" height="30"></a>
   <nav class="kopf-nav" aria-label="Seite">
+    <a class="nur-gross" href="#no-shows">No-Shows</a>
     <a class="nur-gross" href="#ablauf">So läuft's</a>
     <a class="nur-gross" href="#kosten">Kosten</a>
     <a class="nur-gross" href="#fragen">Fragen</a>
@@ -282,6 +298,7 @@ body.tf-cc-offen .leiste{display:none}
       <p class="blase"><span>„Kann ich das Tattoo auch in Raten* zahlen?“</span><small>Kundin, 21:47</small></p>
       <h1 id="h-held">Raten* für deine Kunden. Dein Geld auf einmal.</h1>
       <p class="einstieg">Du schickst einen Zahlungslink per WhatsApp. Dein Kunde zahlt per Karte, Apple&nbsp;Pay oder in Raten über Klarna.* Du bekommst den Betrag abzüglich 10&nbsp;% auf einmal, automatisch aufs Konto.</p>
+      <p class="noshow"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-kal"/></svg><span><b>Weniger No-Shows:</b> Anzahlung vorab per Link. Sagt jemand kurzfristig ab oder erscheint einfach nicht, bleibt die Anzahlung nach deinen Bedingungen bei dir.</span></p>
       <div class="held-cta">
         <a class="knopf knopf-gross" href="#anfrage" data-cta="held">Kostenlos einrichten lassen</a>
         <a class="wa-link" href="https://wa.me/491624502375?text=Hi%2C%20ich%20habe%20eure%20Anzeige%20gesehen%20und%20eine%20Frage%20zu%20Tattoofin%20f%C3%BCr%20mein%20Studio." target="_blank" rel="noopener" data-lp="whatsapp"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-wa"/></svg>Erst fragen? WhatsApp</a>
@@ -308,7 +325,24 @@ body.tf-cc-offen .leiste{display:none}
   </div>
 </section>
 
-<!-- 2 · Ablauf einer Zahlung, mit echten Bildschirmen -->
+<!-- 2 · Weniger No-Shows: Anzahlung vorab per Link -->
+<section class="anzahlung" id="no-shows" aria-labelledby="h-anz">
+  <div class="rahmen anz-raster">
+    <div class="anz-text">
+      <h2 id="h-anz">Weniger No-Shows. Anzahlung vorab per Link.</h2>
+      <p class="unter">No-Shows, also Kunden, die zum Termin einfach nicht erscheinen, kosten dich den geblockten Platz und die Vorarbeit am Motiv. Hol dir die Anzahlung vorher, per Link oder per QR-Code an der Theke.</p>
+      <ol class="anz-schritte">
+        <li><h3>Anzahlungslink schicken</h3><p>Betrag eintippen, Art „Anzahlung“ wählen und per WhatsApp schicken. Fertig in unter einer Minute.</p></li>
+        <li><h3>Kunde bestätigt deine Bedingungen und zahlt</h3><p>Vor dem Bezahlen liest er deine Anzahlungsbedingungen und hakt sie ab. Gespeichert mit Zeitpunkt, dein Beleg, falls jemand später zurückbuchen will.</p></li>
+        <li><h3>Termin ist gesichert</h3><p>Die Anzahlung wird mit dem Tattoo verrechnet. Sagt der Kunde weniger als 48 Stunden vorher ab oder kommt nicht, bleibt sie nach deinen Bedingungen bei dir.</p></li>
+      </ol>
+      <p class="anz-hinweis">Die 48 Stunden stehen in unseren Muster-Bedingungen, die du von uns bekommst. Frist und Text stellst du jederzeit selbst im Portal ein. Mehr dazu: <a href="/tattoo-anzahlung.html">Ratgeber Tattoo-Anzahlung &amp; No-Shows</a>.</p>
+    </div>
+    <figure class="schirm schirm-handy anz-handy"><img src="/assets/lp/handy-anzahlung.webp" alt="Zahlseite für eine Anzahlung von 150 Euro, mit Anzahlungsbedingungen und bestätigtem Häkchen" width="300" height="649" loading="lazy"></figure>
+  </div>
+</section>
+
+<!-- 3 · Ablauf einer Zahlung, mit echten Bildschirmen -->
 <section class="ablauf" id="ablauf" aria-labelledby="h-ablauf">
   <div class="rahmen">
     <h2 id="h-ablauf">So läuft eine Zahlung</h2>
@@ -332,22 +366,6 @@ body.tf-cc-offen .leiste{display:none}
         <p>90&nbsp;% jeder Zahlung gehen automatisch auf dein Konto. Im Portal siehst du, wer was bezahlt hat.</p>
       </li>
     </ol>
-  </div>
-</section>
-
-<!-- 3 · Anzahlung gegen No-Shows -->
-<section class="anzahlung" aria-labelledby="h-anz">
-  <div class="rahmen anz-raster">
-    <div class="anz-text">
-      <h2 id="h-anz">Anzahlung per Link. Mit deinen Bedingungen.</h2>
-      <p class="unter">Termin vorbereitet, und der Kunde kommt nicht? Hol dir die Anzahlung vorher, per Link oder per QR-Code an der Theke.</p>
-      <ul class="haken">
-        <li>Dein Kunde bestätigt deine Anzahlungsbedingungen, bevor er zahlt. Gespeichert mit Zeitpunkt.</li>
-        <li>Das ist dein Beleg, falls jemand nicht erscheint oder die Zahlung später zurückbucht.</li>
-        <li>Muster-Bedingungen bekommst du von uns. Anpassen kannst du sie jederzeit im Portal.</li>
-      </ul>
-    </div>
-    <figure class="schirm schirm-handy anz-handy"><img src="/assets/lp/handy-anzahlung.webp" alt="Zahlseite für eine Anzahlung von 150 Euro, mit Anzahlungsbedingungen und bestätigtem Häkchen" width="300" height="649" loading="lazy"></figure>
   </div>
 </section>
 
@@ -459,7 +477,7 @@ body.tf-cc-offen .leiste{display:none}
   <a class="leiste-wa" href="https://wa.me/491624502375?text=Hi%2C%20ich%20habe%20eure%20Anzeige%20gesehen%20und%20eine%20Frage%20zu%20Tattoofin%20f%C3%BCr%20mein%20Studio." target="_blank" rel="noopener" data-lp="whatsapp" aria-label="Fragen per WhatsApp"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-wa"/></svg></a>
 </div>
 
-<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="i-wa" viewBox="0 0 32 32"><path fill="currentColor" d="M16 3a13 13 0 0 0-11.3 19.4L3 29l6.8-1.8A13 13 0 1 0 16 3zm0 23.7c-2 0-3.9-.5-5.6-1.5l-.4-.2-4 1 1.1-3.9-.3-.4A10.7 10.7 0 1 1 16 26.7zm5.9-8c-.3-.2-1.9-.9-2.2-1-.3-.1-.5-.2-.7.2l-1 1.2c-.2.2-.4.2-.7.1a8.8 8.8 0 0 1-4.4-3.8c-.3-.6.3-.5 1-1.7.1-.2 0-.4 0-.6l-1-2.4c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4-.3.3-1.2 1.1-1.2 2.8s1.2 3.2 1.4 3.4c.2.2 2.4 3.6 5.7 5 2.1.9 2.9 1 4 .8.6-.1 1.9-.8 2.2-1.5.3-.8.3-1.4.2-1.5l-.6-.3z"/></symbol></svg>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="i-kal" viewBox="0 0 32 32"><rect x="3" y="6" width="26" height="23" rx="4" fill="#fff" stroke="#1f3d5c" stroke-width="2.6"/><path d="M3 12.5h26M10 3v6M22 3v6" stroke="#1f3d5c" stroke-width="2.6" stroke-linecap="round"/><path d="M10.5 20.5l3.6 3.6 7.4-7.6" fill="none" stroke="#2f8f5b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-wa" viewBox="0 0 32 32"><path fill="currentColor" d="M16 3a13 13 0 0 0-11.3 19.4L3 29l6.8-1.8A13 13 0 1 0 16 3zm0 23.7c-2 0-3.9-.5-5.6-1.5l-.4-.2-4 1 1.1-3.9-.3-.4A10.7 10.7 0 1 1 16 26.7zm5.9-8c-.3-.2-1.9-.9-2.2-1-.3-.1-.5-.2-.7.2l-1 1.2c-.2.2-.4.2-.7.1a8.8 8.8 0 0 1-4.4-3.8c-.3-.6.3-.5 1-1.7.1-.2 0-.4 0-.6l-1-2.4c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4-.3.3-1.2 1.1-1.2 2.8s1.2 3.2 1.4 3.4c.2.2 2.4 3.6 5.7 5 2.1.9 2.9 1 4 .8.6-.1 1.9-.8 2.2-1.5.3-.8.3-1.4.2-1.5l-.6-.3z"/></symbol></svg>
 
 <script src="/js/tf-track.js"></script>
 <script src="/js/studios.js"></script>
