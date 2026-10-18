@@ -689,7 +689,7 @@ try {
   check(/width="100mm" height="150mm"/.test(svgT) && svgT.includes(nwZahlseite) && /<g id="schnitt" fill="none" stroke="#0000ff" stroke-width="0.01">/.test(svgT) && !/<text|<image/.test(svgT), "Aufsteller: SVG 1:1, Schrift in Pfaden, blaue Schnittlinie, QR-Link der Zahlseite");
   const fSvg = (await runter('[data-auf="fsvg"]')).buf.toString();
   const fFarben = [...new Set(fSvg.match(/(?:fill|stroke)="#[0-9a-f]{6}"/gi).map((x) => x.split('"')[1].toLowerCase()))].sort().join(",");
-  check(/width="181mm" height="181mm"/.test(fSvg) && fFarben === "#000000,#0000ff" && !/<image|<text/.test(fSvg) && fSvg.includes(nwZahlseite), "Aufsteller: Formulor-Platte P1 mit Fuß (nur Schwarz/Blau, keine Pixelbilder)");
+  check(/width="181mm" height="181mm"/.test(fSvg) && fFarben === "#000000,#0000ff,#ff0000" && /<g id="liniengravur" fill="none" stroke="#ff0000" stroke-width="0.01">/.test(fSvg) && !/<image|<text/.test(fSvg) && fSvg.includes(nwZahlseite), "Aufsteller: Formulor-Platte P1 mit Fuß (Schwarz = Fläche, Rot = Linie, Blau = Schnitt, keine Pixelbilder)");
   const fPdf = await runter('[data-auf="fpdf"]');
   check(/\/MediaBox \[0 0 513\.071 513\.071\]/.test(fPdf.buf.toString("latin1")) && fPdf.name.includes("formulor-P1-birke-3mm"), "Aufsteller: Formulor-PDF 181 × 181 mm (" + fPdf.name + ")");
   const pngD = await runter('[data-auf="png"]');

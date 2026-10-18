@@ -131,6 +131,17 @@ export default handler(async (req) => {
       await log("admin-branding", { admin: adminName(req), studioId: s.id, stripe: Boolean(b.stripe), felder: Object.keys(b).filter((k) => b[k] !== undefined && b[k] !== "") });
       return json({ ...r, oeffentlich: brandingOeffentlich(s) });
     }
+    // QR-Aufsteller: Status vermerken (z. B. „gratis – wird von Domenic bestellt“), ohne Mail an das Studio
+    if (aktion === "aufsteller" && req.method === "POST") {
+      const b = await body(req);
+      const STATI = { angefragt: "angefragt", gratis: "gratis – wird von Domenic bestellt", bestellt: "bei Formulor bestellt", geliefert: "geliefert" };
+      if (!STATI[b.status]) return fail("Unbekannter Status");
+      s.aufsteller = { ...(s.aufsteller || {}), status: b.status, statusText: STATI[b.status], statusAm: now(), notiz: clean(b.notiz, 300) || s.aufsteller?.notiz || "",
+        ...(b.status === "gratis" ? { gratis: true } : {}), angefordertAm: s.aufsteller?.angefordertAm || now() };
+      await saveStudio(s);
+      await log("aufsteller-status", { admin: adminName(req), studioId: s.id, status: b.status });
+      return json(s);
+    }
     if (aktion === "konto" && req.method === "POST") {
       if (!s.stripe?.accountId) return fail("Kein Stripe-Konto verbunden");
       const vorher = { freigegeben: Boolean(s.stripe.chargesEnabled), auszahlungen: Boolean(s.stripe.payoutsEnabled), angaben: Boolean(s.stripe.detailsSubmitted) };

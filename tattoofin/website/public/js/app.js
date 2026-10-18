@@ -298,7 +298,8 @@
   function aufPaket() {
     var a = D.studio.aufsteller || {}, box = $("auf-paket");
     var preis = euro(a.preisNetto || 2900).replace(",00", "");
-    var knopf = a.bezahltAm ? '<span class="chip ok">✓ Bestellt und bezahlt am ' + dat(a.bezahltAm) + " – wir lassen ihn fertigen und melden uns</span>"
+    var knopf = a.gratis ? '<span class="chip ok">🎁 Geschenkt – wir bestellen deinen Aufsteller und schicken ihn an dein Studio</span>'
+      : a.bezahltAm ? '<span class="chip ok">✓ Bestellt und bezahlt am ' + dat(a.bezahltAm) + " – wir lassen ihn fertigen und melden uns</span>"
       : a.angefordertAm ? '<span class="chip ok">✓ ' + (a.inklusive ? "Angefordert" : "Angefragt") + " am " + dat(a.angefordertAm) + " – wir melden uns</span>"
       : a.inklusive ? '<button class="btn gold small" id="auf-anfordern">Aufsteller kostenlos anfordern</button>'
       : '<button class="btn gold small" id="auf-kaufen">QR-Aufsteller bestellen – ' + preis + '</button>';

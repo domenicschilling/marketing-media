@@ -2,8 +2,9 @@
 // Erzeugt SVG, PDF und PNG direkt im Browser. Alle Schriften sind in Pfade umgewandelt (Glyphen aus
 // /assets/aufsteller-glyphen.json: DM Sans 700/500 + Wortmarke in Luckiest Guy), damit jeder Laser-Dienst die Datei
 // ohne Schriftarten öffnen kann.
-//   Farben nach Formulor-Vorgabe: Schwarz RGB(0,0,0) gefüllt = Flächengravur · Blau RGB(0,0,255) Haarlinie 0,01 mm = Schnitt
-//   (Rot wäre dort Liniengravur, wird hier nicht benutzt) · Grau = Platzhalter, nicht gravieren. Keine Pixelbilder: das Logo
+//   Farben nach Formulor-Vorgabe: Schwarz RGB(0,0,0) gefüllt = Flächengravur (nur große Elemente: Details ≥ 0,4 mm,
+//   Flächen ≥ 1 mm²) · Rot RGB(255,0,0) Haarlinie = Liniengravur (kleine Schrift: Umrisse werden abgefahren) ·
+//   Blau RGB(0,0,255) Haarlinie 0,01 mm = Schnitt · Grau = Platzhalter, nicht gravieren. Keine Pixelbilder: das Logo
 //   wird in Vektor-Rechtecke umgewandelt. QR-Code mit Fehlerkorrektur Q (lange Links M) und 4 Modulen Ruhezone.
 //   Formulor-Platte P1 (181 × 181 mm): Schild + zwei Fußteile mit Kreuz-Steckverbindung (Schlitzbreite = Materialstärke,
 //   der Laser nimmt ca. 0,1–0,2 mm weg → leichtes Spiel). Untere 17 mm des Schilds bleiben frei (Fuß).
@@ -70,19 +71,29 @@
     if (!g) { var ohne = ch.normalize("NFD").replace(/[̀-ͯ]/g, ""); g = F.g[ohne] || F.g["?"]; }
     return g;
   }
-  function breite(f, txt, size) {
-    var F = G[f], s = size / F.upm, w = 0;
-    Array.from(txt).forEach(function (ch) { w += glyphe(F, ch)[0] * s; });
-    return w;
+  // Positionen der Zeichen (Schrift-Einheiten). Berühren/überlappen sich zwei Nachbarn (z. B. „fi“), wird der zweite
+  // so weit verschoben, dass mindestens 0,45 mm Luft bleibt – sonst verschmelzen sie beim Lasern bzw. die Lücke ist zu fein.
+  function lauf(f, txt, size) {
+    var F = G[f], luft = size >= 6 ? 0.45 * F.upm / size : 0, x = 0, pos = [], vor = null; // kleine Schrift (Liniengravur): nur Überlappung verhindern
+    Array.from(txt).forEach(function (ch) {
+      var g = glyphe(F, ch), b = g[2];
+      if (b && vor) {
+        var yUeber = Math.min(vor.b[3], b[3]) - Math.max(vor.b[1], b[1]);
+        if (yUeber > 0) { var luecke = (x + b[0]) - (vor.x + vor.b[2]); if (luecke < luft) x += luft - luecke; }
+      }
+      pos.push(x); if (b) vor = { x: x, b: b };
+      x += g[0];
+    });
+    return { pos: pos, w: x };
   }
+  function breite(f, txt, size) { return lauf(f, txt, size).w * size / G[f].upm; }
   // Text als Pfad; anchor: "mitte" | "links"
   function text(f, txt, x, yBasis, size, anchor) {
-    var F = G[f], s = size / F.upm, ops = [];
-    var cx = anchor === "links" ? x : x - breite(f, txt, size) / 2;
-    Array.from(txt).forEach(function (ch) {
+    var F = G[f], s = size / F.upm, ops = [], l = lauf(f, txt, size);
+    var x0 = anchor === "links" ? x : x - l.w * s / 2;
+    Array.from(txt).forEach(function (ch, i) {
       var g = glyphe(F, ch);
-      if (g[1]) ops = ops.concat(setzen(parse(g[1]), cx, yBasis, s));
-      cx += g[0] * s;
+      if (g[1]) ops = ops.concat(setzen(parse(g[1]), x0 + l.pos[i] * s, yBasis, s));
     });
     return ops;
   }
@@ -114,17 +125,42 @@
     for (var r = 0; r < n; r++) { var row = []; for (var c = 0; c < n; c++) row.push(m.isDark(r, c)); rows.push(row); }
     return rows;
   }
-  function qrPfad(mx, x0, y0, modul) {
+  // Dunkle Rasterfelder → geschlossene Umrisse (Außen im Uhrzeigersinn, Löcher gegenläufig, gemeinsame Kanten entfallen)
+  function gitterKonturen(dunkel, nr, nc, x0, y0, zelle) {
+    var kanten = {}, key = function (a, b, c, d) { return a + "," + b + ">" + c + "," + d; };
+    function add(a, b, c, d) { var rk = key(c, d, a, b); if (kanten[rk]) delete kanten[rk]; else kanten[key(a, b, c, d)] = [a, b, c, d]; }
+    for (var r = 0; r < nr; r++) for (var c = 0; c < nc; c++) if (dunkel(r, c)) { add(c, r, c + 1, r); add(c + 1, r, c + 1, r + 1); add(c + 1, r + 1, c, r + 1); add(c, r + 1, c, r); }
+    var von = {};
+    Object.keys(kanten).forEach(function (k) { var e = kanten[k], s = e[0] + "," + e[1]; (von[s] = von[s] || []).push(e); });
     var ops = [];
-    mx.forEach(function (row, r) {
-      for (var c = 0; c < row.length; c++) {
-        if (!row[c]) continue;
-        var start = c; while (c + 1 < row.length && row[c + 1]) c++;
-        ops = ops.concat(rechteck(x0 + start * modul, y0 + r * modul, (c - start + 1) * modul, modul));
+    Object.keys(kanten).forEach(function (k0) {
+      var e = kanten[k0]; if (!e || e.used) return;
+      var pts = [[e[0], e[1]]], cur = e;
+      while (cur && !cur.used) {
+        cur.used = true; pts.push([cur[2], cur[3]]);
+        var weiter = (von[cur[2] + "," + cur[3]] || []).filter(function (x) { return !x.used; });
+        if (weiter.length > 1) { // Ecke an Ecke: rechts abbiegen, damit diagonale Felder getrennt bleiben
+          var dx = cur[2] - cur[0], dy = cur[3] - cur[1];
+          weiter.sort(function (a, b) { var ca = dx * (a[3] - a[1]) - dy * (a[2] - a[0]), cb = dx * (b[3] - b[1]) - dy * (b[2] - b[0]); return cb - ca; });
+        }
+        cur = weiter[0];
       }
+      // gerade Zwischenpunkte weglassen
+      var p = [];
+      for (var i = 0; i < pts.length - 1; i++) {
+        var a = p.length ? p[p.length - 1] : pts[pts.length - 2], b = pts[i], c = pts[i + 1];
+        if ((b[0] - a[0]) * (c[1] - b[1]) - (b[1] - a[1]) * (c[0] - b[0]) !== 0) p.push(b);
+      }
+      if (p.length < 3) p = pts.slice(0, -1);
+      p.forEach(function (q, i) { ops.push([i ? "L" : "M", x0 + q[0] * zelle, y0 + q[1] * zelle]); });
+      ops.push(["Z"]);
     });
     return ops;
   }
+  function qrPfad(mx, x0, y0, modul) {
+    return gitterKonturen(function (r, c) { return mx[r][c]; }, mx.length, mx.length, x0, y0, modul);
+  }
+
 
   // ---------- Schnittkonturen ----------
   function verschieben(ops, dx, dy) { return ops.map(function (o) { if (o[0] === "Z") return o; var r = [o[0]]; for (var k = 1; k < o.length; k += 2) r.push(o[k] + dx, o[k + 1] + dy); return r; }); }
@@ -145,9 +181,9 @@
   function datei(o, opts) {
     opts = opts || {};
     var sz = bauen(o), t = opts.dicke || 3;
-    if (!opts.formulor) return { w: W, h: H, gravur: sz.gravur, schnitt: sz.kontur, sz: sz };
+    if (!opts.formulor) return { w: W, h: H, gravur: sz.gravur, linien: sz.linien, schnitt: sz.kontur, sz: sz };
     var y2 = ABST + H + 6;
-    return { w: PLATTE, h: PLATTE, sz: sz, gravur: verschieben(sz.gravur, ABST, ABST),
+    return { w: PLATTE, h: PLATTE, sz: sz, gravur: verschieben(sz.gravur, ABST, ABST), linien: verschieben(sz.linien, ABST, ABST),
       schnitt: verschieben(schildKontur(t), ABST, ABST).concat(verschieben(fussKontur(t), ABST, y2), verschieben(fussKontur(t), ABST + FUSS_L + 6, y2)) };
   }
 
@@ -155,7 +191,7 @@
   // o = { url, firma, variante: "name" | "logo", logo: { src (Data-URL JPEG, schwarz/weiß), w, h } }
   function bauen(o) {
     if (!G) throw new Error("Glyphen nicht geladen – erst TFAufsteller.laden()");
-    var mitte = W / 2, nutz = W - 2 * RAND, g = [], blau = [], blauText = [];
+    var mitte = W / 2, nutz = W - 2 * RAND, g = [], v = [], blau = [], blauText = [];
     var mx = qrMatrix(o.url), n = mx.length, modul = QR_MM / n, qx = mitte - QR_MM / 2, ruhe = 4 * modul, e0 = ruhe + 0.6, QR_Y = QR_OBEN + e0;
 
     // 1) Tattoofin-Wortmarke klein oben
@@ -168,7 +204,9 @@
       if (o.logo && o.logo.runs) {
         // Logo als Vektor: jede schwarze Pixelreihe wird ein Rechteck (Laser-Dienste nehmen keine Pixelbilder)
         var L = o.logo, f = Math.min(LOGO.w / L.gw, LOGO.h / L.gh), lx = mitte - L.gw * f / 2, ly = LOGO.y + (LOGO.h - L.gh * f) / 2;
-        for (var ri = 0; ri < L.runs.length; ri += 3) g = g.concat(rechteck(lx + L.runs[ri + 1] * f, ly + L.runs[ri] * f, L.runs[ri + 2] * f, f));
+        var bit = new Uint8Array(L.gw * L.gh);
+        for (var ri = 0; ri < L.runs.length; ri += 3) for (var rx = 0; rx < L.runs[ri + 2]; rx++) bit[L.runs[ri] * L.gw + L.runs[ri + 1] + rx] = 1;
+        g = g.concat(gitterKonturen(function (r, c) { return bit[r * L.gw + c]; }, L.gh, L.gw, lx, ly, f));
       } else {
         blau = rundRechteck(LOGO.x, LOGO.y, LOGO.w, LOGO.h, 2);
         blauText = text("dm700", "DEIN STUDIO-LOGO", mitte, LOGO.y + LOGO.h / 2 + 1.4, 4, "mitte");
@@ -176,11 +214,13 @@
     } else {
       var name = String(o.firma || "Dein Studio").trim().replace(/\s+/g, " ");
       var gr = Math.min(9, nutz / breite("dm700", name, 1));
-      if (gr >= 6.2) g = g.concat(text("dm700", name, mitte, 22.6, gr, "mitte"));
+      // ab 7 mm Schrifthöhe als Fläche (i-Punkte ≥ 1 mm², Striche ≥ 0,9 mm), kleiner als Liniengravur
+      if (gr >= 7) g = g.concat(text("dm700", name, mitte, 22.6, gr, "mitte"));
+      else if (gr >= 6.2) v = v.concat(text("dm700", name, mitte, 22.6, gr, "mitte"));
       else {
         var z = zweiZeilen(name), gr2 = Math.min(4.9, nutz / Math.max(breite("dm700", z[0], 1), breite("dm700", z[1] || "", 1)));
-        if (z.length === 1) g = g.concat(text("dm700", name, mitte, 22.6, Math.max(gr, 3.2), "mitte"));
-        else { g = g.concat(text("dm700", z[0], mitte, 17.9, gr2, "mitte")); g = g.concat(text("dm700", z[1], mitte, 17.9 + gr2 * 1.12, gr2, "mitte")); }
+        if (z.length === 1) v = v.concat(text("dm700", name, mitte, 22.6, Math.max(gr, 3.2), "mitte"));
+        else { v = v.concat(text("dm700", z[0], mitte, 17.9, gr2, "mitte")); v = v.concat(text("dm700", z[1], mitte, 17.9 + gr2 * 1.12, gr2, "mitte")); }
       }
     }
 
@@ -193,27 +233,28 @@
       g = g.concat(rechteck(mitte + kopfB / 2 + 3, kopfY - 2.6, strich, 0.7));
     }
     var unter = "Tattoo bezahlen, Anzahlung oder in Raten*", unterGr = Math.min(4.2, nutz / breite("dm500", unter, 1));
-    g = g.concat(text("dm500", unter, mitte, 37.4, unterGr, "mitte"));
+    v = v.concat(text("dm500", unter, mitte, 37.4, unterGr, "mitte"));
 
     // 4) QR-Code (Ruhezone bleibt frei) + Ecken als Rahmen außerhalb der Ruhezone
     g = g.concat(qrPfad(mx, qx, QR_Y, modul));
     var el = 7, ed = 0.9, L = qx - e0, R = qx + QR_MM + e0, T = QR_Y - e0, B = QR_Y + QR_MM + e0;
     [[L, T, 1, 1], [R, T, -1, 1], [L, B, 1, -1], [R, B, -1, -1]].forEach(function (k) {
       var x = k[0], y = k[1], dx = k[2], dy = k[3];
-      g = g.concat(rechteck(dx > 0 ? x : x - el, dy > 0 ? y : y - ed, el, ed));
-      g = g.concat(rechteck(dx > 0 ? x : x - ed, dy > 0 ? y : y - el, ed, el));
+      // Ecke als ein L-förmiger Umriss (keine überlappenden Rechtecke)
+      g.push(["M", x, y], ["L", x + dx * el, y], ["L", x + dx * el, y + dy * ed], ["L", x + dx * ed, y + dy * ed], ["L", x + dx * ed, y + dy * el], ["L", x, y + dy * el], ["Z"]);
     });
 
     // 5) Link als Text (falls der Scan nicht klappt) + Zahlarten
     var kurz = o.linkText || o.url.replace(/^https?:\/\//, "").replace(/[?#].*$/, "").replace(/\/$/, ""), linkGr = Math.min(3.3, nutz / breite("dm700", kurz, 1));
-    g = g.concat(text("dm700", kurz, mitte, B + 4.6, linkGr, "mitte"));
-    g = g.concat(text("dm500", "Karte · Apple Pay · Google Pay · Klarna*", mitte, B + 9.4, 3, "mitte"));
+    // Kleine Schrift (Punkte, Kommas, i-Punkte < 1 mm²) als Liniengravur: der Laser fährt die Buchstaben-Umrisse ab
+    v = v.concat(text("dm700", kurz, mitte, B + 4.6, linkGr, "mitte"));
+    v = v.concat(text("dm500", "Karte · Apple Pay · Google Pay · Klarna*", mitte, B + 9.4, 3, "mitte"));
 
     // 6) Fußnote (Pflicht bei „Raten*“), oberhalb der Fußzone
     var fGr = 2.5, fz = umbrechen("dm500", FUSS, fGr, nutz), fy = H - FUSSZONE - 1.4 - (fz.length - 1) * fGr * 1.3;
-    fz.forEach(function (z, i) { g = g.concat(text("dm500", z, mitte, fy + i * fGr * 1.3, fGr, "mitte")); });
+    fz.forEach(function (z, i) { v = v.concat(text("dm500", z, mitte, fy + i * fGr * 1.3, fGr, "mitte")); });
 
-    return { gravur: g, platzhalter: blau, platzhalterText: blauText, logo: logo, kontur: rundRechteck(0, 0, W, H, RADIUS), konturSchlitze: schildKontur(o.dicke || 3), qr: { x: qx, y: QR_Y, mm: QR_MM, n: n, modulMm: modul, ruheMm: ruhe }, unten: fy + (fz.length - 1) * fGr * 1.3 };
+    return { gravur: g, linien: v, platzhalter: blau, platzhalterText: blauText, logo: logo, kontur: rundRechteck(0, 0, W, H, RADIUS), konturSchlitze: schildKontur(o.dicke || 3), qr: { x: qx, y: QR_Y, mm: QR_MM, n: n, modulMm: modul, ruheMm: ruhe }, unten: fy + (fz.length - 1) * fGr * 1.3 };
   }
 
   // ---------- SVG ----------
@@ -226,11 +267,12 @@
     if (!holz) {
       var d = datei(o, opts), t = opts.dicke || 3, mat = t === 4 ? "Sperrholz Pappel 4 mm" : "Sperrholz Birke " + t + " mm";
       var beschr = opts.formulor
-        ? "Formulor-Platte P1 (181 × 181 mm), " + mat + ". Schild 100 × 150 mm + 2 Fußteile 60 × 16 mm (Kreuz-Steckverbindung, Schlitze " + t + " mm). Schwarz gefüllt = Flächengravur, Blau 0,01 mm = Schnitt. Schrift in Pfaden, keine Pixelbilder. QR-Code: " + o.url
-        : "Gravurvorlage Schild 100 × 150 mm, Maßstab 1:1 (Fuß vom Hersteller). Schwarz gefüllt = gravieren, Blau 0,01 mm = Außenkontur/Schnitt, Grau = Platzhalter (nicht gravieren). Untere 17 mm frei für den Fuß. QR-Code: " + o.url;
+        ? "Formulor-Platte P1 (181 × 181 mm), " + mat + ". Schild 100 × 150 mm + 2 Fußteile 60 × 16 mm (Kreuz-Steckverbindung, Schlitze " + t + " mm). Schwarz gefüllt = Flächengravur (alle Details ≥ 0,4 mm, Flächen ≥ 1 mm²), Rot 0,01 mm = Liniengravur (kleine Schrift), Blau 0,01 mm = Schnitt. Schrift in Pfaden ohne Überlappungen, keine Pixelbilder. QR-Code: " + o.url
+        : "Gravurvorlage Schild 100 × 150 mm, Maßstab 1:1 (Fuß vom Hersteller). Schwarz gefüllt = Flächengravur, Rot 0,01 mm = Liniengravur (kleine Schrift), Blau 0,01 mm = Außenkontur/Schnitt, Grau = Platzhalter (nicht gravieren). Untere 17 mm frei für den Fuß. QR-Code: " + o.url;
       return '<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="' + d.w + 'mm" height="' + d.h + 'mm" viewBox="0 0 ' + d.w + " " + d.h + '">\n' +
         "<title>" + esc(tit) + "</title>\n<desc>" + esc(beschr) + "</desc>\n" +
-        '<g id="gravur" fill="#000000" stroke="none" fill-rule="nonzero"><path d="' + svgD(d.gravur) + '"/></g>\n' +
+        '<g id="flaechengravur" fill="#000000" stroke="none" fill-rule="nonzero"><path d="' + svgD(opts.flaeche ? d.gravur.concat(d.linien) : d.gravur) + '"/></g>\n' +
+        (d.linien.length && !opts.flaeche ? '<g id="liniengravur" fill="none" stroke="#ff0000" stroke-width="0.01"><path d="' + svgD(d.linien) + '"/></g>\n' : "") +
         (d.sz.platzhalter.length && !opts.formulor ? '<g id="platzhalter-nicht-gravieren"><path d="' + svgD(d.sz.platzhalter) + '" fill="none" stroke="#9aa5b1" stroke-width="0.3" stroke-dasharray="1.2 0.8"/><path d="' + svgD(d.sz.platzhalterText) + '" fill="#9aa5b1"/></g>\n' : "") +
         (opts.kontur === false ? "" : '<g id="schnitt" fill="none" stroke="' + BLAU + '" stroke-width="0.01"><path d="' + svgD(d.schnitt) + '"/></g>\n') +
         "</svg>\n";
@@ -249,7 +291,7 @@
       '<ellipse cx="' + W / 2 + '" cy="' + (H + 1) + '" rx="46" ry="2.2" fill="#000" opacity=".18"/>' +
 '<g filter="url(#schatten)"><path d="' + svgD(sz.kontur) + '" fill="url(#hg)"/></g>' +
       '<g clip-path="url(#platte)"><rect x="0" y="0" width="' + W + '" height="' + H + '" fill="' + holz.maserung + '" filter="url(#mas)" opacity=".3"/>' +
-      '<g filter="url(#brand)" fill="' + holz.gravur + '" opacity=".92"><path d="' + svgD(sz.gravur) + '"/>' + "</g>" + 
+      '<g filter="url(#brand)" fill="' + holz.gravur + '" opacity=".92"><path d="' + svgD(sz.gravur.concat(sz.linien)) + '"/>' + "</g>" + 
       (sz.platzhalter.length ? '<g opacity=".45"><path d="' + svgD(sz.platzhalter) + '" fill="none" stroke="' + holz.gravur + '" stroke-width="0.35" stroke-dasharray="1.2 0.8"/><path d="' + svgD(sz.platzhalterText) + '" fill="' + holz.gravur + '"/></g>' : "") +
       "</g>" +
       '<path d="' + svgD(sz.kontur) + '" fill="none" stroke="' + holz.kante + '" stroke-width="0.6"/>' +
@@ -277,7 +319,7 @@
   function pdf(o, opts) {
     opts = opts || {};
     var d = datei(o, opts), k = 72 / 25.4, pw = zahl(d.w * k), ph = zahl(d.h * k);
-    var inhalt = "q\n" + zahl(k) + " 0 0 " + zahl(-k) + " 0 " + ph + " cm\n0 0 0 rg\n" + pdfOps(d.gravur) + "\nf\n";
+    var inhalt = "q\n" + zahl(k) + " 0 0 " + zahl(-k) + " 0 " + ph + " cm\n0 0 0 rg\n" + pdfOps(d.gravur) + "\nf\n" + (d.linien.length ? "1 0 0 RG 0.01 w\n" + pdfOps(d.linien) + "\nS\n" : "");
     if (d.sz.platzhalter.length && !opts.formulor) inhalt += "q 0.604 0.647 0.694 RG 0.604 0.647 0.694 rg 0.3 w [1.2 0.8] 0 d\n" + pdfOps(d.sz.platzhalter) + "\nS\n" + pdfOps(d.sz.platzhalterText) + "\nf Q\n";
     if (opts.kontur !== false) inhalt += "0 0 1 RG 0.01 w\n" + pdfOps(d.schnitt) + "\nS\n";
     inhalt += "Q\n";
@@ -286,7 +328,7 @@
     objs[2] = "<< /Type /Pages /Kids [3 0 R] /Count 1 >>";
     objs[3] = "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 " + pw + " " + ph + "] /TrimBox [0 0 " + pw + " " + ph + "] /Resources << >> /Contents 4 0 R >>";
     objs[4] = "<< /Length " + inhalt.length + " >>\nstream\n" + inhalt + "endstream";
-    objs[5] = "<< /Title " + utf16hex("Tattoofin QR-Aufsteller – " + (o.firma || "Studio")) + " /Subject " + utf16hex((opts.formulor ? "Formulor-Platte P1 181 × 181 mm mit Schild + Fuß" : "Gravurvorlage 100 × 150 mm") + ", 1:1. Schwarz = Flächengravur, Blau = Schnitt. QR: " + o.url) + " /Creator (Tattoofin) /Producer (Tattoofin) >>";
+    objs[5] = "<< /Title " + utf16hex("Tattoofin QR-Aufsteller – " + (o.firma || "Studio")) + " /Subject " + utf16hex((opts.formulor ? "Formulor-Platte P1 181 × 181 mm mit Schild + Fuß" : "Gravurvorlage 100 × 150 mm") + ", 1:1. Schwarz = Flächengravur, Rot = Liniengravur, Blau = Schnitt. QR: " + o.url) + " /Creator (Tattoofin) /Producer (Tattoofin) >>";
     var teile = [bytes("%PDF-1.4\n%\xE2\xE3\xCF\xD3\n")], pos = teile[0].length, xref = [];
     for (var i = 1; i <= 5; i++) { xref[i] = pos; var t = bytes(i + " 0 obj\n" + objs[i] + "\nendobj\n"); teile.push(t); pos += t.length; }
     var x = "xref\n0 6\n0000000000 65535 f \n";
@@ -316,7 +358,7 @@
   function png(o, dpi) {
     dpi = dpi || 600;
     var px = function (mm) { return Math.round(mm / 25.4 * dpi); };
-    return svgZuCanvas(svg(o, { kontur: false }), px(W), px(H), "#ffffff");
+    return svgZuCanvas(svg(o, { kontur: false, flaeche: true }), px(W), px(H), "#ffffff");
   }
   function vorschau(o, holz, breitePx) {
     var b = breitePx || 600, h = Math.round(b * 172 / 120);
