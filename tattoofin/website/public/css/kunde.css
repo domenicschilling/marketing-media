@@ -18,3 +18,6 @@ body.kunde{padding-bottom:30px}
 .sig{background:#fff;border:2px dashed var(--ink);border-radius:14px;touch-action:none;width:100%;height:190px;display:block}
 .foto-vorschau{max-width:100%;border-radius:12px;margin:8px 0;border:2px solid var(--ink)}
 .schritt-tag{display:inline-block;background:var(--ink);color:var(--yellow);font-weight:800;font-size:12px;border-radius:99px;padding:3px 10px;margin-bottom:8px}
+/* Studio-Logo im Kopf (im Admin hinterlegt). Dunkle Logos sitzen auf einer Kachel in der Studiofarbe. */
+.studio-logo{display:block;margin:0 auto 10px;max-width:min(260px,70vw);max-height:120px;width:auto;height:auto;border-radius:16px;border:2px solid var(--ink);background:var(--studio-farbe,#111);padding:4px;object-fit:contain}
+.studio-logo.hell{background:#fff}

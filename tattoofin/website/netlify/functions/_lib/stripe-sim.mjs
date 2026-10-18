@@ -62,6 +62,12 @@ export function createSim({ load, save, pageBase, webhook }) {
         if (method === "POST" && !id1) { const a = { id: rid("acct"), object: "account", ...p, charges_enabled: false, payouts_enabled: false, details_submitted: false }; db.accounts[a.id] = a; return done(a); }
         if (method === "POST" && act === "login_links") return done({ object: "login_link", url: `${pageBase}/express/${id1}` });
         if (!db.accounts[id1]) throw new SimFehler(404, "Konto nicht gefunden");
+        if (method === "POST" && !act && p.settings) {
+          const a = db.accounts[id1];
+          a.settings = a.settings || {};
+          for (const [k, v] of Object.entries(p.settings)) a.settings[k] = { ...(a.settings[k] || {}), ...v };
+          return done(a);
+        }
         return db.accounts[id1];
       }
       if (res1 === "account_links") return done({ object: "account_link", url: `${pageBase}/onboard/${p.account}?return=${encodeURIComponent(p.return_url)}` });

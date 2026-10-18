@@ -19,6 +19,9 @@
 //   POST  /api/admin/mail-nachsenden          Warteschlange sofort erneut versuchen
 //   POST  /api/admin/konten-abgleichen        Stripe-Status aller Studios mit Konto neu abfragen (ohne Webhook)
 //   GET   /api/admin/gesundheit               letztes Ergebnis des stündlichen Gesundheits-Checks
+//   GET   /api/admin/studio/:id/branding      hinterlegtes Branding (Logo/Icon/Farben/Kurzbezeichnung)
+//   POST  /api/admin/studio/:id/branding      { logo?, icon? (data:image/png|jpeg;base64), farbe?, akzent? (#RRGGBB), kurzbezeichnung?, logoHell?, stripe? }
+//                                             speichert fürs Studio (Zahlseite + Checkout) und setzt mit stripe:true auch das Branding des verbundenen Stripe-Kontos
 //   POST  /api/admin/checkout-test            unbezahlte Test-Sitzung (1 €) mit Tattoofin-Branding → { id, url }; { expire: "cs_…" } beendet sie
 import { CFG, netto, paketVon, provisionSatz } from "./_lib/config.mjs";
 import { json, fail, body, clean, now, handler } from "./_lib/util.mjs";
@@ -29,6 +32,7 @@ import { notify, monatsabrechnung, taeglicheJobs, kontoAbgleichen, provisionVerd
 import { mails } from "./_lib/emails.mjs";
 import { sendMail, warteschlangeStatus, warteschlangeAbarbeiten } from "./_lib/mail.mjs";
 import { randomBytes } from "node:crypto";
+import { brandingSetzen, brandingOeffentlich } from "./_lib/branding.mjs";
 
 export default handler(async (req) => {
   if (!isAdmin(req)) return fail("Nicht berechtigt", 401);
@@ -117,6 +121,15 @@ export default handler(async (req) => {
     if (aktion === "ansehen" && req.method === "POST") {
       await log("admin-ansicht-angefordert", { admin: adminName(req), studioId: s.id });
       return json({ url: `/api/admin-ansicht?t=${sign({ t: "ansicht", sid: s.id, admin: adminName(req), exp: Date.now() + 2 * 60000 })}` });
+    }
+    if (aktion === "branding" && req.method === "GET") return json({ branding: s.branding || null, oeffentlich: brandingOeffentlich(s) });
+    if (aktion === "branding" && req.method === "POST") {
+      const b = await body(req);
+      let r;
+      try { r = await brandingSetzen(s, b); }
+      finally { if (s.branding) await saveStudio(s); } // Bilder/Farben bleiben gespeichert, auch wenn Stripe einen Fehler meldet
+      await log("admin-branding", { admin: adminName(req), studioId: s.id, stripe: Boolean(b.stripe), felder: Object.keys(b).filter((k) => b[k] !== undefined && b[k] !== "") });
+      return json({ ...r, oeffentlich: brandingOeffentlich(s) });
     }
     if (aktion === "konto" && req.method === "POST") {
       if (!s.stripe?.accountId) return fail("Kein Stripe-Konto verbunden");

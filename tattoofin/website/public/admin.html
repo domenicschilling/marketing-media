@@ -90,6 +90,16 @@
       '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn dark small" id="d-save">Speichern</button><button class="btn gold small" id="d-live">Live schalten + E-Mail</button>' +
       '<button class="btn ghost small" id="d-konto">Stripe-Status jetzt abgleichen</button><button class="btn ghost small" id="d-link">Login-Link erzeugen</button><button class="btn ghost small" id="d-einr">Einrichtungslink erzeugen</button><button class="btn dark small" id="d-ansehen">Dashboard ansehen</button>' +
       '<div id="d-linkbox" style="margin-top:10px"></div>' +
+      '<details id="d-brand" style="margin-top:12px"' + (s.branding ? "" : " open") + '><summary><b>Logo/Farbe für Studio setzen</b>' + (s.branding ? " ✓ hinterlegt" + (s.branding.stripeAm ? ", bei Stripe gesetzt " + e(TF.datum(s.branding.stripeAm)) : "") : "") + '</summary>' +
+        '<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:8px 0" id="b-vorschau"></div>' +
+        '<div class="field"><label for="b-icon">Icon (quadratisch, mind. 128 px, PNG/JPG)</label><input type="file" id="b-icon" accept="image/png,image/jpeg"></div>' +
+        '<div class="field"><label for="b-logo">Logo (breit, PNG/JPG)</label><input type="file" id="b-logo" accept="image/png,image/jpeg"></div>' +
+        '<div style="display:flex;gap:14px;flex-wrap:wrap"><div class="field"><label for="b-farbe">Markenfarbe (Hintergrund)</label><input type="color" id="b-farbe" value="' + e((s.branding && s.branding.farbe) || "#111111") + '"></div>' +
+        '<div class="field"><label for="b-akzent">Akzentfarbe (Knöpfe)</label><input type="color" id="b-akzent" value="' + e((s.branding && s.branding.akzent) || "#b08d57") + '"></div>' +
+        '<div class="field"><label for="b-kurz">Kurzbezeichnung Abrechnung (5–22 Zeichen)</label><input type="text" id="b-kurz" maxlength="22" autocomplete="off" value="' + e((s.branding && s.branding.kurzbezeichnung) || String(s.firma || "").toUpperCase().slice(0, 22)) + '"></div></div>' +
+        '<label style="display:flex;gap:8px;align-items:center;margin:4px 0"><input type="checkbox" id="b-hell"' + (s.branding && s.branding.logoHell ? " checked" : "") + '> Logo ist für hellen Hintergrund gemacht</label>' +
+        '<label style="display:flex;gap:8px;align-items:center;margin:4px 0 10px"><input type="checkbox" id="b-stripe"' + (s.stripe && s.stripe.accountId ? " checked" : " disabled") + '> auch beim Stripe-Konto des Studios setzen (Kasse, Belege)</label>' +
+        '<button class="btn dark small" id="b-save">Branding speichern</button></details>' +
       (s.modell === "kauf" && s.stripe && s.stripe.paymentIntentId ? '<button class="btn ghost small" id="d-refund" style="color:var(--red)">Garantie erstatten</button>' : "") + "</div></div></div>" +
       "<h2 style='margin-top:20px;font-size:18px'>Fragebogen</h2><pre>" + e(JSON.stringify(s.fragebogen || {}, null, 2)) + "</pre>" +
       "<h2 style='font-size:18px'>Zahlungen (" + d.zahlungen.length + ")</h2><pre>" + e(d.zahlungen.map(function (z) { return TF.datum(z.bezahltAm || z.createdAt) + " · " + z.status + " · " + TF.euro(z.betragCent, true) + " · " + (z.kunde || "") + " · " + (z.zahlartText || "") + (z.gebuehrNettoCent ? " · Provision " + TF.euro(z.gebuehrNettoCent, true) : "") + (z.abgerechnet ? " [abgerechnet " + z.abgerechnet + "]" : ""); }).join("\n")) + "</pre>" +
@@ -111,6 +121,43 @@
     }
     $("d-link").onclick = async function () { try { linkZeigen(await api("studio/" + id + "/login-link", { body: {} }), "Login-Link"); } catch (err) { msg(err.message, "err"); } };
     $("d-einr").onclick = async function () { try { linkZeigen(await api("studio/" + id + "/einrichtungslink", { body: {} }), "Einrichtungslink (Stripe-Zahlungskonto)"); } catch (err) { msg(err.message, "err"); } };
+    // Branding: Bilder im Browser verkleinern (max. 1000 px, unter ~500 KB für Stripe), dann als data-URL senden
+    function bildLesen(input, quadrat) {
+      var f = input.files && input.files[0]; if (!f) return Promise.resolve(null);
+      return new Promise(function (ok, no) {
+        var r = new FileReader(); r.onerror = no;
+        r.onload = function () {
+          var img = new Image(); img.onerror = function () { no(new Error("Bild konnte nicht gelesen werden.")); };
+          img.onload = function () {
+            var max = 1000, sk = Math.min(1, max / Math.max(img.width, img.height));
+            if (sk === 1 && f.size < 480000 && !quadrat) return ok(r.result);
+            var w = Math.round(img.width * sk), h = Math.round(img.height * sk), c = document.createElement("canvas");
+            if (quadrat) { var m = Math.min(w, h, 512); c.width = c.height = m; var q = Math.min(img.width, img.height); c.getContext("2d").drawImage(img, (img.width - q) / 2, (img.height - q) / 2, q, q, 0, 0, m, m); }
+            else { c.width = w; c.height = h; c.getContext("2d").drawImage(img, 0, 0, w, h); }
+            var png = f.type === "image/png", url = c.toDataURL(png ? "image/png" : "image/jpeg", 0.9);
+            if (png && url.length > 650000) url = c.toDataURL("image/jpeg", 0.9);
+            ok(url);
+          };
+          img.src = r.result;
+        };
+        r.readAsDataURL(f);
+      });
+    }
+    function brandVorschau(o) {
+      if (!o) return;
+      $("b-vorschau").innerHTML = [o.iconUrl, o.logoUrl].filter(Boolean).map(function (u) { return '<img src="' + e(u) + '" alt="" style="max-height:80px;border-radius:10px;border:2px solid #222;background:' + e(o.logoHell ? "#fff" : (o.farbe || "#111")) + '">'; }).join("") +
+        (o.farbe ? '<span class="muted" style="font-size:13px">Farbe ' + e(o.farbe) + (o.akzent ? " · Akzent " + e(o.akzent) : "") + "</span>" : "");
+    }
+    api("studio/" + id + "/branding").then(function (r) { brandVorschau(r.oeffentlich); }).catch(function () {});
+    $("b-save").onclick = async function () {
+      var btn = $("b-save"); btn.disabled = true;
+      try {
+        var b = { icon: await bildLesen($("b-icon"), true), logo: await bildLesen($("b-logo"), false), farbe: $("b-farbe").value, akzent: $("b-akzent").value, kurzbezeichnung: $("b-kurz").value, logoHell: $("b-hell").checked, stripe: $("b-stripe").checked };
+        var r = await api("studio/" + id + "/branding", { body: b }); zeig(r); brandVorschau(r.oeffentlich);
+        msg("Branding gespeichert" + (b.stripe ? (r.stripe && r.stripe.fehler ? " – Stripe meldet: " + r.stripe.fehler : " und bei Stripe gesetzt.") : "."), r.stripe && r.stripe.fehler ? "err" : "ok");
+      } catch (err) { msg(err.message, "err"); }
+      btn.disabled = false;
+    };
     var rf = $("d-refund"); if (rf) rf.onclick = async function () { if (!confirm("Kaufpreis wirklich vollständig erstatten?")) return; try { zeig(await api("studio/" + id + "/erstattung", { body: {} })); msg("Erstattet."); start(); } catch (err) { msg(err.message, "err"); } };
     p.scrollIntoView({ behavior: "smooth" });
   }

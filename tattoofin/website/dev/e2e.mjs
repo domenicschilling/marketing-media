@@ -303,6 +303,33 @@ try {
   check(/localhost:12111\/pay\//.test(live.url || "") && !live.clientSecret && liveSession.data.modus !== "weiterleitung", "Live-Einstellung ohne payment_intent-Webhooks (TF_BEZAHLFELD aus): Kunde zahlt im Stripe-Checkout, Einrichtung bleibt eingebettet");
   delete process.env.TF_BEZAHLFELD;
 
+  // ---------------------------------------------------------------- H2: Branding je Studio (Logo/Farbe)
+  console.log("Branding je Studio: Admin setzt Logo/Farbe → Zahlseite, Checkout, Stripe-Konto");
+  {
+    const png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+    check((await admin(`studio/${provId}/branding`, { body: { farbe: "rot" } })).error?.includes("#RRGGBB"), "Branding: ungültige Farbe wird abgelehnt");
+    const br = await admin(`studio/${provId}/branding`, { body: { icon: png, logo: png, farbe: "#0E0B08", akzent: "#b08d57", kurzbezeichnung: "Ink Provision", stripe: true } });
+    check(br.branding?.farbe === "#0e0b08" && br.branding?.kurzbezeichnung === "INK PROVISION" && /^file_mock_/.test(br.stripe?.dateien?.icon || "") && /^file_mock_/.test(br.stripe?.dateien?.logo || ""), "Branding gespeichert + Icon/Logo bei Stripe hochgeladen");
+    check(br.stripe?.branding?.primary_color === "#0e0b08" && br.stripe?.branding?.secondary_color === "#b08d57" && br.stripe?.abrechnungstext === "INK PROVISION", "Stripe-Konto: Farben + Abrechnungstext gesetzt");
+    const st = await mock("state");
+    check(st.files.every((f) => f.account === det.studio.stripe.accountId), "Branding-Dateien liegen auf dem verbundenen Konto (Stripe-Account-Header)");
+    const nur = await admin(`studio/${provId}/branding`, { body: { akzent: "#c09a5f" } });
+    check(nur.branding?.logo && nur.branding?.farbe === "#0e0b08" && nur.branding?.akzent === "#c09a5f", "Branding: nur geänderte Felder werden überschrieben, Logo bleibt");
+    const bild = await fetch(`${BASE}/api/studio-bild?s=${slug}&art=logo`);
+    check(bild.status === 200 && bild.headers.get("content-type") === "image/png", "/api/studio-bild liefert das Logo");
+    check((await fetch(`${BASE}/api/studio-bild?s=gibt-es-nicht&art=logo`)).status === 404, "/api/studio-bild: unbekanntes Studio → 404");
+    const info = await (await fetch(`${BASE}/api/pay?s=${slug}`)).json();
+    check(/\/api\/studio-bild\?s=/.test(info.studio.branding?.logoUrl || "") && info.studio.branding.farbe === "#0e0b08", "Zahlseiten-API liefert Logo-URL + Farbe");
+    process.env.TF_BEZAHLFELD = "aus";
+    const mitLogo = await (await post("/api/pay", { s: slug, betrag: "200", kunde: "Logo", inhaltOk: true })).json();
+    delete process.env.TF_BEZAHLFELD;
+    const cs = (await mock("state")).sessions[mitLogo.url.split("/pay/")[1]];
+    check(cs?.branding_settings?.display_name === "Ink Provision" && /studio-bild/.test(cs.branding_settings.logo?.url || "") && cs.branding_settings.background_color === "#0e0b08" && cs.branding_settings.button_color === "#c09a5f", "Checkout zeigt Logo/Farben des Studios (branding_settings)");
+    await pK.goto(`${BASE}/zahlen/${slug}`);
+    await pK.waitForFunction(() => { const i = document.querySelector(".kunde-kopf .studio-logo"); return i && i.complete && i.naturalWidth > 0; });
+    check(true, "Zahlseite zeigt das Studio-Logo");
+  }
+
   // ---------------------------------------------------------------- I/J: Erstattung + Rückbuchung
   console.log("Erstattung (Portal) → Betrag vom Studio zurück, Provision anteilig abzüglich Stripe-Gebühr");
   det = await admin(`studio/${provId}`);

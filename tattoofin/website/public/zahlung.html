@@ -38,7 +38,7 @@
   try { d = await TF.api("/api/pay?z=" + encodeURIComponent(zid || "")); }
   catch (err) { $("schritt1").classList.add("hidden"); $("studio").textContent = "Zahlungslink"; B.meldung(err.message); return; }
   var z = d.zahlung, anz = z.art === "anzahlung";
-  $("studio").textContent = d.studio.firma;
+  $("studio").textContent = d.studio.firma; B.branding(d.studio);
   $("hallo").textContent = z.kunde ? "Hi " + z.kunde + ", dein Zahlungslink von" : "Dein Zahlungslink von";
   $("betrag").textContent = TF.euro(z.betragCent, true);
   $("sub").textContent = (z.beschreibung || "Tattoo-Projekt") + (z.sitzungen ? " · " + z.sitzungen : "") + (anz ? " · Anzahlung" : "");

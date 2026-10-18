@@ -22,5 +22,16 @@ window.TFBezahlen = (function () {
       await TFStripe.bezahlfeld($("bezahlfeld"), r, { name: info.kunde, email: info.email, fehler: function (t) { meldung(t); } });
     } catch (err) { meldung(err.message); btn.disabled = false; btn.textContent = "Weiter zum Bezahlen"; }
   }
-  return { meldung: meldung, betragCent: betragCent, inhaltText: inhaltText, starte: starte };
+  // Logo des Studios über dem Namen zeigen (falls im Admin hinterlegt); ohne Logo bleibt alles wie bisher
+  function branding(studio) {
+    var b = studio && studio.branding, kopf = document.querySelector(".kunde-kopf");
+    if (!b || !kopf || kopf.querySelector(".studio-logo")) return;
+    var src = b.logoUrl || b.iconUrl; if (!src) return;
+    var img = document.createElement("img");
+    img.className = "studio-logo" + (b.logoHell ? " hell" : ""); img.alt = "Logo " + (studio.firma || ""); img.src = src;
+    if (b.farbe) img.style.setProperty("--studio-farbe", b.farbe);
+    img.onerror = function () { img.remove(); };
+    kopf.insertBefore(img, kopf.firstChild);
+  }
+  return { meldung: meldung, betragCent: betragCent, inhaltText: inhaltText, starte: starte, branding: branding };
 })();

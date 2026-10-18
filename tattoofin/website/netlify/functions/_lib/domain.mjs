@@ -4,6 +4,7 @@ import { CFG, plattformgebuehr, netto, provisionSatz, BAUSTEINE_SIMULIERT, paket
 import { sendMail } from "./mail.mjs";
 import { mails } from "./emails.mjs";
 import { stripe, taxRateId, ensureCustomer, TATTOOFIN_BRANDING } from "./stripe.mjs";
+import { checkoutBranding } from "./branding.mjs";
 import { allStudios, zahlungenVon, saveZahlung, getAbrechnung, saveAbrechnung, saveStudio, getStudio, log, store } from "./store.mjs";
 import { monatsende, now, HttpError } from "./util.mjs";
 import { loginLink, zweckToken } from "./auth.mjs";
@@ -158,7 +159,7 @@ export async function checkoutFuer(studio, z) {
   const fee = plattformgebuehr(z.betragCent, studio);
   const anzahlung = istAnzahlung(z);
   const meta = { tattoofinZahlung: z.id, studioId: studio.id };
-  const session = await stripe("POST", "/checkout/sessions", {
+  const params = {
     mode: "payment", locale: "de", client_reference_id: z.id, payment_method_types: CFG.zahlarten,
     line_items: [{ quantity: 1, price_data: { currency: "eur", unit_amount: z.betragCent, product_data: { name: z.beschreibung || "Tattoo-Projekt", description: `${studio.firma}${anzahlung ? " · Anzahlung" : ""}` } } }],
     customer_email: z.email || undefined,
@@ -171,7 +172,17 @@ export async function checkoutFuer(studio, z) {
     metadata: meta,
     success_url: `${CFG.siteUrl}/bezahlt.html?z=${z.id}`,
     cancel_url: `${CFG.siteUrl}/zahlung.html?z=${z.id}&abbruch=1`,
-  }, plattform ? {} : { account: studio.stripe.accountId });
+  };
+  const opts = plattform ? {} : { account: studio.stripe.accountId };
+  // Logo/Farben des Studios im Checkout (falls im Admin hinterlegt). Lehnt Stripe das Branding ab,
+  // läuft die Zahlung ohne – die Kasse darf daran nie scheitern.
+  const branding = checkoutBranding(studio);
+  let session;
+  if (branding) {
+    try { session = await stripe("POST", "/checkout/sessions", { ...params, branding_settings: branding }, opts); }
+    catch (e) { console.error("Checkout-Branding abgelehnt:", e.message); }
+  }
+  if (!session) session = await stripe("POST", "/checkout/sessions", params, opts);
   z.checkoutSessionId = session.id;
   z.abwicklung = plattform ? "plattform" : "studio";
   z.gebuehrNettoCent = fee.nettoCent;

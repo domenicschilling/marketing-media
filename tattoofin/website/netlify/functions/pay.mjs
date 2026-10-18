@@ -12,8 +12,9 @@ import { json, fail, body, clean, id, now, handler, isEmail, parseBetrag, euro, 
 import { getStudio, studioBy, zahlungBy, saveZahlung } from "./_lib/store.mjs";
 import { checkoutFuer, bezahlfeldFuer, darfKassieren, anzahlungsbedingungen, istAnzahlung, bezahlfeld, zahlungBezahlt, plattformKassiert } from "./_lib/domain.mjs";
 import { stripe } from "./_lib/stripe.mjs";
+import { brandingOeffentlich } from "./_lib/branding.mjs";
 
-const studioInfo = (s) => ({ firma: s.firma, ort: s.ort, slug: s.slug, aktiv: Boolean(darfKassieren(s)), anzahlungsbedingungen: anzahlungsbedingungen(s) });
+const studioInfo = (s) => ({ firma: s.firma, ort: s.ort, slug: s.slug, aktiv: Boolean(darfKassieren(s)), anzahlungsbedingungen: anzahlungsbedingungen(s), branding: brandingOeffentlich(s) });
 const NICHT_BESTAETIGT = "Bitte bestätige die Anzahlungsbedingungen des Studios.";
 const INHALT_FEHLT = "Bitte bestätige kurz, dass Studio, Projekt und Betrag stimmen.";
 
