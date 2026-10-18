@@ -64,6 +64,8 @@ export const CFG = {
   gruenderMax: Number(env("GRUENDER_MAX", 10)),
   // Zahlarten im Checkout. Bewusst ohne SEPA-Lastschrift: Die kann der Kunde 8 Wochen lang ohne Grund zurückbuchen.
   zahlarten: env("ZAHLARTEN", "card,klarna").split(",").map((x) => x.trim()).filter(Boolean),
+  // QR-Aufsteller aus Holz: in diesen Paketen inklusive (später z. B. "profi,studio"); alle anderen können ihn anfragen
+  aufstellerPakete: env("AUFSTELLER_PAKETE", "profi").split(",").map((x) => x.trim()).filter(Boolean),
 };
 
 export const SECRETS = {

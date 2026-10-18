@@ -504,6 +504,48 @@ try {
     await h.waitForTimeout(hash === "werbung" ? 1500 : 300);
     await appShot(h, path.join(S, name + ".png"));
   }
+  // ---- QR-Aufsteller: Vorschau, Dateien (PDF/SVG/PNG), Logo, Anfordern, Hersteller-Seite ----
+  console.log("QR-Aufsteller");
+  await h.goto(`${BASE}/app.html#werbung`);
+  await h.waitForFunction(() => (document.getElementById("auf-img").getAttribute("src") || "").startsWith("data:image/png"), null, { timeout: 15000 });
+  check(true, "Aufsteller: Vorschau mit echtem QR-Code wird gezeichnet");
+  const nwZahlseite = `${BASE}/zahlen/${nwSlug}`;
+  const runter = async (sel) => { const [d] = await Promise.all([h.waitForEvent("download"), h.click(sel)]); return { name: d.suggestedFilename(), buf: fs.readFileSync(await d.path()) }; };
+  const pdfD = await runter('[data-auf="pdf"]');
+  check(pdfD.buf.subarray(0, 5).toString() === "%PDF-" && /\/MediaBox \[0 0 283\.465 425\.197\]/.test(pdfD.buf.toString("latin1")) && /%%EOF\s*$/.test(pdfD.buf.toString("latin1")), "Aufsteller: PDF 100 × 150 mm (" + pdfD.name + ")");
+  const svgD = await runter('[data-auf="svg"]');
+  const svgT = svgD.buf.toString();
+  check(/width="100mm" height="150mm"/.test(svgT) && svgT.includes(nwZahlseite) && /id="kontur-schnitt"/.test(svgT) && !/<text/.test(svgT), "Aufsteller: SVG 1:1, Schrift in Pfaden, QR-Link der Zahlseite");
+  const pngD = await runter('[data-auf="png"]');
+  check(pngD.buf.readUInt32BE(16) === 2362 && pngD.buf.readUInt32BE(20) === 3543, "Aufsteller: PNG mit 600 dpi (2362 × 3543 px)");
+  const qrD = await runter("#zs-png");
+  check(qrD.buf.subarray(1, 4).toString() === "PNG" && qrD.buf.readUInt32BE(16) >= 1000, "Digitaler QR-Code als PNG (" + qrD.buf.readUInt32BE(16) + " px)");
+  const inkl = await h.evaluate(() => fetch("/api/portal").then((r) => r.json()).then((d) => d.studio.aufsteller.inklusive));
+  check((await h.textContent("#auf-paket")).includes(inkl ? "In deinem Paket enthalten" : "Zum Selbermachen"), "Aufsteller: Hinweis passt zum Paket (" + (inkl ? "inklusive" : "Anfrage") + ")");
+  await h.click('label:has(> input[name="auf-var"][value="logo"])');
+  await h.setInputFiles("#auf-logo", path.join(root, "public/assets/wortmarke.png"));
+  await h.waitForFunction(() => /Logo gespeichert/.test(document.getElementById("toast").textContent), null, { timeout: 10000 });
+  const oeff = await (await fetch(`${BASE}/api/aufsteller?s=${nwSlug}`)).json();
+  check(oeff.variante === "logo" && /^data:image\/jpeg;base64,/.test(oeff.logo?.src || "") && oeff.zahlseite.endsWith("/zahlen/" + nwSlug), "Aufsteller: Logo hochgeladen (schwarz/weiß) und gespeichert");
+  const pdfL = await runter('[data-auf="pdf"]');
+  check(/\/Subtype \/Image/.test(pdfL.buf.toString("latin1")) && pdfL.name.includes("-logo"), "Aufsteller: PDF mit Logo");
+  await h.click('label:has(> input[name="auf-holz"][value="dunkel"])');
+  await h.waitForTimeout(600);
+  await appShot(h, path.join(S, "18b-qr-aufsteller.png"));
+  await h.click("#auf-anfordern");
+  await h.waitForSelector("#auf-paket .chip.ok");
+  const nwA = (await admin(`studio/${nwId}`)).studio?.aufsteller || (await studioPer("hallo@nadelwerk-test.de")).aufsteller;
+  check(nwA?.angefordertAm && nwA.holz === "dunkel" && nwA.variante === "logo", "Aufsteller: angefordert (Holz dunkel, mit Logo)");
+  const doppelt = await h.evaluate(() => fetch("/api/portal/aufsteller", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ anfordern: true }) }).then((r) => r.status));
+  check(doppelt === 409, "Aufsteller: nicht doppelt anforderbar");
+  const hH = await neueSeite();
+  await hH.goto(`${BASE}/aufsteller.html?s=${nwSlug}`);
+  await hH.waitForFunction(() => (document.getElementById("auf-img").getAttribute("src") || "").startsWith("data:image/png"), null, { timeout: 15000 });
+  check((await hH.textContent("#auf-titel")).includes("Nadelwerk Studio") && (await hH.textContent("#auf-qr")).includes("/zahlen/" + nwSlug), "Hersteller-Seite /aufsteller.html zeigt Vorlage + Dateien");
+  await hH.screenshot({ path: path.join(S, "18c-aufsteller-hersteller.png"), fullPage: true });
+  const aufFremd = (await fetch(`${BASE}/api/aufsteller?s=gibt-es-nicht`)).status;
+  check(aufFremd === 404, "Hersteller-Seite: unbekanntes Studio → 404");
+
   await h.goto(`${BASE}/`);
   await cookiesAblehnen(h);
   await h.evaluate(() => document.querySelectorAll(".reveal").forEach((el) => el.classList.add("in")));

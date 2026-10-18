@@ -41,6 +41,7 @@ Garantie-Erstattung · Abschluss abgebrochen · Rückbuchung (Belege) · Rückbu
 | Absicherung | Vor dem Bezahlen: Häkchen „Inhalt stimmt“ (+ Anzahlungsbedingungen), gespeichert mit Zeit/IP. Nach dem Termin: Leistungsbestätigung `/bestaetigung.html?t=…` (Name, Datum, Unterschrift, optional Foto), Nachweis-PDF `/nachweis.html?z=…`. Entwurf, Rechtsprüfung offen |
 | `/recht.html` | „Deine rechtliche Lage – einfach erklärt“ (Entwurf), Zustimmung mit Version/Zeitstempel (`CFG.rechtVersion`) |
 | Extras | Anfrage-Knopf im Dashboard (`EXTRAS` in `portal.mjs`), keine Abrechnung |
+| QR-Aufsteller | Werbung → „Dein QR-Aufsteller“: Gravurvorlage 100 × 150 mm mit echtem QR-Code der Zahlseite (`js/aufsteller.js`, Glyphen `assets/aufsteller-glyphen.json`), Vorschau Holz hell/dunkel, Studioname oder eigenes Logo (s/w), Download SVG/PDF/PNG 600 dpi + digitaler QR (PNG). Anfordern → Admin-Mail mit Lieferadresse und Link `/aufsteller.html?s=<studio>` (Dateien für den Hersteller, Daten über `/api/aufsteller`). Inklusive-Pakete: `AUFSTELLER_PAKETE` (Standard `profi`). Muster + KI-Bilder: `tattoofin/qr-aufsteller/` |
 | Vorschau | Eigene Site `tattoofin-vorschau.netlify.app` (Env nur `TF_VORSCHAU=1`, `SITE_URL`): eigener Speicher, keine Mails, kein Tracking, Stripe-Simulation (`_lib/stripe-sim.mjs`, `/api/sim/*`), Steuerseite `/vorschau.html`. Bauen + veröffentlichen: `node dev/vorschau-deploy.mjs --deploy` |
 | Tests | `NODE_PATH=… node dev/e2e.mjs [ordner] [handy-ordner]` – 100 Prüfungen inkl. Mandantentrennung, Zahlseite, Leistungsbestätigung, Handy-Screenshots |
 

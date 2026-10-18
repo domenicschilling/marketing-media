@@ -257,6 +257,95 @@
     $("zs-url").value = s.zahlseite; $("zs-open").href = s.zahlseite; qr($("zs-qr"), s.zahlseite, 220);
     $("mat").innerHTML = D.materialLinks.map(function (m) { return '<a target="_blank" rel="noopener" href="' + e(m.url) + '">' + e(m.titel) + "<small>Mit " + e(s.firma) + " und deinem QR-Code · Öffnen → Drucken/PDF</small></a>"; }).join("");
     if (window.TFKit) TFKit.zeige($("kit"), { firma: s.firma, ort: s.ort, zahlseite: s.zahlseite, onPost: function () { abhaken("werbung", true); } });
+    $("zs-png").onclick = function () { if (window.TFAufsteller) datei(TFAufsteller.qrBild(s.zahlseite, 1200), "tattoofin-qr-zahlseite.png"); };
+    aufsteller();
+  }
+
+  // ---------- QR-Aufsteller aus Holz ----------
+  // Vorschau + Dateien (SVG/PDF/PNG) entstehen im Browser aus dem echten Link der Zahlseite (js/aufsteller.js).
+  var AUF = { logo: null, geladen: false, nr: 0 };
+  function datei(inhalt, name) {
+    var fertig = function (blob) { var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000); };
+    if (inhalt instanceof HTMLCanvasElement) inhalt.toBlob(fertig, "image/png"); else fertig(inhalt);
+  }
+  function aufWahl() {
+    var h = document.querySelector('input[name="auf-holz"]:checked'), v = document.querySelector('input[name="auf-var"]:checked');
+    return { holz: h ? h.value : "hell", variante: v ? v.value : "name" };
+  }
+  function aufOpts() { var s = D.studio, w = aufWahl(); return { url: s.zahlseite, firma: s.firma, variante: w.variante === "logo" && AUF.logo ? "logo" : w.variante, logo: AUF.logo }; }
+  async function aufZeichnen() {
+    var nr = ++AUF.nr, w = aufWahl();
+    $("auf-logo-box").classList.toggle("hidden", w.variante !== "logo");
+    $("auf-holz-hinweis").textContent = w.holz === "dunkel"
+      ? "Dunkles Holz (Walnuss) sieht edel aus, der QR-Code hat aber weniger Kontrast. Im Test ließ er sich bis etwa 80 cm sicher scannen."
+      : "Helles Holz (Birke, Buche, Ahorn) hat den besten Kontrast. Im Test ließ sich der QR-Code auch aus über 1 m scannen.";
+    try {
+      var cv = await TFAufsteller.vorschau(aufOpts(), w.holz, 720);
+      if (nr !== AUF.nr) return;
+      $("auf-img").src = cv.toDataURL("image/png"); $("auf-laden").classList.add("hidden");
+    } catch (err) { $("auf-laden").textContent = "Vorschau nicht möglich: " + err.message; }
+  }
+  async function aufSpeichern(extra) {
+    var w = aufWahl(), b = { holz: w.holz, variante: w.variante };
+    Object.assign(b, extra || {});
+    D.studio = await TF.api("/api/portal/aufsteller", { body: b });
+    aufPaket();
+  }
+  function aufPaket() {
+    var a = D.studio.aufsteller || {}, box = $("auf-paket");
+    var knopf = a.angefordertAm ? '<span class="chip ok">✓ Angefordert am ' + dat(a.angefordertAm) + " – wir melden uns</span>"
+      : '<button class="btn gold small" id="auf-anfordern">' + (a.inklusive ? "Aufsteller kostenlos anfordern" : "Fertigen Aufsteller anfragen") + "</button>";
+    box.innerHTML = a.inklusive
+      ? "<b>✓ In deinem Paket enthalten.</b> Wir lassen deinen Aufsteller fertigen und schicken ihn an deine Studio-Adresse. Wähle unten Holz und Variante, dann anfordern.<div class=\"row-a\">" + knopf + "</div>"
+      : "<b>Zum Selbermachen oder bei uns anfragen.</b> Die Dateien unten kannst du kostenlos bei jedem Laser-Dienst gravieren lassen. Oder du fragst einen fertigen Aufsteller bei uns an.<div class=\"row-a\">" + knopf + "</div>";
+    var k = $("auf-anfordern");
+    if (k) k.onclick = async function () {
+      var w = aufWahl();
+      if (w.variante === "logo" && !AUF.logo) return toast("Bitte lade zuerst dein Logo hoch oder wähle „Mit Studioname“.", true);
+      if (!confirm("Aufsteller jetzt anfordern? Holz " + (w.holz === "dunkel" ? "dunkel" : "hell") + ", " + (w.variante === "logo" ? "mit deinem Logo" : "mit Studioname") + ". Lieferung an deine Studio-Adresse.")) return;
+      k.disabled = true;
+      try { await aufSpeichern({ anfordern: true }); toast("Danke! Wir kümmern uns um deinen Aufsteller."); }
+      catch (err) { k.disabled = false; toast(err.message, true); }
+    };
+  }
+  async function aufsteller() {
+    if (!window.TFAufsteller) return;
+    var s = D.studio, a = s.aufsteller || {};
+    aufPaket();
+    if (!AUF.geladen) {
+      AUF.geladen = true;
+      try {
+        await TFAufsteller.laden();
+        if (a.hatLogo) { var p = await (await fetch("/api/aufsteller?s=" + encodeURIComponent(s.zahlseite.split("/").pop()))).json(); if (p.logo) AUF.logo = p.logo; }
+      } catch (err) { $("auf-laden").textContent = "Vorschau konnte nicht geladen werden."; AUF.geladen = false; return; }
+      document.querySelectorAll('input[name="auf-holz"]').forEach(function (r) { r.checked = r.value === (a.holz || "hell"); r.onchange = function () { aufZeichnen(); aufSpeichern().catch(function () {}); }; });
+      document.querySelectorAll('input[name="auf-var"]').forEach(function (r) {
+        r.checked = r.value === (a.variante || "name");
+        r.onchange = function () { aufZeichnen(); if (r.value === "name" || AUF.logo) aufSpeichern().catch(function () {}); };
+      });
+      $("auf-logo").onchange = async function () {
+        var f = this.files && this.files[0]; if (!f) return;
+        if (f.size > 8e6) return toast("Die Datei ist zu groß (max. 8 MB).", true);
+        try {
+          AUF.logo = await TFAufsteller.logoVorbereiten(f);
+          aufZeichnen();
+          await aufSpeichern({ variante: "logo", logo: AUF.logo.src, logoW: AUF.logo.w, logoH: AUF.logo.h });
+          toast("Logo gespeichert.");
+        } catch (err) { toast(err.message, true); }
+      };
+      document.querySelectorAll("[data-auf]").forEach(function (b) {
+        b.onclick = async function () {
+          var o = aufOpts(), art = b.dataset.auf, name = "tattoofin-qr-aufsteller-" + (s.zahlseite.split("/").pop() || "studio") + (o.variante === "logo" ? "-logo" : "");
+          if (aufWahl().variante === "logo" && !AUF.logo) return toast("Bitte lade zuerst dein Logo hoch – oder wähle „Mit Studioname“.", true);
+          try {
+            if (art === "svg") datei(new Blob([TFAufsteller.svg(o)], { type: "image/svg+xml" }), name + ".svg");
+            else if (art === "pdf") datei(new Blob([TFAufsteller.pdf(o)], { type: "application/pdf" }), name + ".pdf");
+            else datei(await TFAufsteller.png(o), name + "-600dpi.png");
+          } catch (err) { toast(err.message, true); }
+        };
+      });
+    }
+    aufZeichnen();
   }
 
   // ---------- Mehr ----------

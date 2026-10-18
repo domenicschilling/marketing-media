@@ -15,6 +15,7 @@
 //   GET    /api/portal/nachweis/:id        Alle Nachweise zu einer Zahlung (für PDF/Druck)
 //   POST   /api/portal/recht               { version } „Deine rechtliche Lage“ gelesen (Zeitstempel + Version)
 //   POST   /api/portal/extra               { extra, nachricht } Interesse an einem Extra (Anfrage, keine Abrechnung)
+//   POST   /api/portal/aufsteller          { holz, variante, logo?, logoW, logoH, anfordern? } QR-Aufsteller speichern/anfordern
 //   POST   /api/portal/checkliste          { punkt, erledigt } Einrichtungs-Checkliste (manuelle Punkte)
 //   POST   /api/portal/abmelden            Auf allen Geräten abmelden (Sitzungsversion hochzählen)
 // Mandantentrennung: Jede Abfrage nutzt ausschließlich das Studio aus dem Session-Cookie; Zahlungen werden
@@ -63,6 +64,7 @@ const oeffentlich = (s) => ({
   checkliste: s.checkliste || {}, extrasAngefragt: Object.keys(s.extras || {}), eingebettet: eingebettet(), simulation: BAUSTEINE_SIMULIERT,
   anzahlungsbedingungen: anzahlungsbedingungen(s),
   kannKassieren: Boolean(darfKassieren(s)), zahlseite: zahlseite(s), connectUrl: connectUrl(s),
+  aufsteller: { inklusive: CFG.aufstellerPakete.includes(paketVon(s).id), holz: s.aufsteller?.holz || "hell", variante: s.aufsteller?.variante || "name", hatLogo: Boolean(s.aufsteller?.hatLogo), angefordertAm: s.aufsteller?.angefordertAm || null },
 });
 
 export default handler(async (req) => {
@@ -272,6 +274,36 @@ export default handler(async (req) => {
     await saveStudio(s);
     await notifyAdmin(`Extra angefragt: ${ex.titel}`, s, { Nachricht: clean(b.nachricht, 500) || "–", Telefon: s.telefon });
     return json({ ok: true });
+  }
+
+  // ---- QR-Aufsteller aus Holz: Auswahl speichern (Holzton, Variante, Logo) und optional anfordern ----
+  // Logo: schwarz/weiß-JPEG aus dem Browser (für einfarbige Gravur), getrennt gespeichert unter aufsteller-logo/<studioId>
+  if (bereich === "aufsteller" && req.method === "POST") {
+    const b = await body(req);
+    const holz = ["hell", "dunkel"].includes(b.holz) ? b.holz : "hell";
+    const variante = ["name", "logo"].includes(b.variante) ? b.variante : "name";
+    const a = { ...(s.aufsteller || {}), holz, variante, am: now() };
+    if (b.logo === null) { await store.del("aufsteller-logo/" + s.id); a.hatLogo = false; }
+    else if (typeof b.logo === "string") {
+      if (!/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(b.logo) || b.logo.length > 700000) return fail("Logo bitte als Bild unter 500 KB hochladen.");
+      await store.set("aufsteller-logo/" + s.id, { src: b.logo, w: Math.round(Number(b.logoW) || 0), h: Math.round(Number(b.logoH) || 0), am: now() });
+      a.hatLogo = true;
+    }
+    if (variante === "logo" && !a.hatLogo) return fail("Bitte lade zuerst dein Logo hoch oder wähle „Mit Studioname“.");
+    if (b.anfordern) {
+      if (a.angefordertAm) return fail("Dein Aufsteller ist schon angefordert. Wir melden uns bei dir.", 409);
+      a.angefordertAm = now();
+      const inklusive = CFG.aufstellerPakete.includes(paketVon(s).id);
+      await notifyAdmin(`QR-Aufsteller ${inklusive ? "bestellen (im Paket enthalten)" : "angefragt (nicht im Paket)"}`, s, {
+        Paket: paketVon(s).name, Holz: holz === "dunkel" ? "dunkel (Walnuss)" : "hell (Birke/Buche)", Variante: variante === "logo" ? "mit Studio-Logo" : "mit Studioname",
+        Lieferadresse: [s.firma, s.strasse, [s.plz, s.ort].filter(Boolean).join(" ")].filter(Boolean).join(", "),
+        Dateien: `${CFG.siteUrl}/aufsteller.html?s=${encodeURIComponent(s.slug)}`, Telefon: s.telefon,
+      });
+      await log("aufsteller-angefordert", { studioId: s.id, inklusive, holz, variante });
+    }
+    s.aufsteller = a;
+    await saveStudio(s);
+    return json(oeffentlich(s));
   }
 
   if (bereich === "checkliste" && req.method === "POST") {

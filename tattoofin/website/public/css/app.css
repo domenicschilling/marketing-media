@@ -159,3 +159,11 @@ body.app{background-color:var(--cream);background-image:none;padding-bottom:calc
 .tabbar .plus-tab span{width:54px;height:54px;border-radius:50%;background:var(--yellow);border:var(--bw) solid var(--ink);box-shadow:3px 3px 0 var(--ink);display:grid;place-items:center;font:400 32px/1 var(--head);color:var(--ink);margin-top:-26px}
 @media (min-width:900px){.app-main{padding-top:28px}}
 @media print{.app-top,.tabbar,.sim-hinweis,.toast{display:none!important}}
+/* QR-Aufsteller */
+.auf-paket{background:var(--yellow-soft,#fff4d6);border-radius:12px;padding:12px;margin:0 0 14px;font-size:14.5px;line-height:1.45}
+.auf-paket .row-a{margin-top:10px}
+.auf-vorschau{background:#f3efe8;border-radius:14px;padding:14px;margin:0 0 8px;text-align:center}
+.auf-vorschau img{display:block;width:100%;max-width:340px;height:auto;margin:0 auto}
+.auf-vorschau img:not([src]){display:none}
+.auf-h3{font-size:16px;margin:16px 0 8px}
+.fussnote{font-size:12px!important;margin-top:10px}

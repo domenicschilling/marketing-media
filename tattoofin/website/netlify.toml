@@ -46,6 +46,10 @@
     Content-Type = "application/manifest+json"
     Cache-Control = "public, max-age=3600"
 [[headers]]
+  for = "/aufsteller.html"
+  [headers.values]
+    X-Robots-Tag = "noindex"
+[[headers]]
   for = "/admin.html"
   [headers.values]
     X-Robots-Tag = "noindex"
