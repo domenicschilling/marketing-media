@@ -31,17 +31,23 @@ const errors = [];
 page.on("pageerror", (e) => errors.push(e.message));
 page.on("console", (m) => { if (m.type() === "error" && !/404|Failed to load resource/.test(m.text())) errors.push(m.text()); });
 
-async function signup({ modell, email, firma, code, zahlart }) {
-  await page.goto(`${BASE}/start.html?modell=${modell}`);
+// Cookie-Fenster (Meta-Pixel) schließen, damit es keine Knöpfe verdeckt
+async function cookiesAblehnen(p = page) {
+  const nein = await p.waitForSelector(".tf-cc .nein", { timeout: 1500 }).catch(() => null);
+  if (nein) await nein.click();
+}
+
+async function signup({ modell, email, firma, code, zahlart, geschenk }) {
+  await page.goto(`${BASE}/start.html?modell=${modell}${geschenk ? "&geschenk=" + geschenk : ""}`);
+  await cookiesAblehnen();
   if (code) await page.fill("#aktionscode", code);
   if (zahlart) await page.check(`input[name=zahlart][value=${zahlart}]`, { force: true });
   await page.click("section[data-step='1'] [data-next]");
   for (const [k, v] of Object.entries({ firma, inhaber: "Alex Muster", strasse: "Musterstr. 1", plz: "96047", ort: "Bamberg", email, telefon: "0151 1234567", studioTelefon: "0951 123456" })) await page.fill("#" + k, v);
   await page.click("section[data-step='2'] [data-next]");
-  await page.check("input[name=ak_vertrag]"); await page.check("input[name=ak_avv]"); await page.check("input[name=ak_unternehmer]");
+  await page.check("input[name=ak_alle]");
   await page.fill("#unterzeichner", "Alex Muster");
-  await page.click("section[data-step='3'] [data-next]");
-  await page.screenshot({ path: path.join(shots, `start-${modell}-schritt4.png`), fullPage: true });
+  await page.screenshot({ path: path.join(shots, `start-${modell}-schritt3.png`), fullPage: true });
   await page.click("#submit");
 }
 
