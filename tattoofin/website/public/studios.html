@@ -319,6 +319,7 @@ body.tf-cc-offen .leiste{display:none}
       <div class="held-cta">
         <a class="knopf knopf-gross" href="#anfrage" data-cta="held">Kostenlos einrichten lassen</a>
         <a class="wa-link" href="https://wa.me/491624502375?text=Hi%2C%20ich%20habe%20eure%20Anzeige%20gesehen%20und%20eine%20Frage%20zu%20Tattoofin%20f%C3%BCr%20mein%20Studio." target="_blank" rel="noopener" data-lp="whatsapp"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-wa"/></svg>Erst fragen? WhatsApp</a>
+        <a class="wa-link" href="/video" data-v="hero" style="text-decoration:underline">▶ Video ansehen (2 Min.)</a>
       </div>
       <dl class="fakten">
         <div><dt>Einrichtung</dt><dd>0&nbsp;<span class="eur">€</span></dd></div>
@@ -343,6 +344,43 @@ body.tf-cc-offen .leiste{display:none}
 </section>
 
 <!-- 2 · Weniger No-Shows: Anzahlung vorab per Link -->
+<section class="tfv" id="ablauf-video" aria-labelledby="h-video"><style>
+.tfv{background:#1f3d5c;color:#fff;padding:56px 16px;background-image:radial-gradient(rgba(251,179,22,.13) 1.3px,transparent 1.6px);background-size:18px 18px}
+.tfv-in{max-width:980px;margin:0 auto;display:grid;gap:26px;align-items:center;grid-template-columns:1fr}
+.tfv h2{color:#fff;font-size:clamp(30px,6vw,46px);line-height:1.04;margin:0 0 12px}
+.tfv h2 span{color:#fbb316}
+.tfv p{margin:0 0 12px;font-size:17px;line-height:1.5;color:rgba(255,255,255,.92)}
+.tfv-box{position:relative;width:min(100%,330px);aspect-ratio:9/16;margin:0 auto;border:3px solid #fff;border-radius:22px;overflow:hidden;box-shadow:6px 6px 0 #fbb316;background:#000}
+.tfv-box video,.tfv-play img{display:block;width:100%;height:100%;object-fit:cover}
+.tfv-play{all:unset;cursor:pointer;display:block;width:100%;height:100%;position:relative}
+.tfv-play:focus-visible{outline:3px solid #fbb316;outline-offset:-6px}
+.tfv-btn{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:8px;background:#fbb316;color:#1f3d5c;border:3px solid #1f3d5c;border-radius:99px;padding:12px 20px;font:800 17px/1 system-ui,sans-serif;box-shadow:4px 4px 0 #1f3d5c;white-space:nowrap}
+.tfv-links{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin-top:6px}
+.tfv-links a{color:#fbb316;font-weight:700}
+.tfv-fn{font-size:13px!important;color:rgba(255,255,255,.72)!important;margin-top:14px!important}
+@media(min-width:760px){.tfv-in{grid-template-columns:1.2fr 1fr}.tfv{padding:80px 24px}}
+</style><div class="tfv-in">
+  <div>
+    <h2 id="h-video">So läuft Tattoofin – <span>in 2 Minuten</span></h2>
+    <p>Zahlungslink per WhatsApp, Anzahlung vorab gegen No-Shows und Raten* für deine Kunden: der ganze Ablauf im Video, mit Untertiteln – auch ohne Ton verständlich.</p>
+    <div class="tfv-links"><a href="/video" data-v="seite">Video auf eigener Seite öffnen →</a></div>
+    <p class="tfv-fn">*Ratenzahlung über externe Anbieter wie Klarna, nach deren Prüfung. Tattoofin ist kein Kreditgeber. Achtung! Kreditaufnahme kostet Geld.</p>
+  </div>
+  <div class="tfv-box" id="tfv-box"><button class="tfv-play" type="button" id="tfv-play" aria-label="Video abspielen: So läuft Tattoofin, 2 Minuten, mit Untertiteln"><img src="/media/tattoofin-ablauf-poster-480.jpg" loading="lazy" decoding="async" width="480" height="853" alt=""><span class="tfv-btn">▶ Video ansehen (2 Min.)</span></button></div>
+</div><script>
+(function () {
+  var b = document.getElementById("tfv-play"); if (!b) return;
+  b.addEventListener("click", function () {
+    var v = document.createElement("video");
+    v.src = "/media/tattoofin-ablauf.mp4"; v.controls = true; v.playsInline = true; v.setAttribute("playsinline", ""); v.preload = "auto"; v.poster = "/media/tattoofin-ablauf-poster-480.jpg";
+    v.setAttribute("aria-label", "Video: So läuft Tattoofin (Untertitel im Bild)");
+    var box = document.getElementById("tfv-box"); box.innerHTML = ""; box.appendChild(v);
+    try { if (window.umami) window.umami.track("video-play", { seite: location.pathname }); } catch (x) {}
+    var p = v.play(); if (p && p.catch) p.catch(function () {});
+  });
+})();
+</script></section>
+
 <section class="anzahlung" id="no-shows" aria-labelledby="h-anz">
   <div class="rahmen anz-raster">
     <div class="anz-text">
@@ -418,13 +456,13 @@ body.tf-cc-offen .leiste{display:none}
     <h2 id="h-pakete">Drei Pakete. Du wählst.</h2>
     <p class="unter">Gleiche Einrichtung, gleiche Betreuung. Je mehr über Tattoofin läuft, desto eher lohnt sich ein Fixpreis.</p>
     <div class="pk-raster">
-      <article class="pk"><h3>Risikofrei</h3><p class="pk-preis">10&nbsp;%<small> auf alle Zahlungen</small></p><p>Inkl. der Zahlungsgebühr. Keine Fixkosten, monatlich kündbar. Digitaler QR-Code inklusive.</p><p class="pk-bsp">Kunde zahlt 1.000&nbsp;€, du bekommst 900&nbsp;€.</p><a class="knopf knopf-klein" href="/start?paket=risikofrei" data-lp="start">Risikofrei starten</a></article>
-      <article class="pk pk-tipp"><span class="pk-badge">⭐ Empfohlen</span><h3>Monatlich</h3><p class="pk-preis">49&nbsp;<span class="eur">€</span><small> netto im Monat</small></p><p>Danach nur die Zahlungsgebühren von Stripe (ca. 1,5–3&nbsp;% je nach Zahlart, direkt an Stripe). 0&nbsp;% Tattoofin-Provision. Inkl. QR-Aufsteller aus Holz und digitalem QR-Code. Monatlich kündbar.</p><p class="pk-bsp">Lohnt sich ab ca. 900&nbsp;€ Zahlungen im Monat.</p><a class="knopf knopf-klein" href="/start?paket=monatlich" data-lp="start">Monatlich wählen</a></article>
-      <article class="pk"><h3>Einmalzahlung</h3><p class="pk-preis">999&nbsp;<span class="eur">€</span><small> netto einmalig</small></p><p>Einmal zahlen, keine Tattoofin-Gebühr mehr, nur die Zahlungsgebühr an Stripe. Inkl. QR-Aufsteller aus Holz und digitalem QR-Code. 30 Tage Geld-zurück-Garantie.</p><p class="pk-bsp">Günstiger als Monatlich nach ca. 20 Monaten.</p><a class="knopf knopf-klein" href="/start?paket=einmal" data-lp="start">Einmalzahlung wählen</a></article>
+      <article class="pk"><h3>Risikofrei</h3><p class="pk-preis">10&nbsp;%<small> auf alle Zahlungen</small></p><p>Inkl. der Zahlungsgebühr. Keine Fixkosten, monatlich kündbar. Digitaler QR-Code inklusive, QR-Aufsteller aus Holz für 29&nbsp;€ netto dazu bestellbar.</p><p class="pk-bsp">Kunde zahlt 1.000&nbsp;€, du bekommst 900&nbsp;€.</p><a class="knopf knopf-klein" href="/start?paket=risikofrei" data-lp="start">Risikofrei starten</a></article>
+      <article class="pk pk-tipp"><span class="pk-badge">⭐ Empfohlen</span><h3>Monatlich</h3><p class="pk-preis">49&nbsp;<span class="eur">€</span><small> netto im Monat</small></p><p>Danach nur die Zahlungsgebühren von Stripe (ca. 1,5–3&nbsp;% je nach Zahlart, direkt an Stripe). 0&nbsp;% Tattoofin-Provision. QR-Aufsteller aus Holz im Wert von 29&nbsp;€ inklusive, dazu der digitale QR-Code. Monatlich kündbar.</p><p class="pk-bsp">Lohnt sich ab ca. 900&nbsp;€ Zahlungen im Monat.</p><a class="knopf knopf-klein" href="/start?paket=monatlich" data-lp="start">Monatlich wählen</a></article>
+      <article class="pk"><h3>Einmalzahlung</h3><p class="pk-preis">999&nbsp;<span class="eur">€</span><small> netto einmalig</small></p><p>Einmal zahlen, keine Tattoofin-Gebühr mehr, nur die Zahlungsgebühr an Stripe. QR-Aufsteller aus Holz im Wert von 29&nbsp;€ inklusive, dazu der digitale QR-Code. 30 Tage Geld-zurück-Garantie.</p><p class="pk-bsp">Günstiger als Monatlich nach ca. 20 Monaten.</p><a class="knopf knopf-klein" href="/start?paket=einmal" data-lp="start">Einmalzahlung wählen</a></article>
     </div>
     <div class="pk-aufsteller">
       <img src="/assets/lp/aufsteller-theke-480.webp" width="480" height="596" loading="lazy" alt="KI-Visualisierung: QR-Aufsteller aus Holz mit Studioname und QR-Code auf einer Studio-Theke">
-      <div><h3>Der QR-Aufsteller aus Holz</h3><p>Dein Studioname und der QR-Code deiner Zahlseite, eingraviert. Kunde scannt an der Theke und zahlt Tattoo oder Anzahlung, auch in Raten.* Bei Monatlich und Einmalzahlung inklusive.</p><p class="klein">Bild: KI-Visualisierung. Rechnung zu „lohnt sich ab“: 10&nbsp;% von 900&nbsp;€ = 90&nbsp;€ (USt. schon drin); Monatlich 58,31&nbsp;€ (49&nbsp;€ + USt.) + ca. 3,3&nbsp;% Zahlungsgebühr (30&nbsp;€) = ca. 88&nbsp;€. Mit Vorsteuerabzug eher ab ca. 950&nbsp;€. 999&nbsp;€ ÷ 49&nbsp;€ ≈ 20 Monate. Keine Garantie.</p></div>
+      <div><h3>Der QR-Aufsteller aus Holz</h3><p>Dein Studioname und der QR-Code deiner Zahlseite, eingraviert. Kunde scannt an der Theke und zahlt Tattoo oder Anzahlung, auch in Raten.* Bei Monatlich und Einmalzahlung im Wert von 29&nbsp;€ inklusive, bei Risikofrei für 29&nbsp;€ netto (zzgl. USt.) bestellbar.</p><p class="klein">Bild: KI-Visualisierung. Rechnung zu „lohnt sich ab“: 10&nbsp;% von 900&nbsp;€ = 90&nbsp;€ (USt. schon drin); Monatlich 58,31&nbsp;€ (49&nbsp;€ + USt.) + ca. 3,3&nbsp;% Zahlungsgebühr (30&nbsp;€) = ca. 88&nbsp;€. Mit Vorsteuerabzug eher ab ca. 950&nbsp;€. 999&nbsp;€ ÷ 49&nbsp;€ ≈ 20 Monate. Keine Garantie.</p></div>
     </div>
   </div>
 </section>

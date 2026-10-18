@@ -15,6 +15,10 @@
 //   POST  /api/admin/studio/:id/einrichtungslink  signierter Stripe-Einrichtungslink (24 h) zum Weitergeben
 //   POST  /api/admin/studio/:id/ansehen       Link für „Dashboard ansehen“ (nur lesend, protokolliert)
 //   Anmeldung: ADMIN_TOKEN (Bearer) oder Admin-Sitzung per E-Mail-Link (/api/admin-login)
+//   GET   /api/admin/mail-status              Warteschlange (hängende Mails), Versandwege, letzte Fehler
+//   POST  /api/admin/mail-nachsenden          Warteschlange sofort erneut versuchen
+//   POST  /api/admin/konten-abgleichen        Stripe-Status aller Studios mit Konto neu abfragen (ohne Webhook)
+//   GET   /api/admin/gesundheit               letztes Ergebnis des stündlichen Gesundheits-Checks
 //   POST  /api/admin/checkout-test            unbezahlte Test-Sitzung (1 €) mit Tattoofin-Branding → { id, url }; { expire: "cs_…" } beendet sie
 import { CFG, netto, paketVon, provisionSatz } from "./_lib/config.mjs";
 import { json, fail, body, clean, now, handler } from "./_lib/util.mjs";
@@ -23,7 +27,7 @@ import { isAdmin, loginLink, sign, adminName } from "./_lib/auth.mjs";
 import { stripe, TATTOOFIN_BRANDING } from "./_lib/stripe.mjs";
 import { notify, monatsabrechnung, taeglicheJobs, kontoAbgleichen, provisionVerdient, STATUS, aufstellerUrl, connectUrl } from "./_lib/domain.mjs";
 import { mails } from "./_lib/emails.mjs";
-import { sendMail } from "./_lib/mail.mjs";
+import { sendMail, warteschlangeStatus, warteschlangeAbarbeiten } from "./_lib/mail.mjs";
 import { randomBytes } from "node:crypto";
 
 export default handler(async (req) => {
@@ -106,7 +110,7 @@ export default handler(async (req) => {
       await notify(s, mails.garantieErstattung(s, { betragCent: r.amount }));
       return json(s);
     }
-    if (aktion === "login-link" && req.method === "POST") { await log("admin-link", { admin: adminName(req), studioId: s.id, art: "login" }); return json({ url: loginLink(s.id, 60), gueltig: "60 Minuten" }); }
+    if (aktion === "login-link" && req.method === "POST") { await log("admin-link", { admin: adminName(req), studioId: s.id, art: "login" }); return json({ url: loginLink(s.id), gueltig: "24 Stunden, einmal verwendbar" }); }
     // Signierter Einrichtungslink (24 h, Zweck „connect“) zum Weitergeben per WhatsApp, z. B. wenn Mails nicht ankommen
     if (aktion === "einrichtungslink" && req.method === "POST") { await log("admin-link", { admin: adminName(req), studioId: s.id, art: "einrichtung" }); return json({ url: connectUrl(s), gueltig: "24 Stunden" }); }
     // „Dashboard ansehen“: kurzlebiger Link (2 Min.) → /api/admin-ansicht setzt eine nur lesende Studio-Sitzung
@@ -116,8 +120,10 @@ export default handler(async (req) => {
     }
     if (aktion === "konto" && req.method === "POST") {
       if (!s.stripe?.accountId) return fail("Kein Stripe-Konto verbunden");
+      const vorher = { freigegeben: Boolean(s.stripe.chargesEnabled), auszahlungen: Boolean(s.stripe.payoutsEnabled), angaben: Boolean(s.stripe.detailsSubmitted) };
       await kontoAbgleichen(s, await stripe("GET", "/accounts/" + s.stripe.accountId));
-      return json(s.stripe);
+      await log("admin-konto-abgleich", { admin: adminName(req), studioId: s.id });
+      return json({ vorher, nachher: { freigegeben: Boolean(s.stripe.chargesEnabled), auszahlungen: Boolean(s.stripe.payoutsEnabled), angaben: Boolean(s.stripe.detailsSubmitted) }, offen: s.stripe.offen, abgeglichenAm: s.stripe.abgeglichenAm, accountId: s.stripe.accountId });
     }
   }
 
@@ -127,6 +133,24 @@ export default handler(async (req) => {
     return json(await monatsabrechnung(monat, { dryRun: b.dryRun !== false }));
   }
   if (bereich === "jobs" && req.method === "POST") return json(await taeglicheJobs());
+  if (bereich === "mail-status" && req.method === "GET") {
+    const fehlerKeys = (await store.list("mail-fehler/")).slice(-5).reverse();
+    const fehler = [];
+    for (const k of fehlerKeys) { const f = await store.get(k); if (f) fehler.push({ am: k.slice(12), an: f.to, betreff: f.subject, fehler: String(f.error || "").slice(0, 200) }); }
+    return json({ ...(await warteschlangeStatus()), fehler });
+  }
+  if (bereich === "mail-nachsenden" && req.method === "POST") return json({ ergebnis: await warteschlangeAbarbeiten(), status: await warteschlangeStatus() });
+  if (bereich === "konten-abgleichen" && req.method === "POST") {
+    const out = [];
+    for (const s of await allStudios()) {
+      if (!s.stripe?.accountId) continue;
+      try { await kontoAbgleichen(s, await stripe("GET", "/accounts/" + s.stripe.accountId)); out.push({ id: s.id, firma: s.firma, freigegeben: Boolean(s.stripe.chargesEnabled), offen: s.stripe.offen?.faellig?.length || 0 }); }
+      catch (e) { out.push({ id: s.id, firma: s.firma, fehler: e.message }); }
+    }
+    await log("admin-konten-abgleich", { admin: adminName(req), anzahl: out.length });
+    return json(out);
+  }
+  if (bereich === "gesundheit" && req.method === "GET") return json((await store.get("meta/gesundheit")) || { hinweis: "Noch kein Check gelaufen." });
   if (bereich === "mails" && req.method === "GET") {
     const keys = (await store.list("mail/")).slice(-50).reverse();
     const out = [];

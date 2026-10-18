@@ -63,6 +63,8 @@ export const CFG = {
   zahlarten: env("ZAHLARTEN", "card,klarna").split(",").map((x) => x.trim()).filter(Boolean),
   // QR-Aufsteller aus Holz: in diesen Paketen inklusive (digitaler QR-Code ist in allen Paketen dabei); andere können ihn anfragen
   aufstellerPakete: env("AUFSTELLER_PAKETE", "monatlich,einmal").split(",").map((x) => x.trim()).filter(Boolean),
+  // QR-Aufsteller einzeln (Pakete ohne Aufsteller, z. B. Risikofrei): Preis netto zzgl. USt., Kauf per Stripe-Checkout (DSX-Konto)
+  aufstellerPreisNetto: Number(env("AUFSTELLER_PREIS_NETTO_CENT", 2900)),
 };
 
 export const SECRETS = {
@@ -125,7 +127,7 @@ export function publicConfig() {
     produkt: c.produkt, marke: c.marke, firma: c.firma, adresse: c.adresse, registergericht: c.registergericht,
     ustid: c.ustid, geschaeftsfuehrer: c.geschaeftsfuehrer, telefon: c.telefon, email: c.email,
     gerichtsstand: c.gerichtsstand, whatsapp: c.whatsapp, videoUrl: c.videoUrl,
-    kaufNetto: c.kaufNetto, monatNetto: c.monatNetto, nutzungJahre: c.nutzungJahre, aufstellerPakete: c.aufstellerPakete,
+    kaufNetto: c.kaufNetto, monatNetto: c.monatNetto, nutzungJahre: c.nutzungJahre, aufstellerPakete: c.aufstellerPakete, aufstellerPreisNetto: c.aufstellerPreisNetto,
     pakete: Object.values(PAKETE).map(({ id, name, modell, einmalNetto, monatNetto, provisionProzent, empfohlen }) => ({ id, name, modell, einmalNetto, monatNetto, provisionProzent, empfohlen: Boolean(empfohlen) })),
     provisionProzent: c.provisionProzent, ustProzent: c.ustProzent, garantieTage: c.garantieTage,
     setupSupportTage: c.setupSupportTage, vertragVersion: c.vertragVersion,

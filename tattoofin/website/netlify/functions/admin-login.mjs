@@ -1,7 +1,8 @@
 // Admin-Login per E-Mail-Link (wie der Studio-Login) und Admin-Ansicht eines Studio-Dashboards.
-//   POST /api/admin-login { email }        → Login-Link (30 Min.) an die Adresse, falls sie in ADMIN_EMAILS/ADMIN_EMAIL steht.
+//   POST /api/admin-login { email }        → Login-Link (2 Std., einmal verwendbar) an die Adresse, falls sie in ADMIN_EMAILS/ADMIN_EMAIL steht.
 //                                            Antwort immer { ok: true }. Begrenzung: 3 Mails/15 Min. pro Adresse, 20/Std. pro IP.
-//   GET  /api/admin-login?token=…          → Admin-Sitzung (Cookie tf_admin, 12 Std., httpOnly, SameSite=Strict) → /admin.html
+//   GET  /api/admin-login?token=…          → Zwischenseite (schickt sich selbst ab; Mail-Scanner verbrauchen den Link nicht)
+//   POST /api/admin-login (Formular token)  → Admin-Sitzung (Cookie tf_admin, 12 Std., httpOnly, SameSite=Strict) → /admin.html
 //   POST /api/admin-login/abmelden         → Admin-Sitzung beenden
 //   GET  /api/admin-ansicht?t=…            → (Token aus /api/admin/studio/:id/ansehen, 2 Min.) Studio-Dashboard nur lesend öffnen
 //   GET  /api/admin-ansicht/ende           → Admin-Ansicht beenden, zurück zum Admin
@@ -9,16 +10,28 @@
 import crypto from "node:crypto";
 import { json, fail, body, clean, handler, clientIp, now } from "./_lib/util.mjs";
 import { zaehleVersuch, getStudio, log } from "./_lib/store.mjs";
-import { verify, istAdminEmail, adminLoginLink, adminCookie, clearAdminCookie, ansichtCookie, clearCookie } from "./_lib/auth.mjs";
+import { verify, istAdminEmail, adminLoginLink, adminCookie, clearAdminCookie, ansichtCookie, clearCookie, einmalBenutzt, einmalVerbrauchen, adminVonCookie, ADMIN_LOGIN_STUNDEN } from "./_lib/auth.mjs";
+import { zwischenseite } from "./_lib/seiten.mjs";
 import { sendMail } from "./_lib/mail.mjs";
 import { SECRETS } from "./_lib/config.mjs";
 
 const hash = (x) => crypto.createHmac("sha256", SECRETS.sessionSecret).update(String(x)).digest("hex").slice(0, 32);
-const weiter = (to, cookie) => new Response(null, { status: 302, headers: { Location: to, ...(cookie ? { "Set-Cookie": cookie } : {}) } });
+const weiter = (to, cookie) => new Response(null, { status: 303, headers: { Location: to, "Cache-Control": "no-store", ...(cookie ? { "Set-Cookie": cookie } : {}) } });
 
 export default handler(async (req, context) => {
   const u = new URL(req.url);
   const teil = u.pathname.replace(/^\/api\//, "");
+
+  // Formular aus der Zwischenseite: Link prüfen und (einmalig) verbrauchen
+  if (teil === "admin-login" && req.method === "POST" && /form/.test(req.headers.get("content-type") || "")) {
+    let token = ""; try { token = String((await req.formData()).get("token") || ""); } catch { /* leer */ }
+    const p = verify(token, "adminlogin");
+    if (!p || !istAdminEmail(p.email)) return weiter("/admin.html?abgelaufen=1");
+    if (await einmalBenutzt(p)) return weiter(adminVonCookie(req) === p.email ? "/admin.html" : "/admin.html?abgelaufen=1");
+    await einmalVerbrauchen(p);
+    await log("admin-login", { email: p.email });
+    return weiter("/admin.html", adminCookie(p.email));
+  }
 
   if (teil === "admin-login" && req.method === "POST") {
     const email = clean((await body(req)).email, 160).toLowerCase();
@@ -28,8 +41,8 @@ export default handler(async (req, context) => {
       const link = adminLoginLink(email);
       await sendMail({
         to: email, subject: "Dein Admin-Login für Tattoofin",
-        html: `<p>Hier ist dein Admin-Login für Tattoofin. Der Link ist 30 Minuten gültig und funktioniert nur für dich.</p><p><a href="${link}">Als Admin anmelden</a></p><p style="color:#5b6370;font-size:13px">Wenn du das nicht angefordert hast, ignoriere diese E-Mail.</p>`,
-        text: `Admin-Login für Tattoofin (30 Minuten gültig): ${link}`,
+        html: `<p>Hier ist dein Admin-Login für Tattoofin. Der Link ist ${ADMIN_LOGIN_STUNDEN} Stunden gültig, funktioniert einmal und nur für dich.</p><p><a href="${link}">Als Admin anmelden</a></p><p style="color:#5b6370;font-size:13px">Wenn du das nicht angefordert hast, ignoriere diese E-Mail.</p>`,
+        text: `Admin-Login für Tattoofin (${ADMIN_LOGIN_STUNDEN} Stunden gültig, einmal verwendbar): ${link}`,
       });
       await log("admin-login-link", { email });
     }
@@ -37,10 +50,10 @@ export default handler(async (req, context) => {
   }
 
   if (teil === "admin-login" && req.method === "GET") {
-    const p = verify(u.searchParams.get("token"), "adminlogin");
+    const token = u.searchParams.get("token") || "";
+    const p = verify(token, "adminlogin");
     if (!p || !istAdminEmail(p.email)) return weiter("/admin.html?abgelaufen=1");
-    await log("admin-login", { email: p.email });
-    return weiter("/admin.html", adminCookie(p.email));
+    return zwischenseite({ action: "/api/admin-login", felder: { token }, titel: "Admin-Anmeldung …", knopf: "Als Admin anmelden" });
   }
 
   if (teil === "admin-login/abmelden" && req.method === "POST") {

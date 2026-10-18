@@ -33,8 +33,8 @@ const hallo = (s) => p(`Hey ${esc(s.inhaber?.split(" ")[0] || s.firma)},`);
 const modellText = (s) => {
   const p = paketVon(s);
   if (p.id === "geschenk") return "Geschenk: keine Einrichtungsgebühr, keine Grundgebühr, keine Provision. Du zahlst nur die normalen Gebühren von Stripe (bzw. Klarna) direkt an Stripe, Tattoofin verdient nichts daran.";
-  if (p.id === "monatlich") return `Paket Monatlich: ${euro(CFG.monatNetto)} netto im Monat (${euro(brutto(CFG.monatNetto))} inkl. USt.), danach nur die Zahlungsgebühren, die du direkt an Stripe zahlst. Keine Tattoofin-Provision, monatlich kündbar. Inklusive QR-Aufsteller aus Holz und digitalem QR-Code.`;
-  if (p.id === "einmal" && s.paket === "einmal") return `Paket Einmalzahlung: ${euro(s.preisNetto)} netto einmalig (${euro(brutto(s.preisNetto))} inkl. USt.), danach keine Tattoofin-Gebühr mehr, nur die Zahlungsgebühren, die du direkt an Stripe zahlst. Inklusive QR-Aufsteller aus Holz und digitalem QR-Code.`;
+  if (p.id === "monatlich") return `Paket Monatlich: ${euro(CFG.monatNetto)} netto im Monat (${euro(brutto(CFG.monatNetto))} inkl. USt.), danach nur die Zahlungsgebühren, die du direkt an Stripe zahlst. Keine Tattoofin-Provision, monatlich kündbar. Inklusive QR-Aufsteller aus Holz (Wert 29 €) und digitalem QR-Code.`;
+  if (p.id === "einmal" && s.paket === "einmal") return `Paket Einmalzahlung: ${euro(s.preisNetto)} netto einmalig (${euro(brutto(s.preisNetto))} inkl. USt.), danach keine Tattoofin-Gebühr mehr, nur die Zahlungsgebühren, die du direkt an Stripe zahlst. Inklusive QR-Aufsteller aus Holz (Wert 29 €) und digitalem QR-Code.`;
   if (s.modell === "kauf") return `Kauf: Einrichtung ${euro(s.preisNetto)} netto einmalig (${euro(brutto(s.preisNetto))} brutto), keine monatliche Grundgebühr, keine Provision`;
   return `Paket Risikofrei: ${CFG.provisionProzent} % vom Zahlbetrag jeder Zahlung über Tattoofin, alles inklusive (Zahlungsgebühren und USt.), keine Einrichtungs- und keine Grundgebühr, monatlich kündbar. Digitaler QR-Code inklusive.`;
 };
@@ -84,7 +84,7 @@ export const mails = {
   kaufBezahlt: (s, { betragCent, rechnungUrl }) => mk("Zahlung erhalten. Danke!", {
     preheader: s.paket === "einmal" ? "Deine Einmalzahlung für Tattoofin ist eingegangen." : "Deine Zahlung für das Tattoofin Setup ist eingegangen.",
     title: "Zahlung erhalten ✅",
-    body: hallo(s) + p(`wir haben deine Zahlung über <b>${euro(betragCent)}</b> erhalten. ${s.paket === "einmal" ? "Ab jetzt gibt es keine Tattoofin-Gebühr mehr, du zahlst nur noch die Zahlungsgebühren direkt an Stripe. Dein QR-Aufsteller aus Holz ist inklusive, wir schicken ihn dir nach dem Go-live." : "Es gibt keine monatliche Grundgebühr und keine Provision."} Die Betreuung bleibt kostenlos.`) +
+    body: hallo(s) + p(`wir haben deine Zahlung über <b>${euro(betragCent)}</b> erhalten. ${s.paket === "einmal" ? "Ab jetzt gibt es keine Tattoofin-Gebühr mehr, du zahlst nur noch die Zahlungsgebühren direkt an Stripe. Dein QR-Aufsteller aus Holz (Wert 29 €) ist inklusive, wir schicken ihn dir nach dem Go-live." : "Es gibt keine monatliche Grundgebühr und keine Provision."} Die Betreuung bleibt kostenlos.`) +
       (rechnungUrl ? p(`Deine Rechnung: <a href="${esc(rechnungUrl)}">ansehen / herunterladen</a>`) : "") +
       box(`<b>Zufriedenheitsgarantie:</b> ${CFG.garantieTage} Tage ab Go-live. Passt es nicht, bekommst du dein Geld zurück.`),
   }),
@@ -94,7 +94,7 @@ export const mails = {
     title: "Paket Monatlich gestartet ✅",
     body: hallo(s) + p(`danke! Deine erste Monatszahlung über <b>${euro(betragCent)}</b> (inkl. USt.) ist da. Ab jetzt zahlst du ${euro(CFG.monatNetto)} netto im Monat und sonst nur die Zahlungsgebühren deiner Kunden-Zahlungen, direkt an Stripe. Tattoofin nimmt keine Provision.`) +
       (rechnungUrl ? p(`Deine Rechnung: <a href="${esc(rechnungUrl)}">ansehen / herunterladen</a>. Jeden Monat bekommst du automatisch eine neue Rechnung per E-Mail.`) : "") +
-      box("<b>Dein QR-Aufsteller aus Holz</b> ist inklusive. Wir schicken ihn dir nach dem Go-live an die Studio-Adresse.") +
+      box("<b>Dein QR-Aufsteller aus Holz</b> (Wert 29 €) ist inklusive. Wir schicken ihn dir nach dem Go-live an die Studio-Adresse.") +
       p("Kündigen kannst du jederzeit zum Ende des laufenden Monats, mit einem Klick im Studio-Portal."),
   }),
 
@@ -120,10 +120,10 @@ export const mails = {
     body: hallo(s) + p("gute Nachrichten: Stripe hat das Konto deines Studios geprüft und freigegeben. Wir richten jetzt Zahlungsarten, Branding und den Ablauf ein und melden uns für Test und Teamschulung."),
   }),
 
-  login: (s, { url }) => mk(`Dein Login-Link für das Tattoofin-Portal (${s.firma})`, {
+  login: (s, { url, stunden = 24 }) => mk(`Dein Login-Link für das Tattoofin-Portal (${s.firma})`, {
     preheader: "Einfach klicken, kein Passwort nötig.",
     title: "Dein Login-Link",
-    body: hallo(s) + p("hier ist dein persönlicher Link zum Studio-Portal. Er ist 60 Minuten gültig und funktioniert nur für dich. Wenn du ihn nicht angefordert hast, kannst du diese E-Mail ignorieren."),
+    body: hallo(s) + p(`hier ist dein persönlicher Link zum Studio-Portal. Er ist ${stunden} Stunden gültig, funktioniert einmal und nur für dich. Danach bleibst du 30 Tage angemeldet. Ist er abgelaufen, kannst du auf der Seite mit einem Klick einen neuen anfordern. Wenn du ihn nicht angefordert hast, kannst du diese E-Mail ignorieren.`),
     cta: "Jetzt einloggen", ctaUrl: url,
   }),
 
