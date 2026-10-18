@@ -68,7 +68,8 @@
         .map(function (r) { return "<tr><th>" + r[0] + "</th><td>" + e(r[1] || "–") + "</td></tr>"; }).join("") + "</table></div><div>" +
       '<div class="field"><label>Notiz</label><textarea id="d-notiz">' + e(s.notiz || "") + "</textarea></div>" +
       '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn dark small" id="d-save">Speichern</button><button class="btn gold small" id="d-live">Live schalten + E-Mail</button>' +
-      '<button class="btn ghost small" id="d-konto">Stripe-Status abfragen</button><button class="btn ghost small" id="d-link">Login-Link</button><button class="btn dark small" id="d-ansehen">Dashboard ansehen</button>' +
+      '<button class="btn ghost small" id="d-konto">Stripe-Status abfragen</button><button class="btn ghost small" id="d-link">Login-Link erzeugen</button><button class="btn ghost small" id="d-einr">Einrichtungslink erzeugen</button><button class="btn dark small" id="d-ansehen">Dashboard ansehen</button>' +
+      '<div id="d-linkbox" style="margin-top:10px"></div>' +
       (s.modell === "kauf" && s.stripe && s.stripe.paymentIntentId ? '<button class="btn ghost small" id="d-refund" style="color:var(--red)">Garantie erstatten</button>' : "") + "</div></div></div>" +
       "<h2 style='margin-top:20px;font-size:18px'>Fragebogen</h2><pre>" + e(JSON.stringify(s.fragebogen || {}, null, 2)) + "</pre>" +
       "<h2 style='font-size:18px'>Zahlungen (" + d.zahlungen.length + ")</h2><pre>" + e(d.zahlungen.map(function (z) { return TF.datum(z.bezahltAm || z.createdAt) + " · " + z.status + " · " + TF.euro(z.betragCent, true) + " · " + (z.kunde || "") + " · " + (z.zahlartText || "") + (z.gebuehrNettoCent ? " · Provision " + TF.euro(z.gebuehrNettoCent, true) : "") + (z.abgerechnet ? " [abgerechnet " + z.abgerechnet + "]" : ""); }).join("\n")) + "</pre>" +
@@ -77,7 +78,12 @@
     $("d-ansehen").onclick = async function () { try { var r = await api("studio/" + id + "/ansehen", { body: {} }); location.href = r.url; } catch (err) { msg(err.message, "err"); } };
     $("d-live").onclick = async function () { if (!confirm("Live schalten und Go-live-E-Mail senden?")) return; try { zeig(await api("studio/" + id + "/live", { body: {} })); msg("Live geschaltet."); start(); } catch (err) { msg(err.message, "err"); } };
     $("d-konto").onclick = async function () { try { zeig(await api("studio/" + id + "/konto", { body: {} })); start(); } catch (err) { msg(err.message, "err"); } };
-    $("d-link").onclick = async function () { var r = await api("studio/" + id + "/login-link", { body: {} }); zeig(r); };
+    function linkZeigen(r, titel) {
+      $("d-linkbox").innerHTML = '<div class="alert info"><b>' + e(titel) + "</b> (gültig " + e(r.gueltig || "") + ', zum Weitergeben z. B. per WhatsApp)<br><input type="text" readonly id="d-linktext" style="width:100%;margin:8px 0" value="' + e(r.url) + '"><button class="btn dark small" id="d-copy">Link kopieren</button></div>';
+      $("d-copy").onclick = async function () { try { await navigator.clipboard.writeText(r.url); } catch (x) { $("d-linktext").select(); document.execCommand("copy"); } $("d-copy").textContent = "Kopiert ✓"; };
+    }
+    $("d-link").onclick = async function () { try { linkZeigen(await api("studio/" + id + "/login-link", { body: {} }), "Login-Link"); } catch (err) { msg(err.message, "err"); } };
+    $("d-einr").onclick = async function () { try { linkZeigen(await api("studio/" + id + "/einrichtungslink", { body: {} }), "Einrichtungslink (Stripe-Zahlungskonto)"); } catch (err) { msg(err.message, "err"); } };
     var rf = $("d-refund"); if (rf) rf.onclick = async function () { if (!confirm("Kaufpreis wirklich vollständig erstatten?")) return; try { zeig(await api("studio/" + id + "/erstattung", { body: {} })); msg("Erstattet."); start(); } catch (err) { msg(err.message, "err"); } };
     p.scrollIntoView({ behavior: "smooth" });
   }

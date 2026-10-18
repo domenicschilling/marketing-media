@@ -98,7 +98,7 @@ export const artikel = [
 <tr><td>QR-Aufsteller aus Holz</td><td>–</td><td>inklusive</td><td>inklusive</td></tr>
 <tr><td>Laufzeit</td><td>monatlich kündbar</td><td>monatlich kündbar</td><td>30 Tage Geld-zurück-Garantie</td></tr>
 </table>
-<p>Faustregel: Ab ca. 730 € Zahlungen im Monat über Tattoofin lohnt sich Monatlich statt Risikofrei, die Einmalzahlung ist gegenüber Monatlich nach ca. 20 Monaten günstiger. Die Rechnung zeigt der <a href="/#lohnt">Vergleich auf der Startseite</a>.</p>
+<p>Faustregel: Ab ca. 900 € Zahlungen im Monat über Tattoofin lohnt sich Monatlich statt Risikofrei, die Einmalzahlung ist gegenüber Monatlich nach ca. 20 Monaten günstiger. Die Rechnung zeigt der <a href="/#lohnt">Vergleich auf der Startseite</a>.</p>
 
 <h2 id="recht">Rechtliches: Was Studios beachten müssen</h2>
 <ul>

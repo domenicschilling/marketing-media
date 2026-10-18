@@ -12,6 +12,7 @@
 //   POST  /api/admin/anleitung                { email, firma } → Einrichtungs-Anleitung per E-Mail
 //   POST  /api/admin/einladen                 { email, firma } → Geschenk-Einladung (0 € Einrichtung, 0 % Provision) per E-Mail
 //   GET   /api/admin/anfragen                 Kurz-Anfragen von /studios (neueste zuerst)
+//   POST  /api/admin/studio/:id/einrichtungslink  signierter Stripe-Einrichtungslink (24 h) zum Weitergeben
 //   POST  /api/admin/studio/:id/ansehen       Link für „Dashboard ansehen“ (nur lesend, protokolliert)
 //   Anmeldung: ADMIN_TOKEN (Bearer) oder Admin-Sitzung per E-Mail-Link (/api/admin-login)
 //   POST  /api/admin/checkout-test            unbezahlte Test-Sitzung (1 €) mit Tattoofin-Branding → { id, url }; { expire: "cs_…" } beendet sie
@@ -20,7 +21,7 @@ import { json, fail, body, clean, now, handler } from "./_lib/util.mjs";
 import { allStudios, getStudio, saveStudio, zahlungenVon, abrechnungenVon, store, log } from "./_lib/store.mjs";
 import { isAdmin, loginLink, sign, adminName } from "./_lib/auth.mjs";
 import { stripe, TATTOOFIN_BRANDING } from "./_lib/stripe.mjs";
-import { notify, monatsabrechnung, taeglicheJobs, kontoAbgleichen, provisionVerdient, STATUS, aufstellerUrl } from "./_lib/domain.mjs";
+import { notify, monatsabrechnung, taeglicheJobs, kontoAbgleichen, provisionVerdient, STATUS, aufstellerUrl, connectUrl } from "./_lib/domain.mjs";
 import { mails } from "./_lib/emails.mjs";
 import { sendMail } from "./_lib/mail.mjs";
 import { randomBytes } from "node:crypto";
@@ -105,7 +106,9 @@ export default handler(async (req) => {
       await notify(s, mails.garantieErstattung(s, { betragCent: r.amount }));
       return json(s);
     }
-    if (aktion === "login-link" && req.method === "POST") return json({ url: loginLink(s.id, 60) });
+    if (aktion === "login-link" && req.method === "POST") { await log("admin-link", { admin: adminName(req), studioId: s.id, art: "login" }); return json({ url: loginLink(s.id, 60), gueltig: "60 Minuten" }); }
+    // Signierter Einrichtungslink (24 h, Zweck „connect“) zum Weitergeben per WhatsApp, z. B. wenn Mails nicht ankommen
+    if (aktion === "einrichtungslink" && req.method === "POST") { await log("admin-link", { admin: adminName(req), studioId: s.id, art: "einrichtung" }); return json({ url: connectUrl(s), gueltig: "24 Stunden" }); }
     // „Dashboard ansehen“: kurzlebiger Link (2 Min.) → /api/admin-ansicht setzt eine nur lesende Studio-Sitzung
     if (aktion === "ansehen" && req.method === "POST") {
       await log("admin-ansicht-angefordert", { admin: adminName(req), studioId: s.id });

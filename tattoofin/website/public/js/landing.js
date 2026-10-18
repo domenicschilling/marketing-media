@@ -111,7 +111,7 @@
     function rechne() {
       var v = +$("volumen").value;
       $("v-volumen").textContent = v.toLocaleString("de-DE") + " €";
-      var risiko = v * c.provisionProzent / 100, gebuehr = v * GEBUEHR, monat = c.monatNetto / 100 + gebuehr;
+      var risiko = v * c.provisionProzent / 100, gebuehr = v * GEBUEHR, monat = c.monatNetto * (100 + c.ustProzent) / 10000 + gebuehr; // alles brutto: 10 % enthalten USt., 49 € + USt.
       $("r-risiko").textContent = TF.euro(Math.round(risiko) * 100);
       $("r-monat").textContent = TF.euro(Math.round(monat) * 100);
       $("r-einmal").textContent = "ca. " + TF.euro(Math.round(gebuehr) * 100);

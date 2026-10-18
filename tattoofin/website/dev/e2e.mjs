@@ -101,12 +101,12 @@ try {
   check((await p0.textContent("h1")).includes("leichter bezahlbar"), "Hero lädt");
   check(await p0.locator(".prices.drei .price").count() === 3, "Drei Pakete auf der Startseite");
   await p0.waitForFunction(() => document.getElementById("r-risiko").textContent.includes("€"));
-  check((await p0.textContent("#r-risiko")).includes("150") && (await p0.textContent("#r-monat")).includes("99"), "Rechner 1.500 €/Monat: Risikofrei 150 €, Monatlich 49 € + 3,3 % ≈ 99 €");
+  check((await p0.textContent("#r-risiko")).includes("150") && (await p0.textContent("#r-monat")).includes("108"), "Rechner 1.500 €/Monat: Risikofrei 150 €, Monatlich 58,31 € + 3,3 % ≈ 108 € (brutto)");
   check((await p0.textContent("#r-tipp")).includes("Monatlich"), "Rechner empfiehlt Monatlich bei 1.500 €/Monat");
   await p0.locator("#volumen").evaluate((el) => { el.value = 500; el.dispatchEvent(new Event("input")); });
   check((await p0.textContent("#r-tipp")).includes("Risikofrei"), "Rechner empfiehlt Risikofrei bei 500 €/Monat");
   const preise = await p0.textContent("#preise");
-  check(preise.includes("999") && preise.includes("49") && preise.includes("Empfohlen") && preise.includes("730") && preise.includes("20 Monaten") && !preise.includes("1.499") && !/Gründer|Profi\b/.test(preise), "Pakete 10 % / 49 € / 999 €, Monatlich empfohlen, Lohnt-sich-Rechnung, keine alten Preise");
+  check(preise.includes("999") && preise.includes("49") && preise.includes("Empfohlen") && preise.includes("900 €") && !preise.includes("730") && preise.includes("20 Monaten") && !preise.includes("1.499") && !/Gründer|Profi\b/.test(preise), "Pakete 10 % / 49 € / 999 €, Monatlich empfohlen, Lohnt-sich-Rechnung, keine alten Preise");
   check((await p0.textContent("#aufsteller")).includes("KI-Visualisierung"), "QR-Aufsteller-Abschnitt mit KI-Kennzeichnung");
   const ld = await p0.textContent('script[type="application/ld+json"]');
   check(ld.includes("Paket Monatlich") && ld.includes("Paket Einmalzahlung") && !ld.includes("1499"), "Strukturierte Daten: drei Pakete");
@@ -504,6 +504,10 @@ try {
   await pAdmA.click("#admin-ansicht a");
   await pAdmA.waitForURL(/admin\.html/);
   check(true, "Zurück zum Admin");
+  const einr = await (await fetch(`${BASE}/api/admin/studio/${provId}/einrichtungslink`, { method: "POST", headers: { cookie: aCookie, "content-type": "application/json" }, body: "{}" })).json();
+  const einrR = await fetch(einr.url, { redirect: "manual" });
+  check(einr.gueltig === "24 Stunden" && /api\/connect\?id=.+&t=/.test(einr.url) && !/login\.html/.test(einrR.headers.get("location") || ""), "Admin: signierter Einrichtungslink (24 h) zum Weitergeben funktioniert ohne Login");
+  check((await fetch(`${BASE}/api/admin/studio/${provId}/einrichtungslink`, { method: "POST" })).status === 401, "Einrichtungslink nur für Admins");
 
   console.log("Web-App (PWA)");
   const man = await (await fetch(BASE + "/manifest.webmanifest")).json();
