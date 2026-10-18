@@ -17,6 +17,14 @@ export function startStripeMock({ port = 12111, webhookUrl, webhookSecret, log =
     const url = new URL(req.url, "http://x");
     let raw = "";
     for await (const c of req) raw += c;
+    // Datei-Upload (multipart, z. B. Branding-Logo): nur Größe/Zweck merken, Datei-ID zurückgeben
+    if (url.pathname === "/v1/files" && (req.headers["content-type"] || "").startsWith("multipart/")) {
+      const purpose = (/name="purpose"\r\n\r\n([^\r]+)/.exec(raw) || [])[1] || "";
+      db.files = db.files || [];
+      const f = { id: "file_mock_" + (db.files.length + 1), object: "file", purpose, size: raw.length, account: req.headers["stripe-account"] || null };
+      db.files.push(f);
+      res.writeHead(200, { "content-type": "application/json" }); return res.end(JSON.stringify(f));
+    }
     const isJson = (req.headers["content-type"] || "").includes("json");
     const p = isJson ? (raw ? JSON.parse(raw) : {}) : nest(new URLSearchParams(raw));
     const send = (code, obj, type = "application/json") => { res.writeHead(code, { "content-type": type }); res.end(type === "application/json" ? JSON.stringify(obj) : obj); };
