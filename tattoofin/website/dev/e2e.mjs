@@ -604,7 +604,12 @@ try {
   check(pdfD.buf.subarray(0, 5).toString() === "%PDF-" && /\/MediaBox \[0 0 283\.465 425\.197\]/.test(pdfD.buf.toString("latin1")) && /%%EOF\s*$/.test(pdfD.buf.toString("latin1")), "Aufsteller: PDF 100 × 150 mm (" + pdfD.name + ")");
   const svgD = await runter('[data-auf="svg"]');
   const svgT = svgD.buf.toString();
-  check(/width="100mm" height="150mm"/.test(svgT) && svgT.includes(nwZahlseite) && /id="kontur-schnitt"/.test(svgT) && !/<text/.test(svgT), "Aufsteller: SVG 1:1, Schrift in Pfaden, QR-Link der Zahlseite");
+  check(/width="100mm" height="150mm"/.test(svgT) && svgT.includes(nwZahlseite) && /<g id="schnitt" fill="none" stroke="#0000ff" stroke-width="0.01">/.test(svgT) && !/<text|<image/.test(svgT), "Aufsteller: SVG 1:1, Schrift in Pfaden, blaue Schnittlinie, QR-Link der Zahlseite");
+  const fSvg = (await runter('[data-auf="fsvg"]')).buf.toString();
+  const fFarben = [...new Set(fSvg.match(/(?:fill|stroke)="#[0-9a-f]{6}"/gi).map((x) => x.split('"')[1].toLowerCase()))].sort().join(",");
+  check(/width="181mm" height="181mm"/.test(fSvg) && fFarben === "#000000,#0000ff" && !/<image|<text/.test(fSvg) && fSvg.includes(nwZahlseite), "Aufsteller: Formulor-Platte P1 mit Fuß (nur Schwarz/Blau, keine Pixelbilder)");
+  const fPdf = await runter('[data-auf="fpdf"]');
+  check(/\/MediaBox \[0 0 513\.071 513\.071\]/.test(fPdf.buf.toString("latin1")) && fPdf.name.includes("formulor-P1-birke-3mm"), "Aufsteller: Formulor-PDF 181 × 181 mm (" + fPdf.name + ")");
   const pngD = await runter('[data-auf="png"]');
   check(pngD.buf.readUInt32BE(16) === 2362 && pngD.buf.readUInt32BE(20) === 3543, "Aufsteller: PNG mit 600 dpi (2362 × 3543 px)");
   const qrD = await runter("#zs-png");
@@ -617,7 +622,7 @@ try {
   const oeff = (await api(h, `/api/aufsteller?s=${nwSlug}`)).data;
   check(oeff.variante === "logo" && /^data:image\/jpeg;base64,/.test(oeff.logo?.src || "") && oeff.zahlseite.endsWith("/zahlen/" + nwSlug), "Aufsteller: Logo hochgeladen (schwarz/weiß) und gespeichert");
   const pdfL = await runter('[data-auf="pdf"]');
-  check(/\/Subtype \/Image/.test(pdfL.buf.toString("latin1")) && pdfL.name.includes("-logo"), "Aufsteller: PDF mit Logo");
+  check(!/\/Subtype \/Image/.test(pdfL.buf.toString("latin1")) && pdfL.buf.length > pdfD.buf.length && pdfL.name.includes("-logo"), "Aufsteller: PDF mit Logo als Vektor (kein Pixelbild)");
   await h.click('label:has(> input[name="auf-holz"][value="dunkel"])');
   await h.waitForTimeout(600);
   await appShot(h, path.join(S, "18b-qr-aufsteller.png"));

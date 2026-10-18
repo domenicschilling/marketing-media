@@ -25,17 +25,23 @@
     <div class="auf-bild"><img id="auf-img" alt="Vorschau des QR-Aufstellers"></div>
     <div>
       <h2 style="margin-top:0">Dateien für die Gravur</h2>
+      <p class="klein"><b>Formulor</b> (formulor.de → Datei hochladen): Platte P1 181 × 181 mm, Sperrholz Birke 3 mm. Schild + Fuß auf einer Platte.</p>
       <div class="auf-knoepfe">
-        <button class="btn dark small" data-auf="pdf">PDF</button>
-        <button class="btn dark small" data-auf="svg">SVG</button>
+        <button class="btn dark small" data-auf="fpdf">PDF mit Fuß</button>
+        <button class="btn dark small" data-auf="fsvg">SVG mit Fuß</button>
+      </div>
+      <p class="klein">Nur das Schild (Anbieter mit eigenem Fuß):</p>
+      <div class="auf-knoepfe">
+        <button class="btn ghost small" data-auf="pdf">PDF</button>
+        <button class="btn ghost small" data-auf="svg">SVG</button>
         <button class="btn ghost small" data-auf="png">PNG (600 dpi)</button>
       </div>
       <table>
         <tr><td>Format</td><td>100 × 150 mm, Hochformat, Maßstab 1:1, Ecken 4 mm Radius</td></tr>
-        <tr><td>Material</td><td id="auf-holz">Sperrholz/Birke hell, 3–5 mm</td></tr>
-        <tr><td>Gravur</td><td>einfarbig, Flächengravur: Schwarz = gravieren. Schriften sind in Pfade umgewandelt.</td></tr>
-        <tr><td>Kontur</td><td>Rote Haarlinie (0,1 mm) = Außenkontur/Schnitt</td></tr>
-        <tr><td>Fuß</td><td>kleiner Holzfuß mit Schlitz; untere 12 mm des Schilds sind frei</td></tr>
+        <tr><td>Material</td><td id="auf-holz">Sperrholz Birke 3 mm (hell)</td></tr>
+        <tr><td>Gravur</td><td>einfarbig, Flächengravur: Schwarz RGB(0,0,0) gefüllt. Schrift und Logo als Vektoren, keine Pixelbilder.</td></tr>
+        <tr><td>Schnitt</td><td>Blau RGB(0,0,255), Haarlinie 0,01 mm (Formulor-Vorgabe)</td></tr>
+        <tr><td>Fuß</td><td>2 Fußteile 60 × 16 mm, Kreuz-Steckverbindung: Schlitze 3 mm breit, je 8 mm tief (Schild unten bei 22 und 78 mm, Fußteil oben mittig). Ohne Leim zusammenstecken.</td></tr>
         <tr><td>QR-Code</td><td id="auf-qr"></td></tr>
       </table>
       <p class="klein">Bitte den QR-Code nicht verkleinern und nicht invertieren. Vor dem Versand einmal mit dem Handy scannen.</p>
@@ -53,9 +59,9 @@
     var r = await fetch("/api/aufsteller?s=" + encodeURIComponent(slug) + "&t=" + encodeURIComponent(t)), d = await r.json();
     if (!r.ok) throw new Error(d.error || "Studio nicht gefunden");
     await TFAufsteller.laden();
-    var o = { url: d.zahlseite, firma: d.firma, variante: d.variante, logo: d.logo };
+    var o = { url: d.zahlseite, firma: d.firma, variante: d.variante, logo: await TFAufsteller.logoAusDaten(d.logo) };
     $("auf-titel").textContent = d.firma + " · " + (d.variante === "logo" ? "mit Studio-Logo" : "mit Studioname") + " · Holz " + (d.holz === "dunkel" ? "dunkel" : "hell");
-    $("auf-holz").textContent = d.holz === "dunkel" ? "Walnuss (dunkel), 3–5 mm" : "Sperrholz Birke/Buche (hell), 3–5 mm";
+    $("auf-holz").textContent = d.holz === "dunkel" ? "gewünscht: dunkel (Walnuss) – bei Formulor nicht erhältlich, dort Birke 3 mm" : "Sperrholz Birke 3 mm (hell)";
     var info = TFAufsteller.bauen(o);
     $("auf-qr").textContent = d.zahlseite + " · " + info.qr.mm + " mm Kantenlänge, Modul " + info.qr.modulMm.toFixed(2).replace(".", ",") + " mm";
     $("auf-img").src = (await TFAufsteller.vorschau(o, d.holz, 720)).toDataURL("image/png");
@@ -64,8 +70,11 @@
     document.querySelectorAll("[data-auf]").forEach(function (b) {
       b.onclick = async function () {
         var art = b.dataset.auf;
-        if (art === "svg") laden(new Blob([TFAufsteller.svg(o)], { type: "image/svg+xml" }), name + ".svg");
-        else if (art === "pdf") laden(new Blob([TFAufsteller.pdf(o)], { type: "application/pdf" }), name + ".pdf");
+        var fo = { formulor: true, dicke: 3 };
+        if (art === "fsvg") laden(new Blob([TFAufsteller.svg(o, fo)], { type: "image/svg+xml" }), name + "-formulor-P1-birke-3mm.svg");
+        else if (art === "fpdf") laden(new Blob([TFAufsteller.pdf(o, fo)], { type: "application/pdf" }), name + "-formulor-P1-birke-3mm.pdf");
+        else if (art === "svg") laden(new Blob([TFAufsteller.svg(o)], { type: "image/svg+xml" }), name + "-schild.svg");
+        else if (art === "pdf") laden(new Blob([TFAufsteller.pdf(o)], { type: "application/pdf" }), name + "-schild.pdf");
         else (await TFAufsteller.png(o)).toBlob(function (bl) { laden(bl, name + "-600dpi.png"); }, "image/png");
       };
     });

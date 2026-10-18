@@ -2,12 +2,18 @@
 // Erzeugt SVG, PDF und PNG direkt im Browser. Alle Schriften sind in Pfade umgewandelt (Glyphen aus
 // /assets/aufsteller-glyphen.json: DM Sans 700/500 + Wortmarke in Luckiest Guy), damit jeder Laser-Dienst die Datei
 // ohne Schriftarten öffnen kann.
-//   Schwarz = gravieren · Rot (Haarlinie 0,1 mm) = Außenkontur/Schnitt · Grau = Platzhalter, nicht gravieren
-//   Untere 12 mm bleiben frei (steckt im Holzfuß). QR-Code mit Fehlerkorrektur Q und 4 Modulen Ruhezone.
+//   Farben nach Formulor-Vorgabe: Schwarz RGB(0,0,0) gefüllt = Flächengravur · Blau RGB(0,0,255) Haarlinie 0,01 mm = Schnitt
+//   (Rot wäre dort Liniengravur, wird hier nicht benutzt) · Grau = Platzhalter, nicht gravieren. Keine Pixelbilder: das Logo
+//   wird in Vektor-Rechtecke umgewandelt. QR-Code mit Fehlerkorrektur Q (lange Links M) und 4 Modulen Ruhezone.
+//   Formulor-Platte P1 (181 × 181 mm): Schild + zwei Fußteile mit Kreuz-Steckverbindung (Schlitzbreite = Materialstärke,
+//   der Laser nimmt ca. 0,1–0,2 mm weg → leichtes Spiel). Untere 17 mm des Schilds bleiben frei (Fuß).
 // Formulierungsregeln (tattoofin/UEBERGABE.md): „Raten“ nur mit Sternchen + Fußnote, kein „Geld sofort“, kein „voller Betrag“.
 (function (root) {
   var FUSS = "*Ratenzahlung über externe Anbieter wie Klarna, nach deren Prüfung. Tattoofin ist kein Kreditgeber. Achtung! Kreditaufnahme kostet Geld.";
-  var W = 100, H = 150, RADIUS = 4, RAND = 7, FUSSZONE = 12; // mm
+  var W = 100, H = 150, RADIUS = 4, RAND = 7, FUSSZONE = 17; // mm
+  // Fuß: zwei Teile 60 × 16 mm, je ein Schlitz von oben (8 mm); Schild hat zwei Schlitze von unten (8 mm) bei x = 22 und 78
+  var FUSS_L = 60, FUSS_H = 16, SCHLITZ_T = 8, SCHLITZ_X = [22, 78], PLATTE = 181, ABST = 4;
+  var BLAU = "#0000ff";
   var QR_MM = 58, QR_OBEN = 40; // Kantenlänge der Module (ohne Ruhezone), Oberkante der Rahmen-Ecken
   var LOGO = { x: 15, y: 13.2, w: 70, h: 11.6 }; // Feld für das Studio-Logo
   var HOLZ = {
@@ -120,6 +126,31 @@
     return ops;
   }
 
+  // ---------- Schnittkonturen ----------
+  function verschieben(ops, dx, dy) { return ops.map(function (o) { if (o[0] === "Z") return o; var r = [o[0]]; for (var k = 1; k < o.length; k += 2) r.push(o[k] + dx, o[k + 1] + dy); return r; }); }
+  // Schild mit zwei Schlitzen von unten (Breite = Materialstärke t), Ecken r = 4 mm
+  function schildKontur(t) {
+    var r = RADIUS, k = 0.5523 * r, ops = [["M", r, 0], ["L", W - r, 0], ["C", W - r + k, 0, W, r - k, W, r], ["L", W, H - r], ["C", W, H - r + k, W - r + k, H, W - r, H]];
+    SCHLITZ_X.slice().reverse().forEach(function (sx) { ops.push(["L", sx + t / 2, H], ["L", sx + t / 2, H - SCHLITZ_T], ["L", sx - t / 2, H - SCHLITZ_T], ["L", sx - t / 2, H]); });
+    ops.push(["L", r, H], ["C", r - k, H, 0, H - r + k, 0, H - r], ["L", 0, r], ["C", 0, r - k, r - k, 0, r, 0], ["Z"]);
+    return ops;
+  }
+  // Fußteil 60 × 16 mm mit Schlitz von oben in der Mitte, untere Ecken leicht gerundet
+  function fussKontur(t) {
+    var c = FUSS_L / 2, r = 2, k = 0.5523 * r;
+    return [["M", 0, 0], ["L", c - t / 2, 0], ["L", c - t / 2, SCHLITZ_T], ["L", c + t / 2, SCHLITZ_T], ["L", c + t / 2, 0], ["L", FUSS_L, 0],
+      ["L", FUSS_L, FUSS_H - r], ["C", FUSS_L, FUSS_H - r + k, FUSS_L - r + k, FUSS_H, FUSS_L - r, FUSS_H], ["L", r, FUSS_H], ["C", r - k, FUSS_H, 0, FUSS_H - r + k, 0, FUSS_H - r], ["Z"]];
+  }
+  // Datei für den Laser: formulor = ganze Platte P1 mit Schild + 2 Fußteilen, sonst nur das Schild
+  function datei(o, opts) {
+    opts = opts || {};
+    var sz = bauen(o), t = opts.dicke || 3;
+    if (!opts.formulor) return { w: W, h: H, gravur: sz.gravur, schnitt: sz.kontur, sz: sz };
+    var y2 = ABST + H + 6;
+    return { w: PLATTE, h: PLATTE, sz: sz, gravur: verschieben(sz.gravur, ABST, ABST),
+      schnitt: verschieben(schildKontur(t), ABST, ABST).concat(verschieben(fussKontur(t), ABST, y2), verschieben(fussKontur(t), ABST + FUSS_L + 6, y2)) };
+  }
+
   // ---------- Layout ----------
   // o = { url, firma, variante: "name" | "logo", logo: { src (Data-URL JPEG, schwarz/weiß), w, h } }
   function bauen(o) {
@@ -134,9 +165,10 @@
     // 2) Studioname oder Logo-Feld
     var logo = null;
     if (o.variante === "logo") {
-      if (o.logo && o.logo.src) {
-        var f = Math.min(LOGO.w / o.logo.w, LOGO.h / o.logo.h), lw = o.logo.w * f, lh = o.logo.h * f;
-        logo = { src: o.logo.src, x: mitte - lw / 2, y: LOGO.y + (LOGO.h - lh) / 2, w: lw, h: lh };
+      if (o.logo && o.logo.runs) {
+        // Logo als Vektor: jede schwarze Pixelreihe wird ein Rechteck (Laser-Dienste nehmen keine Pixelbilder)
+        var L = o.logo, f = Math.min(LOGO.w / L.gw, LOGO.h / L.gh), lx = mitte - L.gw * f / 2, ly = LOGO.y + (LOGO.h - L.gh * f) / 2;
+        for (var ri = 0; ri < L.runs.length; ri += 3) g = g.concat(rechteck(lx + L.runs[ri + 1] * f, ly + L.runs[ri] * f, L.runs[ri + 2] * f, f));
       } else {
         blau = rundRechteck(LOGO.x, LOGO.y, LOGO.w, LOGO.h, 2);
         blauText = text("dm700", "DEIN STUDIO-LOGO", mitte, LOGO.y + LOGO.h / 2 + 1.4, 4, "mitte");
@@ -173,7 +205,7 @@
     });
 
     // 5) Link als Text (falls der Scan nicht klappt) + Zahlarten
-    var kurz = o.url.replace(/^https?:\/\//, "").replace(/\/$/, ""), linkGr = Math.min(3.3, nutz / breite("dm700", kurz, 1));
+    var kurz = o.linkText || o.url.replace(/^https?:\/\//, "").replace(/[?#].*$/, "").replace(/\/$/, ""), linkGr = Math.min(3.3, nutz / breite("dm700", kurz, 1));
     g = g.concat(text("dm700", kurz, mitte, B + 4.6, linkGr, "mitte"));
     g = g.concat(text("dm500", "Karte · Apple Pay · Google Pay · Klarna*", mitte, B + 9.4, 3, "mitte"));
 
@@ -181,7 +213,7 @@
     var fGr = 2.5, fz = umbrechen("dm500", FUSS, fGr, nutz), fy = H - FUSSZONE - 1.4 - (fz.length - 1) * fGr * 1.3;
     fz.forEach(function (z, i) { g = g.concat(text("dm500", z, mitte, fy + i * fGr * 1.3, fGr, "mitte")); });
 
-    return { gravur: g, platzhalter: blau, platzhalterText: blauText, logo: logo, kontur: rundRechteck(0, 0, W, H, RADIUS), qr: { x: qx, y: QR_Y, mm: QR_MM, n: n, modulMm: modul, ruheMm: ruhe }, unten: fy + (fz.length - 1) * fGr * 1.3 };
+    return { gravur: g, platzhalter: blau, platzhalterText: blauText, logo: logo, kontur: rundRechteck(0, 0, W, H, RADIUS), konturSchlitze: schildKontur(o.dicke || 3), qr: { x: qx, y: QR_Y, mm: QR_MM, n: n, modulMm: modul, ruheMm: ruhe }, unten: fy + (fz.length - 1) * fGr * 1.3 };
   }
 
   // ---------- SVG ----------
@@ -191,13 +223,16 @@
     var sz = bauen(o), holz = HOLZ[opts.holz];
     var tit = "Tattoofin QR-Aufsteller – " + (o.firma || "Studio");
     var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
-    var logoImg = sz.logo ? '<image x="' + zahl(sz.logo.x) + '" y="' + zahl(sz.logo.y) + '" width="' + zahl(sz.logo.w) + '" height="' + zahl(sz.logo.h) + '" href="' + sz.logo.src + '" preserveAspectRatio="xMidYMid meet"/>' : "";
     if (!holz) {
-      return '<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="' + W + 'mm" height="' + H + 'mm" viewBox="0 0 ' + W + " " + H + '">\n' +
-        "<title>" + esc(tit) + "</title>\n<desc>Gravurvorlage 100 × 150 mm, Maßstab 1:1. Schwarz = gravieren, Rot = Außenkontur (Schnitt, Ecken r = 4 mm), Grau = Platzhalter (nicht gravieren, vor der Bestellung durch das Logo ersetzen). Untere 12 mm frei für den Holzfuß. QR-Code: " + esc(o.url) + "</desc>\n" +
-        '<g id="gravur" fill="#000000" fill-rule="nonzero"><path d="' + svgD(sz.gravur) + '"/>' + (logoImg ? '<g id="logo">' + logoImg + "</g>" : "") + "</g>\n" +
-        (sz.platzhalter.length ? '<g id="platzhalter-nicht-gravieren"><path d="' + svgD(sz.platzhalter) + '" fill="none" stroke="#9aa5b1" stroke-width="0.3" stroke-dasharray="1.2 0.8"/><path d="' + svgD(sz.platzhalterText) + '" fill="#9aa5b1"/></g>\n' : "") +
-        (opts.kontur === false ? "" : '<g id="kontur-schnitt" fill="none" stroke="#ff0000" stroke-width="0.1"><path d="' + svgD(sz.kontur) + '"/></g>\n') +
+      var d = datei(o, opts), t = opts.dicke || 3, mat = t === 4 ? "Sperrholz Pappel 4 mm" : "Sperrholz Birke " + t + " mm";
+      var beschr = opts.formulor
+        ? "Formulor-Platte P1 (181 × 181 mm), " + mat + ". Schild 100 × 150 mm + 2 Fußteile 60 × 16 mm (Kreuz-Steckverbindung, Schlitze " + t + " mm). Schwarz gefüllt = Flächengravur, Blau 0,01 mm = Schnitt. Schrift in Pfaden, keine Pixelbilder. QR-Code: " + o.url
+        : "Gravurvorlage Schild 100 × 150 mm, Maßstab 1:1 (Fuß vom Hersteller). Schwarz gefüllt = gravieren, Blau 0,01 mm = Außenkontur/Schnitt, Grau = Platzhalter (nicht gravieren). Untere 17 mm frei für den Fuß. QR-Code: " + o.url;
+      return '<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="' + d.w + 'mm" height="' + d.h + 'mm" viewBox="0 0 ' + d.w + " " + d.h + '">\n' +
+        "<title>" + esc(tit) + "</title>\n<desc>" + esc(beschr) + "</desc>\n" +
+        '<g id="gravur" fill="#000000" stroke="none" fill-rule="nonzero"><path d="' + svgD(d.gravur) + '"/></g>\n' +
+        (d.sz.platzhalter.length && !opts.formulor ? '<g id="platzhalter-nicht-gravieren"><path d="' + svgD(d.sz.platzhalter) + '" fill="none" stroke="#9aa5b1" stroke-width="0.3" stroke-dasharray="1.2 0.8"/><path d="' + svgD(d.sz.platzhalterText) + '" fill="#9aa5b1"/></g>\n' : "") +
+        (opts.kontur === false ? "" : '<g id="schnitt" fill="none" stroke="' + BLAU + '" stroke-width="0.01"><path d="' + svgD(d.schnitt) + '"/></g>\n') +
         "</svg>\n";
     }
     // Vorschau: Holzplatte mit Maserung, Gravur leicht eingebrannt, kleiner Fuß
@@ -210,17 +245,16 @@
       '<filter id="inv"><feColorMatrix values="-1 0 0 0 1  0 -1 0 0 1  0 0 -1 0 1  0 0 0 1 0"/></filter>' +
       '<filter id="schatten" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0.8" dy="1.6" stdDeviation="1.6" flood-opacity=".28"/></filter>' +
       '<clipPath id="platte"><path d="' + svgD(sz.kontur) + '"/></clipPath></defs>' +
-      // Fuß (hinter der Platte)
-      '<rect x="18" y="' + (H - 9) + '" width="64" height="16" rx="2.5" fill="' + holz.kante + '" filter="url(#schatten)"/>' +
-      '<rect x="18" y="' + (H - 9) + '" width="64" height="5" rx="2" fill="' + holz.grund2 + '" opacity=".55"/>' +
-      '<g filter="url(#schatten)"><path d="' + svgD(sz.kontur) + '" fill="url(#hg)"/></g>' +
+      // Schatten auf dem Tisch
+      '<ellipse cx="' + W / 2 + '" cy="' + (H + 1) + '" rx="46" ry="2.2" fill="#000" opacity=".18"/>' +
+'<g filter="url(#schatten)"><path d="' + svgD(sz.kontur) + '" fill="url(#hg)"/></g>' +
       '<g clip-path="url(#platte)"><rect x="0" y="0" width="' + W + '" height="' + H + '" fill="' + holz.maserung + '" filter="url(#mas)" opacity=".3"/>' +
-      '<g filter="url(#brand)" fill="' + holz.gravur + '" opacity=".92"><path d="' + svgD(sz.gravur) + '"/>' + "</g>" + (sz.logo ? '<mask id="lm"><image x="' + zahl(sz.logo.x) + '" y="' + zahl(sz.logo.y) + '" width="' + zahl(sz.logo.w) + '" height="' + zahl(sz.logo.h) + '" href="' + sz.logo.src + '" filter="url(#inv)"/></mask><rect x="0" y="0" width="' + W + '" height="' + H + '" fill="' + holz.gravur + '" opacity=".92" mask="url(#lm)" filter="url(#brand)"/>' : "") +
+      '<g filter="url(#brand)" fill="' + holz.gravur + '" opacity=".92"><path d="' + svgD(sz.gravur) + '"/>' + "</g>" + 
       (sz.platzhalter.length ? '<g opacity=".45"><path d="' + svgD(sz.platzhalter) + '" fill="none" stroke="' + holz.gravur + '" stroke-width="0.35" stroke-dasharray="1.2 0.8"/><path d="' + svgD(sz.platzhalterText) + '" fill="' + holz.gravur + '"/></g>' : "") +
       "</g>" +
       '<path d="' + svgD(sz.kontur) + '" fill="none" stroke="' + holz.kante + '" stroke-width="0.6"/>' +
-      // Vorderkante des Fußes vor der Platte
-      '<rect x="16" y="' + (H - 4) + '" width="68" height="11" rx="2" fill="' + holz.kante + '"/><rect x="16" y="' + (H - 4) + '" width="68" height="1.1" fill="#000" opacity=".18"/><rect x="16" y="' + (H + 5.6) + '" width="68" height="1.4" rx="0.7" fill="#000" opacity=".15"/>' +
+      // Fußteile (Kreuz-Steckverbindung) von vorn: schmale Stege vor dem Schild
+      SCHLITZ_X.map(function (sx) { return '<rect x="' + (sx - 2) + '" y="' + (H - FUSS_H) + '" width="4" height="' + FUSS_H + '" rx="0.6" fill="' + holz.kante + '" stroke="#000" stroke-opacity=".3" stroke-width=".3"/><rect x="' + (sx - 2) + '" y="' + (H - FUSS_H) + '" width="1.2" height="' + FUSS_H + '" fill="#fff" opacity=".18"/>'; }).join("") +
       "</svg>";
   }
 
@@ -242,37 +276,22 @@
   function utf16hex(s) { var h = "FEFF"; for (var i = 0; i < s.length; i++) h += ("000" + s.charCodeAt(i).toString(16)).slice(-4); return "<" + h.toUpperCase() + ">"; }
   function pdf(o, opts) {
     opts = opts || {};
-    var sz = bauen(o), k = 72 / 25.4, pw = zahl(W * k), ph = zahl(H * k);
-    var inhalt = "q\n" + zahl(k) + " 0 0 " + zahl(-k) + " 0 " + ph + " cm\n0 0 0 rg\n" + pdfOps(sz.gravur) + "\nf\n";
-    var jpeg = null;
-    if (sz.logo) {
-      var b64 = sz.logo.src.split(",")[1], bin = root.atob(b64);
-      jpeg = { daten: bytes(bin), w: o.logo.w, h: o.logo.h };
-      inhalt += "q " + [sz.logo.w, 0, 0, -sz.logo.h, sz.logo.x, sz.logo.y + sz.logo.h].map(zahl).join(" ") + " cm /Logo Do Q\n";
-    }
-    if (sz.platzhalter.length) inhalt += "q 0.604 0.647 0.694 RG 0.604 0.647 0.694 rg 0.3 w [1.2 0.8] 0 d\n" + pdfOps(sz.platzhalter) + "\nS\n" + pdfOps(sz.platzhalterText) + "\nf Q\n";
-    if (opts.kontur !== false) inhalt += "1 0 0 RG 0.1 w\n" + pdfOps(sz.kontur) + "\nS\n";
+    var d = datei(o, opts), k = 72 / 25.4, pw = zahl(d.w * k), ph = zahl(d.h * k);
+    var inhalt = "q\n" + zahl(k) + " 0 0 " + zahl(-k) + " 0 " + ph + " cm\n0 0 0 rg\n" + pdfOps(d.gravur) + "\nf\n";
+    if (d.sz.platzhalter.length && !opts.formulor) inhalt += "q 0.604 0.647 0.694 RG 0.604 0.647 0.694 rg 0.3 w [1.2 0.8] 0 d\n" + pdfOps(d.sz.platzhalter) + "\nS\n" + pdfOps(d.sz.platzhalterText) + "\nf Q\n";
+    if (opts.kontur !== false) inhalt += "0 0 1 RG 0.01 w\n" + pdfOps(d.schnitt) + "\nS\n";
     inhalt += "Q\n";
     var objs = [];
     objs[1] = "<< /Type /Catalog /Pages 2 0 R >>";
     objs[2] = "<< /Type /Pages /Kids [3 0 R] /Count 1 >>";
-    objs[3] = "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 " + pw + " " + ph + "] /TrimBox [0 0 " + pw + " " + ph + "] /Resources << " + (jpeg ? "/XObject << /Logo 6 0 R >> " : "") + ">> /Contents 4 0 R >>";
+    objs[3] = "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 " + pw + " " + ph + "] /TrimBox [0 0 " + pw + " " + ph + "] /Resources << >> /Contents 4 0 R >>";
     objs[4] = "<< /Length " + inhalt.length + " >>\nstream\n" + inhalt + "endstream";
-    objs[5] = "<< /Title " + utf16hex("Tattoofin QR-Aufsteller – " + (o.firma || "Studio")) + " /Subject " + utf16hex("Gravurvorlage 100 × 150 mm, 1:1. Schwarz = gravieren, Rot = Kontur/Schnitt. QR: " + o.url) + " /Creator (Tattoofin) /Producer (Tattoofin) >>";
+    objs[5] = "<< /Title " + utf16hex("Tattoofin QR-Aufsteller – " + (o.firma || "Studio")) + " /Subject " + utf16hex((opts.formulor ? "Formulor-Platte P1 181 × 181 mm mit Schild + Fuß" : "Gravurvorlage 100 × 150 mm") + ", 1:1. Schwarz = Flächengravur, Blau = Schnitt. QR: " + o.url) + " /Creator (Tattoofin) /Producer (Tattoofin) >>";
     var teile = [bytes("%PDF-1.4\n%\xE2\xE3\xCF\xD3\n")], pos = teile[0].length, xref = [];
-    for (var i = 1; i <= (jpeg ? 6 : 5); i++) {
-      xref[i] = pos;
-      var t;
-      if (i === 6) {
-        var kopf = bytes("6 0 obj\n<< /Type /XObject /Subtype /Image /Width " + jpeg.w + " /Height " + jpeg.h + " /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length " + jpeg.daten.length + " >>\nstream\n");
-        var fuss = bytes("\nendstream\nendobj\n");
-        teile.push(kopf, jpeg.daten, fuss); pos += kopf.length + jpeg.daten.length + fuss.length; continue;
-      }
-      t = bytes(i + " 0 obj\n" + objs[i] + "\nendobj\n"); teile.push(t); pos += t.length;
-    }
-    var anzahl = jpeg ? 7 : 6, x = "xref\n0 " + anzahl + "\n0000000000 65535 f \n";
-    for (var j = 1; j < anzahl; j++) x += ("000000000" + xref[j]).slice(-10) + " 00000 n \n";
-    x += "trailer\n<< /Size " + anzahl + " /Root 1 0 R /Info 5 0 R >>\nstartxref\n" + pos + "\n%%EOF\n";
+    for (var i = 1; i <= 5; i++) { xref[i] = pos; var t = bytes(i + " 0 obj\n" + objs[i] + "\nendobj\n"); teile.push(t); pos += t.length; }
+    var x = "xref\n0 6\n0000000000 65535 f \n";
+    for (var j = 1; j < 6; j++) x += ("000000000" + xref[j]).slice(-10) + " 00000 n \n";
+    x += "trailer\n<< /Size 6 /Root 1 0 R /Info 5 0 R >>\nstartxref\n" + pos + "\n%%EOF\n";
     teile.push(bytes(x));
     var gesamt = teile.reduce(function (s, u) { return s + u.length; }, 0), out = new Uint8Array(gesamt), p = 0;
     teile.forEach(function (u) { out.set(u, p); p += u.length; });
@@ -311,6 +330,29 @@
     mx.forEach(function (row, r) { row.forEach(function (d, col) { if (d) c.fillRect((col + 4) * m, (r + 4) * m, m, m); }); });
     return cv;
   }
+  // Schwarz/weiß-Bild → Pixelreihen [zeile, start, länge, …] in einem Raster von max. 700 Punkten Breite (≈ 0,1 mm)
+  function logoRuns(bild) {
+    var w = bild.width || bild.naturalWidth, h = bild.height || bild.naturalHeight, f = Math.min(1, 700 / w, 140 / h), gw = Math.max(1, Math.round(w * f)), gh = Math.max(1, Math.round(h * f));
+    var cv = root.document.createElement("canvas"); cv.width = gw; cv.height = gh;
+    var c = cv.getContext("2d"); c.fillStyle = "#fff"; c.fillRect(0, 0, gw, gh); c.drawImage(bild, 0, 0, gw, gh);
+    var p = c.getImageData(0, 0, gw, gh).data, runs = [];
+    for (var y = 0; y < gh; y++) for (var x = 0; x < gw; x++) {
+      if (p[(y * gw + x) * 4] >= 128) continue;
+      var x0 = x; while (x + 1 < gw && p[(y * gw + x + 1) * 4] < 128) x++;
+      runs.push(y, x0, x - x0 + 1);
+    }
+    return { gw: gw, gh: gh, runs: runs };
+  }
+  // Gespeichertes Logo (Data-URL) → mit Vektor-Daten ergänzen
+  function logoAusDaten(logo) {
+    if (!logo || !logo.src || logo.runs) return Promise.resolve(logo);
+    return new Promise(function (ok, fehler) {
+      var img = new Image();
+      img.onload = function () { ok(Object.assign({}, logo, logoRuns(img))); };
+      img.onerror = function () { fehler(new Error("Logo konnte nicht geladen werden")); };
+      img.src = logo.src;
+    });
+  }
   // Logo-Datei → schwarz/weiß (für einfarbige Gravur) als JPEG-Data-URL
   function logoVorbereiten(datei) {
     return new Promise(function (ok, fehler) {
@@ -333,7 +375,8 @@
           c.putImageData(d, 0, 0);
           var bw = maxX - minX + 1, bh = maxY - minY + 1, cv2 = root.document.createElement("canvas"); cv2.width = bw; cv2.height = bh;
           cv2.getContext("2d").drawImage(cv, minX, minY, bw, bh, 0, 0, bw, bh); // auf den Inhalt zuschneiden
-          ok({ src: cv2.toDataURL("image/jpeg", 0.95), w: bw, h: bh });
+          var lg = { src: cv2.toDataURL("image/jpeg", 0.95), w: bw, h: bh };
+          ok(Object.assign(lg, logoRuns(cv2)));
         };
         img.src = r.result;
       };
@@ -341,5 +384,5 @@
     });
   }
 
-  root.TFAufsteller = { laden: laden, bauen: bauen, svg: svg, pdf: pdf, png: png, vorschau: vorschau, qrBild: qrBild, qrMatrix: qrMatrix, logoVorbereiten: logoVorbereiten, FUSS: FUSS, HOLZ: HOLZ, MASSE: { breite: W, hoehe: H, fusszone: FUSSZONE, qrMm: QR_MM } };
+  root.TFAufsteller = { laden: laden, bauen: bauen, svg: svg, pdf: pdf, png: png, vorschau: vorschau, qrBild: qrBild, qrMatrix: qrMatrix, logoVorbereiten: logoVorbereiten, logoAusDaten: logoAusDaten, datei: datei, FUSS: FUSS, HOLZ: HOLZ, MASSE: { breite: W, hoehe: H, fusszone: FUSSZONE, qrMm: QR_MM, platte: PLATTE, fussL: FUSS_L, fussH: FUSS_H, schlitzTiefe: SCHLITZ_T } };
 })(typeof window !== "undefined" ? window : globalThis);

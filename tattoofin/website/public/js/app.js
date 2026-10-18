@@ -281,7 +281,7 @@
     var nr = ++AUF.nr, w = aufWahl();
     $("auf-logo-box").classList.toggle("hidden", w.variante !== "logo");
     $("auf-holz-hinweis").textContent = w.holz === "dunkel"
-      ? "Dunkles Holz (Walnuss) sieht edel aus, der QR-Code hat aber weniger Kontrast. Im Test ließ er sich bis etwa 80 cm sicher scannen."
+      ? "Dunkles Holz (Walnuss) sieht edel aus, der QR-Code hat aber weniger Kontrast (im Test sicher bis etwa 80 cm). Bei Formulor gibt es kein dunkles Sperrholz – dafür einen anderen Anbieter wählen."
       : "Helles Holz (Birke, Buche, Ahorn) hat den besten Kontrast. Im Test ließ sich der QR-Code auch aus über 1 m scannen.";
     try {
       var cv = await TFAufsteller.vorschau(aufOpts(), w.holz, 720);
@@ -320,7 +320,7 @@
       AUF.geladen = true;
       try {
         await TFAufsteller.laden();
-        if (a.hatLogo) { var p = await (await fetch("/api/aufsteller?s=" + encodeURIComponent(s.zahlseite.split("/").pop()))).json(); if (p.logo) AUF.logo = p.logo; }
+        if (a.hatLogo) { var p = await (await fetch("/api/aufsteller?s=" + encodeURIComponent(s.zahlseite.split("/").pop()))).json(); if (p.logo) AUF.logo = await TFAufsteller.logoAusDaten(p.logo); }
       } catch (err) { $("auf-laden").textContent = "Vorschau konnte nicht geladen werden."; AUF.geladen = false; return; }
       document.querySelectorAll('input[name="auf-holz"]').forEach(function (r) { r.checked = r.value === (a.holz || "hell"); r.onchange = function () { aufZeichnen(); aufSpeichern().catch(function () {}); }; });
       document.querySelectorAll('input[name="auf-var"]').forEach(function (r) {
@@ -342,8 +342,11 @@
           var o = aufOpts(), art = b.dataset.auf, name = "tattoofin-qr-aufsteller-" + (s.zahlseite.split("/").pop() || "studio") + (o.variante === "logo" ? "-logo" : "");
           if (aufWahl().variante === "logo" && !AUF.logo) return toast("Bitte lade zuerst dein Logo hoch – oder wähle „Mit Studioname“.", true);
           try {
-            if (art === "svg") datei(new Blob([TFAufsteller.svg(o)], { type: "image/svg+xml" }), name + ".svg");
-            else if (art === "pdf") datei(new Blob([TFAufsteller.pdf(o)], { type: "application/pdf" }), name + ".pdf");
+            var fo = { formulor: true, dicke: 3 };
+            if (art === "fsvg") datei(new Blob([TFAufsteller.svg(o, fo)], { type: "image/svg+xml" }), name + "-formulor-P1-birke-3mm.svg");
+            else if (art === "fpdf") datei(new Blob([TFAufsteller.pdf(o, fo)], { type: "application/pdf" }), name + "-formulor-P1-birke-3mm.pdf");
+            else if (art === "svg") datei(new Blob([TFAufsteller.svg(o)], { type: "image/svg+xml" }), name + "-schild.svg");
+            else if (art === "pdf") datei(new Blob([TFAufsteller.pdf(o)], { type: "application/pdf" }), name + "-schild.pdf");
             else datei(await TFAufsteller.png(o), name + "-600dpi.png");
           } catch (err) { toast(err.message, true); }
         };
