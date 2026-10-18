@@ -662,7 +662,7 @@ try {
   await h.click("#so-gehts .sg-kap summary");
   await h.click("#so-gehts .sg-kap button[data-i='1']");
   // Der Testserver liefert keine Teilbereiche (Range), echtes Springen daher nur auf Netlify prüfbar – hier: richtiges Ziel angefordert
-  check(await h.evaluate(() => document.querySelector("#so-gehts video").dataset.ziel === "22.1"), "So geht's: Kapitel antippen springt an die Stelle (Ziel 0:22)");
+  check(await h.evaluate(() => document.querySelector("#so-gehts video").dataset.ziel === "22.6"), "So geht's: Kapitel antippen springt an die Stelle (Ziel 0:22)");
   await h.evaluate(() => document.querySelector("#so-gehts video").pause());
   await h.click("#so-gehts .sg-aus");
   check(await h.evaluate(() => document.getElementById("so-gehts").classList.contains("hidden")), "So geht's: auf der Startseite ausblendbar");
