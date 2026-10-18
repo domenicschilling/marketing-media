@@ -21,7 +21,7 @@ import { loginLink, sessionCookie, currentStudio, zweckOk } from "./_lib/auth.mj
 const weiter = (s) => `/danke.html?id=${s.id}&weiter=app`;
 
 const PRODUKT_EINMAL = "Tattoofin Paket Einmalzahlung";
-const TEXT_EINMAL = "Einrichtung der Zahlungsstruktur inkl. Studio Kit, QR-Aufsteller aus Holz, Schulung und Betreuung. Danach keine Tattoofin-Gebühr, nur die Zahlungsgebühren von Stripe";
+const TEXT_EINMAL = "Einrichtung der Zahlungsstruktur inkl. Studio Kit, QR-Aufsteller aus Holz (Wert 29 €), Schulung und Betreuung. Danach keine Tattoofin-Gebühr, nur die Zahlungsgebühren von Stripe";
 const RECHNUNG_FUSS = `${CFG.firma} · ${CFG.adresse} · USt-IdNr. ${CFG.ustid}`;
 
 export default handler(async (req, context) => {
@@ -116,7 +116,7 @@ export default handler(async (req, context) => {
         quantity: 1, tax_rates: [await taxRateId()],
         price_data: {
           currency: "eur", unit_amount: monatNetto, recurring: { interval: "month" },
-          product_data: { name: "Tattoofin Paket Monatlich", description: "Zahlungsstruktur, Studio-Portal, Studio Kit, QR-Aufsteller aus Holz und Betreuung. Keine Provision, monatlich kündbar." },
+          product_data: { name: "Tattoofin Paket Monatlich", description: "Zahlungsstruktur, Studio-Portal, Studio Kit, QR-Aufsteller aus Holz (Wert 29 €) und Betreuung. Keine Provision, monatlich kündbar." },
         },
       }],
       subscription_data: { description: "Tattoofin Paket Monatlich", metadata: { studioId: s.id, typ: "abo", paket: "monatlich" } },

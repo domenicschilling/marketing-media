@@ -15,7 +15,7 @@ import { CFG } from "./_lib/config.mjs";
 import { json, fail, now, brutto, handler } from "./_lib/util.mjs";
 import { stripe, verifyWebhook } from "./_lib/stripe.mjs";
 import { getStudio, saveStudio, studioBy, store, log, zahlungBy, saveZahlung } from "./_lib/store.mjs";
-import { notify, notifyAdmin, zaehleAktion, einrichtungUrl, kontoAbgleichen, provisionVerdient, zahlungBezahlt, paketDetails } from "./_lib/domain.mjs";
+import { notify, notifyAdmin, zaehleAktion, einrichtungUrl, kontoAbgleichen, provisionVerdient, zahlungBezahlt, paketDetails, aufstellerBezahlt } from "./_lib/domain.mjs";
 import { mails } from "./_lib/emails.mjs";
 import { loginLink } from "./_lib/auth.mjs";
 
@@ -179,6 +179,8 @@ export default handler(async (req) => {
     switch (event.type) {
       case "checkout.session.completed": {
         const s = await studioFuer(o);
+        // QR-Aufsteller einzeln gekauft (29 € netto): nur vermerken + Admin-Mail, Studio-Status bleibt unverändert
+        if (o.metadata?.typ === "aufsteller") { await aufstellerBezahlt(s, o); break; }
         // Paket Monatlich: Abo gestartet (erste Monatsrechnung ist bezahlt bzw. bei Lastschrift eingeleitet)
         if (s && o.mode === "subscription" && s.status === "entwurf") {
           s.status = "einrichtung";

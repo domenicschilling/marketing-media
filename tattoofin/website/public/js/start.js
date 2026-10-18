@@ -64,7 +64,7 @@
         TF.euro(C.monatNetto) + " netto im Monat, keine Einrichtungsgebühr.",
         "Danach nur die Zahlungsgebühren von Stripe (ca. 1,5–3 % je nach Zahlart), die du direkt an Stripe zahlst. 0 % Tattoofin-Provision.",
         "Alles läuft über dein eigenes Zahlungskonto bei Stripe.",
-        "Inklusive QR-Aufsteller aus Holz für deine Theke und digitalem QR-Code.",
+        "Inklusive QR-Aufsteller aus Holz für deine Theke (Wert 29 €) und digitalem QR-Code.",
         "Monatlich kündbar zum Ende des laufenden Abrechnungsmonats, keine Mindestlaufzeit.",
       ];
     } else {
@@ -74,7 +74,7 @@
       sub.textContent = z === "rechnung" ? "Zahlungspflichtig bestellen (Rechnung)" : "Zahlungspflichtig bestellen & bezahlen";
       kurz = [
         "Einmalig " + TF.euro(C.kaufNetto) + " netto. Danach keine Tattoofin-Gebühr mehr, nur die Zahlungsgebühren, die du direkt an Stripe zahlst.",
-        "Inklusive QR-Aufsteller aus Holz für deine Theke und digitalem QR-Code.",
+        "Inklusive QR-Aufsteller aus Holz für deine Theke (Wert 29 €) und digitalem QR-Code.",
         C.garantieTage + " Tage Geld-zurück-Garantie ab Go-live.",
         "Alles läuft über dein eigenes Zahlungskonto bei Stripe.",
         z === "rechnung" ? "Die Einrichtung startet nach Zahlungseingang." : "Nach der Zahlung legen wir sofort los.",

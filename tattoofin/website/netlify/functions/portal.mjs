@@ -15,7 +15,9 @@
 //   GET    /api/portal/nachweis/:id        Alle Nachweise zu einer Zahlung (für PDF/Druck)
 //   POST   /api/portal/recht               { version } „Deine rechtliche Lage“ gelesen (Zeitstempel + Version)
 //   POST   /api/portal/extra               { extra, nachricht } Interesse an einem Extra (Anfrage, keine Abrechnung)
-//   POST   /api/portal/aufsteller          { holz, variante, logo?, logoW, logoH, anfordern? } QR-Aufsteller speichern/anfordern
+//   POST   /api/portal/aufsteller          { holz, variante, logo?, logoW, logoH, anfordern?, kaufen? } QR-Aufsteller speichern/anfordern
+//                                          (anfordern: im Paket enthalten; kaufen: sonst 29 € netto per Stripe-Checkout → { url })
+//   POST   /api/portal/aufsteller-pruefen  { cs } Rückkehr aus dem Aufsteller-Checkout: Zahlung prüfen (falls der Webhook fehlt)
 //   POST   /api/portal/checkliste          { punkt, erledigt } Einrichtungs-Checkliste (manuelle Punkte)
 //   POST   /api/portal/abmelden            Auf allen Geräten abmelden (Sitzungsversion hochzählen)
 // Mandantentrennung: Jede Abfrage nutzt ausschließlich das Studio aus dem Session-Cookie; Zahlungen werden
@@ -25,7 +27,7 @@ import { json, fail, body, clean, id, now, handler, isEmail, parseBetrag, client
 import { saveStudio, zahlungenVon, getZahlung, saveZahlung, abrechnungenVon, getLeistung, store, log } from "./_lib/store.mjs";
 import { currentStudio, clearCookie } from "./_lib/auth.mjs";
 import { stripe, dashboardLink, accountSession, ensureConnectedAccount } from "./_lib/stripe.mjs";
-import { notify, notifyAdmin, kuendigungsDatum, connectUrl, darfKassieren, anzahlungsbedingungen, provisionVerdient, kontoAbgleichen, eingebettet, STATUS, aboKuendigen, aufstellerUrl } from "./_lib/domain.mjs";
+import { notify, notifyAdmin, kuendigungsDatum, connectUrl, darfKassieren, anzahlungsbedingungen, provisionVerdient, kontoAbgleichen, eingebettet, STATUS, aboKuendigen, aufstellerUrl, aufstellerCheckout, aufstellerBezahlt } from "./_lib/domain.mjs";
 import { randomBytes } from "node:crypto";
 
 // Extras (Zusatzangebote): nur Anzeige + Anfrage, keine Abrechnung. Preise sind Vorschläge.
@@ -66,7 +68,7 @@ const oeffentlich = (s) => ({
   checkliste: s.checkliste || {}, extrasAngefragt: Object.keys(s.extras || {}), eingebettet: eingebettet(), simulation: BAUSTEINE_SIMULIERT,
   anzahlungsbedingungen: anzahlungsbedingungen(s),
   kannKassieren: Boolean(darfKassieren(s)), zahlseite: zahlseite(s), connectUrl: connectUrl(s),
-  aufsteller: { inklusive: CFG.aufstellerPakete.includes(paketVon(s).id), holz: s.aufsteller?.holz || "hell", variante: s.aufsteller?.variante || "name", hatLogo: Boolean(s.aufsteller?.hatLogo), angefordertAm: s.aufsteller?.angefordertAm || null },
+  aufsteller: { inklusive: CFG.aufstellerPakete.includes(paketVon(s).id), holz: s.aufsteller?.holz || "hell", variante: s.aufsteller?.variante || "name", hatLogo: Boolean(s.aufsteller?.hatLogo), angefordertAm: s.aufsteller?.angefordertAm || null, preisNetto: CFG.aufstellerPreisNetto, bezahltAm: s.aufsteller?.kauf?.bezahltAm || null },
 });
 
 export default handler(async (req) => {
@@ -310,7 +312,18 @@ export default handler(async (req) => {
       a.hatLogo = true;
     }
     if (variante === "logo" && !a.hatLogo) return fail("Bitte lade zuerst dein Logo hoch oder wähle „Mit Studioname“.");
+    const inklusivePaket = CFG.aufstellerPakete.includes(paketVon(s).id);
+    if (b.kaufen && !inklusivePaket) {
+      if (a.angefordertAm || a.kauf?.bezahltAm) return fail("Dein Aufsteller ist schon bestellt. Wir melden uns bei dir.", 409);
+      s.aufsteller = a;
+      const cs = await aufstellerCheckout(s);
+      s.aufsteller.kauf = { csId: cs.id, gestartetAm: now() };
+      await saveStudio(s);
+      await log("aufsteller-checkout", { studioId: s.id, cs: cs.id });
+      return json({ ...oeffentlich(s), url: cs.url });
+    }
     if (b.anfordern) {
+      if (!inklusivePaket) return fail("Der QR-Aufsteller ist in deinem Paket nicht enthalten. Du kannst ihn für 29 € bestellen.", 400);
       if (a.angefordertAm) return fail("Dein Aufsteller ist schon angefordert. Wir melden uns bei dir.", 409);
       a.angefordertAm = now();
       const inklusive = CFG.aufstellerPakete.includes(paketVon(s).id);
@@ -324,6 +337,14 @@ export default handler(async (req) => {
     s.aufsteller = a;
     await saveStudio(s);
     return json(oeffentlich(s));
+  }
+
+  if (bereich === "aufsteller-pruefen" && req.method === "POST") {
+    const cs = clean((await body(req)).cs, 200);
+    if (!/^cs_[A-Za-z0-9_]+$/.test(cs)) return fail("Ungültig");
+    const session = await stripe("GET", "/checkout/sessions/" + cs);
+    const ok = await aufstellerBezahlt(s, session);
+    return json({ ...oeffentlich(s), bezahlt: ok });
   }
 
   if (bereich === "checkliste" && req.method === "POST") {

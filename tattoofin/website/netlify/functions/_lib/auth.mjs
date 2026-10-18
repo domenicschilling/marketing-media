@@ -21,14 +21,15 @@ export function sign(payload) {
   return data + "." + sig;
 }
 
-export function verify(token, type) {
-  if (!token || !token.includes(".")) return null;
+// abgelaufenOk: auch abgelaufene (aber echt signierte) Token zurückgeben – nur für „neuen Link anfordern“
+export function verify(token, type, { abgelaufenOk = false } = {}) {
+  if (!token || typeof token !== "string" || !token.includes(".")) return null;
   const [data, sig] = token.split(".");
   const expected = crypto.createHmac("sha256", SECRETS.sessionSecret).update(data).digest("base64url");
   if (sig.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) return null;
   try {
     const p = JSON.parse(Buffer.from(data, "base64url").toString());
-    if (p.exp && p.exp < Date.now()) return null;
+    if (p.exp && p.exp < Date.now() && !abgelaufenOk) return null;
     if (type && p.t !== type) return null;
     return p;
   } catch { return null; }
@@ -39,8 +40,17 @@ export function verify(token, type) {
 export const zweckToken = (studioId, zweck, stunden = 24) => sign({ t: zweck, sid: studioId, exp: Date.now() + stunden * 3600e3 });
 export const zweckOk = (token, zweck, studioId) => { const p = verify(token, zweck); return Boolean(p && studioId && p.sid === studioId); };
 
-export const loginLink = (studioId, minutes = 60 * 24) =>
-  `${CFG.siteUrl}/api/auth?token=${sign({ t: "login", sid: studioId, exp: Date.now() + minutes * 60000 })}`;
+// Login-Link: 24 Stunden gültig und nur einmal verwendbar („n“ = Einmal-Kennung). Seit 18.10.2026 (vorher 60 Min.):
+// Mails kamen wegen des IONOS-Limits stundenlang verspätet an und waren dann schon abgelaufen.
+export const LOGIN_STUNDEN = 24;
+export const ADMIN_LOGIN_STUNDEN = 2;
+const nonce = () => crypto.randomBytes(9).toString("base64url");
+export const loginLink = (studioId, minutes = LOGIN_STUNDEN * 60) =>
+  `${CFG.siteUrl}/api/auth?token=${sign({ t: "login", sid: studioId, n: nonce(), exp: Date.now() + minutes * 60000 })}`;
+
+// Einmal-Links: verbrauchte Kennungen merken (Schlüssel einmal/<n>). Ältere Token ohne „n“ gelten bis zum Ablauf.
+export const einmalBenutzt = async (p) => Boolean(p?.n) && Boolean(await store.get("einmal/" + p.n));
+export const einmalVerbrauchen = async (p) => { if (p?.n) await store.set("einmal/" + p.n, { am: new Date().toISOString(), t: p.t, exp: p.exp }); };
 
 // Sitzung 30 Tage. „sv“ = Sitzungsversion des Studios: „Auf allen Geräten abmelden“ zählt sie hoch, alte Cookies verfallen.
 export function sessionCookie(studioOderId) {
@@ -79,7 +89,7 @@ export async function currentStudio(req) {
 export const adminEmails = () => String(process.env.ADMIN_EMAILS || CFG.adminEmail || "").split(",").map((x) => normEmail(x)).filter(Boolean);
 export const istAdminEmail = (email) => Boolean(email) && adminEmails().includes(normEmail(email));
 const ADMIN_COOKIE = "tf_admin";
-export const adminLoginLink = (email) => `${CFG.siteUrl}/api/admin-login?token=${sign({ t: "adminlogin", email: normEmail(email), exp: Date.now() + 30 * 60000 })}`;
+export const adminLoginLink = (email) => `${CFG.siteUrl}/api/admin-login?token=${sign({ t: "adminlogin", email: normEmail(email), n: nonce(), exp: Date.now() + ADMIN_LOGIN_STUNDEN * 3600e3 })}`;
 export function adminCookie(email) {
   const val = sign({ t: "admin", email: normEmail(email), exp: Date.now() + 12 * 3600e3 });
   const secure = CFG.siteUrl.startsWith("https") ? "; Secure" : "";

@@ -3,7 +3,7 @@ import crypto from "node:crypto";
 import { CFG, plattformgebuehr, netto, provisionSatz, BAUSTEINE_SIMULIERT, paketVon, aufstellerInklusive } from "./config.mjs";
 import { sendMail } from "./mail.mjs";
 import { mails } from "./emails.mjs";
-import { stripe, taxRateId, ensureCustomer } from "./stripe.mjs";
+import { stripe, taxRateId, ensureCustomer, TATTOOFIN_BRANDING } from "./stripe.mjs";
 import { allStudios, zahlungenVon, saveZahlung, getAbrechnung, saveAbrechnung, saveStudio, getStudio, log, store } from "./store.mjs";
 import { monatsende, now, HttpError } from "./util.mjs";
 import { loginLink, zweckToken } from "./auth.mjs";
@@ -67,6 +67,48 @@ export function paketDetails(s, { aufsteller = false } = {}) {
     d["QR-Code zeigt auf"] = zahlseiteUrl(s);
   }
   return d;
+}
+
+// Rechnungsfuß für Rechnungen vom DSX-Konto (Stripe)
+export const RECHNUNG_FUSS = `${CFG.firma} · ${CFG.adresse} · USt-IdNr. ${CFG.ustid}`;
+const lieferadresse = (s) => [s.firma, s.strasse, [s.plz, s.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ");
+const holzText = (h) => (h === "dunkel" ? "dunkel (Walnuss)" : "hell (Birke/Buche)");
+
+// QR-Aufsteller einzeln kaufen (Pakete ohne Aufsteller): Stripe-Checkout auf dem DSX-Konto, Rechnung automatisch.
+export async function aufstellerCheckout(s) {
+  if (!s.stripe?.customerId) { const cus = await ensureCustomer(s); s.stripe = { ...(s.stripe || {}), customerId: cus.id }; }
+  const name = "QR-Aufsteller aus Holz";
+  const text = `Graviert mit QR-Code deiner Zahlseite, ${s.aufsteller?.variante === "logo" ? "mit deinem Logo" : "mit Studioname"}, Holz ${holzText(s.aufsteller?.holz)}. Lieferung an: ${lieferadresse(s)}`.slice(0, 480);
+  const session = await stripe("POST", "/checkout/sessions", {
+    mode: "payment", customer: s.stripe.customerId, locale: "de", client_reference_id: s.id,
+    branding_settings: TATTOOFIN_BRANDING,
+    line_items: [{ quantity: 1, tax_rates: [await taxRateId()], price_data: { currency: "eur", unit_amount: CFG.aufstellerPreisNetto, product_data: { name, description: text } } }],
+    invoice_creation: { enabled: true, invoice_data: { description: name, metadata: { studioId: s.id, typ: "aufsteller" }, footer: RECHNUNG_FUSS } },
+    customer_update: { address: "auto", name: "auto" }, tax_id_collection: { enabled: true },
+    payment_intent_data: { metadata: { studioId: s.id, typ: "aufsteller" }, description: name },
+    metadata: { studioId: s.id, typ: "aufsteller" },
+    success_url: `${CFG.siteUrl}/app.html?aufsteller=bezahlt&cs={CHECKOUT_SESSION_ID}#werbung`,
+    cancel_url: `${CFG.siteUrl}/app.html#werbung`,
+  });
+  return session;
+}
+
+// Aufsteller-Kauf bezahlt (Webhook checkout.session.completed oder Rückkehr aus dem Checkout): einmalig vermerken + Admin-Mail
+export async function aufstellerBezahlt(s, session) {
+  if (!s || session?.metadata?.typ !== "aufsteller" || session.metadata.studioId !== s.id || session.payment_status !== "paid") return false;
+  const a = s.aufsteller || {};
+  if (a.kauf?.csId === session.id && a.kauf?.bezahltAm) return true;
+  a.kauf = { csId: session.id, bezahltAm: new Date().toISOString(), betragCent: session.amount_total, invoiceId: typeof session.invoice === "object" ? session.invoice?.id : session.invoice || null };
+  a.angefordertAm = a.angefordertAm || a.kauf.bezahltAm;
+  s.aufsteller = a;
+  await saveStudio(s);
+  await notifyAdmin("QR-Aufsteller bestellen (29 € bezahlt)", s, {
+    Paket: paketVon(s).name, Bezahlt: (session.amount_total / 100).toFixed(2).replace(".", ",") + " € brutto",
+    Holz: holzText(a.holz), Variante: a.variante === "logo" ? "mit Studio-Logo" : "mit Studioname",
+    Lieferadresse: lieferadresse(s), Gravurdatei: aufstellerUrl(s), "QR-Code zeigt auf": zahlseiteUrl(s), Telefon: s.telefon,
+  });
+  await log("aufsteller-bezahlt", { studioId: s.id, cs: session.id });
+  return true;
 }
 
 // Paket Monatlich: Abo auf dem DSX-Konto zum Ende des laufenden Abrechnungsmonats beenden (bzw. Kündigung zurücknehmen).
@@ -311,6 +353,10 @@ export async function kontoAbgleichen(s, acct) {
   s.stripe.chargesEnabled = Boolean(acct.charges_enabled);
   s.stripe.payoutsEnabled = Boolean(acct.payouts_enabled);
   s.stripe.detailsSubmitted = Boolean(acct.details_submitted);
+  // Was Stripe noch braucht (für Admin/Dashboard), und wann zuletzt abgeglichen (Webhook oder „jetzt abgleichen“)
+  const r = acct.requirements || {};
+  s.stripe.offen = { faellig: (r.currently_due || []).slice(0, 20), ueberfaellig: (r.past_due || []).slice(0, 20), inPruefung: (r.pending_verification || []).slice(0, 20), sperrgrund: r.disabled_reason || null };
+  s.stripe.abgeglichenAm = new Date().toISOString();
   await saveStudio(s);
   if (!vorher && s.stripe.chargesEnabled) {
     await notify(s, mails.kontoFreigegeben(s));

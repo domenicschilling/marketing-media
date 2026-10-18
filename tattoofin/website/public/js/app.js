@@ -22,7 +22,7 @@
     if (D.adminAnsicht && !document.getElementById("admin-ansicht")) {
       document.body.insertAdjacentHTML("afterbegin", '<div id="admin-ansicht" role="status" style="position:sticky;top:0;z-index:200;background:#a8231a;color:#fff;font:700 14px/1.4 system-ui,sans-serif;padding:8px 12px;display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap"><span>Admin-Ansicht: ' + e(D.studio.firma) + ' · nur lesen</span><a href="/api/admin-ansicht/ende" style="color:#fff;background:rgba(0,0,0,.25);padding:4px 10px;border-radius:99px;text-decoration:none">Zurück zum Admin</a></div>');
     }
-    kopf(); route();
+    kopf(); route(); aufRueckkehr();
   }
 
   function kopf() {
@@ -297,20 +297,50 @@
   }
   function aufPaket() {
     var a = D.studio.aufsteller || {}, box = $("auf-paket");
-    var knopf = a.angefordertAm ? '<span class="chip ok">✓ Angefordert am ' + dat(a.angefordertAm) + " – wir melden uns</span>"
-      : '<button class="btn gold small" id="auf-anfordern">' + (a.inklusive ? "Aufsteller kostenlos anfordern" : "Fertigen Aufsteller anfragen") + "</button>";
+    var preis = euro(a.preisNetto || 2900).replace(",00", "");
+    var knopf = a.bezahltAm ? '<span class="chip ok">✓ Bestellt und bezahlt am ' + dat(a.bezahltAm) + " – wir lassen ihn fertigen und melden uns</span>"
+      : a.angefordertAm ? '<span class="chip ok">✓ ' + (a.inklusive ? "Angefordert" : "Angefragt") + " am " + dat(a.angefordertAm) + " – wir melden uns</span>"
+      : a.inklusive ? '<button class="btn gold small" id="auf-anfordern">Aufsteller kostenlos anfordern</button>'
+      : '<button class="btn gold small" id="auf-kaufen">QR-Aufsteller bestellen – ' + preis + '</button>';
     box.innerHTML = a.inklusive
-      ? "<b>✓ In deinem Paket enthalten.</b> Wir lassen deinen Aufsteller fertigen und schicken ihn an deine Studio-Adresse. Wähle unten Holz und Variante, dann anfordern.<div class=\"row-a\">" + knopf + "</div>"
-      : "<b>Zum Selbermachen oder bei uns anfragen.</b> Die Dateien unten kannst du kostenlos bei jedem Laser-Dienst gravieren lassen. Oder du fragst einen fertigen Aufsteller bei uns an.<div class=\"row-a\">" + knopf + "</div>";
+      ? "<b>✓ In deinem Paket enthalten (im Wert von " + preis + ").</b> Wir lassen deinen Aufsteller fertigen und schicken ihn an deine Studio-Adresse. Wähle unten Holz und Variante, dann anfordern.<div class=\"row-a\">" + knopf + "</div>"
+      : "<b>Fertig graviert für " + preis + " netto</b> (zzgl. USt., inkl. Versand an deine Studio-Adresse, Rechnung kommt automatisch). Oder kostenlos selbst machen: Die Dateien unten kannst du bei jedem Laser-Dienst gravieren lassen.<div class=\"row-a\">" + knopf + "</div>";
+    var w0 = function () {
+      var w = aufWahl();
+      if (w.variante === "logo" && !AUF.logo) { toast("Bitte lade zuerst dein Logo hoch oder wähle „Mit Studioname“.", true); return null; }
+      return w;
+    };
     var k = $("auf-anfordern");
     if (k) k.onclick = async function () {
-      var w = aufWahl();
-      if (w.variante === "logo" && !AUF.logo) return toast("Bitte lade zuerst dein Logo hoch oder wähle „Mit Studioname“.", true);
+      var w = w0(); if (!w) return;
       if (!confirm("Aufsteller jetzt anfordern? Holz " + (w.holz === "dunkel" ? "dunkel" : "hell") + ", " + (w.variante === "logo" ? "mit deinem Logo" : "mit Studioname") + ". Lieferung an deine Studio-Adresse.")) return;
       k.disabled = true;
       try { await aufSpeichern({ anfordern: true }); toast("Danke! Wir kümmern uns um deinen Aufsteller."); }
       catch (err) { k.disabled = false; toast(err.message, true); }
     };
+    var kk = $("auf-kaufen");
+    if (kk) kk.onclick = async function () {
+      var w = w0(); if (!w) return;
+      if (!confirm("QR-Aufsteller für " + preis + " netto (zzgl. USt.) bestellen? Holz " + (w.holz === "dunkel" ? "dunkel" : "hell") + ", " + (w.variante === "logo" ? "mit deinem Logo" : "mit Studioname") + ". Lieferung an deine Studio-Adresse. Du wirst zur sicheren Bezahlseite von Stripe weitergeleitet.")) return;
+      kk.disabled = true;
+      try {
+        var b = aufWahl(), r = await TF.api("/api/portal/aufsteller", { body: { holz: b.holz, variante: b.variante, kaufen: true } });
+        if (r.url) { location.href = r.url; return; }
+        D.studio = r; aufPaket();
+      } catch (err) { kk.disabled = false; toast(err.message, true); }
+    };
+  }
+  // Rückkehr aus dem Aufsteller-Checkout (Stripe): Zahlung prüfen, Adresse aufräumen
+  async function aufRueckkehr() {
+    var q = new URLSearchParams(location.search);
+    if (q.get("aufsteller") !== "bezahlt" || !q.get("cs")) return;
+    try { history.replaceState(null, "", "/app.html" + location.hash); } catch (x) {}
+    try {
+      var r = await TF.api("/api/portal/aufsteller-pruefen", { body: { cs: q.get("cs") } });
+      D.studio = r;
+      toast(r.bezahlt ? "Danke! Dein QR-Aufsteller ist bestellt. Wir melden uns, sobald er unterwegs ist." : "Die Zahlung ist noch nicht bestätigt. Wir melden uns, sobald sie da ist.", !r.bezahlt);
+      if ($("auf-paket")) aufPaket();
+    } catch (err) { toast(err.message, true); }
   }
   async function aufsteller() {
     if (!window.TFAufsteller) return;

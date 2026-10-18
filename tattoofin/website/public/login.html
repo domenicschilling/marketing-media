@@ -20,13 +20,31 @@
 <script>
 var a = document.getElementById("alert");
 if (new URLSearchParams(location.search).get("weiter") === "einrichtung") a.innerHTML = '<div class="alert info">Bitte melde dich kurz an. Danach geht es mit der Einrichtung deines Zahlungskontos weiter.</div>';
-if (new URLSearchParams(location.search).get("abgelaufen")) a.innerHTML = '<div class="alert err">Der Link ist abgelaufen oder ungültig. Fordere einfach einen neuen an.</div>';
+var q = new URLSearchParams(location.search), WA = "https://wa.me/491624502375?text=" + encodeURIComponent("Hi, mein Login-Link für Tattoofin funktioniert nicht. Kannst du mir helfen?");
+function hinweisVerzoegert(r) { return r && r.verzoegert ? '<br><small>Unser Mailversand ist gerade langsamer als sonst. Kommt nichts an, schreib uns kurz per <a href="' + WA + '" target="_blank" rel="noopener">WhatsApp</a>, dann schicken wir dir den Link direkt.</small>' : ""; }
+if (q.get("abgelaufen")) {
+  var neu = q.get("neu");
+  // Den alten Link aus der Adresszeile entfernen (nicht im Verlauf lassen)
+  try { history.replaceState(null, "", "/login.html?abgelaufen=1"); } catch (x) {}
+  a.innerHTML = '<div class="alert err" id="abg"><b>Dieser Login-Link ist abgelaufen oder wurde schon benutzt.</b><br>' +
+    (neu ? 'Kein Problem: Wir schicken dir sofort einen neuen an die E-Mail-Adresse deines Studios.<div style="margin-top:12px"><button type="button" class="btn gold" style="width:100%" id="neu-btn">Neuen Login-Link schicken</button></div>'
+         : "Gib unten die E-Mail-Adresse deines Studios ein, dann schicken wir dir einen neuen Link.") +
+    '<small style="display:block;margin-top:10px">Login-Links gelten 24 Stunden und funktionieren einmal. Hilfe: <a href="' + WA + '" target="_blank" rel="noopener">WhatsApp</a></small></div>';
+  var nb = document.getElementById("neu-btn");
+  if (nb) nb.onclick = async function () {
+    nb.disabled = true; nb.textContent = "Wird geschickt …";
+    try {
+      var r = await TF.api("/api/login", { body: { neu: neu } });
+      a.innerHTML = '<div class="alert ok"><b>Neuer Link ist unterwegs' + (r.an ? " an " + TF.esc(r.an) : "") + ".</b> Schau in dein Postfach (auch im Spam-Ordner)." + (r.gedrosselt ? "<br><small>Du hast gerade schon mehrere Links angefordert. Bitte nimm den neuesten aus deinem Postfach.</small>" : "") + hinweisVerzoegert(r) + "</div>";
+    } catch (err) { nb.disabled = false; nb.textContent = "Neuen Login-Link schicken"; a.insertAdjacentHTML("beforeend", '<div class="alert err">' + TF.esc(err.message) + "</div>"); }
+  };
+}
 document.getElementById("f").addEventListener("submit", async function (e) {
   e.preventDefault();
   var b = document.getElementById("btn"); b.disabled = true;
   try {
-    await TF.api("/api/login", { body: { email: document.getElementById("email").value } });
-    a.innerHTML = '<div class="alert ok">Wenn es zu dieser E-Mail ein Studio gibt, ist der Link unterwegs. Schau auch im Spam-Ordner nach.</div>';
+    var r = await TF.api("/api/login", { body: { email: document.getElementById("email").value } });
+    a.innerHTML = '<div class="alert ok">Wenn es zu dieser E-Mail ein Studio gibt, ist der Link unterwegs. Schau auch im Spam-Ordner nach.' + hinweisVerzoegert(r) + "</div>";
   } catch (err) { a.innerHTML = '<div class="alert err">' + TF.esc(err.message) + "</div>"; }
   b.disabled = false;
 });

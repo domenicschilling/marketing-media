@@ -27,6 +27,8 @@ const linkAus = (m, re) => (m.html.match(re) || [])[1]?.replace(/&amp;/g, "&");
 const mock = (p, opts) => fetch("http://localhost:12111/" + (opts ? "" : "mock/") + p, opts).then((r) => r.json());
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const post = (url, b, cookie) => fetch(BASE + url, { method: "POST", headers: { "content-type": "application/json", ...(cookie ? { cookie } : {}) }, body: JSON.stringify(b) });
+// Formular absenden wie die Zwischenseite beim Login per Link (POST, application/x-www-form-urlencoded)
+const formPost = (url, felder, cookie) => fetch(BASE + url, { method: "POST", redirect: "manual", headers: { "content-type": "application/x-www-form-urlencoded", ...(cookie ? { cookie } : {}) }, body: new URLSearchParams(felder).toString() });
 const studioPer = async (email) => (await admin("studios")).find((s) => s.email === email);
 
 const browser = await chromium.launch();
@@ -455,8 +457,28 @@ try {
   check((await fetch(`${BASE}/api/stripe-webhook`, { method: "POST", headers: { "stripe-signature": "t=1,v1=00" }, body: "{}" })).status === 400, "Webhook mit falscher Signatur abgelehnt");
   check((await fetch(`${BASE}/api/admin/studios`)).status === 401, "Admin ohne Token abgelehnt");
   check((await fetch(`${BASE}/api/portal`)).status === 401, "Portal ohne Login abgelehnt");
-  const redir = await fetch(`${BASE}/api/auth?token=${encodeURIComponent(new URL(loginUrl).searchParams.get("token"))}&next=//evil.com`, { redirect: "manual" });
-  check(redir.headers.get("location") === "/app.html", "Kein offener Redirect (Standardziel: Dashboard)");
+  // Login-Link (24 h, einmal verwendbar): GET zeigt nur die Zwischenseite, erst der POST meldet an
+  await post("/api/login", { email: "rechnung@example.com" });
+  const llMail = mailsAn("rechnung@example.com").filter((m) => /Login-Link/.test(m.subject)).pop();
+  const llTok = new URL(linkAus(llMail, /href="([^"]*\/api\/auth\?token=[^"]+)"/)).searchParams.get("token");
+  check(/24 Stunden gültig, funktioniert einmal/.test(llMail.html), "Login-Mail: 24 Stunden gültig, einmal verwendbar");
+  const llGet = await fetch(`${BASE}/api/auth?token=${encodeURIComponent(llTok)}`, { redirect: "manual" });
+  check(llGet.status === 200 && !llGet.headers.get("set-cookie") && /method="post" action="\/api\/auth"/.test(await llGet.text()), "Login-Link: GET (z. B. Mail-Scanner) verbraucht den Link nicht, nur Zwischenseite");
+  const redir = await formPost("/api/auth", { token: llTok, next: "//evil.com" });
+  check(redir.headers.get("location") === "/app.html" && /tf_session=/.test(redir.headers.get("set-cookie") || ""), "Kein offener Redirect (Standardziel: Dashboard)");
+  const llCookie = (redir.headers.get("set-cookie") || "").split(";")[0];
+  check((await formPost("/api/auth", { token: llTok, next: "/app.html" }, llCookie)).headers.get("location") === "/app.html", "Login-Link doppelt angetippt (schon angemeldet): einfach weiter");
+  const llZweit = await formPost("/api/auth", { token: llTok });
+  check(/^\/login\.html\?abgelaufen=1&neu=/.test(llZweit.headers.get("location") || "") && !llZweit.headers.get("set-cookie"), "Login-Link ein zweites Mal (anderes Gerät): „abgelaufen“ mit Knopf für neuen Link");
+  const vorNeu = mailsAn("rechnung@example.com").filter((m) => /Login-Link/.test(m.subject)).length;
+  const neuR = await (await post("/api/login", { neu: llTok })).json();
+  check(neuR.ok && /^r•••••@example\.com$/.test(neuR.an || "") && mailsAn("rechnung@example.com").filter((m) => /Login-Link/.test(m.subject)).length === vorNeu + 1, "„Neuen Link schicken“: neuer Link an die Studio-Adresse (maskiert angezeigt)");
+  check((await (await post("/api/login", { neu: "gefaelscht.abc" })).json()).an === undefined, "„Neuen Link schicken“ mit gefälschtem Token: nichts verschickt");
+  const pAbg = await neueSeite();
+  await pAbg.goto(BASE + new URL(llZweit.headers.get("location"), BASE).pathname + new URL(llZweit.headers.get("location"), BASE).search);
+  await pAbg.click("#neu-btn");
+  await pAbg.waitForFunction(() => /Neuer Link ist unterwegs/.test(document.getElementById("alert").textContent));
+  check(!/neu=/.test(pAbg.url()), "Seite „Link abgelaufen“: ein Knopf, neuer Link unterwegs, alter Link aus der Adresszeile entfernt");
   const blocked = await post("/api/pay", { s: (await studioPer("rechnung@example.com")).slug, betrag: "500", kunde: "x", inhaltOk: true });
   check(blocked.status === 409, "Studio ohne freigegebenes Konto kann nicht kassieren");
   check((await fetch(`${BASE}/api/vorschau/mails`)).status === 404 && (await post("/api/vorschau/einladen", { email: "x@example.com", firma: "x" })).status === 404, "Vorschau-Endpunkte außerhalb der Vorschau: 404");
@@ -475,9 +497,13 @@ try {
   const adminMail = mailsAn("domenicschilling@googlemail.com").find((m) => /Admin-Login/.test(m.subject));
   const adminLink = adminMail && (adminMail.html.match(/href="([^"]*\/api\/admin-login\?token=[^"]+)"/) || [])[1];
   check(Boolean(adminLink), "Admin-Login-Link an domenicschilling@googlemail.com (gmail/googlemail normalisiert)");
-  const aResp = await fetch(adminLink, { redirect: "manual" });
+  const aGet = await fetch(adminLink, { redirect: "manual" });
+  check(aGet.status === 200 && !aGet.headers.get("set-cookie"), "Admin-Link: GET zeigt nur die Zwischenseite (2 Std., einmal verwendbar)");
+  const aTok = new URL(adminLink).searchParams.get("token");
+  const aResp = await formPost("/api/admin-login", { token: aTok });
   const aCookie = (aResp.headers.get("set-cookie") || "").split(";")[0];
   check(aResp.headers.get("location") === "/admin.html" && /^tf_admin=/.test(aCookie) && /HttpOnly/i.test(aResp.headers.get("set-cookie")), "Admin-Sitzung als httpOnly-Cookie");
+  check((await formPost("/api/admin-login", { token: aTok })).headers.get("location") === "/admin.html?abgelaufen=1", "Admin-Link nur einmal verwendbar");
   const aStudios = await fetch(`${BASE}/api/admin/studios`, { headers: { cookie: aCookie } });
   check(aStudios.status === 200 && (await aStudios.json()).length > 3, "Admin-Sitzung hat Admin-Rechte (Studios-Liste)");
   check((await fetch(`${BASE}/api/admin/studios`, { headers: { cookie: "tf_admin=gefaelscht.x" } })).status === 401, "Gefälschtes Admin-Cookie abgelehnt");
@@ -615,7 +641,7 @@ try {
   const qrD = await runter("#zs-png");
   check(qrD.buf.subarray(1, 4).toString() === "PNG" && qrD.buf.readUInt32BE(16) >= 1000, "Digitaler QR-Code als PNG (" + qrD.buf.readUInt32BE(16) + " px)");
   const inkl = await h.evaluate(() => fetch("/api/portal").then((r) => r.json()).then((d) => d.studio.aufsteller.inklusive));
-  check((await h.textContent("#auf-paket")).includes(inkl ? "In deinem Paket enthalten" : "Zum Selbermachen"), "Aufsteller: Hinweis passt zum Paket (" + (inkl ? "inklusive" : "Anfrage") + ")");
+  check((await h.textContent("#auf-paket")).includes(inkl ? "In deinem Paket enthalten" : "Fertig graviert für 29 € netto"), "Aufsteller: Hinweis passt zum Paket (" + (inkl ? "inklusive" : "Anfrage") + ")");
   await h.click('label:has(> input[name="auf-var"][value="logo"])');
   await h.setInputFiles("#auf-logo", path.join(root, "public/assets/wortmarke.png"));
   await h.waitForFunction(() => /Logo gespeichert/.test(document.getElementById("toast").textContent), null, { timeout: 10000 });
@@ -626,12 +652,26 @@ try {
   await h.click('label:has(> input[name="auf-holz"][value="dunkel"])');
   await h.waitForTimeout(600);
   await appShot(h, path.join(S, "18b-qr-aufsteller.png"));
-  await h.click("#auf-anfordern");
-  await h.waitForSelector("#auf-paket .chip.ok");
+  // Geschenk-Paket: Aufsteller nicht inklusive → für 29 € netto bestellen (Stripe-Checkout auf dem DSX-Konto)
+  check((await h.textContent("#auf-kaufen")).includes("QR-Aufsteller bestellen – 29 €") && (await h.textContent("#auf-paket")).includes("29 € netto"), "Aufsteller (nicht im Paket): Knopf „QR-Aufsteller bestellen – 29 €“ mit Netto-Hinweis");
+  const ohneKauf = await h.evaluate(() => fetch("/api/portal/aufsteller", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ anfordern: true }) }).then((r) => r.status));
+  check(ohneKauf === 400, "Aufsteller (nicht im Paket): kostenlos anfordern nicht möglich");
+  const nwStatusVor = (await admin(`studio/${nwId}`)).studio.status;
+  await h.click("#auf-kaufen");
+  await h.waitForURL(/localhost:12111\/pay\//);
+  check((await h.textContent("body")).includes("34.51"), "Aufsteller-Checkout: 29 € netto + 19 % USt. = 34,51 €");
+  await h.click("#pay");
+  await h.waitForURL(/app\.html/);
+  await h.waitForSelector("#auf-paket .chip.ok", { timeout: 15000 });
+  check(/Bestellt und bezahlt/.test(await h.textContent("#auf-paket")) && !/cs=/.test(h.url()), "Aufsteller: nach Zahlung „Bestellt und bezahlt“, Adresse aufgeräumt");
   const nwA = (await admin(`studio/${nwId}`)).studio?.aufsteller || (await studioPer("hallo@nadelwerk-test.de")).aufsteller;
-  check(nwA?.angefordertAm && nwA.holz === "dunkel" && nwA.variante === "logo", "Aufsteller: angefordert (Holz dunkel, mit Logo)");
-  const doppelt = await h.evaluate(() => fetch("/api/portal/aufsteller", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ anfordern: true }) }).then((r) => r.status));
-  check(doppelt === 409, "Aufsteller: nicht doppelt anforderbar");
+  check(nwA?.angefordertAm && nwA?.kauf?.bezahltAm && nwA.holz === "dunkel" && nwA.variante === "logo", "Aufsteller: gekauft (Holz dunkel, mit Logo)");
+  const aufMails = mailsAn("domenicschilling@gmail.com").filter((m) => m.subject.includes("QR-Aufsteller bestellen (29 € bezahlt)") && m.subject.includes("Nadelwerk"));
+  check(aufMails.length === 1 && aufMails[0].html.includes("/aufsteller.html?s=" + nwSlug), "Admin-Mail „QR-Aufsteller bestellen (29 € bezahlt)“ genau einmal (Webhook + Rückkehr) mit Gravurdatei");
+  const nwStatus = (await admin(`studio/${nwId}`)).studio.status;
+  check(nwStatus === nwStatusVor, "Aufsteller-Kauf ändert den Studio-Status nicht (" + nwStatus + ")");
+  const doppelt = await h.evaluate(() => fetch("/api/portal/aufsteller", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ kaufen: true }) }).then((r) => r.status));
+  check(doppelt === 409, "Aufsteller: nicht doppelt bestellbar");
   const hH = await neueSeite();
   await hH.goto((await admin(`studio/${nwId}`)).aufstellerLink);
   await hH.waitForFunction(() => (document.getElementById("auf-img").getAttribute("src") || "").startsWith("data:image/png"), null, { timeout: 15000 });
@@ -639,6 +679,60 @@ try {
   await hH.screenshot({ path: path.join(S, "18c-aufsteller-hersteller.png"), fullPage: true });
   const aufFremd = (await fetch(`${BASE}/api/aufsteller?s=gibt-es-nicht`)).status;
   check(aufFremd === 404, "Hersteller-Seite: unbekanntes Studio → 404");
+
+  console.log("Mailversand: Resend zuerst, IONOS/SMTP als Rückfall, Warteschlange, Gesundheits-Check");
+  {
+    const { sendMail, warteschlangeStatus, warteschlangeAbarbeiten } = await import("../netlify/functions/_lib/mail.mjs");
+    let antwort = 500, aufrufe = 0;
+    const fake = (await import("node:http")).createServer((req, res) => { aufrufe++; let b = ""; req.on("data", (c) => (b += c)); req.on("end", () => { res.writeHead(antwort, { "content-type": "application/json" }); res.end(antwort === 200 ? '{"id":"re_1"}' : '{"message":"450 Mail send limit exceeded"}'); }); }).listen(12199);
+    process.env.RESEND_API_KEY = "re_test"; process.env.RESEND_API_BASE = "http://localhost:12199/emails";
+    antwort = 200;
+    check(await sendMail({ to: "resend@example.com", subject: "Test Resend", html: "<p>x</p>" }) === true && aufrufe === 1, "Mit RESEND_API_KEY: Versand über Resend");
+    const mResend = fs.readdirSync(dataDir).filter((f) => f.startsWith("mail%2F")).map((f) => JSON.parse(fs.readFileSync(path.join(dataDir, f)))).find((m) => m.to === "resend@example.com");
+    check(mResend?.weg === "resend", "Protokoll: Versandweg „resend“ vermerkt");
+    antwort = 450;
+    check(await sendMail({ to: "warte@example.com", subject: "Test Warteschlange", html: "<p>x</p>" }) === false, "Resend-Fehler ohne SMTP-Rückfall: Mail nicht gesendet");
+    const ws = await warteschlangeStatus();
+    check(ws.anzahl === 1 && /limit/.test(ws.letzterFehler) && ws.wege.includes("resend"), "Vorübergehender Fehler → Warteschlange (Status zeigt Anzahl + Fehler)");
+    const msAdmin = await admin("mail-status");
+    check(msAdmin.anzahl === 1 && msAdmin.fehler.length >= 1, "Admin: /api/admin/mail-status zeigt hängende Mails");
+    const loginVerz = await (await post("/api/login", { email: "niemand@example.com" })).json();
+    check(loginVerz.ok === true && loginVerz.verzoegert === true, "Login-Seite bekommt Hinweis „Mailversand verzögert“ (für alle gleich)");
+    const pAdmM = await neueSeite();
+    await pAdmM.goto(BASE + "/admin.html");
+    await pAdmM.evaluate(() => sessionStorage.setItem("tf-admin", "admin"));
+    await pAdmM.goto(BASE + "/admin.html");
+    await pAdmM.waitForSelector("#hinweise .alert.err");
+    check(/1 E-Mail hängt in der Warteschlange/.test(await pAdmM.textContent("#hinweise")), "Admin-Bereich: Hinweis „E-Mail hängt in der Warteschlange“ + Knopf „Jetzt erneut senden“");
+    antwort = 200;
+    const nach = await warteschlangeAbarbeiten();
+    check(nach.length === 1 && nach[0][0] === "gesendet" && (await warteschlangeStatus()).anzahl === 0, "Warteschlange: nach Störung erneut gesendet");
+    const { gesundheitPruefen } = await import("../netlify/functions/_lib/gesundheit.mjs");
+    process.env.TF_TEST_SLUG = (await studioPer("prov@example.com")).slug;
+    const g = await gesundheitPruefen({ basis: BASE, mailen: false });
+    check(g.ok === true, "Gesundheits-Check: Startseite, Login-API, Zahlseite, Mails ok" + (g.ok ? "" : ": " + g.fehler.join(" | ")));
+    const st = await fetch(BASE + "/api/status");
+    check(st.status === 200 && (await st.json()).ok === true, "/api/status: 200 bei gesundem Check");
+    process.env.TF_TEST_SLUG = "gibt-es-nicht";
+    const g2 = await gesundheitPruefen({ basis: BASE, mailen: false });
+    const st2 = await fetch(BASE + "/api/status");
+    check(!g2.ok && st2.status === 503 && (await st2.json()).stoerungen.includes("Zahlseite"), "/api/status: 503 mit Störung „Zahlseite“ (Ultron-Wächter schlägt Alarm)");
+    process.env.TF_TEST_SLUG = (await studioPer("prov@example.com")).slug;
+    await gesundheitPruefen({ basis: BASE, mailen: false });
+    delete process.env.RESEND_API_KEY; delete process.env.RESEND_API_BASE; fake.close();
+  }
+  {
+    const pV = await neueSeite({ viewport: { width: 390, height: 844 }, isMobile: true });
+    await pV.goto(BASE + "/video.html");
+    check(await pV.evaluate(() => { const v = document.getElementById("v"); return v.hasAttribute("playsinline") && v.controls && v.preload === "metadata" && /tattoofin-ablauf\.mp4$/.test(v.querySelector("source").src) && document.documentElement.scrollWidth <= innerWidth; }), "/video: Video mit playsinline, controls, preload=metadata, kein Querscrollen");
+    await pV.goto(BASE + "/");
+    await cookiesAblehnen(pV);
+    check(await pV.evaluate(() => Boolean(document.querySelector("#ablauf-video #tfv-play")) && !document.querySelector("#ablauf-video video") && Boolean(document.querySelector('a[href="/video"][data-v="hero"]'))), "Startseite: Video-Abschnitt (lädt erst beim Antippen) + Hero-Knopf „Video ansehen“");
+    await pV.click("#tfv-play");
+    check(await pV.evaluate(() => Boolean(document.querySelector("#ablauf-video video[playsinline]"))), "Startseite: Antippen lädt das Video");
+    await pV.goto(BASE + "/studios.html");
+    check(await pV.evaluate(() => Boolean(document.querySelector("#ablauf-video #tfv-play")) && document.documentElement.scrollWidth <= innerWidth), "/studios: Video-Abschnitt, kein Querscrollen");
+  }
 
   await h.goto(`${BASE}/`);
   await cookiesAblehnen(h);
