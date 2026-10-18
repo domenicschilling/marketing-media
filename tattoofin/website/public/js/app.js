@@ -283,7 +283,7 @@
       box.innerHTML = '<div class="sg-film hoch"><video controls playsinline preload="none" width="1080" height="1920" poster="' + url + 'cover.jpg" aria-label="Werbevideo: Jetzt auch in Raten* bezahlen"><source src="' + url + 'reel.mp4" type="video/mp4"></video></div>' +
         (eigen
           ? '<div class="row-a"><button class="btn gold small" id="wv-speichern">Video speichern</button><button class="btn ghost small" id="wv-text-an">Text dazu</button></div><p class="klein muted"><b>Bevor du postest:</b> Stell deinen QR-Code an die Theke (Holzaufsteller oder Ausdruck, siehe unten). Im Video heißt es „an der Theke den QR-Code scannen“.</p>'
-          : '<p class="klein"><b>Das ist ein Muster.</b> Deine Fassung mit deinem Logo, deinem Studionamen und dem Link zu deiner Zahlseite erstellen wir für dich. <a href="' + wa + '" target="_blank" rel="noopener">Schreib uns auf WhatsApp</a> – dann findest du dein Video hier zum Speichern.</p>') +
+          : '<p class="klein"><b>Das ist ein Muster – nur zur Vorschau, bitte so nicht posten</b> (Platzhalter statt Logo und QR-Code). Deine Fassung mit deinem Logo, deinem Studionamen und dem Link zu deiner Zahlseite erstellen wir für dich. <a href="' + wa + '" target="_blank" rel="noopener">Schreib uns auf WhatsApp</a> – dann findest du dein Video hier zum Speichern.</p>') +
         '<div class="hidden" id="wv-text"><pre class="caption">' + e(text) + '</pre><div class="row-a"><button class="btn dark small" data-copytext="' + e(text) + '">Text kopieren</button></div></div>';
       if (!eigen) return;
       $("wv-text-an").onclick = function () { $("wv-text").classList.toggle("hidden"); };
