@@ -619,6 +619,35 @@ try {
     await h.waitForTimeout(hash === "werbung" ? 1500 : 300);
     await appShot(h, path.join(S, name + ".png"));
   }
+  // ---- „So geht's“: Erklärvideo auf der Startseite und unter Mehr ----
+  console.log("So geht's (Erklärvideo)");
+  await h.goto(`${BASE}/app.html#start`); await h.reload();
+  await h.waitForSelector("#so-gehts video", { state: "attached", timeout: 15000 });
+  check(await h.evaluate(() => !document.querySelector("#so-gehts video").getAttribute("poster")), "So geht's: Vorschaubild lädt erst, wenn das Video in Sichtweite kommt");
+  await h.evaluate(() => document.getElementById("so-gehts").scrollIntoView());
+  await h.waitForSelector("#so-gehts video[poster]", { timeout: 15000 });
+  const sg = await h.evaluate(() => { const v = document.querySelector("#so-gehts video"); return { preload: v.preload, poster: v.getAttribute("poster"), src: v.querySelector("source").getAttribute("src"), kap: document.querySelectorAll("#so-gehts .sg-kap button").length, fuss: /kein Kreditgeber/.test(document.getElementById("so-gehts").textContent) }; });
+  check(sg.preload === "none" && /9x16\.jpg$/.test(sg.poster) && /9x16\.mp4$/.test(sg.src), "So geht's: Video auf der Startseite lädt erst beim Abspielen (Hochformat am Handy, mit Vorschaubild)");
+  check(sg.kap === 10 && sg.fuss, "So geht's: 10 Kapitel + Raten-Fußnote unter dem Video");
+  const vr = await fetch(BASE + sg.src, { headers: { range: "bytes=0-1023" } });
+  check([200, 206].includes(vr.status) && /video\/mp4/.test(vr.headers.get("content-type") || ""), "So geht's: Videodatei wird ausgeliefert (video/mp4)");
+  for (const f of ["so-gehts-16x9.mp4", "so-gehts-16x9.jpg", "so-gehts-9x16.jpg"]) check((await fetch(`${BASE}/assets/app/hilfe/${f}`, { method: "HEAD" })).ok, "So geht's: " + f + " vorhanden");
+  await h.click("#so-gehts .sg-kap summary");
+  await h.click("#so-gehts .sg-kap button[data-i='1']");
+  // Der Testserver liefert keine Teilbereiche (Range), echtes Springen daher nur auf Netlify prüfbar – hier: richtiges Ziel angefordert
+  check(await h.evaluate(() => document.querySelector("#so-gehts video").dataset.ziel === "22.1"), "So geht's: Kapitel antippen springt an die Stelle (Ziel 0:22)");
+  await h.evaluate(() => document.querySelector("#so-gehts video").pause());
+  await h.click("#so-gehts .sg-aus");
+  check(await h.evaluate(() => document.getElementById("so-gehts").classList.contains("hidden")), "So geht's: auf der Startseite ausblendbar");
+  await h.goto(`${BASE}/app.html#mehr`); await h.waitForSelector("a[href='#video']");
+  await h.click("a[href='#video']");
+  await h.waitForSelector("#video-box video[poster]", { timeout: 15000 });
+  check(await h.evaluate(() => !document.querySelector("[data-view=video]").classList.contains("hidden") && document.querySelector("#tabbar a.on")?.dataset.tab === "mehr"), "So geht's: unter Mehr als eigene Ansicht (Tab Mehr aktiv)");
+  await appShot(h, path.join(S, "22-so-gehts.png"));
+  await h.click("#sg-wieder");
+  await h.goto(`${BASE}/app.html#start`); await h.reload(); await h.waitForSelector("#so-gehts video", { state: "attached", timeout: 15000 });
+  check(await h.evaluate(() => !document.getElementById("so-gehts").classList.contains("hidden")), "So geht's: wieder auf der Startseite eingeblendet");
+
   // ---- QR-Aufsteller: Vorschau, Dateien (PDF/SVG/PNG), Logo, Anfordern, Hersteller-Seite ----
   console.log("QR-Aufsteller");
   await h.goto(`${BASE}/app.html#werbung`);

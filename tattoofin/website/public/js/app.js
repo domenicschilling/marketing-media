@@ -50,7 +50,7 @@
     var h = (location.hash || "#start").slice(1).split("/"), v = h[0] || "start", par = h[1];
     if (!document.querySelector('[data-view="' + v + '"]')) v = "start";
     document.querySelectorAll("[data-view]").forEach(function (s) { s.classList.toggle("hidden", s.dataset.view !== v); });
-    var tab = { zahlung: "zahlungen", einrichtung: "start", recht: "mehr", extras: "mehr", konto: "mehr", einstellungen: "mehr", werbung: "mehr" }[v] || v;
+    var tab = { zahlung: "zahlungen", einrichtung: "start", recht: "mehr", extras: "mehr", konto: "mehr", einstellungen: "mehr", werbung: "mehr", video: "mehr" }[v] || v;
     document.querySelectorAll("#tabbar a").forEach(function (a) { a.classList.toggle("on", a.dataset.tab === tab); });
     window.scrollTo(0, 0);
     (ANSICHT[v] || function () {})(par);

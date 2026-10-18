@@ -1,0 +1,19 @@
+/* „So geht's“: Erklärvideo in der Studio-App (js/so-gehts.js) */
+.so-gehts .card-h h2{margin:0}
+.sg-aus{background:none;border:0;color:var(--muted);font:700 13px/1 var(--body);text-decoration:underline;padding:6px 0;cursor:pointer}
+.sg-text{margin:4px 0 12px}
+.sg-film{margin:0 auto 12px;border-radius:14px;overflow:hidden;background:var(--ink);border:var(--bw) solid var(--ink)}
+.sg-film video{display:block;width:100%;height:auto;background:var(--ink)}
+.sg-film.hoch{max-width:min(100%,calc(72vh * 9 / 16));aspect-ratio:9/16}
+.sg-film.quer{aspect-ratio:16/9}
+.sg-film.hoch.kompakt{max-width:min(100%,calc(56vh * 9 / 16))}
+.sg-film.hoch video{height:100%;object-fit:contain}
+.sg-kap{margin:0 0 8px}
+.sg-kap summary{cursor:pointer;font-weight:800;padding:8px 0;list-style-position:inside}
+.sg-kap ol{list-style:none;margin:0;padding:0}
+.sg-kap li{border-top:1px dashed #cdd6df}
+.sg-kap button{display:flex;gap:12px;width:100%;text-align:left;background:none;border:0;padding:10px 4px;font:600 15px/1.3 var(--body);color:var(--ink);cursor:pointer;border-radius:8px}
+.sg-kap button span{flex:none;min-width:42px;font-variant-numeric:tabular-nums;color:var(--muted);font-weight:700}
+.sg-kap button.an{background:var(--ys,#fff3c4)}
+.sg-kap button:focus-visible{outline:3px solid var(--yellow);outline-offset:1px}
+.sg-fuss{margin:6px 0 0;font-size:12px!important}
