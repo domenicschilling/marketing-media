@@ -263,6 +263,44 @@
     if (window.TFKit) TFKit.zeige($("kit"), { firma: s.firma, ort: s.ort, zahlseite: s.zahlseite, onPost: function () { abhaken("werbung", true); } });
     $("zs-png").onclick = function () { if (window.TFAufsteller) datei(TFAufsteller.qrBild(s.zahlseite, 1200), "tattoofin-qr-zahlseite.png"); };
     aufsteller();
+    werbevideo(s);
+  }
+
+  // ---------- Werbevideo „Jetzt auch in Raten*“ (Reel 9:16, Vorlage spots/tfin-studio-werbung in der Marketing-Maschine) ----------
+  // Persönliche Fassung je Studio unter WV_BASIS/<slug>/ (reel.mp4, cover.jpg); gibt es sie noch nicht, zeigen wir das Muster „Dein Studio“.
+  var WV_BASIS = "https://domenicschilling.github.io/marketing-media/tattoofin/studio-werbung/";
+  function wvText(s) {
+    return "Dein Wunsch-Tattoo – jetzt auch in Raten* bezahlen 🖤\n\nBei " + s.firma + " zahlst du einfach per Link oder per QR-Code an der Theke. Die Kosten kannst du über Klarna* aufteilen, nach deren Prüfung. Und mit einer Anzahlung sicherst du dir deinen Termin.\n\n👉 Schreib uns für deinen Termin – den Link zu unserer Bezahlseite findest du in unserer Bio.\n\n*Ratenzahlung über externe Anbieter wie Klarna, nach deren Prüfung. Tattoofin ist kein Kreditgeber. Achtung! Kreditaufnahme kostet Geld.\nStimme mit KI erstellt · Symbolbilder mit KI erstellt";
+  }
+  function werbevideo(s) {
+    var box = $("wv-box");
+    if (!box || box.dataset.fertig) return;
+    box.dataset.fertig = "1";
+    var slug = (String(s.zahlseite || "").match(/\/zahlen\/([^/?#]+)/) || [])[1] || "";
+    function zeige(eigen) {
+      var url = WV_BASIS + encodeURIComponent(eigen ? slug : "dein-studio") + "/", text = wvText(s);
+      var wa = "https://wa.me/491624502375?text=" + encodeURIComponent("Hi, ich hätte gern mein Werbevideo „Raten*“ für " + s.firma + ".");
+      box.innerHTML = '<div class="sg-film hoch"><video controls playsinline preload="none" width="1080" height="1920" poster="' + url + 'cover.jpg" aria-label="Werbevideo: Jetzt auch in Raten* bezahlen"><source src="' + url + 'reel.mp4" type="video/mp4"></video></div>' +
+        (eigen
+          ? '<div class="row-a"><button class="btn gold small" id="wv-speichern">Video speichern</button><button class="btn ghost small" id="wv-text-an">Text dazu</button></div>'
+          : '<p class="klein"><b>Das ist ein Muster.</b> Deine Fassung mit deinem Logo, deinem Studionamen und dem Link zu deiner Zahlseite erstellen wir für dich. <a href="' + wa + '" target="_blank" rel="noopener">Schreib uns auf WhatsApp</a> – dann findest du dein Video hier zum Speichern.</p>') +
+        '<div class="hidden" id="wv-text"><pre class="caption">' + e(text) + '</pre><div class="row-a"><button class="btn dark small" data-copytext="' + e(text) + '">Text kopieren</button></div></div>';
+      if (!eigen) return;
+      $("wv-text-an").onclick = function () { $("wv-text").classList.toggle("hidden"); };
+      $("wv-speichern").onclick = async function () {
+        var b = this, alt = b.textContent; b.disabled = true; b.textContent = "Wird geladen …";
+        try {
+          var blob = await (await fetch(url + "reel.mp4")).blob();
+          var name = "werbevideo-" + slug + ".mp4", datei = new File([blob], name, { type: "video/mp4" });
+          if (navigator.canShare && navigator.canShare({ files: [datei] })) { try { await navigator.share({ files: [datei] }); } catch (x) {} }
+          else { var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000); }
+          abhaken("werbung", true);
+        } catch (x) { toast("Speichern hat nicht geklappt. Bitte versuch es noch einmal."); }
+        b.disabled = false; b.textContent = alt;
+      };
+    }
+    if (!slug) return zeige(false);
+    fetch(WV_BASIS + encodeURIComponent(slug) + "/cover.jpg", { method: "HEAD", cache: "no-store" }).then(function (r) { zeige(r.ok); }).catch(function () { zeige(false); });
   }
 
   // ---------- QR-Aufsteller aus Holz ----------
