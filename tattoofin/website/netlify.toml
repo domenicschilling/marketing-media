@@ -116,3 +116,8 @@
   from = "/app"
   to = "/app.html"
   status = 200
+# Produktvideo (/video): Dateien ändern sich nicht, neue Fassung = neuer Dateiname
+[[headers]]
+  for = "/media/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
