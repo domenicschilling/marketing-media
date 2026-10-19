@@ -12,6 +12,7 @@
 //   POST  /api/admin/anleitung                { email, firma } → Einrichtungs-Anleitung per E-Mail
 //   POST  /api/admin/einladen                 { email, firma } → Geschenk-Einladung (0 € Einrichtung, 0 % Provision) per E-Mail
 //   GET   /api/admin/anfragen                 Kurz-Anfragen von /studios (neueste zuerst)
+//   GET   /api/admin/studio-tipps             von Kunden auf /raten genannte Studios, gezählt (nur intern, nie anschreiben)
 //   POST  /api/admin/studio/:id/einrichtungslink  signierter Stripe-Einrichtungslink (24 h) zum Weitergeben
 //   POST  /api/admin/studio/:id/ansehen       Link für „Dashboard ansehen“ (nur lesend, protokolliert)
 //   Anmeldung: ADMIN_TOKEN (Bearer) oder Admin-Sitzung per E-Mail-Link (/api/admin-login)
@@ -187,6 +188,17 @@ export default handler(async (req) => {
     const out = [];
     for (const k of keys) { const a = await store.get(k); if (a) out.push(a); }
     return json(out);
+  }
+  // Von Kunden auf /raten genannte Studios, gezählt (nur intern; Studios werden deswegen NICHT angeschrieben, § 7 UWG)
+  if (bereich === "studio-tipps" && req.method === "GET") {
+    const zaehl = {};
+    for (const k of await store.list("studio-tipp/")) {
+      const t = await store.get(k); if (!t || t.test) continue;
+      const key = `${t.studio} | ${t.stadt || "–"}`.toLowerCase();
+      const z = (zaehl[key] ||= { studio: t.studio, stadt: t.stadt || "", anzahl: 0, zuletzt: t.am, kanaele: {} });
+      z.anzahl++; z.kanaele[t.kanal] = (z.kanaele[t.kanal] || 0) + 1; if (t.am > z.zuletzt) z.zuletzt = t.am;
+    }
+    return json(Object.values(zaehl).sort((a, b) => b.anzahl - a.anzahl || (b.zuletzt > a.zuletzt ? 1 : -1)));
   }
   if (bereich === "info" && req.method === "GET") return json({ siteUrl: CFG.siteUrl, aktion: await store.get("meta/aktion-zaehler"), vorschau: CFG.vorschau });
   return fail("Nicht gefunden", 404);
