@@ -110,6 +110,11 @@
   to = "/muster-anzahlungsbedingungen.pdf"
   status = 302
 
+# Endkunden-Seite (19.10.2026): /fuer-kunden ist ein zweiter Name für /raten
+[[redirects]]
+  from = "/fuer-kunden"
+  to = "/raten"
+  status = 301
 # Eigene Zahlseite je Studio: tattoofin.de/zahlen/<studio> (alte Adresse /zahlen.html?s=… funktioniert weiter)
 [[redirects]]
   from = "/zahlen/*"

@@ -1,4 +1,5 @@
-// POST /api/anfrage – Kurz-Anfrage von der Kampagnen-Seite /studios (Vorname, Studio + Ort, Handynummer).
+// POST /api/anfrage – Kurz-Anfrage von der Kampagnen-Seite /studios (Vorname, Name des Studios + Ort, Handynummer,
+// Pflicht-Häkchen „Ich führe ein Tattoostudio bzw. arbeite in einem“ = studio_bestaetigt, seit 19.10.2026).
 // Speichert die Anfrage (Netlify Blobs „anfrage/…“), meldet sie per E-Mail an ADMIN_EMAIL und sendet –
 // nur mit Cookie-Einwilligung und nur auf tattoofin.de – das Ereignis „Lead“ an Meta (Conversions API, gleiche event_id wie der Pixel).
 // Keine E-Mail an die anfragende Person. Testanfragen (Text enthält „TEST“) werden markiert und nie an Meta gemeldet.
@@ -7,6 +8,9 @@ import { json, fail, body, clean, now, id, esc, clientIp, handler } from "./_lib
 import { store, log } from "./_lib/store.mjs";
 import { sendMail } from "./_lib/mail.mjs";
 import { capiEvent, telefonE164 } from "./_lib/meta.mjs";
+
+// Typische Endkunden-Sätze im Feld „Name deines Studios“ (Preis, „ich habe/will“, „mein Tattoo“, „Termin“, „Raten“)
+const ENDKUNDE = /€|\beuro\b|\bkostet\b|\bich (habe|hab|möchte|will|würde)\b|\bmein(en|em)? tattoo\b|\btermin\b|\braten(zahlung)?\b|\bfinanzier/i;
 
 export default handler(async (req, context) => {
   if (req.method !== "POST") return fail("Nur POST", 405);
@@ -17,15 +21,20 @@ export default handler(async (req, context) => {
   const vorname = clean(b.vorname, 60), studio = clean(b.studio, 120), telefon = clean(b.telefon, 40);
   const fehler = {};
   if (vorname.length < 2) fehler.vorname = "Bitte gib deinen Vornamen ein.";
-  if (studio.length < 2) fehler.studio = "Bitte gib dein Studio und den Ort ein.";
+  // 19.10.2026: Name des Studios ist Pflicht. Endkunden schrieben hier z. B. „Ich habe bald Tattoo-Termin, das Tattoo kostet 400 €“
+  // → solche Sätze freundlich auf die Kunden-Seite /raten schicken statt als Studio-Anfrage zu speichern.
+  if (studio.length < 2) fehler.studio = "Bitte gib den Namen deines Studios ein.";
+  else if (ENDKUNDE.test(studio)) fehler.studio = "Das sieht nicht nach einem Studionamen aus. Du bist Kunde und willst in Raten zahlen? Dann schau auf tattoofin.de/raten.";
   if (!telefonE164(telefon)) fehler.telefon = "Bitte gib eine Handynummer ein, z. B. 0151 23456789.";
+  // Pflicht-Häkchen „Ich führe ein Tattoostudio bzw. arbeite in einem“
+  if (b.studio_bestaetigt !== true && b.studio_bestaetigt !== "ja") fehler.studio_bestaetigt = "Bitte bestätige, dass du ein Tattoostudio führst oder in einem arbeitest.";
   if (Object.keys(fehler).length) return json({ error: "Bitte prüfe die markierten Felder.", fehler }, 400);
 
   const test = /\btest\b/i.test(`${vorname} ${studio}`);
   const herkunft = {};
-  for (const k of ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"]) if (b.utm?.[k]) herkunft[k] = clean(String(b.utm[k]), 120);
+  for (const k of ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "ref"]) if (b.utm?.[k]) herkunft[k] = clean(String(b.utm[k]), 120);
   const a = {
-    id: id("af_"), am: now(), vorname, studio, telefon, test, herkunft,
+    id: id("af_"), am: now(), vorname, studio, telefon, test, herkunft, studioBestaetigt: true,
     seite: clean(b.seite, 200), einwilligung: b.einwilligung === "ja",
   };
   await store.set(`anfrage/${a.am}-${a.id}`, a);

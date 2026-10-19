@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tattoo in Raten* zahlen? Frag dein Studio nach Tattoofin</title>
+<meta name="description" content="Du willst dein Tattoo in Raten* zahlen? Schick deinem Lieblingsstudio eine kurze Nachricht: Mit Tattoofin kann es dir einen Zahlungslink schicken – Karte, Apple Pay oder Raten über Klarna*.">
+<link rel="canonical" href="https://tattoofin.de/raten">
+<meta property="og:type" content="website"><meta property="og:locale" content="de_DE"><meta property="og:site_name" content="Tattoofin">
+<meta property="og:title" content="Dein Tattoo in Raten* zahlen? Frag dein Studio nach Tattoofin">
+<meta property="og:description" content="Schick deinem Lieblingsstudio eine kurze Nachricht. Mit Tattoofin geht Karte, Apple Pay oder Raten über Klarna*.">
+<meta property="og:url" content="https://tattoofin.de/raten"><meta property="og:image" content="https://tattoofin.de/assets/og.jpg">
+<meta name="theme-color" content="#fbb316">
+<link rel="icon" href="/favicon.png" type="image/png"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preload" href="/assets/fonts/LuckiestGuy.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+/* Tattoofin Endkunden-Seite /raten (19.10.2026) – Look wie die Kampagnen-Seite /studios (LP v2): Gelb + Navy, Comic-Schrift, Sticker-Schatten.
+   Ziel: Kunden, die in Raten zahlen wollen, schicken ihrem Studio eine fertige Nachricht (WhatsApp oder kopiert für Instagram-DM).
+   Wir schreiben Studios NICHT selbst an (§ 7 UWG) – die Nachricht schickt der Kunde aus seinem eigenen Konto. */
+@font-face{font-family:'DM Sans';font-style:normal;font-weight:400 800;font-display:swap;src:url(/assets/fonts/DMSans.woff2) format('woff2')}
+@font-face{font-family:'Luckiest Guy';font-style:normal;font-weight:400;font-display:swap;src:url(/assets/fonts/LuckiestGuy.woff2) format('woff2')}
+:root{
+  --gelb:#fbb316; --gelb-hell:#fff1c7; --navy:#1f3d5c; --navy-tief:#13283d; --weiss:#fff; --grau:#4a5f73;
+  --wa:#25d366; --wa-tief:#0b6b33; --rot:#a8231a; --gruen:#2f8f5b;
+  --kopf:'Luckiest Guy','Arial Black',system-ui,sans-serif;
+  --text:'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --rand:3px solid var(--navy); --schatten:8px 8px 0 var(--navy);
+  --r-gross:28px; --r:18px; --abstand:clamp(64px,9vw,112px);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{overflow-x:clip;scroll-behavior:smooth;scroll-padding-top:16px;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--gelb);color:var(--navy);font:400 18px/1.6 var(--text);-webkit-font-smoothing:antialiased;overflow-x:clip}
+img{display:block;max-width:100%;height:auto}
+a{color:inherit}
+h1,h2{font-family:var(--kopf);font-weight:400;line-height:.98;letter-spacing:.005em;margin:0;text-wrap:balance;hyphens:manual;overflow-wrap:normal}
+h3{font:700 21px/1.25 var(--text);margin:0}
+p{margin:0}
+::selection{background:var(--navy);color:var(--gelb)}
+:focus-visible{outline:3px solid var(--navy);outline-offset:3px;border-radius:6px}
+.fuss :focus-visible,.dunkel :focus-visible{outline-color:var(--gelb)}
+.skip{position:absolute;left:12px;top:-60px;background:var(--navy);color:var(--gelb);padding:10px 16px;border-radius:10px;z-index:50;font-weight:700}
+.skip:focus{top:12px}
+.rahmen{max-width:1120px;margin:0 auto;padding:0 24px}
+.unter{font-size:20px;line-height:1.5;max-width:34em;margin-top:18px}
+.klein{font-size:14px;line-height:1.5;color:var(--grau)}
+.pflicht{font-size:13px;line-height:1.45;max-width:46em}
+
+/* Knöpfe */
+.knopf{display:inline-flex;align-items:center;justify-content:center;gap:12px;background:var(--navy);color:var(--gelb);text-decoration:none;
+  font:400 19px/1 var(--kopf);letter-spacing:.03em;padding:19px 30px 16px;border-radius:999px;border:var(--rand);
+  box-shadow:4px 4px 0 var(--navy-tief);transition:transform .15s,box-shadow .15s;cursor:pointer;text-align:center}
+.knopf:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--navy-tief)}
+.knopf:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--navy-tief)}
+.knopf svg{width:28px;height:28px;flex:none}
+.knopf-gross{font-size:23px;padding:22px 34px 19px}
+.knopf-wa{background:var(--wa);color:var(--navy-tief)}
+.knopf-hell{background:var(--weiss);color:var(--navy)}
+.knopf-klein{font-size:15px;padding:12px 18px 10px;box-shadow:3px 3px 0 var(--navy-tief)}
+.knopf-voll{width:100%}
+
+/* Kopf */
+.kopf{padding:18px 0}
+.kopf-in{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.marke{display:flex;align-items:center;gap:10px;text-decoration:none}
+.marke img:first-child{width:44px;height:auto}
+.marke .wm{width:132px;height:auto}
+.kopf-nav{display:flex;align-items:center;gap:22px;font-weight:600;font-size:16px}
+.kopf-nav a{text-decoration:none;padding:6px 0;border-bottom:2px solid transparent}
+.kopf-nav a:hover{border-bottom-color:var(--navy)}
+
+/* 1 · Held mit Teilen-Karte */
+.held{padding:clamp(16px,3vw,44px) 0 var(--abstand)}
+.held-raster{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"text karte" "mehr karte";grid-template-rows:auto 1fr;column-gap:clamp(32px,5vw,72px);row-gap:0;align-items:start}
+.held-text{grid-area:text}.teilen{grid-area:karte}.held-mehr{grid-area:mehr}
+.blase{display:inline-flex;flex-direction:column;gap:2px;background:var(--weiss);border:var(--rand);border-radius:22px 22px 22px 6px;
+  padding:12px 18px 10px;font-weight:700;font-size:18px;line-height:1.3;transform:rotate(-1.5deg);box-shadow:4px 4px 0 var(--navy);margin-bottom:24px;max-width:100%}
+.held h1{font-size:clamp(44px,5.2vw,74px)}
+.einstieg{font-size:clamp(18px,1.6vw,21px);line-height:1.55;max-width:31em;margin-top:22px;font-weight:500}
+.punkte{list-style:none;margin:26px 0 0;padding:0;display:grid;gap:12px;max-width:31em}
+.punkte li{position:relative;padding-left:38px;font-weight:600}
+.punkte li::before{content:"";position:absolute;left:0;top:3px;width:24px;height:24px;border-radius:50%;background:var(--navy) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 12.5l4 4 8-9' fill='none' stroke='%23fbb316' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/16px no-repeat}
+.held .pflicht{margin-top:24px}
+.held-mehr .punkte{margin-top:22px}
+
+.teilen{background:var(--weiss);border:var(--rand);border-radius:var(--r-gross);box-shadow:var(--schatten);padding:clamp(22px,3vw,34px)}
+.teilen h2{font-size:clamp(30px,3.2vw,40px)}
+.teilen > p.klein{margin-top:8px}
+.vorschau{margin:20px 0 0;background:#e7f7ec;border:2px solid var(--navy);border-radius:18px 18px 18px 6px;padding:14px 16px;font-size:16px;line-height:1.5;white-space:pre-line;overflow-wrap:anywhere}
+.vorschau-titel{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--grau);margin-top:18px}
+.felder{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin-top:10px}
+.feld label{display:block;font-weight:700;font-size:15px;margin-bottom:6px}
+.feld input{width:100%;font:500 17px/1.3 var(--text);color:var(--navy);background:var(--weiss);border:2px solid var(--navy);border-radius:14px;padding:13px 14px;min-height:52px;appearance:none}
+.feld input::placeholder{color:#7d8c9a}
+.feld input:focus{outline:0;box-shadow:0 0 0 4px rgba(31,61,92,.25)}
+.optional{font-weight:500;color:var(--grau)}
+.feld-hinweis{font-size:13px;line-height:1.45;color:var(--grau);margin-top:8px}
+.knoepfe{display:grid;gap:12px;margin-top:18px}
+.persoenlich{font-weight:700;font-size:16px;margin-top:12px;padding-top:16px;border-top:2px solid var(--gelb-hell)}
+.status{font-weight:700;font-size:16px;min-height:1.5em;margin-top:2px}
+.status.ok{color:var(--gruen)}
+.ig-hilfe{font-size:15px;line-height:1.5;background:var(--gelb-hell);border-radius:14px;padding:12px 14px;margin-top:4px}
+.ig-hilfe b{font-weight:800}
+
+/* 2 · So läuft's */
+.ablauf{background:var(--weiss);padding:var(--abstand) 0}
+.ablauf h2,.fragen h2,.studio-teil h2{font-size:clamp(36px,4.6vw,58px)}
+.ablauf-raster{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);gap:clamp(32px,6vw,88px);align-items:center}
+.schritte{list-style:none;margin:36px 0 0;padding:0;counter-reset:s;display:grid;gap:26px}
+.schritte li{counter-increment:s;display:grid;grid-template-columns:44px minmax(0,1fr);column-gap:16px}
+.schritte li::before{content:counter(s);grid-row:1 / span 2;display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:var(--navy);color:var(--gelb);font:400 20px/1 var(--kopf);padding-top:3px}
+.schritte h3{margin-top:9px}
+.schritte p{margin-top:6px;color:var(--grau)}
+.schirm{margin:0;display:flex;justify-content:center;background:var(--gelb-hell);border:var(--rand);border-radius:var(--r-gross);padding:28px 20px 0;overflow:hidden}
+.schirm img{width:min(280px,78%);border:8px solid var(--navy);border-bottom:0;border-radius:30px 30px 0 0;background:var(--weiss)}
+.schirm-text{font-size:13px;margin-top:10px;text-align:center}
+
+/* 3 · Fragen */
+.fragen{padding:var(--abstand) 0}
+.fragen-raster{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:clamp(32px,6vw,88px);align-items:start}
+.fragen-liste{border-top:3px solid var(--navy)}
+.fragen details{border-bottom:2px solid var(--navy)}
+.fragen summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:20px;padding:20px 0;font-weight:700;font-size:19px;line-height:1.3}
+.fragen summary::-webkit-details-marker{display:none}
+.fragen summary::after{content:"";flex:none;width:30px;height:30px;border-radius:50%;background:var(--weiss) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 5v14M5 12h14' stroke='%231f3d5c' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E") center/16px no-repeat;border:2px solid var(--navy);transition:transform .2s}
+.fragen details[open] summary::after{transform:rotate(45deg)}
+.fragen details p{padding:0 0 22px;max-width:38em}
+
+/* 4 · Für Studios */
+.studio-teil{background:var(--navy-tief);color:var(--weiss);padding:var(--abstand) 0}
+.studio-teil h2{color:var(--gelb)}
+.studio-teil .unter{color:#dfe7ee}
+.studio-teil .knopf{margin-top:28px;background:var(--gelb);color:var(--navy-tief);border-color:var(--gelb)}
+
+/* Fuß */
+.fuss{background:var(--navy-tief);color:#dfe7ee;padding:40px 0 110px;font-size:15px;border-top:2px solid rgba(255,255,255,.12)}
+.fuss-raster{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:32px}
+.fuss .wm{width:132px;filter:brightness(0) invert(1);margin-bottom:14px}
+.fuss .pflicht{margin-top:12px;color:#c9d4de}
+.fuss nav{display:flex;flex-wrap:wrap;gap:10px 22px;align-content:start;justify-content:flex-end}
+.fuss nav a{color:var(--weiss);text-underline-offset:3px;padding:4px 0}
+
+/* Handy-Leiste */
+.leiste{position:fixed;left:12px;right:12px;bottom:12px;z-index:40;display:none}
+.leiste .knopf{width:100%;font-size:19px;padding:17px 18px 14px}
+.leiste.sichtbar{display:block}
+body.tf-cc-offen .leiste{display:none}
+@media (prefers-reduced-motion:no-preference){
+  .blase{animation:pop .5s cubic-bezier(.2,1.4,.4,1) both .15s}
+  @keyframes pop{from{opacity:0;transform:rotate(-1.5deg) scale(.85) translateY(8px)}to{opacity:1;transform:rotate(-1.5deg)}}
+  .leiste.sichtbar{animation:hoch .25s ease-out both}@keyframes hoch{from{transform:translateY(120%)}to{transform:none}}
+}
+
+@media (max-width:980px){
+  .held-raster,.ablauf-raster,.fragen-raster{grid-template-columns:minmax(0,1fr)}
+  .held-raster{grid-template-areas:"text" "karte" "mehr";row-gap:26px}
+  .held .pflicht{margin-top:0}
+  .nur-gross{display:none}
+}
+@media (max-width:600px){
+  body{font-size:17px}
+  .rahmen{padding:0 16px}
+  .kopf{padding:12px 0}
+  .marke .wm{width:110px}
+  .blase{font-size:16px;padding:10px 14px 8px;margin-bottom:18px}
+  .held h1{font-size:clamp(36px,10vw,48px)}
+  .blase{display:none}
+  .einstieg{margin-top:16px}
+  .punkte{margin-top:20px}
+  .knopf-gross{font-size:20px;padding:20px 16px 17px}
+  .unter{font-size:18px}
+  .fragen summary{font-size:17px;padding:18px 0}
+  .fuss-raster{grid-template-columns:1fr}
+  .fuss nav{justify-content:flex-start}
+}
+@media (min-width:981px){.leiste{display:none!important}}
+</style>
+<!-- Umami: cookielose Besucherzählung, nur auf tattoofin.de (Vorschau-Adressen zählen nicht) -->
+<script defer src="https://cloud.umami.is/script.js" data-website-id="507b740f-264e-4ba1-a7d0-9dbe49db75af" data-domains="tattoofin.de"></script>
+</head><body data-wa="aus">
+<a class="skip" href="#inhalt">Zum Inhalt springen</a>
+
+<header class="kopf"><div class="rahmen kopf-in">
+  <a class="marke" href="/" aria-label="Tattoofin Startseite"><img src="/assets/figur.png" alt="" width="44" height="45"><img class="wm" src="/assets/wortmarke.png" alt="Tattoofin" width="132" height="30"></a>
+  <nav class="kopf-nav" aria-label="Seite">
+    <a class="nur-gross" href="#ablauf">So läuft's</a>
+    <a class="nur-gross" href="#fragen">Fragen</a>
+    <a href="/studios?utm_source=raten&amp;utm_medium=seite&amp;utm_content=kopf" data-r="studios">Du hast ein Studio?</a>
+  </nav>
+</div></header>
+
+<main id="inhalt">
+
+<section class="held" aria-labelledby="h-held">
+  <div class="rahmen held-raster">
+    <div class="held-text">
+      <p class="blase">„Kann ich mein Tattoo auch in Raten* zahlen?“</p>
+      <h1 id="h-held">Du willst dein Tattoo in Raten* zahlen?</h1>
+      <p class="einstieg">Frag dein Lieblingsstudio nach <b>Tattoofin</b>. Damit schickt dir dein Studio einen Zahlungslink, und du zahlst so, wie es für dich passt.</p>
+    </div>
+    <div class="held-mehr">
+      <p class="pflicht">*Ratenzahlung über externe Anbieter wie Klarna, nach deren Prüfung. Tattoofin ist kein Kreditgeber. Achtung! Kreditaufnahme kostet Geld.</p>
+      <ul class="punkte">
+        <li>Karte, Apple&nbsp;Pay oder Raten über Klarna*</li>
+        <li>Kein Kartenterminal, keine App nötig, ein Link reicht</li>
+        <li>Dein Studio braucht nur ein paar Minuten zum Einrichten</li>
+      </ul>
+    </div>
+
+    <div class="teilen" id="teilen" aria-labelledby="h-teilen">
+      <h2 id="h-teilen">Schick's deinem Studio</h2>
+      <p class="klein">Fertige Nachricht, ein Tipp. Du schickst sie selbst, aus deinem WhatsApp oder Instagram.</p>
+      <div class="knoepfe">
+        <a class="knopf knopf-gross knopf-voll knopf-wa" id="t-wa" href="https://wa.me/?text=" target="_blank" rel="noopener"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-wa"/></svg>An mein Studio schicken</a>
+        <button class="knopf knopf-voll knopf-hell" type="button" id="t-kopieren"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-ig"/></svg>Text kopieren für Instagram-DM</button>
+        <p class="status" id="t-status" role="status" aria-live="polite"></p>
+        <p class="ig-hilfe" id="t-ig" hidden><b>So geht's auf Instagram:</b> Profil deines Studios öffnen, „Nachricht“ tippen, ins Textfeld tippen und „Einsetzen“ wählen.</p>
+      </div>
+      <p class="persoenlich">Persönlicher mit dem Namen deines Studios:</p>
+      <form id="t-form" novalidate onsubmit="return false">
+        <div class="felder">
+          <div class="feld">
+            <label for="t-studio">Wie heißt dein Studio? <span class="optional">(optional)</span></label>
+            <input id="t-studio" name="organization" type="text" autocomplete="organization" autocapitalize="words" enterkeyhint="next" maxlength="80" placeholder="z. B. Ink Studio">
+          </div>
+          <div class="feld">
+            <label for="t-stadt">Stadt <span class="optional">(optional)</span></label>
+            <input id="t-stadt" name="address-level2" type="text" autocomplete="address-level2" autocapitalize="words" enterkeyhint="done" maxlength="60" placeholder="z. B. Bamberg">
+          </div>
+        </div>
+        <p class="feld-hinweis">Wir zählen nur, welche Studios gefragt werden. Wir schreiben dein Studio deswegen nicht an, die Nachricht kommt nur von dir.</p>
+      </form>
+      <p class="vorschau-titel" id="t-vorschau-titel">Deine Nachricht</p>
+      <p class="vorschau" id="t-vorschau" aria-labelledby="t-vorschau-titel"></p>
+    </div>
+  </div>
+</section>
+
+<section class="ablauf" id="ablauf" aria-labelledby="h-ablauf">
+  <div class="rahmen ablauf-raster">
+    <div>
+      <h2 id="h-ablauf">So läuft's für dich</h2>
+      <ol class="schritte">
+        <li><h3>Du fragst dein Studio</h3><p>Mit der Nachricht oben, per WhatsApp oder Instagram. Oder du zeigst ihnen einfach unser Video.</p></li>
+        <li><h3>Dein Studio schickt dir einen Zahlungslink</h3><p>Für das ganze Tattoo oder die Anzahlung. Du öffnest ihn am Handy, ohne App und ohne Anmeldung.</p></li>
+        <li><h3>Du wählst, wie du zahlst</h3><p>Per Karte, Apple&nbsp;Pay, Google&nbsp;Pay oder in Raten über Klarna.* Ob und welche Raten für dich möglich sind, prüft und entscheidet Klarna.</p></li>
+      </ol>
+    </div>
+    <figure class="schirm-wrap" style="margin:0">
+      <div class="schirm"><img src="/assets/lp/handy-kunde.webp" alt="Beispiel einer Zahlseite: Hi Lena, hier ist dein Zahlungslink, 2.000 Euro, Sleeve linker Arm, Knopf Weiter zur Zahlung" width="300" height="649" loading="lazy"></div>
+      <figcaption class="klein schirm-text">So sieht ein Zahlungslink aus (Beispiel-Studio, Beispieldaten).</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="fragen" id="fragen" aria-labelledby="h-fragen">
+  <div class="rahmen fragen-raster">
+    <div>
+      <h2 id="h-fragen">Fragen</h2>
+      <p class="unter">Kurz und ehrlich beantwortet.</p>
+    </div>
+    <div class="fragen-liste">
+      <details><summary>Ist Tattoofin ein Kredit?</summary><p>Nein. Tattoofin ist kein Kreditgeber. Tattoofin ist die Zahlseite, über die dein Studio dir den Link schickt. Wenn du in Raten zahlst, schließt du den Ratenvertrag direkt mit dem Anbieter, zum Beispiel Klarna. Der prüft und legt die Bedingungen fest. Achtung: Kreditaufnahme kostet Geld.</p></details>
+      <details><summary>Kann ich bei jedem Studio in Raten zahlen?</summary><p>Nur bei Studios, die Tattoofin nutzen. Deshalb lohnt sich die Frage: Viele Studios kennen die Möglichkeit noch nicht. Ob Raten für dich möglich sind, entscheidet am Ende Klarna nach eigener Prüfung.</p></details>
+      <details><summary>Mein Studio nutzt Tattoofin schon. Wie geht's?</summary><p>Frag im Studio nach dem Zahlungslink oder scanne den QR-Code an der Theke. Auf der Zahlseite wählst du dann, wie du zahlst.</p></details>
+      <details><summary>Schreibt ihr mein Studio an?</summary><p>Nein. Du entscheidest, ob und wie du dein Studio fragst. Wenn du oben den Namen deines Studios einträgst, zählen wir das nur intern. Wir schreiben dein Studio deswegen nicht per E-Mail oder WhatsApp an.</p></details>
+      <details><summary>Was, wenn mein Studio Nein sagt?</summary><p>Dann zahlst du so wie immer im Studio. Ob ein Studio Tattoofin nutzt, entscheidet allein das Studio.</p></details>
+    </div>
+  </div>
+</section>
+
+<section class="studio-teil dunkel" aria-labelledby="h-studio">
+  <div class="rahmen">
+    <h2 id="h-studio">Du hast selbst ein Studio?</h2>
+    <p class="unter">Raten* für deine Kunden, dein Geld auf einmal. Alles für Studios, mit Video und kostenloser Einrichtung.</p>
+    <a class="knopf knopf-gross" href="/studios?utm_source=raten&amp;utm_medium=seite&amp;utm_content=studio-teil" data-r="studios">Zur Seite für Studios</a>
+  </div>
+</section>
+
+</main>
+
+<footer class="fuss"><div class="rahmen fuss-raster">
+  <div>
+    <img class="wm" src="/assets/wortmarke.png" alt="Tattoofin" width="132" height="30" loading="lazy">
+    <p>© <span id="jahr">2026</span> DSX Media Solutions UG (haftungsbeschränkt). Tattoofin ist kein Kreditinstitut.</p>
+    <p class="pflicht">*Ratenzahlung über externe Anbieter wie Klarna, nach deren Prüfung. Tattoofin ist kein Kreditgeber. Achtung! Kreditaufnahme kostet Geld.</p>
+  </div>
+  <nav aria-label="Rechtliches"><a href="/">Startseite</a><a href="/studios">Für Studios</a><a href="/impressum">Impressum</a><a href="/datenschutz#studio-tipp">Datenschutz</a><a href="#" data-cookies>Cookie-Einstellungen</a></nav>
+</div></footer>
+
+<!-- Handy: Leiste unten, sobald die Teilen-Karte aus dem Bild ist -->
+<div class="leiste" id="leiste" hidden><a class="knopf knopf-wa" href="#teilen" data-r="leiste"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-wa"/></svg>An mein Studio schicken</a></div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-wa" viewBox="0 0 32 32"><path fill="currentColor" d="M16 3a13 13 0 0 0-11.3 19.4L3 29l6.8-1.8A13 13 0 1 0 16 3zm0 23.7c-2 0-3.9-.5-5.6-1.5l-.4-.2-4 1 1.1-3.9-.3-.4A10.7 10.7 0 1 1 16 26.7zm5.9-8c-.3-.2-1.9-.9-2.2-1-.3-.1-.5-.2-.7.2l-1 1.2c-.2.2-.4.2-.7.1a8.8 8.8 0 0 1-4.4-3.8c-.3-.6.3-.5 1-1.7.1-.2 0-.4 0-.6l-1-2.4c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4-.3.3-1.2 1.1-1.2 2.8s1.2 3.2 1.4 3.4c.2.2 2.4 3.6 5.7 5 2.1.9 2.9 1 4 .8.6-.1 1.9-.8 2.2-1.5.3-.8.3-1.4.2-1.5l-.6-.3z"/></symbol>
+  <symbol id="i-ig" viewBox="0 0 32 32"><rect x="4" y="4" width="24" height="24" rx="7" fill="none" stroke="currentColor" stroke-width="2.8"/><circle cx="16" cy="16" r="5.6" fill="none" stroke="currentColor" stroke-width="2.8"/><circle cx="23" cy="9" r="1.7" fill="currentColor"/></symbol>
+</svg>
+
+<script src="/js/tf-track.js"></script>
+<script src="/js/raten.js"></script>
+</body></html>

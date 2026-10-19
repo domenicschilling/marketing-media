@@ -4,7 +4,8 @@
 //                  oder Klick auf WhatsApp. Ein Klick auf „Online abschließen“ ist KEIN Lead mehr
 //                  (der echte Abschluss wird auf /start und /danke als InitiateCheckout/CompleteRegistration gemessen).
 //   Meta nur mit Cookie-Einwilligung (tf-track.js) und nur auf tattoofin.de.
-//   Umami (cookielos): cta-klick, whatsapp, online-start, formular-start, formular-gesendet, formular-fehler, rechner, scroll-50/90.
+//   Umami (cookielos): cta-klick, whatsapp, online-start, formular-start, formular-gesendet, formular-fehler, rechner, scroll-50/90,
+//                      kunde-weiter (Link zur Endkunden-Seite /raten, 19.10.2026).
 (function () {
   var j = document.getElementById("jahr");
   if (j) j.textContent = new Date().getFullYear();
@@ -13,6 +14,7 @@
   // utm_* / fbclid an die Links zum Online-Abschluss hängen (Herkunft bleibt sichtbar)
   var q = new URLSearchParams(location.search), mit = [], utm = {};
   q.forEach(function (v, k) { if (/^utm_|^fbclid$/.test(k)) { mit.push([k, v]); if (/^utm_/.test(k)) utm[k] = v; } });
+  if (q.get("ref")) utm.ref = q.get("ref"); // z. B. ref=kunde (Kunde hat uns seinem Studio empfohlen, /raten)
   if (mit.length) document.querySelectorAll('a[href^="/start"]').forEach(function (a) {
     var url = new URL(a.getAttribute("href"), location.origin);
     mit.forEach(function (p) { if (!url.searchParams.has(p[0])) url.searchParams.set(p[0], p[1]); });
@@ -39,6 +41,7 @@
       if (consent() !== "nein" && einmalHeute("lp-wa") && window.TFTrack) TFTrack.track("Lead", { content_name: "WhatsApp (Kampagnen-Seite)", content_category: "Tattoo-Studio" });
     } else if (/^\/start/.test(h)) u("online-start", { paket: (h.match(/paket=(\w+)/) || [])[1] || "risikofrei" });
     else if (a.dataset.cta) u("cta-klick", { ort: a.dataset.cta });
+    else if (a.dataset.lp === "raten") u("kunde-weiter", { ort: a.closest(".held") ? "held" : "formular" });
   }, true);
 
   // Video im Handy: nur abspielen, wenn sichtbar und „weniger Bewegung“ nicht gewünscht ist
@@ -78,12 +81,19 @@
   var gestartet = false;
   if (f) {
     var knopf = document.getElementById("a-senden"), status = document.getElementById("a-status");
-    var felder = { vorname: f.elements.vorname, studio: f.elements.studio, telefon: f.elements.telefon };
+    var felder = { vorname: f.elements.vorname, studio: f.elements.studio, telefon: f.elements.telefon, studio_bestaetigt: f.elements.studio_bestaetigt };
+    // Endkunden-Sätze im Studiofeld (z. B. „das Tattoo kostet 400 €“) → auf /raten hinweisen (gleiche Regel wie /api/anfrage, 19.10.2026)
+    var ENDKUNDE = /€|\beuro\b|\bkostet\b|\bich (habe|hab|möchte|will|würde)\b|\bmein(en|em)? tattoo\b|\btermin\b|\braten(zahlung)?\b|\bfinanzier/i;
     var regeln = {
       vorname: function (v) { return v.trim().length >= 2 ? "" : "Bitte gib deinen Vornamen ein."; },
-      studio: function (v) { return v.trim().length >= 2 ? "" : "Bitte gib dein Studio und den Ort ein."; },
+      studio: function (v) {
+        if (v.trim().length < 2) return "Bitte gib den Namen deines Studios ein.";
+        return ENDKUNDE.test(v) ? "Das sieht nicht nach einem Studionamen aus. Du bist Kunde und willst in Raten zahlen? Dann schau auf tattoofin.de/raten." : "";
+      },
+      studio_bestaetigt: function () { return felder.studio_bestaetigt.checked ? "" : "Bitte bestätige, dass du ein Tattoostudio führst oder in einem arbeitest."; },
       telefon: function (v) { var d = v.replace(/\D/g, ""); return d.length >= 8 && d.length <= 15 ? "" : "Bitte gib eine Handynummer ein, z. B. 0151 23456789."; },
     };
+    function wert(n) { return n === "studio_bestaetigt" ? (felder[n].checked ? "ja" : "") : felder[n].value; }
     function zeige(name, text) {
       var el = felder[name], p = document.getElementById("a-" + name + "-f");
       if (text) { el.setAttribute("aria-invalid", "true"); p.textContent = text; p.hidden = false; }
@@ -91,21 +101,21 @@
     }
     Object.keys(felder).forEach(function (n) {
       felder[n].addEventListener("focus", function () { if (!gestartet) { gestartet = true; u("formular-start"); } });
-      felder[n].addEventListener("blur", function () { if (felder[n].value) zeige(n, regeln[n](felder[n].value)); });
-      felder[n].addEventListener("input", function () { if (felder[n].getAttribute("aria-invalid")) zeige(n, regeln[n](felder[n].value)); });
+      felder[n].addEventListener("blur", function () { if (wert(n)) zeige(n, regeln[n](wert(n))); });
+      felder[n].addEventListener(n === "studio_bestaetigt" ? "change" : "input", function () { if (felder[n].getAttribute("aria-invalid")) zeige(n, regeln[n](wert(n))); });
     });
 
     f.addEventListener("submit", async function (e) {
       e.preventDefault();
       status.textContent = ""; status.className = "status";
       var erster = null;
-      Object.keys(felder).forEach(function (n) { var t = regeln[n](felder[n].value); zeige(n, t); if (t && !erster) erster = felder[n]; });
-      if (erster) { erster.focus(); u("formular-fehler", { art: "eingabe" }); return; }
+      Object.keys(felder).forEach(function (n) { var t = regeln[n](wert(n)); zeige(n, t); if (t && !erster) erster = felder[n]; });
+      if (erster) { erster.focus(); u("formular-fehler", { art: ENDKUNDE.test(felder.studio.value) ? "endkunde" : "eingabe" }); return; }
 
       var eid = window.TFTrack && TFTrack.eventId ? TFTrack.eventId() : "tf-" + Date.now().toString(36);
       var fbclid = q.get("fbclid");
       var daten = {
-        vorname: felder.vorname.value, studio: felder.studio.value, telefon: felder.telefon.value,
+        vorname: felder.vorname.value, studio: felder.studio.value, telefon: felder.telefon.value, studio_bestaetigt: felder.studio_bestaetigt.checked,
         firmenwebsite: f.elements.firmenwebsite.value, utm: utm, seite: location.pathname + location.search,
         einwilligung: consent() === "ja" ? "ja" : "nein", event_id: eid,
         fbp: window.TFTrack && TFTrack.cookie ? TFTrack.cookie("_fbp") : "",

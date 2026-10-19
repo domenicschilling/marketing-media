@@ -200,6 +200,17 @@ input[type=range]{width:100%;margin:18px 0 6px;accent-color:var(--navy);height:2
 .hinweis{font-size:14px;color:var(--grau);margin-top:6px}
 .fehler{font-size:15px;font-weight:600;color:var(--rot);margin-top:6px}
 .honig{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+/* Pflicht-Häkchen + Weg für Endkunden (19.10.2026) */
+.feld-haken{display:grid;grid-template-columns:28px minmax(0,1fr);column-gap:12px;align-items:start}
+.feld-haken input{width:28px;height:28px;min-height:0;margin:0;padding:0;border-radius:4px;appearance:auto;-webkit-appearance:checkbox;box-shadow:none;accent-color:var(--navy);cursor:pointer}
+.feld-haken label{margin:0;font-weight:700;font-size:16px;line-height:1.4;padding-top:2px;cursor:pointer}
+.feld-haken .fehler{grid-column:2}
+.feld-haken input[aria-invalid=true]{outline:3px solid var(--rot);outline-offset:2px}
+.kunde-weiter{margin:-4px 0 20px;background:var(--gelb-hell);border:2px dashed var(--navy);border-radius:14px;padding:10px 14px;font-size:15px;line-height:1.4}
+.kunde-weiter a{text-decoration:none;display:block}
+.kunde-weiter b{text-decoration:underline;text-underline-offset:3px;white-space:nowrap}
+.held-kunde{font-size:14px;margin-top:10px}
+.held-kunde a{font-weight:700;text-underline-offset:3px}
 .status{min-height:0;font-weight:600;margin-top:12px}
 .status.fehlt{color:var(--rot)}
 .formular-karte .klein{margin-top:14px}
@@ -327,6 +338,7 @@ body.tf-cc-offen .leiste{display:none}
         <div><dt>Grundgebühr, monatlich kündbar</dt><dd>0&nbsp;<span class="eur">€</span></dd></div>
       </dl>
       <p class="pflicht">*Ratenzahlung über externe Anbieter wie Klarna, nach deren Prüfung. Tattoofin ist kein Kreditgeber. Achtung! Kreditaufnahme kostet Geld.</p>
+      <p class="held-kunde">Kein Studio, sondern Kunde? <a href="/raten?utm_source=studios&amp;utm_medium=seite&amp;utm_content=held" data-lp="raten">Hier geht's zur Seite für Kunden →</a></p>
     </div>
 
     <figure class="held-bild">
@@ -507,8 +519,9 @@ body.tf-cc-offen .leiste{display:none}
           <p class="fehler" id="a-vorname-f" hidden></p>
         </div>
         <div class="feld">
-          <label for="a-studio">Studio und Ort</label>
-          <input id="a-studio" name="studio" type="text" autocomplete="organization" autocapitalize="words" enterkeyhint="next" required maxlength="120" placeholder="z. B. Ink Studio, Bamberg" aria-describedby="a-studio-f">
+          <label for="a-studio">Name deines Studios</label>
+          <input id="a-studio" name="studio" type="text" autocomplete="organization" autocapitalize="words" enterkeyhint="next" required maxlength="120" placeholder="z. B. Ink Studio, Bamberg" aria-describedby="a-studio-h a-studio-f">
+          <p class="hinweis" id="a-studio-h">Gern mit Ort.</p>
           <p class="fehler" id="a-studio-f" hidden></p>
         </div>
         <div class="feld">
@@ -517,6 +530,12 @@ body.tf-cc-offen .leiste{display:none}
           <p class="hinweis" id="a-telefon-h">Wir schreiben dir nur zu deiner Anfrage.</p>
           <p class="fehler" id="a-telefon-f" hidden></p>
         </div>
+        <div class="feld feld-haken">
+          <input id="a-studio_bestaetigt" name="studio_bestaetigt" type="checkbox" required aria-describedby="a-studio_bestaetigt-f">
+          <label for="a-studio_bestaetigt">Ich führe ein Tattoostudio bzw. arbeite in einem.</label>
+          <p class="fehler" id="a-studio_bestaetigt-f" hidden></p>
+        </div>
+        <p class="kunde-weiter"><a href="/raten?utm_source=studios&amp;utm_medium=seite&amp;utm_content=formular" data-lp="raten">Du bist Kunde und willst in Raten* zahlen? <b>→ hier entlang</b></a></p>
         <div class="honig" aria-hidden="true"><label for="a-web">Firmenwebsite</label><input id="a-web" name="firmenwebsite" type="text" tabindex="-1" autocomplete="off"></div>
         <button class="knopf knopf-gross knopf-voll" type="submit" id="a-senden">Einrichtung anfragen</button>
         <p class="status" id="a-status" role="status" aria-live="polite"></p>
