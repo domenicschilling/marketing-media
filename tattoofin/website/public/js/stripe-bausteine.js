@@ -1,5 +1,5 @@
 // Stripe direkt in tattoofin.de: Connect Embedded Components (Einrichtung, Auszahlungen, Konto, Hinweise) für Studios
-// und das Payment Element (Karte, Apple/Google Pay, Klarna) für deren Kunden – im Tattoofin-Design.
+// und das Payment Element (Karte, Apple/Google Pay, Klarna, PayPal falls freigeschaltet) für deren Kunden – im Tattoofin-Design.
 // In der Vorschau ohne Stripe-Testschlüssel zeigt dieselbe Schnittstelle eine deutlich gekennzeichnete Simulation.
 window.TFStripe = (function () {
   var FONT_CSS = location.origin + "/css/fonts-stripe.css";
@@ -114,11 +114,12 @@ window.TFStripe = (function () {
     if (r.simulation) {
       var pm = "card";
       box.innerHTML = '<div class="sim-box">' + TAG.replace("STRIPE-BAUSTEIN", "BEZAHLFELD") +
-        '<div class="seg" role="radiogroup"><label><input type="radio" name="sim-pm" value="card" checked><span>💳 Karte</span></label><label><input type="radio" name="sim-pm" value="klarna"><span>Klarna</span></label></div>' +
+        '<div class="seg" role="radiogroup"><label><input type="radio" name="sim-pm" value="card" checked><span>💳 Karte</span></label><label><input type="radio" name="sim-pm" value="klarna"><span>Klarna</span></label>' + ((r.zahlarten || []).indexOf("paypal") >= 0 ? '<label><input type="radio" name="sim-pm" value="paypal"><span>PayPal</span></label>' : "") + '</div>' +
         '<div id="sim-card"><label for="sim-nr">Kartennummer</label><input id="sim-nr" autocomplete="off" value="4242 4242 4242 4242"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><label for="sim-ab">Gültig bis</label><input id="sim-ab" autocomplete="off" value="12 / 30"></div><div><label for="sim-cvc">Prüfnummer</label><input id="sim-cvc" autocomplete="off" value="123"></div></div></div>' +
+        '<div id="sim-paypal" class="hidden"><p class="klein">Bei PayPal wirst du kurz zu PayPal weitergeleitet, meldest dich dort an und bestätigst. Danach kommst du hierher zurück.</p></div>' +
         '<div id="sim-klarna" class="hidden"><p class="klein">Bei Klarna wirst du kurz zu Klarna weitergeleitet und siehst dort, welche Optionen dir angeboten werden (z. B. später bezahlen oder Raten*). Danach kommst du hierher zurück.</p></div>' +
         '<button class="btn gold big w100" id="pay-jetzt">' + e(knopfText) + "</button></div>";
-      box.querySelectorAll("input[name=sim-pm]").forEach(function (i) { i.onchange = function () { pm = i.value; document.getElementById("sim-card").classList.toggle("hidden", pm !== "card"); document.getElementById("sim-klarna").classList.toggle("hidden", pm !== "klarna"); }; });
+      box.querySelectorAll("input[name=sim-pm]").forEach(function (i) { i.onchange = function () { pm = i.value; document.getElementById("sim-card").classList.toggle("hidden", pm !== "card"); document.getElementById("sim-klarna").classList.toggle("hidden", pm !== "klarna"); document.getElementById("sim-paypal").classList.toggle("hidden", pm !== "paypal"); }; });
       document.getElementById("pay-jetzt").onclick = async function () {
         this.disabled = true; this.textContent = "Einen Moment …";
         var pi = r.clientSecret.split("_secret_")[0];

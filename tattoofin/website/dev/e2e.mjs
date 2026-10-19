@@ -130,7 +130,7 @@ try {
   check(/api\/auth\?token=[^"]+next=%2Fapp\.html%23einrichtung/.test(willkommen.html), "Willkommens-Mail führt mit Login direkt in die Einrichtung im Dashboard");
   let state = await mock("state");
   const provAcct = Object.values(state.accounts).find((a) => a.email === "prov@example.com");
-  check(!provAcct?.type && provAcct?.controller?.stripe_dashboard?.type === "express" && provAcct?.controller?.losses?.payments === "application" && provAcct?.controller?.fees?.payer === "application" && provAcct?.capabilities?.klarna_payments?.requested === "true", "Risikofrei: Express-Verhalten über Controller-Eigenschaften (Hotfix) mit Karte + Klarna");
+  check(!provAcct?.type && provAcct?.controller?.stripe_dashboard?.type === "express" && provAcct?.controller?.losses?.payments === "application" && provAcct?.controller?.fees?.payer === "application" && provAcct?.requested_capabilities?.includes("klarna_payments") && !provAcct.requested_capabilities.includes("paypal_payments"), "Risikofrei: Express-Verhalten über Controller-Eigenschaften (Hotfix) mit Karte + Klarna, ohne PayPal (ZAHLARTEN ohne paypal)");
   check(mailsAn("domenicschilling@gmail.com").some((m) => m.subject.includes("Paket Risikofrei") && !m.html.includes("aufsteller.html")), "Admin-Mail Risikofrei: Paket, ohne Aufsteller");
   check(state.accountSessions.some((s) => s.account === provAcct.id) === false, "Simulation: keine echte Account Session nötig");
 
@@ -393,6 +393,96 @@ try {
   await admin(`studio/${aboId}/live`, { body: {} });
   const rAbo = await api(pD, "/api/portal/zahlung", { method: "POST", body: { betrag: "1000", kunde: "Sam" } });
   check(rAbo.data.zahlung?.gebuehrBruttoCent === 0, "Paket Monatlich: Zahlungslink ohne Tattoofin-Provision");
+
+  // ---------------------------------------------------------------- L2: PayPal
+  console.log("PayPal: nur bei aktiver Capability, Admin-Beantragung, Rückfall ohne PayPal");
+  {
+    const { ensureConnectedAccount } = await import("../netlify/functions/_lib/stripe.mjs");
+    const piVon = (r, st) => st.paymentIntents[(r.clientSecret || "").split("_secret_")[0]] || { payment_method_types: ["fehlt"] };
+    let st;
+    // 1) Hauptschalter aus (Standard): nie PayPal, auch nicht nach Beantragung
+    const ohne = await (await post("/api/pay", { s: slug, betrag: "100", kunde: "Ohne PP", inhaltOk: true })).json();
+    st = await mock("state");
+    check(!piVon(ohne, st).payment_method_types.includes("paypal") && !(ohne.zahlarten || []).includes("paypal"), "PayPal: Standard (ZAHLARTEN ohne paypal) → Kasse nur Karte + Klarna");
+    process.env.ZAHLARTEN = "card,klarna,paypal";
+    const vorFreigabe = await (await post("/api/pay", { s: slug, betrag: "100", kunde: "Vor Freigabe", inhaltOk: true })).json();
+    st = await mock("state");
+    check(vorFreigabe.clientSecret && !piVon(vorFreigabe, st).payment_method_types.includes("paypal"), "PayPal: Schalter an, Capability noch nicht beantragt → kein PayPal, Kasse funktioniert");
+    // 2) Plattform noch nicht freigeschaltet → Beantragen scheitert sauber, Standard-Konten werden übersprungen
+    await mock("paypal?plattform=aus");
+    const pp1 = await admin("paypal-beantragen", { body: {} });
+    const pp1Prov = pp1.studios.find((x) => x.id === provId), pp1Kauf = pp1.studios.find((x) => x.id === kaufId);
+    check(pp1Prov?.ergebnis === "Fehler" && /nicht freigeschaltet/.test(pp1Prov.fehler || "") && /übersprungen/.test(pp1Kauf?.ergebnis || "") && /enthält paypal/.test(pp1.schalter), "Admin „PayPal beantragen“: Plattform noch nicht freigeschaltet → Fehler je Studio, Standard-Konten übersprungen");
+    // 3) Plattform freigeschaltet → beantragen, Stand landet im Abgleich, PayPal an der Kasse
+    await mock("paypal?plattform=aktiv");
+    const pp2 = await admin("paypal-beantragen", { body: {} });
+    const pp2Prov = pp2.studios.find((x) => x.id === provId);
+    st = await mock("state");
+    check(pp2Prov?.ergebnis === "beantragt" && pp2Prov.paypal === "active" && pp2Prov.kasse.includes("paypal") && st.accounts[provAcct.id].requested_capabilities.includes("paypal_payments"), "Admin „PayPal beantragen“: capabilities[paypal_payments][requested]=true, Stand „active“ übernommen");
+    await wait(300);
+    const detPP = await admin(`studio/${provId}`);
+    check(detPP.studio.stripe.zahlartenStatus?.paypal === "active" && detPP.studio.stripe.zahlartenStatus?.klarna === "active", "Stripe-Abgleich führt Capability-Stand (Klarna, PayPal) mit");
+    check((await admin("studios")).find((x) => x.id === provId)?.stripe.includes("PayPal aktiv"), "Admin-Liste zeigt „PayPal aktiv“");
+    const nurPruefen = await admin("paypal-beantragen", { body: { nurPruefen: true } });
+    check(nurPruefen.studios.find((x) => x.id === provId)?.ergebnis === "geprüft", "Admin „PayPal beantragen“ mit nurPruefen: nur Stand abfragen");
+    // 4) Kunde zahlt mit PayPal im eingebetteten Bezahlfeld
+    await pK.goto(`${BASE}/zahlen/${slug}`);
+    await pK.waitForFunction(() => document.getElementById("studio").textContent === "Ink Provision");
+    await pK.fill("#betrag", "120"); await pK.fill("#kunde", "Paula Pal"); await pK.fill("#email", "paula@example.com"); await pK.fill("#beschreibung", "Fineline");
+    await pK.check("#inhalt-ok");
+    await pK.click("#weiter");
+    await pK.waitForSelector("#pay-jetzt");
+    check(await pK.$("input[name=sim-pm][value=paypal]"), "Bezahlfeld zeigt PayPal");
+    await pK.click("label:has(> input[name=sim-pm][value=paypal])");
+    await pK.click("#pay-jetzt");
+    await pK.waitForURL(/bezahlt\.html/);
+    await pK.waitForFunction(() => /erhalten/.test(document.getElementById("msg").textContent), null, { timeout: 15000 });
+    st = await mock("state");
+    const paula = (await admin(`studio/${provId}`)).zahlungen.find((z) => z.kunde === "Paula Pal");
+    const piPaula = st.paymentIntents[paula?.paymentIntentId];
+    check(piPaula?.payment_method_types?.includes("paypal") && piPaula.on_behalf_of === provAcct.id && piPaula.transfer_data?.destination === provAcct.id && piPaula.application_fee_amount === 1200, "PayPal-Zahlung: gleiche Abwicklung (Destination Charge, on_behalf_of, 10 % Provision)");
+    check(paula?.zahlart === "paypal" && paula.zahlartText === "PayPal" && paula.stripeGebuehrCent === 398, "Zahlart PayPal erkannt, Stripe-Gebühr gemerkt");
+    check(mailsAn("paula@example.com").some((m) => m.html.includes("mit PayPal bezahlt")) && mailsAn("prov@example.com").some((m) => m.subject.includes("Zahlung eingegangen: 120,00") && m.html.includes("PayPal")), "E-Mails: Kundin (Hinweis PayPal) + Studio (Zahlungsart PayPal)");
+    // 5) Stripe-Checkout (Live-Weg) bietet PayPal an
+    process.env.TF_BEZAHLFELD = "aus";
+    const coPP = await (await post("/api/pay", { s: slug, betrag: "150", kunde: "Checkout PP", inhaltOk: true })).json();
+    st = await mock("state");
+    const csPP = st.sessions[coPP.url.split("/pay/")[1]];
+    check(csPP?.payment_method_types?.includes("paypal") && csPP.payment_method_types.includes("klarna") && csPP.payment_intent_data?.on_behalf_of === provAcct.id, "Stripe-Checkout: PayPal neben Karte + Klarna");
+    check(/id=pay-paypal/.test(await (await fetch(coPP.url)).text()), "Checkout-Seite zeigt „Mit PayPal bezahlen“");
+    // 6) Stripe lehnt PayPal ab → Kasse läuft ohne PayPal weiter, Admin-Mail, 24 h Pause
+    await mock("paypal?ablehnen=1");
+    const vorMails = mailsAn("domenicschilling@gmail.com").filter((m) => m.subject.includes("PayPal an der Kasse abgelehnt")).length;
+    const coAbgelehnt = await (await post("/api/pay", { s: slug, betrag: "160", kunde: "Abgelehnt", inhaltOk: true })).json();
+    st = await mock("state");
+    const csAbg = st.sessions[(coAbgelehnt.url || "").split("/pay/")[1]];
+    check(csAbg && !csAbg.payment_method_types.includes("paypal") && csAbg.payment_method_types.includes("card") && csAbg.branding_settings?.display_name === "Ink Provision", "Stripe lehnt PayPal ab → Checkout trotzdem da (ohne PayPal, mit Branding)");
+    check(mailsAn("domenicschilling@gmail.com").filter((m) => m.subject.includes("PayPal an der Kasse abgelehnt")).length === vorMails + 1, "Admin-Mail: PayPal an der Kasse abgelehnt");
+    delete process.env.TF_BEZAHLFELD;
+    const nachAbl = await (await post("/api/pay", { s: slug, betrag: "170", kunde: "Pause", inhaltOk: true })).json();
+    st = await mock("state");
+    check(nachAbl.clientSecret && !piVon(nachAbl, st).payment_method_types.includes("paypal") && (await admin(`studio/${provId}`)).studio.stripe.paypalAbgelehnt?.am, "Nach Ablehnung: 24 h kein PayPal-Versuch für dieses Studio");
+    await mock("paypal?ablehnen=0");
+    // 7) Neue Konten: paypal_payments wird mit beantragt; Plattform nicht frei → Konto trotzdem angelegt (ohne PayPal)
+    const neuPP = { id: "st_pp_neu", modell: "provision", email: "pp-neu@example.com", firma: "PP Neu" };
+    const acctPP = await ensureConnectedAccount(neuPP);
+    st = await mock("state");
+    check(st.accounts[acctPP].requested_capabilities.includes("paypal_payments") && st.accounts[acctPP].requested_capabilities.includes("klarna_payments") && neuPP.stripe.paypal?.beantragtAm, "Neues Risikofrei-Konto: paypal_payments mit beantragt (ZAHLARTEN enthält paypal)");
+    await mock("paypal?plattform=aus");
+    const neuOhne = { id: "st_pp_ohne", modell: "provision", email: "pp-ohne@example.com", firma: "PP Ohne" };
+    const acctOhne = await ensureConnectedAccount(neuOhne);
+    st = await mock("state");
+    check(acctOhne && !st.accounts[acctOhne].requested_capabilities.includes("paypal_payments") && neuOhne.stripe.paypal?.fehler, "PayPal für Plattform noch nicht frei: Konto wird ohne PayPal angelegt, Einrichtung scheitert nicht");
+    const neuKauf = { id: "st_pp_kauf", modell: "kauf", email: "pp-kauf@example.com", firma: "PP Kauf" };
+    const acctKauf = await ensureConnectedAccount(neuKauf);
+    st = await mock("state");
+    check(st.accounts[acctKauf].type === "standard" && !(st.accounts[acctKauf].requested_capabilities || []).length, "Standard-Konto: keine Capabilities von uns (Studio schaltet PayPal selbst ein)");
+    await mock("paypal?plattform=aktiv");
+    delete process.env.ZAHLARTEN;
+    const ohneSchalter = await (await post("/api/pay", { s: slug, betrag: "100", kunde: "Schalter aus", inhaltOk: true })).json();
+    st = await mock("state");
+    check(!piVon(ohneSchalter, st).payment_method_types.includes("paypal"), "Hauptschalter wieder aus → kein PayPal, obwohl Capability aktiv");
+  }
 
   // ---------------------------------------------------------------- M: Leistungsbestätigung
   console.log("Leistungsbestätigung nach dem Termin");

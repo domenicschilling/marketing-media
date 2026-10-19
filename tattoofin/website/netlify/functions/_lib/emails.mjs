@@ -174,7 +174,8 @@ export const mails = {
     title: `Danke, ${esc(z.kunde || "")}! Deine Zahlung ist da.`,
     body: p(`${esc(s.firma)} hat deine Zahlung über <b>${euro(z.betragCent)}</b> für <b>${esc(z.beschreibung || "dein Tattoo-Projekt")}</b> erhalten.`) +
       p("Den Beleg des Zahlungsanbieters bekommst du separat. Bei Fragen zu Termin oder Projekt meld dich direkt beim Studio.") +
-      (z.zahlart === "klarna" ? p("Du hast über Klarna bezahlt. Alle Fragen zu Raten oder Fälligkeiten klärst du direkt mit Klarna.") : ""),
+      (z.zahlart === "klarna" ? p("Du hast über Klarna bezahlt. Alle Fragen zu Raten oder Fälligkeiten klärst du direkt mit Klarna.") : "") +
+      (z.zahlart === "paypal" ? p("Du hast mit PayPal bezahlt. Die Zahlung siehst du auch in deinem PayPal-Konto.") : ""),
     footerNote: `Diese E-Mail wurde im Auftrag von ${esc(s.firma)} über Tattoofin versendet.`,
   }),
 

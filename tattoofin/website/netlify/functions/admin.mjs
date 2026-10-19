@@ -18,6 +18,8 @@
 //   GET   /api/admin/mail-status              Warteschlange (hängende Mails), Versandwege, letzte Fehler
 //   POST  /api/admin/mail-nachsenden          Warteschlange sofort erneut versuchen
 //   POST  /api/admin/konten-abgleichen        Stripe-Status aller Studios mit Konto neu abfragen (ohne Webhook)
+//   POST  /api/admin/paypal-beantragen        { nurPruefen? } PayPal (Capability paypal_payments) für alle Express-Konten (Risikofrei)
+//                                             beantragen und Stand abgleichen; Standard-Konten schalten PayPal selbst ein
 //   GET   /api/admin/gesundheit               letztes Ergebnis des stündlichen Gesundheits-Checks
 //   GET   /api/admin/studio/:id/branding      hinterlegtes Branding (Logo/Icon/Farben/Kurzbezeichnung)
 //   POST  /api/admin/studio/:id/branding      { logo?, icon? (data:image/png|jpeg;base64), farbe?, akzent? (#RRGGBB), kurzbezeichnung?, logoHell?, stripe? }
@@ -27,12 +29,14 @@ import { CFG, netto, paketVon, provisionSatz } from "./_lib/config.mjs";
 import { json, fail, body, clean, now, handler } from "./_lib/util.mjs";
 import { allStudios, getStudio, saveStudio, zahlungenVon, abrechnungenVon, store, log } from "./_lib/store.mjs";
 import { isAdmin, loginLink, sign, adminName } from "./_lib/auth.mjs";
-import { stripe, TATTOOFIN_BRANDING } from "./_lib/stripe.mjs";
-import { notify, monatsabrechnung, taeglicheJobs, kontoAbgleichen, provisionVerdient, STATUS, aufstellerUrl, connectUrl } from "./_lib/domain.mjs";
+import { stripe, TATTOOFIN_BRANDING, paypalBeantragen } from "./_lib/stripe.mjs";
+import { notify, monatsabrechnung, taeglicheJobs, kontoAbgleichen, provisionVerdient, STATUS, aufstellerUrl, connectUrl, zahlartenFuer } from "./_lib/domain.mjs";
 import { mails } from "./_lib/emails.mjs";
 import { sendMail, warteschlangeStatus, warteschlangeAbarbeiten } from "./_lib/mail.mjs";
 import { randomBytes } from "node:crypto";
 import { brandingSetzen, brandingOeffentlich } from "./_lib/branding.mjs";
+
+const PAYPAL_TEXT = (st) => ({ active: "aktiv", pending: "in Prüfung", inactive: "beantragt, noch nicht aktiv" }[st] || st);
 
 export default handler(async (req) => {
   if (!isAdmin(req)) return fail("Nicht berechtigt", 401);
@@ -75,7 +79,8 @@ export default handler(async (req) => {
         umsatzCent: bezahlt.reduce((a, x) => a + x.betragCent, 0), provisionNettoCent: abgerechnet.reduce((a, x) => a + netto(provisionVerdient(x)), 0),
         // Deckungsbeitrag Provision: Provision netto minus Stripe-Gebühren, die Tattoofin bei Provision trägt
         deckungsbeitragCent: abgerechnet.reduce((a, x) => a + netto(provisionVerdient(x)) - (x.stripeGebuehrCent || 0), 0),
-        stripe: s.stripe?.chargesEnabled ? "freigegeben" : s.stripe?.accountId ? "in Prüfung" : "nicht verbunden",
+        stripe: (s.stripe?.chargesEnabled ? "freigegeben" : s.stripe?.accountId ? "in Prüfung" : "nicht verbunden") + (s.stripe?.zahlartenStatus?.paypal ? " · PayPal " + PAYPAL_TEXT(s.stripe.zahlartenStatus.paypal) : ""),
+        paypal: s.stripe?.zahlartenStatus?.paypal || null,
         fragebogen: Boolean(s.fragebogen), slug: s.slug,
         paket: paketVon(s).name, provisionProzent: provisionSatz(s),
         recht: s.recht ? `${s.recht.version} (${s.recht.am.slice(0, 10)})` : "", extras: Object.keys(s.extras || {}).join(", "),
@@ -147,7 +152,7 @@ export default handler(async (req) => {
       const vorher = { freigegeben: Boolean(s.stripe.chargesEnabled), auszahlungen: Boolean(s.stripe.payoutsEnabled), angaben: Boolean(s.stripe.detailsSubmitted) };
       await kontoAbgleichen(s, await stripe("GET", "/accounts/" + s.stripe.accountId));
       await log("admin-konto-abgleich", { admin: adminName(req), studioId: s.id });
-      return json({ vorher, nachher: { freigegeben: Boolean(s.stripe.chargesEnabled), auszahlungen: Boolean(s.stripe.payoutsEnabled), angaben: Boolean(s.stripe.detailsSubmitted) }, offen: s.stripe.offen, abgeglichenAm: s.stripe.abgeglichenAm, accountId: s.stripe.accountId });
+      return json({ vorher, nachher: { freigegeben: Boolean(s.stripe.chargesEnabled), auszahlungen: Boolean(s.stripe.payoutsEnabled), angaben: Boolean(s.stripe.detailsSubmitted) }, offen: s.stripe.offen, zahlarten: s.stripe.zahlartenStatus, kasse: zahlartenFuer(s), abgeglichenAm: s.stripe.abgeglichenAm, accountId: s.stripe.accountId });
     }
   }
 
@@ -168,11 +173,34 @@ export default handler(async (req) => {
     const out = [];
     for (const s of await allStudios()) {
       if (!s.stripe?.accountId) continue;
-      try { await kontoAbgleichen(s, await stripe("GET", "/accounts/" + s.stripe.accountId)); out.push({ id: s.id, firma: s.firma, freigegeben: Boolean(s.stripe.chargesEnabled), offen: s.stripe.offen?.faellig?.length || 0 }); }
+      try { await kontoAbgleichen(s, await stripe("GET", "/accounts/" + s.stripe.accountId)); out.push({ id: s.id, firma: s.firma, freigegeben: Boolean(s.stripe.chargesEnabled), offen: s.stripe.offen?.faellig?.length || 0, paypal: s.stripe.zahlartenStatus?.paypal || null }); }
       catch (e) { out.push({ id: s.id, firma: s.firma, fehler: e.message }); }
     }
     await log("admin-konten-abgleich", { admin: adminName(req), anzahl: out.length });
     return json(out);
+  }
+  // PayPal für alle Studios beantragen: nur Express-Konten (Paket Risikofrei). Der Stand landet über kontoAbgleichen in
+  // s.stripe.zahlartenStatus.paypal (später auch per Webhook account.updated). An der Kasse erscheint PayPal erst bei „active“
+  // UND wenn ZAHLARTEN „paypal“ enthält. nurPruefen: nichts beantragen, nur Stand zeigen.
+  if (bereich === "paypal-beantragen" && req.method === "POST") {
+    const b = await body(req);
+    const out = [];
+    for (const s of await allStudios()) {
+      if (!s.stripe?.accountId) continue;
+      const zeile = { id: s.id, firma: s.firma, paket: paketVon(s).name };
+      if (s.stripe.kontoTyp !== "express") { out.push({ ...zeile, ergebnis: "übersprungen: eigenes Stripe-Dashboard, Studio schaltet PayPal selbst ein", paypal: s.stripe.zahlartenStatus?.paypal || null }); continue; }
+      try {
+        const acct = b.nurPruefen ? await stripe("GET", "/accounts/" + s.stripe.accountId) : await paypalBeantragen(s);
+        await kontoAbgleichen(s, acct);
+        out.push({ ...zeile, ergebnis: b.nurPruefen ? "geprüft" : "beantragt", paypal: s.stripe.zahlartenStatus?.paypal || null, kasse: zahlartenFuer(s) });
+      } catch (e) {
+        s.stripe.paypal = { ...(s.stripe.paypal || {}), fehler: String(e.message || "").slice(0, 300), am: now() };
+        await saveStudio(s);
+        out.push({ ...zeile, ergebnis: "Fehler", fehler: e.message });
+      }
+    }
+    await log("admin-paypal-beantragen", { admin: adminName(req), anzahl: out.length, nurPruefen: Boolean(b.nurPruefen) });
+    return json({ schalter: CFG.zahlarten.includes("paypal") ? "ZAHLARTEN enthält paypal" : "ZAHLARTEN enthält KEIN paypal – PayPal erscheint an keiner Kasse, bis „paypal“ ergänzt ist", studios: out });
   }
   if (bereich === "gesundheit" && req.method === "GET") return json((await store.get("meta/gesundheit")) || { hinweis: "Noch kein Check gelaufen." });
   if (bereich === "mails" && req.method === "GET") {

@@ -7,8 +7,33 @@ import crypto from "node:crypto";
 
 export const leereDb = () => ({ subscriptions: {}, customers: {}, sessions: {}, invoices: {}, items: [], setupIntents: {}, refunds: [], taxRates: {}, accounts: {}, paymentIntents: {}, feeRefunds: [], transfers: [], reversals: [], accountSessions: [], idem: {}, invoiceNr: 1000 });
 
-// Stripe-Gebühren im Nachbau: Karte EWR 1,5 % + 0,25 €, Klarna 2,99 % + 0,35 €
-const gebuehr = (betrag, pm) => (pm === "klarna" ? Math.round(betrag * 0.0299) + 35 : Math.round(betrag * 0.015) + 25);
+// Stripe-Gebühren im Nachbau: Karte EWR 1,5 % + 0,25 €, Klarna 2,99 % + 0,35 €, PayPal (Annahme) 2,99 % + 0,39 €
+const gebuehr = (betrag, pm) => (pm === "klarna" ? Math.round(betrag * 0.0299) + 35 : pm === "paypal" ? Math.round(betrag * 0.0299) + 39 : Math.round(betrag * 0.015) + 25);
+
+// PayPal im Nachbau. db.paypal = { plattform: "aktiv" | "aus", ablehnen: bool } (Test-Hilfe /mock/paypal?plattform=…&ablehnen=…)
+//  plattform „aus“: Plattform hat PayPal (noch) nicht freigeschaltet → Beantragen von paypal_payments wird abgelehnt
+//  ablehnen:        Stripe lehnt Sitzungen mit PayPal ab (z. B. „on_behalf_of nicht unterstützt“) → Rückfall ohne PayPal testen
+// Wie echtes Stripe: PayPal an der Kasse nur, wenn das Händler-Konto (on_behalf_of bzw. Stripe-Account) paypal_payments „active“ hat.
+const paypalCfg = (db) => ({ plattform: "aktiv", ablehnen: false, ...(db.paypal || {}) });
+function capStatus(db, a, k) {
+  if (k === "paypal_payments" && paypalCfg(db).plattform !== "aktiv") return "pending";
+  return a.charges_enabled ? "active" : "inactive";
+}
+function capsBeantragen(db, a, caps) {
+  a.capabilities = a.capabilities || {};
+  for (const [k, v] of Object.entries(caps || {})) {
+    if (String(v?.requested) !== "true") continue;
+    if (k === "paypal_payments" && paypalCfg(db).plattform !== "aktiv") throw new SimFehler(400, "Simulation: PayPal ist für deine Plattform noch nicht freigeschaltet (paypal_payments kann nicht beantragt werden).");
+    a.requested_capabilities = [...new Set([...(a.requested_capabilities || []), k])];
+    a.capabilities[k] = capStatus(db, a, k);
+  }
+}
+function paypalPruefen(db, pmTypes, haendler) {
+  if (!(pmTypes || []).includes("paypal")) return;
+  if (paypalCfg(db).ablehnen) throw new SimFehler(400, "Simulation: The payment method type `paypal` is not supported with on_behalf_of.");
+  const a = db.accounts[haendler];
+  if (haendler && a?.capabilities?.paypal_payments !== "active") throw new SimFehler(400, "Simulation: paypal_payments ist für dieses Konto nicht aktiv.");
+}
 const rid = (p) => p + "_" + crypto.randomBytes(6).toString("hex");
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const seite = (titel, inhalt) => `<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=robots content=noindex><title>${titel}</title>
@@ -59,13 +84,21 @@ export function createSim({ load, save, pageBase, webhook }) {
       const [, res1, id1, act] = path.split("/");
 
       if (res1 === "accounts") {
-        if (method === "POST" && !id1) { const a = { id: rid("acct"), object: "account", ...p, charges_enabled: false, payouts_enabled: false, details_submitted: false }; db.accounts[a.id] = a; return done(a); }
+        if (method === "POST" && !id1) {
+          // Wie Stripe: capabilities als Status-Werte („inactive“ bis zur Freigabe); requested_capabilities nur im Nachbau
+          const a = { id: rid("acct"), object: "account", ...p, capabilities: {}, charges_enabled: false, payouts_enabled: false, details_submitted: false };
+          capsBeantragen(db, a, p.capabilities);
+          db.accounts[a.id] = a; return done(a);
+        }
         if (method === "POST" && act === "login_links") return done({ object: "login_link", url: `${pageBase}/express/${id1}` });
         if (!db.accounts[id1]) throw new SimFehler(404, "Konto nicht gefunden");
-        if (method === "POST" && !act && p.settings) {
+        if (method === "POST" && !act && (p.settings || p.capabilities)) {
           const a = db.accounts[id1];
-          a.settings = a.settings || {};
-          for (const [k, v] of Object.entries(p.settings)) a.settings[k] = { ...(a.settings[k] || {}), ...v };
+          if (p.settings) {
+            a.settings = a.settings || {};
+            for (const [k, v] of Object.entries(p.settings)) a.settings[k] = { ...(a.settings[k] || {}), ...v };
+          }
+          if (p.capabilities) { capsBeantragen(db, a, p.capabilities); emit("account.updated", a, a.id); }
           return done(a);
         }
         return db.accounts[id1];
@@ -79,6 +112,7 @@ export function createSim({ load, save, pageBase, webhook }) {
       }
       if (res1 === "payment_intents") {
         if (method === "POST" && !id1) {
+          paypalPruefen(db, p.payment_method_types, p.on_behalf_of || account);
           const pi = {
             id: rid("pi"), object: "payment_intent", amount: Number(p.amount), currency: p.currency || "eur", status: "requires_payment_method",
             payment_method_types: p.payment_method_types || ["card"], description: p.description, metadata: p.metadata || {}, receipt_email: p.receipt_email,
@@ -113,6 +147,7 @@ export function createSim({ load, save, pageBase, webhook }) {
           if (path.endsWith("/expire")) { s.status = "expired"; emit("checkout.session.expired", s, s.account || undefined); }
           return s;
         }
+        paypalPruefen(db, p.payment_method_types, p.payment_intent_data?.on_behalf_of || account);
         const s = { id: rid("cs"), object: "checkout.session", ...p, status: "open", account: account || null };
         s.url = `${pageBase}/pay/${s.id}`;
         if (s.mode === "payment" || s.mode === "subscription") {
@@ -189,6 +224,7 @@ export function createSim({ load, save, pageBase, webhook }) {
           <h2>Stripe Testkasse</h2><p>Modus: <b>${s.mode}</b>${s.amount_total ? " · Betrag: " + (s.amount_total / 100).toFixed(2) + " €" : ""}</p>
           <form method=post><input type=hidden name=pm value=card><button id=pay style="padding:12px 20px;font-size:16px">${s.mode === "setup" ? "Zahlungsmethode speichern" : "Mit Karte bezahlen"}</button></form>
           ${s.account || s.payment_intent_data?.transfer_data ? '<form method=post><input type=hidden name=pm value=klarna><button id=pay-klarna style="padding:12px 20px;font-size:16px;margin-top:8px">Mit Klarna (Raten) bezahlen</button></form>' : ""}
+          ${(s.payment_method_types || []).includes("paypal") ? '<form method=post><input type=hidden name=pm value=paypal><button id=pay-paypal style="padding:12px 20px;font-size:16px;margin-top:8px">Mit PayPal bezahlen</button></form>' : ""}
           <p><a id=cancel href="${esc(s.cancel_url)}">Abbrechen</a></p>`) };
         s.status = "complete";
         const ziel = s.payment_intent_data?.transfer_data?.destination;
@@ -229,6 +265,7 @@ export function createSim({ load, save, pageBase, webhook }) {
         if (!a) return { status: 404, text: "unbekannt" };
         if (method === "GET") return { html: seite("Stripe Onboarding (Test)", `<h2>Stripe Onboarding (Simulation)</h2><p>Konto ${esc(a.id)} für ${esc(a.email)}</p><form method=post><button id=onboard style="padding:12px 20px">Angaben absenden</button></form>`) };
         Object.assign(a, { charges_enabled: true, payouts_enabled: true, details_submitted: true });
+        for (const k of Object.keys(a.capabilities || {})) a.capabilities[k] = capStatus(db, a, k);
         emit("account.updated", a, a.id);
         return { redirect: query.get("return") || "/" };
       });
@@ -239,6 +276,7 @@ export function createSim({ load, save, pageBase, webhook }) {
         const a = db.accounts[id];
         if (!a) return { status: 404, text: "unbekannt" };
         Object.assign(a, { charges_enabled: true, payouts_enabled: true, details_submitted: true, sim_angaben: { name: String(form.name || "").slice(0, 80), iban: String(form.iban || "").slice(-4) } });
+        for (const k of Object.keys(a.capabilities || {})) a.capabilities[k] = capStatus(db, a, k);
         emit("account.updated", a, a.id);
         return { json: { ok: true } };
       });
@@ -250,7 +288,8 @@ export function createSim({ load, save, pageBase, webhook }) {
         if (!pi || pi.client_secret !== form.client_secret) return { status: 404, json: { error: "Zahlung nicht gefunden" } };
         if (pi.status === "succeeded") return { json: { status: pi.status } };
         if (form.pm === "abgelehnt") { emit("payment_intent.payment_failed", { ...pi, last_payment_error: { message: "Karte abgelehnt (Simulation)" } }, pi.account || undefined); return { status: 402, json: { error: "Deine Karte wurde abgelehnt (Simulation)." } }; }
-        bezahle(db, emit, pi, form.pm === "klarna" ? "klarna" : "card");
+        const pmWahl = ["klarna", "paypal"].includes(form.pm) && (pi.payment_method_types || []).includes(form.pm) ? form.pm : "card";
+        bezahle(db, emit, pi, pmWahl);
         emit("payment_intent.succeeded", pi, pi.account || undefined);
         return { json: { status: pi.status } };
       });
@@ -262,6 +301,15 @@ export function createSim({ load, save, pageBase, webhook }) {
   async function mock(parts, query) {
     const [art, id] = parts;
     if (art === "state") return load();
+    // PayPal-Verhalten umschalten: /mock/paypal?plattform=aktiv|aus&ablehnen=1|0&freigeben=<acct> (freigeben: Capability aktiv setzen + Webhook)
+    if (art === "paypal") return tx(async (db, emit) => {
+      db.paypal = paypalCfg(db);
+      if (query.get("plattform")) db.paypal.plattform = query.get("plattform");
+      if (query.get("ablehnen")) db.paypal.ablehnen = query.get("ablehnen") === "1";
+      const a = db.accounts[query.get("freigeben") || ""];
+      if (a?.capabilities?.paypal_payments) { a.capabilities.paypal_payments = capStatus(db, a, "paypal_payments"); emit("account.updated", a, a.id); }
+      return db.paypal;
+    });
     return tx(async (db, emit) => {
       if (art === "dispute") {
         const pi = db.paymentIntents[id];

@@ -61,7 +61,10 @@ export const CFG = {
   rechtVersion: "2026-10b",
   bestaetigungVersion: "2026-10b",
   // Zahlarten im Checkout. Bewusst ohne SEPA-Lastschrift: Die kann der Kunde 8 Wochen lang ohne Grund zurückbuchen.
-  zahlarten: env("ZAHLARTEN", "card,klarna").split(",").map((x) => x.trim()).filter(Boolean),
+  // „paypal“ (z. B. ZAHLARTEN=card,klarna,paypal) ist der Hauptschalter für PayPal: Erst dann beantragt Tattoofin bei neuen
+  // Konten die Capability paypal_payments, und PayPal erscheint an der Kasse NUR bei Studios, deren Capability „active“ ist
+  // (siehe zahlartenFuer in domain.mjs). Wird bei jedem Zugriff neu gelesen (die Tests schalten es zur Laufzeit um).
+  get zahlarten() { return env("ZAHLARTEN", "card,klarna").split(",").map((x) => x.trim()).filter(Boolean); },
   // QR-Aufsteller aus Holz: in diesen Paketen inklusive (digitaler QR-Code ist in allen Paketen dabei); andere können ihn anfragen
   aufstellerPakete: env("AUFSTELLER_PAKETE", "monatlich,einmal").split(",").map((x) => x.trim()).filter(Boolean),
   // QR-Aufsteller einzeln (Pakete ohne Aufsteller, z. B. Risikofrei): Preis netto zzgl. USt., Kauf per Stripe-Checkout (DSX-Konto)

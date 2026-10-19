@@ -123,25 +123,49 @@ export async function ensureCustomer(studio) {
 //                        kontoTyp bleibt „express“ (Portal/dashboardLink prüfen darauf).
 //  Idempotenz-Schlüssel „acct2-…“: Stripe speichert die Antwort zum alten Schlüssel „acct-…“ 24 h – auch den
 //  Fehler „review the responsibilities of managing losses“ vom 18.10. – und lehnt geänderte Parameter ab.
+//  PayPal (nur Provision/Express, nur wenn ZAHLARTEN „paypal“ enthält): paypal_payments wird mit beantragt. Lehnt Stripe
+//  das ab (z. B. weil PayPal für die Plattform noch nicht freigeschaltet ist), wird das Konto ohne PayPal angelegt –
+//  die Einrichtung des Studios darf daran nie scheitern. Eigener Idempotenz-Schlüssel für die PayPal-Variante.
+//  Standard-Konten (Kauf/Monatlich/Geschenk) haben ein eigenes Stripe-Dashboard: Dort schaltet das Studio PayPal selbst ein.
 export async function ensureConnectedAccount(studio) {
   if (studio.stripe?.accountId) return studio.stripe.accountId;
   const express = studio.modell === "provision";
-  const capabilities = express ? {
+  const mitPaypal = express && CFG.zahlarten.includes("paypal");
+  const capabilities = (paypal) => (express ? {
     card_payments: { requested: true }, transfers: { requested: true },
     ...(CFG.zahlarten.includes("klarna") ? { klarna_payments: { requested: true } } : {}),
-  } : undefined;
+    ...(paypal ? { paypal_payments: { requested: true } } : {}),
+  } : undefined);
   const delay = Number(CFG.auszahlungTage);
-  const acct = await stripe("POST", "/accounts", {
+  const anlegen = (paypal) => stripe("POST", "/accounts", {
     ...(express
       ? { controller: { losses: { payments: "application" }, fees: { payer: "application" }, stripe_dashboard: { type: "express" }, requirement_collection: "stripe" } }
       : { type: "standard" }),
-    country: "DE", email: studio.email, default_currency: "eur", capabilities,
+    country: "DE", email: studio.email, default_currency: "eur", capabilities: capabilities(paypal),
     business_profile: { name: studio.firma, mcc: express ? "7299" : undefined, product_description: "Tätowierungen und Tattoo-Projekte", url: studio.website || undefined },
     settings: express && delay > 0 ? { payouts: { schedule: { interval: "daily", delay_days: delay } } } : undefined,
     metadata: { studioId: studio.id, modell: studio.modell },
-  }, { idempotencyKey: "acct2-" + studio.id });
+  }, { idempotencyKey: (paypal ? "acct2-pp-" : "acct2-") + studio.id });
+  let acct, paypalFehler = null;
+  if (mitPaypal) {
+    try { acct = await anlegen(true); }
+    catch (e) { paypalFehler = e.message; console.error("[connect] Konto mit PayPal abgelehnt, lege ohne PayPal an:", e.message); }
+  }
+  if (!acct) acct = await anlegen(false);
   studio.stripe = { ...(studio.stripe || {}), accountId: acct.id, kontoTyp: express ? "express" : "standard" };
+  if (mitPaypal) studio.stripe.paypal = paypalFehler ? { beantragtAm: null, fehler: paypalFehler.slice(0, 300), am: new Date().toISOString() } : { beantragtAm: new Date().toISOString() };
   return acct.id;
+}
+
+// PayPal für ein bestehendes Konto beantragen (Admin-Aktion „PayPal für alle Studios beantragen“):
+// POST /v1/accounts/{id} mit capabilities[paypal_payments][requested]=true. Nur Express-Konten (Provision) –
+// Standard-Konten aktivieren PayPal selbst im eigenen Stripe-Dashboard. Liefert das aktualisierte Konto.
+export async function paypalBeantragen(studio) {
+  if (!studio.stripe?.accountId) throw new Error("Kein Stripe-Konto verbunden");
+  if (studio.stripe.kontoTyp !== "express") throw new Error("Eigenes Stripe-Dashboard: Das Studio schaltet PayPal selbst ein (Einstellungen → Zahlungsmethoden).");
+  const acct = await stripe("POST", "/accounts/" + studio.stripe.accountId, { capabilities: { paypal_payments: { requested: true } } });
+  studio.stripe.paypal = { beantragtAm: new Date().toISOString() };
+  return acct;
 }
 
 // Login in das Express-Dashboard (Auszahlungen, Bankkonto, Belege) für Provisions-Studios

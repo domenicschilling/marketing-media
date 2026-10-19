@@ -154,6 +154,36 @@ export const ANZAHLUNG_STANDARD = "Die Anzahlung sichert deinen Termin und wird 
 export const anzahlungsbedingungen = (s) => (s.anzahlungsbedingungen || ANZAHLUNG_STANDARD);
 export const istAnzahlung = (z) => z.art === "anzahlung" || Boolean(z.anzahlung);
 
+// Zahlarten an der Kasse eines Studios. Grundlage: ZAHLARTEN (Standard Karte + Klarna; Apple Pay/Google Pay/Link kommen
+// mit der Karte). PayPal nur, wenn (1) ZAHLARTEN „paypal“ enthält, (2) die Capability paypal_payments des Studio-Kontos
+// laut letztem Stripe-Abgleich „active“ ist und (3) Stripe PayPal für dieses Studio in den letzten 24 h nicht abgelehnt hat.
+// So geht eine Kasse nie wegen PayPal kaputt (siehe auch mitPaypalRueckfall).
+export const PAYPAL_PAUSE_STD = 24;
+export function zahlartenFuer(studio) {
+  const alle = CFG.zahlarten;
+  const basis = alle.filter((x) => x !== "paypal");
+  if (!alle.includes("paypal") || studio?.stripe?.zahlartenStatus?.paypal !== "active") return basis;
+  const fehlerAm = studio.stripe.paypalAbgelehnt?.am;
+  if (fehlerAm && Date.now() - new Date(fehlerAm).getTime() < PAYPAL_PAUSE_STD * 3600e3) return basis;
+  return [...basis, "paypal"];
+}
+
+// Lehnt Stripe eine Sitzung mit PayPal ab (laut Stripe-Doku unterstützt PayPal bei Connect weder on_behalf_of noch
+// Direct Charges – das kann sich ändern, darum probieren wir es nur bei aktiver Capability), läuft die Kasse sofort
+// ohne PayPal weiter. Klappt es ohne PayPal, lag es an PayPal: 24 h Pause für dieses Studio + Admin-Mail.
+async function mitPaypalRueckfall(studio, zahlarten, versuch) {
+  if (!zahlarten.includes("paypal")) return versuch(zahlarten);
+  try { return await versuch(zahlarten); }
+  catch (e) {
+    console.error("[kasse] PayPal abgelehnt, Kasse ohne PayPal:", e.message);
+    const r = await versuch(zahlarten.filter((x) => x !== "paypal"));
+    studio.stripe.paypalAbgelehnt = { am: now(), meldung: String(e.message || "").slice(0, 300) };
+    await saveStudio(studio);
+    await notifyAdmin("PayPal an der Kasse abgelehnt – Kasse läuft ohne PayPal weiter (24 h Pause)", studio, { Fehler: e.message, Konto: studio.stripe.accountId });
+    return r;
+  }
+}
+
 // Checkout-Sitzung für eine Kundenzahlung.
 //  Kauf:      auf dem eigenen Stripe-Konto des Studios (Direct Charge), keine Plattformgebühr.
 //  Provision: auf der Tattoofin-Plattform mit transfer_data → Konto des Studios und on_behalf_of (Studio ist Händler).
@@ -165,7 +195,7 @@ export async function checkoutFuer(studio, z) {
   const anzahlung = istAnzahlung(z);
   const meta = { tattoofinZahlung: z.id, studioId: studio.id };
   const params = {
-    mode: "payment", locale: "de", client_reference_id: z.id, payment_method_types: CFG.zahlarten,
+    mode: "payment", locale: "de", client_reference_id: z.id,
     line_items: [{ quantity: 1, price_data: { currency: "eur", unit_amount: z.betragCent, product_data: { name: z.beschreibung || "Tattoo-Projekt", description: `${studio.firma}${anzahlung ? " · Anzahlung" : ""}` } } }],
     customer_email: z.email || undefined,
     custom_text: anzahlung ? { submit: { message: ("Anzahlungsbedingungen: " + anzahlungsbedingungen(studio)).slice(0, 1200) } } : undefined,
@@ -182,12 +212,14 @@ export async function checkoutFuer(studio, z) {
   // Logo/Farben des Studios im Checkout (falls im Admin hinterlegt). Lehnt Stripe das Branding ab,
   // läuft die Zahlung ohne – die Kasse darf daran nie scheitern.
   const branding = checkoutBranding(studio);
-  let session;
-  if (branding) {
-    try { session = await stripe("POST", "/checkout/sessions", { ...params, branding_settings: branding }, opts); }
-    catch (e) { console.error("Checkout-Branding abgelehnt:", e.message); }
-  }
-  if (!session) session = await stripe("POST", "/checkout/sessions", params, opts);
+  const session = await mitPaypalRueckfall(studio, zahlartenFuer(studio), async (zahlarten) => {
+    const p = { ...params, payment_method_types: zahlarten };
+    if (branding) {
+      try { return await stripe("POST", "/checkout/sessions", { ...p, branding_settings: branding }, opts); }
+      catch (e) { console.error("Checkout-Branding abgelehnt:", e.message); }
+    }
+    return stripe("POST", "/checkout/sessions", p, opts);
+  });
   z.checkoutSessionId = session.id;
   z.abwicklung = plattform ? "plattform" : "studio";
   z.gebuehrNettoCent = fee.nettoCent;
@@ -208,23 +240,25 @@ export async function bezahlfeldFuer(studio, z) {
   const meta = { tattoofinZahlung: z.id, studioId: studio.id };
   // Bestehenden, noch offenen PaymentIntent wiederverwenden (Kunde lädt die Seite neu), sonst neu anlegen
   if (z.paymentIntentId && z.clientSecret && z.betragFuerPi === z.betragCent) {
-    return { clientSecret: z.clientSecret, stripeAccount: plattform ? null : studio.stripe.accountId };
+    return { clientSecret: z.clientSecret, stripeAccount: plattform ? null : studio.stripe.accountId, zahlarten: z.zahlartenAngeboten || CFG.zahlarten.filter((x) => x !== "paypal") };
   }
-  const pi = await stripe("POST", "/payment_intents", {
-    amount: z.betragCent, currency: "eur", payment_method_types: CFG.zahlarten,
+  // Idempotenz-Schlüssel je Zahlarten-Variante (mit PayPal „-pp“), damit der Rückfall ohne PayPal nicht am Schlüssel scheitert
+  const pi = await mitPaypalRueckfall(studio, zahlartenFuer(studio), (zahlarten) => stripe("POST", "/payment_intents", {
+    amount: z.betragCent, currency: "eur", payment_method_types: zahlarten,
     description: `${z.beschreibung || "Tattoo-Projekt"} (${z.kunde || "Kunde"})${anzahlung ? " · Anzahlung" : ""}`,
     receipt_email: z.email || undefined, metadata: meta,
     ...(plattform ? { application_fee_amount: fee.bruttoCent, on_behalf_of: studio.stripe.accountId, transfer_data: { destination: studio.stripe.accountId }, transfer_group: z.id } : {}),
-  }, { idempotencyKey: `pi-${z.id}-${z.betragCent}`, ...(plattform ? {} : { account: studio.stripe.accountId }) });
+  }, { idempotencyKey: `pi-${z.id}-${z.betragCent}${zahlarten.includes("paypal") ? "-pp" : ""}`, ...(plattform ? {} : { account: studio.stripe.accountId }) }));
   z.paymentIntentId = pi.id;
   z.clientSecret = pi.client_secret;
   z.betragFuerPi = z.betragCent;
   z.abwicklung = plattform ? "plattform" : "studio";
   z.weg = "bezahlfeld";
+  z.zahlartenAngeboten = pi.payment_method_types || [];
   z.gebuehrNettoCent = fee.nettoCent;
   z.gebuehrBruttoCent = fee.bruttoCent;
   await saveZahlung(z);
-  return { clientSecret: pi.client_secret, stripeAccount: plattform ? null : studio.stripe.accountId };
+  return { clientSecret: pi.client_secret, stripeAccount: plattform ? null : studio.stripe.accountId, zahlarten: z.zahlartenAngeboten };
 }
 
 const objId = (x) => (x && typeof x === "object" ? x.id : x || "");
@@ -372,8 +406,15 @@ export async function kontoAbgleichen(s, acct) {
   // Was Stripe noch braucht (für Admin/Dashboard), und wann zuletzt abgeglichen (Webhook oder „jetzt abgleichen“)
   const r = acct.requirements || {};
   s.stripe.offen = { faellig: (r.currently_due || []).slice(0, 20), ueberfaellig: (r.past_due || []).slice(0, 20), inPruefung: (r.pending_verification || []).slice(0, 20), sperrgrund: r.disabled_reason || null };
+  // Stand der Zahlart-Capabilities (active | pending | inactive | null = nicht beantragt). PayPal erscheint an der Kasse nur bei „active“.
+  const cap = (k) => { const v = (acct.capabilities || {})[k]; return (typeof v === "object" ? v?.status : v) || null; };
+  const paypalVorher = s.stripe.zahlartenStatus?.paypal || null;
+  s.stripe.zahlartenStatus = { karte: cap("card_payments"), klarna: cap("klarna_payments"), paypal: cap("paypal_payments") };
+  // Neu freigeschaltet: eine frühere Ablehnung an der Kasse gilt nicht mehr
+  if (paypalVorher !== "active" && s.stripe.zahlartenStatus.paypal === "active") delete s.stripe.paypalAbgelehnt;
   s.stripe.abgeglichenAm = new Date().toISOString();
   await saveStudio(s);
+  if (paypalVorher !== s.stripe.zahlartenStatus.paypal && s.stripe.zahlartenStatus.paypal) await log("paypal-status", { studioId: s.id, vorher: paypalVorher, jetzt: s.stripe.zahlartenStatus.paypal });
   if (!vorher && s.stripe.chargesEnabled) {
     await notify(s, mails.kontoFreigegeben(s));
     await notifyAdmin("Stripe-Konto freigegeben: Zahlungsarten + Branding einrichten", s, {});

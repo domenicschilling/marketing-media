@@ -27,6 +27,7 @@
           <button class="btn dark small" id="abr-los">Abrechnung erstellen</button>
           <button class="btn ghost small" id="jobs">Tägliche Jobs</button>
           <button class="btn ghost small" id="konten">Alle Stripe-Status abgleichen</button>
+          <button class="btn ghost small" id="paypal">PayPal für alle Studios beantragen</button>
         </div></div>
       <div class="scroll" style="margin-top:14px" id="liste"></div>
     </div>
@@ -167,6 +168,10 @@
   $("abr-test").onclick = async function () { zeig(await api("abrechnung", { body: { monat: $("monat").value, dryRun: true } })); };
   $("abr-los").onclick = async function () { if (!confirm("Abrechnung für " + $("monat").value + " wirklich erstellen? Rechnungen werden erzeugt und eingezogen.")) return; try { zeig(await api("abrechnung", { body: { monat: $("monat").value, dryRun: false } })); msg("Abrechnung erstellt."); } catch (err) { msg(err.message, "err"); } };
   $("jobs").onclick = async function () { zeig(await api("jobs", { body: {} })); };
+  $("paypal").onclick = async function () {
+    if (!confirm("PayPal bei Stripe für alle Risikofrei-Studios (Express-Konten) beantragen? Studios mit eigenem Stripe-Konto schalten PayPal selbst ein.")) return;
+    try { var r = await api("paypal-beantragen", { body: {} }); zeig(r); msg(r.studios.length + " Studios bearbeitet. " + r.schalter + "."); start(); } catch (err) { msg(err.message, "err"); }
+  };
   $("konten").onclick = async function () { try { var r = await api("konten-abgleichen", { body: {} }); zeig(r); msg(r.length + " Stripe-Konten abgeglichen."); start(); } catch (err) { msg(err.message, "err"); } };
   $("login-token").addEventListener("submit", function (ev) { ev.preventDefault(); token = $("token").value; sessionStorage.setItem("tf-admin", token); start(); });
   $("login-mail").addEventListener("submit", async function (ev) {
