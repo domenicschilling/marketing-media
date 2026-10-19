@@ -1,9 +1,9 @@
 // Service Worker der Tattoofin-Studio-App: hält die App-Hülle (Seite, Styles, Skripte, Schrift, Icons) offline bereit.
 // Daten (/api/…) und Stripe werden NIE zwischengespeichert: Zahlungen und Beträge kommen immer frisch vom Server.
 // Später für eine native App (z. B. Capacitor-Hülle) wiederverwendbar: gleiche Seite, gleiche API.
-var VERSION = "tf-app-2";
+var VERSION = "tf-app-3";
 var HUELLE = ["/app.html", "/css/site.css", "/css/app.css", "/css/fonts.css", "/js/common.js", "/js/app.js", "/js/app-kit.js", "/js/aufsteller.js", "/assets/aufsteller-glyphen.json", "/js/stripe-bausteine.js", "/js/qrcode.min.js",
-  "/assets/figur.png", "/assets/fonts/DMSans.woff2", "/assets/fonts/LuckiestGuy.woff2", "/assets/fonts/TitanOne.woff2", "/assets/app/icon-192.png", "/offline.html"];
+  "/assets/figur.png", "/assets/wortmarke.png", "/assets/fonts/DMSans.woff2", "/assets/fonts/LuckiestGuy.woff2", "/assets/fonts/TitanOne.woff2", "/assets/app/icon-192.png", "/offline.html"];
 
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(VERSION).then(function (c) { return c.addAll(HUELLE); }).then(function () { return self.skipWaiting(); }));

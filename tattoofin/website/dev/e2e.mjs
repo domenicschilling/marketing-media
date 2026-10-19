@@ -646,6 +646,43 @@ try {
     await h.waitForTimeout(hash === "werbung" ? 1500 : 300);
     await appShot(h, path.join(S, name + ".png"));
   }
+  // ---- Werbung: fertige Beiträge „Ab jetzt Ratenzahlung*“ (js/app-kit.js) ----
+  console.log("Werbung: Beiträge für das Studio");
+  await h.goto(`${BASE}/app.html#werbung`);
+  await h.waitForFunction(() => document.querySelectorAll("#kit .kit-item").length === 5 && document.querySelectorAll("#kit .kit-bilder img").length === 8 && [...document.querySelectorAll("#kit .kit-bilder img")].every((i) => i.complete && i.naturalWidth), null, { timeout: 30000 });
+  const kit = await h.evaluate(() => [...document.querySelectorAll("#kit .kit-item")].map((el) => ({ id: el.dataset.vorlage, bilder: [...el.querySelectorAll(".kit-bilder img")].map((i) => i.naturalWidth + "x" + i.naturalHeight), text: el.querySelector("pre").textContent, knopf: el.querySelector('[data-kit="bild"]').textContent })));
+  check(kit.map((x) => x.id).join() === "ankuendigung,karussell,qr-story,schritte,frag-story", "Werbung: 5 Vorlagen (Ankündigung, Karussell, QR-Story, So geht's, Frag uns) – alte Anzahlungs-Vorlage entfernt");
+  const fmt = Object.fromEntries(kit.map((x) => [x.id, x.bilder.join()]));
+  check(fmt.ankuendigung === "1080x1350" && fmt.schritte === "1080x1350" && fmt.karussell === Array(4).fill("1080x1350").join() && fmt["qr-story"] === "1080x1920" && fmt["frag-story"] === "1080x1920", "Werbung: Beiträge 4:5 (1080 × 1350), Karussell 4 Bilder, Storys 9:16 (1080 × 1920)");
+  const FUSS_STUDIO = "*Ratenzahlung über externe Anbieter wie Klarna, nach deren Prüfung. Weder wir noch Tattoofin sind Kreditgeber. Achtung! Kreditaufnahme kostet Geld.";
+  const posts = kit.filter((x) => !x.id.includes("story"));
+  check(posts.every((x) => x.text.includes("Raten*") && x.text.includes(FUSS_STUDIO) && (x.text.match(/#\S+/g) || []).length <= 5 && x.text.includes("#bambergtattoo")), "Werbung: Texte mit Raten*, Pflicht-Fußnote und höchstens 5 Hashtags (mit Ort)");
+  check(kit.every((x) => !/\b0\s?%|zinsfrei|zinslos|Geld sofort|voller Betrag|Anzahlung|garantiert|jeder bekommt/i.test(x.text)), "Werbung: keine verbotenen Aussagen (0 %, zinsfrei, Geld sofort, voller Betrag, Anzahlung, Zusagen)");
+  check(kit.find((x) => x.id === "qr-story").text.includes(`${BASE}/zahlen/${nwSlug}`), "Werbung: QR-Story mit Link zur Zahlseite für den Link-Sticker");
+  check(kit.find((x) => x.id === "karussell").knopf === "Alle 4 Bilder speichern", "Werbung: Karussell – alle 4 Bilder auf einmal speichern");
+  // Speichern am Computer: ohne Teilen-Menü → Download (Karussell als ZIP)
+  await h.evaluate(() => { navigator.canShare = () => false; });
+  const [dlKar] = await Promise.all([h.waitForEvent("download"), h.click('[data-vorlage="karussell"] [data-kit="bild"]')]);
+  const zipBuf = fs.readFileSync(await dlKar.path());
+  const eocd = zipBuf.length - 22, zipNamen = [];
+  for (let o = 0; zipBuf.readUInt32LE(o) === 0x04034b50;) { const nl = zipBuf.readUInt16LE(o + 26), gr = zipBuf.readUInt32LE(o + 18), name = zipBuf.subarray(o + 30, o + 30 + nl).toString(), daten = zipBuf.subarray(o + 30 + nl, o + 30 + nl + gr); zipNamen.push(name + ":" + (daten.subarray(1, 4).toString() === "PNG" ? daten.readUInt32BE(16) + "x" + daten.readUInt32BE(20) : "?")); o += 30 + nl + gr; }
+  check(dlKar.suggestedFilename() === "nadelwerk-studio-raten-karussell.zip" && zipBuf.readUInt32LE(eocd) === 0x06054b50 && zipBuf.readUInt16LE(eocd + 10) === 4 && zipNamen.join() === [1, 2, 3, 4].map((i) => `nadelwerk-studio-raten-karussell-${i}.png:1080x1350`).join(), "Werbung: Karussell als ZIP mit 4 PNG (" + zipNamen.length + " Dateien)");
+  const [dlAnk] = await Promise.all([h.waitForEvent("download"), h.click('[data-vorlage="ankuendigung"] [data-kit="bild"]')]);
+  const ankBuf = fs.readFileSync(await dlAnk.path());
+  check(dlAnk.suggestedFilename() === "nadelwerk-studio-raten-ankuendigung.png" && ankBuf.subarray(1, 4).toString() === "PNG" && ankBuf.readUInt32BE(16) === 1080 && ankBuf.readUInt32BE(20) === 1350, "Werbung: Einzelbild als PNG 1080 × 1350");
+  // Großansicht + Name auf den Bildern ändern (bleibt im Browser gespeichert)
+  await h.click('[data-vorlage="qr-story"] .kit-bilder img');
+  check(await h.isVisible(".kit-gross img"), "Werbung: Bild antippen → große Ansicht");
+  await h.click(".kit-gross .btn.ghost");
+  check((await h.inputValue("#kit-name")) === "Nadelwerk Studio" && (await h.getAttribute("#kit-name", "autocomplete")) === "organization", "Werbung: Feld „Name auf den Bildern“ mit Studioname (Autofill-Token)");
+  await h.fill("#kit-name", "Nadelwerk");
+  await h.click(".kit-name button");
+  await h.waitForFunction(() => document.querySelectorAll("#kit .kit-bilder img").length === 8 && document.querySelector('#kit [data-vorlage="ankuendigung"] [data-kit="bild"]') && localStorage.getItem(Object.keys(localStorage).find((k) => k.startsWith("tf-kit-name|")) || "") === "Nadelwerk", null, { timeout: 30000 });
+  check(true, "Werbung: Name auf den Bildern geändert → Bilder neu erstellt und gemerkt");
+  await h.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith("tf-kit-name|")).forEach((k) => localStorage.removeItem(k)));
+  const kitName = await h.evaluate(() => TFKit.anzeigeName("DSX Media Solutions UG (haftungsbeschränkt)") + "|" + TFKit.anzeigeName("Tattoo Kunst GmbH & Co. KG") + "|" + TFKit.anzeigeName("Chic Tattoo Augsburg"));
+  check(kitName === "DSX Media Solutions|Tattoo Kunst|Chic Tattoo Augsburg", "Werbung: Rechtsform fällt auf den Bildern weg (" + kitName + ")");
+
   // ---- „So geht's“: Erklärvideo auf der Startseite und unter Mehr ----
   console.log("So geht's (Erklärvideo)");
   await h.goto(`${BASE}/app.html#start`); await h.reload();
