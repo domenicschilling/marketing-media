@@ -79,6 +79,8 @@
     var vorname = (s.inhaber || "").split(" ")[0];
     $("hallo").textContent = "Hey" + (vorname ? " " + vorname : "") + " 👋";
     checkliste();
+    var gesehen = false; try { gesehen = localStorage.getItem("tf-werbevideo-gesehen") === "1"; } catch (x) {}
+    $("wv-neu").classList.toggle("hidden", gesehen);
     var l = D.zahlungen.slice(0, 5);
     $("letzte").innerHTML = l.length ? liste(l) : '<p class="leer">Noch keine Zahlungen. Erstelle oben deinen ersten Link – zum Testen gern an dich selbst.</p>';
     var k = D.kpis;
@@ -263,6 +265,47 @@
     if (window.TFKit) TFKit.zeige($("kit"), { firma: s.firma, ort: s.ort, zahlseite: s.zahlseite, onPost: function () { abhaken("werbung", true); } });
     $("zs-png").onclick = function () { if (window.TFAufsteller) datei(TFAufsteller.qrBild(s.zahlseite, 1200), "tattoofin-qr-zahlseite.png"); };
     aufsteller();
+    werbevideo();
+  }
+
+  // ---------- Werbevideo für alle Studios (Reel 9:16 + Beitrag 4:5, Quelle spots/tfin-studio-universal in der Marketing-Maschine) ----------
+  var WV_TEXT = "Dein Wunsch-Tattoo – ganz easy in Raten* 🖤\n\nBei uns kannst du dein Tattoo jetzt mit Tattoofin in Raten* zahlen. Alles bequem übers Handy, ohne Papierkram.\n\nSprich uns einfach drauf an oder schreib uns eine Nachricht!\n\n*Ratenzahlung über externe Anbieter wie Klarna, nach deren Prüfung. Tattoofin ist kein Kreditgeber. Achtung! Kreditaufnahme kostet Geld.\nStimme mit KI erstellt";
+  var WV_GESEHEN = "tf-werbevideo-gesehen";
+  function werbevideo() {
+    try { localStorage.setItem(WV_GESEHEN, "1"); } catch (x) {}
+    var box = $("wv");
+    if (!box || box.dataset.fertig) return;
+    box.dataset.fertig = "1";
+    var format = "reel";
+    $("wv-caption").textContent = WV_TEXT;
+    box.querySelectorAll("[data-wv]").forEach(function (b) {
+      b.onclick = function () {
+        format = b.dataset.wv;
+        box.querySelectorAll("[data-wv]").forEach(function (x) { var an = x === b; x.className = "btn small " + (an ? "dark" : "ghost"); x.setAttribute("aria-selected", an); });
+        var film = $("wv-film"), v = film.querySelector("video");
+        film.className = "sg-film " + (format === "reel" ? "hoch" : "wv-feed");
+        v.poster = "/media/studio-video/" + (format === "reel" ? "cover.jpg" : "cover-feed.jpg");
+        v.querySelector("source").src = "/media/studio-video/" + format + ".mp4";
+        v.load();
+      };
+    });
+    $("wv-text-an").onclick = function () { $("wv-text").classList.toggle("hidden"); };
+    $("wv-kopieren").onclick = function () {
+      var b = this;
+      (navigator.clipboard ? navigator.clipboard.writeText(WV_TEXT) : Promise.reject()).then(function () { toast("Text kopiert"); }).catch(function () { toast("Bitte Text markieren und kopieren"); });
+      b.blur();
+    };
+    $("wv-speichern").onclick = async function () {
+      var b = this, alt = b.textContent; b.disabled = true; b.textContent = "Wird geladen …";
+      try {
+        var blob = await (await fetch("/media/studio-video/" + format + ".mp4")).blob();
+        var name = "tattoofin-raten-" + format + ".mp4", f = new File([blob], name, { type: "video/mp4" });
+        if (navigator.canShare && navigator.canShare({ files: [f] })) { try { await navigator.share({ files: [f] }); } catch (x) {} }
+        else datei(blob, name);
+        abhaken("werbung", true);
+      } catch (x) { toast("Speichern hat nicht geklappt. Bitte versuch es noch einmal.", true); }
+      b.disabled = false; b.textContent = alt;
+    };
   }
 
   // ---------- QR-Aufsteller aus Holz ----------

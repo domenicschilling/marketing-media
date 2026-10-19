@@ -26,6 +26,7 @@
     <h1 class="hallo" id="hallo"></h1>
     <a class="big-cta" href="#link"><span class="plus">+</span><span>Zahlungslink erstellen<small>Betrag eintragen, per WhatsApp schicken</small></span></a>
     <div id="checkliste"></div>
+    <a class="card-a neu-hinweis hidden" id="wv-neu" href="#werbung"><span class="neu-badge">Neu</span><span><b>Dein Werbevideo ist da!</b><small>Fertiges Reel „Ganz easy in Raten*“ für dein Instagram – speichern und posten.</small></span></a>
     <div class="card-a so-gehts" id="so-gehts"></div>
     <div class="card-a"><div class="card-h"><h2>Letzte Zahlungen</h2><a href="#zahlungen">Alle</a></div><div id="letzte"></div></div>
     <div class="card-a" id="geld-kurz"></div>
@@ -97,6 +98,18 @@
   <section data-view="werbung" class="hidden">
     <h1>Werbung für dein Studio</h1>
     <p class="muted klein">Fertige Bilder für Instagram, mit deinem Studionamen und dem QR-Code zu deiner Zahlseite. Antippen, speichern, posten.</p>
+    <div class="card-a" id="wv">
+      <h2>Dein Werbevideo <span class="neu-badge">Neu</span></h2>
+      <p class="muted klein">Fertiges Video für Instagram, Facebook und TikTok: Deine Kunden sehen, dass sie bei dir ganz easy in Raten* zahlen können – und dass sie euch einfach darauf ansprechen oder schreiben können. Speichern, Text kopieren, posten.</p>
+      <div class="wv-wahl" role="tablist" aria-label="Format">
+        <button class="btn small dark" data-wv="reel" role="tab" aria-selected="true">Reel / Story (9:16)</button>
+        <button class="btn small ghost" data-wv="feed" role="tab" aria-selected="false">Beitrag (4:5)</button>
+      </div>
+      <div class="sg-film hoch" id="wv-film"><video controls playsinline preload="none" width="1080" height="1920" poster="/media/studio-video/cover.jpg" aria-label="Werbevideo: Ganz easy in Raten* mit Tattoofin"><source src="/media/studio-video/reel.mp4" type="video/mp4"></video></div>
+      <div class="row-a"><button class="btn gold small" id="wv-speichern">Video speichern</button><button class="btn ghost small" id="wv-text-an">Text zum Posten</button></div>
+      <div class="hidden" id="wv-text"><pre class="caption" id="wv-caption"></pre><div class="row-a"><button class="btn dark small" id="wv-kopieren">Text kopieren</button></div></div>
+      <p class="klein muted fussnote">*Ratenzahlung über externe Anbieter wie Klarna, nach deren Prüfung. Tattoofin ist kein Kreditgeber. Achtung! Kreditaufnahme kostet Geld.</p>
+    </div>
     <div id="kit"></div>
     <div class="card-a"><h2>Deine Zahlseite</h2><p class="muted klein">Für Theke, Flyer und Bio-Link. Kunden scannen, tragen den abgesprochenen Betrag ein und bezahlen.</p>
       <div class="zs"><div class="qr" id="zs-qr"></div><div><input type="text" id="zs-url" readonly aria-label="Link zu deiner Zahlseite"><div class="row-a"><button class="btn dark small" data-copy="zs-url">Link kopieren</button><a class="btn ghost small" id="zs-open" target="_blank" rel="noopener">Ansehen</a><button class="btn ghost small" id="zs-png">QR-Code speichern (PNG)</button></div></div></div>

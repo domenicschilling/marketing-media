@@ -123,6 +123,21 @@ export async function ensureCustomer(studio) {
 //                        kontoTyp bleibt „express“ (Portal/dashboardLink prüfen darauf).
 //  Idempotenz-Schlüssel „acct2-…“: Stripe speichert die Antwort zum alten Schlüssel „acct-…“ 24 h – auch den
 //  Fehler „review the responsibilities of managing losses“ vom 18.10. – und lehnt geänderte Parameter ab.
+// Website-Angabe der Studios ist freier Text („FB/chictattooaugsburg“, „insta: xy“, „www.xy.de“). Stripe lehnt
+// alles ab, was keine echte URL ist („Not a valid URL“) – dann entsteht gar kein Konto. Darum: bekannte Kurzformen
+// in echte Links umwandeln, sonst nur gültige http(s)-Adressen mit Punkt im Hostnamen, alles andere weglassen.
+export function webUrl(roh) {
+  let v = String(roh || "").trim().replace(/\s+/g, "");
+  if (!v) return undefined;
+  const sozial = v.match(/^(fb|facebook|ig|insta|instagram)(\.com)?[\/:@]+(.+)$/i);
+  if (sozial) v = (/^(fb|facebook)$/i.test(sozial[1]) ? "https://www.facebook.com/" : "https://www.instagram.com/") + sozial[3].replace(/^@/, "");
+  if (!/^https?:\/\//i.test(v)) v = "https://" + v;
+  try {
+    const u = new URL(v);
+    return /^[a-z0-9.-]+\.[a-z]{2,}$/i.test(u.hostname) ? u.href : undefined;
+  } catch { return undefined; }
+}
+
 export async function ensureConnectedAccount(studio) {
   if (studio.stripe?.accountId) return studio.stripe.accountId;
   const express = studio.modell === "provision";
@@ -131,15 +146,20 @@ export async function ensureConnectedAccount(studio) {
     ...(CFG.zahlarten.includes("klarna") ? { klarna_payments: { requested: true } } : {}),
   } : undefined;
   const delay = Number(CFG.auszahlungTage);
-  const acct = await stripe("POST", "/accounts", {
+  const url = webUrl(studio.website);
+  const anlegen = (mitUrl) => stripe("POST", "/accounts", {
     ...(express
       ? { controller: { losses: { payments: "application" }, fees: { payer: "application" }, stripe_dashboard: { type: "express" }, requirement_collection: "stripe" } }
       : { type: "standard" }),
     country: "DE", email: studio.email, default_currency: "eur", capabilities,
-    business_profile: { name: studio.firma, mcc: express ? "7299" : undefined, product_description: "Tätowierungen und Tattoo-Projekte", url: studio.website || undefined },
+    business_profile: { name: studio.firma, mcc: express ? "7299" : undefined, product_description: "Tätowierungen und Tattoo-Projekte", url: mitUrl ? url : undefined },
     settings: express && delay > 0 ? { payouts: { schedule: { interval: "daily", delay_days: delay } } } : undefined,
     metadata: { studioId: studio.id, modell: studio.modell },
-  }, { idempotencyKey: "acct2-" + studio.id });
+  }, { idempotencyKey: (mitUrl ? "acct3-" : "acct3o-") + studio.id });
+  // Lehnt Stripe die Website trotzdem ab, Konto ohne Website anlegen – die Angabe ist freiwillig.
+  let acct;
+  try { acct = await anlegen(!!url); }
+  catch (e) { if (url && /url/i.test(String(e?.message || e))) acct = await anlegen(false); else throw e; }
   studio.stripe = { ...(studio.stripe || {}), accountId: acct.id, kontoTyp: express ? "express" : "standard" };
   return acct.id;
 }
