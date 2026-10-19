@@ -268,8 +268,8 @@
     werbevideo();
   }
 
-  // ---------- Werbevideo für alle Studios (Reel 9:16 + Beitrag 4:5, Quelle spots/tfin-studio-universal in der Marketing-Maschine) ----------
-  var WV_TEXT = "Dein Wunsch-Tattoo – ganz easy in Raten* 🖤\n\nBei uns kannst du dein Tattoo jetzt mit Tattoofin in Raten* zahlen. Alles bequem übers Handy, ohne Papierkram.\n\nSprich uns einfach drauf an oder schreib uns eine Nachricht!\n\n*Ratenzahlung über externe Anbieter wie Klarna, nach deren Prüfung. Tattoofin ist kein Kreditgeber. Achtung! Kreditaufnahme kostet Geld.\nStimme mit KI erstellt";
+  // ---------- Werbevideo für alle Studios (Reel 9:16 + Beitrag 4:5, Quelle spots/tfin-studio-universal-v2 in der Marketing-Maschine, Fassung 2) ----------
+  var WV_TEXT = "Dein Wunsch-Tattoo – bei uns ganz bequem in Raten* 🖤\n\nBei uns kannst du dein Tattoo jetzt über Tattoofin in Raten* zahlen. Alles direkt übers Handy, ohne Papierkram.\n\nSprich uns einfach drauf an oder schreib uns eine Nachricht!\n\n*Ratenzahlung über externe Anbieter wie Klarna, nach deren Prüfung. Tattoofin ist kein Kreditgeber. Achtung! Kreditaufnahme kostet Geld.\nStimme mit KI erstellt";
   var WV_GESEHEN = "tf-werbevideo-gesehen";
   function werbevideo() {
     try { localStorage.setItem(WV_GESEHEN, "1"); } catch (x) {}
