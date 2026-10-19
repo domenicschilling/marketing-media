@@ -1,7 +1,7 @@
 // Admin-API (Header: Authorization: Bearer <ADMIN_TOKEN>)
 //   GET   /api/admin/studios
 //   GET   /api/admin/studio/:id
-//   PATCH /api/admin/studio/:id               { status, notiz, benachrichtigungEmail }
+//   PATCH /api/admin/studio/:id               { status, notiz, benachrichtigungEmail, strasse, plz, ort, website }
 //   POST  /api/admin/studio/:id/live          Go-live setzen + E-Mail
 //   POST  /api/admin/studio/:id/erstattung    Garantie-Erstattung (Kauf) über Stripe
 //   POST  /api/admin/studio/:id/login-link    Login-Link für Support
@@ -92,6 +92,8 @@ export default handler(async (req) => {
     if (!aktion && req.method === "PATCH") {
       const b = await body(req);
       for (const k of ["notiz", "benachrichtigungEmail"]) if (b[k] !== undefined) s[k] = clean(b[k], 1000);
+      // Anschrift korrigieren (z. B. Firmenname im Feld Straße) – wichtig für Monatsabrechnung und Vertrag
+      for (const k of ["strasse", "plz", "ort", "website"]) if (b[k] !== undefined) s[k] = clean(b[k], 160);
       if (b.status && STATUS[b.status]) s.status = b.status;
       await saveStudio(s);
       return json(s);
