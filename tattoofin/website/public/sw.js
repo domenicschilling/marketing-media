@@ -1,7 +1,7 @@
 // Service Worker der Tattoofin-Studio-App: hält die App-Hülle (Seite, Styles, Skripte, Schrift, Icons) offline bereit.
 // Daten (/api/…) und Stripe werden NIE zwischengespeichert: Zahlungen und Beträge kommen immer frisch vom Server.
 // Später für eine native App (z. B. Capacitor-Hülle) wiederverwendbar: gleiche Seite, gleiche API.
-var VERSION = "tf-app-3";
+var VERSION = "tf-app-4";
 var HUELLE = ["/app.html", "/css/site.css", "/css/app.css", "/css/fonts.css", "/js/common.js", "/js/app.js", "/js/app-kit.js", "/js/aufsteller.js", "/assets/aufsteller-glyphen.json", "/js/stripe-bausteine.js", "/js/qrcode.min.js",
   "/assets/figur.png", "/assets/wortmarke.png", "/assets/fonts/DMSans.woff2", "/assets/fonts/LuckiestGuy.woff2", "/assets/fonts/TitanOne.woff2", "/assets/app/icon-192.png", "/offline.html"];
 
@@ -21,12 +21,11 @@ self.addEventListener("fetch", function (e) {
     }));
     return;
   }
-  // Dateien der App-Hülle: aus dem Speicher, im Hintergrund auffrischen
+  // Dateien der App-Hülle: erst Netz (Studios sehen immer die neueste Fassung), nur offline aus dem Speicher
   if (HUELLE.indexOf(u.pathname) >= 0) {
     e.respondWith(caches.open(VERSION).then(function (c) {
-      return c.match(e.request).then(function (r) {
-        var netz = fetch(e.request).then(function (n) { if (n.ok) c.put(e.request, n.clone()); return n; }).catch(function () { return r; });
-        return r || netz;
+      return fetch(e.request, { cache: "no-cache" }).then(function (n) { if (n.ok) c.put(e.request, n.clone()); return n; }).catch(function () {
+        return c.match(e.request, { ignoreSearch: true });
       });
     }));
   }

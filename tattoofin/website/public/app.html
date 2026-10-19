@@ -7,7 +7,8 @@
 <link rel="icon" href="/favicon.png" type="image/png"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Tattoofin">
-<link rel="stylesheet" href="/css/site.css"><link rel="stylesheet" href="/css/app.css"><link rel="stylesheet" href="/css/so-gehts.css">
+<!-- ?v= bei jeder Änderung an CSS/JS hochzählen: sonst zeigt der Service Worker (sw.js) Studios beim ersten Öffnen die alte Fassung -->
+<link rel="stylesheet" href="/css/site.css?v=20261019c"><link rel="stylesheet" href="/css/app.css?v=20261019c"><link rel="stylesheet" href="/css/so-gehts.css?v=20261019c">
 </head><body class="app">
 <header class="app-top">
   <a class="app-brand" href="#start"><img src="/assets/figur.png" alt=""><span id="top-firma">Tattoofin</span></a>
@@ -25,8 +26,11 @@
   <section data-view="start" class="hidden">
     <h1 class="hallo" id="hallo"></h1>
     <a class="big-cta" href="#link"><span class="plus">+</span><span>Zahlungslink erstellen<small>Betrag eintragen, per WhatsApp schicken</small></span></a>
+    <a class="werbung-cta" id="werbung-cta" href="#werbung">
+      <img src="/media/studio-video/cover.jpg" alt="" width="1080" height="1920" loading="lazy">
+      <span class="wc-text"><span class="neu-badge hidden" id="wv-neu">Neu</span><b>Werbung für dein Studio</b><small>Fertiges Video und 5 Beiträge für Instagram: Zeig deinen Kunden, dass bei dir Ratenzahlung geht – das bringt neue Kunden.</small><span class="wc-knopf">Video &amp; Beiträge ansehen</span></span>
+    </a>
     <div id="checkliste"></div>
-    <a class="card-a neu-hinweis hidden" id="wv-neu" href="#werbung"><span class="neu-badge">Neu</span><span><b>Dein Werbevideo ist da!</b><small>Fertiges Reel „Ganz easy in Raten*“ für dein Instagram – speichern und posten.</small></span></a>
     <div class="card-a so-gehts" id="so-gehts"></div>
     <div class="card-a"><div class="card-h"><h2>Letzte Zahlungen</h2><a href="#zahlungen">Alle</a></div><div id="letzte"></div></div>
     <div class="card-a" id="geld-kurz"></div>
@@ -214,11 +218,11 @@
   <a href="#mehr" data-tab="mehr"><span>☰</span>Mehr</a>
 </nav>
 
-<script src="/js/qrcode.min.js"></script>
-<script src="/js/common.js"></script>
-<script src="/js/stripe-bausteine.js"></script>
-<script src="/js/app-kit.js"></script>
-<script src="/js/aufsteller.js"></script>
-<script src="/js/so-gehts.js"></script>
-<script src="/js/app.js"></script>
+<script src="/js/qrcode.min.js?v=20261019c"></script>
+<script src="/js/common.js?v=20261019c"></script>
+<script src="/js/stripe-bausteine.js?v=20261019c"></script>
+<script src="/js/app-kit.js?v=20261019c"></script>
+<script src="/js/aufsteller.js?v=20261019c"></script>
+<script src="/js/so-gehts.js?v=20261019c"></script>
+<script src="/js/app.js?v=20261019c"></script>
 </body></html>

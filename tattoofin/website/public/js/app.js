@@ -502,6 +502,19 @@
   // Offline-Hinweis + Service Worker (Web-App)
   function netz() { $("offline").classList.toggle("hidden", navigator.onLine !== false); }
   window.addEventListener("online", netz); window.addEventListener("offline", netz); netz();
-  if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(function () {});
+  // App auf dem Homebildschirm immer aktuell: sw.js nie aus dem HTTP-Cache, beim Zurückkehren in die App nach Updates
+  // schauen und nach einem Update einmal neu laden (nur wenn gerade kein Formular offen ist).
+  if ("serviceWorker" in navigator) {
+    var hatteSW = !!navigator.serviceWorker.controller, neuGeladen = false;
+    navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" }).then(function (reg) {
+      document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible") reg.update().catch(function () {}); });
+    }).catch(function () {});
+    navigator.serviceWorker.addEventListener("controllerchange", function () {
+      if (!hatteSW || neuGeladen) { hatteSW = true; return; }
+      var tippt = document.activeElement && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);
+      if (tippt) return;
+      neuGeladen = true; location.reload();
+    });
+  }
   laden();
 })();

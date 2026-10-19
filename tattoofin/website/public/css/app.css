@@ -182,9 +182,15 @@ body.app{background-color:var(--cream);background-image:none;padding-bottom:calc
 
 /* Werbevideo + Hinweis auf der Startseite */
 .neu-badge{display:inline-block;background:var(--gold,#f5b301);color:var(--ink,#1d2b4f);font-size:11px;font-weight:800;border-radius:999px;padding:2px 8px;vertical-align:middle;margin-left:4px}
-.neu-hinweis{display:flex;gap:10px;align-items:center;text-decoration:none;color:inherit}
-.neu-hinweis.hidden{display:none}
-.neu-hinweis .neu-badge{margin-left:0;flex:none}
-.neu-hinweis small{display:block;font-weight:400;opacity:.75}
 .wv-wahl{display:flex;gap:8px;margin:10px 0}
 .sg-film.wv-feed{max-width:min(100%,calc(60vh * 4 / 5));aspect-ratio:4/5}
+
+/* Werbung auf der Startseite (für Tattoofin besonders wichtig: jeder Beitrag zeigt unser Logo) */
+.werbung-cta{display:flex;gap:14px;align-items:stretch;background:var(--ink);color:#fff;text-decoration:none;border:var(--bw) solid var(--ink);border-radius:var(--r);box-shadow:var(--sh);padding:12px;margin:0 0 18px}
+.werbung-cta:active{transform:translate(3px,3px);box-shadow:2px 2px 0 var(--ink)}
+.werbung-cta img{flex:none;width:78px;height:auto;aspect-ratio:9/16;object-fit:cover;border-radius:10px;border:2px solid var(--yellow)}
+.wc-text{display:flex;flex-direction:column;gap:6px;justify-content:center}
+.wc-text b{font:400 22px/1.05 var(--head);color:var(--yellow);letter-spacing:.01em}
+.wc-text small{font:500 14px/1.35 var(--body);color:#e6edf5}
+.wc-text .neu-badge{align-self:flex-start;margin-left:0}
+.wc-knopf{align-self:flex-start;background:var(--yellow);color:var(--ink);font:700 14px/1 var(--body);padding:9px 14px;border-radius:999px;margin-top:2px}
