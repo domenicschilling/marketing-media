@@ -41,7 +41,7 @@
     var p = paket(), z = zahlart(), html, kurz;
     var fin = document.getElementById("final"), sub = document.getElementById("submit");
     if (geschenk) {
-      html = "<p><b>Tattoofin als Geschenk</b> · 0 € Einrichtung, keine Grundgebühr, keine Provision – du zahlst nur die normalen Gebühren von Stripe bzw. Klarna direkt an Stripe.</p>" +
+      html = "<p><b>Deine persönliche Einladung</b> · 0 € Einrichtung, keine Grundgebühr, keine Provision – du zahlst nur die normalen Zahlungsgebühren von Stripe bzw. Klarna direkt an Stripe.</p>" +
         "<p style=\"margin-bottom:0\"><b>Jetzt wird nichts bezahlt.</b> Danach legst du in ca. 10 Minuten das Zahlungskonto deines Studios an. Halte Ausweis und Bankverbindung bereit.</p>";
       sub.textContent = "Einladung annehmen";
       kurz = ["Keine Einrichtungsgebühr, keine Grundgebühr, keine Provision.", "Du zahlst nur die normalen Gebühren von Stripe bzw. Klarna, direkt an Stripe.", "Das Geld deiner Kunden landet direkt auf dem Konto deines Studios.", "Wir richten alles mit dir ein."];
@@ -164,7 +164,7 @@
   try { var alt = JSON.parse(sessionStorage.getItem("tf-start") || "{}"); setze(alt); if (!alt.paket && alt.modell) setzePaket(alt.modell); } catch (e) {}
   if (q.get("modell")) setzePaket(q.get("modell"));
   if (q.get("paket")) setzePaket(q.get("paket"));
-  if (geschenk) { document.querySelector("[data-step='1'] .choice.pakete").classList.add("hidden"); document.querySelector("[data-step='1'] h2").textContent = "1. Deine Einladung"; document.querySelector("[data-step='1'] h2 + p").textContent = "Eigenes Zahlungskonto deines Studios, keine Einrichtungsgebühr, keine Provision."; show("Du bist eingeladen: Tattoofin ist für dein Studio ein Geschenk – ohne Einrichtung und ohne Provision.", "info"); }
+  if (geschenk) { document.querySelector("[data-step='1'] .choice.pakete").classList.add("hidden"); document.querySelector("[data-step='1'] h2").textContent = "1. Deine Einladung"; document.querySelector("[data-step='1'] h2 + p").textContent = "Eigenes Zahlungskonto deines Studios, keine Einrichtungsgebühr, keine Provision."; show("Du bist eingeladen: keine Einrichtung, keine Provision – du zahlst nur die Zahlungsgebühren.", "info"); }
   if (q.get("resume")) {
     resumeId = q.get("resume");
     TF.api("/api/signup?id=" + encodeURIComponent(resumeId) + (q.get("t") ? "&t=" + encodeURIComponent(q.get("t")) : "")).then(function (d) {

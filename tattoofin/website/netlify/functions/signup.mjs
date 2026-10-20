@@ -77,6 +77,8 @@ export default handler(async (req, context) => {
   s = {
     ...(s || { id: id("st_"), createdAt: now() }),
     ...d, modell, paket: paketId, zahlart, preisNetto, monatNetto, aktion: false, status: "entwurf",
+    // Sonderkondition aus der Admin-Einladung (z. B. „Partner – nur Zahlungsgebühren“), nur Anzeige – Abwicklung = Geschenk
+    sonderkondition: geschenk ? (geschenk.bezeichnung || null) : null,
     vertrag: {
       version: CFG.vertragVersion, akzeptiertAm: now(), name: d.unterzeichner, ip: clientIp(req, context),
       ua: (req.headers.get("user-agent") || "").slice(0, 200), vertrag: true, avv: true, unternehmer: true,
@@ -103,7 +105,7 @@ export default handler(async (req, context) => {
     await saveStudio(s);
     await store.set(`geschenk/${geschenk.code}`, { ...geschenk, benutzt: now(), studioId: s.id });
     await notify(s, mails.anmeldung(s, { loginUrl: loginLink(s.id), connectUrl: einrichtungUrl(s) }));
-    await notifyAdmin("Neuer Abschluss (Geschenk-Einladung) 🎁", s, { Einladung: geschenk.firma });
+    await notifyAdmin(geschenk.bezeichnung ? `Neuer Abschluss (Einladung: ${geschenk.bezeichnung})` : "Neuer Abschluss (Geschenk-Einladung) 🎁", s, { Einladung: geschenk.firma, Sonderkondition: geschenk.bezeichnung || undefined });
     return eingeloggt(s, { url: weiter(s) });
   }
   // Paket Monatlich: Abo auf dem DSX-Konto. Rechnungen erstellt Stripe jeden Monat automatisch (mit USt. und DSX-Angaben im Fuß).

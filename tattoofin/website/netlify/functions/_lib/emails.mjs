@@ -32,6 +32,7 @@ const rows = (pairs) => `<table role="presentation" cellpadding="0" cellspacing=
 const hallo = (s) => p(`Hey ${esc(s.inhaber?.split(" ")[0] || s.firma)},`);
 const modellText = (s) => {
   const p = paketVon(s);
+  if (p.id === "geschenk" && s.sonderkondition) return `${s.sonderkondition}: keine Einrichtungsgebühr, keine Grundgebühr, keine Provision. Du zahlst nur die normalen Zahlungsgebühren von Stripe (bzw. Klarna) direkt an Stripe, Tattoofin verdient nichts daran.`;
   if (p.id === "geschenk") return "Geschenk: keine Einrichtungsgebühr, keine Grundgebühr, keine Provision. Du zahlst nur die normalen Gebühren von Stripe (bzw. Klarna) direkt an Stripe, Tattoofin verdient nichts daran.";
   if (p.id === "monatlich") return `Paket Monatlich: ${euro(CFG.monatNetto)} netto im Monat (${euro(brutto(CFG.monatNetto))} inkl. USt.), danach nur die Zahlungsgebühren, die du direkt an Stripe zahlst. Keine Tattoofin-Provision, monatlich kündbar. Inklusive QR-Aufsteller aus Holz (Wert 29 €) und digitalem QR-Code.`;
   if (p.id === "einmal" && s.paket === "einmal") return `Paket Einmalzahlung: ${euro(s.preisNetto)} netto einmalig (${euro(brutto(s.preisNetto))} inkl. USt.), danach keine Tattoofin-Gebühr mehr, nur die Zahlungsgebühren, die du direkt an Stripe zahlst. Inklusive QR-Aufsteller aus Holz (Wert 29 €) und digitalem QR-Code.`;
@@ -53,7 +54,19 @@ export const mails = {
   }),
 
   // Persönliche Einladung (Geschenk): Link zur Anmeldung ohne Einrichtung und ohne Provision
-  geschenkEinladung: ({ firma, link }) => mk(`Deine Einladung zu Tattoofin – für ${firma} geschenkt`, {
+  // Mit bezeichnung (Sonderkondition, z. B. „Partner – nur Zahlungsgebühren“): gleiche Abwicklung, Text ohne „Geschenk“
+  geschenkEinladung: ({ firma, link, bezeichnung }) => bezeichnung ? mk(`Deine Einladung zu Tattoofin – keine Provision, nur Zahlungsgebühren`, {
+    preheader: "Tattoofin für dein Studio: keine Provision, du zahlst nur die Zahlungsgebühren.",
+    title: "Du bist eingeladen",
+    body: p("Hey,") + p(`für <b>${esc(firma)}</b> haben wir bei Tattoofin eine eigene Kondition eingerichtet: <b>${esc(bezeichnung)}</b>.`) +
+      p("Das heißt ganz einfach: Tattoofin nimmt <b>keine Provision</b>. Du zahlst <b>nur die Zahlungsgebühren</b>, die Stripe bzw. Klarna für jede Zahlung verlangt. Die gehen direkt an Stripe, Tattoofin verdient daran nichts.") + rows([
+      ["Einrichtung", "0 €"], ["Grundgebühr", "0 €"], ["Provision", "keine (0 %)"],
+      ["Du zahlst nur", "die normalen Zahlungsgebühren von Stripe bzw. Klarna, direkt an Stripe"], ["Dein Geld", "landet direkt auf dem Konto deines Studios"],
+    ]) + p("Damit bekommst du: Zahlungslinks per WhatsApp, eine QR-Zahlseite für die Theke, Anzahlungen mit deinen Bedingungen und Ratenzahlung über Klarna* für deine Kunden.") +
+      p("<b>So geht's:</b> Knopf unten drücken, Studio-Daten eintragen, Vertrag bestätigen. Danach legst du das Zahlungskonto deines Studios bei Stripe an (ca. 10 Minuten, Ausweis und Bankverbindung bereithalten). Bitte nutze dafür genau diese E-Mail-Adresse. Den Rest richten wir mit dir ein.") +
+      p('<span style="color:#5b6370;font-size:13px">*Ratenzahlung über externe Anbieter wie Klarna, nach deren Prüfung. Tattoofin ist kein Kreditgeber. Achtung! Kreditaufnahme kostet Geld.</span>'),
+    cta: "Einladung annehmen", ctaUrl: link,
+  }) : mk(`Deine Einladung zu Tattoofin – für ${firma} geschenkt`, {
     preheader: "Tattoofin für dein Studio: ohne Einrichtungsgebühr und ohne Provision.",
     title: "Du bist eingeladen 🎁",
     body: p("Hey,") + p(`wir schenken <b>${esc(firma)}</b> Tattoofin: Zahlungslinks per WhatsApp, QR-Zahlseite an der Theke, Anzahlungen mit deinen Bedingungen und Ratenzahlung über Klarna* für deine Kunden.`) + rows([

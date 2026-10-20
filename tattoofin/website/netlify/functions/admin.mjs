@@ -10,7 +10,9 @@
 //   POST  /api/admin/jobs                     tägliche Jobs sofort ausführen
 //   GET   /api/admin/mails                    letzte E-Mails
 //   POST  /api/admin/anleitung                { email, firma } → Einrichtungs-Anleitung per E-Mail
-//   POST  /api/admin/einladen                 { email, firma } → Geschenk-Einladung (0 € Einrichtung, 0 % Provision) per E-Mail
+//   POST  /api/admin/einladen                 { email, firma, bezeichnung?, senden? } → Einladung mit Sonderkondition „eigenes Konto, 0 € Einrichtung,
+//                                             0 % Provision, nur Zahlungsgebühren“ per E-Mail. bezeichnung (z. B. „Partner – nur Zahlungsgebühren“)
+//                                             wird beim Studio als sonderkondition gespeichert und in Mails/Admin statt „Geschenk“ angezeigt.
 //   GET   /api/admin/anfragen                 Kurz-Anfragen von /studios (neueste zuerst)
 //   GET   /api/admin/studio-tipps             von Kunden auf /raten genannte Studios, gezählt (nur intern, nie anschreiben)
 //   POST  /api/admin/studio/:id/einrichtungslink  signierter Stripe-Einrichtungslink (24 h) zum Weitergeben
@@ -54,13 +56,14 @@ export default handler(async (req) => {
     const b = await body(req);
     const email = clean(b.email, 160).toLowerCase(), firma = clean(b.firma, 120);
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email) || !firma) return fail("E-Mail und Studio-Name angeben.");
+    const bezeichnung = clean(b.bezeichnung, 80) || null;
     const code = randomBytes(9).toString("base64url");
-    await store.set(`geschenk/${code}`, { code, email, firma, erstellt: now(), benutzt: null });
+    await store.set(`geschenk/${code}`, { code, email, firma, bezeichnung, erstellt: now(), benutzt: null });
     const link = `${CFG.siteUrl}/start.html?modell=kauf&geschenk=${code}`;
-    const m = mails.geschenkEinladung({ firma, link });
+    const m = mails.geschenkEinladung({ firma, link, bezeichnung });
     if (b.senden !== false) await sendMail({ to: email, subject: m.subject, html: m.html, text: m.text });
-    await log("einladung", { email, firma });
-    return json({ ok: true, link, gesendet: b.senden !== false });
+    await log("einladung", { email, firma, bezeichnung });
+    return json({ ok: true, link, bezeichnung, gesendet: b.senden !== false });
   }
 
   if (bereich === "studios" && req.method === "GET") {

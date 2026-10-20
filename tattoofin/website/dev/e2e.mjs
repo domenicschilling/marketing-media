@@ -590,6 +590,18 @@ try {
   await signup(h, { geschenk: new URL(inv.link).searchParams.get("geschenk"), email: "hallo@nadelwerk-test.de", firma: "Nadelwerk Studio", shot: S });
   await einrichtungEingebettet(h, S);
   check((await studioPer("hallo@nadelwerk-test.de"))?.status === "einrichtung", "Geschenk-Einladung → direkt ins Dashboard → Einrichtung eingebettet");
+  // Sonderkondition „Partner – nur Zahlungsgebühren“: gleiche Abwicklung wie Geschenk (eigenes Konto, 0 %), eigener Name + Mailtext
+  const invP = await admin("einladen", { body: { email: "partner@nadelwerk-test.de", firma: "Partner Studio", bezeichnung: "Partner – nur Zahlungsgebühren" } });
+  const mP = mailsAn("partner@nadelwerk-test.de").find((m) => /keine Provision, nur Zahlungsgebühren/.test(m.subject));
+  check(invP.ok && invP.bezeichnung === "Partner – nur Zahlungsgebühren" && mP && /keine Provision/.test(mP.html) && !/geschenkt/i.test(mP.subject), "Einladung mit Sonderkondition: Mail „keine Provision, nur Zahlungsgebühren“");
+  const hp = await neueSeite();
+  fs.mkdirSync(path.join(shots, "partner"), { recursive: true });
+  await signup(hp, { geschenk: new URL(invP.link).searchParams.get("geschenk"), email: "partner@nadelwerk-test.de", firma: "Partner Studio", shot: path.join(shots, "partner") });
+  await hp.waitForURL(/app\.html/, { timeout: 15000 });
+  const sp = await studioPer("partner@nadelwerk-test.de");
+  check(sp?.status === "einrichtung" && sp.paket === "Partner – nur Zahlungsgebühren" && sp.provisionProzent === 0 && sp.modell === "kauf", "Sonderkondition beim Studio: Name im Admin, 0 % Provision, eigenes Konto");
+  check(mailsAn("partner@nadelwerk-test.de").some((m) => /Partner – nur Zahlungsgebühren: keine Einrichtungsgebühr/.test(m.html)), "Willkommens-Mail nennt die Sonderkondition");
+  await hp.context().close();
   const nwId = (await studioPer("hallo@nadelwerk-test.de")).id;
   await admin(`studio/${nwId}/live`, { body: {} });
   await h.goto(BASE + "/app.html#start");

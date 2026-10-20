@@ -97,7 +97,7 @@ export const PAKETE = {
 export const PAKET_ALIAS = { provision: "risikofrei", kauf: "einmal", risikofrei: "risikofrei", monatlich: "monatlich", einmal: "einmal", einmalzahlung: "einmal", start: "risikofrei", profi: "einmal" };
 // Paket eines Studios. Ältere Datensätze ohne „paket“: provision → Risikofrei, kauf → Einmalzahlung (Altvertrag „Kauf“).
 export function paketVon(s) {
-  if (s?.zahlart === "geschenk") return { id: "geschenk", name: "Geschenk (eigenes Konto)", modell: "kauf", einrichtungNetto: 0, einmalNetto: 0, monatNetto: 0, provisionProzent: 0 };
+  if (s?.zahlart === "geschenk") return { id: "geschenk", name: s.sonderkondition || "Geschenk (eigenes Konto)", modell: "kauf", einrichtungNetto: 0, einmalNetto: 0, monatNetto: 0, provisionProzent: 0 };
   return PAKETE[s?.paket] || (s?.modell === "kauf" ? PAKETE.einmal : PAKETE.risikofrei);
 }
 export const aufstellerInklusive = (s) => CFG.aufstellerPakete.includes(paketVon(s).id);
