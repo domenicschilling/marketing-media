@@ -51,7 +51,7 @@
     var h = (location.hash || "#start").slice(1).split("/"), v = h[0] || "start", par = h[1];
     if (!document.querySelector('[data-view="' + v + '"]')) v = "start";
     document.querySelectorAll("[data-view]").forEach(function (s) { s.classList.toggle("hidden", s.dataset.view !== v); });
-    var tab = { zahlung: "zahlungen", gutschein: "start", gutscheine: "start", einrichtung: "start", recht: "mehr", extras: "mehr", konto: "mehr", einstellungen: "mehr", werbung: "mehr", video: "mehr" }[v] || v;
+    var tab = { zahlung: "zahlungen", raten: "mehr", gutschein: "start", gutscheine: "start", einrichtung: "start", recht: "mehr", extras: "mehr", konto: "mehr", einstellungen: "mehr", werbung: "mehr", video: "mehr" }[v] || v;
     document.querySelectorAll("#tabbar a").forEach(function (a) { a.classList.toggle("on", a.dataset.tab === tab); });
     window.scrollTo(0, 0);
     (ANSICHT[v] || function () {})(par);
@@ -59,7 +59,7 @@
   window.addEventListener("hashchange", route);
 
   var ANSICHT = {
-    start: start, link: linkForm, gutschein: gutscheinForm, gutscheine: gutscheine, zahlungen: zahlungen, zahlung: zahlungDetail, geld: geld, werbung: werbung,
+    start: start, link: linkForm, raten: ratenHilfe, gutschein: gutscheinForm, gutscheine: gutscheine, zahlungen: zahlungen, zahlung: zahlungDetail, geld: geld, werbung: werbung,
     mehr: mehr, einrichtung: einrichtung, recht: recht, extras: extras, konto: konto, einstellungen: einstellungen,
   };
 
@@ -171,7 +171,7 @@
       var r = await TF.api("/api/portal/zahlung", { body: { betrag: f.betrag.value, art: f.art.value, kunde: f.kunde.value, email: f.email.value, beschreibung: f.beschreibung.value, sitzungen: f.sitzungen.value } });
       var wa = "https://wa.me/?text=" + encodeURIComponent(r.whatsappText);
       $("l-out").innerHTML = '<div class="link-ok"><h2>✓ Link für ' + e(r.zahlung.kunde || "deinen Kunden") + " über " + euro(r.zahlung.betragCent, true) + '</h2><div class="qr" id="l-qr"></div>' +
-        '<p class="klein muted">Kunde ist da? QR-Code scannen lassen. Sonst per WhatsApp schicken.</p><a class="btn wa big w100" target="_blank" rel="noopener" href="' + e(wa) + '">Per WhatsApp schicken</a>' +
+        '<p class="klein muted">Kunde ist da? QR-Code scannen lassen. Sonst per WhatsApp schicken.' + (r.zahlung.art === "gesamt" ? " Für Raten* wählt dein Kunde beim Bezahlen „Klarna“ – das steht schon im Text." : "") + '</p><a class="btn wa big w100" target="_blank" rel="noopener" href="' + e(wa) + '">Per WhatsApp schicken</a>' +
         '<div class="row-a" style="justify-content:center"><button class="btn dark small" data-copytext="' + e(r.link) + '">Link kopieren</button><button class="btn ghost small" id="l-neu">Noch einen Link</button></div></div>';
       qr($("l-qr"), r.link);
       f.classList.add("hidden");
@@ -255,6 +255,14 @@
     var zu = $("gs-zurueck"); if (zu) zu.onclick = async function () { if (!confirm("Einlösung zurücknehmen? Der Gutschein ist dann wieder gültig.")) return; try { await TF.api("/api/portal/gutschein/" + z.id + "/einloesen", { method: "DELETE" }); toast("Zurückgenommen."); nachladen(); } catch (err) { toast(err.message, true); } };
     var se = $("gs-senden"); if (se) se.onclick = async function () { se.disabled = true; try { var r = await TF.api("/api/portal/gutschein/" + z.id + "/senden", { body: {} }); toast(r.gesendet ? "Gutschein erneut gesendet an " + z.email : "Versand verzögert, wir versuchen es automatisch weiter.", !r.gesendet); } catch (err) { toast(err.message, true); } se.disabled = false; };
   }
+  function ratenHilfe() { $("raten-text").textContent = D.ratenText || ""; }
+  $("raten-kopieren").onclick = function () { (navigator.clipboard ? navigator.clipboard.writeText(D.ratenText || "") : Promise.reject()).then(function () { toast("Text kopiert"); }).catch(function () { toast("Bitte Text markieren und kopieren"); }); };
+  function artHinweis() {
+    var anz = document.querySelector('#f-link input[name=art]:checked').value === "anzahlung";
+    $("l-art-hinweis").textContent = anz ? "Anzahlung: Dein Kunde zahlt sie am einfachsten ganz normal per Karte, Apple Pay oder Google Pay. Ratenzahlung ist für den Projektpreis größerer Tattoos gedacht."
+      : "Projektpreis: Dein Kunde kann per Karte zahlen oder mit Klarna in Raten*. Für Raten muss er beim Bezahlen „Klarna“ wählen – das steht schon im WhatsApp-Text.";
+  }
+  document.querySelectorAll("#f-link input[name=art]").forEach(function (r) { r.addEventListener("change", artHinweis); });
   function gutscheinForm() {
     var s = D.studio, g = $("gs-gesperrt");
     g.innerHTML = s.kannKassieren ? "" : '<div class="card-a"><b>Erst noch das Zahlungskonto.</b><p class="klein muted">Sobald Stripe dein Konto freigegeben hat, kannst du Gutscheine verkaufen.</p></div>';

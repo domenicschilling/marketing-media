@@ -199,3 +199,6 @@ body.app{background-color:var(--cream);background-image:none;padding-bottom:calc
 .big-cta.gs-cta .plus{font:400 26px/1 system-ui,sans-serif;background:var(--yellow-soft);border:2px solid var(--ink)}
 .chip.gueltig{background:#dff5e7;color:#14532d}.chip.eingeloest{background:#e6effa;color:#1f3f66}.chip.abgelaufen,.chip.storniert{background:#eee;color:#555}
 .gs-code-a{font:700 17px/1.2 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.5px}
+.raten-hilfe-link{display:block;text-decoration:none;color:var(--ink);margin-top:14px}
+.raten-hilfe-link small{display:block;color:var(--muted);font-size:13.5px}
+.hilfe-schritte{list-style:none;padding:0}

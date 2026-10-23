@@ -35,3 +35,12 @@ body.kunde{padding-bottom:30px}
 .ausweg{display:grid;gap:10px;margin:4px 0 0}
 .ausweg .btn{display:block;width:100%;max-width:100%;white-space:normal;text-align:center;height:auto;line-height:1.25;padding-top:12px;padding-bottom:12px}
 .ausweg small{display:block;font-weight:500;font-size:13px;opacity:.85}
+/* Raten-Hinweis vor dem Bezahlen */
+.raten-box{background:var(--yellow-soft);border:2px solid var(--ink);border-radius:14px;padding:12px 14px;margin:0 0 14px;font-size:15px}
+.raten-box p{margin:4px 0 8px}
+.raten-box .rb-titel{font:400 19px/1.2 var(--round);display:block}
+.raten-box.ruhig{background:#fff;border-style:dashed;font-size:14.5px}
+.raten-schritte{list-style:none;margin:8px 0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.raten-schritte li{background:#fff;border:2px solid var(--ink);border-radius:12px;padding:8px 6px;text-align:center;font-weight:700;font-size:13.5px;line-height:1.25}
+.raten-schritte span{display:grid;place-items:center;width:26px;height:26px;margin:0 auto 4px;border-radius:50%;background:var(--ink);color:var(--yellow);font:400 15px/1 var(--head)}
+@media (max-width:380px){.raten-schritte{grid-template-columns:1fr}.raten-schritte li{display:flex;align-items:center;gap:8px;text-align:left}.raten-schritte span{margin:0}}

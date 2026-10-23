@@ -71,8 +71,21 @@
       <input type="email" id="l-email" name="email" inputmode="email" autocomplete="off" enterkeyhint="done" placeholder="kunde@beispiel.de">
       <button class="btn gold big w100" id="l-btn">Link erstellen</button>
       <p class="muted klein">Dein Kunde bestätigt vor dem Bezahlen Betrag und Projekt, bei Anzahlungen auch deine Bedingungen. So hast du später einen Beleg.</p>
+      <p class="muted klein" id="l-art-hinweis">Projektpreis: Dein Kunde kann per Karte zahlen oder mit Klarna in Raten*. Für Raten muss er beim Bezahlen „Klarna“ wählen – das steht schon im WhatsApp-Text.</p>
     </form>
     <div id="l-out"></div>
+    <a class="card-a raten-hilfe-link" href="#raten"><b>💡 So zahlt dein Kunde in Raten*</b><small>3 Schritte zum Erklären + fertiger WhatsApp-Text</small></a>
+  </section>
+
+  <!-- HILFE: RATEN FÜR KUNDEN -->
+  <section data-view="raten" class="hidden">
+    <a class="zurueck" href="#link">← Zahlungslink</a>
+    <h1>So zahlt dein Kunde in Raten*</h1>
+    <div class="card-a"><h2>1. Link schicken</h2><p class="klein">Unter <b>+ Zahlungslink</b> den Projektpreis eintragen (nicht „Anzahlung“) und den Link per WhatsApp schicken oder den QR-Code im Studio scannen lassen. Ratenzahlung ist für größere Projekte gedacht. Anzahlungen zahlt dein Kunde am besten ganz normal per Karte.</p></div>
+    <div class="card-a"><h2>2. Kunde wählt Klarna</h2><ol class="check-a hilfe-schritte"><li><span class="ic">1</span><span><b>Link öffnen, „Weiter zum Bezahlen“</b><small>Betrag und Projekt kurz bestätigen</small></span></li><li><span class="ic">2</span><span><b>„Klarna“ als Zahlungsart wählen</b><small>Wer hier „Karte“ nimmt, zahlt alles auf einmal</small></span></li><li><span class="ic">3</span><span><b>Bei Klarna Raten oder Finanzierung aussuchen und bestätigen</b><small>Klarna prüft kurz und zeigt die Möglichkeiten (je nach Angebot 25 € bis 10.000 €)</small></span></li></ol></div>
+    <div class="card-a"><h2>3. Fertiger WhatsApp-Text</h2><p class="muted klein">Steht automatisch im Text, wenn du einen Zahlungslink erstellst. Zum Selbst-Schreiben hier zum Kopieren ([…] ersetzen):</p><pre class="caption" id="raten-text"></pre><div class="row-a"><button class="btn dark small" id="raten-kopieren">Text kopieren</button></div></div>
+    <div class="card-a"><h2>Wenn Klarna nicht zustimmt</h2><p class="klein">Das entscheidet allein Klarna. Dein Kunde sieht dann: mit Karte zahlen oder – wenn du es unter Einstellungen einschaltest – Anzahlung per Karte, Rest am Termin. Du bekommst eine E-Mail.</p><a class="btn ghost small" href="#einstellungen">Zu den Einstellungen</a></div>
+    <p class="klein muted fussnote">*Ratenzahlung über externe Anbieter wie Klarna, nach deren Prüfung. Tattoofin ist kein Kreditgeber. Achtung! Kreditaufnahme kostet Geld.</p>
   </section>
 
   <!-- GUTSCHEIN VERKAUFEN -->
@@ -189,6 +202,7 @@
     <h1>Mehr</h1>
     <nav class="liste-links gross">
       <a href="#video"><b>🎬 So geht's (Video)</b><small>Deine App Schritt für Schritt erklärt, mit Kapiteln</small></a>
+      <a href="#raten"><b>💡 Raten für deine Kunden</b><small>So schickst du den Link, so wählt dein Kunde Klarna</small></a>
       <a href="#gutscheine"><b>🎁 Gutscheine</b><small>Verkaufen, Code prüfen, als eingelöst markieren</small></a>
       <a href="#werbung"><b>📣 Werbung &amp; QR-Code</b><small>Instagram-Bilder, Zahlseite, Studio Kit</small></a>
       <a href="#recht"><b>⚖️ Deine rechtliche Lage</b><small id="mehr-recht">Wer trägt welches Risiko? Einfach erklärt.</small></a>

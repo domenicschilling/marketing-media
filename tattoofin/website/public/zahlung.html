@@ -28,6 +28,7 @@
   <form id="schritt1" class="card-a" novalidate>
     <span class="schritt-tag">Schritt 1 von 2</span>
     <div class="summe"><div class="amt" id="betrag"></div><div class="muted" id="sub"></div></div>
+    <div id="raten-hinweis"></div>
     <div id="bed" class="bed hidden"><b>Anzahlungsbedingungen des Studios</b><p id="bed-text"></p>
       <label class="haken"><input type="checkbox" id="bed-ok"> <span>Ich bin mit den Anzahlungsbedingungen des Studios einverstanden.</span></label></div>
     <label class="haken"><input type="checkbox" id="inhalt-ok"> <span id="inhalt-text"></span></label>
@@ -65,6 +66,7 @@
   if (anz) { $("bed").classList.remove("hidden"); $("bed-text").textContent = d.studio.anzahlungsbedingungen; }
   if (z.status === "bezahlt") { $("schritt1").classList.add("hidden"); B.meldung("Dieser Betrag ist bereits bezahlt. Danke! 🖤", "ok"); return; }
   if (["offen", "abgebrochen"].indexOf(z.status) < 0) { $("schritt1").classList.add("hidden"); B.meldung("Dieser Zahlungslink ist nicht mehr gültig. Bitte frag im Studio nach einem neuen Link."); return; }
+  B.ratenHinweis($("raten-hinweis"), { klarna: (z.zahlarten || []).indexOf("klarna") >= 0, anzahlung: anz, betragCent: z.betragCent });
   $("weiter").disabled = false;
   if (q.get("abbruch")) {
     var aw = $("ausweg");

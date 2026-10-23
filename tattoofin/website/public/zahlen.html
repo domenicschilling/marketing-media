@@ -16,7 +16,8 @@
     </div>
     <label class="lbl" for="betrag">Betrag (wie mit dem Studio abgesprochen)</label>
     <div class="betrag-feld"><input type="text" inputmode="decimal" id="betrag" name="betrag" placeholder="0" required autocomplete="transaction-amount" enterkeyhint="next"><span>€</span></div>
-    <div style="height:14px"></div>
+    <div id="raten-hinweis" style="margin-top:12px"></div>
+    <div style="height:6px"></div>
     <label class="lbl" for="kunde">Dein Name</label>
     <input type="text" id="kunde" name="name" required autocomplete="name" autocapitalize="words" enterkeyhint="next">
     <label class="lbl" for="email">Deine E-Mail (für die Quittung)</label>
@@ -75,7 +76,7 @@
   var f = $("schritt1");
   function anzahlung() { return f.art.value === "anzahlung"; }
   function info() { return { firma: studio.firma, betragCent: B.betragCent($("betrag").value), beschreibung: $("beschreibung").value.trim(), sitzungen: $("sitzungen").value.trim(), anzahlung: anzahlung(), kunde: $("kunde").value.trim(), email: $("email").value.trim() }; }
-  function text() { $("inhalt-text").textContent = B.inhaltText(info()); $("bed").classList.toggle("hidden", !anzahlung()); }
+  function text() { var i = info(); $("inhalt-text").textContent = B.inhaltText(i); $("bed").classList.toggle("hidden", !anzahlung()); B.ratenHinweis($("raten-hinweis"), { klarna: studio.klarna !== false, anzahlung: i.anzahlung, betragCent: i.betragCent }); }
   f.addEventListener("input", text); f.addEventListener("change", text); text();
   $("aendern").onclick = function (ev) { ev.preventDefault(); location.reload(); };
   f.addEventListener("submit", function (ev) {

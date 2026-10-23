@@ -45,6 +45,14 @@ export const EXTRAS = [
     text: "Dein Kunde bekommt vor dem Termin automatisch eine Erinnerung per WhatsApp oder E-Mail, mit Link zur Anzahlung. Weniger leere Termine.", icon: "⏰" },
 ];
 
+// WhatsApp-Text fürs Studio (Zahlungslink Projektpreis): erklärt dem Kunden, dass er für Raten „Klarna“ wählen muss.
+// Fußnote wie in den Studio-Beiträgen (Raten* nur mit Hinweis, kein Versprechen).
+export const RATEN_FUSS = "*Ratenzahlung über Klarna, nach deren Prüfung. Weder wir noch Tattoofin sind Kreditgeber. Achtung! Kreditaufnahme kostet Geld.";
+export const ratenWhatsapp = ({ vorname = "", projekt = "dein Tattoo", betrag = "", link = "", firma = "" }) =>
+  `Hi ${vorname}, hier ist dein Zahlungslink für ${projekt}${betrag ? " (" + betrag + ")" : ""}: ${link}\n\n` +
+  `Du möchtest in Raten* zahlen? So geht's:\n1. Link öffnen und auf „Weiter zum Bezahlen“ tippen\n2. „Klarna“ als Zahlungsart wählen\n3. Bei Klarna Raten oder Finanzierung aussuchen und bestätigen\n` +
+  `Klarna prüft kurz und zeigt dir, welche Möglichkeiten du hast. Mit Karte zahlst du den ganzen Betrag auf einmal.\n\nLiebe Grüße, ${firma}\n\n${RATEN_FUSS}`;
+
 // Manuelle Punkte der Einrichtungs-Checkliste (die übrigen erkennt das System selbst)
 const CHECK_MANUELL = ["app", "werbung", "theke"];
 import { mails } from "./_lib/emails.mjs";
@@ -110,6 +118,7 @@ export default handler(async (req) => {
         umsatzGesamtCent: bezahlt.reduce((a, z) => a + z.betragCent, 0), offen: zahlungen.filter((z) => z.status === "offen").length,
         anteilKlarna: bezahlt.length ? Math.round(100 * bezahlt.filter((z) => z.zahlart === "klarna").length / bezahlt.length) : 0,
       },
+      ratenText: ratenWhatsapp({ vorname: "[Name]", projekt: "[Motiv]", betrag: "[Betrag]", link: "[Zahlungslink]", firma: s.firma }),
       materialien: `${CFG.materialsUrl}generator.html`,
       materialLinks: [
         ["20-fensteraufkleber", "Fensteraufkleber"], ["21-flyer-a6", "Flyer A6"], ["22-thekenaufsteller-a5", "Thekenaufsteller A5"],
@@ -142,7 +151,9 @@ export default handler(async (req) => {
       const betragText = (betragCent / 100).toLocaleString("de-DE", { minimumFractionDigits: 2 }) + " €";
       const text = gutschein
         ? `Hi ${z.kunde.split(" ")[0]}, hier ist dein Link für den Gutschein von ${s.firma} über ${betragText}${z.gutschein.empfaenger ? " für " + z.gutschein.empfaenger : ""}: ${link} . Nach dem Bezahlen bekommst du den Gutschein mit Code per E-Mail. Liebe Grüße, ${s.firma}`
-        : `Hi ${z.kunde ? z.kunde.split(" ")[0] : ""}, hier ist dein Zahlungslink für ${z.beschreibung} (${betragText}): ${link} . Beim Bezahlen siehst du, welche Zahlungsoptionen dir angeboten werden. Liebe Grüße, ${s.firma}`;
+        : z.art === "anzahlung"
+          ? `Hi ${z.kunde ? z.kunde.split(" ")[0] : ""}, hier ist dein Link für die Anzahlung (${z.beschreibung}, ${betragText}): ${link} . Am einfachsten zahlst du per Karte, Apple Pay oder Google Pay. Liebe Grüße, ${s.firma}`
+          : ratenWhatsapp({ vorname: z.kunde ? z.kunde.split(" ")[0] : "", projekt: z.beschreibung, betrag: betragText, link, firma: s.firma });
       await log("zahlungslink", { studioId: s.id, zahlungId: z.id, betragCent });
       return json({ zahlung: fuerStudio(z), link, whatsappText: text }, 201);
     }
