@@ -217,7 +217,7 @@ ${g.nachricht ? `<div style="font-style:italic;color:#5b6370;margin-top:10px">�
     preheader: `${euro(z.betragCent)} · ${z.beschreibung || "Tattoo-Projekt"}`,
     title: "Klarna hat diesmal nicht zugestimmt",
     body: hallo(s) + p(`<b>${esc(z.kunde || "Dein Kunde")}</b> wollte ${euro(z.betragCent)} (${esc(z.beschreibung || "Tattoo-Projekt")}) mit Klarna bezahlen. Klarna hat die Zahlung nicht bestätigt. Das entscheidet allein Klarna, die Gründe nennt Klarna weder uns noch dir.`) +
-      p("Dein Kunde sieht auf der Zahlseite jetzt diese Möglichkeiten: noch einmal mit Klarna versuchen, mit Karte zahlen" + (s.ausweichAnzahlung?.an ? ` oder eine Anzahlung von ${s.ausweichAnzahlung.prozent} % per Karte und den Rest am Termin` : "") + ".") +
+      p("Dein Kunde sieht auf der Zahlseite jetzt diese Möglichkeiten: noch einmal mit Klarna versuchen, mit Karte zahlen" + (s.ausweichAnzahlung?.an ? ` oder eine Anzahlung von ${s.ausweichAnzahlung.prozent} % per Karte und den Rest direkt bei dir im Studio` : "") + ".") +
       p("Tipp: Frag kurz nach, ob alles geklappt hat. Es ist noch nichts bezahlt."),
     cta: "Zahlung in der App ansehen", ctaUrl: `${CFG.siteUrl}/app.html#zahlung/${z.id}`,
   }),

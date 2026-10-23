@@ -178,12 +178,13 @@ export function artikelText(studio, z) {
     name: `Wertgutschein ${(z.betragCent / 100).toLocaleString("de-DE")} € – ${studio.firma}`.slice(0, 200),
     description: `Wertgutschein, einlösbar für alle Leistungen bei ${studio.firma}${z.gutschein?.empfaenger ? ", für " + z.gutschein.empfaenger : ""}. Gültig bis Ende des dritten Jahres nach dem Kauf.`.slice(0, 480),
   };
-  // Wahrheitsgemäß als Dienstleistung des Studios: „Tattoo-Termin bei <Studio> – <Motiv>“ (+ Anschrift des Studios)
+  // Wahrheitsgemäß als Dienstleistung des Studios: „Tattoo bei <Studio> – <Motiv>“ (+ Anschrift des Studios).
+  // Ablauf (Domenic 23.10.): Kunde ist im Studio → Link → Zahlung/Finanzierung freigegeben → Tattoo wird direkt gestochen.
   const anz = istAnzahlung(z);
   const adr = [studio.strasse, [studio.plz, studio.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ");
   return {
-    name: `${anz ? "Anzahlung für " : ""}Tattoo-Termin bei ${studio.firma}${motiv ? " – " + motiv : ""}`.slice(0, 200),
-    description: [z.sitzungen, anz ? "Anzahlung, wird mit dem Preis verrechnet" : "", `Tätowierung im Studio ${studio.firma}${adr ? ", " + adr : ""}`].filter(Boolean).join(" · ").slice(0, 480),
+    name: `${anz ? "Anzahlung für " : ""}Tattoo bei ${studio.firma}${motiv ? " – " + motiv : ""}`.slice(0, 200),
+    description: [z.sitzungen, anz ? "Anzahlung, wird mit dem Preis verrechnet" : "Tätowierung vor Ort, direkt nach der Zahlungsfreigabe", `Studio ${studio.firma}${adr ? ", " + adr : ""}`].filter(Boolean).join(" · ").slice(0, 480),
   };
 }
 
@@ -213,7 +214,7 @@ export async function checkoutFuer(studio, z, { nurKarte = false } = {}) {
     } catch (e) { console.error("Kunde konnte nicht angelegt werden:", e.message); }
   }
   const ausweichHinweis = !anzahlung && z.art !== "gutschein" && zahlarten.includes("klarna")
-    ? "Stimmt Klarna nicht zu, kommst du über den Zurück-Pfeil oben links zu weiteren Möglichkeiten" + (studio.ausweichAnzahlung?.an ? " (z. B. Anzahlung per Karte, Rest am Termin)." : " (z. B. Zahlung per Karte).")
+    ? "Stimmt Klarna nicht zu, kommst du über den Zurück-Pfeil oben links zu weiteren Möglichkeiten" + (studio.ausweichAnzahlung?.an ? " (z. B. Anzahlung per Karte, Rest direkt im Studio)." : " (z. B. Zahlung per Karte).")
     : "";
   const params = {
     mode: "payment", locale: "de", client_reference_id: z.id, payment_method_types: zahlarten,

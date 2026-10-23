@@ -44,7 +44,7 @@ window.TFBezahlen = (function () {
     el.innerHTML = '<div class="raten-box"><b class="rb-titel">Du willst in Raten* zahlen?</b><p>Wähle im nächsten Schritt <b>Klarna</b> als Zahlungsart.</p>' +
       '<ol class="raten-schritte" aria-label="So zahlst du in Raten"><li><span>1</span>Klarna wählen</li><li><span>2</span>Raten oder Finanzierung aussuchen</li><li><span>3</span>Bei Klarna bestätigen</li></ol>' +
       '<p class="klein">' + (zuHoch ? "Über 10.000 € bietet Klarna keine Ratenzahlung an. " : "Ratenzahlung ist je nach Angebot von Klarna für Beträge von 25 € bis 10.000 € möglich. ") +
-      "Ob und welche Raten du bekommst, entscheidet Klarna nach einer kurzen Prüfung. Mit Karte zahlst du den ganzen Betrag auf einmal.</p></div>";
+      "Ob und welche Raten du bekommst, entscheidet Klarna nach einer kurzen Prüfung. Sobald die Zahlung freigegeben ist, kann es im Studio losgehen. Mit Karte zahlst du den ganzen Betrag auf einmal.</p></div>";
   }
   return { meldung: meldung, betragCent: betragCent, inhaltText: inhaltText, starte: starte, branding: branding, ratenHinweis: ratenHinweis };
 })();

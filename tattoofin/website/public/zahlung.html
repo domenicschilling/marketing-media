@@ -14,7 +14,7 @@
     <p class="klein muted" id="ausweg-text"></p>
     <div class="ausweg">
       <button class="btn gold big" id="aw-karte" type="button">Mit Karte zahlen<small id="aw-karte-sub"></small></button>
-      <button class="btn dark big hidden" id="aw-anz" type="button">Anzahlung per Karte, Rest am Termin<small id="aw-anz-sub"></small></button>
+      <button class="btn dark big hidden" id="aw-anz" type="button">Anzahlung per Karte, Rest direkt im Studio<small id="aw-anz-sub"></small></button>
       <button class="btn ghost" id="aw-nochmal" type="button">Noch einmal versuchen (alle Zahlungsarten)</button>
     </div>
     <div id="aw-anz-box" class="hidden" style="margin-top:12px">
@@ -75,9 +75,9 @@
     $("aw-karte-sub").textContent = TF.euro(z.betragCent, true) + " jetzt per Karte, Apple Pay oder Google Pay";
     if (d.ausweich) {
       $("aw-anz").classList.remove("hidden");
-      $("aw-anz-sub").textContent = TF.euro(d.ausweich.betragCent, true) + " jetzt (" + d.ausweich.prozent + " %), " + TF.euro(d.ausweich.restCent, true) + " am Termin im Studio";
+      $("aw-anz-sub").textContent = TF.euro(d.ausweich.betragCent, true) + " jetzt (" + d.ausweich.prozent + " %), " + TF.euro(d.ausweich.restCent, true) + " direkt im Studio";
       $("aw-bed-text").textContent = d.studio.anzahlungsbedingungen;
-      $("aw-inhalt-text").textContent = "Ich zahle " + TF.euro(d.ausweich.betragCent, true) + " an " + d.studio.firma + " als Anzahlung für: " + (z.beschreibung || "Tattoo-Projekt") + ". Den Rest von " + TF.euro(d.ausweich.restCent, true) + " zahle ich am Termin direkt im Studio. Betrag und Projekt sind so mit dem Studio abgesprochen.";
+      $("aw-inhalt-text").textContent = "Ich zahle " + TF.euro(d.ausweich.betragCent, true) + " an " + d.studio.firma + " als Anzahlung für: " + (z.beschreibung || "Tattoo-Projekt") + ". Den Rest von " + TF.euro(d.ausweich.restCent, true) + " zahle ich direkt im Studio. Betrag und Projekt sind so mit dem Studio abgesprochen.";
     }
     if (z.ausweichAnzahlungId) $("aw-anz").classList.add("hidden");
     aw.classList.remove("hidden");

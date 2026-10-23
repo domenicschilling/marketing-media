@@ -37,7 +37,7 @@ function bestaetigen(req, context, s, z) {
   if (istAnzahlung(z)) z.bedingungen = { akzeptiertAm: now(), text: anzahlungsbedingungen(s) };
 }
 
-// Ausweg nach Klarna-Ablehnung: Anzahlung per Karte (nur wenn das Studio das erlaubt), Rest am Termin.
+// Ausweg nach Klarna-Ablehnung: Anzahlung per Karte (nur wenn das Studio das erlaubt), Rest direkt im Studio.
 // Betrag: eingestellter Prozentsatz vom Gesamtbetrag, auf volle Euro gerundet, mindestens der Mindestbetrag.
 export function ausweichAngebot(s, z) {
   const a = s.ausweichAnzahlung || {};
@@ -104,7 +104,7 @@ export default handler(async (req, context) => {
     if (z.status === "bezahlt") return fail("Dieser Betrag ist bereits bezahlt. Danke!", 409);
     if (!["offen", "abgebrochen"].includes(z.status)) return fail("Dieser Zahlungslink ist nicht mehr gültig. Bitte frag im Studio nach einem neuen Link.", 410);
     const s = await getStudio(z.studioId);
-    // Ausweg „Anzahlung jetzt per Karte, Rest am Termin“: eigene Zahlung (art anzahlung), mit dem Original verknüpft
+    // Ausweg „Anzahlung jetzt per Karte, Rest direkt im Studio“: eigene Zahlung (art anzahlung), mit dem Original verknüpft
     if (b.ausweich === "anzahlung") {
       const an = ausweichAngebot(s, z);
       if (!an) return fail("Diese Möglichkeit bietet das Studio nicht an.", 409);
@@ -113,10 +113,10 @@ export default handler(async (req, context) => {
       const za = {
         id: id("zl_"), studioId: s.id, createdAt: now(), art: "anzahlung", status: "offen", betragCent: an.betragCent,
         kunde: z.kunde, email: z.email, beschreibung: `Anzahlung: ${z.beschreibung || "Tattoo-Projekt"}`.slice(0, 120), sitzungen: z.sitzungen,
-        ausweichVon: z.id, restCent: an.restCent, nurKarte: true, hinweis: `Rest ${euro(an.restCent)} am Termin im Studio`,
+        ausweichVon: z.id, restCent: an.restCent, nurKarte: true, hinweis: `Rest ${euro(an.restCent)} direkt im Studio`,
       };
       bestaetigen(req, context, s, za);
-      za.kundeBestaetigt.inhalt += ` Den Rest von ${euro(an.restCent)} zahle ich am Termin direkt im Studio.`;
+      za.kundeBestaetigt.inhalt += ` Den Rest von ${euro(an.restCent)} zahle ich direkt im Studio.`;
       await saveZahlung(za);
       z.ausweich = { ...(z.ausweich || {}), anzahlungId: za.id, am: now() };
       await saveZahlung(z);

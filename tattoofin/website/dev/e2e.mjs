@@ -470,7 +470,7 @@ try {
     let st = await mock("state");
     const cs1 = st.sessions[r1.url.split("/pay/")[1]];
     const li = cs1.line_items[0];
-    check(li.quantity === "1" && li.price_data.product_data.name === "Tattoo-Termin bei Ink Provision – Rückenstück Drache" && /2 Sitzungen/.test(li.price_data.product_data.description) && /Musterstr\. 1, 96047 Bamberg/.test(li.price_data.product_data.description), "Checkout: Artikel „Tattoo-Termin bei Ink Provision – Rückenstück Drache“, Menge 1, Sitzungen + Studio-Anschrift in der Beschreibung");
+    check(li.quantity === "1" && li.price_data.product_data.name === "Tattoo bei Ink Provision – Rückenstück Drache" && /direkt nach der Zahlungsfreigabe/.test(li.price_data.product_data.description) && /2 Sitzungen/.test(li.price_data.product_data.description) && /Musterstr\. 1, 96047 Bamberg/.test(li.price_data.product_data.description), "Checkout: Artikel „Tattoo bei Ink Provision – Rückenstück Drache“ (Tätowierung direkt nach Freigabe), Menge 1, Sitzungen + Studio-Anschrift in der Beschreibung");
     check(cs1.billing_address_collection === "required" && cs1.phone_number_collection?.enabled === "true", "Checkout: Rechnungsadresse und Telefonnummer verpflichtend");
     const kunde = st.customers[cs1.customer];
     check(kunde?.name === "Kai Klarna" && kunde?.email === "kai@example.com" && cs1.customer_update?.name === "auto", "Checkout: Kunde mit Name + E-Mail vorausgefüllt (Stripe-Customer)");
@@ -498,7 +498,7 @@ try {
     check((await admin(`studio/${provId}`)).studio.ausweichAnzahlung?.an === true, "Einstellung „Anzahlung als Ausweg“ (30 %) im Dashboard gespeichert");
     await pK.reload();
     await pK.waitForSelector("#aw-anz:not(.hidden)");
-    check((await pK.textContent("#aw-anz")).includes("360,00") && (await pK.textContent("#aw-anz")).includes("840,00"), "Ausweg: 360 € Anzahlung jetzt (30 %), 840 € am Termin");
+    check((await pK.textContent("#aw-anz")).includes("360,00") && (await pK.textContent("#aw-anz")).includes("840,00"), "Ausweg: 360 € Anzahlung jetzt (30 %), 840 € direkt im Studio");
     check(mailsAn("prov@example.com").filter((m) => m.subject.includes("Klarna hat bei Kai Klarna nicht zugestimmt")).length === 1, "Neu laden schickt keine zweite Mail");
     await pK.screenshot({ path: path.join(shots, "kunde-klarna-ausweg.png"), fullPage: true });
     await pK.click("#aw-anz");
@@ -509,7 +509,7 @@ try {
     await pK.waitForURL(/localhost:12111\/pay\//);
     st = await mock("state");
     const csA = st.sessions[pK.url().split("/pay/")[1]];
-    check(csA.amount_total === 36000 && JSON.stringify(csA.payment_method_types) === '["card"]' && /^Anzahlung für Tattoo-Termin bei Ink Provision – Rückenstück Drache/.test(csA.line_items[0].price_data.product_data.name) && /Anzahlungsbedingungen/.test(csA.custom_text?.submit?.message || ""), "Ausweg-Checkout: 360 € nur Karte, Artikel „Anzahlung für Tattoo-Termin bei …“, Bedingungen im Checkout");
+    check(csA.amount_total === 36000 && JSON.stringify(csA.payment_method_types) === '["card"]' && /^Anzahlung für Tattoo bei Ink Provision – Rückenstück Drache/.test(csA.line_items[0].price_data.product_data.name) && /Anzahlungsbedingungen/.test(csA.custom_text?.submit?.message || ""), "Ausweg-Checkout: 360 € nur Karte, Artikel „Anzahlung für Tattoo bei …“, Bedingungen im Checkout");
     check(await pK.locator("#pay-klarna").count() === 0, "Ausweg-Checkout bietet Klarna nicht noch einmal an");
     await pK.click("#pay");
     await pK.waitForURL(/bezahlt\.html/);
@@ -518,7 +518,7 @@ try {
     const orig = det.zahlungen.find((z) => z.id === klId);
     const anzA = det.zahlungen.find((z) => z.ausweichVon === klId);
     check(orig.klarnaAbgelehnt?.code === "payment_method_provider_decline" && orig.ausweich?.bezahltAm && orig.status === "offen", "Original-Link: Klarna-Ablehnung + bezahlte Anzahlung vermerkt (Rest bleibt offen)");
-    check(anzA?.status === "bezahlt" && anzA.art === "anzahlung" && anzA.bedingungen?.text && /Rest von 840,00 €/.test(anzA.kundeBestaetigt?.inhalt || ""), "Anzahlung bezahlt, mit Bedingungen + Bestätigung „Rest am Termin“");
+    check(anzA?.status === "bezahlt" && anzA.art === "anzahlung" && anzA.bedingungen?.text && /Rest von 840,00 €/.test(anzA.kundeBestaetigt?.inhalt || ""), "Anzahlung bezahlt, mit Bedingungen + Bestätigung „Rest direkt im Studio“");
     check((await (await post("/api/pay", { z: klId, ausweich: "anzahlung", bedingungen: true, inhaltOk: true })).json()).url !== undefined || true, "Ausweg erneut aufrufbar ohne Fehler");
     // „Mit Karte zahlen“: gleicher Betrag, nur Karte
     const kk = await api(pA, "/api/portal/zahlung", { method: "POST", body: { betrag: "600", kunde: "Karla", beschreibung: "Unterarm" } });
