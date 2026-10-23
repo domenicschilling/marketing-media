@@ -111,7 +111,9 @@ export default handler(async (req, context) => {
   // Paket Monatlich: Abo auf dem DSX-Konto. Rechnungen erstellt Stripe jeden Monat automatisch (mit USt. und DSX-Angaben im Fuß).
   if (paketId === "monatlich") {
     await stripe("POST", `/customers/${s.stripe.customerId}`, { invoice_settings: { footer: RECHNUNG_FUSS } });
+    // Klarna ist für B2B-Käufe laut Klarna-Regeln nicht erlaubt (Studios kaufen als Unternehmer).
     const session = await stripe("POST", "/checkout/sessions", {
+      excluded_payment_method_types: ["klarna"],
       mode: "subscription", customer: s.stripe.customerId, locale: "de", client_reference_id: s.id,
       branding_settings: TATTOOFIN_BRANDING,
       line_items: [{
@@ -133,7 +135,9 @@ export default handler(async (req, context) => {
   }
 
   if (modell === "kauf" && zahlart === "sofort") {
+    // Klarna ist für B2B-Käufe laut Klarna-Regeln nicht erlaubt (Studios kaufen als Unternehmer).
     const session = await stripe("POST", "/checkout/sessions", {
+      excluded_payment_method_types: ["klarna"],
       mode: "payment", customer: s.stripe.customerId, locale: "de", client_reference_id: s.id,
       branding_settings: TATTOOFIN_BRANDING,
       line_items: [{
