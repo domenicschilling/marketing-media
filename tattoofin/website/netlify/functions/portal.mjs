@@ -20,6 +20,12 @@
 //   POST   /api/portal/aufsteller-pruefen  { cs } Rückkehr aus dem Aufsteller-Checkout: Zahlung prüfen (falls der Webhook fehlt)
 //   POST   /api/portal/checkliste          { punkt, erledigt } Einrichtungs-Checkliste (manuelle Punkte)
 //   POST   /api/portal/abmelden            Auf allen Geräten abmelden (Sitzungsversion hochzählen)
+//   POST   /api/portal/zahlung { art: "gutschein", betrag, kunde (Käufer), email (Pflicht), empfaenger?, nachricht? }  Gutschein-Zahlungslink
+//   POST   /api/portal/gutschein/:id/einloesen   { notiz? } Gutschein als eingelöst markieren
+//   DELETE /api/portal/gutschein/:id/einloesen   Einlösung zurücknehmen (Versehen)
+//   POST   /api/portal/gutschein/:id/senden      Gutschein-Mail erneut an den Käufer senden
+//   GET    /api/portal/gutschein/:id/pdf         Gutschein als PDF
+//   GET    /api/portal/gutschein-code?code=…      Gutschein per Code finden (nur eigene)
 // Mandantentrennung: Jede Abfrage nutzt ausschließlich das Studio aus dem Session-Cookie; Zahlungen werden
 // über zahlung/<studioId>/<id> gelesen, fremde IDs ergeben immer 404.
 import { CFG, plattformgebuehr, provisionSatz, paketVon, aufstellerInklusive, BAUSTEINE_SIMULIERT } from "./_lib/config.mjs";
@@ -29,13 +35,12 @@ import { currentStudio, clearCookie } from "./_lib/auth.mjs";
 import { stripe, dashboardLink, accountSession, ensureConnectedAccount } from "./_lib/stripe.mjs";
 import { notify, notifyAdmin, kuendigungsDatum, connectUrl, darfKassieren, anzahlungsbedingungen, provisionVerdient, kontoAbgleichen, eingebettet, STATUS, aboKuendigen, aufstellerUrl, aufstellerCheckout, aufstellerBezahlt } from "./_lib/domain.mjs";
 import { randomBytes } from "node:crypto";
+import { gutscheinStatus, gutscheinPdf, gutscheinSenden, gutscheinUrl, normCode } from "./_lib/gutschein.mjs";
 
 // Extras (Zusatzangebote): nur Anzeige + Anfrage, keine Abrechnung. Preise sind Vorschläge.
 export const EXTRAS = [
   { id: "insta-aktion", titel: "Instagram-Werbeaktion für dein Studio", preis: "ab 149 € netto einmalig, zzgl. Werbebudget",
     text: "Wir bauen dir eine fertige Werbeaktion: Video oder Bilder, Texte, Zielgruppe in deiner Stadt. Du gibst nur das Okay.", icon: "📣" },
-  { id: "gutscheine", titel: "Gutscheine verkaufen", preis: "in deinem Paket enthalten (bei Risikofrei mit der normalen Provision)",
-    text: "Tattoo-Gutscheine über deine Zahlseite verkaufen, mit schöner Gutschein-Karte zum Ausdrucken oder Verschicken. Perfekt für Weihnachten und Geburtstage.", icon: "🎁" },
   { id: "no-show", titel: "Termin-Erinnerung & No-Show-Schutz", preis: "geplant: ca. 19 € netto im Monat",
     text: "Dein Kunde bekommt vor dem Termin automatisch eine Erinnerung per WhatsApp oder E-Mail, mit Link zur Anzahlung. Weniger leere Termine.", icon: "⏰" },
 ];
@@ -52,6 +57,10 @@ const fuerStudio = (z) => {
   const { clientSecret, betragFuerPi, leistungToken, ...rest } = z;
   if (rest.kundeBestaetigt) rest.kundeBestaetigt = { am: rest.kundeBestaetigt.am, inhalt: rest.kundeBestaetigt.inhalt, version: rest.kundeBestaetigt.version };
   if (leistungToken) rest.leistungLink = `${CFG.siteUrl}/bestaetigung.html?t=${leistungToken.t}`;
+  if (rest.gutschein) {
+    const { token, ...g } = rest.gutschein;
+    rest.gutschein = { ...g, status: gutscheinStatus(z), link: token ? gutscheinUrl(rest.gutschein) : null };
+  }
   return rest;
 };
 const oeffentlich = (s) => ({
@@ -67,6 +76,7 @@ const oeffentlich = (s) => ({
   recht: s.recht ? { version: s.recht.version, am: s.recht.am, aktuell: s.recht.version === CFG.rechtVersion } : null,
   checkliste: s.checkliste || {}, extrasAngefragt: Object.keys(s.extras || {}), eingebettet: eingebettet(), simulation: BAUSTEINE_SIMULIERT,
   anzahlungsbedingungen: anzahlungsbedingungen(s),
+  ausweichAnzahlung: { an: Boolean(s.ausweichAnzahlung?.an), prozent: s.ausweichAnzahlung?.prozent || 30 },
   kannKassieren: Boolean(darfKassieren(s)), zahlseite: zahlseite(s), connectUrl: connectUrl(s),
   aufsteller: { inklusive: CFG.aufstellerPakete.includes(paketVon(s).id), holz: s.aufsteller?.holz || "hell", variante: s.aufsteller?.variante || "name", hatLogo: Boolean(s.aufsteller?.hatLogo), angefordertAm: s.aufsteller?.angefordertAm || null, preisNetto: CFG.aufstellerPreisNetto, bezahltAm: s.aufsteller?.kauf?.bezahltAm || null },
 });
@@ -118,14 +128,21 @@ export default handler(async (req) => {
       const email = clean(b.email, 160).toLowerCase();
       if (email && !isEmail(email)) return fail("Bitte eine gültige E-Mail-Adresse eingeben oder das Feld leer lassen.");
       const fee = plattformgebuehr(betragCent, s);
+      const gutschein = b.art === "gutschein";
+      if (gutschein && !clean(b.kunde, 80)) return fail("Bitte den Namen des Käufers eintragen.");
+      if (gutschein && !email) return fail("Bitte die E-Mail des Käufers eintragen – dorthin schicken wir den Gutschein.");
       const z = {
-        id: id("zl_"), studioId: s.id, createdAt: now(), art: b.art === "anzahlung" ? "anzahlung" : "gesamt", status: "offen",
-        betragCent, kunde: clean(b.kunde, 80), email, beschreibung: clean(b.beschreibung, 120) || "Tattoo-Projekt", sitzungen: clean(b.sitzungen, 60),
+        id: id("zl_"), studioId: s.id, createdAt: now(), art: gutschein ? "gutschein" : b.art === "anzahlung" ? "anzahlung" : "gesamt", status: "offen",
+        betragCent, kunde: clean(b.kunde, 80), email, beschreibung: gutschein ? "Wertgutschein" : clean(b.beschreibung, 120) || "Tattoo-Projekt", sitzungen: gutschein ? "" : clean(b.sitzungen, 60),
         gebuehrNettoCent: fee.nettoCent, gebuehrBruttoCent: fee.bruttoCent,
+        ...(gutschein ? { gutschein: { empfaenger: clean(b.empfaenger, 80), nachricht: clean(b.nachricht, 240) } } : {}),
       };
       await saveZahlung(z);
       const link = `${CFG.siteUrl}/zahlung.html?z=${z.id}`;
-      const text = `Hi ${z.kunde ? z.kunde.split(" ")[0] : ""}, hier ist dein Zahlungslink für ${z.beschreibung} (${(betragCent / 100).toLocaleString("de-DE", { minimumFractionDigits: 2 })} €): ${link} . Beim Bezahlen siehst du, welche Zahlungsoptionen dir angeboten werden. Liebe Grüße, ${s.firma}`;
+      const betragText = (betragCent / 100).toLocaleString("de-DE", { minimumFractionDigits: 2 }) + " €";
+      const text = gutschein
+        ? `Hi ${z.kunde.split(" ")[0]}, hier ist dein Link für den Gutschein von ${s.firma} über ${betragText}${z.gutschein.empfaenger ? " für " + z.gutschein.empfaenger : ""}: ${link} . Nach dem Bezahlen bekommst du den Gutschein mit Code per E-Mail. Liebe Grüße, ${s.firma}`
+        : `Hi ${z.kunde ? z.kunde.split(" ")[0] : ""}, hier ist dein Zahlungslink für ${z.beschreibung} (${betragText}): ${link} . Beim Bezahlen siehst du, welche Zahlungsoptionen dir angeboten werden. Liebe Grüße, ${s.firma}`;
       await log("zahlungslink", { studioId: s.id, zahlungId: z.id, betragCent });
       return json({ zahlung: fuerStudio(z), link, whatsappText: text }, 201);
     }
@@ -229,6 +246,12 @@ export default handler(async (req) => {
     const b = await body(req);
     if (b.email !== undefined) { if (!isEmail(b.email)) return fail("Bitte gültige E-Mail"); s.benachrichtigungEmail = clean(b.email, 160); }
     if (b.anzahlungsbedingungen !== undefined) s.anzahlungsbedingungen = clean(b.anzahlungsbedingungen, 1000) || null;
+    // Ausweg bei Klarna-Ablehnung: Anzahlung per Karte anbieten (Prozent vom Gesamtbetrag, 10–50 %)
+    if (b.ausweichAnzahlung !== undefined) {
+      const pr = Math.round(Number(b.ausweichAnzahlung?.prozent) || 30);
+      if (pr < 10 || pr > 50) return fail("Bitte einen Anteil zwischen 10 und 50 % eingeben.");
+      s.ausweichAnzahlung = { an: Boolean(b.ausweichAnzahlung?.an), prozent: pr, am: now() };
+    }
     await saveStudio(s);
     return json(oeffentlich(s));
   }
@@ -353,6 +376,44 @@ export default handler(async (req) => {
     s.checkliste = { ...(s.checkliste || {}), [b.punkt]: b.erledigt ? now() : null };
     await saveStudio(s);
     return json(oeffentlich(s));
+  }
+
+  // ---- Gutscheine ----
+  if (bereich === "gutschein-code" && req.method === "GET") {
+    const code = normCode(url.searchParams.get("code"));
+    const ref = code ? await store.get("idx/gutschein/" + code) : null;
+    const [sid, zid] = (ref || "").split("/");
+    if (!ref || sid !== s.id) return fail("Kein Gutschein mit diesem Code gefunden.", 404);
+    return json(fuerStudio(await getZahlung(s.id, zid)));
+  }
+  if (bereich === "gutschein" && sub) {
+    const z = await getZahlung(s.id, sub);
+    if (!z || z.art !== "gutschein") return fail("Nicht gefunden", 404);
+    const aktion = url.pathname.split("/").filter(Boolean).pop();
+    if (aktion === "pdf" && req.method === "GET") {
+      if (!z.gutschein?.code) return fail("Der Gutschein entsteht, sobald er bezahlt ist.", 409);
+      return new Response(await gutscheinPdf(s, z), { headers: { "content-type": "application/pdf", "content-disposition": `inline; filename="Gutschein-${z.gutschein.code}.pdf"`, "cache-control": "no-store" } });
+    }
+    if (aktion === "einloesen") {
+      const st = gutscheinStatus(z);
+      if (req.method === "POST") {
+        if (st === "eingeloest") return fail("Dieser Gutschein ist schon eingelöst.", 409);
+        if (st !== "gueltig" && st !== "abgelaufen") return fail("Nur bezahlte Gutscheine können eingelöst werden.", 409);
+        z.gutschein.eingeloestAm = now(); z.gutschein.einloeseNotiz = clean((await body(req)).notiz, 200);
+      } else if (req.method === "DELETE") {
+        if (st !== "eingeloest") return fail("Dieser Gutschein ist nicht eingelöst.", 409);
+        z.gutschein.einloesungZurueck = [...(z.gutschein.einloesungZurueck || []), { am: now(), war: z.gutschein.eingeloestAm }];
+        delete z.gutschein.eingeloestAm; delete z.gutschein.einloeseNotiz;
+      } else return fail("Methode nicht erlaubt", 405);
+      await saveZahlung(z);
+      await log("gutschein-" + (req.method === "POST" ? "eingeloest" : "einloesung-zurueck"), { studioId: s.id, zahlungId: z.id, code: z.gutschein.code });
+      return json(fuerStudio(z));
+    }
+    if (aktion === "senden" && req.method === "POST") {
+      if (!z.gutschein?.code || !z.email) return fail("Der Gutschein entsteht, sobald er bezahlt ist.", 409);
+      const ok = await gutscheinSenden(s, z);
+      return json({ ...fuerStudio(z), gesendet: ok });
+    }
   }
 
   if (bereich === "abmelden" && req.method === "POST") {

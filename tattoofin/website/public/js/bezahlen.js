@@ -6,6 +6,7 @@ window.TFBezahlen = (function () {
   function betragCent(v) { var n = parseFloat(String(v || "").replace(/\s|€/g, "").replace(/\.(?=\d{3}(\D|$))/g, "").replace(",", ".")); return isFinite(n) ? Math.round(n * 100) : 0; }
   // Text des Inhalts-Häkchens (gleich wie auf dem Server gespeichert)
   function inhaltText(d) {
+    if (d.gutschein) return "Ich kaufe einen Wertgutschein über " + TF.euro(d.betragCent, true) + " von " + d.firma + (d.empfaenger ? " für " + d.empfaenger : "") + ", einlösbar für alle Leistungen bei " + d.firma + ". Den Gutschein mit Code bekomme ich nach der Zahlung per E-Mail.";
     return "Ich zahle " + (d.betragCent ? TF.euro(d.betragCent, true) : "den Betrag") + " an " + d.firma + " für: " + (d.beschreibung || "Tattoo-Projekt") +
       (d.sitzungen ? ", " + d.sitzungen : "") + (d.anzahlung ? " – als Anzahlung, die mit dem Preis verrechnet wird" : "") + ". Betrag und Projekt sind so mit dem Studio abgesprochen.";
   }
@@ -19,7 +20,7 @@ window.TFBezahlen = (function () {
       $("s2-summe").innerHTML = '<div class="amt">' + TF.euro(r.betragCent, true) + '</div><div class="muted">' + TF.esc(info.beschreibung || "Tattoo-Projekt") + (info.anzahlung ? " · Anzahlung" : "") + "</div>";
       meldung("");
       window.scrollTo({ top: 0, behavior: "smooth" });
-      await TFStripe.bezahlfeld($("bezahlfeld"), r, { name: info.kunde, email: info.email, fehler: function (t) { meldung(t); } });
+      await TFStripe.bezahlfeld($("bezahlfeld"), r, { zahlarten: r.zahlarten, name: info.kunde, email: info.email, fehler: function (t) { meldung(t); } });
     } catch (err) { meldung(err.message); btn.disabled = false; btn.textContent = "Weiter zum Bezahlen"; }
   }
   // Logo des Studios über dem Namen zeigen (falls im Admin hinterlegt); ohne Logo bleibt alles wie bisher

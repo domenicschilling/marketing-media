@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Tattoofin">
 <!-- ?v= bei jeder Änderung an CSS/JS hochzählen: sonst zeigt der Service Worker (sw.js) Studios beim ersten Öffnen die alte Fassung -->
-<link rel="stylesheet" href="/css/site.css?v=20261019d"><link rel="stylesheet" href="/css/app.css?v=20261019d"><link rel="stylesheet" href="/css/so-gehts.css?v=20261019d">
+<link rel="stylesheet" href="/css/site.css?v=20261023a"><link rel="stylesheet" href="/css/app.css?v=20261023a"><link rel="stylesheet" href="/css/so-gehts.css?v=20261023a">
 </head><body class="app">
 <header class="app-top">
   <a class="app-brand" href="#start"><img src="/assets/figur.png" alt=""><span id="top-firma">Tattoofin</span></a>
@@ -26,6 +26,7 @@
   <section data-view="start" class="hidden">
     <h1 class="hallo" id="hallo"></h1>
     <a class="big-cta" href="#link"><span class="plus">+</span><span>Zahlungslink erstellen<small>Betrag eintragen, per WhatsApp schicken</small></span></a>
+    <a class="big-cta gs-cta" href="#gutschein"><span class="plus">🎁</span><span>Gutschein verkaufen<small>Wertgutschein mit Code, kommt per E-Mail als PDF</small></span></a>
     <a class="werbung-cta" id="werbung-cta" href="#werbung">
       <img src="/media/studio-video/cover.jpg" alt="" width="1080" height="1920" loading="lazy">
       <span class="wc-text"><span class="neu-badge hidden" id="wv-neu">Neu</span><b>Werbung für dein Studio</b><small>Fertiges Video und 5 Beiträge für Instagram: Zeig deinen Kunden, dass bei dir Ratenzahlung geht – das bringt neue Kunden.</small><span class="wc-knopf">Video &amp; Beiträge ansehen</span></span>
@@ -72,6 +73,41 @@
       <p class="muted klein">Dein Kunde bestätigt vor dem Bezahlen Betrag und Projekt, bei Anzahlungen auch deine Bedingungen. So hast du später einen Beleg.</p>
     </form>
     <div id="l-out"></div>
+  </section>
+
+  <!-- GUTSCHEIN VERKAUFEN -->
+  <section data-view="gutschein" class="hidden">
+    <a class="zurueck" href="#gutscheine">← Gutscheine</a>
+    <h1>Gutschein verkaufen</h1>
+    <p class="muted klein">Dein Kunde bezahlt per Link (Karte, Apple Pay, Google Pay) und bekommt den Gutschein mit Code sofort als PDF per E-Mail. Der Gutschein gilt für alle Leistungen in deinem Studio, 3 Jahre bis Jahresende.</p>
+    <div id="gs-gesperrt"></div>
+    <form id="f-gs" class="form-a" autocomplete="off">
+      <label class="lbl" for="g-betrag">Wert des Gutscheins</label>
+      <div class="betrag-feld"><input type="text" inputmode="decimal" id="g-betrag" name="betrag" placeholder="0" required autocomplete="transaction-amount" enterkeyhint="next"><span>€</span></div>
+      <div id="g-fee" class="fee"></div>
+      <label class="lbl" for="g-kunde">Name des Käufers</label>
+      <input type="text" id="g-kunde" name="kunde" required autocomplete="off" autocapitalize="words" enterkeyhint="next" placeholder="z. B. Lena Beispiel">
+      <label class="lbl" for="g-email">E-Mail des Käufers (dorthin kommt der Gutschein)</label>
+      <input type="email" id="g-email" name="email" required inputmode="email" autocomplete="off" enterkeyhint="next" placeholder="kunde@beispiel.de">
+      <label class="lbl" for="g-empfaenger">Für wen? (optional, steht auf dem Gutschein)</label>
+      <input type="text" id="g-empfaenger" name="empfaenger" autocomplete="off" autocapitalize="words" enterkeyhint="next" placeholder="z. B. Max">
+      <label class="lbl" for="g-nachricht">Persönliche Nachricht (optional)</label>
+      <textarea id="g-nachricht" name="nachricht" rows="3" maxlength="240" autocomplete="off" placeholder="z. B. Alles Gute zum Geburtstag!"></textarea>
+      <button class="btn gold big w100" id="g-btn">Gutschein-Link erstellen</button>
+      <p class="muted klein">Bezahlt wird per Karte. Ratenzahlung über Klarna ist für Gutscheine nicht möglich (Regel von Klarna). Du stellst den Gutschein aus, Tattoofin übernimmt Bezahlung, Code und Versand.</p>
+    </form>
+    <div id="g-out"></div>
+  </section>
+
+  <!-- GUTSCHEINE (Liste) -->
+  <section data-view="gutscheine" class="hidden">
+    <a class="zurueck" href="#start">← Start</a>
+    <h1>Gutscheine</h1>
+    <a class="btn gold w100" href="#gutschein" style="margin:0 0 12px">+ Gutschein verkaufen</a>
+    <div class="card-a"><label class="lbl" for="gs-suche">Code prüfen (beim Termin)</label>
+      <div class="row-a"><input type="text" id="gs-suche" autocomplete="off" autocapitalize="characters" placeholder="GS-XXXX-XXXX" style="flex:1"><button class="btn dark small" id="gs-suche-btn">Prüfen</button></div>
+      <div id="gs-treffer"></div></div>
+    <div id="gs-liste"></div>
   </section>
 
   <!-- ZAHLUNGEN -->
@@ -153,6 +189,7 @@
     <h1>Mehr</h1>
     <nav class="liste-links gross">
       <a href="#video"><b>🎬 So geht's (Video)</b><small>Deine App Schritt für Schritt erklärt, mit Kapiteln</small></a>
+      <a href="#gutscheine"><b>🎁 Gutscheine</b><small>Verkaufen, Code prüfen, als eingelöst markieren</small></a>
       <a href="#werbung"><b>📣 Werbung &amp; QR-Code</b><small>Instagram-Bilder, Zahlseite, Studio Kit</small></a>
       <a href="#recht"><b>⚖️ Deine rechtliche Lage</b><small id="mehr-recht">Wer trägt welches Risiko? Einfach erklärt.</small></a>
       <a href="#extras"><b>✨ Extras für dein Studio</b><small>Mehr Kunden, weniger No-Shows</small></a>
@@ -204,6 +241,10 @@
     <div class="card-a"><h2>Anzahlungsbedingungen</h2><p class="muted klein">Sieht dein Kunde bei jeder Anzahlung und muss sie bestätigen. Leer lassen = Standardtext.</p>
       <label class="lbl" for="k-anz">Deine Bedingungen</label><textarea id="k-anz" rows="5" maxlength="1000" autocomplete="off"></textarea>
       <button class="btn gold small" id="k-anz-save">Speichern</button></div>
+    <div class="card-a"><h2>Wenn Klarna nicht zustimmt</h2><p class="muted klein">Klarna prüft jeden Kunden selbst. Stimmt Klarna nicht zu, kann dein Kunde mit Karte zahlen. Auf Wunsch bieten wir ihm zusätzlich an: Anzahlung jetzt per Karte, den Rest zahlt er am Termin direkt bei dir (mit deinen Anzahlungsbedingungen).</p>
+      <label class="haken"><input type="checkbox" id="k-aw-an"> <span>Anzahlung als Ausweg anbieten</span></label>
+      <label class="lbl" for="k-aw-pr">Höhe der Anzahlung (% vom Betrag, 10–50)</label><input type="number" id="k-aw-pr" min="10" max="50" step="5" inputmode="numeric" autocomplete="off">
+      <button class="btn gold small" id="k-aw-save">Speichern</button></div>
     <div class="card-a"><h2>Benachrichtigungen</h2>
       <label class="lbl" for="k-email">E-Mail für Zahlungsbenachrichtigungen</label><input type="email" id="k-email" autocomplete="email" inputmode="email">
       <button class="btn gold small" id="k-save">Speichern</button></div>
@@ -218,11 +259,11 @@
   <a href="#mehr" data-tab="mehr"><span>☰</span>Mehr</a>
 </nav>
 
-<script src="/js/qrcode.min.js?v=20261019d"></script>
-<script src="/js/common.js?v=20261019d"></script>
-<script src="/js/stripe-bausteine.js?v=20261019d"></script>
-<script src="/js/app-kit.js?v=20261019d"></script>
-<script src="/js/aufsteller.js?v=20261019d"></script>
-<script src="/js/so-gehts.js?v=20261019d"></script>
-<script src="/js/app.js?v=20261019d"></script>
+<script src="/js/qrcode.min.js?v=20261023a"></script>
+<script src="/js/common.js?v=20261023a"></script>
+<script src="/js/stripe-bausteine.js?v=20261023a"></script>
+<script src="/js/app-kit.js?v=20261023a"></script>
+<script src="/js/aufsteller.js?v=20261023a"></script>
+<script src="/js/so-gehts.js?v=20261023a"></script>
+<script src="/js/app.js?v=20261023a"></script>
 </body></html>

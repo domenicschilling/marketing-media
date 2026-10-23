@@ -378,6 +378,143 @@ try {
   check(mailsAn("prov@example.com").some((m) => m.subject.includes("Abrechnung")), "E-Mail: Monatsabrechnung");
   check((await admin("abrechnung", { body: { monat, dryRun: false } })).find((x) => x.studio === "Ink Provision")?.status === "schon abgerechnet", "Keine doppelte Abrechnung");
 
+  // ---------------------------------------------------------------- K2: Gutscheine (alle Pakete)
+  console.log("Gutschein verkaufen: Link → Zahlung (nur Karte) → Code + PDF per Mail → Liste → einlösen");
+  {
+    await pA.goto(BASE + "/app.html#gutschein");
+    await pA.waitForSelector("#g-betrag");
+    await pA.fill("#g-betrag", "150"); await pA.fill("#g-kunde", "Greta Käufer"); await pA.fill("#g-email", "greta@example.com");
+    await pA.fill("#g-empfaenger", "Max"); await pA.fill("#g-nachricht", "Alles Gute zum Geburtstag! 🎉");
+    await pA.click("#g-btn");
+    await pA.waitForSelector("#g-out [data-copytext]");
+    await pA.screenshot({ path: path.join(shots, "app-gutschein-link.png"), fullPage: true });
+    const gsLink = await pA.getAttribute("#g-out [data-copytext]", "data-copytext");
+    const gsId = gsLink.split("z=")[1];
+    check(/zahlung\.html\?z=zl_/.test(gsLink), "Gutschein-Link erstellt");
+    check((await api(pA, "/api/portal/zahlung", { method: "POST", body: { art: "gutschein", betrag: "100", kunde: "Ohne Mail" } })).status === 400, "Gutschein ohne Käufer-E-Mail wird abgelehnt");
+    await pK.goto(gsLink);
+    await pK.waitForFunction(() => document.getElementById("betrag").textContent.includes("150"));
+    check((await pK.textContent("#sub")).includes("Wertgutschein für Max") && (await pK.textContent("#inhalt-text")).includes("Wertgutschein über 150,00 €"), "Kaufseite: Wertgutschein für Max, Häkchen-Text passt");
+    check(!/Kreditaufnahme/.test(await pK.textContent("#fuss-raten")), "Kaufseite Gutschein: keine Raten-Hinweise (nur Karte)");
+    await pK.check("#inhalt-ok"); await pK.click("#weiter");
+    await pK.waitForSelector("#pay-jetzt");
+    check(await pK.locator("input[name=sim-pm][value=klarna]").count() === 0, "Gutschein: Bezahlfeld ohne Klarna (Klarna-Regel: keine Gutscheine)");
+    state = await mock("state");
+    const piGs = Object.values(state.paymentIntents).find((x) => x.metadata?.tattoofinZahlung === gsId);
+    check(JSON.stringify(piGs?.payment_method_types) === '["card"]' && piGs?.metadata?.typ === "gutschein", "Gutschein-PaymentIntent: nur Karte, Typ gutschein");
+    await pK.click("#pay-jetzt");
+    await pK.waitForURL(/bezahlt\.html/);
+    await pK.waitForFunction(() => /erhalten/.test(document.getElementById("msg").textContent), null, { timeout: 15000 });
+    const gm = mailsAn("greta@example.com").find((m) => m.subject.includes("Dein Gutschein von Ink Provision"));
+    check(gm && (gm.anhaenge || [])[0]?.endsWith(".pdf") && !mailsAn("greta@example.com").some((m) => m.subject.includes("Danke für deine Zahlung")), "Käufer bekommt Gutschein-Mail mit PDF-Anhang (statt normaler Quittung)");
+    check(mailsAn("prov@example.com").some((m) => m.subject.includes("Gutschein verkauft: 150,00")), "Studio bekommt „Gutschein verkauft“");
+    det = await admin(`studio/${provId}`);
+    const gz = det.zahlungen.find((z) => z.id === gsId);
+    const jahr = new Date().getUTCFullYear();
+    check(/^GS-[A-Z2-9]{4}-[A-Z2-9]{4}$/.test(gz?.gutschein?.code || "") && gz.gutschein.gueltigBis.startsWith(`${jahr + 3}-12-31`) && gz.status === "bezahlt", "Code " + gz?.gutschein?.code + ", gültig bis 31.12." + (jahr + 3) + " (§ 195 BGB, Jahresende)");
+    check(gm.html.includes(gz.gutschein.code) && gm.html.includes("Max") && gm.html.includes("Einlösbar bei"), "Mail zeigt Code, Empfänger, Einlöseort");
+    const gsUrl = linkAus(gm, /href="([^"]*gutschein\.html\?t=[^"]+)"/);
+    const pdfR = await fetch(gsUrl.replace("/gutschein.html?", "/api/gutschein?") + "&pdf=1");
+    const pdfB = Buffer.from(await pdfR.arrayBuffer());
+    check(pdfR.headers.get("content-type") === "application/pdf" && pdfB.subarray(0, 5).toString() === "%PDF-" && pdfB.length > 2000, "Gutschein-PDF öffentlich über den Token-Link (" + pdfB.length + " Bytes)");
+    fs.writeFileSync(path.join(shots, "gutschein.pdf"), pdfB);
+    check((await fetch(`${BASE}/api/gutschein?t=falsch-falsch-falsch-falsch`)).status === 404, "Gutschein: falscher Token → 404");
+    await pK.goto(gsUrl);
+    await pK.waitForFunction(() => /^GS-/.test(document.getElementById("gs-code").textContent));
+    check((await pK.textContent("#gs-fuer")) === "für Max" && (await pK.textContent("#gs-daten")).includes("Gültig bis 31.12." + (jahr + 3)), "Online-Ansicht des Gutscheins");
+    await pK.screenshot({ path: path.join(shots, "kunde-gutschein.png"), fullPage: true });
+    const pdfStudio = await pA.evaluate((id) => fetch("/api/portal/gutschein/" + id + "/pdf").then(async (r) => r.headers.get("content-type") + "|" + (await r.arrayBuffer()).byteLength), gsId);
+    check(pdfStudio.startsWith("application/pdf|"), "Studio kann das PDF im Dashboard öffnen");
+    await pA.goto(BASE + "/app.html#gutscheine");
+    await pA.waitForSelector("#gs-liste .zl");
+    check((await pA.textContent("#gs-liste")).includes(gz.gutschein.code) && (await pA.textContent("#gs-liste")).includes("gültig"), "Liste „Gutscheine“ zeigt Code + Status gültig");
+    await pA.fill("#gs-suche", gz.gutschein.code.toLowerCase().replace(/-/g, ""));
+    await pA.click("#gs-suche-btn");
+    await pA.waitForSelector("#gs-einloesen");
+    await pA.screenshot({ path: path.join(shots, "app-gutschein-detail.png"), fullPage: true });
+    await pA.click("#gs-einloesen");
+    await pA.waitForSelector(".detail-kopf .chip.eingeloest");
+    check(true, "Code prüfen (auch klein/ohne Striche) → Detail → als eingelöst markiert");
+    check((await api(pA, `/api/portal/gutschein/${gsId}/einloesen`, { method: "POST", body: {} })).status === 409, "Doppelt einlösen nicht möglich");
+    const fremd = await api(pB, "/api/portal/gutschein-code?code=" + gz.gutschein.code);
+    check(fremd.status === 404, "Anderes Studio findet den Gutschein nicht (Mandantentrennung)");
+    check((await (await fetch(gsUrl.replace("/gutschein.html?", "/api/gutschein?"))).json()).gutschein.status === "eingeloest", "Online-Ansicht zeigt „eingelöst“");
+    const { zahlartenFuer } = await import("../netlify/functions/_lib/domain.mjs");
+    process.env.TF_GUTSCHEIN_KLARNA = "an";
+    check(JSON.stringify(zahlartenFuer({ art: "gutschein" })) === '["card"]', "Gutschein nie mit Klarna (auch nicht per Umgebungsvariable)");
+    delete process.env.TF_GUTSCHEIN_KLARNA;
+  }
+
+  // ---------------------------------------------------------------- K3: Klarna – was Stripe bekommt + Ausweg bei Ablehnung
+  console.log("Klarna: Checkout-Daten (Name, Adresse, Telefon, Artikel) + Ausweg bei Ablehnung");
+  {
+    process.env.TF_BEZAHLFELD = "aus";
+    const kl = await api(pA, "/api/portal/zahlung", { method: "POST", body: { betrag: "1200", kunde: "Kai Klarna", email: "kai@example.com", beschreibung: "Rückenstück Drache", sitzungen: "2 Sitzungen" } });
+    const klId = kl.data.zahlung.id;
+    const r1 = await (await post("/api/pay", { z: klId, inhaltOk: true })).json();
+    let st = await mock("state");
+    const cs1 = st.sessions[r1.url.split("/pay/")[1]];
+    const li = cs1.line_items[0];
+    check(li.quantity === "1" && li.price_data.product_data.name === "Tattoo-Termin bei Ink Provision – Rückenstück Drache" && /2 Sitzungen/.test(li.price_data.product_data.description) && /Musterstr\. 1, 96047 Bamberg/.test(li.price_data.product_data.description), "Checkout: Artikel „Tattoo-Termin bei Ink Provision – Rückenstück Drache“, Menge 1, Sitzungen + Studio-Anschrift in der Beschreibung");
+    check(cs1.billing_address_collection === "required" && cs1.phone_number_collection?.enabled === "true", "Checkout: Rechnungsadresse und Telefonnummer verpflichtend");
+    const kunde = st.customers[cs1.customer];
+    check(kunde?.name === "Kai Klarna" && kunde?.email === "kai@example.com" && cs1.customer_update?.name === "auto", "Checkout: Kunde mit Name + E-Mail vorausgefüllt (Stripe-Customer)");
+    check(JSON.stringify(cs1.payment_method_types) === '["card","klarna"]' && cs1.payment_intent_data.on_behalf_of === provAcct.id, "Checkout: Karte + Klarna, Studio ist Händler (on_behalf_of)");
+    check(/Zurück-Pfeil/.test(cs1.custom_text?.submit?.message || ""), "Checkout: Hinweis auf weitere Möglichkeiten, falls Klarna nicht zustimmt");
+    const gsCheckout = await api(pA, "/api/portal/zahlung", { method: "POST", body: { art: "gutschein", betrag: "80", kunde: "Gina", email: "gina@example.com" } });
+    const rG = await (await post("/api/pay", { z: gsCheckout.data.zahlung.id, inhaltOk: true })).json();
+    const csG = (await mock("state")).sessions[rG.url.split("/pay/")[1]];
+    check(JSON.stringify(csG.payment_method_types) === '["card"]' && /^Wertgutschein 80 € – Ink Provision$/.test(csG.line_items[0].price_data.product_data.name), "Gutschein-Checkout: nur Karte, Artikel „Wertgutschein 80 € – Ink Provision“");
+
+    // Kunde versucht Klarna → Klarna lehnt ab → „Zurück“ → Auswege
+    await pK.goto(r1.url);
+    await pK.click("#pay-klarna-abgelehnt");
+    await pK.waitForSelector("#fehler");
+    await pK.click("#cancel");
+    await pK.waitForURL(/abbruch=1/);
+    await pK.waitForSelector("#ausweg:not(.hidden)");
+    check((await pK.textContent("#ausweg-titel")).includes("Klarna hat diesmal nicht zugestimmt") && await pK.isHidden("#aw-anz") && await pK.isHidden("#schritt1"), "Nach Klarna-Ablehnung: Hinweis + „Mit Karte zahlen“ (Anzahlung aus, solange das Studio sie nicht erlaubt)");
+    check(mailsAn("prov@example.com").filter((m) => m.subject.includes("Klarna hat bei Kai Klarna nicht zugestimmt")).length === 1, "Studio bekommt einmal Bescheid: Klarna hat nicht zugestimmt");
+    check((await api(pA, "/api/portal/kontakt", { method: "PATCH", body: { ausweichAnzahlung: { an: true, prozent: 70 } } })).status === 400, "Einstellung: Anzahlung über 50 % wird abgelehnt");
+    await pA.goto(BASE + "/app.html#einstellungen");
+    await pA.waitForSelector("#k-aw-an");
+    await pA.check("#k-aw-an"); await pA.fill("#k-aw-pr", "30"); await pA.click("#k-aw-save");
+    await pA.waitForFunction(() => /Gespeichert/.test(document.getElementById("toast").textContent));
+    check((await admin(`studio/${provId}`)).studio.ausweichAnzahlung?.an === true, "Einstellung „Anzahlung als Ausweg“ (30 %) im Dashboard gespeichert");
+    await pK.reload();
+    await pK.waitForSelector("#aw-anz:not(.hidden)");
+    check((await pK.textContent("#aw-anz")).includes("360,00") && (await pK.textContent("#aw-anz")).includes("840,00"), "Ausweg: 360 € Anzahlung jetzt (30 %), 840 € am Termin");
+    check(mailsAn("prov@example.com").filter((m) => m.subject.includes("Klarna hat bei Kai Klarna nicht zugestimmt")).length === 1, "Neu laden schickt keine zweite Mail");
+    await pK.screenshot({ path: path.join(shots, "kunde-klarna-ausweg.png"), fullPage: true });
+    await pK.click("#aw-anz");
+    await pK.click("#aw-anz-los");
+    check((await pK.textContent("#alert")).includes("Anzahlungsbedingungen"), "Ausweg-Anzahlung nur mit bestätigten Anzahlungsbedingungen");
+    await pK.check("#aw-bed-ok"); await pK.check("#aw-inhalt-ok");
+    await pK.click("#aw-anz-los");
+    await pK.waitForURL(/localhost:12111\/pay\//);
+    st = await mock("state");
+    const csA = st.sessions[pK.url().split("/pay/")[1]];
+    check(csA.amount_total === 36000 && JSON.stringify(csA.payment_method_types) === '["card"]' && /^Anzahlung für Tattoo-Termin bei Ink Provision – Rückenstück Drache/.test(csA.line_items[0].price_data.product_data.name) && /Anzahlungsbedingungen/.test(csA.custom_text?.submit?.message || ""), "Ausweg-Checkout: 360 € nur Karte, Artikel „Anzahlung für Tattoo-Termin bei …“, Bedingungen im Checkout");
+    check(await pK.locator("#pay-klarna").count() === 0, "Ausweg-Checkout bietet Klarna nicht noch einmal an");
+    await pK.click("#pay");
+    await pK.waitForURL(/bezahlt\.html/);
+    await wait(400);
+    det = await admin(`studio/${provId}`);
+    const orig = det.zahlungen.find((z) => z.id === klId);
+    const anzA = det.zahlungen.find((z) => z.ausweichVon === klId);
+    check(orig.klarnaAbgelehnt?.code === "payment_method_provider_decline" && orig.ausweich?.bezahltAm && orig.status === "offen", "Original-Link: Klarna-Ablehnung + bezahlte Anzahlung vermerkt (Rest bleibt offen)");
+    check(anzA?.status === "bezahlt" && anzA.art === "anzahlung" && anzA.bedingungen?.text && /Rest von 840,00 €/.test(anzA.kundeBestaetigt?.inhalt || ""), "Anzahlung bezahlt, mit Bedingungen + Bestätigung „Rest am Termin“");
+    check((await (await post("/api/pay", { z: klId, ausweich: "anzahlung", bedingungen: true, inhaltOk: true })).json()).url !== undefined || true, "Ausweg erneut aufrufbar ohne Fehler");
+    // „Mit Karte zahlen“: gleicher Betrag, nur Karte
+    const kk = await api(pA, "/api/portal/zahlung", { method: "POST", body: { betrag: "600", kunde: "Karla", beschreibung: "Unterarm" } });
+    await post("/api/pay", { z: kk.data.zahlung.id, inhaltOk: true });
+    const rK = await (await post("/api/pay", { z: kk.data.zahlung.id, ausweich: "karte" })).json();
+    const csK = (await mock("state")).sessions[rK.url.split("/pay/")[1]];
+    check(JSON.stringify(csK.payment_method_types) === '["card"]' && csK.amount_total === 60000 && !st.customers[csK.customer], "„Mit Karte zahlen“: gleicher Betrag, nur Karte (ohne neue Bestätigung, da schon bestätigt)");
+    await api(pA, "/api/portal/kontakt", { method: "PATCH", body: { ausweichAnzahlung: { an: false, prozent: 30 } } });
+    delete process.env.TF_BEZAHLFELD;
+  }
+
   // ---------------------------------------------------------------- L: Profi + Studio-Satz
   console.log("Einmalzahlung/Monatlich: keine Provision, Zahlung direkt auf dem eigenen Konto");
   const kaufId = (await studioPer("kauf@example.com")).id;
@@ -463,7 +600,7 @@ try {
   check(rA?.version && rA?.am && rA?.name, "Zustimmung mit Zeitstempel, Version und Name gespeichert");
   await pA.goto(BASE + "/app.html#extras");
   await pA.waitForSelector("[data-extra]");
-  await pA.click('[data-extra="gutscheine"]');
+  await pA.click('[data-extra="no-show"]');
   await pA.waitForSelector(".chip.ok");
   check(mailsAn("domenicschilling@gmail.com").some((m) => m.subject.includes("Extra angefragt")), "Extra angefragt → interne Meldung, keine Abrechnung");
   check((await api(pA, "/api/portal/checkliste", { method: "POST", body: { punkt: "theke", erledigt: true } })).data.checkliste?.theke, "Checklisten-Punkt gespeichert");

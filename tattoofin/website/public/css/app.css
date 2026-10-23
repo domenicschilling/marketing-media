@@ -194,3 +194,8 @@ body.app{background-color:var(--cream);background-image:none;padding-bottom:calc
 .wc-text small{font:500 14px/1.35 var(--body);color:#e6edf5}
 .wc-text .neu-badge{align-self:flex-start;margin-left:0}
 .wc-knopf{align-self:flex-start;background:var(--yellow);color:var(--ink);font:700 14px/1 var(--body);padding:9px 14px;border-radius:999px;margin-top:2px}
+/* Gutscheine (23.10.2026) */
+.big-cta.gs-cta{background:#fff;font-size:20px;padding:14px 18px}
+.big-cta.gs-cta .plus{font:400 26px/1 system-ui,sans-serif;background:var(--yellow-soft);border:2px solid var(--ink)}
+.chip.gueltig{background:#dff5e7;color:#14532d}.chip.eingeloest{background:#e6effa;color:#1f3f66}.chip.abgelaufen,.chip.storniert{background:#eee;color:#555}
+.gs-code-a{font:700 17px/1.2 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.5px}

@@ -5,7 +5,8 @@ import { sendMail } from "./mail.mjs";
 import { mails } from "./emails.mjs";
 import { stripe, taxRateId, ensureCustomer, TATTOOFIN_BRANDING } from "./stripe.mjs";
 import { checkoutBranding } from "./branding.mjs";
-import { allStudios, zahlungenVon, saveZahlung, getAbrechnung, saveAbrechnung, saveStudio, getStudio, log, store } from "./store.mjs";
+import { allStudios, zahlungenVon, saveZahlung, getZahlung, getAbrechnung, saveAbrechnung, saveStudio, getStudio, log, store } from "./store.mjs";
+import { gutscheinAusstellen } from "./gutschein.mjs";
 import { monatsende, now, HttpError } from "./util.mjs";
 import { loginLink, zweckToken } from "./auth.mjs";
 
@@ -154,31 +155,76 @@ export const ANZAHLUNG_STANDARD = "Die Anzahlung sichert deinen Termin und wird 
 export const anzahlungsbedingungen = (s) => (s.anzahlungsbedingungen || ANZAHLUNG_STANDARD);
 export const istAnzahlung = (z) => z.art === "anzahlung" || Boolean(z.anzahlung);
 
+// Zahlarten je Zahlung: Gutscheine nur per Karte (Klarna lässt „Wertkarten, Gutscheine und Geschenkkarten“ nicht zu,
+// docs.stripe.com/payments/klarna/compliance). nurKarte: Ausweg, wenn Klarna abgelehnt hat (Kunde wählt „mit Karte zahlen“).
+// Gutscheine NIE mit Klarna: Die Klarna-Regeln schließen „Wertkarten, Gutscheine und Geschenkkarten“ aus
+// (docs.stripe.com/payments/klarna/compliance); Stripe führt Geschenkkarten als eingeschränkte Branche
+// (stripe.com/legal/restricted-businesses). Ein Verstoß kann Klarna oder das Plattformkonto sperren. Bewusst kein Schalter.
+export const zahlartenFuer = (z, { nurKarte = false } = {}) => (z.art === "gutschein" || z.nurKarte || nurKarte ? ["card"] : CFG.zahlarten);
+
+// Klarer Name für den Warenkorb (Klarna zeigt ihn in der App und nutzt Warenkorbdaten für die Prüfung):
+// „Tattoo – <Motiv> (<Studio>)“, Menge 1. Gutschein: „Tattoo-Gutschein <Studio> über X €“.
+export function artikelText(studio, z) {
+  const besch = (z.beschreibung || "").trim();
+  const motiv = besch && !/^(tattoo-projekt|anzahlung|tattoo)$/i.test(besch) ? besch.replace(/^anzahlung:\s*/i, "") : "";
+  if (z.art === "gutschein") return {
+    name: `Wertgutschein ${(z.betragCent / 100).toLocaleString("de-DE")} € – ${studio.firma}`.slice(0, 200),
+    description: `Wertgutschein, einlösbar für alle Leistungen bei ${studio.firma}${z.gutschein?.empfaenger ? ", für " + z.gutschein.empfaenger : ""}. Gültig bis Ende des dritten Jahres nach dem Kauf.`.slice(0, 480),
+  };
+  // Wahrheitsgemäß als Dienstleistung des Studios: „Tattoo-Termin bei <Studio> – <Motiv>“ (+ Anschrift des Studios)
+  const anz = istAnzahlung(z);
+  const adr = [studio.strasse, [studio.plz, studio.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ");
+  return {
+    name: `${anz ? "Anzahlung für " : ""}Tattoo-Termin bei ${studio.firma}${motiv ? " – " + motiv : ""}`.slice(0, 200),
+    description: [z.sitzungen, anz ? "Anzahlung, wird mit dem Preis verrechnet" : "", `Tätowierung im Studio ${studio.firma}${adr ? ", " + adr : ""}`].filter(Boolean).join(" · ").slice(0, 480),
+  };
+}
+
 // Checkout-Sitzung für eine Kundenzahlung.
 //  Kauf:      auf dem eigenen Stripe-Konto des Studios (Direct Charge), keine Plattformgebühr.
 //  Provision: auf der Tattoofin-Plattform mit transfer_data → Konto des Studios und on_behalf_of (Studio ist Händler).
 //             application_fee_amount = 10 % vom Zahlbetrag. Stripe-Gebühren trägt Tattoofin aus diesen 10 %.
-export async function checkoutFuer(studio, z) {
+// Für die Klarna-Prüfung (23.10.2026; Kunde braucht Vor-/Nachname, Anschrift, Telefon, E-Mail –, docs.stripe.com/payments/klarna/best-practices): klarer Artikelname mit Menge 1,
+// Kunde als Stripe-Customer mit Name + E-Mail (vorausgefüllt), Rechnungsadresse und Telefonnummer verpflichtend.
+export async function checkoutFuer(studio, z, { nurKarte = false } = {}) {
   if (!darfKassieren(studio)) throw new HttpError(409, "Dieses Studio kann gerade keine Zahlungen annehmen.");
   const plattform = plattformKassiert(studio);
   const fee = plattformgebuehr(z.betragCent, studio);
   const anzahlung = istAnzahlung(z);
-  const meta = { tattoofinZahlung: z.id, studioId: studio.id };
+  const meta = { tattoofinZahlung: z.id, studioId: studio.id, ...(z.art === "gutschein" ? { typ: "gutschein" } : {}) };
+  const opts = plattform ? {} : { account: studio.stripe.accountId };
+  const zahlarten = zahlartenFuer(z, { nurKarte });
+  const artikel = artikelText(studio, z);
+  // Kunde vorab anlegen (Name + E-Mail vorausgefüllt). Klappt das nicht, sammelt Checkout die Angaben selbst.
+  let customer = z.stripeCustomerId;
+  if (!customer && (z.email || z.kunde)) {
+    try {
+      const c = await stripe("POST", "/customers", {
+        name: z.kunde || undefined, email: z.email || undefined, preferred_locales: ["de"], metadata: { tattoofinZahlung: z.id, studioId: studio.id },
+      }, { ...opts, idempotencyKey: `cus-z-${z.id}` });
+      customer = z.stripeCustomerId = c.id;
+    } catch (e) { console.error("Kunde konnte nicht angelegt werden:", e.message); }
+  }
+  const ausweichHinweis = !anzahlung && z.art !== "gutschein" && zahlarten.includes("klarna")
+    ? "Stimmt Klarna nicht zu, kommst du über den Zurück-Pfeil oben links zu weiteren Möglichkeiten" + (studio.ausweichAnzahlung?.an ? " (z. B. Anzahlung per Karte, Rest am Termin)." : " (z. B. Zahlung per Karte).")
+    : "";
   const params = {
-    mode: "payment", locale: "de", client_reference_id: z.id, payment_method_types: CFG.zahlarten,
-    line_items: [{ quantity: 1, price_data: { currency: "eur", unit_amount: z.betragCent, product_data: { name: z.beschreibung || "Tattoo-Projekt", description: `${studio.firma}${anzahlung ? " · Anzahlung" : ""}` } } }],
-    customer_email: z.email || undefined,
-    custom_text: anzahlung ? { submit: { message: ("Anzahlungsbedingungen: " + anzahlungsbedingungen(studio)).slice(0, 1200) } } : undefined,
+    mode: "payment", locale: "de", client_reference_id: z.id, payment_method_types: zahlarten,
+    line_items: [{ quantity: 1, price_data: { currency: "eur", unit_amount: z.betragCent, product_data: artikel } }],
+    ...(customer ? { customer, customer_update: { name: "auto", address: "auto" } } : { customer_email: z.email || undefined, customer_creation: "always" }),
+    billing_address_collection: "required",
+    phone_number_collection: { enabled: true },
+    custom_text: anzahlung ? { submit: { message: ("Anzahlungsbedingungen: " + anzahlungsbedingungen(studio)).slice(0, 1200) } }
+      : ausweichHinweis ? { submit: { message: ausweichHinweis } } : undefined,
     payment_intent_data: {
       ...(plattform ? { application_fee_amount: fee.bruttoCent, on_behalf_of: studio.stripe.accountId, transfer_data: { destination: studio.stripe.accountId }, transfer_group: z.id } : {}),
-      description: `${z.beschreibung || "Tattoo-Projekt"} (${z.kunde || "Kunde"})${anzahlung ? " · Anzahlung" : ""}`,
+      description: `${artikel.name} · ${z.kunde || "Kunde"}`.slice(0, 500),
       metadata: meta,
     },
     metadata: meta,
     success_url: `${CFG.siteUrl}/bezahlt.html?z=${z.id}`,
     cancel_url: `${CFG.siteUrl}/zahlung.html?z=${z.id}&abbruch=1`,
   };
-  const opts = plattform ? {} : { account: studio.stripe.accountId };
   // Logo/Farben des Studios im Checkout (falls im Admin hinterlegt). Lehnt Stripe das Branding ab,
   // läuft die Zahlung ohne – die Kasse darf daran nie scheitern.
   const branding = checkoutBranding(studio);
@@ -196,6 +242,26 @@ export async function checkoutFuer(studio, z) {
   return session.url;
 }
 
+// Nach „Zurück“ aus dem Checkout: Hat Klarna abgelehnt? (Checkout-Sitzung → PaymentIntent → letzter Fehler)
+// Klarna-Fehlercodes seit API 2023-08-16 (docs.stripe.com/changelog/2023-08-16/klarna-payment-failure-error-code):
+// payment_method_customer_decline, payment_method_provider_decline, payment_method_not_available,
+// payment_intent_payment_attempt_expired.
+export async function klarnaVersuch(studio, z) {
+  if (!z.checkoutSessionId || !studio?.stripe?.accountId) return null;
+  const opts = plattformKassiert(studio) ? {} : { account: studio.stripe.accountId };
+  try {
+    const cs = await stripe("GET", `/checkout/sessions/${z.checkoutSessionId}`, null, opts);
+    const piId = typeof cs.payment_intent === "object" ? cs.payment_intent?.id : cs.payment_intent;
+    if (!piId) return null;
+    const pi = await stripe("GET", `/payment_intents/${piId}`, null, opts);
+    const err = pi.last_payment_error;
+    if (!err) return null;
+    const typ = err.payment_method?.type || "";
+    const klarna = typ === "klarna" || /klarna/i.test(err.message || "") || /^payment_method_(customer|provider)_decline$|^payment_method_not_available$/.test(err.code || "");
+    return klarna ? { code: err.code || err.decline_code || "", text: String(err.message || "").slice(0, 200), pi: pi.id } : null;
+  } catch (e) { console.error("Klarna-Abgleich:", e.message); return null; }
+}
+
 // Eingebettetes Bezahlfeld (Payment Element) auf tattoofin.de statt Weiterleitung zum Stripe-Checkout.
 // Gleiche Abwicklung wie checkoutFuer: Provision → Destination Charge (application_fee, on_behalf_of, transfer_data),
 // Kauf/Profi → Direct Charge auf dem Konto des Studios (Stripe-Account-Header, ohne Plattformgebühr).
@@ -208,12 +274,12 @@ export async function bezahlfeldFuer(studio, z) {
   const meta = { tattoofinZahlung: z.id, studioId: studio.id };
   // Bestehenden, noch offenen PaymentIntent wiederverwenden (Kunde lädt die Seite neu), sonst neu anlegen
   if (z.paymentIntentId && z.clientSecret && z.betragFuerPi === z.betragCent) {
-    return { clientSecret: z.clientSecret, stripeAccount: plattform ? null : studio.stripe.accountId };
+    return { clientSecret: z.clientSecret, stripeAccount: plattform ? null : studio.stripe.accountId, zahlarten: zahlartenFuer(z) };
   }
   const pi = await stripe("POST", "/payment_intents", {
-    amount: z.betragCent, currency: "eur", payment_method_types: CFG.zahlarten,
-    description: `${z.beschreibung || "Tattoo-Projekt"} (${z.kunde || "Kunde"})${anzahlung ? " · Anzahlung" : ""}`,
-    receipt_email: z.email || undefined, metadata: meta,
+    amount: z.betragCent, currency: "eur", payment_method_types: zahlartenFuer(z),
+    description: `${artikelText(studio, z).name} · ${z.kunde || "Kunde"}`.slice(0, 500),
+    receipt_email: z.email || undefined, metadata: z.art === "gutschein" ? { ...meta, typ: "gutschein" } : meta,
     ...(plattform ? { application_fee_amount: fee.bruttoCent, on_behalf_of: studio.stripe.accountId, transfer_data: { destination: studio.stripe.accountId }, transfer_group: z.id } : {}),
   }, { idempotencyKey: `pi-${z.id}-${z.betragCent}`, ...(plattform ? {} : { account: studio.stripe.accountId }) });
   z.paymentIntentId = pi.id;
@@ -224,7 +290,7 @@ export async function bezahlfeldFuer(studio, z) {
   z.gebuehrNettoCent = fee.nettoCent;
   z.gebuehrBruttoCent = fee.bruttoCent;
   await saveZahlung(z);
-  return { clientSecret: pi.client_secret, stripeAccount: plattform ? null : studio.stripe.accountId };
+  return { clientSecret: pi.client_secret, stripeAccount: plattform ? null : studio.stripe.accountId, zahlarten: zahlartenFuer(z) };
 }
 
 const objId = (x) => (x && typeof x === "object" ? x.id : x || "");
@@ -248,8 +314,15 @@ export async function zahlungBezahlt(z, account) {
   z.bezahltAm = now();
   delete z.clientSecret;
   await saveZahlung(z);
+  // Gutschein: Code vergeben + PDF an den Käufer (statt der normalen Zahlungsbestätigung)
+  if (z.art === "gutschein") await gutscheinAusstellen(s, z);
+  // Ausweg nach Klarna-Ablehnung: Anzahlung bezahlt → am ursprünglichen Link vermerken
+  if (z.ausweichVon) {
+    const orig = await getZahlung(s.id, z.ausweichVon);
+    if (orig) { orig.ausweich = { ...(orig.ausweich || {}), anzahlungId: z.id, bezahltAm: z.bezahltAm, betragCent: z.betragCent }; await saveZahlung(orig); }
+  }
   await notify(s, mails.zahlungEingegangen(s, z));
-  if (z.email) await notify(s, mails.zahlungKunde(s, z), z.email);
+  if (z.email && z.art !== "gutschein") await notify(s, mails.zahlungKunde(s, z), z.email);
   await log("kundenzahlung", { studioId: s.id, zahlungId: z.id, betragCent: z.betragCent, gebuehrBruttoCent: z.gebuehrBruttoCent, stripeGebuehrCent: z.stripeGebuehrCent });
 }
 

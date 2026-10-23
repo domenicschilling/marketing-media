@@ -46,11 +46,12 @@
     if (!D) return;
     var teil = (location.hash || "#start").slice(1).split("/");
     if (["start", "zahlungen", "geld", ""].indexOf(teil[0]) >= 0) await frisch(15000);
+    if (teil[0] === "gutscheine") await frisch(0);
     if (teil[0] === "zahlung") await frisch(D.zahlungen.some(function (z) { return z.id === teil[1]; }) ? 3000 : 0);
     var h = (location.hash || "#start").slice(1).split("/"), v = h[0] || "start", par = h[1];
     if (!document.querySelector('[data-view="' + v + '"]')) v = "start";
     document.querySelectorAll("[data-view]").forEach(function (s) { s.classList.toggle("hidden", s.dataset.view !== v); });
-    var tab = { zahlung: "zahlungen", einrichtung: "start", recht: "mehr", extras: "mehr", konto: "mehr", einstellungen: "mehr", werbung: "mehr", video: "mehr" }[v] || v;
+    var tab = { zahlung: "zahlungen", gutschein: "start", gutscheine: "start", einrichtung: "start", recht: "mehr", extras: "mehr", konto: "mehr", einstellungen: "mehr", werbung: "mehr", video: "mehr" }[v] || v;
     document.querySelectorAll("#tabbar a").forEach(function (a) { a.classList.toggle("on", a.dataset.tab === tab); });
     window.scrollTo(0, 0);
     (ANSICHT[v] || function () {})(par);
@@ -58,7 +59,7 @@
   window.addEventListener("hashchange", route);
 
   var ANSICHT = {
-    start: start, link: linkForm, zahlungen: zahlungen, zahlung: zahlungDetail, geld: geld, werbung: werbung,
+    start: start, link: linkForm, gutschein: gutscheinForm, gutscheine: gutscheine, zahlungen: zahlungen, zahlung: zahlungDetail, geld: geld, werbung: werbung,
     mehr: mehr, einrichtung: einrichtung, recht: recht, extras: extras, konto: konto, einstellungen: einstellungen,
   };
 
@@ -136,6 +137,7 @@
   function liste(l) {
     return '<ul class="zl">' + l.map(function (z) {
       var nachweis = z.leistung ? " · ✍️" : "";
+      if (z.art === "gutschein") nachweis += z.gutschein && z.gutschein.code ? " · 🎁 " + e(z.gutschein.code) : " · 🎁";
       return '<li><a href="#zahlung/' + e(z.id) + '"><span class="wer"><b>' + e(z.kunde || "Kunde") + "</b><small>" + e(z.beschreibung || "") + " · " + dat(z.bezahltAm || z.createdAt) + nachweis + '</small></span><span class="betrag">' + euro(z.betragCent, true) +
         '<small><span class="chip ' + e(z.status) + '">' + e(STATUS[z.status] || z.status) + "</span></small></span></a></li>";
     }).join("") + "</ul>";
@@ -193,6 +195,9 @@
       ["Erstellt", dat(z.createdAt)], bez ? ["Bezahlt am", dat(z.bezahltAm)] : null, z.zahlartText ? ["Zahlart", e(z.zahlartText)] : null,
       prov() && bez ? ["Tattoofin " + D.studio.provisionProzent + " %", euro(tf, true)] : null, prov() && bez ? ["An dich", euro(an(z), true)] : null,
       z.erstattetCent ? ["Erstattet", euro(z.erstattetCent, true)] : null, z.email ? ["E-Mail", e(z.email)] : null].filter(Boolean);
+    if (z.art === "gutschein") return gutscheinDetail(z, box, zeilen, bez, zl);
+    if (z.klarnaAbgelehnt) zeilen.push(["Klarna", "hat am " + dat(z.klarnaAbgelehnt.am) + " nicht zugestimmt" + (z.ausweich && z.ausweich.anzahlungId ? " · Kunde hat stattdessen eine Anzahlung gewählt" + (z.ausweich.bezahltAm ? " (" + euro(z.ausweich.betragCent, true) + " bezahlt)" : "") : "")]);
+    if (z.hinweis) zeilen.push(["Hinweis", e(z.hinweis)]);
     var nachweise = '<div class="card-a"><h2>Nachweise</h2>' +
       zeile(Boolean(z.kundeBestaetigt), "Beim Bezahlen bestätigt", z.kundeBestaetigt ? "Betrag und Projekt, am " + dat(z.kundeBestaetigt.am) : "Passiert automatisch, wenn dein Kunde bezahlt.") +
       (anz ? zeile(Boolean(z.bedingungen), "Anzahlungsbedingungen bestätigt", z.bedingungen ? "am " + dat(z.bedingungen.akzeptiertAm) : "Passiert automatisch beim Bezahlen.") : "") +
@@ -223,6 +228,73 @@
       catch (err) { toast(err.message, true); }
     };
   }
+  // ---------- Gutscheine ----------
+  var GS_STATUS = { offen: "noch nicht bezahlt", gueltig: "gültig", eingeloest: "eingelöst", abgelaufen: "abgelaufen", erstattet: "erstattet", storniert: "storniert" };
+  function gsChip(z) { var st = (z.gutschein && z.gutschein.status) || "offen"; return '<span class="chip ' + e(st) + '">' + e(GS_STATUS[st] || st) + "</span>"; }
+  function gutscheinDetail(z, box, zeilen, bez, zl) {
+    var g = z.gutschein || {}, st = g.status || "offen";
+    var reihen = [["Wert", euro(z.betragCent, true)], ["Käufer", e(z.kunde || "") + (z.email ? "<br><small>" + e(z.email) + "</small>" : "")], g.empfaenger ? ["Für", e(g.empfaenger)] : null, g.nachricht ? ["Nachricht", e(g.nachricht)] : null,
+      ["Erstellt", dat(z.createdAt)], g.ausgestelltAm ? ["Ausgestellt", dat(g.ausgestelltAm)] : null, g.gueltigBis ? ["Gültig bis", dat(g.gueltigBis)] : null,
+      g.eingeloestAm ? ["Eingelöst", dat(g.eingeloestAm) + (g.einloeseNotiz ? " · " + e(g.einloeseNotiz) : "")] : null, g.gesendetAm ? ["Per E-Mail", "gesendet am " + dat(g.gesendetAm)] : null,
+      prov() && bez ? ["Tattoofin " + D.studio.provisionProzent + " %", euro(Math.max(0, (z.gebuehrBruttoCent || 0) - (z.gebuehrErstattetCent || 0)), true)] : null].filter(Boolean);
+    var akt = "";
+    if (z.status === "offen") akt = '<div class="row-a"><a class="btn wa small" target="_blank" rel="noopener" href="https://wa.me/?text=' + encodeURIComponent("Hier ist dein Link für den Gutschein: " + zl) + '">WhatsApp</a><button class="btn dark small" data-copytext="' + e(zl) + '">Link kopieren</button><button class="btn ghost small" id="z-storno">Stornieren</button></div>';
+    if (st === "gueltig" || st === "abgelaufen") akt += '<button class="btn gold big w100" id="gs-einloesen" style="margin-top:10px">Als eingelöst markieren</button>';
+    if (st === "eingeloest") akt += '<button class="btn ghost small" id="gs-zurueck" style="margin-top:10px">Einlösung zurücknehmen</button>';
+    if (g.code) akt += '<div class="row-a" style="margin-top:10px"><a class="btn dark small" target="_blank" href="/api/portal/gutschein/' + e(z.id) + '/pdf">Gutschein als PDF</a><button class="btn ghost small" id="gs-senden">Nochmal per E-Mail senden</button></div>';
+    box.innerHTML = '<div class="detail-kopf">' + gsChip(z) + '<div class="amt">' + euro(z.betragCent, true) + "</div><b>🎁 Gutschein" + (g.code ? ' · <span class="gs-code-a">' + e(g.code) + "</span>" : "") + "</b></div>" +
+      '<div class="card-a"><table class="tbl-a">' + reihen.map(function (r) { return "<tr><th>" + r[0] + "</th><td>" + r[1] + "</td></tr>"; }).join("") + "</table>" + akt + "</div>" +
+      '<p class="muted klein">Du bist Aussteller des Gutscheins. Er gilt für alle Leistungen in deinem Studio bis zum angegebenen Datum. Beim Termin Code prüfen und als eingelöst markieren.</p>';
+    var nachladen = async function () { D = await TF.api("/api/portal"); geladenAm = Date.now(); zahlungDetail(z.id); };
+    var st0 = $("z-storno"); if (st0) st0.onclick = async function () { if (!confirm("Gutschein-Link stornieren?")) return; try { await TF.api("/api/portal/zahlung/" + z.id, { method: "DELETE" }); toast("Storniert."); nachladen(); } catch (err) { toast(err.message, true); } };
+    var ei = $("gs-einloesen"); if (ei) ei.onclick = async function () {
+      if (!confirm("Gutschein " + g.code + " über " + euro(z.betragCent, true) + " als eingelöst markieren?" + (st === "abgelaufen" ? " Achtung: Das Gültigkeitsdatum ist schon vorbei." : ""))) return;
+      ei.disabled = true;
+      try { await TF.api("/api/portal/gutschein/" + z.id + "/einloesen", { body: {} }); toast("Als eingelöst markiert ✓"); nachladen(); } catch (err) { ei.disabled = false; toast(err.message, true); }
+    };
+    var zu = $("gs-zurueck"); if (zu) zu.onclick = async function () { if (!confirm("Einlösung zurücknehmen? Der Gutschein ist dann wieder gültig.")) return; try { await TF.api("/api/portal/gutschein/" + z.id + "/einloesen", { method: "DELETE" }); toast("Zurückgenommen."); nachladen(); } catch (err) { toast(err.message, true); } };
+    var se = $("gs-senden"); if (se) se.onclick = async function () { se.disabled = true; try { var r = await TF.api("/api/portal/gutschein/" + z.id + "/senden", { body: {} }); toast(r.gesendet ? "Gutschein erneut gesendet an " + z.email : "Versand verzögert, wir versuchen es automatisch weiter.", !r.gesendet); } catch (err) { toast(err.message, true); } se.disabled = false; };
+  }
+  function gutscheinForm() {
+    var s = D.studio, g = $("gs-gesperrt");
+    g.innerHTML = s.kannKassieren ? "" : '<div class="card-a"><b>Erst noch das Zahlungskonto.</b><p class="klein muted">Sobald Stripe dein Konto freigegeben hat, kannst du Gutscheine verkaufen.</p></div>';
+    $("g-btn").disabled = !s.kannKassieren;
+    gsFee();
+  }
+  function gsFee() {
+    var c = betragCent($("g-betrag").value);
+    $("g-fee").innerHTML = !c ? "" : prov() ? "Du bekommst <b>" + euro(c - Math.round(c * D.studio.provisionProzent / 100), true) + "</b> · Tattoofin " + D.studio.provisionProzent + " % (alles inklusive)" : "Die Kartengebühr zahlst du direkt an Stripe.";
+  }
+  $("g-betrag").addEventListener("input", gsFee);
+  $("f-gs").addEventListener("submit", async function (ev) {
+    ev.preventDefault();
+    var f = ev.target, b = $("g-btn"); b.disabled = true; b.textContent = "Einen Moment …";
+    try {
+      var r = await TF.api("/api/portal/zahlung", { body: { art: "gutschein", betrag: f.betrag.value, kunde: f.kunde.value, email: f.email.value, empfaenger: f.empfaenger.value, nachricht: f.nachricht.value } });
+      var wa = "https://wa.me/?text=" + encodeURIComponent(r.whatsappText);
+      $("g-out").innerHTML = '<div class="link-ok"><h2>✓ Gutschein-Link über ' + euro(r.zahlung.betragCent, true) + '</h2><div class="qr" id="g-qr"></div>' +
+        '<p class="klein muted">Käufer ist da? QR-Code scannen lassen. Sonst per WhatsApp schicken. Nach dem Bezahlen bekommt er den Gutschein mit Code per E-Mail.</p><a class="btn wa big w100" target="_blank" rel="noopener" href="' + e(wa) + '">Per WhatsApp schicken</a>' +
+        '<div class="row-a" style="justify-content:center"><button class="btn dark small" data-copytext="' + e(r.link) + '">Link kopieren</button><button class="btn ghost small" id="g-neu">Noch einen Gutschein</button></div></div>';
+      qr($("g-qr"), r.link);
+      f.classList.add("hidden");
+      $("g-neu").onclick = function () { f.reset(); f.classList.remove("hidden"); $("g-out").innerHTML = ""; gsFee(); };
+      D = await TF.api("/api/portal"); geladenAm = Date.now();
+    } catch (err) { toast(err.message, true); }
+    b.disabled = !D.studio.kannKassieren; b.textContent = "Gutschein-Link erstellen";
+  });
+  function gutscheine() {
+    var l = D.zahlungen.filter(function (z) { return z.art === "gutschein" && z.status !== "storniert"; });
+    $("gs-liste").innerHTML = '<div class="card-a">' + (l.length ? '<ul class="zl">' + l.map(function (z) {
+      var g = z.gutschein || {};
+      return '<li><a href="#zahlung/' + e(z.id) + '"><span class="wer"><b>' + e(g.empfaenger || z.kunde || "Gutschein") + "</b><small>" + (g.code ? '<span class="gs-code-a">' + e(g.code) + "</span> · " : "") + "von " + e(z.kunde || "") + " · " + dat(g.ausgestelltAm || z.createdAt) + '</small></span><span class="betrag">' + euro(z.betragCent, true) + "<small>" + gsChip(z) + "</small></span></a></li>";
+    }).join("") + "</ul>" : '<p class="leer">Noch keine Gutscheine. Perfekt für Geburtstage und Weihnachten.</p>') + "</div>";
+  }
+  $("gs-suche-btn").onclick = async function () {
+    var c = $("gs-suche").value.trim(); if (!c) return;
+    try { var z = await TF.api("/api/portal/gutschein-code?code=" + encodeURIComponent(c)); location.hash = "#zahlung/" + z.id; }
+    catch (err) { $("gs-treffer").innerHTML = '<p class="klein" style="color:var(--red)">' + e(err.message) + "</p>"; }
+  };
+
   function zeile(ok, titel, text) { return '<div class="nachweis-ok"><span class="ic">' + (ok ? "✅" : "⬜") + "</span><span><b>" + e(titel) + '</b><br><span class="muted">' + text + "</span></span></div>"; }
 
   // ---------- Geld ----------
@@ -477,7 +549,11 @@
     stripeSitzung().then(function (r) { if (r.modus === "ansicht") { box.innerHTML = '<p class="leer">' + e(r.hinweis) + "</p>"; return; } TFStripe.zeige(box, "account-management", { firma: s.firma, adresse: s.strasse + ", " + s.plz + " " + s.ort }); }).catch(function (err) { box.innerHTML = '<p class="leer">' + e(err.message) + "</p>"; });
   }
 
-  function einstellungen() { $("k-email").value = D.studio.benachrichtigung.email || ""; $("k-anz").value = D.studio.anzahlungsbedingungen || ""; }
+  function einstellungen() {
+    $("k-email").value = D.studio.benachrichtigung.email || ""; $("k-anz").value = D.studio.anzahlungsbedingungen || "";
+    var aw = D.studio.ausweichAnzahlung || {}; $("k-aw-an").checked = Boolean(aw.an); $("k-aw-pr").value = aw.prozent || 30;
+  }
+  $("k-aw-save").onclick = async function () { try { D.studio = await TF.api("/api/portal/kontakt", { method: "PATCH", body: { ausweichAnzahlung: { an: $("k-aw-an").checked, prozent: $("k-aw-pr").value } } }); einstellungen(); toast("Gespeichert."); } catch (err) { toast(err.message, true); } };
   $("k-anz-save").onclick = async function () { try { D.studio = await TF.api("/api/portal/kontakt", { method: "PATCH", body: { anzahlungsbedingungen: $("k-anz").value } }); einstellungen(); toast("Anzahlungsbedingungen gespeichert."); } catch (err) { toast(err.message, true); } };
   $("k-save").onclick = async function () { try { D.studio = await TF.api("/api/portal/kontakt", { method: "PATCH", body: { email: $("k-email").value } }); toast("Gespeichert."); } catch (err) { toast(err.message, true); } };
   $("logout").onclick = async function () { await TF.api("/api/logout", { method: "POST" }); location.href = "/login.html"; };

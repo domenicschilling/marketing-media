@@ -36,7 +36,8 @@ async function perResend(msg) {
   const r = await fetch(process.env.RESEND_API_BASE || "https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: "Bearer " + process.env.RESEND_API_KEY, "Content-Type": "application/json" },
-    body: JSON.stringify({ ...msg, to: [].concat(msg.to), bcc: msg.bcc ? [].concat(msg.bcc) : undefined }),
+    body: JSON.stringify({ ...msg, to: [].concat(msg.to), bcc: msg.bcc ? [].concat(msg.bcc) : undefined,
+      attachments: msg.attachments?.length ? msg.attachments.map((a) => ({ filename: a.filename, content: a.content, content_type: a.contentType })) : undefined }),
     signal: AbortSignal.timeout(15000),
   });
   if (!r.ok) throw new Error("Resend " + r.status + ": " + (await r.text()).slice(0, 300));
@@ -49,23 +50,28 @@ async function perSmtp(msg) {
     secure: Number(process.env.SMTP_PORT) === 465,
     auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
   });
-  await t.sendMail({ from: msg.from, to: msg.to, bcc: msg.bcc, subject: msg.subject, html: msg.html, text: msg.text, replyTo: msg.reply_to });
+  await t.sendMail({
+    from: msg.from, to: msg.to, bcc: msg.bcc, subject: msg.subject, html: msg.html, text: msg.text, replyTo: msg.reply_to,
+    attachments: msg.attachments?.map((a) => ({ filename: a.filename, content: a.content, encoding: "base64", contentType: a.contentType })),
+  });
 }
 
-async function sendeEinmal({ to, subject, html, text, bcc, replyTo }) {
-  const msg = { from: CFG.mailFrom, to, subject, html, text, bcc, reply_to: replyTo || CFG.mailReplyTo || undefined };
+// attachments: [{ filename, content (Base64), contentType }] – z. B. Gutschein-PDF
+async function sendeEinmal({ to, subject, html, text, bcc, replyTo, attachments }) {
+  const msg = { from: CFG.mailFrom, to, subject, html, text, bcc, reply_to: replyTo || CFG.mailReplyTo || undefined, attachments: attachments?.length ? attachments : undefined };
+  const anhaenge = attachments?.length ? attachments.map((a) => a.filename) : undefined;
   if (CFG.vorschau) {
     // Vorschau: nie echte E-Mails verschicken. Die Mail landet nur im Vorschau-Postfach (/vorschau.html).
     console.log(`[mail/vorschau] an ${to}: ${subject}`);
-    return protokolliere({ to, subject, html, weg: "vorschau" });
+    return protokolliere({ to, subject, html, weg: "vorschau", anhaenge });
   }
   const wege = versandwege();
-  if (!wege.length) { console.log(`[mail] an ${to}: ${subject}`); return protokolliere({ to, subject, html, weg: "log" }); }
+  if (!wege.length) { console.log(`[mail] an ${to}: ${subject}`); return protokolliere({ to, subject, html, weg: "log", anhaenge }); }
   const fehler = [];
   for (const weg of wege) {
     try {
       await (weg === "resend" ? perResend(msg) : perSmtp(msg));
-      return protokolliere({ to, subject, html, weg, ...(fehler.length ? { rueckfall: fehler.join(" | ").slice(0, 300) } : {}) });
+      return protokolliere({ to, subject, html, weg, anhaenge, ...(fehler.length ? { rueckfall: fehler.join(" | ").slice(0, 300) } : {}) });
     } catch (e) {
       console.error(`[mail/${weg}] Fehler`, e.message);
       fehler.push(`${weg}: ${e.message}`);
@@ -76,8 +82,9 @@ async function sendeEinmal({ to, subject, html, text, bcc, replyTo }) {
   return text2 || "Fehler";
 }
 
-async function protokolliere({ to, subject, html, weg, rueckfall }) {
-  await store.set(`mail/${new Date().toISOString()}-${Math.random().toString(36).slice(2, 6)}`, { to, subject, html, weg, rueckfall, at: new Date().toISOString() });
+async function protokolliere({ to, subject, html, weg, rueckfall, anhaenge }) {
+  // Anhänge nur mit Dateinamen protokollieren (Inhalt nicht speichern)
+  await store.set(`mail/${new Date().toISOString()}-${Math.random().toString(36).slice(2, 6)}`, { to, subject, html, weg, rueckfall, anhaenge, at: new Date().toISOString() });
   return true;
 }
 

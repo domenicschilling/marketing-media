@@ -188,8 +188,16 @@ export function createSim({ load, save, pageBase, webhook }) {
         if (method === "GET") return { html: seite("Stripe (Test)", `
           <h2>Stripe Testkasse</h2><p>Modus: <b>${s.mode}</b>${s.amount_total ? " · Betrag: " + (s.amount_total / 100).toFixed(2) + " €" : ""}</p>
           <form method=post><input type=hidden name=pm value=card><button id=pay style="padding:12px 20px;font-size:16px">${s.mode === "setup" ? "Zahlungsmethode speichern" : "Mit Karte bezahlen"}</button></form>
-          ${s.account || s.payment_intent_data?.transfer_data ? '<form method=post><input type=hidden name=pm value=klarna><button id=pay-klarna style="padding:12px 20px;font-size:16px;margin-top:8px">Mit Klarna (Raten) bezahlen</button></form>' : ""}
+          ${(s.account || s.payment_intent_data?.transfer_data) && [].concat(s.payment_method_types || ["card", "klarna"]).includes("klarna") ? '<form method=post><input type=hidden name=pm value=klarna><button id=pay-klarna style="padding:12px 20px;font-size:16px;margin-top:8px">Mit Klarna (Raten) bezahlen</button></form><form method=post><input type=hidden name=pm value=klarna-abgelehnt><button id=pay-klarna-abgelehnt style="padding:8px 14px;margin-top:8px">Klarna lehnt ab (Test)</button></form>' : ""}
+          ${s.last_error ? `<p id=fehler style="color:#a00">${esc(s.last_error)}</p>` : ""}
           <p><a id=cancel href="${esc(s.cancel_url)}">Abbrechen</a></p>`) };
+        // Klarna lehnt ab (wie live: Checkout bleibt offen, der PaymentIntent trägt den Fehler)
+        if (form.pm === "klarna-abgelehnt") {
+          const pi = { id: rid("pi"), object: "payment_intent", amount: s.amount_total, status: "requires_payment_method", payment_method_types: ["klarna"], metadata: s.payment_intent_data?.metadata || {}, account: s.account, refunded: 0,
+            last_payment_error: { code: "payment_method_provider_decline", message: "The customer's payment was declined by Klarna (Simulation).", payment_method: { type: "klarna" } } };
+          db.paymentIntents[pi.id] = pi; s.payment_intent = pi.id; s.last_error = "Klarna hat die Zahlung abgelehnt. Bitte wähle eine andere Zahlungsart.";
+          return { redirect: `${pageBase}/pay/${s.id}` };
+        }
         s.status = "complete";
         const ziel = s.payment_intent_data?.transfer_data?.destination;
         if (s.mode === "payment" && (s.account || ziel)) {

@@ -58,6 +58,11 @@
   [headers.values]
     X-Robots-Tag = "noindex"
 [[headers]]
+  for = "/gutschein.html"
+  [headers.values]
+    X-Robots-Tag = "noindex"
+    Referrer-Policy = "no-referrer"
+[[headers]]
   for = "/admin.html"
   [headers.values]
     X-Robots-Tag = "noindex"

@@ -114,7 +114,7 @@ window.TFStripe = (function () {
     if (r.simulation) {
       var pm = "card";
       box.innerHTML = '<div class="sim-box">' + TAG.replace("STRIPE-BAUSTEIN", "BEZAHLFELD") +
-        '<div class="seg" role="radiogroup"><label><input type="radio" name="sim-pm" value="card" checked><span>💳 Karte</span></label><label><input type="radio" name="sim-pm" value="klarna"><span>Klarna</span></label></div>' +
+        '<div class="seg" role="radiogroup"><label><input type="radio" name="sim-pm" value="card" checked><span>💳 Karte</span></label>' + (!opts.zahlarten || opts.zahlarten.indexOf("klarna") >= 0 ? '<label><input type="radio" name="sim-pm" value="klarna"><span>Klarna</span></label>' : "") + '</div>' +
         '<div id="sim-card"><label for="sim-nr">Kartennummer</label><input id="sim-nr" autocomplete="off" value="4242 4242 4242 4242"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><label for="sim-ab">Gültig bis</label><input id="sim-ab" autocomplete="off" value="12 / 30"></div><div><label for="sim-cvc">Prüfnummer</label><input id="sim-cvc" autocomplete="off" value="123"></div></div></div>' +
         '<div id="sim-klarna" class="hidden"><p class="klein">Bei Klarna wirst du kurz zu Klarna weitergeleitet und siehst dort, welche Optionen dir angeboten werden (z. B. später bezahlen oder Raten*). Danach kommst du hierher zurück.</p></div>' +
         '<button class="btn gold big w100" id="pay-jetzt">' + e(knopfText) + "</button></div>";

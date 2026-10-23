@@ -21,3 +21,17 @@ body.kunde{padding-bottom:30px}
 /* Studio-Logo im Kopf (im Admin hinterlegt). Dunkle Logos sitzen auf einer Kachel in der Studiofarbe. */
 .studio-logo{display:block;margin:0 auto 10px;max-width:min(260px,70vw);max-height:120px;width:auto;height:auto;border-radius:16px;border:2px solid var(--ink);background:var(--studio-farbe,#111);padding:4px;object-fit:contain}
 .studio-logo.hell{background:#fff}
+/* Gutschein (öffentliche Ansicht /gutschein.html, Kaufseite /zahlung.html bei art „gutschein“) */
+.gs-karte{background:#fff;border:var(--bw) solid var(--ink);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;margin:0 0 16px}
+.gs-band{background:var(--studio-farbe,var(--ink));color:#fff;padding:16px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:5px solid var(--yellow)}
+.gs-band b{font:400 22px/1.1 var(--round)}
+.gs-band span{font:400 24px/1 var(--head);color:var(--yellow);letter-spacing:.04em}
+.gs-inhalt{padding:18px;text-align:center}
+.gs-fuer{font-weight:800;font-size:17px;margin:0 0 4px}
+.gs-betrag{font:400 54px/1 var(--head);color:var(--ink);margin:6px 0}
+.gs-nachricht{font-style:italic;color:var(--muted);margin:8px 0 12px}
+.gs-code{display:inline-block;background:var(--yellow-soft);border:2px dashed var(--yellow-3);border-radius:12px;padding:10px 16px;font:700 22px/1.2 ui-monospace,Menlo,Consolas,monospace;letter-spacing:1px;color:var(--ink);margin:6px 0}
+.gs-daten{font-size:14px;color:var(--muted);margin:10px 0 0}
+.ausweg{display:grid;gap:10px;margin:4px 0 0}
+.ausweg .btn{display:block;width:100%;max-width:100%;white-space:normal;text-align:center;height:auto;line-height:1.25;padding-top:12px;padding-bottom:12px}
+.ausweg small{display:block;font-weight:500;font-size:13px;opacity:.85}

@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dein Gutschein</title><meta name="robots" content="noindex"><meta name="theme-color" content="#1f3d5c">
+<link rel="icon" href="/favicon.png" type="image/png">
+<link rel="stylesheet" href="/css/site.css"><link rel="stylesheet" href="/css/app.css"><link rel="stylesheet" href="/css/kunde.css">
+</head><body class="app kunde">
+<main class="app-main">
+  <div id="alert"></div>
+  <div id="gs" class="hidden">
+    <div class="gs-karte">
+      <div class="gs-band" id="gs-band"><b id="gs-firma"></b><span>Gutschein</span></div>
+      <div class="gs-inhalt">
+        <p class="gs-fuer hidden" id="gs-fuer"></p>
+        <div class="gs-betrag" id="gs-betrag"></div>
+        <div class="muted klein" id="gs-art"></div>
+        <p class="gs-nachricht hidden" id="gs-nachricht"></p>
+        <div><small class="muted">Gutschein-Code</small></div>
+        <div class="gs-code" id="gs-code"></div>
+        <p class="gs-daten" id="gs-daten"></p>
+        <p class="gs-daten" id="gs-ort"></p>
+        <div id="gs-status"></div>
+      </div>
+    </div>
+    <a class="btn gold big w100" id="gs-pdf" target="_blank" rel="noopener">Gutschein als PDF (zum Ausdrucken)</a>
+    <p class="fuss">Bitte den Code beim Termin angeben. Der Gutschein wurde vom Studio ausgestellt und über Tattoofin verkauft. Fragen zum Termin klärst du direkt mit dem Studio.</p>
+  </div>
+  <p class="powered"><img src="/assets/figur.png" alt=""> Bereitgestellt von Tattoofin</p>
+</main>
+<script src="/js/common.js"></script>
+<script>
+(async function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var t = new URLSearchParams(location.search).get("t") || "";
+  try {
+    var d = await TF.api("/api/gutschein?t=" + encodeURIComponent(t)), g = d.gutschein, s = d.studio;
+    document.title = "Gutschein – " + s.firma;
+    $("gs-firma").textContent = s.firma;
+    if (s.branding && s.branding.farbe) $("gs-band").style.setProperty("--studio-farbe", s.branding.farbe);
+    if (g.empfaenger) { $("gs-fuer").textContent = "für " + g.empfaenger; $("gs-fuer").classList.remove("hidden"); }
+    $("gs-betrag").textContent = TF.euro(g.betragCent, true);
+    $("gs-art").textContent = "Wertgutschein · für alle Leistungen bei " + s.firma;
+    if (g.nachricht) { $("gs-nachricht").textContent = "„" + g.nachricht + "“"; $("gs-nachricht").classList.remove("hidden"); }
+    $("gs-code").textContent = g.code;
+    $("gs-daten").textContent = "Ausgestellt am " + TF.datum(g.ausgestelltAm) + " · Gültig bis " + TF.datum(g.gueltigBis);
+    $("gs-ort").textContent = "Einlösbar bei " + [s.firma, s.strasse, [s.plz, s.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ");
+    var st = { eingeloest: ["Eingelöst am " + TF.datum(g.eingeloestAm), "info"], abgelaufen: ["Abgelaufen", "err"], erstattet: ["Erstattet, nicht mehr gültig", "err"] }[g.status];
+    if (st) $("gs-status").innerHTML = '<div class="alert-a ' + st[1] + '" style="margin-top:12px">' + TF.esc(st[0]) + "</div>";
+    $("gs-pdf").href = "/api/gutschein?t=" + encodeURIComponent(t) + "&pdf=1";
+    $("gs").classList.remove("hidden");
+  } catch (err) { $("alert").innerHTML = '<div class="alert-a err">' + TF.esc(err.message) + "</div>"; }
+})();
+</script>
+</body></html>

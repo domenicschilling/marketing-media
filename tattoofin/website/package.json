@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@netlify/blobs": "^11.1.4",
-    "nodemailer": "^7.0.10"
+    "nodemailer": "^7.0.10",
+    "pdf-lib": "^1.17.1"
   }
 }
