@@ -140,9 +140,13 @@ export default handler(async (req) => {
     if (aktion === "konto" && req.method === "POST") {
       if (!s.stripe?.accountId) return fail("Kein Stripe-Konto verbunden");
       const vorher = { freigegeben: Boolean(s.stripe.chargesEnabled), auszahlungen: Boolean(s.stripe.payoutsEnabled), angaben: Boolean(s.stripe.detailsSubmitted) };
-      await kontoAbgleichen(s, await stripe("GET", "/accounts/" + s.stripe.accountId));
+      const acct = await stripe("GET", "/accounts/" + s.stripe.accountId);
+      await kontoAbgleichen(s, acct);
       await log("admin-konto-abgleich", { admin: adminName(req), studioId: s.id });
-      return json({ vorher, nachher: { freigegeben: Boolean(s.stripe.chargesEnabled), auszahlungen: Boolean(s.stripe.payoutsEnabled), angaben: Boolean(s.stripe.detailsSubmitted) }, offen: s.stripe.offen, abgeglichenAm: s.stripe.abgeglichenAm, accountId: s.stripe.accountId });
+      // Nur lesen: Zahlungsfähigkeiten (Karte/Klarna) und Geschäftsprofil, wie Stripe/Klarna das Studio sehen
+      const bp = acct.business_profile || {};
+      return json({ vorher, nachher: { freigegeben: Boolean(s.stripe.chargesEnabled), auszahlungen: Boolean(s.stripe.payoutsEnabled), angaben: Boolean(s.stripe.detailsSubmitted) }, offen: s.stripe.offen, abgeglichenAm: s.stripe.abgeglichenAm, accountId: s.stripe.accountId,
+        faehigkeiten: acct.capabilities || {}, profil: { name: bp.name || null, mcc: bp.mcc || null, beschreibung: bp.product_description || null, url: bp.url || null }, abrechnungstext: acct.settings?.payments?.statement_descriptor || null });
     }
   }
 
