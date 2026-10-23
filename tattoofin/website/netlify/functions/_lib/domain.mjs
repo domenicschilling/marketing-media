@@ -81,7 +81,9 @@ export async function aufstellerCheckout(s) {
   if (!s.stripe?.customerId) { const cus = await ensureCustomer(s); s.stripe = { ...(s.stripe || {}), customerId: cus.id }; }
   const name = "QR-Aufsteller aus Holz";
   const text = `Graviert mit QR-Code deiner Zahlseite, ${s.aufsteller?.variante === "logo" ? "mit deinem Logo" : "mit Studioname"}, Holz ${holzText(s.aufsteller?.holz)}. Lieferung an: ${lieferadresse(s)}`.slice(0, 480);
+  // Klarna ist für B2B-Käufe laut Klarna-Regeln nicht erlaubt (Studios kaufen als Unternehmer).
   const session = await stripe("POST", "/checkout/sessions", {
+    excluded_payment_method_types: ["klarna"],
     mode: "payment", customer: s.stripe.customerId, locale: "de", client_reference_id: s.id,
     branding_settings: TATTOOFIN_BRANDING,
     line_items: [{ quantity: 1, tax_rates: [await taxRateId()], price_data: { currency: "eur", unit_amount: CFG.aufstellerPreisNetto, product_data: { name, description: text } } }],
