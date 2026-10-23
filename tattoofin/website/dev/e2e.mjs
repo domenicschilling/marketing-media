@@ -17,6 +17,36 @@ const shots = process.argv[2] || path.join(os.tmpdir(), "tf-e2e");
 const handyShots = process.argv[3] || path.join(shots, "handy");
 fs.mkdirSync(shots, { recursive: true }); fs.mkdirSync(handyShots, { recursive: true });
 const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "tf-data-"));
+// PayPal-Nachbau (Orders API v2, OAuth, Webhook-Prüfung) – vor startDev, weil die Konfiguration beim Laden gelesen wird
+const ppOrders = {};
+{
+  const http = await import("node:http");
+  http.createServer((req, res) => {
+    let b = ""; req.on("data", (c) => (b += c)); req.on("end", () => {
+      const send = (code, o) => { res.writeHead(code, { "content-type": "application/json" }); res.end(JSON.stringify(o)); };
+      const u = req.url;
+      if (u === "/mock/orders") return send(200, ppOrders);
+      if (u === "/v1/oauth2/token") return req.headers.authorization === "Basic " + Buffer.from("test-client:test-secret").toString("base64") ? send(200, { access_token: "A21", expires_in: 3600 }) : send(401, { error: "invalid_client" });
+      if (req.headers.authorization !== "Bearer A21") return send(401, { name: "AUTHENTICATION_FAILURE" });
+      const j = b ? JSON.parse(b) : {};
+      if (u === "/v1/notifications/verify-webhook-signature") return send(200, { verification_status: j.transmission_sig === "gut" && j.webhook_id === "WH-TEST" && j.webhook_event?.id ? "SUCCESS" : "FAILURE" });
+      if (u === "/v2/checkout/orders" && req.method === "POST") {
+        if (/fehler/.test(j.purchase_units?.[0]?.payee?.email_address || "")) return send(422, { name: "UNPROCESSABLE_ENTITY", details: [{ issue: "PAYEE_ACCOUNT_INVALID", description: "Payee account is invalid." }] });
+        const id = "PP" + Math.random().toString(36).slice(2, 12).toUpperCase();
+        ppOrders[id] = { ...j, id, status: "CREATED" };
+        return send(201, { id, status: "CREATED" });
+      }
+      const m = u.match(/^\/v2\/checkout\/orders\/([^/]+)\/capture$/);
+      if (m && ppOrders[m[1]]) {
+        const o = ppOrders[m[1]], pu = o.purchase_units[0];
+        o.status = "COMPLETED";
+        return send(201, { id: o.id, status: "COMPLETED", payer: { email_address: "kunde@paypal.test" }, purchase_units: [{ reference_id: pu.reference_id, payments: { captures: [{ id: "CAP" + o.id, status: "COMPLETED", amount: pu.amount, custom_id: pu.custom_id }] } }] });
+      }
+      return send(404, { name: "RESOURCE_NOT_FOUND" });
+    });
+  }).listen(12197);
+  Object.assign(process.env, { PAYPAL_CLIENT_ID: "test-client", PAYPAL_CLIENT_SECRET: "test-secret", PAYPAL_API_BASE: "http://localhost:12197", PAYPAL_WEBHOOK_ID: "WH-TEST" });
+}
 await startDev({ port: PORT, mock: true, dataDir, quiet: true });
 
 let ok = 0, fail = 0;
@@ -528,6 +558,57 @@ try {
     check(JSON.stringify(csK.payment_method_types) === '["card"]' && csK.amount_total === 60000 && !st.customers[csK.customer], "„Mit Karte zahlen“: gleicher Betrag, nur Karte (ohne neue Bestätigung, da schon bestätigt)");
     await api(pA, "/api/portal/kontakt", { method: "PATCH", body: { ausweichAnzahlung: { an: false, prozent: 30 } } });
     delete process.env.TF_BEZAHLFELD;
+  }
+
+  // ---------------------------------------------------------------- K4: PayPal (Geld direkt an das PayPal-Konto des Studios)
+  console.log("PayPal: Studio verknüpft Geschäftskonto → Kunde zahlt per PayPal (auch Später bezahlen) → bezahlt, ohne Provision");
+  {
+    check((await (await fetch(`${BASE}/api/pay?s=${slug}`)).json()).studio.paypal === null, "Ohne Verknüpfung kein PayPal auf der Zahlseite");
+    await pA.goto(BASE + "/app.html#einstellungen");
+    await pA.waitForSelector("#k-pp-email");
+    await pA.fill("#k-pp-email", "fehler@paypal.test"); await pA.click("#k-pp-save");
+    await pA.waitForFunction(() => /keine Zahlungen empfangen/.test(document.getElementById("toast").textContent));
+    check(true, "Ungültiges PayPal-Konto wird bei der Prüfung (Testbestellung) abgelehnt");
+    await pA.fill("#k-pp-email", "Studio-PP@example.com"); await pA.fill("#k-pp-id", "abc"); await pA.click("#k-pp-save");
+    await pA.waitForFunction(() => /13 Buchstaben/.test(document.getElementById("toast").textContent));
+    await pA.fill("#k-pp-id", ""); await pA.click("#k-pp-save");
+    await pA.waitForSelector("#pp-status .chip.ok");
+    check((await pA.textContent("#pp-status")).includes("studio-pp@example.com"), "PayPal-Geschäftskonto verknüpft (Händler-ID optional, Format geprüft)");
+    check(mailsAn("domenicschilling@gmail.com").some((m) => m.subject.includes("PayPal verknüpft") && m.subject.includes("ohne Provision")), "Admin-Hinweis: Risikofrei-Studio mit PayPal, vorerst ohne Provision");
+    const ppL = await api(pA, "/api/portal/zahlung", { method: "POST", body: { betrag: "800", kunde: "Paula Pay", email: "paula@example.com", beschreibung: "Unterarm Rose" } });
+    check(/PayPal-Knopf/.test(ppL.data.whatsappText), "WhatsApp-Text nennt PayPal, sobald verknüpft");
+    await pK.goto(`${BASE}/zahlung.html?z=${ppL.data.zahlung.id}`);
+    await pK.waitForSelector("#pp-box:not(.hidden) #pp-sim");
+    check(/oder unten PayPal/.test(await pK.textContent("#raten-hinweis")) && /Ratenzahlung ab 99 €/.test(await pK.textContent("#raten-hinweis")), "Kundenhinweis: Raten mit Klarna oder PayPal");
+    await pK.screenshot({ path: path.join(shots, "kunde-paypal.png"), fullPage: true });
+    await pK.click("#pp-sim");
+    await pK.waitForFunction(() => /Projekt und Betrag/.test(document.getElementById("alert").textContent));
+    check(!Object.values(await (await fetch("http://localhost:12197/mock/orders")).json()).some((x) => x.purchase_units[0].custom_id === ppL.data.zahlung.id), "PayPal-Bestellung erst nach dem Inhalts-Häkchen");
+    await pK.check("#inhalt-ok"); await pK.click("#pp-sim");
+    await pK.waitForURL(/bezahlt\.html/);
+    await pK.waitForFunction(() => /erhalten/.test(document.getElementById("msg").textContent), null, { timeout: 15000 });
+    const orders = Object.values(await (await fetch("http://localhost:12197/mock/orders")).json());
+    const o = orders.find((x) => x.purchase_units[0].custom_id === ppL.data.zahlung.id);
+    check(o?.purchase_units[0].payee?.email_address === "studio-pp@example.com" && o.purchase_units[0].amount.value === "800.00" && o.purchase_units[0].items[0].name === "Tattoo bei Ink Provision – Unterarm Rose" && o.payment_source.paypal.experience_context.shipping_preference === "NO_SHIPPING", "PayPal-Bestellung: Empfänger = PayPal-Konto des Studios, 800,00 €, Artikel „Tattoo bei …“, ohne Versand");
+    det = await admin(`studio/${provId}`);
+    const pz = det.zahlungen.find((z) => z.id === ppL.data.zahlung.id);
+    check(pz.status === "bezahlt" && pz.zahlart === "paypal" && pz.abwicklung === "paypal" && pz.gebuehrBruttoCent === 0 && /ohne Tattoofin-Provision/.test(pz.provisionHinweis || "") && pz.paypal?.captureId, "Zahlung bezahlt per PayPal, ohne Provision (Hinweis intern), Capture gemerkt");
+    check(mailsAn("prov@example.com").some((m) => m.subject.includes("Zahlung eingegangen: 800,00") && m.html.includes("PayPal-Konto")) && mailsAn("paula@example.com").some((m) => m.html.includes("über PayPal bezahlt")), "Mails: Studio (Geld auf PayPal-Konto) + Kundin");
+    const hook = (sig, ev) => fetch(`${BASE}/api/paypal-webhook`, { method: "POST", headers: { "content-type": "application/json", "paypal-transmission-sig": sig, "paypal-transmission-id": "t1", "paypal-transmission-time": new Date().toISOString(), "paypal-cert-url": "https://api.paypal.com/cert", "paypal-auth-algo": "SHA256withRSA" }, body: JSON.stringify(ev) });
+    const ev = { id: "WH-EV-1", event_type: "PAYMENT.CAPTURE.REFUNDED", resource: { id: "RF1", custom_id: pz.id, amount: { value: "800.00", currency_code: "EUR" } } };
+    check((await hook("falsch", ev)).status === 400, "PayPal-Webhook mit falscher Signatur wird abgelehnt");
+    check((await hook("gut", ev)).status === 200 && (await admin(`studio/${provId}`)).zahlungen.find((z) => z.id === pz.id).status === "erstattet", "PayPal-Webhook (geprüft): Erstattung → Status erstattet");
+    const zs = await (await post("/api/pay", { s: slug, betrag: "300", kunde: "Zara", beschreibung: "Handgelenk", inhaltOk: true, zahlweg: "paypal" })).json();
+    const cap = await (await post("/api/paypal/capture", { orderId: zs.paypalOrderId })).json();
+    check(zs.paypalOrderId && cap.status === "bezahlt", "Zahlseite: PayPal-Zahlung mit frei eingegebenem Betrag");
+    check((await (await post("/api/paypal/capture", { orderId: zs.paypalOrderId })).json()).status === "bezahlt", "Doppeltes Abschließen ist harmlos");
+    const gsP = await api(pA, "/api/portal/zahlung", { method: "POST", body: { art: "gutschein", betrag: "50", kunde: "Gus", email: "gus@example.com" } });
+    check((await post("/api/pay", { z: gsP.data.zahlung.id, inhaltOk: true, zahlweg: "paypal" })).status === 409, "Gutschein nicht per PayPal (nur Karte)");
+    await pK.goto(`${BASE}/zahlung.html?z=${gsP.data.zahlung.id}`);
+    await pK.waitForFunction(() => document.getElementById("betrag").textContent.includes("50"));
+    check(await pK.isHidden("#pp-box"), "Gutschein-Seite ohne PayPal-Knopf");
+    const weg = await api(pA, "/api/portal/paypal", { method: "DELETE" });
+    check(weg.data.paypal?.verknuepft === false && (await (await fetch(`${BASE}/api/pay?s=${slug}`)).json()).studio.paypal === null, "PayPal-Verknüpfung lösen → kein PayPal-Knopf mehr");
   }
 
   // ---------------------------------------------------------------- L: Profi + Studio-Satz

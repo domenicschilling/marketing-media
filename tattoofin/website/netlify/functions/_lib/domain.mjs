@@ -322,6 +322,27 @@ export async function zahlungBezahlt(z, account) {
   z.bezahltAm = now();
   delete z.clientSecret;
   await saveZahlung(z);
+  await bezahltMelden(s, z);
+  await log("kundenzahlung", { studioId: s.id, zahlungId: z.id, betragCent: z.betragCent, gebuehrBruttoCent: z.gebuehrBruttoCent, stripeGebuehrCent: z.stripeGebuehrCent });
+}
+
+// PayPal (Geld direkt beim Studio): nach geprüftem Capture als bezahlt markieren. Keine Tattoofin-Provision (vorerst, 23.10.).
+export async function paypalBezahlt(z, cap) {
+  if (z.status === "bezahlt") return;
+  const s = await getStudio(z.studioId);
+  z.paypal = { ...(z.paypal || {}), orderId: cap.orderId, captureId: cap.captureId, zahler: cap.zahler, am: now() };
+  z.zahlart = "paypal"; z.zahlartText = "PayPal";
+  z.abwicklung = "paypal";
+  z.gebuehrNettoCent = 0; z.gebuehrBruttoCent = 0;
+  if (s.modell === "provision") z.provisionHinweis = "PayPal: vorerst ohne Tattoofin-Provision (Entscheidung 23.10.2026)";
+  z.status = "bezahlt";
+  z.bezahltAm = now();
+  await saveZahlung(z);
+  await bezahltMelden(s, z);
+  await log("kundenzahlung-paypal", { studioId: s.id, zahlungId: z.id, betragCent: z.betragCent, captureId: cap.captureId });
+}
+
+async function bezahltMelden(s, z) {
   // Gutschein: Code vergeben + PDF an den Käufer (statt der normalen Zahlungsbestätigung)
   if (z.art === "gutschein") await gutscheinAusstellen(s, z);
   // Ausweg nach Klarna-Ablehnung: Anzahlung bezahlt → am ursprünglichen Link vermerken
@@ -331,7 +352,6 @@ export async function zahlungBezahlt(z, account) {
   }
   await notify(s, mails.zahlungEingegangen(s, z));
   if (z.email && z.art !== "gutschein") await notify(s, mails.zahlungKunde(s, z), z.email);
-  await log("kundenzahlung", { studioId: s.id, zahlungId: z.id, betragCent: z.betragCent, gebuehrBruttoCent: z.gebuehrBruttoCent, stripeGebuehrCent: z.stripeGebuehrCent });
 }
 
 // Provision, die Tattoofin an einer Zahlung endgültig verdient (brutto, inkl. USt.)

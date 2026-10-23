@@ -169,7 +169,9 @@ export const mails = {
       ["Zahlungsart", esc(z.zahlartText || z.zahlart || "")],
       ["Tattoofin " + provisionSatz(s) + " % (alles inklusive)", z.abwicklung === "plattform" ? euro(z.gebuehrBruttoCent) : ""],
       ["Auszahlung an dich", z.abwicklung === "plattform" ? "<b>" + euro(z.betragCent - z.gebuehrBruttoCent) + "</b>" : ""],
-    ]) + p(z.abwicklung === "plattform"
+    ]) + p(z.abwicklung === "paypal"
+      ? "Das Geld ist direkt auf deinem PayPal-Konto. Hat dein Kunde „Später bezahlen“ oder Ratenzahlung gewählt, trägt PayPal das Risiko. Erstattungen machst du direkt in deinem PayPal-Konto."
+      : z.abwicklung === "plattform"
       ? "Stripe überweist den Betrag automatisch auf das Bankkonto deines Studios. Weitere Gebühren fallen für dich nicht an: Die Kosten des Zahlungsanbieters sind in den " + provisionSatz(s) + " % enthalten."
       : "Die Auszahlung auf dein Konto übernimmt Stripe nach deinem Auszahlungsplan. Gebühren des Zahlungsanbieters siehst du im Stripe-Dashboard."),
     cta: "In der App ansehen", ctaUrl: `${CFG.siteUrl}/app.html#zahlungen`,
@@ -188,7 +190,8 @@ export const mails = {
     title: `Danke, ${esc(z.kunde || "")}! Deine Zahlung ist da.`,
     body: p(`${esc(s.firma)} hat deine Zahlung über <b>${euro(z.betragCent)}</b> für <b>${esc(z.beschreibung || "dein Tattoo-Projekt")}</b> erhalten.`) +
       p("Den Beleg des Zahlungsanbieters bekommst du separat. Bei Fragen zu Termin oder Projekt meld dich direkt beim Studio.") +
-      (z.zahlart === "klarna" ? p("Du hast über Klarna bezahlt. Alle Fragen zu Raten oder Fälligkeiten klärst du direkt mit Klarna.") : ""),
+      (z.zahlart === "klarna" ? p("Du hast über Klarna bezahlt. Alle Fragen zu Raten oder Fälligkeiten klärst du direkt mit Klarna.") : "") +
+      (z.zahlart === "paypal" ? p("Du hast über PayPal bezahlt. Fragen zu „Später bezahlen“ oder Ratenzahlung klärst du direkt mit PayPal.") : ""),
     footerNote: `Diese E-Mail wurde im Auftrag von ${esc(s.firma)} über Tattoofin versendet.`,
   }),
 

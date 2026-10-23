@@ -193,7 +193,7 @@
     var anz = z.art === "anzahlung" || z.anzahlung;
     var zeilen = [["Projekt", e(z.beschreibung || "")], z.sitzungen ? ["Sitzungen", e(z.sitzungen)] : null, ["Art", anz ? "Anzahlung" : z.art === "zahlseite" ? "über deine Zahlseite" : "Projektpreis"],
       ["Erstellt", dat(z.createdAt)], bez ? ["Bezahlt am", dat(z.bezahltAm)] : null, z.zahlartText ? ["Zahlart", e(z.zahlartText)] : null,
-      prov() && bez ? ["Tattoofin " + D.studio.provisionProzent + " %", euro(tf, true)] : null, prov() && bez ? ["An dich", euro(an(z), true)] : null,
+      prov() && bez && z.abwicklung !== "paypal" ? ["Tattoofin " + D.studio.provisionProzent + " %", euro(tf, true)] : null, prov() && bez ? ["An dich", euro(an(z), true) + (z.abwicklung === "paypal" ? " (direkt auf dein PayPal-Konto)" : "")] : null,
       z.erstattetCent ? ["Erstattet", euro(z.erstattetCent, true)] : null, z.email ? ["E-Mail", e(z.email)] : null].filter(Boolean);
     if (z.art === "gutschein") return gutscheinDetail(z, box, zeilen, bez, zl);
     if (z.klarnaAbgelehnt) zeilen.push(["Klarna", "hat am " + dat(z.klarnaAbgelehnt.am) + " nicht zugestimmt" + (z.ausweich && z.ausweich.anzahlungId ? " · Kunde hat stattdessen eine Anzahlung gewählt" + (z.ausweich.bezahltAm ? " (" + euro(z.ausweich.betragCent, true) + " bezahlt)" : "") : "")]);
@@ -557,7 +557,23 @@
     stripeSitzung().then(function (r) { if (r.modus === "ansicht") { box.innerHTML = '<p class="leer">' + e(r.hinweis) + "</p>"; return; } TFStripe.zeige(box, "account-management", { firma: s.firma, adresse: s.strasse + ", " + s.plz + " " + s.ort }); }).catch(function (err) { box.innerHTML = '<p class="leer">' + e(err.message) + "</p>"; });
   }
 
+  function ppStatus() {
+    var p = D.studio.paypal || {};
+    $("pp-karte").classList.toggle("hidden", !p.moeglich && !p.verknuepft);
+    $("pp-status").innerHTML = p.verknuepft ? '<p><span class="chip ok">✓ Verknüpft: ' + e(p.email) + (p.merchantId ? " · " + e(p.merchantId) : "") + "</span></p>" : "";
+    $("k-pp-email").value = p.email || ""; $("k-pp-id").value = p.merchantId || "";
+    $("k-pp-weg").classList.toggle("hidden", !p.verknuepft);
+    $("k-pp-save").textContent = p.verknuepft ? "Speichern" : "PayPal verknüpfen";
+  }
+  $("k-pp-save").onclick = async function () {
+    var b = this; b.disabled = true;
+    try { D.studio = await TF.api("/api/portal/paypal", { method: "PATCH", body: { email: $("k-pp-email").value, merchantId: $("k-pp-id").value } }); ppStatus(); toast("PayPal verknüpft ✓"); }
+    catch (err) { toast(err.message, true); }
+    b.disabled = false;
+  };
+  $("k-pp-weg").onclick = async function () { if (!confirm("PayPal-Verknüpfung lösen? Kunden sehen dann keinen PayPal-Knopf mehr.")) return; try { D.studio = await TF.api("/api/portal/paypal", { method: "DELETE" }); ppStatus(); toast("Gelöst."); } catch (err) { toast(err.message, true); } };
   function einstellungen() {
+    ppStatus();
     $("k-email").value = D.studio.benachrichtigung.email || ""; $("k-anz").value = D.studio.anzahlungsbedingungen || "";
     var aw = D.studio.ausweichAnzahlung || {}; $("k-aw-an").checked = Boolean(aw.an); $("k-aw-pr").value = aw.prozent || 30;
   }

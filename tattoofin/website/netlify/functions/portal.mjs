@@ -20,6 +20,8 @@
 //   POST   /api/portal/aufsteller-pruefen  { cs } Rückkehr aus dem Aufsteller-Checkout: Zahlung prüfen (falls der Webhook fehlt)
 //   POST   /api/portal/checkliste          { punkt, erledigt } Einrichtungs-Checkliste (manuelle Punkte)
 //   POST   /api/portal/abmelden            Auf allen Geräten abmelden (Sitzungsversion hochzählen)
+//   PATCH  /api/portal/paypal { email, merchantId? }  PayPal-Geschäftskonto verknüpfen (Prüfung per Testbestellung)
+//   DELETE /api/portal/paypal                       PayPal-Verknüpfung lösen
 //   POST   /api/portal/zahlung { art: "gutschein", betrag, kunde (Käufer), email (Pflicht), empfaenger?, nachricht? }  Gutschein-Zahlungslink
 //   POST   /api/portal/gutschein/:id/einloesen   { notiz? } Gutschein als eingelöst markieren
 //   DELETE /api/portal/gutschein/:id/einloesen   Einlösung zurücknehmen (Versehen)
@@ -35,6 +37,8 @@ import { currentStudio, clearCookie } from "./_lib/auth.mjs";
 import { stripe, dashboardLink, accountSession, ensureConnectedAccount } from "./_lib/stripe.mjs";
 import { notify, notifyAdmin, kuendigungsDatum, connectUrl, darfKassieren, anzahlungsbedingungen, provisionVerdient, kontoAbgleichen, eingebettet, STATUS, aboKuendigen, aufstellerUrl, aufstellerCheckout, aufstellerBezahlt } from "./_lib/domain.mjs";
 import { randomBytes } from "node:crypto";
+import { paypalKontoPruefen, paypalVerknuepft, PP_ID_MUSTER } from "./_lib/paypal.mjs";
+import { paypalAktiv } from "./_lib/config.mjs";
 import { gutscheinStatus, gutscheinPdf, gutscheinSenden, gutscheinUrl, normCode } from "./_lib/gutschein.mjs";
 
 // Extras (Zusatzangebote): nur Anzeige + Anfrage, keine Abrechnung. Preise sind Vorschläge.
@@ -47,11 +51,11 @@ export const EXTRAS = [
 
 // WhatsApp-Text fürs Studio (Zahlungslink Projektpreis): erklärt dem Kunden, dass er für Raten „Klarna“ wählen muss.
 // Fußnote wie in den Studio-Beiträgen (Raten* nur mit Hinweis, kein Versprechen).
-export const RATEN_FUSS = "*Ratenzahlung über Klarna, nach deren Prüfung. Weder wir noch Tattoofin sind Kreditgeber. Achtung! Kreditaufnahme kostet Geld.";
-export const ratenWhatsapp = ({ vorname = "", projekt = "dein Tattoo", betrag = "", link = "", firma = "" }) =>
+export const RATEN_FUSS = "*Ratenzahlung über Klarna oder PayPal, nach deren Prüfung. Weder wir noch Tattoofin sind Kreditgeber. Achtung! Kreditaufnahme kostet Geld.";
+export const ratenWhatsapp = ({ vorname = "", projekt = "dein Tattoo", betrag = "", link = "", firma = "", paypal = false }) =>
   `Hi ${vorname}, hier ist dein Zahlungslink für ${projekt}${betrag ? " (" + betrag + ")" : ""}: ${link}\n\n` +
   `Du möchtest in Raten* zahlen? So geht's:\n1. Link öffnen und auf „Weiter zum Bezahlen“ tippen\n2. „Klarna“ als Zahlungsart wählen\n3. Bei Klarna Raten oder Finanzierung aussuchen und bestätigen\n` +
-  `Klarna prüft kurz und zeigt dir, welche Möglichkeiten du hast. Mit Karte zahlst du den ganzen Betrag auf einmal.\n\nLiebe Grüße, ${firma}\n\n${RATEN_FUSS}`;
+  `Klarna prüft kurz und zeigt dir, welche Möglichkeiten du hast.${paypal ? " Oder du tippst auf den PayPal-Knopf und wählst dort „Später bezahlen“ bzw. Ratenzahlung (PayPal prüft ebenfalls kurz)." : ""} Mit Karte zahlst du den ganzen Betrag auf einmal.\n\nLiebe Grüße, ${firma}\n\n${RATEN_FUSS}`;
 
 // Manuelle Punkte der Einrichtungs-Checkliste (die übrigen erkennt das System selbst)
 const CHECK_MANUELL = ["app", "werbung", "theke"];
@@ -85,6 +89,7 @@ const oeffentlich = (s) => ({
   checkliste: s.checkliste || {}, extrasAngefragt: Object.keys(s.extras || {}), eingebettet: eingebettet(), simulation: BAUSTEINE_SIMULIERT,
   anzahlungsbedingungen: anzahlungsbedingungen(s),
   ausweichAnzahlung: { an: Boolean(s.ausweichAnzahlung?.an), prozent: s.ausweichAnzahlung?.prozent || 30 },
+  paypal: { moeglich: paypalAktiv(), verknuepft: paypalVerknuepft(s), email: s.paypal?.email || "", merchantId: s.paypal?.merchantId || "", geprueftAm: s.paypal?.geprueftAm || null },
   kannKassieren: Boolean(darfKassieren(s)), zahlseite: zahlseite(s), connectUrl: connectUrl(s),
   aufsteller: { inklusive: CFG.aufstellerPakete.includes(paketVon(s).id), holz: s.aufsteller?.holz || "hell", variante: s.aufsteller?.variante || "name", hatLogo: Boolean(s.aufsteller?.hatLogo), angefordertAm: s.aufsteller?.angefordertAm || null, preisNetto: CFG.aufstellerPreisNetto, bezahltAm: s.aufsteller?.kauf?.bezahltAm || null },
 });
@@ -118,7 +123,7 @@ export default handler(async (req) => {
         umsatzGesamtCent: bezahlt.reduce((a, z) => a + z.betragCent, 0), offen: zahlungen.filter((z) => z.status === "offen").length,
         anteilKlarna: bezahlt.length ? Math.round(100 * bezahlt.filter((z) => z.zahlart === "klarna").length / bezahlt.length) : 0,
       },
-      ratenText: ratenWhatsapp({ vorname: "[Name]", projekt: "[Motiv]", betrag: "[Betrag]", link: "[Zahlungslink]", firma: s.firma }),
+      ratenText: ratenWhatsapp({ vorname: "[Name]", projekt: "[Motiv]", betrag: "[Betrag]", link: "[Zahlungslink]", firma: s.firma, paypal: paypalAktiv() && paypalVerknuepft(s) }),
       materialien: `${CFG.materialsUrl}generator.html`,
       materialLinks: [
         ["20-fensteraufkleber", "Fensteraufkleber"], ["21-flyer-a6", "Flyer A6"], ["22-thekenaufsteller-a5", "Thekenaufsteller A5"],
@@ -153,7 +158,7 @@ export default handler(async (req) => {
         ? `Hi ${z.kunde.split(" ")[0]}, hier ist dein Link für den Gutschein von ${s.firma} über ${betragText}${z.gutschein.empfaenger ? " für " + z.gutschein.empfaenger : ""}: ${link} . Nach dem Bezahlen bekommst du den Gutschein mit Code per E-Mail. Liebe Grüße, ${s.firma}`
         : z.art === "anzahlung"
           ? `Hi ${z.kunde ? z.kunde.split(" ")[0] : ""}, hier ist dein Link für die Anzahlung (${z.beschreibung}, ${betragText}): ${link} . Am einfachsten zahlst du per Karte, Apple Pay oder Google Pay. Liebe Grüße, ${s.firma}`
-          : ratenWhatsapp({ vorname: z.kunde ? z.kunde.split(" ")[0] : "", projekt: z.beschreibung, betrag: betragText, link, firma: s.firma });
+          : ratenWhatsapp({ vorname: z.kunde ? z.kunde.split(" ")[0] : "", projekt: z.beschreibung, betrag: betragText, link, firma: s.firma, paypal: paypalAktiv() && paypalVerknuepft(s) });
       await log("zahlungslink", { studioId: s.id, zahlungId: z.id, betragCent });
       return json({ zahlung: fuerStudio(z), link, whatsappText: text }, 201);
     }
@@ -386,6 +391,24 @@ export default handler(async (req) => {
     if (!CHECK_MANUELL.includes(b.punkt)) return fail("Unbekannter Punkt");
     s.checkliste = { ...(s.checkliste || {}), [b.punkt]: b.erledigt ? now() : null };
     await saveStudio(s);
+    return json(oeffentlich(s));
+  }
+
+  // ---- PayPal-Geschäftskonto des Studios verknüpfen (Geld geht direkt dorthin) ----
+  if (bereich === "paypal") {
+    if (req.method === "DELETE") { s.paypal = { ...(s.paypal || {}), an: false, geloestAm: now() }; await saveStudio(s); await log("paypal-geloest", { studioId: s.id }); return json(oeffentlich(s)); }
+    if (req.method !== "PATCH") return fail("Methode nicht erlaubt", 405);
+    if (!paypalAktiv()) return fail("PayPal ist bei Tattoofin noch nicht freigeschaltet. Wir melden uns, sobald es losgeht.", 409);
+    const b = await body(req);
+    const email = clean(b.email, 160).toLowerCase(), merchantId = clean(b.merchantId, 20).toUpperCase().replace(/\s/g, "");
+    if (!isEmail(email)) return fail("Bitte die E-Mail-Adresse deines PayPal-Geschäftskontos eingeben.");
+    if (merchantId && !PP_ID_MUSTER.test(merchantId)) return fail("Die PayPal-Händler-ID besteht aus 13 Buchstaben und Zahlen. Lass das Feld sonst einfach leer.");
+    const pr = await paypalKontoPruefen(s, { email, merchantId });
+    if (!pr.ok) return fail(pr.fehler, 400);
+    s.paypal = { an: true, email, merchantId: merchantId || null, geprueftAm: now() };
+    await saveStudio(s);
+    await log("paypal-verknuepft", { studioId: s.id, email, merchantId: merchantId || null });
+    await notifyAdmin("PayPal verknüpft" + (s.modell === "provision" ? " (Risikofrei: PayPal-Zahlungen vorerst ohne Provision)" : ""), s, { "PayPal-E-Mail": email, "Händler-ID": merchantId || "–" });
     return json(oeffentlich(s));
   }
 

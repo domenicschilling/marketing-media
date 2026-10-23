@@ -141,6 +141,8 @@ export async function saveZahlung(z) {
   await store.set("idx/zahlung/" + z.id, `${z.studioId}/${z.id}`);
   if (z.checkoutSessionId) await store.set("idx/cs/" + z.checkoutSessionId, `${z.studioId}/${z.id}`);
   if (z.paymentIntentId) await store.set("idx/pi/" + z.paymentIntentId, `${z.studioId}/${z.id}`);
+  if (z.paypal?.orderId) await store.set("idx/ppo/" + z.paypal.orderId, `${z.studioId}/${z.id}`);
+  if (z.paypal?.captureId) await store.set("idx/ppc/" + z.paypal.captureId, `${z.studioId}/${z.id}`);
   return z;
 }
 export async function zahlungBy(kind, value) {

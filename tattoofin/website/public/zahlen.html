@@ -30,6 +30,7 @@
       <label class="haken"><input type="checkbox" id="bed-ok"> <span>Ich bin mit den Anzahlungsbedingungen des Studios einverstanden.</span></label></div>
     <label class="haken"><input type="checkbox" id="inhalt-ok"> <span id="inhalt-text">Ich zahle den Betrag an das Studio. Betrag und Projekt sind so mit dem Studio abgesprochen.</span></label>
     <button class="btn gold big w100" id="weiter" disabled>Weiter zum Bezahlen</button>
+    <div id="pp-box" class="pp-box hidden"><div class="pp-oder"><span>oder</span></div><div id="pp-knopf"></div><p class="klein muted">Mit PayPal geht das Geld direkt an das Studio. Je nach Prüfung durch PayPal auch „Später bezahlen“ oder Ratenzahlung*.</p></div>
   </form>
 
   <div id="schritt2" class="card-a hidden">
@@ -39,7 +40,7 @@
     <p class="klein" style="text-align:center;margin:12px 0 0"><a href="" id="aendern">Angaben ändern</a></p>
   </div>
 
-  <p class="fuss">Beim Bezahlen siehst du, welche Zahlungsoptionen dir angeboten werden, je nach Prüfung durch den Zahlungsanbieter auch Ratenzahlung* oder späteres Bezahlen. Die Bedingungen legt allein der Zahlungsanbieter fest. Dein Vertrag über das Tattoo besteht nur mit dem Studio; Tattoofin stellt nur die Technik bereit. Deine gesetzlichen Rechte bleiben von den Häkchen unberührt.<br>*Ratenzahlung über externe Anbieter wie Klarna, nach deren Prüfung. Tattoofin ist kein Kreditgeber. <b>Achtung! Kreditaufnahme kostet Geld.</b></p>
+  <p class="fuss">Beim Bezahlen siehst du, welche Zahlungsoptionen dir angeboten werden, je nach Prüfung durch den Zahlungsanbieter auch Ratenzahlung* oder späteres Bezahlen. Die Bedingungen legt allein der Zahlungsanbieter fest. Dein Vertrag über das Tattoo besteht nur mit dem Studio; Tattoofin stellt nur die Technik bereit. Deine gesetzlichen Rechte bleiben von den Häkchen unberührt.<br>*Ratenzahlung über externe Anbieter wie Klarna oder PayPal, nach deren Prüfung. Tattoofin ist kein Kreditgeber. <b>Achtung! Kreditaufnahme kostet Geld.</b></p>
   <p class="powered"><img src="/assets/figur.png" alt=""> Sichere Zahlung über Stripe · bereitgestellt von Tattoofin · <a href="/impressum.html" target="_blank">Impressum</a> · <a href="/datenschutz.html#zahlseiten" target="_blank">Datenschutz</a></p>
 </main>
 <script src="/js/common.js"></script>
@@ -76,8 +77,16 @@
   var f = $("schritt1");
   function anzahlung() { return f.art.value === "anzahlung"; }
   function info() { return { firma: studio.firma, betragCent: B.betragCent($("betrag").value), beschreibung: $("beschreibung").value.trim(), sitzungen: $("sitzungen").value.trim(), anzahlung: anzahlung(), kunde: $("kunde").value.trim(), email: $("email").value.trim() }; }
-  function text() { var i = info(); $("inhalt-text").textContent = B.inhaltText(i); $("bed").classList.toggle("hidden", !anzahlung()); B.ratenHinweis($("raten-hinweis"), { klarna: studio.klarna !== false, anzahlung: i.anzahlung, betragCent: i.betragCent }); }
+  function text() { var i = info(); $("inhalt-text").textContent = B.inhaltText(i); $("bed").classList.toggle("hidden", !anzahlung()); B.ratenHinweis($("raten-hinweis"), { klarna: studio.klarna !== false, anzahlung: i.anzahlung, betragCent: i.betragCent, paypal: Boolean(studio.paypal) && !i.anzahlung }); }
   f.addEventListener("input", text); f.addEventListener("change", text); text();
+  B.paypalKnopf($("pp-box"), studio.paypal, function () {
+    var i = info();
+    if (!i.betragCent) { $("betrag").focus(); B.meldung("Bitte gib den Betrag ein."); return null; }
+    if (!i.kunde) { $("kunde").focus(); B.meldung("Bitte gib deinen Namen ein."); return null; }
+    if (i.anzahlung && !$("bed-ok").checked) { B.meldung("Bitte bestätige die Anzahlungsbedingungen."); return null; }
+    if (!$("inhalt-ok").checked) { B.meldung("Bitte bestätige kurz, dass Studio, Projekt und Betrag stimmen."); return null; }
+    return { s: slug, betrag: $("betrag").value, kunde: i.kunde, email: i.email, beschreibung: i.beschreibung, sitzungen: i.sitzungen, anzahlung: i.anzahlung, bedingungen: i.anzahlung, inhaltOk: true };
+  });
   $("aendern").onclick = function (ev) { ev.preventDefault(); location.reload(); };
   f.addEventListener("submit", function (ev) {
     ev.preventDefault();

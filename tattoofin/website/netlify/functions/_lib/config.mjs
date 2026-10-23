@@ -68,7 +68,22 @@ export const CFG = {
   aufstellerPreisNetto: Number(env("AUFSTELLER_PREIS_NETTO_CENT", 2900)),
 };
 
+// PayPal (seit 23.10.2026): Zahlung direkt an das PayPal-Geschäftskonto des Studios („Pay another account“, Orders API v2,
+// Empfänger = payee), mit „Später bezahlen“/Ratenzahlung, wenn PayPal den Kunden freigibt. Zugangsdaten = REST-App von
+// Tattoofin/DSX (developer.paypal.com). In der Vorschau nur Sandbox-Zugänge, sonst Simulation.
+const PP_ENV = env("PAYPAL_ENV", "sandbox") === "live" && !VORSCHAU ? "live" : "sandbox";
+const PP_ID = env("PAYPAL_CLIENT_ID", ""), PP_SECRET = env("PAYPAL_CLIENT_SECRET", "");
+export const PAYPAL = {
+  clientId: PP_ID, env: PP_ENV, webhookId: env("PAYPAL_WEBHOOK_ID", ""),
+  apiBase: env("PAYPAL_API_BASE", PP_ENV === "live" ? "https://api-m.paypal.com" : "https://api-m.sandbox.paypal.com"),
+  // Simulation: Vorschau ohne Sandbox-Zugang (Zustand im Vorschau-Speicher); lokaler Nachbau: Knopf ohne PayPal-Skript
+  simulation: VORSCHAU && !(PP_ID && PP_SECRET),
+  lokal: /^http:\/\/localhost:\d+$/.test(env("PAYPAL_API_BASE", "")),
+};
+export const paypalAktiv = () => process.env.TF_PAYPAL !== "aus" && (PAYPAL.simulation || Boolean(PAYPAL.clientId && PP_SECRET));
+
 export const SECRETS = {
+  paypalSecret: PP_SECRET,
   stripeKey: STRIPE_KEY,
   stripeWebhookSecret: env("STRIPE_WEBHOOK_SECRET", ""),
   stripeConnectWebhookSecret: env("STRIPE_CONNECT_WEBHOOK_SECRET", ""),

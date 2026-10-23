@@ -15,8 +15,10 @@ import { mails } from "./_lib/emails.mjs";
 import { log } from "./_lib/store.mjs";
 import { stripe } from "./_lib/stripe.mjs";
 import { brandingOeffentlich } from "./_lib/branding.mjs";
+import { paypalOeffentlich, paypalBestellung } from "./_lib/paypal.mjs";
+import { artikelText } from "./_lib/domain.mjs";
 
-const studioInfo = (s) => ({ klarna: CFG.zahlarten.includes("klarna"), firma: s.firma, ort: s.ort, slug: s.slug, aktiv: Boolean(darfKassieren(s)), anzahlungsbedingungen: anzahlungsbedingungen(s), branding: brandingOeffentlich(s) });
+const studioInfo = (s) => ({ klarna: CFG.zahlarten.includes("klarna"), paypal: paypalOeffentlich(s), firma: s.firma, ort: s.ort, slug: s.slug, aktiv: Boolean(darfKassieren(s)), anzahlungsbedingungen: anzahlungsbedingungen(s), branding: brandingOeffentlich(s) });
 const NICHT_BESTAETIGT = "Bitte bestätige die Anzahlungsbedingungen des Studios.";
 const INHALT_FEHLT = "Bitte bestätige kurz, dass Studio, Projekt und Betrag stimmen.";
 
@@ -48,7 +50,17 @@ export function ausweichAngebot(s, z) {
   return { prozent, betragCent, restCent: z.betragCent - betragCent };
 }
 
-async function starte(s, z, { nurKarte = false } = {}) {
+async function starte(s, z, { nurKarte = false, paypal = false } = {}) {
+  // PayPal: Bestellung für das PayPal-Konto des Studios anlegen; der Kunde gibt sie im PayPal-Fenster frei
+  if (paypal) {
+    if (z.art === "gutschein") return fail("Gutscheine bitte per Karte bezahlen.", 409);
+    if (!paypalOeffentlich(s)) return fail("PayPal ist bei diesem Studio gerade nicht verfügbar.", 409);
+    const o = await paypalBestellung(s, z, artikelText(s, z));
+    z.paypal = { orderId: o.id, erstelltAm: now() };
+    z.weg = "paypal";
+    await saveZahlung(z);
+    return json({ paypalOrderId: o.id, zahlung: z.id, betragCent: z.betragCent });
+  }
   if (nurKarte) return json({ url: await checkoutFuer(s, z, { nurKarte: true }) });
   if (bezahlfeld()) {
     const r = await bezahlfeldFuer(s, z);
@@ -129,6 +141,7 @@ export default handler(async (req, context) => {
     if (!b.inhaltOk) return fail(INHALT_FEHLT);
     bestaetigen(req, context, s, z);
     await saveZahlung(z);
+    if (b.zahlweg === "paypal") return starte(s, z, { paypal: true });
     // Ausweg „mit Karte zahlen“: gleicher Betrag, nur Karte (Klarna wird nicht noch einmal vorausgewählt)
     return starte(s, z, { nurKarte: b.ausweich === "karte" });
   }
@@ -147,7 +160,7 @@ export default handler(async (req, context) => {
   const z = { id: id("zl_"), studioId: s.id, createdAt: now(), art: "zahlseite", anzahlung, status: "offen", betragCent, kunde, email, beschreibung: clean(b.beschreibung, 120) || (anzahlung ? "Anzahlung" : "Tattoo-Projekt"), sitzungen: clean(b.sitzungen, 60) };
   bestaetigen(req, context, s, z);
   await saveZahlung(z);
-  return starte(s, z);
+  return starte(s, z, { paypal: b.zahlweg === "paypal" });
 });
 
 export const config = { path: "/api/pay" };
