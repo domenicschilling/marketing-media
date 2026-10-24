@@ -1,0 +1,17 @@
+--- a/netlify/functions/api.mjs
++++ b/netlify/functions/api.mjs
+@@ -131,9 +131,12 @@
+   return lead;
+ };
+ 
+-// Gründer-Aktion: wie viele der 10 Plätze sind noch frei? (stornierte Bestellungen zählen nicht)
++// Gründer-Aktion: wie viele der 10 Plätze sind noch frei? Es zählen nur bezahlte Bestellungen (paid/in_progress/live).
++// Offene, abgebrochene und stornierte Bestellungen sowie Testbestellungen (source „claude-test“, …@example.com/.org/.net) zählen nicht.
++const AKTION_BEZAHLT = ["paid", "in_progress", "live"];
+ const aktionFrei = async () => {
+-  const { count, error } = await db().from("leads").select("id", { count: "exact", head: true }).contains("addons", [AKTION.key]).neq("status", "cancelled");
++  const { count, error } = await db().from("leads").select("id", { count: "exact", head: true }).contains("addons", [AKTION.key]).in("status", AKTION_BEZAHLT)
++    .or("source.is.null,source.neq.claude-test").not("email", "ilike", "%@example.com").not("email", "ilike", "%@example.org").not("email", "ilike", "%@example.net");
+   if (error) throw error;
+   return Math.max(0, AKTION.plaetze - (count || 0));
+ };
