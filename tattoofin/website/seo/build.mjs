@@ -1,5 +1,9 @@
 // Erzeugt die Ratgeber-Seiten, die Ratgeber-Übersicht, sitemap.xml und robots.txt in public/.
 // Aufruf (im Ordner tattoofin/website):  node seo/build.mjs
+// ACHTUNG (25.10.2026): Die HTML-Seiten in public/ wurden nach dem letzten Lauf von Hand nachbearbeitet
+// (Commit 12a9b60: „Raten*“ + Fußnote, QR-Aufsteller-Texte; 25.10.: Fußzeile, FAQ, Sitemap). Ein neuer Lauf würde das
+// überschreiben. Erst artikel.mjs/build.mjs an den Stand der HTML-Dateien angleichen, dann mit --trotzdem ausführen.
+if (!process.argv.includes("--trotzdem")) { console.error("seo/build.mjs ist veraltet – siehe Kommentar oben. Abbruch."); process.exit(1); }
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";

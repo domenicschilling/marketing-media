@@ -275,3 +275,8 @@ input:focus,select:focus,textarea:focus{outline:none;box-shadow:4px 4px 0 var(--
 .choice.pakete .p{font-size:30px}
 .choice .p-zusatz{font:700 15px var(--body);color:var(--muted)}
 .choice .tipp{position:absolute;top:-14px;left:18px;background:var(--orange);color:#fff;font:400 13px var(--round);text-transform:uppercase;padding:5px 12px;border-radius:99px;border:2.5px solid var(--ink)}
+/* 25.10.2026: Partner-Zeile in der Fußzeile */
+.foot .partner{flex-basis:100%;font-size:14px;color:rgba(255,255,255,.75)}
+.foot .partner a{margin-right:6px}
+@media (max-width:560px){.foot .wrap>div:nth-child(2){display:flex;flex-wrap:wrap;gap:4px 18px}.foot .partner{display:flex;flex-wrap:wrap;gap:0 14px;align-items:center}}
+.cta-box .btn{max-width:100%;white-space:normal;text-align:center}
