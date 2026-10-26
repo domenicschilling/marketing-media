@@ -7,7 +7,7 @@ body.app{background-color:var(--cream);background-image:none;padding-bottom:calc
 .app-brand span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .app-top-r{font-size:12.5px;font-weight:700;background:var(--yellow);color:var(--ink);border-radius:99px;padding:4px 10px;white-space:nowrap}
 .app-top-r.warn{background:#fff;color:var(--ink)}
-.sim-hinweis{background:var(--orange);color:#fff;font-weight:700;font-size:13px;text-align:center;padding:6px 12px}
+.sim-hinweis{background:var(--orange-t);color:#fff;font-weight:700;font-size:13px;text-align:center;padding:6px 12px}
 .offline{background:var(--ink-2);color:#fff;font-size:13px;text-align:center;padding:6px 12px}
 .app-main{max-width:620px;margin:0 auto;padding:16px 16px 24px}
 .app-main h1{font:400 30px/1.05 var(--head);margin:6px 0 12px;color:var(--ink)}
@@ -99,7 +99,7 @@ body.app{background-color:var(--cream);background-image:none;padding-bottom:calc
 .stripe-box{min-height:120px;margin:0 0 16px}
 .stripe-box:empty::before{content:"Wird geladen …";display:block;color:var(--muted);text-align:center;padding:30px 0}
 .sim-box{background:#fff;border:2px dashed var(--ink-3);border-radius:16px;padding:16px;margin:0 0 16px}
-.sim-box .sim-tag{display:inline-block;background:var(--orange);color:#fff;font-size:11.5px;font-weight:800;border-radius:6px;padding:2px 7px;margin-bottom:8px;letter-spacing:.03em}
+.sim-box .sim-tag{display:inline-block;background:var(--orange-t);color:#fff;font-size:11.5px;font-weight:800;border-radius:6px;padding:2px 7px;margin-bottom:8px;letter-spacing:.03em}
 .sim-box input{width:100%;font:500 16px var(--body);border:1px solid #b9c4cf;border-radius:10px;padding:11px 12px;margin:0 0 12px;color:var(--ink)}
 .sim-box label{display:block;font-size:13.5px;font-weight:600;margin:0 0 4px;color:#30475e}
 .sim-schritte{display:flex;gap:6px;margin:0 0 14px}
@@ -147,7 +147,7 @@ body.app{background-color:var(--cream);background-image:none;padding-bottom:calc
 .recht-text h1{margin-top:0}
 .recht-text h2{font:400 20px/1.2 var(--round)!important;margin:22px 0 8px!important}
 .recht-text p,.recht-text li{font-size:16px;line-height:1.55}
-.recht-text .entwurf{background:var(--orange);color:#fff;font-weight:800;border-radius:12px;padding:10px 12px;font-size:14.5px}
+.recht-text .entwurf{background:var(--orange-t);color:#fff;font-weight:800;border-radius:12px;padding:10px 12px;font-size:14.5px}
 .recht-text .wer{display:grid;gap:10px;margin:10px 0}
 .recht-text .wer div{background:#fff;border:2px solid var(--ink);border-radius:14px;padding:10px 12px}
 

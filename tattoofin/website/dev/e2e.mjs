@@ -109,7 +109,7 @@ try {
   check((await p0.textContent("#r-tipp")).includes("Risikofrei"), "Rechner empfiehlt Risikofrei bei 500 €/Monat");
   const preise = await p0.textContent("#preise");
   check(preise.includes("999") && preise.includes("49") && preise.includes("Empfohlen") && preise.includes("900 €") && !preise.includes("730") && preise.includes("20 Monaten") && !preise.includes("1.499") && !/Gründer|Profi\b/.test(preise), "Pakete 10 % / 49 € / 999 €, Monatlich empfohlen, Lohnt-sich-Rechnung, keine alten Preise");
-  check((await p0.textContent("#aufsteller")).includes("KI-Visualisierung"), "QR-Aufsteller-Abschnitt mit KI-Kennzeichnung");
+  check((await p0.textContent("#aufsteller")).includes("KI-generiertes Symbolbild"), "QR-Aufsteller-Abschnitt mit KI-Kennzeichnung");
   const ld = await p0.textContent('script[type="application/ld+json"]');
   check(ld.includes("Paket Monatlich") && ld.includes("Paket Einmalzahlung") && !ld.includes("1499"), "Strukturierte Daten: drei Pakete");
   await p0.waitForTimeout(1000);

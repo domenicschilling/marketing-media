@@ -170,6 +170,39 @@ body.tf-cc-offen .leiste{display:none}
   .fuss nav{justify-content:flex-start}
 }
 @media (min-width:981px){.leiste{display:none!important}}
+
+@media (max-width:380px){.marke .wm{width:92px}.marke img:first-child{width:38px}.kopf-nav{font-size:14px}.kopf-nav a{white-space:nowrap}.kopf-in{gap:8px}}
+@media (min-width:1800px){body{zoom:1.2}}
+@media (min-width:2200px){body{zoom:1.4}}
+@media (min-width:1800px){.rahmen{max-width:1500px}}
+/* Viewport-Feinschliff 26.10.2026: Schick-es-deinem-Studio-Knopf liegt im ersten Bildschirm */
+@media (max-width:600px){
+  .knopf-gross{padding:16px 16px 13px;font-size:19px}
+  .held{padding-top:10px}
+}
+@media (max-width:600px) and (max-height:720px){
+  .held h1{font-size:clamp(32px,9.6vw,40px)}
+  .einstieg{font-size:16px;margin-top:10px}
+  .teilen{padding:16px}
+  .teilen h2{font-size:26px}
+  .teilen > p.klein{display:none}
+  .held-raster{row-gap:14px}
+  .knopf-gross{padding:13px 14px 10px;font-size:17px}
+}
+@media (max-height:520px) and (min-width:600px){
+  .held-raster{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"text karte" "mehr karte";column-gap:24px;row-gap:0}
+  .kopf{padding:8px 0}
+  .held{padding-top:6px}
+  .held h1{font-size:clamp(28px,min(5vw,9svh),44px)}
+  .blase{display:none}
+  .einstieg{font-size:15.5px;margin-top:8px;line-height:1.45}
+  .teilen{padding:14px 18px}
+  .teilen h2{font-size:24px}
+  .teilen > p.klein{display:none}
+  .knopf-gross{padding:12px 16px 9px;font-size:17px}
+  .held .pflicht{font-size:11.5px;margin-top:8px}
+  .punkte{display:none}
+}
 </style>
 <!-- Umami: cookielose Besucherzählung, nur auf tattoofin.de (Vorschau-Adressen zählen nicht) -->
 <script defer src="https://cloud.umami.is/script.js" data-website-id="507b740f-264e-4ba1-a7d0-9dbe49db75af" data-domains="tattoofin.de"></script>
@@ -200,7 +233,7 @@ body.tf-cc-offen .leiste{display:none}
       <ul class="punkte">
         <li>Karte, Apple&nbsp;Pay oder Raten über Klarna*</li>
         <li>Kein Kartenterminal, keine App nötig, ein Link reicht</li>
-        <li>Dein Studio braucht nur ein paar Minuten zum Einrichten</li>
+        <li>Dein Studio richtet es schnell ein</li>
       </ul>
     </div>
 
@@ -269,7 +302,7 @@ body.tf-cc-offen .leiste{display:none}
 <section class="studio-teil dunkel" aria-labelledby="h-studio">
   <div class="rahmen">
     <h2 id="h-studio">Du hast selbst ein Studio?</h2>
-    <p class="unter">Raten* für deine Kunden, dein Geld auf einmal. Alles für Studios, mit Video und kostenloser Einrichtung.</p>
+    <p class="unter">Raten* für deine Kunden, dein Geld nach der Klarna-Freigabe. Alles für Studios, mit Video und kostenloser Einrichtung.</p>
     <a class="knopf knopf-gross" href="/studios?utm_source=raten&amp;utm_medium=seite&amp;utm_content=studio-teil" data-r="studios">Zur Seite für Studios</a>
   </div>
 </section>
@@ -280,6 +313,7 @@ body.tf-cc-offen .leiste{display:none}
   <div>
     <img class="wm" src="/assets/wortmarke.png" alt="Tattoofin" width="132" height="30" loading="lazy">
     <p>© <span id="jahr">2026</span> DSX Media Solutions UG (haftungsbeschränkt). Tattoofin ist kein Kreditinstitut.</p>
+    <p>Bilder auf dieser Website sind KI-generierte Symbolbilder. Bildschirmaufnahmen der App zeigen Beispieldaten.</p>
     <p class="pflicht">*Ratenzahlung über externe Anbieter wie Klarna, nach deren Prüfung. Tattoofin ist kein Kreditgeber. Achtung! Kreditaufnahme kostet Geld.</p>
   </div>
   <nav aria-label="Rechtliches"><a href="/">Startseite</a><a href="/studios">Für Studios</a><a href="/impressum">Impressum</a><a href="/datenschutz#studio-tipp">Datenschutz</a><a href="#" data-cookies>Cookie-Einstellungen</a></nav>
