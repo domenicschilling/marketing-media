@@ -54,11 +54,12 @@ export const CFG = {
   ruecklastGebuehrCent: Number(env("RUECKLAST_GEBUEHR_CENT", 2000)),
   // Optional: Auszahlung an Provisions-Studios erst nach X Tagen (Puffer für Rückbuchungen). Leer = Stripe-Standard.
   auszahlungTage: env("AUSZAHLUNG_TAGE", ""),
-  // 2026-10d (18.10.2026): Rechtsdurchsicht (Stripe-Bedingungen, QR-Aufsteller einzeln im Paket Risikofrei, Haftung, Kündigung,
-  // Vertragsschluss online). Ältere Fassungen: /vertrag-2026-10c.html, /vertrag-2026-10b.html
-  vertragVersion: "2026-10d",
+  // 2026-11 (27.10.2026): Rechtsprüfung Kreditrecht (keine Rechtsbehauptung „kein Kreditvermittler“, Klarna im Paket Risikofrei ab 20.11.2026
+  // nicht mehr, Hinweis „Achtung! Kreditaufnahme kostet Geld.“ in der Studio-Werbung). Ältere Fassungen (archiviert, nie rückwirkend ändern):
+  // /vertrag-2026-10d.html, /vertrag-2026-10c.html, /vertrag-2026-10b.html
+  vertragVersion: "2026-11",
   // Blatt „Deine rechtliche Lage“ und Leistungsbestätigung: Version bei inhaltlichen Änderungen hochzählen (wird mit der Zustimmung gespeichert)
-  rechtVersion: "2026-10b",
+  rechtVersion: "2026-11",
   bestaetigungVersion: "2026-10b",
   // Zahlarten im Checkout. Bewusst ohne SEPA-Lastschrift: Die kann der Kunde 8 Wochen lang ohne Grund zurückbuchen.
   zahlarten: env("ZAHLARTEN", "card,klarna").split(",").map((x) => x.trim()).filter(Boolean),
@@ -76,6 +77,45 @@ export const SECRETS = {
   sessionSecret: env("SESSION_SECRET", "dev-secret-bitte-in-netlify-setzen"),
   adminToken: env("ADMIN_TOKEN", ""),
 };
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Klarna im Plattform-Modell (Rechtsprüfung 27.10.2026, Entscheidung Inhaber): Ab 20.11.2026 gilt in Deutschland das neue
+// Verbraucherkreditrecht (Klarna-Raten = Verbraucherkredit). Klarna gibt es dann nur noch dort, wo das Geld der Kunden NICHT
+// über das Plattformkonto von Tattoofin läuft:
+//   Monatlich / Einmalzahlung / Einladung = Standard-Konto des Studios (Direct Charge)  → Klarna bleibt
+//   Risikofrei = Destination Charge über das Plattformkonto                              → Klarna endet am Stichtag
+// Ausnahme: RISIKOFREI_DIRECT=1 (Risikofrei als Direct Charge auf dem Studio-Konto, Standard AUS) → Klarna bleibt auch dort.
+// Steuerung zentral hier:  KLARNA_PLATTFORM_BIS=2026-11-20  (Datum, ab 00:00 Uhr deutscher Zeit ohne Klarna)
+//                          KLARNA_PLATTFORM_BIS=nie         (Schalter aus: Klarna bleibt für alle Pakete)
+// Zeit-Override nur für Tests: TF_JETZT=2026-11-20T00:00:00+01:00
+export const KLARNA_PLATTFORM_BIS_STANDARD = "2026-11-20";
+// Mitternacht (00:00) eines Kalendertags „JJJJ-MM-TT“ in Europe/Berlin als Zeitpunkt (ms seit 1970), Sommer-/Winterzeit-fest
+export function berlinMitternacht(tag) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(tag || "").trim());
+  if (!m) return null;
+  const utc = Date.UTC(+m[1], +m[2] - 1, +m[3]);
+  const fmt = new Intl.DateTimeFormat("en-US", { timeZone: "Europe/Berlin", hourCycle: "h23", year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "numeric", second: "numeric" });
+  const versatz = (t) => { const g = Object.fromEntries(fmt.formatToParts(new Date(t)).map((x) => [x.type, +x.value])); return Date.UTC(g.year, g.month - 1, g.day, g.hour, g.minute, g.second) - t; };
+  let t = utc - versatz(utc);
+  t = utc - versatz(t);
+  return t;
+}
+// Stichtag als Zeitpunkt (ms) oder null (= nie). Wird bei jedem Aufruf gelesen, damit Umgebungsvariable und Tests wirken.
+export function klarnaPlattformStichtag() {
+  const e = process.env.KLARNA_PLATTFORM_BIS;
+  const roh = String(e === undefined || e === "" ? KLARNA_PLATTFORM_BIS_STANDARD : e).trim().toLowerCase();
+  if (["nie", "aus", "0", "off", "false"].includes(roh)) return null;
+  return berlinMitternacht(roh) ?? berlinMitternacht(KLARNA_PLATTFORM_BIS_STANDARD);
+}
+export const jetzt = () => { const o = process.env.TF_JETZT; const d = o ? new Date(o) : null; return d && !isNaN(d) ? d : new Date(); };
+// Risikofrei als Direct Charge (Geld läuft nie über das Plattformkonto). Standard AUS, nur nach Stripe-Test aktivieren.
+export const risikofreiDirect = () => ["1", "an", "true", "ja"].includes(String(process.env.RISIKOFREI_DIRECT || "").trim().toLowerCase());
+// Ist Klarna im Plattform-Modell zu diesem Zeitpunkt abgeschaltet? (Direct-Schalter an → nie)
+export function klarnaPlattformAus(zeit = jetzt()) {
+  if (risikofreiDirect()) return false;
+  const st = klarnaPlattformStichtag();
+  return st !== null && new Date(zeit).getTime() >= st;
+}
 
 // Simulation statt echtem Stripe: nur in der Vorschau ohne Test-Schlüssel
 export const SIMULATION = VORSCHAU && !STRIPE_KEY;
@@ -135,5 +175,9 @@ export function publicConfig() {
     minBetragCent: c.minBetragCent, maxBetragCent: c.maxBetragCent,
     stripeAktiv: Boolean(SECRETS.stripeKey) || SIMULATION, vorschau: c.vorschau, simulation: BAUSTEINE_SIMULIERT,
     ruecklastGebuehrCent: c.ruecklastGebuehrCent, rechtVersion: c.rechtVersion,
+    // Klarna im Paket Risikofrei: Zeitpunkt (ISO) ab dem es dort nicht mehr angeboten wird (null = nie) + Direct-Schalter.
+    // Die Seiten rechnen selbst gegen die Uhr des Besuchers, damit der Stichtag auch bei zwischengespeicherter Antwort stimmt.
+    klarnaPlattformBis: klarnaPlattformStichtag() === null || risikofreiDirect() ? null : new Date(klarnaPlattformStichtag()).toISOString(),
+    klarnaPlattformAus: klarnaPlattformAus(),
   };
 }

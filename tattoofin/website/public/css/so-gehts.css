@@ -16,4 +16,5 @@
 .sg-kap button span{flex:none;min-width:42px;font-variant-numeric:tabular-nums;color:var(--muted);font-weight:700}
 .sg-kap button.an{background:var(--ys,#fff3c4)}
 .sg-kap button:focus-visible{outline:3px solid var(--yellow);outline-offset:1px}
-.sg-fuss{margin:6px 0 0;font-size:12px!important}
+.sg-fuss{margin:6px 0 0;font-size:15px!important;color:var(--ink)}
+.sg-fuss b{font-weight:800}

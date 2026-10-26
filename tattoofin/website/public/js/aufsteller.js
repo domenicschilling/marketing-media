@@ -9,7 +9,11 @@
 //   der Laser nimmt ca. 0,1–0,2 mm weg → leichtes Spiel). Untere 17 mm des Schilds bleiben frei (Fuß).
 // Formulierungsregeln (tattoofin/UEBERGABE.md): „Raten“ nur mit Sternchen + Fußnote, kein „Geld sofort“, kein „voller Betrag“.
 (function (root) {
-  var FUSS = "*Ratenzahlung über externe Anbieter wie Klarna, nach deren Prüfung. Tattoofin ist kein Kreditgeber. Achtung! Kreditaufnahme kostet Geld.";
+  // Pflichthinweis bei „Klarna*“ (UWG-Anhang Nr. 23e, 27.10.2026): Hinweis + Warnsatz in eigener Zeile, fett und größer.
+  // Mit o.klarna === false (z. B. Paket Risikofrei ab dem Stichtag) steht auf dem Aufsteller weder Klarna noch Raten noch Fußnote.
+  var FUSS_TEIL = "*Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, nicht Tattoofin.";
+  var WARNUNG = "Achtung! Kreditaufnahme kostet Geld.";
+  var FUSS = FUSS_TEIL + " " + WARNUNG;
   var W = 100, H = 150, RADIUS = 4, RAND = 7, FUSSZONE = 17; // mm
   // Fuß: zwei Teile 60 × 16 mm, je ein Schlitz von oben (8 mm); Schild hat zwei Schlitze von unten (8 mm) bei x = 22 und 78
   var FUSS_L = 60, FUSS_H = 16, SCHLITZ_T = 8, SCHLITZ_X = [22, 78], PLATTE = 181, ABST = 4;
@@ -192,7 +196,8 @@
       g = g.concat(rechteck(mitte - kopfB / 2 - 3 - strich, kopfY - 2.6, strich, 0.7));
       g = g.concat(rechteck(mitte + kopfB / 2 + 3, kopfY - 2.6, strich, 0.7));
     }
-    var unter = "Tattoo bezahlen, Anzahlung oder in Raten*", unterGr = Math.min(4.2, nutz / breite("dm500", unter, 1));
+    var klarna = o.klarna !== false;
+    var unter = klarna ? "Karte · Apple Pay · Google Pay · Klarna*" : "Tattoo bezahlen oder Anzahlung leisten", unterGr = Math.min(4.2, nutz / breite("dm500", unter, 1));
     g = g.concat(text("dm500", unter, mitte, 37.4, unterGr, "mitte"));
 
     // 4) QR-Code (Ruhezone bleibt frei) + Ecken als Rahmen außerhalb der Ruhezone
@@ -207,11 +212,16 @@
     // 5) Link als Text (falls der Scan nicht klappt) + Zahlarten
     var kurz = o.linkText || o.url.replace(/^https?:\/\//, "").replace(/[?#].*$/, "").replace(/\/$/, ""), linkGr = Math.min(3.3, nutz / breite("dm700", kurz, 1));
     g = g.concat(text("dm700", kurz, mitte, B + 4.6, linkGr, "mitte"));
-    g = g.concat(text("dm500", "Karte · Apple Pay · Google Pay · Klarna*", mitte, B + 9.4, 3, "mitte"));
+    if (!klarna) g = g.concat(text("dm500", "Karte · Apple Pay · Google Pay", mitte, B + 9.4, 3, "mitte"));
 
-    // 6) Fußnote (Pflicht bei „Raten*“), oberhalb der Fußzone
-    var fGr = 2.5, fz = umbrechen("dm500", FUSS, fGr, nutz), fy = H - FUSSZONE - 1.4 - (fz.length - 1) * fGr * 1.3;
-    fz.forEach(function (z, i) { g = g.concat(text("dm500", z, mitte, fy + i * fGr * 1.3, fGr, "mitte")); });
+    // 6) Fußnote (Pflicht bei „Klarna*“), oberhalb der Fußzone: Hinweis 3 mm, Warnsatz fett 3,4 mm
+    var fGr = 3, wGr = 3.4, fz = [], fy = H - FUSSZONE - 1.4;
+    if (klarna) {
+      fz = umbrechen("dm500", FUSS_TEIL, fGr, nutz);
+      fy = H - FUSSZONE - 1.4 - wGr * 1.45 - (fz.length - 1) * fGr * 1.3;
+      fz.forEach(function (z, i) { g = g.concat(text("dm500", z, mitte, fy + i * fGr * 1.3, fGr, "mitte")); });
+      g = g.concat(text("dm700", WARNUNG, mitte, H - FUSSZONE - 1.4, wGr, "mitte"));
+    }
 
     return { gravur: g, platzhalter: blau, platzhalterText: blauText, logo: logo, kontur: rundRechteck(0, 0, W, H, RADIUS), konturSchlitze: schildKontur(o.dicke || 3), qr: { x: qx, y: QR_Y, mm: QR_MM, n: n, modulMm: modul, ruheMm: ruhe }, unten: fy + (fz.length - 1) * fGr * 1.3 };
   }

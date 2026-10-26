@@ -8,7 +8,9 @@ body.kunde{padding-bottom:30px}
 .summe .amt{font:400 48px/1 var(--head);color:var(--ink)}
 .bed{background:var(--yellow-soft);border:2px solid var(--ink);border-radius:14px;padding:12px 14px;font-size:14.5px;margin:0 0 14px}
 .bed p{margin:6px 0 10px}
-.fuss{font-size:12.5px;line-height:1.5;color:var(--muted);margin:14px 0 0}
+.fuss{font-size:15px;line-height:1.5;color:var(--ink);margin:14px 0 0}
+.fuss b,.fuss strong,.raten-box .rb-warn b{font-weight:800}
+.raten-box .rb-warn{font-size:15px;line-height:1.5;color:var(--ink)}
 .powered{display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;color:var(--muted);margin-top:14px}
 .powered img{width:24px}
 .alert-a{border-radius:14px;padding:12px 14px;margin:0 0 14px;font-weight:600;font-size:15px}

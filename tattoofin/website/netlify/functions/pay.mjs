@@ -10,13 +10,13 @@
 import { CFG, BAUSTEINE_SIMULIERT } from "./_lib/config.mjs";
 import { json, fail, body, clean, id, now, handler, isEmail, parseBetrag, euro, clientIp } from "./_lib/util.mjs";
 import { getStudio, studioBy, zahlungBy, saveZahlung } from "./_lib/store.mjs";
-import { checkoutFuer, bezahlfeldFuer, darfKassieren, anzahlungsbedingungen, istAnzahlung, bezahlfeld, zahlungBezahlt, plattformKassiert, klarnaVersuch, zahlartenFuer, notify, zahlungAbgleichen } from "./_lib/domain.mjs";
+import { checkoutFuer, bezahlfeldFuer, darfKassieren, anzahlungsbedingungen, istAnzahlung, bezahlfeld, zahlungBezahlt, plattformKassiert, klarnaVersuch, zahlartenFuer, klarnaFuer, notify, zahlungAbgleichen } from "./_lib/domain.mjs";
 import { mails } from "./_lib/emails.mjs";
 import { log } from "./_lib/store.mjs";
 import { stripe } from "./_lib/stripe.mjs";
 import { brandingOeffentlich } from "./_lib/branding.mjs";
 
-const studioInfo = (s) => ({ klarna: CFG.zahlarten.includes("klarna"), firma: s.firma, ort: s.ort, slug: s.slug, aktiv: Boolean(darfKassieren(s)), anzahlungsbedingungen: anzahlungsbedingungen(s), branding: brandingOeffentlich(s) });
+const studioInfo = (s) => ({ klarna: klarnaFuer(s), firma: s.firma, ort: s.ort, slug: s.slug, aktiv: Boolean(darfKassieren(s)), anzahlungsbedingungen: anzahlungsbedingungen(s), branding: brandingOeffentlich(s) });
 const NICHT_BESTAETIGT = "Bitte bestätige die Anzahlungsbedingungen des Studios.";
 const INHALT_FEHLT = "Bitte bestätige kurz, dass Studio, Projekt und Betrag stimmen.";
 
@@ -80,7 +80,7 @@ export default handler(async (req, context) => {
       return json({
         studio: studioInfo(s),
         zahlung: { id: z.id, betragCent: z.betragCent, beschreibung: z.beschreibung, sitzungen: z.sitzungen || "", kunde: (z.kunde || "").split(" ")[0], status: z.status, art: z.art,
-          empfaenger: z.gutschein?.empfaenger || "", zahlarten: zahlartenFuer(z), ausweichAnzahlungId: z.ausweich?.anzahlungId || null },
+          empfaenger: z.gutschein?.empfaenger || "", zahlarten: zahlartenFuer(z, { studio: s }), ausweichAnzahlungId: z.ausweich?.anzahlungId || null },
         klarnaAbgelehnt: Boolean(klarna || z.klarnaAbgelehnt),
         ausweich: ausweichAngebot(s, z),
       });

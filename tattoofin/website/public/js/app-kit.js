@@ -8,7 +8,7 @@
 // Zeilen sind fest gesetzt, die Schrift wird kleiner, bis jede Zeile passt.
 window.TFKit = (function () {
   // Im Beitrag des Studios spricht das Studio („wir“). Weder das Studio noch Tattoofin vergeben Kredite → beide nennen.
-  var FUSS = "*Ratenzahlung über externe Anbieter wie Klarna, nach deren Prüfung. Weder wir noch Tattoofin sind Kreditgeber. Achtung! Kreditaufnahme kostet Geld.";
+  var FUSS = "*Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, weder wir noch Tattoofin. Achtung! Kreditaufnahme kostet Geld.";
   var NAVY = "#1f3d5c", NAVY2 = "#0f2236", GELB = "#fbb316", CREME = "#fffaf0";
   var HEAD = "'Luckiest Guy', 'Titan One', sans-serif", BODY = "'DM Sans', sans-serif";
 
@@ -357,7 +357,7 @@ window.TFKit = (function () {
       var y = studioKopf(c, k, W, 64, { size: 74 });
       sticker(c, "AB JETZT BEI UNS", W / 2, y + 54, { size: 40, rot: -0.04, bg: NAVY, farbe: GELB, fam: HEAD, gewicht: "400", padX: 38 });
       var u = comicBlock(c, [{ t: "Ratenzahlung*", f: GELB, g: 1.18 }, { t: "für dein", f: "#fff", g: 0.7 }, { t: "Wunsch-Tattoo", f: "#fff" }], W / 2, y + 96, 118, W - 130, 1.0);
-      var f = fussnote(c, W, H - 36, 27);
+      var f = fussnote(c, W, H - 36, 33);
       var b = await abzeichen(c, W, f - 22);
       await reihe(c, W, ["Bequem übers Handy –", "per Link oder QR-Code.", "Sprich uns einfach an!"], u + 10, b.oben - (p ? 56 : 16), { size: 38, figur: 220 });
       if (p) seitenPunkte(c, W, b.oben - 30, p.nr, p.von);
@@ -367,7 +367,7 @@ window.TFKit = (function () {
       grund(c, W, H, "gelb", 300);
       var y = studioKopf(c, k, W, 56, { size: 56, min: 32, ortSize: 30 });
       var u = comicBlock(c, [{ t: "Tattoo in Raten*?", f: GELB }, { t: "So einfach geht's:", f: "#fff", g: 0.8 }], W / 2, y + 22, 96, W - 130, 1.02);
-      var f = fussnote(c, W, H - 36, 27);
+      var f = fussnote(c, W, H - 36, 33);
       var b = await abzeichen(c, W, f - 22);
       var sy = u + 26, sw = W - 140, frei = b.oben - (p ? 58 : 30) - sy, gap = 24, sh = Math.min(168, Math.floor((frei - gap * 2) / 3));
       sy += Math.max(0, (frei - (sh * 3 + gap * 2)) / 2);
@@ -381,7 +381,7 @@ window.TFKit = (function () {
       grund(c, W, H, "navy", 520);
       var y = studioKopf(c, k, W, 64, { size: 66, hell: true });
       var u = comicBlock(c, [{ t: "Dein", f: GELB, g: 0.86 }, { t: "Wunsch-Tattoo?", f: GELB }], W / 2, y + 36, 126, W - 130, 1.0, NAVY2);
-      var f = fussnote(c, W, H - 36, 27, true);
+      var f = fussnote(c, W, H - 36, 33, true);
       var b = await abzeichen(c, W, f - 22);
       await reihe(c, W, ["Aber nicht alles", "auf einmal zahlen?"], u + 10, b.oben - (p ? 150 : 16), { size: 54, figur: 230, schatten: NAVY2, mitte: true, rot: -0.02, kippen: -0.08 });
       if (p) { wischWeiter(c, W, b.oben - 100, true); seitenPunkte(c, W, b.oben - 30, p.nr, p.von, true); }
@@ -393,7 +393,7 @@ window.TFKit = (function () {
       var u = comicBlock(c, [{ t: "Frag uns", f: GELB }, { t: "einfach!", f: GELB }], W / 2, y + 16, 118, W - 130, 1.0, NAVY2);
       font(c, "700", 37, BODY); c.fillStyle = "#fff"; c.textAlign = "center";
       ["Schreib uns eine Nachricht oder", "sprich uns im Studio an."].forEach(function (z, i) { c.fillText(z, W / 2, u + 54 + i * 48); });
-      var f = fussnote(c, W, H - 36, 27, true);
+      var f = fussnote(c, W, H - 36, 33, true);
       var b = await abzeichen(c, W, f - 22);
       var qy = u + 132, qs = Math.min(300, Math.floor((b.oben - (p ? 58 : 26) - qy - 70) / 1.18));
       await qrKarte(c, k.zahlseite, W / 2, qy, qs, "Direkt zur Zahlseite");
@@ -406,7 +406,7 @@ window.TFKit = (function () {
       var y = studioKopf(c, k, W, 250, { size: 70, hell: true });
       sticker(c, "NEU BEI UNS", W / 2, y + 50, { size: 42, rot: -0.04, bg: GELB, fam: HEAD, gewicht: "400", padX: 40 });
       var u = comicBlock(c, [{ t: "Dein Wunsch-Tattoo", f: "#fff", g: 0.82 }, { t: "jetzt in Raten*", f: GELB }], W / 2, y + 100, 116, W - 120, 1.04, NAVY2);
-      var f = fussnote(c, W, STORY_UNTEN, 30, true);
+      var f = fussnote(c, W, STORY_UNTEN, 36, true);
       var b = await abzeichen(c, W, f - 24, true);
       // QR-Code so groß wie Platz ist (lange Studionamen brauchen oben zwei Zeilen)
       var qy = u + 40, qs = Math.max(240, Math.min(380, Math.floor((b.oben - qy - 70 - 96) / 1.18))), cw = qs + Math.round(qs * 0.09) * 2;
@@ -429,7 +429,7 @@ window.TFKit = (function () {
       await figur(c, 80, ty - 40, 270, -0.05);
       font(c, "700", 42, BODY); c.fillStyle = NAVY; c.textAlign = "left";
       ["Schreib uns eine", "Nachricht oder sprich", "uns im Studio an."].forEach(function (z, i) { c.fillText(z, 390, ty + 60 + i * 56); });
-      var f = fussnote(c, W, STORY_UNTEN, 30);
+      var f = fussnote(c, W, STORY_UNTEN, 36);
       await abzeichen(c, W, f - 24, true);
     } },
   };

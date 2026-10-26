@@ -213,8 +213,10 @@ input:focus,select:focus,textarea:focus{outline:none;box-shadow:4px 4px 0 var(--
 /* Zahlseiten */
 .paybox{max-width:470px;margin:0 auto;background:var(--paper);border-radius:28px;padding:30px;border:var(--bw) solid var(--ink);box-shadow:var(--sh-lg)}
 .paybox .amt{font:400 54px/1 var(--head);margin:12px 0 6px;color:var(--ink)}
-.fn{font-size:13px;color:var(--muted);margin-top:10px}
-.dark .fn{color:var(--muted-d)}
+/* Pflicht-Hinweis bei Raten-Werbung (UWG-Anhang Nr. 23e, 27.10.2026): mindestens Fließtextgröße, volle Textfarbe, Warnsatz fett */
+.fn{font-size:16.5px;line-height:1.5;color:var(--ink);margin-top:12px}
+.fn strong,.fn b,.fussnote strong,.fussnote b{font-weight:800}
+.dark .fn{color:#fff}
 .sticker{background:#fff;border-radius:50%;padding:14px;border:var(--bw) solid var(--ink);box-shadow:var(--sh);display:inline-block}
 .co h4{font:700 15px var(--body);margin:0 0 4px}
 .co .amt{font:400 32px var(--head);margin:4px 0 14px;color:var(--ink)}

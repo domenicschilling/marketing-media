@@ -25,10 +25,11 @@
         <label><input type="radio" name="paket" value="einmal"><b>Einmalzahlung</b><div class="p"><span data-c="kaufNetto|euro">999 €</span><small class="p-zusatz"> netto einmalig</small></div><small>Einmal zahlen, keine Tattoofin-Gebühr mehr, nur die Zahlungsgebühr an Stripe. QR-Aufsteller aus Holz im Wert von 29 € inklusive, dazu der digitale QR-Code. <span data-c="garantieTage">30</span> Tage Geld-zurück-Garantie ab Go-live.</small></label>
       </div>
       <p class="muted" style="font-size:13px;margin:12px 0 0">Faustregel: Monatlich lohnt sich gegenüber Risikofrei ab ca. 900 € Zahlungen im Monat über Tattoofin, die Einmalzahlung gegenüber Monatlich nach ca. 20 Monaten. <a href="/#preise" target="_blank">Rechnung ansehen</a></p>
+      <p class="muted" data-klarna-aus hidden style="font-size:15px;font-weight:700;margin:12px 0 0">Hinweis zu Klarna: Ab <span data-klarna-datum>20.11.2026</span> gibt es Klarna nur noch bei Studios mit eigenem Stripe-Konto (Monatlich, Einmalzahlung). Im Paket Risikofrei zahlen deine Kunden dann per Karte, Apple Pay oder Google Pay.</p>
       <div id="kauf-extra" class="hidden" style="margin-top:18px">
         <div class="field"><label>Wie möchtest du die Einmalzahlung bezahlen?</label>
           <div class="choice">
-            <label><input type="radio" name="zahlart" value="sofort" checked><b style="font-size:16px">Jetzt bezahlen</b><small>z. B. Karte oder Klarna über Stripe</small></label>
+            <label><input type="radio" name="zahlart" value="sofort" checked><b style="font-size:16px">Jetzt bezahlen</b><small>z. B. Karte über Stripe</small></label>
             <label><input type="radio" name="zahlart" value="rechnung"><b style="font-size:16px">Auf Rechnung</b><small>Zahlbar in 7 Tagen per Überweisung. Die Einrichtung startet nach Zahlungseingang.</small></label>
           </div>
         </div>
@@ -84,6 +85,7 @@
 </div></main>
 
 <script src="/js/common.js"></script>
+<script src="/js/klarna-stichtag.js" defer></script>
 <script src="/js/start.js"></script>
 <script src="/js/tf-track.js"></script>
 </body></html>

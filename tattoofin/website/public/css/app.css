@@ -178,7 +178,7 @@ body.app{background-color:var(--cream);background-image:none;padding-bottom:calc
 .auf-vorschau img{display:block;width:100%;max-width:340px;height:auto;margin:0 auto}
 .auf-vorschau img:not([src]){display:none}
 .auf-h3{font-size:16px;margin:16px 0 8px}
-.fussnote{font-size:12px!important;margin-top:10px}
+.fussnote{font-size:15px!important;line-height:1.5;color:var(--ink)!important;margin-top:10px}
 
 /* Werbevideo + Hinweis auf der Startseite */
 .neu-badge{display:inline-block;background:var(--gold,#f5b301);color:var(--ink,#1d2b4f);font-size:11px;font-weight:800;border-radius:999px;padding:2px 8px;vertical-align:middle;margin-left:4px}

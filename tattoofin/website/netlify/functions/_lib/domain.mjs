@@ -1,6 +1,6 @@
 // Geschäftslogik: Benachrichtigungen, Zahlungslinks, Kündigung, Monatsabrechnung.
 import crypto from "node:crypto";
-import { CFG, plattformgebuehr, netto, provisionSatz, BAUSTEINE_SIMULIERT, paketVon, aufstellerInklusive } from "./config.mjs";
+import { CFG, plattformgebuehr, netto, provisionSatz, BAUSTEINE_SIMULIERT, paketVon, aufstellerInklusive, klarnaPlattformAus, risikofreiDirect } from "./config.mjs";
 import { sendMail } from "./mail.mjs";
 import { mails } from "./emails.mjs";
 import { stripe, taxRateId, ensureCustomer, TATTOOFIN_BRANDING } from "./stripe.mjs";
@@ -145,8 +145,23 @@ export function darfKassieren(s) {
   return s.stripe?.accountId && s.stripe?.chargesEnabled && ["einrichtung", "live", "gekuendigt"].includes(s.status);
 }
 
-// Provisions-Studios: Tattoofin kassiert als Plattform (Destination Charge), Stripe überweist den Rest an das Studio.
-export const plattformKassiert = (s) => s.modell === "provision";
+// Provisions-Studios (Paket Risikofrei): Standard = Tattoofin kassiert als Plattform (Destination Charge), Stripe überweist den Rest
+// an das Studio. Mit RISIKOFREI_DIRECT=1 (Standard AUS, Prototyp) zahlt der Kunde direkt auf dem Stripe-Konto des Studios
+// (Direct Charge mit Stripe-Account-Header), Tattoofin bekommt nur die Plattformgebühr (application_fee_amount, 10 %).
+export const istProvision = (s) => s.modell === "provision";
+export const direktCharge = (s) => istProvision(s) && risikofreiDirect();
+// Geld läuft über das Plattformkonto (Destination Charge)
+export const plattformKassiert = (s) => istProvision(s) && !risikofreiDirect();
+// Zahlung mit Tattoofin-Provision (egal ob Destination oder Direct Charge); z.abwicklung: plattform | direkt | studio
+export const provisionZahlung = (z) => z.abwicklung === "plattform" || z.abwicklung === "direkt";
+// Klarna für dieses Studio zum Zeitpunkt „zeit“ (Standard: jetzt). Ab dem Stichtag (KLARNA_PLATTFORM_BIS, Standard 20.11.2026, 00:00 deutscher
+// Zeit) nicht mehr im Plattform-Modell (Risikofrei über das Plattformkonto); mit RISIKOFREI_DIRECT=1 oder bei eigenem Stripe-Konto weiter ja.
+export const klarnaFuer = (s, zeit) => CFG.zahlarten.includes("klarna") && !(s && plattformKassiert(s) && klarnaPlattformAus(zeit));
+// Klarna auch nach dem Stichtag? Für Dinge, die länger halten als der Stichtag (graviertes Holzschild, Beiträge/Bilder für Social Media):
+// dort steht Klarna nur, wenn das Studio es dauerhaft anbietet.
+export const klarnaDauerhaft = (s) => klarnaFuer(s, new Date("2100-01-01T00:00:00Z"));
+// Grobe Schätzung der Stripe-Gebühr (für die Provisions-Verrechnung bei Erstattungen), falls Stripe sie auf dem Studio-Konto nicht ausweist
+const schaetzGebuehr = (betragCent, zahlart) => (zahlart === "klarna" ? Math.round(betragCent * 0.0299) + 35 : Math.round(betragCent * 0.015) + 25);
 
 // Standard-Anzahlungsbedingungen (Verbraucher-AGB des Studios, Fassung 18.10.2026): Pauschale nur bei kurzfristiger Absage/
 // Nichterscheinen, Nachweis eines geringeren Schadens ausdrücklich möglich (§ 309 Nr. 5 BGB), Rückzahlung bei Absage durch das Studio.
@@ -166,11 +181,13 @@ export const istAnzahlung = (z) => z.art === "anzahlung" || Boolean(z.anzahlung)
 // (stripe.com/legal/restricted-businesses). Ein Verstoß kann Klarna oder das Plattformkonto sperren. Bewusst kein Schalter.
 // Reihenfolge: Tattoo-Zahlungen Klarna zuerst (wer Raten will, soll Klarna sofort sehen; Stripe kann die Anzeige-Reihenfolge
 // trotzdem selbst optimieren), Anzahlungen Karte zuerst (Anzahlung normal per Karte, Klarna bleibt technisch erlaubt).
-export const zahlartenFuer = (z, { nurKarte = false } = {}) => {
+// Mit „studio“: Klarna entfällt, wo es für dieses Studio nicht angeboten wird (siehe klarnaFuer: Risikofrei über das Plattformkonto ab Stichtag).
+export const zahlartenFuer = (z, { nurKarte = false, studio = null, zeit } = {}) => {
   if (z.art === "gutschein" || z.nurKarte || nurKarte) return ["card"];
-  const rest = CFG.zahlarten.filter((x) => x !== "klarna" && x !== "card");
-  if (!CFG.zahlarten.includes("klarna")) return CFG.zahlarten;
-  return istAnzahlung(z) ? ["card", "klarna", ...rest] : ["klarna", "card", ...rest].filter((x) => x === "klarna" || CFG.zahlarten.includes(x));
+  const arten = klarnaFuer(studio, zeit) ? CFG.zahlarten : CFG.zahlarten.filter((x) => x !== "klarna");
+  const rest = arten.filter((x) => x !== "klarna" && x !== "card");
+  if (!arten.includes("klarna")) return arten;
+  return istAnzahlung(z) ? ["card", "klarna", ...rest] : ["klarna", "card", ...rest].filter((x) => x === "klarna" || arten.includes(x));
 };
 
 // Klarer Name für den Warenkorb (Klarna zeigt ihn in der App und nutzt Warenkorbdaten für die Prüfung):
@@ -213,11 +230,12 @@ async function zahlartFehlt(studio, z, e) {
 export async function checkoutFuer(studio, z, { nurKarte = false } = {}) {
   if (!darfKassieren(studio)) throw new HttpError(409, "Dieses Studio kann gerade keine Zahlungen annehmen.");
   const plattform = plattformKassiert(studio);
+  const direkt = direktCharge(studio);
   const fee = plattformgebuehr(z.betragCent, studio);
   const anzahlung = istAnzahlung(z);
   const meta = { tattoofinZahlung: z.id, studioId: studio.id, ...(z.art === "gutschein" ? { typ: "gutschein" } : {}) };
   const opts = plattform ? {} : { account: studio.stripe.accountId };
-  const zahlarten = zahlartenFuer(z, { nurKarte });
+  const zahlarten = zahlartenFuer(z, { nurKarte, studio });
   const artikel = artikelText(studio, z);
   // Kunde vorab anlegen (Name + E-Mail vorausgefüllt). Klappt das nicht, sammelt Checkout die Angaben selbst.
   let customer = z.stripeCustomerId;
@@ -241,7 +259,8 @@ export async function checkoutFuer(studio, z, { nurKarte = false } = {}) {
     custom_text: anzahlung ? { submit: { message: ("Anzahlungsbedingungen: " + anzahlungsbedingungen(studio)).slice(0, 1200) } }
       : ausweichHinweis ? { submit: { message: ausweichHinweis } } : undefined,
     payment_intent_data: {
-      ...(plattform ? { application_fee_amount: fee.bruttoCent, on_behalf_of: studio.stripe.accountId, transfer_data: { destination: studio.stripe.accountId }, transfer_group: z.id } : {}),
+      ...(plattform ? { application_fee_amount: fee.bruttoCent, on_behalf_of: studio.stripe.accountId, transfer_data: { destination: studio.stripe.accountId }, transfer_group: z.id }
+        : direkt ? { application_fee_amount: fee.bruttoCent } : {}),
       description: `${artikel.name} · ${z.kunde || "Kunde"}`.slice(0, 500),
       metadata: meta,
     },
@@ -270,7 +289,7 @@ export async function checkoutFuer(studio, z, { nurKarte = false } = {}) {
     session = await anlegen({ ...params, payment_method_types: ["card"], custom_text: anzahlung ? params.custom_text : undefined });
   }
   z.checkoutSessionId = session.id;
-  z.abwicklung = plattform ? "plattform" : "studio";
+  z.abwicklung = plattform ? "plattform" : direkt ? "direkt" : "studio";
   z.gebuehrNettoCent = fee.nettoCent;
   z.gebuehrBruttoCent = fee.bruttoCent;
   await saveZahlung(z);
@@ -304,36 +323,38 @@ export async function klarnaVersuch(studio, z) {
 export async function bezahlfeldFuer(studio, z) {
   if (!darfKassieren(studio)) throw new HttpError(409, "Dieses Studio kann gerade keine Zahlungen annehmen.");
   const plattform = plattformKassiert(studio);
+  const direkt = direktCharge(studio);
   const fee = plattformgebuehr(z.betragCent, studio);
-  const anzahlung = istAnzahlung(z);
   const meta = { tattoofinZahlung: z.id, studioId: studio.id };
   // Bestehenden, noch offenen PaymentIntent wiederverwenden (Kunde lädt die Seite neu), sonst neu anlegen
   if (z.paymentIntentId && z.clientSecret && z.betragFuerPi === z.betragCent) {
-    return { clientSecret: z.clientSecret, stripeAccount: plattform ? null : studio.stripe.accountId, zahlarten: zahlartenFuer(z) };
+    return { clientSecret: z.clientSecret, stripeAccount: plattform ? null : studio.stripe.accountId, zahlarten: zahlartenFuer(z, { studio }) };
   }
   const piParams = (arten) => ({
     amount: z.betragCent, currency: "eur", payment_method_types: arten,
     description: `${artikelText(studio, z).name} · ${z.kunde || "Kunde"}`.slice(0, 500),
     receipt_email: z.email || undefined, metadata: z.art === "gutschein" ? { ...meta, typ: "gutschein" } : meta,
-    ...(plattform ? { application_fee_amount: fee.bruttoCent, on_behalf_of: studio.stripe.accountId, transfer_data: { destination: studio.stripe.accountId }, transfer_group: z.id } : {}),
+    ...(plattform ? { application_fee_amount: fee.bruttoCent, on_behalf_of: studio.stripe.accountId, transfer_data: { destination: studio.stripe.accountId }, transfer_group: z.id }
+      : direkt ? { application_fee_amount: fee.bruttoCent } : {}),
   });
   const piOpts = (schluessel) => ({ idempotencyKey: schluessel, ...(plattform ? {} : { account: studio.stripe.accountId }) });
   let pi;
-  try { pi = await stripe("POST", "/payment_intents", piParams(zahlartenFuer(z)), piOpts(`pi-${z.id}-${z.betragCent}`)); }
+  const arten = zahlartenFuer(z, { studio });
+  try { pi = await stripe("POST", "/payment_intents", piParams(arten), piOpts(`pi-${z.id}-${z.betragCent}-${arten.join("")}`)); }
   catch (e) {
-    if (!zahlartAbgelehnt(e) || zahlartenFuer(z).join() === "card") throw e;
+    if (!zahlartAbgelehnt(e) || arten.join() === "card") throw e;
     await zahlartFehlt(studio, z, e);
     pi = await stripe("POST", "/payment_intents", piParams(["card"]), piOpts(`pi-karte-${z.id}-${z.betragCent}`));
   }
   z.paymentIntentId = pi.id;
   z.clientSecret = pi.client_secret;
   z.betragFuerPi = z.betragCent;
-  z.abwicklung = plattform ? "plattform" : "studio";
+  z.abwicklung = plattform ? "plattform" : direkt ? "direkt" : "studio";
   z.weg = "bezahlfeld";
   z.gebuehrNettoCent = fee.nettoCent;
   z.gebuehrBruttoCent = fee.bruttoCent;
   await saveZahlung(z);
-  return { clientSecret: pi.client_secret, stripeAccount: plattform ? null : studio.stripe.accountId, zahlarten: zahlartenFuer(z) };
+  return { clientSecret: pi.client_secret, stripeAccount: plattform ? null : studio.stripe.accountId, zahlarten: arten };
 }
 
 const objId = (x) => (x && typeof x === "object" ? x.id : x || "");
@@ -353,6 +374,9 @@ export async function zahlungBezahlt(z, account) {
   // Provision: Stripe-Gebühr zahlt Tattoofin. Merken, weil sie bei Erstattungen nicht zurückkommt.
   const bt = charge?.balance_transaction;
   if (z.abwicklung === "plattform" && bt && typeof bt === "object") z.stripeGebuehrCent = bt.fee || 0;
+  // Direct Charge: Stripe rechnet die Gebühr bei Konten, für die die Plattform die Gebühren trägt, mit der Plattform ab und weist sie auf dem
+  // Studio-Konto evtl. nicht aus → dann Schätzung (nur für die Verrechnung bei Erstattungen, nicht für Geldflüsse)
+  if (z.abwicklung === "direkt") z.stripeGebuehrCent = (bt && typeof bt === "object" && bt.fee) || schaetzGebuehr(z.betragCent, z.zahlart);
   z.status = "bezahlt";
   z.bezahltAm = now();
   delete z.clientSecret;

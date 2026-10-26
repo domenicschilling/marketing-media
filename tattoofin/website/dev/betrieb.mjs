@@ -23,6 +23,9 @@ fs.mkdirSync(shots, { recursive: true });
 const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "tf-betrieb-data-"));
 // Wie live: Checkout statt eingebettetem Bezahlfeld, Klarna + Karte
 process.env.TF_BEZAHLFELD = "aus";
+// Feste „Jetzt“-Zeit vor dem Klarna-Stichtag (20.11.2026), damit die Abläufe 1–16 unabhängig vom Kalendertag laufen; Abschnitt 17 prüft den Stichtag gezielt.
+const BASIS_ZEIT = "2026-10-27T12:00:00+01:00";
+process.env.TF_JETZT = BASIS_ZEIT;
 process.env.ADMIN_EMAIL = "admin@betrieb.test";
 process.env.MAIL_TEST_TOKEN = "mailtest";
 await startDev({ port: PORT, mock: true, dataDir, quiet: true });
@@ -787,6 +790,150 @@ await abschnitt("16 Browser: Kundenseite (Handy) mit Cookie-Fenster, keine JavaS
   await ph.screenshot({ path: path.join(shots, "kunde-bezahlt-handy.png") });
   await ph.context().close();
   check(jsFehler.length === 0, "Keine JavaScript-Fehler im Browser", jsFehler.slice(0, 2).join(" ; "));
+});
+
+// =====================================================================================================
+await abschnitt("17 Recht (27.10.2026): Klarna-Stichtag 20.11.2026 für Risikofrei, Direct-Charge-Prototyp, Warnhinweis lesbar", async () => {
+  const config = await import("../netlify/functions/_lib/config.mjs");
+  const setze = (k, v) => { if (v === undefined) delete process.env[k]; else process.env[k] = v; };
+  const slug = async (k) => (await detail(ST[k].id)).studio.slug;
+  // Zahlungslink (Studio) und Checkout-Start (Kunde klickt „Weiter zum Bezahlen“)
+  async function link(k, betrag, kunde) {
+    const z = await post("/api/portal/zahlung", { betrag, kunde, email: `${kunde.toLowerCase().replace(/\W/g, "")}@kunde.test`, beschreibung: "Rechtstest" }, ST[k].cookie);
+    return z.data;
+  }
+  async function starte(zahlungId) {
+    const s = await post("/api/pay", { z: zahlungId, inhaltOk: true });
+    const cs = await lastSession();
+    return { s, cs, pmt: [].concat(cs.payment_method_types || []) };
+  }
+  const info = async (zahlungId) => (await json(`/api/pay?z=${zahlungId}`)).data;
+  await admin(`studio/${ST.mo.id}/live`, { body: {} });
+
+  // a) Zeitfunktion: Mitternacht Europe/Berlin (Winter- und Sommerzeit)
+  check(config.berlinMitternacht("2026-11-20") === Date.UTC(2026, 10, 19, 23) && config.berlinMitternacht("2026-07-01") === Date.UTC(2026, 5, 30, 22), "Stichtag: 20.11.2026 00:00 deutscher Zeit = 19.11. 23:00 UTC (Sommerzeit-Kontrolle ok)", `${new Date(config.berlinMitternacht("2026-11-20")).toISOString()}`);
+
+  // b) eine Sekunde VOR dem Stichtag: Risikofrei hat Klarna
+  setze("TF_JETZT", "2026-11-19T22:59:59Z");
+  const vor = await link("rf", "900", "Vor Stichtag");
+  const iv = await info(vor.zahlung.id);
+  check(iv.zahlung.zahlarten.includes("klarna") && iv.studio.klarna === true && /„Klarna“ als Zahlungsart wählen/.test(vor.whatsappText), "Vor dem Stichtag (19.11. 23:59:59): Risikofrei bietet Klarna, WhatsApp-Text erklärt Klarna", `${iv.zahlung.zahlarten}`);
+  const cfgVor = (await json("/api/config")).data;
+  check(cfgVor.klarnaPlattformAus === false && cfgVor.klarnaPlattformBis === "2026-11-19T23:00:00.000Z", "Öffentliche Konfiguration: Stichtag als Zeitpunkt, noch nicht erreicht", `${cfgVor.klarnaPlattformBis}`);
+  const aufV = (await json(`/api/aufsteller?s=${await slug("rf")}`, {}, ST.rf.cookie)).data;
+  check(aufV.klarna === false, "QR-Aufsteller (Gravur hält länger als der Stichtag): Risikofrei schon heute ohne Klarna", `${aufV.klarna}`);
+
+  // c) genau AM Stichtag (00:00:00 deutscher Zeit)
+  setze("TF_JETZT", "2026-11-19T23:00:00Z");
+  const nach = await link("rf", "900", "Nach Stichtag");
+  const inf = await info(nach.zahlung.id);
+  const st1 = await starte(nach.zahlung.id);
+  check(JSON.stringify(inf.zahlung.zahlarten) === '["card"]' && inf.studio.klarna === false, "Ab dem Stichtag (20.11. 00:00): Risikofrei zeigt nur Karte/Wallets, kein Klarna", `${inf.zahlung.zahlarten} klarna=${inf.studio.klarna}`);
+  check(JSON.stringify(st1.pmt) === '["card"]' && st1.cs.payment_intent_data?.transfer_data?.destination === ST.rf.konto, "Checkout nur mit Karte (weiter als Destination Charge, nur ohne Klarna)", `${st1.pmt}`);
+  check(!/Klarna|Raten/.test(nach.whatsappText) && /Karte, Apple Pay oder Google Pay/.test(nach.whatsappText), "WhatsApp-Text für Kunden: keine Raten-Werbung, wo Klarna fehlt", nach.whatsappText.slice(0, 80).replace(/\n/g, " "));
+  const vorLink = await starte(vor.zahlung.id);
+  check(JSON.stringify(vorLink.pmt) === '["card"]', "Vor dem Stichtag erstellter Link, nach dem Stichtag bezahlt: ohne Klarna", `${vorLink.pmt}`);
+  const portal = (await json("/api/portal", {}, ST.rf.cookie)).data;
+  check(portal.studio.klarna === false && !/Klarna/.test(portal.ratenText), "Dashboard-Daten: Studio-Flag klarna=false, Raten-Text ohne Klarna", `${portal.studio.klarna}`);
+  const cfgNach = (await json("/api/config")).data;
+  check(cfgNach.klarnaPlattformAus === true, "Öffentliche Konfiguration: Stichtag erreicht", "");
+  // (Einmalzahlung statt Monatlich: bei „Monatlich“ ist Klarna in Abschnitt 8b absichtlich deaktiviert worden)
+  await admin(`studio/${ST.ei.id}/live`, { body: {} });
+  const eiL = await link("ei", "800", "Einmal Nach");
+  const im = await info(eiL.zahlung.id);
+  const stm = await starte(eiL.zahlung.id);
+  check(im.zahlung.zahlarten.includes("klarna") && im.studio.klarna === true && stm.pmt.includes("klarna") && stm.cs.account === ST.ei.konto, "Einmalzahlung (eigenes Stripe-Konto) behält Klarna auch nach dem Stichtag", `${stm.pmt}`);
+  const aufM = (await json(`/api/aufsteller?s=${await slug("ei")}`, {}, ST.ei.cookie)).data;
+  check(aufM.klarna === true, "QR-Aufsteller Einmalzahlung: Klarna bleibt", `${aufM.klarna}`);
+
+  // d) Steuerung: Datum ändern / abschalten
+  setze("TF_JETZT", "2026-12-01T12:00:00Z");
+  setze("KLARNA_PLATTFORM_BIS", "nie");
+  const nie = await info((await link("rf", "700", "Nie Aus")).zahlung.id);
+  check(nie.zahlung.zahlarten.includes("klarna"), "KLARNA_PLATTFORM_BIS=nie: Klarna bleibt für Risikofrei", `${nie.zahlung.zahlarten}`);
+  setze("KLARNA_PLATTFORM_BIS", "2026-12-24");
+  const spaeter = await info((await link("rf", "700", "Spaeter Datum")).zahlung.id);
+  check(spaeter.zahlung.zahlarten.includes("klarna"), "KLARNA_PLATTFORM_BIS=2026-12-24: am 01.12. noch Klarna", `${spaeter.zahlung.zahlarten}`);
+  setze("KLARNA_PLATTFORM_BIS", undefined);
+
+  // e) Prototyp Risikofrei als Direct Charge (RISIKOFREI_DIRECT=1): Klarna bleibt, Geld läuft nie über das Plattformkonto
+  setze("RISIKOFREI_DIRECT", "1");
+  const d1 = await link("rf", "1000", "Direkt Klarna");
+  const infD = await info(d1.zahlung.id);
+  const sd = await starte(d1.zahlung.id);
+  const pdD = sd.cs.payment_intent_data || {};
+  check(infD.zahlung.zahlarten.includes("klarna") && sd.pmt.includes("klarna"), "RISIKOFREI_DIRECT=1: Klarna bleibt auch nach dem Stichtag (D ist dann nicht nötig)", `${sd.pmt}`);
+  check(sd.cs.account === ST.rf.konto && !pdD.transfer_data && !pdD.on_behalf_of && Number(pdD.application_fee_amount) === 10000, "Direct Charge: Sitzung auf dem Studio-Konto (Stripe-Account), kein transfer_data/on_behalf_of, Plattformgebühr 100,00 € (10 %)", `account=${sd.cs.account} fee=${pdD.application_fee_amount}`);
+  await stripeBezahlen(sd.s.data.url, "klarna");
+  const zd = (await detail(ST.rf.id)).zahlungen.find((x) => x.id === d1.zahlung.id);
+  check(zd?.status === "bezahlt" && zd.abwicklung === "direkt" && zd.zahlart === "klarna" && zd.applicationFeeId && !zd.transferId && zd.gebuehrBruttoCent === 10000, "Direct Charge bezahlt (Klarna): Abwicklung „direkt“, Plattformgebühr gemerkt, kein Transfer", `${zd?.status} ${zd?.abwicklung} fee=${zd?.applicationFeeId}`);
+  check(/900,00/.test(mailAnMit("risikofrei@betrieb.test", /Zahlung eingegangen: 1\.000,00/)?.html || ""), "Studio-Mail: 1.000 € − 100 € = 900,00 € Auszahlung (wie beim Plattformweg)", "");
+  const vorR = await mockState();
+  const erst = await post(`/api/portal/erstattung/${d1.zahlung.id}`, { betrag: "400" }, ST.rf.cookie);
+  await wait(600);
+  const nachR = await mockState();
+  const ref = nachR.refunds.at(-1);
+  const zr = (await detail(ST.rf.id)).zahlungen.find((x) => x.id === d1.zahlung.id);
+  check(erst.status === 200 && ref && ref.reverse_transfer === false && ref.amount === 40000, "Erstattung bei Direct Charge: ohne reverse_transfer (Stripe bucht beim Studio-Konto ab)", `HTTP ${erst.status} reverse=${ref?.reverse_transfer} amount=${ref?.amount}`);
+  check(zr.erstattetCent === 40000 && nachR.feeRefunds.length === vorR.feeRefunds.length + 1 && zr.gebuehrErstattetCent > 0 && zr.gebuehrErstattetCent < 4000, "Erstattung: Plattformgebühr anteilig zurück (abzüglich Stripe-Gebühr), Zahlung bleibt „bezahlt“", `erstattet=${zr.erstattetCent} fee zurück=${zr.gebuehrErstattetCent}`);
+  const d2 = await link("rf", "600", "Direkt Streit");
+  const s2 = await starte(d2.zahlung.id);
+  await stripeBezahlen(s2.s.data.url, "card");
+  const pi2 = (await detail(ST.rf.id)).zahlungen.find((x) => x.id === d2.zahlung.id).paymentIntentId;
+  const revVor = (await mockState()).reversals.length, frVor = (await mockState()).feeRefunds.length;
+  await mock(`dispute/${pi2}?status=lost`);
+  await wait(700);
+  const z2 = (await detail(ST.rf.id)).zahlungen.find((x) => x.id === d2.zahlung.id);
+  const stN = await mockState();
+  check(z2.status === "rueckgebucht" && stN.reversals.length === revVor && !z2.rueckbuchung?.zurueckgeholtCent, "Rückbuchung bei Direct Charge: keine Transfer-Rückholung beim Studio (Stripe bucht dort selbst ab)", `${z2.status} reversals ${revVor}→${stN.reversals.length}`);
+  check(z2.rueckbuchung?.gebuehrZurueckAm && stN.feeRefunds.length === frVor + 1 && stN.feeRefunds.at(-1).amount === 6000, "Verlorene Rückbuchung: Plattformgebühr (60 €) geht an das Studio zurück, keine Provision", `fee-Erstattungen ${frVor}→${stN.feeRefunds.length}`);
+  check(Boolean(mails().find((m) => m.to === "admin@betrieb.test" && /Rückbuchung/.test(m.subject) && /Direct Charge/.test(m.html || ""))), "Admin-Mail zur Rückbuchung nennt: Gebühr trägt die Plattform (Direct Charge)", "");
+  setze("RISIKOFREI_DIRECT", undefined);
+  setze("TF_JETZT", BASIS_ZEIT);
+
+  // f) Texte: Rechtsbehauptung weg, Studio-Regel da
+  const holen = async (u) => (await fetch(BASE + u)).text();
+  const [imp, recht, vertrag, raten] = await Promise.all([holen("/impressum.html"), holen("/recht.html"), holen("/vertrag.html"), holen("/raten.html")]);
+  check(!/Kreditvermittler/.test(imp) && /nicht Partei eines Ratenvertrags/.test(imp), "Impressum: kein „kein Kreditvermittler“, dafür Tatsachen (nicht Kreditgeber, nicht Vertragspartei, keine Kreditberatung)", "");
+  check(!/kein Zahlungsdienstleister|vermittelt keine Kredite/.test(recht) && /zinsfrei“, „ohne Schufa“ oder „ohne Gebühren“/.test(recht) && /Ratenbeträge/.test(recht), "Rechtsblatt: keine Rechtsbehauptung, Studio-Regel (kein zinsfrei, ohne Schufa, ohne Gebühren, keine Ratenbeträge)", "");
+  check(!/kein Kreditvermittler/.test(vertrag) && /nicht Kreditgeber und nicht Partei von Kredit- oder Ratenverträgen/.test(vertrag) && /Ab dem 20\.11\.2026 bietet der Anbieter Klarna im Paket Risikofrei nicht mehr an/.test(vertrag), "Vertrag (neue Fassung): Tatsachen statt „kein Kreditvermittler“, Klarna-Regel für Risikofrei", "");
+  const altVertrag = await holen("/vertrag-2026-10d.html");
+  check(/kein Kreditvermittler/.test(altVertrag) && /archiviert/.test(altVertrag), "Alte Vertragsfassung 2026-10d bleibt unverändert als Archiv (nicht rückwirkend ändern)", "");
+  const cfgV = (await json("/api/config")).data;
+  check(cfgV.vertragVersion === "2026-11" && cfgV.rechtVersion === "2026-11", "Versionen hochgezählt: Vertrag und Rechtsblatt 2026-11", `${cfgV.vertragVersion}/${cfgV.rechtVersion}`);
+  const ratenText = raten.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g, " ").replace(/<[^>]+>/g, " ");
+  const kopfDaten = (raten.match(/<title>[\s\S]*?<\/title>/) || [""])[0] + (raten.match(/<meta name="description"[^>]*>/) || [""])[0] + (raten.match(/<script type="application\/ld\+json">[\s\S]*?<\/script>/) || [""])[0];
+  check(!/zinsfrei|ohne Schufa|ohne Gebühr|0\s?%|monatlich ab|pro Monat/i.test(ratenText) && !/Raten|Klarna/.test(kopfDaten), "/raten: kein zinsfrei/ohne Schufa/Ratenbeträge; Titel, Meta und Schema ohne Raten/Klarna", "");
+
+  // g) Browser: Warnhinweis „Achtung! Kreditaufnahme kostet Geld.“ lesbar (Größe, Fett, Kontrast, Nähe zur Raten-Aussage), Handy + Desktop
+  const lesbar = () => {
+    const parse = (c) => { const m = c.match(/rgba?\(([^)]+)\)/); if (!m) return [255, 255, 255, 1]; const p = m[1].split(",").map(Number); return [p[0], p[1], p[2], p[3] === undefined ? 1 : p[3]]; };
+    const lum = ([r, g, b]) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
+    const hintergrund = (el) => { let e = el; while (e) { const c = parse(getComputedStyle(e).backgroundColor); if (c[3] > 0.9) return c; e = e.parentElement; } return [255, 255, 255, 1]; };
+    const sichtbar = (el) => { const r = el.getBoundingClientRect(), cs = getComputedStyle(el); return r.width > 0 && r.height > 0 && cs.visibility !== "hidden" && cs.display !== "none" && !el.closest("[hidden], .hidden"); };
+    // Abbildungen (3D-Mockup des Aufstellers auf der Startseite) zählen nicht, sie sind keine Fließtext-Werbung
+    const warn = [...document.querySelectorAll("strong, b")].filter((e) => /Achtung! Kreditaufnahme kostet Geld\./.test(e.textContent) && sichtbar(e) && !e.closest(".mock"));
+    if (!warn.length) return { n: 0 };
+    const claims = [...document.querySelectorAll("h1, h2, p, li, span, div")].filter((e) => !e.closest("nav, header, script, style, .tf-cc, [hidden], .hidden") && sichtbar(e) && e.children.length < 6 && /(Raten|Klarna|Ratenzahlung)\*/.test(e.textContent) && !/Achtung! Kreditaufnahme/.test(e.textContent));
+    const y = (e) => e.getBoundingClientRect().top + scrollY;
+    const cl = claims.sort((a, b) => y(a) - y(b))[0];
+    const w0 = [...warn].sort((a, b) => y(a) - y(b))[0];
+    const abstand = cl ? y(w0) - y(cl) : 0;
+    const res = warn.map((w) => { const cs = getComputedStyle(w); const fg = parse(cs.color), bg = hintergrund(w), l1 = lum(fg), l2 = lum(bg); return { px: parseFloat(cs.fontSize), gewicht: Number(cs.fontWeight), kontrast: (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05), elternPx: parseFloat(getComputedStyle(w.parentElement).fontSize) }; });
+    return { n: warn.length, abstand, claim: Boolean(cl), minPx: Math.min(...res.map((r) => r.px)), minElternPx: Math.min(...res.map((r) => r.elternPx)), minGewicht: Math.min(...res.map((r) => r.gewicht)), minKontrast: Math.min(...res.map((r) => r.kontrast)), breite: document.documentElement.scrollWidth <= innerWidth };
+  };
+  for (const [name, pfad] of [["raten", "/raten.html"], ["start", "/"], ["studios", "/studios.html"], ["finanzieren", "/tattoo-finanzieren.html"], ["ratenzahlung", "/ratenzahlung-tattoostudio.html"]]) {
+    for (const [w, h] of [[390, 844], [1440, 900]]) {
+      const p = await neueSeite({ width: w, height: h });
+      await p.goto(BASE + pfad, { waitUntil: "load" });
+      await p.waitForTimeout(500);
+      const r = await p.evaluate(lesbar);
+      const fertig = r.n > 0 && r.minPx >= 15.9 && r.minPx >= r.minElternPx - 0.5 && r.minGewicht >= 700 && r.minKontrast >= 4.5 && (!r.claim || Math.abs(r.abstand) <= 1000) && r.breite;
+      check(fertig, `${pfad} ${w}x${h}: Warnhinweis lesbar (≥16 px, nicht kleiner als der Fließtext, fett, Kontrast ≥ 4,5, nah an der Raten-Aussage, kein Querscrollen)`, `n=${r.n} px=${r.minPx} fließ=${r.minElternPx} gew=${r.minGewicht} kontrast=${(r.minKontrast || 0).toFixed(1)} abstand=${Math.round(r.abstand || 0)} breit=${r.breite}`);
+      if (["raten", "start", "studios"].includes(name)) await p.screenshot({ path: path.join(shots, `recht-${name}-${w}.png`) });
+      await p.context().close();
+    }
+  }
 });
 
 await browser.close();

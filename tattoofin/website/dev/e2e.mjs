@@ -17,6 +17,8 @@ const shots = process.argv[2] || path.join(os.tmpdir(), "tf-e2e");
 const handyShots = process.argv[3] || path.join(shots, "handy");
 fs.mkdirSync(shots, { recursive: true }); fs.mkdirSync(handyShots, { recursive: true });
 const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "tf-data-"));
+// Feste „Jetzt“-Zeit vor dem Klarna-Stichtag (20.11.2026), damit die Tests nicht vom Kalendertag abhängen
+process.env.TF_JETZT = "2026-10-27T12:00:00+01:00";
 await startDev({ port: PORT, mock: true, dataDir, quiet: true });
 
 let ok = 0, fail = 0;
@@ -818,7 +820,7 @@ try {
   check(kit.map((x) => x.id).join() === "ankuendigung,karussell,qr-story,schritte,frag-story", "Werbung: 5 Vorlagen (Ankündigung, Karussell, QR-Story, So geht's, Frag uns) – alte Anzahlungs-Vorlage entfernt");
   const fmt = Object.fromEntries(kit.map((x) => [x.id, x.bilder.join()]));
   check(fmt.ankuendigung === "1080x1350" && fmt.schritte === "1080x1350" && fmt.karussell === Array(4).fill("1080x1350").join() && fmt["qr-story"] === "1080x1920" && fmt["frag-story"] === "1080x1920", "Werbung: Beiträge 4:5 (1080 × 1350), Karussell 4 Bilder, Storys 9:16 (1080 × 1920)");
-  const FUSS_STUDIO = "*Ratenzahlung über externe Anbieter wie Klarna, nach deren Prüfung. Weder wir noch Tattoofin sind Kreditgeber. Achtung! Kreditaufnahme kostet Geld.";
+  const FUSS_STUDIO = "*Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, weder wir noch Tattoofin. Achtung! Kreditaufnahme kostet Geld.";
   const posts = kit.filter((x) => !x.id.includes("story"));
   check(posts.every((x) => x.text.includes("Raten*") && x.text.includes(FUSS_STUDIO) && (x.text.match(/#\S+/g) || []).length <= 5 && x.text.includes("#bambergtattoo")), "Werbung: Texte mit Raten*, Pflicht-Fußnote und höchstens 5 Hashtags (mit Ort)");
   check(kit.every((x) => !/\b0\s?%|zinsfrei|zinslos|Geld sofort|voller Betrag|Anzahlung|garantiert|jeder bekommt/i.test(x.text)), "Werbung: keine verbotenen Aussagen (0 %, zinsfrei, Geld sofort, voller Betrag, Anzahlung, Zusagen)");
@@ -854,7 +856,7 @@ try {
   check(await h.evaluate(() => !document.querySelector("#so-gehts video").getAttribute("poster")), "So geht's: Vorschaubild lädt erst, wenn das Video in Sichtweite kommt");
   await h.evaluate(() => document.getElementById("so-gehts").scrollIntoView());
   await h.waitForSelector("#so-gehts video[poster]", { timeout: 15000 });
-  const sg = await h.evaluate(() => { const v = document.querySelector("#so-gehts video"); return { preload: v.preload, poster: v.getAttribute("poster"), src: v.querySelector("source").getAttribute("src"), kap: document.querySelectorAll("#so-gehts .sg-kap button").length, fuss: /kein Kreditgeber/.test(document.getElementById("so-gehts").textContent) }; });
+  const sg = await h.evaluate(() => { const v = document.querySelector("#so-gehts video"); return { preload: v.preload, poster: v.getAttribute("poster"), src: v.querySelector("source").getAttribute("src"), kap: document.querySelectorAll("#so-gehts .sg-kap button").length, fuss: /Achtung! Kreditaufnahme kostet Geld/.test(document.getElementById("so-gehts").textContent) }; });
   check(sg.preload === "none" && /9x16\.jpg$/.test(sg.poster) && /9x16\.mp4$/.test(sg.src), "So geht's: Video auf der Startseite lädt erst beim Abspielen (Hochformat am Handy, mit Vorschaubild)");
   check(sg.kap === 10 && sg.fuss, "So geht's: 10 Kapitel + Raten-Fußnote unter dem Video");
   const vr = await fetch(BASE + sg.src, { headers: { range: "bytes=0-1023" } });

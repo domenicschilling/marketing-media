@@ -34,7 +34,7 @@
       '<div class="sg-film ' + (quer ? "quer" : "hoch") + (kompakt ? " kompakt" : "") + '"><video controls playsinline preload="none" width="' + f.w + '" height="' + f.h + '" data-poster="' + f.poster + '" aria-label="Erklärvideo: So funktioniert deine Tattoofin-App"><source src="' + f.src + '" type="video/mp4"></video></div>' +
       '<details class="sg-kap"' + (kompakt ? "" : " open") + "><summary>Kapitel (" + V.kapitel.length + ")</summary><ol>" +
       V.kapitel.map(function (k, i) { return '<li><button type="button" data-t="' + k.ab + '" data-i="' + i + '"><span>' + zeit(k.ab) + "</span>" + k.name + "</button></li>"; }).join("") +
-      '</ol></details><p class="klein muted sg-fuss">Stimme mit KI erstellt · App-Bilder: Beispiel-Studio mit Testdaten · *Ratenzahlung über externe Anbieter wie Klarna, nach deren Prüfung. Tattoofin ist kein Kreditgeber.</p>';
+      '</ol></details><p class="klein muted sg-fuss">Stimme mit KI erstellt · App-Bilder: Beispiel-Studio mit Testdaten · *Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, nicht Tattoofin. <b>Achtung! Kreditaufnahme kostet Geld.</b></p>';
     var v = el.querySelector("video"), knoepfe = el.querySelectorAll(".sg-kap button");
     el.querySelectorAll(".sg-kap button").forEach(function (b) {
       b.onclick = function () {

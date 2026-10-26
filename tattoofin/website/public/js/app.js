@@ -41,6 +41,16 @@
   }
   document.addEventListener("visibilitychange", function () { if (!document.hidden && D) frisch(10000).then(route); });
 
+  // Klarna-Elemente nur zeigen, wenn das Studio Klarna anbietet (Paket Risikofrei: ab dem Stichtag nicht mehr, siehe domain.klarnaFuer).
+  // data-klarna = nur mit Klarna, data-ohne-klarna = nur ohne Klarna. Werbung/Aufsteller richten sich nach klarnaDauerhaft (halten länger).
+  function klarnaSicht() {
+    var an = !D || !D.studio || D.studio.klarna !== false, dauer = !D || !D.studio || D.studio.klarnaDauerhaft !== false;
+    document.querySelectorAll("[data-klarna]").forEach(function (el) { el.classList.toggle("hidden", !an); });
+    document.querySelectorAll("[data-klarna-dauer]").forEach(function (el) { el.classList.toggle("hidden", !dauer); });
+    document.querySelectorAll("[data-ohne-klarna]").forEach(function (el) { el.classList.toggle("hidden", an); });
+    document.querySelectorAll("[data-ohne-klarna-dauer]").forEach(function (el) { el.classList.toggle("hidden", dauer); });
+  }
+
   // ---------- Router ----------
   async function route() {
     if (!D) return;
@@ -51,6 +61,7 @@
     var h = (location.hash || "#start").slice(1).split("/"), v = h[0] || "start", par = h[1];
     if (!document.querySelector('[data-view="' + v + '"]')) v = "start";
     document.querySelectorAll("[data-view]").forEach(function (s) { s.classList.toggle("hidden", s.dataset.view !== v); });
+    klarnaSicht();
     var tab = { zahlung: "zahlungen", raten: "mehr", gutschein: "start", gutscheine: "start", einrichtung: "start", recht: "mehr", extras: "mehr", konto: "mehr", einstellungen: "mehr", werbung: "mehr", video: "mehr" }[v] || v;
     document.querySelectorAll("#tabbar a").forEach(function (a) { a.classList.toggle("on", a.dataset.tab === tab); });
     window.scrollTo(0, 0);
@@ -171,7 +182,7 @@
       var r = await TF.api("/api/portal/zahlung", { body: { betrag: f.betrag.value, art: f.art.value, kunde: f.kunde.value, email: f.email.value, beschreibung: f.beschreibung.value, sitzungen: f.sitzungen.value } });
       var wa = "https://wa.me/?text=" + encodeURIComponent(r.whatsappText);
       $("l-out").innerHTML = '<div class="link-ok"><h2>✓ Link für ' + e(r.zahlung.kunde || "deinen Kunden") + " über " + euro(r.zahlung.betragCent, true) + '</h2><div class="qr" id="l-qr"></div>' +
-        '<p class="klein muted">Kunde ist da? QR-Code scannen lassen. Sonst per WhatsApp schicken.' + (r.zahlung.art === "gesamt" ? " Für Raten* wählt dein Kunde beim Bezahlen „Klarna“ – das steht schon im Text." : "") + '</p><a class="btn wa big w100" target="_blank" rel="noopener" href="' + e(wa) + '">Per WhatsApp schicken</a>' +
+        '<p class="klein muted">Kunde ist da? QR-Code scannen lassen. Sonst per WhatsApp schicken.' + (r.zahlung.art === "gesamt" && D.studio.klarna !== false ? " Für Raten* wählt dein Kunde beim Bezahlen „Klarna“ – das steht schon im Text." : "") + '</p><a class="btn wa big w100" target="_blank" rel="noopener" href="' + e(wa) + '">Per WhatsApp schicken</a>' +
         '<div class="row-a" style="justify-content:center"><button class="btn dark small" data-copytext="' + e(r.link) + '">Link kopieren</button><button class="btn ghost small" id="l-neu">Noch einen Link</button></div></div>';
       qr($("l-qr"), r.link);
       f.classList.add("hidden");
@@ -207,7 +218,7 @@
       '<p class="muted klein" style="margin:10px 0 0">Hilft dir, falls jemand die Zahlung später zurückbucht. Eine Garantie, dass du einen Streitfall gewinnst, gibt es nicht.</p></div>';
     var aktionen = "";
     if (z.status === "offen") aktionen = '<div class="row-a"><a class="btn wa small" target="_blank" rel="noopener" href="https://wa.me/?text=' + encodeURIComponent("Hier ist dein Zahlungslink: " + zl) + '">WhatsApp</a><button class="btn dark small" data-copytext="' + e(zl) + '">Link kopieren</button><button class="btn ghost small" id="z-storno">Stornieren</button></div>';
-    var erstattbar = prov() && z.abwicklung === "plattform" && z.status === "bezahlt" && rest > 0 && !(z.rueckbuchung && !z.rueckbuchung.abgeschlossenAm);
+    var erstattbar = prov() && (z.abwicklung === "plattform" || z.abwicklung === "direkt") && z.status === "bezahlt" && rest > 0 && !(z.rueckbuchung && !z.rueckbuchung.abgeschlossenAm);
     if (erstattbar) aktionen += '<div class="row-a"><button class="btn ghost small" id="z-erstatten">Geld zurückgeben (Erstattung)</button></div>';
     if (z.rueckbuchung && !z.rueckbuchung.abgeschlossenAm) aktionen += '<div class="card-a" style="border-color:var(--red)"><b>⚠️ Rückbuchung läuft.</b><p class="klein">Schick uns bitte schnell deine Nachweise (PDF oben) per WhatsApp. Wir reichen sie bei Stripe ein.</p></div>';
     box.innerHTML = '<div class="detail-kopf"><span class="chip ' + e(z.status) + '">' + e(STATUS[z.status] || z.status) + '</span><div class="amt">' + euro(z.betragCent, true) + "</div><b>" + e(z.kunde || "Kunde") + "</b></div>" +
@@ -259,6 +270,7 @@
   $("raten-kopieren").onclick = function () { (navigator.clipboard ? navigator.clipboard.writeText(D.ratenText || "") : Promise.reject()).then(function () { toast("Text kopiert"); }).catch(function () { toast("Bitte Text markieren und kopieren"); }); };
   function artHinweis() {
     var anz = document.querySelector('#f-link input[name=art]:checked').value === "anzahlung";
+    if (D.studio.klarna === false) { $("l-art-hinweis").textContent = "Dein Kunde zahlt per Karte, Apple Pay oder Google Pay."; return; }
     $("l-art-hinweis").textContent = anz ? "Anzahlung: Dein Kunde zahlt sie am einfachsten ganz normal per Karte, Apple Pay oder Google Pay. Ratenzahlung ist für den Projektpreis größerer Tattoos gedacht."
       : "Projektpreis: Dein Kunde kann per Karte zahlen oder mit Klarna in Raten*. Für Raten muss er beim Bezahlen „Klarna“ wählen – das steht schon im WhatsApp-Text.";
   }
@@ -352,14 +364,14 @@
     var s = D.studio;
     $("zs-url").value = s.zahlseite; $("zs-open").href = s.zahlseite; qr($("zs-qr"), s.zahlseite, 220);
     $("mat").innerHTML = D.materialLinks.map(function (m) { return '<a target="_blank" rel="noopener" href="' + e(m.url) + '">' + e(m.titel) + "<small>Mit " + e(s.firma) + " und deinem QR-Code · Öffnen → Drucken/PDF</small></a>"; }).join("");
-    if (window.TFKit) TFKit.zeige($("kit"), { firma: s.firma, ort: s.ort, zahlseite: s.zahlseite, onPost: function () { abhaken("werbung", true); } });
+    if (window.TFKit && s.klarnaDauerhaft !== false) TFKit.zeige($("kit"), { firma: s.firma, ort: s.ort, zahlseite: s.zahlseite, onPost: function () { abhaken("werbung", true); } });
     $("zs-png").onclick = function () { if (window.TFAufsteller) datei(TFAufsteller.qrBild(s.zahlseite, 1200), "tattoofin-qr-zahlseite.png"); };
     aufsteller();
     werbevideo();
   }
 
   // ---------- Werbevideo für alle Studios (Reel 9:16 + Beitrag 4:5, Quelle spots/tfin-studio-universal-v2 in der Marketing-Maschine, Fassung 2) ----------
-  var WV_TEXT = "Dein Wunsch-Tattoo – bei uns ganz bequem in Raten* 🖤\n\nBei uns kannst du dein Tattoo jetzt über Tattoofin in Raten* zahlen. Alles direkt übers Handy, ohne Papierkram.\n\nSprich uns einfach drauf an oder schreib uns eine Nachricht!\n\n*Ratenzahlung über externe Anbieter wie Klarna, nach deren Prüfung. Tattoofin ist kein Kreditgeber. Achtung! Kreditaufnahme kostet Geld.\nStimme mit KI erstellt";
+  var WV_TEXT = "Dein Wunsch-Tattoo – bei uns ganz bequem in Raten* 🖤\n\nBei uns kannst du dein Tattoo jetzt über Tattoofin in Raten* zahlen. Alles direkt übers Handy, ohne Papierkram.\n\nSprich uns einfach drauf an oder schreib uns eine Nachricht!\n\n*Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, weder wir noch Tattoofin.\nAchtung! Kreditaufnahme kostet Geld.\nStimme mit KI erstellt";
   var WV_GESEHEN = "tf-werbevideo-gesehen";
   function werbevideo() {
     try { localStorage.setItem(WV_GESEHEN, "1"); } catch (x) {}
@@ -409,7 +421,7 @@
     var h = document.querySelector('input[name="auf-holz"]:checked'), v = document.querySelector('input[name="auf-var"]:checked');
     return { holz: h ? h.value : "hell", variante: v ? v.value : "name" };
   }
-  function aufOpts() { var s = D.studio, w = aufWahl(); return { url: s.zahlseite, firma: s.firma, variante: w.variante === "logo" && AUF.logo ? "logo" : w.variante, logo: AUF.logo }; }
+  function aufOpts() { var s = D.studio, w = aufWahl(); return { url: s.zahlseite, firma: s.firma, klarna: s.klarnaDauerhaft !== false, variante: w.variante === "logo" && AUF.logo ? "logo" : w.variante, logo: AUF.logo }; }
   async function aufZeichnen() {
     var nr = ++AUF.nr, w = aufWahl();
     $("auf-logo-box").classList.toggle("hidden", w.variante !== "logo");

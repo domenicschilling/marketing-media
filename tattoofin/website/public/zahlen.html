@@ -39,7 +39,7 @@
     <p class="klein" style="text-align:center;margin:12px 0 0"><a href="" id="aendern">Angaben ändern</a></p>
   </div>
 
-  <p class="fuss">Beim Bezahlen siehst du, welche Zahlungsoptionen dir angeboten werden, je nach Prüfung durch den Zahlungsanbieter auch Ratenzahlung* oder späteres Bezahlen. Die Bedingungen legt allein der Zahlungsanbieter fest. Dein Vertrag über das Tattoo besteht nur mit dem Studio; Tattoofin stellt nur die Technik bereit. Deine gesetzlichen Rechte bleiben von den Häkchen unberührt.<br>*Ratenzahlung über externe Anbieter wie Klarna, nach deren Prüfung. Tattoofin ist kein Kreditgeber. <b>Achtung! Kreditaufnahme kostet Geld.</b></p>
+  <p class="fuss">Beim Bezahlen siehst du, welche Zahlungsoptionen dir angeboten werden, je nach Prüfung durch den Zahlungsanbieter auch Ratenzahlung* oder späteres Bezahlen. Die Bedingungen legt allein der Zahlungsanbieter fest. Dein Vertrag über das Tattoo besteht nur mit dem Studio; Tattoofin stellt nur die Technik bereit. Deine gesetzlichen Rechte bleiben von den Häkchen unberührt.<br>*Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, nicht Tattoofin. <strong>Achtung! Kreditaufnahme kostet Geld.</strong></p>
   <p class="powered"><img src="/assets/figur.png" alt=""> Sichere Zahlung über Stripe · bereitgestellt von Tattoofin · <a href="/impressum.html" target="_blank">Impressum</a> · <a href="/datenschutz.html#zahlseiten" target="_blank">Datenschutz</a></p>
 </main>
 <script src="/js/common.js"></script>
@@ -60,6 +60,8 @@
     studio = d.studio; B.branding(studio);
     $("studio").textContent = studio.firma; $("ort").textContent = studio.ort || "";
     document.title = "Bezahlen bei " + studio.firma;
+    // Ohne Klarna (z. B. Paket Risikofrei ab dem Stichtag): keine Raten-Hinweise, nur Karte/Wallets
+    if (studio.klarna === false) document.querySelector(".fuss").innerHTML = "Bezahlt wird per Karte (auch Apple Pay / Google Pay). Dein Vertrag über das Tattoo besteht nur mit dem Studio; Tattoofin stellt nur die Technik bereit. Deine gesetzlichen Rechte bleiben von den Häkchen unberührt.";
     $("bed-text").textContent = studio.anzahlungsbedingungen;
     $("weiter").disabled = false;
     if (!studio.aktiv) {

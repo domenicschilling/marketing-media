@@ -5,6 +5,7 @@ import { CFG } from "./_lib/config.mjs";
 import { json, fail, clean, handler } from "./_lib/util.mjs";
 import { studioBy, store } from "./_lib/store.mjs";
 import { currentStudio, zweckOk } from "./_lib/auth.mjs";
+import { klarnaDauerhaft } from "./_lib/domain.mjs";
 
 export default handler(async (req) => {
   if (req.method !== "GET") return fail("Methode nicht erlaubt", 405);
@@ -15,7 +16,7 @@ export default handler(async (req) => {
   const a = s.aufsteller || {};
   const logo = a.hatLogo ? await store.get("aufsteller-logo/" + s.id) : null;
   return json({
-    firma: s.firma, slug: s.slug, zahlseite: `${CFG.siteUrl}/zahlen/${s.slug}`,
+    firma: s.firma, slug: s.slug, klarna: klarnaDauerhaft(s), zahlseite: `${CFG.siteUrl}/zahlen/${s.slug}`,
     holz: a.holz || "hell", variante: logo ? a.variante || "name" : "name",
     logo: logo ? { src: logo.src, w: logo.w, h: logo.h } : null,
   });

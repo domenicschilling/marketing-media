@@ -113,3 +113,13 @@ Webhook fehlt → Status wird bei Rückkehr auf /bezahlt.html und in den Tagesjo
 
 Mit echtem Stripe-Testkonto: `STRIPE_SECRET_KEY=sk_test_… STRIPE_WEBHOOK_SECRET=whsec_… STRIPE_CONNECT_WEBHOOK_SECRET=whsec_… node dev/server.mjs`
 und `stripe listen --forward-to localhost:8888/api/stripe-webhook --forward-connect-to localhost:8888/api/stripe-webhook`.
+
+## Stand 27.10.2026: Kreditrecht (Branch claude/tattoofin-recht)
+
+| Thema | Kurz |
+|---|---|
+| Klarna-Stichtag | Ab **20.11.2026 00:00 Uhr deutscher Zeit** gibt es Klarna nicht mehr im Paket Risikofrei (Zahlung über das Plattformkonto). Monatlich/Einmalzahlung/Einladung (eigenes Stripe-Konto) behalten Klarna. Zentral in `_lib/config.mjs`: `KLARNA_PLATTFORM_BIS` (Standard `2026-11-20`; `nie` = aus), Logik `klarnaFuer()` in `_lib/domain.mjs`. Test-Zeit: `TF_JETZT=2026-11-20T00:00:00+01:00`. |
+| Direct-Charge-Prototyp | `RISIKOFREI_DIRECT=1` (Standard AUS, **nicht aktivieren, bevor in Stripe-Test geprüft**): Risikofrei als Direct Charge auf dem Studio-Konto (Stripe-Account-Header, `application_fee_amount` 10 %). Dann bleibt Klarna auch nach dem Stichtag. Zahlung trägt `abwicklung: "direkt"`. |
+| Warnhinweis | „Achtung! Kreditaufnahme kostet Geld.“ überall, wo mit Raten geworben wird: fett, mind. Fließtextgröße, direkt bei der Raten-Aussage. Test: `dev/betrieb.mjs` Abschnitt 17 (Größe, Fett, Kontrast, Abstand, 390 px + 1440 px). |
+| Verträge | Neue Fassung `2026-11` (`/vertrag.html`), bisherige Fassung als `/vertrag-2026-10d.html` archiviert (nie rückwirkend ändern). Rechtsblatt `rechtVersion` 2026-11. |
+| Nicht im Code | Instagram-Beiträge, Reels, `public/media/*.mp4` (Videos), gerenderte PDFs in `public/` und `tattoofin/pdf/` (z. B. `einrichtung-anleitung.pdf`) tragen ggf. noch den alten Hinweis und müssen aus den Quellen neu erzeugt werden. |

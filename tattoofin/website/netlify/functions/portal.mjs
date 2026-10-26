@@ -33,7 +33,7 @@ import { json, fail, body, clean, id, now, handler, isEmail, parseBetrag, client
 import { saveStudio, zahlungenVon, getZahlung, saveZahlung, abrechnungenVon, getLeistung, store, log } from "./_lib/store.mjs";
 import { currentStudio, clearCookie } from "./_lib/auth.mjs";
 import { stripe, dashboardLink, accountSession, ensureConnectedAccount } from "./_lib/stripe.mjs";
-import { notify, notifyAdmin, kuendigungsDatum, connectUrl, connectUrlGehostet, darfKassieren, anzahlungsbedingungen, provisionVerdient, kontoAbgleichen, eingebettet, STATUS, aboKuendigen, aufstellerUrl, aufstellerCheckout, aufstellerBezahlt } from "./_lib/domain.mjs";
+import { notify, notifyAdmin, kuendigungsDatum, connectUrl, connectUrlGehostet, darfKassieren, anzahlungsbedingungen, provisionVerdient, kontoAbgleichen, eingebettet, klarnaFuer, klarnaDauerhaft, provisionZahlung, STATUS, aboKuendigen, aufstellerUrl, aufstellerCheckout, aufstellerBezahlt } from "./_lib/domain.mjs";
 import { randomBytes } from "node:crypto";
 import { gutscheinStatus, gutscheinPdf, gutscheinSenden, gutscheinUrl, normCode } from "./_lib/gutschein.mjs";
 
@@ -46,12 +46,15 @@ export const EXTRAS = [
 ];
 
 // WhatsApp-Text fürs Studio (Zahlungslink Projektpreis): erklärt dem Kunden, dass er für Raten „Klarna“ wählen muss.
-// Fußnote wie in den Studio-Beiträgen (Raten* nur mit Hinweis, kein Versprechen).
-export const RATEN_FUSS = "*Ratenzahlung über Klarna, nach deren Prüfung. Weder wir noch Tattoofin sind Kreditgeber. Achtung! Kreditaufnahme kostet Geld.";
-export const ratenWhatsapp = ({ vorname = "", projekt = "dein Tattoo", betrag = "", link = "", firma = "" }) =>
+// Pflichthinweis (UWG-Anhang Nr. 23e) direkt unter dem Raten-Satz, eigene Zeile. Keine Zusage, Klarna entscheidet.
+// Ohne Klarna (z. B. Paket Risikofrei ab dem Stichtag, siehe klarnaFuer): schlichter Text ohne Raten-Werbung.
+export const RATEN_FUSS = "*Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, weder wir noch Tattoofin.\nAchtung! Kreditaufnahme kostet Geld.";
+export const ratenWhatsapp = ({ vorname = "", projekt = "dein Tattoo", betrag = "", link = "", firma = "", klarna = true }) =>
   `Hi ${vorname}, hier ist dein Zahlungslink für ${projekt}${betrag ? " (" + betrag + ")" : ""}: ${link}\n\n` +
-  `Du möchtest in Raten* zahlen? So geht's:\n1. Link öffnen und auf „Weiter zum Bezahlen“ tippen\n2. „Klarna“ als Zahlungsart wählen\n3. Bei Klarna Raten oder Finanzierung aussuchen und bestätigen\n` +
-  `Klarna prüft kurz und zeigt dir, welche Möglichkeiten du hast. Mit Karte zahlst du den ganzen Betrag auf einmal.\n\nLiebe Grüße, ${firma}\n\n${RATEN_FUSS}`;
+  (klarna
+    ? `Du möchtest in Raten* zahlen? So geht's:\n1. Link öffnen und auf „Weiter zum Bezahlen“ tippen\n2. „Klarna“ als Zahlungsart wählen\n3. Bei Klarna Raten oder Finanzierung aussuchen und bestätigen\n` +
+      `Klarna prüft kurz und entscheidet, welche Möglichkeiten du hast. Mit Karte zahlst du den ganzen Betrag auf einmal.\n${RATEN_FUSS}\n\nLiebe Grüße, ${firma}`
+    : `Bezahlen kannst du per Karte, Apple Pay oder Google Pay.\n\nLiebe Grüße, ${firma}`);
 
 // Manuelle Punkte der Einrichtungs-Checkliste (die übrigen erkennt das System selbst)
 const CHECK_MANUELL = ["app", "werbung", "theke"];
@@ -80,6 +83,7 @@ const oeffentlich = (s) => ({
   benachrichtigung: { email: s.benachrichtigungEmail || s.email },
   garantieBis: hatGarantie(s) ? (s.goLiveAt ? new Date(new Date(s.goLiveAt).getTime() + CFG.garantieTage * 864e5).toISOString() : "ab Go-live") : null,
   stripe: { verbunden: Boolean(s.stripe?.accountId), freigegeben: Boolean(s.stripe?.chargesEnabled), auszahlungen: Boolean(s.stripe?.payoutsEnabled), express: s.stripe?.kontoTyp === "express", angabenGemacht: Boolean(s.stripe?.detailsSubmitted), kontoTyp: s.stripe?.kontoTyp || (s.modell === "provision" ? "express" : "standard") },
+  klarna: klarnaFuer(s), klarnaDauerhaft: klarnaDauerhaft(s),
   paket: paketVon(s).id, paketName: paketVon(s).name, provisionProzent: provisionSatz(s), monatNetto: s.monatNetto || null, aufstellerInklusive: aufstellerInklusive(s),
   recht: s.recht ? { version: s.recht.version, am: s.recht.am, aktuell: s.recht.version === CFG.rechtVersion } : null,
   checkliste: s.checkliste || {}, extrasAngefragt: Object.keys(s.extras || {}), eingebettet: eingebettet(), simulation: BAUSTEINE_SIMULIERT,
@@ -118,7 +122,7 @@ export default handler(async (req) => {
         umsatzGesamtCent: bezahlt.reduce((a, z) => a + z.betragCent, 0), offen: zahlungen.filter((z) => z.status === "offen").length,
         anteilKlarna: bezahlt.length ? Math.round(100 * bezahlt.filter((z) => z.zahlart === "klarna").length / bezahlt.length) : 0,
       },
-      ratenText: ratenWhatsapp({ vorname: "[Name]", projekt: "[Motiv]", betrag: "[Betrag]", link: "[Zahlungslink]", firma: s.firma }),
+      ratenText: ratenWhatsapp({ vorname: "[Name]", projekt: "[Motiv]", betrag: "[Betrag]", link: "[Zahlungslink]", firma: s.firma, klarna: klarnaFuer(s) }),
       materialien: `${CFG.materialsUrl}generator.html`,
       materialLinks: [
         ["20-fensteraufkleber", "Fensteraufkleber"], ["21-flyer-a6", "Flyer A6"], ["22-thekenaufsteller-a5", "Thekenaufsteller A5"],
@@ -153,7 +157,7 @@ export default handler(async (req) => {
         ? `Hi ${z.kunde.split(" ")[0]}, hier ist dein Link für den Gutschein von ${s.firma} über ${betragText}${z.gutschein.empfaenger ? " für " + z.gutschein.empfaenger : ""}: ${link} . Nach dem Bezahlen bekommst du den Gutschein mit Code per E-Mail. Liebe Grüße, ${s.firma}`
         : z.art === "anzahlung"
           ? `Hi ${z.kunde ? z.kunde.split(" ")[0] : ""}, hier ist dein Link für die Anzahlung (${z.beschreibung}, ${betragText}): ${link} . Am einfachsten zahlst du per Karte, Apple Pay oder Google Pay. Liebe Grüße, ${s.firma}`
-          : ratenWhatsapp({ vorname: z.kunde ? z.kunde.split(" ")[0] : "", projekt: z.beschreibung, betrag: betragText, link, firma: s.firma });
+          : ratenWhatsapp({ vorname: z.kunde ? z.kunde.split(" ")[0] : "", projekt: z.beschreibung, betrag: betragText, link, firma: s.firma, klarna: klarnaFuer(s) });
       await log("zahlungslink", { studioId: s.id, zahlungId: z.id, betragCent });
       return json({ zahlung: fuerStudio(z), link, whatsappText: text }, 201);
     }
@@ -227,17 +231,20 @@ export default handler(async (req) => {
   if (bereich === "erstattung" && sub && req.method === "POST") {
     const z = await getZahlung(s.id, sub);
     if (!z) return fail("Nicht gefunden", 404);
-    if (z.abwicklung !== "plattform") return fail("Erstattungen machst du direkt in deinem Stripe-Dashboard.");
+    if (!provisionZahlung(z)) return fail("Erstattungen machst du direkt in deinem Stripe-Dashboard.");
     if (z.status !== "bezahlt") return fail("Nur bezahlte Zahlungen können erstattet werden.");
     if (z.rueckbuchung && !z.rueckbuchung.abgeschlossenAm) return fail("Zu dieser Zahlung läuft eine Rückbuchung. Eine Erstattung ist erst nach Abschluss möglich.");
     const b = await body(req);
     const rest = z.betragCent - (z.erstattetCent || 0);
     const betragCent = parseBetrag(b.betrag);
     if (!(betragCent > 0 && betragCent <= rest)) return fail(`Bitte einen Betrag bis ${(rest / 100).toLocaleString("de-DE", { minimumFractionDigits: 2 })} € eingeben.`);
+    // Destination Charge: reverse_transfer holt den Betrag beim Studio zurück. Direct Charge (RISIKOFREI_DIRECT): Die Erstattung läuft auf dem
+    // Studio-Konto (Stripe-Account-Header), Stripe bucht sie dort ab, die Plattformgebühr verrechnet der Webhook.
+    const direkt = z.abwicklung === "direkt";
     await stripe("POST", "/refunds", {
-      payment_intent: z.paymentIntentId, amount: betragCent, reverse_transfer: true, refund_application_fee: false,
+      payment_intent: z.paymentIntentId, amount: betragCent, ...(direkt ? {} : { reverse_transfer: true }), refund_application_fee: false,
       metadata: { tattoofinZahlung: z.id, studioId: s.id, quelle: "portal" },
-    }, { idempotencyKey: `re-${z.id}-${z.erstattetCent || 0}-${betragCent}` });
+    }, { idempotencyKey: `re-${z.id}-${z.erstattetCent || 0}-${betragCent}`, ...(direkt ? { account: s.stripe.accountId } : {}) });
     // Status, Provision und E-Mail an das Studio aktualisiert der Webhook „charge.refunded“
     await log("erstattung", { studioId: s.id, zahlungId: z.id, betragCent });
     return json({ ok: true });

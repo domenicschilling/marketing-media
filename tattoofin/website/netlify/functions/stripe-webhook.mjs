@@ -15,7 +15,7 @@ import { CFG } from "./_lib/config.mjs";
 import { json, fail, now, brutto, handler } from "./_lib/util.mjs";
 import { stripe, verifyWebhook } from "./_lib/stripe.mjs";
 import { getStudio, saveStudio, studioBy, store, log, zahlungBy, saveZahlung } from "./_lib/store.mjs";
-import { notify, notifyAdmin, zaehleAktion, einrichtungUrl, kontoAbgleichen, provisionVerdient, zahlungBezahlt, paketDetails, aufstellerBezahlt } from "./_lib/domain.mjs";
+import { notify, notifyAdmin, zaehleAktion, einrichtungUrl, kontoAbgleichen, provisionVerdient, zahlungBezahlt, paketDetails, aufstellerBezahlt, provisionZahlung } from "./_lib/domain.mjs";
 import { mails } from "./_lib/emails.mjs";
 import { loginLink } from "./_lib/auth.mjs";
 
@@ -67,7 +67,8 @@ async function kundenEreignis(event) {
       };
       await saveZahlung(z);
       await notify(s, mails.rueckbuchung(s, z));
-      await notifyAdmin("Rückbuchung (Dispute) eingegangen", s, { Zahlung: z.id, Grund: o.reason, Betrag: euroText(o.amount), Modell: s.modell });
+      await notifyAdmin("Rückbuchung (Dispute) eingegangen", s, { Zahlung: z.id, Grund: o.reason, Betrag: euroText(o.amount), Modell: s.modell,
+        ...(z.abwicklung === "direkt" ? { Hinweis: "Direct Charge: Stripe bucht den Betrag vom Studio-Konto ab, die Rückbuchungsgebühr trägt die Plattform (fees.payer=application). Nicht automatisch beim Studio zurückholbar." } : {}) });
       break;
     }
 
@@ -115,7 +116,14 @@ async function kundenEreignis(event) {
       z.rueckbuchung = { ...(z.rueckbuchung || {}), status: o.status, abgeschlossenAm: now() };
       if (o.status === "lost") {
         z.status = "rueckgebucht";
-        if (z.abgerechnet && z.abwicklung === "plattform") await notifyAdmin("Verlorene Rückbuchung nach Monatsabrechnung: Gutschrift über die Provision erstellen", s, { Zahlung: z.id, Monat: z.abgerechnet, Provision: euroText(z.gebuehrBruttoCent || 0) });
+        // Direct Charge: Das Studio verliert den Betrag direkt; Tattoofin verlangt dafür keine Provision → Plattformgebühr zurück an das Studio
+        if (z.abwicklung === "direkt" && z.applicationFeeId && z.gebuehrBruttoCent && !z.rueckbuchung.gebuehrZurueckAm) {
+          try {
+            await stripe("POST", `/application_fees/${z.applicationFeeId}/refunds`, { amount: Math.max(0, z.gebuehrBruttoCent - (z.gebuehrErstattetCent || 0)) }, { idempotencyKey: `afr-lost-${o.id}` });
+            z.rueckbuchung.gebuehrZurueckAm = now();
+          } catch (e) { await notifyAdmin("⚠️ Verlorene Rückbuchung (Direct Charge): Plattformgebühr konnte nicht zurückerstattet werden", s, { Zahlung: z.id, Fehler: e.message }); }
+        }
+        if (z.abgerechnet && provisionZahlung(z)) await notifyAdmin("Verlorene Rückbuchung nach Monatsabrechnung: Gutschrift über die Provision erstellen", s, { Zahlung: z.id, Monat: z.abgerechnet, Provision: euroText(z.gebuehrBruttoCent || 0) });
       }
       await saveZahlung(z);
       await notify(s, mails.rueckbuchungEntschieden(s, z));
@@ -131,7 +139,7 @@ async function kundenEreignis(event) {
       const anteil = o.amount ? o.amount_refunded / o.amount : 1;
       let gebuehrZurueck = 0;
       const feeId = id(o.application_fee) || z.applicationFeeId;
-      if (z.abwicklung === "plattform" && z.gebuehrBruttoCent && feeId) {
+      if (provisionZahlung(z) && z.gebuehrBruttoCent && feeId) {
         const behalten = Math.round((z.stripeGebuehrCent || 0) * (100 + CFG.ustProzent) / 100);
         const ziel = Math.round(Math.max(0, z.gebuehrBruttoCent - behalten) * anteil);
         gebuehrZurueck = ziel - (z.gebuehrErstattetCent || 0);
@@ -144,7 +152,7 @@ async function kundenEreignis(event) {
       z.erstattetCent = o.amount_refunded;
       if (o.amount_refunded >= o.amount) z.status = "erstattet";
       await saveZahlung(z);
-      if (z.abwicklung === "plattform" && neuErstattet > 0) await notify(s, mails.erstattung(s, z, { betragCent: neuErstattet, provisionZurueckCent: Math.max(0, gebuehrZurueck) }));
+      if (provisionZahlung(z) && neuErstattet > 0) await notify(s, mails.erstattung(s, z, { betragCent: neuErstattet, provisionZurueckCent: Math.max(0, gebuehrZurueck) }));
       if (z.abgerechnet && gebuehrZurueck > 0) await notifyAdmin("Erstattung nach Monatsabrechnung: Gutschrift über die Provision erstellen", s, { Zahlung: z.id, Monat: z.abgerechnet, Provision_zurueck: euroText(gebuehrZurueck) });
       break;
     }

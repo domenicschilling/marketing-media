@@ -39,6 +39,9 @@ const modellText = (s) => {
   if (s.modell === "kauf") return `Kauf: Einrichtung ${euro(s.preisNetto)} netto einmalig (${euro(brutto(s.preisNetto))} brutto), keine monatliche Grundgebühr, keine Provision`;
   return `Paket Risikofrei: ${CFG.provisionProzent} % vom Zahlbetrag jeder Zahlung über Tattoofin, alles inklusive (Zahlungsgebühren und USt.), keine Einrichtungs- und keine Grundgebühr, monatlich kündbar. Digitaler QR-Code inklusive.`;
 };
+// Pflichthinweis bei Werbung mit Raten (UWG-Anhang Nr. 23e): deutlich lesbar, fett, volle Textfarbe, mindestens Fließtextgröße
+const RATEN_HINWEIS_HTML = '<span style="color:#1f3d5c;font-size:15px;line-height:1.5">*Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, nicht Tattoofin. <b style="font-size:16px">Achtung! Kreditaufnahme kostet Geld.</b></span>';
+const istProv = (z) => z.abwicklung === "plattform" || z.abwicklung === "direkt";
 const wert = (v) => (typeof v === "string" && /^https?:\/\/\S+$/.test(v) ? `<a href="${esc(v)}">${esc(v)}</a>` : esc(typeof v === "object" ? JSON.stringify(v) : v));
 const mk = (subject, l) => ({ subject, ...layout(l) });
 
@@ -64,7 +67,7 @@ export const mails = {
       ["Du zahlst nur", "die normalen Zahlungsgebühren von Stripe bzw. Klarna, direkt an Stripe"], ["Dein Geld", "landet direkt auf dem Konto deines Studios"],
     ]) + p("Damit bekommst du: Zahlungslinks per WhatsApp, eine QR-Zahlseite für die Theke, Anzahlungen mit deinen Bedingungen und Ratenzahlung über Klarna* für deine Kunden.") +
       p("<b>So geht's:</b> Knopf unten drücken, Studio-Daten eintragen, Vertrag bestätigen. Danach legst du das Zahlungskonto deines Studios bei Stripe an (ca. 10 Minuten, Ausweis und Bankverbindung bereithalten). Bitte nutze dafür genau diese E-Mail-Adresse. Den Rest richten wir mit dir ein.") +
-      p('<span style="color:#5b6370;font-size:13px">*Ratenzahlung über externe Anbieter wie Klarna, nach deren Prüfung. Tattoofin ist kein Kreditgeber. Achtung! Kreditaufnahme kostet Geld.</span>'),
+      p(RATEN_HINWEIS_HTML),
     cta: "Einladung annehmen", ctaUrl: link,
   }) : mk(`Deine Einladung zu Tattoofin – für ${firma} geschenkt`, {
     preheader: "Tattoofin für dein Studio: ohne Einrichtungsgebühr und ohne Provision.",
@@ -73,7 +76,7 @@ export const mails = {
       ["Einrichtung", "0 €"], ["Grundgebühr", "0 €"], ["Provision", "0 % – Tattoofin verdient nichts daran"],
       ["Du zahlst nur", "die normalen Gebühren von Stripe bzw. Klarna, direkt an Stripe"], ["Dein Geld", "landet direkt auf dem Konto deines Studios"],
     ]) + p("So geht's: Link öffnen, Studio-Daten eintragen, Vertrag bestätigen, dann das Zahlungskonto deines Studios verbinden (ca. 10 Minuten, Ausweis und Bankverbindung bereithalten). Wir richten den Rest mit dir ein.") +
-      p('<span style="color:#5b6370;font-size:13px">*Ratenzahlung über externe Anbieter wie Klarna, nach deren Prüfung. Tattoofin ist kein Kreditgeber. Achtung! Kreditaufnahme kostet Geld.</span>'),
+      p(RATEN_HINWEIS_HTML),
     cta: "Einladung annehmen", ctaUrl: link,
   }),
 
@@ -167,9 +170,9 @@ export const mails = {
       ["Kunde", esc(z.kunde)], ["Projekt", esc(z.beschreibung)], ["Betrag", euro(z.betragCent)],
       ["Gutschein-Code", z.gutschein?.code ? esc(z.gutschein.code) + (z.gutschein.empfaenger ? " (für " + esc(z.gutschein.empfaenger) + ")" : "") + ", gültig bis " + datum(z.gutschein.gueltigBis) : ""],
       ["Zahlungsart", esc(z.zahlartText || z.zahlart || "")],
-      ["Tattoofin " + provisionSatz(s) + " % (alles inklusive)", z.abwicklung === "plattform" ? euro(z.gebuehrBruttoCent) : ""],
-      ["Auszahlung an dich", z.abwicklung === "plattform" ? "<b>" + euro(z.betragCent - z.gebuehrBruttoCent) + "</b>" : ""],
-    ]) + p(z.abwicklung === "plattform"
+      ["Tattoofin " + provisionSatz(s) + " % (alles inklusive)", istProv(z) ? euro(z.gebuehrBruttoCent) : ""],
+      ["Auszahlung an dich", istProv(z) ? "<b>" + euro(z.betragCent - z.gebuehrBruttoCent) + "</b>" : ""],
+    ]) + p(istProv(z)
       ? "Stripe überweist den Betrag automatisch auf das Bankkonto deines Studios. Weitere Gebühren fallen für dich nicht an: Die Kosten des Zahlungsanbieters sind in den " + provisionSatz(s) + " % enthalten."
       : "Die Auszahlung auf dein Konto übernimmt Stripe nach deinem Auszahlungsplan. Gebühren des Zahlungsanbieters siehst du im Stripe-Dashboard."),
     cta: "In der App ansehen", ctaUrl: `${CFG.siteUrl}/app.html#zahlungen`,
@@ -223,7 +226,8 @@ ${g.nachricht ? `<div style="font-style:italic;color:#5b6370;margin-top:10px">�
   }),
 
   rueckbuchung: (s, z) => {
-    const plattform = z.abwicklung === "plattform";
+    const plattform = istProv(z);
+    const direkt = z.abwicklung === "direkt";
     const bis = z.rueckbuchung?.faelligBis ? `, spätestens bis <b>${datum(z.rueckbuchung.faelligBis)}</b>` : "";
     const belege = "unterschriebene Einverständniserklärung, Terminbestätigung bzw. akzeptierte Anzahlungsbedingungen, Chatverlauf, Foto vom fertigen Tattoo (ohne Gesicht), Rechnung";
     return mk(`⚠️ Rückbuchung: ${euro(z.betragCent)} von ${z.kunde || "Kunde"}`, {
@@ -232,7 +236,9 @@ ${g.nachricht ? `<div style="font-style:italic;color:#5b6370;margin-top:10px">�
       body: hallo(s) + p(`für die Zahlung von <b>${esc(z.kunde || "Kunde")}</b> über <b>${euro(z.betragCent)}</b> (${esc(z.beschreibung || "Tattoo-Projekt")}${z.art === "anzahlung" ? ", Anzahlung" : ""}) wurde eine Rückbuchung bzw. Reklamation eröffnet. Grund laut Bank/Anbieter: <b>${esc(z.rueckbuchung?.grund || "nicht angegeben")}</b>.`) +
         (plattform
           ? box(`<b>Was du jetzt tun solltest:</b> Antworte auf diese E-Mail oder schick uns per WhatsApp die Belege${bis}: ${belege}. Wir reichen sie für dich bei Stripe ein.`) +
-            p(`Solange der Fall offen ist, holt Stripe den Betrag abzüglich der Tattoofin-Provision plus ${euro(CFG.ruecklastGebuehrCent)} Rückbuchungsgebühr von deinem Studio-Konto zurück. Wird zu deinen Gunsten entschieden, bekommst du alles zurück. Geht der Fall verloren, verlangen wir für diese Zahlung keine Provision.`)
+            p(direkt
+              ? "Solange der Fall offen ist, bucht Stripe den streitigen Betrag von deinem Studio-Konto ab. Wird zu deinen Gunsten entschieden, bekommst du ihn zurück. Geht der Fall verloren, verlangen wir für diese Zahlung keine Provision."
+              : `Solange der Fall offen ist, holt Stripe den Betrag abzüglich der Tattoofin-Provision plus ${euro(CFG.ruecklastGebuehrCent)} Rückbuchungsgebühr von deinem Studio-Konto zurück. Wird zu deinen Gunsten entschieden, bekommst du alles zurück. Geht der Fall verloren, verlangen wir für diese Zahlung keine Provision.`)
           : box(`<b>Was du jetzt tun solltest:</b> Im Stripe-Dashboard unter „Zahlungen → Angefochten“ Belege einreichen${bis}: ${belege}.`)),
       cta: plattform ? "Belege per WhatsApp schicken" : "Zum Stripe-Dashboard",
       ctaUrl: plattform ? `https://wa.me/${CFG.whatsapp}` : "https://dashboard.stripe.com/disputes",
@@ -248,7 +254,7 @@ ${g.nachricht ? `<div style="font-style:italic;color:#5b6370;margin-top:10px">�
         ? p(`die Reklamation zur Zahlung von <b>${esc(z.kunde || "Kunde")}</b> über <b>${euro(z.betragCent)}</b> ist erledigt. ${z.rueckbuchung?.zurueckgeholtCent ? `Die zurückgeholten <b>${euro(z.rueckbuchung.zurueckgeholtCent)}</b> überweist Stripe wieder auf dein Studio-Konto.` : "Das Geld bleibt bei dir."}`)
         : st === "lost"
           ? p(`die Bank bzw. der Zahlungsanbieter hat die Rückbuchung zur Zahlung von <b>${esc(z.kunde || "Kunde")}</b> über <b>${euro(z.betragCent)}</b> zugunsten des Kunden entschieden. Der Betrag geht an den Kunden zurück.`) +
-            (z.abwicklung === "plattform" ? p("Für diese Zahlung verlangen wir keine Provision. Tipp für die Zukunft: Anzahlungsbedingungen und Einverständniserklärung immer unterschreiben bzw. bestätigen lassen, das sind die stärksten Belege.") : "")
+            (istProv(z) ? p("Für diese Zahlung verlangen wir keine Provision. Tipp für die Zukunft: Anzahlungsbedingungen und Einverständniserklärung immer unterschreiben bzw. bestätigen lassen, das sind die stärksten Belege.") : "")
           : p(`der Rückbuchungsfall zur Zahlung von <b>${esc(z.kunde || "Kunde")}</b> ist abgeschlossen (Status: ${esc(st || "")}).`)),
       cta: "In der App ansehen", ctaUrl: `${CFG.siteUrl}/app.html#zahlungen`,
     });

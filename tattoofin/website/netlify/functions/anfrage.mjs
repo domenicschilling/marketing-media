@@ -24,7 +24,7 @@ export default handler(async (req, context) => {
   // 19.10.2026: Name des Studios ist Pflicht. Endkunden schrieben hier z. B. „Ich habe bald Tattoo-Termin, das Tattoo kostet 400 €“
   // → solche Sätze freundlich auf die Kunden-Seite /raten schicken statt als Studio-Anfrage zu speichern.
   if (studio.length < 2) fehler.studio = "Bitte gib den Namen deines Studios ein.";
-  else if (ENDKUNDE.test(studio)) fehler.studio = "Das sieht nicht nach einem Studionamen aus. Du bist Kunde und willst in Raten zahlen? Dann schau auf tattoofin.de/raten.";
+  else if (ENDKUNDE.test(studio)) fehler.studio = "Das sieht nicht nach einem Studionamen aus. Du bist Kunde und willst dein Tattoo bezahlen? Dann schau auf tattoofin.de/raten.";
   if (!telefonE164(telefon)) fehler.telefon = "Bitte gib eine Handynummer ein, z. B. 0151 23456789.";
   // Pflicht-Häkchen „Ich führe ein Tattoostudio bzw. arbeite in einem“
   if (b.studio_bestaetigt !== true && b.studio_bestaetigt !== "ja") fehler.studio_bestaetigt = "Bitte bestätige, dass du ein Tattoostudio führst oder in einem arbeitest.";

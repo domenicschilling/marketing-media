@@ -88,7 +88,7 @@
       vorname: function (v) { return v.trim().length >= 2 ? "" : "Bitte gib deinen Vornamen ein."; },
       studio: function (v) {
         if (v.trim().length < 2) return "Bitte gib den Namen deines Studios ein.";
-        return ENDKUNDE.test(v) ? "Das sieht nicht nach einem Studionamen aus. Du bist Kunde und willst in Raten zahlen? Dann schau auf tattoofin.de/raten." : "";
+        return ENDKUNDE.test(v) ? "Das sieht nicht nach einem Studionamen aus. Du bist Kunde und willst dein Tattoo bezahlen? Dann schau auf tattoofin.de/raten." : "";
       },
       studio_bestaetigt: function () { return felder.studio_bestaetigt.checked ? "" : "Bitte bestätige, dass du ein Tattoostudio führst oder in einem arbeitest."; },
       telefon: function (v) { var d = v.replace(/\D/g, ""); return d.length >= 8 && d.length <= 15 ? "" : "Bitte gib eine Handynummer ein, z. B. 0151 23456789."; },

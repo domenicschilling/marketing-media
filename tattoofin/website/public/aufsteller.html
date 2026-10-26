@@ -59,7 +59,7 @@
     var r = await fetch("/api/aufsteller?s=" + encodeURIComponent(slug) + "&t=" + encodeURIComponent(t)), d = await r.json();
     if (!r.ok) throw new Error(d.error || "Studio nicht gefunden");
     await TFAufsteller.laden();
-    var o = { url: d.zahlseite, firma: d.firma, variante: d.variante, logo: await TFAufsteller.logoAusDaten(d.logo) };
+    var o = { url: d.zahlseite, firma: d.firma, klarna: d.klarna, variante: d.variante, logo: await TFAufsteller.logoAusDaten(d.logo) };
     $("auf-titel").textContent = d.firma + " · " + (d.variante === "logo" ? "mit Studio-Logo" : "mit Studioname") + " · Holz " + (d.holz === "dunkel" ? "dunkel" : "hell");
     $("auf-holz").textContent = d.holz === "dunkel" ? "gewünscht: dunkel (Walnuss) – bei Formulor nicht erhältlich, dort Birke 3 mm" : "Sperrholz Birke 3 mm (hell)";
     var info = TFAufsteller.bauen(o);

@@ -80,7 +80,7 @@
         var bez = ["bezahlt", "erstattet", "rueckgebucht"].indexOf(z.status) >= 0;
         var tf = z.status === "rueckgebucht" ? 0 : Math.max(0, (z.gebuehrBruttoCent || 0) - (z.gebuehrErstattetCent || 0));
         var rest = z.betragCent - (z.erstattetCent || 0);
-        var erstattbar = prov && z.abwicklung === "plattform" && z.status === "bezahlt" && rest > 0 && !(z.rueckbuchung && !z.rueckbuchung.abgeschlossenAm);
+        var erstattbar = prov && (z.abwicklung === "plattform" || z.abwicklung === "direkt") && z.status === "bezahlt" && rest > 0 && !(z.rueckbuchung && !z.rueckbuchung.abgeschlossenAm);
         return "<tr><td>" + dat(z.bezahltAm || z.createdAt) + "</td><td>" + e(z.kunde || "–") + (z.email ? "<br><small class='muted'>" + e(z.email) + "</small>" : "") + "</td><td>" + e(z.beschreibung) + ((z.art === "anzahlung" || z.anzahlung) && !/anzahlung/i.test(z.beschreibung || "") ? " <small class='muted'>(Anzahlung)</small>" : "") + (z.art === "zahlseite" ? " <small class='muted'>(Zahlseite)</small>" : "") +
           "</td><td><b>" + euro(z.betragCent, true) + "</b>" + (z.erstattetCent && z.status === "bezahlt" ? "<br><small class='muted'>" + euro(z.erstattetCent, true) + " erstattet</small>" : "") + "</td><td><span class=\"tag " + e(z.status) + "\">" + e(STATUS[z.status] || z.status) + "</span></td><td>" + e(z.zahlartText || "–") + "</td>" +
           (prov ? "<td>" + (bez ? euro(tf, true) : "–") + "</td><td>" + (bez ? euro(z.status === "rueckgebucht" ? 0 : rest - tf, true) : "–") + "</td>" : "") +
