@@ -105,23 +105,22 @@
       v.src = c.videoUrl;
       v.addEventListener("loadedmetadata", function () { $("video-wrap").classList.remove("hidden"); });
     }
-    // Paket-Rechner: Kosten pro Monat je nach Zahlungen über Tattoofin.
-    // Annahme Zahlungsgebühr bei Monatlich/Einmalzahlung: ca. 3,3 % (vorsichtig, Klarna 2,99 % + 0,35 €; Karte meist günstiger).
-    var GEBUEHR = 0.033;
+    // Paket-Rechner (seit 26.10.2026 ohne Risikofrei): Kosten an Tattoofin inkl. USt. nach Nutzungsdauer, Monatlich gegen Einmalzahlung.
+    // Die Zahlungsgebühren an Stripe sind bei beiden Paketen gleich und deshalb nicht enthalten.
     function rechne() {
-      var v = +$("volumen").value;
-      $("v-volumen").textContent = v.toLocaleString("de-DE") + " €";
-      var risiko = v * c.provisionProzent / 100, gebuehr = v * GEBUEHR, monat = c.monatNetto * (100 + c.ustProzent) / 10000 + gebuehr; // alles brutto: 10 % enthalten USt., 49 € + USt.
-      $("r-risiko").textContent = TF.euro(Math.round(risiko) * 100);
-      $("r-monat").textContent = TF.euro(Math.round(monat) * 100);
-      $("r-einmal").textContent = "ca. " + TF.euro(Math.round(gebuehr) * 100);
-      var monatBesser = monat < risiko;
-      $("r-tipp").textContent = monatBesser ? "Monatlich ⭐" : "Risikofrei";
-      $("r-tipp-text").textContent = monatBesser
-        ? "Ab ca. 20 Monaten Laufzeit ist die Einmalzahlung noch günstiger als Monatlich."
-        : "Bei diesem Betrag zahlst du mit Risikofrei am wenigsten, ganz ohne Fixkosten. Die Einmalzahlung kostet vorab 999 € netto und lohnt sich erst über mehrere Jahre.";
+      var n = +$("monate").value;
+      $("v-monate").textContent = n + (n === 1 ? " Monat" : " Monate");
+      var proMonat = c.monatNetto * (100 + c.ustProzent) / 100, einmal = c.kaufNetto * (100 + c.ustProzent) / 100; // Cent, brutto
+      var monat = proMonat * n;
+      $("r-monat").textContent = TF.euro(Math.round(monat), true);
+      $("r-einmal").textContent = TF.euro(Math.round(einmal), true);
+      var einmalBesser = einmal < monat;
+      $("r-tipp").textContent = einmalBesser ? "Einmalzahlung" : "Monatlich ⭐";
+      $("r-tipp-text").textContent = einmalBesser
+        ? "Bei dieser Dauer ist die Einmalzahlung günstiger. Dafür zahlst du am Anfang einmalig " + TF.euro(Math.round(einmal), true) + "."
+        : "Bei dieser Dauer zahlst du mit Monatlich weniger und startest ohne große Einmalzahlung. Ab ca. 20 Monaten Laufzeit lohnt sich die Einmalzahlung.";
     }
-    $("volumen").addEventListener("input", rechne);
+    $("monate").addEventListener("input", rechne);
     rechne();
   });
 })();

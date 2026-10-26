@@ -325,7 +325,7 @@ ${g.nachricht ? `<div style="font-style:italic;color:#5b6370;margin-top:10px">�
   anmeldungAbgebrochen: (s, { resumeUrl }) => mk("Fast geschafft: dein Abschluss ist noch offen", {
     title: "Du warst fast fertig 🙂", preheader: "Mit einem Klick weitermachen.",
     body: hallo(s) + p("du hast gestern angefangen, Tattoofin für dein Studio abzuschließen, aber die Zahlung ist noch offen.") +
-      p(`Falls etwas unklar war: Antworte einfach auf diese E-Mail. Und falls du lieber ohne Fixkosten startest: Im Paket Risikofrei zahlst du nur ${CFG.provisionProzent} % von Zahlungen, die über Tattoofin laufen, inklusive aller Zahlungsgebühren.`),
+      p(`Falls etwas unklar war: Antworte einfach auf diese E-Mail, wir helfen dir gern bei der Wahl zwischen Monatlich (${euro(CFG.monatNetto)} netto im Monat) und Einmalzahlung (${euro(CFG.kaufNetto)} netto einmalig).`),
     cta: "Abschluss fortsetzen", ctaUrl: resumeUrl,
   }),
 

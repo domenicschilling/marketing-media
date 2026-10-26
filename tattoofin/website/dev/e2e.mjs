@@ -19,6 +19,9 @@ fs.mkdirSync(shots, { recursive: true }); fs.mkdirSync(handyShots, { recursive: 
 const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "tf-data-"));
 // Feste „Jetzt“-Zeit vor dem Klarna-Stichtag (20.11.2026), damit die Tests nicht vom Kalendertag abhängen
 process.env.TF_JETZT = "2026-10-27T12:00:00+01:00";
+// Seit 26.10.2026 ist das Paket Risikofrei für Neukunden geschlossen. Die Abläufe der BESTANDSSTUDIOS (Risikofrei) werden hier weiter geprüft:
+// Diese Studios werden wie vor der Schließung angelegt (Notschalter RISIKOFREI_NEU). Das Sperr-Verhalten selbst prüft der Abschnitt „Risikofrei geschlossen“ weiter unten.
+process.env.RISIKOFREI_NEU = "1";
 await startDev({ port: PORT, mock: true, dataDir, quiet: true });
 
 let ok = 0, fail = 0;
@@ -56,7 +59,7 @@ async function cookiesAblehnen(p) {
   if (nein) await nein.click();
 }
 
-// paket: risikofrei | monatlich | einmal; alternativ modell (alte Links: provision → risikofrei, kauf → einmal)
+// paket: monatlich | einmal; alternativ modell (alter Link: kauf → einmal). Risikofrei ist für Neukunden geschlossen (Bestandsstudios werden per API angelegt).
 async function signup(p, { paket, modell, email, firma, zahlart, geschenk, shot }) {
   await p.goto(`${BASE}/start.html?${geschenk ? "geschenk=" + geschenk : paket ? "paket=" + paket : "modell=" + modell}`);
   await cookiesAblehnen(p);
@@ -99,31 +102,38 @@ async function signatur(p) {
 
 try {
   // ---------------------------------------------------------------- Startseite
-  console.log("Startseite: drei Pakete (Risikofrei, Monatlich, Einmalzahlung) + Rechner + QR-Aufsteller");
+  console.log("Startseite: zwei Pakete (Monatlich, Einmalzahlung) + Rechner + QR-Aufsteller, kein Risikofrei");
   const p0 = await neueSeite();
   await p0.goto(BASE + "/");
   check((await p0.textContent("h1")).includes("leichter bezahlbar"), "Hero lädt");
-  check(await p0.locator(".prices.drei .price").count() === 3, "Drei Pakete auf der Startseite");
-  await p0.waitForFunction(() => document.getElementById("r-risiko").textContent.includes("€"));
-  check((await p0.textContent("#r-risiko")).includes("150") && (await p0.textContent("#r-monat")).includes("108"), "Rechner 1.500 €/Monat: Risikofrei 150 €, Monatlich 58,31 € + 3,3 % ≈ 108 € (brutto)");
-  check((await p0.textContent("#r-tipp")).includes("Monatlich"), "Rechner empfiehlt Monatlich bei 1.500 €/Monat");
-  await p0.locator("#volumen").evaluate((el) => { el.value = 500; el.dispatchEvent(new Event("input")); });
-  check((await p0.textContent("#r-tipp")).includes("Risikofrei"), "Rechner empfiehlt Risikofrei bei 500 €/Monat");
+  check(await p0.locator(".prices.zwei .price").count() === 2 && await p0.locator(".prices.drei").count() === 0, "Zwei Pakete auf der Startseite (Monatlich, Einmalzahlung)");
+  await p0.waitForFunction(() => document.getElementById("r-monat").textContent.includes("€"));
+  check((await p0.textContent("#r-monat")).includes("699,72") && (await p0.textContent("#r-einmal")).includes("1.188,81"), "Rechner 12 Monate: Monatlich 12 × 58,31 € = 699,72 €, Einmalzahlung 1.188,81 € (brutto)");
+  check((await p0.textContent("#r-tipp")).includes("Monatlich"), "Rechner empfiehlt Monatlich bei 12 Monaten");
+  await p0.locator("#monate").evaluate((el) => { el.value = 36; el.dispatchEvent(new Event("input")); });
+  check((await p0.textContent("#r-tipp")).includes("Einmalzahlung"), "Rechner empfiehlt Einmalzahlung bei 36 Monaten");
+  await p0.locator("#monate").evaluate((el) => { el.value = 20; el.dispatchEvent(new Event("input")); });
+  check((await p0.textContent("#r-tipp")).includes("Monatlich"), "Grenze: bei 20 Monaten noch Monatlich (20 × 58,31 € = 1.166,20 € < 1.188,81 €)");
+  await p0.locator("#monate").evaluate((el) => { el.value = 21; el.dispatchEvent(new Event("input")); });
+  check((await p0.textContent("#r-tipp")).includes("Einmalzahlung"), "Grenze: ab 21 Monaten Einmalzahlung günstiger");
   const preise = await p0.textContent("#preise");
-  check(preise.includes("999") && preise.includes("49") && preise.includes("Empfohlen") && preise.includes("900 €") && !preise.includes("730") && preise.includes("20 Monaten") && !preise.includes("1.499") && !/Gründer|Profi\b/.test(preise), "Pakete 10 % / 49 € / 999 €, Monatlich empfohlen, Lohnt-sich-Rechnung, keine alten Preise");
+  check(preise.includes("999") && preise.includes("49") && preise.includes("Empfohlen") && !preise.includes("730") && preise.includes("20 Monaten") && !preise.includes("1.499") && !/Gründer|Profi\b|Risikofrei|10 %|900 €|Grundgebühr|Fixkosten an Tattoofin keine/.test(preise), "Pakete 49 € / 999 €, Monatlich empfohlen, Lohnt-sich-Rechnung, keine alten Preise, nichts von Risikofrei"); 
   check((await p0.textContent("#aufsteller")).includes("KI-generiertes Symbolbild"), "QR-Aufsteller-Abschnitt mit KI-Kennzeichnung");
   const ld = await p0.textContent('script[type="application/ld+json"]');
-  check(ld.includes("Paket Monatlich") && ld.includes("Paket Einmalzahlung") && !ld.includes("1499"), "Strukturierte Daten: drei Pakete");
+  check(ld.includes("Paket Monatlich") && ld.includes("Paket Einmalzahlung") && !ld.includes("1499") && !/Risikofrei|10 %/.test(ld), "Strukturierte Daten: nur Monatlich und Einmalzahlung, kein Risikofrei");
   await p0.waitForTimeout(1000);
   await p0.screenshot({ path: path.join(shots, "landing.png"), fullPage: true });
   const pS = await neueSeite();
   await pS.goto(BASE + "/studios.html");
-  check((await pS.textContent("#pakete")).includes("Monatlich") && (await pS.content()).includes("paket=risikofrei"), "/studios: drei Pakete, Start-Link Risikofrei");
+  { const sh = await pS.content(); check((await pS.textContent("#pakete")).includes("Monatlich") && (await pS.locator("#pakete .pk").count()) === 2 && !/risikofrei/i.test(sh) && sh.includes("paket=monatlich"), "/studios: zwei Pakete, Start-Links auf Monatlich, kein Risikofrei"); }
 
   // ---------------------------------------------------------------- A: Paket Start
-  console.log("Paket Risikofrei (alter Link ?modell=provision): Abschluss → direkt ins Dashboard → eingebettete Einrichtung");
+  console.log("Bestandsstudio Paket Risikofrei (angelegt wie vor der Schließung): Dashboard → eingebettete Einrichtung");
   const pA = await neueSeite();
-  await signup(pA, { modell: "provision", email: "prov@example.com", firma: "Ink Provision" });
+  { const r = await post("/api/signup", { firma: "Ink Provision", inhaber: "Alex Muster", strasse: "Musterstr. 1", plz: "96047", ort: "Bamberg", email: "prov@example.com", telefon: "0151 1234567", studioTelefon: "0951 123456", unterzeichner: "Alex Muster", paket: "risikofrei", akzeptiert: { vertrag: true, avv: true, unternehmer: true } });
+    const ck = (r.headers.get("set-cookie") || "").split(";")[0]; const [cn, ...cv] = ck.split("=");
+    await pA.context().addCookies([{ name: cn, value: cv.join("="), url: BASE }]);
+    await pA.goto(BASE + "/app.html#einrichtung"); }
   await einrichtungEingebettet(pA);
   check(true, "Nach dem Abschluss eingeloggt im Dashboard, Einrichtung eingebettet abgeschlossen");
   const mProv = mailsAn("prov@example.com");
@@ -162,7 +172,7 @@ try {
   await pC2.waitForFunction(() => document.getElementById("firma").value === "Ink Abbruch");
   check(true, "Nach Abbruch sind Angaben wieder da");
   const basis = { firma: "x", inhaber: "x", strasse: "x", plz: "1", ort: "x", telefon: "1", studioTelefon: "1", unterzeichner: "x", akzeptiert: { vertrag: true, avv: true, unternehmer: true } };
-  check((await post("/api/signup", { ...basis, paket: "risikofrei", email: "kauf@example.com" })).status === 409, "Doppelte Anmeldung abgelehnt");
+  check((await post("/api/signup", { ...basis, paket: "monatlich", email: "kauf@example.com" })).status === 409, "Doppelte Anmeldung abgelehnt");
   check((await post("/api/signup", { paket: "einmal", email: "neu@example.com" })).status === 400, "Signup ohne Pflichtangaben abgelehnt");
   await post("/api/signup", { ...basis, paket: "einmal", aktionscode: "RATENJA", email: "code@example.com" });
   check(!Object.values((await mock("state")).sessions).some((x) => x.amount_total === 148631), "Aktionscode RATENJA abgeschaltet (Preis bleibt 999 €)");
@@ -992,6 +1002,37 @@ try {
     await pV.goto(BASE + "/studios.html");
     check(await pV.evaluate(() => Boolean(document.querySelector("#ablauf-video #tfv-play")) && document.documentElement.scrollWidth <= innerWidth), "/studios: Video-Abschnitt, kein Querscrollen");
   }
+
+  // ---------------------------------------------------------------- Risikofrei für Neukunden geschlossen (26.10.2026)
+  console.log("Risikofrei für Neukunden geschlossen: alte Links, Paketwahl, Anmeldung gesperrt");
+  delete process.env.RISIKOFREI_NEU;
+  for (const q of ["paket=risikofrei", "modell=provision", "paket=start"]) {
+    const pR = await neueSeite({ viewport: { width: 390, height: 844 } });
+    await pR.goto(`${BASE}/start.html?${q}`); await cookiesAblehnen(pR);
+    const info = await pR.textContent("#alert");
+    check(/nicht mehr/.test(info) && /Monatlich/.test(info) && /Einmalzahlung/.test(info), `start.html?${q}: freundlicher Hinweis auf die Paketwahl`);
+    check(await pR.locator("input[name=paket][value=risikofrei]").count() === 0 && await pR.locator("input[name=paket]").count() === 2 && await pR.locator("input[name=paket]:checked").count() === 0, `start.html?${q}: nur Monatlich + Einmalzahlung, nichts vorgewählt`);
+    await pR.click("section[data-step='1'] [data-next]");
+    check(/wähle ein Paket/.test(await pR.textContent("#alert")), `start.html?${q}: ohne Paketwahl kein Weiter`);
+    await pR.context().close();
+  }
+  { const pM = await neueSeite({ viewport: { width: 390, height: 844 } });
+    await pM.goto(`${BASE}/start.html?paket=monatlich`); await cookiesAblehnen(pM);
+    check(await pM.locator("input[name=paket][value=monatlich]:checked").count() === 1 && !/nicht mehr/.test(await pM.textContent("#alert")), "start.html?paket=monatlich: Monatlich vorgewählt, kein Hinweis");
+    check(!/risikofrei|10 ?%|900 €|Grundgeb|Fixkosten/i.test(await pM.textContent("section[data-step='1']")), "Paketwahl: kein Wort von Risikofrei, 10 %, 900 €, Grundgebühr, Fixkosten");
+    await pM.context().close(); }
+  const sperre = await post("/api/signup", { ...basis, paket: "risikofrei", email: "neu-rf@example.com" });
+  const sperreD = await sperre.json();
+  check(sperre.status === 410 && sperreD.gesperrt === true && /Risikofrei gibt es für neue Anmeldungen nicht mehr/.test(sperreD.error) && !(await studioPer("neu-rf@example.com")), "API: Neuanmeldung Risikofrei wird mit klarer Meldung abgelehnt, kein Studio angelegt");
+  check((await post("/api/signup", { ...basis, modell: "provision", email: "neu-rf2@example.com" })).status === 410 && (await post("/api/signup", { ...basis, paket: "start", email: "neu-rf3@example.com" })).status === 410 && !(await studioPer("neu-rf2@example.com")) && !(await studioPer("neu-rf3@example.com")), "API: auch ?modell=provision und alter Name „start“ sind gesperrt");
+  check(mailsAn("neu-rf@example.com").length === 0 && mailsAn("neu-rf2@example.com").length === 0, "Gesperrte Anmeldung verschickt keine Mail");
+  const paketeListe = await (await fetch(BASE + "/api/signup?pakete=1")).json();
+  const cfgListe = await (await fetch(BASE + "/api/config")).json();
+  check(JSON.stringify(paketeListe.pakete.map((x) => x.id)) === '["monatlich","einmal"]' && JSON.stringify(cfgListe.pakete.map((x) => x.id)) === '["monatlich","einmal"]', "Paketlisten (/api/signup?pakete=1, /api/config): nur Monatlich + Einmalzahlung");
+  check((await post("/api/signup", { ...basis, paket: "monatlich", email: "neu-mo@example.com" })).status === 200, "Monatlich lässt sich weiter abschließen");
+  const bestand = await (await fetch(`${BASE}/api/admin/studio/${(await studioPer("prov@example.com")).id}`, { headers: { Authorization: "Bearer admin" } })).json();
+  check(/risikofrei/i.test(bestand.studio.paket) && bestand.studio.modell === "provision" && ["einrichtung", "live"].includes(bestand.studio.status), "Bestandsstudio bleibt im Paket Risikofrei (Provision), auch bei geschlossener Anmeldung");
+  process.env.RISIKOFREI_NEU = "1";
 
   await h.goto(`${BASE}/`);
   await cookiesAblehnen(h);

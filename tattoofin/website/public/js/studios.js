@@ -39,7 +39,7 @@
     if (/wa\.me|api\.whatsapp\.com/.test(h)) {
       u("whatsapp", { ort: a.closest(".leiste") ? "leiste" : a.closest(".held") ? "held" : "seite" });
       if (consent() !== "nein" && einmalHeute("lp-wa") && window.TFTrack) TFTrack.track("Lead", { content_name: "WhatsApp (Kampagnen-Seite)", content_category: "Tattoo-Studio" });
-    } else if (/^\/start/.test(h)) u("online-start", { paket: (h.match(/paket=(\w+)/) || [])[1] || "risikofrei" });
+    } else if (/^\/start/.test(h)) u("online-start", { paket: (h.match(/paket=(\w+)/) || [])[1] || "monatlich" });
     else if (a.dataset.cta) u("cta-klick", { ort: a.dataset.cta });
     else if (a.dataset.lp === "raten") u("kunde-weiter", { ort: a.closest(".held") ? "held" : "formular" });
   }, true);
@@ -59,14 +59,16 @@
     }, { threshold: 0.35 }).observe(film);
   }
 
-  // Rechner: Kunde zahlt X → 10 % Tattoofin → 90 % an dich
+  // Rechner: Kunde zahlt X → Tattoofin-Provision 0 € → Zahlungsgebühr von Stripe (Spanne: Karte ab 1,5 % + 0,25 €, Klarna ab 2,99 % + 0,35 €) → Rest auf dem Stripe-Konto
   var rb = document.getElementById("r-betrag"), rr = document.getElementById("r-regler");
   var fee = document.getElementById("r-fee"), du = document.getElementById("r-du");
-  function euro(c) { return (c / 100).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €"; }
+  function eur0(c) { return Math.round(c / 100).toLocaleString("de-DE"); }
   function zahl(v) { var n = Number(String(v).replace(/\s|€/g, "").replace(/\.(?=\d{3}(\D|$))/g, "").replace(",", ".")); return isFinite(n) ? n : NaN; }
   function rechne(betrag) {
     var c = Math.round(betrag * 100); if (!(c > 0)) { fee.textContent = "–"; du.textContent = "–"; return; }
-    var f = Math.round(c * 0.10); fee.textContent = euro(f); du.innerHTML = euro(c - f).replace("€", '<span class="eur">€</span>');
+    var kleinste = Math.round(c * 0.015) + 25, groesste = Math.round(c * 0.0299) + 35;
+    fee.innerHTML = "ca. " + eur0(kleinste) + "–" + eur0(groesste) + "&nbsp;€";
+    du.innerHTML = "ca. " + eur0(c - groesste) + "–" + eur0(c - kleinste) + '&nbsp;<span class="eur">€</span>';
   }
   var gerechnet = false;
   function merk() { if (!gerechnet) { gerechnet = true; u("rechner"); } }

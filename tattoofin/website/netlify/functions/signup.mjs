@@ -1,5 +1,6 @@
 // Online-Abschluss: Paket wählen, Vertrag + AVV akzeptieren, Stripe-Kunde anlegen, dann je nach Paket:
-//   Risikofrei   (modell provision): nichts zu zahlen → Stripe-Auszahlungskonto (Express) verbinden
+//   Risikofrei   (modell provision): NUR NOCH FÜR BESTANDSSTUDIOS. Seit 26.10.2026 für Neuanmeldungen gesperrt (siehe paketNeuWaehlbar in config.mjs),
+//                der Zweig unten bleibt für den Notschalter RISIKOFREI_NEU=1 und die Tests der Bestandsabläufe erhalten.
 //   Monatlich    (modell kauf, zahlart abo): Stripe-Checkout im Abo-Modus auf dem DSX-Konto (49 € netto + USt. im Monat)
 //                → danach eigenes Stripe-Konto (Standard) verbinden wie bei der Einmalzahlung
 //   Einmalzahlung (modell kauf, zahlart sofort|rechnung): einmalig 999 € netto per Checkout oder Rechnung
@@ -7,9 +8,9 @@
 // Zahlungskonto (eingebettet bzw. per Weiterleitung zu Stripe) einrichtet.
 // POST /api/signup   → { url } (Stripe Checkout bzw. Danke-Seite → Dashboard) oder { next } (Einmalzahlung auf Rechnung)
 // GET  /api/signup?id=…  → Status für Danke-Seite bzw. Fortsetzen
-// GET  /api/signup?pakete=1 → die drei Pakete (öffentlich)
+// GET  /api/signup?pakete=1 → die Pakete, die neu gewählt werden können (öffentlich; ohne Risikofrei)
 // Alte Links: ?modell=provision → Risikofrei, ?modell=kauf → Einmalzahlung. Der Aktionscode (RATENJA) ist abgeschaltet.
-import { CFG, PAKETE, PAKET_ALIAS } from "./_lib/config.mjs";
+import { CFG, PAKETE, PAKET_ALIAS, paketNeuWaehlbar, PAKETE_NEU_TEXT } from "./_lib/config.mjs";
 import { json, fail, body, clean, isEmail, id, now, handler, clientIp, brutto, addMonths } from "./_lib/util.mjs";
 import { getStudio, saveStudio, studioBy, store, log, normEmail, studiosPerEmail, AKTIV } from "./_lib/store.mjs";
 import { stripe, ensureCustomer, taxRateId, TATTOOFIN_BRANDING } from "./_lib/stripe.mjs";
@@ -26,7 +27,7 @@ const RECHNUNG_FUSS = `${CFG.firma} · ${CFG.adresse} · USt-IdNr. ${CFG.ustid}`
 
 export default handler(async (req, context) => {
   if (req.method === "GET") {
-    if (new URL(req.url).searchParams.get("pakete")) return json({ pakete: Object.values(PAKETE) }, 200, { "cache-control": "no-store" });
+    if (new URL(req.url).searchParams.get("pakete")) return json({ pakete: Object.values(PAKETE).filter((x) => paketNeuWaehlbar(x.id)) }, 200, { "cache-control": "no-store" });
     const u = new URL(req.url);
     const s = await getStudio(u.searchParams.get("id"));
     if (!s) return fail("Nicht gefunden", 404);
@@ -46,6 +47,11 @@ export default handler(async (req, context) => {
   const geschenk = b.geschenk ? await store.get(`geschenk/${clean(b.geschenk, 40)}`) : null;
   if (b.geschenk && (!geschenk || geschenk.benutzt)) return fail("Diese Einladung ist ungültig oder wurde schon benutzt. Bitte melde dich bei uns.");
   const paketId = geschenk ? null : PAKET_ALIAS[clean(b.paket, 20).toLowerCase()] || PAKET_ALIAS[clean(b.modell, 20).toLowerCase()] || null;
+  // Risikofrei: für Neukunden geschlossen (auch bei alten Links ?paket=risikofrei / ?modell=provision und bei alten Entwürfen), klare Meldung statt Anmeldung
+  if (paketId && !paketNeuWaehlbar(paketId)) {
+    await log("signup-gesperrt", { paket: paketId, ip: clientIp(req, context) });
+    return json({ error: PAKETE_NEU_TEXT, gesperrt: true, weiter: "/start.html" }, 410, { "cache-control": "no-store" });
+  }
   const paket = PAKETE[paketId];
   const modell = geschenk ? "kauf" : paket ? paket.modell : null;
   const zahlart = geschenk ? "geschenk" : paketId === "risikofrei" ? "provision" : paketId === "monatlich" ? "abo" : (b.zahlart === "rechnung" ? "rechnung" : "sofort");

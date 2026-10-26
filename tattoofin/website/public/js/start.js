@@ -6,11 +6,14 @@
 
   function show(msg, type) { alertBox.innerHTML = msg ? '<div class="alert ' + (type || "err") + '">' + TF.esc(msg) + "</div>" : ""; }
   function val(n) { var el = f.elements[n]; return el ? (el.type === "checkbox" ? el.checked : (el.value || "").trim()) : ""; }
-  // Paket: risikofrei | monatlich | einmal (alte Links ?modell=provision → risikofrei, ?modell=kauf → einmal)
-  var ALIAS = { provision: "risikofrei", kauf: "einmal", risikofrei: "risikofrei", monatlich: "monatlich", einmal: "einmal", einmalzahlung: "einmal" };
-  var NAMEN = { risikofrei: "Risikofrei", monatlich: "Monatlich", einmal: "Einmalzahlung" };
+  // Paket: monatlich | einmal (alte Links ?modell=kauf → einmal). Das Paket Risikofrei gibt es seit 26.10.2026 für neue Anmeldungen nicht mehr:
+  // alte Links (?paket=risikofrei, ?modell=provision, ?paket=start) und alte Entwürfe führen freundlich auf die Paketwahl, nichts wird vorgewählt.
+  var ALIAS = { kauf: "einmal", monatlich: "monatlich", einmal: "einmal", einmalzahlung: "einmal", profi: "einmal" };
+  var GESCHLOSSEN = { provision: 1, risikofrei: 1, start: 1 };
+  var NAMEN = { monatlich: "Monatlich", einmal: "Einmalzahlung" };
+  var HINWEIS_RISIKOFREI = "Das Paket Risikofrei gibt es für neue Anmeldungen nicht mehr. Bitte wähle unten Monatlich oder Einmalzahlung. Studios, die schon Risikofrei haben, sind nicht betroffen.";
   function paket() { var r = f.querySelector("input[name=paket]:checked"); return r ? r.value : ""; }
-  function modell() { var p = paket(); return p === "risikofrei" ? "provision" : p ? "kauf" : ""; }
+  function modell() { return paket() ? "kauf" : ""; }
   function zahlart() { var r = f.querySelector("input[name=zahlart]:checked"); return r ? r.value : "sofort"; }
 
   function go(n) {
@@ -44,19 +47,7 @@
       html = "<p><b>Deine persönliche Einladung</b> · 0 € Einrichtung, keine Grundgebühr, keine Provision – du zahlst nur die normalen Zahlungsgebühren von Stripe bzw. Klarna direkt an Stripe.</p>" +
         "<p style=\"margin-bottom:0\"><b>Jetzt wird nichts bezahlt.</b> Danach legst du in ca. 10 Minuten das Zahlungskonto deines Studios an. Halte Ausweis und Bankverbindung bereit.</p>";
       sub.textContent = "Einladung annehmen";
-      kurz = ["Keine Einrichtungsgebühr, keine Grundgebühr, keine Provision.", "Du zahlst nur die normalen Gebühren von Stripe bzw. Klarna, direkt an Stripe.", "Das Geld deiner Kunden landet direkt auf dem Konto deines Studios.", "Wir richten alles mit dir ein."];
-    } else if (p === "risikofrei") {
-      html = "<p><b>Paket Risikofrei</b> · " + C.provisionProzent + " % auf alle Zahlungen, inkl. der Zahlungsgebühr</p>" +
-        "<p style=\"margin-bottom:0\"><b>Jetzt wird nichts bezahlt.</b> Danach richtest du in deinem Studio-Bereich in ca. 10 Minuten dein Auszahlungskonto ein. Halte Ausweis und Bankverbindung bereit.</p>";
-      sub.textContent = "Jetzt verbindlich starten";
-      kurz = [
-        "Keine Einrichtungsgebühr, keine Fixkosten: Jetzt wird nichts bezahlt.",
-        C.provisionProzent + " % nur, wenn über Tattoofin Geld reinkommt. Alles inklusive, auch Zahlungsgebühren, Klarna und USt.",
-        "Der Rest kommt automatisch aufs Konto deines Studios. Beispiel: Kunde zahlt 1.000 €, du bekommst 900 €.",
-        "Bei einer Rückbuchung holen wir den Betrag (ohne unsere Provision) plus " + TF.euro(C.ruecklastGebuehrCent || 2000) + " Rückbuchungsgebühr von deinem Auszahlungskonto zurück. Gewinnst du den Fall, bekommst du beides zurück.",
-        "Digitaler QR-Code für deine Zahlseite inklusive, QR-Aufsteller aus Holz für " + TF.euro(C.aufstellerPreisNetto || 2900) + " netto zzgl. USt. im Portal bestellbar.",
-        "Keine Mindestlaufzeit, jederzeit zum Monatsende kündbar, mit einem Klick in der App.",
-      ];
+      kurz = ["Keine Einrichtungsgebühr, keine Grundgebühr, keine Provision.", "Du zahlst nur die normalen Gebühren von Stripe bzw. Klarna, direkt an Stripe.", "Die Zahlungen deiner Kunden laufen auf das Konto deines Studios.", "Wir richten alles mit dir ein."];
     } else if (p === "monatlich") {
       html = "<p><b>Paket Monatlich</b> · " + TF.esc(TF.euro(C.monatNetto)) + " netto im Monat zzgl. " + C.ustProzent + " % USt. (" + TF.esc(TF.euro(Math.round(C.monatNetto * (100 + C.ustProzent) / 100), true)) + " brutto)</p>" +
         "<p>Im nächsten Schritt startest du das Abo sicher über Stripe (z. B. per Karte). Die Rechnung kommt jeden Monat automatisch per E-Mail. Danach richtest du in deinem Studio-Bereich das Zahlungskonto deines Studios ein.</p>";
@@ -106,7 +97,11 @@
     toggleKauf();
   }
   // Paket aus Paket- oder Modell-Angabe setzen (Aliase)
-  function setzePaket(x) { var p = ALIAS[String(x || "").toLowerCase()]; if (p) setze({ paket: p }); }
+  function setzePaket(x) {
+    var k = String(x || "").toLowerCase(), p = ALIAS[k];
+    if (p) setze({ paket: p });
+    else if (GESCHLOSSEN[k] && !geschenk) show(HINWEIS_RISIKOFREI, "info");
+  }
 
   function toggleKauf() { document.getElementById("kauf-extra").classList.toggle("hidden", paket() !== "einmal" || !!geschenk); }
 
@@ -134,6 +129,7 @@
       location.href = r.url || r.next;
     } catch (err2) {
       show(err2.message); btn.disabled = false; btn.textContent = txt;
+      if (err2.status === 410) { go(1); }
       if (err2.status === 409) alertBox.insertAdjacentHTML("beforeend", '<p><a class="btn dark small" href="/login.html">Zum Login</a></p>');
     }
   });
@@ -142,7 +138,7 @@
   fetch("/vertrag.html").then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/<main class="doc">([\s\S]*?)<\/main>/);
     var box = document.getElementById("vertrag-box");
-    box.innerHTML = m ? m[1].replace(/<img[^>]*>/g, "") : "Vertrag konnte nicht geladen werden. Bitte über den Link öffnen.";
+    box.innerHTML = m ? '<p style="background:#fff3cd;border:1px solid #e0b84b;border-radius:8px;padding:10px 12px;font-size:14px;margin:0 0 12px"><b>Hinweis:</b> Du kannst die Pakete <b>Monatlich</b> und <b>Einmalzahlung</b> abschließen. Das Paket Risikofrei wird seit dem 26.10.2026 nicht mehr neu vergeben. Die Regelungen dazu im Vertrag gelten nur für Studios, die es schon haben.</p>' + m[1].replace(/<img[^>]*>/g, "") : "Vertrag konnte nicht geladen werden. Bitte über den Link öffnen.";
     box.querySelectorAll("[data-cfg]").forEach(function (el) { el.textContent = ""; });
     TF.config().then(function (c) {
       var map = { kaufPreis: TF.euro(c.kaufNetto), provisionSatz: c.provisionProzent + " %", 
@@ -161,7 +157,7 @@
   });
 
   // Vorbelegung: ?modell=…, gespeicherter Entwurf, ?resume=<id> nach Abbruch
-  try { var alt = JSON.parse(sessionStorage.getItem("tf-start") || "{}"); setze(alt); if (!alt.paket && alt.modell) setzePaket(alt.modell); } catch (e) {}
+  try { var alt = JSON.parse(sessionStorage.getItem("tf-start") || "{}"); if (GESCHLOSSEN[String(alt.paket || "").toLowerCase()]) alt.paket = ""; setze(alt); if (!alt.paket && alt.modell) setzePaket(alt.modell); } catch (e) {}
   if (q.get("modell")) setzePaket(q.get("modell"));
   if (q.get("paket")) setzePaket(q.get("paket"));
   if (geschenk) { document.querySelector("[data-step='1'] .choice.pakete").classList.add("hidden"); document.querySelector("[data-step='1'] h2").textContent = "1. Deine Einladung"; document.querySelector("[data-step='1'] h2 + p").textContent = "Eigenes Zahlungskonto deines Studios, keine Einrichtungsgebühr, keine Provision."; show("Du bist eingeladen: keine Einrichtung, keine Provision – du zahlst nur die Zahlungsgebühren.", "info"); }

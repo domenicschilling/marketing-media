@@ -52,8 +52,8 @@ function head({ title, description, url, type = "website", jsonld }) {
 }
 
 const ctas = {
-  studio: `<div class="cta-box"><h3>Du bist Tätowierer oder Studioinhaber?</h3><p>Mit Tattoofin bietest du Zahlungslinks, eine QR-Zahlseite, Anzahlungen und Ratenzahlung über Klarna an. 0 € Einrichtung, 10 % pro Zahlung, alles inklusive.</p><a class="btn gold" href="/start.html?utm_source=ratgeber">Tattoofin fürs Studio holen →</a></div>`,
-  start: `<div class="cta-box"><h3>In 3 Minuten startklar</h3><p>Zahlungslinks, QR-Zahlseite, Anzahlungen und Ratenzahlung über Klarna für dein Studio. Eingerichtet, getestet, betreut. 0 € Einrichtung, 10 % pro Zahlung, alles inklusive.</p><a class="btn gold" href="/start.html?utm_source=ratgeber">Jetzt risikofrei starten →</a></div>`,
+  studio: `<div class="cta-box"><h3>Du bist Tätowierer oder Studioinhaber?</h3><p>Mit Tattoofin bietest du Zahlungslinks, eine QR-Zahlseite, Anzahlungen und Ratenzahlung über Klarna an. Keine Provision auf deine Zahlungen: 49 € netto im Monat oder einmalig 999 € netto.</p><a class="btn gold" href="/start.html?utm_source=ratgeber">Tattoofin fürs Studio holen →</a></div>`,
+  start: `<div class="cta-box"><h3>In 3 Minuten startklar</h3><p>Zahlungslinks, QR-Zahlseite, Anzahlungen und Ratenzahlung über Klarna für dein Studio. Eingerichtet, getestet, betreut. Keine Provision auf deine Zahlungen: 49 € netto im Monat oder einmalig 999 € netto.</p><a class="btn gold" href="/start.html?utm_source=ratgeber">Jetzt starten →</a></div>`,
 };
 
 for (const a of artikel) {

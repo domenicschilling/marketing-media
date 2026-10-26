@@ -51,7 +51,7 @@
       // Meta-Pixel (nur mit Einwilligung, pro Abschluss einmal): Provision → CompleteRegistration, Kauf bezahlt → Purchase
       if (window.TFTrack && (s.status === "einrichtung" || s.status === "zahlung_offen")) {
         if (s.modell === "kauf" && s.status === "einrichtung" && s.zahlart !== "geschenk") TFTrack.track("Purchase", s.zahlart === "abo" ? { value: 49, currency: "EUR", content_name: "Tattoofin Paket Monatlich" } : { value: (s.preisNetto || 99900) / 100, currency: "EUR", content_name: "Tattoofin Paket Einmalzahlung" }, "kauf-" + s.id);
-        else TFTrack.track("CompleteRegistration", { content_name: s.modell === "kauf" ? "Einmalzahlung auf Rechnung" : "Paket Risikofrei", status: s.status }, "abschluss-" + s.id);
+        else TFTrack.track("CompleteRegistration", { content_name: s.modell === "kauf" ? "Einmalzahlung auf Rechnung" : "Studio-Anmeldung", status: s.status }, "abschluss-" + s.id);
       }
       if ((s.status === "einrichtung" || s.status === "zahlung_offen") && weiter(s)) return;
       if (s.status === "einrichtung") { msg.textContent = s.modell === "provision" || s.zahlart === "geschenk" ? "Dein Vertrag ist abgeschlossen." : s.zahlart === "abo" ? "Dein Paket Monatlich läuft. Die Rechnung kommt jeden Monat per E-Mail." : "Deine Zahlung ist eingegangen. Die Rechnung kommt per E-Mail."; zeigeConnect(); }

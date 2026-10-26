@@ -516,7 +516,8 @@ export async function taeglicheJobs(heute = new Date()) {
   for (const k of await store.list("anfrage/")) if (k.slice(8) < grenze) { await store.del(k); out.push(["anfrage-geloescht", k]); }
   for (const s of await allStudios()) {
     const alterStd = (Date.now() - new Date(s.createdAt).getTime()) / 3600e3;
-    if (s.status === "entwurf" && !s.erinnertAbbruch && alterStd > 20) {
+    // Alte Entwürfe im (geschlossenen) Paket Risikofrei bekommen keine Erinnerung: Der Link würde in eine Sackgasse führen.
+    if (s.status === "entwurf" && !s.erinnertAbbruch && alterStd > 20 && s.paket !== "risikofrei") {
       s.erinnertAbbruch = now(); await saveStudio(s);
       await notify(s, mails.anmeldungAbgebrochen(s, { resumeUrl: resumeUrl(s) }));
       out.push(["abbruch-erinnerung", s.firma]);

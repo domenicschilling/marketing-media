@@ -133,6 +133,12 @@ export const PAKETE = {
   monatlich: { id: "monatlich", name: "Monatlich", modell: "kauf", einrichtungNetto: 0, einmalNetto: 0, monatNetto: CFG.monatNetto, provisionProzent: 0, empfohlen: true },
   einmal: { id: "einmal", name: "Einmalzahlung", modell: "kauf", einrichtungNetto: CFG.kaufNetto, einmalNetto: CFG.kaufNetto, monatNetto: 0, provisionProzent: 0 },
 };
+// Seit 26.10.2026 (Entscheidung Domenic): Paket Risikofrei ist für NEUE Anmeldungen geschlossen. Bestandsstudios (Antisocial Ink, Chic Tattoo Augsburg,
+// Santo Tattoo Dachau, Color Lab, Different tattoo Mudersbach) laufen unverändert weiter: Das Paket bleibt in PAKETE (paketVon, Abrechnung, Webhooks,
+// Mails, Klarna-Stichtag). RISIKOFREI_NEU=1 öffnet die Anmeldung wieder (Notschalter und Test der Bestandsabläufe, Standard AUS).
+export const risikofreiNeuErlaubt = () => ["1", "an", "true", "ja"].includes(String(process.env.RISIKOFREI_NEU || "").trim().toLowerCase());
+export const paketNeuWaehlbar = (id) => Boolean(PAKETE[id]) && (id !== "risikofrei" || risikofreiNeuErlaubt());
+export const PAKETE_NEU_TEXT = "Das Paket Risikofrei gibt es für neue Anmeldungen nicht mehr. Bitte wähle Monatlich oder Einmalzahlung.";
 // URL-/Formular-Aliase: ?modell=provision → Risikofrei, ?modell=kauf → Einmalzahlung (auch alte Vorschau-Namen start/profi)
 export const PAKET_ALIAS = { provision: "risikofrei", kauf: "einmal", risikofrei: "risikofrei", monatlich: "monatlich", einmal: "einmal", einmalzahlung: "einmal", start: "risikofrei", profi: "einmal" };
 // Paket eines Studios. Ältere Datensätze ohne „paket“: provision → Risikofrei, kauf → Einmalzahlung (Altvertrag „Kauf“).
@@ -169,7 +175,7 @@ export function publicConfig() {
     ustid: c.ustid, geschaeftsfuehrer: c.geschaeftsfuehrer, telefon: c.telefon, email: c.email,
     gerichtsstand: c.gerichtsstand, whatsapp: c.whatsapp, videoUrl: c.videoUrl,
     kaufNetto: c.kaufNetto, monatNetto: c.monatNetto, nutzungJahre: c.nutzungJahre, aufstellerPakete: c.aufstellerPakete, aufstellerPreisNetto: c.aufstellerPreisNetto,
-    pakete: Object.values(PAKETE).map(({ id, name, modell, einmalNetto, monatNetto, provisionProzent, empfohlen }) => ({ id, name, modell, einmalNetto, monatNetto, provisionProzent, empfohlen: Boolean(empfohlen) })),
+    pakete: Object.values(PAKETE).filter((x) => paketNeuWaehlbar(x.id)).map(({ id, name, modell, einmalNetto, monatNetto, provisionProzent, empfohlen }) => ({ id, name, modell, einmalNetto, monatNetto, provisionProzent, empfohlen: Boolean(empfohlen) })),
     provisionProzent: c.provisionProzent, ustProzent: c.ustProzent, garantieTage: c.garantieTage,
     setupSupportTage: c.setupSupportTage, vertragVersion: c.vertragVersion,
     minBetragCent: c.minBetragCent, maxBetragCent: c.maxBetragCent,

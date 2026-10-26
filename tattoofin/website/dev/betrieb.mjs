@@ -26,6 +26,10 @@ process.env.TF_BEZAHLFELD = "aus";
 // Feste „Jetzt“-Zeit vor dem Klarna-Stichtag (20.11.2026), damit die Abläufe 1–16 unabhängig vom Kalendertag laufen; Abschnitt 17 prüft den Stichtag gezielt.
 const BASIS_ZEIT = "2026-10-27T12:00:00+01:00";
 process.env.TF_JETZT = BASIS_ZEIT;
+// Seit 26.10.2026 ist das Paket Risikofrei für NEUE Anmeldungen geschlossen. Die Abschnitte 1–17 prüfen weiter alle Abläufe der Bestandsstudios
+// (Risikofrei): Diese Studios werden hier wie vor der Schließung angelegt (Notschalter RISIKOFREI_NEU). Abschnitt 18 schaltet die Sperre scharf
+// und belegt: Neukunden kommen nicht mehr hinein, Bestandsstudios laufen unverändert weiter.
+process.env.RISIKOFREI_NEU = "1";
 process.env.ADMIN_EMAIL = "admin@betrieb.test";
 process.env.MAIL_TEST_TOKEN = "mailtest";
 await startDev({ port: PORT, mock: true, dataDir, quiet: true });
@@ -112,7 +116,7 @@ await abschnitt("1 Start-Seite: Cookie-Fenster verdeckt keinen Knopf (ohne es we
   const groessen = [[1280, 720], [1366, 768], [1920, 1080], [390, 844], [375, 667], [360, 640], [320, 568], [844, 390]];
   for (const [w, h] of groessen) {
     const p = await neueSeite({ width: w, height: h });
-    await p.goto(`${BASE}/start.html?paket=risikofrei`);
+    await p.goto(`${BASE}/start.html?paket=monatlich`);
     const banner = Boolean(await p.waitForSelector(".tf-cc", { timeout: 3000 }).catch(() => null));
     const klick = async (sel) => { try { await p.click(sel, { timeout: 3000 }); return true; } catch { return false; } };
     const trial = async (sel) => { try { await p.click(sel, { timeout: 3000, trial: true }); return true; } catch { return false; } };
@@ -142,18 +146,16 @@ async function browserAnmeldung(paket, email, firma, viewport) {
   return p;
 }
 const ST = {}; // Studios dieses Durchlaufs
-await abschnitt("2 Anmeldung: alle 3 Pakete im Browser (Cookie-Fenster bleibt offen)", async () => {
-  // Risikofrei (Handy-Größe): direkt ins Dashboard
-  let p = await browserAnmeldung("risikofrei", "risikofrei@betrieb.test", "Betrieb Risikofrei", { width: 390, height: 844 });
-  await p.waitForURL(/app\.html/, { timeout: 15000 }).catch(() => {});
+await abschnitt("2 Anmeldung: Monatlich + Einmalzahlung im Browser (Cookie-Fenster bleibt offen), Bestandspaket Risikofrei per Schnittstelle", async () => {
+  // Bestandsstudio Risikofrei: seit 26.10.2026 nicht mehr auf der Seite wählbar, hier angelegt wie vor der Schließung (Notschalter RISIKOFREI_NEU)
+  const rfA = await anmelden("risikofrei", "risikofrei@betrieb.test", "Betrieb Risikofrei");
   ST.rf = await studioPer("risikofrei@betrieb.test");
-  check(/app\.html/.test(p.url()) && ST.rf?.status === "einrichtung" && ST.rf?.paket === "Risikofrei" && ST.rf?.provisionProzent === 10, "Paket Risikofrei: Abschluss → Dashboard, Status Einrichtung, 10 %", `${ST.rf?.id} ${p.url().replace(BASE, "")}`);
-  ST.rf.cookie = (await p.context().cookies()).map((c) => `${c.name}=${c.value}`).join("; ");
-  await p.screenshot({ path: path.join(shots, "dashboard-risikofrei.png") });
-  await p.context().close();
+  check(rfA.r.status === 200 && /danke\.html|app/.test(rfA.r.data.url || "") && ST.rf?.status === "einrichtung" && ST.rf?.paket === "Risikofrei" && ST.rf?.provisionProzent === 10, "Bestandspaket Risikofrei (wie vor der Schließung angelegt): Abschluss → Status Einrichtung, 10 %", `${ST.rf?.id} ${rfA.r.data.url}`);
+  ST.rf.cookie = rfA.cookie;
+  let p;
 
   // Monatlich: Stripe-Checkout (Abo) → Dashboard
-  p = await browserAnmeldung("monatlich", "monatlich@betrieb.test", "Betrieb Monatlich", { width: 1280, height: 900 });
+  p = await browserAnmeldung("monatlich", "monatlich@betrieb.test", "Betrieb Monatlich", { width: 390, height: 844 });
   await p.waitForURL(/\/pay\//, { timeout: 15000 }).catch(() => {});
   const urlAbo = p.url();
   check(/\/pay\//.test(urlAbo), "Paket Monatlich: Weiterleitung zum Stripe-Checkout (Abo)", urlAbo.replace(STRIPE, ""));
@@ -178,7 +180,7 @@ await abschnitt("2 Anmeldung: alle 3 Pakete im Browser (Cookie-Fenster bleibt of
   ST.ei.cookie = (await p.context().cookies()).map((c) => `${c.name}=${c.value}`).join("; ");
   await p.context().close();
 
-  check(Boolean(mailAnMit("risikofrei@betrieb.test", /Willkommen/) && mailAnMit("monatlich@betrieb.test", /Willkommen/) && mailAnMit("einmal@betrieb.test", /Willkommen/)), "Willkommens-Mail bei allen 3 Paketen", `${mails().length} Mails im Protokoll`);
+  check(Boolean(mailAnMit("risikofrei@betrieb.test", /Willkommen/) && mailAnMit("monatlich@betrieb.test", /Willkommen/) && mailAnMit("einmal@betrieb.test", /Willkommen/)), "Willkommens-Mail bei allen 3 Paketen (Risikofrei = Bestand)", `${mails().length} Mails im Protokoll`);
   check(mails().filter((m) => m.to === "admin@betrieb.test" && /Neuer Abschluss|bezahlt/.test(m.subject)).length >= 3, "Admin bekommt für jede Anmeldung eine Meldung", "");
 });
 
@@ -934,6 +936,126 @@ await abschnitt("17 Recht (27.10.2026): Klarna-Stichtag 20.11.2026 für Risikofr
       await p.context().close();
     }
   }
+});
+
+// =====================================================================================================
+await abschnitt("18 Paket Risikofrei geschlossen (26.10.2026): Neukunden gesperrt, Bestandsstudios laufen unverändert", async () => {
+  // Bestandsstudio: ganz normal angelegt, eingerichtet, live (solange die Anmeldung noch offen war)
+  const best = await anmelden("risikofrei", "bestand@betrieb.test", "Bestand Risikofrei");
+  const eb = await einrichten(best.id, best.cookie);
+  await admin(`studio/${best.id}/live`, { body: {} });
+  const zuvor = (await studios()).length;
+  // Ab jetzt zu: Notschalter aus
+  delete process.env.RISIKOFREI_NEU;
+  try {
+    // --- Neukunden ---
+    const mailsVor = mails().length;
+    for (const [name, extra] of [["paket=risikofrei", { paket: "risikofrei" }], ["modell=provision", { modell: "provision" }], ["paket=start (alter Name)", { paket: "start" }], ["paket=Risikofrei (Schreibweise)", { paket: " Risikofrei " }]]) {
+      const r = await post("/api/signup", { ...DATEN("neukunde-rf@betrieb.test", "Neukunde Risikofrei"), ...extra });
+      check(r.status === 410 && r.data.gesperrt === true && /Risikofrei gibt es für neue Anmeldungen nicht mehr/.test(r.data.error || "") && /Monatlich oder Einmalzahlung/.test(r.data.error || ""), `Neuanmeldung ${name}: klare Fehlermeldung (HTTP 410)`, `${r.status} ${(r.data.error || "").slice(0, 70)}`);
+    }
+    check((await studios()).length === zuvor && !(await studioPer("neukunde-rf@betrieb.test", 1)), "Gesperrte Anmeldungen legen kein Studio an", `${zuvor} Studios`);
+    check(mails().length === mailsVor, "Gesperrte Anmeldungen verschicken keine Mail (weder an Interessent noch Admin)", "");
+    const pak = await json("/api/signup?pakete=1"), cfg = await json("/api/config");
+    check(JSON.stringify(pak.data.pakete.map((x) => x.id)) === '["monatlich","einmal"]' && JSON.stringify(cfg.data.pakete.map((x) => x.id)) === '["monatlich","einmal"]', "Paketlisten für die Website: nur Monatlich + Einmalzahlung", pak.data.pakete.map((x) => x.id).join(","));
+    check(cfg.data.monatNetto === 4900 && cfg.data.kaufNetto === 99900 && cfg.data.aufstellerPreisNetto === 2900, "Preise unverändert: Monatlich 49 €, Einmalzahlung 999 €, QR-Aufsteller einzeln 29 € (alles netto)", `${cfg.data.monatNetto}/${cfg.data.kaufNetto}/${cfg.data.aufstellerPreisNetto}`);
+    const mo = await post("/api/signup", { ...DATEN("neu-monatlich@betrieb.test", "Neu Monatlich"), paket: "monatlich" });
+    const ein = await post("/api/signup", { ...DATEN("neu-einmal@betrieb.test", "Neu Einmal"), paket: "einmal", zahlart: "rechnung" });
+    check(mo.status === 200 && /\/pay\//.test(mo.data.url || "") && ein.status === 200, "Monatlich und Einmalzahlung lassen sich weiter abschließen", `${mo.status} ${ein.status}`);
+    const ge = await admin("einladen", { body: { email: "geschenk-neu@betrieb.test", firma: "Geschenk Neu", senden: false } });
+    check(ge._status === 200 && /geschenk=/.test(ge.link || ""), "Admin-Einladung (eigenes Konto, 0 € Einrichtung, keine Provision) weiter möglich", `HTTP ${ge._status}`);
+    // Abgebrochene Entwürfe im Paket Risikofrei: keine Erinnerung mit Sackgassen-Link
+    const storeMod = await import("../netlify/functions/_lib/store.mjs");
+    const alt = new Date(Date.now() - 3 * 864e5).toISOString();
+    await storeMod.saveStudio({ id: "st_entwurf_rf", email: "entwurf-rf@betrieb.test", firma: "Entwurf Risikofrei", inhaber: "X", status: "entwurf", paket: "risikofrei", modell: "provision", zahlart: "provision", createdAt: alt });
+    await storeMod.saveStudio({ id: "st_entwurf_mo", email: "entwurf-mo@betrieb.test", firma: "Entwurf Monatlich", inhaber: "X", status: "entwurf", paket: "monatlich", modell: "kauf", zahlart: "abo", createdAt: alt });
+    await domain.taeglicheJobs();
+    check(mailsAn("entwurf-rf@betrieb.test").length === 0 && mailsAn("entwurf-mo@betrieb.test").some((m) => /Fast geschafft/.test(m.subject)), "Erinnerung an abgebrochene Abschlüsse: Entwurf Monatlich ja, Entwurf Risikofrei nein", `${mailsAn("entwurf-rf@betrieb.test").length}/${mailsAn("entwurf-mo@betrieb.test").length}`);
+    const erinn = mailsAn("entwurf-mo@betrieb.test").find((m) => /Fast geschafft/.test(m.subject));
+    check(Boolean(erinn) && !/Risikofrei|10 ?%/i.test(erinn.html), "Erinnerungs-Mail erwähnt Risikofrei nicht mehr, nennt Monatlich + Einmalzahlung", "");
+    // --- Website ---
+    const seiten = ["/", "/studios.html", "/start.html", "/ratgeber.html", "/tattoo-finanzieren.html", "/ratenzahlung-tattoostudio.html", "/tattoo-anzahlung.html", "/klarna-tattoostudio.html", "/video.html", "/raten.html", "/sitemap.xml"];
+    for (const pf of seiten) {
+      const t = await (await fetch(BASE + pf)).text();
+      const treffer = (t.match(/risikofrei|0 € Einrichtung|10 ?(&nbsp;)? ?%|900 ?(&nbsp;)?€|0 ?(&nbsp;)?€ Grundgeb|Grundgebühr|ohne Fixkosten|nur bei Zahlung|Keine Zahlungen über Tattoofin = keine Kosten/gi) || []);
+      check(treffer.length === 0, `${pf}: kein Risikofrei-Versprechen mehr („Risikofrei“, 10 %, 900 €, 0 € Einrichtung/Grundgebühr, Fixkosten)`, treffer.slice(0, 3).join(" | "));
+    }
+    for (const pf of ["/", "/studios.html"]) {
+      const t = await (await fetch(BASE + pf)).text();
+      const auf = (t.match(/href="\/start(?:\.html)?\?paket=(\w+)/g) || []).map((x) => x.replace(/.*paket=/, ""));
+      check(auf.length >= 2 && auf.every((x) => ["monatlich", "einmal"].includes(x)), `${pf}: alle Start-Knöpfe zeigen auf Monatlich oder Einmalzahlung`, [...new Set(auf)].join(","));
+    }
+    const lp = await (await fetch(BASE + "/")).text();
+    check(/class="btn dark big" href="\/start\.html\?paket=monatlich">Monatlich starten/.test(lp), "Hero-Knopf: „Monatlich starten“ → /start.html?paket=monatlich", "");
+    const wann = await (await fetch(BASE + "/")).text();
+    check(/49 €<\/span> netto im Monat/.test(wann) && /999 €<\/span> netto einmalig/.test(wann) && /Zwei Pakete/.test(wann), "Preise auf der Startseite: 49 € netto im Monat, 999 € netto einmalig, „Zwei Pakete“", "");
+    check(/Achtung! Kreditaufnahme kostet Geld\./.test(wann), "Pflicht-Warnhinweis steht weiter auf der Startseite", "");
+    // --- Bestandsstudio läuft unverändert ---
+    const pt = await json("/api/portal", {}, best.cookie);
+    check(pt.status === 200 && pt.data.studio.paket === "risikofrei" && pt.data.studio.provisionProzent === 10 && pt.data.studio.modell === "provision", "Bestandsstudio: Dashboard lädt, Paket Risikofrei, 10 %", `HTTP ${pt.status} ${pt.data.studio?.paket}`);
+    const zl = await post("/api/portal/zahlung", { betrag: "1000", kunde: "Bestandskunde", email: "bk@kunde.test", beschreibung: "Unterarm" }, best.cookie);
+    check(zl.status === 201 && /zahlung\.html\?z=zl_/.test(zl.data.link), "Bestandsstudio: Zahlungslink erstellen", `${zl.status}`);
+    const stt = await post("/api/pay", { z: zl.data.zahlung.id, inhaltOk: true });
+    const cs18 = await lastSession(); const pd18 = cs18.payment_intent_data || {};
+    check(stt.status === 200 && pd18.transfer_data?.destination === eb.konto && Number(pd18.application_fee_amount) === 10000, "Bestandsstudio: Checkout als Destination Charge, Provision 100,00 € (10 % von 1.000 €)", `fee=${pd18.application_fee_amount}`);
+    await stripeBezahlen(stt.data.url, "card");
+    const z18 = (await detail(best.id)).zahlungen.find((z) => z.id === zl.data.zahlung.id);
+    check(z18?.status === "bezahlt" && z18.gebuehrBruttoCent === 10000, "Bestandsstudio: Zahlung bezahlt, Provision gebucht", `${z18?.status} ${z18?.gebuehrBruttoCent}`);
+    check(/900,00/.test(mailAnMit("bestand@betrieb.test", /Zahlung eingegangen/)?.html || "") && Boolean(mailAnMit("bk@kunde.test", /Danke für deine Zahlung/)), "Bestandsstudio: Mails (Zahlung eingegangen mit 900 €, Danke an den Kunden)", "");
+    const er = await post(`/api/portal/erstattung/${zl.data.zahlung.id}`, { betrag: "100" }, best.cookie); await wait(300);
+    const ze = (await detail(best.id)).zahlungen.find((z) => z.id === zl.data.zahlung.id);
+    check(er.status === 200 && ze.erstattetCent === 10000 && ze.gebuehrErstattetCent > 0, "Bestandsstudio: Teil-Erstattung 100 € läuft, Provision kommt anteilig zurück", `${er.status} erstattet=${ze?.erstattetCent} prov zurück=${ze?.gebuehrErstattetCent}`);
+    const monat = new Date().toISOString().slice(0, 7);
+    const echt = await admin("abrechnung", { body: { monat, dryRun: false } });
+    const dd = await detail(best.id);
+    const ab = dd.abrechnungen?.find((a) => a.monat === monat);
+    const erw = dd.zahlungen.filter((z) => ["bezahlt", "erstattet"].includes(z.status)).reduce((a, z) => a + (z.gebuehrBruttoCent - (z.gebuehrErstattetCent || 0)), 0);
+    check(echt._status === 200 && Boolean(ab) && ab.provisionBruttoCent === erw && Boolean(mailAnMit("bestand@betrieb.test", /Abrechnung/)), "Bestandsstudio: Monatsrechnung wird erstellt und gemailt", `${ab?.provisionBruttoCent} ct`);
+    // Klarna-Stichtag 20.11.2026 für Bestandsstudios bleibt: 1 Sekunde davor Klarna, am Stichtag nur Karte/Wallets
+    const stz = await post("/api/portal/zahlung", { betrag: "900", kunde: "Stichtag Test", email: "st@kunde.test", beschreibung: "Stichtag" }, best.cookie);
+    const infoPay = async () => (await json(`/api/pay?z=${stz.data.zahlung.id}`)).data;
+    process.env.TF_JETZT = "2026-11-19T22:59:59Z";
+    const vorSt = await infoPay();
+    process.env.TF_JETZT = "2026-11-19T23:00:00Z";
+    const amSt = await infoPay();
+    process.env.TF_JETZT = BASIS_ZEIT;
+    check(vorSt.zahlung.zahlarten.includes("klarna") && JSON.stringify(amSt.zahlung.zahlarten) === '["card"]', "Bestandsstudio: Klarna-Stichtag 20.11.2026 gilt weiter (davor Klarna, ab 00:00 nur Karte/Wallets)", `${vorSt.zahlung.zahlarten} → ${amSt.zahlung.zahlarten}`);
+  } finally {
+    process.env.RISIKOFREI_NEU = "1";
+  }
+});
+
+// =====================================================================================================
+await abschnitt("19 Optik nach dem Entfernen von Risikofrei: Hero-Knopf, zwei Paket-Karten, kein Querscrollen auf 14 Größen", async () => {
+  const GROESSEN = [[320, 568], [375, 667], [390, 844], [414, 896], [430, 932], [844, 390], [768, 1024], [1024, 768], [1280, 720], [1366, 768], [1440, 900], [1536, 864], [1920, 1080], [2560, 1440]];
+  const SEITEN = [["/", ".hero .ctas .btn.dark", "#preise .prices.zwei .price"], ["/studios.html", ".held-cta .knopf-gross", "#pakete .pk"], ["/start.html?paket=risikofrei", null, "section[data-step='1'] .choice.pakete label"]];
+  const probleme = [];
+  for (const [w, h] of GROESSEN) {
+    for (const [pf, cta, karten] of SEITEN) {
+      const p = await neueSeite({ width: w, height: h });
+      await p.goto(BASE + pf, { waitUntil: "load" });
+      await p.waitForTimeout(450);
+      await p.addStyleTag({ content: "html{scroll-behavior:auto!important}" });
+      const m = await p.evaluate(([cta, karten]) => {
+        const out = { quer: document.documentElement.scrollWidth > innerWidth, karten: document.querySelectorAll(karten).length };
+        if (cta) {
+          const el = document.querySelector(cta), r = el.getBoundingClientRect();
+          out.imErsten = r.top >= 0 && r.bottom <= innerHeight;
+          el.scrollIntoView({ block: "center", behavior: "instant" });
+          const q = el.getBoundingClientRect(), top = document.elementFromPoint(q.left + q.width / 2, q.top + q.height / 2);
+          out.frei = Boolean(top) && (el === top || el.contains(top));
+          out.text = el.textContent.trim();
+        }
+        // Karten: gleich breit, nichts ragt über den Rand
+        const ks = [...document.querySelectorAll(karten)].map((k) => k.getBoundingClientRect());
+        out.rand = ks.every((r) => r.left >= -1 && r.right <= innerWidth + 1);
+        return out;
+      }, [cta, karten]);
+      if (m.quer || m.karten !== 2 || !m.rand || (cta && (!m.imErsten || !m.frei))) probleme.push(`${pf} ${w}x${h}: ${JSON.stringify(m)}`);
+      await p.context().close();
+    }
+  }
+  check(probleme.length === 0, "14 Größen × 3 Seiten: kein Querscrollen, Hero-Knopf im ersten Bildschirm und nach Scrollen nicht verdeckt (Cookie-Fenster), genau 2 Paket-Karten, nichts ragt über den Rand", probleme.slice(0, 2).join(" ; ") || "42 Seitenaufrufe geprüft");
 });
 
 await browser.close();

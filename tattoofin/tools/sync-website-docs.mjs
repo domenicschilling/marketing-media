@@ -43,7 +43,7 @@ const page = (title, { style, main }) => `<!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${title} – Tattoofin</title>
 <link rel="canonical" href="https://tattoofin.de/${title === "Vertrag" ? "vertrag" : "avv"}.html"><link rel="icon" href="/favicon.png" type="image/png">
-<meta name="description" content="${title === "Vertrag" ? "Dienstleistungsvertrag Tattoofin für Tattoo-Studios: Leistungen, Pakete Risikofrei, Monatlich und Einmalzahlung, Zahlungsabwicklung über Stripe." : "Auftragsverarbeitungsvertrag (AVV) nach Art. 28 DSGVO für Tattoo-Studios, die Tattoofin nutzen."}">
+<meta name="description" content="${title === "Vertrag" ? "Dienstleistungsvertrag Tattoofin für Tattoo-Studios: Leistungen, Pakete Monatlich und Einmalzahlung (Risikofrei nur für Bestandsstudios), Zahlungsabwicklung über Stripe." : "Auftragsverarbeitungsvertrag (AVV) nach Art. 28 DSGVO für Tattoo-Studios, die Tattoofin nutzen."}">
 <link rel="stylesheet" href="/css/doc.css">
 <style>${style}
 body{background:#fbb316 radial-gradient(rgba(31,61,92,.13) 1.3px,transparent 1.6px) 0 0/18px 18px}
