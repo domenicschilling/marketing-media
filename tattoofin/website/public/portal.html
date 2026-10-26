@@ -12,7 +12,7 @@
 .tag.bezahlt{background:#dff5e7;color:#14532d}.tag.in_pruefung{background:#e6effa;color:#1f3f66}.tag.storniert,.tag.abgebrochen,.tag.fehlgeschlagen{background:#eceae4;color:#5b6370}.tag.erstattet,.tag.rueckgebucht{background:#fde8e8;color:#8a1c1c}
 </style>
 </head><body>
-<header class="nav"><div class="wrap"><a class="brand" href="/"><img src="/assets/figur.png" alt=""><img class="wm" src="/assets/wortmarke.png" alt="Tattoofin"></a>
+<header class="nav"><div class="wrap"><a class="brand" href="/" aria-label="Tattoofin, zur Startseite"><img src="/assets/figur.png" alt=""><img class="wm" src="/assets/wortmarke.png" alt="Tattoofin"></a>
   <nav class="links"><span id="who" style="font-size:14px;font-weight:600"></span><a href="#" id="logout">Logout</a></nav></div></header>
 <main class="sec tight"><div class="wrap">
   <div id="alert"></div>
@@ -36,12 +36,12 @@
         <p class="muted" style="margin-top:-4px">Betrag und Projekt eintragen, Link per WhatsApp schicken. Dein Kunde wählt beim Bezahlen, wie er zahlen möchte.</p>
         <form id="f-link">
           <div class="grid2">
-            <div class="field"><label>Betrag in €</label><input type="text" inputmode="decimal" id="l-betrag" placeholder="z. B. 1.500" required></div>
+            <div class="field"><label>Betrag in €</label><input type="text" inputmode="decimal" id="l-betrag" autocomplete="off" placeholder="z. B. 1.500" required></div>
             <div class="field"><label>Art</label><select id="l-art"><option value="gesamt">Projektpreis</option><option value="anzahlung">Anzahlung</option></select></div>
-            <div class="field"><label>Name des Kunden</label><input type="text" id="l-kunde" required></div>
-            <div class="field"><label>E-Mail des Kunden (optional, für die Bestätigung)</label><input type="email" id="l-email"></div>
+            <div class="field"><label>Name des Kunden</label><input type="text" id="l-kunde" autocomplete="off" required></div>
+            <div class="field"><label>E-Mail des Kunden (optional, für die Bestätigung)</label><input type="email" id="l-email" autocomplete="off"></div>
           </div>
-          <div class="field"><label>Projekt</label><input type="text" id="l-beschreibung" placeholder="z. B. Sleeve linker Arm, Japanese"></div>
+          <div class="field"><label>Projekt</label><input type="text" id="l-beschreibung" autocomplete="off" placeholder="z. B. Sleeve linker Arm, Japanese"></div>
           <div id="l-fee" class="muted" style="font-size:14px;margin-bottom:12px"></div>
           <button class="btn gold">Zahlungslink erstellen</button>
         </form>
@@ -92,7 +92,7 @@
         <div class="field"><textarea id="k-anz" rows="4" maxlength="1000"></textarea></div>
         <button class="btn gold small" id="k-anz-save">Speichern</button></div>
       <div class="panel"><h2>Benachrichtigungen</h2>
-        <div class="field"><label>E-Mail für Zahlungsbenachrichtigungen</label><input type="email" id="k-email"></div>
+        <div class="field"><label>E-Mail für Zahlungsbenachrichtigungen</label><input type="email" id="k-email" autocomplete="off"></div>
         <button class="btn gold small" id="k-save">Speichern</button></div>
     </section>
   </div>

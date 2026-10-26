@@ -33,7 +33,7 @@
     var l = links(kanal);
     return (name ? "Hey " + name + "!" : "Hey ihr!") + " Kurze Frage: Kann ich mein Tattoo bei euch auch in Raten zahlen? 🙏\n\n" +
       "Mit Tattoofin könnt ihr mir einen Zahlungslink schicken. Dann geht Karte, Apple Pay oder Raten über Klarna (die prüfen das), " +
-      "und ihr bekommt euer Geld trotzdem auf einmal.\n\n" +
+      "und ihr bekommt euer Geld nach der Freigabe in der Regel auf einmal.\n\n" +
       "Schaut mal: " + l.seite + "\nVideo (2 Min.): " + l.video;
   }
   function aktualisiere() {
