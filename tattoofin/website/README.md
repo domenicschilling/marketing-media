@@ -102,5 +102,14 @@ node dev/server.mjs     # http://localhost:8888 mit Stripe-Nachbau inkl. Connect
 node dev/e2e.mjs        # kompletter Durchlauf im Browser (156 Prüfungen)
 ```
 
+Betriebs-Durchlauf (27.10.2026, `dev/betrieb.mjs`, ca. 170 Prüfungen, Protokoll mit Beweis je Schritt; konfiguriert wie live: Checkout statt Bezahlfeld, Karte + Klarna):
+alle 3 Pakete im Browser mit offenem Cookie-Fenster, Connect-Einrichtung (eingebettet + Stripe-Seite), Login-Link, Zahlungslink, Karte/Klarna, Provision 10 %, Anzahlung/No-Show/Teil-Erstattung,
+Klarna abgelehnt/nicht aktiviert, abgelaufene/stornierte Links, Webhook-Ausfall (Nachtragen per Rückkehr + Tagesjob), Dispute, Monatsrechnung, Abo-Ereignisse, QR-Aufsteller, Einladung, Admin, Anfrage-Formular, tägliche Jobs, Resend/Warteschlange, /api/status.
+```
+NODE_PATH=… node dev/betrieb.mjs [runde]     # oder: npm run test:betrieb;  PROTOKOLL=datei.md schreibt die Tabelle
+```
+Rückfälle, die dabei abgesichert sind: Klarna beim (Standard-)Studio-Konto nicht aktiviert → Kasse nur mit Karte + Admin-Hinweis; Stripe lehnt Bausteine ab → kleine Liste, sonst Stripe-Seite (`/api/connect?…&gehostet=1`);
+Webhook fehlt → Status wird bei Rückkehr auf /bezahlt.html und in den Tagesjobs bei Stripe nachgesehen; Gesundheits-Check nimmt ein anderes Studio, falls das DSX-Teststudio fehlt (nicht löschen, aber nicht kritisch).
+
 Mit echtem Stripe-Testkonto: `STRIPE_SECRET_KEY=sk_test_… STRIPE_WEBHOOK_SECRET=whsec_… STRIPE_CONNECT_WEBHOOK_SECRET=whsec_… node dev/server.mjs`
 und `stripe listen --forward-to localhost:8888/api/stripe-webhook --forward-connect-to localhost:8888/api/stripe-webhook`.

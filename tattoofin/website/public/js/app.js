@@ -328,13 +328,23 @@
     stripeSitzung().then(function (r) {
       if (r.modus === "ansicht") { box.innerHTML = '<div class="card-a"><p class="klein">' + e(r.hinweis) + "</p></div>"; return; }
       if (r.modus === "weiterleitung") { box.innerHTML = '<div class="card-a"><p class="klein">Die Einrichtung läuft auf einer sicheren Seite unseres Zahlungspartners Stripe. Danach kommst du automatisch zurück.</p><a class="btn gold big w100" href="' + e(r.url) + '">Weiter zur Einrichtung</a></div>'; return; }
+      // Immer ein Ausweg unter dem Baustein: Geht in der eingebetteten Einrichtung etwas nicht (Stripe-Fehler im Baustein, Browser), bleibt das Studio nie hängen
+      if (s.connectUrl && !$("einr-hilfe")) {
+        var hilfe = document.createElement("p"); hilfe.id = "einr-hilfe"; hilfe.className = "klein muted"; hilfe.style.marginTop = "12px";
+        hilfe.innerHTML = 'Geht hier etwas nicht? <a href="' + e(s.connectUrl + "&gehostet=1") + '">Einrichtung auf der Seite von Stripe öffnen</a>';
+        box.parentNode.insertBefore(hilfe, box.nextSibling);
+      }
       TFStripe.zeige(box, "account-onboarding", { firma: s.firma, inhaber: s.inhaber, fertig: async function () {
         try { D.studio = await TF.api("/api/portal/konto-status", { body: {} }); } catch (x) {}
         kopf();
         toast(D.studio.stripe.freigegeben ? "Geschafft! Dein Zahlungskonto ist bereit." : "Danke! Stripe prüft jetzt deine Angaben.");
         if (D.studio.stripe.freigegeben) setTimeout(function () { location.hash = "#start"; }, 1200); else einrichtung();
       } });
-    }).catch(function (err) { box.innerHTML = '<p class="leer">' + e(err.message) + "</p>"; });
+    }).catch(function (err) {
+      // Stripe-Baustein nicht ladbar (Werbeblocker, Netz, Browser): nie in einer Sackgasse enden, Weg über die Stripe-Seite anbieten
+      box.innerHTML = '<div class="card-a"><p class="klein">' + e(err.message) + '</p><p class="klein muted">Kein Problem: Du kannst die Einrichtung auch direkt auf der Seite von Stripe machen. Danach kommst du automatisch zurück.</p>' +
+        (s.connectUrl ? '<a class="btn gold big w100" href="' + e(s.connectUrl + "&gehostet=1") + '">Einrichtung bei Stripe öffnen</a>' : "") + "</div>";
+    });
   }
 
   // ---------- Werbung ----------

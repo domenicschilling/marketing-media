@@ -29,7 +29,8 @@ export default handler(async (req) => {
   }
   if (s.stripe?.chargesEnabled) return redirect("/app.html");
   // Eingeloggt und eingebettete Einrichtung verfügbar → im Dashboard bleiben statt zu Stripe wechseln
-  if (eingebettet() && mitSitzung) return redirect("/app.html#einrichtung");
+  // „gehostet=1“: Rettungsweg – Stripe-Seite erzwingen (sonst Schleife, wenn die eingebettete Einrichtung nicht funktioniert)
+  if (eingebettet() && mitSitzung && !u.searchParams.get("gehostet")) return redirect("/app.html#einrichtung");
   try {
     await ensureConnectedAccount(s);
     await saveStudio(s);

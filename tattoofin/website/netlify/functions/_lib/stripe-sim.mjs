@@ -40,7 +40,7 @@ export function createSim({ load, save, pageBase, webhook }) {
     const emit = (type, object, account) => queue.push([type, JSON.parse(JSON.stringify(object)), account]);
     const out = await fn(db, emit);
     await save(db);
-    for (const [type, object, account] of queue) await webhook(type, object, account);
+    if (!db.sim_webhooks_aus) for (const [type, object, account] of queue) await webhook(type, object, account);
     return out;
   }
 
@@ -73,12 +73,17 @@ export function createSim({ load, save, pageBase, webhook }) {
       if (res1 === "account_links") return done({ object: "account_link", url: `${pageBase}/onboard/${p.account}?return=${encodeURIComponent(p.return_url)}` });
       if (res1 === "account_sessions") {
         if (!db.accounts[p.account]) throw new SimFehler(404, "Konto nicht gefunden");
+        // Test-Schalter /mock/session-fehler/<acct>?stufe=voll|alle: Stripe lehnt Bausteine ab (voll = nur die volle Liste, alle = auch die kleine)
+        const sf = db.accounts[p.account].sim_session_fehler;
+        if (sf && (sf === "alle" || Object.keys(p.components || {}).some((k) => !["account_onboarding", "notification_banner"].includes(k)))) throw new SimFehler(400, "Simulation: Baustein für dieses Konto nicht erlaubt");
         const as = { object: "account_session", account: p.account, client_secret: rid("simas") + "_secret", components: p.components || {}, expires_at: Math.floor(Date.now() / 1000) + 1800, livemode: false };
         db.accountSessions.push({ account: p.account, components: p.components || {} });
         return as;
       }
       if (res1 === "payment_intents") {
         if (method === "POST" && !id1) {
+          const ziel0 = account || p.on_behalf_of || p.transfer_data?.destination;
+          if (ziel0 && db.accounts[ziel0]?.sim_ohne_klarna && [].concat(p.payment_method_types || []).includes("klarna")) throw new SimFehler(400, "The payment method type provided: klarna is invalid. Please ensure the provided type is activated in your dashboard.");
           const pi = {
             id: rid("pi"), object: "payment_intent", amount: Number(p.amount), currency: p.currency || "eur", status: "requires_payment_method",
             payment_method_types: p.payment_method_types || ["card"], description: p.description, metadata: p.metadata || {}, receipt_email: p.receipt_email,
@@ -113,6 +118,9 @@ export function createSim({ load, save, pageBase, webhook }) {
           if (path.endsWith("/expire")) { s.status = "expired"; emit("checkout.session.expired", s, s.account || undefined); }
           return s;
         }
+        // Wie bei Stripe: Zahlart, die das Konto (noch) nicht aktiviert hat, lehnt die ganze Sitzung ab (Test-Schalter: /mock/ohne-klarna/<acct>)
+        const ziel0 = account || p.payment_intent_data?.on_behalf_of || p.payment_intent_data?.transfer_data?.destination;
+        if (ziel0 && db.accounts[ziel0]?.sim_ohne_klarna && [].concat(p.payment_method_types || []).includes("klarna")) throw new SimFehler(400, "The payment method type provided: klarna is invalid. Please ensure the provided type is activated in your dashboard (https://dashboard.stripe.com/account/payments/settings) and your account is enabled for any preview features that you are trying to use.");
         const s = { id: rid("cs"), object: "checkout.session", ...p, status: "open", account: account || null };
         s.url = `${pageBase}/pay/${s.id}`;
         if (s.mode === "payment" || s.mode === "subscription") {
@@ -282,6 +290,9 @@ export function createSim({ load, save, pageBase, webhook }) {
         emit("charge.dispute.closed", { ...d, status }, acc);
         return { ok: true };
       }
+      if (art === "webhooks") { db.sim_webhooks_aus = query.get("an") !== "1"; return { ok: true, webhooksAus: db.sim_webhooks_aus }; }
+      if (art === "session-fehler") { db.accounts[id].sim_session_fehler = query.get("stufe") || "voll"; return { ok: true }; }
+      if (art === "ohne-klarna") { db.accounts[id].sim_ohne_klarna = true; return { ok: true }; }
       if (art === "refund") {
         const pi = db.paymentIntents[id];
         const amount = Number(query.get("amount") || pi.amount);

@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "node dev/server.mjs",
-    "test": "node dev/e2e.mjs"
+    "test": "node dev/e2e.mjs",
+    "test:betrieb": "node dev/betrieb.mjs"
   },
   "dependencies": {
     "@netlify/blobs": "^11.1.4",

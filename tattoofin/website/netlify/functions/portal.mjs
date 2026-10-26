@@ -33,7 +33,7 @@ import { json, fail, body, clean, id, now, handler, isEmail, parseBetrag, client
 import { saveStudio, zahlungenVon, getZahlung, saveZahlung, abrechnungenVon, getLeistung, store, log } from "./_lib/store.mjs";
 import { currentStudio, clearCookie } from "./_lib/auth.mjs";
 import { stripe, dashboardLink, accountSession, ensureConnectedAccount } from "./_lib/stripe.mjs";
-import { notify, notifyAdmin, kuendigungsDatum, connectUrl, darfKassieren, anzahlungsbedingungen, provisionVerdient, kontoAbgleichen, eingebettet, STATUS, aboKuendigen, aufstellerUrl, aufstellerCheckout, aufstellerBezahlt } from "./_lib/domain.mjs";
+import { notify, notifyAdmin, kuendigungsDatum, connectUrl, connectUrlGehostet, darfKassieren, anzahlungsbedingungen, provisionVerdient, kontoAbgleichen, eingebettet, STATUS, aboKuendigen, aufstellerUrl, aufstellerCheckout, aufstellerBezahlt } from "./_lib/domain.mjs";
 import { randomBytes } from "node:crypto";
 import { gutscheinStatus, gutscheinPdf, gutscheinSenden, gutscheinUrl, normCode } from "./_lib/gutschein.mjs";
 
@@ -273,7 +273,16 @@ export default handler(async (req) => {
     if (!eingebettet()) return json({ modus: "weiterleitung", url: connectUrl(s) });
     if (!s.stripe?.accountId) { await ensureConnectedAccount(s); await saveStudio(s); }
     if (BAUSTEINE_SIMULIERT) return json({ modus: "simulation", konto: s.stripe.accountId, kontoTyp: s.stripe.kontoTyp });
-    const as = await accountSession(s);
+    let as;
+    try { as = await accountSession(s); }
+    catch (e) {
+      // Eingebettete Einrichtung nicht möglich → Studio kommt über die Stripe-Seite zum Ziel (gleicher Ablauf wie die Notlösung TF_EINBETTEN=aus)
+      console.error("[portal] Account Session fehlgeschlagen:", e.message);
+      await log("account-session-fehler", { studioId: s.id, kontoTyp: s.stripe.kontoTyp, fehler: String(e.message).slice(0, 200) });
+      const letzte = s.einbettenFehlerAm && Date.now() - new Date(s.einbettenFehlerAm).getTime() < 24 * 3600e3;
+      if (!letzte) { s.einbettenFehlerAm = now(); await saveStudio(s); await notifyAdmin("Eingebettete Stripe-Einrichtung nicht möglich: Studio nutzt die Stripe-Seite", s, { Konto: s.stripe.accountId, Typ: s.stripe.kontoTyp, Fehler: String(e.message).slice(0, 200) }); }
+      return json({ modus: "weiterleitung", url: connectUrlGehostet(s), grund: "einbetten-fehlgeschlagen" });
+    }
     return json({ modus: "stripe", publishableKey: CFG.stripePublishableKey, clientSecret: as.client_secret, kontoTyp: s.stripe.kontoTyp });
   }
   if (bereich === "konto-status" && req.method === "POST") {

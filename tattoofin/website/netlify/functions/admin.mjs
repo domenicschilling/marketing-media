@@ -31,7 +31,7 @@ import { json, fail, body, clean, now, handler } from "./_lib/util.mjs";
 import { allStudios, getStudio, saveStudio, zahlungenVon, abrechnungenVon, store, log } from "./_lib/store.mjs";
 import { isAdmin, loginLink, sign, adminName } from "./_lib/auth.mjs";
 import { stripe, TATTOOFIN_BRANDING } from "./_lib/stripe.mjs";
-import { notify, monatsabrechnung, taeglicheJobs, kontoAbgleichen, provisionVerdient, STATUS, aufstellerUrl, connectUrl } from "./_lib/domain.mjs";
+import { notify, monatsabrechnung, taeglicheJobs, kontoAbgleichen, provisionVerdient, STATUS, aufstellerUrl, connectUrl, connectUrlGehostet } from "./_lib/domain.mjs";
 import { mails } from "./_lib/emails.mjs";
 import { sendMail, warteschlangeStatus, warteschlangeAbarbeiten } from "./_lib/mail.mjs";
 import { randomBytes } from "node:crypto";
@@ -122,7 +122,7 @@ export default handler(async (req) => {
     }
     if (aktion === "login-link" && req.method === "POST") { await log("admin-link", { admin: adminName(req), studioId: s.id, art: "login" }); return json({ url: loginLink(s.id), gueltig: "24 Stunden, einmal verwendbar" }); }
     // Signierter Einrichtungslink (24 h, Zweck „connect“) zum Weitergeben per WhatsApp, z. B. wenn Mails nicht ankommen
-    if (aktion === "einrichtungslink" && req.method === "POST") { await log("admin-link", { admin: adminName(req), studioId: s.id, art: "einrichtung" }); return json({ url: connectUrl(s), gueltig: "24 Stunden" }); }
+    if (aktion === "einrichtungslink" && req.method === "POST") { await log("admin-link", { admin: adminName(req), studioId: s.id, art: "einrichtung" }); return json({ url: connectUrlGehostet(s), gueltig: "24 Stunden", hinweis: "führt direkt zur Stripe-Seite (auch wenn das Studio eingeloggt ist)" }); }
     // „Dashboard ansehen“: kurzlebiger Link (2 Min.) → /api/admin-ansicht setzt eine nur lesende Studio-Sitzung
     if (aktion === "ansehen" && req.method === "POST") {
       await log("admin-ansicht-angefordert", { admin: adminName(req), studioId: s.id });

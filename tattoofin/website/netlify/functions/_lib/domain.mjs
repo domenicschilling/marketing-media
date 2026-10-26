@@ -40,6 +40,8 @@ export async function notifyAdmin(titel, studio, details) {
 
 // Stripe-Einrichtung per Weiterleitung: nur mit signiertem Link (24 h, an Studio + Zweck gebunden) oder Sitzung
 export const connectUrl = (s) => `${CFG.siteUrl}/api/connect?id=${s.id}&t=${zweckToken(s.id, "connect", 24)}`;
+// Stripe-Seite statt eingebetteter Einrichtung erzwingen (Rettungsweg, wenn die eingebettete Einrichtung hängt oder nicht möglich ist)
+export const connectUrlGehostet = (s) => connectUrl(s) + "&gehostet=1";
 // Abschluss fortsetzen (Erinnerungs-Mail, Abbruch im Checkout): signiert, 7 Tage
 export const resumeUrl = (s) => `${CFG.siteUrl}/start.html?resume=${s.id}&t=${zweckToken(s.id, "resume", 24 * 7)}`;
 // Eingebettete Einrichtung im Dashboard möglich? (öffentlicher Stripe-Schlüssel gesetzt oder Simulation)
@@ -190,6 +192,18 @@ export function artikelText(studio, z) {
   };
 }
 
+// Stripe lehnt eine Sitzung/Zahlung ab, wenn eine genannte Zahlart beim (Studio-)Konto nicht aktiviert ist
+// („The payment method type provided: klarna is invalid …“). Erkennen, damit die Kasse auf Karte zurückfallen kann.
+export const zahlartAbgelehnt = (e) => /payment method type.{0,40}(is )?invalid|payment method type.{0,60}(not|isn.t) (been )?(activated|enabled|available)|activated in your dashboard|invalid payment_method_types/i.test(String(e?.message || e));
+async function zahlartFehlt(studio, z, e) {
+  console.error(`[kasse] Zahlart bei ${studio.id} nicht verfügbar, Rückfall auf Karte:`, e.message);
+  const letzte = studio.zahlartHinweisAm && Date.now() - new Date(studio.zahlartHinweisAm).getTime() < 24 * 3600e3;
+  if (letzte) return;
+  studio.zahlartHinweisAm = now();
+  await saveStudio(studio);
+  await notifyAdmin("⚠️ Klarna beim Studio-Konto nicht aktiviert: Kunden können nur per Karte zahlen", studio, { Zahlung: z.id, Konto: studio.stripe?.accountId, Stripe: String(e.message).slice(0, 200), Tipp: "Studio bitten, Klarna im eigenen Stripe-Dashboard (Einstellungen → Zahlungsmethoden) zu aktivieren" });
+}
+
 // Checkout-Sitzung für eine Kundenzahlung.
 //  Kauf:      auf dem eigenen Stripe-Konto des Studios (Direct Charge), keine Plattformgebühr.
 //  Provision: auf der Tattoofin-Plattform mit transfer_data → Konto des Studios und on_behalf_of (Studio ist Händler).
@@ -238,12 +252,23 @@ export async function checkoutFuer(studio, z, { nurKarte = false } = {}) {
   // Logo/Farben des Studios im Checkout (falls im Admin hinterlegt). Lehnt Stripe das Branding ab,
   // läuft die Zahlung ohne – die Kasse darf daran nie scheitern.
   const branding = checkoutBranding(studio);
+  const anlegen = async (p) => {
+    let sitzung;
+    if (branding) {
+      try { sitzung = await stripe("POST", "/checkout/sessions", { ...p, branding_settings: branding }, opts); }
+      catch (e) { if (zahlartAbgelehnt(e)) throw e; console.error("Checkout-Branding abgelehnt:", e.message); }
+    }
+    return sitzung || stripe("POST", "/checkout/sessions", p, opts);
+  };
   let session;
-  if (branding) {
-    try { session = await stripe("POST", "/checkout/sessions", { ...params, branding_settings: branding }, opts); }
-    catch (e) { console.error("Checkout-Branding abgelehnt:", e.message); }
+  try { session = await anlegen(params); }
+  catch (e) {
+    // Zahlart (z. B. Klarna) beim Konto des Studios nicht aktiviert: Stripe lehnt dann die GANZE Sitzung ab. Die Kasse darf daran nie
+    // scheitern → einmal nur mit Karte, Admin wird informiert (Klarna im Konto des Studios bzw. in der Plattform-Konfiguration aktivieren).
+    if (!zahlartAbgelehnt(e) || zahlarten.join() === "card") throw e;
+    await zahlartFehlt(studio, z, e);
+    session = await anlegen({ ...params, payment_method_types: ["card"], custom_text: anzahlung ? params.custom_text : undefined });
   }
-  if (!session) session = await stripe("POST", "/checkout/sessions", params, opts);
   z.checkoutSessionId = session.id;
   z.abwicklung = plattform ? "plattform" : "studio";
   z.gebuehrNettoCent = fee.nettoCent;
@@ -286,12 +311,20 @@ export async function bezahlfeldFuer(studio, z) {
   if (z.paymentIntentId && z.clientSecret && z.betragFuerPi === z.betragCent) {
     return { clientSecret: z.clientSecret, stripeAccount: plattform ? null : studio.stripe.accountId, zahlarten: zahlartenFuer(z) };
   }
-  const pi = await stripe("POST", "/payment_intents", {
-    amount: z.betragCent, currency: "eur", payment_method_types: zahlartenFuer(z),
+  const piParams = (arten) => ({
+    amount: z.betragCent, currency: "eur", payment_method_types: arten,
     description: `${artikelText(studio, z).name} · ${z.kunde || "Kunde"}`.slice(0, 500),
     receipt_email: z.email || undefined, metadata: z.art === "gutschein" ? { ...meta, typ: "gutschein" } : meta,
     ...(plattform ? { application_fee_amount: fee.bruttoCent, on_behalf_of: studio.stripe.accountId, transfer_data: { destination: studio.stripe.accountId }, transfer_group: z.id } : {}),
-  }, { idempotencyKey: `pi-${z.id}-${z.betragCent}`, ...(plattform ? {} : { account: studio.stripe.accountId }) });
+  });
+  const piOpts = (schluessel) => ({ idempotencyKey: schluessel, ...(plattform ? {} : { account: studio.stripe.accountId }) });
+  let pi;
+  try { pi = await stripe("POST", "/payment_intents", piParams(zahlartenFuer(z)), piOpts(`pi-${z.id}-${z.betragCent}`)); }
+  catch (e) {
+    if (!zahlartAbgelehnt(e) || zahlartenFuer(z).join() === "card") throw e;
+    await zahlartFehlt(studio, z, e);
+    pi = await stripe("POST", "/payment_intents", piParams(["card"]), piOpts(`pi-karte-${z.id}-${z.betragCent}`));
+  }
   z.paymentIntentId = pi.id;
   z.clientSecret = pi.client_secret;
   z.betragFuerPi = z.betragCent;
@@ -334,6 +367,50 @@ export async function zahlungBezahlt(z, account) {
   await notify(s, mails.zahlungEingegangen(s, z));
   if (z.email && z.art !== "gutschein") await notify(s, mails.zahlungKunde(s, z), z.email);
   await log("kundenzahlung", { studioId: s.id, zahlungId: z.id, betragCent: z.betragCent, gebuehrBruttoCent: z.gebuehrBruttoCent, stripeGebuehrCent: z.stripeGebuehrCent });
+}
+
+// Zahlungsstatus bei Stripe nachsehen, falls der Webhook nicht (rechtzeitig) angekommen ist: Kunde ist von Stripe/Klarna zurück auf
+// /bezahlt.html gekommen, oder die täglichen Jobs prüfen noch offene Links. Ohne diesen Abgleich bliebe eine bezahlte Rechnung „offen“,
+// das Studio bekäme keine Mail und der Kunde keine Bestätigung. Gibt true zurück, wenn die Zahlung jetzt als bezahlt verbucht wurde.
+export async function zahlungAbgleichen(s, z) {
+  if (!s?.stripe?.accountId || !["offen", "in_pruefung", "abgebrochen"].includes(z.status)) return false;
+  const account = plattformKassiert(s) ? undefined : s.stripe.accountId;
+  const opts = account ? { account } : {};
+  try {
+    if (z.weg === "bezahlfeld" && z.paymentIntentId) {
+      const pi = await stripe("GET", `/payment_intents/${z.paymentIntentId}`, null, opts);
+      if (pi.status === "succeeded") { await zahlungBezahlt(z, account); return true; }
+      if (pi.status === "processing" && z.status !== "in_pruefung") { z.status = "in_pruefung"; await saveZahlung(z); }
+      return false;
+    }
+    if (!z.checkoutSessionId) return false;
+    const cs = await stripe("GET", `/checkout/sessions/${z.checkoutSessionId}`, null, opts);
+    const piId = objId(cs.payment_intent);
+    if (cs.payment_status === "paid" || cs.payment_status === "no_payment_required") {
+      if (piId) z.paymentIntentId = piId;
+      await zahlungBezahlt(z, account);
+      await log("zahlung-abgeglichen", { studioId: s.id, zahlungId: z.id });
+      return true;
+    }
+    if (cs.status === "complete" && z.status !== "in_pruefung") { if (piId) z.paymentIntentId = piId; z.status = "in_pruefung"; await saveZahlung(z); }
+  } catch (e) { console.error("[abgleich]", z.id, e.message); }
+  return false;
+}
+
+// Offene Zahlungslinks mit gestarteter Kasse der letzten 30 Tage abgleichen (höchstens 100 pro Lauf)
+export async function offeneZahlungenAbgleichen() {
+  const out = [];
+  const grenze = Date.now() - 30 * 864e5;
+  let n = 0;
+  for (const s of await allStudios()) {
+    if (!s.stripe?.accountId) continue;
+    for (const z of await zahlungenVon(s.id)) {
+      if (!["offen", "in_pruefung"].includes(z.status) || !z.checkoutSessionId || new Date(z.createdAt).getTime() < grenze || n >= 100) continue;
+      n++;
+      if (await zahlungAbgleichen(s, z)) out.push(["zahlung-nachgetragen", s.firma, z.id]);
+    }
+  }
+  return out;
 }
 
 // Provision, die Tattoofin an einer Zahlung endgültig verdient (brutto, inkl. USt.)
@@ -408,6 +485,8 @@ export async function monatsabrechnung(monat, { dryRun = false } = {}) {
 // Läuft täglich: Erinnerungen, Vertragsende
 export async function taeglicheJobs(heute = new Date()) {
   const out = [];
+  // Zahlungen, die bezahlt wurden, deren Webhook aber fehlte, nachtragen
+  out.push(...(await offeneZahlungenAbgleichen()));
   // Kurz-Anfragen von /studios nach 6 Monaten löschen (Datenschutzerklärung, Abschnitt Anfrageformular)
   const grenze = new Date(Date.now() - 183 * 864e5).toISOString();
   for (const k of await store.list("anfrage/")) if (k.slice(8) < grenze) { await store.del(k); out.push(["anfrage-geloescht", k]); }
@@ -424,7 +503,8 @@ export async function taeglicheJobs(heute = new Date()) {
       const stufe = seit > 7 ? 2 : seit > 2 ? 1 : 0;
       if (stufe > (s.connectErinnert || 0)) {
         s.connectErinnert = stufe; await saveStudio(s);
-        await notify(s, mails.connectErinnerung(s, { connectUrl: einrichtungUrl(s) }));
+        // Wer nach 2 Tagen noch nicht fertig ist, bekommt den sicheren Weg über die Stripe-Seite (funktioniert auch, wenn die eingebettete Einrichtung hakt)
+        await notify(s, mails.connectErinnerung(s, { connectUrl: connectUrlGehostet(s) }));
         if (stufe === 2) await notifyAdmin("Stripe-Konto seit 7 Tagen nicht fertig: bitte anrufen", s, {});
         out.push(["connect-erinnerung", s.firma, stufe]);
       }

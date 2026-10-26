@@ -10,7 +10,7 @@
 import { CFG, BAUSTEINE_SIMULIERT } from "./_lib/config.mjs";
 import { json, fail, body, clean, id, now, handler, isEmail, parseBetrag, euro, clientIp } from "./_lib/util.mjs";
 import { getStudio, studioBy, zahlungBy, saveZahlung } from "./_lib/store.mjs";
-import { checkoutFuer, bezahlfeldFuer, darfKassieren, anzahlungsbedingungen, istAnzahlung, bezahlfeld, zahlungBezahlt, plattformKassiert, klarnaVersuch, zahlartenFuer, notify } from "./_lib/domain.mjs";
+import { checkoutFuer, bezahlfeldFuer, darfKassieren, anzahlungsbedingungen, istAnzahlung, bezahlfeld, zahlungBezahlt, plattformKassiert, klarnaVersuch, zahlartenFuer, notify, zahlungAbgleichen } from "./_lib/domain.mjs";
 import { mails } from "./_lib/emails.mjs";
 import { log } from "./_lib/store.mjs";
 import { stripe } from "./_lib/stripe.mjs";
@@ -65,13 +65,7 @@ export default handler(async (req, context) => {
       if (!z) return fail("Zahlungslink nicht gefunden", 404);
       const s = await getStudio(z.studioId);
       // Nach der Rückkehr vom Bezahlen: Status direkt bei Stripe nachsehen (falls der Webhook noch nicht da ist)
-      if (u.searchParams.get("abgleich") && z.paymentIntentId && ["offen", "in_pruefung"].includes(z.status) && z.weg === "bezahlfeld") {
-        try {
-          const pi = await stripe("GET", `/payment_intents/${z.paymentIntentId}`, null, plattformKassiert(s) ? {} : { account: s.stripe.accountId });
-          if (pi.status === "succeeded") await zahlungBezahlt(z, plattformKassiert(s) ? undefined : s.stripe.accountId);
-          else if (pi.status === "processing" && z.status !== "in_pruefung") { z.status = "in_pruefung"; await saveZahlung(z); }
-        } catch { /* der Webhook kommt ohnehin */ }
-      }
+      if (u.searchParams.get("abgleich")) await zahlungAbgleichen(s, z);
       // Rückkehr aus dem Checkout („Zurück“): nachsehen, ob Klarna abgelehnt hat → Auswege anbieten, Studio einmal informieren
       let klarna = null;
       if (u.searchParams.get("abbruch") && ["offen", "abgebrochen"].includes(z.status)) {

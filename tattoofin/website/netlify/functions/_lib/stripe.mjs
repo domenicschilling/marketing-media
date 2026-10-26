@@ -190,8 +190,15 @@ export function bausteine(studio) {
   };
 }
 
+// Stufe 1: alle Bausteine. Lehnt Stripe das für das Konto ab (z. B. nicht jeder Baustein ist für Standard-Konten mit eigenem
+// Dashboard erlaubt), Stufe 2: nur Einrichtung + Hinweise – die Einrichtung selbst darf nie daran scheitern.
 export async function accountSession(studio) {
-  return stripe("POST", "/account_sessions", { account: studio.stripe.accountId, components: bausteine(studio) });
+  try { return await stripe("POST", "/account_sessions", { account: studio.stripe.accountId, components: bausteine(studio) }); }
+  catch (e) {
+    console.error("[account_session] alle Bausteine abgelehnt, nur Einrichtung:", e.message);
+    const b = bausteine(studio);
+    return stripe("POST", "/account_sessions", { account: studio.stripe.accountId, components: { account_onboarding: b.account_onboarding, notification_banner: b.notification_banner } });
+  }
 }
 
 export async function onboardingLink(studio, base) {
