@@ -24,7 +24,7 @@ export const CFG = {
   registergericht: env("FIRMA_REGISTER", "Amtsgericht Bamberg, HRB 12150"),
   ustid: env("FIRMA_USTID", "DE456133925"),
   geschaeftsfuehrer: env("FIRMA_GF", "Domenic Schilling"),
-  telefon: env("KONTAKT_TELEFON", "0174 1682157"),
+  telefon: env("KONTAKT_TELEFON", "0162 4502375"),
   email: env("KONTAKT_EMAIL", "info@tattoofin.de"),
   gerichtsstand: env("GERICHTSSTAND", "Bamberg"),
   whatsapp: env("KONTAKT_WHATSAPP", "491624502375"),

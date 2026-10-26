@@ -17,7 +17,7 @@ const heute = new Date().toISOString().slice(0, 10);
 
 const ORG = {
   "@type": "Organization", "@id": SITE + "/#org", name: "Tattoofin", legalName: "DSX Media Solutions UG (haftungsbeschränkt)",
-  url: SITE + "/", logo: SITE + "/assets/logo.png", email: "info@tattoofin.de", telephone: "+491741682157",
+  url: SITE + "/", logo: SITE + "/assets/logo.png", email: "info@tattoofin.de", telephone: "+491624502375",
   address: { "@type": "PostalAddress", streetAddress: "Am Weingarten 9", postalCode: "96117", addressLocality: "Memmelsdorf", addressCountry: "DE" },
   sameAs: ["https://www.instagram.com/tattoofin.de/"],
 };

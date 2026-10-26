@@ -13,7 +13,7 @@ window.CFG = {
   ustid: "DE456133925",
   geschaeftsfuehrer: "Domenic Schilling",
   ansprechpartner: "Domenic Schilling",
-  telefon: "0174 1682157",
+  telefon: "0162 4502375",
   email: "info@tattoofin.de",
   web: "tattoofin.de",
   webUrl: "https://tattoofin.de",
