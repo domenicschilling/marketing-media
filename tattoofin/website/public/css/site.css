@@ -295,3 +295,8 @@ input:focus,select:focus,textarea:focus{outline:none;box-shadow:4px 4px 0 var(--
 /* Sehr große Bildschirme: Inhalt wächst mit (statt klein in der Mitte zu stehen) */
 @media (min-width:1800px){body{zoom:1.2}}
 @media (min-width:2200px){body{zoom:1.4}}
+
+/* KI-Kennzeichnung: dezent, aber lesbar (26.10.2026) */
+.ki-hinweis{position:absolute;left:10px;top:10px;z-index:3;background:rgba(19,40,61,.86);color:#fff;font:600 11.5px/1.2 var(--body);padding:4px 9px;border-radius:99px;pointer-events:none}
+.ki-fuss{margin-top:6px;font-size:13px;opacity:.9;max-width:42em}
+.foot .ki-fuss{color:var(--muted-d)}
