@@ -2,7 +2,7 @@
 //   node dev/vorschau-deploy.mjs            → nur bauen (Ordner .vorschau-dist)
 //   node dev/vorschau-deploy.mjs --deploy   → bauen + auf tattoofin-vorschau.netlify.app veröffentlichen
 // Unterschiede zur echten Site: noindex überall, Banner „Vorschau – keine echten Zahlungen“, kein Pixel/CAPI/Umami,
-// Steuerseite /vorschau.html. Die Site hat nur TF_VORSCHAU=1 (keine Stripe-Live-Schlüssel, keine Mail-Zugänge).
+// Steuerseite /vorschau.html. Mit VORSCHAU_BANNER=1 bleibt tf-track.js (Cookie-Fenster sichtbar; Pixel/CAPI bleiben auf Vorschau-Adressen trotzdem aus). Die Site hat nur TF_VORSCHAU=1 (keine Stripe-Live-Schlüssel, keine Mail-Zugänge).
 import fs from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
@@ -20,7 +20,7 @@ const BANNER = '<div style="background:#f2682a;color:#fff;font:700 13px/1.4 syst
 for (const f of fs.readdirSync(dist).filter((n) => n.endsWith(".html"))) {
   let s = fs.readFileSync(path.join(dist, f), "utf8");
   s = s.replace(/<meta name="robots"[^>]*>/g, "").replace(/<head>/, '<head><meta name="robots" content="noindex,nofollow">');
-  s = s.replace(/<script[^>]*tf-track\.js[^>]*><\/script>/g, "").replace(/<script[^>]*umami[^>]*><\/script>/g, "");
+  if (!process.env.VORSCHAU_BANNER) s = s.replace(/<script[^>]*tf-track\.js[^>]*><\/script>/g, ""); s = s.replace(/<script[^>]*umami[^>]*><\/script>/g, "");
   if (!["app.html", "nachweis.html", "recht.html"].includes(f)) s = s.replace(/<body([^>]*)>/, (m) => m + BANNER);
   fs.writeFileSync(path.join(dist, f), s);
 }

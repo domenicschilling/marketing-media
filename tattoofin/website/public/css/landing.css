@@ -326,3 +326,21 @@
 
 /* Rundes Siegel nicht über die Überschrift legen */
 @media (min-width:961px){.badge-round{left:3%;bottom:-8px}}
+/* Mit Cookie-Fenster: beide Hero-Knöpfe bleiben darüber sichtbar */
+@media (max-width:560px) and (max-height:700px){
+  .hero .ctas{gap:8px;margin-top:12px}
+  .hero .ctas .btn.big{padding:10px 16px;font-size:17px}
+}
+@media (max-height:520px) and (min-width:560px){
+  .hero .ctas{gap:8px}
+  .hero .ctas .btn.big{padding:8px 13px;font-size:15px}
+  .hero .lead{font-size:14.5px}
+}
+/* Sehr große Bildschirme: breiterer Inhalt, Überschrift passt in ihre Spalte, Text wächst mit */
+@media (min-width:1800px){
+  .wrap{max-width:1520px}
+  .hero h1{font-size:clamp(70px,min(5.4vw,8.4svh),104px)}
+  .hero .lead{max-width:680px;font-size:clamp(20px,2.4svh,24px)}
+  .hero .fn-hero,.hero .noshow-hero{max-width:640px}
+  .scene{height:680px}
+}

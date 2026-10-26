@@ -62,7 +62,7 @@ window.TFTrack = (function () {
     ".tf-cc b{display:block;font-size:16px;margin-bottom:4px}.tf-cc a{color:#1f3d5c}" +
     ".tf-cc .r{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}" +
     ".tf-cc button{flex:1;min-width:140px;border:3px solid #1f3d5c;border-radius:99px;padding:10px 14px;font:700 15px 'DM Sans',system-ui,sans-serif;cursor:pointer;background:#fff;color:#1f3d5c}" +
-    ".tf-cc button.ja{background:#1f3d5c;color:#fbb316}" +
+    ".tf-cc button.ja{background:#fff;color:#1f3d5c}" +
     ".tf-wa{position:fixed;right:16px;bottom:16px;z-index:9998;display:flex;align-items:center;gap:8px;background:#25d366;color:#fff;text-decoration:none;border:3px solid #1f3d5c;border-radius:99px;box-shadow:4px 4px 0 #1f3d5c;padding:10px 16px 10px 12px;font:700 15px 'DM Sans',system-ui,sans-serif}" +
     ".tf-wa svg{width:24px;height:24px;flex:none}.tf-wa small{display:block;font-weight:500;font-size:11px;opacity:.9}" +
     "@media (max-width:600px){.tf-wa span{display:none}.tf-wa{padding:12px}}" +
@@ -71,9 +71,10 @@ window.TFTrack = (function () {
     "body.tf-cc-offen{padding-bottom:190px}@media (max-width:600px){body.tf-cc-offen{padding-bottom:150px}}" +
     // Am großen Bildschirm unten rechts statt mittig, damit der Hauptknopf links frei bleibt
     "@media (min-width:1000px){.tf-cc{left:auto;right:20px;bottom:20px;max-width:430px;margin:0}}" +
-    "@media (max-width:600px){.tf-cc{left:8px;right:8px;bottom:8px;padding:10px 12px;font-size:13.5px;line-height:1.4;box-shadow:4px 4px 0 #1f3d5c;border-width:2px}" +
+    "@media (max-width:600px){.tf-cc{left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right));bottom:max(8px,env(safe-area-inset-bottom));padding:8px 10px;font-size:13px;line-height:1.35;box-shadow:3px 3px 0 #1f3d5c;border-width:2px;border-radius:14px}" +
     ".tf-cc b{display:none}.tf-cc .lang{display:none}.tf-cc .kurz{display:inline}" +
-    ".tf-cc .r{margin-top:8px;gap:8px;flex-wrap:nowrap}.tf-cc button{min-width:0;padding:8px 6px;font-size:14px;border-width:2px}}" +
+    // beide Knöpfe gleich groß und gleich gestaltet (kein Dark Pattern)
+    ".tf-cc .r{margin-top:6px;gap:8px;flex-wrap:nowrap}.tf-cc button,.tf-cc button.ja{min-width:0;padding:7px 6px;font-size:13.5px;border-width:2px;background:#fff;color:#1f3d5c}}" +
     // Handy quer / sehr niedrige Fenster: Text links, Knöpfe rechts in einer Zeile (statt halber Bildschirm); Platz für die Sicherheitsränder (Notch)
     "@media (max-height:520px){.tf-cc{max-width:none;margin:0;left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right));bottom:max(8px,env(safe-area-inset-bottom));display:flex;align-items:center;gap:14px;padding:8px 12px;font-size:13px;line-height:1.35}" +
     ".tf-cc b,.tf-cc .lang{display:none}.tf-cc .kurz{display:inline}.tf-cc .r{margin:0;flex:none;flex-wrap:nowrap}.tf-cc button{flex:none;min-width:0;padding:8px 14px;font-size:14px;border-width:2px}body.tf-cc-offen{padding-bottom:84px}}";
@@ -82,7 +83,7 @@ window.TFTrack = (function () {
     if (document.querySelector(".tf-cc")) return;
     var d = document.createElement("div");
     d.className = "tf-cc"; d.setAttribute("role", "dialog"); d.setAttribute("aria-label", "Cookie-Einstellungen");
-    d.innerHTML = "<b>Cookies für unsere Werbung</b><span class=\"kurz\">Dürfen wir mit dem Meta-Pixel messen, ob unsere Werbung wirkt? Nur mit deiner Zustimmung. </span><span class=\"lang\">Wir möchten mit dem Meta-Pixel messen, ob unsere Anzeigen auf Facebook und Instagram funktionieren. Dafür setzen wir Cookies, aber nur mit deiner Zustimmung. Du kannst sie jederzeit im Fußbereich widerrufen. </span><a href=\"/datenschutz.html#meta\">Mehr erfahren</a>" +
+    d.innerHTML = "<b>Cookies für unsere Werbung</b><span class=\"kurz\">Meta-Pixel zur Werbemessung, nur mit deiner Zustimmung. </span><span class=\"lang\">Wir möchten mit dem Meta-Pixel messen, ob unsere Anzeigen auf Facebook und Instagram funktionieren. Dafür setzen wir Cookies, aber nur mit deiner Zustimmung. Du kannst sie jederzeit im Fußbereich widerrufen. </span><a href=\"/datenschutz.html#meta\">Mehr erfahren</a>" +
       "<div class=\"r\"><button type=\"button\" class=\"nein\">Nur notwendige</button><button type=\"button\" class=\"ja\">Einverstanden</button></div>";
     document.body.appendChild(d);
     document.body.classList.add("tf-cc-offen");

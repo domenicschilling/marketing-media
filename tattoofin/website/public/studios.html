@@ -320,7 +320,11 @@ body.tf-cc-offen .leiste{display:none}
   .blase{margin-bottom:12px}
 }
 @supports (height:1svh){@media (max-width:600px){.held h1{font-size:clamp(34px,min(11.4vw,7.6svh),52px)}}}
-@media (max-width:600px) and (max-height:620px){.blase{display:none}.einstieg{font-size:16.5px}}
+@media (max-width:600px) and (max-height:780px){.blase{display:none}}
+@media (max-width:600px) and (max-height:620px){.einstieg{font-size:15px;line-height:1.4;margin-top:8px}.kopf{padding:8px 0}.held{padding-top:6px}.held h1{font-size:clamp(32px,10.2vw,36px)}.held-cta{margin-top:12px}.held-cta .knopf{padding:13px 14px 10px;font-size:17px}}
+@media (min-width:1800px){body{zoom:1.2}}
+@media (min-width:2200px){body{zoom:1.4}}
+@media (min-width:1800px){.rahmen{max-width:1500px}}
 @media (max-height:520px) and (min-width:600px){
   .held-raster{grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);gap:24px;align-items:start}
   .blase{display:none}
