@@ -25,6 +25,8 @@
 //   GET   /api/admin/studio/:id/branding      hinterlegtes Branding (Logo/Icon/Farben/Kurzbezeichnung)
 //   POST  /api/admin/studio/:id/branding      { logo?, icon? (data:image/png|jpeg;base64), farbe?, akzent? (#RRGGBB), kurzbezeichnung?, logoHell?, stripe? }
 //                                             speichert fürs Studio (Zahlseite + Checkout) und setzt mit stripe:true auch das Branding des verbundenen Stripe-Kontos
+//   GET   /api/admin/studio/:id/team          Team-Adressen (zusätzliche Login-Adressen, z. B. Mitarbeiter, die Zahlungslinks erstellen)
+//   POST  /api/admin/studio/:id/team          { emails: ["a@b.de", …] } ersetzt die Liste (höchstens 5; leer = keine)
 //   POST  /api/admin/checkout-test            unbezahlte Test-Sitzung (1 €) mit Tattoofin-Branding → { id, url }; { expire: "cs_…" } beendet sie
 import { CFG, netto, paketVon, provisionSatz } from "./_lib/config.mjs";
 import { json, fail, body, clean, now, handler } from "./_lib/util.mjs";
@@ -127,6 +129,18 @@ export default handler(async (req) => {
     if (aktion === "ansehen" && req.method === "POST") {
       await log("admin-ansicht-angefordert", { admin: adminName(req), studioId: s.id });
       return json({ url: `/api/admin-ansicht?t=${sign({ t: "ansicht", sid: s.id, admin: adminName(req), exp: Date.now() + 2 * 60000 })}` });
+    }
+    if (aktion === "team" && req.method === "GET") return json({ email: s.email, teamEmails: s.teamEmails || [] });
+    if (aktion === "team" && req.method === "POST") {
+      const b = await body(req);
+      const liste = [...new Set((Array.isArray(b.emails) ? b.emails : []).map((e) => clean(e, 160).replace(/\s+/g, "").toLowerCase()).filter(Boolean))];
+      if (liste.length > 5) return fail("Höchstens 5 Team-Adressen");
+      const falsch = liste.find((e) => !/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(e));
+      if (falsch) return fail(`Keine gültige E-Mail: ${falsch}`);
+      s.teamEmails = liste;
+      await saveStudio(s);
+      await log("admin-team", { admin: adminName(req), studioId: s.id, anzahl: liste.length });
+      return json({ email: s.email, teamEmails: s.teamEmails });
     }
     if (aktion === "branding" && req.method === "GET") return json({ branding: s.branding || null, oeffentlich: brandingOeffentlich(s) });
     if (aktion === "branding" && req.method === "POST") {

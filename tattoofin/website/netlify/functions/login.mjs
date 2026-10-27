@@ -6,7 +6,7 @@
 // „verzoegert“: true, wenn der Mailversand gerade hängt (Warteschlange nicht leer) – betrifft alle gleich, verrät also nichts.
 import crypto from "node:crypto";
 import { json, fail, body, clean, handler, clientIp } from "./_lib/util.mjs";
-import { studiosPerEmail, AKTIV, zaehleVersuch, getStudio } from "./_lib/store.mjs";
+import { studiosPerEmail, AKTIV, zaehleVersuch, getStudio, normEmail } from "./_lib/store.mjs";
 import { loginLink, verify, LOGIN_STUNDEN } from "./_lib/auth.mjs";
 import { notify } from "./_lib/domain.mjs";
 import { mails } from "./_lib/emails.mjs";
@@ -37,7 +37,11 @@ export default handler(async (req, context) => {
   const mailOk = await zaehleVersuch(`rl/login-mail/${hash(email)}`, 3, 15 * 60e3);
   if (!mailOk) return antwort();
   // Alle aktiven Studios zu dieser Adresse (nicht nur den letzten Index-Eintrag): je Studio ein Link, höchstens 3
-  for (const s of (await studiosPerEmail(email)).filter(AKTIV).slice(0, 3)) await notify(s, mails.login(s, { url: loginLink(s.id), stunden: LOGIN_STUNDEN }));
+  // Link geht an die eingegebene Adresse (Hauptadresse oder hinterlegte Team-Adresse – beides passt laut studiosPerEmail)
+  for (const s of (await studiosPerEmail(email)).filter(AKTIV).slice(0, 3)) {
+    const an = normEmail(s.email) === normEmail(email) ? undefined : (s.teamEmails || []).find((t) => normEmail(t) === normEmail(email));
+    await notify(s, mails.login(s, { url: loginLink(s.id), stunden: LOGIN_STUNDEN }), an);
+  }
   return antwort();
 });
 

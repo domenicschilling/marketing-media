@@ -681,6 +681,15 @@ try {
   await post("/api/login", { email: " testgmail@GMAIL.com " });
   check(mailsAn("test.gmail+abc@googlemail.com").some((m) => /Login-Link/.test(m.subject)), "Login: gmail/googlemail, Punkte, +Zusatz und Groß/Klein werden gleich behandelt");
   check((await post("/api/signup", { ...basis, paket: "einmal", email: "testgmail@gmail.com" })).status === 409, "Keine Dublette mit Gmail-Variante derselben Adresse");
+  // Team-Adresse (z. B. Mitarbeiterin): Admin hinterlegt sie, Login-Link geht an die Mitarbeiterin, nicht an den Inhaber
+  const teamSid = (await studioPer("prov@example.com")).id;
+  check((await admin(`studio/${teamSid}/team`, { body: { emails: ["kein-mail"] } })).error, "Team: ungültige Adresse abgelehnt");
+  const team = await admin(`studio/${teamSid}/team`, { body: { emails: [" Mitarbeiterin@Example.com "] } });
+  check(team.teamEmails?.[0] === "mitarbeiterin@example.com", "Team-Adresse hinterlegt (bereinigt)");
+  const vorInhaber = mailsAn("prov@example.com").length;
+  await post("/api/login", { email: "mitarbeiterin@example.com" });
+  check(mailsAn("mitarbeiterin@example.com").some((m) => /Login-Link/.test(m.subject)) && mailsAn("prov@example.com").length === vorInhaber, "Team-Login: Link an die Mitarbeiterin, Inhaber bekommt keine Mail");
+  check((await post("/api/login", { email: "fremd2@example.com" })).ok && !mailsAn("fremd2@example.com").length, "Fremde Adresse ohne Team-Eintrag bekommt keinen Link");
 
   console.log("Admin-Login per E-Mail + Dashboard ansehen (nur lesend)");
   check((await (await post("/api/admin-login", { email: "fremd@example.com" })).json()).ok === true && !mailsAn("fremd@example.com").length, "Admin-Login: fremde Adresse bekommt keine Mail (Antwort gleich)");

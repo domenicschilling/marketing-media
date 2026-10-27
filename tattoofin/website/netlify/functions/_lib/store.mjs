@@ -130,7 +130,8 @@ export const AKTIV = (s) => s && !["entwurf", "abgebrochen"].includes(s.status);
 export async function studiosPerEmail(email) {
   const n = normEmail(email);
   if (!n) return [];
-  return (await allStudios()).filter((x) => x.email && normEmail(x.email) === n)
+  // Hauptadresse oder Team-Adresse (s.teamEmails, z. B. Mitarbeiterin, die Zahlungslinks erstellt – vom Admin hinterlegt)
+  return (await allStudios()).filter((x) => (x.email && normEmail(x.email) === n) || (x.teamEmails || []).some((t) => normEmail(t) === n))
     .sort((a, b) => (b.updatedAt || b.createdAt || "").localeCompare(a.updatedAt || a.createdAt || ""));
 }
 
