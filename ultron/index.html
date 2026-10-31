@@ -1,0 +1,1485 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#05070a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ULTRON">
+<link rel="apple-touch-icon" href="ultron-180.png">
+<link rel="icon" href="ultron-192.png" type="image/png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>ULTRON</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#05070a; --panel:#0b1016; --panel2:#10161e; --line:#1d2630; --line2:#2a3542;
+  --text:#d9e1ea; --muted:#7b8896; --dim:#4f5b68;
+  --red:#ff2a2a; --red2:#ff5a4d; --redsoft:rgba(255,42,42,.12);
+  --green:#2bd96b; --amber:#ffb020; --blue:#7fb4ff;
+  --display:"Chakra Petch",system-ui,sans-serif; --sans:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+  --pad:16px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 var(--sans);min-height:100vh;
+  background-image:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(255,30,30,.16),transparent 70%),
+  linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);
+  background-size:auto,28px 28px,28px 28px;overflow-x:hidden}
+button,input{font:inherit;color:inherit}
+a{color:var(--red2)}
+.wrap{max-width:980px;margin:0 auto;padding:0 var(--pad) calc(40px + env(safe-area-inset-bottom))}
+
+/* Gesicht */
+.gesicht{position:relative;display:block}
+.gesicht img{width:100%;height:100%;display:block;border-radius:50%}
+.gesicht::after{content:"";position:absolute;inset:0;border-radius:50%;box-shadow:0 0 0 1px rgba(255,42,42,.5),0 0 40px rgba(255,30,30,.35);animation:puls 3.2s ease-in-out infinite}
+@keyframes puls{0%,100%{box-shadow:0 0 0 1px rgba(255,42,42,.45),0 0 26px rgba(255,30,30,.25)}50%{box-shadow:0 0 0 1px rgba(255,42,42,.9),0 0 60px rgba(255,30,30,.55)}}
+.denkt .gesicht::after{animation-duration:.9s}
+
+/* Sperrbildschirm */
+#sperre{min-height:100vh;display:grid;place-items:center;padding:24px var(--pad)}
+.sperre-box{width:100%;max-width:380px;text-align:center}
+.sperre-box .gesicht{width:180px;height:180px;margin:0 auto 26px}
+h1.logo{font:700 34px/1 var(--display);letter-spacing:.42em;margin:0 0 6px;padding-left:.42em;color:#fff}
+.unter{color:var(--muted);font-size:13px;letter-spacing:.08em;text-transform:uppercase}
+.feld{margin-top:28px;display:flex;gap:8px}
+.feld input{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line2);border-radius:10px;padding:13px 14px;outline:none}
+.feld input:focus{border-color:var(--red)}
+.kreativ video{width:100%;max-height:70vh;border-radius:10px;background:#000;margin-top:8px;display:block}
+.kreativ .bilder{display:flex;gap:8px;overflow-x:auto;margin-top:8px}.kreativ .bilder img{height:220px;border-radius:8px}
+.kreativ .text{white-space:pre-wrap;font-size:14px;margin-top:8px;padding:10px;border-radius:8px;background:var(--panel2)}
+.kreativ .knopf.bestaetigen,.knopf.bestaetigen{background:#ffb020;color:#1a1000}
+.kreativ .pruef{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.kreativ .pruef span{font-size:12px;padding:3px 8px;border-radius:99px;background:var(--panel2);border:1px solid var(--line2)}
+.knopf{background:var(--red);border:0;border-radius:10px;padding:12px 16px;font-weight:600;color:#fff;cursor:pointer;white-space:nowrap}
+.knopf:active{transform:translateY(1px)}
+.knopf.leise{background:var(--panel2);border:1px solid var(--line2);color:var(--text)}
+.fehler{color:var(--red2);font-size:13px;min-height:20px;margin-top:10px}
+
+/* Kopfzeile */
+header.leiste{position:sticky;top:0;z-index:5;background:rgba(5,7,10,.86);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
+.leiste-in{max-width:980px;margin:0 auto;padding:10px var(--pad);display:flex;align-items:center;gap:12px}
+.leiste .gesicht{width:34px;height:34px;flex:none}
+.leiste b{font:700 16px var(--display);letter-spacing:.3em}
+.leiste .stand{margin-left:auto;color:var(--muted);font-size:12px;text-align:right}
+.punkt{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:1px;background:var(--dim)}
+.gruen{--c:var(--green)} .gelb{--c:var(--amber)} .rot{--c:var(--red)}
+.punkt.gruen,.punkt.gelb,.punkt.rot{background:var(--c);box-shadow:0 0 10px var(--c)}
+nav.chips{max-width:980px;margin:0 auto;padding:0 var(--pad) 10px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+nav.chips::-webkit-scrollbar{display:none}
+nav.chips a{flex:none;text-decoration:none;color:var(--muted);border:1px solid var(--line2);border-radius:999px;padding:5px 12px;font-size:13px}
+nav.chips a:hover{color:var(--text);border-color:var(--red)}
+
+/* Held */
+.held{display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:center;margin:22px 0 14px}
+.held .gesicht{width:112px;height:112px}
+.held h2{font:700 24px/1.15 var(--display);margin:0 0 6px;color:#fff}
+.held .zeile{color:var(--muted);font-size:13px;display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line2);border-radius:999px;padding:2px 10px;font-size:12px;color:var(--text)}
+.chip.modus-aktiv{border-color:rgba(255,42,42,.6);color:#ffb3ad}
+.chip.modus-nur-melden{border-color:rgba(255,176,32,.6);color:#ffd892}
+.chip.modus-aus{color:var(--muted)}
+.zahlen{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:6px 0 16px}
+.zahl{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}
+.zahl .w{font:600 22px/1.1 var(--display);color:#fff;font-variant-numeric:tabular-nums}
+.zahl .l{color:var(--muted);font-size:12px;margin-top:4px}
+.zahl.warn .w{color:var(--red2)}
+.befehle{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.befehle .knopf{padding:10px 14px;font-size:14px}
+
+/* Abschnitte */
+section{margin-top:26px;scroll-margin-top:110px}
+section > h3{font:600 12px/1 var(--display);letter-spacing:.24em;text-transform:uppercase;color:var(--red2);margin:0 0 10px;display:flex;align-items:center;gap:10px}
+section > h3::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(255,42,42,.4),transparent)}
+.karte{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.karte + .karte{margin-top:8px}
+.lage p{margin:.35em 0} .lage ul{margin:.3em 0;padding-left:1.1em} .lage li{margin:.2em 0}
+.lage h4{font:600 14px var(--display);margin:.8em 0 .2em;color:#fff}
+.meta{color:var(--muted);font-size:12px}
+.leer{color:var(--muted);font-size:14px}
+.eintrag{display:grid;grid-template-columns:22px 1fr;gap:8px;padding:10px 0;border-top:1px solid var(--line)}
+.eintrag:first-child{border-top:0;padding-top:0}
+.eintrag:last-child{padding-bottom:0}
+.eintrag .t{font-weight:500}
+.eintrag .d{color:var(--muted);font-size:13px;margin-top:2px;overflow-wrap:anywhere}
+.alarm-kritisch{border-left:3px solid var(--red)} .alarm-warnung{border-left:3px solid var(--amber)} .alarm-info{border-left:3px solid var(--line2)}
+
+/* Netz */
+.netz{position:relative}
+.netz svg{width:100%;height:auto;display:block}
+.netz .knoten{cursor:pointer}
+.netz-info{min-height:44px;margin-top:6px;font-size:13px;color:var(--muted);text-align:center}
+.agenten{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px;margin-top:10px}
+.agent{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13px}
+.agent .n{display:flex;justify-content:space-between;gap:8px;font-weight:500}
+.balken{height:4px;background:var(--line);border-radius:4px;margin-top:8px;overflow:hidden}
+.balken i{display:block;height:100%;background:var(--c,var(--dim))}
+
+/* Werbung */
+.kamp{display:grid;gap:8px}
+.kamp .karte{padding:12px 14px}
+.kamp .kopf{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.kamp .name{font-weight:600;overflow-wrap:anywhere}
+.kennz{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}
+.kennz div{background:var(--panel2);border-radius:8px;padding:7px 8px}
+.kennz b{display:block;font:600 15px var(--display);font-variant-numeric:tabular-nums;color:#fff}
+.kennz span{font-size:11px;color:var(--muted)}
+.marke{font-size:11px;border-radius:6px;padding:1px 7px;background:var(--redsoft);color:#ffb3ad;white-space:nowrap}
+
+/* System */
+.raster{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:6px}
+.site{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13px;min-width:0}
+.site span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.site em{font-style:normal;color:var(--muted);font-family:var(--mono);font-size:11px}
+details{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 16px}
+details summary{cursor:pointer;font-weight:500}
+pre.playbook{white-space:pre-wrap;font:13px/1.55 var(--mono);color:var(--text);margin:10px 0 0}
+
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translate(-50%,120px);background:#140607;border:1px solid var(--red);color:#fff;border-radius:12px;padding:12px 16px;font-size:14px;max-width:calc(100% - 32px);transition:transform .25s ease;z-index:9}
+#toast.da{transform:translate(-50%,0)}
+.verborgen{display:none!important}
+@media (max-width:560px){
+  .held{grid-template-columns:76px 1fr;gap:14px}
+  .held .gesicht{width:76px;height:76px}
+  .held h2{font-size:19px}
+  .zahl .w{font-size:19px}
+  .kennz{grid-template-columns:repeat(2,1fr)}
+}
+
+/* ---------- Neues Layout: Reiter unten (Handy), oben (Computer) ---------- */
+.ansicht{display:none}.ansicht.an{display:block;animation:rein .18s ease}
+@keyframes rein{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+nav.reiter{position:fixed;left:0;right:0;bottom:0;z-index:8;background:rgba(8,11,15,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding:4px 4px calc(4px + env(safe-area-inset-bottom))}
+nav.reiter button{background:none;border:0;padding:6px 2px 4px;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--muted);font:500 11px var(--sans);cursor:pointer;position:relative;min-height:52px;justify-content:center}
+nav.reiter button svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+nav.reiter button.an{color:#fff}
+nav.reiter button.an svg{stroke:var(--red2);filter:drop-shadow(0 0 6px rgba(255,42,42,.6))}
+nav.reiter .badge{position:absolute;top:3px;left:calc(50% + 6px);min-width:17px;height:17px;border-radius:9px;background:var(--red);color:#fff;font:600 10px/17px var(--sans);padding:0 4px;text-align:center}
+.wrap{padding-bottom:calc(96px + env(safe-area-inset-bottom))}
+#toast{bottom:calc(84px + env(safe-area-inset-bottom))}
+@media (min-width:900px){
+  nav.reiter{position:sticky;top:0;bottom:auto;border-top:0;border-bottom:1px solid var(--line);grid-template-columns:repeat(5,minmax(0,140px));justify-content:center;padding:4px}
+  nav.reiter button{flex-direction:row;gap:8px;font-size:14px;min-height:44px}
+  nav.reiter button svg{width:20px;height:20px}
+  .wrap{padding-bottom:40px} #toast{bottom:20px}
+}
+/* Kopf kompakt */
+.kopf2{display:flex;align-items:center;gap:12px;margin:16px 0 12px}
+.kopf2 .gesicht{width:56px;height:56px;flex:none}
+.kopf2 h2{font:700 19px/1.2 var(--display);margin:0;color:#fff}
+.kopf2 .meta{margin-top:3px}
+.kopf2 .neu{margin-left:auto;flex:none;background:var(--panel2);border:1px solid var(--line2);border-radius:999px;width:40px;height:40px;display:grid;place-items:center;cursor:pointer;color:var(--text)}
+.kopf2 .neu svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2}
+.denkt .kopf2 .neu svg{animation:dreh 1s linear infinite}
+@keyframes dreh{to{transform:rotate(360deg)}}
+/* Auftragsfeld */
+.auftrag{background:linear-gradient(180deg,rgba(255,42,42,.10),rgba(255,42,42,.02));border:1px solid rgba(255,42,42,.45);border-radius:16px;padding:14px}
+.auftrag label{display:block;font:600 13px var(--display);letter-spacing:.16em;color:#ffb3ad;margin-bottom:8px}
+.auftrag textarea{width:100%;min-height:96px;background:rgba(5,7,10,.7);border:1px solid var(--line2);border-radius:12px;padding:12px;color:var(--text);font:16px/1.45 var(--sans);resize:vertical;outline:none}
+.auftrag textarea:focus{border-color:var(--red)}
+.auftrag .zeile2{display:flex;gap:8px;align-items:center;margin-top:10px}
+.auftrag .knopf{flex:1;padding:13px 16px;font-size:16px}
+.vorlagen{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-top:10px;padding-bottom:2px}
+.vorlagen::-webkit-scrollbar{display:none}
+.vorlagen button{flex:none;background:var(--panel2);border:1px solid var(--line2);border-radius:999px;padding:7px 12px;font-size:13px;color:var(--text);cursor:pointer}
+.verlauf{margin-top:10px}
+.verlauf .eintrag .t{font-weight:400}
+/* Kacheln */
+.kacheln{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:12px 0 0}
+@media (min-width:700px){.kacheln{grid-template-columns:repeat(4,1fr)}}
+.kachel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 12px;text-align:left;color:inherit;cursor:pointer;font:inherit}
+.kachel .w{font:600 21px/1.1 var(--display);color:#fff;font-variant-numeric:tabular-nums}
+.kachel .l{color:var(--muted);font-size:12px;margin-top:3px}
+.kachel.warn{border-color:rgba(255,42,42,.5)} .kachel.warn .w{color:var(--red2)}
+.knopfreihe{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.knopfreihe .knopf{padding:12px;font-size:14px}
+.sterne{color:#ffb020;letter-spacing:1px;font-size:14px;white-space:nowrap}
+.mehrtext{max-height:180px;overflow:hidden;position:relative}
+.mehrtext::after{content:"";position:absolute;left:0;right:0;bottom:0;height:50px;background:linear-gradient(transparent,var(--panel))}
+.mehrtext.offen{max-height:none}.mehrtext.offen::after{display:none}
+.aufklapp{background:none;border:0;color:var(--red2);padding:6px 0 0;cursor:pointer;font-size:13px}
+.liste-mehr{display:grid;gap:8px}
+.liste-mehr button{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;color:var(--text);font:inherit;cursor:pointer}
+.liste-mehr button span{flex:1}
+.liste-mehr button em{font-style:normal;color:var(--muted);font-size:13px}
+.frage{border-left:3px solid var(--amber)}
+.frage .t{font-weight:600;color:#fff}
+.frage ul{margin:6px 0 0;padding-left:1.1em;color:var(--text);font-size:14px}
+.frage .knoepfe{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.frage .knoepfe .knopf{flex:1;min-width:120px;padding:11px}
+.frage textarea,.antwortfeld textarea{width:100%;min-height:70px;margin-top:8px;background:var(--panel2);border:1px solid var(--line2);border-radius:10px;padding:10px;color:var(--text);font:16px/1.4 var(--sans)}
+.erledigt{opacity:.55}
+.pitchtext{background:var(--panel2);border-left:3px solid var(--red);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:14.5px;line-height:1.55}
+.ideestatus{font-size:11px;border-radius:6px;padding:1px 7px;background:var(--panel2);color:var(--muted);white-space:nowrap}
+#ideenFilter button.an{border-color:var(--red);color:#fff}
+.zurueck{background:none;border:0;color:var(--red2);font:inherit;padding:14px 0 0;cursor:pointer}
+
+/* ===================== Neues Design: Gespräch mit Ultron ===================== */
+:root{
+  --bg:#000; --panel:#16141a; --panel2:#1f1c24; --line:#2a2730; --line2:#38343f;
+  --text:#f1ece8; --muted:#9a939a; --dim:#5e5862;
+  --red:#e8342c; --red2:#ff5b52; --redsoft:rgba(232,52,44,.14); --amber:#f5b544; --green:#3ccf7a;
+  --sans:"Instrument Sans",system-ui,-apple-system,sans-serif; --mono:var(--sans);
+}
+body{background:#000;font:16px/1.5 var(--sans);background-image:none}
+.wrap{max-width:640px}
+section{margin-top:28px}
+section > h3, section > h2, .feed h2{font:600 17px/1.3 var(--sans);letter-spacing:0;text-transform:none;color:var(--text);margin:0 0 10px;display:block}
+section > h3::after{display:none}
+.karte{background:var(--panel);border:0;border-radius:18px;padding:14px 16px}
+.meta,.klein-meta{color:var(--muted);font-size:13px}
+.knopf{border-radius:999px;padding:11px 18px;font-weight:600;background:var(--red)}
+.knopf.leise{background:var(--panel2);border:0}
+.sterne{color:var(--amber)}
+.punkt{width:7px;height:7px}
+
+/* Kopf */
+.status{display:flex;align-items:center;gap:12px;padding:calc(10px + env(safe-area-inset-top)) 0 4px}
+.gesicht.klein{width:44px;height:44px;flex:none}
+.status h1{font:600 19px/1.2 var(--sans);margin:0;color:#fff}
+.status p{margin:2px 0 0;color:var(--muted);font-size:13px}
+.status-text{min-width:0;flex:1}
+.rund{flex:none;width:40px;height:40px;border-radius:50%;border:0;background:var(--panel);display:grid;place-items:center;color:var(--muted);cursor:pointer}
+.rund svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+.denkt .rund svg{animation:dreh 1s linear infinite}
+
+/* Blasen */
+.blase{display:block;width:100%;text-align:left;font:inherit;color:inherit;background:var(--panel);border:0;border-radius:20px;padding:13px 15px;margin:0 0 8px;line-height:1.5}
+.blase.von-ultron{border-top-left-radius:6px}
+.blase.von-dir{background:#2a1214;border-top-right-radius:6px;margin-left:18%;width:auto}
+.blase.heute{cursor:pointer;font-size:16px}
+.blase.heute b{color:#fff;font-weight:600}
+.blase .t{font-weight:600;color:#fff;font-size:16px}
+.blase ul{margin:6px 0 0;padding-left:1.1em}
+.blase textarea,#notiz{width:100%;min-height:72px;margin-top:8px;background:#000;border:1px solid var(--line2);border-radius:14px;padding:11px 12px;color:var(--text);font:16px/1.45 var(--sans);resize:vertical;outline:none}
+.blase textarea:focus,#notiz:focus{border-color:var(--red)}
+.reihe{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.reihe .knopf{flex:1;min-width:120px}
+.frage{border-left:0}
+.frage.braucht{box-shadow:inset 3px 0 0 var(--amber)}
+.frage .knoepfe{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.frage .knoepfe .knopf{flex:1;min-width:110px;padding:11px}
+.frage details,.antwortfeld{margin-top:10px}
+.frage summary,.antwortfeld summary{color:var(--red2);font-size:14px;cursor:pointer;list-style:none}
+.erledigt{opacity:.5}
+.mehrtext::after{background:linear-gradient(transparent,var(--panel))}
+.aufklapp{color:var(--red2);font-size:14px;padding-top:8px}
+.leer-hinweis{color:var(--muted);font-size:14px;margin:0}
+.lage p{margin:.4em 0} .lage h4{font:600 15px var(--sans);margin:.8em 0 .2em;color:#fff}
+
+.blase{font-size:15.5px}.blase .meta{font-size:15px}.blase .klein-meta{font-size:13px}.blase .lage p,.blase.lage p{margin:.35em 0}
+#vorschlaege .meta{color:var(--text)!important}
+/* Schreibfeld unten (wie ein Messenger) */
+.schreiben{position:fixed;left:0;right:0;bottom:calc(60px + env(safe-area-inset-bottom));z-index:7;padding:8px 12px 8px;background:linear-gradient(transparent,#000 22%);}
+.schreiben .vorlagen{max-width:640px;margin:0 auto 8px;display:none}
+.schreiben.offen .vorlagen{display:flex}
+.vorlagen button{background:var(--panel2);border:0;border-radius:999px;padding:8px 13px;font-size:14px;color:var(--text)}
+.eingabe{max-width:640px;margin:0 auto;display:flex;align-items:flex-end;gap:8px;background:var(--panel);border-radius:24px;padding:6px 6px 6px 16px;border:1px solid var(--line2)}
+.eingabe:focus-within{border-color:var(--red)}
+.eingabe textarea{flex:1;background:none;border:0;outline:none;color:var(--text);font:16px/1.4 var(--sans);resize:none;max-height:140px;padding:8px 0}
+.senden{flex:none;width:40px;height:40px;border-radius:50%;border:0;background:var(--red);display:grid;place-items:center;cursor:pointer}
+.senden svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.senden:disabled{opacity:.5}
+[data-ansicht="start"].an ~ * {}
+body.start-an .wrap{padding-bottom:calc(150px + env(safe-area-inset-bottom))}
+body.tippt nav.reiter{display:none}
+body.tippt .schreiben{bottom:0;padding-bottom:calc(8px + env(safe-area-inset-bottom))}
+
+/* Reiterleiste ruhiger */
+nav.reiter{background:rgba(0,0,0,.92);border-top:1px solid var(--line)}
+nav.reiter button{font:500 11px var(--sans)}
+nav.reiter button.an svg{stroke:var(--text);filter:none}
+nav.reiter button.an{color:var(--text)}
+nav.reiter button.an::before{content:"";position:absolute;top:0;left:30%;right:30%;height:2px;border-radius:2px;background:var(--red)}
+@media (min-width:900px){ .schreiben{bottom:0} body.start-an .wrap{padding-bottom:120px} }
+
+/* Listen in „Mehr“ ruhiger */
+.liste-mehr button{border:0;border-radius:16px;background:var(--panel)}
+.kachel{border:0;border-radius:16px}
+.kamp .karte,.agent,.site,details{border:0}
+#toast{background:var(--panel2);border:0;border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.6);bottom:calc(150px + env(safe-area-inset-bottom))}
+
+@media (prefers-reduced-motion:reduce){.gesicht::after{animation:none}}
+
+/* ===================== Kommandobrücke, Schurken, Steckbrief, Ideen-Gespräch, Sprache ===================== */
+button.gesicht{background:none;border:0;padding:0;cursor:pointer;color:inherit}
+.gesicht img{object-fit:cover;background:#0a0405}
+/* Schreibfeld */
+.modus-wahl{max-width:640px;margin:0 auto 8px;display:flex;gap:6px}
+.schreiben{background:linear-gradient(transparent,rgba(0,0,0,.9) 22px,#000 60%)}
+.modus-wahl button{flex:none;border:1px solid var(--line2);background:rgba(22,20,26,.92);color:var(--muted);border-radius:999px;padding:7px 13px;font:600 13.5px var(--sans);cursor:pointer;min-height:36px}
+.modus-wahl button[aria-checked="true"]{color:#fff;border-color:var(--red);background:#2a1214;box-shadow:0 0 14px rgba(232,52,44,.35)}
+.schreiben.idee-modus .eingabe{border-color:rgba(245,181,68,.55)}
+.schreiben.idee-modus .senden{background:#c98a1c}
+.mikro{flex:none;width:40px;height:40px;border-radius:50%;border:0;background:var(--panel2);display:grid;place-items:center;cursor:pointer;color:var(--text)}
+.mikro svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.mikro.an{background:var(--red);color:#fff;animation:mikro 1.2s ease-in-out infinite}
+@keyframes mikro{0%,100%{box-shadow:0 0 0 0 rgba(232,52,44,.6)}50%{box-shadow:0 0 0 9px rgba(232,52,44,0)}}
+.diktat-hinweis{max-width:640px;margin:8px auto 0;background:var(--panel2);border-radius:14px;padding:9px 13px;font-size:14px;color:var(--text);border-left:3px solid var(--red)}
+body.start-an .wrap{padding-bottom:calc(200px + env(safe-area-inset-bottom))}
+#toast{bottom:calc(200px + env(safe-area-inset-bottom))}
+/* Ideen-Gespräch */
+.denkt-blase{display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:var(--muted)}
+.tippen{display:inline-flex;gap:4px}.tippen i{width:7px;height:7px;border-radius:50%;background:var(--red2);animation:tipp 1.2s infinite}
+.tippen i:nth-child(2){animation-delay:.2s}.tippen i:nth-child(3){animation-delay:.4s}
+@keyframes tipp{0%,60%,100%{opacity:.25;transform:none}30%{opacity:1;transform:translateY(-3px)}}
+.ichat-plan{background:linear-gradient(180deg,rgba(245,181,68,.12),rgba(245,181,68,.03));border:1px solid rgba(245,181,68,.4);border-radius:18px;padding:13px 15px;margin:4px 0 8px}
+.ichat-text{margin-top:4px;white-space:pre-wrap;line-height:1.5}
+.ichat-erledigt{box-shadow:inset 3px 0 0 var(--green)}
+.idee-start{display:flex;align-items:center;gap:12px;width:100%;margin-top:16px;text-align:left;background:linear-gradient(135deg,#2a1214,#16141a);border:1px solid rgba(232,52,44,.5);border-radius:18px;padding:14px 16px;color:var(--text);font:inherit;cursor:pointer}
+.idee-start>span:first-child{font-size:26px}.idee-start b{display:block;color:#fff}.idee-start em{font-style:normal;color:var(--muted);font-size:13px}
+/* Schurken-Karten */
+.trupp{margin-bottom:10px}
+.schurke{--ak:#ff2a1a;position:relative;display:flex;gap:12px;align-items:center;width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer;
+  background:linear-gradient(100deg,color-mix(in srgb,var(--ak) 14%,#121015),#121015 60%);border:1px solid color-mix(in srgb,var(--ak) 30%,transparent);border-radius:18px;padding:10px 12px 10px 10px;overflow:hidden}
+.schurke:focus-visible,.bschild:focus-visible,.blatt-zu:focus-visible,.mikro:focus-visible,.modus-wahl button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.sk-bild{flex:none;width:72px;height:72px;border-radius:14px;display:grid;place-items:center;background:radial-gradient(circle at 50% 40%,color-mix(in srgb,var(--ak) 28%,transparent),#07060a 70%);overflow:hidden}
+.sk-bild img{width:100%;height:100%;object-fit:cover}
+.sk-emoji{font-size:34px}
+.sk-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.sk-name{display:flex;align-items:center;gap:6px;font-weight:600;color:#fff;font-size:16px}
+.sk-lv{margin-left:auto;font:700 12px var(--display);letter-spacing:.06em;color:var(--ak);border:1px solid color-mix(in srgb,var(--ak) 55%,transparent);border-radius:6px;padding:0 6px;flex:none}
+.sk-neu{font:700 10px var(--sans);letter-spacing:.08em;background:var(--red);color:#fff;border-radius:5px;padding:1px 5px}
+.sk-rolle{color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sk-kraft{height:5px;border-radius:5px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:2px}
+.sk-kraft i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,color-mix(in srgb,var(--ak) 60%,#000),var(--ak));box-shadow:0 0 8px var(--ak)}
+.sk-meta{color:var(--muted);font-size:12.5px}
+.sk-warn{color:var(--red2);font-weight:600}.sk-ok{color:var(--green);font-weight:600}
+.schurke.fehler{border-color:rgba(255,42,42,.7);animation:fehlerglut 2.4s ease-in-out infinite}
+@keyframes fehlerglut{0%,100%{box-shadow:0 0 0 0 rgba(255,42,42,0)}50%{box-shadow:0 0 18px 0 rgba(255,42,42,.45)}}
+.schurke.fehler .sk-bild{animation:flacker 1.8s steps(1) infinite}
+.unter-trupp{margin:6px 0 0 18px;padding-left:12px;border-left:2px solid rgba(232,52,44,.35)}
+.ut-titel{font-size:12px;color:var(--muted);letter-spacing:.04em;margin:2px 0 6px}
+.ut-raster{display:grid;grid-template-columns:1fr;gap:6px}
+.schurke.klein{padding:8px 10px 8px 8px;border-radius:14px}
+.schurke.klein .sk-bild{width:52px;height:52px;border-radius:11px}.schurke.klein .sk-emoji{font-size:24px}
+.schurke.klein .sk-name{font-size:14.5px}
+@media (min-width:560px){.ut-raster{grid-template-columns:1fr 1fr}}
+/* Steckbrief (Blatt von unten) */
+.blatt{--ak:#ff2a1a;position:fixed;inset:0;z-index:20}
+.blatt-grund{position:absolute;inset:0;background:rgba(0,0,0,.6);opacity:0;transition:opacity .2s}
+.blatt-karte{position:absolute;left:0;right:0;bottom:0;max-width:640px;margin:0 auto;max-height:88vh;overflow-y:auto;overscroll-behavior:contain;background:#121015;border-radius:22px 22px 0 0;
+  border-top:2px solid var(--ak);box-shadow:0 -10px 50px color-mix(in srgb,var(--ak) 30%,transparent);padding:18px 18px calc(24px + env(safe-area-inset-bottom));transform:translateY(100%);transition:transform .22s ease}
+.blatt.da .blatt-grund{opacity:1}.blatt.da .blatt-karte{transform:none}
+.blatt-zu{position:sticky;top:0;float:right;width:40px;height:40px;border-radius:50%;border:0;background:var(--panel2);color:var(--text);font-size:16px;cursor:pointer;z-index:1}
+.sb-kopf{display:flex;gap:14px;align-items:center;margin-right:44px}
+.sb-bild{flex:none;width:110px;height:110px;border-radius:20px;overflow:hidden;display:grid;place-items:center;background:radial-gradient(circle at 50% 40%,color-mix(in srgb,var(--ak) 32%,transparent),#07060a 72%)}
+.sb-bild img{width:100%;height:100%;object-fit:cover}.sb-bild .sk-emoji{font-size:52px}
+.sb-rolle{font:600 11px var(--display);letter-spacing:.2em;text-transform:uppercase;color:var(--ak)}
+.sb-kopf h2{margin:2px 0;font:700 22px/1.15 var(--sans);color:#fff}
+.sb-titel{color:var(--muted);font-size:14px}
+.sb-rang{margin-top:6px;font:600 13px var(--sans);color:var(--text);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sb-xp{display:inline-flex;gap:3px}.sb-xp i{width:14px;height:6px;border-radius:2px;background:rgba(255,255,255,.12)}.sb-xp i.an{background:var(--ak);box-shadow:0 0 6px var(--ak)}
+.sb-werte{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:16px 0 8px}
+.sb-werte div{background:var(--panel2);border-radius:12px;padding:9px 8px;text-align:center}
+.sb-werte b{display:block;font:600 17px var(--display);color:#fff;overflow-wrap:anywhere}.sb-werte span{font-size:11.5px;color:var(--muted)}
+.sb-kraft{height:6px;border-radius:6px;background:rgba(255,255,255,.08);overflow:hidden;margin-bottom:10px}.sb-kraft i{display:block;height:100%;background:var(--ak);box-shadow:0 0 10px var(--ak)}
+.sb-zeile{color:var(--muted);font-size:14px}
+.blatt-karte h3{font:600 15px var(--sans);color:#fff;margin:18px 0 6px}
+.sb-chips{display:flex;flex-wrap:wrap;gap:6px}.sb-chips span,.sb-chips button{background:var(--panel2);border:0;border-radius:999px;padding:6px 11px;font:inherit;font-size:13px;color:var(--text)}
+.sb-chips button{cursor:pointer;border:1px solid var(--line2)}
+.sb-bericht{font-size:15px;line-height:1.55}.sb-bericht p{margin:.35em 0}.sb-bericht ul{padding-left:1.1em;margin:.3em 0}
+.sb-bericht.mehrtext::after{background:linear-gradient(transparent,#121015)}
+.sb-fehler{margin-top:14px;background:rgba(255,42,42,.12);border:1px solid rgba(255,42,42,.5);border-radius:12px;padding:10px 12px;font-size:14px}
+.sb-vorschlag{background:var(--panel2);border-radius:12px;padding:10px 12px;margin-top:6px;font-size:14px}.sb-vorschlag b{color:#fff}
+body.blatt-offen{overflow:hidden}
+@media (max-width:420px){.sb-werte{grid-template-columns:repeat(2,1fr)}.sb-bild{width:92px;height:92px}}
+@media (min-width:900px){.schreiben .modus-wahl{margin-bottom:6px}}
+@media (prefers-reduced-motion:reduce){.mikro.an,.tippen i,.schurke.fehler,.schurke.fehler .sk-bild{animation:none}.blatt-karte,.blatt-grund{transition:none}}
+/* ===================== Navigation (17.10.): Menü, Seitenleiste, klare Bereiche ===================== */
+.ic{width:22px;height:22px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.badge{display:inline-block;min-width:22px;height:22px;border-radius:11px;background:var(--red);color:#fff;font:700 12px/22px var(--sans);padding:0 7px;text-align:center;font-style:normal;flex:none}
+.badge.info{background:var(--panel2);color:var(--text);box-shadow:inset 0 0 0 1px var(--line2)}
+/* Leiste unten (Handy) */
+nav.reiter{grid-template-columns:repeat(5,1fr);padding:4px 2px calc(4px + env(safe-area-inset-bottom))}
+nav.reiter button{font:500 11px var(--sans);min-height:54px;gap:3px}
+nav.reiter button .ic{width:24px;height:24px}
+nav.reiter button.an .ic{color:var(--text)}
+nav.reiter .badge{position:absolute;top:2px;left:calc(50% + 4px);min-width:18px;height:18px;font-size:10.5px;line-height:18px;padding:0 5px}
+nav.reiter button[aria-expanded="true"]{color:var(--text)}
+nav.reiter .badge.info{background:#2c2933;color:var(--text);box-shadow:none}
+/* Menü-Schublade (Handy) / Seitenleiste (Computer) */
+.menue{position:fixed;top:0;bottom:0;left:0;z-index:30;width:min(86vw,320px);background:#0c0b0f;border-right:1px solid var(--line);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);
+  transform:translateX(-102%);visibility:hidden;transition:transform .22s ease,visibility 0s linear .22s}
+.menue.offen{transform:none;visibility:visible;transition:transform .22s ease;box-shadow:20px 0 60px rgba(0,0,0,.6)}
+.menue-grund{position:fixed;inset:0;z-index:29;background:rgba(0,0,0,.62)}
+.menue-grund[hidden]{display:none}
+body.menue-offen{overflow:hidden}
+.menue-kopf{display:flex;align-items:center;gap:12px;padding:16px 14px 12px 18px;border-bottom:1px solid var(--line)}
+.menue-av::after{animation:none}
+.menue-kopf b{display:block;font:700 15px var(--display);letter-spacing:.3em;color:#fff}
+.menue-kopf span{display:block;color:var(--muted);font-size:12.5px;margin-top:1px}
+.menue-zu{margin-left:auto;width:42px;height:42px;border-radius:50%;border:0;background:var(--panel);color:var(--text);cursor:pointer;font-size:15px;flex:none}
+.menue-liste{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:10px 10px calc(18px + env(safe-area-inset-bottom))}
+.menue-liste a{display:flex;align-items:center;gap:14px;min-height:52px;padding:0 12px;border-radius:14px;color:var(--text);text-decoration:none;font-size:16px;font-weight:500}
+.menue-liste a span{flex:1;min-width:0}
+.menue-liste a .ic{color:var(--muted)}
+.menue-liste a:hover{background:var(--panel)}
+.menue-liste a.an{background:#2a1214;color:#fff}
+.menue-liste a.an .ic{color:var(--red2)}
+.menue-liste a:focus-visible,.menue-zu:focus-visible,nav.reiter button:focus-visible,.wichtig:focus-visible,.liste-mehr button:focus-visible,.kachel:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.menue-gruppe{margin:16px 12px 6px;font:600 11.5px var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+/* Kopf jeder Seite */
+.seitenkopf{padding:calc(20px + env(safe-area-inset-top)) 0 6px}
+.seitenkopf h1{font:600 27px/1.15 var(--sans);margin:0;color:#fff;letter-spacing:-.01em}
+.seitenkopf p{margin:6px 0 0;color:var(--muted);font-size:14.5px;line-height:1.45;max-width:560px}
+section > .seitenkopf{padding-top:6px;margin-bottom:12px}
+section > h2{font:600 17px/1.3 var(--sans);color:var(--text);margin:0 0 10px}
+/* Leerer Zustand */
+.leer-karte{background:var(--panel);border-radius:18px;padding:24px 18px;text-align:center;color:var(--muted);font-size:14.5px;line-height:1.45}
+.leer-karte .ok{width:46px;height:46px;border-radius:50%;margin:0 auto 10px;display:grid;place-items:center;background:rgba(60,207,122,.12);color:var(--green);font-size:20px;font-weight:700}
+.leer-karte b{display:block;color:var(--text);font-size:16px;margin-bottom:3px}
+/* Dashboard: Kacheln + das Wichtigste */
+#zahlen{margin:0}
+.kachel{min-height:78px;display:flex;flex-direction:column;justify-content:space-between}
+.kachel.gut .w{color:var(--green)} .kachel.offen .w{color:var(--amber)}
+.wichtig{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--panel);border:0;border-radius:16px;padding:13px 12px 13px 14px;color:var(--text);font:inherit;cursor:pointer;margin-bottom:8px;min-height:60px}
+.wichtig .nr{flex:none;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font:700 13px var(--sans);background:var(--panel2);color:var(--text)}
+.wichtig.rot .nr{background:rgba(232,52,44,.2);color:var(--red2)} .wichtig.gelb .nr{background:rgba(245,181,68,.16);color:var(--amber)} .wichtig.gruen .nr{background:rgba(60,207,122,.13);color:var(--green)}
+.wichtig .txt{flex:1;min-width:0}
+.wichtig .txt b{display:block;color:#fff;font-weight:600;font-size:15.5px;line-height:1.3;overflow-wrap:anywhere}
+.wichtig .txt span{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+.ic.pfeil{width:18px;height:18px;color:var(--dim)}
+/* Wartet auf dich */
+.hinweis-link{display:flex;align-items:center;gap:12px;width:100%;margin-top:22px;text-align:left;background:linear-gradient(135deg,#1b2430,#16141a);border:1px solid rgba(127,180,255,.35);border-radius:18px;padding:14px;color:var(--text);font:inherit;cursor:pointer}
+.hinweis-link .ic{color:var(--blue)} .hinweis-link .ic.pfeil{color:var(--muted)}
+.hinweis-link span{flex:1} .hinweis-link b{display:block;color:#fff} .hinweis-link em{font-style:normal;color:var(--muted);font-size:13px}
+#updateliste .frage+.frage,#fragenliste .frage+.frage{margin-top:10px}
+/* Heute erledigt */
+.zaehler{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0 6px}
+.zaehler span{background:var(--panel);border-radius:999px;padding:6px 12px;font-size:13.5px;color:var(--muted)}
+.zaehler b{color:#fff;font-variant-numeric:tabular-nums}
+.tat{display:grid;grid-template-columns:46px 1fr;gap:8px;padding:12px 14px 12px 12px;background:var(--panel);border-radius:16px;margin-top:8px}
+.tat .uhr{font:600 13px/1.4 var(--sans);color:var(--muted);font-variant-numeric:tabular-nums;padding-top:1px}
+.tat .t{font-weight:600;color:#fff;line-height:1.35;overflow-wrap:anywhere}
+.tat .d{color:var(--muted);font-size:13.5px;margin-top:3px;overflow-wrap:anywhere;line-height:1.45}
+.tat .wer{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.tat.fehlschlag{box-shadow:inset 3px 0 0 var(--red)}
+.etikett{display:inline-block;font:500 12px/1.5 var(--sans);border-radius:6px;padding:1px 8px;background:var(--panel2);color:var(--muted);white-space:nowrap;border:0}
+.etikett.gruen{background:rgba(60,207,122,.12);color:var(--green)} .etikett.rot{background:rgba(232,52,44,.16);color:var(--red2)} .etikett.gelb{background:rgba(245,181,68,.14);color:var(--amber)}
+button.etikett{cursor:pointer}
+details.frueher{margin-top:22px;background:none;padding:0}
+details.frueher summary{color:var(--red2);font-size:15px;padding:8px 0;list-style:none}
+details.frueher #aktionen{background:var(--panel);border-radius:16px;padding:12px 14px;margin-top:6px}
+/* Ideen-Filter */
+.filter{display:flex;gap:6px;margin:0 0 12px}
+.filter button{background:var(--panel);border:1px solid transparent;border-radius:999px;padding:8px 15px;font-size:14px;color:var(--muted);cursor:pointer;min-height:40px}
+.filter button.an{border-color:var(--red);color:#fff;background:#2a1214}
+#ideenFilter button.an{border-color:var(--red)}
+.idee-start{margin-top:14px}
+/* System-Liste */
+.liste-mehr{margin-top:14px}
+.liste-mehr button{min-height:58px;font-size:16px}
+.liste-mehr .ic{color:var(--muted)}
+.zurueck{display:inline-flex;align-items:center;min-height:44px;padding:10px 0 0;font-size:15px}
+#mehrUnter section{margin-top:0}
+#kostenZahlen{grid-template-columns:repeat(2,1fr)}
+.raster{grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr))}
+.agenten{grid-template-columns:repeat(auto-fill,minmax(min(230px,100%),1fr))}
+.kosten-zeile{display:grid;grid-template-columns:1fr auto;gap:4px 12px;padding:10px 0;border-top:1px solid var(--line);align-items:baseline}
+.kosten-zeile:first-child{border-top:0;padding-top:0}.kosten-zeile:last-child{padding-bottom:0}
+.kosten-zeile b{font-weight:600;color:#fff}.kosten-zeile .eur{font:600 16px var(--display);color:#fff;font-variant-numeric:tabular-nums;text-align:right}
+.kosten-zeile .d{grid-column:1/-1;color:var(--muted);font-size:13px}
+body:not(.start-an) #toast{bottom:calc(84px + env(safe-area-inset-bottom))}
+/* Computer: Seitenleiste links dauerhaft */
+@media (min-width:900px){
+  nav.reiter{display:none}
+  .menue{transform:none;visibility:visible;width:272px;transition:none;background:#08070a;box-shadow:none}
+  .menue-zu,.menue-grund{display:none!important}
+  #app{padding-left:272px}
+  .wrap{max-width:780px;padding-left:32px;padding-right:32px}
+  .schreiben{left:272px}
+  .zurueck{display:none}
+  .kacheln{grid-template-columns:repeat(4,1fr)}
+  #toast{left:calc(50% + 136px)}
+  body:not(.start-an) #toast{bottom:24px}
+  .seitenkopf{padding-top:30px}
+}
+/* ===================== Team als Kino-Galerie (Porträts p-<id>.webp) ===================== */
+.av{display:block;width:100%;height:100%;border-radius:50%;overflow:hidden;background:#0a0405}
+.av img{width:100%;height:100%;object-fit:cover;object-position:50% 30%;transform:scale(1.9);transform-origin:50% 34%;border-radius:0!important;display:block}
+.menue-av{width:42px;height:42px;flex:none}
+.held-kino{position:relative;display:block;width:100%;padding:0;border:0;cursor:pointer;color:inherit;font:inherit;text-align:left;border-radius:22px;overflow:hidden;background:#07050a;
+  aspect-ratio:4/5;max-height:560px;margin-top:14px;box-shadow:0 0 0 1px rgba(232,52,44,.45),0 0 40px rgba(232,52,44,.18);animation:heldglut 5s ease-in-out infinite}
+@keyframes heldglut{0%,100%{box-shadow:0 0 0 1px rgba(232,52,44,.4),0 0 30px rgba(232,52,44,.14)}50%{box-shadow:0 0 0 1px rgba(255,70,60,.75),0 0 60px rgba(232,52,44,.32)}}
+.held-bild,.kino-bild,.sb-portraet{position:absolute;inset:0;overflow:hidden}
+.held-bild img,.kino-bild img,.sb-portraet img{width:100%;height:100%;object-fit:cover;object-position:50% 18%;display:block}
+.held-kino::after,.kino::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,0) 40%,rgba(0,0,0,.55) 66%,rgba(0,0,0,.94) 100%)}
+.held-text{position:absolute;left:0;right:0;bottom:0;z-index:1;padding:18px 18px 16px;display:flex;flex-direction:column;gap:3px}
+.held-name{font:700 30px/1.05 var(--display);letter-spacing:.32em;color:#fff;text-shadow:0 2px 20px rgba(0,0,0,.8)}
+.held-modus{color:#ffb3ad;font-size:14px}
+.held-werte{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}
+.held-werte span{background:rgba(10,8,12,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:7px 6px;text-align:center;font-size:11.5px;color:var(--muted)}
+.held-werte b{display:block;font:600 18px var(--display);color:#fff;font-variant-numeric:tabular-nums}
+.galerie{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (min-width:640px){.galerie{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.kino{--ak:#ff2a1a;position:relative;display:block;width:100%;aspect-ratio:3/4;padding:0;border:0;border-radius:18px;overflow:hidden;cursor:pointer;color:inherit;font:inherit;text-align:left;
+  background:radial-gradient(circle at 50% 35%,color-mix(in srgb,var(--ak) 26%,#0a080c),#07060a 72%);box-shadow:0 0 0 1px color-mix(in srgb,var(--ak) 32%,transparent);transition:box-shadow .2s,transform .2s}
+.kino:hover,.kino:focus-visible{box-shadow:0 0 0 1px var(--ak),0 0 26px color-mix(in srgb,var(--ak) 40%,transparent)}
+.kino:focus-visible,.held-kino:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.kino:active{transform:scale(.98)}
+.kino-bild .sk-emoji{position:absolute;inset:0;display:grid;place-items:center;font-size:46px}
+.kino-lv{position:absolute;top:8px;right:8px;z-index:1;font:700 11.5px var(--display);letter-spacing:.06em;color:#fff;background:rgba(0,0,0,.6);border:1px solid color-mix(in srgb,var(--ak) 70%,transparent);border-radius:7px;padding:1px 7px}
+.kino-neu{position:absolute;top:8px;left:8px;z-index:1;font:700 10px var(--sans);letter-spacing:.08em;background:var(--red);color:#fff;border-radius:5px;padding:2px 6px}
+.kino-text{position:absolute;left:0;right:0;bottom:0;z-index:1;padding:10px 11px 10px;display:flex;flex-direction:column;gap:3px}
+.kino-name{font-weight:600;color:#fff;font-size:15.5px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kino-rolle{color:color-mix(in srgb,var(--ak) 55%,#fff);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kino-meta{color:rgba(255,255,255,.66);font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kino .sk-kraft{margin-top:3px}
+.kino.fehler{box-shadow:0 0 0 2px #ff2a2a;animation:fehlerglut 2.4s ease-in-out infinite}
+.kino.fehler .kino-bild{animation:flacker 1.8s steps(1) infinite}
+@supports (animation-timeline: view()){
+  @media (prefers-reduced-motion:no-preference){
+    .kino-bild img,.held-bild img{animation:parallax linear both;animation-timeline:view()}
+  }
+}
+@keyframes parallax{from{transform:scale(1.1) translateY(-4%)}to{transform:scale(1.1) translateY(4%)}}
+/* Steckbrief mit großem Porträt */
+.sb-portraet{position:relative;inset:auto;height:min(78vw,380px);margin:-18px -18px 0;border-radius:22px 22px 0 0;background:radial-gradient(circle at 50% 40%,color-mix(in srgb,var(--ak) 30%,transparent),#07060a 72%)}
+.sb-portraet::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 45%,#121015 100%)}
+.sb-portraet.ohne{display:grid;place-items:center;height:160px}.sb-portraet.ohne .sk-emoji{font-size:60px}
+.sb-portraet + .sb-kopf{position:relative;margin-top:-46px;z-index:1}
+.blatt-zu{position:sticky;top:0;z-index:2;background:rgba(20,18,24,.85)}
+@media (prefers-reduced-motion:reduce){.held-kino,.kino.fehler,.kino.fehler .kino-bild{animation:none}.kino{transition:none}}
+.kurztext{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}
+.kurztext.offen{display:block;-webkit-line-clamp:unset}
+.kurztext p{margin:0}
+.blatt-karte > .blatt-zu{position:sticky;top:0;float:none;display:block;margin:0 0 -58px auto}
+</style>
+</head>
+<body>
+
+<div id="sperre">
+  <div class="sperre-box">
+    <div class="gesicht"><span class="av"><img src="p-ultron.webp" alt="" width="480" height="643"></span></div>
+    <h1 class="logo">ULTRON</h1>
+    <div class="unter">Kommandozentrale · Marketing-Maschine</div>
+    <form class="feld" id="form">
+      <input id="schluessel" type="password" autocomplete="current-password" placeholder="Schlüssel" aria-label="Schlüssel">
+      <button class="knopf" type="submit">Verbinden</button>
+    </form>
+    <div class="fehler" id="fehler" role="alert"></div>
+  </div>
+</div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-dash" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="8" rx="1.8"/><rect x="13.5" y="3.5" width="7" height="5" rx="1.8"/><rect x="13.5" y="11.5" width="7" height="9" rx="1.8"/><rect x="3.5" y="14.5" width="7" height="6" rx="1.8"/></symbol>
+  <symbol id="i-wartet" viewBox="0 0 24 24"><path d="M3 13.5h5l1.8 2.5h4.4l1.8-2.5h5"/><path d="M5.5 5h13l2.5 8.5V19H3v-5.5z"/></symbol>
+  <symbol id="i-updates" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16.5v-9"/><path d="M8.5 11L12 7.5l3.5 3.5"/></symbol>
+  <symbol id="i-erledigt" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.8 2.8L16.2 10"/></symbol>
+  <symbol id="i-ideen" viewBox="0 0 24 24"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></symbol>
+  <symbol id="i-team" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.2c2.8.3 5 2.6 5 5.8"/></symbol>
+  <symbol id="i-werbung" viewBox="0 0 24 24"><path d="M4 19V9"/><path d="M10 19V5"/><path d="M16 19v-7"/><path d="M22 19H2"/></symbol>
+  <symbol id="i-menue" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+  <symbol id="i-alarme" viewBox="0 0 24 24"><path d="M12 3.5l9 16H3z"/><path d="M12 10v4"/><path d="M12 17v.01"/></symbol>
+  <symbol id="i-auftraege" viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0 5 5l-8.2 8.2a2.1 2.1 0 0 1-3-3z"/><path d="M14.7 6.3L17.5 3.5"/></symbol>
+  <symbol id="i-netz" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"/></symbol>
+  <symbol id="i-websites" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></symbol>
+  <symbol id="i-kosten" viewBox="0 0 24 24"><path d="M17.5 6.5a7 7 0 1 0 0 11"/><path d="M4 10h9M4 14h9"/></symbol>
+  <symbol id="i-hirn" viewBox="0 0 24 24"><path d="M5 4.5h11a3 3 0 0 1 3 3V20H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/></symbol>
+  <symbol id="i-push" viewBox="0 0 24 24"><path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 21h4"/></symbol>
+  <symbol id="i-steuerung" viewBox="0 0 24 24"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></symbol>
+  <symbol id="i-pfeil" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
+</svg>
+
+<div id="app" class="verborgen">
+  <!-- Menü: am Handy als Schublade (über „Menü“ unten), am Computer dauerhaft links -->
+  <div class="menue-grund" id="menueGrund" hidden></div>
+  <aside class="menue" id="menue" aria-label="Menü">
+    <div class="menue-kopf">
+      <span class="gesicht menue-av"><span class="av"><img src="p-ultron.webp" alt="" width="480" height="643"></span></span>
+      <div><b>ULTRON</b><span id="menueStand">Kommandozentrale</span></div>
+      <button type="button" class="menue-zu" id="menueZu" aria-label="Menü schließen">✕</button>
+    </div>
+    <nav class="menue-liste" aria-label="Bereiche">
+      <a href="#start" data-gehe="start"><svg class="ic"><use href="#i-dash"/></svg><span>Dashboard</span><b class="badge info verborgen" data-badge="start"></b></a>
+      <a href="#wartet" data-gehe="wartet"><svg class="ic"><use href="#i-wartet"/></svg><span>Wartet auf dich</span><b class="badge verborgen" data-badge="wartet"></b></a>
+      <a href="#updates" data-gehe="updates"><svg class="ic"><use href="#i-updates"/></svg><span>Update-Vorschläge</span><b class="badge verborgen" data-badge="updates"></b></a>
+      <a href="#erledigt" data-gehe="erledigt"><svg class="ic"><use href="#i-erledigt"/></svg><span>Heute erledigt</span><b class="badge info verborgen" data-badge="erledigt"></b></a>
+      <a href="#ideen" data-gehe="ideen"><svg class="ic"><use href="#i-ideen"/></svg><span>Geschäftsideen</span><b class="badge info verborgen" data-badge="ideen"></b></a>
+      <a href="#team" data-gehe="team"><svg class="ic"><use href="#i-team"/></svg><span>Team</span><b class="badge verborgen" data-badge="team"></b></a>
+      <a href="#werbung" data-gehe="werbung"><svg class="ic"><use href="#i-werbung"/></svg><span>Werbung</span><b class="badge info verborgen" data-badge="werbung"></b></a>
+      <div class="menue-gruppe">System</div>
+      <a href="#mehr/alarme" data-gehe="mehr/alarme"><svg class="ic"><use href="#i-alarme"/></svg><span>Alarme</span><b class="badge verborgen" data-badge="alarme"></b></a>
+      <a href="#mehr/auftraege" data-gehe="mehr/auftraege"><svg class="ic"><use href="#i-auftraege"/></svg><span>Bau-Aufträge</span><b class="badge info verborgen" data-badge="auftraege"></b></a>
+      <a href="#mehr/netz" data-gehe="mehr/netz"><svg class="ic"><use href="#i-netz"/></svg><span>Automatiken</span><b class="badge verborgen" data-badge="netz"></b></a>
+      <a href="#mehr/websites" data-gehe="mehr/websites"><svg class="ic"><use href="#i-websites"/></svg><span>Websites &amp; Zugänge</span><b class="badge verborgen" data-badge="websites"></b></a>
+      <a href="#mehr/kosten" data-gehe="mehr/kosten"><svg class="ic"><use href="#i-kosten"/></svg><span>KI-Kosten</span><b class="badge info verborgen" data-badge="kosten"></b></a>
+      <a href="#mehr/hirn" data-gehe="mehr/hirn"><svg class="ic"><use href="#i-hirn"/></svg><span>Gedächtnis</span></a>
+      <a href="#mehr/push" data-gehe="mehr/push"><svg class="ic"><use href="#i-push"/></svg><span>Push-Nachrichten</span><b class="badge info verborgen" data-badge="push"></b></a>
+      <a href="#mehr/steuerung" data-gehe="mehr/steuerung"><svg class="ic"><use href="#i-steuerung"/></svg><span>Steuerung</span><b class="badge info verborgen" data-badge="steuerung"></b></a>
+    </nav>
+  </aside>
+
+  <!-- Leiste unten (nur Handy) -->
+  <nav class="reiter" aria-label="Schnellwahl">
+    <button type="button" data-reiter="start"><svg class="ic" aria-hidden="true"><use href="#i-dash"/></svg>Dashboard</button>
+    <button type="button" data-reiter="wartet"><svg class="ic" aria-hidden="true"><use href="#i-wartet"/></svg>Wartet<span class="badge verborgen" data-badge="wartet"></span></button>
+    <button type="button" data-reiter="erledigt"><svg class="ic" aria-hidden="true"><use href="#i-erledigt"/></svg>Erledigt<span class="badge info verborgen" data-badge="erledigt"></span></button>
+    <button type="button" data-reiter="ideen"><svg class="ic" aria-hidden="true"><use href="#i-ideen"/></svg>Ideen<span class="badge info verborgen" data-badge="ideen"></span></button>
+    <button type="button" id="menueAuf" aria-controls="menue" aria-expanded="false"><svg class="ic" aria-hidden="true"><use href="#i-menue"/></svg>Menü<span class="badge verborgen" data-badge="menue"></span></button>
+  </nav>
+
+  <main class="wrap">
+
+  <!-- ===== DASHBOARD ===== -->
+  <div class="ansicht" data-ansicht="start">
+    <header class="status">
+      <button type="button" class="gesicht klein" id="ultronKopf" aria-label="Ultrons Steckbrief"><span class="av"><img src="p-ultron.webp" alt="" width="480" height="643"></span></button>
+      <div class="status-text">
+        <h1 id="stimmung">Ultron</h1>
+        <p><span id="standPunkt" class="punkt"></span><span id="modus">–</span>, zuletzt <span id="stand">–</span></p>
+      </div>
+      <button class="rund" id="neu" type="button" aria-label="Neu laden"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></button>
+    </header>
+
+    <div class="feed">
+      <div class="blase von-ultron verborgen" id="pushKarte"></div>
+
+      <section><h2>Heute auf einen Blick</h2><div class="kacheln" id="zahlen"></div></section>
+
+      <section><h2>Das Wichtigste jetzt</h2><div id="wichtig"></div></section>
+
+      <section id="ideeChat" class="verborgen" aria-live="polite"><h2>Ideen-Gespräch</h2><div id="ideeChatInhalt"></div></section>
+
+      <section id="gespraech"><h2>Dein Draht zu Ultron</h2>
+        <div id="verlauf"></div>
+        <div id="antwortBox" class="verborgen"><div class="blase von-ultron lage"><div class="klein-meta" id="antwortFrage"></div><div class="mehrtext" id="antwortText"></div><button class="aufklapp" data-aufklapp="antwortText">Ganz lesen</button></div></div>
+        <p class="leer-hinweis" id="gespraechLeer">Schreib Ultron unten, was er tun soll. Zum Beispiel: „Finovation Kampagne überlegen, als PDF“.</p>
+      </section>
+
+      <section id="lage"><h2>Lagebericht</h2><div class="blase von-ultron lage"><div class="mehrtext" id="lagetext"></div><button class="aufklapp" data-aufklapp="lagetext">Ganz lesen</button></div></section>
+
+      <div id="macPult" class="verborgen">
+        <section><h2>Notizen an Ultron</h2>
+        <div class="blase">
+          <div class="klein-meta" id="notizStand"></div>
+          <textarea id="notiz" rows="5" placeholder="Ideen, Pläne, Wünsche: Ultron durchdenkt sie mit seinem Team und legt Bau-Aufträge an."></textarea>
+          <div class="reihe"><button class="knopf" id="notizSenden">Ultron durchdenken lassen</button><button class="knopf leise" id="notizSpeichern">Nur speichern</button></div>
+          <div id="notizListe"></div>
+        </div></section>
+      </div>
+    </div>
+
+    <form class="schreiben" id="auftragForm">
+      <div class="modus-wahl" role="radiogroup" aria-label="Was soll Ultron damit machen?">
+        <button type="button" role="radio" data-modus="auftrag" aria-checked="true">⚡ Auftrag</button>
+        <button type="button" role="radio" data-modus="idee" aria-checked="false">💡 Idee besprechen</button>
+      </div>
+      <div class="vorlagen" id="vorlagen">
+        <button type="button" data-vorlage=" überlegen, als PDF">Konzept als PDF</button>
+        <button type="button" data-vorlage="Lagebericht">Lagebericht jetzt</button>
+        <button type="button" data-vorlage="Wie laufen die Kampagnen heute?">Wie laufen die Kampagnen?</button>
+        <button type="button" data-vorlage="Was ist heute das Wichtigste, das ich tun sollte?">Was ist heute wichtig?</button>
+      </div>
+      <div class="eingabe">
+        <textarea id="auftragText" rows="1" maxlength="3000" enterkeyhint="send" placeholder="Schreib Ultron, was er tun soll …" aria-label="Auftrag an Ultron"></textarea>
+        <button class="mikro" type="button" id="mikro" aria-label="Spracheingabe starten" aria-pressed="false"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg></button>
+        <button class="senden" type="submit" id="auftragSenden" aria-label="An Ultron senden"><svg viewBox="0 0 24 24"><path d="M5 12h13"/><path d="M13 6l6 6-6 6"/></svg></button>
+      </div>
+      <div class="diktat-hinweis verborgen" id="diktatHinweis" role="status"></div>
+    </form>
+  </div>
+
+  <!-- ===== WARTET AUF DICH ===== -->
+  <div class="ansicht" data-ansicht="wartet">
+    <header class="seitenkopf"><h1>Wartet auf dich</h1><p>Hier entscheidest du. Ultron macht bei diesen Punkten erst weiter, wenn du antwortest.</p></header>
+    <section id="creatives" class="verborgen"><h2>Werbung prüfen</h2><p class="meta" style="margin:-4px 0 10px">Neue Anzeigen sind fertig, aber aus. Erst wenn du sie angesehen und freigegeben hast, gehen sie live.</p><div id="creativeliste"></div></section>
+    <section id="fragen"><h2>Deine Entscheidung</h2><div id="fragenliste"></div></section>
+    <div id="updateHinweis"></div>
+    <section id="dich"><h2>Ultron schlägt vor</h2><p class="meta" style="margin:-4px 0 10px">Ideen aus dem Lagebericht. Antworte nur, wenn du etwas dazu sagen willst.</p><div id="vorschlaege"></div></section>
+    <div id="wartetLeer"></div>
+  </div>
+
+  <!-- ===== UPDATE-VORSCHLÄGE ===== -->
+  <div class="ansicht" data-ansicht="updates">
+    <header class="seitenkopf"><h1>Update-Vorschläge</h1><p>Das Team hat etwas fertig gebaut. Es geht erst online, wenn du „Übernehmen“ tippst.</p></header>
+    <div id="updateliste"></div>
+  </div>
+
+  <!-- ===== HEUTE ERLEDIGT ===== -->
+  <div class="ansicht" data-ansicht="erledigt">
+    <header class="seitenkopf"><h1>Heute erledigt</h1><p>Was Ultron und sein Team in den letzten 24 Stunden selbst gemacht haben. Neueste zuerst.</p></header>
+    <div class="zaehler" id="erledigtZahlen"></div>
+    <div id="erledigtliste"></div>
+    <details class="frueher" id="taten"><summary>Frühere Tage</summary><div id="aktionen"></div></details>
+  </div>
+
+  <!-- ===== IDEEN ===== -->
+  <div class="ansicht" data-ansicht="ideen">
+    <header class="seitenkopf"><h1>Geschäftsideen</h1><p>Der Scout sucht ständig nach Wegen, Geld zu verdienen. Antippen = Pitch lesen. Nur was du löschst, verschwindet.</p></header>
+    <button type="button" class="idee-start" id="ideeStart"><span>💡</span><span><b>Eigene Idee besprechen</b><em>Kurz mit Ultron durchsprechen, dann „Umsetzen“ oder „Verwerfen“</em></span></button>
+    <section>
+      <div class="filter" id="ideenFilter" role="group" aria-label="Ideen filtern"><button type="button" data-filter="offen">Offen</button><button type="button" data-filter="verfolgen">Verfolgt</button><button type="button" data-filter="alle">Alle</button></div>
+      <div id="ideenliste"></div></section>
+  </div>
+
+  <!-- ===== TEAM ===== -->
+  <div class="ansicht" data-ansicht="team">
+    <header class="seitenkopf"><h1>Team</h1><p>Ultron und seine Abteilungen. Antippen öffnet den Steckbrief – dort kannst du jedem einzeln einen Auftrag geben.</p></header>
+    <div id="ultronHeld"></div>
+    <section><p class="meta" style="margin:0 0 12px">Level 1–10 misst echte Wirkung (Note vom Personalchef, umgesetzte Ergebnisse, Teamarbeit, Wissen). Endlevel 10 = Meister.</p><div id="schurken"></div></section>
+    <section id="team"><h2>Berichte der letzten Runde</h2><div id="teamliste"></div></section>
+    <details style="margin-top:20px"><summary>Stammbaum</summary><div id="stammbaum" style="margin-top:8px"></div></details>
+  </div>
+
+  <!-- ===== WERBUNG ===== -->
+  <div class="ansicht" data-ansicht="werbung">
+    <header class="seitenkopf"><h1>Werbung</h1><p>Alle laufenden Kampagnen mit Ausgaben und Anfragen von heute und den letzten 7 Tagen.</p></header>
+    <section id="werbung" style="margin-top:0"><div class="kacheln" id="werbeZahlen" style="margin:0 0 12px"></div><div id="pausiert"></div><div class="kamp" id="kampagnen"></div></section>
+  </div>
+
+  <!-- ===== SYSTEM ===== -->
+  <div class="ansicht" data-ansicht="mehr">
+    <div id="mehrMenue">
+      <header class="seitenkopf"><h1>System</h1><p>Technik im Hintergrund. Hier musst du meistens nichts tun.</p></header>
+      <div class="liste-mehr">
+        <button type="button" data-gehe="mehr/alarme"><svg class="ic"><use href="#i-alarme"/></svg><span>Alarme</span><b class="badge verborgen" data-badge="alarme"></b><svg class="ic pfeil"><use href="#i-pfeil"/></svg></button>
+        <button type="button" data-gehe="mehr/auftraege"><svg class="ic"><use href="#i-auftraege"/></svg><span>Bau-Aufträge</span><b class="badge info verborgen" data-badge="auftraege"></b><svg class="ic pfeil"><use href="#i-pfeil"/></svg></button>
+        <button type="button" data-gehe="mehr/netz"><svg class="ic"><use href="#i-netz"/></svg><span>Automatiken</span><b class="badge verborgen" data-badge="netz"></b><svg class="ic pfeil"><use href="#i-pfeil"/></svg></button>
+        <button type="button" data-gehe="mehr/websites"><svg class="ic"><use href="#i-websites"/></svg><span>Websites &amp; Zugänge</span><b class="badge verborgen" data-badge="websites"></b><svg class="ic pfeil"><use href="#i-pfeil"/></svg></button>
+        <button type="button" data-gehe="mehr/kosten"><svg class="ic"><use href="#i-kosten"/></svg><span>KI-Kosten</span><b class="badge info verborgen" data-badge="kosten"></b><svg class="ic pfeil"><use href="#i-pfeil"/></svg></button>
+        <button type="button" data-gehe="mehr/hirn"><svg class="ic"><use href="#i-hirn"/></svg><span>Gedächtnis</span><svg class="ic pfeil"><use href="#i-pfeil"/></svg></button>
+        <button type="button" data-gehe="mehr/push"><svg class="ic"><use href="#i-push"/></svg><span>Push-Nachrichten</span><b class="badge info verborgen" data-badge="push"></b><svg class="ic pfeil"><use href="#i-pfeil"/></svg></button>
+        <button type="button" data-gehe="mehr/steuerung"><svg class="ic"><use href="#i-steuerung"/></svg><span>Steuerung</span><b class="badge info verborgen" data-badge="steuerung"></b><svg class="ic pfeil"><use href="#i-pfeil"/></svg></button>
+      </div>
+    </div>
+    <div id="mehrUnter" class="verborgen">
+      <button type="button" class="zurueck" id="zurueck">‹ System</button>
+      <section id="alarme" data-unter-teil><header class="seitenkopf"><h1>Alarme</h1><p>Was Ultron gerade beobachtet. Rot heißt: jemand muss eingreifen.</p></header><div id="alarmliste"></div></section>
+      <section id="auftraege" data-unter-teil><header class="seitenkopf"><h1>Bau-Aufträge</h1><p id="auftragHinweis">Ultron und sein Team bereiten sie vor. Ist der Mac an, setzt der Mac-Arm sie mit Claude Code um. Fertiges landet bei den Update-Vorschlägen.</p></header><div id="armStatus"></div><div id="auftragsliste"></div></section>
+      <section id="netz" data-unter-teil><header class="seitenkopf"><h1>Automatiken</h1><p>Die kleinen Helfer im Hintergrund (Posts, Berichte, Prüfungen). Gezeigt werden nur die mit Fehler.</p></header><div class="agenten" id="agenten"></div><button class="knopf leise" id="agentenMehr" style="margin-top:10px"></button></section>
+      <section id="websites" data-unter-teil><header class="seitenkopf"><h1>Websites &amp; Zugänge</h1><p>Sind die Seiten erreichbar, gelten die Zugänge noch, ist genug Content geplant?</p></header>
+        <h2>Websites</h2><div class="raster" id="websiteliste"></div>
+        <h2 style="margin-top:18px">Zugänge (Tokens)</h2><div class="raster" id="tokens"></div>
+        <h2 style="margin-top:18px">Content-Vorrat</h2><div class="raster" id="content"></div>
+      </section>
+      <section id="kosten" data-unter-teil><header class="seitenkopf"><h1>KI-Kosten</h1><p>Was Ultron und sein Team an KI verbrauchen, in Euro. Über dem Tagesbudget pausieren die Team-Runden automatisch.</p></header><div class="kacheln" id="kostenZahlen" style="margin:0 0 12px"></div><div class="karte" id="kiverbrauch"></div></section>
+      <section id="hirn" data-unter-teil><header class="seitenkopf"><h1>Gedächtnis</h1><p>Was Ultron aus Fehlern und Erfolgen gelernt hat.</p></header>
+        <div class="karte" id="lektionen"></div>
+        <details style="margin-top:8px"><summary>Ultrons Playbook (selbst geschrieben)</summary><pre class="playbook" id="playbook"></pre></details>
+      </section>
+      <section id="push" data-unter-teil><header class="seitenkopf"><h1>Push-Nachrichten</h1><p>Ultrons Fragen kommen als Nachricht aufs Handy statt per Mail.</p></header><div class="karte" id="pushBereich"></div>
+        <div class="karte" style="margin-top:10px"><b>Verbindung zu Ultron</b><div class="meta" style="margin-top:4px">Prüft den ganzen Weg Handy → Ultron → Handy. Ändert nichts.</div><div class="reihe"><button class="knopf leise" type="button" data-ping>Verbindung testen</button></div><div class="meta" id="pingStand" style="margin-top:6px"></div><div class="meta" id="appVersion" style="margin-top:6px"></div></div></section>
+      <section id="steuerung" data-unter-teil><header class="seitenkopf"><h1>Steuerung</h1><p>„Nur noch melden“: Ultron schaut weiter zu, ändert aber nichts mehr. „Selbstständig“ gibt ihm die Kontrolle zurück.</p></header>
+        <div class="knopfreihe">
+          <button class="knopf" data-cmd="lage">Lagebericht jetzt</button>
+          <button class="knopf leise" data-cmd="wache">Schnell-Check</button>
+          <button class="knopf leise" data-cmd="stopp">⏸ Nur noch melden</button>
+          <button class="knopf leise" data-cmd="start">▶ Selbstständig</button>
+        </div>
+        <div class="meta" style="margin-top:10px" id="modusText"></div>
+        <div style="margin-top:22px"><button class="knopf leise" id="abmelden">Schlüssel auf diesem Gerät vergessen</button></div>
+      </section>
+    </div>
+  </div>
+
+  </main>
+</div>
+<div id="steckbrief" class="blatt verborgen" role="dialog" aria-modal="true" aria-labelledby="sbName">
+  <div class="blatt-grund" data-sb-zu></div>
+  <div class="blatt-karte"><button type="button" class="blatt-zu" id="sbZu" data-sb-zu aria-label="Steckbrief schließen">✕</button><div id="sbInhalt"></div></div>
+</div>
+<div id="toast" role="status"></div>
+<script src="struktur.js"></script>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const md = (s) => esc(String(s ?? "").replace(/(Pull Request|PR|Details)?:?\s*https?:\/\/github\.com\/\S+/gi, "")).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/`(.+?)`/g, "<code>$1</code>")
+  .split(/\n/).map((l) => /^#{1,4} /.test(l) ? `<h4>${l.replace(/^#+ /, "")}</h4>` : /^\s*[-•*] /.test(l) ? `<li>${l.replace(/^\s*[-•*] /, "")}</li>` : l.trim() ? `<p>${l}</p>` : "").join("")
+  .replace(/(<li>.*?<\/li>)+/g, (m) => `<ul>${m}</ul>`);
+const klar = (t) => String(t || "").replace(/https?:\/\/\S+/g, "").replace(/[#*_`>]+/g, "").replace(/\s+/g, " ").trim();
+const lager = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} }, del(k) { try { localStorage.removeItem(k); } catch {} } };
+const zeit = (iso) => iso ? new Date(iso).toLocaleString("de-DE", { timeZone: "Europe/Berlin", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "–";
+const vor = (iso) => { if (!iso) return "–"; const m = Math.round((Date.now() - Date.parse(iso)) / 60000); return m < 1 ? "gerade eben" : m < 60 ? `vor ${m} Min.` : m < 1440 ? `vor ${Math.round(m / 60)} Std.` : zeit(iso); };
+const euro = (n) => n == null ? "–" : `${Number(n).toLocaleString("de-DE", { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 })} €`;
+const toast = (t) => { const e = $("#toast"); e.textContent = t; e.classList.add("da"); clearTimeout(toast.t); toast.t = setTimeout(() => e.classList.remove("da"), 4200); };
+
+const b64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+async function entschluessele(paket, pw) {
+  const basis = await crypto.subtle.importKey("raw", new TextEncoder().encode(pw), "PBKDF2", false, ["deriveKey"]);
+  const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt: b64(paket.salz), iterations: paket.iter, hash: "SHA-256" }, basis, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+  const klar = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64(paket.iv) }, key, b64(paket.daten));
+  return JSON.parse(new TextDecoder().decode(klar));
+}
+
+let daten = null;
+let alleAgenten = false;
+async function lade(pw, still) {
+  document.body.classList.add("denkt");
+  try {
+    const r = await fetch(`lage.json?t=${Date.now()}`, { cache: "no-store" });
+    if (!r.ok) throw new Error("Noch keine Lage veröffentlicht – Ultron meldet sich nach seiner ersten Runde.");
+    const paket = await r.json();
+    if (still && daten && paket.daten === lade.letzt) return; // nichts Neues – spart Akku (Entschlüsseln ist teuer)
+    try { daten = await entschluessele(paket, pw); } catch { throw new Error("Schlüssel passt nicht."); }
+    lade.letzt = paket.daten;
+    lager.set("ultron-schluessel", pw);
+    $("#sperre").classList.add("verborgen"); $("#app").classList.remove("verborgen");
+    zeige(daten);
+    if (!still) toast("Verbunden.");
+  } catch (e) {
+    if (!daten) { $("#sperre").classList.remove("verborgen"); $("#app").classList.add("verborgen"); $("#fehler").textContent = e.message; }
+    else toast(e.message);
+  } finally { document.body.classList.remove("denkt"); }
+}
+
+const STIMMUNG = { gruen: "Alles im grünen Bereich", gelb: "Ich beobachte etwas", rot: "Eingreifen nötig" };
+const farbe = (q) => q == null ? "var(--dim)" : q >= 90 ? "var(--green)" : q >= 60 ? "var(--amber)" : "var(--red)";
+
+function zeige(d) {
+  $("#stimmung").textContent = STIMMUNG[d.stimmung] || d.stimmung;
+  $("#standPunkt").className = `punkt ${d.stimmung}`;
+  $("#stand").textContent = vor(d.zeit);
+  $("#modus").textContent = { aktiv: "Arbeitet selbstständig", "nur-melden": "Meldet nur, ändert nichts", aus: "Ist ausgeschaltet" }[d.modus] || d.modus;
+
+  const k = d.kampagnen || [];
+  const ausgabe = k.reduce((s, c) => s + (c.heute?.ausgabe || 0), 0);
+  const leads = k.reduce((s, c) => s + (c.heute?.leads || 0), 0);
+  const krit = (d.alarme || []).filter((a) => a.stufe === "kritisch").length;
+  const ag = d.agenten || [];
+  const tag = (d.aktionen || []).filter((a) => Date.now() - Date.parse(a.zeit) < 86400000).length;
+  const kachel = ([w, l, ziel, art]) => `<button type="button" class="kachel ${art || ""}" data-gehe="${ziel || ""}"><div class="w">${esc(w)}</div><div class="l">${esc(l)}</div></button>`;
+  const fehlerAg = ag.filter((a) => a.fehlerSerie).length;
+  const wartetN = offeneAnfragen(d).length, erl = heuteErledigt(d);
+  $("#zahlen").innerHTML = [[euro(ausgabe), "Werbung heute", "werbung"], [leads, leads === 1 ? "Anfrage heute" : "Anfragen heute", "werbung", leads ? "gut" : ""], [wartetN, "wartet auf dich", "wartet", wartetN ? "offen" : ""], [erl.length, "heute erledigt", "erledigt"]].map(kachel).join("");
+  $("#werbeZahlen").innerHTML = [[k.length, "aktive Kampagnen"], [euro(ausgabe), "Ausgabe heute"], [leads, "Anfragen heute"], [euro(k.reduce((s, c) => s + (c.woche?.ausgabe || 0), 0)), "Ausgabe 7 Tage"]].map(kachel).join("");
+  zeigeWichtig(d); zeigeErledigt(d, erl); zeigeKosten(d);
+  const webFehler = (d.websites || []).filter((s) => !s.ok).length + (d.tokens || []).filter((t) => !t.gueltig).length;
+  badge("alarme", krit); badge("netz", fehlerAg); badge("websites", webFehler); badge("auftraege", (d.auftraege || []).length); badge("erledigt", erl.length);
+  badge("werbung", k.length); badge("menue", krit); badge("team", (d.teamBerichte?.berichte || []).filter((b) => b.fehler).length); badge("steuerung", d.modus === "aktiv" ? 0 : "aus");
+  $("#modusText").textContent = `Gerade: ${({ aktiv: "Ultron arbeitet selbstständig.", "nur-melden": "Ultron meldet nur und ändert nichts.", aus: "Ultron ist ausgeschaltet." })[d.modus] || d.modus}`;
+  $("#menueStand").textContent = `${STIMMUNG[d.stimmung] || "Kommandozentrale"} · ${vor(d.zeit)}`;
+
+  $("#antwortBox").classList.toggle("verborgen", !d.antwort);
+  if (d.antwort) { $("#antwortFrage").textContent = `Antwort auf „${klar(d.frage).slice(0, 90)}“, ${zeit(d.zeit)}`; $("#antwortText").innerHTML = md(String(d.antwort).replace(/=== FÜR DOMENIC ===[\s\S]*$/, "").trim()); }
+  $("#lagetext").innerHTML = d.lage ? `${md(d.lage)}<div class="meta" style="margin-top:8px">Lagebericht ${zeit(d.lageZeit)}</div>` : `<div class="leer">Der erste Lagebericht kommt mit der Morgenrunde.</div>`;
+  zeigeVerlauf();
+
+  const al = (d.alarme || []).slice().sort((a, b) => ["kritisch", "warnung", "info"].indexOf(a.stufe) - ["kritisch", "warnung", "info"].indexOf(b.stufe));
+  $("#alarmliste").innerHTML = al.length ? al.map((a) => `<div class="karte alarm-${a.stufe}" style="margin-bottom:8px"><div class="t">${a.stufe === "kritisch" ? "🔴" : a.stufe === "warnung" ? "🟡" : "⚪"} ${esc(a.titel)}</div>${a.detail ? `<div class="meta" style="overflow-wrap:anywhere">${esc(a.detail)}</div>` : ""}</div>`).join("") : leer("Keine Alarme", "Alles unter Kontrolle. Ultron schaut alle 2 Stunden nach.");
+
+  const ak = (d.aktionen || []).filter((a) => Date.now() - Date.parse(a.zeit) >= 864e5);
+  $("#taten").classList.toggle("verborgen", !ak.length);
+  $("#aktionen").innerHTML = ak.length ? ak.map((a) => `<div class="eintrag"><div>${a.ergebnis === "ok" ? "✅" : "❌"}</div><div><div class="t">${esc(freundlich(a.text))}</div><div class="d">${esc(a.grund || "")}${a.fehler ? ` · Fehler: ${esc(a.fehler)}` : ""}</div><div class="d">${zeit(a.zeit)}${a.befund ? ` · Kontrolle: ${esc(a.befund)}` : a.kontrolleAb ? ` · Kontrolle ab ${zeit(a.kontrolleAb)}` : ""}</div></div></div>`).join("") : `<div class="leer">Noch keine Aktionen.</div>`;
+
+  try { window.UltronTeam?.zeige(d); } catch (e) { console.warn("Team:", e); }
+  const team = d.struktur?.team || [];
+  $("#stammbaum").innerHTML = team.slice().sort((a, b) => Date.parse(b.erschaffen) - Date.parse(a.erschaffen)).map((t) => `<div class="eintrag"><div>${esc(t.symbol || "◆")}</div><div><div class="t">${esc(t.titel)}</div><div class="d">${t.von === "ultron" ? "von Ultron erschaffen" : "gegründet"} ${zeit(t.erschaffen)} · ${t.laeufe} Einsätze · Level ${t.level || "–"}/10 · ${t.regeln} Regeln${t.note != null ? ` · Note ${t.note}/10` : ""}</div></div></div>`).join("");
+
+  const tb = d.teamBerichte?.berichte || [];
+  $("#teamliste").innerHTML = tb.length ? `<div class="meta" style="margin-bottom:6px">Stand ${zeit(d.teamBerichte.zeit)}</div>` + tb.map((t) => `<details class="karte" style="margin-bottom:8px"><summary><b>${t.wichtig === "hoch" ? "🔴" : t.wichtig === "mittel" ? "🟡" : "⚪"} ${esc(t.titel)}</b><div class="meta" style="margin-top:3px">${esc(klar(t.fehler || t.bericht).slice(0, 120))}…</div></summary><div class="lage" style="margin-top:8px">${t.fehler ? esc(t.fehler) : md(t.bericht)}</div>${(t.vorschlaege || []).map((v) => `<div class="meta" style="margin-top:6px">→ <b>${esc(v.titel)}</b>: ${esc(v.detail)}</div>`).join("")}</details>`).join("") : leer("Noch keine Berichte", "Das Team berichtet mit der nächsten Morgenrunde.");
+
+  const id = d.ideen || [];
+  zeigeIdeen(d); zeigeFragen(d); zeigeCreatives(d); zeigePush(); zeigePing(); ideeChatAbgleich(d);
+
+  const au = d.auftraege || [];
+  $("#auftragsliste").innerHTML = au.length ? au.map((a, i) => `<div class="karte"><div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline"><b>${esc(a.titel)}</b><span class="meta">von ${esc(a.von)}</span></div><div class="meta" style="margin-top:4px;color:var(--text);white-space:pre-wrap">${esc(a.auftrag)}</div><div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">${lokal ? `<button class="knopf" data-ausfuehren="${esc(a.id)}">Jetzt ausführen</button>` : ""}<button class="knopf leise" data-auftrag="${i}">Auftrag kopieren</button>${lokal ? `<button class="knopf leise" data-erledigt="${esc(a.id)}">Erledigt</button>` : ""}</div></div>`).join("") : leer("Keine offenen Bau-Aufträge", "Das Team legt neue an, wenn es etwas zu bauen gibt.");
+  document.querySelectorAll("[data-ausfuehren]").forEach((b) => b.onclick = async () => { const r = await fetch("/api/ausfuehren", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: b.dataset.ausfuehren }) }); const j = await r.json().catch(() => ({})); toast(r.ok ? "Mac-Arm arbeitet – Ergebnis kommt als Pull Request + Mail." : `Geht gerade nicht: ${j.error || r.status}`); zeigeArm(); });
+  document.querySelectorAll("[data-auftrag]").forEach((b) => b.onclick = async () => { const a = au[b.dataset.auftrag]; try { await navigator.clipboard.writeText(a.auftrag); toast("Auftrag kopiert – in Claude Code einfügen und starten."); } catch { toast("Kopieren nicht möglich."); } });
+  document.querySelectorAll("[data-erledigt]").forEach((b) => b.onclick = async () => { await fetch("/api/auftrag-erledigt", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: b.dataset.erledigt }) }); toast("Als erledigt markiert."); ladeLokal(); });
+
+  const sortiert = ag.slice().sort((a, b) => (b.fehlerSerie - a.fehlerSerie) || ((a.quote ?? 101) - (b.quote ?? 101)));
+  const sichtbar = alleAgenten ? sortiert : sortiert.filter((a) => a.fehlerSerie || a.laeuftGerade);
+  $("#agentenMehr").textContent = alleAgenten ? "Nur Auffällige zeigen" : `Alle ${ag.length} Agenten zeigen`;
+  $("#agenten").innerHTML = (sichtbar.length ? "" : `<div class="agent leer" style="grid-column:1/-1">Keine Automatik mit Fehler – alles läuft.</div>`) + sichtbar.map((a) => `<div class="agent" style="--c:${farbe(a.quote)}"><div class="n"><span>${esc(a.name)}</span><span>${a.quote == null ? "–" : a.quote + " %"}</span></div><div class="meta">${a.laeuftGerade ? "⚙︎ läuft gerade · " : ""}${a.laeufe} Läufe${a.fehlerSerie ? ` · ${a.fehlerSerie}× Fehler in Folge` : ""} · zuletzt ${vor(a.letzter?.zeit)}</div><div class="balken"><i style="width:${a.quote ?? 0}%"></i></div></div>`).join("");
+
+  $("#pausiert").innerHTML = (d.pausiert || []).length ? `<div class="karte" style="margin-bottom:8px"><div class="meta">Von Ultron pausiert</div>${d.pausiert.map((p) => `<div class="eintrag"><div>⏸</div><div><div class="t">${esc(p.name || p.id)}</div><div class="d">${esc(p.grund || "")} · ${zeit(p.zeit)}</div></div></div>`).join("")}</div>` : "";
+  $("#kampagnen").innerHTML = k.length ? k.slice().sort((a, b) => (b.heute?.ausgabe || 0) - (a.heute?.ausgabe || 0)).map((c) => `<div class="karte"><div class="kopf"><div class="name">${esc(c.name)}</div>${c.gesperrt ? `<span class="marke">gesperrt</span>` : ""}</div><div class="meta">${esc(c.konto)} · Budget ${euro(c.tagesbudget)}/Tag</div>
+    <div class="kennz"><div><b>${euro(c.heute?.ausgabe)}</b><span>heute</span></div><div><b>${c.heute?.leads ?? 0}</b><span>Leads heute</span></div><div><b>${euro(c.woche?.ausgabe)}</b><span>7 Tage · ${c.woche?.leads ?? 0} Leads</span></div><div><b>${euro(c.woche?.cpl)}</b><span>CPL 7 Tage</span></div></div></div>`).join("") : leer("Keine aktiven Kampagnen", "Gerade läuft keine Werbung.");
+
+  $("#websiteliste").innerHTML = (d.websites || []).map((s) => `<div class="site"><i class="punkt ${s.ok ? "gruen" : "rot"}"></i><span>${esc(s.url.replace(/^https?:\/\//, ""))}</span><em>${s.ok ? s.ms + " ms" : esc(s.code || s.fehler)}</em></div>`).join("") || `<div class="leer">–</div>`;
+  $("#tokens").innerHTML = (d.tokens || []).map((t) => `<div class="site"><i class="punkt ${t.gueltig ? "gruen" : "rot"}"></i><span>${esc(t.name)}</span><em>${t.gueltig ? (t.laeuftAb && t.laeuftAb !== "nie" ? "bis " + zeit(t.laeuftAb) : "gültig") + (/^\d{4}-/.test(t.datenzugriffBis || "") ? " · Daten bis " + zeit(t.datenzugriffBis) : "") : "ungültig"}</em></div>`).join("") || `<div class="leer">–</div>`;
+  $("#content").innerHTML = (d.content || []).map((c) => { const offen = (c.fehlendeSlots || []).length; const prob = (c.fehler || []).length + (c.verpasst || []).length; return `<div class="site"><i class="punkt ${prob ? "rot" : offen ? "gelb" : "gruen"}"></i><span>${esc(c.name)}</span><em>${c.autoContent ? (offen ? offen + " Plätze leer" : "3 Tage voll") : "manuell"}${prob ? " · " + prob + " Problem" : ""}</em></div>`; }).join("");
+
+  const v = d.vorschlaege || [];
+  const erlV = erledigt.lies();
+  $("#vorschlaege").innerHTML = v.length ? v.map((x, n) => `<div class="blase von-ultron ${erlV["v:" + x.titel] ? "erledigt" : ""}"><div class="t" style="font-weight:600">${esc(x.titel)}</div><div class="meta kurztext" style="margin-top:4px;color:var(--text)" data-kurz>${md(x.detail)}</div>${erlV["v:" + x.titel] ? `<div class="meta" style="margin-top:6px">✓ ${esc(erlV["v:" + x.titel].was)}</div>` : `<details class="antwortfeld" style="background:none;border:0;padding:0"><summary>Antworten</summary><textarea data-vtext="${n}" placeholder="z. B. „Ja, mach das“ oder „Nein, Reels bleiben pausiert“"></textarea><button class="knopf" data-vsende="${n}" style="margin-top:8px;width:100%">An Ultron senden</button></details>`}</div>`).join("") : "";
+  document.querySelectorAll("[data-vsende]").forEach((b) => b.onclick = async () => { const x = v[b.dataset.vsende], t = document.querySelector(`[data-vtext="${b.dataset.vsende}"]`).value.trim(); if (!t) return; if (await sendeAuftrag(`Antwort auf deinen Vorschlag „${x.titel}“ (${x.detail.slice(0, 400)}): ${t}`, { meldung: "Antwort angekommen ✓ Ultron setzt es um." })) { erledigt.setze("v:" + x.titel, `Geantwortet: „${t.slice(0, 60)}“`); zeige(daten); } });
+  zeigeWartetLeer(d);
+  const l = d.lektionen || [];
+  $("#lektionen").innerHTML = l.length ? l.map((x) => `<div class="eintrag"><div>🧠</div><div><div>${esc(x.text)}</div><div class="d">${zeit(x.zeit)}</div></div></div>`).join("") : `<div class="leer">Ultron sammelt gerade seine ersten Erfahrungen.</div>`;
+  $("#playbook").textContent = d.playbook || "Wird mit der ersten Sonntags-Reflexion geschrieben.";
+}
+
+document.querySelectorAll("[data-cmd]").forEach((b) => b.addEventListener("click", () => sendeAuftrag(b.dataset.cmd)));
+$("#form").addEventListener("submit", (e) => { e.preventDefault(); $("#fehler").textContent = ""; lade($("#schluessel").value.trim()); });
+$("#neu").addEventListener("click", (e) => { e.preventDefault(); if (lokal) { ladeLokal(); toast("Aktualisiert."); return; } const pw = lager.get("ultron-schluessel"); if (pw) lade(pw); });
+$("#agentenMehr").addEventListener("click", () => { alleAgenten = !alleAgenten; if (daten) zeige(daten); });
+$("#abmelden").addEventListener("click", () => { lager.del("ultron-schluessel"); location.reload(); });
+
+
+// ---------- Bausteine für die Bereiche ----------
+const leer = (titel, text) => `<div class="leer-karte"><div class="ok" aria-hidden="true">✓</div><b>${esc(titel)}</b>${esc(text)}</div>`;
+const AUTOMATIK = { regenerate: "Post neu erstellen", "check-instagram": "Instagram prüfen", gsc: "Google-Suche auswerten", "token-info": "Zugänge prüfen", publish: "Post veröffentlichen", "ads-analyze": "Kampagne analysieren" };
+function freundlich(t) {
+  t = String(t || "");
+  const m = t.match(/^Agent ([\w-]+)\.ya?ml gestartet\s*(\{[\s\S]*\})?\s*$/);
+  if (m) { let x = {}; try { x = JSON.parse(m[2] || "{}"); } catch {} return `Automatik „${AUTOMATIK[m[1]] || m[1]}“ gestartet${x.brand ? ` (${x.brand})` : ""}`; }
+  return t.replace(/^Mac-Auftrag erstellt:\s*(\d+\s*·\s*)?/, "Bau-Auftrag angelegt: ");
+}
+const teamName = (id) => (daten?.struktur?.team || []).find((t) => t.id === id)?.name || null;
+const QUELLE = { befehl: "auf deinen Auftrag", lage: "Ultron · Lagebericht", team: "Team-Runde", wache: "Ultron · Wache", ultron: "Ultron", reflexion: "Ultron · Reflexion" };
+const offeneAnfragen = (d) => { const erl = erledigt.lies(); return (d?.anfragen || []).filter((f) => !erl[f.id] || zustellung(erl[f.id]).art === "verloren"); };
+function heuteErledigt(d) {
+  if (Array.isArray(d?.heuteErledigt)) return d.heuteErledigt;
+  // Ältere Lage ohne fertige Liste: aus Aktionen + Qualitätskontrolle zusammensetzen
+  const frisch = (z) => z && Date.now() - Date.parse(z) < 864e5, l = [];
+  for (const a of d?.aktionen || []) if (frisch(a.zeit)) l.push({ zeit: a.zeit, art: "aktion", ok: a.ergebnis === "ok", titel: a.text, text: a.grund || "", von: a.quelle, fehler: a.fehler });
+  const tb = d?.teamBerichte, qk = (tb?.berichte || []).find((b) => b.id === "qualitaetskontrolle");
+  if (qk && frisch(tb.zeit)) for (const z of String(qk.bericht || "").split("\n")) if (z.startsWith("✅ ")) l.push({ zeit: tb.zeit, art: "content", ok: true, titel: z.slice(2).trim(), text: "Von der Qualitätskontrolle geprüft und im Content-Plan übernommen.", von: "qualitaetskontrolle" });
+  return l.sort((a, b) => Date.parse(b.zeit) - Date.parse(a.zeit));
+}
+function zeigeErledigt(d, liste) {
+  const uhr = (iso) => new Date(iso).toLocaleTimeString("de-DE", { timeZone: "Europe/Berlin", hour: "2-digit", minute: "2-digit" });
+  const n = (art) => liste.filter((x) => x.art === art).length;
+  const teile = [[n("aktion"), "Aktion", "Aktionen"], [n("auftrag") + n("update"), "Bau-Auftrag fertig", "Bau-Aufträge fertig"], [n("content"), "Post verbessert", "Posts verbessert"]].filter(([z]) => z).map(([z, e, m]) => [z, z === 1 ? e : m]);
+  $("#erledigtZahlen").innerHTML = teile.map(([z, t]) => `<span><b>${z}</b> ${t}</span>`).join("");
+  const ART = { aktion: "Ultron", auftrag: "Mac-Arm", update: "Mac-Arm", content: "Qualitätskontrolle" };
+  const entschieden = erledigt.lies();
+  $("#erledigtliste").innerHTML = liste.length ? liste.map((x) => {
+    const wer = x.art === "aktion" ? (QUELLE[x.von] || teamName(x.von) || "Ultron") : x.art === "content" ? "Qualitätskontrolle" : `${ART[x.art]}${teamName(x.von) ? ` · Idee von ${teamName(x.von)}` : ""}`;
+    const status = !x.ok ? `<span class="etikett rot">hat nicht geklappt</span>` : x.wartet && entschieden[x.anfrage] ? `<span class="etikett gruen">${esc(entschieden[x.anfrage].was)}</span>` : x.wartet ? `<button type="button" class="etikett gelb" data-gehe="updates">wartet auf dein OK ›</button>` : `<span class="etikett gruen">erledigt</span>`;
+    return `<div class="tat${x.ok ? "" : " fehlschlag"}"><div class="uhr">${uhr(x.zeit)}</div><div><div class="t">${esc(freundlich(x.titel))}</div>${x.text ? `<div class="d">${esc(klar(x.text)).slice(0, 320)}</div>` : ""}${x.fehler ? `<div class="d" style="color:var(--red2)">Fehler: ${esc(String(x.fehler).slice(0, 200))}</div>` : ""}<div class="wer">${status}<span class="etikett">${esc(wer)}</span>${x.projekt ? `<span class="etikett">${esc(x.projekt)}</span>` : ""}</div></div></div>`;
+  }).join("") : leer("Heute noch nichts erledigt", "Ultron schaut alle 2 Stunden nach dem Rechten. Was er oder das Team selbst erledigt, steht dann hier.");
+}
+function zeigeWichtig(d) {
+  const p = [];
+  const cr = (d.creativeReview || []).filter((r) => r.status === "wartet" && !erledigt.lies()[ckey(r)]);
+  if (cr.length) p.push({ art: "gelb", titel: cr.length === 1 ? `Werbung prüfen: ${cr[0].titel}` : `${cr.length} neue Anzeigen warten auf dein OK`, text: "Video ansehen, dann freigeben oder ablehnen", ziel: "wartet" });
+  for (const a of (d.alarme || []).filter((x) => x.stufe === "kritisch")) p.push({ art: "rot", titel: a.titel, text: "Alarm – bitte ansehen", ziel: "mehr/alarme" });
+  const offen = offeneAnfragen(d);
+  for (const f of offen.filter((x) => x.typ !== "pr")) p.push({ art: "gelb", titel: f.einfach?.titel || (f.typ === "idee" ? `Idee: ${f.name}` : `Budget: ${f.text || f.name}`), text: "Wartet auf deine Entscheidung", ziel: "wartet" });
+  const upd = offen.filter((x) => x.typ === "pr");
+  if (upd.length) p.push({ art: "gelb", titel: upd.length === 1 ? (upd[0].einfach?.titel || upd[0].name) : `${upd.length} Updates sind fertig gebaut`, text: "Update-Vorschlag – übernehmen oder verwerfen", ziel: "updates" });
+  const erlV = erledigt.lies();
+  for (const v of (d.vorschlaege || []).filter((x) => !erlV["v:" + x.titel])) p.push({ art: "", titel: v.titel, text: "Vorschlag von Ultron", ziel: "wartet" });
+  $("#wichtig").innerHTML = p.length ? p.slice(0, 3).map((x, i) => `<button type="button" class="wichtig ${x.art}" data-gehe="${x.ziel}"><span class="nr">${i + 1}</span><span class="txt"><b>${esc(klar(x.titel))}</b><span>${esc(x.text)}</span></span><svg class="ic pfeil" aria-hidden="true"><use href="#i-pfeil"/></svg></button>`).join("")
+    : leer("Nichts Dringendes", "Ultron hat alles im Griff.");
+}
+function zeigeKosten(d) {
+  const kv = d.kiVerbrauch || [], heute = new Date().toISOString().slice(0, 10);
+  const eur = (v) => v.eur ?? ((v.input || 0) * 15 + (v.output || 0) * 75) / 1e6; // ohne gespeicherten €-Wert: Schätzung mit Standardpreis
+  const summe = {}; let heuteEur = 0, wocheEur = 0, geschaetzt = false;
+  const grenze = new Date(Date.now() - 6 * 864e5).toISOString().slice(0, 10);
+  for (const [tag, agenten] of kv) for (const [k, v] of Object.entries(agenten)) {
+    const e = eur(v); if (v.eur == null) geschaetzt = true;
+    const x = (summe[k] ||= { eur: 0, heute: 0, aufrufe: 0, tage: 0 }); x.eur += e; x.aufrufe += v.aufrufe || 0; x.tage++;
+    if (tag === heute) { x.heute += e; heuteEur += e; }
+    if (tag >= grenze) wocheEur += e;
+  }
+  const r = (n) => Math.round(n * 100) / 100;
+  $("#kostenZahlen").innerHTML = [[euro(r(heuteEur)), "heute"], [euro(r(wocheEur)), "letzte 7 Tage"]].map(([w, l]) => `<div class="kachel"><div class="w">${esc(w)}</div><div class="l">${esc(l)}</div></div>`).join("");
+  const zeilen = Object.entries(summe).sort((a, b) => b[1].eur - a[1].eur);
+  $("#kiverbrauch").innerHTML = zeilen.length ? zeilen.map(([k, v]) => `<div class="kosten-zeile"><b>${esc(teamName(k) || k)}</b><span class="eur">${euro(r(v.eur))}</span><span class="d">${v.heute ? `heute ${euro(r(v.heute))} · ` : ""}${v.aufrufe} ${v.aufrufe === 1 ? "Aufruf" : "Aufrufe"}${v.tage > 1 ? ` an ${v.tage} Tagen` : ""}</span></div>`).join("") + (geschaetzt ? `<div class="meta" style="margin-top:10px">Ältere Tage ohne genaue Abrechnung sind geschätzt.</div>` : "") : `<div class="leer">Noch keine Daten.</div>`;
+  badge("kosten", heuteEur >= 1 ? `${Math.round(heuteEur)} €` : 0);
+}
+function zeigeWartetLeer(d) {
+  const nicht = offeneAnfragen(d), fr = (d.anfragen || []).filter((f) => f.typ !== "pr"), upd = nicht.filter((f) => f.typ === "pr");
+  const erlV = erledigt.lies(), v = d.vorschlaege || [];
+  $("#fragen").classList.toggle("verborgen", !fr.length);
+  $("#dich").classList.toggle("verborgen", !v.length);
+  $("#updateHinweis").innerHTML = upd.length ? `<button type="button" class="hinweis-link" data-gehe="updates"><svg class="ic" aria-hidden="true"><use href="#i-updates"/></svg><span><b>${upd.length} ${upd.length === 1 ? "Update wartet" : "Updates warten"} auf dein OK</b><em>Fertig gebaut – übernehmen oder verwerfen</em></span><svg class="ic pfeil" aria-hidden="true"><use href="#i-pfeil"/></svg></button>` : "";
+  const alles = !(d.creativeReview || []).length && !fr.length && !upd.length && !v.filter((x) => !erlV["v:" + x.titel]).length;
+  $("#wartetLeer").innerHTML = alles && !v.length ? leer("Gerade nichts", "Ultron hat alles im Griff. Sobald er dich braucht, steht es hier – und du bekommst eine Nachricht.") : "";
+  badge("wartet", nicht.length + (d.creativeReview || []).filter((r) => r.status === "wartet" && !erlV[ckey(r)]).length); badge("updates", upd.length);
+}
+
+// ---------- Navigation: Leiste unten, Menü (Schublade / Seitenleiste), #bereich in der Adresse ----------
+function badge(k, n) { document.querySelectorAll(`[data-badge="${k}"]`).forEach((e) => { e.textContent = typeof n === "number" && n > 9 ? "9+" : n; e.classList.toggle("verborgen", !n); }); }
+const UNTER = ["alarme", "auftraege", "netz", "websites", "kosten", "hirn", "push", "steuerung"];
+const ALIAS = { "mehr/taten": "erledigt", taten: "erledigt", "mehr/system": "mehr/websites", system: "mehr/websites", fragen: "wartet", dich: "wartet", freigaben: "wartet", pr: "updates", dashboard: "start", uebersicht: "start", menue: "mehr" };
+const BEREICHE = ["start", "wartet", "updates", "erledigt", "ideen", "team", "werbung", "mehr"];
+function geheZu(ziel, still) {
+  let z = String(ziel || "start").replace(/^#/, ""); z = ALIAS[z] || z;
+  if (UNTER.includes(z)) z = `mehr/${z}`;
+  let [r, unter] = z.split("/");
+  if (!BEREICHE.includes(r)) { r = "start"; unter = null; }
+  if (r !== "mehr" || !UNTER.includes(unter)) unter = null;
+  document.querySelectorAll("[data-ansicht]").forEach((v) => v.classList.toggle("an", v.dataset.ansicht === r));
+  const voll = unter ? `${r}/${unter}` : r;
+  // Leiste unten: Bereiche ohne eigenen Knopf zählen zum „Menü“
+  const unten = ["start", "wartet", "erledigt", "ideen"].includes(r) ? r : null;
+  document.querySelectorAll("[data-reiter]").forEach((b) => { b.classList.toggle("an", b.dataset.reiter === unten); if (b.dataset.reiter === unten) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current"); });
+  $("#menueAuf").classList.toggle("an", !unten);
+  document.querySelectorAll(".menue-liste [data-gehe]").forEach((a) => { const an = a.dataset.gehe === voll || (r === "mehr" && !unter && a.dataset.gehe === "mehr/alarme" && false); a.classList.toggle("an", an); if (an) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+  if (r === "mehr") {
+    $("#mehrMenue").classList.toggle("verborgen", !!unter); $("#mehrUnter").classList.toggle("verborgen", !unter);
+    document.querySelectorAll("[data-unter-teil]").forEach((t) => t.classList.toggle("verborgen", t.id !== unter));
+  }
+  lager.set("ultron-reiter", voll); document.body.classList.toggle("start-an", r === "start");
+  window.UltronTeam?.sichtbar(r === "team");
+  menue(false);
+  const h = `#${voll}`; if (location.hash !== h) history.replaceState(null, "", h);
+  if (!still) window.scrollTo(0, 0);
+}
+const breit = matchMedia("(min-width: 900px)");
+function menue(auf) {
+  const m = $("#menue"), knopf = $("#menueAuf");
+  if (breit.matches) auf = false;
+  const war = m.classList.contains("offen");
+  m.classList.toggle("offen", !!auf); $("#menueGrund").hidden = !auf; document.body.classList.toggle("menue-offen", !!auf);
+  knopf.setAttribute("aria-expanded", String(!!auf));
+  if (!breit.matches) m.inert = !auf; else m.inert = false;
+  if (auf) (m.querySelector("a.an") || m.querySelector("a")).focus({ preventScroll: true });
+  else if (war) knopf.focus({ preventScroll: true });
+}
+breit.addEventListener?.("change", () => menue(false));
+$("#menueAuf").addEventListener("click", () => menue(!$("#menue").classList.contains("offen")));
+$("#menueZu").addEventListener("click", () => menue(false));
+$("#menueGrund").addEventListener("click", () => menue(false));
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && $("#menue").classList.contains("offen")) menue(false); });
+document.querySelectorAll("[data-reiter]").forEach((b) => b.addEventListener("click", () => geheZu(b.dataset.reiter)));
+document.addEventListener("click", (e) => { const k = e.target.closest && e.target.closest("[data-gehe]"); if (k && k.dataset.gehe) { e.preventDefault(); geheZu(k.dataset.gehe); } });
+$("#zurueck").addEventListener("click", () => geheZu("mehr"));
+window.addEventListener("hashchange", () => { const h = location.hash.slice(1); if (h && !/^k=/.test(h)) geheZu(h, true); });
+document.querySelectorAll("[data-aufklapp]").forEach((b) => b.addEventListener("click", () => { const t = $(`#${b.dataset.aufklapp}`); t.classList.toggle("offen"); b.textContent = t.classList.contains("offen") ? "Weniger" : "Ganz lesen"; }));
+menue(false);
+
+// ---------- Auftrag an Ultron (Handy: signiert über Make → GitHub; Mac: direkt) ----------
+const b64url = (txt) => { const by = new TextEncoder().encode(txt); let s = ""; by.forEach((x) => s += String.fromCharCode(x)); return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); };
+async function signiere(text, pw) {
+  const a = b64url(text), z = String(Date.now());
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(pw), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const sig = [...new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`${z}.${a}`)))].map((x) => x.toString(16).padStart(2, "0")).join("");
+  return { a, z, s: sig };
+}
+function merkeVerlauf(text, s) { let v = []; try { v = JSON.parse(lager.get("ultron-verlauf") || "[]"); } catch {} v.unshift({ text, zeit: new Date().toISOString(), s: s ? String(s).slice(0, 16) : undefined }); lager.set("ultron-verlauf", JSON.stringify(v.slice(0, 8))); zeigeVerlauf(); }
+function zeigeVerlauf() {
+  let v = []; try { v = JSON.parse(lager.get("ultron-verlauf") || "[]"); } catch {}
+  const beantwortet = (x) => daten?.frage && daten.frage.trim() === x.text.trim() && Date.parse(daten.zeit) >= Date.parse(x.zeit) - 60000;
+  $("#verlauf").innerHTML = v.slice(0, 4).reverse().map((x) => { const ok = beantwortet(x), alt = Date.now() - Date.parse(x.zeit) > 30 * 60000; const e = eingangVon(x.s); const z = x.s && !ok && !e ? zustellung({ s: x.s, zeit: Date.parse(x.zeit) }) : null; return `<div class="blase von-dir">${esc(x.text.slice(0, 300))}<div class="klein-meta" style="margin-top:4px;text-align:right">${vor(x.zeit)}, ${ok ? "beantwortet" : e && !/^⏳/.test(e.ergebnis || "") ? esc(e.ergebnis) : e ? "bei Ultron angekommen – er arbeitet daran" : z?.art === "verloren" ? "⚠️ kam nicht an – bitte nochmal senden" : alt ? "Antwort kam per Mail" : "gesendet – wartet auf Ultron"}</div></div>`; }).join("");
+  $("#gespraechLeer").classList.toggle("verborgen", !!(v.length || daten?.antwort));
+}
+let sendetGerade = false;
+// Gesendete Klicks merken (Signatur-Anfang): Ultron bestätigt jede Sendung in lage.json → „handyEingang“
+const SENDUNGEN = "ultron-sendungen";
+function merkeSendung(s, text) { let l = []; try { l = JSON.parse(lager.get(SENDUNGEN) || "[]"); } catch {} l.push({ s: String(s).slice(0, 16), zeit: Date.now(), text: String(text).slice(0, 80) }); lager.set(SENDUNGEN, JSON.stringify(l.slice(-30))); }
+const eingangVon = (s) => s ? (daten?.handyEingang || []).find((e) => e.s === String(s).slice(0, 16)) || null : null;
+// Zustellung eines Klicks: ok = bei Ultron angekommen, unterwegs = noch keine Bestätigung, verloren = Lage ist längst neuer, aber nichts kam an
+function zustellung(x) {
+  if (!x?.s) return { art: "ok" }; // ältere Markierungen ohne Kennung
+  const e = eingangVon(x.s);
+  if (e) { if (!x.bestaetigt) { x.bestaetigt = true; erledigt.bestaetige(x.s); } return { art: "ok", e }; }
+  if (x.bestaetigt) return { art: "ok" };
+  const stand = Date.parse(daten?.aktualisiert || daten?.zeit || 0);
+  if (stand - x.zeit > 20 * 60000 || Date.now() - x.zeit > 60 * 60000) return { art: "verloren" };
+  return { art: "unterwegs" };
+}
+const zustellText = (z, was) => z.art === "ok" ? `✓ ${esc(was)}${z.e?.ergebnis && !/^⏳/.test(z.e.ergebnis) ? ` · Ultron: ${esc(z.e.ergebnis)}` : " – Ultron setzt es um."}`
+  : z.art === "unterwegs" ? `⏳ ${esc(was)} – gesendet, Ultron bestätigt in ca. 2–4 Min.`
+  : `⚠️ Keine Bestätigung von Ultron – das kam wohl nicht an. Bitte nochmal tippen.`;
+async function sendeAuftrag(text, { meldung, ohneVerlauf } = {}) {
+  text = String(text || "").trim(); if (!text) return false;
+  if (sendetGerade) { toast("Moment – die letzte Nachricht wird noch gesendet."); return false; }
+  if (lokal) { const ok = await sendeBefehl(text); if (ok && !ohneVerlauf) merkeVerlauf(text); return ok; }
+  const pw = lager.get("ultron-schluessel");
+  if (text.length > 4000) { toast("Zu lang – bitte kürzer fassen."); return false; }
+  if (!pw) { toast("Dein Schlüssel fehlt – öffne den Link aus der Ultron-Mail einmal neu."); return false; }
+  if (!daten?.auftragUrl) { toast("Auftragsfeld noch nicht bereit – Ultron muss einmal neu laufen. Bitte gleich nochmal versuchen."); return false; }
+  if (navigator.onLine === false) { toast("Kein Internet – bitte gleich nochmal senden."); return false; }
+  sendetGerade = true; const k = $("#auftragSenden"); k.disabled = true;
+  try {
+    const paket = await signiere(text, pw);
+    const r = await fetch(daten.auftragUrl, { method: "POST", body: new URLSearchParams(paket) });
+    const antwort = await r.text().catch(() => "");
+    if (!r.ok) throw new Error(`Make meldet Fehler ${r.status}`);
+    // Nur {"ok":true} heißt: Make hat Ultron wirklich gestartet. „Accepted“ = nur angenommen (z. B. Szenario aus oder Daten unvollständig).
+    if (!/"ok"\s*:\s*true/.test(antwort)) throw new Error("Make hat es nicht an Ultron weitergegeben");
+    merkeSendung(paket.s, text);
+    if (!ohneVerlauf) merkeVerlauf(text, paket.s);
+    toast(meldung || (["stopp", "start", "lage", "wache"].includes(text.toLowerCase()) ? "Befehl angekommen." : "Angekommen ✓ Ultron arbeitet daran – Antwort per Mail."));
+    return paket.s;
+  } catch (e) { toast(`Senden hat nicht geklappt (${e.message}). Bitte nochmal versuchen.`); return false; }
+  finally { sendetGerade = false; k.disabled = false; }
+}
+$("#auftragForm").addEventListener("submit", async (e) => { e.preventDefault(); stoppeDiktat(); const ok = schreibModus === "idee" ? await ideeSenden(feld.value) : await sendeAuftrag(feld.value); if (ok) { feld.value = ""; hoehe(); feld.blur(); } });
+const feld = $("#auftragText");
+const hoehe = () => { feld.style.height = "auto"; feld.style.height = Math.min(feld.scrollHeight, 140) + "px"; };
+feld.addEventListener("input", hoehe);
+feld.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); $("#auftragForm").requestSubmit(); } });
+feld.addEventListener("focus", () => { document.body.classList.add("tippt"); $("#auftragForm").classList.add("offen"); });
+feld.addEventListener("blur", () => setTimeout(() => { if (document.activeElement !== feld) { document.body.classList.remove("tippt"); $("#auftragForm").classList.remove("offen"); } }, 200));
+document.querySelectorAll("[data-vorlage]").forEach((b) => b.addEventListener("click", () => {
+  const v = b.dataset.vorlage, t = $("#auftragText");
+  if (v === "Lagebericht") { sendeAuftrag("lage"); return; }
+  if (v.startsWith(" ")) { t.value = v; t.focus(); t.setSelectionRange(0, 0); } else { t.value = v; t.focus(); }
+}));
+if (!/^#k=/.test(location.hash)) geheZu((location.hash.slice(1) || lager.get("ultron-reiter") || "start"), true);
+
+
+// ---------- Schreibfeld: Modus „Auftrag“ oder „Idee besprechen“ ----------
+let schreibModus = "auftrag";
+function setzeModus(mo) {
+  schreibModus = mo === "idee" ? "idee" : "auftrag";
+  document.querySelectorAll("[data-modus]").forEach((b) => b.setAttribute("aria-checked", String(b.dataset.modus === schreibModus)));
+  $("#auftragForm").classList.toggle("idee-modus", schreibModus === "idee");
+  feld.placeholder = schreibModus === "idee" ? (aktiverChat() ? "Antworte Ultron …" : "Erzähl Ultron deine Idee …") : "Schreib Ultron, was er tun soll …";
+  feld.setAttribute("aria-label", schreibModus === "idee" ? "Idee mit Ultron besprechen" : "Auftrag an Ultron");
+  $("#auftragSenden").setAttribute("aria-label", schreibModus === "idee" ? "Idee an Ultron senden" : "Auftrag an Ultron senden");
+}
+document.querySelectorAll("[data-modus]").forEach((b) => { b.addEventListener("pointerdown", (e) => e.preventDefault()); b.addEventListener("click", () => { setzeModus(b.dataset.modus); feld.focus(); }); });
+window.ultronAuftragAn = (id) => {
+  const t = (daten?.struktur?.team || []).find((x) => x.id === id);
+  geheZu("start"); setzeModus("auftrag"); feld.value = `${id}: `; hoehe(); feld.focus(); feld.setSelectionRange(feld.value.length, feld.value.length);
+  diktatHinweis(`Schreib oder sprich, was ${t?.name || id} tun soll – nur er arbeitet daran.`, 6000);
+};
+$("#ultronKopf").addEventListener("click", () => window.UltronTeam?.oeffne("ultron"));
+$("#ideeStart").addEventListener("click", () => { geheZu("start"); setzeModus("idee"); feld.focus(); const c = $("#ideeChat"); if (!c.classList.contains("verborgen")) c.scrollIntoView({ block: "start" }); });
+
+// ---------- Spracheingabe (Web Speech API, Deutsch; sonst Hinweis auf die Diktier-Taste) ----------
+const Erkennung = window.SpeechRecognition || window.webkitSpeechRecognition;
+let diktat = null;
+function diktatHinweis(t, ms = 7000) { const h = $("#diktatHinweis"); h.textContent = t || ""; h.classList.toggle("verborgen", !t); clearTimeout(diktatHinweis.t); if (t && ms) diktatHinweis.t = setTimeout(() => h.classList.add("verborgen"), ms); }
+function stoppeDiktat() { if (diktat) { try { diktat.stop(); } catch {} } }
+function diktatUi(an) { const b = $("#mikro"); b.classList.toggle("an", an); b.setAttribute("aria-pressed", String(an)); b.setAttribute("aria-label", an ? "Spracheingabe beenden" : "Spracheingabe starten"); $("#auftragForm").classList.toggle("hoert", an); }
+$("#mikro").addEventListener("pointerdown", (e) => e.preventDefault()); // Fokus (und Tastatur) im Feld lassen
+$("#mikro").addEventListener("click", () => {
+  if (diktat) return stoppeDiktat();
+  if (!Erkennung || !window.isSecureContext) { diktatHinweis(istIOS ? "Sprechen geht hier über die iPhone-Tastatur: ins Feld tippen, dann unten rechts auf das Mikrofon (Diktier-Taste)." : "Dieser Browser kann keine Spracheingabe. Nutze die Diktier-Taste deiner Tastatur.", 10000); feld.focus(); return; }
+  let r; try { r = new Erkennung(); } catch { diktatHinweis("Spracheingabe ließ sich nicht starten. Die Diktier-Taste der Tastatur klappt immer.", 9000); return; }
+  diktat = r; r.lang = "de-DE"; r.interimResults = true; r.continuous = !istIOS; r.maxAlternatives = 1;
+  const basis = feld.value.trim() ? feld.value.replace(/\s*$/, " ") : "";
+  let gehoert = false;
+  const notaus = setTimeout(() => stoppeDiktat(), 90000);
+  r.onstart = () => { diktatUi(true); diktatHinweis("Ich höre zu … sprich einfach. Zum Beenden nochmal aufs Mikrofon.", 0); };
+  r.onresult = (e) => { let t = ""; for (const x of e.results) t += x[0].transcript; if (t.trim()) gehoert = true; feld.value = basis + t.replace(/^\s+/, ""); hoehe(); };
+  r.onerror = (e) => { const f = e.error; diktatHinweis(f === "not-allowed" || f === "service-not-allowed" ? "Das Mikrofon ist hier nicht erlaubt. In den Einstellungen freigeben – oder die Diktier-Taste der iPhone-Tastatur nutzen." : f === "no-speech" ? "Ich habe nichts gehört. Tipp nochmal aufs Mikrofon und sprich." : f === "aborted" ? "" : `Spracheingabe ging nicht (${f}). Die Diktier-Taste der Tastatur klappt immer.`, 10000); };
+  r.onend = () => { clearTimeout(notaus); diktat = null; diktatUi(false); if ($("#diktatHinweis").textContent.startsWith("Ich höre zu")) diktatHinweis(gehoert ? "Fertig. Prüfen und auf den Pfeil tippen." : "", 4000); if (gehoert) { feld.focus(); feld.setSelectionRange(feld.value.length, feld.value.length); } };
+  try { r.start(); } catch { diktat = null; diktatUi(false); diktatHinweis("Spracheingabe ließ sich nicht starten. Die Diktier-Taste der Tastatur klappt immer.", 9000); }
+});
+
+// ---------- Ideen-Gespräch: kurz besprechen, dann „Umsetzen“ oder „Verwerfen“ ----------
+// Läuft über den signierten Kanal (Make → GitHub). Ultron antwortet mit einem schnellen, kurzen KI-Aufruf (ohne ganze Runde)
+// und schickt eine Push-Nachricht; die App fragt währenddessen alle 20 Sekunden nach.
+const CHATS = "ultron-ideechats";
+function chats() { try { return JSON.parse(lager.get(CHATS) || "[]"); } catch { return []; } }
+function speichereChats(l) { lager.set(CHATS, JSON.stringify(l.filter((c) => c.status === "offen" || Date.now() - Date.parse(c.zeit) < 3 * 864e5).slice(-10))); }
+function aktiverChat() { return chats().find((c) => c.status === "offen") || null; }
+function chatNutzlast(c) {
+  const n = c.nachrichten.map(({ von, text }) => ({ von, text: von === "ultron" ? text.slice(0, 700) : text.slice(0, 1500) })).slice(-12);
+  while (n.length > 1 && JSON.stringify(n).length > 3500) n.shift();
+  return { typ: "idee-chat", id: c.id, nachrichten: n };
+}
+async function ideeSenden(text, nochmal) {
+  text = String(text || "").trim();
+  const l = chats(); let c = l.find((x) => x.status === "offen");
+  if (!nochmal) {
+    if (!text) return false;
+    if (text.length > 1500) { toast("Bitte etwas kürzer – höchstens 1.500 Zeichen pro Nachricht."); return false; }
+    if (c?.wartet) { toast("Ultron denkt noch über deine letzte Nachricht nach."); return false; }
+    if (!c) { c = { id: "i" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), status: "offen", zeit: new Date().toISOString(), nachrichten: [] }; l.push(c); }
+    c.nachrichten.push({ von: "du", text, zeit: new Date().toISOString() });
+  } else if (!c) return false;
+  const ok = await sendeAktion(chatNutzlast(c), "Angekommen ✓ Ultron denkt nach – Antwort in ca. 3–5 Minuten.");
+  if (!ok) { if (!nochmal) { c.nachrichten.pop(); if (!c.nachrichten.length) l.splice(l.indexOf(c), 1); } speichereChats(l); zeigeIdeeChat(); return false; }
+  c.wartet = true; c.fehler = null; c.gesendet = c.zeit = new Date().toISOString();
+  speichereChats(l); setzeModus("idee"); zeigeIdeeChat(); schnellPruefen();
+  setTimeout(() => $("#ideeChat").scrollIntoView({ block: "nearest", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }), 50);
+  return true;
+}
+function ideeChatAbgleich(d) {
+  const l = chats(); let neu = false;
+  for (const c of l) {
+    if (!c.wartet) continue;
+    const a = (d.ideenChats || []).find((x) => x.id === c.id && x.n === c.nachrichten.length);
+    if (!a) continue;
+    c.wartet = false; neu = true;
+    if (a.fehler) { c.fehler = a.fehler; continue; }
+    c.nachrichten.push({ von: "ultron", text: a.antwort, zeit: a.zeit });
+    if (a.zusammenfassung) c.zusammenfassung = a.zusammenfassung;
+    c.bereit = !!a.bereit;
+  }
+  if (neu) { speichereChats(l); toast("Ultron hat zu deiner Idee geantwortet."); }
+  zeigeIdeeChat();
+}
+function zeigeIdeeChat() {
+  const l = chats(), c = l.find((x) => x.status === "offen") || l.filter((x) => x.status === "umgesetzt" && Date.now() - Date.parse(x.zeit) < 864e5).pop();
+  $("#ideeChat").classList.toggle("verborgen", !c);
+  if (schreibModus === "idee") setzeModus("idee");
+  if (!c) { $("#ideeChatInhalt").innerHTML = ""; return; }
+  const lange = c.wartet && Date.now() - Date.parse(c.gesendet) > 10 * 60000;
+  const hatAntwort = c.nachrichten.some((n) => n.von === "ultron");
+  $("#ideeChatInhalt").innerHTML = c.nachrichten.map((n) => n.von === "du"
+    ? `<div class="blase von-dir">${esc(n.text)}</div>`
+    : `<div class="blase von-ultron"><div class="klein-meta">Ultron</div>${md(n.text)}</div>`).join("")
+    + (c.wartet ? `<div class="blase von-ultron denkt-blase"><span class="tippen" aria-hidden="true"><i></i><i></i><i></i></span> ${lange ? `Das dauert länger als sonst. <button type="button" class="aufklapp" data-ichat="nochmal">Nochmal senden</button>` : "Ultron denkt nach … meist 3–5 Minuten. Du bekommst eine Push-Nachricht mit seiner Antwort."}</div>` : "")
+    + (c.fehler ? `<div class="blase von-ultron"><b style="color:var(--red2)">Das ging schief:</b> ${esc(c.fehler)} <button type="button" class="aufklapp" data-ichat="nochmal">Nochmal senden</button></div>` : "")
+    + (c.status === "umgesetzt" ? `<div class="blase von-ultron ichat-erledigt">✓ Umsetzen ist angekommen. Ultron und sein Team legen los – du bekommst Bescheid, wenn es fertig ist.</div>` : "")
+    + (c.status === "offen" && !c.wartet && hatAntwort ? `<div class="ichat-plan"><div class="klein-meta">${c.bereit ? "So setzt Ultron es um" : "Bisheriger Plan – Ultron hat noch Fragen"}</div><div class="ichat-text">${esc(c.zusammenfassung || "")}</div>
+        <div class="reihe"><button type="button" class="knopf" data-ichat="umsetzen">✅ Umsetzen</button><button type="button" class="knopf leise" data-ichat="verwerfen">Verwerfen</button></div>
+        <div class="klein-meta" style="margin-top:8px">Noch etwas ergänzen? Einfach unten antworten.</div></div>` : "")
+    + (c.status === "offen" && c.wartet ? `<div class="reihe"><button type="button" class="knopf leise" data-ichat="verwerfen" style="flex:0 0 auto">Verwerfen</button></div>` : "");
+}
+async function ideeUmsetzen(knopf) {
+  const l = chats(), c = l.find((x) => x.status === "offen"); if (!c) return;
+  const verlauf = c.nachrichten.map((n) => `${n.von === "du" ? "Domenic" : "Ultron"}: ${n.text}`).join("\n");
+  let text = `umsetzen: ${c.zusammenfassung || c.nachrichten.filter((n) => n.von === "du").map((n) => n.text).join(" ")}\n\n--- So haben wir es besprochen ---\n${verlauf}`;
+  if (text.length > 3900) text = text.slice(0, 3900) + " …";
+  if (knopf) knopf.disabled = true;
+  if (await sendeAuftrag(text, { meldung: "Umsetzen ist angekommen ✓ Ultron legt los." })) { c.status = "umgesetzt"; c.zeit = new Date().toISOString(); speichereChats(l); setzeModus("auftrag"); zeigeIdeeChat(); }
+  else if (knopf) knopf.disabled = false;
+}
+$("#ideeChatInhalt").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-ichat]"); if (!b) return;
+  if (b.dataset.ichat === "umsetzen") return ideeUmsetzen(b);
+  if (b.dataset.ichat === "nochmal") return ideeSenden("", true);
+  if (b.dataset.ichat === "verwerfen") { const l = chats(), c = l.find((x) => x.status === "offen"); if (!c) return; c.status = "verworfen"; c.zeit = new Date().toISOString(); speichereChats(l); setzeModus("auftrag"); zeigeIdeeChat(); toast("Verworfen – es wird nichts umgesetzt."); }
+});
+let schnellTimer = null;
+function schnellPruefen() {
+  if (schnellTimer) return;
+  const pruefe = () => {
+    const warte = chats().some((c) => c.wartet && Date.now() - Date.parse(c.gesendet) < 30 * 60000);
+    if (!warte) { clearInterval(schnellTimer); schnellTimer = null; zeigeIdeeChat(); return; }
+    if (document.hidden) return;
+    if (lokal) ladeLokal(); else { const pw = lager.get("ultron-schluessel"); if (pw) lade(pw, true); }
+    zeigeIdeeChat();
+  };
+  schnellTimer = setInterval(pruefe, 20000);
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden && chats().some((c) => c.wartet)) { const pw = lager.get("ultron-schluessel"); if (lokal) ladeLokal(); else if (pw) lade(pw, true); } });
+setzeModus(aktiverChat() ? "idee" : "auftrag"); zeigeIdeeChat(); if (chats().some((c) => c.wartet)) schnellPruefen();
+
+
+// ---------- Ultron fragt dich (Freigaben mit Antwortfeld) ----------
+const erledigt = { lies() { try { return JSON.parse(lager.get("ultron-erledigt") || "{}"); } catch { return {}; } },
+  bestaetige(s) { const e = this.lies(); let n = 0; for (const v of Object.values(e)) if (v.s === s && !v.bestaetigt) { v.bestaetigt = true; n++; } if (n) lager.set("ultron-erledigt", JSON.stringify(e)); },
+  setze(id, was, s) { const e = this.lies(); e[id] = { was, zeit: Date.now(), s: typeof s === "string" ? s.slice(0, 16) : undefined }; for (const [k, v] of Object.entries(e)) if (Date.now() - v.zeit > 4 * 86400000) delete e[k]; lager.set("ultron-erledigt", JSON.stringify(e)); } };
+// ---------- Werbung prüfen: fertige, pausierte Anzeigen ansehen und freigeben ----------
+// Lokale „erledigt“-Markierung je Fassung: überarbeitete Werbemittel (neue QK-Prüfung) erscheinen wieder (18.10.)
+function ckey(r) { return "c:" + r.id + "@" + ((r.qkUnabhaengig && r.qkUnabhaengig.zeit) || r.zeit || ""); }
+function zeigeCreatives(d) {
+  const liste = d.creativeReview || [], erl = erledigt.lies();
+  const offen = liste.filter((r) => r.status === "wartet" && !erl[ckey(r)]);
+  $("#creatives").classList.toggle("verborgen", !liste.length);
+  zeigeWartetLeer(d);
+  $("#creativeliste").innerHTML = liste.map((r) => {
+    let x = erl[ckey(r)]; const z = x && r.status === "wartet" ? zustellung(x) : null;
+    if (z?.art === "verloren") x = null; // nicht angekommen → Knöpfe wieder zeigen
+    const fertig = r.status !== "wartet" || x;
+    const pr = r.pruefung || {};
+    return `<div class="blase von-ultron frage kreativ ${fertig ? "erledigt" : "braucht"}">
+      <div class="meta">${esc(r.marke || "Werbung")}${r.budget ? ` · ${esc(r.budget)}` : ""} · ${vor(r.zeit)}</div>
+      <div class="t" style="margin-top:2px">${esc(r.titel)}</div>
+      ${r.satz ? `<div style="margin-top:4px;font-size:14px">${esc(r.satz)}</div>` : ""}
+      ${(r.videos || []).map((v) => `<div class="meta" style="margin-top:10px">${esc(v.titel || "Video")}</div><video controls playsinline preload="metadata" src="${esc(v.url)}"${v.poster ? ` poster="${esc(v.poster)}"` : ""}></video>`).join("")}
+      ${(r.bilder || []).length ? `<div class="bilder">${r.bilder.map((b) => `<img loading="lazy" src="${esc(b.url || b)}" alt="${esc(b.titel || "Anzeigenbild")}">`).join("")}</div>` : ""}
+      ${(r.texte || []).map((t) => `<div class="text">${esc(t)}</div>`).join("")}
+      ${pr.qk || pr.sprache ? `<div class="pruef">${pr.qk ? `<span>Qualität: ${esc(pr.qk)}</span>` : ""}${pr.sprache ? `<span>Sprache: ${esc(pr.sprache)}</span>` : ""}</div>` : ""}
+      ${z?.art === "verloren" ? `<div class="meta" style="margin-top:8px;color:var(--amber)">${zustellText(z)}</div>` : ""}
+      ${fertig ? `<div class="meta" style="margin-top:8px">${x && z ? zustellText(z, x.was) : `✓ ${esc(x?.was || (r.status === "freigegeben" ? (r.eingeschaltet ? "Freigegeben und live" : "Freigegeben") : r.status === "abgelehnt" ? "Abgelehnt" : r.status))}`}</div>` : `
+      <div class="knoepfe"><button class="knopf" data-cja="${esc(r.id)}">Freigeben & live</button><button class="knopf leise" data-cnein="${esc(r.id)}">Ablehnen</button></div>
+      <details style="background:none;border:0;padding:0"><summary>Ablehnen mit Hinweis ans Team</summary>
+        <textarea data-ctext="${esc(r.id)}" placeholder="z. B. „Musik zu laut“ oder „Preis groß einblenden“"></textarea>
+        <button class="knopf leise" data-csende="${esc(r.id)}" style="margin-top:8px;width:100%">Ablehnen und Hinweis senden</button></details>`}
+    </div>`;
+  }).join("");
+  // Freigabe NUR über den signierten Handy-Weg – Ultron nimmt sie sonst nicht an
+  const sende = async (id, ja, text) => {
+    if (lokal) { toast("Freigeben geht nur in der Handy-App (wegen deines Schlüssels) – oder sag es mir im Chat."); return false; }
+    return sendeAktion({ typ: "creative-freigabe", id, ja, ...(text ? { text } : {}) }, ja ? "Freigegeben ✓ Ultron schaltet sie ein – du bekommst eine Nachricht." : "Abgelehnt ✓ Das Team baut neu.");
+  };
+  const nach = (id, was, ok) => { if (ok) { const r = liste.find((y) => y.id === id); erledigt.setze(r ? ckey(r) : "c:" + id, was, ok); zeigeCreatives(daten); } };
+  // Bestätigung im Knopf statt confirm(): in der Handy-App (Home-Bildschirm) werden Systemdialoge teils unterdrückt – dann kam der Klick nie an (17.10.)
+  document.querySelectorAll("[data-cja]").forEach((b) => b.onclick = async () => {
+    if (!b.dataset.sicher) { b.dataset.sicher = "1"; b.textContent = "Wirklich live? Nochmal tippen"; b.classList.add("bestaetigen"); setTimeout(() => { if (b.isConnected && b.dataset.sicher) { delete b.dataset.sicher; b.textContent = "Freigeben & live"; b.classList.remove("bestaetigen"); } }, 6000); return; }
+    b.disabled = true; b.textContent = "Wird gesendet …";
+    const ok = await sende(b.dataset.cja, true);
+    if (!ok) { b.disabled = false; delete b.dataset.sicher; b.textContent = "Freigeben & live"; b.classList.remove("bestaetigen"); }
+    nach(b.dataset.cja, "Freigegeben – wird eingeschaltet", ok);
+  });
+  document.querySelectorAll("[data-cnein]").forEach((b) => b.onclick = async () => nach(b.dataset.cnein, "Abgelehnt", await sende(b.dataset.cnein, false)));
+  document.querySelectorAll("[data-csende]").forEach((b) => b.onclick = async () => { const t = document.querySelector(`[data-ctext="${CSS.escape(b.dataset.csende)}"]`).value.trim(); if (!t) return; nach(b.dataset.csende, `Abgelehnt: „${t.slice(0, 60)}“`, await sende(b.dataset.csende, false, t)); });
+}
+
+function zeigeFragen(d) {
+  const fr = d.anfragen || [], erl = erledigt.lies();
+  const KNOEPFE = { pr: ["✅ Übernehmen", "Verwerfen"], idee: ["👍 Verfolgen", "Verwerfen"], budget: ["✅ Freigeben", "Ablehnen"] };
+  const karte = (f) => {
+    const e = f.einfach || {}, k = KNOEPFE[f.typ] || KNOEPFE.budget; let x = erl[f.id]; const z = x ? zustellung(x) : null;
+    if (z?.art === "verloren") x = null; // Anfrage ist bei Ultron noch offen und nichts kam an → Knöpfe wieder zeigen
+    const titel = e.titel || (f.typ === "idee" ? `Idee: ${f.name}` : f.typ === "pr" ? f.name.replace(/^[^:]*:\s*/, "") : `Budget: ${f.text || f.name}`);
+    return `<div class="blase von-ultron frage ${x ? "erledigt" : "braucht"}">
+      <div class="meta">${esc(f.projekt || { pr: "Update", idee: "Geschäftsidee", budget: "Budget" }[f.typ] || "")} · ${vor(f.zeit)}</div>
+      <div class="t" style="margin-top:2px">${esc(titel)}</div>
+      ${e.satz || f.grund ? `<div style="margin-top:4px;font-size:14px">${esc(e.satz || f.grund)}</div>` : ""}
+      ${(e.nutzen || []).length ? `<div class="meta" style="margin-top:8px">Das bringt dir</div><ul>${e.nutzen.map((n) => `<li>${esc(n)}</li>`).join("")}</ul>` : ""}
+      ${(e.tun || []).length ? `<div class="meta" style="margin-top:8px">Das brauche ich von dir</div><ul>${e.tun.map((n) => `<li>${esc(n)}</li>`).join("")}</ul>` : ""}
+      ${(f.antworten || []).map((a) => `<div class="meta" style="margin-top:6px">Deine Antwort ${vor(a.zeit)}: „${esc(a.text)}“</div>`).join("")}
+      ${z?.art === "verloren" ? `<div class="meta" style="margin-top:8px;color:var(--amber)">${zustellText(z)}</div>` : ""}
+      ${x ? `<div class="meta" style="margin-top:8px">${zustellText(z, x.was)}</div>` : `
+      <div class="knoepfe"><button class="knopf" data-fja="${esc(f.id)}">${k[0]}</button><button class="knopf leise" data-fnein="${esc(f.id)}">${k[1]}</button></div>
+      <details style="background:none;border:0;padding:0"><summary>Etwas anderes antworten</summary>
+        <textarea data-ftext="${esc(f.id)}" placeholder="z. B. „Nach Coburg liefern wir per Paket“ oder „Ja, aber erst ab November“"></textarea>
+        <button class="knopf" data-fsende="${esc(f.id)}" style="margin-top:8px;width:100%">Antwort an Ultron senden</button></details>`}
+    </div>`;
+  };
+  $("#fragenliste").innerHTML = fr.filter((f) => f.typ !== "pr").map(karte).join("");
+  const upd = fr.filter((f) => f.typ === "pr");
+  $("#updateliste").innerHTML = upd.length ? upd.map(karte).join("") : leer("Gerade keine Updates", "Sobald das Team etwas fertig gebaut hat, steht es hier zum Übernehmen.");
+  zeigeWartetLeer(d);
+  const nach = (id, was, ok) => { if (ok) { erledigt.setze(id, was, ok); zeigeFragen(daten); zeigeWichtig(daten); zeigeErledigt(daten, heuteErledigt(daten)); } };
+  document.querySelectorAll("[data-fja]").forEach((b) => b.onclick = async () => nach(b.dataset.fja, "Zugestimmt", await sendeAktion({ typ: "entscheid", id: b.dataset.fja, ja: true }, "Angekommen ✓ Ultron setzt es um.")));
+  document.querySelectorAll("[data-fnein]").forEach((b) => b.onclick = async () => nach(b.dataset.fnein, "Abgelehnt", await sendeAktion({ typ: "entscheid", id: b.dataset.fnein, ja: false }, "Angekommen ✓ Abgelehnt.")));
+  document.querySelectorAll("[data-fsende]").forEach((b) => b.onclick = async () => { const t = document.querySelector(`[data-ftext="${CSS.escape(b.dataset.fsende)}"]`).value.trim(); if (!t) return; nach(b.dataset.fsende, `Geantwortet: „${t.slice(0, 60)}“`, await sendeAktion({ typ: "antwort", id: b.dataset.fsende, text: t }, "Antwort angekommen ✓ Ultron meldet sich.")); });
+}
+
+// ---------- Ideen: Pitch lesen, ausarbeiten (PDF), verfolgen, löschen ----------
+let ideenFilter = lager.get("ultron-ideenfilter") || "offen";
+function zeigeIdeen(d) {
+  const erl = erledigt.lies();
+  const alle = (d.ideen || []).filter((i) => !(erl["idee:" + i.titel]?.was === "Gelöscht"));
+  const st = (n) => n == null ? "" : "★".repeat(Math.round(n)) + "☆".repeat(5 - Math.round(n));
+  const STATUS = { neu: "offen", verfolgen: "verfolgt", verworfen: "verworfen" };
+  const liste = alle.filter((i) => ideenFilter === "alle" ? true : ideenFilter === "verfolgen" ? i.status === "verfolgen" : i.status === "neu" || !i.status)
+    .sort((a, b) => (b.sterne ?? -1) - (a.sterne ?? -1) || Date.parse(b.zeit) - Date.parse(a.zeit));
+  document.querySelectorAll("#ideenFilter [data-filter]").forEach((b) => b.classList.toggle("an", b.dataset.filter === ideenFilter));
+  badge("ideen", alle.filter((i) => i.status === "neu" && Date.now() - Date.parse(i.zeit) < 2 * 86400000).length);
+  $("#ideenliste").innerHTML = liste.length ? liste.map((i) => { const x = erl["idee:" + i.titel]; const pitch = i.pitch || [i.beschreibung, i.geldweg && `So kommt Geld rein: ${i.geldweg}`].filter(Boolean).join("\n\n"); return `<details class="karte" style="margin-bottom:8px"><summary style="list-style:none;cursor:pointer">
+      <div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline"><b>${esc(i.titel)}</b><span class="sterne">${st(i.sterne)}</span></div>
+      <div class="meta" style="margin-top:4px">~${euro(i.umsatzpotenzial_monat_eur)}/Monat · Start ${euro(i.kosten_start_eur)}${i.ultron_umsetzbar_prozent != null ? ` · Ultron ${i.ultron_umsetzbar_prozent} %` : ""} · <span class="ideestatus">${esc(STATUS[i.status] || i.status || "offen")}</span>${i.pdf ? ` <span class="ideestatus">📄 PDF</span>` : ""}</div></summary>
+      <div class="pitchtext">${md(pitch)}</div>
+      ${i.sterne_grund ? `<div class="meta" style="margin-top:8px">⭐ ${esc(i.sterne_grund)}</div>` : ""}
+      <div class="meta" style="margin-top:6px">Laufend ${euro(i.kosten_monat_eur)}/Monat · Aufwand ${esc(i.aufwand || "–")}</div>
+      ${i.domenic_muss ? `<div class="meta" style="margin-top:6px"><b>Du musst:</b> ${esc(i.domenic_muss)}</div>` : ""}
+      ${i.recht ? `<div class="meta" style="margin-top:6px"><b>Recht:</b> ${esc(i.recht)}</div>` : ""}
+      ${i.erster_schritt ? `<div class="meta" style="margin-top:6px"><b>Erster Schritt:</b> ${esc(i.erster_schritt)}</div>` : ""}
+      ${i.pdf ? `<div class="meta" style="margin-top:6px">📄 Ausarbeitung kam per Mail (${zeit(i.pdfZeit)}).</div>` : ""}
+      ${x ? `<div class="meta" style="margin-top:10px">✓ ${esc(x.was)} – kommt per Mail.</div>` : `<div class="knoepfe" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+        <button class="knopf" data-iaus="${esc(i.titel)}" style="flex:1 1 100%">📄 Ausarbeiten lassen (PDF per Mail)</button>
+        ${i.status !== "verfolgen" ? `<button class="knopf leise" data-iverf="${esc(i.titel)}" style="flex:1">👍 Verfolgen</button>` : ""}
+        <button class="knopf leise" data-iloe="${esc(i.titel)}" style="flex:1">🗑 Löschen</button></div>`}
+    </details>`; }).join("") : `<div class="karte leer">${ideenFilter === "verfolgen" ? "Noch keine verfolgten Ideen." : "Keine offenen Ideen – der Scout sucht weiter."}</div>`;
+  const merk = (t, was) => { erledigt.setze("idee:" + t, was); zeigeIdeen(daten); };
+  document.querySelectorAll("[data-iaus]").forEach((b) => b.onclick = async () => { if (await sendeAktion({ typ: "idee", titel: b.dataset.iaus, was: "ausarbeiten" }, "Angekommen ✓ Ultron arbeitet die Idee aus – PDF kommt in ca. 10 Min. per Mail.")) merk(b.dataset.iaus, "Wird ausgearbeitet"); });
+  document.querySelectorAll("[data-iverf]").forEach((b) => b.onclick = async () => { if (await sendeAktion({ typ: "idee", titel: b.dataset.iverf, was: "verfolgen" }, "Angekommen ✓ Ultron plant die Idee ein.")) merk(b.dataset.iverf, "Wird verfolgt"); });
+  // Doppel-Tipp statt confirm(): Systemdialoge werden in der Home-Bildschirm-App bzw. im Mail-Browser teils unterdrückt
+  document.querySelectorAll("[data-iloe]").forEach((b) => b.onclick = async () => {
+    if (!b.dataset.sicher) { b.dataset.sicher = "1"; b.textContent = "Wirklich löschen? Nochmal tippen"; b.classList.add("bestaetigen"); setTimeout(() => { if (b.isConnected && b.dataset.sicher) { delete b.dataset.sicher; b.textContent = "🗑 Löschen"; b.classList.remove("bestaetigen"); } }, 6000); return; }
+    b.disabled = true;
+    if (await sendeAktion({ typ: "idee", titel: b.dataset.iloe, was: "loeschen" }, "Gelöscht.")) merk(b.dataset.iloe, "Gelöscht"); else { b.disabled = false; delete b.dataset.sicher; b.textContent = "🗑 Löschen"; b.classList.remove("bestaetigen"); }
+  });
+}
+document.querySelectorAll("#ideenFilter [data-filter]").forEach((b) => b.addEventListener("click", () => { ideenFilter = b.dataset.filter; lager.set("ultron-ideenfilter", ideenFilter); if (daten) zeigeIdeen(daten); }));
+
+// ---------- Push-Nachrichten ----------
+const istIOS = /iP(hone|ad|od)/.test(navigator.userAgent), alsApp = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+function zeigePush() {
+  const k = $("#pushKarte"), kannPush = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+  const an = kannPush && Notification.permission === "granted" && lager.get("ultron-push") === "an";
+  badge("push", lokal ? 0 : an ? "an" : "aus");
+  const anleitung = istIOS && !alsApp ? `Dafür einmal unten auf <b>Teilen</b> tippen, dann <b>Zum Home-Bildschirm</b>. Danach Ultron über das neue Symbol öffnen und hier „Einschalten“ tippen.` : "";
+  $("#pushBereich").innerHTML = lokal ? `<div class="meta">Push gibt es nur in der Handy-App.</div>`
+    : an ? `<b>Push ist eingeschaltet.</b><div class="meta" style="margin-top:4px">Ultrons Fragen kommen als Nachricht aufs Handy. Antippen öffnet direkt die richtige Stelle.</div><div class="reihe"><button class="knopf leise" type="button" data-push="an">Neu einrichten</button><button class="knopf leise" type="button" data-ping>Verbindung testen</button></div>`
+    : !kannPush && !anleitung ? `<div class="meta">Dieser Browser kann keine Push-Nachrichten. Fragen kommen weiter per Mail.</div>`
+    : `<b>Push ist aus.</b><div class="meta" style="margin-top:4px">${anleitung || "Ultrons Fragen kommen gerade per Mail."}</div>${anleitung ? "" : `<div class="reihe"><button class="knopf" type="button" data-push="an">Einschalten</button></div>`}`;
+  if (lokal || an || !daten?.vapidPublic || lager.get("ultron-push-weg") === "1") { k.classList.add("verborgen"); }
+  else {
+    k.classList.remove("verborgen");
+    if (istIOS && !alsApp) k.innerHTML = `Soll ich dir meine Fragen als Nachricht aufs Handy schicken statt per Mail? ${anleitung}<div class="reihe"><button class="knopf leise" data-push="weg">Später</button></div>`;
+    else if (!kannPush) k.innerHTML = `<div class="meta">Dieser Browser kann keine Push-Nachrichten. Fragen kommen weiter per Mail.</div><button class="aufklapp" data-push="weg">Ausblenden</button>`;
+    else k.innerHTML = `Soll ich dir meine Fragen als Nachricht aufs Handy schicken statt per Mail? Antworten kannst du dann direkt hier.<div class="reihe"><button class="knopf" data-push="an">Einschalten</button><button class="knopf leise" data-push="weg">Später</button></div>`;
+  }
+}
+document.addEventListener("click", (e) => { const k = e.target.closest && e.target.closest("[data-kurz]"); if (k) k.classList.toggle("offen"); });
+// Verbindungstest: Handy → Make → GitHub → Ultron → Push „Verbindung ok“ (ändert nichts)
+document.addEventListener("click", async (e) => { const b = e.target.closest && e.target.closest("[data-ping]"); if (!b) return; b.disabled = true; const ok = await sendeAktion({ typ: "ping" }, "Test gesendet ✓ In ca. 2–3 Minuten kommt „Verbindung ok“ als Push."); if (ok) erledigt.setze("ping", "Verbindungstest", ok); b.disabled = false; zeigePing(); });
+function zeigePing() {
+  const x = erledigt.lies().ping, ziel = $("#pingStand"); if (!ziel) return;
+  if (!x) { ziel.textContent = ""; return; }
+  const z = zustellung(x);
+  ziel.innerHTML = z.art === "ok" ? `Letzter Test ${vor(new Date(x.zeit).toISOString())}: ${esc(z.e?.ergebnis || "angekommen")}` : z.art === "unterwegs" ? `Test läuft … (gesendet ${vor(new Date(x.zeit).toISOString())})` : "⚠️ Der letzte Test kam nicht bei Ultron an.";
+}
+document.addEventListener("click", (e) => { const b = e.target.closest && e.target.closest("[data-push]"); if (!b) return; if (b.dataset.push === "an") { if (!daten?.vapidPublic) { toast("Push ist noch nicht bereit – Ultron muss einmal neu laufen."); return; } pushEinschalten(); } else { lager.set("ultron-push-weg", "1"); zeigePush(); } });
+async function pushEinschalten() {
+  try {
+    if (await Notification.requestPermission() !== "granted") { toast("Push nicht erlaubt – in den Einstellungen des Handys freigeben."); return; }
+    const reg = await navigator.serviceWorker.register("sw.js"); await navigator.serviceWorker.ready;
+    const roh = atob(daten.vapidPublic.replace(/-/g, "+").replace(/_/g, "/") + "=".repeat((4 - daten.vapidPublic.length % 4) % 4));
+    const abo = (await reg.pushManager.getSubscription()) || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: Uint8Array.from(roh, (c) => c.charCodeAt(0)) });
+    if (await sendeAktion({ typ: "push-abo", abo: abo.toJSON() }, "Push eingerichtet ✓ In ca. 2 Minuten kommt eine Test-Nachricht.")) { lager.set("ultron-push", "an"); zeigePush(); }
+  } catch (e) { toast(`Push ging nicht: ${e.message}`); }
+}
+if ("serviceWorker" in navigator && !["localhost", "127.0.0.1"].includes(location.hostname)) {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+  navigator.serviceWorker.addEventListener("message", (e) => { if (e.data?.ziel) { geheZu(e.data.ziel); const pw = lager.get("ultron-schluessel"); if (pw) lade(pw, true); } });
+}
+async function sendeAktion(obj, meldung) { return sendeAuftrag("ultron-aktion:" + JSON.stringify(obj), { meldung, ohneVerlauf: true }); }
+
+// ---------- Mac-App: lokale Daten, Befehlszeile, Notizen ----------
+let lokal = false;
+async function ladeLokal() {
+  const r = await fetch("/api/status", { cache: "no-store" }).catch(() => null);
+  if (!r?.ok) return false;
+  const roh = await r.text(); if (lokal && roh === ladeLokal.letzt) return true; ladeLokal.letzt = roh;
+  daten = JSON.parse(roh); lokal = true;
+  $("#sperre").classList.add("verborgen"); $("#app").classList.remove("verborgen");
+  $("#macPult").classList.remove("verborgen");
+  $("#abmelden").classList.add("verborgen"); badge("push", 0);
+  zeige(daten); zeigeNotizen(); zeigeArm();
+  return true;
+}
+async function zeigeArm() {
+  const r = await fetch("/api/ausfuehrer").catch(() => null); if (!r?.ok) return;
+  const a = await r.json();
+  const zeile = (l) => `<div class="eintrag"><div>${l.ende ? (l.ok ? "✅" : "❌") : "⚙︎"}</div><div><div class="t">${esc(l.titel)}</div><div class="d">${l.automatisch ? "automatisch" : "per Klick"} · ${zeit(l.start)}${l.pr ? ` · <a href="${esc(l.pr)}" target="_blank" rel="noopener">Pull Request</a>` : ""}${!l.ende && l.letzteZeile ? ` · ${esc(l.letzteZeile)}` : ""}</div></div></div>`;
+  $("#armStatus").innerHTML = `<div class="karte" style="margin-bottom:8px;border-color:${a.laeuft ? "rgba(43,217,107,.5)" : "var(--line)"}"><div style="display:flex;justify-content:space-between;gap:8px"><b style="font-family:var(--display);letter-spacing:.12em">MAC-ARM</b><span class="meta">${a.claude ? "Claude Code bereit" : "Claude Code nicht gefunden"} · ${a.konfig.automatisch ? `automatisch, ${a.heute}/${a.konfig.maxProTag} heute` : "nur per Klick"} · Modus ${esc(a.konfig.modus)}</span></div>${a.laeuft ? zeile(a.laeuft) : `<div class="meta" style="margin-top:6px">Gerade frei.</div>`}${(a.letzte || []).filter((l) => l.ende).slice(0, 5).map(zeile).join("")}</div>`;
+}
+setInterval(() => lokal && !document.hidden && zeigeArm(), 15_000);
+async function sendeBefehl(text) {
+  const r = await fetch("/api/befehl", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text }) });
+  const j = await r.json().catch(() => ({}));
+  toast(r.ok ? "An Ultron gesendet – er arbeitet daran (Antwort in ca. 3–8 Min.)." : `Fehler: ${j.error || r.status}`);
+  return r.ok;
+}
+async function zeigeNotizen() {
+  const r = await fetch("/api/notizen").catch(() => null); if (!r?.ok) return;
+  const n = await r.json();
+  if (!$("#notiz").value) $("#notiz").value = n.entwurf || "";
+  $("#notizListe").innerHTML = (n.gesendet || []).slice(-6).reverse().map((x) => `<div class="eintrag"><div>🧠</div><div><div style="white-space:pre-wrap">${esc(x.text)}</div><div class="d">an Ultron ${zeit(x.zeit)}</div></div></div>`).join("");
+}
+let notizTimer;
+$("#notiz").addEventListener("input", () => { clearTimeout(notizTimer); notizTimer = setTimeout(async () => { await fetch("/api/notizen", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ entwurf: $("#notiz").value }) }); $("#notizStand").textContent = "gespeichert"; }, 600); });
+$("#notizSpeichern").addEventListener("click", async () => { await fetch("/api/notizen", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ entwurf: $("#notiz").value }) }); toast("Notiz gespeichert."); });
+$("#notizSenden").addEventListener("click", async () => {
+  const t = $("#notiz").value.trim(); if (!t) return;
+  if (await sendeBefehl(`notiz: ${t}`)) { await fetch("/api/notizen", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ entwurf: "", gesendet: t }) }); $("#notiz").value = ""; zeigeNotizen(); }
+});
+
+// ---------- Neue App-Version? Dann einmal neu laden (GitHub Pages cacht 10 Min., Home-Bildschirm-Apps oft länger) ----------
+const APP_VERSION = "07995564cb20";
+if ($("#appVersion")) $("#appVersion").textContent = `App-Version ${APP_VERSION.startsWith("__") ? "lokal" : APP_VERSION}`;
+async function pruefeVersion() {
+  if (lokal || APP_VERSION.startsWith("__")) return;
+  try {
+    const r = await fetch(`version.json?t=${Date.now()}`, { cache: "no-store" }); if (!r.ok) return;
+    const { v } = await r.json();
+    if (!v || v === APP_VERSION) return;
+    let zuletzt = null; try { zuletzt = sessionStorage.getItem("ultron-neu-geladen"); } catch {}
+    if (zuletzt === v) return; // schon einmal versucht – keine Endlosschleife
+    try { sessionStorage.setItem("ultron-neu-geladen", v); } catch {}
+    const h = location.hash && !/^#k=/.test(location.hash) ? location.hash : "";
+    location.replace(`${location.pathname}?v=${v}${h}`);
+  } catch {}
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden) pruefeVersion(); });
+
+// Einrichtung per Link: …/ultron/#k=SCHLÜSSEL (wird sofort aus der Adresse entfernt)
+(async () => {
+  if (["localhost", "127.0.0.1"].includes(location.hostname) && await ladeLokal()) { setInterval(() => !document.hidden && ladeLokal(), 60 * 1000); return; }
+  const ausLink = new URLSearchParams(location.hash.slice(1)).get("k");
+  // Mit Schlüssel im Link erst speichern, dann (beim nächsten Öffnen) auf neue Version prüfen – sonst ginge der Schlüssel beim Neuladen verloren
+  if (ausLink) { history.replaceState(null, "", location.pathname); geheZu("start", true); lade(ausLink); }
+  else { pruefeVersion(); const pw = lager.get("ultron-schluessel"); if (pw) lade(pw, true); else $("#schluessel").focus(); }
+  setInterval(() => { const pw = lager.get("ultron-schluessel"); if (pw && !document.hidden) { lade(pw, true); pruefeVersion(); } }, 5 * 60 * 1000);
+})();
+</script>
+</body>
+</html>
