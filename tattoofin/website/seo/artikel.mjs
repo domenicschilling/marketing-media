@@ -179,7 +179,7 @@ export const artikel = [
       ["Kann ich Klarna im Tattoostudio ohne Onlineshop nutzen?", "Ja, zum Beispiel mit Zahlungslinks und einer Zahlseite mit QR-Code. Der Kunde zahlt im Checkout per Klarna, du brauchst keinen Shop."],
       ["Welche Klarna-Optionen bekommen meine Kunden?", "Je nach Betrag und Prüfung z. B. später bezahlen, in 3 Raten oder eine Finanzierung. Welche Optionen ein Kunde sieht, entscheidet Klarna."],
       ["Was kostet Klarna fürs Studio?", "Je nach Zahlungsanbieter ab 2,99 % + 0,35 € pro Zahlung, wenn du die Gebühren selbst zahlst (bei Tattoofin Monatlich oder Einmalzahlung zahlst du sie direkt an Stripe, Tattoofin nimmt keine Provision)."],
-      ["Bekomme ich das Geld sofort, auch wenn der Kunde in Raten zahlt?", "Nach Freigabe durch Klarna wird dir der Betrag automatisch ausgezahlt. Die Raten zahlt der Kunde an Klarna, das Ausfallrisiko trägt Klarna."],
+      ["Wann bekomme ich mein Geld, wenn der Kunde in Raten zahlt?", "Stimmt Klarna zu, zahlt Stripe dir den Betrag aus, nach seinen Auszahlungsfristen. Die Raten zahlt der Kunde an Klarna, das Ausfallrisiko trägt nach den Bedingungen von Stripe und Klarna Klarna. Reklamiert der Kunde die Leistung, kann der Betrag aber zurückgebucht werden. Achtung! Kreditaufnahme kostet Geld."],
     ],
     inhalt: `
 <div class="toc"><b>Inhalt</b><ol><li><a href="#optionen">Klarna-Optionen und Grenzen</a></li><li><a href="#ablauf">So läuft es im Studio</a></li><li><a href="#kosten">Kosten</a></li><li><a href="#regeln">Regeln, die du kennen musst</a></li><li><a href="#faq">Häufige Fragen</a></li></ol></div>

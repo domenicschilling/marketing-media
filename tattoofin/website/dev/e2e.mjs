@@ -6,6 +6,7 @@ import path from "node:path";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import { startDev } from "./server.mjs";
+import { sendeWebhook } from "../netlify/functions/_lib/stripe-sim.mjs";
 
 const require = createRequire(import.meta.url);
 let chromium;
@@ -540,6 +541,70 @@ try {
     check(JSON.stringify(csK.payment_method_types) === '["card"]' && csK.amount_total === 60000 && !st.customers[csK.customer], "„Mit Karte zahlen“: gleicher Betrag, nur Karte (ohne neue Bestätigung, da schon bestätigt)");
     await api(pA, "/api/portal/kontakt", { method: "PATCH", body: { ausweichAnzahlung: { an: false, prozent: 30 } } });
     delete process.env.TF_BEZAHLFELD;
+  }
+
+  // ---------------------------------------------------------------- K4: Auszahlungs-Korrektur (01.11.2026)
+  console.log("Klarna: Transfer-/Gebühren-IDs kommen erst nach dem ersten Webhook → werden nachgetragen; doppelte Webhooks → genau eine Mail");
+  {
+    const piVon = (raw) => raw.clientSecret.split("_secret_")[0];
+    const bezahleKlarna = (raw) => mock("bestaetigen", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ pi: piVon(raw), client_secret: raw.clientSecret, pm: "klarna" }) });
+    const zahlungMit = async (kunde) => (await admin(`studio/${provId}`)).zahlungen.find((z) => z.kunde === kunde);
+    const mailsZahlung = (kunde) => mailsAn("prov@example.com").filter((m) => m.subject.includes("Zahlung eingegangen") && m.subject.includes(kunde));
+    await mock("klarna-verzoegert");
+
+    // a) charge.updated trägt die IDs nach
+    const nina = await (await post("/api/pay", { s: slug, betrag: "400", kunde: "Nina Nachtrag", email: "nina@example.com", inhaltOk: true })).json();
+    await bezahleKlarna(nina);
+    await wait(500);
+    let zn = await zahlungMit("Nina Nachtrag");
+    check(zn?.status === "bezahlt" && zn.zahlart === "klarna" && !zn.transferId && !zn.applicationFeeId && !zn.stripeGebuehrCent, "Klarna: beim ersten Webhook fehlen Transfer-ID, Plattformgebühr-ID und Stripe-Gebühr noch (wie live)");
+    check(!/Voraussichtlich verfügbar ab/.test(mailsZahlung("Nina Nachtrag")[0]?.html || "") && /7 Tage ab der Zahlung/.test(mailsZahlung("Nina Nachtrag")[0]?.html || ""), "Mail „Zahlung eingegangen“: Frist 7 Tage, ohne erfundenes Datum");
+    await mock(`nachtragen/${zn.paymentIntentId}`);
+    await wait(500);
+    zn = await zahlungMit("Nina Nachtrag");
+    check(/^tr_/.test(zn.transferId || "") && /^fee_/.test(zn.applicationFeeId || "") && zn.stripeGebuehrCent === 1231 && zn.chargeId, "charge.updated: Transfer-ID, Plattformgebühr-ID und Stripe-Gebühr (Klarna 12,31 €) nachgetragen");
+    check(zn.verfuegbarAb && new Date(zn.verfuegbarAb) > new Date(), "Verfügbar-ab-Datum aus Stripe (available_on) gemerkt");
+
+    // b) Notanker: Rückbuchung vor dem Nachtragen → Betrag wird trotzdem vom Studio zurückgeholt
+    const nora = await (await post("/api/pay", { s: slug, betrag: "400", kunde: "Nora Notanker", email: "nora@example.com", inhaltOk: true })).json();
+    await bezahleKlarna(nora);
+    await wait(500);
+    let zo = await zahlungMit("Nora Notanker");
+    check(!zo.transferId, "Notanker-Fall: Transfer-ID fehlt, bevor die Rückbuchung kommt");
+    await mock(`nachtragen/${zo.paymentIntentId}?ereignis=0`); // Stripe hängt die Daten an, aber charge.updated kommt nicht an
+    await mock(`dispute/${zo.paymentIntentId}?status=lost`);
+    await wait(500);
+    zo = await zahlungMit("Nora Notanker");
+    state = await mock("state");
+    check(/^tr_/.test(zo.transferId || "") && state.reversals.some((r) => r.transfer === zo.transferId) && !zo.rueckbuchung?.offenCent, "Rückbuchung: IDs vorher nachgeholt → Betrag vom Studio zurückgeholt (kein „Transfer-ID fehlt“)");
+
+    // c) Tagesjob: Klarna-Zahlung ohne charge.updated
+    const tina = await (await post("/api/pay", { s: slug, betrag: "400", kunde: "Tina Tagesjob", email: "tina@example.com", inhaltOk: true })).json();
+    await bezahleKlarna(tina);
+    await wait(500);
+    let zt = await zahlungMit("Tina Tagesjob");
+    await mock(`nachtragen/${zt.paymentIntentId}?ereignis=0`);
+    check(!zt.transferId, "Tagesjob-Fall: IDs fehlen, kein charge.updated angekommen");
+    const jobs = await admin("jobs", { body: {} });
+    zt = await zahlungMit("Tina Tagesjob");
+    check(/^tr_/.test(zt.transferId || "") && /^fee_/.test(zt.applicationFeeId || "") && zt.stripeGebuehrCent === 1231 && JSON.stringify(jobs).includes(zt.id), "Täglicher Job trägt die fehlenden IDs nach");
+    await mock("klarna-verzoegert?an=0");
+
+    // d) doppelte Webhooks derselben Zahlung (zwei verschiedene Ereignisse fast gleichzeitig) → genau eine Mail je Empfänger
+    await mock("webhooks?an=0"); // Simulation schickt nichts selbst, die Ereignisse kommen gleich von Hand
+    const dora = await (await post("/api/pay", { s: slug, betrag: "250", kunde: "Dora Doppelt", email: "dora@example.com", inhaltOk: true })).json();
+    await mock("bestaetigen", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ pi: piVon(dora), client_secret: dora.clientSecret, pm: "card" }) });
+    const piDora = (await mock("state")).paymentIntents[piVon(dora)];
+    const hook = () => sendeWebhook(`${BASE}/api/stripe-webhook`, "whsec_mock", "payment_intent.succeeded", piDora, undefined);
+    const antworten = await Promise.all([hook(), hook(), hook()]);
+    await wait(800);
+    const zd = await zahlungMit("Dora Doppelt");
+    check(antworten.every((a) => a === 200) && zd?.status === "bezahlt", "Drei gleichzeitige Webhooks: alle 200, Zahlung bezahlt");
+    check(mailsZahlung("Dora Doppelt").length === 1, "Doppelte Webhooks: genau 1 Mail „Zahlung eingegangen“ an das Studio");
+    check(mailsAn("dora@example.com").filter((m) => m.subject.includes("Danke")).length === 1, "Doppelte Webhooks: genau 1 Bestätigung an den Kunden");
+    await hook(); await wait(300);
+    check(mailsZahlung("Dora Doppelt").length === 1, "Später noch ein Webhook: weiterhin 1 Mail");
+    await mock("webhooks?an=1");
   }
 
   // ---------------------------------------------------------------- L: Profi + Studio-Satz

@@ -2,6 +2,9 @@
 import { CFG, provisionSatz, paketVon } from "./config.mjs";
 import { esc, euro, brutto, datum, monatName } from "./util.mjs";
 
+// „Voraussichtlich verfügbar ab …“ nur, wenn Stripe das Datum (available_on) schon geliefert hat; sonst weglassen
+const verfuegbarSatz = (z) => (z.verfuegbarAb ? " Voraussichtlich verfügbar ab " + datum(z.verfuegbarAb) + "." : "");
+
 const gelb = "#ffbd16", navy = "#13243d";
 
 function layout({ preheader = "", title, body, cta, ctaUrl, footerNote = "" }) {
@@ -173,8 +176,8 @@ export const mails = {
       ["Tattoofin " + provisionSatz(s) + " % (alles inklusive)", istProv(z) ? euro(z.gebuehrBruttoCent) : ""],
       ["Auszahlung an dich", istProv(z) ? "<b>" + euro(z.betragCent - z.gebuehrBruttoCent) + "</b>" : ""],
     ]) + p(istProv(z)
-      ? "Stripe überweist den Betrag automatisch auf das Bankkonto deines Studios. Weitere Gebühren fallen für dich nicht an: Die Kosten des Zahlungsanbieters sind in den " + provisionSatz(s) + " % enthalten."
-      : "Die Auszahlung auf dein Konto übernimmt Stripe nach deinem Auszahlungsplan. Gebühren des Zahlungsanbieters siehst du im Stripe-Dashboard."),
+      ? "Stripe zahlt den Betrag auf dein Bankkonto aus. Bei neuen Konten dauert das 7 Tage ab der Zahlung, danach in der Regel wenige Werktage." + verfuegbarSatz(z) + " Weitere Gebühren fallen für dich nicht an: Die Kosten des Zahlungsanbieters sind in den " + provisionSatz(s) + " % enthalten."
+      : "Die Auszahlung auf dein Konto übernimmt Stripe nach deinem Auszahlungsplan. Bei neuen Konten dauert das 7 Tage ab der Zahlung, danach in der Regel wenige Werktage." + verfuegbarSatz(z) + " Gebühren des Zahlungsanbieters siehst du im Stripe-Dashboard."),
     cta: "In der App ansehen", ctaUrl: `${CFG.siteUrl}/app.html#zahlungen`,
   }),
 
