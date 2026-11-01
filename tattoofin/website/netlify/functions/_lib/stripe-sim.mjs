@@ -100,6 +100,14 @@ export function createSim({ load, save, pageBase, webhook }) {
         if (method === "POST") { Object.assign(pi, p, p.amount ? { amount: Number(p.amount) } : {}); return pi; }
         return pi;
       }
+      // Lesezugriffe für das Nachtragen von Stripe-Daten: Transfer → Zahlung auf dem Studio-Konto → Verfügbar-ab-Datum; Plattformgebühr je Charge
+      if (res1 === "transfers" && id1 && !act && method === "GET") return { id: id1, object: "transfer", destination_payment: "py_" + id1.slice(3) };
+      if (res1 === "charges" && id1 && method === "GET") return { id: id1, object: "charge", balance_transaction: { id: rid("txn"), available_on: Math.floor(Date.now() / 1000) + 7 * 86400 } };
+      if (res1 === "application_fees" && !id1 && method === "GET") {
+        const pi = Object.values(db.paymentIntents).find((x) => x.latest_charge?.id === p.charge);
+        const fee = pi?.latest_charge?.application_fee;
+        return { object: "list", data: fee ? [{ id: fee, object: "application_fee", charge: p.charge }] : [] };
+      }
       if (res1 === "transfers" && act === "reversals") { const r = { id: rid("trr"), transfer: id1, amount: Number(p.amount), metadata: p.metadata || {} }; db.reversals.push(r); return done(r); }
       if (res1 === "transfers" && !id1) { const t = { id: rid("tr"), ...p, amount: Number(p.amount) }; db.transfers.push(t); return done(t); }
       if (res1 === "application_fees" && act === "refunds") { const r = { id: rid("fr"), fee: id1, amount: Number(p.amount) }; db.feeRefunds.push(r); return done(r); }
@@ -182,6 +190,12 @@ export function createSim({ load, save, pageBase, webhook }) {
     pi.status = "succeeded";
     pi.payment_method_types = [pm];
     pi.latest_charge = charge(db, { amount: pi.amount, pm, fee: pi.application_fee_amount, ziel });
+    // Wie live bei Klarna: Transfer, Plattformgebühr und Gebühr hängt Stripe erst später an (Schalter /mock/klarna-verzoegert, danach /mock/nachtragen/<pi>)
+    if (db.sim_klarna_verzoegert && pm === "klarna" && ziel) {
+      const c = pi.latest_charge;
+      c.verzoegert = { transfer: c.transfer, application_fee: c.application_fee, balance_transaction: c.balance_transaction };
+      c.transfer = null; c.application_fee = null; c.balance_transaction = null;
+    }
   }
 
   // ---------- Seiten / Aktionen ----------
@@ -292,6 +306,16 @@ export function createSim({ load, save, pageBase, webhook }) {
       }
       if (art === "webhooks") { db.sim_webhooks_aus = query.get("an") !== "1"; return { ok: true, webhooksAus: db.sim_webhooks_aus }; }
       if (art === "session-fehler") { db.accounts[id].sim_session_fehler = query.get("stufe") || "voll"; return { ok: true }; }
+      if (art === "klarna-verzoegert") { db.sim_klarna_verzoegert = query.get("an") !== "0"; return { ok: true, klarnaVerzoegert: db.sim_klarna_verzoegert }; }
+      // Stripe hängt die verzögerten Daten an den Charge und meldet charge.updated
+      if (art === "nachtragen") {
+        const pi = db.paymentIntents[id];
+        const c = pi?.latest_charge;
+        if (!c?.verzoegert) return { ok: false };
+        Object.assign(c, c.verzoegert); delete c.verzoegert;
+        if (query.get("ereignis") !== "0") emit("charge.updated", { id: c.id, object: "charge", payment_intent: pi.id, amount: pi.amount, application_fee: c.application_fee, transfer: c.transfer }, pi.account || undefined);
+        return { ok: true, transfer: c.transfer, application_fee: c.application_fee };
+      }
       if (art === "ohne-klarna") { db.accounts[id].sim_ohne_klarna = true; return { ok: true }; }
       if (art === "refund") {
         const pi = db.paymentIntents[id];

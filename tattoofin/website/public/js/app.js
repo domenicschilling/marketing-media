@@ -106,7 +106,7 @@
     var punkte = [
       { ok: true, t: "Vertrag abgeschlossen", s: "Paket " + s.paketName + (s.provisionProzent ? " · " + s.provisionProzent + " % pro Zahlung, alles inklusive" : s.paket === "monatlich" ? " · " + TF.euro(s.monatNetto || 4900) + " netto im Monat, keine Provision" : " · keine Provision") },
       { ok: s.stripe.freigegeben, warte: s.stripe.angabenGemacht && !s.stripe.freigegeben, t: "Zahlungskonto einrichten",
-        s: s.stripe.freigegeben ? "Freigegeben. Das Geld deiner Kunden kommt auf dein Bankkonto." : s.stripe.angabenGemacht ? "Stripe prüft deine Angaben, meist 1 bis 3 Werktage." : "Ca. 10 Minuten. Ausweis und IBAN bereithalten.",
+        s: s.stripe.freigegeben ? "Freigegeben. Stripe zahlt das Geld deiner Kunden auf dein Bankkonto aus. Bei neuen Konten wird es erst 7 Tage nach der Zahlung freigegeben." : s.stripe.angabenGemacht ? "Stripe prüft deine Angaben, meist 1 bis 3 Werktage." : "Ca. 10 Minuten. Ausweis und IBAN bereithalten.",
         knopf: s.stripe.freigegeben || s.stripe.angabenGemacht ? null : ["#einrichtung", "Jetzt einrichten", "gold"] },
       { ok: s.recht && s.recht.aktuell, t: "Deine rechtliche Lage lesen", s: "5 Minuten: Wer trägt welches Risiko?", knopf: ["#recht", "Lesen", "dark"] },
       { ok: D.zahlungen.length > 0, t: "Ersten Zahlungslink erstellen", s: "Zum Ausprobieren gern an dich selbst.", knopf: ["#link", "Erstellen", "dark"] },
@@ -321,8 +321,8 @@
   function geld() {
     var s = D.studio;
     $("geld-text").textContent = prov()
-      ? "Stripe zahlt dir " + (100 - s.provisionProzent) + " % jeder Zahlung automatisch auf dein Bankkonto aus, meist nach 1 bis 2 Werktagen. Die " + s.provisionProzent + " % für Tattoofin sind schon abgezogen, weitere Gebühren gibt es nicht."
-      : "Das Geld landet auf deinem eigenen Stripe-Konto und wird automatisch auf dein Bankkonto ausgezahlt. Die Gebühren des Zahlungsanbieters zieht Stripe direkt ab.";
+      ? "Stripe zahlt dir " + (100 - s.provisionProzent) + " % jeder Zahlung automatisch auf dein Bankkonto aus. Bei neuen Konten wird das Geld 7 Tage nach der Zahlung freigegeben, danach läuft die Auszahlung täglich. Auf deinem Konto ist es meist 1–2 Bankarbeitstage später. Die " + s.provisionProzent + " % für Tattoofin sind schon abgezogen, weitere Gebühren gibt es nicht."
+      : "Das Geld landet auf deinem eigenen Stripe-Konto und wird automatisch auf dein Bankkonto ausgezahlt. Bei neuen Konten wird das Geld 7 Tage nach der Zahlung freigegeben, danach läuft die Auszahlung täglich. Auf deinem Konto ist es meist 1–2 Bankarbeitstage später. Die Gebühren des Zahlungsanbieters zieht Stripe direkt ab.";
     var box = $("geld-box");
     if (!s.stripe.freigegeben) { box.innerHTML = '<div class="card-a"><b>Noch kein Zahlungskonto freigegeben.</b><p class="klein muted">Sobald es eingerichtet ist, siehst du hier deine Auszahlungen.</p>' + (s.stripe.angabenGemacht ? "" : '<a class="btn gold small" href="#einrichtung">Jetzt einrichten</a>') + "</div>"; return; }
     if (!s.eingebettet) { box.innerHTML = '<div class="card-a"><p class="klein">Deine Auszahlungen zeigt Stripe auf einer eigenen Seite.</p><button class="btn dark" id="dash">Auszahlungen ansehen</button></div>'; $("dash").onclick = dashboard; return; }

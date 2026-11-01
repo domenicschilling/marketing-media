@@ -22,6 +22,8 @@ async function netlify() {
   return {
     get: (k) => st().get(k, { type: "json" }),
     set: (k, v) => st().setJSON(k, v),
+    // Nur schreiben, wenn der Schlüssel noch nicht existiert (atomar, Netlify Blobs „onlyIfNew“) → true = angelegt
+    setNeu: async (k, v) => (await st().setJSON(k, v, { onlyIfNew: true })).modified !== false,
     del: (k) => st().delete(k),
     list: async (prefix) => {
       const out = [];
@@ -43,6 +45,12 @@ function files() {
   return {
     get: async (k) => { try { return JSON.parse(await fs.readFile(f(k), "utf8")); } catch { return null; } },
     set: async (k, v) => { await fs.mkdir(dir, { recursive: true }); await fs.writeFile(f(k), JSON.stringify(v, null, 2)); },
+    // Nur schreiben, wenn die Datei noch nicht existiert (Flag „wx“ ist atomar) → true = angelegt
+    setNeu: async (k, v) => {
+      await fs.mkdir(dir, { recursive: true });
+      try { await fs.writeFile(f(k), JSON.stringify(v, null, 2), { flag: "wx" }); return true; }
+      catch (e) { if (e.code === "EEXIST") return false; throw e; }
+    },
     del: async (k) => { await fs.rm(f(k), { force: true }); },
     list: async (prefix) => {
       try {
@@ -62,6 +70,7 @@ async function db() {
 export const store = {
   get: async (k) => (await db()).get(k),
   set: async (k, v) => (await db()).set(k, v),
+  setNeu: async (k, v) => (await db()).setNeu(k, v),
   del: async (k) => (await db()).del(k),
   list: async (prefix) => (await db()).list(prefix),
   async all(prefix) {

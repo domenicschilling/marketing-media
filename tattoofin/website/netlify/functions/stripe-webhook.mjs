@@ -4,10 +4,12 @@
 //   Kauf:      Zahlung direkt auf dem Stripe-Konto des Studios (Direct Charge) → Endpoint „Verbundene Konten“
 // In Stripe zwei Endpoints auf <SITE_URL>/api/stripe-webhook anlegen:
 //   1) „Ihr Konto“: checkout.session.completed, checkout.session.async_payment_succeeded, checkout.session.async_payment_failed,
-//      checkout.session.expired, invoice.paid, invoice.payment_failed, charge.refunded, charge.dispute.created,
+//      checkout.session.expired, invoice.paid, invoice.payment_failed, charge.refunded, charge.updated, charge.dispute.created,
 //      charge.dispute.funds_withdrawn, charge.dispute.funds_reinstated, charge.dispute.closed
 //   2) „Verbundene Konten“: account.updated, checkout.session.completed, checkout.session.async_payment_succeeded,
-//      checkout.session.async_payment_failed, checkout.session.expired, charge.refunded, charge.dispute.created, charge.dispute.closed
+//      checkout.session.async_payment_failed, checkout.session.expired, charge.refunded, charge.updated, charge.dispute.created, charge.dispute.closed
+//      charge.updated: Bei Klarna hängt Stripe Transfer und Plattformgebühr erst NACH der Zahlung an den Charge → dann werden die IDs nachgetragen
+//      (zusätzlich Notanker vor Rückbuchung/Erstattung und täglicher Job, falls das Ereignis nicht abonniert ist).
 //      Für das Paket Monatlich (Abo) zusätzlich empfohlen: customer.subscription.deleted (Abo von Stripe beendet,
 //      z. B. nach endgültig fehlgeschlagenen Zahlungen) – wird unten verarbeitet, sobald das Ereignis abonniert ist.
 //   Secrets: STRIPE_WEBHOOK_SECRET (1) und STRIPE_CONNECT_WEBHOOK_SECRET (2)
@@ -15,7 +17,7 @@ import { CFG } from "./_lib/config.mjs";
 import { json, fail, now, brutto, handler } from "./_lib/util.mjs";
 import { stripe, verifyWebhook } from "./_lib/stripe.mjs";
 import { getStudio, saveStudio, studioBy, store, log, zahlungBy, saveZahlung } from "./_lib/store.mjs";
-import { notify, notifyAdmin, zaehleAktion, einrichtungUrl, kontoAbgleichen, provisionVerdient, zahlungBezahlt, paketDetails, aufstellerBezahlt, provisionZahlung } from "./_lib/domain.mjs";
+import { notify, notifyAdmin, zaehleAktion, einrichtungUrl, kontoAbgleichen, provisionVerdient, zahlungBezahlt, paketDetails, aufstellerBezahlt, provisionZahlung, stripeDatenNachtragen } from "./_lib/domain.mjs";
 import { mails } from "./_lib/emails.mjs";
 import { loginLink } from "./_lib/auth.mjs";
 
@@ -57,6 +59,14 @@ async function kundenEreignis(event) {
       break;
     }
 
+    // Stripe hat am Charge etwas ergänzt (bei Klarna: Transfer, Plattformgebühr, Gebühr) → fehlende IDs nachtragen
+    case "charge.updated": {
+      const z = await zahlungBy("pi", o.payment_intent);
+      if (!z || !["bezahlt", "erstattet", "rueckgebucht"].includes(z.status)) break;
+      await stripeDatenNachtragen(z, { immer: true });
+      break;
+    }
+
     case "charge.dispute.created": {
       const z = await zahlungBy("pi", o.payment_intent);
       if (!z || z.rueckbuchung?.disputeId === o.id) break;
@@ -78,6 +88,7 @@ async function kundenEreignis(event) {
       const z = await zahlungBy("pi", o.payment_intent);
       if (!z || z.abwicklung !== "plattform" || z.rueckbuchung?.zurueckgeholtCent) break;
       const s = await getStudio(z.studioId);
+      await stripeDatenNachtragen(z); // Notanker: Transfer-ID muss da sein, sonst kann der Betrag nicht zurückgeholt werden
       z.rueckbuchung = { ...(z.rueckbuchung || { disputeId: o.id, grund: o.reason, betragCent: o.amount, am: now() }), status: "belastet" };
       const provAnteil = Math.round(provisionVerdient(z) * o.amount / z.betragCent);
       const ziel = Math.max(0, Math.min(z.betragCent - (z.erstattetCent || 0), o.amount - provAnteil + CFG.ruecklastGebuehrCent));
@@ -136,6 +147,7 @@ async function kundenEreignis(event) {
       const z = await zahlungBy("pi", o.payment_intent);
       if (!z) break;
       const s = await getStudio(z.studioId);
+      await stripeDatenNachtragen(z); // Notanker: Plattformgebühr-ID + echte Stripe-Gebühr für die Provisions-Erstattung
       const anteil = o.amount ? o.amount_refunded / o.amount : 1;
       let gebuehrZurueck = 0;
       const feeId = id(o.application_fee) || z.applicationFeeId;

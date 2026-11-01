@@ -359,9 +359,120 @@ export async function bezahlfeldFuer(studio, z) {
 
 const objId = (x) => (x && typeof x === "object" ? x.id : x || "");
 
-// Zahlung als bezahlt markieren (Webhook oder Abgleich nach der Rückkehr auf /bezahlt.html)
+// Konto, auf dem die Zahlung liegt: Plattformkonto (Destination Charge) = kein Header, sonst das Stripe-Konto des Studios
+const kontoFuer = (z, s) => (z.abwicklung ? z.abwicklung === "plattform" : plattformKassiert(s)) ? undefined : s?.stripe?.accountId;
+
+// Wann das Geld auf dem Stripe-Konto des Studios zur Auszahlung freigegeben wird (Stripe-Feld available_on der balance_transaction
+// auf dem Studio-Konto). Destination Charge: Die Zahlung auf dem Studio-Konto („py_…“) hängt am Transfer. Nur wenn Stripe es liefert,
+// sonst leer lassen (lieber kein Datum als ein falsches).
+async function verfuegbarAbHolen(z, s, charge) {
+  try {
+    let bt = null, account;
+    if (z.abwicklung === "plattform") {
+      const trId = z.transferId || objId(charge?.transfer);
+      if (!trId) return "";
+      const tr = await stripe("GET", `/transfers/${trId}`);
+      const py = objId(tr.destination_payment);
+      if (!py || !s?.stripe?.accountId) return "";
+      account = s.stripe.accountId;
+      bt = (await stripe("GET", `/charges/${py}`, { expand: ["balance_transaction"] }, { account })).balance_transaction;
+    } else {
+      bt = charge?.balance_transaction;
+    }
+    const t = bt && typeof bt === "object" ? Number(bt.available_on) : 0;
+    return t > 0 ? new Date(t * 1000).toISOString() : "";
+  } catch (e) { console.error("[verfuegbar-ab]", z.id, e.message); return ""; }
+}
+
+// Was an einer bezahlten Zahlung noch fehlt (Transfer-ID, Plattformgebühr-ID, echte Stripe-Gebühr). Bei Klarna hängt Stripe diese Daten erst
+// Sekunden bis Stunden NACH der Zahlung an → beim ersten Webhook sind sie noch leer.
+export function stripeLuecken(z) {
+  if (!z?.paymentIntentId || !["plattform", "direkt"].includes(z.abwicklung)) return [];
+  const l = [];
+  if (z.abwicklung === "plattform" && !z.transferId) l.push("transferId");
+  if (z.gebuehrBruttoCent && !z.applicationFeeId) l.push("applicationFeeId");
+  if (z.abwicklung === "plattform" && !z.stripeGebuehrCent) l.push("stripeGebuehrCent");
+  return l;
+}
+
+// Fehlende Stripe-Daten einer Zahlung nachtragen (Aufrufe: Webhook charge.updated, Notanker vor Rückbuchung/Erstattung, täglicher Job).
+// Ändert z in place und speichert nur bei Änderung. Wirft nie (Rückgabe: Liste der nachgetragenen Felder).
+export async function stripeDatenNachtragen(z, { immer = false } = {}) {
+  const luecken = stripeLuecken(z);
+  if (!luecken.length && !(immer && !z.verfuegbarAb)) return [];
+  const nachgetragen = [];
+  try {
+    const s = await getStudio(z.studioId);
+    const account = kontoFuer(z, s);
+    const pi = await stripe("GET", `/payment_intents/${z.paymentIntentId}`, { expand: ["latest_charge.balance_transaction"] }, account ? { account } : {});
+    const charge = pi?.latest_charge && typeof pi.latest_charge === "object" ? pi.latest_charge : null;
+    if (!charge) return [];
+    const setze = (feld, wert) => { if (wert && !z[feld]) { z[feld] = wert; nachgetragen.push(feld); } };
+    setze("chargeId", charge.id);
+    setze("transferId", objId(charge.transfer));
+    let feeId = objId(charge.application_fee);
+    // Manche Konten/Zahlarten liefern die Gebühr nicht am Charge → bei Stripe nach der Plattformgebühr dieses Charges fragen
+    if (!feeId && z.gebuehrBruttoCent && !z.applicationFeeId) {
+      try { feeId = ((await stripe("GET", "/application_fees", { charge: charge.id, limit: 1 })).data || [])[0]?.id || ""; } catch (e) { console.error("[nachtragen] application_fees:", e.message); }
+    }
+    setze("applicationFeeId", feeId);
+    const bt = charge.balance_transaction;
+    if (z.abwicklung === "plattform" && bt && typeof bt === "object" && bt.fee && !z.stripeGebuehrCent) { z.stripeGebuehrCent = bt.fee; nachgetragen.push("stripeGebuehrCent"); }
+    if (z.abwicklung === "direkt" && bt && typeof bt === "object" && bt.fee && z.stripeGebuehrCent !== bt.fee && !z.stripeGebuehrEcht) { z.stripeGebuehrCent = bt.fee; z.stripeGebuehrEcht = true; nachgetragen.push("stripeGebuehrCent"); }
+    if (!z.verfuegbarAb) { const va = await verfuegbarAbHolen(z, s, charge); if (va) { z.verfuegbarAb = va; nachgetragen.push("verfuegbarAb"); } }
+    if (nachgetragen.length) {
+      await saveZahlung(z);
+      await log("stripe-nachgetragen", { studioId: z.studioId, zahlungId: z.id, felder: nachgetragen });
+    }
+  } catch (e) { console.error("[nachtragen]", z.id, e.message); }
+  return nachgetragen;
+}
+
+// Bezahlte Zahlungen der letzten 180 Tage (Klarna-Streitfälle sind so lange möglich) mit leeren Stripe-Daten nachtragen. Höchstens 100 pro Lauf,
+// und pro Zahlung höchstens 14 Versuche über den Tagesjob (danach reicht der Notanker bei Rückbuchung/Erstattung).
+export async function stripeDatenNachholen() {
+  const out = [];
+  const grenze = Date.now() - 180 * 864e5;
+  let n = 0;
+  for (const s of await allStudios()) {
+    for (const z of await zahlungenVon(s.id)) {
+      if (z.status !== "bezahlt" || n >= 100 || !stripeLuecken(z).length || new Date(z.bezahltAm || z.createdAt).getTime() < grenze || (z.nachtragVersuche || 0) >= 14) continue;
+      n++;
+      const felder = await stripeDatenNachtragen(z);
+      if (!felder.length) { z.nachtragVersuche = (z.nachtragVersuche || 0) + 1; await saveZahlung(z); }
+      else out.push(["stripe-nachgetragen", s.firma, z.id, felder.join("+")]);
+    }
+  }
+  return out;
+}
+
+// Zahlung als bezahlt markieren (Webhook oder Abgleich nach der Rückkehr auf /bezahlt.html).
+// Genau einmal pro Zahlung: Stripe schickt für dieselbe Zahlung mehrere Ereignisse fast gleichzeitig (z. B. checkout.session.completed UND
+// payment_intent.succeeded). Ohne Sperre liefen beide Aufrufe parallel durch und das Studio bekam jede Mail doppelt (31.10.2026).
+// Die Sperre ist ein atomar angelegter Eintrag je Zahlung; schlägt die Verarbeitung fehl, wird sie wieder freigegeben (Stripe sendet erneut).
+const SPERRE_STALE_MS = 3 * 60 * 1000;
 export async function zahlungBezahlt(z, account) {
   if (z.status === "bezahlt") return;
+  const sperre = `sperre/bezahlt/${z.id}`;
+  if (!(await store.setNeu(sperre, { at: now() }))) {
+    const alt = await store.get(sperre);
+    const abgelaufen = alt && !alt.fertig && Date.now() - new Date(alt.at).getTime() > SPERRE_STALE_MS;
+    // Fertig oder ein anderer Aufruf arbeitet gerade → nichts doppelt tun. Nur eine hängengebliebene Sperre (Absturz) wird übernommen.
+    if (!abgelaufen) return;
+    await store.set(sperre, { at: now(), uebernommen: true });
+  }
+  try {
+    const frisch = await getZahlung(z.studioId, z.id);
+    if (frisch?.status === "bezahlt") { await store.set(sperre, { at: now(), fertig: true }); return; }
+    await zahlungBezahltAusfuehren(z, account);
+    await store.set(sperre, { at: now(), fertig: true });
+  } catch (e) {
+    await store.del(sperre).catch(() => {});
+    throw e;
+  }
+}
+
+async function zahlungBezahltAusfuehren(z, account) {
   const s = await getStudio(z.studioId);
   let pi = null;
   try { pi = await stripe("GET", `/payment_intents/${z.paymentIntentId}`, { expand: ["latest_charge.balance_transaction"] }, { account }); } catch { /* Details optional */ }
@@ -377,6 +488,8 @@ export async function zahlungBezahlt(z, account) {
   // Direct Charge: Stripe rechnet die Gebühr bei Konten, für die die Plattform die Gebühren trägt, mit der Plattform ab und weist sie auf dem
   // Studio-Konto evtl. nicht aus → dann Schätzung (nur für die Verrechnung bei Erstattungen, nicht für Geldflüsse)
   if (z.abwicklung === "direkt") z.stripeGebuehrCent = (bt && typeof bt === "object" && bt.fee) || schaetzGebuehr(z.betragCent, z.zahlart);
+  // Voraussichtlich verfügbar ab (nur wenn Stripe es schon liefert; bei Klarna erst später → dann beim Nachtragen)
+  if (charge && z.abwicklung) { const va = await verfuegbarAbHolen(z, s, charge); if (va) z.verfuegbarAb = va; }
   z.status = "bezahlt";
   z.bezahltAm = now();
   delete z.clientSecret;
@@ -511,6 +624,8 @@ export async function taeglicheJobs(heute = new Date()) {
   const out = [];
   // Zahlungen, die bezahlt wurden, deren Webhook aber fehlte, nachtragen
   out.push(...(await offeneZahlungenAbgleichen()));
+  // Bezahlte Zahlungen, bei denen Stripe Transfer-/Gebühren-IDs erst nach dem Webhook geliefert hat (Klarna), nachtragen
+  out.push(...(await stripeDatenNachholen()));
   // Kurz-Anfragen von /studios nach 6 Monaten löschen (Datenschutzerklärung, Abschnitt Anfrageformular)
   const grenze = new Date(Date.now() - 183 * 864e5).toISOString();
   for (const k of await store.list("anfrage/")) if (k.slice(8) < grenze) { await store.del(k); out.push(["anfrage-geloescht", k]); }
