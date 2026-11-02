@@ -155,7 +155,7 @@ export async function ensureConnectedAccount(studio) {
     business_profile: { name: studio.firma, mcc: express ? "7299" : undefined, product_description: "Tätowierungen und Tattoo-Projekte", url: mitUrl ? url : undefined },
     settings: express && delay > 0 ? { payouts: { schedule: { interval: "daily", delay_days: delay } } } : undefined,
     metadata: { studioId: studio.id, modell: studio.modell },
-  }, { idempotencyKey: (mitUrl ? "acct3-" : "acct3o-") + studio.id });
+  }, { idempotencyKey: (mitUrl ? "acct3-" : "acct3o-") + (studio.stripe?.altKonto ? "umst-" : "") + studio.id });
   // Lehnt Stripe die Website trotzdem ab, Konto ohne Website anlegen – die Angabe ist freiwillig.
   let acct;
   try { acct = await anlegen(!!url); }

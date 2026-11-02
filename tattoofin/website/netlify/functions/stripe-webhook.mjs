@@ -17,7 +17,7 @@ import { CFG } from "./_lib/config.mjs";
 import { json, fail, now, brutto, handler } from "./_lib/util.mjs";
 import { stripe, verifyWebhook } from "./_lib/stripe.mjs";
 import { getStudio, saveStudio, studioBy, store, log, zahlungBy, saveZahlung } from "./_lib/store.mjs";
-import { notify, notifyAdmin, zaehleAktion, einrichtungUrl, kontoAbgleichen, provisionVerdient, zahlungBezahlt, paketDetails, aufstellerBezahlt, provisionZahlung, stripeDatenNachtragen } from "./_lib/domain.mjs";
+import { umstellungAbschliessen, notify, notifyAdmin, zaehleAktion, einrichtungUrl, kontoAbgleichen, provisionVerdient, zahlungBezahlt, paketDetails, aufstellerBezahlt, provisionZahlung, stripeDatenNachtragen } from "./_lib/domain.mjs";
 import { mails } from "./_lib/emails.mjs";
 import { loginLink } from "./_lib/auth.mjs";
 
@@ -111,7 +111,7 @@ async function kundenEreignis(event) {
       if (!z || z.abwicklung !== "plattform" || !z.rueckbuchung?.zurueckgeholtCent || z.rueckbuchung.zurueckUeberwiesenAm) break;
       const s = await getStudio(z.studioId);
       const tr = await stripe("POST", "/transfers", {
-        amount: z.rueckbuchung.zurueckgeholtCent, currency: "eur", destination: s.stripe.accountId, transfer_group: z.id,
+        amount: z.rueckbuchung.zurueckgeholtCent, currency: "eur", destination: s.stripe.altKonto?.accountId || s.stripe.accountId, transfer_group: z.id,
         description: `Rückbuchung gewonnen: ${z.beschreibung || "Tattoo-Projekt"}`, metadata: { tattoofinZahlung: z.id, dispute: o.id },
       }, { idempotencyKey: `tr-zurueck-${o.id}` });
       z.rueckbuchung.zurueckUeberwiesenAm = now();
@@ -175,7 +175,8 @@ async function connectEreignis(event) {
   if (event.type === "account.updated") {
     const o = event.data.object;
     const s = await studioBy("acct", o.id || event.account);
-    if (s) await kontoAbgleichen(s, o);
+    // Nach einer Umstellung zählt nur das neue Konto; Meldungen zum alten Auszahlungskonto ändern den Status nicht
+    if (s && (!s.stripe?.altKonto || s.stripe.accountId === (o.id || event.account))) await kontoAbgleichen(s, o);
     return;
   }
   return kundenEreignis(event);
@@ -201,6 +202,8 @@ export default handler(async (req) => {
         const s = await studioFuer(o);
         // QR-Aufsteller einzeln gekauft (29 € netto): nur vermerken + Admin-Mail, Studio-Status bleibt unverändert
         if (o.metadata?.typ === "aufsteller") { await aufstellerBezahlt(s, o); break; }
+        // Altstudio stellt auf den festen Monatspreis um
+        if (s && o.mode === "subscription" && o.metadata?.umstellung === "1") { await umstellungAbschliessen(s, o); break; }
         // Paket Monatlich: Abo gestartet (erste Monatsrechnung ist bezahlt bzw. bei Lastschrift eingeleitet)
         if (s && o.mode === "subscription" && s.status === "entwurf") {
           s.status = "einrichtung";

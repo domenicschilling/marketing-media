@@ -988,7 +988,7 @@ await abschnitt("18 Paket Risikofrei geschlossen (26.10.2026): Neukunden gesperr
       check(auf.every((x) => x === "monatlich") && !/href="\/start[^"]*einmal/.test(t), `${pf}: kein Start-Knopf zeigt auf Einmalzahlung`, [...new Set(auf)].join(","));
     }
     const lp = await (await fetch(BASE + "/")).text();
-    check(/class="btn dark big" href="\/start\.html\?paket=monatlich">Monatlich starten/.test(lp), "Hero-Knopf: „Jetzt starten“ → /start.html", "");
+    check(/class="btn dark big" href="\/start\.html">Jetzt starten/.test(lp), "Hero-Knopf: „Jetzt starten“ → /start.html", "");
     const wann = await (await fetch(BASE + "/")).text();
     check(/49 €<\/span> netto im Monat/.test(wann) && !/999 €/.test(wann) && /Ein Preis/.test(wann), "Preise auf der Startseite: 49 € netto im Monat, keine 999 €, „Ein Preis“", "");
     check(/Achtung! Kreditaufnahme kostet Geld\./.test(wann), "Pflicht-Warnhinweis steht weiter auf der Startseite", "");
@@ -1058,6 +1058,89 @@ await abschnitt("19 Optik nach dem Entfernen von Risikofrei: Hero-Knopf, zwei Pa
     }
   }
   check(probleme.length === 0, "14 Größen × 3 Seiten: kein Querscrollen, Hero-Knopf im ersten Bildschirm und nach Scrollen nicht verdeckt (Cookie-Fenster), genau 1 Preis-Karte, nichts ragt über den Rand", probleme.slice(0, 2).join(" ; ") || "42 Seitenaufrufe geprüft");
+});
+
+// =====================================================================================================
+await abschnitt("19 Altstudio stellt um: Zustimmung, 29 €, neues eigenes Konto, alte Zahlungen bleiben richtig", async () => {
+  process.env.RISIKOFREI_NEU = "1";
+  const a = await anmelden("risikofrei", "umstellung@betrieb.test", "Umstell Studio");
+  const eb = await einrichten(a.id, a.cookie);
+  await admin(`studio/${a.id}/live`, { body: {} });
+  delete process.env.RISIKOFREI_NEU;
+  const altKonto = eb.konto;
+  // Eine bezahlte Provisions-Zahlung und ein noch offener Link aus der Zeit davor
+  const z1 = (await post("/api/portal/zahlung", { betrag: "500", kunde: "Alt Bezahlt", email: "alt@example.com", beschreibung: "Vor der Umstellung" }, a.cookie)).data.zahlung;
+  const r1 = await post("/api/pay", { z: z1.id, inhaltOk: true });
+  await stripeBezahlen(r1.data.url, "card");
+  const z2 = (await post("/api/portal/zahlung", { betrag: "300", kunde: "Alt Offen", beschreibung: "Offener Link" }, a.cookie)).data.zahlung;
+  const r2 = await post("/api/pay", { z: z2.id, inhaltOk: true });
+  check(Boolean(r2.data.url), "Vorher: offener Link hat eine Bezahlsitzung über die Plattform", "");
+
+  // Ohne Angebot geht nichts, und ohne senden:true geht keine Mail raus
+  const ohne = await post("/api/portal/umstellung", { unterzeichner: "Alex Muster", akzeptiert: { vertrag: true, avv: true, unternehmer: true, kmu: true } }, a.cookie);
+  check(ohne.status === 409, "Ohne Angebot keine Umstellung", `HTTP ${ohne.status}`);
+  const mailsVor = mailsAn("umstellung@betrieb.test").length;
+  const ang = await admin(`studio/${a.id}/umstellung`, { body: { monatNetto: 2900 } });
+  check(ang.ok && ang.gesendet === false && /29,00 €|29 €/.test(ang.html) && /Achtung! Kreditaufnahme kostet Geld/.test(ang.html) && mailsAn("umstellung@betrieb.test").length === mailsVor, "Angebot: nur Vorschau, keine Mail ohne senden:true, Preis + Pflichtsatz im Text", ang.betreff);
+  const dash = (await json("/api/portal", {}, a.cookie)).data;
+  check(dash.studio.umstellungAngebot?.monatNetto === 2900, "Dashboard zeigt das Angebot", "");
+  const ohneHaken = await post("/api/portal/umstellung", { unterzeichner: "Alex Muster", akzeptiert: { vertrag: true, avv: true, unternehmer: true } }, a.cookie);
+  check(ohneHaken.status === 400, "Ohne KMU-Häkchen keine Umstellung", `HTTP ${ohneHaken.status}`);
+
+  // Nur Zustimmung, noch nicht bezahlt: alles bleibt wie es ist (kein Wechsel durch Schweigen oder Abbruch)
+  const zu = await post("/api/portal/umstellung", { unterzeichner: "Alex Muster", akzeptiert: { vertrag: true, avv: true, unternehmer: true, kmu: true } }, a.cookie);
+  const cs = (await sessions()).find((x) => x.url === zu.data.url || zu.data.url?.includes(x.id));
+  const vorBezahlt = await detail(a.id);
+  check(zu.status === 200 && vorBezahlt.studio.modell === "provision" && Number(cs?.line_items?.[0]?.price_data?.unit_amount) === 2900 && cs?.excluded_payment_method_types?.includes("klarna") && cs?.mode === "subscription", "Checkout: Abo 29 € netto, Klarna ausgeschlossen, Paket noch unverändert", `${vorBezahlt.studio.modell}`);
+
+  await stripeBezahlen(zu.data.url, "card");
+  await wait(300);
+  const nach = await detail(a.id);
+  const sn = nach.studio;
+  check(sn.modell === "kauf" && sn.paket === "monatlich" && sn.monatNetto === 2900 && sn.status === "einrichtung" && sn.stripe.accountId === null && sn.stripe.altKonto?.accountId === altKonto && sn.stripe.subscriptionId, "Nach Zahlung: Monatlich 29 €, altes Konto vermerkt, neues Konto fehlt noch", JSON.stringify(sn.stripe.altKonto));
+  check(sn.vertrag.version === "2026-12" && sn.vertrag.kmu === true && sn.vertragAlt?.length === 1, "Neuer Vertrag gespeichert, alter bleibt nachvollziehbar", sn.vertrag.version);
+  check(mailsAn("umstellung@betrieb.test").some((m) => /Wechsel ist bestätigt/.test(m.subject)), "Bestätigung per Mail", "");
+
+  // Altes Konto meldet sich: darf den Status nicht verfälschen
+  const { sendeWebhook } = await import("../netlify/functions/_lib/stripe-sim.mjs");
+  await sendeWebhook(`${BASE}/api/stripe-webhook`, "whsec_mock", "account.updated", { id: altKonto, charges_enabled: true, payouts_enabled: true, details_submitted: true }, altKonto).catch(() => null);
+  await wait(200);
+  check(!(await detail(a.id)).studio.stripe.chargesEnabled, "Meldung vom alten Konto schaltet das Studio nicht frei", "");
+
+  // Neues Konto: Standard, Klarna auch nach dem Stichtag, offener Link ohne Provision direkt aufs neue Konto
+  const neu = await einrichten(a.id, a.cookie);
+  const st = await mockState();
+  const neuKonto = neu.konto;
+  check(neuKonto && neuKonto !== altKonto && st.accounts[neuKonto]?.type === "standard", "Neues Konto ist ein eigenes Standard-Konto", neuKonto);
+  await admin(`studio/${a.id}/live`, { body: {} });
+  process.env.TF_JETZT = "2026-11-21T12:00:00+01:00";
+  const offen = await post("/api/pay", { z: z2.id, inhaltOk: true });
+  const csNeu = await lastSession();
+  check(offen.status === 200 && csNeu.account === neuKonto && !csNeu.payment_intent_data?.application_fee_amount && !csNeu.payment_intent_data?.transfer_data && [].concat(csNeu.payment_method_types).join() === "card,klarna", "Offener Link läuft nach dem Stichtag direkt aufs neue Konto, keine Provision, Klarna bleibt", [].concat(csNeu.payment_method_types).join());
+  delete process.env.TF_JETZT;
+  process.env.TF_JETZT = "2026-11-02T12:00:00+01:00";
+  const zAlt = (await detail(a.id)).zahlungen.find((x) => x.id === z1.id);
+  check(zAlt.abwicklung === "plattform" && zAlt.gebuehrBruttoCent === 5000, "Alte Zahlung bleibt als Provisions-Zahlung erhalten", `${zAlt.abwicklung} ${zAlt.gebuehrBruttoCent}`);
+  const erst = await post(`/api/portal/erstattung/${z1.id}`, { betrag: "100" }, a.cookie);
+  check(erst.status === 200, "Erstattung einer alten Zahlung funktioniert nach der Umstellung", `HTTP ${erst.status}`);
+  const monat = (zAlt.bezahltAm || "").slice(0, 7);
+  const abr = await admin("abrechnung", { body: { monat, dryRun: true } });
+  const zeile = (abr.ergebnis || abr || []).find?.((x) => x.studio === "Umstell Studio");
+  check(Boolean(zeile), "Monatsabrechnung erfasst die alten Provisions-Zahlungen weiter", JSON.stringify(zeile || {}).slice(0, 100));
+  delete process.env.TF_JETZT;
+
+  // Kündigung durch den Anbieter: erst Vorschau, dann nur mit senden:true, nicht vom Studio rücknehmbar
+  process.env.RISIKOFREI_NEU = "1";
+  const k = await anmelden("risikofrei", "kuendig@betrieb.test", "Kuendig Studio");
+  delete process.env.RISIKOFREI_NEU;
+  const vs = await admin(`studio/${k.id}/kuendigen`, { body: {} });
+  check(vs.gesendet === false && (await detail(k.id)).studio.status !== "gekuendigt" && !mailsAn("kuendig@betrieb.test").some((m) => /Kündigung deines/.test(m.subject)), "Kündigung: ohne senden:true nur Vorschau", vs.zum);
+  const ks = await admin(`studio/${k.id}/kuendigen`, { body: { senden: true } });
+  const kd = (await detail(k.id)).studio;
+  const zurueck = await json("/api/portal/kuendigung", { method: "DELETE" }, k.cookie);
+  check(ks.gesendet === true && kd.status === "gekuendigt" && kd.kuendigung.durchAnbieter === true && zurueck.status === 409 && mailsAn("kuendig@betrieb.test").some((m) => /Kündigung deines/.test(m.subject)), "Kündigung gesendet, Studio kann sie nicht selbst zurücknehmen", `${kd.status} ${zurueck.status}`);
+  const { anbieterKuendigungZum } = await import("../netlify/functions/_lib/domain.mjs");
+  check(anbieterKuendigungZum(new Date("2026-11-30T10:00:00Z")).startsWith("2026-12-31") && anbieterKuendigungZum(new Date("2026-11-02T10:00:00Z")).startsWith("2026-12-31") && anbieterKuendigungZum(new Date("2026-12-01T10:00:00Z")).startsWith("2027-01-31"), "Frist: Kündigung bis 30.11. wirkt zum 31.12., ab 01.12. zum 31.01.", "");
 });
 
 await browser.close();

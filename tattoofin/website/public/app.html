@@ -25,6 +25,13 @@
   <!-- START -->
   <section data-view="start" class="hidden">
     <h1 class="hallo" id="hallo"></h1>
+    <div class="card-a hidden" id="umst-karte"><h2>Neu ab 20.11.: dein eigenes Stripe-Konto</h2>
+      <p class="klein">Am 20.11. ändert sich das Gesetz. Klarna bleibt nur möglich, wenn das Geld direkt auf dein eigenes Stripe-Konto läuft. Dann zahlst du keine 10 % mehr, sondern <b id="umst-preis"></b> netto im Monat, dazu die Zahlungsgebühren direkt an Stripe. Monatlich kündbar. Der QR-Aufsteller ist bei diesem Preis nicht enthalten.</p>
+      <p class="klein">Nach der Bestätigung richtest du das neue Konto ein (ca. 10 Minuten). Stripe prüft es meist in 1 bis 3 Werktagen. Bis zur Freigabe kannst du keine neuen Zahlungslinks nutzen.</p>
+      <label class="haken"><input type="checkbox" id="umst-vertrag"> <span>Ich akzeptiere den <a href="/vertrag.html" target="_blank">Vertrag</a> und den <a href="/avv.html" target="_blank">AVV</a> und handle als Unternehmer/in für mein Studio.</span></label>
+      <label class="haken"><input type="checkbox" id="umst-kmu"> <span>Mein Studio ist ein kleines oder mittleres Unternehmen (weniger als 250 Beschäftigte, höchstens 50 Mio. € Umsatz oder 43 Mio. € Bilanzsumme).</span></label>
+      <label class="lbl" for="umst-name">Dein Vor- und Nachname</label><input type="text" id="umst-name" autocomplete="name" autocapitalize="words" enterkeyhint="done">
+      <button class="btn gold" id="umst-los" type="button">Zahlungspflichtig umstellen</button></div>
     <a class="big-cta" href="#link"><span class="plus">+</span><span>Zahlungslink erstellen<small>Betrag eintragen, per WhatsApp schicken</small></span></a>
     <a class="big-cta gs-cta" href="#gutschein"><span class="plus">🎁</span><span>Gutschein verkaufen<small>Wertgutschein mit Code, kommt per E-Mail als PDF</small></span></a>
     <a class="werbung-cta" id="werbung-cta" href="#werbung" data-klarna-dauer>

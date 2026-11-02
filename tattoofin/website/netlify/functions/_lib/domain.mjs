@@ -299,7 +299,8 @@ export async function checkoutFuer(studio, z, { nurKarte = false } = {}) {
 // payment_intent_payment_attempt_expired.
 export async function klarnaVersuch(studio, z) {
   if (!z.checkoutSessionId || !studio?.stripe?.accountId) return null;
-  const opts = plattformKassiert(studio) ? {} : { account: studio.stripe.accountId };
+  const kontoId = kontoFuer(z, studio);
+  const opts = kontoId ? { account: kontoId } : {};
   try {
     const cs = await stripe("GET", `/checkout/sessions/${z.checkoutSessionId}`, null, opts);
     const piId = typeof cs.payment_intent === "object" ? cs.payment_intent?.id : cs.payment_intent;
@@ -370,8 +371,9 @@ async function verfuegbarAbHolen(z, s, charge) {
       if (!trId) return "";
       const tr = await stripe("GET", `/transfers/${trId}`);
       const py = objId(tr.destination_payment);
-      if (!py || !s?.stripe?.accountId) return "";
-      account = s.stripe.accountId;
+      const auszahlungskonto = s?.stripe?.altKonto?.accountId || s?.stripe?.accountId;
+      if (!py || !auszahlungskonto) return "";
+      account = auszahlungskonto;
       bt = (await stripe("GET", `/charges/${py}`, { expand: ["balance_transaction"] }, { account })).balance_transaction;
     } else {
       bt = charge?.balance_transaction;
@@ -508,7 +510,7 @@ async function zahlungBezahltAusfuehren(z, account) {
 // das Studio bekäme keine Mail und der Kunde keine Bestätigung. Gibt true zurück, wenn die Zahlung jetzt als bezahlt verbucht wurde.
 export async function zahlungAbgleichen(s, z) {
   if (!s?.stripe?.accountId || !["offen", "in_pruefung", "abgebrochen"].includes(z.status)) return false;
-  const account = plattformKassiert(s) ? undefined : s.stripe.accountId;
+  const account = kontoFuer(z, s);
   const opts = account ? { account } : {};
   try {
     if (z.weg === "bezahlfeld" && z.paymentIntentId) {
@@ -558,11 +560,14 @@ export function provisionVerdient(z) {
 export async function monatsabrechnung(monat, { dryRun = false } = {}) {
   const ergebnis = [];
   for (const s of await allStudios()) {
-    if (s.modell !== "provision" || !s.stripe?.accountId) continue;
+    // Umgestellte Studios: Provisions-Zahlungen aus der Zeit vor der Umstellung werden noch abgerechnet
+    const umgestellt = Boolean(s.stripe?.altKonto);
+    if (!umgestellt && (s.modell !== "provision" || !s.stripe?.accountId)) continue;
     const vorhanden = await getAbrechnung(s.id, monat);
     if (vorhanden && !dryRun) { ergebnis.push({ studio: s.firma, monat, status: "schon abgerechnet" }); continue; }
     // Erstattungen und verlorene Rückbuchungen mindern die Provision
-    const zahlungen = (await zahlungenVon(s.id)).filter((z) => ["bezahlt", "erstattet", "rueckgebucht"].includes(z.status) && (z.bezahltAm || "").slice(0, 7) === monat);
+    const zahlungen = (await zahlungenVon(s.id)).filter((z) => ["bezahlt", "erstattet", "rueckgebucht"].includes(z.status) && (z.bezahltAm || "").slice(0, 7) === monat && (!umgestellt || provisionZahlung(z)));
+    if (umgestellt && !zahlungen.length) continue;
     const positionen = zahlungen.map((z) => {
       const betragCent = z.status === "rueckgebucht" ? 0 : z.betragCent - (z.erstattetCent || 0);
       const provisionBruttoCent = provisionVerdient(z);
@@ -682,3 +687,70 @@ export async function kontoAbgleichen(s, acct) {
 
 
 export { loginLink };
+
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Altstudios (Paket Risikofrei) nach der Rechtsprüfung vom 01.11.2026 (U1): Das Studio stimmt aktiv zu und zahlt ab dann einen festen
+// Monatspreis. Das Geld läuft danach direkt auf ein neues, eigenes Stripe-Konto (Standard). Ohne Zustimmung bleibt der Altvertrag bis zur Kündigung.
+export const hatUmstellungsangebot = (s) => Boolean(s?.umstellung?.monatNetto) && s.modell === "provision" && !["beendet", "erstattet", "abgebrochen", "entwurf"].includes(s.status);
+
+// Letzter Tag des Monats, zu dem der Anbieter mit einem Monat Frist kündigen kann (Altvertrag: ein Monat zum Monatsende)
+export function anbieterKuendigungZum(jetzt = new Date()) {
+  const d = new Date(Date.UTC(jetzt.getUTCFullYear(), jetzt.getUTCMonth() + 1, jetzt.getUTCDate()));
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0, 23, 59, 59)).toISOString();
+}
+
+export async function umstellungCheckout(s) {
+  const kunde = await ensureCustomer(s);
+  s.stripe.customerId = kunde.id;
+  await saveStudio(s);
+  await stripe("POST", `/customers/${s.stripe.customerId}`, { invoice_settings: { footer: `${CFG.firma} · ${CFG.adresse} · USt-IdNr. ${CFG.ustid}` } });
+  const session = await stripe("POST", "/checkout/sessions", {
+    // Klarna ist für B2B-Käufe laut Klarna-Regeln nicht erlaubt (Studios kaufen als Unternehmer).
+    excluded_payment_method_types: ["klarna"],
+    mode: "subscription", customer: s.stripe.customerId, locale: "de", client_reference_id: s.id,
+    branding_settings: TATTOOFIN_BRANDING,
+    line_items: [{
+      quantity: 1, tax_rates: [await taxRateId()],
+      price_data: {
+        currency: "eur", unit_amount: s.umstellung.monatNetto, recurring: { interval: "month" },
+        product_data: { name: "Tattoofin (Bestandskunden-Preis)", description: "Software für Zahlungslinks, Zahlseite, Anzahlungen und Gutscheine. Keine Provision, monatlich kündbar." },
+      },
+    }],
+    subscription_data: { description: "Tattoofin (Bestandskunden-Preis)", metadata: { studioId: s.id, typ: "abo", paket: "monatlich", umstellung: "1" } },
+    customer_update: { address: "auto", name: "auto" }, tax_id_collection: { enabled: true },
+    metadata: { studioId: s.id, typ: "abo", paket: "monatlich", umstellung: "1" },
+    success_url: `${CFG.siteUrl}/app.html?umgestellt=1#einrichtung`,
+    cancel_url: `${CFG.siteUrl}/app.html#start`,
+  }, { idempotencyKey: `cs-umst-${s.id}-${s.umstellung.zustimmung?.am || ""}` });
+  return session.url;
+}
+
+// Nach bezahltem erstem Monat: Studio wechselt das Paket. Das alte Auszahlungskonto bleibt für Auszahlungen, Rückbuchungen und Erstattungen alter Zahlungen vermerkt.
+export async function umstellungAbschliessen(s, session) {
+  if (s.modell !== "provision") return false;
+  const alt = s.stripe || {};
+  s.stripe = {
+    ...alt, accountId: null, kontoTyp: null, chargesEnabled: false, payoutsEnabled: false, detailsSubmitted: false,
+    altKonto: { accountId: alt.accountId || null, kontoTyp: alt.kontoTyp || "express", bis: now() },
+    subscriptionId: typeof session.subscription === "string" ? session.subscription : session.subscription?.id,
+  };
+  s.vertragAlt = [...(s.vertragAlt || []), s.vertrag];
+  s.vertrag = s.umstellung.zustimmung;
+  s.modell = "kauf"; s.paket = "monatlich"; s.zahlart = "abo"; s.monatNetto = s.umstellung.monatNetto; s.provisionProzent = 0;
+  s.status = "einrichtung"; s.goLiveAt = null; s.connectErinnert = 0; s.bezahltAm = now();
+  s.umstellung = { ...s.umstellung, erledigtAm: now() };
+  await saveStudio(s);
+  // Offene Links laufen ab jetzt über das neue Konto ohne Provision: alte Bezahlsitzungen verwerfen
+  for (const z of await zahlungenVon(s.id)) {
+    if (z.abwicklung !== "plattform" || !["offen", "abgebrochen"].includes(z.status)) continue;
+    if (z.checkoutSessionId) await stripe("POST", `/checkout/sessions/${z.checkoutSessionId}/expire`, {}).catch(() => null);
+    for (const k of ["checkoutSessionId", "paymentIntentId", "clientSecret", "betragFuerPi", "abwicklung"]) delete z[k];
+    z.gebuehrNettoCent = 0; z.gebuehrBruttoCent = 0;
+    await saveZahlung(z);
+  }
+  await notify(s, mails.umstellungBestaetigt(s, { loginUrl: loginLink(s.id) }));
+  await notifyAdmin("Altstudio umgestellt: festes Monatsabo, neues Stripe-Konto wird eingerichtet", s, { Preis: s.monatNetto / 100 + " € netto", AltesKonto: s.stripe.altKonto.accountId, Abo: s.stripe.subscriptionId });
+  await log("umstellung.fertig", { studioId: s.id, altKonto: s.stripe.altKonto.accountId });
+  return true;
+}

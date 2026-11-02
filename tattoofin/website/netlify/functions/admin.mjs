@@ -33,7 +33,7 @@ import { json, fail, body, clean, now, handler } from "./_lib/util.mjs";
 import { allStudios, getStudio, saveStudio, zahlungenVon, abrechnungenVon, store, log } from "./_lib/store.mjs";
 import { isAdmin, loginLink, sign, adminName } from "./_lib/auth.mjs";
 import { stripe, TATTOOFIN_BRANDING } from "./_lib/stripe.mjs";
-import { notify, monatsabrechnung, taeglicheJobs, kontoAbgleichen, provisionVerdient, STATUS, aufstellerUrl, connectUrl, connectUrlGehostet } from "./_lib/domain.mjs";
+import { anbieterKuendigungZum, notify, monatsabrechnung, taeglicheJobs, kontoAbgleichen, provisionVerdient, STATUS, aufstellerUrl, connectUrl, connectUrlGehostet } from "./_lib/domain.mjs";
 import { mails } from "./_lib/emails.mjs";
 import { sendMail, warteschlangeStatus, warteschlangeAbarbeiten } from "./_lib/mail.mjs";
 import { randomBytes } from "node:crypto";
@@ -150,6 +150,35 @@ export default handler(async (req) => {
       finally { if (s.branding) await saveStudio(s); } // Bilder/Farben bleiben gespeichert, auch wenn Stripe einen Fehler meldet
       await log("admin-branding", { admin: adminName(req), studioId: s.id, stripe: Boolean(b.stripe), felder: Object.keys(b).filter((k) => b[k] !== undefined && b[k] !== "") });
       return json({ ...r, oeffentlich: brandingOeffentlich(s) });
+    }
+    // Altstudio: Angebot fester Monatspreis (Sonderpreis) hinterlegen. Mail nur mit senden:true, sonst nur Vorschau.
+    if (aktion === "umstellung" && req.method === "POST") {
+      if (s.modell !== "provision") return fail("Nur für Studios im Paket Risikofrei.", 409);
+      const b = await body(req);
+      const monatNetto = Math.round(Number(b.monatNetto) || 2900);
+      if (monatNetto < 100 || monatNetto > CFG.monatNetto) return fail("Preis prüfen (Cent, höchstens der normale Monatspreis).");
+      const antwortBis = clean(b.antwortBis, 10) || "2026-11-16";
+      s.umstellung = { ...(s.umstellung || {}), monatNetto, antwortBis, angebotAm: now() };
+      await saveStudio(s);
+      const m = mails.umstellungAngebot(s, { monatNetto, antwortBis, loginUrl: loginLink(s.id) });
+      if (b.senden === true) { await notify(s, m); s.umstellung.gesendetAm = now(); await saveStudio(s); }
+      await log("admin-umstellung", { admin: adminName(req), studioId: s.id, monatNetto, gesendet: b.senden === true });
+      return json({ ok: true, gesendet: b.senden === true, betreff: m.subject, html: m.html, text: m.text });
+    }
+    // Kündigung durch den Anbieter (Altvertrag: ein Monat zum Monatsende). Ohne senden:true passiert nichts, nur Vorschau.
+    if (aktion === "kuendigen" && req.method === "POST") {
+      if (["gekuendigt", "beendet", "erstattet"].includes(s.status)) return fail("Der Vertrag ist bereits gekündigt.", 409);
+      if (s.modell !== "provision") return fail("Nur für Studios im Paket Risikofrei.", 409);
+      const b = await body(req);
+      const zum = anbieterKuendigungZum(new Date());
+      const m = mails.anbieterKuendigung(s, { zum });
+      if (b.senden !== true) return json({ ok: true, gesendet: false, zum, betreff: m.subject, html: m.html, text: m.text });
+      s.kuendigung = { eingegangenAm: now(), zum, grund: clean(b.grund, 500) || "Neues Verbraucherkreditrecht", durchAnbieter: true, vorherStatus: s.status };
+      s.status = "gekuendigt";
+      await saveStudio(s);
+      await notify(s, m);
+      await log("admin-kuendigung", { admin: adminName(req), studioId: s.id, zum });
+      return json({ ok: true, gesendet: true, zum });
     }
     if (aktion === "konto" && req.method === "POST") {
       if (!s.stripe?.accountId) return fail("Kein Stripe-Konto verbunden");

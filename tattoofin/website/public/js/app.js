@@ -90,6 +90,9 @@
     var s = D.studio;
     var vorname = (s.inhaber || "").split(" ")[0];
     $("hallo").textContent = "Hey" + (vorname ? " " + vorname : "") + " 👋";
+    var ua = s.umstellungAngebot;
+    $("umst-karte").classList.toggle("hidden", !ua);
+    if (ua) $("umst-preis").textContent = TF.euro(ua.monatNetto);
     checkliste();
     var gesehen = false; try { gesehen = localStorage.getItem("tf-werbevideo-gesehen") === "1"; } catch (x) {}
     $("wv-neu").classList.toggle("hidden", gesehen);
@@ -585,6 +588,14 @@
     $("k-zh-an").checked = Boolean(D.studio.zahlartenHinweis);
   }
   $("k-aw-save").onclick = async function () { try { D.studio = await TF.api("/api/portal/kontakt", { method: "PATCH", body: { ausweichAnzahlung: { an: $("k-aw-an").checked, prozent: $("k-aw-pr").value } } }); einstellungen(); toast("Gespeichert."); } catch (err) { toast(err.message, true); } };
+  $("umst-los").onclick = async function () {
+    if (!$("umst-vertrag").checked || !$("umst-kmu").checked) return toast("Bitte bestätige beide Häkchen.", true);
+    var btn = this; btn.disabled = true;
+    try {
+      var r = await TF.api("/api/portal/umstellung", { body: { unterzeichner: $("umst-name").value, akzeptiert: { vertrag: true, avv: true, unternehmer: true, kmu: true } } });
+      location.href = r.url;
+    } catch (err) { btn.disabled = false; toast(err.message, true); }
+  };
   $("k-zh-save").onclick = async function () { try { D.studio = await TF.api("/api/portal/kontakt", { method: "PATCH", body: { zahlartenHinweis: $("k-zh-an").checked } }); einstellungen(); toast("Gespeichert."); } catch (err) { toast(err.message, true); } };
   $("k-anz-save").onclick = async function () { try { D.studio = await TF.api("/api/portal/kontakt", { method: "PATCH", body: { anzahlungsbedingungen: $("k-anz").value } }); einstellungen(); toast("Anzahlungsbedingungen gespeichert."); } catch (err) { toast(err.message, true); } };
   $("k-save").onclick = async function () { try { D.studio = await TF.api("/api/portal/kontakt", { method: "PATCH", body: { email: $("k-email").value } }); toast("Gespeichert."); } catch (err) { toast(err.message, true); } };

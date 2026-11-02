@@ -33,7 +33,7 @@ import { json, fail, body, clean, id, now, handler, isEmail, parseBetrag, client
 import { saveStudio, zahlungenVon, getZahlung, saveZahlung, abrechnungenVon, getLeistung, store, log } from "./_lib/store.mjs";
 import { currentStudio, clearCookie } from "./_lib/auth.mjs";
 import { stripe, dashboardLink, accountSession, ensureConnectedAccount } from "./_lib/stripe.mjs";
-import { notify, notifyAdmin, kuendigungsDatum, connectUrl, connectUrlGehostet, darfKassieren, anzahlungsbedingungen, provisionVerdient, kontoAbgleichen, eingebettet, klarnaFuer, klarnaDauerhaft, provisionZahlung, STATUS, aboKuendigen, aufstellerUrl, aufstellerCheckout, aufstellerBezahlt } from "./_lib/domain.mjs";
+import { hatUmstellungsangebot, umstellungCheckout, notify, notifyAdmin, kuendigungsDatum, connectUrl, connectUrlGehostet, darfKassieren, anzahlungsbedingungen, provisionVerdient, kontoAbgleichen, eingebettet, klarnaFuer, klarnaDauerhaft, provisionZahlung, STATUS, aboKuendigen, aufstellerUrl, aufstellerCheckout, aufstellerBezahlt } from "./_lib/domain.mjs";
 import { randomBytes } from "node:crypto";
 import { gutscheinStatus, gutscheinPdf, gutscheinSenden, gutscheinUrl, normCode } from "./_lib/gutschein.mjs";
 
@@ -89,11 +89,13 @@ const oeffentlich = (s) => ({
   anzahlungsbedingungen: anzahlungsbedingungen(s),
   ausweichAnzahlung: { an: Boolean(s.ausweichAnzahlung?.an), prozent: s.ausweichAnzahlung?.prozent || 30 },
   zahlartenHinweis: Boolean(s.zahlartenHinweis),
+  umstellungAngebot: hatUmstellungsangebot(s) ? { monatNetto: s.umstellung.monatNetto } : null,
+  altKonto: s.stripe?.altKonto ? { bis: s.stripe.altKonto.bis } : null,
   kannKassieren: Boolean(darfKassieren(s)), zahlseite: zahlseite(s), connectUrl: connectUrl(s),
   aufsteller: { inklusive: CFG.aufstellerPakete.includes(paketVon(s).id), holz: s.aufsteller?.holz || "hell", variante: s.aufsteller?.variante || "name", hatLogo: Boolean(s.aufsteller?.hatLogo), angefordertAm: s.aufsteller?.angefordertAm || null, preisNetto: CFG.aufstellerPreisNetto, bezahltAm: s.aufsteller?.kauf?.bezahltAm || null },
 });
 
-export default handler(async (req) => {
+export default handler(async (req, context) => {
   const s = await currentStudio(req);
   if (!s) return fail("Bitte einloggen", 401);
   const url = new URL(req.url);
@@ -186,6 +188,24 @@ export default handler(async (req) => {
     }
   }
 
+  // Altstudio stimmt dem neuen Vertrag und dem festen Monatspreis zu (nur mit Angebot, nur aktiv: § 7 und § 12 Altvertrag)
+  if (bereich === "umstellung" && req.method === "POST") {
+    if (s._ansicht) return fail("In der Admin-Ansicht nicht möglich.", 403);
+    if (!hatUmstellungsangebot(s)) return fail("Für dein Studio liegt kein Angebot vor.", 409);
+    const b = await body(req);
+    const a = b.akzeptiert || {};
+    const name = clean(b.unterzeichner, 120);
+    if (!(a.vertrag && a.avv && a.unternehmer && a.kmu)) return fail("Bitte bestätige Vertrag, AVV, Unternehmereigenschaft und Unternehmensgröße.");
+    if (name.length < 3) return fail("Bitte trage deinen Vor- und Nachnamen ein.");
+    s.umstellung.zustimmung = {
+      version: CFG.vertragVersion, akzeptiertAm: now(), am: now(), name, ip: clientIp(req, context), ua: (req.headers.get("user-agent") || "").slice(0, 200),
+      vertrag: true, avv: true, unternehmer: true, kmu: true, modell: "kauf", paket: "monatlich", preisNetto: null, monatNetto: s.umstellung.monatNetto, provisionProzent: null, aufsteller: false,
+    };
+    await saveStudio(s);
+    await log("umstellung.zustimmung", { studioId: s.id, monatNetto: s.umstellung.monatNetto });
+    return json({ url: await umstellungCheckout(s) });
+  }
+
   if (bereich === "kuendigung") {
     if (req.method === "POST") {
       if (["gekuendigt", "beendet", "erstattet"].includes(s.status)) return fail("Der Vertrag ist bereits gekündigt.");
@@ -211,6 +231,7 @@ export default handler(async (req) => {
     }
     if (req.method === "DELETE") {
       if (s.status !== "gekuendigt" || s.kuendigung?.garantie) return fail("Keine offene Kündigung, die zurückgenommen werden kann.");
+      if (s.kuendigung?.durchAnbieter) return fail("Diese Kündigung kam von Tattoofin. Bitte melde dich bei uns.", 409);
       if (s.paket === "monatlich" && s.stripe?.subscriptionId) {
         if (s.stripe.aboBeendetAm || new Date(s.kuendigung.zum) <= new Date()) return fail("Dein Abo ist schon beendet. Bitte melde dich bei uns, dann starten wir es neu.", 409);
         try { await aboKuendigen(s, false); }

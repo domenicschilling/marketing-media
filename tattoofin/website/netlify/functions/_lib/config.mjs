@@ -149,7 +149,8 @@ export function paketVon(s) {
   if (s?.zahlart === "geschenk") return { id: "geschenk", name: s.sonderkondition || "Geschenk (eigenes Konto)", modell: "kauf", einrichtungNetto: 0, einmalNetto: 0, monatNetto: 0, provisionProzent: 0 };
   return PAKETE[s?.paket] || (s?.modell === "kauf" ? PAKETE.einmal : PAKETE.risikofrei);
 }
-export const aufstellerInklusive = (s) => CFG.aufstellerPakete.includes(paketVon(s).id);
+// Beim Bestandskunden-Preis (umgestelltes Altstudio) ist der Aufsteller nicht enthalten
+export const aufstellerInklusive = (s) => CFG.aufstellerPakete.includes(paketVon(s).id) && !s?.stripe?.altKonto;
 
 // Provisionssatz eines Studios in Prozent (0 bei Kauf/Profi)
 export function provisionSatz(s) {

@@ -37,7 +37,7 @@ const modellText = (s) => {
   const p = paketVon(s);
   if (p.id === "geschenk" && s.sonderkondition) return `${s.sonderkondition}: keine Einrichtungsgebühr, keine Grundgebühr, keine Provision. Du zahlst nur die normalen Zahlungsgebühren von Stripe (bzw. Klarna) direkt an Stripe, Tattoofin verdient nichts daran.`;
   if (p.id === "geschenk") return "Geschenk: keine Einrichtungsgebühr, keine Grundgebühr, keine Provision. Du zahlst nur die normalen Gebühren von Stripe (bzw. Klarna) direkt an Stripe, Tattoofin verdient nichts daran.";
-  if (p.id === "monatlich") return `Paket Monatlich: ${euro(CFG.monatNetto)} netto im Monat (${euro(brutto(CFG.monatNetto))} inkl. USt.), danach nur die Zahlungsgebühren, die du direkt an Stripe zahlst. Keine Tattoofin-Provision, monatlich kündbar. Inklusive QR-Aufsteller aus Holz (Wert 29 €) und digitalem QR-Code.`;
+  if (p.id === "monatlich") return `Paket Monatlich: ${euro(s.monatNetto || CFG.monatNetto)} netto im Monat (${euro(brutto(s.monatNetto || CFG.monatNetto))} inkl. USt.), danach nur die Zahlungsgebühren, die du direkt an Stripe zahlst. Keine Tattoofin-Provision, monatlich kündbar. Inklusive QR-Aufsteller aus Holz (Wert 29 €) und digitalem QR-Code.`;
   if (p.id === "einmal" && s.paket === "einmal") return `Paket Einmalzahlung: ${euro(s.preisNetto)} netto einmalig (${euro(brutto(s.preisNetto))} inkl. USt.), danach keine Tattoofin-Gebühr mehr, nur die Zahlungsgebühren, die du direkt an Stripe zahlst. Inklusive QR-Aufsteller aus Holz (Wert 29 €) und digitalem QR-Code.`;
   if (s.modell === "kauf") return `Kauf: Einrichtung ${euro(s.preisNetto)} netto einmalig (${euro(brutto(s.preisNetto))} brutto), keine monatliche Grundgebühr, keine Provision`;
   return `Paket Risikofrei: ${CFG.provisionProzent} % vom Zahlbetrag jeder Zahlung über Tattoofin, alles inklusive (Zahlungsgebühren und USt.), keine Einrichtungs- und keine Grundgebühr, monatlich kündbar. Digitaler QR-Code inklusive.`;
@@ -291,6 +291,36 @@ ${g.nachricht ? `<div style="font-style:italic;color:#5b6370;margin-top:10px">�
     title: "Die Zahlung hat nicht geklappt",
     body: hallo(s) + p(`leider konnten wir <b>${euro(betragCent)}</b> nicht einziehen. Bitte bezahl die Rechnung über den Button. Bei Fragen melde dich gern.`),
     cta: "Jetzt bezahlen", ctaUrl: rechnungUrl || `${CFG.siteUrl}/portal.html`,
+  }),
+
+  // Altstudios: Angebot fester Monatspreis. Geht nur nach Freigabe raus (Admin: senden:true).
+  umstellungAngebot: (s, { monatNetto, antwortBis, loginUrl }) => mk("Tattoofin ab 20.11.: Das ändert sich für dein Studio", {
+    preheader: `Klarna geht bei dir nur weiter, wenn du umstellst. Dein Preis: ${euro(monatNetto)} netto im Monat.`,
+    title: "Am 20.11. ändert sich das Gesetz",
+    body: hallo(s) + p("am 20.11.2026 tritt ein neues Gesetz in Kraft: Ratenzahlung und späteres Bezahlen über Klarna gelten dann als Kredit. Bei deinem jetzigen Paket läuft das Geld deiner Kunden über unser Konto bei Stripe, und wir bekommen 10 % von jeder Zahlung. Deshalb bieten wir Klarna in diesem Modell ab dem 20.11. nicht mehr an.") +
+      p("<b>Das bedeutet für dich:</b> Ändert sich nichts, können deine Kunden ab dem 20.11. nur noch per Karte, Apple Pay und Google Pay zahlen.") +
+      p(`<b>Unser Angebot:</b> Du wechselst auf ein eigenes Stripe-Konto. Dann bleibt Klarna möglich, soweit Klarna es freigibt, und das Geld geht direkt an dich. Du zahlst keine 10 % mehr, sondern <b>${euro(monatNetto)} netto im Monat</b>. Der normale Preis für neue Studios ist ${euro(CFG.monatNetto)}. Dazu kommen die Zahlungsgebühren, die du direkt an Stripe zahlst (je nach Zahlart ca. 1,5–3 %). Du kannst monatlich kündigen.`) +
+      p("<b>So geht's:</b> Studio-Bereich öffnen, Angebot bestätigen, ersten Monat zahlen und dein neues Stripe-Konto einrichten (ca. 10 Minuten). Stripe prüft es dann, meist in 1 bis 3 Werktagen. Bis zur Freigabe kannst du keine neuen Zahlungslinks nutzen. Mach es deshalb an einem ruhigen Tag.") +
+      box(`Bitte entscheide bis zum ${antwortBis.split("-").reverse().join(".")}, damit dein neues Konto zum 20.11. fertig ist. Machst du nichts, läuft dein Vertrag erst einmal ohne Klarna weiter. Wir kündigen ihn dann mit der vertraglichen Frist, weil wir das alte Modell nicht fortführen.`) +
+      p("Wirbst du bis dahin mit Raten, muss direkt daneben stehen: <b>Achtung! Kreditaufnahme kostet Geld.</b> Das gilt ab dem 20.11. auch für Instagram, Flyer und Aufsteller.") +
+      p("Fragen? Antworte einfach auf diese Mail."),
+    cta: "Angebot ansehen", ctaUrl: loginUrl,
+  }),
+
+  umstellungBestaetigt: (s, { loginUrl }) => mk("Dein Wechsel ist bestätigt: jetzt noch das Stripe-Konto", {
+    preheader: "Noch ca. 10 Minuten, dann ist alles fertig.",
+    title: "Danke! Noch ein Schritt.",
+    body: hallo(s) + p(`dein neuer Preis gilt: ${euro(s.monatNetto)} netto im Monat, keine Provision. Richte jetzt dein eigenes Stripe-Konto ein. Sobald Stripe es freigegeben hat, funktionieren deine Zahlungslinks und deine Zahlseite wieder, mit derselben Adresse und demselben QR-Code.`) +
+      box("Dein altes Auszahlungskonto bleibt bestehen: Stripe zahlt noch offene Beträge von dort aus. Erstattungen und Rückbuchungen zu alten Zahlungen laufen weiter über Tattoofin."),
+    cta: "Stripe-Konto einrichten", ctaUrl: loginUrl,
+  }),
+
+  anbieterKuendigung: (s, { zum }) => mk("Kündigung deines Tattoofin-Vertrags (Paket Risikofrei)", {
+    preheader: `Dein Vertrag endet am ${datum(zum)}.`,
+    title: "Kündigung zum " + datum(zum),
+    body: hallo(s) + p(`hiermit kündigen wir deinen Tattoofin-Vertrag im Paket Risikofrei ordentlich zum <b>${datum(zum)}</b>. Der Grund ist das neue Verbraucherkreditrecht: Wir führen das Modell mit Provision und Zahlung über unser Konto nicht weiter.`) +
+      p("Bis dahin funktionieren Zahlungslinks und Zahlseite wie bisher, aber ohne Klarna. Offene Auszahlungen bekommst du auch nach dem Ende von Stripe, abzüglich späterer Rückbuchungen.") +
+      p(`Du möchtest Tattoofin weiter nutzen? Das geht jederzeit bis zum Vertragsende mit eigenem Stripe-Konto. Antworte einfach auf diese Mail.`),
   }),
 
   kuendigung: (s, { zum }) => mk("Deine Kündigung ist eingegangen", {
