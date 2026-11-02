@@ -294,16 +294,16 @@ ${g.nachricht ? `<div style="font-style:italic;color:#5b6370;margin-top:10px">�
   }),
 
   // Altstudios: Angebot fester Monatspreis. Geht nur nach Freigabe raus (Admin: senden:true).
-  umstellungAngebot: (s, { monatNetto, antwortBis, loginUrl }) => mk("Tattoofin ab 20.11.: Das ändert sich für dein Studio", {
-    preheader: `Klarna geht bei dir nur weiter, wenn du umstellst. Dein Preis: ${euro(monatNetto)} netto im Monat.`,
-    title: "Am 20.11. ändert sich das Gesetz",
-    body: hallo(s) + p("am 20.11.2026 tritt ein neues Gesetz in Kraft: Ratenzahlung und späteres Bezahlen über Klarna gelten dann als Kredit. Bei deinem jetzigen Paket läuft das Geld deiner Kunden über unser Konto bei Stripe, und wir bekommen 10 % von jeder Zahlung. Deshalb bieten wir Klarna in diesem Modell ab dem 20.11. nicht mehr an.") +
-      p("<b>Das bedeutet für dich:</b> Ändert sich nichts, können deine Kunden ab dem 20.11. nur noch per Karte, Apple Pay und Google Pay zahlen.") +
-      p(`<b>Unser Angebot:</b> Du wechselst auf ein eigenes Stripe-Konto. Dann bleibt Klarna möglich, soweit Klarna es freigibt, und das Geld geht direkt an dich. Du zahlst keine 10 % mehr, sondern <b>${euro(monatNetto)} netto im Monat</b>. Der normale Preis für neue Studios ist ${euro(CFG.monatNetto)}. Dazu kommen die Zahlungsgebühren, die du direkt an Stripe zahlst (je nach Zahlart ca. 1,5–3 %). Du kannst monatlich kündigen.`) +
-      p("<b>So geht's:</b> Studio-Bereich öffnen, Angebot bestätigen, ersten Monat zahlen und dein neues Stripe-Konto einrichten (ca. 10 Minuten). Stripe prüft es dann, meist in 1 bis 3 Werktagen. Bis zur Freigabe kannst du keine neuen Zahlungslinks nutzen. Mach es deshalb an einem ruhigen Tag.") +
-      box(`Bitte entscheide bis zum ${antwortBis.split("-").reverse().join(".")}, damit dein neues Konto zum 20.11. fertig ist. Machst du nichts, läuft dein Vertrag erst einmal ohne Klarna weiter. Wir kündigen ihn dann mit der vertraglichen Frist, weil wir das alte Modell nicht fortführen.`) +
-      p("<b>Deine Werbung:</b> Stellst du um und wirbst weiter mit Raten, muss ab dem 20.11. direkt daneben stehen: <b>Achtung! Kreditaufnahme kostet Geld.</b> Das gilt auch für Instagram, Flyer und Aufsteller. Stellst du nicht um, nimm die Raten-Werbung bis dahin heraus.") +
-      p("Fragen? Antworte einfach auf diese Mail."),
+  umstellungAngebot: (s, { monatNetto, antwortBis, loginUrl }) => mk("Eine Änderung bei Klarna ab 20.11. und ein Angebot für dich", {
+    preheader: `Danke, dass du von Anfang an dabei bist. Dein Preis: ${euro(monatNetto)} netto im Monat, keine Provision mehr.`,
+    title: "Danke, dass du dabei bist",
+    body: hallo(s) + p("schön, dass du Tattoofin nutzt. Heute melde ich mich wegen einer Änderung, die dein Studio betrifft, und weil ich dir dafür ein gutes Angebot machen möchte.") +
+      p("<b>Was sich ändert:</b> Am 20.11.2026 tritt ein neues Gesetz in Kraft. Ratenzahlung und späteres Bezahlen über Klarna gelten dann als Kredit. In deinem jetzigen Paket läuft das Geld deiner Kunden über unser Konto bei Stripe, und wir bekommen 10 % von jeder Zahlung. Deshalb bieten wir Klarna in diesem Modell ab dem 20.11. nicht mehr an. Karte, Apple Pay und Google Pay laufen weiter.") +
+      p(`<b>Mein Angebot an dich:</b> Du wechselst auf dein eigenes Stripe-Konto. Dann bleibt Klarna möglich, soweit Klarna es freigibt, und das Geld läuft auf dein eigenes Konto. Statt 10 % zahlst du <b>${euro(monatNetto)} netto im Monat</b>. Neue Studios zahlen ${euro(CFG.monatNetto)}, du als Bestandskunde bekommst den günstigeren Preis. Dazu kommen die Zahlungsgebühren, die du direkt an Stripe zahlst (je nach Zahlart ca. 1,5–3 %). Du kannst monatlich kündigen.`) +
+      p("<b>So geht's:</b> Im Studio-Bereich das Angebot bestätigen, den ersten Monat zahlen und dein neues Stripe-Konto einrichten, das dauert etwa 10 Minuten. Klarna schaltest du danach selbst in deinem Stripe-Konto ein. Stripe prüft das neue Konto meist in 1 bis 3 Werktagen. Bis zur Freigabe kannst du keine neuen Zahlungslinks nutzen, nimm dir dafür also am besten einen ruhigen Tag.") +
+      box(`Wenn es für dich passt, entscheide dich bitte bis zum ${antwortBis.split("-").reverse().join(".")}, damit dein neues Konto zum 20.11. fertig ist. Wenn du nicht wechseln möchtest, ist das völlig in Ordnung. Dein Vertrag läuft dann erst einmal ohne Klarna weiter, und wir beenden ihn später mit der vertraglichen Frist, weil wir das alte Modell nicht fortführen. Dazu bekommst du vorher noch eine eigene Nachricht.`) +
+      p("<b>Noch ein Hinweis zu deiner Werbung:</b> Wenn du nach dem Wechsel mit Raten wirbst, muss ab dem 20.11. direkt daneben stehen: <b>Achtung! Kreditaufnahme kostet Geld.</b> Das gilt auch für Instagram, Flyer und Aufsteller. Wenn du nicht wechselst, nimm die Raten-Werbung bitte bis dahin heraus.") +
+      p("Wenn du Fragen hast, antworte einfach auf diese Mail, ich helfe dir gern.<br><br>Viele Grüße<br>Domenic von Tattoofin"),
     cta: "Angebot ansehen", ctaUrl: loginUrl,
   }),
 
