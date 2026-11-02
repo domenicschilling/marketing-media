@@ -221,9 +221,9 @@ ${g.nachricht ? `<div style="font-style:italic;color:#5b6370;margin-top:10px">�
   // Info ans Studio: Kunde hat es mit Klarna versucht, Klarna hat (diesmal) nicht zugestimmt
   klarnaAbgelehnt: (s, z) => mk(`Klarna hat bei ${z.kunde || "deinem Kunden"} nicht zugestimmt`, {
     preheader: `${euro(z.betragCent)} · ${z.beschreibung || "Tattoo-Projekt"}`,
-    title: "Klarna hat diesmal nicht zugestimmt",
+    title: "Klarna hat nicht zugestimmt",
     body: hallo(s) + p(`<b>${esc(z.kunde || "Dein Kunde")}</b> wollte ${euro(z.betragCent)} (${esc(z.beschreibung || "Tattoo-Projekt")}) mit Klarna bezahlen. Klarna hat die Zahlung nicht bestätigt. Das entscheidet allein Klarna, die Gründe nennt Klarna weder uns noch dir.`) +
-      p("Dein Kunde sieht auf der Zahlseite jetzt diese Möglichkeiten: noch einmal mit Klarna versuchen, mit Karte zahlen" + (s.ausweichAnzahlung?.an ? ` oder eine Anzahlung von ${s.ausweichAnzahlung.prozent} % per Karte und den Rest direkt bei dir im Studio` : "") + ".") +
+      p("Dein Kunde sieht auf der Zahlseite jetzt diese Möglichkeit: mit Karte zahlen" + (s.ausweichAnzahlung?.an ? ` oder eine Anzahlung von ${s.ausweichAnzahlung.prozent} % per Karte und den Rest direkt bei dir im Studio` : "") + ".") +
       p("Tipp: Frag kurz nach, ob alles geklappt hat. Es ist noch nichts bezahlt."),
     cta: "Zahlung in der App ansehen", ctaUrl: `${CFG.siteUrl}/app.html#zahlung/${z.id}`,
   }),
@@ -328,7 +328,7 @@ ${g.nachricht ? `<div style="font-style:italic;color:#5b6370;margin-top:10px">�
   anmeldungAbgebrochen: (s, { resumeUrl }) => mk("Fast geschafft: dein Abschluss ist noch offen", {
     title: "Du warst fast fertig 🙂", preheader: "Mit einem Klick weitermachen.",
     body: hallo(s) + p("du hast gestern angefangen, Tattoofin für dein Studio abzuschließen, aber die Zahlung ist noch offen.") +
-      p(`Falls etwas unklar war: Antworte einfach auf diese E-Mail, wir helfen dir gern bei der Wahl zwischen Monatlich (${euro(CFG.monatNetto)} netto im Monat) und Einmalzahlung (${euro(CFG.kaufNetto)} netto einmalig).`),
+      p(`Falls etwas unklar war: Antworte einfach auf diese E-Mail, wir helfen dir gern weiter. Tattoofin kostet ${euro(CFG.monatNetto)} netto im Monat.`),
     cta: "Abschluss fortsetzen", ctaUrl: resumeUrl,
   }),
 

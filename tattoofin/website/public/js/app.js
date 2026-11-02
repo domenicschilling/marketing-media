@@ -182,7 +182,7 @@
       var r = await TF.api("/api/portal/zahlung", { body: { betrag: f.betrag.value, art: f.art.value, kunde: f.kunde.value, email: f.email.value, beschreibung: f.beschreibung.value, sitzungen: f.sitzungen.value } });
       var wa = "https://wa.me/?text=" + encodeURIComponent(r.whatsappText);
       $("l-out").innerHTML = '<div class="link-ok"><h2>✓ Link für ' + e(r.zahlung.kunde || "deinen Kunden") + " über " + euro(r.zahlung.betragCent, true) + '</h2><div class="qr" id="l-qr"></div>' +
-        '<p class="klein muted">Kunde ist da? QR-Code scannen lassen. Sonst per WhatsApp schicken.' + (r.zahlung.art === "gesamt" && D.studio.klarna !== false ? " Für Raten* wählt dein Kunde beim Bezahlen „Klarna“ – das steht schon im Text." : "") + '</p><a class="btn wa big w100" target="_blank" rel="noopener" href="' + e(wa) + '">Per WhatsApp schicken</a>' +
+        '<p class="klein muted">Kunde ist da? QR-Code scannen lassen. Sonst per WhatsApp schicken.' + (r.zahlung.art === "gesamt" && D.studio.klarna !== false ? " Welche Zahlarten dein Kunde bekommt, sieht er beim Bezahlen." : "") + '</p><a class="btn wa big w100" target="_blank" rel="noopener" href="' + e(wa) + '">Per WhatsApp schicken</a>' +
         '<div class="row-a" style="justify-content:center"><button class="btn dark small" data-copytext="' + e(r.link) + '">Link kopieren</button><button class="btn ghost small" id="l-neu">Noch einen Link</button></div></div>';
       qr($("l-qr"), r.link);
       f.classList.add("hidden");
@@ -272,7 +272,7 @@
     var anz = document.querySelector('#f-link input[name=art]:checked').value === "anzahlung";
     if (D.studio.klarna === false) { $("l-art-hinweis").textContent = "Dein Kunde zahlt per Karte, Apple Pay oder Google Pay."; return; }
     $("l-art-hinweis").textContent = anz ? "Anzahlung: Dein Kunde zahlt sie am einfachsten ganz normal per Karte, Apple Pay oder Google Pay. Ratenzahlung ist für den Projektpreis größerer Tattoos gedacht."
-      : "Projektpreis: Dein Kunde kann per Karte zahlen oder mit Klarna in Raten*. Für Raten muss er beim Bezahlen „Klarna“ wählen – das steht schon im WhatsApp-Text.";
+      : "Projektpreis: Dein Kunde kann per Karte zahlen oder mit Klarna in Raten*. Der Pflichtsatz steht schon im WhatsApp-Text.";
   }
   document.querySelectorAll("#f-link input[name=art]").forEach(function (r) { r.addEventListener("change", artHinweis); });
   function gutscheinForm() {
@@ -582,8 +582,10 @@
   function einstellungen() {
     $("k-email").value = D.studio.benachrichtigung.email || ""; $("k-anz").value = D.studio.anzahlungsbedingungen || "";
     var aw = D.studio.ausweichAnzahlung || {}; $("k-aw-an").checked = Boolean(aw.an); $("k-aw-pr").value = aw.prozent || 30;
+    $("k-zh-an").checked = Boolean(D.studio.zahlartenHinweis);
   }
   $("k-aw-save").onclick = async function () { try { D.studio = await TF.api("/api/portal/kontakt", { method: "PATCH", body: { ausweichAnzahlung: { an: $("k-aw-an").checked, prozent: $("k-aw-pr").value } } }); einstellungen(); toast("Gespeichert."); } catch (err) { toast(err.message, true); } };
+  $("k-zh-save").onclick = async function () { try { D.studio = await TF.api("/api/portal/kontakt", { method: "PATCH", body: { zahlartenHinweis: $("k-zh-an").checked } }); einstellungen(); toast("Gespeichert."); } catch (err) { toast(err.message, true); } };
   $("k-anz-save").onclick = async function () { try { D.studio = await TF.api("/api/portal/kontakt", { method: "PATCH", body: { anzahlungsbedingungen: $("k-anz").value } }); einstellungen(); toast("Anzahlungsbedingungen gespeichert."); } catch (err) { toast(err.message, true); } };
   $("k-save").onclick = async function () { try { D.studio = await TF.api("/api/portal/kontakt", { method: "PATCH", body: { email: $("k-email").value } }); toast("Gespeichert."); } catch (err) { toast(err.message, true); } };
   $("logout").onclick = async function () { await TF.api("/api/logout", { method: "POST" }); location.href = "/login.html"; };

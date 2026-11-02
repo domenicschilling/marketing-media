@@ -67,6 +67,8 @@ export default handler(async (req, context) => {
   if (!isEmail(d.email)) fehlt.push("gültige E-Mail");
   if (fehlt.length) return fail("Bitte ausfüllen: " + fehlt.join(", "));
   if (!(b.akzeptiert?.vertrag && b.akzeptiert?.avv && b.akzeptiert?.unternehmer)) return fail("Bitte Vertrag, AVV und Unternehmereigenschaft bestätigen.");
+  // KMU-Bestätigung seit Vertrag 2026-12 (§ 34k Abs. 4 Nr. 3 GewO: Ausnahme nur für kleine und mittlere Unternehmen)
+  if (!b.akzeptiert?.kmu) return fail("Bitte bestätige, dass dein Studio ein kleines oder mittleres Unternehmen ist.");
 
   // Bestehenden Abschluss fortsetzen oder Dublette verhindern
   // Schon ein aktiver Vertrag mit dieser Adresse (auch gmail/googlemail-Varianten)? → Login statt Dublette
@@ -87,7 +89,7 @@ export default handler(async (req, context) => {
     sonderkondition: geschenk ? (geschenk.bezeichnung || null) : null,
     vertrag: {
       version: CFG.vertragVersion, akzeptiertAm: now(), name: d.unterzeichner, ip: clientIp(req, context),
-      ua: (req.headers.get("user-agent") || "").slice(0, 200), vertrag: true, avv: true, unternehmer: true,
+      ua: (req.headers.get("user-agent") || "").slice(0, 200), vertrag: true, avv: true, unternehmer: true, kmu: true,
       modell, paket: paketId, preisNetto, monatNetto, provisionProzent: modell === "provision" ? CFG.provisionProzent : null,
       aufsteller: ["monatlich", "einmal"].includes(paketId),
     },

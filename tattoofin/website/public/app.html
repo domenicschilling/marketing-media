@@ -87,7 +87,7 @@
     <div class="card-a" data-klarna><h2>3. Fertiger WhatsApp-Text</h2><p class="muted klein">Steht automatisch im Text, wenn du einen Zahlungslink erstellst. Zum Selbst-Schreiben hier zum Kopieren ([…] ersetzen):</p><pre class="caption" id="raten-text"></pre><div class="row-a"><button class="btn dark small" id="raten-kopieren">Text kopieren</button></div></div>
     <div class="card-a" data-klarna><h2>Wenn Klarna nicht zustimmt</h2><p class="klein">Das entscheidet allein Klarna. Dein Kunde sieht dann: mit Karte zahlen oder – wenn du es unter Einstellungen einschaltest – Anzahlung per Karte, Rest direkt bei dir im Studio. Du bekommst eine E-Mail.</p><a class="btn ghost small" href="#einstellungen">Zu den Einstellungen</a></div>
     <p class="klein muted fussnote" data-klarna>*Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, nicht Tattoofin. <strong>Achtung! Kreditaufnahme kostet Geld.</strong></p>
-    <div class="card-a hidden" data-ohne-klarna><h2>Zahlarten bei deinem Paket</h2><p class="klein">Bei deinem Paket zahlen deine Kunden per Karte, Apple Pay oder Google Pay. Klarna gibt es nur bei Studios mit eigenem Stripe-Konto (Pakete Monatlich und Einmalzahlung). Du schickst einfach den Zahlungslink oder lässt den QR-Code scannen.</p></div>
+    <div class="card-a hidden" data-ohne-klarna><h2>Zahlarten bei deinem Paket</h2><p class="klein">Bei deinem Paket zahlen deine Kunden per Karte, Apple Pay oder Google Pay. Klarna gibt es nur bei Studios mit eigenem Stripe-Konto (Paket Monatlich). Du schickst einfach den Zahlungslink oder lässt den QR-Code scannen.</p></div>
   </section>
 
   <!-- GUTSCHEIN VERKAUFEN -->
@@ -154,7 +154,7 @@
     <h1>Werbung für dein Studio</h1>
     <p class="muted klein" data-klarna-dauer>Fertiges Video und fertige Beiträge für Instagram und Facebook: Deine Kunden sehen, dass sie ihr Tattoo bei dir jetzt in Raten* zahlen können. Speichern, Text kopieren, posten.</p>
     <p class="klein muted fussnote" data-klarna-dauer>*Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, nicht Tattoofin. <strong>Achtung! Kreditaufnahme kostet Geld.</strong></p>
-    <div class="card-a hidden" data-ohne-klarna-dauer><h2>Werbung mit Raten</h2><p class="klein">Fertige Raten-Beiträge und das Raten-Video gibt es für Studios mit eigenem Stripe-Konto (Pakete Monatlich und Einmalzahlung). Bei deinem Paket zahlen deine Kunden per Karte, Apple Pay oder Google Pay. Deine Zahlseite und den QR-Code findest du unten.</p></div>
+    <div class="card-a hidden" data-ohne-klarna-dauer><h2>Werbung mit Raten</h2><p class="klein">Fertige Raten-Beiträge und das Raten-Video gibt es für Studios mit eigenem Stripe-Konto (Paket Monatlich). Bei deinem Paket zahlen deine Kunden per Karte, Apple Pay oder Google Pay. Deine Zahlseite und den QR-Code findest du unten.</p></div>
     <div class="card-a" id="wv" data-klarna-dauer>
       <h2>Dein Werbevideo <span class="neu-badge">Neu</span></h2>
       <p class="muted klein">Fertiges Video für Instagram, Facebook und TikTok: Deine Kunden sehen, dass sie bei dir ganz bequem in Raten* zahlen können – und dass sie euch einfach darauf ansprechen oder schreiben können. Speichern, Text kopieren, posten.</p>
@@ -263,6 +263,9 @@
       <label class="haken"><input type="checkbox" id="k-aw-an"> <span>Anzahlung als Ausweg anbieten</span></label>
       <label class="lbl" for="k-aw-pr">Höhe der Anzahlung (% vom Betrag, 10–50)</label><input type="number" id="k-aw-pr" min="10" max="50" step="5" inputmode="numeric" autocomplete="off">
       <button class="btn gold small" id="k-aw-save">Speichern</button></div>
+    <div class="card-a" data-klarna><h2>Hinweis auf deiner Zahlseite</h2><p class="muted klein">Auf Wunsch steht auf deiner Zahlseite: „Im nächsten Schritt siehst du die Zahlarten, die dir angeboten werden, zum Beispiel Karte, Apple Pay oder Klarna.*“, mit dem Pflichtsatz darunter. Das entscheidest du selbst.</p>
+      <label class="haken"><input type="checkbox" id="k-zh-an"> <span>Hinweis auf meiner Zahlseite zeigen</span></label>
+      <button class="btn gold small" id="k-zh-save">Speichern</button></div>
     <div class="card-a"><h2>Benachrichtigungen</h2>
       <label class="lbl" for="k-email">E-Mail für Zahlungsbenachrichtigungen</label><input type="email" id="k-email" autocomplete="email" inputmode="email">
       <button class="btn gold small" id="k-save">Speichern</button></div>

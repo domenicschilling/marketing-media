@@ -8,10 +8,10 @@
   function val(n) { var el = f.elements[n]; return el ? (el.type === "checkbox" ? el.checked : (el.value || "").trim()) : ""; }
   // Paket: monatlich | einmal (alte Links ?modell=kauf → einmal). Das Paket Risikofrei gibt es seit 26.10.2026 für neue Anmeldungen nicht mehr:
   // alte Links (?paket=risikofrei, ?modell=provision, ?paket=start) und alte Entwürfe führen freundlich auf die Paketwahl, nichts wird vorgewählt.
-  var ALIAS = { kauf: "einmal", monatlich: "monatlich", einmal: "einmal", einmalzahlung: "einmal", profi: "einmal" };
+  var ALIAS = { kauf: "monatlich", monatlich: "monatlich", einmal: "monatlich", einmalzahlung: "monatlich", profi: "monatlich" };
   var GESCHLOSSEN = { provision: 1, risikofrei: 1, start: 1 };
   var NAMEN = { monatlich: "Monatlich", einmal: "Einmalzahlung" };
-  var HINWEIS_RISIKOFREI = "Das Paket Risikofrei gibt es für neue Anmeldungen nicht mehr. Bitte wähle unten Monatlich oder Einmalzahlung. Studios, die schon Risikofrei haben, sind nicht betroffen.";
+  var HINWEIS_RISIKOFREI = "Das Paket Risikofrei gibt es für neue Anmeldungen nicht mehr. Tattoofin kostet jetzt einheitlich 49 € netto im Monat.";
   function paket() { var r = f.querySelector("input[name=paket]:checked"); return r ? r.value : ""; }
   function modell() { return paket() ? "kauf" : ""; }
   function zahlart() { var r = f.querySelector("input[name=zahlart]:checked"); return r ? r.value : "sofort"; }
@@ -34,6 +34,7 @@
     }
     if (n === 3) {
       if (!val("ak_alle")) return "Bitte setze den Haken bei Vertrag und AVV.";
+      if (!val("ak_kmu")) return "Bitte bestätige, dass dein Studio ein kleines oder mittleres Unternehmen ist.";
       if (!val("unterzeichner")) { f.elements.unterzeichner.focus(); return "Bitte gib deinen Vor- und Nachnamen ein."; }
     }
     return "";
@@ -103,7 +104,7 @@
     else if (GESCHLOSSEN[k] && !geschenk) show(HINWEIS_RISIKOFREI, "info");
   }
 
-  function toggleKauf() { document.getElementById("kauf-extra").classList.toggle("hidden", paket() !== "einmal" || !!geschenk); }
+  function toggleKauf() { var k = document.getElementById("kauf-extra"); if (k) k.classList.toggle("hidden", paket() !== "einmal" || !!geschenk); }
 
   f.addEventListener("change", function (e) { if (e.target.name === "paket") toggleKauf(); });
   f.addEventListener("click", function (e) {
@@ -122,7 +123,7 @@
     btn.disabled = true; var txt = btn.textContent; btn.textContent = "Einen Moment …";
     try {
       var d = daten();
-      d.akzeptiert = { vertrag: true, avv: true, unternehmer: true };
+      d.akzeptiert = { vertrag: true, avv: true, unternehmer: true, kmu: true };
       if (resumeId) d.resumeId = resumeId;
       var r = await TF.api("/api/signup", { body: d });
       try { sessionStorage.removeItem("tf-start"); } catch (e2) {}
@@ -138,7 +139,7 @@
   fetch("/vertrag.html").then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/<main class="doc">([\s\S]*?)<\/main>/);
     var box = document.getElementById("vertrag-box");
-    box.innerHTML = m ? '<p style="background:#fff3cd;border:1px solid #e0b84b;border-radius:8px;padding:10px 12px;font-size:14px;margin:0 0 12px"><b>Hinweis:</b> Du kannst die Pakete <b>Monatlich</b> und <b>Einmalzahlung</b> abschließen. Das Paket Risikofrei wird seit dem 26.10.2026 nicht mehr neu vergeben. Die Regelungen dazu im Vertrag gelten nur für Studios, die es schon haben.</p>' + m[1].replace(/<img[^>]*>/g, "") : "Vertrag konnte nicht geladen werden. Bitte über den Link öffnen.";
+    box.innerHTML = m ? '<p style="background:#fff3cd;border:1px solid #e0b84b;border-radius:8px;padding:10px 12px;font-size:14px;margin:0 0 12px"><b>Hinweis:</b> Neu abschließen kannst du das Paket <b>Monatlich</b>.</p>' + m[1].replace(/<img[^>]*>/g, "") : "Vertrag konnte nicht geladen werden. Bitte über den Link öffnen.";
     box.querySelectorAll("[data-cfg]").forEach(function (el) { el.textContent = ""; });
     TF.config().then(function (c) {
       var map = { kaufPreis: TF.euro(c.kaufNetto), provisionSatz: c.provisionProzent + " %", 

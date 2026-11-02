@@ -29,7 +29,7 @@ process.env.TF_JETZT = BASIS_ZEIT;
 // Seit 26.10.2026 ist das Paket Risikofrei für NEUE Anmeldungen geschlossen. Die Abschnitte 1–17 prüfen weiter alle Abläufe der Bestandsstudios
 // (Risikofrei): Diese Studios werden hier wie vor der Schließung angelegt (Notschalter RISIKOFREI_NEU). Abschnitt 18 schaltet die Sperre scharf
 // und belegt: Neukunden kommen nicht mehr hinein, Bestandsstudios laufen unverändert weiter.
-process.env.RISIKOFREI_NEU = "1";
+process.env.RISIKOFREI_NEU = "1"; process.env.EINMAL_NEU = "1";
 process.env.ADMIN_EMAIL = "admin@betrieb.test";
 process.env.MAIL_TEST_TOKEN = "mailtest";
 await startDev({ port: PORT, mock: true, dataDir, quiet: true });
@@ -76,7 +76,7 @@ const stripeForm = (url, felder = {}) => fetch(STRIPE + url, { method: "POST", r
 
 const DATEN = (email, firma) => ({
   firma, inhaber: "Alex Muster", strasse: "Musterstr. 1", plz: "96047", ort: "Bamberg", email, telefon: "0151 1234567", studioTelefon: "0951 123456",
-  unterzeichner: "Alex Muster", akzeptiert: { vertrag: true, avv: true, unternehmer: true },
+  unterzeichner: "Alex Muster", akzeptiert: { vertrag: true, avv: true, unternehmer: true, kmu: true },
 });
 // Anmeldung per API wie start.js; liefert Studio-ID + Sitzungs-Cookie
 async function anmelden(paket, email, firma, extra = {}) {
@@ -123,7 +123,7 @@ await abschnitt("1 Start-Seite: Cookie-Fenster verdeckt keinen Knopf (ohne es we
     const s1 = await klick("section[data-step='1'] [data-next]");
     for (const [k, v] of Object.entries({ firma: "Cookie Test", inhaber: "A M", strasse: "Musterstr. 1", plz: "96047", ort: "Bamberg", email: "c@test.de", telefon: "0151 1234567", studioTelefon: "0951 123456" })) await p.fill("#" + k, v).catch(() => {});
     const s2 = await klick("section[data-step='2'] [data-next]");
-    await p.check("input[name=ak_alle]").catch(() => {});
+    await p.check("input[name=ak_alle]").catch(() => {}); await p.check("input[name=ak_kmu]").catch(() => {});
     await p.fill("#unterzeichner", "Alex Muster").catch(() => {});
     const s3 = await trial("#submit");
     check(banner && s1 && s2 && s3, `start.html ${w}x${h}: Banner da, „Weiter“ (Schritt 1+2) und „Verbindlich abschließen“ klickbar`, `banner=${banner} s1=${s1} s2=${s2} abschluss=${s3}`);
@@ -135,11 +135,13 @@ await abschnitt("1 Start-Seite: Cookie-Fenster verdeckt keinen Knopf (ohne es we
 async function browserAnmeldung(paket, email, firma, viewport) {
   const p = await neueSeite(viewport);
   await p.goto(`${BASE}/start.html?paket=${paket}`);
-  if (paket === "einmal") await p.check("input[name=zahlart][value=sofort]", { force: true }).catch(() => {});
+  // Einmalzahlung ist seit 02.11.2026 nicht mehr wählbar (Notschalter EINMAL_NEU): Auswahl für die Bestandsabläufe nachbilden
+  if (paket === "einmal") await p.evaluate(() => document.getElementById("f").insertAdjacentHTML("beforeend", '<input type="radio" name="paket" value="einmal" checked style="display:none"><input type="radio" name="zahlart" value="sofort" checked style="display:none">'));
   await p.click("section[data-step='1'] [data-next]");
   for (const [k, v] of Object.entries({ firma, inhaber: "Alex Muster", strasse: "Musterstr. 1", plz: "96047", ort: "Bamberg", email, telefon: "0151 1234567", studioTelefon: "0951 123456" })) await p.fill("#" + k, v);
   await p.click("section[data-step='2'] [data-next]");
   await p.check("input[name=ak_alle]");
+  await p.check("input[name=ak_kmu]");
   await p.fill("#unterzeichner", "Alex Muster");
   await p.screenshot({ path: path.join(shots, `anmeldung-${paket}.png`), fullPage: true });
   await p.click("#submit");
@@ -289,7 +291,7 @@ await abschnitt("5 Go-live, Zahlungslink, Kunde zahlt (Karte + Klarna), Provisio
   check(zlG.status === 201 && /zahlung\.html\?z=zl_/.test(zlG.data.link) && /Klarna/.test(zlG.data.whatsappText), "Zahlungslink erstellt, WhatsApp-Text nennt Klarna", `${ST.zl1?.id}`);
   // Kunde öffnet den Link
   const pub = await json(`/api/pay?z=${ST.zl1.id}`);
-  check(pub.status === 200 && pub.data.zahlung.betragCent === 150000 && pub.data.zahlung.zahlarten[0] === "klarna", "Kundenseite: Betrag stimmt, Klarna steht zuerst", `${pub.data.zahlung?.zahlarten}`);
+  check(pub.status === 200 && pub.data.zahlung.betragCent === 150000 && pub.data.zahlung.zahlarten[0] === "card", "Kundenseite: Betrag stimmt, Karte steht zuerst", `${pub.data.zahlung?.zahlarten}`);
   const ohne = await post("/api/pay", { z: ST.zl1.id });
   check(ohne.status === 400, "Ohne Inhalts-Häkchen kein Checkout", `HTTP ${ohne.status}`);
   const start = await post("/api/pay", { z: ST.zl1.id, inhaltOk: true });
@@ -298,7 +300,7 @@ await abschnitt("5 Go-live, Zahlungslink, Kunde zahlt (Karte + Klarna), Provisio
   const pd = cs.payment_intent_data || {};
   check(pd.on_behalf_of === ST.rf.konto && pd.transfer_data?.destination === ST.rf.konto && Number(pd.application_fee_amount) === 15000, "Destination Charge: Ziel = Studio-Konto, Händler = Studio, Plattformgebühr 150,00 € (10 % von 1.500 €)", `fee=${pd.application_fee_amount}`);
   const pmt = [].concat(cs.payment_method_types);
-  check(pmt[0] === "klarna" && pmt.includes("card") && !pmt.includes("sepa_debit"), "Zahlarten: Klarna zuerst, Karte, kein SEPA", pmt.join(","));
+  check(pmt[0] === "card" && pmt.includes("klarna") && !pmt.includes("sepa_debit"), "Zahlarten: Karte zuerst, Klarna, kein SEPA", pmt.join(","));
   check(cs.billing_address_collection === "required" && String(cs.phone_number_collection?.enabled) === "true" && cs.customer, "Klarna-Voraussetzungen: Rechnungsadresse + Telefon Pflicht, Kunde mit Name/E-Mail", `customer=${cs.customer}`);
   check(/Tattoo bei Betrieb Risikofrei/.test(cs.line_items[0].price_data.product_data.name) && Number(cs.line_items[0].quantity) === 1, "Artikelname für Klarna: „Tattoo bei <Studio> – <Motiv>“, Menge 1", cs.line_items[0].price_data.product_data.name);
   await stripeBezahlen(start.data.url, "klarna");
@@ -759,7 +761,7 @@ await abschnitt("16 Browser: Kundenseite (Handy) mit Cookie-Fenster, keine JavaS
     await p.goto(z.link);
     await p.waitForSelector("#bezahlen, button", { timeout: 8000 }).catch(() => {});
     const text = await p.evaluate(() => document.body.innerText);
-    check(/1\.200/.test(text) && /Rest|Raten|Klarna/i.test(text), `Kundenseite ${w}x${h}: Betrag + Raten-Hinweis sichtbar`, text.slice(0, 60).replace(/\s+/g, " "));
+    check(/1\.200/.test(text) && /Zahlarten/.test(text) && !/Wähle im nächsten Schritt/.test(text), `Kundenseite ${w}x${h}: Betrag + neutraler Satz zu den Zahlarten sichtbar`, text.slice(0, 60).replace(/\s+/g, " "));
     await p.check("#inhalt-ok", { force: true }).catch(() => {});
     const klickbar = await p.click("#weiter", { timeout: 3000, trial: true }).then(() => true).catch(() => false);
     check(klickbar, `Kundenseite ${w}x${h}: Bezahl-Knopf klickbar (Cookie-Fenster verdeckt ihn nicht)`, "");
@@ -819,7 +821,7 @@ await abschnitt("17 Recht (27.10.2026): Klarna-Stichtag 20.11.2026 für Risikofr
   setze("TF_JETZT", "2026-11-19T22:59:59Z");
   const vor = await link("rf", "900", "Vor Stichtag");
   const iv = await info(vor.zahlung.id);
-  check(iv.zahlung.zahlarten.includes("klarna") && iv.studio.klarna === true && /„Klarna“ als Zahlungsart wählen/.test(vor.whatsappText), "Vor dem Stichtag (19.11. 23:59:59): Risikofrei bietet Klarna, WhatsApp-Text erklärt Klarna", `${iv.zahlung.zahlarten}`);
+  check(iv.zahlung.zahlarten.includes("klarna") && iv.studio.klarna === true && /Klarna\*/.test(vor.whatsappText) && /Kreditaufnahme kostet Geld/.test(vor.whatsappText), "Vor dem Stichtag (19.11. 23:59:59): Risikofrei bietet Klarna, WhatsApp-Text nennt Klarna mit Pflichtsatz", `${iv.zahlung.zahlarten}`);
   const cfgVor = (await json("/api/config")).data;
   check(cfgVor.klarnaPlattformAus === false && cfgVor.klarnaPlattformBis === "2026-11-19T23:00:00.000Z", "Öffentliche Konfiguration: Stichtag als Zeitpunkt, noch nicht erreicht", `${cfgVor.klarnaPlattformBis}`);
   const aufV = (await json(`/api/aufsteller?s=${await slug("rf")}`, {}, ST.rf.cookie)).data;
@@ -898,11 +900,11 @@ await abschnitt("17 Recht (27.10.2026): Klarna-Stichtag 20.11.2026 für Risikofr
   const [imp, recht, vertrag, raten] = await Promise.all([holen("/impressum.html"), holen("/recht.html"), holen("/vertrag.html"), holen("/raten.html")]);
   check(!/Kreditvermittler/.test(imp) && /nicht Partei eines Ratenvertrags/.test(imp), "Impressum: kein „kein Kreditvermittler“, dafür Tatsachen (nicht Kreditgeber, nicht Vertragspartei, keine Kreditberatung)", "");
   check(!/kein Zahlungsdienstleister|vermittelt keine Kredite/.test(recht) && /zinsfrei“, „ohne Schufa“ oder „ohne Gebühren“/.test(recht) && /Ratenbeträge/.test(recht), "Rechtsblatt: keine Rechtsbehauptung, Studio-Regel (kein zinsfrei, ohne Schufa, ohne Gebühren, keine Ratenbeträge)", "");
-  check(!/kein Kreditvermittler/.test(vertrag) && /nicht Kreditgeber und nicht Partei von Kredit- oder Ratenverträgen/.test(vertrag) && /Ab dem 20\.11\.2026 bietet der Anbieter Klarna im Paket Risikofrei nicht mehr an/.test(vertrag), "Vertrag (neue Fassung): Tatsachen statt „kein Kreditvermittler“, Klarna-Regel für Risikofrei", "");
+  check(!/kein Kreditvermittler/.test(vertrag) && /nicht Kreditgeber und nicht Partei von Kredit- oder Ratenverträgen/.test(vertrag) && /keine Vergütung oder sonstigen Vorteile für Kredit- oder Ratenverträge/.test(vertrag) && !/Risikofrei|Modell B|Einmalzahlung/.test(vertrag), "Vertrag 2026-12: Tatsachen statt „kein Kreditvermittler“, fester Preis, kein Risikofrei und keine Einmalzahlung", "");
   const altVertrag = await holen("/vertrag-2026-10d.html");
   check(/kein Kreditvermittler/.test(altVertrag) && /archiviert/.test(altVertrag), "Alte Vertragsfassung 2026-10d bleibt unverändert als Archiv (nicht rückwirkend ändern)", "");
   const cfgV = (await json("/api/config")).data;
-  check(cfgV.vertragVersion === "2026-11" && cfgV.rechtVersion === "2026-11", "Versionen hochgezählt: Vertrag und Rechtsblatt 2026-11", `${cfgV.vertragVersion}/${cfgV.rechtVersion}`);
+  check(cfgV.vertragVersion === "2026-12" && cfgV.rechtVersion === "2026-12", "Versionen hochgezählt: Vertrag und Rechtsblatt 2026-12", `${cfgV.vertragVersion}/${cfgV.rechtVersion}`);
   const ratenText = raten.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g, " ").replace(/<[^>]+>/g, " ");
   const kopfDaten = (raten.match(/<title>[\s\S]*?<\/title>/) || [""])[0] + (raten.match(/<meta name="description"[^>]*>/) || [""])[0] + (raten.match(/<script type="application\/ld\+json">[\s\S]*?<\/script>/) || [""])[0];
   check(!/zinsfrei|ohne Schufa|ohne Gebühr|0\s?%|monatlich ab|pro Monat/i.test(ratenText) && !/Raten|Klarna/.test(kopfDaten), "/raten: kein zinsfrei/ohne Schufa/Ratenbeträge; Titel, Meta und Schema ohne Raten/Klarna", "");
@@ -946,22 +948,22 @@ await abschnitt("18 Paket Risikofrei geschlossen (26.10.2026): Neukunden gesperr
   await admin(`studio/${best.id}/live`, { body: {} });
   const zuvor = (await studios()).length;
   // Ab jetzt zu: Notschalter aus
-  delete process.env.RISIKOFREI_NEU;
+  delete process.env.RISIKOFREI_NEU; delete process.env.EINMAL_NEU;
   try {
     // --- Neukunden ---
     const mailsVor = mails().length;
     for (const [name, extra] of [["paket=risikofrei", { paket: "risikofrei" }], ["modell=provision", { modell: "provision" }], ["paket=start (alter Name)", { paket: "start" }], ["paket=Risikofrei (Schreibweise)", { paket: " Risikofrei " }]]) {
       const r = await post("/api/signup", { ...DATEN("neukunde-rf@betrieb.test", "Neukunde Risikofrei"), ...extra });
-      check(r.status === 410 && r.data.gesperrt === true && /Risikofrei gibt es für neue Anmeldungen nicht mehr/.test(r.data.error || "") && /Monatlich oder Einmalzahlung/.test(r.data.error || ""), `Neuanmeldung ${name}: klare Fehlermeldung (HTTP 410)`, `${r.status} ${(r.data.error || "").slice(0, 70)}`);
+      check(r.status === 410 && r.data.gesperrt === true && /gibt es für neue Anmeldungen nicht mehr/.test(r.data.error || "") && /49 €/.test(r.data.error || ""), `Neuanmeldung ${name}: klare Fehlermeldung (HTTP 410)`, `${r.status} ${(r.data.error || "").slice(0, 70)}`);
     }
     check((await studios()).length === zuvor && !(await studioPer("neukunde-rf@betrieb.test", 1)), "Gesperrte Anmeldungen legen kein Studio an", `${zuvor} Studios`);
     check(mails().length === mailsVor, "Gesperrte Anmeldungen verschicken keine Mail (weder an Interessent noch Admin)", "");
     const pak = await json("/api/signup?pakete=1"), cfg = await json("/api/config");
-    check(JSON.stringify(pak.data.pakete.map((x) => x.id)) === '["monatlich","einmal"]' && JSON.stringify(cfg.data.pakete.map((x) => x.id)) === '["monatlich","einmal"]', "Paketlisten für die Website: nur Monatlich + Einmalzahlung", pak.data.pakete.map((x) => x.id).join(","));
+    check(JSON.stringify(pak.data.pakete.map((x) => x.id)) === '["monatlich"]' && JSON.stringify(cfg.data.pakete.map((x) => x.id)) === '["monatlich"]', "Paketlisten für die Website: nur Monatlich", pak.data.pakete.map((x) => x.id).join(","));
     check(cfg.data.monatNetto === 4900 && cfg.data.kaufNetto === 99900 && cfg.data.aufstellerPreisNetto === 2900, "Preise unverändert: Monatlich 49 €, Einmalzahlung 999 €, QR-Aufsteller einzeln 29 € (alles netto)", `${cfg.data.monatNetto}/${cfg.data.kaufNetto}/${cfg.data.aufstellerPreisNetto}`);
     const mo = await post("/api/signup", { ...DATEN("neu-monatlich@betrieb.test", "Neu Monatlich"), paket: "monatlich" });
     const ein = await post("/api/signup", { ...DATEN("neu-einmal@betrieb.test", "Neu Einmal"), paket: "einmal", zahlart: "rechnung" });
-    check(mo.status === 200 && /\/pay\//.test(mo.data.url || "") && ein.status === 200, "Monatlich und Einmalzahlung lassen sich weiter abschließen", `${mo.status} ${ein.status}`);
+    check(mo.status === 200 && /\/pay\//.test(mo.data.url || "") && ein.status === 410, "Monatlich lässt sich abschließen, Einmalzahlung nicht mehr", `${mo.status} ${ein.status}`);
     const ge = await admin("einladen", { body: { email: "geschenk-neu@betrieb.test", firma: "Geschenk Neu", senden: false } });
     check(ge._status === 200 && /geschenk=/.test(ge.link || ""), "Admin-Einladung (eigenes Konto, 0 € Einrichtung, keine Provision) weiter möglich", `HTTP ${ge._status}`);
     // Abgebrochene Entwürfe im Paket Risikofrei: keine Erinnerung mit Sackgassen-Link
@@ -972,7 +974,7 @@ await abschnitt("18 Paket Risikofrei geschlossen (26.10.2026): Neukunden gesperr
     await domain.taeglicheJobs();
     check(mailsAn("entwurf-rf@betrieb.test").length === 0 && mailsAn("entwurf-mo@betrieb.test").some((m) => /Fast geschafft/.test(m.subject)), "Erinnerung an abgebrochene Abschlüsse: Entwurf Monatlich ja, Entwurf Risikofrei nein", `${mailsAn("entwurf-rf@betrieb.test").length}/${mailsAn("entwurf-mo@betrieb.test").length}`);
     const erinn = mailsAn("entwurf-mo@betrieb.test").find((m) => /Fast geschafft/.test(m.subject));
-    check(Boolean(erinn) && !/Risikofrei|10 ?%/i.test(erinn.html), "Erinnerungs-Mail erwähnt Risikofrei nicht mehr, nennt Monatlich + Einmalzahlung", "");
+    check(Boolean(erinn) && !/Risikofrei|10 ?%/i.test(erinn.html), "Erinnerungs-Mail erwähnt Risikofrei nicht mehr", "");
     // --- Website ---
     const seiten = ["/", "/studios.html", "/start.html", "/ratgeber.html", "/tattoo-finanzieren.html", "/ratenzahlung-tattoostudio.html", "/tattoo-anzahlung.html", "/klarna-tattoostudio.html", "/video.html", "/raten.html", "/sitemap.xml"];
     for (const pf of seiten) {
@@ -983,12 +985,12 @@ await abschnitt("18 Paket Risikofrei geschlossen (26.10.2026): Neukunden gesperr
     for (const pf of ["/", "/studios.html"]) {
       const t = await (await fetch(BASE + pf)).text();
       const auf = (t.match(/href="\/start(?:\.html)?\?paket=(\w+)/g) || []).map((x) => x.replace(/.*paket=/, ""));
-      check(auf.length >= 2 && auf.every((x) => ["monatlich", "einmal"].includes(x)), `${pf}: alle Start-Knöpfe zeigen auf Monatlich oder Einmalzahlung`, [...new Set(auf)].join(","));
+      check(auf.every((x) => x === "monatlich") && !/href="\/start[^"]*einmal/.test(t), `${pf}: kein Start-Knopf zeigt auf Einmalzahlung`, [...new Set(auf)].join(","));
     }
     const lp = await (await fetch(BASE + "/")).text();
-    check(/class="btn dark big" href="\/start\.html\?paket=monatlich">Monatlich starten/.test(lp), "Hero-Knopf: „Monatlich starten“ → /start.html?paket=monatlich", "");
+    check(/class="btn dark big" href="\/start\.html\?paket=monatlich">Monatlich starten/.test(lp), "Hero-Knopf: „Jetzt starten“ → /start.html", "");
     const wann = await (await fetch(BASE + "/")).text();
-    check(/49 €<\/span> netto im Monat/.test(wann) && /999 €<\/span> netto einmalig/.test(wann) && /Zwei Pakete/.test(wann), "Preise auf der Startseite: 49 € netto im Monat, 999 € netto einmalig, „Zwei Pakete“", "");
+    check(/49 €<\/span> netto im Monat/.test(wann) && !/999 €/.test(wann) && /Ein Preis/.test(wann), "Preise auf der Startseite: 49 € netto im Monat, keine 999 €, „Ein Preis“", "");
     check(/Achtung! Kreditaufnahme kostet Geld\./.test(wann), "Pflicht-Warnhinweis steht weiter auf der Startseite", "");
     // --- Bestandsstudio läuft unverändert ---
     const pt = await json("/api/portal", {}, best.cookie);
@@ -1021,14 +1023,14 @@ await abschnitt("18 Paket Risikofrei geschlossen (26.10.2026): Neukunden gesperr
     process.env.TF_JETZT = BASIS_ZEIT;
     check(vorSt.zahlung.zahlarten.includes("klarna") && JSON.stringify(amSt.zahlung.zahlarten) === '["card"]', "Bestandsstudio: Klarna-Stichtag 20.11.2026 gilt weiter (davor Klarna, ab 00:00 nur Karte/Wallets)", `${vorSt.zahlung.zahlarten} → ${amSt.zahlung.zahlarten}`);
   } finally {
-    process.env.RISIKOFREI_NEU = "1";
+    process.env.RISIKOFREI_NEU = "1"; process.env.EINMAL_NEU = "1";
   }
 });
 
 // =====================================================================================================
 await abschnitt("19 Optik nach dem Entfernen von Risikofrei: Hero-Knopf, zwei Paket-Karten, kein Querscrollen auf 14 Größen", async () => {
   const GROESSEN = [[320, 568], [375, 667], [390, 844], [414, 896], [430, 932], [844, 390], [768, 1024], [1024, 768], [1280, 720], [1366, 768], [1440, 900], [1536, 864], [1920, 1080], [2560, 1440]];
-  const SEITEN = [["/", ".hero .ctas .btn.dark", "#preise .prices.zwei .price"], ["/studios.html", ".held-cta .knopf-gross", "#pakete .pk"], ["/start.html?paket=risikofrei", null, "section[data-step='1'] .choice.pakete label"]];
+  const SEITEN = [["/", ".hero .ctas .btn.dark", "#preise .prices.eins .price"], ["/studios.html", ".held-cta .knopf-gross", "#pakete .pk"], ["/start.html?paket=risikofrei", null, "section[data-step='1'] .choice.pakete label"]];
   const probleme = [];
   for (const [w, h] of GROESSEN) {
     for (const [pf, cta, karten] of SEITEN) {
@@ -1051,11 +1053,11 @@ await abschnitt("19 Optik nach dem Entfernen von Risikofrei: Hero-Knopf, zwei Pa
         out.rand = ks.every((r) => r.left >= -1 && r.right <= innerWidth + 1);
         return out;
       }, [cta, karten]);
-      if (m.quer || m.karten !== 2 || !m.rand || (cta && (!m.imErsten || !m.frei))) probleme.push(`${pf} ${w}x${h}: ${JSON.stringify(m)}`);
+      if (m.quer || m.karten !== 1 || !m.rand || (cta && (!m.imErsten || !m.frei))) probleme.push(`${pf} ${w}x${h}: ${JSON.stringify(m)}`);
       await p.context().close();
     }
   }
-  check(probleme.length === 0, "14 Größen × 3 Seiten: kein Querscrollen, Hero-Knopf im ersten Bildschirm und nach Scrollen nicht verdeckt (Cookie-Fenster), genau 2 Paket-Karten, nichts ragt über den Rand", probleme.slice(0, 2).join(" ; ") || "42 Seitenaufrufe geprüft");
+  check(probleme.length === 0, "14 Größen × 3 Seiten: kein Querscrollen, Hero-Knopf im ersten Bildschirm und nach Scrollen nicht verdeckt (Cookie-Fenster), genau 1 Preis-Karte, nichts ragt über den Rand", probleme.slice(0, 2).join(" ; ") || "42 Seitenaufrufe geprüft");
 });
 
 await browser.close();

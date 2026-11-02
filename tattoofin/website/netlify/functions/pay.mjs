@@ -16,7 +16,7 @@ import { log } from "./_lib/store.mjs";
 import { stripe } from "./_lib/stripe.mjs";
 import { brandingOeffentlich } from "./_lib/branding.mjs";
 
-const studioInfo = (s) => ({ klarna: klarnaFuer(s), firma: s.firma, ort: s.ort, slug: s.slug, aktiv: Boolean(darfKassieren(s)), anzahlungsbedingungen: anzahlungsbedingungen(s), branding: brandingOeffentlich(s) });
+const studioInfo = (s) => ({ klarna: klarnaFuer(s), zahlartenHinweis: Boolean(s.zahlartenHinweis), firma: s.firma, ort: s.ort, slug: s.slug, aktiv: Boolean(darfKassieren(s)), anzahlungsbedingungen: anzahlungsbedingungen(s), branding: brandingOeffentlich(s) });
 const NICHT_BESTAETIGT = "Bitte bestätige die Anzahlungsbedingungen des Studios.";
 const INHALT_FEHLT = "Bitte bestätige kurz, dass Studio, Projekt und Betrag stimmen.";
 

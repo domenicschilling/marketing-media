@@ -57,9 +57,10 @@ export const CFG = {
   // 2026-11 (27.10.2026): Rechtsprüfung Kreditrecht (keine Rechtsbehauptung „kein Kreditvermittler“, Klarna im Paket Risikofrei ab 20.11.2026
   // nicht mehr, Hinweis „Achtung! Kreditaufnahme kostet Geld.“ in der Studio-Werbung). Ältere Fassungen (archiviert, nie rückwirkend ändern):
   // /vertrag-2026-10d.html, /vertrag-2026-10c.html, /vertrag-2026-10b.html
-  vertragVersion: "2026-11",
+  // 2026-12 (02.11.2026): Software zum festen Preis, Vergütung unabhängig von der Zahlart, keine Mitwirkung an Krediten, KMU-Bestätigung (Rechtsprüfung 01.11.2026, U8). Archiv zusätzlich /vertrag-2026-11.html
+  vertragVersion: "2026-12",
   // Blatt „Deine rechtliche Lage“ und Leistungsbestätigung: Version bei inhaltlichen Änderungen hochzählen (wird mit der Zustimmung gespeichert)
-  rechtVersion: "2026-11",
+  rechtVersion: "2026-12",
   bestaetigungVersion: "2026-10b",
   // Zahlarten im Checkout. Bewusst ohne SEPA-Lastschrift: Die kann der Kunde 8 Wochen lang ohne Grund zurückbuchen.
   zahlarten: env("ZAHLARTEN", "card,klarna").split(",").map((x) => x.trim()).filter(Boolean),
@@ -137,8 +138,10 @@ export const PAKETE = {
 // Santo Tattoo Dachau, Color Lab, Different tattoo Mudersbach) laufen unverändert weiter: Das Paket bleibt in PAKETE (paketVon, Abrechnung, Webhooks,
 // Mails, Klarna-Stichtag). RISIKOFREI_NEU=1 öffnet die Anmeldung wieder (Notschalter und Test der Bestandsabläufe, Standard AUS).
 export const risikofreiNeuErlaubt = () => ["1", "an", "true", "ja"].includes(String(process.env.RISIKOFREI_NEU || "").trim().toLowerCase());
-export const paketNeuWaehlbar = (id) => Boolean(PAKETE[id]) && (id !== "risikofrei" || risikofreiNeuErlaubt());
-export const PAKETE_NEU_TEXT = "Das Paket Risikofrei gibt es für neue Anmeldungen nicht mehr. Bitte wähle Monatlich oder Einmalzahlung.";
+// Seit 02.11.2026 (Entscheidung Domenic): Es gibt für neue Anmeldungen nur noch einen Preis, Monatlich. Einmalzahlung bleibt im Code für den Notschalter EINMAL_NEU=1.
+export const einmalNeuErlaubt = () => ["1", "an", "true", "ja"].includes(String(process.env.EINMAL_NEU || "").trim().toLowerCase());
+export const paketNeuWaehlbar = (id) => Boolean(PAKETE[id]) && (id !== "risikofrei" || risikofreiNeuErlaubt()) && (id !== "einmal" || einmalNeuErlaubt());
+export const PAKETE_NEU_TEXT = "Dieses Paket gibt es für neue Anmeldungen nicht mehr. Tattoofin kostet jetzt einheitlich 49 € netto im Monat.";
 // URL-/Formular-Aliase: ?modell=provision → Risikofrei, ?modell=kauf → Einmalzahlung (auch alte Vorschau-Namen start/profi)
 export const PAKET_ALIAS = { provision: "risikofrei", kauf: "einmal", risikofrei: "risikofrei", monatlich: "monatlich", einmal: "einmal", einmalzahlung: "einmal", start: "risikofrei", profi: "einmal" };
 // Paket eines Studios. Ältere Datensätze ohne „paket“: provision → Risikofrei, kauf → Einmalzahlung (Altvertrag „Kauf“).

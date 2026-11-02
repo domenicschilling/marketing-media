@@ -35,18 +35,13 @@ window.TFBezahlen = (function () {
     kopf.insertBefore(img, kopf.firstChild);
   }
   // Hinweis vor dem Bezahlen (23.10.2026): Viele Kunden landen sonst bei der Karte, obwohl sie Raten wollen.
-  // Bei Anzahlungen bewusst ruhig: Anzahlung normal per Karte, Ratenzahlung ist für größere Projekte gedacht.
-  // Pflichthinweis (UWG-Anhang Nr. 23e) direkt in der Raten-Box: gut lesbar, Warnsatz fett
+  // Rechtsprüfung 01.11.2026 (U5): Tattoofin erklärt Kunden keinen Kreditabschluss. Nur wenn das Studio den Hinweis in seinen Einstellungen einschaltet,
+  // steht hier ein neutraler Satz zu den Zahlarten, mit Pflichthinweis (UWG-Anhang Nr. 23e) direkt darunter.
   var RATEN_WARN = '<p class="rb-warn">*Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, nicht Tattoofin. <b>Achtung! Kreditaufnahme kostet Geld.</b></p>';
   function ratenHinweis(el, d) {
     if (!el) return;
-    if (!d.klarna) { el.innerHTML = ""; return; }
-    if (d.anzahlung) { el.innerHTML = '<div class="raten-box ruhig">Anzahlungen zahlst du am einfachsten direkt per <b>Karte, Apple Pay oder Google Pay</b>. Ratenzahlung* ist für größere Tattoo-Projekte gedacht.' + RATEN_WARN + '</div>'; return; }
-    var zuHoch = d.betragCent > 1000000;
-    el.innerHTML = '<div class="raten-box"><b class="rb-titel">Du willst in Raten* zahlen?</b><p>Wähle im nächsten Schritt <b>Klarna</b> als Zahlungsart.</p>' +
-      '<ol class="raten-schritte" aria-label="So zahlst du in Raten"><li><span>1</span>Klarna wählen</li><li><span>2</span>Raten oder Finanzierung aussuchen</li><li><span>3</span>Bei Klarna bestätigen</li></ol>' +
-      '<p class="klein">' + (zuHoch ? "Über 10.000 € bietet Klarna keine Ratenzahlung an. " : "Ratenzahlung ist je nach Angebot von Klarna für Beträge von 25 € bis 10.000 € möglich. ") +
-      "Ob und welche Raten du bekommst, entscheidet Klarna nach einer kurzen Prüfung. Sobald die Zahlung freigegeben ist, kann es im Studio losgehen. Mit Karte zahlst du den ganzen Betrag auf einmal.</p>" + RATEN_WARN + "</div>";
+    if (!d.klarna || !d.zahlartenHinweis) { el.innerHTML = ""; return; }
+    el.innerHTML = '<div class="raten-box ruhig">Im nächsten Schritt siehst du die Zahlarten, die dir angeboten werden, zum Beispiel Karte, Apple Pay oder Klarna.*' + RATEN_WARN + "</div>";
   }
   return { meldung: meldung, betragCent: betragCent, inhaltText: inhaltText, starte: starte, branding: branding, ratenHinweis: ratenHinweis };
 })();

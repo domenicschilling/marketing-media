@@ -105,22 +105,5 @@
       v.src = c.videoUrl;
       v.addEventListener("loadedmetadata", function () { $("video-wrap").classList.remove("hidden"); });
     }
-    // Paket-Rechner (seit 26.10.2026 ohne Risikofrei): Kosten an Tattoofin inkl. USt. nach Nutzungsdauer, Monatlich gegen Einmalzahlung.
-    // Die Zahlungsgebühren an Stripe sind bei beiden Paketen gleich und deshalb nicht enthalten.
-    function rechne() {
-      var n = +$("monate").value;
-      $("v-monate").textContent = n + (n === 1 ? " Monat" : " Monate");
-      var proMonat = c.monatNetto * (100 + c.ustProzent) / 100, einmal = c.kaufNetto * (100 + c.ustProzent) / 100; // Cent, brutto
-      var monat = proMonat * n;
-      $("r-monat").textContent = TF.euro(Math.round(monat), true);
-      $("r-einmal").textContent = TF.euro(Math.round(einmal), true);
-      var einmalBesser = einmal < monat;
-      $("r-tipp").textContent = einmalBesser ? "Einmalzahlung" : "Monatlich ⭐";
-      $("r-tipp-text").textContent = einmalBesser
-        ? "Bei dieser Dauer ist die Einmalzahlung günstiger. Dafür zahlst du am Anfang einmalig " + TF.euro(Math.round(einmal), true) + "."
-        : "Bei dieser Dauer zahlst du mit Monatlich weniger und startest ohne große Einmalzahlung. Ab ca. 20 Monaten Laufzeit lohnt sich die Einmalzahlung.";
-    }
-    $("monate").addEventListener("input", rechne);
-    rechne();
   });
 })();

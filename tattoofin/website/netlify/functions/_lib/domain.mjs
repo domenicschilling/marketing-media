@@ -179,15 +179,12 @@ export const istAnzahlung = (z) => z.art === "anzahlung" || Boolean(z.anzahlung)
 // Gutscheine NIE mit Klarna: Die Klarna-Regeln schließen „Wertkarten, Gutscheine und Geschenkkarten“ aus
 // (docs.stripe.com/payments/klarna/compliance); Stripe führt Geschenkkarten als eingeschränkte Branche
 // (stripe.com/legal/restricted-businesses). Ein Verstoß kann Klarna oder das Plattformkonto sperren. Bewusst kein Schalter.
-// Reihenfolge: Tattoo-Zahlungen Klarna zuerst (wer Raten will, soll Klarna sofort sehen; Stripe kann die Anzeige-Reihenfolge
-// trotzdem selbst optimieren), Anzahlungen Karte zuerst (Anzahlung normal per Karte, Klarna bleibt technisch erlaubt).
+// Reihenfolge: immer Karte zuerst, keine Lenkung auf Klarna (Rechtsprüfung 01.11.2026, U5).
 // Mit „studio“: Klarna entfällt, wo es für dieses Studio nicht angeboten wird (siehe klarnaFuer: Risikofrei über das Plattformkonto ab Stichtag).
 export const zahlartenFuer = (z, { nurKarte = false, studio = null, zeit } = {}) => {
   if (z.art === "gutschein" || z.nurKarte || nurKarte) return ["card"];
   const arten = klarnaFuer(studio, zeit) ? CFG.zahlarten : CFG.zahlarten.filter((x) => x !== "klarna");
-  const rest = arten.filter((x) => x !== "klarna" && x !== "card");
-  if (!arten.includes("klarna")) return arten;
-  return istAnzahlung(z) ? ["card", "klarna", ...rest] : ["klarna", "card", ...rest].filter((x) => x === "klarna" || arten.includes(x));
+  return ["card", ...arten.filter((x) => x !== "card")].filter((x) => x !== "card" || arten.includes("card"));
 };
 
 // Klarer Name für den Warenkorb (Klarna zeigt ihn in der App und nutzt Warenkorbdaten für die Prüfung):

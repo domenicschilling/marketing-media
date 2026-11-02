@@ -52,8 +52,7 @@ export const RATEN_FUSS = "*Raten über Klarna, nach deren Bonitätsprüfung. Ve
 export const ratenWhatsapp = ({ vorname = "", projekt = "dein Tattoo", betrag = "", link = "", firma = "", klarna = true }) =>
   `Hi ${vorname}, hier ist dein Zahlungslink für ${projekt}${betrag ? " (" + betrag + ")" : ""}: ${link}\n\n` +
   (klarna
-    ? `Du möchtest in Raten* zahlen? So geht's:\n1. Link öffnen und auf „Weiter zum Bezahlen“ tippen\n2. „Klarna“ als Zahlungsart wählen\n3. Bei Klarna Raten oder Finanzierung aussuchen und bestätigen\n` +
-      `Klarna prüft kurz und entscheidet, welche Möglichkeiten du hast. Mit Karte zahlst du den ganzen Betrag auf einmal.\n${RATEN_FUSS}\n\nLiebe Grüße, ${firma}`
+    ? `Die Zahlarten, die dir angeboten werden, zum Beispiel Karte, Apple Pay oder Klarna*, siehst du beim Bezahlen.\n${RATEN_FUSS}\n\nLiebe Grüße, ${firma}`
     : `Bezahlen kannst du per Karte, Apple Pay oder Google Pay.\n\nLiebe Grüße, ${firma}`);
 
 // Manuelle Punkte der Einrichtungs-Checkliste (die übrigen erkennt das System selbst)
@@ -89,6 +88,7 @@ const oeffentlich = (s) => ({
   checkliste: s.checkliste || {}, extrasAngefragt: Object.keys(s.extras || {}), eingebettet: eingebettet(), simulation: BAUSTEINE_SIMULIERT,
   anzahlungsbedingungen: anzahlungsbedingungen(s),
   ausweichAnzahlung: { an: Boolean(s.ausweichAnzahlung?.an), prozent: s.ausweichAnzahlung?.prozent || 30 },
+  zahlartenHinweis: Boolean(s.zahlartenHinweis),
   kannKassieren: Boolean(darfKassieren(s)), zahlseite: zahlseite(s), connectUrl: connectUrl(s),
   aufsteller: { inklusive: CFG.aufstellerPakete.includes(paketVon(s).id), holz: s.aufsteller?.holz || "hell", variante: s.aufsteller?.variante || "name", hatLogo: Boolean(s.aufsteller?.hatLogo), angefordertAm: s.aufsteller?.angefordertAm || null, preisNetto: CFG.aufstellerPreisNetto, bezahltAm: s.aufsteller?.kauf?.bezahltAm || null },
 });
@@ -270,6 +270,8 @@ export default handler(async (req) => {
       if (pr < 10 || pr > 50) return fail("Bitte einen Anteil zwischen 10 und 50 % eingeben.");
       s.ausweichAnzahlung = { an: Boolean(b.ausweichAnzahlung?.an), prozent: pr, am: now() };
     }
+    // Hinweis zu den Zahlarten auf der Zahlseite: entscheidet allein das Studio (Standard: aus)
+    if (b.zahlartenHinweis !== undefined) s.zahlartenHinweis = Boolean(b.zahlartenHinweis);
     await saveStudio(s);
     return json(oeffentlich(s));
   }
