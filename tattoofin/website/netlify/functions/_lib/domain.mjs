@@ -674,6 +674,8 @@ export async function kontoAbgleichen(s, acct) {
   s.stripe.chargesEnabled = Boolean(acct.charges_enabled);
   s.stripe.payoutsEnabled = Boolean(acct.payouts_enabled);
   s.stripe.detailsSubmitted = Boolean(acct.details_submitted);
+  // Klarna auf dem eigenen Konto schaltet das Studio selbst ein (Stripe: klarna_payments), hier nur der Stand fürs Dashboard
+  if (acct.capabilities) s.stripe.klarnaAktiv = acct.capabilities.klarna_payments === "active";
   // Was Stripe noch braucht (für Admin/Dashboard), und wann zuletzt abgeglichen (Webhook oder „jetzt abgleichen“)
   const r = acct.requirements || {};
   s.stripe.offen = { faellig: (r.currently_due || []).slice(0, 20), ueberfaellig: (r.past_due || []).slice(0, 20), inPruefung: (r.pending_verification || []).slice(0, 20), sperrgrund: r.disabled_reason || null };

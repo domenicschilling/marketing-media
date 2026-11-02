@@ -311,6 +311,7 @@ ${g.nachricht ? `<div style="font-style:italic;color:#5b6370;margin-top:10px">�
     preheader: "Noch ca. 10 Minuten, dann ist alles fertig.",
     title: "Danke! Noch ein Schritt.",
     body: hallo(s) + p(`dein neuer Preis gilt: ${euro(s.monatNetto)} netto im Monat, keine Provision. Richte jetzt dein eigenes Stripe-Konto ein. Sobald Stripe es freigegeben hat, funktionieren deine Zahlungslinks und deine Zahlseite wieder, mit derselben Adresse und demselben QR-Code.`) +
+      p("Möchtest du deinen Kunden weiter Klarna anbieten? Dann schalte es danach selbst in deinem Stripe-Konto ein (Einstellungen → Zahlungsmethoden). Das entscheidest allein du.") +
       box("Dein altes Auszahlungskonto bleibt bestehen: Stripe zahlt noch offene Beträge von dort aus. Erstattungen und Rückbuchungen zu alten Zahlungen laufen weiter über Tattoofin."),
     cta: "Stripe-Konto einrichten", ctaUrl: loginUrl,
   }),

@@ -1,6 +1,6 @@
 // Werbung im Dashboard (19.10.2026): fertige Instagram-/Facebook-Beiträge, mit denen ein Studio verkündet
 // „Ab jetzt bei uns: Ratenzahlung*“ – Werbung FÜR das Studio (Studioname groß), auf jedem Bild das Abzeichen
-// „Ratenzahlung* mit Tattoofin · tattoofin.de“, damit andere Studios auf Tattoofin aufmerksam werden.
+// „Zahlung per Link mit Tattoofin · tattoofin.de“, damit andere Studios auf Tattoofin aufmerksam werden.
 // Direkt im Browser gezeichnet (Canvas), Design wie das Studio-Werbevideo: Gelb/Navy, Strahlen, Maskottchen,
 // Luckiest Guy + DM Sans. Keine KI-Bilder.
 // Formulierungsregeln: „Raten*“ immer mit Fußnote; keine Zahlen zu Raten/Zinsen/Monatsbeträgen, kein „0 %“/„zinsfrei“,
@@ -203,13 +203,13 @@ window.TFKit = (function () {
     return unten;
   }
 
-  // Abzeichen „Ratenzahlung* mit TATTOOFIN / tattoofin.de“ (auf jedem Bild, damit andere Studios Tattoofin finden).
+  // Abzeichen „Zahlung per Link mit TATTOOFIN / tattoofin.de“ (auf jedem Bild, damit andere Studios Tattoofin finden). Bewusst ohne Raten: Tattoofin stellt Endkunden keine Kredite vor (Rechtsprüfung U4).
   // Gibt {oben, unten} zurück.
   async function abzeichen(c, W, unten, gross) {
     var wm = await bild("/assets/wortmarke.png"), fig = await bild("/assets/figur.png");
     var f = gross ? 1.12 : 1, s = Math.round(26 * f), wmH = Math.round(50 * f), wmW = wm ? wmH * wm.naturalWidth / wm.naturalHeight : 225 * f, fg = Math.round(108 * f);
     font(c, "700", s, BODY);
-    var t1 = "Ratenzahlung* mit", t3 = "tattoofin.de", spalte = Math.max(wmW, c.measureText(t1).width);
+    var t1 = "Zahlung per Link mit", t3 = "tattoofin.de", spalte = Math.max(wmW, c.measureText(t1).width);
     var padY = Math.round(14 * f), h = padY * 2 + s + 6 * f + wmH + 6 * f + s, w = 18 + fg + 16 + spalte + 30, x = Math.round((W - w) / 2), y = unten - h;
     c.fillStyle = NAVY; rund(c, x + 7, y + 7, w, h, 26); c.fill();
     c.fillStyle = "#fff"; c.strokeStyle = NAVY; c.lineWidth = 5; rund(c, x, y, w, h, 26); c.fill(); c.stroke();

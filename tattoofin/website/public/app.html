@@ -25,6 +25,9 @@
   <!-- START -->
   <section data-view="start" class="hidden">
     <h1 class="hallo" id="hallo"></h1>
+    <div class="card-a hidden" id="klarna-eigen"><h2>Klarna ist bei dir noch nicht eingeschaltet</h2>
+      <p class="klein">Deine Kunden können gerade per Karte, Apple Pay und Google Pay zahlen. Klarna schaltest du bei Bedarf selbst in deinem Stripe-Konto ein. Das entscheidest allein du.</p>
+      <a class="btn dark small" href="https://dashboard.stripe.com/settings/payment_methods" target="_blank" rel="noopener">Zahlungsmethoden bei Stripe öffnen</a></div>
     <div class="card-a hidden" id="umst-karte"><h2>Neu ab 20.11.: dein eigenes Stripe-Konto</h2>
       <p class="klein">Am 20.11. ändert sich das Gesetz. Klarna bleibt nur möglich, wenn das Geld direkt auf dein eigenes Stripe-Konto läuft. Dann zahlst du keine 10 % mehr, sondern <b id="umst-preis"></b> netto im Monat, dazu die Zahlungsgebühren direkt an Stripe. Monatlich kündbar. Der QR-Aufsteller ist bei diesem Preis nicht enthalten.</p>
       <p class="klein">Nach der Bestätigung richtest du das neue Konto ein (ca. 10 Minuten). Stripe prüft es meist in 1 bis 3 Werktagen. Bis zur Freigabe kannst du keine neuen Zahlungslinks nutzen.</p>
@@ -78,7 +81,7 @@
       <input type="email" id="l-email" name="email" inputmode="email" autocomplete="off" enterkeyhint="done" placeholder="kunde@beispiel.de">
       <button class="btn gold big w100" id="l-btn">Link erstellen</button>
       <p class="muted klein">Dein Kunde bestätigt vor dem Bezahlen Betrag und Projekt, bei Anzahlungen auch deine Bedingungen. So hast du später einen Beleg.</p>
-      <p class="muted klein" id="l-art-hinweis">Projektpreis: Dein Kunde kann per Karte zahlen oder mit Klarna in Raten*. Für Raten muss er beim Bezahlen „Klarna“ wählen – das steht schon im WhatsApp-Text.</p>
+      <p class="muted klein" id="l-art-hinweis">Projektpreis: Dein Kunde kann per Karte zahlen oder mit Klarna in Raten*. Der Pflichtsatz steht schon im WhatsApp-Text.</p>
     </form>
     <div id="l-out"></div>
     <a class="card-a raten-hilfe-link" href="#raten" data-klarna><b>💡 So zahlt dein Kunde in Raten*</b><small>3 Schritte zum Erklären + fertiger WhatsApp-Text</small></a>
@@ -169,7 +172,7 @@
         <button class="btn small dark" data-wv="reel" role="tab" aria-selected="true">Reel / Story (9:16)</button>
         <button class="btn small ghost" data-wv="feed" role="tab" aria-selected="false">Beitrag (4:5)</button>
       </div>
-      <div class="sg-film hoch" id="wv-film"><video controls playsinline preload="none" width="1080" height="1920" poster="/media/studio-video/cover.jpg" aria-label="Werbevideo: Bei uns ganz bequem in Raten* über Tattoofin"><source src="/media/studio-video/reel.mp4" type="video/mp4"></video></div>
+      <div class="sg-film hoch" id="wv-film"><video controls playsinline preload="none" width="1080" height="1920" poster="/media/studio-video/cover.jpg" aria-label="Werbevideo: Bei uns ganz bequem in Raten*"><source src="/media/studio-video/reel.mp4" type="video/mp4"></video></div>
       <div class="row-a"><button class="btn gold small" id="wv-speichern">Video speichern</button><button class="btn ghost small" id="wv-text-an">Text zum Posten</button></div>
       <div class="hidden" id="wv-text"><pre class="caption" id="wv-caption"></pre><div class="row-a"><button class="btn dark small" id="wv-kopieren">Text kopieren</button></div></div>
       <p class="klein muted fussnote">*Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, nicht Tattoofin. <strong>Achtung! Kreditaufnahme kostet Geld.</strong></p>

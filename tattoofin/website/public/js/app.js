@@ -90,6 +90,7 @@
     var s = D.studio;
     var vorname = (s.inhaber || "").split(" ")[0];
     $("hallo").textContent = "Hey" + (vorname ? " " + vorname : "") + " 👋";
+    $("klarna-eigen").classList.toggle("hidden", !(s.modell === "kauf" && s.stripe.freigegeben && s.stripe.klarnaAktiv === false));
     var ua = s.umstellungAngebot;
     $("umst-karte").classList.toggle("hidden", !ua);
     if (ua) $("umst-preis").textContent = TF.euro(ua.monatNetto);
@@ -374,7 +375,7 @@
   }
 
   // ---------- Werbevideo für alle Studios (Reel 9:16 + Beitrag 4:5, Quelle spots/tfin-studio-universal-v2 in der Marketing-Maschine, Fassung 2) ----------
-  var WV_TEXT = "Dein Wunsch-Tattoo – bei uns ganz bequem in Raten* 🖤\n\nBei uns kannst du dein Tattoo jetzt über Tattoofin in Raten* zahlen. Alles direkt übers Handy, ohne Papierkram.\n\nSprich uns einfach drauf an oder schreib uns eine Nachricht!\n\n*Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, weder wir noch Tattoofin.\nAchtung! Kreditaufnahme kostet Geld.\nStimme mit KI erstellt";
+  var WV_TEXT = "Dein Wunsch-Tattoo – bei uns ganz bequem in Raten* 🖤\n\nBei uns kannst du dein Tattoo jetzt in Raten* zahlen. Alles direkt übers Handy, ohne Papierkram.\n\nSprich uns einfach drauf an oder schreib uns eine Nachricht!\n\n*Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, weder wir noch Tattoofin.\nAchtung! Kreditaufnahme kostet Geld.\nStimme mit KI erstellt";
   var WV_GESEHEN = "tf-werbevideo-gesehen";
   function werbevideo() {
     try { localStorage.setItem(WV_GESEHEN, "1"); } catch (x) {}
