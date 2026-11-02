@@ -116,7 +116,7 @@ try {
   check(await p0.locator("#preise .price").count() === 1 && await p0.locator("#r-monat").count() === 0, "Ein Preis auf der Startseite, kein Paket-Rechner");
   const preise = await p0.textContent("#preise");
   check(preise.includes("49") && !preise.includes("999") && !preise.includes("Einmalzahlung") && !/Gründer|Profi\b|Risikofrei|10 %|900 €|Grundge/.test(preise) && /Achtung! Kreditaufnahme kostet Geld/.test(preise), "Preisbereich: nur 49 €, Pflichtsatz bei Klarna*");
-  check(!/Ich spar noch/.test(await p0.textContent("body")), "„Ich spar noch.“ ist weg");
+  { const sichtbar = await p0.evaluate(() => document.body.innerText); check(!/Ich spar noch|Einmalzahlung|beiden Paketen|999 €/.test(sichtbar), "Startseite: kein „Ich spar noch.“, keine Einmalzahlung, keine zwei Pakete"); }
   check((await p0.textContent("#aufsteller")).includes("KI-generiertes Symbolbild"), "QR-Aufsteller-Abschnitt mit KI-Kennzeichnung");
   const ld = await p0.textContent('script[type="application/ld+json"]');
   check(ld.includes("Paket Monatlich") && !/Einmalzahlung|999 €/.test(ld) && !/Risikofrei|10 %/.test(ld), "Strukturierte Daten: nur Monatlich");
