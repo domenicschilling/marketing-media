@@ -1103,7 +1103,8 @@ await abschnitt("19 Altstudio stellt um: Zustimmung, 29 €, neues eigenes Konto
 
   // Altes Konto meldet sich: darf den Status nicht verfälschen
   const { sendeWebhook } = await import("../netlify/functions/_lib/stripe-sim.mjs");
-  await sendeWebhook(`${BASE}/api/stripe-webhook`, "whsec_mock", "account.updated", { id: altKonto, charges_enabled: true, payouts_enabled: true, details_submitted: true }, altKonto).catch(() => null);
+  const wAlt = await sendeWebhook(`${BASE}/api/stripe-webhook`, "whsec_mock", "account.updated", { id: altKonto, charges_enabled: true, payouts_enabled: true, details_submitted: true }, altKonto);
+  check(wAlt === 200, "Meldung vom alten Konto wird angenommen", `HTTP ${wAlt}`);
   await wait(200);
   check(!(await detail(a.id)).studio.stripe.chargesEnabled, "Meldung vom alten Konto schaltet das Studio nicht frei", "");
 
@@ -1134,6 +1135,7 @@ await abschnitt("19 Altstudio stellt um: Zustimmung, 29 €, neues eigenes Konto
   const k = await anmelden("risikofrei", "kuendig@betrieb.test", "Kuendig Studio");
   delete process.env.RISIKOFREI_NEU;
   const vs = await admin(`studio/${k.id}/kuendigen`, { body: {} });
+  check(/31\.12\.2026|31\.01\.2027/.test(vs.html) && !/01\.01\.2027/.test(vs.html), "Kündigungsmail nennt den letzten Tag des Monats", vs.zum);
   check(vs.gesendet === false && (await detail(k.id)).studio.status !== "gekuendigt" && !mailsAn("kuendig@betrieb.test").some((m) => /Kündigung deines/.test(m.subject)), "Kündigung: ohne senden:true nur Vorschau", vs.zum);
   const ks = await admin(`studio/${k.id}/kuendigen`, { body: { senden: true } });
   const kd = (await detail(k.id)).studio;

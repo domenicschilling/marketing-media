@@ -699,7 +699,8 @@ export const hatUmstellungsangebot = (s) => Boolean(s?.umstellung?.monatNetto) &
 // Letzter Tag des Monats, zu dem der Anbieter mit einem Monat Frist kündigen kann (Altvertrag: ein Monat zum Monatsende)
 export function anbieterKuendigungZum(jetzt = new Date()) {
   const d = new Date(Date.UTC(jetzt.getUTCFullYear(), jetzt.getUTCMonth() + 1, jetzt.getUTCDate()));
-  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0, 23, 59, 59)).toISOString();
+  // 12 Uhr UTC, damit das angezeigte Datum in deutscher Zeit der letzte Tag des Monats bleibt
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0, 12, 0, 0)).toISOString();
 }
 
 export async function umstellungCheckout(s) {

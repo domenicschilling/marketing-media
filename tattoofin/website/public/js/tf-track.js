@@ -63,8 +63,8 @@ window.TFTrack = (function () {
     ".tf-cc .r{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}" +
     ".tf-cc button{flex:1;min-width:140px;border:3px solid #1f3d5c;border-radius:99px;padding:10px 14px;font:700 15px 'DM Sans',system-ui,sans-serif;cursor:pointer;background:#fff;color:#1f3d5c}" +
     ".tf-cc button.ja{background:#fff;color:#1f3d5c}" +
-    ".tf-wa{position:fixed;right:16px;bottom:16px;z-index:9998;display:flex;align-items:center;gap:8px;background:#25d366;color:#fff;text-decoration:none;border:3px solid #1f3d5c;border-radius:99px;box-shadow:4px 4px 0 #1f3d5c;padding:10px 16px 10px 12px;font:700 15px 'DM Sans',system-ui,sans-serif}" +
-    ".tf-wa svg{width:24px;height:24px;flex:none}.tf-wa small{display:block;font-weight:500;font-size:11px;opacity:.9}" +
+    ".tf-wa{position:fixed;right:16px;bottom:16px;z-index:9998;display:flex;align-items:center;gap:8px;background:#25d366;color:#0f2236;text-decoration:none;border:3px solid #1f3d5c;border-radius:99px;box-shadow:4px 4px 0 #1f3d5c;padding:10px 16px 10px 12px;font:700 15px 'DM Sans',system-ui,sans-serif}" +
+    ".tf-wa svg{width:24px;height:24px;flex:none}.tf-wa small{display:block;font-weight:500;font-size:11px}" +
     "@media (max-width:600px){.tf-wa span{display:none}.tf-wa{padding:12px}}" +
     "body.tf-cc-offen .tf-wa{display:none}.tf-cc .kurz{display:none}" +
     // Platz unter dem Seitenende, damit das Fenster keine Knöpfe (z. B. „Weiter“ auf /start) verdeckt
