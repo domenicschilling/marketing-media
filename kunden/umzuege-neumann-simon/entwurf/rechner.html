@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Umzugsrechner – Entwurf</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--b:#0054a6;--bd:#003a75;--bl:#e9f2fc;--ink:#121c27;--mut:#5b6876;--line:#e3e8ee}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Inter,system-ui,sans-serif;color:var(--ink);background:#f4f7fa;font-size:15px}
+.top{background:var(--bd);color:#fff;padding:18px 18px 22px}
+.top .t{display:flex;justify-content:space-between;align-items:center;font-weight:700}
+.lg{background:#fff;border-radius:8px;padding:6px 9px;font-family:"Archivo Black",sans-serif;color:#0054a6;line-height:.92;font-size:13px}
+.top small{font-weight:500;color:#b9cde0;font-size:13px}
+.prog{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:16px}
+.prog div{height:5px;border-radius:3px;background:rgba(255,255,255,.25)}
+.prog div.on{background:#9fd0ff}
+.lbl{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:7px;font-size:11px;color:#b9cde0}
+.lbl .on{color:#fff;font-weight:600}
+.body{padding:16px}
+h2{font-size:19px;letter-spacing:-.01em;margin:4px 0 10px}
+.rooms{display:flex;gap:7px;overflow:hidden;margin-bottom:14px}
+.rooms span{border:1.5px solid var(--line);background:#fff;border-radius:20px;padding:7px 12px;font-size:13.5px;font-weight:600;white-space:nowrap}
+.rooms span.on{background:var(--b);border-color:var(--b);color:#fff}
+.item{display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px 12px;margin-bottom:8px}
+.item .n{font-weight:600}.item .m{font-size:12.5px;color:var(--mut)}
+.cnt{display:flex;align-items:center;gap:10px;font-weight:700}
+.cnt b{width:30px;height:30px;border-radius:9px;border:1.5px solid #cbd8e6;display:grid;place-items:center;color:var(--b);font-size:18px}
+.cnt b.p{background:var(--b);color:#fff;border-color:var(--b)}
+.res{background:#fff;border-radius:16px;border:1.5px solid var(--b);padding:16px;margin-top:14px}
+.row{display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
+.row:last-of-type{border:0}
+.row b{font-size:15px}
+.big{font-size:30px;font-weight:800;color:var(--bd);letter-spacing:-.02em}
+.price{background:var(--bl);border-radius:12px;padding:12px 14px;margin-top:10px}
+.price .k{font-size:12.5px;color:var(--mut);font-weight:600}
+.price .v{font-size:22px;font-weight:800;color:var(--bd);margin-top:2px}
+.btn{display:block;text-align:center;background:var(--b);color:#fff;font-weight:700;border-radius:12px;padding:15px;margin-top:14px;font-size:16px}
+.hint{font-size:11.5px;color:var(--mut);text-align:center;margin-top:8px}
+</style></head><body>
+<div class="top">
+  <div class="t"><div class="lg">UMZÜGE<br>NEUMANN</div><span>Umzugsrechner</span></div>
+  <div class="prog"><div class="on"></div><div class="on"></div><div class="on"></div><div></div></div>
+  <div class="lbl"><span>Adressen</span><span>Zimmer</span><span class="on">Möbel</span><span>Anfrage</span></div>
+</div>
+<div class="body">
+  <h2>Was soll mit?</h2>
+  <div class="rooms"><span>Küche</span><span class="on">Wohnzimmer</span><span>Schlafzimmer</span><span>Keller</span></div>
+  <div class="item"><div><div class="n">Sofa, 3-Sitzer</div><div class="m">ca. 1,5 m³</div></div><div class="cnt"><b>−</b>1<b class="p">+</b></div></div>
+  <div class="item"><div><div class="n">Schrankwand</div><div class="m">ca. 2,4 m³</div></div><div class="cnt"><b>−</b>1<b class="p">+</b></div></div>
+  <div class="item"><div><div class="n">Umzugskartons</div><div class="m">je 0,1 m³</div></div><div class="cnt"><b>−</b>40<b class="p">+</b></div></div>
+  <div class="res">
+    <div class="row"><span>Ihr Umzugsgut</span><span class="big">31 m³</span></div>
+    <div class="row"><span>Empfehlung</span><b>3 Helfer · 1 LKW 7,5 t</b></div>
+    <div class="row"><span>Strecke</span><b>Bamberg → Hallstadt</b></div>
+    <div class="price"><div class="k">Ihr Richtpreis</div><div class="v" id="p">wird sofort angezeigt</div></div>
+  </div>
+  <div class="btn">Kostenloses Angebot anfordern →</div>
+  <div class="hint">Beispielwerte · Richtpreis nach Ihren eigenen Preisen eingestellt</div>
+</div>
+</body></html>

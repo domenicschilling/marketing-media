@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><title>Musterbrief Barrierefreiheits-Check</title>
+<style>
+@page { size: A4; margin: 0; }
+* { box-sizing: border-box; }
+body { margin: 0; font: 10.6pt/1.5 Helvetica, Arial, sans-serif; color: #1b2027; }
+.seite { width: 210mm; height: 297mm; position: relative; padding: 0 20mm 0 25mm; page-break-after: always; overflow: hidden; }
+.entwurf { position: absolute; top: 8mm; right: 12mm; font-size: 8pt; color: #c62828; border: 1px solid #c62828; border-radius: 4px; padding: 2px 6px; }
+.kopf { position: absolute; top: 14mm; left: 25mm; right: 20mm; display: flex; justify-content: space-between; align-items: flex-start; }
+.marke b { font-size: 13pt; letter-spacing: .02em; } .marke span { display: block; font-size: 8.5pt; color: #5b6470; }
+.ruecksende { position: absolute; top: 45mm; left: 25mm; font-size: 7pt; color: #5b6470; border-bottom: .5px solid #9aa3ad; }
+.anschrift { position: absolute; top: 50mm; left: 25mm; width: 85mm; font-size: 10.5pt; line-height: 1.4; }
+.info { position: absolute; top: 50mm; left: 125mm; font-size: 8.5pt; color: #5b6470; line-height: 1.5; }
+.inhalt { position: absolute; top: 98mm; left: 25mm; right: 20mm; }
+.betreff { font-weight: 700; font-size: 11pt; margin: 0 0 14px; }
+p { margin: 0 0 9px; }
+.box { display: grid; grid-template-columns: 1fr 34mm; gap: 12px; align-items: center; background: #f5f6f8; border-radius: 10px; padding: 10px 14px; margin: 12px 0; }
+.qr { width: 30mm; height: 30mm; border: 1.5px dashed #9aa3ad; border-radius: 6px; display: grid; place-items: center; text-align: center; font-size: 7.5pt; color: #5b6470; }
+.fuss { position: absolute; bottom: 10mm; left: 25mm; right: 20mm; font-size: 7.2pt; color: #7b8896; border-top: .5px solid #c9ced4; padding-top: 5px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+/* Beiblatt */
+.blatt { padding: 22mm 20mm 0 25mm; }
+.titel { font-size: 16pt; font-weight: 700; margin: 0 0 2px; }
+.unter { color: #5b6470; margin-bottom: 14px; }
+.wert { display: flex; align-items: center; gap: 16px; margin: 10px 0 16px; }
+.ring { flex-shrink: 0; width: 32mm; height: 32mm; border-radius: 50%; background: conic-gradient(#e5a100 0 78%, #e3e6ea 78% 100%); display: grid; place-items: center; }
+.ring div { width: 24mm; height: 24mm; border-radius: 50%; background: #fff; display: grid; place-items: center; font-size: 20pt; font-weight: 700; }
+.ring small { display: block; font-size: 7.5pt; color: #5b6470; font-weight: 400; text-align: center; margin-top: -4px; }
+.problem { border: 1px solid #e3e6ea; border-radius: 10px; padding: 9px 12px; margin: 8px 0; }
+.problem b { display: block; font-size: 10.8pt; }
+.problem .wer { font-size: 9pt; color: #5b6470; }
+.bildplatz { height: 22mm; border: 1.5px dashed #c9ced4; border-radius: 6px; margin-top: 6px; display: grid; place-items: center; font-size: 8pt; color: #9aa3ad; }
+.hinweis { font-size: 8.5pt; color: #5b6470; margin-top: 14px; }
+</style></head><body>
+
+<!-- Seite 1: Brief -->
+<div class="seite">
+  <div class="entwurf">MUSTER – Entwurf, nicht versenden</div>
+  <div class="kopf">
+    <div class="marke"><b>DSX Media Solutions</b><span>Barrierefreie Online-Shops · Bamberg</span></div>
+    <div style="font-size:8.5pt;color:#5b6470;text-align:right">Am Weingarten 9 · 96117 Memmelsdorf<br>info@dsxmediasolutions.de</div>
+  </div>
+  <div class="ruecksende">DSX Media Solutions UG (haftungsbeschränkt) · Am Weingarten 9 · 96117 Memmelsdorf</div>
+  <div class="anschrift">Mahrs Bräu Bamberg GmbH<br>z. Hd. der Geschäftsführung<br><span style="color:#9aa3ad">[Name laut Impressum]</span><br>Wunderburg 10<br>96050 Bamberg</div>
+  <div class="info">Ihr Ansprechpartner<br><b style="color:#1b2027">Domenic Schilling</b><br>WhatsApp 0174 1682157<br><br>Datum<br><b style="color:#1b2027">[Datum]</b></div>
+
+  <div class="inhalt">
+    <p class="betreff">Ihr Online-Shop im Barrierefreiheits-Test: 78 von 100 Punkten</p>
+    <p>Sehr geehrte Damen und Herren,</p>
+    <p>seit dem 28. Juni 2025 müssen Online-Shops, die an Verbraucher verkaufen, barrierefrei sein – also auch für Menschen nutzbar, die schlecht sehen, blind sind oder nur mit Tastatur arbeiten. So regelt es das Barrierefreiheitsstärkungsgesetz.</p>
+    <p>Wir sind ein Bamberger Team, das Online-Shops genau dabei unterstützt. Deshalb haben wir uns Ihren Shop <b>mahrs.de/shop</b> mit einem automatischen Test angesehen. Das Ergebnis: <b>78 von 100 Punkten</b> – ein ordentlicher Start, aber mit drei Stellen, die Kunden mit Einschränkungen heute noch ausbremsen:</p>
+    <ul style="margin:0 0 9px 18px;padding:0">
+      <li><b>Zoomen am Handy ist gesperrt</b> – wer schlecht sieht, kann die Seite nicht vergrößern.</li>
+      <li><b>Bildern fehlt eine Beschreibung</b> – Vorlese-Programme für Blinde sagen nur „Bild“.</li>
+      <li><b>16 Links ohne Namen</b> – etwa das Warenkorb-Symbol wird nur als „Link“ vorgelesen.</li>
+    </ul>
+    <div class="box">
+      <div><b>Ihren vollständigen Bericht</b> mit Bildschirmfotos und einer einfachen Erklärung jedes Punktes finden Sie kostenlos über den QR-Code. Die gute Nachricht: Die meisten Punkte lassen sich mit überschaubarem Aufwand beheben.</div>
+      <div class="qr">QR-Code<br>zum persönlichen<br>Bericht</div>
+    </div>
+    <p>Gern besprechen wir in 15 Minuten, was davon wirklich wichtig ist und was es kostet – unverbindlich, telefonisch oder bei Ihnen in Bamberg. Rufen Sie einfach an oder schreiben Sie mir per WhatsApp.</p>
+    <p>Mit freundlichen Grüßen aus Memmelsdorf</p>
+    <p style="margin-top:22px"><b>Domenic Schilling</b><br><span style="color:#5b6470;font-size:9.5pt">Geschäftsführer, DSX Media Solutions</span></p>
+    <p style="font-size:7.6pt;color:#7b8896;margin-top:14px">Hinweis: Der Test ist automatisch und technisch; er ersetzt keine vollständige Prüfung und keine Rechtsberatung. Ihre Adresse stammt aus dem öffentlichen Impressum Ihrer Website. Wenn Sie keine weiteren Schreiben von uns wünschen, genügt eine kurze Nachricht an info@dsxmediasolutions.de.</p>
+  </div>
+
+  <div class="fuss">
+    <div>DSX Media Solutions UG (haftungsbeschränkt)<br>Am Weingarten 9 · 96117 Memmelsdorf</div>
+    <div>Geschäftsführer: Domenic Schilling<br>Amtsgericht Bamberg · HRB 12150</div>
+    <div>info@dsxmediasolutions.de<br>WhatsApp 0174 1682157</div>
+  </div>
+</div>
+
+<!-- Seite 2: Beiblatt mit Ergebnis -->
+<div class="seite blatt">
+  <div class="entwurf">MUSTER</div>
+  <div class="titel">Ihr Ergebnis auf einen Blick</div>
+  <div class="unter">mahrs.de/shop · automatischer Test (Handy-Ansicht) vom [Datum]</div>
+  <div class="wert">
+    <div class="ring"><div><span>78<small>von 100</small></span></div></div>
+    <div><b style="font-size:12pt">Ordentlich – mit 3 klaren Baustellen.</b><br><span style="color:#5b6470">100 Punkte heißt: keine automatisch erkennbaren Fehler. Ein Teil der Anforderungen lässt sich nur von Hand prüfen – das gehört zu unserer vollständigen Prüfung.</span></div>
+  </div>
+
+  <div class="problem"><b>1 · Zoomen am Handy ist gesperrt</b>
+    <div class="wer">Betrifft: Menschen, die schlecht sehen – und alle, die unterwegs etwas genauer lesen wollen.</div>
+    Die Seite verbietet dem Handy das Vergrößern. Das lässt sich mit einer Zeile im Seiten-Code beheben.
+    <div class="bildplatz">[Bildschirmfoto der Stelle]</div></div>
+  <div class="problem"><b>2 · Bildern fehlt eine Beschreibung</b>
+    <div class="wer">Betrifft: blinde und sehbehinderte Kunden, die sich die Seite vorlesen lassen.</div>
+    Produktbilder brauchen einen kurzen Text („Mahrs Ungespundet, 0,5-l-Flasche“). Das hilft nebenbei auch bei Google.
+    <div class="bildplatz">[Bildschirmfoto der Stelle]</div></div>
+  <div class="problem"><b>3 · 16 Links ohne Namen</b>
+    <div class="wer">Betrifft: alle, die mit Vorlese-Programm oder Tastatur einkaufen.</div>
+    Symbole wie Warenkorb oder Instagram werden nur als „Link“ vorgelesen – niemand weiß, wohin er führt.
+    <div class="bildplatz">[Bildschirmfoto der Stelle]</div></div>
+
+  <div class="hinweis"><b>Was jetzt?</b> Im kostenlosen Online-Bericht (QR-Code im Brief) sehen Sie alle Punkte. Wenn Sie möchten, prüfen wir Ihren Shop vollständig – Startseite, Produktseiten, Warenkorb und Kasse – und beheben die Punkte zum Festpreis.</div>
+  <div class="fuss" style="left:25mm">
+    <div>DSX Media Solutions UG (haftungsbeschränkt)</div><div>Technischer Test · keine Rechtsberatung</div><div>info@dsxmediasolutions.de</div>
+  </div>
+</div>
+</body></html>

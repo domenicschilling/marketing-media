@@ -1,0 +1,2 @@
+Dein Tattoo kostet 400 Euro und du würdest es lieber in Raten zahlen? Mit Tattoofin schickt dir dein Studio einfach einen Zahlungslink. Dann zahlst du per Karte, Apple Pay oder in Raten über Klarna. Dein Studio hat Tattoofin noch nicht? Dann frag einfach danach. Oder schick ihnen einfach dieses Video. Alles auf tattoofin.de slash raten.
+(mlx_whisper large-v3-turbo, Prompt „Tattoofin“; ohne Prompt wird „Tattoofin“ in Zeile 5 als „Tattoo Fee“ erkannt)
