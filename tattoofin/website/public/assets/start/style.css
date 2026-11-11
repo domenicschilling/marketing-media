@@ -410,5 +410,5 @@ svg.stech.los .f,svg.stech.los .t{opacity:1;transition:opacity .4s .55s}
   .auftakt-text .satz{order:2}
 }
 @media (max-width:899px) and (max-height:500px){.leiste{transform:none;visibility:visible}}
-/* Schwebender WhatsApp-Knopf (tf-track.js) am Handy über der Leiste, damit er „Jetzt starten“ nicht verdeckt */
-@media (max-width:899px){.tf-wa{bottom:calc(80px + env(safe-area-inset-bottom))!important}}
+/* Schwebender WhatsApp-Knopf (tf-track.js): am Handy aus, die Leiste unten hat ihren eigenen WhatsApp-Knopf */
+@media (max-width:899px){.tf-wa{display:none!important}}
