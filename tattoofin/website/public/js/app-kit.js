@@ -1,14 +1,16 @@
 // Werbung im Dashboard (19.10.2026): fertige Instagram-/Facebook-Beiträge, mit denen ein Studio verkündet
-// „Ab jetzt bei uns: Ratenzahlung*“ – Werbung FÜR das Studio (Studioname groß), auf jedem Bild das Abzeichen
+// „Ab jetzt bei uns: Mit Klarna bezahlen“ – Werbung FÜR das Studio (Studioname groß), auf jedem Bild das Abzeichen
 // „Zahlung per Link mit Tattoofin · tattoofin.de“, damit andere Studios auf Tattoofin aufmerksam werden.
 // Direkt im Browser gezeichnet (Canvas), Design wie das Studio-Werbevideo: Gelb/Navy, Strahlen, Maskottchen,
 // Luckiest Guy + DM Sans. Keine KI-Bilder.
-// Formulierungsregeln: „Raten*“ immer mit Fußnote; keine Zahlen zu Raten/Zinsen/Monatsbeträgen, kein „0 %“/„zinsfrei“,
-// kein „Geld sofort“, kein „voller Betrag“, keine Versprechen zur Bewilligung. Keine Silbentrennung auf den Bildern:
+// Formulierungsregeln (Klarna-Regeln Deutschland ab 20.11.2026, Texte zentral in /js/klarna-texte.js): nur der Name („Mit Klarna bezahlen“),
+// KEINE Aussage zu Raten/später bezahlen/30 Tagen (die bräuchte freigegebenen Wortlaut + Warnsatz direkt daneben); keine Zahlen zu Raten/Zinsen/
+// Monatsbeträgen, kein „0 %“/„zinsfrei“, kein „Geld sofort“, kein „voller Betrag“, keine Versprechen zur Bewilligung. Keine Silbentrennung auf den Bildern:
 // Zeilen sind fest gesetzt, die Schrift wird kleiner, bis jede Zeile passt.
 window.TFKit = (function () {
   // Im Beitrag des Studios spricht das Studio („wir“). Weder das Studio noch Tattoofin vergeben Kredite → beide nennen.
-  var FUSS = "*Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, weder wir noch Tattoofin. Achtung! Kreditaufnahme kostet Geld.";
+  // Zusatz + Warnsatz kommen aus der zentralen Konstante (ohne Sternchen: die Beiträge machen keine Raten-Aussage, der Hinweis bleibt als Zusatz)
+  var FUSS = TF_KLARNA.ZUSATZ_STUDIO + " " + TF_KLARNA.WARNSATZ;
   var NAVY = "#1f3d5c", NAVY2 = "#0f2236", GELB = "#fbb316", CREME = "#fffaf0";
   var HEAD = "'Luckiest Guy', 'Titan One', sans-serif", BODY = "'DM Sans', sans-serif";
 
@@ -23,36 +25,37 @@ window.TFKit = (function () {
   function beiUns(k) { return k.ort ? "bei uns in " + k.ort : "bei uns"; }
   function caption(k, teile) { return teile.join("\n\n") + "\n\n" + FUSS + "\n\n" + hashtags(k); }
 
+  var MIT = TF_KLARNA.NAME.mitKlarna; // „Mit Klarna bezahlen“
   var VORLAGEN = [
-    { id: "ankuendigung", titel: "Beitrag: Ab jetzt Ratenzahlung*", format: "Beitrag 4:5", art: "post",
-      wofuer: "Dein Start-Beitrag: Alle sehen sofort, dass man bei euch jetzt in Raten* zahlen kann.",
+    { id: "ankuendigung", titel: "Beitrag: Ab jetzt mit Klarna bezahlen", format: "Beitrag 4:5", art: "post",
+      wofuer: "Dein Start-Beitrag: Alle sehen sofort, dass man bei euch jetzt auch mit Klarna bezahlen kann.",
       seiten: ["ankuendigung"],
       text: function (k) { return caption(k, [
-        "Ab jetzt bei uns: Ratenzahlung* für dein Wunsch-Tattoo! 🖤",
-        "Du hast schon lange ein Motiv im Kopf, willst aber nicht alles auf einmal zahlen? Dann haben wir gute Neuigkeiten: Dein Tattoo kannst du " + beiUns(k) + " jetzt auch in Raten* zahlen. Ganz bequem übers Handy, per Link oder QR-Code.",
+        "Ab jetzt bei uns: " + MIT + " für dein Wunsch-Tattoo! 🖤",
+        "Dein Tattoo kannst du " + beiUns(k) + " jetzt ganz bequem übers Handy bezahlen, per Link oder QR-Code. Zum Beispiel mit Karte, Apple Pay oder Google Pay. " + TF_KLARNA.NAME.verfuegbar + ".",
         "Sprich uns einfach drauf an oder schreib uns eine Nachricht. Wir freuen uns auf dein Projekt!"]); } },
-    { id: "karussell", titel: "Karussell: Wunsch-Tattoo in Raten*", format: "4 Bilder 4:5", art: "post",
+    { id: "karussell", titel: "Karussell: Wunsch-Tattoo mit Klarna bezahlen", format: "4 Bilder 4:5", art: "post",
       wofuer: "Vier Bilder zum Durchwischen: Frage, Neuigkeit, So geht's, Frag uns. Alle vier zusammen als einen Beitrag posten.",
       seiten: ["haken", "ankuendigung", "schritte", "fragpost"],
       text: function (k) { return caption(k, [
-        "Dein Wunsch-Tattoo, aber nicht alles auf einmal zahlen? Wisch mal rüber 👉",
-        "Ab jetzt kannst du " + beiUns(k) + " in Raten* zahlen. So einfach geht's: Design und Termin mit uns absprechen, Link oder QR-Code öffnen und am Handy über Klarna in Raten* zahlen.",
+        "Dein Wunsch-Tattoo – jetzt ganz einfach bezahlen. Wisch mal rüber 👉",
+        "Ab jetzt kannst du " + beiUns(k) + " mit Klarna bezahlen. So einfach geht's: Design und Termin mit uns absprechen, Link oder QR-Code öffnen und am Handy bezahlen.",
         "Fragen? Schreib uns eine Nachricht oder sprich uns im Studio an! 🖤"]); } },
-    { id: "qr-story", titel: "Story: Raten* mit QR-Code", format: "Story 9:16", art: "story",
+    { id: "qr-story", titel: "Story: Mit Klarna bezahlen, QR-Code", format: "Story 9:16", art: "story",
       wofuer: "Für deine Story, mit dem QR-Code zu deiner Zahlseite. Tipp: In Instagram noch den Link-Sticker mit deiner Zahlseite dazu – dann können Kunden direkt antippen.",
       seiten: ["qrstory"], kopieren: "link",
       text: function (k) { return "Link für den Link-Sticker in deiner Story:\n" + k.zahlseite; } },
     { id: "schritte", titel: "Beitrag: So einfach geht's", format: "Beitrag 4:5", art: "post",
-      wofuer: "Erklärt in drei Schritten, wie die Ratenzahlung* bei euch funktioniert. Gut als zweiter Beitrag ein paar Tage später.",
+      wofuer: "Erklärt in drei Schritten, wie das Bezahlen bei euch funktioniert. Gut als zweiter Beitrag ein paar Tage später.",
       seiten: ["schritte"],
       text: function (k) { return caption(k, [
-        "Tattoo in Raten*? So einfach geht's 👇",
-        "1️⃣ Design & Termin: Wir planen dein Tattoo gemeinsam mit dir.\n2️⃣ Link oder QR-Code: Den Link schicken wir dir, oder du scannst den QR-Code bei uns im Studio.\n3️⃣ In Raten* zahlen: Bequem am Handy über Klarna.",
+        "Tattoo bezahlen? So einfach geht's 👇",
+        "1️⃣ Design & Termin: Wir planen dein Tattoo gemeinsam mit dir.\n2️⃣ Link oder QR-Code: Den Link schicken wir dir, oder du scannst den QR-Code bei uns im Studio.\n3️⃣ Bezahlen: Bequem am Handy. " + MIT + ".",
         "Alles übers Handy, ohne Papierkram. Fragen? Schreib uns einfach!"]); } },
     { id: "frag-story", titel: "Story: Frag uns!", format: "Story 9:16", art: "story",
-      wofuer: "Lädt deine Follower ein, euch zur Ratenzahlung* zu schreiben. Tipp: In Instagram den Fragen-Sticker dazu – den Text dafür kannst du kopieren.",
+      wofuer: "Lädt deine Follower ein, euch zur Bezahlung zu schreiben. Tipp: In Instagram den Fragen-Sticker dazu – den Text dafür kannst du kopieren.",
       seiten: ["fragstory"], kopieren: "sticker",
-      text: function () { return "Hast du Fragen zur Ratenzahlung?"; } },
+      text: function () { return "Hast du Fragen zum Bezahlen?"; } },
   ];
 
   // ---------- Zeichnen: Grundlagen ----------
@@ -254,12 +257,12 @@ window.TFKit = (function () {
 
   // Pflicht-Fußnote in dunkler Box, gut lesbar. Gibt Oberkante zurück.
   function fussnote(c, W, unten, s, hell) {
-    var teile = [{ t: "*", b: 1 }].concat(FUSS.slice(1).replace(" Achtung! Kreditaufnahme kostet Geld.", "").split(" ").map(function (t) { return { t: t }; }))
+    var teile = TF_KLARNA.ZUSATZ_STUDIO.split(" ").map(function (t) { return { t: t }; })
       .concat("Achtung! Kreditaufnahme kostet Geld.".split(" ").map(function (t) { return { t: t, b: 1 }; }));
     var maxW = W - 120, zeilen = [[]], breite = [0];
     function fnt(b) { font(c, b ? "800" : "600", s, BODY); }
     teile.forEach(function (p, i) {
-      fnt(p.b); var w = c.measureText(p.t).width, sp = i > 1 ? c.measureText(" ").width : 0;
+      fnt(p.b); var w = c.measureText(p.t).width, sp = i > 0 ? c.measureText(" ").width : 0;
       var z = zeilen.length - 1;
       // Vor „Achtung!“ immer neue Zeile (Sinnabschnitt), sonst füllen
       var neu = (p.t === "Achtung!" && zeilen[z].length) || (breite[z] + sp + w > maxW && zeilen[z].length);
@@ -351,12 +354,12 @@ window.TFKit = (function () {
   // Story: oben 250 px (Instagram-Kopfzeile) und unten ab 1730 px (Antwortfeld) frei lassen.
   var STORY_UNTEN = 1730;
   var SEITEN = {
-    // Beitrag 4:5 – „Ab jetzt bei uns: Ratenzahlung* für dein Wunsch-Tattoo“
+    // Beitrag 4:5 – „Ab jetzt bei uns: Mit Klarna bezahlen“
     ankuendigung: { w: 1080, h: 1350, async malen(c, k, W, H, p) {
       grund(c, W, H, "gelb", 560);
       var y = studioKopf(c, k, W, 64, { size: 74 });
       sticker(c, "AB JETZT BEI UNS", W / 2, y + 54, { size: 40, rot: -0.04, bg: NAVY, farbe: GELB, fam: HEAD, gewicht: "400", padX: 38 });
-      var u = comicBlock(c, [{ t: "Ratenzahlung*", f: GELB, g: 1.18 }, { t: "für dein", f: "#fff", g: 0.7 }, { t: "Wunsch-Tattoo", f: "#fff" }], W / 2, y + 96, 118, W - 130, 1.0);
+      var u = comicBlock(c, [{ t: "Mit Klarna", f: GELB, g: 1.18 }, { t: "bezahlen", f: GELB }, { t: "dein Wunsch-Tattoo", f: "#fff", g: 0.6 }], W / 2, y + 96, 118, W - 130, 1.0);
       var f = fussnote(c, W, H - 36, 33);
       var b = await abzeichen(c, W, f - 22);
       await reihe(c, W, ["Bequem übers Handy –", "per Link oder QR-Code.", "Sprich uns einfach an!"], u + 10, b.oben - (p ? 56 : 16), { size: 38, figur: 220 });
@@ -366,24 +369,24 @@ window.TFKit = (function () {
     schritte: { w: 1080, h: 1350, async malen(c, k, W, H, p) {
       grund(c, W, H, "gelb", 300);
       var y = studioKopf(c, k, W, 56, { size: 56, min: 32, ortSize: 30 });
-      var u = comicBlock(c, [{ t: "Tattoo in Raten*?", f: GELB }, { t: "So einfach geht's:", f: "#fff", g: 0.8 }], W / 2, y + 22, 96, W - 130, 1.02);
+      var u = comicBlock(c, [{ t: "Tattoo bezahlen?", f: GELB }, { t: "So einfach geht's:", f: "#fff", g: 0.8 }], W / 2, y + 22, 96, W - 130, 1.02);
       var f = fussnote(c, W, H - 36, 33);
       var b = await abzeichen(c, W, f - 22);
       var sy = u + 26, sw = W - 140, frei = b.oben - (p ? 58 : 30) - sy, gap = 24, sh = Math.min(168, Math.floor((frei - gap * 2) / 3));
       sy += Math.max(0, (frei - (sh * 3 + gap * 2)) / 2);
       schritt(c, 1, "Design & Termin", "Wir planen dein Tattoo gemeinsam mit dir.", 70, sy, sw, sh);
       schritt(c, 2, "Link oder QR-Code", "Den Link schicken wir dir – oder du scannst den Code bei uns.", 70, sy + sh + gap, sw, sh);
-      schritt(c, 3, "In Raten* zahlen", "Bequem am Handy über Klarna.", 70, sy + (sh + gap) * 2, sw, sh);
+      schritt(c, 3, "Mit Klarna bezahlen", "Bequem am Handy. Klarna verfügbar.", 70, sy + (sh + gap) * 2, sw, sh);
       if (p) seitenPunkte(c, W, b.oben - 30, p.nr, p.von);
     } },
-    // Karussell 1 – Haken (navy): „Dein Wunsch-Tattoo? Aber nicht alles auf einmal zahlen?“
+    // Karussell 1 – Haken (navy): „Dein Wunsch-Tattoo? Jetzt auch mit Klarna bezahlen!“
     haken: { w: 1080, h: 1350, async malen(c, k, W, H, p) {
       grund(c, W, H, "navy", 520);
       var y = studioKopf(c, k, W, 64, { size: 66, hell: true });
       var u = comicBlock(c, [{ t: "Dein", f: GELB, g: 0.86 }, { t: "Wunsch-Tattoo?", f: GELB }], W / 2, y + 36, 126, W - 130, 1.0, NAVY2);
       var f = fussnote(c, W, H - 36, 33, true);
       var b = await abzeichen(c, W, f - 22);
-      await reihe(c, W, ["Aber nicht alles", "auf einmal zahlen?"], u + 10, b.oben - (p ? 150 : 16), { size: 54, figur: 230, schatten: NAVY2, mitte: true, rot: -0.02, kippen: -0.08 });
+      await reihe(c, W, ["Jetzt auch mit", "Klarna bezahlen!"], u + 10, b.oben - (p ? 150 : 16), { size: 54, figur: 230, schatten: NAVY2, mitte: true, rot: -0.02, kippen: -0.08 });
       if (p) { wischWeiter(c, W, b.oben - 100, true); seitenPunkte(c, W, b.oben - 30, p.nr, p.von, true); }
     } },
     // Karussell 4 – Frag uns + QR-Code zur Zahlseite (navy)
@@ -405,7 +408,7 @@ window.TFKit = (function () {
       grund(c, W, H, "navy", 1000);
       var y = studioKopf(c, k, W, 250, { size: 70, hell: true });
       sticker(c, "NEU BEI UNS", W / 2, y + 50, { size: 42, rot: -0.04, bg: GELB, fam: HEAD, gewicht: "400", padX: 40 });
-      var u = comicBlock(c, [{ t: "Dein Wunsch-Tattoo", f: "#fff", g: 0.82 }, { t: "jetzt in Raten*", f: GELB }], W / 2, y + 100, 116, W - 120, 1.04, NAVY2);
+      var u = comicBlock(c, [{ t: "Dein Wunsch-Tattoo", f: "#fff", g: 0.82 }, { t: "Mit Klarna bezahlen", f: GELB }], W / 2, y + 100, 116, W - 120, 1.04, NAVY2);
       var f = fussnote(c, W, STORY_UNTEN, 36, true);
       var b = await abzeichen(c, W, f - 24, true);
       // QR-Code so groß wie Platz ist (lange Studionamen brauchen oben zwei Zeilen)
@@ -420,7 +423,7 @@ window.TFKit = (function () {
     fragstory: { w: 1080, h: 1920, async malen(c, k, W, H) {
       grund(c, W, H, "gelb", 900);
       var y = studioKopf(c, k, W, 250, { size: 76 });
-      var u = comicBlock(c, [{ t: "Tattoo", f: GELB }, { t: "in Raten*?", f: GELB }], W / 2, y + 30, 150, W - 130, 1.0);
+      var u = comicBlock(c, [{ t: "Fragen zum", f: GELB }, { t: "Bezahlen?", f: GELB }], W / 2, y + 30, 150, W - 130, 1.0);
       var bt = "Frag uns einfach!", bs = passend(c, [bt], "800", BODY, 72, 40, W - 300);
       font(c, "800", bs, BODY);
       var bw = c.measureText(bt).width + 100, bx = (W - bw) / 2, by = u + 44;
@@ -485,7 +488,7 @@ window.TFKit = (function () {
   }
   function dateiName(k, v, i, n) {
     var slug = String(k.firma || "studio").toLowerCase().replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "studio";
-    return slug + "-raten-" + v.id + (n > 1 ? "-" + (i + 1) : "") + ".png";
+    return slug + "-klarna-" + v.id + (n > 1 ? "-" + (i + 1) : "") + ".png";
   }
 
   // Großansicht (Antippen eines Bildes), mit „Dieses Bild speichern“
@@ -519,8 +522,8 @@ window.TFKit = (function () {
     if (box.dataset.kit === name + "|" + kRoh.zahlseite + "|" + kRoh.ort) return;
     box.dataset.kit = name + "|" + kRoh.zahlseite + "|" + kRoh.ort;
     var esc = TF.esc;
-    box.innerHTML = '<div class="card-a kit-kopf"><h2>Deine Beiträge: Ab jetzt Ratenzahlung* <span class="neu-badge">Neu</span></h2>' +
-      '<p class="muted klein">Fertige Bilder für Instagram und Facebook, mit denen du deinen Kunden zeigst: Bei euch geht jetzt Ratenzahlung*. Mit deinem Studionamen' + (kRoh.ort ? ", " + esc(kRoh.ort) : "") + ' und dem QR-Code zu deiner Zahlseite.</p>' +
+    box.innerHTML = '<div class="card-a kit-kopf"><h2>Deine Beiträge: Ab jetzt mit Klarna bezahlen <span class="neu-badge">Neu</span></h2>' +
+      '<p class="muted klein">Fertige Bilder für Instagram und Facebook, mit denen du deinen Kunden zeigst: Bei euch geht jetzt auch Klarna. Mit deinem Studionamen' + (kRoh.ort ? ", " + esc(kRoh.ort) : "") + ' und dem QR-Code zu deiner Zahlseite.</p>' +
       '<ol class="kit-so klein"><li><b>Bild speichern</b> – am Handy landet es in deinen Fotos.</li><li><b>Text kopieren</b> – fertig mit Pflichthinweis und Hashtags.</li><li>In Instagram posten und den Text einfügen.</li></ol>' +
       '<form class="kit-name" autocomplete="off"><label class="lbl" for="kit-name">Name auf den Bildern</label><div class="kit-name-row"><input id="kit-name" name="kit-name" type="text" autocomplete="organization" maxlength="60" value="' + esc(name) + '"><button class="btn ghost small" type="submit">Übernehmen</button></div></form></div>' +
       '<div id="kit-liste" class="kit-liste"><p class="muted klein kit-laden">Bilder werden erstellt …</p></div>';

@@ -41,6 +41,7 @@ body.app{background:#fff;padding-bottom:20px}
   <li>Dann prüfen Bank bzw. Zahlungsanbieter den Fall. <b>Sie entscheiden</b> – nicht Tattoofin und nicht du. Niemand kann garantieren, dass du gewinnst.</li>
   <li>Stripe berechnet pro Rückbuchung eine Gebühr, derzeit <b><span data-c="ruecklastGebuehrCent|cent2">20,00 €</span></b>.</li>
 </ul>
+<div data-prov hidden>
 <p><b>Paket Risikofrei</b> (nur für Studios, die es schon haben; für neue Anmeldungen gibt es das Paket seit 26.10.2026 nicht mehr. Die Zahlung läuft über das Plattformkonto von Tattoofin bei Stripe, Provision <span data-c="provisionProzent">10</span> %):</p>
 <ul>
   <li>Stripe bucht den Betrag und die Gebühr zuerst bei Tattoofin ab.</li>
@@ -49,6 +50,7 @@ body.app{background:#fff;padding-bottom:20px}
   <li><b>Verlierst du den Fall</b>, geht das Geld an den Kunden zurück. Tattoofin verlangt für diese Zahlung dann keine Provision.</li>
   <li>Tattoofin reicht deine Nachweise bei Stripe ein. Du schickst sie uns schnell (meist hat man nur wenige Tage Zeit).</li>
 </ul>
+</div>
 <p><b>Eigenes Stripe-Konto</b> (Paket Monatlich): Rückbuchungen laufen direkt über dein Stripe-Konto. Die Gebühr zieht Stripe bei dir ab. Du siehst den Fall in deiner Tattoofin-App unter „Zahlungen“ und reichst Nachweise dort bzw. bei Stripe ein.</p>
 
 <h2>4. Was du selbst absichern solltest</h2>
@@ -72,7 +74,7 @@ body.app{background:#fff;padding-bottom:20px}
   <li><b>Keine Klarna-Käufe im eigenen Studio:</b> Inhaber und Mitarbeitende dürfen laut den Regeln von Klarna nicht selbst per Klarna bei ihrem Studio bezahlen.</li>
   <li><b>Widerruf bei Klarna:</b> Widerruft dein Kunde seinen Klarna-Vertrag (14 Tage), kann das auch den Tattoo-Vertrag betreffen (§ 358 BGB). Bei einem schon gestochenen Tattoo wird dann über Wertersatz abgerechnet. Halte Preis, Leistung und Einverständnis deshalb schriftlich fest.</li>
   <li><b>Werbung mit Raten:</b> Schreib direkt neben jede Raten-Aussage, gut lesbar und hervorgehoben: <b>Achtung! Kreditaufnahme kostet Geld.</b> Das gilt auch für Instagram, Videos, Flyer und Aufsteller. Nenne keine Zinsen, Ratenhöhen oder Laufzeiten und schreib nie „zinsfrei“ oder „ohne Schufa“.</li>
-  <li>Bei Fragen zu deinem konkreten Fall helfen dir zum Beispiel deine Industrie- und Handelskammer oder dein Fachverband weiter.</li>
+  <li>Das sind allgemeine Informationen. Einzelfälle können abweichen.</li>
 </ul>
 
 <h2>6. Was Tattoofin nicht kann</h2>
@@ -87,6 +89,8 @@ body.app{background:#fff;padding-bottom:20px}
 </div>
 <script src="/js/common.js"></script>
 <script>
-TF.config().then(function (c) { TF.fill(c); if (c.klarnaPlattformBis) { document.getElementById("recht-klarna").hidden = false; document.getElementById("recht-klarna-datum").textContent = new Date(c.klarnaPlattformBis).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "Europe/Berlin" }); } if (new URLSearchParams(location.search).get("druck")) setTimeout(function () { print(); }, 400); });
+// „Paket Risikofrei / Provision“ nur für Studios zeigen, die dieses Paket haben (Bestandsstudios). Ohne Anmeldung bleibt der Block aus.
+var provStudio = fetch("/api/portal", { credentials: "same-origin" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) { return Boolean(d && d.studio && d.studio.modell === "provision"); }).catch(function () { return false; });
+Promise.all([TF.config(), provStudio]).then(function (a) { var c = a[0], prov = a[1]; TF.fill(c); document.querySelectorAll("[data-prov]").forEach(function (el) { el.hidden = !prov; }); if (c.klarnaPlattformBis && prov) { document.getElementById("recht-klarna").hidden = false; document.getElementById("recht-klarna-datum").textContent = new Date(c.klarnaPlattformBis).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "Europe/Berlin" }); } if (new URLSearchParams(location.search).get("druck")) setTimeout(function () { print(); }, 400); });
 </script>
 </body></html>

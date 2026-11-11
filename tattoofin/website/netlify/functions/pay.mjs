@@ -15,8 +15,13 @@ import { mails } from "./_lib/emails.mjs";
 import { log } from "./_lib/store.mjs";
 import { stripe } from "./_lib/stripe.mjs";
 import { brandingOeffentlich } from "./_lib/branding.mjs";
+import { gutscheinWort, GUTSCHEIN_HINWEIS } from "./_lib/klarna-texte.mjs";
 
-const studioInfo = (s) => ({ klarna: klarnaFuer(s), zahlartenHinweis: Boolean(s.zahlartenHinweis), firma: s.firma, ort: s.ort, slug: s.slug, aktiv: Boolean(darfKassieren(s)), anzahlungsbedingungen: anzahlungsbedingungen(s), branding: brandingOeffentlich(s) });
+const studioInfo = (s) => ({ klarna: klarnaFuer(s), zahlartenHinweis: Boolean(s.zahlartenHinweis), firma: s.firma, ort: s.ort, strasse: s.strasse || "", plz: s.plz || "", slug: s.slug, aktiv: Boolean(darfKassieren(s)), anzahlungsbedingungen: anzahlungsbedingungen(s), branding: brandingOeffentlich(s) });
+// Doppelzahlung sperren: Hat die Kundin nach einem Klarna-Nein die Anzahlung (Ausweg) schon bezahlt, darf der ursprüngliche Link nicht mehr
+// zahlbar sein (sonst zahlt sie versehentlich den Gesamtbetrag zusätzlich). Umgekehrt: Ist das Original bezahlt, ist die Anzahlung gesperrt.
+export const schonBezahltDurchAusweich = (z) => Boolean(z.ausweich?.bezahltAm);
+const DOPPELT = "Für diesen Link wurde schon eine Anzahlung bezahlt. Den Rest zahlst du direkt im Studio. Hier ist nichts mehr zu bezahlen.";
 const NICHT_BESTAETIGT = "Bitte bestätige die Anzahlungsbedingungen des Studios.";
 const INHALT_FEHLT = "Bitte bestätige kurz, dass Studio, Projekt und Betrag stimmen.";
 
@@ -41,7 +46,7 @@ function bestaetigen(req, context, s, z) {
 // Betrag: eingestellter Prozentsatz vom Gesamtbetrag, auf volle Euro gerundet, mindestens der Mindestbetrag.
 export function ausweichAngebot(s, z) {
   const a = s.ausweichAnzahlung || {};
-  if (!a.an || z.art === "gutschein" || istAnzahlung(z) || z.ausweichVon) return null;
+  if (!a.an || z.art === "gutschein" || istAnzahlung(z) || z.ausweichVon || z.ausweich?.bezahltAm) return null;
   const prozent = Math.min(50, Math.max(10, Number(a.prozent) || 30));
   const betragCent = Math.max(CFG.minBetragCent, Math.round(z.betragCent * prozent / 100 / 100) * 100);
   if (betragCent >= z.betragCent) return null;
@@ -70,6 +75,9 @@ export default handler(async (req, context) => {
       let klarna = null;
       if (u.searchParams.get("abbruch") && ["offen", "abgebrochen"].includes(z.status)) {
         klarna = await klarnaVersuch(s, z);
+        if (z.letzterFehler) await saveZahlung(z);
+        // Nur eine echte Ablehnung ist „Klarna hat nicht zugestimmt“; Abbruch durch den Kunden oder Ablauf nicht (Code/Typ stehen in letzterFehler)
+        if (klarna && klarna.typ !== "ablehnung") klarna = null;
         if (klarna && z.klarnaAbgelehnt?.pi !== klarna.pi) {
           z.klarnaAbgelehnt = { ...klarna, am: now() };
           await saveZahlung(z);
@@ -79,8 +87,10 @@ export default handler(async (req, context) => {
       }
       return json({
         studio: studioInfo(s),
-        zahlung: { id: z.id, betragCent: z.betragCent, beschreibung: z.beschreibung, sitzungen: z.sitzungen || "", kunde: (z.kunde || "").split(" ")[0], status: z.status, art: z.art,
-          empfaenger: z.gutschein?.empfaenger || "", zahlarten: zahlartenFuer(z, { studio: s }), ausweichAnzahlungId: z.ausweich?.anzahlungId || null },
+        zahlung: { id: z.id, betragCent: z.betragCent, beschreibung: z.beschreibung, sitzungen: z.sitzungen || "", kunde: (z.kunde || "").split(" ")[0], status: z.status, art: z.art, zahlart: z.zahlart || "", restCent: z.restCent || 0,
+          empfaenger: z.gutschein?.empfaenger || "", zahlarten: zahlartenFuer(z, { studio: s }), ausweichAnzahlungId: z.ausweich?.anzahlungId || null,
+          anzahlungBezahlt: schonBezahltDurchAusweich(z) ? { betragCent: z.ausweich.betragCent, restCent: Math.max(0, z.betragCent - (z.ausweich.betragCent || 0)) } : null,
+          gutscheinHinweis: z.art !== "gutschein" && gutscheinWort(z.beschreibung, z.sitzungen) ? GUTSCHEIN_HINWEIS : "" },
         klarnaAbgelehnt: Boolean(klarna || z.klarnaAbgelehnt),
         ausweich: ausweichAngebot(s, z),
       });
@@ -97,6 +107,8 @@ export default handler(async (req, context) => {
     if (!z) return fail("Zahlungslink nicht gefunden", 404);
     if (z.status === "bezahlt") return fail("Dieser Betrag ist bereits bezahlt. Danke!", 409);
     if (!["offen", "abgebrochen"].includes(z.status)) return fail("Dieser Zahlungslink ist nicht mehr gültig. Bitte frag im Studio nach einem neuen Link.", 410);
+    if (schonBezahltDurchAusweich(z)) return fail(DOPPELT, 409);
+    if (z.ausweichVon) { const orig = await zahlungBy("zahlung", z.ausweichVon); if (orig?.status === "bezahlt") return fail("Der ursprüngliche Betrag wurde schon bezahlt. Hier ist nichts mehr zu bezahlen.", 409); }
     const s = await getStudio(z.studioId);
     // Ausweg „Anzahlung jetzt per Karte, Rest direkt im Studio“: eigene Zahlung (art anzahlung), mit dem Original verknüpft
     if (b.ausweich === "anzahlung") {
@@ -138,10 +150,12 @@ export default handler(async (req, context) => {
   const anzahlung = Boolean(b.anzahlung);
   if (anzahlung && !b.bedingungen) return fail(NICHT_BESTAETIGT);
   if (!b.inhaltOk) return fail(INHALT_FEHLT);
-  const z = { id: id("zl_"), studioId: s.id, createdAt: now(), art: "zahlseite", anzahlung, status: "offen", betragCent, kunde, email, beschreibung: clean(b.beschreibung, 120) || (anzahlung ? "Anzahlung" : "Tattoo-Projekt"), sitzungen: clean(b.sitzungen, 60) };
+  const gw = gutscheinWort(b.beschreibung, b.sitzungen);
+  const z = { id: id("zl_"), studioId: s.id, createdAt: now(), art: "zahlseite", ...(gw ? { nurKarte: true } : {}), anzahlung, status: "offen", betragCent, kunde, email, beschreibung: clean(b.beschreibung, 120) || (anzahlung ? "Anzahlung" : "Tattoo-Projekt"), sitzungen: clean(b.sitzungen, 60) };
   bestaetigen(req, context, s, z);
   await saveZahlung(z);
-  return starte(s, z);
+  const r = await starte(s, z);
+  return gw ? json({ ...(await r.json()), hinweis: GUTSCHEIN_HINWEIS }) : r;
 });
 
 export const config = { path: "/api/pay" };

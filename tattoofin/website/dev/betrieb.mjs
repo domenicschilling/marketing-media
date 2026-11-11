@@ -10,6 +10,7 @@ import path from "node:path";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import { startDev } from "./server.mjs";
+import { randomBytes } from "node:crypto";
 
 const require = createRequire(import.meta.url);
 let chromium;
@@ -33,6 +34,7 @@ process.env.RISIKOFREI_NEU = "1"; process.env.EINMAL_NEU = "1";
 process.env.ADMIN_EMAIL = "admin@betrieb.test";
 process.env.MAIL_TEST_TOKEN = "mailtest";
 await startDev({ port: PORT, mock: true, dataDir, quiet: true });
+const storeMod0 = await import("../netlify/functions/_lib/store.mjs");
 const auth = await import("../netlify/functions/_lib/auth.mjs");
 const gesundheit = await import("../netlify/functions/_lib/gesundheit.mjs");
 const domain = await import("../netlify/functions/_lib/domain.mjs");
@@ -53,6 +55,12 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // ---------- Helfer ----------
 const admin = (p, opts = {}) => fetch(`${BASE}/api/admin/${p}`, { method: opts.body !== undefined ? "POST" : "GET", ...opts, headers: { Authorization: "Bearer admin", "content-type": "application/json" }, body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined }).then(async (r) => { let d = {}; try { d = await r.json(); } catch { /* leer */ } return Object.assign(Array.isArray(d) ? d : d, { _status: r.status }); });
+// Neue Einladungen sind abgeschaltet (410); Bestandsweg mit früher ausgestellten Codes wird über einen direkt angelegten Code geprüft.
+const altEinladung = async ({ email, firma, bezeichnung = null }) => {
+  const code = randomBytes(9).toString("base64url");
+  await storeMod0.store.set(`geschenk/${code}`, { code, email, firma, bezeichnung, erstellt: new Date().toISOString(), benutzt: null });
+  return { _status: 200, link: `${BASE}/start.html?modell=kauf&geschenk=${code}`, gesendet: false };
+};
 const adminPatch = (p, body) => fetch(`${BASE}/api/admin/${p}`, { method: "PATCH", headers: { Authorization: "Bearer admin", "content-type": "application/json" }, body: JSON.stringify(body) }).then((r) => r.json());
 const mock = (p) => fetch(`${STRIPE}/mock/${p}`).then((r) => r.json());
 const mockState = () => mock("state");
@@ -582,7 +590,9 @@ await abschnitt("11 QR-Aufsteller (Kauf + Paket) und Geschenk-Einladung", async 
   check(anf2.status === 409, "Aufsteller nicht doppelt bestellbar", `HTTP ${anf2.status}`);
 
   // Geschenk-Einladung
-  const ein = await admin("einladen", { body: { email: "gast@betrieb.test", firma: "Gast Studio", bezeichnung: "Partner – nur Zahlungsgebühren", senden: false } });
+  const einNeu = await admin("einladen", { body: { email: "gast0@betrieb.test", firma: "Gast Null", senden: false } });
+  check(einNeu._status === 410 && /Neue Einladungen/.test(einNeu.error || "") && !mailAnMit("gast0@betrieb.test", /Einladung/), "Neue Einladung abgeschaltet (410), keine Mail", `HTTP ${einNeu._status}`);
+  const ein = await altEinladung({ email: "gast@betrieb.test", firma: "Gast Studio", bezeichnung: "Partner – nur Zahlungsgebühren" });
   check(ein._status === 200 && /geschenk=/.test(ein.link || "") && ein.gesendet === false && !mailAnMit("gast@betrieb.test", /Einladung/), "Einladung erzeugt (ohne Versand, wenn gewünscht)", (ein.link || "").slice(0, 60));
   const code = (ein.link || "").split("geschenk=")[1];
   const falsch = await post("/api/signup", { ...DATEN("anderer@betrieb.test", "Gast Studio"), geschenk: code });
@@ -821,7 +831,7 @@ await abschnitt("17 Recht (27.10.2026): Klarna-Stichtag 20.11.2026 für Risikofr
   setze("TF_JETZT", "2026-11-19T22:59:59Z");
   const vor = await link("rf", "900", "Vor Stichtag");
   const iv = await info(vor.zahlung.id);
-  check(iv.zahlung.zahlarten.includes("klarna") && iv.studio.klarna === true && /Klarna\*/.test(vor.whatsappText) && /Kreditaufnahme kostet Geld/.test(vor.whatsappText), "Vor dem Stichtag (19.11. 23:59:59): Risikofrei bietet Klarna, WhatsApp-Text nennt Klarna mit Pflichtsatz", `${iv.zahlung.zahlarten}`);
+  check(iv.zahlung.zahlarten.includes("klarna") && iv.studio.klarna === true && /Klarna verfügbar/.test(vor.whatsappText) && !/Raten|später bezahlen/i.test(vor.whatsappText), "Vor dem Stichtag (19.11. 23:59:59): Risikofrei bietet Klarna, WhatsApp-Text nennt nur den Namen „Klarna verfügbar“ (keine Raten-Aussage)", `${iv.zahlung.zahlarten}`);
   const cfgVor = (await json("/api/config")).data;
   check(cfgVor.klarnaPlattformAus === false && cfgVor.klarnaPlattformBis === "2026-11-19T23:00:00.000Z", "Öffentliche Konfiguration: Stichtag als Zeitpunkt, noch nicht erreicht", `${cfgVor.klarnaPlattformBis}`);
   const aufV = (await json(`/api/aufsteller?s=${await slug("rf")}`, {}, ST.rf.cookie)).data;
@@ -965,7 +975,7 @@ await abschnitt("18 Paket Risikofrei geschlossen (26.10.2026): Neukunden gesperr
     const ein = await post("/api/signup", { ...DATEN("neu-einmal@betrieb.test", "Neu Einmal"), paket: "einmal", zahlart: "rechnung" });
     check(mo.status === 200 && /\/pay\//.test(mo.data.url || "") && ein.status === 410, "Monatlich lässt sich abschließen, Einmalzahlung nicht mehr", `${mo.status} ${ein.status}`);
     const ge = await admin("einladen", { body: { email: "geschenk-neu@betrieb.test", firma: "Geschenk Neu", senden: false } });
-    check(ge._status === 200 && /geschenk=/.test(ge.link || ""), "Admin-Einladung (eigenes Konto, 0 € Einrichtung, keine Provision) weiter möglich", `HTTP ${ge._status}`);
+    check(ge._status === 410, "Admin-Einladung (0 € Einrichtung, keine Provision) ist abgeschaltet: 410", `HTTP ${ge._status}`);
     // Abgebrochene Entwürfe im Paket Risikofrei: keine Erinnerung mit Sackgassen-Link
     const storeMod = await import("../netlify/functions/_lib/store.mjs");
     const alt = new Date(Date.now() - 3 * 864e5).toISOString();

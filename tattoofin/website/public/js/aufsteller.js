@@ -11,8 +11,10 @@
 (function (root) {
   // Pflichthinweis bei „Klarna*“ (UWG-Anhang Nr. 23e, 27.10.2026): Hinweis + Warnsatz in eigener Zeile, fett und größer.
   // Mit o.klarna === false (z. B. Paket Risikofrei ab dem Stichtag) steht auf dem Aufsteller weder Klarna noch Raten noch Fußnote.
-  var FUSS_TEIL = "*Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, nicht Tattoofin.";
-  var WARNUNG = "Achtung! Kreditaufnahme kostet Geld.";
+  // Texte kommen aus /js/klarna-texte.js (zentral), mit gleichlautendem Rückfall, falls die Seite die Datei nicht lädt (Gleichstand prüft dev/e2e.mjs)
+  var K = window.TF_KLARNA || {};
+  var FUSS_TEIL = "*" + (K.ZUSATZ || "Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, nicht Tattoofin.");
+  var WARNUNG = K.WARNSATZ || "Achtung! Kreditaufnahme kostet Geld.";
   var FUSS = FUSS_TEIL + " " + WARNUNG;
   var W = 100, H = 150, RADIUS = 4, RAND = 7, FUSSZONE = 17; // mm
   // Fuß: zwei Teile 60 × 16 mm, je ein Schlitz von oben (8 mm); Schild hat zwei Schlitze von unten (8 mm) bei x = 22 und 78

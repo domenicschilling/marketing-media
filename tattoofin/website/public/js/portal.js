@@ -96,7 +96,7 @@
 
   function renderAbr() {
     var html = "";
-    if (D.studio.modell !== "provision") html = '<p class="muted">Im Kaufmodell fällt keine Provision an. Deine Setup-Rechnung findest du unter „Konto“.</p>';
+    if (D.studio.modell !== "provision") html = '<p class="muted">Bei deinem Paket gibt es keine Abrechnungen pro Zahlung. Deine Rechnungen findest du unter „Konto“.</p>';
     else if (!D.abrechnungen.length) html = '<p class="muted">Noch keine Abrechnungen. Die erste kommt am 1. des Folgemonats nach deiner ersten Zahlung über Tattoofin.</p>';
     else html = '<table class="tbl"><tr><th>Monat</th><th>Zahlungen</th><th>Zahlbeträge</th><th>Tattoofin ' + D.config.provisionProzent + ' % inkl. USt.</th><th>davon netto</th><th>an dich ausgezahlt</th><th>Rechnung</th></tr>' +
       D.abrechnungen.map(function (a) {
@@ -116,7 +116,7 @@
     }
     if (["beendet", "erstattet"].includes(s.status)) { p.innerHTML = '<h2>Vertrag beendet</h2><p class="muted">Der Vertrag ist beendet.' + (s.modell === "provision" ? " Offene Auszahlungen überweist Stripe weiterhin an dich." : " Dein Stripe-Konto bleibt bei dir.") + '</p>'; return; }
     var garantie = s.garantieBis && (s.garantieBis === "ab Go-live" || new Date(s.garantieBis) > new Date());
-    p.innerHTML = "<h2>Kündigen</h2><p class=\"muted\">" + (s.paket === "monatlich" ? "Du kannst jederzeit zum Ende des laufenden Abrechnungsmonats kündigen. " : "Du kannst jederzeit zum Monatsende kündigen. ") + (s.modell === "provision" ? "Offene Auszahlungen bekommst du auch nach dem Ende, abzüglich späterer Rückbuchungen." : "Dein Stripe-Konto bleibt bei deinem Studio.") + (garantie ? " Du bist noch in der Garantiezeit: Mit der Geld-zurück-Garantie erstatten wir dir den vollen Setup-Preis." : "") + "</p>" +
+    p.innerHTML = "<h2>Kündigen</h2><p class=\"muted\">" + (s.paket === "monatlich" ? "Du kannst jederzeit zum Ende des laufenden Abrechnungsmonats kündigen. " : "Du kannst jederzeit zum Monatsende kündigen. ") + (s.modell === "provision" ? "Offene Auszahlungen bekommst du auch nach dem Ende, abzüglich späterer Rückbuchungen." : "Dein Stripe-Konto bleibt bei deinem Studio.") + (garantie ? " Du bist noch in der Garantiezeit: Mit der Geld-zurück-Garantie erstatten wir dir den vollen Preis." : "") + "</p>" +
       '<div class="field"><label>Was hat nicht gepasst? (optional, hilft uns sehr)</label><textarea id="k-grund"></textarea></div>' +
       (garantie ? '<label class="check"><input type="checkbox" id="k-garantie"> <span>Geld-zurück-Garantie nutzen (Vertrag endet sofort)</span></label>' : "") +
       '<button class="btn ghost" id="k-btn" style="color:var(--red)">Vertrag kündigen</button>';

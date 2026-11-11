@@ -1,5 +1,6 @@
 // Alle automatischen E-Mails (an Studios, Endkunden und intern). Jede Funktion liefert { subject, html, text }.
 import { CFG, provisionSatz, paketVon } from "./config.mjs";
+import { PFLICHTSATZ_HTML } from "./klarna-texte.mjs";
 import { esc, euro, brutto, datum, monatName } from "./util.mjs";
 
 // „Voraussichtlich verfügbar ab …“ nur, wenn Stripe das Datum (available_on) schon geliefert hat; sonst weglassen
@@ -43,7 +44,7 @@ const modellText = (s) => {
   return `Paket Risikofrei: ${CFG.provisionProzent} % vom Zahlbetrag jeder Zahlung über Tattoofin, alles inklusive (Zahlungsgebühren und USt.), keine Einrichtungs- und keine Grundgebühr, monatlich kündbar. Digitaler QR-Code inklusive.`;
 };
 // Pflichthinweis bei Werbung mit Raten (UWG-Anhang Nr. 23e): deutlich lesbar, fett, volle Textfarbe, mindestens Fließtextgröße
-const RATEN_HINWEIS_HTML = '<span style="color:#1f3d5c;font-size:15px;line-height:1.5">*Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, nicht Tattoofin. <b style="font-size:16px">Achtung! Kreditaufnahme kostet Geld.</b></span>';
+const RATEN_HINWEIS_HTML = PFLICHTSATZ_HTML;
 const istProv = (z) => z.abwicklung === "plattform" || z.abwicklung === "direkt";
 const wert = (v) => (typeof v === "string" && /^https?:\/\/\S+$/.test(v) ? `<a href="${esc(v)}">${esc(v)}</a>` : esc(typeof v === "object" ? JSON.stringify(v) : v));
 const mk = (subject, l) => ({ subject, ...layout(l) });
@@ -192,9 +193,11 @@ export const mails = {
   zahlungKunde: (s, z) => mk(`Danke für deine Zahlung bei ${s.firma}`, {
     preheader: `${euro(z.betragCent)} für ${z.beschreibung || "dein Tattoo-Projekt"}`,
     title: `Danke, ${esc(z.kunde || "")}! Deine Zahlung ist da.`,
-    body: p(`${esc(s.firma)} hat deine Zahlung über <b>${euro(z.betragCent)}</b> für <b>${esc(z.beschreibung || "dein Tattoo-Projekt")}</b> erhalten.`) +
+    body: p(`${esc(s.firma)} hat deine ${z.art === "anzahlung" ? "Anzahlung" : "Zahlung"} über <b>${euro(z.betragCent)}</b> für <b>${esc(z.beschreibung || "dein Tattoo-Projekt")}</b> erhalten.`) +
+      (z.art === "anzahlung" ? p(z.restCent ? `Die Anzahlung wird mit dem Preis deines Tattoos verrechnet. Den Rest von <b>${euro(z.restCent)}</b> zahlst du direkt im Studio.` : "Die Anzahlung wird mit dem Preis deines Tattoos verrechnet. Den Rest zahlst du direkt im Studio.") : "") +
       p("Den Beleg des Zahlungsanbieters bekommst du separat. Bei Fragen zu Termin oder Projekt meld dich direkt beim Studio.") +
-      (z.zahlart === "klarna" ? p("Du hast über Klarna bezahlt. Alle Fragen zu Raten oder Fälligkeiten klärst du direkt mit Klarna.") : ""),
+      // Klarna-Satz nur, wenn wirklich mit Klarna bezahlt wurde; nur der Name, ohne Raten-Aussage (dann braucht er keinen Warnsatz)
+      (z.zahlart === "klarna" ? p("Du hast mit Klarna bezahlt. Fragen zu deiner Klarna-Zahlung klärst du direkt mit Klarna.") : p("Fragen zur Zahlung klärst du mit dem Studio.")),
     footerNote: `Diese E-Mail wurde im Auftrag von ${esc(s.firma)} über Tattoofin versendet.`,
   }),
 

@@ -35,6 +35,7 @@ import { currentStudio, clearCookie } from "./_lib/auth.mjs";
 import { stripe, dashboardLink, accountSession, ensureConnectedAccount } from "./_lib/stripe.mjs";
 import { hatUmstellungsangebot, umstellungCheckout, notify, notifyAdmin, kuendigungsDatum, connectUrl, connectUrlGehostet, darfKassieren, anzahlungsbedingungen, provisionVerdient, kontoAbgleichen, eingebettet, klarnaFuer, klarnaDauerhaft, provisionZahlung, STATUS, aboKuendigen, aufstellerUrl, aufstellerCheckout, aufstellerBezahlt } from "./_lib/domain.mjs";
 import { randomBytes } from "node:crypto";
+import { KLARNA_NAME, PFLICHTSATZ_STUDIO, gutscheinWort, GUTSCHEIN_HINWEIS } from "./_lib/klarna-texte.mjs";
 import { gutscheinStatus, gutscheinPdf, gutscheinSenden, gutscheinUrl, normCode } from "./_lib/gutschein.mjs";
 
 // Extras (Zusatzangebote): nur Anzeige + Anfrage, keine Abrechnung. Preise sind Vorschläge.
@@ -45,14 +46,14 @@ export const EXTRAS = [
     text: "Dein Kunde bekommt vor dem Termin automatisch eine Erinnerung per WhatsApp oder E-Mail, mit Link zur Anzahlung. Weniger leere Termine.", icon: "⏰" },
 ];
 
-// WhatsApp-Text fürs Studio (Zahlungslink Projektpreis): erklärt dem Kunden, dass er für Raten „Klarna“ wählen muss.
-// Pflichthinweis (UWG-Anhang Nr. 23e) direkt unter dem Raten-Satz, eigene Zeile. Keine Zusage, Klarna entscheidet.
-// Ohne Klarna (z. B. Paket Risikofrei ab dem Stichtag, siehe klarnaFuer): schlichter Text ohne Raten-Werbung.
-export const RATEN_FUSS = "*Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, weder wir noch Tattoofin.\nAchtung! Kreditaufnahme kostet Geld.";
+// WhatsApp-Text fürs Studio (Zahlungslink Projektpreis). Klarna-Regeln ab 20.11.2026: nur der Name („Klarna verfügbar“) ohne Raten-/Später-Bezug,
+// damit kein Warnsatz nötig ist. Texte kommen aus _lib/klarna-texte.mjs. RATEN_FUSS bleibt als Zusatz-Pflichtsatz für Texte mit Raten-Aussage.
+// Ohne Klarna (z. B. Paket Risikofrei ab dem Stichtag, siehe klarnaFuer): schlichter Text ohne Klarna.
+export const RATEN_FUSS = PFLICHTSATZ_STUDIO;
 export const ratenWhatsapp = ({ vorname = "", projekt = "dein Tattoo", betrag = "", link = "", firma = "", klarna = true }) =>
   `Hi ${vorname}, hier ist dein Zahlungslink für ${projekt}${betrag ? " (" + betrag + ")" : ""}: ${link}\n\n` +
   (klarna
-    ? `Die Zahlarten, die dir angeboten werden, zum Beispiel Karte, Apple Pay oder Klarna*, siehst du beim Bezahlen.\n${RATEN_FUSS}\n\nLiebe Grüße, ${firma}`
+    ? `Bezahlen kannst du per Karte, Apple Pay oder Google Pay. ${KLARNA_NAME.verfuegbar}.\n\nLiebe Grüße, ${firma}`
     : `Bezahlen kannst du per Karte, Apple Pay oder Google Pay.\n\nLiebe Grüße, ${firma}`);
 
 // Manuelle Punkte der Einrichtungs-Checkliste (die übrigen erkennt das System selbst)
@@ -146,7 +147,11 @@ export default handler(async (req, context) => {
       const gutschein = b.art === "gutschein";
       if (gutschein && !clean(b.kunde, 80)) return fail("Bitte den Namen des Käufers eintragen.");
       if (gutschein && !email) return fail("Bitte die E-Mail des Käufers eintragen – dorthin schicken wir den Gutschein.");
+      // Gutschein-Wörter im normalen Projektfeld: Klarna aus (Stripe/Klarna schließen Gutscheine/Guthaben aus), Hinweis auf die Gutschein-Funktion
+      const gutscheinImProjekt = !gutschein && gutscheinWort(b.beschreibung, b.sitzungen);
       const z = {
+        ...(gutscheinImProjekt ? { nurKarte: true } : {}),
+        ...(b.heute === true && !gutschein && b.art !== "anzahlung" ? { heute: true } : {}),
         id: id("zl_"), studioId: s.id, createdAt: now(), art: gutschein ? "gutschein" : b.art === "anzahlung" ? "anzahlung" : "gesamt", status: "offen",
         betragCent, kunde: clean(b.kunde, 80), email, beschreibung: gutschein ? "Wertgutschein" : clean(b.beschreibung, 120) || "Tattoo-Projekt", sitzungen: gutschein ? "" : clean(b.sitzungen, 60),
         gebuehrNettoCent: fee.nettoCent, gebuehrBruttoCent: fee.bruttoCent,
@@ -161,7 +166,7 @@ export default handler(async (req, context) => {
           ? `Hi ${z.kunde ? z.kunde.split(" ")[0] : ""}, hier ist dein Link für die Anzahlung (${z.beschreibung}, ${betragText}): ${link} . Am einfachsten zahlst du per Karte, Apple Pay oder Google Pay. Liebe Grüße, ${s.firma}`
           : ratenWhatsapp({ vorname: z.kunde ? z.kunde.split(" ")[0] : "", projekt: z.beschreibung, betrag: betragText, link, firma: s.firma, klarna: klarnaFuer(s) });
       await log("zahlungslink", { studioId: s.id, zahlungId: z.id, betragCent });
-      return json({ zahlung: fuerStudio(z), link, whatsappText: text }, 201);
+      return json({ zahlung: fuerStudio(z), link, whatsappText: text, ...(gutscheinImProjekt ? { hinweis: GUTSCHEIN_HINWEIS } : {}) }, 201);
     }
     if (req.method === "DELETE" && sub) {
       const z = await getZahlung(s.id, sub);
@@ -284,7 +289,11 @@ export default handler(async (req, context) => {
   if (bereich === "kontakt" && req.method === "PATCH") {
     const b = await body(req);
     if (b.email !== undefined) { if (!isEmail(b.email)) return fail("Bitte gültige E-Mail"); s.benachrichtigungEmail = clean(b.email, 160); }
-    if (b.anzahlungsbedingungen !== undefined) s.anzahlungsbedingungen = clean(b.anzahlungsbedingungen, 1000) || null;
+    if (b.anzahlungsbedingungen !== undefined) {
+      // Zu kurze Texte („x“) sind keine Bedingungen: dann gilt der Standardtext
+      const t = clean(b.anzahlungsbedingungen, 1000);
+      s.anzahlungsbedingungen = t.length >= 30 ? t : null;
+    }
     // Ausweg bei Klarna-Ablehnung: Anzahlung per Karte anbieten (Prozent vom Gesamtbetrag, 10–50 %)
     if (b.ausweichAnzahlung !== undefined) {
       const pr = Math.round(Number(b.ausweichAnzahlung?.prozent) || 30);

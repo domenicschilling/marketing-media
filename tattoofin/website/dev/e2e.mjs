@@ -7,6 +7,7 @@ import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import { startDev } from "./server.mjs";
 import { sendeWebhook } from "../netlify/functions/_lib/stripe-sim.mjs";
+import { randomBytes } from "node:crypto";
 
 const require = createRequire(import.meta.url);
 let chromium;
@@ -24,6 +25,9 @@ process.env.TF_JETZT = "2026-10-27T12:00:00+01:00";
 // Diese Studios werden wie vor der Schließung angelegt (Notschalter RISIKOFREI_NEU). Das Sperr-Verhalten selbst prüft der Abschnitt „Risikofrei geschlossen“ weiter unten.
 process.env.RISIKOFREI_NEU = "1"; process.env.EINMAL_NEU = "1";
 await startDev({ port: PORT, mock: true, dataDir, quiet: true });
+// erst nach startDev laden (die Module lesen die Umgebung beim Import)
+const storeMod = await import("../netlify/functions/_lib/store.mjs");
+const { mails: mailVorlagen } = await import("../netlify/functions/_lib/emails.mjs");
 
 let ok = 0, fail = 0;
 const check = (cond, name) => { if (cond) { ok++; console.log("  ✓", name); } else { fail++; console.log("  ✗", name); } };
@@ -35,6 +39,13 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const post = (url, b, cookie) => fetch(BASE + url, { method: "POST", headers: { "content-type": "application/json", ...(cookie ? { cookie } : {}) }, body: JSON.stringify(b) });
 // Formular absenden wie die Zwischenseite beim Login per Link (POST, application/x-www-form-urlencoded)
 const formPost = (url, felder, cookie) => fetch(BASE + url, { method: "POST", redirect: "manual", headers: { "content-type": "application/x-www-form-urlencoded", ...(cookie ? { cookie } : {}) }, body: new URLSearchParams(felder).toString() });
+// Neue Einladungen sind seit 11.11.2026 abgeschaltet (POST /api/admin/einladen → 410). Für die Tests der noch gültigen, früher
+// ausgestellten Einladungs-Codes (Bestandsweg bleibt) wird so ein Code direkt im Speicher angelegt.
+const altEinladung = async ({ email, firma, bezeichnung = null }) => {
+  const code = randomBytes(9).toString("base64url");
+  await storeMod.store.set(`geschenk/${code}`, { code, email, firma, bezeichnung, erstellt: new Date().toISOString(), benutzt: null });
+  return { ok: true, link: `${BASE}/start.html?modell=kauf&geschenk=${code}`, bezeichnung, gesendet: false };
+};
 const studioPer = async (email) => (await admin("studios")).find((s) => s.email === email);
 
 const browser = await chromium.launch();
@@ -170,8 +181,10 @@ try {
   await pC2.waitForURL(/start\.html\?resume=/);
   await pC2.waitForFunction(() => document.getElementById("firma").value === "Ink Abbruch");
   check(true, "Nach Abbruch sind Angaben wieder da");
-  const basis = { firma: "x", inhaber: "x", strasse: "x", plz: "1", ort: "x", telefon: "1", studioTelefon: "1", unterzeichner: "x", akzeptiert: { vertrag: true, avv: true, unternehmer: true, kmu: true } };
+  const basis = { firma: "x", inhaber: "x", strasse: "x", plz: "96047", ort: "x", telefon: "0151 123456", studioTelefon: "0951 123456", unterzeichner: "x", akzeptiert: { vertrag: true, avv: true, unternehmer: true, kmu: true } };
   check((await post("/api/signup", { ...basis, paket: "monatlich", email: "kauf@example.com" })).status === 409, "Doppelte Anmeldung abgelehnt");
+  { const r1 = await post("/api/signup", { ...basis, plz: "x", telefon: "1", studioTelefon: "1", paket: "monatlich", email: "unsinn@example.com" }); const t = (await r1.json()).error || "";
+    check(r1.status === 400 && /PLZ/.test(t) && /Mobilnummer/.test(t), "Anmeldung: PLZ „x“ und Telefon „1“ werden abgelehnt (PLZ 5 Ziffern, Telefon mind. 6 Ziffern)"); }
   check((await post("/api/signup", { paket: "einmal", email: "neu@example.com" })).status === 400, "Signup ohne Pflichtangaben abgelehnt");
   await post("/api/signup", { ...basis, paket: "einmal", aktionscode: "RATENJA", email: "code@example.com" });
   check(!Object.values((await mock("state")).sessions).some((x) => x.amount_total === 148631), "Aktionscode RATENJA abgeschaltet (Preis bleibt 999 €)");
@@ -462,7 +475,7 @@ try {
     process.env.TF_BEZAHLFELD = "aus";
     const kl = await api(pA, "/api/portal/zahlung", { method: "POST", body: { betrag: "1200", kunde: "Kai Klarna", email: "kai@example.com", beschreibung: "Rückenstück Drache", sitzungen: "2 Sitzungen" } });
     const klId = kl.data.zahlung.id;
-    check(/Klarna\*/.test(kl.data.whatsappText) && /Kreditaufnahme kostet Geld/.test(kl.data.whatsappText) && !/„Klarna“ als Zahlungsart wählen|So geht's/.test(kl.data.whatsappText), "WhatsApp-Text Projektpreis: neutraler Satz zu den Zahlarten mit Pflichtsatz, keine Anleitung");
+    check(/Klarna verfügbar/.test(kl.data.whatsappText) && !/Raten|später bezahlen|Kreditaufnahme/i.test(kl.data.whatsappText) && !/„Klarna“ als Zahlungsart wählen|So geht's/.test(kl.data.whatsappText), "WhatsApp-Text Projektpreis: nur der Name „Klarna verfügbar“ (keine Raten-/Später-Aussage, deshalb kein Warnsatz nötig), keine Anleitung");
     await pK.goto(`${BASE}/zahlung.html?z=${klId}`);
     await pK.waitForSelector("#inhalt-text");
     await pK.waitForFunction(() => document.getElementById("inhalt-text").textContent.length > 0);
@@ -470,7 +483,7 @@ try {
     await api(pA, "/api/portal/kontakt", { method: "PATCH", body: { zahlartenHinweis: true } });
     await pK.reload();
     await pK.waitForSelector("#raten-hinweis .raten-box");
-    { const h = await pK.textContent("#raten-hinweis"); check(/Zahlarten, die dir angeboten werden/.test(h) && /Achtung! Kreditaufnahme kostet Geld/.test(h) && !/Wähle|10\.000/.test(h) && (await pK.locator(".raten-schritte li").count()) === 0, "Hinweis nur auf Wunsch des Studios: neutraler Satz + Pflichtsatz, keine Anleitung"); }
+    { const h = await pK.textContent("#raten-hinweis"); check(/Zahlarten, die dir angeboten werden/.test(h) && /Klarna verfügbar/.test(h) && !/Raten|später/i.test(h) && !/Wähle|10\.000/.test(h) && (await pK.locator(".raten-schritte li").count()) === 0, "Hinweis nur auf Wunsch des Studios: neutraler Satz mit „Klarna verfügbar“ (nur Name), keine Anleitung"); }
     await pK.screenshot({ path: path.join(shots, "kunde-raten-hinweis.png"), fullPage: true });
     const anzL = await api(pA, "/api/portal/zahlung", { method: "POST", body: { betrag: "100", kunde: "Anna", art: "anzahlung", beschreibung: "Termin" } });
     check(/per Karte/.test(anzL.data.whatsappText) && !/Klarna/.test(anzL.data.whatsappText), "WhatsApp-Text Anzahlung: per Karte, Klarna nicht beworben");
@@ -487,7 +500,7 @@ try {
     let st = await mock("state");
     const cs1 = st.sessions[r1.url.split("/pay/")[1]];
     const li = cs1.line_items[0];
-    check(li.quantity === "1" && li.price_data.product_data.name === "Tattoo bei Ink Provision – Rückenstück Drache" && /direkt nach der Zahlungsfreigabe/.test(li.price_data.product_data.description) && /2 Sitzungen/.test(li.price_data.product_data.description) && /Musterstr\. 1, 96047 Bamberg/.test(li.price_data.product_data.description), "Checkout: Artikel „Tattoo bei Ink Provision – Rückenstück Drache“ (Tätowierung direkt nach Freigabe), Menge 1, Sitzungen + Studio-Anschrift in der Beschreibung");
+    check(li.quantity === "1" && li.price_data.product_data.name === "Tattoo bei Ink Provision – Rückenstück Drache" && !/direkt nach der Zahlungsfreigabe/.test(li.price_data.product_data.description) && /Tätowierung bei Ink Provision/.test(li.price_data.product_data.description) && /2 Sitzungen/.test(li.price_data.product_data.description) && /Musterstr\. 1, 96047 Bamberg/.test(li.price_data.product_data.description), "Checkout: Artikel „Tattoo bei Ink Provision – Rückenstück Drache“ (neutral „Tätowierung bei <Studio>“, ohne „direkt nach der Zahlungsfreigabe“), Menge 1, Sitzungen + Studio-Anschrift in der Beschreibung");
     check(cs1.billing_address_collection === "required" && cs1.phone_number_collection?.enabled === "true", "Checkout: Rechnungsadresse und Telefonnummer verpflichtend");
     const kunde = st.customers[cs1.customer];
     check(kunde?.name === "Kai Klarna" && kunde?.email === "kai@example.com" && cs1.customer_update?.name === "auto", "Checkout: Kunde mit Name + E-Mail vorausgefüllt (Stripe-Customer)");
@@ -530,13 +543,29 @@ try {
     check(await pK.locator("#pay-klarna").count() === 0, "Ausweg-Checkout bietet Klarna nicht noch einmal an");
     await pK.click("#pay");
     await pK.waitForURL(/bezahlt\.html/);
+    await pK.waitForFunction(() => /Anzahlung/.test(document.getElementById("msg").textContent), null, { timeout: 15000 });
+    { const msg = await pK.textContent("#msg"), fuss = await pK.textContent("#fuss"), ortz = await pK.textContent("#ort-zeile");
+      check(!/Klarna|Raten|später/i.test(fuss + msg) && /Fragen zur Zahlung klärst du mit dem Studio/.test(fuss) && /Anzahlung/.test(msg) && /840,00/.test(msg) && /verrechnet/.test(msg), "Danke-Seite nach Kartenzahlung (Anzahlung): kein Klarna-/Raten-Satz, Rest 840 € im Studio, Verrechnung genannt");
+      check(/Ink Provision/.test(ortz) && /Bamberg/.test(ortz) && await pK.locator('a[href="/impressum.html"]').count() > 0 && await pK.locator('a[href^="/datenschutz.html"]').count() > 0, "Danke-Seite: Studioname + Ort, Impressum und Datenschutz verlinkt"); }
     await wait(400);
     det = await admin(`studio/${provId}`);
     const orig = det.zahlungen.find((z) => z.id === klId);
     const anzA = det.zahlungen.find((z) => z.ausweichVon === klId);
     check(orig.klarnaAbgelehnt?.code === "payment_method_provider_decline" && orig.ausweich?.bezahltAm && orig.status === "offen", "Original-Link: Klarna-Ablehnung + bezahlte Anzahlung vermerkt (Rest bleibt offen)");
     check(anzA?.status === "bezahlt" && anzA.art === "anzahlung" && anzA.bedingungen?.text && /Rest von 840,00 €/.test(anzA.kundeBestaetigt?.inhalt || ""), "Anzahlung bezahlt, mit Bedingungen + Bestätigung „Rest direkt im Studio“");
-    check((await (await post("/api/pay", { z: klId, ausweich: "anzahlung", bedingungen: true, inhaltOk: true })).json()).url !== undefined || true, "Ausweg erneut aufrufbar ohne Fehler");
+    // --- Doppelzahlung gesperrt (11.11.2026): Anzahlung per Karte bezahlt → der ursprüngliche Link ist nicht mehr zahlbar
+    check(orig.letzterFehler?.code === "payment_method_provider_decline" && orig.letzterFehler.typ === "ablehnung" && orig.letzterFehler.zahlart === "klarna" && Boolean(orig.letzterFehler.am) && "declineCode" in orig.letzterFehler && Boolean(orig.letzterFehler.text), "Letzter Fehler getrennt gespeichert: Code, Decline-Code, Typ „ablehnung“, Zahlart klarna, Text, Zeit");
+    { const dp = await post("/api/pay", { z: klId, inhaltOk: true }); const dj = await dp.json();
+      const dp2 = await post("/api/pay", { z: klId, ausweich: "karte" });
+      const dp3 = await post("/api/pay", { z: klId, ausweich: "anzahlung", bedingungen: true, inhaltOk: true });
+      const info = await (await fetch(`${BASE}/api/pay?z=${klId}`)).json();
+      check(dp.status === 409 && /Anzahlung/.test(dj.error || "") && dp2.status === 409 && dp3.status === 409 && !dj.url, "Doppelzahlung gesperrt: nach bezahlter Anzahlung lehnt der Server jede weitere Zahlung für den Link ab (409)");
+      check(info.zahlung.anzahlungBezahlt?.betragCent === 36000 && info.zahlung.anzahlungBezahlt?.restCent === 84000 && info.ausweich === null, "Link-Infos: „Anzahlung 360 € bezahlt, Rest 840 € im Studio“, kein Ausweg-Angebot mehr");
+      await pK.goto(`${BASE}/zahlung.html?z=${klId}`);
+      await pK.waitForFunction(() => /nichts mehr zu bezahlen/.test(document.getElementById("alert").textContent));
+      check(await pK.isHidden("#schritt1") && /360,00/.test(await pK.textContent("#alert")) && /840,00/.test(await pK.textContent("#alert")), "Zahlungslink-Seite: „Anzahlung 360 € bezahlt, Rest 840 € im Studio“, ohne Bezahlknopf");
+    }
+    check((await (await post("/api/pay", { z: klId, ausweich: "anzahlung", bedingungen: true, inhaltOk: true })).json()).error !== undefined, "Ausweg erneut aufrufen: klare Fehlermeldung statt zweiter Zahlung");
     // „Mit Karte zahlen“: gleicher Betrag, nur Karte
     const kk = await api(pA, "/api/portal/zahlung", { method: "POST", body: { betrag: "600", kunde: "Karla", beschreibung: "Unterarm" } });
     await post("/api/pay", { z: kk.data.zahlung.id, inhaltOk: true });
@@ -544,7 +573,45 @@ try {
     const csK = (await mock("state")).sessions[rK.url.split("/pay/")[1]];
     check(JSON.stringify(csK.payment_method_types) === '["card"]' && csK.amount_total === 60000 && !st.customers[csK.customer], "„Mit Karte zahlen“: gleicher Betrag, nur Karte (ohne neue Bestätigung, da schon bestätigt)");
     await api(pA, "/api/portal/kontakt", { method: "PATCH", body: { ausweichAnzahlung: { an: false, prozent: 30 } } });
+    // --- Gutschein-Wörter im normalen Projektfeld: kein Klarna, Hinweis auf die Gutschein-Funktion (11.11.2026)
+    { const gw = await api(pA, "/api/portal/zahlung", { method: "POST", body: { betrag: "200", kunde: "Gina Gut", beschreibung: "Gutschein für Freundin" } });
+      await post("/api/pay", { z: gw.data.zahlung.id, inhaltOk: true });
+      const rG = await (await post("/api/pay", { z: gw.data.zahlung.id, inhaltOk: true })).json();
+      const csG = (await mock("state")).sessions[rG.url.split("/pay/")[1]];
+      const gi = await (await fetch(`${BASE}/api/pay?z=${gw.data.zahlung.id}`)).json();
+      check(/Gutschein-Funktion/.test(gw.data.hinweis || "") && JSON.stringify(csG.payment_method_types) === '["card"]' && JSON.stringify(gi.zahlung.zahlarten) === '["card"]' && /Gutschein-Funktion/.test(gi.zahlung.gutscheinHinweis), "Gutschein-Wort im Projektfeld: nur Karte (kein Klarna) + Hinweis „Für Gutscheine bitte die Gutschein-Funktion nutzen“");
+      const slugP = (await admin(`studio/${provId}`)).studio.slug;
+      const zs = await post("/api/pay", { s: slugP, betrag: "150", kunde: "Gabi", beschreibung: "Guthaben aufladen", inhaltOk: true });
+      const zsj = await zs.json(); const csZ = (await mock("state")).sessions[zsj.url.split("/pay/")[1]];
+      check(JSON.stringify(csZ.payment_method_types) === '["card"]' && /Gutschein-Funktion/.test(zsj.hinweis || ""), "Öffentliche Zahlseite: Wort „Guthaben“ im Projektfeld → nur Karte + Hinweis");
+      const normal = await api(pA, "/api/portal/zahlung", { method: "POST", body: { betrag: "300", kunde: "Nora Normal", beschreibung: "Rose" } });
+      check(!normal.data.hinweis && !normal.data.zahlung.nurKarte, "Normales Projektfeld: kein Gutschein-Hinweis, Klarna bleibt erlaubt");
+      // „heute im Studio“: Der Satz „direkt nach der Zahlungsfreigabe“ steht nur, wenn das Studio es ausdrücklich gewählt hat
+      const he = await api(pA, "/api/portal/zahlung", { method: "POST", body: { betrag: "400", kunde: "Hanna Heute", beschreibung: "Anker", heute: true } });
+      await post("/api/pay", { z: he.data.zahlung.id, inhaltOk: true });
+      const rH = await (await post("/api/pay", { z: he.data.zahlung.id, inhaltOk: true })).json();
+      const csH = (await mock("state")).sessions[rH.url.split("/pay/")[1]];
+      check(he.data.zahlung.heute === true && /direkt nach der Zahlungsfreigabe/.test(csH.line_items[0].price_data.product_data.description), "Studio wählt „heute im Studio“: dann steht „direkt nach der Zahlungsfreigabe“ im Warenkorb");
+      const dom = await import("../netlify/functions/_lib/domain.mjs");
+      const neutral = dom.artikelText({ firma: "Test Ink", strasse: "A 1", plz: "12345", ort: "X" }, { beschreibung: "Rose", sitzungen: "Sitzung 2 von 3", betragCent: 10000 });
+      check(!/direkt nach der Zahlungsfreigabe/.test(neutral.description) && /Tätowierung bei Test Ink/.test(neutral.description) && /Sitzung 2 von 3/.test(neutral.description), "artikelText ohne „direkt nach der Zahlungsfreigabe“ (neutral, mit Sitzungen)");
+    }
     delete process.env.TF_BEZAHLFELD;
+  }
+
+  // ---------------------------------------------------------------- Klarna-Texte: eine zentrale Stelle (11.11.2026)
+  console.log("Klarna-Texte: Backend- und Frontend-Konstante gleich, freigegebener Wortlaut");
+  {
+    const kt = await import("../netlify/functions/_lib/klarna-texte.mjs");
+    const jsSrc = await (await fetch(`${BASE}/js/klarna-texte.js`)).text();
+    const glaeser = [kt.KLARNA_WARNSATZ, kt.KLARNA_NAME.verfuegbar, kt.KLARNA_NAME.mitKlarna, kt.KLARNA_AUSSAGE.spaeter, kt.KLARNA_AUSSAGE.tage30, kt.KLARNA_AUSSAGE.finanzierung, kt.KLARNA_ZUSATZ, kt.KLARNA_ZUSATZ_STUDIO];
+    check(glaeser.every((t) => jsSrc.includes(t)), "klarna-texte.js (Browser) enthält alle Texte der Backend-Konstante wortgleich");
+    check(kt.KLARNA_WARNSATZ === "Achtung! Kreditaufnahme kostet Geld." && kt.KLARNA_AUSSAGE.spaeter === "Jetzt shoppen. Bezahle später mit Klarna." && kt.KLARNA_AUSSAGE.tage30 === "In bis zu 30 Tagen bezahlen mit Klarna." && kt.KLARNA_AUSSAGE.finanzierung === "Bezahle in 6, 12, 24 oder 36 Monatsraten mit Klarna.", "Klarna-Wortlaut exakt wie von Klarna freigegeben (später, 30 Tage, Monatsraten, Warnsatz)");
+    check(kt.gutscheinWort("Gutschein") && kt.gutscheinWort("Guthaben aufladen") && kt.gutscheinWort("Geschenkkarte") && !kt.gutscheinWort("Rose Unterarm", "Sitzung 2 von 3"), "Gutschein-Wörter werden erkannt (Gutschein, Guthaben, Geschenkkarte), normale Motive nicht");
+    for (const f of ["public/js/app-kit.js", "public/bezahlt.html", "public/zahlung.html", "public/zahlen.html"]) {
+      const src = fs.readFileSync(path.join(root, f), "utf8");
+      check(!/in 3 Raten|3 Teilzahlungen/i.test(src), `${f}: kein „In 3 Raten/Teilzahlungen“ (gibt es nur auf Anfrage bei Klarna)`);
+    }
   }
 
   // ---------------------------------------------------------------- K4: Auszahlungs-Korrektur (01.11.2026)
@@ -827,15 +894,18 @@ try {
   const handy = { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, locale: "de-DE" };
   // Dashboard nach der Einrichtung: Toast „Geschafft“ abwarten, Checkliste sichtbar
   const S = handyShots;
-  const inv = await admin("einladen", { body: { email: "hallo@nadelwerk-test.de", firma: "Nadelwerk Studio", senden: false } });
+  const inv410b = await fetch(`${BASE}/api/admin/einladen`, { method: "POST", headers: { Authorization: "Bearer admin", "content-type": "application/json" }, body: JSON.stringify({ email: "neu@nadelwerk-test.de", firma: "Neu", senden: false }) });
+  const inv410t = (await inv410b.json()).error || "";
+  check(inv410b.status === 410 && /Neue Einladungen/.test(inv410t) && !mailsAn("neu@nadelwerk-test.de").length, "Neue 0-€-Einladung abgeschaltet: POST /api/admin/einladen → 410 mit klarer Meldung, keine Mail");
+  const inv = await altEinladung({ email: "hallo@nadelwerk-test.de", firma: "Nadelwerk Studio" });
   const h = await neueSeite(handy);
   await signup(h, { geschenk: new URL(inv.link).searchParams.get("geschenk"), email: "hallo@nadelwerk-test.de", firma: "Nadelwerk Studio", shot: S });
   await einrichtungEingebettet(h, S);
   check((await studioPer("hallo@nadelwerk-test.de"))?.status === "einrichtung", "Geschenk-Einladung → direkt ins Dashboard → Einrichtung eingebettet");
   // Sonderkondition „Partner – nur Zahlungsgebühren“: gleiche Abwicklung wie Geschenk (eigenes Konto, 0 %), eigener Name + Mailtext
-  const invP = await admin("einladen", { body: { email: "partner@nadelwerk-test.de", firma: "Partner Studio", bezeichnung: "Partner – nur Zahlungsgebühren" } });
-  const mP = mailsAn("partner@nadelwerk-test.de").find((m) => /keine Provision, nur Zahlungsgebühren/.test(m.subject));
-  check(invP.ok && invP.bezeichnung === "Partner – nur Zahlungsgebühren" && mP && /keine Provision/.test(mP.html) && !/geschenkt/i.test(mP.subject), "Einladung mit Sonderkondition: Mail „keine Provision, nur Zahlungsgebühren“");
+  const invP = await altEinladung({ email: "partner@nadelwerk-test.de", firma: "Partner Studio", bezeichnung: "Partner – nur Zahlungsgebühren" });
+  const mP = mailVorlagen.geschenkEinladung({ firma: "Partner Studio", link: invP.link, bezeichnung: invP.bezeichnung });
+  check(invP.ok && invP.bezeichnung === "Partner – nur Zahlungsgebühren" && /keine Provision, nur Zahlungsgebühren/.test(mP.subject) && /keine Provision/.test(mP.html) && !/geschenkt/i.test(mP.subject), "Bestehender Einladungs-Code mit Sonderkondition: Mailvorlage „keine Provision, nur Zahlungsgebühren“ bleibt");
   const hp = await neueSeite();
   fs.mkdirSync(path.join(shots, "partner"), { recursive: true });
   await signup(hp, { geschenk: new URL(invP.link).searchParams.get("geschenk"), email: "partner@nadelwerk-test.de", firma: "Partner Studio", shot: path.join(shots, "partner") });
@@ -908,9 +978,9 @@ try {
   check(kit.map((x) => x.id).join() === "ankuendigung,karussell,qr-story,schritte,frag-story", "Werbung: 5 Vorlagen (Ankündigung, Karussell, QR-Story, So geht's, Frag uns) – alte Anzahlungs-Vorlage entfernt");
   const fmt = Object.fromEntries(kit.map((x) => [x.id, x.bilder.join()]));
   check(fmt.ankuendigung === "1080x1350" && fmt.schritte === "1080x1350" && fmt.karussell === Array(4).fill("1080x1350").join() && fmt["qr-story"] === "1080x1920" && fmt["frag-story"] === "1080x1920", "Werbung: Beiträge 4:5 (1080 × 1350), Karussell 4 Bilder, Storys 9:16 (1080 × 1920)");
-  const FUSS_STUDIO = "*Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, weder wir noch Tattoofin. Achtung! Kreditaufnahme kostet Geld.";
+  const FUSS_STUDIO = "Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, weder wir noch Tattoofin. Achtung! Kreditaufnahme kostet Geld.";
   const posts = kit.filter((x) => !x.id.includes("story"));
-  check(posts.every((x) => x.text.includes("Raten*") && x.text.includes(FUSS_STUDIO) && (x.text.match(/#\S+/g) || []).length <= 5 && x.text.includes("#bambergtattoo")), "Werbung: Texte mit Raten*, Pflicht-Fußnote und höchstens 5 Hashtags (mit Ort)");
+  check(posts.every((x) => /mit Klarna bezahlen/i.test(x.text) && !/in Raten|Ratenzahlung|später bezahlen|3 Raten/i.test(x.text.replace(FUSS_STUDIO, "")) && x.text.includes(FUSS_STUDIO) && (x.text.match(/#\S+/g) || []).length <= 5 && x.text.includes("#bambergtattoo")), "Werbung: Texte nur mit „Mit Klarna bezahlen“ (keine Raten-/Später-Aussage), Zusatz + Warnsatz, höchstens 5 Hashtags (mit Ort)");
   check(kit.every((x) => !/\b0\s?%|zinsfrei|zinslos|Geld sofort|voller Betrag|Anzahlung|garantiert|jeder bekommt/i.test(x.text)), "Werbung: keine verbotenen Aussagen (0 %, zinsfrei, Geld sofort, voller Betrag, Anzahlung, Zusagen)");
   check(kit.find((x) => x.id === "qr-story").text.includes(`${BASE}/zahlen/${nwSlug}`), "Werbung: QR-Story mit Link zur Zahlseite für den Link-Sticker");
   check(kit.find((x) => x.id === "karussell").knopf === "Alle 4 Bilder speichern", "Werbung: Karussell – alle 4 Bilder auf einmal speichern");
@@ -920,10 +990,10 @@ try {
   const zipBuf = fs.readFileSync(await dlKar.path());
   const eocd = zipBuf.length - 22, zipNamen = [];
   for (let o = 0; zipBuf.readUInt32LE(o) === 0x04034b50;) { const nl = zipBuf.readUInt16LE(o + 26), gr = zipBuf.readUInt32LE(o + 18), name = zipBuf.subarray(o + 30, o + 30 + nl).toString(), daten = zipBuf.subarray(o + 30 + nl, o + 30 + nl + gr); zipNamen.push(name + ":" + (daten.subarray(1, 4).toString() === "PNG" ? daten.readUInt32BE(16) + "x" + daten.readUInt32BE(20) : "?")); o += 30 + nl + gr; }
-  check(dlKar.suggestedFilename() === "nadelwerk-studio-raten-karussell.zip" && zipBuf.readUInt32LE(eocd) === 0x06054b50 && zipBuf.readUInt16LE(eocd + 10) === 4 && zipNamen.join() === [1, 2, 3, 4].map((i) => `nadelwerk-studio-raten-karussell-${i}.png:1080x1350`).join(), "Werbung: Karussell als ZIP mit 4 PNG (" + zipNamen.length + " Dateien)");
+  check(dlKar.suggestedFilename() === "nadelwerk-studio-klarna-karussell.zip" && zipBuf.readUInt32LE(eocd) === 0x06054b50 && zipBuf.readUInt16LE(eocd + 10) === 4 && zipNamen.join() === [1, 2, 3, 4].map((i) => `nadelwerk-studio-klarna-karussell-${i}.png:1080x1350`).join(), "Werbung: Karussell als ZIP mit 4 PNG (" + zipNamen.length + " Dateien)");
   const [dlAnk] = await Promise.all([h.waitForEvent("download"), h.click('[data-vorlage="ankuendigung"] [data-kit="bild"]')]);
   const ankBuf = fs.readFileSync(await dlAnk.path());
-  check(dlAnk.suggestedFilename() === "nadelwerk-studio-raten-ankuendigung.png" && ankBuf.subarray(1, 4).toString() === "PNG" && ankBuf.readUInt32BE(16) === 1080 && ankBuf.readUInt32BE(20) === 1350, "Werbung: Einzelbild als PNG 1080 × 1350");
+  check(dlAnk.suggestedFilename() === "nadelwerk-studio-klarna-ankuendigung.png" && ankBuf.subarray(1, 4).toString() === "PNG" && ankBuf.readUInt32BE(16) === 1080 && ankBuf.readUInt32BE(20) === 1350, "Werbung: Einzelbild als PNG 1080 × 1350");
   // Großansicht + Name auf den Bildern ändern (bleibt im Browser gespeichert)
   await h.click('[data-vorlage="qr-story"] .kit-bilder img');
   check(await h.isVisible(".kit-gross img"), "Werbung: Bild antippen → große Ansicht");

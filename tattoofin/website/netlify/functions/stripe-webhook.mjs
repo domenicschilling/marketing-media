@@ -17,7 +17,7 @@ import { CFG } from "./_lib/config.mjs";
 import { json, fail, now, brutto, handler } from "./_lib/util.mjs";
 import { stripe, verifyWebhook } from "./_lib/stripe.mjs";
 import { getStudio, saveStudio, studioBy, store, log, zahlungBy, saveZahlung } from "./_lib/store.mjs";
-import { umstellungAbschliessen, notify, notifyAdmin, zaehleAktion, einrichtungUrl, kontoAbgleichen, provisionVerdient, zahlungBezahlt, paketDetails, aufstellerBezahlt, provisionZahlung, stripeDatenNachtragen } from "./_lib/domain.mjs";
+import { umstellungAbschliessen, notify, notifyAdmin, zaehleAktion, einrichtungUrl, kontoAbgleichen, provisionVerdient, zahlungBezahlt, paketDetails, aufstellerBezahlt, provisionZahlung, stripeDatenNachtragen, fehlerEintrag } from "./_lib/domain.mjs";
 import { mails } from "./_lib/emails.mjs";
 import { loginLink } from "./_lib/auth.mjs";
 
@@ -39,8 +39,12 @@ async function kundenEreignis(event) {
       const z = (await zahlungBy("cs", o.id)) || (await zahlungBy("zahlung", o.metadata?.tattoofinZahlung));
       if (!z) break;
       z.paymentIntentId = o.payment_intent || z.paymentIntentId;
-      if (event.type === "checkout.session.expired") { if (z.status === "offen" && z.art === "zahlseite") { z.status = "abgebrochen"; await saveZahlung(z); } break; }
-      if (event.type === "checkout.session.async_payment_failed") { z.status = "fehlgeschlagen"; await saveZahlung(z); break; }
+      if (event.type === "checkout.session.expired") {
+        if (z.status !== "bezahlt") z.letzterFehler = fehlerEintrag({ text: "Checkout-Sitzung abgelaufen" }, { ereignis: "abgelaufen" });
+        if (z.status === "offen" && z.art === "zahlseite") z.status = "abgebrochen";
+        await saveZahlung(z); break;
+      }
+      if (event.type === "checkout.session.async_payment_failed") { z.status = "fehlgeschlagen"; z.letzterFehler = fehlerEintrag({ text: "Zahlung später fehlgeschlagen" }); await saveZahlung(z); break; }
       if (o.payment_status === "paid" || event.type === "checkout.session.async_payment_succeeded") await zahlungBezahlt(z, account);
       else { z.status = "in_pruefung"; await saveZahlung(z); }
       break;
@@ -55,7 +59,7 @@ async function kundenEreignis(event) {
       z.paymentIntentId = o.id;
       if (event.type === "payment_intent.succeeded") await zahlungBezahlt(z, account);
       else if (event.type === "payment_intent.processing") { z.status = "in_pruefung"; await saveZahlung(z); }
-      else { z.letzterFehler = { am: now(), text: String(o.last_payment_error?.message || "").slice(0, 200) }; await saveZahlung(z); }
+      else { z.letzterFehler = fehlerEintrag(o.last_payment_error || {}); await saveZahlung(z); }
       break;
     }
 

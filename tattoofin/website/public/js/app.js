@@ -93,8 +93,17 @@
     $("klarna-eigen").classList.toggle("hidden", !(s.modell === "kauf" && s.stripe.freigegeben && s.stripe.klarnaAktiv === false));
     var ua = s.umstellungAngebot;
     $("umst-karte").classList.toggle("hidden", !ua);
-    if (ua) $("umst-preis").textContent = TF.euro(ua.monatNetto);
+    if (ua) { $("umst-preis").textContent = TF.euro(ua.monatNetto); $("umst-brutto").textContent = TF.euro(Math.round(ua.monatNetto * 1.19)); }
     checkliste();
+    // Vor der Stripe-Freigabe: Einrichtung nach oben, Zahlungslink/Gutschein/Werbung grau („ab Freigabe“), statt auf eine gesperrte Seite zu führen
+    var wc = $("werbung-cta"); if (wc && !s.kannKassieren) wc.classList.add("hidden"); // Werbung mit Klarna erst ab Freigabe
+    var vorFreigabe = !s.kannKassieren, app = document.querySelector('[data-view="start"]');
+    if (vorFreigabe) app.insertBefore($("checkliste"), document.querySelector('[data-view="start"] .big-cta'));
+    else { var so = $("so-gehts"); if (so) app.insertBefore($("checkliste"), so); }
+    document.querySelectorAll('[data-view="start"] .big-cta').forEach(function (a) {
+      a.style.opacity = vorFreigabe ? ".55" : ""; a.setAttribute("aria-disabled", vorFreigabe ? "true" : "false");
+      var sm = a.querySelector("small"); if (sm) { if (!sm.dataset.txt) sm.dataset.txt = sm.textContent; sm.textContent = vorFreigabe ? "Ab Freigabe deines Zahlungskontos" : sm.dataset.txt; }
+    });
     var gesehen = false; try { gesehen = localStorage.getItem("tf-werbevideo-gesehen") === "1"; } catch (x) {}
     $("wv-neu").classList.toggle("hidden", gesehen);
     var l = D.zahlungen.slice(0, 5);
@@ -107,13 +116,15 @@
 
   function checkliste() {
     var s = D.studio, c = s.checkliste || {};
+    var frei = s.stripe.freigegeben, ab = frei ? null : "ab Freigabe";
     var punkte = [
       { ok: true, t: "Vertrag abgeschlossen", s: "Paket " + s.paketName + (s.provisionProzent ? " · " + s.provisionProzent + " % pro Zahlung, alles inklusive" : s.paket === "monatlich" ? " · " + TF.euro(s.monatNetto || 4900) + " netto im Monat, keine Provision" : " · keine Provision") },
-      { ok: s.stripe.freigegeben, warte: s.stripe.angabenGemacht && !s.stripe.freigegeben, t: "Zahlungskonto einrichten",
-        s: s.stripe.freigegeben ? "Freigegeben. Stripe zahlt das Geld deiner Kunden auf dein Bankkonto aus. Bei neuen Konten wird es erst 7 Tage nach der Zahlung freigegeben." : s.stripe.angabenGemacht ? "Stripe prüft deine Angaben, meist 1 bis 3 Werktage." : "Ca. 10 Minuten. Ausweis und IBAN bereithalten.",
+      { ok: s.stripe.freigegeben, warte: s.stripe.angabenGemacht && !s.stripe.freigegeben, t: "Zahlungskonto einrichten (ca. 10 Min.)",
+        s: s.stripe.freigegeben ? "Freigegeben. Stripe zahlt das Geld deiner Kunden auf dein Bankkonto aus. Bei neuen Konten wird es erst 7 Tage nach der Zahlung freigegeben." : s.stripe.angabenGemacht ? "Stripe prüft deine Angaben, meist 1 bis 3 Werktage." : "Ca. 10 Minuten. Ausweis und IBAN bereithalten. Das ist der nächste Schritt, danach geht alles andere.",
         knopf: s.stripe.freigegeben || s.stripe.angabenGemacht ? null : ["#einrichtung", "Jetzt einrichten", "gold"] },
+      { ok: Boolean(s.fragebogenAm), t: "Fragebogen ausfüllen", s: "Hilft uns bei der Einrichtung (10 Minuten).", knopf: ["/onboarding.html", "Ausfüllen", "dark"] },
       { ok: s.recht && s.recht.aktuell, t: "Deine rechtliche Lage lesen", s: "5 Minuten: Wer trägt welches Risiko?", knopf: ["#recht", "Lesen", "dark"] },
-      { ok: D.zahlungen.length > 0, t: "Ersten Zahlungslink erstellen", s: "Zum Ausprobieren gern an dich selbst.", knopf: ["#link", "Erstellen", "dark"] },
+      { ok: D.zahlungen.length > 0, t: "Ersten Zahlungslink erstellen", s: frei ? "Zum Ausprobieren gern an dich selbst." : "Geht, sobald dein Zahlungskonto freigegeben ist.", grau: ab, knopf: frei ? ["#link", "Erstellen", "dark"] : null },
       { ok: c.app || standalone, t: "Tattoofin auf den Startbildschirm", s: "Dann hast du die App immer griffbereit.", manuell: "app" },
       { ok: c.theke, t: "QR-Code an die Theke", s: "Zum Ausdrucken unter Werbung.", knopf: ["#werbung", "Ansehen", "ghost"], manuell: "theke" },
       { ok: c.werbung, t: "Ersten Instagram-Beitrag posten", s: "Fertige Bilder unter Werbung.", knopf: ["#werbung", "Bilder", "ghost"], manuell: "werbung" },
@@ -122,7 +133,7 @@
     if (fertig === punkte.length) { $("checkliste").innerHTML = '<div class="card-a"><b>✓ Alles eingerichtet.</b> <span class="muted klein">Viel Erfolg mit Tattoofin!</span></div>'; return; }
     $("checkliste").innerHTML = '<div class="card-a" id="checkliste-karte"><div class="card-h"><h2>Einrichtung</h2><span class="muted klein">' + fertig + " von " + punkte.length + '</span></div><div class="fortschritt"><i style="width:' + Math.round(100 * fertig / punkte.length) + '%"></i></div><ul class="check-a">' +
       punkte.map(function (p) {
-        return '<li class="' + (p.ok ? "ok" : p.warte ? "wait" : "") + '"><span class="ic">' + (p.ok ? "✓" : p.warte ? "…" : "") + "</span><span><b>" + e(p.t) + "</b><small>" + e(p.s) + "</small>" +
+        return '<li class="' + (p.ok ? "ok" : p.warte ? "wait" : "") + (p.grau ? " grau" : "") + '"' + (p.grau ? ' style="opacity:.55"' : "") + '><span class="ic">' + (p.ok ? "✓" : p.warte ? "…" : "") + "</span><span><b>" + e(p.t) + (p.grau ? " (" + e(p.grau) + ")" : "") + "</b><small>" + e(p.s) + "</small>" +
           (!p.ok && p.knopf ? '<a class="btn ' + p.knopf[2] + ' small" href="' + p.knopf[0] + '">' + e(p.knopf[1]) + "</a> " : "") +
           (!p.ok && p.manuell ? '<button class="btn ghost small" data-check="' + p.manuell + '">Erledigt</button>' : "") + "</span></li>";
       }).join("") + "</ul></div>";
@@ -183,7 +194,8 @@
     ev.preventDefault();
     var f = ev.target, b = $("l-btn"); b.disabled = true; b.textContent = "Einen Moment …";
     try {
-      var r = await TF.api("/api/portal/zahlung", { body: { betrag: f.betrag.value, art: f.art.value, kunde: f.kunde.value, email: f.email.value, beschreibung: f.beschreibung.value, sitzungen: f.sitzungen.value } });
+      var r = await TF.api("/api/portal/zahlung", { body: { betrag: f.betrag.value, art: f.art.value, kunde: f.kunde.value, email: f.email.value, beschreibung: f.beschreibung.value, sitzungen: f.sitzungen.value, heute: Boolean(f.heute && f.heute.checked && f.art.value === "gesamt") } });
+      if (r.hinweis) toast(r.hinweis);
       var wa = "https://wa.me/?text=" + encodeURIComponent(r.whatsappText);
       $("l-out").innerHTML = '<div class="link-ok"><h2>✓ Link für ' + e(r.zahlung.kunde || "deinen Kunden") + " über " + euro(r.zahlung.betragCent, true) + '</h2><div class="qr" id="l-qr"></div>' +
         '<p class="klein muted">Kunde ist da? QR-Code scannen lassen. Sonst per WhatsApp schicken.' + (r.zahlung.art === "gesamt" && D.studio.klarna !== false ? " Welche Zahlarten dein Kunde bekommt, sieht er beim Bezahlen." : "") + '</p><a class="btn wa big w100" target="_blank" rel="noopener" href="' + e(wa) + '">Per WhatsApp schicken</a>' +
@@ -274,11 +286,17 @@
   $("raten-kopieren").onclick = function () { (navigator.clipboard ? navigator.clipboard.writeText(D.ratenText || "") : Promise.reject()).then(function () { toast("Text kopiert"); }).catch(function () { toast("Bitte Text markieren und kopieren"); }); };
   function artHinweis() {
     var anz = document.querySelector('#f-link input[name=art]:checked').value === "anzahlung";
+    $("l-heute-box").classList.toggle("hidden", anz);
     if (D.studio.klarna === false) { $("l-art-hinweis").textContent = "Dein Kunde zahlt per Karte, Apple Pay oder Google Pay."; return; }
-    $("l-art-hinweis").textContent = anz ? "Anzahlung: Dein Kunde zahlt sie am einfachsten ganz normal per Karte, Apple Pay oder Google Pay. Ratenzahlung ist für den Projektpreis größerer Tattoos gedacht."
-      : "Projektpreis: Dein Kunde kann per Karte zahlen oder mit Klarna in Raten*. Der Pflichtsatz steht schon im WhatsApp-Text.";
+    $("l-art-hinweis").textContent = anz ? "Anzahlung: Dein Kunde zahlt sie am einfachsten ganz normal per Karte, Apple Pay oder Google Pay."
+      : "Projektpreis: Dein Kunde kann per Karte, Apple Pay oder Google Pay zahlen. " + TF_KLARNA.NAME.verfuegbar + ".";
   }
   document.querySelectorAll("#f-link input[name=art]").forEach(function (r) { r.addEventListener("change", artHinweis); });
+  function gutscheinWortHinweis() {
+    var ja = $("l-beschreibung").value + " " + $("l-sitzungen").value;
+    $("l-gutschein-hinweis").textContent = TF_KLARNA.gutscheinWort(ja) ? TF_KLARNA.GUTSCHEIN_HINWEIS : "";
+  }
+  ["l-beschreibung", "l-sitzungen"].forEach(function (id) { $(id).addEventListener("input", gutscheinWortHinweis); });
   function gutscheinForm() {
     var s = D.studio, g = $("gs-gesperrt");
     g.innerHTML = s.kannKassieren ? "" : '<div class="card-a"><b>Erst noch das Zahlungskonto.</b><p class="klein muted">Sobald Stripe dein Konto freigegeben hat, kannst du Gutscheine verkaufen.</p></div>';
@@ -375,7 +393,8 @@
   }
 
   // ---------- Werbevideo für alle Studios (Reel 9:16 + Beitrag 4:5, Quelle spots/tfin-studio-universal-v2 in der Marketing-Maschine, Fassung 2) ----------
-  var WV_TEXT = "Dein Wunsch-Tattoo – bei uns ganz bequem in Raten* 🖤\n\nBei uns kannst du dein Tattoo jetzt in Raten* zahlen. Alles direkt übers Handy, ohne Papierkram.\n\nSprich uns einfach drauf an oder schreib uns eine Nachricht!\n\n*Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, weder wir noch Tattoofin.\nAchtung! Kreditaufnahme kostet Geld.\nStimme mit KI erstellt";
+  // Klarna-Regeln ab 20.11.2026: nur der Name, keine Raten-Aussage (Texte zentral in /js/klarna-texte.js). Das Video selbst enthält noch eine Raten-Aussage → neu schneiden.
+  var WV_TEXT = "Dein Wunsch-Tattoo – bei uns ganz bequem übers Handy bezahlen 🖤\n\nBei uns kannst du dein Tattoo jetzt ganz einfach per Link oder QR-Code bezahlen: Karte, Apple Pay, Google Pay. " + TF_KLARNA.NAME.verfuegbar + ". Ohne Papierkram.\n\nSprich uns einfach drauf an oder schreib uns eine Nachricht!\n\nStimme mit KI erstellt";
   var WV_GESEHEN = "tf-werbevideo-gesehen";
   function werbevideo() {
     try { localStorage.setItem(WV_GESEHEN, "1"); } catch (x) {}

@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Tattoofin">
 <!-- ?v= bei jeder Änderung an CSS/JS hochzählen: sonst zeigt der Service Worker (sw.js) Studios beim ersten Öffnen die alte Fassung -->
-<link rel="stylesheet" href="/css/site.css?v=20261023a"><link rel="stylesheet" href="/css/app.css?v=20261023a"><link rel="stylesheet" href="/css/so-gehts.css?v=20261023a">
+<link rel="stylesheet" href="/css/site.css?v=20261111a"><link rel="stylesheet" href="/css/app.css?v=20261111a"><link rel="stylesheet" href="/css/so-gehts.css?v=20261111a">
 </head><body class="app">
 <header class="app-top">
   <a class="app-brand" href="#start"><img src="/assets/figur.png" alt=""><span id="top-firma">Tattoofin</span></a>
@@ -29,17 +29,18 @@
       <p class="klein">Deine Kunden können gerade per Karte, Apple Pay und Google Pay zahlen. Klarna schaltest du bei Bedarf selbst in deinem Stripe-Konto ein. Das entscheidest allein du.</p>
       <a class="btn dark small" href="https://dashboard.stripe.com/settings/payment_methods" target="_blank" rel="noopener">Zahlungsmethoden bei Stripe öffnen</a></div>
     <div class="card-a hidden" id="umst-karte"><h2>Neu ab 20.11.: dein eigenes Stripe-Konto</h2>
-      <p class="klein">Am 20.11. ändert sich das Gesetz. Klarna bleibt nur möglich, wenn das Geld direkt auf dein eigenes Stripe-Konto läuft. Dann zahlst du keine 10 % mehr, sondern <b id="umst-preis"></b> netto im Monat, dazu die Zahlungsgebühren direkt an Stripe. Monatlich kündbar. Der QR-Aufsteller ist bei diesem Preis nicht enthalten.</p>
-      <p class="klein">Nach der Bestätigung richtest du das neue Konto ein (ca. 10 Minuten). Stripe prüft es meist in 1 bis 3 Werktagen. Bis zur Freigabe kannst du keine neuen Zahlungslinks nutzen.</p>
+      <p class="klein">Am 20.11. ändert sich das Gesetz. Klarna bleibt nur möglich, wenn das Geld direkt auf dein eigenes Stripe-Konto läuft. Dann zahlst du keine 10 % mehr, sondern <b id="umst-preis"></b> netto im Monat, <span id="umst-brutto-zeile">(<span id="umst-brutto"></span> inkl. USt.)</span>, dazu die Zahlungsgebühren direkt an Stripe. Monatlich kündbar. Der QR-Aufsteller ist bei diesem Preis nicht enthalten.</p>
+      <p class="klein">Bei einem eigenen Konto laufen auch Streitfälle (z. B. Rückbuchungen) über dein Konto. Wie Klarna dich dabei schützt, können wir dir nicht zusagen.</p>
+      <p class="klein">Nach der Bestätigung richtest du das neue Konto ein (ca. 10 Minuten). Stripe prüft es meist in 1 bis 3 Werktagen. Bis zur Freigabe kannst du keine neuen Zahlungslinks nutzen, und offene Links gehen in dieser Zeit auch nicht.</p>
       <label class="haken"><input type="checkbox" id="umst-vertrag"> <span>Ich akzeptiere den <a href="/vertrag.html" target="_blank">Vertrag</a> und den <a href="/avv.html" target="_blank">AVV</a> und handle als Unternehmer/in für mein Studio.</span></label>
-      <label class="haken"><input type="checkbox" id="umst-kmu"> <span>Mein Studio ist ein kleines oder mittleres Unternehmen (weniger als 250 Beschäftigte, höchstens 50 Mio. € Umsatz oder 43 Mio. € Bilanzsumme).</span></label>
+      <label class="haken"><input type="checkbox" id="umst-kmu"> <span>Mein Studio ist ein kleines Unternehmen (unter 250 Mitarbeitende, höchstens 50 Mio. € Umsatz oder 43 Mio. € Bilanzsumme).</span></label>
       <label class="lbl" for="umst-name">Dein Vor- und Nachname</label><input type="text" id="umst-name" autocomplete="name" autocapitalize="words" enterkeyhint="done">
       <button class="btn gold" id="umst-los" type="button">Zahlungspflichtig umstellen</button></div>
     <a class="big-cta" href="#link"><span class="plus">+</span><span>Zahlungslink erstellen<small>Betrag eintragen, per WhatsApp schicken</small></span></a>
     <a class="big-cta gs-cta" href="#gutschein"><span class="plus">🎁</span><span>Gutschein verkaufen<small>Wertgutschein mit Code, kommt per E-Mail als PDF</small></span></a>
     <a class="werbung-cta" id="werbung-cta" href="#werbung" data-klarna-dauer>
       <img src="/media/studio-video/cover.jpg" alt="" width="1080" height="1920" loading="lazy">
-      <span class="wc-text"><span class="neu-badge hidden" id="wv-neu">Neu</span><b>Werbung für dein Studio</b><small>Fertiges Video und 5 Beiträge für Instagram: Zeig deinen Kunden, dass bei dir Ratenzahlung geht – das bringt neue Kunden.</small><span class="wc-knopf">Video &amp; Beiträge ansehen</span></span>
+      <span class="wc-text"><span class="neu-badge hidden" id="wv-neu">Neu</span><b>Werbung für dein Studio</b><small>Fertiges Video und 5 Beiträge für Instagram: Zeig deinen Kunden, dass sie bei dir ganz einfach per Handy bezahlen können, auch mit Klarna.</small><span class="wc-knopf">Video &amp; Beiträge ansehen</span></span>
     </a>
     <div id="checkliste"></div>
     <div class="card-a so-gehts" id="so-gehts"></div>
@@ -76,27 +77,27 @@
       <label class="lbl" for="l-beschreibung">Motiv / Projekt</label>
       <input type="text" id="l-beschreibung" name="beschreibung" autocomplete="off" enterkeyhint="next" placeholder="z. B. Sleeve linker Arm, Japanese">
       <label class="lbl" for="l-sitzungen">Sitzungen (optional)</label>
-      <input type="text" id="l-sitzungen" name="sitzungen" autocomplete="off" enterkeyhint="next" placeholder="z. B. 3 Sitzungen à 5 Std.">
+      <input type="text" id="l-sitzungen" name="sitzungen" autocomplete="off" enterkeyhint="next" placeholder="z. B. Sitzung 1 von 2">
+      <label class="haken" id="l-heute-box"><input type="checkbox" id="l-heute" name="heute"> <span>Der Kunde wird <b>heute im Studio</b> tätowiert (nur dann steht das so beim Bezahlen).</span></label>
+      <p class="klein" id="l-gutschein-hinweis" style="color:#8a1c1c;font-weight:600"></p>
       <label class="lbl" for="l-email">E-Mail des Kunden (optional, für die Quittung)</label>
       <input type="email" id="l-email" name="email" inputmode="email" autocomplete="off" enterkeyhint="done" placeholder="kunde@beispiel.de">
       <button class="btn gold big w100" id="l-btn">Link erstellen</button>
       <p class="muted klein">Dein Kunde bestätigt vor dem Bezahlen Betrag und Projekt, bei Anzahlungen auch deine Bedingungen. So hast du später einen Beleg.</p>
-      <p class="muted klein" id="l-art-hinweis">Projektpreis: Dein Kunde kann per Karte zahlen oder mit Klarna in Raten*. Der Pflichtsatz steht schon im WhatsApp-Text.</p>
+      <p class="muted klein" id="l-art-hinweis">Projektpreis: Dein Kunde kann per Karte, Apple Pay oder Google Pay zahlen. Klarna verfügbar.</p>
     </form>
     <div id="l-out"></div>
-    <a class="card-a raten-hilfe-link" href="#raten" data-klarna><b>💡 So zahlt dein Kunde in Raten*</b><small>3 Schritte zum Erklären + fertiger WhatsApp-Text</small></a>
+    <a class="card-a raten-hilfe-link" href="#raten" data-klarna><b>💡 Link an deinen Kunden schicken</b><small>Fertiger WhatsApp-Text zum Kopieren</small></a>
   </section>
 
   <!-- HILFE: RATEN FÜR KUNDEN -->
   <section data-view="raten" class="hidden">
     <a class="zurueck" href="#link">← Zahlungslink</a>
-    <h1>So zahlt dein Kunde in Raten*</h1>
-    <div class="card-a" data-klarna><h2>So läuft es ab</h2><p class="klein"><b>Kunde ist bei dir im Studio → du schickst ihm den Zahlungslink → Klarna gibt die Finanzierung frei → du stichst das Tattoo.</b> Die Zahlung ist also für das Tattoo, das du direkt danach stichst – keine Vorauszahlung für einen späteren Termin.</p></div>
-    <div class="card-a" data-klarna><h2>1. Link schicken</h2><p class="klein">Unter <b>+ Zahlungslink</b> den Projektpreis eintragen (nicht „Anzahlung“) und den Link per WhatsApp schicken oder den QR-Code im Studio scannen lassen. Ratenzahlung ist für größere Projekte gedacht. Anzahlungen zahlt dein Kunde am besten ganz normal per Karte.</p></div>
-    <div class="card-a" data-klarna><h2>2. Kunde wählt Klarna</h2><ol class="check-a hilfe-schritte"><li><span class="ic">1</span><span><b>Link öffnen, „Weiter zum Bezahlen“</b><small>Betrag und Projekt kurz bestätigen</small></span></li><li><span class="ic">2</span><span><b>„Klarna“ als Zahlungsart wählen</b><small>Wer hier „Karte“ nimmt, zahlt alles auf einmal</small></span></li><li><span class="ic">3</span><span><b>Bei Klarna Raten oder Finanzierung aussuchen und bestätigen</b><small>Klarna prüft kurz und zeigt die Möglichkeiten (je nach Angebot 25 € bis 10.000 €)</small></span></li></ol></div>
-    <div class="card-a" data-klarna><h2>3. Fertiger WhatsApp-Text</h2><p class="muted klein">Steht automatisch im Text, wenn du einen Zahlungslink erstellst. Zum Selbst-Schreiben hier zum Kopieren ([…] ersetzen):</p><pre class="caption" id="raten-text"></pre><div class="row-a"><button class="btn dark small" id="raten-kopieren">Text kopieren</button></div></div>
+    <h1>Link an deinen Kunden schicken</h1>
+    <div class="card-a"><h2>So läuft es ab</h2><p class="klein"><b>Du erstellst den Zahlungslink, schickst ihn deinem Kunden (WhatsApp oder QR-Code im Studio), er zahlt am Handy.</b> Du entscheidest selbst, wann der Link verschickt wird: im Studio, vorab, für eine Anzahlung oder für einzelne Sitzungen.</p></div>
+    <div class="card-a"><h2>1. Link schicken</h2><p class="klein">Unter <b>+ Zahlungslink</b> Betrag und Projekt eintragen und den Link per WhatsApp schicken oder den QR-Code im Studio scannen lassen. Anzahlungen zahlt dein Kunde am besten ganz normal per Karte.</p></div>
+    <div class="card-a"><h2>2. Fertiger WhatsApp-Text</h2><p class="muted klein">Steht automatisch im Text, wenn du einen Zahlungslink erstellst. Zum Selbst-Schreiben hier zum Kopieren ([…] ersetzen):</p><pre class="caption" id="raten-text"></pre><div class="row-a"><button class="btn dark small" id="raten-kopieren">Text kopieren</button></div></div>
     <div class="card-a" data-klarna><h2>Wenn Klarna nicht zustimmt</h2><p class="klein">Das entscheidet allein Klarna. Dein Kunde sieht dann: mit Karte zahlen oder – wenn du es unter Einstellungen einschaltest – Anzahlung per Karte, Rest direkt bei dir im Studio. Du bekommst eine E-Mail.</p><a class="btn ghost small" href="#einstellungen">Zu den Einstellungen</a></div>
-    <p class="klein muted fussnote" data-klarna>*Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, nicht Tattoofin. <strong>Achtung! Kreditaufnahme kostet Geld.</strong></p>
     <div class="card-a hidden" data-ohne-klarna><h2>Zahlarten bei deinem Paket</h2><p class="klein">Bei deinem Paket zahlen deine Kunden per Karte, Apple Pay oder Google Pay. Klarna gibt es nur bei Studios mit eigenem Stripe-Konto (Paket Monatlich). Du schickst einfach den Zahlungslink oder lässt den QR-Code scannen.</p></div>
   </section>
 
@@ -162,17 +163,17 @@
   <!-- WERBUNG -->
   <section data-view="werbung" class="hidden">
     <h1>Werbung für dein Studio</h1>
-    <p class="muted klein" data-klarna-dauer>Fertiges Video und fertige Beiträge für Instagram und Facebook: Deine Kunden sehen, dass sie ihr Tattoo bei dir jetzt in Raten* zahlen können. Speichern, Text kopieren, posten.</p>
+    <p class="muted klein" data-klarna-dauer>Fertiges Video und fertige Beiträge für Instagram und Facebook: Deine Kunden sehen, dass sie ihr Tattoo bei dir ganz einfach per Link oder QR-Code bezahlen können, auch mit Klarna. Speichern, Text kopieren, posten.</p>
     <p class="klein muted fussnote" data-klarna-dauer>*Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, nicht Tattoofin. <strong>Achtung! Kreditaufnahme kostet Geld.</strong></p>
-    <div class="card-a hidden" data-ohne-klarna-dauer><h2>Werbung mit Raten</h2><p class="klein">Fertige Raten-Beiträge und das Raten-Video gibt es für Studios mit eigenem Stripe-Konto (Paket Monatlich). Bei deinem Paket zahlen deine Kunden per Karte, Apple Pay oder Google Pay. Deine Zahlseite und den QR-Code findest du unten.</p></div>
+    <div class="card-a hidden" data-ohne-klarna-dauer><h2>Werbung mit Klarna</h2><p class="klein">Fertige Klarna-Beiträge und das Werbevideo gibt es für Studios mit eigenem Stripe-Konto (Paket Monatlich). Bei deinem Paket zahlen deine Kunden per Karte, Apple Pay oder Google Pay. Deine Zahlseite und den QR-Code findest du unten.</p></div>
     <div class="card-a" id="wv" data-klarna-dauer>
       <h2>Dein Werbevideo <span class="neu-badge">Neu</span></h2>
-      <p class="muted klein">Fertiges Video für Instagram, Facebook und TikTok: Deine Kunden sehen, dass sie bei dir ganz bequem in Raten* zahlen können – und dass sie euch einfach darauf ansprechen oder schreiben können. Speichern, Text kopieren, posten.</p>
+      <p class="muted klein">Fertiges Video für Instagram, Facebook und TikTok: Deine Kunden sehen, dass sie bei dir ganz bequem übers Handy bezahlen können – und dass sie euch einfach darauf ansprechen oder schreiben können. Speichern, Text kopieren, posten.</p>
       <div class="wv-wahl" role="tablist" aria-label="Format">
         <button class="btn small dark" data-wv="reel" role="tab" aria-selected="true">Reel / Story (9:16)</button>
         <button class="btn small ghost" data-wv="feed" role="tab" aria-selected="false">Beitrag (4:5)</button>
       </div>
-      <div class="sg-film hoch" id="wv-film"><video controls playsinline preload="none" width="1080" height="1920" poster="/media/studio-video/cover.jpg" aria-label="Werbevideo: Bei uns ganz bequem in Raten*"><source src="/media/studio-video/reel.mp4" type="video/mp4"></video></div>
+      <div class="sg-film hoch" id="wv-film"><video controls playsinline preload="none" width="1080" height="1920" poster="/media/studio-video/cover.jpg" aria-label="Werbevideo: Bei uns ganz bequem übers Handy bezahlen"><source src="/media/studio-video/reel.mp4" type="video/mp4"></video></div>
       <div class="row-a"><button class="btn gold small" id="wv-speichern">Video speichern</button><button class="btn ghost small" id="wv-text-an">Text zum Posten</button></div>
       <div class="hidden" id="wv-text"><pre class="caption" id="wv-caption"></pre><div class="row-a"><button class="btn dark small" id="wv-kopieren">Text kopieren</button></div></div>
       <p class="klein muted fussnote">*Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, nicht Tattoofin. <strong>Achtung! Kreditaufnahme kostet Geld.</strong></p>
@@ -183,7 +184,7 @@
     </div>
     <div class="card-a" id="auf">
       <h2>Dein QR-Aufsteller</h2>
-      <p class="muted klein">Holzschild für deine Theke, 10 × 15 cm mit kleinem Fuß. Kunden scannen und bezahlen: Tattoo oder Anzahlung<span data-klarna-dauer>, je nach Prüfung durch Klarna auch in Raten*</span>. Der QR-Code führt direkt auf deine Zahlseite.</p>
+      <p class="muted klein">Holzschild für deine Theke, 10 × 15 cm mit kleinem Fuß. Kunden scannen und bezahlen: Tattoo oder Anzahlung<span data-klarna-dauer>, auch mit Klarna</span>. Der QR-Code führt direkt auf deine Zahlseite.</p>
       <div id="auf-paket" class="auf-paket"></div>
       <div class="seg" role="radiogroup" aria-label="Holzton">
         <label><input type="radio" name="auf-holz" value="hell" checked><span>Holz hell</span></label>
@@ -216,7 +217,7 @@
     <h1>Mehr</h1>
     <nav class="liste-links gross">
       <a href="#video"><b>🎬 So geht's (Video)</b><small>Deine App Schritt für Schritt erklärt, mit Kapiteln</small></a>
-      <a href="#raten" data-klarna><b>💡 Raten für deine Kunden</b><small>So schickst du den Link, so wählt dein Kunde Klarna</small></a>
+      <a href="#raten" data-klarna><b>💡 Link an deine Kunden schicken</b><small>Fertiger WhatsApp-Text zum Kopieren</small></a>
       <a href="#gutscheine"><b>🎁 Gutscheine</b><small>Verkaufen, Code prüfen, als eingelöst markieren</small></a>
       <a href="#werbung"><b>📣 Werbung &amp; QR-Code</b><small>Instagram-Bilder, Zahlseite, Studio Kit</small></a>
       <a href="#recht"><b>⚖️ Deine rechtliche Lage</b><small id="mehr-recht">Wer trägt welches Risiko? Einfach erklärt.</small></a>
@@ -290,11 +291,12 @@
   <a href="#mehr" data-tab="mehr"><span>☰</span>Mehr</a>
 </nav>
 
-<script src="/js/qrcode.min.js?v=20261023a"></script>
-<script src="/js/common.js?v=20261023a"></script>
-<script src="/js/stripe-bausteine.js?v=20261023a"></script>
-<script src="/js/app-kit.js?v=20261023a"></script>
-<script src="/js/aufsteller.js?v=20261023a"></script>
-<script src="/js/so-gehts.js?v=20261023a"></script>
-<script src="/js/app.js?v=20261023a"></script>
+<script src="/js/qrcode.min.js?v=20261111a"></script>
+<script src="/js/common.js?v=20261111a"></script>
+<script src="/js/klarna-texte.js?v=20261111a"></script>
+<script src="/js/stripe-bausteine.js?v=20261111a"></script>
+<script src="/js/app-kit.js?v=20261111a"></script>
+<script src="/js/aufsteller.js?v=20261111a"></script>
+<script src="/js/so-gehts.js?v=20261111a"></script>
+<script src="/js/app.js?v=20261111a"></script>
 </body></html>

@@ -65,6 +65,11 @@ export default handler(async (req, context) => {
   if (!modell) fehlt.push("Paket");
   for (const [k, n] of [["firma", "Studio/Firma"], ["inhaber", "Inhaber"], ["strasse", "Straße"], ["plz", "PLZ"], ["ort", "Ort"], ["telefon", "Mobilnummer"], ["studioTelefon", "Studio-Telefonnummer"], ["unterzeichner", "Name des Unterzeichners"]]) if (!d[k]) fehlt.push(n);
   if (!isEmail(d.email)) fehlt.push("gültige E-Mail");
+  // Plausibilität (nicht nur „nicht leer“): PLZ 5 Ziffern, Telefonnummern mit mindestens 6 Ziffern
+  const ziffern = (x) => String(x || "").replace(/\D/g, "").length;
+  if (d.plz && !/^\d{5}$/.test(d.plz)) fehlt.push("PLZ (5 Ziffern)");
+  if (d.telefon && ziffern(d.telefon) < 6) fehlt.push("Mobilnummer (mindestens 6 Ziffern)");
+  if (d.studioTelefon && ziffern(d.studioTelefon) < 6) fehlt.push("Studio-Telefonnummer (mindestens 6 Ziffern)");
   if (fehlt.length) return fail("Bitte ausfüllen: " + fehlt.join(", "));
   if (!(b.akzeptiert?.vertrag && b.akzeptiert?.avv && b.akzeptiert?.unternehmer)) return fail("Bitte Vertrag, AVV und Unternehmereigenschaft bestätigen.");
   // KMU-Bestätigung seit Vertrag 2026-12 (§ 34k Abs. 4 Nr. 3 GewO: Ausnahme nur für kleine und mittlere Unternehmen)

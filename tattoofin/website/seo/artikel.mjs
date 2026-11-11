@@ -81,7 +81,7 @@ export const artikel = [
 </ul>
 
 <h2 id="wie">So funktioniert es technisch</h2>
-<p>Dein Studio bekommt eine Zahlungsstruktur über einen der größten regulierten Zahlungsanbieter. Darüber laufen Karte, Apple Pay, Google Pay und <b>Klarna</b>. Klarna bietet Kunden je nach Prüfung „später bezahlen“, „in 3 Raten“ oder eine Finanzierung an. In Deutschland sind laut Stripe zum Beispiel 3 Raten für Beträge von 1 bis 5.000 € und Finanzierungen von 25 bis 10.000 € möglich (Stand 10/2026).</p>
+<p>Dein Studio bekommt eine Zahlungsstruktur über einen der größten regulierten Zahlungsanbieter. Darüber laufen Karte, Apple Pay, Google Pay und <b>Klarna</b>. Klarna bietet Kunden je nach Prüfung „später bezahlen“ oder eine Finanzierung an. In Deutschland sind laut Stripe Finanzierungen von 25 bis 10.000 € möglich (Stand 10/2026).</p>
 <ol>
 <li>Du erstellst im Portal einen Zahlungslink mit Betrag und Projekt, oder dein Kunde scannt den QR-Code deiner Zahlseite.</li>
 <li>Der Kunde wählt im Checkout, wie er zahlen will. Prüfung und Bedingungen übernimmt der Anbieter.</li>
@@ -177,7 +177,7 @@ export const artikel = [
     stand: "2026-10-10",
     faq: [
       ["Kann ich Klarna im Tattoostudio ohne Onlineshop nutzen?", "Ja, zum Beispiel mit Zahlungslinks und einer Zahlseite mit QR-Code. Der Kunde zahlt im Checkout per Klarna, du brauchst keinen Shop."],
-      ["Welche Klarna-Optionen bekommen meine Kunden?", "Je nach Betrag und Prüfung z. B. später bezahlen, in 3 Raten oder eine Finanzierung. Welche Optionen ein Kunde sieht, entscheidet Klarna."],
+      ["Welche Klarna-Optionen bekommen meine Kunden?", "Je nach Betrag und Prüfung z. B. später bezahlen oder eine Finanzierung. Welche Optionen ein Kunde sieht, entscheidet Klarna."],
       ["Was kostet Klarna fürs Studio?", "Je nach Zahlungsanbieter ab 2,99 % + 0,35 € pro Zahlung, wenn du die Gebühren selbst zahlst (bei Tattoofin Monatlich oder Einmalzahlung zahlst du sie direkt an Stripe, Tattoofin nimmt keine Provision)."],
       ["Wann bekomme ich mein Geld, wenn der Kunde in Raten zahlt?", "Stimmt Klarna zu, zahlt Stripe dir den Betrag aus, nach seinen Auszahlungsfristen. Die Raten zahlt der Kunde an Klarna, das Ausfallrisiko trägt nach den Bedingungen von Stripe und Klarna Klarna. Reklamiert der Kunde die Leistung, kann der Betrag aber zurückgebucht werden. Achtung! Kreditaufnahme kostet Geld."],
     ],
@@ -188,7 +188,6 @@ export const artikel = [
 <table>
 <tr><th>Option</th><th>Betrag (laut Stripe, Stand 10/2026)</th></tr>
 <tr><td>Später bezahlen (30 Tage)</td><td>ca. 0,10 – 10.000 €</td></tr>
-<tr><td>In 3 Raten</td><td>1 – 5.000 €</td></tr>
 <tr><td>Finanzierung (bis 36 Monate)</td><td>25 – 10.000 €</td></tr>
 </table>
 <p>Welche Option ein Kunde tatsächlich angeboten bekommt, entscheidet Klarna nach Betrag und Prüfung. Für typische Tattoo-Projekte von einigen hundert bis einigen tausend Euro passt das gut.</p>

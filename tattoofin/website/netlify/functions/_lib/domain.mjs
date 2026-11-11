@@ -7,6 +7,7 @@ import { stripe, taxRateId, ensureCustomer, TATTOOFIN_BRANDING } from "./stripe.
 import { checkoutBranding } from "./branding.mjs";
 import { allStudios, zahlungenVon, saveZahlung, getZahlung, getAbrechnung, saveAbrechnung, saveStudio, getStudio, log, store } from "./store.mjs";
 import { gutscheinAusstellen } from "./gutschein.mjs";
+import { gutscheinWort } from "./klarna-texte.mjs";
 import { monatsende, now, HttpError } from "./util.mjs";
 import { loginLink, zweckToken } from "./auth.mjs";
 
@@ -182,7 +183,7 @@ export const istAnzahlung = (z) => z.art === "anzahlung" || Boolean(z.anzahlung)
 // Reihenfolge: immer Karte zuerst, keine Lenkung auf Klarna (Rechtsprüfung 01.11.2026, U5).
 // Mit „studio“: Klarna entfällt, wo es für dieses Studio nicht angeboten wird (siehe klarnaFuer: Risikofrei über das Plattformkonto ab Stichtag).
 export const zahlartenFuer = (z, { nurKarte = false, studio = null, zeit } = {}) => {
-  if (z.art === "gutschein" || z.nurKarte || nurKarte) return ["card"];
+  if (z.art === "gutschein" || z.nurKarte || nurKarte || (z.art !== "gutschein" && gutscheinWort(z.beschreibung, z.sitzungen))) return ["card"];
   const arten = klarnaFuer(studio, zeit) ? CFG.zahlarten : CFG.zahlarten.filter((x) => x !== "klarna");
   return ["card", ...arten.filter((x) => x !== "card")].filter((x) => x !== "card" || arten.includes("card"));
 };
@@ -197,12 +198,15 @@ export function artikelText(studio, z) {
     description: `Wertgutschein, einlösbar für alle Leistungen bei ${studio.firma}${z.gutschein?.empfaenger ? ", für " + z.gutschein.empfaenger : ""}. Gültig bis Ende des dritten Jahres nach dem Kauf.`.slice(0, 480),
   };
   // Wahrheitsgemäß als Dienstleistung des Studios: „Tattoo bei <Studio> – <Motiv>“ (+ Anschrift des Studios).
-  // Ablauf (Domenic 23.10.): Kunde ist im Studio → Link → Zahlung/Finanzierung freigegeben → Tattoo wird direkt gestochen.
+  // Der Satz „direkt nach der Zahlungsfreigabe“ stimmt nur, wenn das Studio beim Anlegen ausdrücklich „heute im Studio“ gewählt hat
+  // (z.heute). Sonst neutral: „Tätowierung bei <Studio>“, plus Sitzungen/Termin, wenn angegeben (Klarna sieht den Warenkorb, er muss immer stimmen).
   const anz = istAnzahlung(z);
   const adr = [studio.strasse, [studio.plz, studio.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ");
+  const leistung = anz ? "Anzahlung, wird mit dem Preis verrechnet"
+    : z.heute ? "Tätowierung vor Ort, direkt nach der Zahlungsfreigabe" : `Tätowierung bei ${studio.firma}`;
   return {
     name: `${anz ? "Anzahlung für " : ""}Tattoo bei ${studio.firma}${motiv ? " – " + motiv : ""}`.slice(0, 200),
-    description: [z.sitzungen, anz ? "Anzahlung, wird mit dem Preis verrechnet" : "Tätowierung vor Ort, direkt nach der Zahlungsfreigabe", `Studio ${studio.firma}${adr ? ", " + adr : ""}`].filter(Boolean).join(" · ").slice(0, 480),
+    description: [z.sitzungen, z.termin ? `Termin: ${z.termin}` : "", leistung, adr ? `Anschrift: ${adr}` : ""].filter(Boolean).join(" · ").slice(0, 480),
   };
 }
 
@@ -293,6 +297,20 @@ export async function checkoutFuer(studio, z, { nurKarte = false } = {}) {
   return session.url;
 }
 
+// Letzten Zahlungsfehler getrennt speichern: Code, Decline-Code, Zahlart und Text, damit Ablehnung (Klarna/Bank), Abbruch durch den Kunden
+// und Ablauf unterscheidbar sind. typ: ablehnung | abbruch | ablauf | fehler. Stripe-Codes: payment_method_customer_decline /
+// payment_method_provider_decline = Ablehnung, „Customer cancelled…“ = Abbruch, payment_intent_payment_attempt_expired / Sitzung abgelaufen = Ablauf.
+export function fehlerTyp(code = "", text = "", ereignis = "") {
+  if (ereignis === "abgelaufen" || /expired/i.test(code)) return "ablauf";
+  if (/cancel/i.test(text) || /customer_cancel|canceled/i.test(code)) return "abbruch";
+  if (/decline|not_available|insufficient|card_declined|authentication/i.test(code)) return "ablehnung";
+  return "fehler";
+}
+export function fehlerEintrag(err, { zahlart = "", ereignis = "" } = {}) {
+  const code = String(err?.code || ""), text = String(err?.message || err?.text || "").slice(0, 200);
+  return { am: now(), code, declineCode: String(err?.decline_code || ""), typ: fehlerTyp(code, text, ereignis), zahlart: zahlart || err?.payment_method?.type || "", text };
+}
+
 // Nach „Zurück“ aus dem Checkout: Hat Klarna abgelehnt? (Checkout-Sitzung → PaymentIntent → letzter Fehler)
 // Klarna-Fehlercodes seit API 2023-08-16 (docs.stripe.com/changelog/2023-08-16/klarna-payment-failure-error-code):
 // payment_method_customer_decline, payment_method_provider_decline, payment_method_not_available,
@@ -310,7 +328,8 @@ export async function klarnaVersuch(studio, z) {
     if (!err) return null;
     const typ = err.payment_method?.type || "";
     const klarna = typ === "klarna" || /klarna/i.test(err.message || "") || /^payment_method_(customer|provider)_decline$|^payment_method_not_available$/.test(err.code || "");
-    return klarna ? { code: err.code || err.decline_code || "", text: String(err.message || "").slice(0, 200), pi: pi.id } : null;
+    z.letzterFehler = fehlerEintrag(err, { zahlart: klarna ? "klarna" : "" });
+    return klarna ? { code: err.code || err.decline_code || "", text: String(err.message || "").slice(0, 200), pi: pi.id, typ: z.letzterFehler.typ } : null;
   } catch (e) { console.error("Klarna-Abgleich:", e.message); return null; }
 }
 

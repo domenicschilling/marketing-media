@@ -17,6 +17,7 @@
     <label class="lbl" for="betrag">Betrag (wie mit dem Studio abgesprochen)</label>
     <div class="betrag-feld"><input type="text" inputmode="decimal" id="betrag" name="betrag" placeholder="0" required autocomplete="transaction-amount" enterkeyhint="next"><span>€</span></div>
     <div id="raten-hinweis" style="margin-top:12px"></div>
+    <div id="gutschein-hinweis" style="margin-top:12px"></div>
     <div style="height:6px"></div>
     <label class="lbl" for="kunde">Dein Name</label>
     <input type="text" id="kunde" name="name" required autocomplete="name" autocapitalize="words" enterkeyhint="next">
@@ -30,6 +31,7 @@
       <label class="haken"><input type="checkbox" id="bed-ok"> <span>Ich bin mit den Anzahlungsbedingungen des Studios einverstanden.</span></label></div>
     <label class="haken"><input type="checkbox" id="inhalt-ok"> <span id="inhalt-text">Ich zahle den Betrag an das Studio. Betrag und Projekt sind so mit dem Studio abgesprochen.</span></label>
     <button class="btn gold big w100" id="weiter" disabled>Weiter zum Bezahlen</button>
+    <p class="klein muted" style="margin:8px 0 0;text-align:center">Du wirst zu Stripe weitergeleitet und gibst dort Rechnungsadresse und Telefonnummer an.</p>
   </form>
 
   <div id="schritt2" class="card-a hidden">
@@ -44,6 +46,7 @@
 </main>
 <script src="/js/common.js"></script>
 <script src="/js/stripe-bausteine.js"></script>
+<script src="/js/klarna-texte.js"></script>
 <script src="/js/bezahlen.js"></script>
 <script>
 (async function () {
@@ -70,6 +73,7 @@
       return;
     }
   } catch (err) {
+    if (err.netz) { $("weiter").disabled = true; $("schritt1").classList.add("hidden"); B.netzfehler(err); return; }
     $("weiter").disabled = true; $("schritt1").classList.add("hidden"); $("studio").textContent = "Studio nicht gefunden";
     $("alert").innerHTML = '<div class="alert err"><b>Diese Zahlseite gibt es nicht.</b><br>Bitte prüfe den Link oder scanne den QR-Code im Studio noch einmal. Den richtigen Link bekommst du direkt vom Studio.</div>';
     return;
@@ -78,7 +82,7 @@
   var f = $("schritt1");
   function anzahlung() { return f.art.value === "anzahlung"; }
   function info() { return { firma: studio.firma, betragCent: B.betragCent($("betrag").value), beschreibung: $("beschreibung").value.trim(), sitzungen: $("sitzungen").value.trim(), anzahlung: anzahlung(), kunde: $("kunde").value.trim(), email: $("email").value.trim() }; }
-  function text() { var i = info(); $("inhalt-text").textContent = B.inhaltText(i); $("bed").classList.toggle("hidden", !anzahlung()); B.ratenHinweis($("raten-hinweis"), { klarna: studio.klarna !== false, zahlartenHinweis: studio.zahlartenHinweis }); }
+  function text() { var i = info(); B.gutscheinHinweis($("gutschein-hinweis"), [i.beschreibung, i.sitzungen]); $("inhalt-text").textContent = B.inhaltText(i); $("bed").classList.toggle("hidden", !anzahlung()); B.ratenHinweis($("raten-hinweis"), { klarna: studio.klarna !== false, zahlartenHinweis: studio.zahlartenHinweis }); }
   f.addEventListener("input", text); f.addEventListener("change", text); text();
   $("aendern").onclick = function (ev) { ev.preventDefault(); location.reload(); };
   f.addEventListener("submit", function (ev) {

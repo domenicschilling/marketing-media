@@ -14,12 +14,18 @@ window.Ted = window.TF = (function () {
   }
   async function api(path, opts) {
     opts = opts || {};
-    var r = await fetch(path, {
-      method: opts.method || (opts.body ? "POST" : "GET"),
-      headers: Object.assign({ "content-type": "application/json" }, opts.headers || {}),
-      body: opts.body ? JSON.stringify(opts.body) : undefined,
-      credentials: "same-origin",
-    });
+    var r;
+    try {
+      r = await fetch(path, {
+        method: opts.method || (opts.body ? "POST" : "GET"),
+        headers: Object.assign({ "content-type": "application/json" }, opts.headers || {}),
+        body: opts.body ? JSON.stringify(opts.body) : undefined,
+        credentials: "same-origin",
+      });
+    } catch (e) {
+      // Funkloch: der Browser meldet sonst nur „Failed to fetch“ (englisch)
+      var ne = new Error("Keine Verbindung. Bitte prüfe dein Netz und versuch es nochmal."); ne.netz = true; throw ne;
+    }
     var data = {};
     try { data = await r.json(); } catch (e) {}
     if (!r.ok) { var err = new Error(data.error || "Fehler " + r.status); err.status = r.status; throw err; }

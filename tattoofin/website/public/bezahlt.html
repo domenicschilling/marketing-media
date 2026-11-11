@@ -8,11 +8,12 @@
   <div class="card-a" style="text-align:center">
     <img src="/assets/figur.png" alt="" style="width:110px;margin:0 auto">
     <h1 id="titel" style="margin:12px 0 8px">Danke! 🖤</h1>
+    <p class="muted" id="ort-zeile" style="margin:-4px 0 8px;font-size:14px"></p>
     <p id="msg" class="muted" style="font-size:17px">Deine Zahlung wird bestätigt …</p>
     <p id="zurueck" class="hidden"><a class="btn gold" id="zurueck-link" href="#">Nochmal versuchen</a></p>
-    <p class="fuss">Den Beleg bekommst du per E-Mail. Bei Ratenzahlung oder späterem Bezahlen klärst du alle Fragen dazu direkt mit dem Anbieter (z. B. Klarna).</p>
+    <p class="fuss" id="fuss">Den Beleg bekommst du per E-Mail. Fragen zur Zahlung klärst du mit dem Studio.</p>
   </div>
-  <p class="powered"><img src="/assets/figur.png" alt=""> Sichere Zahlung über Stripe · bereitgestellt von Tattoofin</p>
+  <p class="powered"><img src="/assets/figur.png" alt=""> Sichere Zahlung über Stripe · bereitgestellt von Tattoofin · <a href="/impressum.html" target="_blank">Impressum</a> · <a href="/datenschutz.html#zahlseiten" target="_blank">Datenschutz</a></p>
 </main>
 <script src="/js/common.js"></script>
 <script>
@@ -28,7 +29,18 @@
   }
   function check() {
     TF.api("/api/pay?abgleich=1&z=" + encodeURIComponent(z)).then(function (d) {
-      if (d.zahlung.status === "bezahlt") msg.textContent = d.studio.firma + " hat deine Zahlung über " + TF.euro(d.zahlung.betragCent, true) + " erhalten. Wir sehen uns im Studio!";
+      var ort = [d.studio.strasse, [d.studio.plz, d.studio.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ");
+      document.getElementById("ort-zeile").textContent = d.studio.firma + (ort ? " · " + ort : "");
+      if (d.zahlung.status === "bezahlt") {
+        // Drei Texte je Art: Projekt, Anzahlung, Gutschein
+        var z = d.zahlung, betrag = TF.euro(z.betragCent, true), art = z.art;
+        if (art === "gutschein") msg.textContent = d.studio.firma + " hat deine Zahlung über " + betrag + " erhalten. Den Gutschein mit Code schicken wir dir in wenigen Minuten per E-Mail (bitte auch im Spam-Ordner nachsehen).";
+        else if (art === "anzahlung") msg.textContent = d.studio.firma + " hat deine Anzahlung über " + betrag + " erhalten. Sie wird mit dem Preis deines Tattoos verrechnet." + (z.restCent ? " Den Rest von " + TF.euro(z.restCent, true) + " zahlst du direkt im Studio." : " Den Rest zahlst du direkt im Studio.");
+        else msg.textContent = d.studio.firma + " hat deine Zahlung über " + betrag + " erhalten. Danke!";
+        // Klarna-Satz nur, wenn wirklich mit Klarna bezahlt wurde (nur der Name, ohne Raten-Aussage)
+        document.getElementById("fuss").textContent = (art === "gutschein" ? "Die Rechnung bzw. den Beleg bekommst du per E-Mail. " : "Den Beleg bekommst du per E-Mail. ") +
+          (z.zahlart === "klarna" ? "Du hast mit Klarna bezahlt. Fragen zu deiner Klarna-Zahlung klärst du direkt mit Klarna." : "Fragen zur Zahlung klärst du mit dem Studio.");
+      }
       else if (d.zahlung.status === "in_pruefung") msg.textContent = "Deine Zahlung wird gerade vom Zahlungsanbieter bearbeitet. Das Studio bekommt automatisch Bescheid.";
       else if (n++ < 10) setTimeout(check, 1500);
       else msg.textContent = "Danke! Das Studio bekommt automatisch Bescheid, sobald die Zahlung bestätigt ist.";

@@ -21,7 +21,25 @@ window.TFBezahlen = (function () {
       meldung("");
       window.scrollTo({ top: 0, behavior: "smooth" });
       await TFStripe.bezahlfeld($("bezahlfeld"), r, { zahlarten: r.zahlarten, name: info.kunde, email: info.email, fehler: function (t) { meldung(t); } });
-    } catch (err) { meldung(err.message); btn.disabled = false; btn.textContent = "Weiter zum Bezahlen"; }
+    } catch (err) { meldung(err.message); btn.disabled = false; btn.textContent = btn.dataset.label || "Weiter zum Bezahlen"; }
+  }
+  // Browser-Zurück aus dem Checkout (Seite kommt aus dem Cache zurück): Knopf nicht auf „Einen Moment …“ gesperrt lassen
+  window.addEventListener("pageshow", function (e) {
+    var btn = $("weiter");
+    if (e.persisted && btn && btn.textContent === "Einen Moment …") { btn.disabled = false; btn.textContent = btn.dataset.label || "Weiter zum Bezahlen"; }
+  });
+  // Seite mit Ausweg: bei Netzfehler Meldung + Knopf „Nochmal laden“ statt leerer Seite
+  function netzfehler(err, ziel) {
+    var e = $("alert"); if (!e) return;
+    e.innerHTML = '<div class="alert-a err">' + TF.esc(err.message) + (err.netz ? ' <button type="button" class="btn ghost small" id="nochmal-laden">Nochmal laden</button>' : "") + "</div>";
+    var b = $("nochmal-laden"); if (b) b.onclick = function () { location.reload(); };
+  }
+  // Gutschein-Wörter im Projektfeld: Klarna wird für diesen Link abgeschaltet (Klarna/Stripe lassen Gutscheine nicht zu)
+  function gutscheinHinweis(el, texte) {
+    if (!el) return false;
+    var ja = window.TF_KLARNA && TF_KLARNA.gutscheinWort.apply(null, texte);
+    el.innerHTML = ja ? '<div class="alert-a info">' + TF.esc(TF_KLARNA.GUTSCHEIN_HINWEIS) + "</div>" : "";
+    return Boolean(ja);
   }
   // Logo des Studios über dem Namen zeigen (falls im Admin hinterlegt); ohne Logo bleibt alles wie bisher
   function branding(studio) {
@@ -37,11 +55,12 @@ window.TFBezahlen = (function () {
   // Hinweis vor dem Bezahlen (23.10.2026): Viele Kunden landen sonst bei der Karte, obwohl sie Raten wollen.
   // Rechtsprüfung 01.11.2026 (U5): Tattoofin erklärt Kunden keinen Kreditabschluss. Nur wenn das Studio den Hinweis in seinen Einstellungen einschaltet,
   // steht hier ein neutraler Satz zu den Zahlarten, mit Pflichthinweis (UWG-Anhang Nr. 23e) direkt darunter.
-  var RATEN_WARN = '<p class="rb-warn">*Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, nicht Tattoofin. <b>Achtung! Kreditaufnahme kostet Geld.</b></p>';
+  // Klarna-Regeln ab 20.11.2026: Hier nur der Name („Klarna verfügbar“), ohne Raten-/Später-Bezug, deshalb kein Warnsatz nötig.
+  // Texte kommen aus /js/klarna-texte.js (zentral).
   function ratenHinweis(el, d) {
     if (!el) return;
     if (!d.klarna || !d.zahlartenHinweis) { el.innerHTML = ""; return; }
-    el.innerHTML = '<div class="raten-box ruhig">Im nächsten Schritt siehst du die Zahlarten, die dir angeboten werden, zum Beispiel Karte, Apple Pay oder Klarna.*' + RATEN_WARN + "</div>";
+    el.innerHTML = '<div class="raten-box ruhig">Im nächsten Schritt siehst du die Zahlarten, die dir angeboten werden. ' + TF.esc(TF_KLARNA.NAME.verfuegbar) + ".</div>";
   }
-  return { meldung: meldung, betragCent: betragCent, inhaltText: inhaltText, starte: starte, branding: branding, ratenHinweis: ratenHinweis };
+  return { meldung: meldung, betragCent: betragCent, inhaltText: inhaltText, starte: starte, branding: branding, ratenHinweis: ratenHinweis, netzfehler: netzfehler, gutscheinHinweis: gutscheinHinweis };
 })();
