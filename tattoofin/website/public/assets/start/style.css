@@ -1,0 +1,406 @@
+/* Flash-Bogen: die Seite ist ein Motiv-Blatt von der Studiowand. */
+@font-face{font-family:'Luckiest Guy';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/LuckiestGuy.woff2) format('woff2')}
+@font-face{font-family:'DM Sans';font-style:normal;font-weight:400 800;font-display:swap;src:url(fonts/DMSans.woff2) format('woff2')}
+
+:root{
+  --blau:#1f3d5c; --gelb:#fbb316; --papier:#f5ead2; --hell:#fff7e3;
+  --rand:clamp(18px,4.6vw,64px);
+  --t:16px;
+  --anzeige:'Luckiest Guy','Arial Black',sans-serif;
+  --text:'DM Sans',system-ui,sans-serif;
+  --h1:clamp(44px,11.9vw,92px);
+  --h2:clamp(33px,8.6vw,58px);
+}
+@media (min-width:900px){:root{--t:18px}}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;background:var(--papier)}
+@media (max-width:899px){html{scroll-padding-bottom:84px}}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--papier);color:var(--blau);font:400 var(--t)/1.5 var(--text);overflow-x:hidden}
+img,video,svg{display:block;max-width:100%}
+img,video{height:auto}
+h1,h2,h3,p,ul,ol,figure{margin:0;padding:0}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--blau);outline-offset:3px;border-radius:4px}
+.fuss :focus-visible{outline-color:var(--gelb)}
+.unsichtbar{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.sprung{position:absolute;left:12px;top:-60px;z-index:50;background:var(--gelb);color:var(--blau);font-weight:700;padding:10px 16px;border-radius:8px}
+.sprung:focus{top:10px}
+
+h1,h2,h3,.kopf-titel,.knopf,.nr{font-family:var(--anzeige);font-weight:400;text-transform:uppercase}
+h1{font-size:var(--h1);line-height:.98;letter-spacing:.005em;text-shadow:3px 3px 0 var(--gelb)}
+h2{font-size:var(--h2);line-height:1;letter-spacing:.005em;text-shadow:2px 2px 0 var(--gelb)}
+h3{font-size:clamp(22px,5.8vw,28px);line-height:1.05}
+/* Luckiest Guy sitzt optisch zu hoch: etwas Luft oben ausgleichen */
+h1,h2,h3{padding-top:.08em}
+
+/* ---------- Der Bogen ---------- */
+.bogen{position:relative;background:var(--papier) url(papier.webp);background-size:640px 640px;overflow:hidden}
+/* Inhalt bleibt bis 1280 px zentriert, Papier und Brett laufen über die volle Breite */
+.kopf,.auftakt,.haupt,.einwaende,.feld,.ablauf,.fragen,.schluss{max-width:1280px;margin-inline:auto}
+.reisszwecke{position:absolute;z-index:6;width:20px;height:20px;border-radius:50%;background:var(--gelb);border:3px solid var(--blau)}
+.reisszwecke::after{content:"";position:absolute;left:3px;top:2px;width:5px;height:5px;border-radius:50%;background:var(--hell)}
+
+.kopf{position:relative;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px var(--rand) 0}
+.kopf-titel{font-size:clamp(16px,4vw,21px);line-height:1;padding-top:.15em;white-space:nowrap}
+.kopf nav{display:flex;gap:clamp(12px,3vw,28px)}
+.kopf nav a{font-weight:700;font-size:15px;text-underline-offset:3px;padding:8px 0}
+.kopf nav a:nth-child(2){display:none}
+@media (min-width:600px){.kopf nav a:nth-child(2){display:inline}.kopf nav a{font-size:18px}}
+
+/* ---------- Knöpfe ---------- */
+.knopf{display:inline-flex;align-items:center;justify-content:center;min-height:58px;padding:.34em 1.25em .16em;background:var(--gelb);color:var(--blau);border:4px solid var(--blau);border-radius:999px;font-size:clamp(22px,6vw,28px);line-height:1;text-decoration:none;box-shadow:4px 5px 0 var(--blau);transition:transform .12s,box-shadow .12s;white-space:nowrap}
+.knopf:hover{transform:translate(-1px,-1px);box-shadow:5px 6px 0 var(--blau)}
+.knopf:active{transform:translate(3px,4px);box-shadow:1px 1px 0 var(--blau)}
+.wege{display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px}
+.wa{font-weight:700;text-underline-offset:3px;padding:8px 0}
+
+/* Pflichthinweis: immer derselbe aufgeklebte Zettel, Wortlaut und Größe bleiben Fließtext */
+.pflicht{position:relative;font-size:var(--t);line-height:1.42;color:var(--blau);background:var(--hell);border:2px dotted var(--blau);padding:14px 12px 10px;margin-top:8px;max-width:62ch}
+.pflicht::before{content:"";position:absolute;left:50%;top:-11px;width:64px;height:22px;margin-left:-32px;background:rgba(251,179,22,.72);transform:rotate(-3deg);border-left:2px dotted rgba(31,61,92,.5);border-right:2px dotted rgba(31,61,92,.5)}
+.pflicht strong{font-weight:800}
+/* Euro-Zeichen in der Anzeigeschrift ist zu klein: eigenes Zeichen in DM Sans */
+.eur{font-family:var(--text);font-weight:800;font-size:.72em;margin-left:.16em;letter-spacing:0}
+
+/* ---------- Flash-Stücke: Nummer und Schild ---------- */
+.motiv{width:100%;height:auto;overflow:visible}
+.nr{position:absolute;display:grid;place-items:center;width:34px;height:34px;padding-top:.18em;border-radius:50%;background:var(--blau);color:var(--gelb);font-size:21px;line-height:1;z-index:3}
+.schild{position:absolute;z-index:3;display:inline-block;background:var(--hell);color:var(--blau);border:3px solid var(--blau);border-radius:15px 5px 5px 15px;padding:2px 10px 2px 21px;font:700 14px/1.3 var(--text);white-space:nowrap;transform:rotate(-3deg)}
+.schild::before{content:"";position:absolute;left:7px;top:50%;width:8px;height:8px;margin-top:-4px;border-radius:50%;background:var(--blau)}
+.deko{position:absolute;display:block;z-index:0;pointer-events:none}
+
+/* ---------- Erster Bildschirm ---------- */
+.auftakt{position:relative;padding:4px var(--rand) 18px}
+.buehne{position:relative;aspect-ratio:354/236;margin:0 -2px}
+.hausherr{position:absolute;left:5%;top:0;width:42%;z-index:2}
+.faeden{position:absolute;inset:0;width:100%;height:100%;z-index:1;overflow:visible;pointer-events:none}
+.faeden path{fill:none;stroke:var(--blau);stroke-width:2.5;stroke-dasharray:2 6;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.faeden-gross{display:none}
+.flash{position:absolute;display:block;z-index:3;text-decoration:none;color:inherit;transition:transform .16s}
+.flash:hover{transform:rotate(-2deg) scale(1.03)}
+.flash:active{transform:scale(.97)}
+.flash .nr{left:0;top:0;width:24px;height:24px;font-size:15px}
+.flash .schild{left:50%;bottom:-20px;translate:-50% 0;font-size:13px;padding:0 6px;border-width:2.5px;border-radius:9px 4px 4px 9px}
+.flash .schild::before{display:none}
+.fl-1{left:57%;top:-2%;width:42%}
+.fl-1 .nr{left:6%;top:6%}
+.fl-2{left:-1%;top:56%;width:27%}
+.fl-3{left:30.5%;top:54.5%;width:17%}
+.fl-4{left:54.5%;top:54.5%;width:18%}
+.fl-5{left:75%;top:56%;width:25%}
+.stich{position:absolute;z-index:1;width:9px;height:9px;margin:-4px 0 0 -4px;border-radius:50%;background:var(--blau)}
+.st-a{left:35.5%;top:34.5%}.st-b{left:12.5%;top:29%}
+.dk-mond{left:48%;top:3%;width:4.6%}
+.dk-diamant{left:50%;top:34%;width:6%}
+.dk-stern{left:0;top:5%;width:6%}
+.dk-blitz{left:94%;top:44%;width:4.4%}
+.auftakt-handy{display:none}
+
+.auftakt-text{position:relative;z-index:4;margin-top:26px;display:grid;gap:10px;justify-items:start}
+.satz{font-weight:600}
+.auftakt-knopf{width:100%;margin-top:4px}
+.preiszeile{font-weight:800;line-height:1.35;margin-top:2px}
+.ansprech{max-width:46ch}
+.schluss-kopf .wege{margin-top:4px}
+@media (max-width:599px){.auftakt-knopf .knopf{width:100%}}
+/* Kleine, niedrige Handys: Knopf soll ganz in den ersten Bildschirm */
+@media (max-width:599px) and (max-height:700px){
+  .buehne{aspect-ratio:354/198}
+  .hausherr{width:38%;left:7%}
+  .fl-1{width:37%;left:60%}
+  .auftakt-text{margin-top:20px;gap:6px}
+  .auftakt-knopf{margin-top:0}
+  .auftakt .pflicht{padding:9px 10px 7px;margin-top:4px}
+  .auftakt .pflicht::before{display:none}
+  h1{font-size:38px}
+  .faeden-klein{display:none}
+  .st-a,.st-b{display:none}
+}
+
+@media (min-width:600px) and (max-width:899px){
+  .buehne{max-width:560px;margin:0 auto}
+  .flash .schild{bottom:-14px}
+}
+@media (min-width:900px){
+  .auftakt{display:grid;grid-template-columns:minmax(0,4.7fr) minmax(0,7.3fr);gap:20px;align-items:center;padding-top:20px;padding-bottom:72px}
+  .auftakt-text{order:-1;margin-top:0;gap:14px}
+  .auftakt-knopf{margin-top:6px}
+  .buehne{aspect-ratio:1/.86}
+  .faeden-klein{display:none}.faeden-gross{display:block}
+  .hausherr{left:24%;top:20%;width:44%}
+  .fl-1{left:64%;right:auto;top:-3%;width:38%}
+  .fl-1 .nr{left:8%;top:8%}
+  .fl-2{left:-2%;top:-1%;width:30%}
+  .fl-3{left:-1%;top:55%;width:23%}
+  .fl-4{left:26%;top:67%;width:19%}
+  .fl-5{left:46%;top:63%;width:29%}
+  .st-a{left:55.5%;top:48.5%}.st-b{left:31.4%;top:44%}
+  .dk-mond{left:46%;top:5%;width:4.4%}
+  .dk-diamant{left:17%;top:88%;width:5%}
+  .dk-stern{left:32%;top:10%;width:4.4%}
+  .dk-blitz{left:57%;top:9%;width:3.4%}
+  .flash .nr{width:34px;height:34px;font-size:21px}
+  .flash .schild{bottom:-10px;font-size:15px;padding:1px 10px 1px 20px;border-width:3px}
+  .flash .schild::before{display:block;left:7px;width:7px;height:7px;margin-top:-3.5px}
+  /* Echtes Handy-Bild in der Bühne */
+  .auftakt-handy{display:block;position:absolute;left:75%;top:37%;width:25%;z-index:2}
+  .auftakt-handy img{width:100%;aspect-ratio:1/1.84;object-fit:cover;object-position:top;box-shadow:0 0 0 3px var(--blau),5px 6px 0 3px var(--blau);transform:rotate(2deg);background:var(--hell)}
+  .auftakt-handy .klebe{top:-14px;transform:rotate(-4deg)}
+  .auftakt-handy figcaption{margin-top:14px;font-size:14px;line-height:1.3}
+}
+
+/* ---------- Nr. 1, das Hauptmotiv ---------- */
+.haupt{position:relative;padding:14px var(--rand) 28px;display:grid;gap:18px}
+/* Am Handy: Herz und echte Zahlseite nebeneinander, das Produkt gleich am Anfang des zweiten Bildschirms */
+.haupt-bild{position:relative;display:grid;grid-template-columns:minmax(0,47fr) minmax(0,50fr);gap:12px 18px;align-items:start}
+.motiv-knopf{position:relative;display:block;width:100%;padding:0;margin:0;background:none;border:0;color:inherit;cursor:pointer;font:inherit;-webkit-tap-highlight-color:transparent}
+.motiv-knopf .nr{left:2%;top:3%}
+.haupt .motiv-knopf .schild{left:0;bottom:-8px;font-size:13px;padding:1px 7px 1px 18px;border-width:2.5px}
+.haupt .motiv-knopf .schild::before{left:6px;width:7px;height:7px;margin-top:-3.5px}
+.haupt h2{margin-bottom:-8px}
+.haupt-text{display:grid;gap:12px;justify-items:start}
+.haupt-text p{max-width:60ch}
+.abzug-haupt{margin-top:6px}
+.haupt-bild:has(.abzug.offen){grid-template-columns:minmax(0,1fr)}
+.haupt-bild:has(.abzug.offen) .motiv-knopf{max-width:50%;margin:0 auto}
+
+/* Abzüge: echte Bilder, mit Klebeband aufgeklebt */
+.abzug{position:relative;z-index:2}
+.abzug-knopf,.abzug-rahmen{position:relative;display:block;width:100%;padding:0;margin:0;background:var(--hell);border:0;box-shadow:0 0 0 3px var(--blau),5px 6px 0 3px var(--blau);transform:rotate(2.5deg);transition:transform .2s}
+.abzug-knopf{cursor:zoom-in}
+.abzug-knopf img,.abzug-rahmen img{width:100%;display:block}
+.abzug-hoch .abzug-knopf img{aspect-ratio:1/1.84;object-fit:cover;object-position:top}
+.abzug-quadrat .abzug-rahmen img{aspect-ratio:1/1;object-fit:cover;object-position:top}
+.abzug figcaption{margin-top:15px;font-size:14px;line-height:1.35}
+.klebe{position:absolute;z-index:2;left:50%;top:-12px;width:64px;height:24px;margin-left:-32px;background:rgba(251,179,22,.72);transform:rotate(-4deg);border-left:2px dotted rgba(31,61,92,.5);border-right:2px dotted rgba(31,61,92,.5)}
+.abzug.offen .abzug-knopf{transform:none;cursor:zoom-out}
+.abzug.offen .abzug-knopf img{aspect-ratio:auto;object-fit:contain}
+
+@media (min-width:720px) and (max-width:899px){
+  .haupt{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:18px 30px;align-items:start}
+  .haupt-bild{grid-column:1;grid-row:1/3}
+  .haupt h2,.haupt-text{grid-column:2}
+  .haupt h2{margin:0}
+}
+@media (min-width:900px){
+  .haupt{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto 1fr;gap:18px 48px;align-items:start;padding-top:26px;padding-bottom:40px}
+  .haupt-bild{grid-row:1/3;grid-template-columns:minmax(0,1fr)}
+  .abzug-haupt{display:none}
+  .haupt h2{margin:0;align-self:end}
+  .haupt .motiv-knopf .schild{left:auto;right:-6%;bottom:10%;font-size:17px;padding:2px 10px 2px 21px;border-width:3px}
+  .haupt .motiv-knopf .schild::before{left:7px;width:8px;height:8px;margin-top:-4px}
+}
+
+/* ---------- Einwände ---------- */
+.einwaende{position:relative;padding:12px var(--rand) 28px}
+/* Rückseite von Nr. 1: eine Stufe kleiner, damit die Zählung des Bogens nicht abreißt */
+.einwaende h2{font-size:clamp(28px,7vw,46px)}
+.einwaende-raster{display:grid;gap:16px;margin-top:16px;grid-auto-flow:dense}
+.einwand{position:relative;padding-left:52px}
+.einwand-motiv{position:absolute;left:0;top:-2px;width:42px}
+.einwand h3{font-size:clamp(21px,5.6vw,25px);margin-bottom:5px}
+.einwand p{max-width:60ch}
+.e-pflicht{margin-top:4px}
+.einwaende-fuss{display:grid;gap:10px;justify-items:start;margin-top:4px}
+.danach{font-size:15px;line-height:1.35;max-width:46ch;font-weight:600}
+@media (min-width:720px){
+  .einwaende-raster{grid-template-columns:repeat(2,minmax(0,1fr));gap:30px 40px;margin-top:24px}
+  .e-pflicht,.einwaende-fuss{grid-column:1/-1}
+  .einwaende-fuss{grid-template-columns:auto minmax(0,1fr);align-items:center;gap:24px}
+}
+@media (min-width:1000px){
+  .einwaende{padding-bottom:72px}
+  .einwaende-raster{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .e-pflicht{grid-column:1/3;align-self:start}
+  .einwaende-fuss{grid-column:3/4;grid-template-columns:minmax(0,1fr);align-self:start;gap:10px}
+}
+
+/* ---------- Die weiteren Stücke ---------- */
+.feld{position:relative;padding:8px var(--rand) 22px;display:grid;gap:26px}
+@media (min-width:720px) and (max-width:1199px){.stueck h2,.haupt h2,.preis h2,.schluss h2{font-size:clamp(33px,4.6vw,48px)}}
+.nb{white-space:nowrap}
+.stueck{z-index:1}
+.stueck{position:relative;display:grid;gap:22px;scroll-margin-top:12px;align-content:start}
+.stueck-bild{position:relative;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:12px;align-items:start}
+.stueck-bild .motiv-knopf .nr{left:0;top:0}
+.stueck-bild .motiv-knopf .schild{left:2%;bottom:-6px}
+.stueck-text{display:grid;gap:12px;justify-items:start;align-content:start}
+.stueck-text p{max-width:60ch}
+.stueck:nth-child(even) .stueck-bild{grid-template-columns:minmax(0,1fr) minmax(0,1.2fr)}
+.stueck:nth-child(even) .motiv-knopf{order:2}
+.stueck:nth-child(even) .abzug-knopf,.stueck:nth-child(even) .abzug-rahmen{transform:rotate(-2.5deg)}
+.stueck.ohne-abzug{grid-template-columns:minmax(0,44%) minmax(0,1fr);gap:14px 16px;align-items:center}
+.ohne-abzug .stueck-text{display:contents}
+.ohne-abzug h2{font-size:clamp(26px,7vw,31px)}
+.ohne-abzug .stueck-text p{grid-column:1/-1;max-width:60ch}
+/* Nr. 5 am Handy gespiegelt, damit die Motive abwechseln */
+.stueck.ohne-abzug:nth-child(even){grid-template-columns:minmax(0,1fr) minmax(0,44%);grid-auto-flow:dense}
+.stueck.ohne-abzug:nth-child(even) .stueck-bild{order:2}
+.wege-feld{display:none;grid-column:1/-1}
+.ohne-abzug .stueck-bild,.stueck.ohne-abzug:nth-child(even) .stueck-bild{grid-template-columns:minmax(0,1fr)}
+.ohne-abzug .motiv-knopf .schild{font-size:13px;padding:1px 7px 1px 18px;border-width:2.5px;left:0}
+.ohne-abzug .deko{display:none}
+@media (min-width:720px){
+  .stueck.ohne-abzug,.stueck.ohne-abzug:nth-child(even){grid-template-columns:minmax(0,1fr);gap:22px;align-content:start}
+  .stueck.ohne-abzug:nth-child(even) .stueck-bild{order:0}
+  .ohne-abzug h2{font-size:clamp(33px,4.6vw,48px)}
+  .ohne-abzug .motiv-knopf{max-width:300px;margin:0 auto}
+  .ohne-abzug .motiv-knopf .schild{font-size:14px;border-width:3px}
+  .wege-feld{display:flex;margin-top:10px}
+}
+@media (min-width:900px){.ohne-abzug .deko{display:block}}
+.stueck-bild:has(.abzug.offen),.stueck:nth-child(even) .stueck-bild:has(.abzug.offen){grid-template-columns:minmax(0,1fr)}
+.stueck-bild:has(.abzug.offen) .motiv-knopf{max-width:60%;margin:0 auto}
+.abzug.offen{max-width:300px;margin:0 auto;width:100%}
+.abzug-quer.offen{max-width:420px}
+
+@media (min-width:720px){
+  .feld{grid-template-columns:1fr 1fr;gap:56px clamp(28px,5vw,72px)}
+  .stueck.tief{margin-top:70px}
+  .stueck-bild:has(.abzug.offen) .motiv-knopf{max-width:50%}
+}
+
+/* ---------- Ablauf: Vorzeichnung, Linie, Farbe ---------- */
+.ablauf{position:relative;padding:20px var(--rand) 30px}
+/* Am Handy: die drei Schwalben als eigene Reihe (Vorzeichnung, Linie, Farbe), darunter die Schritte */
+.ablauf ol{list-style:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 10px;margin-top:22px}
+.ablauf li{display:contents}
+.stufe-bild{position:relative;grid-row:1;padding:4px 0 14px}
+.stufe-bild .nr{left:-4px;top:0;width:26px;height:26px;font-size:16px}
+.stufe-bild .schild{left:50%;bottom:-2px;translate:-50% 0;font-size:12px;padding:0 7px;border-width:2.5px;border-radius:9px 4px 4px 9px}
+.stufe-bild .schild::before{display:none}
+.stufe-text{grid-column:1/-1;display:grid;grid-template-columns:30px minmax(0,1fr);gap:0 10px;margin-top:14px}
+.stufe-text > *{grid-column:2}
+.stufe-text p{margin-top:4px;max-width:60ch}
+.stufe-text::before{content:attr(data-nr);grid-column:1;grid-row:1/3;width:28px;height:28px;border-radius:50%;background:var(--blau);color:var(--gelb);font:400 17px/1 var(--anzeige);display:grid;place-items:center;padding-top:.18em;margin-top:2px}
+.stufe1 .f,.stufe1 .t,.stufe2 .f,.stufe2 .t{display:none}
+.stufe1 .l{stroke-width:9!important;stroke-dasharray:10 14}
+.stufe2 .l{stroke-width:13!important}
+@media (min-width:720px){
+  .ablauf ol{grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(20px,3.4vw,48px);margin-top:30px}
+  .ablauf li{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;align-content:start}
+  .stufe-bild{grid-row:auto;max-width:290px;padding:10px 0 34px}
+  .stufe-bild .schild{bottom:4px}
+  .stufe-bild .nr{width:34px;height:34px;font-size:21px}
+  .stufe-bild .schild{font-size:14px;border-width:3px;padding:1px 10px}
+  .stufe-text{grid-column:auto;grid-template-columns:minmax(0,1fr);margin-top:0}
+  .stufe-text::before{display:none}
+  .stufe-text > *{grid-column:1}
+  .stufe1 .l{stroke-width:5!important;stroke-dasharray:6 10}
+  .stufe2 .l{stroke-width:8!important}
+}
+
+/* ---------- Preis: dunkles Brett über die volle Breite, gelbes Schild, Beispielrechnung ---------- */
+.preis{position:relative;background:var(--blau);color:var(--hell);z-index:2}
+.preis-innen{max-width:1280px;margin:0 auto;padding:30px var(--rand) 36px;display:grid;gap:22px}
+.preis :focus-visible{outline-color:var(--gelb)}
+.preis h2{text-shadow:none;color:var(--hell)}
+.preis-links{display:grid;gap:26px}
+.preis-schild{position:relative;display:grid;justify-items:center}
+.faden{width:60px;height:44px;margin-bottom:-12px;position:relative;z-index:3}
+.preis-schild .reisszwecke{left:50%;top:-4px;margin-left:-10px}
+.anhaenger{position:relative;background:var(--gelb);color:var(--blau);border:5px solid var(--hell);border-radius:44px 44px 18px 18px;padding:38px 18px 12px;text-align:center;transform:rotate(-2deg);transform-origin:50% 0;display:grid;min-width:min(290px,84%)}
+.loch{position:absolute;left:50%;top:10px;width:22px;height:22px;margin-left:-11px;border-radius:50%;background:var(--blau);border:4px solid var(--hell)}
+.betrag{font-family:var(--anzeige);font-weight:400;font-size:clamp(74px,21vw,110px);line-height:.9;padding-top:.08em;white-space:nowrap}
+.einheit{font-family:var(--anzeige);text-transform:uppercase;font-size:clamp(23px,6.2vw,28px);line-height:1;margin-top:2px}
+.brutto{font-weight:700;font-size:15px;margin-top:6px;line-height:1.3}
+/* Beleg */
+.beleg{position:relative;background:var(--hell);color:var(--blau);padding:16px 16px 14px}
+.beleg::after{content:"";position:absolute;left:0;right:0;bottom:-9px;height:10px;background:radial-gradient(circle at 8px 0,var(--hell) 7.5px,transparent 8px) 0 0/16px 10px repeat-x}
+.beleg table{width:100%;border-collapse:collapse;font-size:15px;line-height:1.3}
+@media (min-width:900px){.beleg table{font-size:var(--t)}}
+.beleg caption{font-family:var(--anzeige);text-transform:uppercase;text-align:left;font-size:clamp(21px,5.8vw,25px);line-height:1.05;padding:.08em 0 8px}
+.beleg th{font-weight:500;text-align:left;padding:7px 10px 7px 0;border-top:3px dotted var(--blau)}
+.beleg td{text-align:right;font-weight:700;padding:7px 0;border-top:3px dotted var(--blau);white-space:nowrap;vertical-align:top}
+.beleg .summe th,.beleg .summe td{font-weight:800}
+.beleg .fest th,.beleg .fest td{border-top:3px solid var(--blau);padding-top:10px;font-weight:800}
+.beleg .fest td{font-family:var(--anzeige);text-transform:uppercase;font-weight:400;font-size:17px;padding-top:12px}
+.beleg-hinweis{font-size:14px;margin-top:6px}
+.wege-bon{margin-top:14px}
+@media (max-width:719px){.preis-text .wege{display:none}}
+.preis-text{display:grid;gap:14px;justify-items:start}
+.rechnung{font-weight:600}
+.sterne{list-style:none;display:grid;gap:5px 12px;font-weight:700}
+.enthalten{grid-template-columns:minmax(0,1fr) minmax(0,1fr);width:100%}
+.sterne li{position:relative;padding-left:26px;line-height:1.3}
+.sterne li::before{content:"";position:absolute;left:0;top:.08em;width:19px;height:19px;background:var(--gelb);clip-path:polygon(50% 0,62% 36%,100% 38%,69% 60%,80% 96%,50% 75%,20% 96%,31% 60%,0 38%,38% 36%)}
+.kurz strong{font-weight:800}
+.gebuehr{max-width:62ch}
+.gebuehr a{font-weight:700;text-underline-offset:3px;white-space:nowrap}
+.preis .wa{color:var(--hell)}
+.preis .knopf{border-color:var(--hell);box-shadow:4px 5px 0 var(--hell)}
+.preis .knopf:hover{box-shadow:5px 6px 0 var(--hell)}
+.preis .knopf:active{box-shadow:1px 1px 0 var(--hell)}
+@media (min-width:720px){
+  .preis-innen{grid-template-columns:minmax(0,4.6fr) minmax(0,5.4fr);gap:18px clamp(28px,5vw,72px);padding-top:44px;padding-bottom:60px}
+  .preis h2{grid-column:1/-1}
+  .anhaenger{min-width:0;width:100%;max-width:340px;padding-left:12px;padding-right:12px}
+  .betrag{font-size:clamp(84px,10.4vw,124px)}
+  .wege-bon{display:none}
+}
+
+/* ---------- Fragen ---------- */
+.fragen{position:relative;padding:30px var(--rand) 24px}
+.fragen-liste{margin-top:18px;display:grid}
+.frage{border-bottom:3px dotted var(--blau)}
+.frage summary{display:flex;align-items:center;justify-content:space-between;gap:14px;list-style:none;cursor:pointer;padding:13px 0;font-weight:700;font-size:var(--t);line-height:1.3;min-height:52px}
+.frage summary::-webkit-details-marker{display:none}
+.zu{flex:0 0 28px;width:28px;transition:transform .25s}
+.frage[open] .zu{transform:rotate(144deg)}
+.antwort{padding:0 0 16px;display:grid;gap:10px;max-width:68ch}
+@media (min-width:900px){
+  .fragen{padding-top:72px;padding-bottom:64px}
+  .fragen-liste{grid-template-columns:1fr 1fr;gap:0 56px;align-items:start;margin-top:26px}
+}
+
+/* ---------- Schluss: die Figur hinter der Theke ---------- */
+.schluss{position:relative;padding:10px var(--rand) 0;display:grid;gap:18px;justify-items:start}
+.schluss-kopf{display:grid;gap:12px;justify-items:start;position:relative;z-index:2}
+.hausherr-rahmen{position:relative;justify-self:end;margin-right:clamp(0px,3vw,40px);margin-bottom:-1px;z-index:2}
+.hausherr-klein{width:min(52vw,230px)}
+.schluss-faden{position:absolute;right:97%;bottom:24%;width:min(27vw,120px);height:110px;overflow:visible}
+.schluss-faden path{fill:none;stroke:var(--blau);stroke-width:2.5;stroke-dasharray:2 6;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.st-c{right:calc(97% + min(27vw,120px)*.94 - 4px);left:auto;bottom:calc(24% + 103px);top:auto}
+@media (min-width:720px){
+  .schluss{grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:28px;padding-top:28px}
+  .schluss-kopf{padding-bottom:44px}
+  .hausherr-klein{width:300px}
+  .schluss-faden{right:96%;bottom:26%;width:clamp(80px,11vw,150px);height:44px}
+  .st-c{right:calc(96% + clamp(80px,11vw,150px)*.94 - 4px);bottom:calc(26% + 41px)}
+}
+
+/* ---------- Fuß: die Theke ---------- */
+.fuss{position:relative;z-index:2;background:var(--blau);color:var(--hell);font-size:15px}
+.fuss-innen{max-width:1280px;margin:0 auto;padding:26px var(--rand) 28px;display:grid;gap:12px}
+.fuss-marke{width:190px}
+.fuss nav{display:flex;flex-wrap:wrap;gap:6px 22px;font-weight:700}
+.fuss nav a{padding:6px 0;text-underline-offset:3px}
+.fuss p{max-width:70ch}
+
+/* ---------- Leiste am Handy ---------- */
+.leiste{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;align-items:center;gap:10px;background:var(--blau);color:var(--hell);padding:8px 12px calc(8px + env(safe-area-inset-bottom));transform:translateY(110%);visibility:hidden;transition:transform .22s,visibility .22s}
+.leiste.da{transform:none;visibility:visible}
+.leiste :focus-visible{outline-color:var(--gelb)}
+.leiste-preis{font-weight:800;font-size:14px;line-height:1.2;white-space:nowrap}
+.leiste .knopf{flex:1;min-height:48px;font-size:20px;padding-inline:.5em;border-color:var(--hell);box-shadow:none}
+.leiste-wa{flex:0 0 48px;width:48px;height:48px;display:grid;place-items:center;border-radius:50%;background:var(--hell);color:var(--blau)}
+.leiste-wa svg{width:30px;height:30px}
+@media (min-width:900px){.leiste{display:none}}
+@media (prefers-reduced-motion:reduce){.leiste{transition:none}}
+
+/* ---------- Stechen: aus der Schablone wird das Motiv ---------- */
+.schablone path,.schablone circle{stroke-width:2.6!important;stroke-dasharray:5 7!important;opacity:.7}
+svg.stech.vor .l{stroke-dasharray:1 2;stroke-dashoffset:1;opacity:0}
+svg.stech.vor .f,svg.stech.vor .t{opacity:0}
+svg.stech.los .l{stroke-dasharray:1 2;stroke-dashoffset:0;opacity:1;transition:stroke-dashoffset .75s cubic-bezier(.45,.05,.3,1),opacity .01s}
+svg.stech.los .f,svg.stech.los .t{opacity:1;transition:opacity .4s .55s}
+@media (prefers-reduced-motion:reduce){
+  .knopf,.flash,.abzug-knopf,.zu{transition:none}
+}
+
+/* Klarna-Werberegel ab 20.11.2026: Warnsatz eigene Zeile, so gross und kraeftig wie der Fliesstext, Erklaersatz darunter kleiner */
+.pflicht .warn{display:block;font-weight:800;font-size:var(--t);line-height:1.35;color:var(--blau)}
+.pflicht .erkl{display:block;font-size:.875em;line-height:1.4;margin-top:4px;color:var(--blau)}
+.auftakt .pflicht .warn{font-size:1.125em}
+@media (max-width:599px){.pflicht{line-height:1.32;padding:12px 10px 8px}.pflicht .warn{line-height:1.25}.pflicht .erkl{font-size:.84em;line-height:1.3;margin-top:2px}}
