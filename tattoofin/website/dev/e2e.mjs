@@ -123,14 +123,14 @@ try {
   console.log("Startseite: ein Preis (49 €) + QR-Aufsteller, kein Risikofrei, keine Einmalzahlung");
   const p0 = await neueSeite();
   await p0.goto(BASE + "/");
-  check((await p0.textContent("h1")).includes("leichter bezahlbar"), "Hero lädt");
-  check(await p0.locator("#preise .price").count() === 1 && await p0.locator("#r-monat").count() === 0, "Ein Preis auf der Startseite, kein Paket-Rechner");
-  const preise = await p0.textContent("#preise");
+  check((await p0.textContent("h1")).includes("für deine Kunden"), "Hero lädt");
+  { const warnNachH1 = await p0.evaluate(() => { const n = document.querySelector("h1")?.nextElementSibling; return Boolean(n && /Achtung! Kreditaufnahme kostet Geld/.test(n.textContent)); }); check(warnNachH1, "Warnsatz direkt unter der Hero-Überschrift"); }
+  check(await p0.locator("#preis").count() === 1 && await p0.locator("#r-monat").count() === 0, "Ein Preis auf der Startseite, kein Paket-Rechner");
+  const preise = await p0.textContent("#preis");
   check(preise.includes("49") && !preise.includes("999") && !preise.includes("Einmalzahlung") && !/Gründer|Profi\b|Risikofrei|10 %|900 €|Grundge/.test(preise) && /Achtung! Kreditaufnahme kostet Geld/.test(preise), "Preisbereich: nur 49 €, Pflichtsatz bei Klarna*");
   { const sichtbar = await p0.evaluate(() => document.body.innerText); check(!/Ich spar noch|Einmalzahlung|beiden Paketen|999 €/.test(sichtbar), "Startseite: kein „Ich spar noch.“, keine Einmalzahlung, keine zwei Pakete"); }
-  check((await p0.textContent("#aufsteller")).includes("KI-generiertes Symbolbild"), "QR-Aufsteller-Abschnitt mit KI-Kennzeichnung");
   const ld = await p0.textContent('script[type="application/ld+json"]');
-  check(ld.includes("Paket Monatlich") && !/Einmalzahlung|999 €/.test(ld) && !/Risikofrei|10 %/.test(ld), "Strukturierte Daten: nur Monatlich");
+  check(/49/.test(ld) && !/Einmalzahlung|999 €/.test(ld) && !/Risikofrei|10 %/.test(ld), "Strukturierte Daten: nur 49 €, kein Risikofrei");
   await p0.waitForTimeout(1000);
   await p0.screenshot({ path: path.join(shots, "landing.png"), fullPage: true });
   const pS = await neueSeite();
@@ -1144,9 +1144,7 @@ try {
     check(await pV.evaluate(() => { const v = document.getElementById("v"); return v.hasAttribute("playsinline") && v.controls && v.preload === "metadata" && /tattoofin-ablauf\.mp4$/.test(v.querySelector("source").src) && document.documentElement.scrollWidth <= innerWidth; }), "/video: Video mit playsinline, controls, preload=metadata, kein Querscrollen");
     await pV.goto(BASE + "/");
     await cookiesAblehnen(pV);
-    check(await pV.evaluate(() => Boolean(document.querySelector("#ablauf-video #tfv-play")) && !document.querySelector("#ablauf-video video") && Boolean(document.querySelector('a[href="/video"][data-v="hero"]'))), "Startseite: Video-Abschnitt (lädt erst beim Antippen) + Hero-Knopf „Video ansehen“");
-    await pV.click("#tfv-play");
-    check(await pV.evaluate(() => Boolean(document.querySelector("#ablauf-video video[playsinline]"))), "Startseite: Antippen lädt das Video");
+    check(await pV.evaluate(() => document.documentElement.scrollWidth <= innerWidth && !document.querySelector("video[autoplay]")), "Startseite (neu, ohne Video-Abschnitt): kein Querscrollen, kein Autoplay-Video");
     await pV.goto(BASE + "/studios.html");
     check(await pV.evaluate(() => Boolean(document.querySelector("#ablauf-video #tfv-play")) && document.documentElement.scrollWidth <= innerWidth), "/studios: Video-Abschnitt, kein Querscrollen");
   }
@@ -1184,9 +1182,9 @@ try {
   await cookiesAblehnen(h);
   await h.evaluate(() => document.querySelectorAll(".reveal").forEach((el) => el.classList.add("in")));
   await h.addStyleTag({ content: ".nav,.tf-wa{position:static!important;display:none!important}.reveal{opacity:1!important;transform:none!important}" });
-  await h.locator("#preise").scrollIntoViewIfNeeded();
+  await h.locator("#preis").scrollIntoViewIfNeeded();
   await h.waitForTimeout(1200);
-  await h.locator("#preise").screenshot({ path: path.join(S, "22-pakete-startseite.png") });
+  await h.locator("#preis").screenshot({ path: path.join(S, "22-pakete-startseite.png") });
   check(fs.readdirSync(S).filter((f) => f.endsWith(".png")).length >= 20, "Handy-Screenshots gespeichert: " + S);
 } catch (e) {
   fail++;

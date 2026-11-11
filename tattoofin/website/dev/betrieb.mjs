@@ -998,9 +998,9 @@ await abschnitt("18 Paket Risikofrei geschlossen (26.10.2026): Neukunden gesperr
       check(auf.every((x) => x === "monatlich") && !/href="\/start[^"]*einmal/.test(t), `${pf}: kein Start-Knopf zeigt auf Einmalzahlung`, [...new Set(auf)].join(","));
     }
     const lp = await (await fetch(BASE + "/")).text();
-    check(/class="btn dark big" href="\/start\.html">Jetzt starten/.test(lp), "Hero-Knopf: „Jetzt starten“ → /start.html", "");
+    check(/class="knopf" href="\/start\.html"[^>]*>Jetzt starten/.test(lp), "Hero-Knopf: „Jetzt starten“ → /start.html", "");
     const wann = await (await fetch(BASE + "/")).text();
-    check(/49 €<\/span> netto im Monat/.test(wann) && !/999 €/.test(wann) && /Ein Preis/.test(wann), "Preise auf der Startseite: 49 € netto im Monat, keine 999 €, „Ein Preis“", "");
+    check(/49&nbsp;€ netto im Monat/.test(wann) && !/999 €/.test(wann) && /49 € im Monat/.test(wann), "Preise auf der Startseite: 49 € netto im Monat, keine 999 €", "");
     check(/Achtung! Kreditaufnahme kostet Geld\./.test(wann), "Pflicht-Warnhinweis steht weiter auf der Startseite", "");
     // --- Bestandsstudio läuft unverändert ---
     const pt = await json("/api/portal", {}, best.cookie);
@@ -1040,7 +1040,7 @@ await abschnitt("18 Paket Risikofrei geschlossen (26.10.2026): Neukunden gesperr
 // =====================================================================================================
 await abschnitt("19 Optik nach dem Entfernen von Risikofrei: Hero-Knopf, zwei Paket-Karten, kein Querscrollen auf 14 Größen", async () => {
   const GROESSEN = [[320, 568], [375, 667], [390, 844], [414, 896], [430, 932], [844, 390], [768, 1024], [1024, 768], [1280, 720], [1366, 768], [1440, 900], [1536, 864], [1920, 1080], [2560, 1440]];
-  const SEITEN = [["/", ".hero .ctas .btn.dark", "#preise .prices.eins .price"], ["/studios.html", ".held-cta .knopf-gross", "#pakete .pk"], ["/start.html?paket=risikofrei", null, "section[data-step='1'] .choice.pakete label"]];
+  const SEITEN = [["/", ".auftakt-knopf .knopf", "#preis .preis-schild"], ["/studios.html", ".held-cta .knopf-gross", "#pakete .pk"], ["/start.html?paket=risikofrei", null, "section[data-step='1'] .choice.pakete label"]];
   const probleme = [];
   for (const [w, h] of GROESSEN) {
     for (const [pf, cta, karten] of SEITEN) {
@@ -1053,6 +1053,8 @@ await abschnitt("19 Optik nach dem Entfernen von Risikofrei: Hero-Knopf, zwei Pa
         if (cta) {
           const el = document.querySelector(cta), r = el.getBoundingClientRect();
           out.imErsten = r.top >= 0 && r.bottom <= innerHeight;
+          // Flache Handys quer: die feste Leiste unten mit „Jetzt starten“ zählt als Knopf im ersten Bildschirm
+          const lk = document.querySelector(".leiste .knopf"); if (!out.imErsten && lk) { const l = lk.getBoundingClientRect(); out.imErsten = getComputedStyle(lk.closest(".leiste")).visibility === "visible" && l.height > 0 && l.top >= 0 && l.bottom <= innerHeight; }
           el.scrollIntoView({ block: "center", behavior: "instant" });
           const q = el.getBoundingClientRect(), top = document.elementFromPoint(q.left + q.width / 2, q.top + q.height / 2);
           out.frei = Boolean(top) && (el === top || el.contains(top));
