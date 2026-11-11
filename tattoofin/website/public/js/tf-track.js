@@ -1,6 +1,6 @@
 // Tattoofin: Cookie-Einwilligung, Meta-Pixel (nur nach Zustimmung) und WhatsApp-Button.
 // Nur auf Seiten für Studios einbinden, NIE auf den Zahlseiten der Endkunden (zahlen, zahlung, bezahlt) oder im Portal.
-// Events: PageView (jede Seite) · Contact (WhatsApp-Klick) · Lead (Muster-Anzahlungsbedingungen) ·
+// Events: PageView (jede Seite) · Contact (WhatsApp-Klick) · Lead (Muster-Anzahlungsbedingungen, Anmeldeseite geöffnet) ·
 //         InitiateCheckout (start.html, erster Schritt weiter) · CompleteRegistration (Provision abgeschlossen) · Purchase (Kauf bezahlt)
 // Lead, CompleteRegistration und Purchase gehen mit Einwilligung zusätzlich über /api/capi (Conversions API).
 window.TFTrack = (function () {
@@ -113,6 +113,7 @@ window.TFTrack = (function () {
       var h = a.getAttribute("href") || "";
       if (/wa\.me|api\.whatsapp\.com/.test(h)) track("Contact", { content_name: "WhatsApp" });
       else if (/muster-anzahlungsbedingungen|\/anzahlung(\?|$)/.test(h)) track("Lead", { content_name: "Muster-Anzahlungsbedingungen" });
+
     }, true);
     // „Cookie-Einstellungen“-Links im Fußbereich öffnen das Banner wieder
     document.querySelectorAll("[data-cookies]").forEach(function (l) { l.addEventListener("click", function (e) { e.preventDefault(); banner(); }); });
@@ -123,6 +124,8 @@ window.TFTrack = (function () {
         track("Lead", { content_name: vorgemerkt === "whatsapp" ? "WhatsApp (Kampagnen-Seite)" : "Jetzt starten (Kampagnen-Seite)", content_category: "Tattoo-Studio" });
       }
     } catch (e) {}
+    // Selbst-Anmeldung im Fokus (Domenic 11.11.2026): Anmeldeseite geöffnet → Lead (1× je Browser); echte Abschlüsse zählen auf danke.html
+    if (/^\/start(\.html)?$/.test(location.pathname)) track("Lead", { content_name: "Anmeldung geöffnet", content_category: "Tattoo-Studio" }, "lead-start");
     var c = lies();
     if (c === "ja") ladePixel();
     else if (c !== "nein") banner();
