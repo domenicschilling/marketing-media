@@ -161,7 +161,7 @@ export const mails = {
       ["Deine Zahlseite mit QR", `<a href="${CFG.siteUrl}/zahlen/${esc(s.slug)}">${CFG.siteUrl}/zahlen/${esc(s.slug)}</a>`],
       ["Studio Kit", "Fensteraufkleber, Flyer, Aufsteller und Social-Vorlagen im Portal unter „Studio Kit“"],
       s.zahlart === "geschenk" ? ["Abrechnung", "Keine Tattoofin-Gebühr. Zahlungsgebühren zahlst du direkt an Stripe."] :
-      s.paket === "monatlich" ? ["Abrechnung", `${euro(CFG.monatNetto)} netto im Monat, die Rechnung kommt automatisch per E-Mail. Zahlungsgebühren zahlst du direkt an Stripe.`] :
+      s.paket === "monatlich" ? ["Abrechnung", `${euro(s.monatNetto || CFG.monatNetto)} netto im Monat, die Rechnung kommt automatisch per E-Mail. Zahlungsgebühren zahlst du direkt an Stripe.`] :
       [s.modell === "kauf" && s.zahlart !== "geschenk" && s.paket !== "monatlich" ? "Geld-zurück-Garantie" : "Abrechnung", s.modell === "kauf" && s.zahlart !== "geschenk" && s.paket !== "monatlich" ? `bis ${datum(new Date(Date.now() + CFG.garantieTage * 864e5).toISOString())}` : `Stripe zahlt dir automatisch ${100 - provisionSatz(s)} % jeder Zahlung aus, die Rechnung über die ${provisionSatz(s)} % kommt einmal im Monat`],
     ]) + box("Wichtig fürs Team: keine Raten oder Zinsen versprechen. Einfach sagen: „Du kannst beim Bezahlen schauen, welche Zahlungsoptionen dir angeboten werden.“"),
     cta: "Zur Tattoofin-App", ctaUrl: `${CFG.siteUrl}/app.html`,
