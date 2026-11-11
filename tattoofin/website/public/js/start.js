@@ -125,6 +125,9 @@
       var d = daten();
       d.akzeptiert = { vertrag: true, avv: true, unternehmer: true, kmu: true };
       if (resumeId) d.resumeId = resumeId;
+      // Herkunft (Werbung/Instagram) aus der Adresse mitschicken, ohne etwas im Browser zu speichern
+      var qu = {}; ["utm_source", "utm_medium", "utm_campaign", "utm_content"].forEach(function (k) { var v = new URLSearchParams(location.search).get(k); if (v) qu[k.slice(4)] = v; });
+      if (Object.keys(qu).length) d.quelle = qu;
       var r = await TF.api("/api/signup", { body: d });
       try { sessionStorage.removeItem("tf-start"); } catch (e2) {}
       location.href = r.url || r.next;

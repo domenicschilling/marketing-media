@@ -92,6 +92,8 @@ export default handler(async (req, context) => {
     ...d, modell, paket: paketId, zahlart, preisNetto, monatNetto, aktion: false, status: "entwurf",
     // Sonderkondition aus der Admin-Einladung (z. B. „Partner – nur Zahlungsgebühren“), nur Anzeige – Abwicklung = Geschenk
     sonderkondition: geschenk ? (geschenk.bezeichnung || null) : null,
+    // Herkunft der Anmeldung (UTM aus Anzeige/Instagram), für die Auswertung der Werbung
+    quelle: b.quelle && typeof b.quelle === "object" ? Object.fromEntries(["source", "medium", "campaign", "content"].map((k) => [k, clean(b.quelle[k], 60)]).filter(([, v]) => v)) : (s?.quelle || null),
     vertrag: {
       version: CFG.vertragVersion, akzeptiertAm: now(), name: d.unterzeichner, ip: clientIp(req, context),
       ua: (req.headers.get("user-agent") || "").slice(0, 200), vertrag: true, avv: true, unternehmer: true, kmu: true,

@@ -126,6 +126,12 @@ window.TFTrack = (function () {
     } catch (e) {}
     // Selbst-Anmeldung im Fokus (Domenic 11.11.2026): Anmeldeseite geöffnet → Lead (1× je Browser); echte Abschlüsse zählen auf danke.html
     if (/^\/start(\.html)?$/.test(location.pathname)) track("Lead", { content_name: "Anmeldung geöffnet", content_category: "Tattoo-Studio" }, "lead-start");
+    // UTM aus der Anzeige an alle Links zur Anmeldung weitergeben (nur über die Adresse, nichts wird gespeichert)
+    try {
+      var su = new URLSearchParams(location.search), utm = [];
+      ["utm_source", "utm_medium", "utm_campaign", "utm_content"].forEach(function (k) { if (su.get(k)) utm.push(k + "=" + encodeURIComponent(su.get(k))); });
+      if (utm.length) document.querySelectorAll('a[href^="/start"]').forEach(function (l) { var h = l.getAttribute("href"); if (!/utm_/.test(h)) l.setAttribute("href", h + (h.indexOf("?") < 0 ? "?" : "&") + utm.join("&")); });
+    } catch (e) {}
     var c = lies();
     if (c === "ja") ladePixel();
     else if (c !== "nein") banner();

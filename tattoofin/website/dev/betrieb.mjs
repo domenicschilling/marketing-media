@@ -195,6 +195,12 @@ await abschnitt("2 Anmeldung: Monatlich + Einmalzahlung im Browser (Cookie-Fenst
 });
 
 // =====================================================================================================
+await abschnitt("2b Herkunft der Anmeldung (UTM aus Anzeige) wird gespeichert", async () => {
+  const a = await anmelden("monatlich", "utm@betrieb.test", "UTM Studio", { quelle: { source: "meta", medium: "paid", campaign: "tf-studios-2026-11", content: "a", boese: "x" } });
+  const q = (await detail(a.id)).studio?.quelle || {};
+  check(q.source === "meta" && q.campaign === "tf-studios-2026-11" && q.content === "a" && !("boese" in q), "Anmeldung speichert utm source/campaign/content, sonst nichts", JSON.stringify(q));
+});
+
 await abschnitt("3 Stripe Connect Einrichtung (Test): eingebettet + Rückfall-Link", async () => {
   for (const [k, name] of [["rf", "Risikofrei"], ["mo", "Monatlich"], ["ei", "Einmalzahlung"]]) {
     const { sess, konto } = await einrichten(ST[k].id, ST[k].cookie);
