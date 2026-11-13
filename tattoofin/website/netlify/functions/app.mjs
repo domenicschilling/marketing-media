@@ -205,6 +205,8 @@ const teamAntwort = (s, ich) => ({ hauptadresse: s.email, team: s.teamEmails || 
 async function teamSetzen(s, ich, g, req) {
   if (ich.rolle !== "inhaber") return fehler("Nur der Inhaber kann das Team ändern.", 403, "nur_inhaber");
   const b = await body(req);
+  // Ohne Liste nichts ändern (sonst würde ein fehlerhafter Aufruf das ganze Team löschen)
+  if (!Array.isArray(b.emails)) return fehler("Bitte die Team-Adressen als Liste (emails) schicken.", 400, "emails");
   // Gleiche Prüfung wie im Admin (höchstens 5, gültige Adressen, ohne Dubletten); die Hauptadresse gehört nicht in die Liste
   const roh = [...new Set((Array.isArray(b.emails) ? b.emails : []).map((e) => clean(e, 160).replace(/\s+/g, "").toLowerCase()).filter(Boolean))];
   const gesehen = new Set([normEmail(s.email)]), liste = [];

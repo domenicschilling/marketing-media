@@ -57,10 +57,22 @@ export const EXTRAS = [
 // Ohne Klarna (z. B. Paket Risikofrei ab dem Stichtag, siehe klarnaFuer): schlichter Text ohne Klarna.
 export const RATEN_FUSS = PFLICHTSATZ_STUDIO;
 export const ratenWhatsapp = ({ vorname = "", projekt = "dein Tattoo", betrag = "", link = "", firma = "", klarna = true }) =>
-  `Hi ${vorname}, hier ist dein Zahlungslink für ${projekt}${betrag ? " (" + betrag + ")" : ""}: ${link}\n\n` +
+  `Hi${vorname ? " " + vorname : ""}, hier ist dein Zahlungslink für ${projekt}${betrag ? " (" + betrag + ")" : ""}: ${link}\n\n` +
   (klarna
     ? `Bezahlen kannst du per Karte, Apple Pay oder Google Pay. ${KLARNA_NAME.verfuegbar}.\n\nLiebe Grüße, ${firma}`
     : `Bezahlen kannst du per Karte, Apple Pay oder Google Pay.\n\nLiebe Grüße, ${firma}`);
+
+// Text zum Teilen eines Zahlungslinks (beim Erstellen und später in der App-Detailansicht).
+// Links mit Gutschein-Wort (nurKarte) haben Klarna aus → Text ohne Klarna.
+export const teilText = (s, z, link) => {
+  const betragText = (z.betragCent / 100).toLocaleString("de-DE", { minimumFractionDigits: 2 }) + " €";
+  const vorname = z.kunde ? z.kunde.split(" ")[0] : "";
+  if (z.art === "gutschein")
+    return `Hi${vorname ? " " + vorname : ""}, hier ist dein Link für den Gutschein von ${s.firma} über ${betragText}${z.gutschein?.empfaenger ? " für " + z.gutschein.empfaenger : ""}: ${link} . Nach dem Bezahlen bekommst du den Gutschein mit Code per E-Mail. Liebe Grüße, ${s.firma}`;
+  if (z.art === "anzahlung")
+    return `Hi${vorname ? " " + vorname : ""}, hier ist dein Link für die Anzahlung (${z.beschreibung}, ${betragText}): ${link} . Am einfachsten zahlst du per Karte, Apple Pay oder Google Pay. Liebe Grüße, ${s.firma}`;
+  return ratenWhatsapp({ vorname, projekt: z.beschreibung, betrag: betragText, link, firma: s.firma, klarna: klarnaFuer(s) && !z.nurKarte });
+};
 
 // Manuelle Punkte der Einrichtungs-Checkliste (die übrigen erkennt das System selbst)
 const CHECK_MANUELL = ["app", "werbung", "theke"];
@@ -133,12 +145,7 @@ export default handler(async (req, context) => {
       };
       await saveZahlung(z);
       const link = `${CFG.siteUrl}/zahlung.html?z=${z.id}`;
-      const betragText = (betragCent / 100).toLocaleString("de-DE", { minimumFractionDigits: 2 }) + " €";
-      const text = gutschein
-        ? `Hi ${z.kunde.split(" ")[0]}, hier ist dein Link für den Gutschein von ${s.firma} über ${betragText}${z.gutschein.empfaenger ? " für " + z.gutschein.empfaenger : ""}: ${link} . Nach dem Bezahlen bekommst du den Gutschein mit Code per E-Mail. Liebe Grüße, ${s.firma}`
-        : z.art === "anzahlung"
-          ? `Hi ${z.kunde ? z.kunde.split(" ")[0] : ""}, hier ist dein Link für die Anzahlung (${z.beschreibung}, ${betragText}): ${link} . Am einfachsten zahlst du per Karte, Apple Pay oder Google Pay. Liebe Grüße, ${s.firma}`
-          : ratenWhatsapp({ vorname: z.kunde ? z.kunde.split(" ")[0] : "", projekt: z.beschreibung, betrag: betragText, link, firma: s.firma, klarna: klarnaFuer(s) });
+      const text = teilText(s, z, link);
       await log("zahlungslink", { studioId: s.id, zahlungId: z.id, betragCent });
       return json({ zahlung: fuerStudio(z), link, whatsappText: text, ...(gutscheinImProjekt ? { hinweis: GUTSCHEIN_HINWEIS } : {}) }, 201);
     }
@@ -154,7 +161,8 @@ export default handler(async (req, context) => {
           if (await zahlungAbgleichen(s, z)) z = await getZahlung(s.id, sub);
         }
       }
-      return json({ zahlung: fuerStudio(z), link: `${CFG.siteUrl}/zahlung.html?z=${z.id}` });
+      const link = `${CFG.siteUrl}/zahlung.html?z=${z.id}`;
+      return json({ zahlung: fuerStudio(z), link, ...(z.status === "offen" ? { whatsappText: teilText(s, z, link) } : {}) });
     }
     if (req.method === "DELETE" && sub) {
       const z = await getZahlung(s.id, sub);
@@ -438,6 +446,8 @@ export default handler(async (req, context) => {
   }
 
   if (bereich === "abmelden" && req.method === "POST") {
+    // App: nur der Inhaber darf alle Geräte und Browser abmelden (ein Team-Handy würde sonst auch den Inhaber rauswerfen)
+    if (s._app && s._app.rolle !== "inhaber") return json({ error: "Nur der Inhaber kann alle Geräte abmelden.", code: "nur_inhaber" }, 403);
     s.sessionVersion = (s.sessionVersion || 0) + 1;
     await saveStudio(s);
     return json({ ok: true }, 200, { "Set-Cookie": clearCookie() });

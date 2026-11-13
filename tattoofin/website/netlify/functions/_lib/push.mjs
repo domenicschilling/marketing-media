@@ -149,7 +149,7 @@ export async function pushTest(g) {
     if (!g?.push?.token) return { gesendet: false, grund: "kein-token" };
     if (g.platform !== "ios") { await log("push-uebersprungen", { grund: "fcm-fehlt", ereignis: "test", studioId: g.studioId }); return { gesendet: false, grund: "fcm-fehlt" }; }
     if (!apnsAktiv()) { await log("push-uebersprungen", { grund: "apns-nicht-eingerichtet", ereignis: "test", studioId: g.studioId }); return { gesendet: false, grund: "apns-nicht-eingerichtet" }; }
-    const r = await anGeraete([g], { titel: "Test", text: "Test: Mitteilungen funktionieren", daten: { typ: "test" }, thread: "test", collapseId: "test-" + g.id }, "test");
+    const r = await anGeraete([g], { titel: "Tattoofin", text: "Mitteilungen funktionieren. So meldet sich die App bei neuen Zahlungen.", daten: { typ: "test" }, thread: "test", collapseId: "test-" + g.id }, "test");
     return r.gesendet ? { gesendet: true } : { gesendet: false, grund: "apns-fehler" };
   } catch (e) { return { gesendet: false, grund: "apns-fehler" }; }
 }

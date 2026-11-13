@@ -322,7 +322,7 @@ try {
   check(schlMails.length === 1 && blob(`appgeraet/${C.id}/${g1.id}`).push?.token === TOK_C, "403 InvalidProviderToken → genau eine Admin-Mail (höchstens alle 30 Min.), Token bleibt", `${schlMails.length} Mails`);
   delete antworten[TOK_C];
   const okTest = await call("POST", "/api/app/push/test", { token: tC });
-  check(okTest.data.gesendet === true && apns.empfangen.at(-1).payload.aps.alert.body === "Test: Mitteilungen funktionieren", "Push-Test mit Schlüssel → {gesendet:true}, „Test: Mitteilungen funktionieren“", okTest.text);
+  check(okTest.data.gesendet === true && apns.empfangen.at(-1).payload.aps.alert.body === "Mitteilungen funktionieren. So meldet sich die App bei neuen Zahlungen.", "Push-Test mit Schlüssel → {gesendet:true}, „Mitteilungen funktionieren …“", okTest.text);
   rlReset();
   // Android: Token wird gespeichert, aber nicht genutzt (FCM fehlt noch)
   const andr = await appLogin("tom@ink-c.test", GERAET("Pixel", "android"));
@@ -363,6 +363,10 @@ try {
   await wait(30);
   await call("GET", `/api/portal/zahlung/${zid}?abgleich=1`, { token: tC });
   const sp2 = blob("abgleich/" + zid);
+  check(typeof ab1.data.whatsappText === "string" && ab1.data.whatsappText.startsWith("Hi Ina, ") && ab1.data.whatsappText.includes(ab1.data.link) && !/raten|später/i.test(ab1.data.whatsappText), "GET zahlung/:id (offen) liefert den Teilen-Text wie beim Erstellen (ohne Raten-Aussage)", ab1.text);
+  const zKarte = await call("POST", "/api/portal/zahlung", { token: tC, body: { betrag: "120", beschreibung: "Gutschein Weihnachten" } });
+  const zKarteGet = await call("GET", `/api/portal/zahlung/${zKarte.data.zahlung.id}`, { token: tC });
+  check(zKarte.data.hinweis && !/klarna/i.test(zKarte.data.whatsappText) && zKarte.data.whatsappText.startsWith("Hi, ") && !/klarna/i.test(zKarteGet.data.whatsappText || "x klarna"), "Link mit Gutschein-Wort (nur Karte): Teilen-Text ohne Klarna, ohne Name „Hi, …“", zKarte.data.whatsappText);
   check(ab1.status === 200 && ab1.data.zahlung.status === "offen" && sp1?.am && sp2?.am === sp1.am, "abgleich=1 fragt Stripe höchstens alle 10 s (Sperre abgleich/<id> bleibt beim 2. Aufruf unverändert)", `${sp1?.am} / ${sp2?.am}`);
   setBlob("abgleich/" + zid, { am: new Date(Date.now() - 11e3).toISOString() });
   await call("GET", `/api/portal/zahlung/${zid}?abgleich=1`, { token: tC });
@@ -374,6 +378,8 @@ try {
   const tput = await call("PUT", "/api/app/team", { token: tB, body: { emails: ["Anna@Ink-B.test", "anna@ink-b.test", "chef@ink-b.test"] } });
   check(tput.status === 200 && JSON.stringify(tput.data) === JSON.stringify({ hauptadresse: "chef@ink-b.test", team: ["anna@ink-b.test"], max: 5, darfAendern: true }), "PUT /api/app/team: Dubletten und Hauptadresse fallen raus", tput.text);
   check((await call("GET", "/api/portal", { token: tLisaB })).status === 401 && blob(`appgeraet/${B.id}/${gLisaB.id}`).widerrufenAm, "Entfernte Team-Adresse: App-Gerät sofort widerrufen → 401");
+  const ohneListe = await call("PUT", "/api/app/team", { token: tB, body: { team: ["x@y.de"] } });
+  check(ohneListe.status === 400 && ohneListe.data.code === "emails" && blob("studio/" + B.id).teamEmails.includes("anna@ink-b.test"), "PUT /api/app/team ohne emails-Liste → 400, Team bleibt unverändert", ohneListe.text);
   check((await call("PUT", "/api/app/team", { token: tB, body: { emails: ["a@b.de", "c@d.de", "e@f.de", "g@h.de", "i@j.de", "k@l.de"] } })).data.error === "Höchstens 5 Team-Adressen" && (await call("PUT", "/api/app/team", { token: tB, body: { emails: ["kaputt"] } })).data.error === "Keine gültige E-Mail: kaputt", "Gleiche Prüfung wie im Admin (höchstens 5, gültige Adressen)");
   check(mailsAn("admin@app.test").some((m) => /Team-Adressen in der App geändert/.test(m.subject)) && logs("app-team").length >= 1, "notifyAdmin + log app-team");
   const anna = await appLogin("anna@ink-b.test");
@@ -383,6 +389,8 @@ try {
   check(raus.status === 200 && raus.data.ok === true && !blob("studio/" + B.id).teamEmails.includes("anna@ink-b.test") && (await call("GET", "/api/portal", { token: tAnna })).status === 401, "DELETE /api/app/team/ich: Adresse raus, eigene Geräte widerrufen");
   await call("PUT", "/api/app/team", { token: tB, body: { emails: ["anna@ink-b.test"] } });
   const tAnna2 = (await appLogin("anna@ink-b.test")).token;
+  const teamAlle = await call("POST", "/api/portal/abmelden", { token: tAnna2 });
+  check(teamAlle.status === 403 && teamAlle.data.code === "nur_inhaber" && (await call("GET", "/api/portal", { token: tB })).status === 200, "Team-Gerät darf nicht „Auf allen Geräten abmelden“ (403 nur_inhaber), Inhaber bleibt angemeldet", teamAlle.text);
   const svVor = blob("studio/" + B.id).sessionVersion || 0;
   const alle = await call("PUT", "/api/app/team", { token: tB, body: { emails: ["anna@ink-b.test"], alleAbmelden: true } });
   check(alle.status === 200 && (blob("studio/" + B.id).sessionVersion || 0) === svVor + 1 && (await call("GET", "/api/portal", { token: tAnna2 })).status === 401 && (await call("GET", "/api/portal", { cookie: B.cookie })).status === 401 && (await call("GET", "/api/portal", { token: tB })).status === 200, "alleAbmelden: Sitzungsversion +1 → andere App-Geräte und Web-Cookies raus, dieses Gerät bleibt angemeldet");
