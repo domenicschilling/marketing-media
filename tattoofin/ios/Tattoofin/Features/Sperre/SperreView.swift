@@ -4,6 +4,10 @@ import SwiftUI
 struct SperreView: View {
     @Environment(SperreManager.self) private var sperre
     @Environment(\.scenePhase) private var phase
+    /// Nur nach echtem Hintergrund automatisch fragen. Die Face-ID-Abfrage selbst macht die App kurz „inaktiv“;
+    /// ohne diese Unterscheidung käme nach „Abbrechen“ sofort die nächste Abfrage (Endlosschleife).
+    /// Startwert true: beim App-Start (inaktiv → aktiv) einmal von selbst fragen
+    @State private var warImHintergrund = true
 
     var body: some View {
         ZStack {
@@ -34,10 +38,19 @@ struct SperreView: View {
         }
         .task {
             // Face ID startet von selbst, sobald die App sichtbar ist
-            if phase == .active { await sperre.pruefen() }
+            if phase == .active {
+                warImHintergrund = false
+                await sperre.pruefen()
+            }
         }
         .onChange(of: phase) { _, neu in
-            if neu == .active && sperre.gesperrt { Task { await sperre.pruefen() } }
+            if neu == .background { warImHintergrund = true }
+            if neu == .active && warImHintergrund && sperre.gesperrt {
+                warImHintergrund = false
+                Task { await sperre.pruefen() }
+            }
         }
+        // Blauer Hintergrund: helle Statusleiste
+        .preferredColorScheme(.dark)
     }
 }

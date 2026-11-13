@@ -15,7 +15,7 @@ struct TeamView: View {
     private var max: Int { team?.max ?? 5 }
 
     var body: some View {
-        List {
+        TFListe {
             if let t = team {
                 Section(Texte.Team.haupt) {
                     Label(t.hauptadresse ?? "–", systemImage: "person.crop.circle.badge.checkmark")
@@ -81,8 +81,8 @@ struct TeamView: View {
         .navigationBarTitleDisplayMode(.inline)
         .task { await laden() }
         .refreshable { await laden() }
-        .confirmationDialog(Texte.Team.entfernenFrage(entfernenFrage ?? ""), isPresented: Binding(
-            get: { entfernenFrage != nil }, set: { if !$0 { entfernenFrage = nil } }), titleVisibility: .visible) {
+        .alert(Texte.Team.entfernenFrage(entfernenFrage ?? ""), isPresented: Binding(
+            get: { entfernenFrage != nil }, set: { if !$0 { entfernenFrage = nil } })) {
             Button(Texte.Team.entfernen, role: .destructive) {
                 if let e = entfernenFrage { speichern((team?.team ?? []).filter { $0 != e }) }
             }
@@ -90,7 +90,7 @@ struct TeamView: View {
         } message: {
             Text(Texte.Team.entfernenText)
         }
-        .confirmationDialog(Texte.Team.zugangEntfernenFrage, isPresented: $eigenenFrage, titleVisibility: .visible) {
+        .alert(Texte.Team.zugangEntfernenFrage, isPresented: $eigenenFrage) {
             Button(Texte.Team.zugangEntfernen, role: .destructive) { eigenenZugangEntfernen() }
             Button(Texte.Allgemein.abbrechen, role: .cancel) {}
         } message: {

@@ -146,6 +146,8 @@ struct ZahlungErstellt: Codable, Sendable, Hashable {
 struct ZahlungEinzeln: Codable, Sendable {
     var zahlung: Zahlung
     var link: String?
+    /// Nur bei offenen Links: fertiger Text zum Teilen (wie beim Erstellen)
+    var whatsappText: String?
 }
 
 /// POST /api/portal/bestaetigung/:id

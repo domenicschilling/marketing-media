@@ -93,6 +93,7 @@ struct HauptKnopfStil: ButtonStyle {
 /// Zweitknopf: Umriss
 struct ZweitKnopfStil: ButtonStyle {
     var farbe: Color = .tfTinte
+    @Environment(\.isEnabled) private var aktiv
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
@@ -104,7 +105,7 @@ struct ZweitKnopfStil: ButtonStyle {
             .padding(.vertical, 2)
             .background(Color.tfKarte, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(farbe.opacity(0.5), lineWidth: 1.5))
-            .opacity(configuration.isPressed ? 0.7 : 1)
+            .opacity(aktiv ? (configuration.isPressed ? 0.7 : 1) : 0.45)
     }
 }
 

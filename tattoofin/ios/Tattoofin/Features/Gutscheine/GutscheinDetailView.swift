@@ -11,6 +11,7 @@ struct GutscheinDetailView: View {
     @State private var fehler: String?
     @State private var meldung: String?
     @State private var pdf: URL?
+    @State private var pdfTeilen = false
     @State private var linkSheet: ZahlungErstellt?
     @State private var eingeloestZaehler = 0
     @State private var link: String?
@@ -23,7 +24,7 @@ struct GutscheinDetailView: View {
     private var status: String { g.status ?? "offen" }
 
     var body: some View {
-        List {
+        TFListe {
             Section {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack(alignment: .firstTextBaseline) {
@@ -51,8 +52,8 @@ struct GutscheinDetailView: View {
                 if let d = Datum.tag(g.gueltigBis) { WertZeile(titel: Texte.Gutscheine.gueltigBis, wert: d) }
                 if let k = zahlung.kunde?.leerAlsNil { WertZeile(titel: Texte.Gutscheine.kaeufer, wert: k) }
                 if let e = zahlung.email?.leerAlsNil { WertZeile(titel: Texte.Gutscheine.kaeuferEmail, wert: e) }
-                if let e = g.empfaenger?.leerAlsNil { WertZeile(titel: Texte.Gutscheine.empfaenger, wert: e) }
-                if let n = g.nachricht?.leerAlsNil { WertZeile(titel: Texte.Gutscheine.nachricht, wert: n) }
+                if let e = g.empfaenger?.leerAlsNil { WertZeile(titel: Texte.Gutscheine.empfaengerKurz, wert: e) }
+                if let n = g.nachricht?.leerAlsNil { WertZeile(titel: Texte.Gutscheine.nachrichtKurz, wert: n) }
                 if let n = g.einloeseNotiz?.leerAlsNil { WertZeile(titel: Texte.Gutscheine.notiz, wert: n) }
                 if let d = Datum.tagUhrzeit(zahlung.bezahltAm) { WertZeile(titel: Texte.Detail.bezahlt, wert: d) }
                 if let d = Datum.tagUhrzeit(g.gesendetAm) { WertZeile(titel: Texte.Gutscheine.gesendet, wert: d) }
@@ -89,7 +90,9 @@ struct GutscheinDetailView: View {
                 default:
                     EmptyView()
                 }
+            }
 
+            Section {
                 if g.code != nil {
                     if let pdf {
                         ShareLink(item: pdf) { Label(Texte.Gutscheine.pdfTeilen, systemImage: "doc.richtext") }
@@ -122,6 +125,9 @@ struct GutscheinDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .sensoryFeedback(.success, trigger: eingeloestZaehler)
         .sheet(item: $linkSheet) { ZahlungslinkSheet(erstellt: $0) }
+        .sheet(isPresented: $pdfTeilen) {
+            if let pdf { TeilenSheet(dinge: [pdf]).presentationDetents([.medium, .large]).ignoresSafeArea() }
+        }
         .alert(Texte.Gutscheine.einloesenFrage, isPresented: $einloesenFrage) {
             TextField(Texte.Gutscheine.notizOptional, text: $notiz)
             Button(Texte.Gutscheine.einloesenJa) { Task { await einloesen() } }
@@ -129,7 +135,7 @@ struct GutscheinDetailView: View {
         } message: {
             Text(Texte.Gutscheine.einloesenText(zahlung.betragCent))
         }
-        .confirmationDialog(Texte.Gutscheine.zuruecknehmenFrage, isPresented: $zuruecknehmenFrage, titleVisibility: .visible) {
+        .alert(Texte.Gutscheine.zuruecknehmenFrage, isPresented: $zuruecknehmenFrage) {
             Button(Texte.Gutscheine.zuruecknehmen, role: .destructive) { Task { await zuruecknehmen() } }
             Button(Texte.Allgemein.abbrechen, role: .cancel) {}
         }
@@ -182,6 +188,7 @@ struct GutscheinDetailView: View {
             let ziel = FileManager.default.temporaryDirectory.appending(path: "Gutschein-\(g.code ?? zahlung.id).pdf")
             try daten.write(to: ziel, options: .atomic)
             pdf = ziel
+            pdfTeilen = true
         } catch {
             fehler = fehlerText(error)
         }

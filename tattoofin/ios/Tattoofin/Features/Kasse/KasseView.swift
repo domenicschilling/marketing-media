@@ -59,6 +59,11 @@ struct KasseView: View {
         return nil
     }
 
+    /// Wie im Dashboard: Gutschein-Wörter im Projektfeld → Hinweis „Gutschein-Funktion nutzen, nur Karte“
+    private var gutscheinWort: Bool {
+        KlarnaTexte.istGutscheinWort(entwurf.beschreibung, entwurf.anzahlung ? "" : entwurf.sitzungen)
+    }
+
     private var bereit: Bool {
         guard let c = eingabe.cent else { return false }
         return c >= portal.config.min && c <= portal.config.max && !sendet
@@ -94,11 +99,15 @@ struct KasseView: View {
 
                 DisclosureGroup(isExpanded: $detailsOffen) {
                     VStack(spacing: 10) {
-                        Eingabefeld(titel: Texte.Kasse.kunde, text: $entwurf.kunde, inhalt: .name)
-                        Eingabefeld(titel: Texte.Kasse.email, text: $entwurf.email, inhalt: .emailAddress, tastatur: .emailAddress)
-                        Eingabefeld(titel: Texte.Kasse.motiv, text: $entwurf.beschreibung)
+                        // Daten des Kunden, nicht des Studios: kein Autofill mit den eigenen Kontaktdaten
+                        Eingabefeld(titel: Texte.Kasse.kunde, text: $entwurf.kunde, platzhalter: Texte.Kasse.kundeBeispiel, grossschreibung: .words)
+                        Eingabefeld(titel: Texte.Kasse.email, text: $entwurf.email, platzhalter: Texte.Kasse.emailBeispiel, tastatur: .emailAddress)
+                        Eingabefeld(titel: Texte.Kasse.motiv, text: $entwurf.beschreibung, platzhalter: Texte.Kasse.motivBeispiel)
                         if !entwurf.anzahlung {
-                            Eingabefeld(titel: Texte.Kasse.sitzungen, text: $entwurf.sitzungen)
+                            Eingabefeld(titel: Texte.Kasse.sitzungen, text: $entwurf.sitzungen, platzhalter: Texte.Kasse.sitzungenBeispiel)
+                        }
+                        if gutscheinWort {
+                            HinweisKarte(text: KlarnaTexte.gutscheinHinweis)
                         }
                     }
                     .padding(.top, 8)
@@ -170,6 +179,8 @@ extension Array where Element == String? {
 struct Eingabefeld: View {
     let titel: String
     @Binding var text: String
+    /// Beispiel im leeren Feld (sonst der Titel)
+    var platzhalter: String?
     var inhalt: UITextContentType?
     var tastatur: UIKeyboardType = .default
     var grossschreibung: TextInputAutocapitalization = .sentences
@@ -177,7 +188,7 @@ struct Eingabefeld: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(titel).font(.dm(.subheadline, weight: .semibold)).foregroundStyle(Color.tfTinte)
-            TextField(titel, text: $text)
+            TextField(platzhalter ?? titel, text: $text)
                 .textContentType(inhalt)
                 .keyboardType(tastatur)
                 .textInputAutocapitalization(tastatur == .emailAddress ? .never : grossschreibung)

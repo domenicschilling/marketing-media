@@ -37,6 +37,17 @@ struct KlarnaTexteTests {
         #expect(Self.wert("GUTSCHEIN_HINWEIS", in: t) == KlarnaTexte.gutscheinHinweis)
     }
 
+    @Test(.enabled(if: quelle != nil, "klarna-texte.mjs nicht gefunden"))
+    func gutscheinWortWieServer() throws {
+        let t = try #require(Self.quelle)
+        let r = try #require(t.range(of: #"export const GUTSCHEIN_WORT = /([^\n]+)/i;"#, options: .regularExpression))
+        let zeile = String(t[r])
+        #expect(zeile == "export const GUTSCHEIN_WORT = /\(KlarnaTexte.gutscheinWortMuster)/i;")
+        #expect(KlarnaTexte.istGutscheinWort("Wertgutschein 100 €", ""))
+        #expect(KlarnaTexte.istGutscheinWort("", "Geschenkkarte"))
+        #expect(!KlarnaTexte.istGutscheinWort("Rose Unterarm", "Sitzung 1 von 2"))
+    }
+
     @Test func pflichtsatzAufbau() {
         #expect(KlarnaTexte.pflichtsatz == "*\(KlarnaTexte.zusatz) \(KlarnaTexte.warnsatz)")
         #expect(KlarnaTexte.mitWarnsatz(KlarnaTexte.ratenKurz) == "Raten* über Klarna Achtung! Kreditaufnahme kostet Geld.")

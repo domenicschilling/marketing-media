@@ -100,12 +100,26 @@ struct LeerAnsicht: View {
     let text: String
     var symbol: String = "tray"
 
+    // Eigener Aufbau statt ContentUnavailableView: die setzt die Systemschrift durch, hier gilt DM Sans in Markenfarben
     var body: some View {
-        ContentUnavailableView {
-            Label(titel, systemImage: symbol).font(.dm(.title3, weight: .bold))
-        } description: {
-            Text(text).font(.dm(.body))
+        VStack(spacing: 10) {
+            Image(systemName: symbol)
+                .font(.system(size: 40, weight: .regular))
+                .foregroundStyle(Color.tfLeise)
+                .accessibilityHidden(true)
+            Text(titel)
+                .font(.dm(.title3, weight: .bold))
+                .foregroundStyle(Color.tfTinte)
+            Text(text)
+                .font(.dm(.body))
+                .foregroundStyle(Color.tfLeise)
         }
+        .multilineTextAlignment(.center)
+        .fixedSize(horizontal: false, vertical: true)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 28)
+        .padding(.horizontal, 16)
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -181,4 +195,38 @@ struct SafariAnsicht: UIViewControllerRepresentable {
 struct WebSeite: Identifiable, Hashable {
     let url: URL
     var id: String { url.absoluteString }
+}
+
+/// Systemmenü „Teilen“ zum direkten Öffnen (z. B. sobald das Gutschein-PDF geladen ist)
+struct TeilenSheet: UIViewControllerRepresentable {
+    let dinge: [Any]
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: dinge, applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ vc: UIActivityViewController, context: Context) {}
+}
+
+/// Liste in Markenfarben: Zeilen auf tfKarte (sonst nimmt iOS im Dunkelmodus Systemgrau statt Markenblau).
+/// Zeilen mit eigenem .listRowBackground behalten ihren Hintergrund.
+struct TFListe<Inhalt: View>: View {
+    @ViewBuilder var inhalt: Inhalt
+
+    var body: some View {
+        List {
+            inhalt.listRowBackground(Color.tfKarte)
+        }
+    }
+}
+
+/// Formular in Markenfarben (wie TFListe)
+struct TFFormular<Inhalt: View>: View {
+    @ViewBuilder var inhalt: Inhalt
+
+    var body: some View {
+        Form {
+            inhalt.listRowBackground(Color.tfKarte)
+        }
+    }
 }

@@ -11,6 +11,7 @@ struct KontoView: View {
     @State private var mitteilungenZahlungen = true
     @State private var mitteilungenAuszahlungen = true
     @State private var faceID = Einstellungen.faceIDAn
+    @State private var faceIDFehler: String?
     @State private var pushErlaubt: Bool?
     @State private var prueftStripe = false
     @State private var fehler: String?
@@ -27,7 +28,7 @@ struct KontoView: View {
 
     var body: some View {
         NavigationStack {
-            List {
+            TFListe {
                 studioAbschnitt
                 stripeAbschnitt
                 mitteilungenAbschnitt
@@ -46,17 +47,17 @@ struct KontoView: View {
             .refreshable { await allesLaden() }
             .task { await allesLaden() }
             .sheet(item: $webseite) { SafariAnsicht(url: $0.url).ignoresSafeArea() }
-            .confirmationDialog(Texte.Konto.abmeldenFrage, isPresented: $abmeldenFrage, titleVisibility: .visible) {
+            .alert(Texte.Konto.abmeldenFrage, isPresented: $abmeldenFrage) {
                 Button(Texte.Konto.abmelden, role: .destructive) { Task { await app.abmelden() } }
                 Button(Texte.Allgemein.abbrechen, role: .cancel) {}
             }
-            .confirmationDialog(Texte.Konto.ueberallFrage, isPresented: $ueberallFrage, titleVisibility: .visible) {
+            .alert(Texte.Konto.ueberallFrage, isPresented: $ueberallFrage) {
                 Button(Texte.Konto.ueberallJa, role: .destructive) { ueberallAbmelden() }
                 Button(Texte.Allgemein.abbrechen, role: .cancel) {}
             } message: {
                 Text(Texte.Konto.ueberallText)
             }
-            .confirmationDialog(Texte.Konto.zuruecknehmenFrage, isPresented: $zuruecknehmenFrage, titleVisibility: .visible) {
+            .alert(Texte.Konto.zuruecknehmenFrage, isPresented: $zuruecknehmenFrage) {
                 Button(Texte.Konto.zuruecknehmenJa) { kuendigungZuruecknehmen() }
                 Button(Texte.Allgemein.abbrechen, role: .cancel) {}
             }
@@ -160,13 +161,21 @@ struct KontoView: View {
                 .onChange(of: faceID) { _, neu in
                     guard neu != Einstellungen.faceIDAn else { return }
                     if neu {
-                        Task { faceID = await sperre.einschalten() }
+                        Task {
+                            faceIDFehler = nil
+                            let ok = await sperre.einschalten()
+                            faceID = ok
+                            // Abbrechen ist kein Fehler; sonst sagen, warum der Schalter zurückspringt
+                            if !ok, sperre.fehler != nil { faceIDFehler = Texte.Sperre.einschaltenFehler(sperre.artName) }
+                        }
                     } else {
                         sperre.ausschalten()
                     }
                 }
             if !sperre.verfuegbar {
                 Text(Texte.Sperre.nichtVerfuegbar).font(.dm(.footnote)).foregroundStyle(Color.tfLeise)
+            } else if let f = faceIDFehler {
+                FehlerZeile(text: f)
             }
             NavigationLink { TeamView() } label: { Label(Texte.Konto.team, systemImage: "person.2") }
             NavigationLink { GeraeteView() } label: { Label(Texte.Konto.geraete, systemImage: "iphone") }
@@ -191,8 +200,10 @@ struct KontoView: View {
         Section {
             if let fehler { FehlerZeile(text: fehler) }
             Button(Texte.Konto.abmelden) { abmeldenFrage = true }
-            Button(Texte.Konto.ueberall, role: .destructive) { ueberallFrage = true }
-                .disabled(arbeitet)
+            if istInhaber {
+                Button(Texte.Konto.ueberall, role: .destructive) { ueberallFrage = true }
+                    .disabled(arbeitet)
+            }
             NavigationLink {
                 KontoLoeschenView()
             } label: {

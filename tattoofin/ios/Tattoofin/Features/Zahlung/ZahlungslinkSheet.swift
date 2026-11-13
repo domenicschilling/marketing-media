@@ -47,7 +47,7 @@ struct ZahlungslinkSheet: View {
                     Button(Texte.Allgemein.fertig) { dismiss() }.font(.dm(.body, weight: .semibold))
                 }
             }
-            .confirmationDialog(Texte.Zahlung.stornoFrage, isPresented: $stornoFrage, titleVisibility: .visible) {
+            .alert(Texte.Zahlung.stornoFrage, isPresented: $stornoFrage) {
                 Button(Texte.Zahlung.stornoJa, role: .destructive) { stornieren() }
                 Button(Texte.Allgemein.abbrechen, role: .cancel) {}
             } message: {
@@ -64,8 +64,10 @@ struct ZahlungslinkSheet: View {
 
     private var offenAnsicht: some View {
         Group {
-            if let h = erstellt.hinweis { HinweisKarte(text: h) }
-            if zahlung.status == "storniert" || storniert {
+            let istStorniert = zahlung.status == "storniert" || storniert
+            // Gutschein-Hinweis nur, solange der Link noch bezahlt werden kann
+            if let h = erstellt.hinweis, !istStorniert { HinweisKarte(text: h) }
+            if istStorniert {
                 HinweisKarte(text: Texte.Zahlung.istStorniert, symbol: "xmark.circle.fill")
             } else {
                 QRCodeView(inhalt: erstellt.link, beschreibung: Texte.Zahlung.qrLabel(zahlung.betragCent))

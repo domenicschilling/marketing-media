@@ -34,6 +34,14 @@ enum KlarnaTexte {
     static let pflichtsatz = "*\(zusatz) \(warnsatz)"
     static let fussnote = "*\(zusatz)"
 
+    /// Wie GUTSCHEIN_WORT in klarna-texte.mjs (Groß-/Kleinschreibung egal)
+    static let gutscheinWortMuster = #"gutschein|guthaben|geschenkkarte|geschenk-?karte|wertkarte|wertgutschein|geschenk-?gutschein|gift\s?-?card|voucher|prepaid|aufladen"#
+
+    static func istGutscheinWort(_ teile: String...) -> Bool {
+        let text = teile.filter { !$0.isEmpty }.joined(separator: " ")
+        return text.range(of: gutscheinWortMuster, options: [.regularExpression, .caseInsensitive]) != nil
+    }
+
     static let gutscheinHinweis = "Für Gutscheine bitte die Gutschein-Funktion nutzen. Bei diesem Link ist Klarna ausgeschaltet, bezahlt wird per Karte."
 }
 

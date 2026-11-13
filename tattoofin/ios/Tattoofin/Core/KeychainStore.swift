@@ -21,7 +21,10 @@ enum KeychainStore {
         var q = basis()
         q[kSecValueData as String] = Data(token.utf8)
         q[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlockedThisDeviceOnly
-        return SecItemAdd(q as CFDictionary, nil) == errSecSuccess
+        let status = SecItemAdd(q as CFDictionary, nil)
+        // -34018 = errSecMissingEntitlement: typisch für unsignierte Simulator-Builds (dann nur bis zum Neustart angemeldet)
+        if status != errSecSuccess { log.error("Schlüsselbund: Speichern fehlgeschlagen (\(status, privacy: .public))") }
+        return status == errSecSuccess
     }
 
     static func lesen() -> String? {

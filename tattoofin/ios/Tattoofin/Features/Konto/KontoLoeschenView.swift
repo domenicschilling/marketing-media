@@ -4,6 +4,7 @@ import SwiftUI
 struct KontoLoeschenView: View {
     @Environment(AppState.self) private var app
     @Environment(PortalStore.self) private var portal
+    @Environment(\.dismiss) private var dismiss
     @State private var eingabe = ""
     @State private var grund = ""
     @State private var arbeitet = false
@@ -17,7 +18,7 @@ struct KontoLoeschenView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 if istInhaber {
-                    if let ergebnis { erledigt(ergebnis) } else { formular }
+                    if zurueckGenommen { zurueckAnsicht } else if let ergebnis { erledigt(ergebnis) } else { formular }
                 } else {
                     teamAnsicht
                 }
@@ -81,14 +82,21 @@ struct KontoLoeschenView: View {
             }
             .karte()
             Text(Texte.Loeschen.erledigtText).font(.dm(.body)).foregroundStyle(Color.tfTinte).fixedSize(horizontal: false, vertical: true)
-            if zurueckGenommen {
-                HinweisKarte(text: Texte.Loeschen.zurueckErledigt, symbol: "checkmark")
-            } else {
-                Button(Texte.Loeschen.zuruecknehmen) { zuruecknehmen() }
-                    .buttonStyle(.zweit)
-                    .disabled(arbeitet)
-            }
+            Button(Texte.Loeschen.zuruecknehmen) { zuruecknehmen() }
+                .buttonStyle(.zweit)
+                .disabled(arbeitet)
             if let fehler { FehlerZeile(text: fehler) }
+        }
+    }
+
+    /// Nach „Löschen zurücknehmen“: nur noch die Bestätigung, nicht mehr die Daten der Löschung
+    private var zurueckAnsicht: some View {
+        Group {
+            Image(systemName: "checkmark.circle.fill").font(.system(size: 56)).foregroundStyle(Color.tfGruen).accessibilityHidden(true)
+            Ueberschrift(Texte.Loeschen.zurueckTitel, groesse: 26)
+            Text(Texte.Loeschen.zurueckErledigt).font(.dm(.body)).foregroundStyle(Color.tfTinte).fixedSize(horizontal: false, vertical: true)
+            Button(Texte.Loeschen.zumKonto) { dismiss() }
+                .buttonStyle(.haupt)
         }
     }
 

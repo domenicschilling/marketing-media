@@ -10,7 +10,7 @@ struct GeraeteView: View {
     private var istInhaber: Bool { app.sitzung?.istInhaber ?? false }
 
     var body: some View {
-        List {
+        TFListe {
             if let geraete {
                 Section {
                     if geraete.isEmpty { Text(Texte.Geraete.leer).foregroundStyle(Color.tfLeise) }
@@ -37,8 +37,8 @@ struct GeraeteView: View {
         .navigationBarTitleDisplayMode(.inline)
         .task { await laden() }
         .refreshable { await laden() }
-        .confirmationDialog(Texte.Geraete.frage(abmeldenFrage?.name ?? ""), isPresented: Binding(
-            get: { abmeldenFrage != nil }, set: { if !$0 { abmeldenFrage = nil } }), titleVisibility: .visible) {
+        .alert(Texte.Geraete.frage(abmeldenFrage?.name ?? ""), isPresented: Binding(
+            get: { abmeldenFrage != nil }, set: { if !$0 { abmeldenFrage = nil } })) {
             Button(Texte.Geraete.abmelden, role: .destructive) { if let g = abmeldenFrage { abmelden(g) } }
             Button(Texte.Allgemein.abbrechen, role: .cancel) {}
         }
@@ -60,10 +60,17 @@ struct GeraeteView: View {
                         .background(Color.tfGelb, in: Capsule())
                 }
             }
-            Text([g.plattformText, g.modell].compactMap { $0 }.joined(separator: " · "))
+            // Technische Kennungen wie „iPhone18,3“ sagen dem Studio nichts → weglassen
+            Text([g.plattformText, g.modell.flatMap { $0.range(of: #"^[A-Za-z]+\d+,\d+$"#, options: .regularExpression) == nil ? $0 : nil }]
+                    .compactMap { $0 }.joined(separator: " · "))
                 .font(.dm(.subheadline)).foregroundStyle(Color.tfLeise)
             if let e = g.email { Text(Texte.Geraete.angemeldetMit(e)).font(.dm(.subheadline)).foregroundStyle(Color.tfLeise) }
-            if let z = Datum.relativ(g.zuletztAm) { Text(Texte.Geraete.zuletzt(z)).font(.dm(.caption)).foregroundStyle(Color.tfLeise) }
+            // Der Server schreibt „zuletzt aktiv“ höchstens stündlich; dieses Gerät ist gerade in Benutzung
+            if g.diesesGeraet == true {
+                Text(Texte.Geraete.geradeAktiv).font(.dm(.caption)).foregroundStyle(Color.tfLeise)
+            } else if let z = Datum.relativ(g.zuletztAm) {
+                Text(Texte.Geraete.zuletzt(z)).font(.dm(.caption)).foregroundStyle(Color.tfLeise)
+            }
             Label(g.push == true && (g.mitteilungen?.zahlungen == true || g.mitteilungen?.auszahlungen == true)
                   ? Texte.Geraete.pushAn : Texte.Geraete.pushAus,
                   systemImage: g.push == true ? "bell.fill" : "bell.slash")

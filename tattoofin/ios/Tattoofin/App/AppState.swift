@@ -165,8 +165,21 @@ final class PortalStore {
 
     /// Einzelne Zahlung in der Liste ersetzen bzw. vorne einfügen
     func aktualisieren(_ z: Zahlung) {
+        let alt = zahlungen.first { $0.id == z.id }
         if let i = zahlungen.firstIndex(where: { $0.id == z.id }) { zahlungen[i] = z } else { zahlungen.insert(z, at: 0) }
         ZahlungenCache.speichern(zahlungen)
+        // Kennzahlen (Umsatz, Anzahl, offene Links) rechnet der Server: bei neuem Link oder geändertem Status neu holen
+        if alt == nil || alt?.status != z.status { kennzahlenNeuLaden() }
+    }
+
+    private var kennzahlenTask: Task<Void, Never>?
+    private func kennzahlenNeuLaden() {
+        kennzahlenTask?.cancel()
+        kennzahlenTask = Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(300))
+            guard !Task.isCancelled, let self else { return }
+            if let a = try? await APIClient.shared.portal() { self.uebernehmen(a) }
+        }
     }
 
     func leeren() {

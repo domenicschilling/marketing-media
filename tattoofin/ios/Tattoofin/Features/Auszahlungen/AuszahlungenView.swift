@@ -8,7 +8,7 @@ struct AuszahlungenView: View {
     @State private var laedtMehr = false
 
     var body: some View {
-        List {
+        TFListe {
             if let a = antwort {
                 if a.konto?.verbunden == false {
                     Section {
@@ -122,7 +122,8 @@ struct AuszahlungZeile: View {
                 Text(Euro.text(auszahlung.betragCent))
                     .font(.dm(.body, weight: .bold))
                     .foregroundStyle(Color.tfTinte)
-                if let d = Datum.tag(auszahlung.ankunftAm) {
+                // Fehlgeschlagene/abgebrochene Auszahlungen kommen nicht an → kein Ankunftsdatum
+                if !["failed", "canceled"].contains(auszahlung.status), let d = Datum.tag(auszahlung.ankunftAm) {
                     Text(auszahlung.status == "paid" ? Texte.Auszahlungen.angekommenAm(d) : Texte.Auszahlungen.ankunftAm(d))
                         .font(.dm(.subheadline))
                         .foregroundStyle(Color.tfLeise)

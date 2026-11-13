@@ -21,8 +21,14 @@ Native SwiftUI-App für Tattoo-Studios (iOS 18+, Swift 6, nur Apple-Frameworks, 
 
 ```sh
 xcodebuild -project tattoofin/ios/Tattoofin.xcodeproj -scheme Tattoofin -sdk iphonesimulator \
-  -destination "platform=iOS Simulator,name=iPhone 17" -derivedDataPath <scratch>/dd CODE_SIGNING_ALLOWED=NO build   # bzw. test
+  -destination "platform=iOS Simulator,name=iPhone 17" -derivedDataPath <scratch>/dd \
+  CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= build   # bzw. test
 ```
+
+Für den Simulator **ad hoc signieren** (`CODE_SIGN_IDENTITY=-`, kein Team nötig) statt `CODE_SIGNING_ALLOWED=NO`: Nur dann gelten die
+Entitlements. Ohne Signatur bleibt der Schlüsselbund-Eintrag nicht erhalten (Test 13.11.: nach jedem Neustart abgemeldet), und die App
+bekommt keinen APNs-Token. Mit Ad-hoc-Signatur bleibt die Anmeldung erhalten und der Simulator liefert einen echten Geräte-Token,
+sodass die ganze Kette Server → APNs-Nachbau (`dev/app-lokal.mjs`) → `xcrun simctl push` → Banner getestet werden kann.
 
 DerivedData danach löschen (Speicher).
 
@@ -30,7 +36,8 @@ DerivedData danach löschen (Speicher).
 
 - Debug: `http://localhost:8888` (aus `TF_API_BASE` → Info.plist `TFApiBasis`), Release: `https://tattoofin.de`.
 - Für Tests überschreibbar mit dem Startargument `-TFApiBase http://localhost:<port>`. Nur im Debug-Build füllt `-TFTestEmail <adresse>` das E-Mail-Feld vor.
-- Im Simulator ohne Signatur geht der Schlüsselbund-Eintrag bei jeder Neuinstallation verloren (keine feste App-Kennung) → nach `simctl install` neu anmelden. Auf echten Geräten mit Signatur nicht.
+- Nur im Debug-Build: `-TFSperreSekunden 5` verkürzt die Face-ID-Sperre nach dem Hintergrund von 5 Minuten auf 5 Sekunden (zum Testen).
+- Texte eintippen im Simulator: `xcrun simctl pbcopy booted` und im Feld „Einsetzen“ (die Mac-Tastatur kommt nicht immer an).
 - Lokaler Server mit Beispiel-Studios: `cd tattoofin/website && NODE_PATH=… node dev/app-lokal.mjs` (Adressen und Test-Code stehen in der Ausgabe).
 
 ## Wichtige Regeln

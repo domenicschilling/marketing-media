@@ -70,11 +70,9 @@ struct ZahlungenView: View {
     }
 
     private var zahlungsListe: some View {
-        List {
+        TFListe {
+            // Kennzahlen als Kopf des Abschnitts: Zeilen in .insetGrouped werden an den Ecken abgerundet beschnitten
             Section {
-                KPIKopf(kpis: portal.kpis)
-                    .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 8, trailing: 0))
-                    .listRowBackground(Color.clear)
                 Picker(Texte.Zahlungen.filter, selection: $filter) {
                     Text(Texte.Zahlungen.alle).tag(Filter.alle)
                     Text(Texte.Zahlungen.offen).tag(Filter.offen)
@@ -82,7 +80,13 @@ struct ZahlungenView: View {
                 }
                 .pickerStyle(.segmented)
                 .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
                 .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+            } header: {
+                KPIKopf(kpis: portal.kpis)
+                    .textCase(nil)
+                    .padding(.horizontal, -20)
+                    .padding(.bottom, 8)
             }
 
             if let f = portal.fehler {
@@ -140,7 +144,7 @@ struct KPIKopf: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .padding(12)
         .background(Color.tfKarte, in: RoundedRectangle(cornerRadius: 14))
-        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.tfLinie, lineWidth: 1))
+        .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(Color.tfLinie, lineWidth: 1))
         .accessibilityElement(children: .combine)
     }
 }

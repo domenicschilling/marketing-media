@@ -7,6 +7,7 @@ struct ZahlungDetailView: View {
     @Environment(PortalStore.self) private var portal
     @State private var zahlung: Zahlung?
     @State private var link: String?
+    @State private var teilText: String?
     @State private var fehler: String?
     @State private var aktionFehler: String?
     @State private var linkSheet: ZahlungErstellt?
@@ -35,7 +36,7 @@ struct ZahlungDetailView: View {
         .task { await laden() }
         .sheet(item: $linkSheet) { ZahlungslinkSheet(erstellt: $0) }
         .sheet(item: $bestaetigung) { b in BestaetigungSheet(antwort: b, betragCent: zahlung?.betragCent ?? 0) }
-        .confirmationDialog(Texte.Zahlung.stornoFrage, isPresented: $stornoFrage, titleVisibility: .visible) {
+        .alert(Texte.Zahlung.stornoFrage, isPresented: $stornoFrage) {
             Button(Texte.Zahlung.stornoJa, role: .destructive) { stornieren() }
             Button(Texte.Allgemein.abbrechen, role: .cancel) {}
         } message: {
@@ -44,7 +45,7 @@ struct ZahlungDetailView: View {
     }
 
     private func inhalt(_ z: Zahlung) -> some View {
-        List {
+        TFListe {
             Section {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(alignment: .firstTextBaseline) {
@@ -80,13 +81,14 @@ struct ZahlungDetailView: View {
             Section {
                 if z.istOffen, let link {
                     Button {
-                        linkSheet = ZahlungErstellt(zahlung: z, link: link, whatsappText: nil, hinweis: z.nurKarte == true ? KlarnaTexte.gutscheinHinweis : nil)
+                        linkSheet = ZahlungErstellt(zahlung: z, link: link, whatsappText: teilText, hinweis: z.nurKarte == true ? KlarnaTexte.gutscheinHinweis : nil)
                     } label: {
                         Label(Texte.Detail.qrZeigen, systemImage: "qrcode")
                     }
-                    ShareLink(item: link) { Label(Texte.Zahlung.teilen, systemImage: "square.and.arrow.up") }
+                    ShareLink(item: teilText ?? link) { Label(Texte.Zahlung.teilen, systemImage: "square.and.arrow.up") }
                     Button(role: .destructive) { stornoFrage = true } label: {
                         Label(Texte.Zahlung.stornieren, systemImage: "xmark.circle")
+                            .foregroundStyle(Color.tfRot)
                     }
                 }
                 if z.istBezahlt && !z.istGutschein {
@@ -117,6 +119,7 @@ struct ZahlungDetailView: View {
             let a = try await APIClient.shared.zahlung(id)
             zahlung = a.zahlung
             link = a.link
+            teilText = a.whatsappText
             fehler = nil
             portal.aktualisieren(a.zahlung)
         } catch is CancellationError {

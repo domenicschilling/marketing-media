@@ -14,7 +14,7 @@ struct GutscheineView: View {
 
     var body: some View {
         NavigationStack(path: $pfad) {
-            List {
+            TFListe {
                 Section {
                     Button {
                         scannerOffen = true
@@ -121,6 +121,8 @@ struct GutscheineView: View {
             portal.aktualisieren(z)
             pfad = [z]
         } catch {
+            // Gesuchten Code stehen lassen, damit man ihn korrigieren kann
+            if case let .code(c) = t { code = c }
             fehler = fehlerText(error)
         }
     }

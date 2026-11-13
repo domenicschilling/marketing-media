@@ -7,7 +7,14 @@ import Observation
 @MainActor
 @Observable
 final class SperreManager {
-    static let hintergrundGrenze: TimeInterval = 5 * 60
+    /// 5 Minuten. Nur im Debug-Build für Tests verkürzbar: Startargument  -TFSperreSekunden 5
+    static var hintergrundGrenze: TimeInterval {
+        #if DEBUG
+        let s = UserDefaults.standard.double(forKey: "TFSperreSekunden")
+        if s > 0 { return s }
+        #endif
+        return 5 * 60
+    }
 
     private(set) var gesperrt = false
     private(set) var prueftGerade = false
@@ -62,6 +69,7 @@ final class SperreManager {
         c.localizedCancelTitle = Texte.Allgemein.abbrechen
         var e: NSError?
         guard c.canEvaluatePolicy(.deviceOwnerAuthentication, error: &e) else {
+            log.notice("Sperre: nicht verfügbar: \(e?.localizedDescription ?? "-", privacy: .public)")
             // Kein Gerätecode eingerichtet: keine Sperre möglich
             gesperrt = false
             return true
@@ -74,6 +82,7 @@ final class SperreManager {
             fehler = nil
             return false
         } catch {
+            log.notice("Sperre: Prüfung fehlgeschlagen: \(error.localizedDescription, privacy: .public)")
             fehler = Texte.Sperre.fehlgeschlagen
             return false
         }

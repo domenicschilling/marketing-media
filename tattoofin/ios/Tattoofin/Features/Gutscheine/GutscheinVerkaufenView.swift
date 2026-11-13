@@ -20,6 +20,15 @@ struct GutscheinVerkaufenView: View {
         return e.contains("@") && e.contains(".") && !e.contains(" ")
     }
 
+    /// Sobald ein gültiger Wert eingetippt ist: sagen, welches Pflichtfeld noch fehlt (Texte wie der Server)
+    private var pflichtHinweis: String? {
+        guard let c = betrag.cent, c >= portal.config.min, c <= portal.config.max else { return nil }
+        if kaeufer.leerAlsNil == nil { return Texte.Gutscheine.pflichtKaeufer }
+        if email.leerAlsNil == nil { return Texte.Gutscheine.pflichtEmail }
+        if !emailOk { return Texte.Gutscheine.emailUngueltig }
+        return nil
+    }
+
     private var bereit: Bool {
         guard let c = betrag.cent else { return false }
         return c >= portal.config.min && c <= portal.config.max && kaeufer.leerAlsNil != nil && emailOk && !sendet
@@ -27,7 +36,7 @@ struct GutscheinVerkaufenView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
+            TFFormular {
                 Section {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(betrag.anzeige)
@@ -48,9 +57,10 @@ struct GutscheinVerkaufenView: View {
                 }
 
                 Section {
-                    TextField(Texte.Gutscheine.kaeufer, text: $kaeufer).textContentType(.name)
+                    // Daten des Käufers, nicht des Studios: kein Autofill mit den eigenen Kontaktdaten
+                    TextField(Texte.Gutscheine.kaeufer, text: $kaeufer)
+                        .textInputAutocapitalization(.words)
                     TextField(Texte.Gutscheine.kaeuferEmail, text: $email)
-                        .textContentType(.emailAddress)
                         .keyboardType(.emailAddress)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
@@ -78,7 +88,11 @@ struct GutscheinVerkaufenView: View {
                     Label(Texte.Gutscheine.zahlarten, systemImage: "creditcard")
                         .font(.dm(.subheadline))
                         .foregroundStyle(Color.tfTinte)
-                    if let fehler { FehlerZeile(text: fehler) }
+                    if let fehler { FehlerZeile(text: fehler) } else if let pflichtHinweis { FehlerZeile(text: pflichtHinweis) }
+                }
+
+                // Knopf in eigenem Abschnitt ohne Kartenhintergrund
+                Section {
                     Button {
                         erstellen()
                     } label: {

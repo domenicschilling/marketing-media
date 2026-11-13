@@ -36,6 +36,7 @@ enum Texte {
         static let grund = "Damit nur du die Tattoofin-App öffnen kannst"
         static let grundEinschalten = "Bestätige einmal, dass du die App so öffnen willst."
         static let fehlgeschlagen = "Das hat nicht geklappt. Tipp unten auf den Knopf, dann geht auch dein Gerätecode."
+        static func einschaltenFehler(_ art: String) -> String { "\(art) hat nicht geklappt. Prüf in den iPhone-Einstellungen, ob \(art) und ein Gerätecode eingerichtet sind." }
         static let nichtVerfuegbar = "Auf diesem iPhone ist weder Face ID noch ein Gerätecode eingerichtet. Deshalb kann die App nicht gesperrt werden."
         static func entsperren(_ art: String) -> String { "Mit \(art) öffnen" }
     }
@@ -49,7 +50,7 @@ enum Texte {
         static let keinPasswort = "Kein Passwort nötig. Der Code gilt 10 Minuten."
         static let codeTitel = "Code eingeben"
         static let codeNavTitel = "Code"
-        static let codeHinweis = "Wenn die Adresse bei uns hinterlegt ist, kommt gleich ein 6-stelliger Code."
+        static let codeHinweis = "Wenn die Adresse bei uns hinterlegt ist, kommt gleich ein Code mit 6 Ziffern."
         static let verzoegert = "Der Mailversand dauert gerade länger."
         static let codeLabel = "6-stelliger Code"
         static let anmelden = "Anmelden"
@@ -90,6 +91,10 @@ enum Texte {
         static let email = "E-Mail des Kunden"
         static let motiv = "Motiv / Beschreibung"
         static let sitzungen = "Sitzungen"
+        static let kundeBeispiel = "z. B. Lena Beispiel"
+        static let emailBeispiel = "Für die Quittung (freiwillig)"
+        static let motivBeispiel = "z. B. Rose Unterarm"
+        static let sitzungenBeispiel = "z. B. Sitzung 1 von 2"
         static let erstellen = "Zahlungslink erstellen"
         static func grenzen(min: Int, max: Int) -> String { "Betrag zwischen \(Euro.kurz(min)) und \(Euro.kurz(max))" }
         static func tasteLabel(_ t: String) -> String {
@@ -205,6 +210,11 @@ enum Texte {
         static let optional = "Optional"
         static let empfaenger = "Für wen ist der Gutschein?"
         static let nachricht = "Nachricht auf dem Gutschein"
+        static let pflichtKaeufer = "Bitte den Namen des Käufers eintragen."
+        static let pflichtEmail = "Bitte die E-Mail des Käufers eintragen – dorthin schicken wir den Gutschein."
+        static let emailUngueltig = "Bitte eine gültige E-Mail-Adresse eingeben."
+        static let empfaengerKurz = "Für"
+        static let nachrichtKurz = "Nachricht"
         static func zeichen(_ n: Int, _ max: Int) -> String { "\(n) von \(max) Zeichen" }
         static let zahlarten = "Gutscheine werden per Karte, Apple Pay oder Google Pay bezahlt."
         static let linkErstellen = "Gutschein-Link erstellen"
@@ -313,6 +323,7 @@ enum Texte {
         static let diesesGeraet = "Dieses Gerät"
         static func angemeldetMit(_ e: String) -> String { "Angemeldet mit \(e)" }
         static func zuletzt(_ r: String) -> String { "Zuletzt aktiv \(r)" }
+        static let geradeAktiv = "Gerade aktiv"
         static let pushAn = "Mitteilungen an"
         static let pushAus = "Mitteilungen aus"
     }
@@ -339,6 +350,8 @@ enum Texte {
         static let erledigtText = "Wir haben dir eine Bestätigung per Mail geschickt. Bis zum Vertragsende kannst du weiter kassieren und das Löschen zurücknehmen."
         static let zuruecknehmen = "Löschen zurücknehmen"
         static let zurueckErledigt = "Erledigt. Dein Vertrag läuft normal weiter."
+        static let zurueckTitel = "Löschen zurückgenommen"
+        static let zumKonto = "Zurück zum Konto"
     }
 }
 

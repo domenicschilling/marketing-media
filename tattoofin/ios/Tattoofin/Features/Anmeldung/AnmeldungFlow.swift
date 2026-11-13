@@ -326,7 +326,7 @@ struct StudioAuswahlView: View {
     @State private var fehler: String?
 
     var body: some View {
-        List {
+        TFListe {
             Section {
                 ForEach(studios) { s in
                     Button {

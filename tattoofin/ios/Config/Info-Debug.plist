@@ -14,6 +14,8 @@
 		<string>LuckiestGuy.ttf</string>
 		<string>DMSans.ttf</string>
 	</array>
+	<key>UIStatusBarStyle</key>
+	<string>UIStatusBarStyleLightContent</string>
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIColorName</key>
