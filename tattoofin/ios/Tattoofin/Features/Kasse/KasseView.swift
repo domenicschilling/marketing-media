@@ -188,7 +188,7 @@ struct Eingabefeld: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(titel).font(.dm(.subheadline, weight: .semibold)).foregroundStyle(Color.tfTinte)
-            TextField(platzhalter ?? titel, text: $text)
+            TextField(titel, text: $text, prompt: tfPlatzhalter(self.platzhalter ?? titel))
                 .textContentType(inhalt)
                 .keyboardType(tastatur)
                 .textInputAutocapitalization(tastatur == .emailAddress ? .never : grossschreibung)

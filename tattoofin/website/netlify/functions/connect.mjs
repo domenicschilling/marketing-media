@@ -22,6 +22,8 @@ export default handler(async (req) => {
   const erlaubt = mitSitzung || Boolean(s && zweckOk(u.searchParams.get("t"), "connect", s.id));
   if (!erlaubt) return redirect("/login.html?weiter=einrichtung");
   if (["entwurf", "abgebrochen", "beendet", "erstattet"].includes(s.status)) return redirect("/login.html");
+  // Demo-Studio (App-Prüfung): nie ein echtes Stripe-Konto anlegen
+  if (s.demo) return redirect("/app.html");
 
   if (u.pathname.endsWith("/zurueck")) {
     if (s.stripe?.accountId) await kontoAbgleichen(s, await stripe("GET", "/accounts/" + s.stripe.accountId));

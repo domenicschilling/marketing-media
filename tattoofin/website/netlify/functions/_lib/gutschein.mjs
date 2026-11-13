@@ -64,6 +64,13 @@ export async function gutscheinAusstellen(s, z) {
 
 export async function gutscheinSenden(s, z) {
   const g = z.gutschein;
+  // Demo-Studio (App-Prüfung): nie echte Mails, aber wie „gesendet“ behandeln, damit die App keinen Fehler zeigt
+  if (s?.demo) {
+    g.gesendetAm = now(); g.gesendetAn = z.email; g.versandOk = true; g.demo = true;
+    z.gutschein = g;
+    await saveZahlung(z);
+    return true;
+  }
   const pdf = await gutscheinPdf(s, z);
   const m = mails.gutscheinKaeufer(s, z, { url: gutscheinUrl(g) });
   const ok = await sendMail({

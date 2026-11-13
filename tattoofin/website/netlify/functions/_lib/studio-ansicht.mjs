@@ -15,6 +15,9 @@ export const fuerStudio = (z) => {
   }
   return rest;
 };
+// Demo-Studio (App-Prüfung bei Apple): Stripe gilt als fertig eingerichtet (passt zu den Beispiel-Auszahlungen), keine Einrichtung
+// über Stripe (connectUrl null; connect.mjs lehnt Demo-Studios ab). Es fließt nie Geld (pay.mjs sperrt Demo-Studios).
+const DEMO_STRIPE = { klarnaAktiv: false, verbunden: true, freigegeben: true, auszahlungen: true, express: false, angabenGemacht: true, kontoTyp: "standard" };
 export const oeffentlich = (s) => ({
   id: s.id, firma: s.firma, inhaber: s.inhaber, email: s.email, telefon: s.telefon, studioTelefon: s.studioTelefon,
   strasse: s.strasse, plz: s.plz, ort: s.ort, modell: s.modell, zahlart: s.zahlart, preisNetto: s.preisNetto, slug: s.slug,
@@ -23,7 +26,8 @@ export const oeffentlich = (s) => ({
   kuendigung: s.kuendigung || null, loeschAnfrage: s.loeschAnfrage ? { am: s.loeschAnfrage.am, durch: s.loeschAnfrage.durch } : null, fragebogenAm: s.fragebogen?.updatedAt || null,
   benachrichtigung: { email: s.benachrichtigungEmail || s.email },
   garantieBis: hatGarantie(s) ? (s.goLiveAt ? new Date(new Date(s.goLiveAt).getTime() + CFG.garantieTage * 864e5).toISOString() : "ab Go-live") : null,
-  stripe: { klarnaAktiv: s.stripe?.klarnaAktiv, verbunden: Boolean(s.stripe?.accountId), freigegeben: Boolean(s.stripe?.chargesEnabled), auszahlungen: Boolean(s.stripe?.payoutsEnabled), express: s.stripe?.kontoTyp === "express", angabenGemacht: Boolean(s.stripe?.detailsSubmitted), kontoTyp: s.stripe?.kontoTyp || (s.modell === "provision" ? "express" : "standard") },
+  demo: Boolean(s.demo),
+  stripe: s.demo ? DEMO_STRIPE : { klarnaAktiv: s.stripe?.klarnaAktiv, verbunden: Boolean(s.stripe?.accountId), freigegeben: Boolean(s.stripe?.chargesEnabled), auszahlungen: Boolean(s.stripe?.payoutsEnabled), express: s.stripe?.kontoTyp === "express", angabenGemacht: Boolean(s.stripe?.detailsSubmitted), kontoTyp: s.stripe?.kontoTyp || (s.modell === "provision" ? "express" : "standard") },
   klarna: klarnaFuer(s), klarnaDauerhaft: klarnaDauerhaft(s),
   paket: paketVon(s).id, paketName: paketVon(s).name, provisionProzent: provisionSatz(s), monatNetto: s.monatNetto || null, aufstellerInklusive: aufstellerInklusive(s),
   recht: s.recht ? { version: s.recht.version, am: s.recht.am, aktuell: s.recht.version === CFG.rechtVersion } : null,
@@ -33,6 +37,6 @@ export const oeffentlich = (s) => ({
   zahlartenHinweis: Boolean(s.zahlartenHinweis),
   umstellungAngebot: hatUmstellungsangebot(s) ? { monatNetto: s.umstellung.monatNetto } : null,
   altKonto: s.stripe?.altKonto ? { bis: s.stripe.altKonto.bis } : null,
-  kannKassieren: Boolean(darfKassieren(s)), zahlseite: zahlseite(s), connectUrl: connectUrl(s),
+  kannKassieren: Boolean(darfKassieren(s)), zahlseite: zahlseite(s), connectUrl: s.demo ? null : connectUrl(s),
   aufsteller: { inklusive: CFG.aufstellerPakete.includes(paketVon(s).id), holz: s.aufsteller?.holz || "hell", variante: s.aufsteller?.variante || "name", hatLogo: Boolean(s.aufsteller?.hatLogo), angefordertAm: s.aufsteller?.angefordertAm || null, preisNetto: CFG.aufstellerPreisNetto, bezahltAm: s.aufsteller?.kauf?.bezahltAm || null },
 });

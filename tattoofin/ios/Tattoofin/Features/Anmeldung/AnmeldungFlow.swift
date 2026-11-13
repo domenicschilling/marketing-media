@@ -86,7 +86,7 @@ struct EmailView: View {
 
                 VStack(alignment: .leading, spacing: 6) {
                     Text(Texte.Anmelden.emailLabel).font(.dm(.subheadline, weight: .semibold)).foregroundStyle(Color.tfTinte)
-                    TextField(Texte.Anmelden.emailPlatzhalter, text: $email)
+                    TextField(Texte.Anmelden.emailLabel, text: $email, prompt: tfPlatzhalter(Texte.Anmelden.emailPlatzhalter))
                         .textContentType(.emailAddress)
                         .keyboardType(.emailAddress)
                         .textInputAutocapitalization(.never)
@@ -113,6 +113,8 @@ struct EmailView: View {
                 Text(Texte.Anmelden.keinPasswort)
                     .font(.dm(.footnote))
                     .foregroundStyle(Color.tfLeise)
+
+                RechtsFuss()
             }
             .padding(20)
         }
@@ -206,6 +208,8 @@ struct CodeView: View {
                         .font(.dm(.subheadline))
                         .foregroundStyle(Color.tfGruen)
                 }
+
+                RechtsFuss()
             }
             .padding(20)
         }

@@ -32,7 +32,7 @@
 //   POST  /api/admin/checkout-test            unbezahlte Test-Sitzung (1 €) mit Tattoofin-Branding → { id, url }; { expire: "cs_…" } beendet sie
 import { CFG, netto, paketVon, provisionSatz } from "./_lib/config.mjs";
 import { json, fail, body, clean, now, handler } from "./_lib/util.mjs";
-import { allStudios, getStudio, saveStudio, zahlungenVon, abrechnungenVon, store, log } from "./_lib/store.mjs";
+import { allStudios, getStudio, saveStudio, zahlungenVon, abrechnungenVon, store, log, normEmail } from "./_lib/store.mjs";
 import { isAdmin, loginLink, sign, adminName } from "./_lib/auth.mjs";
 import { stripe, TATTOOFIN_BRANDING } from "./_lib/stripe.mjs";
 import { anbieterKuendigungZum, notify, monatsabrechnung, taeglicheJobs, kontoAbgleichen, provisionVerdient, STATUS, aufstellerUrl, connectUrl, connectUrlGehostet } from "./_lib/domain.mjs";
@@ -41,6 +41,7 @@ import { sendMail, warteschlangeStatus, warteschlangeAbarbeiten } from "./_lib/m
 import { randomBytes } from "node:crypto";
 import { brandingSetzen, brandingOeffentlich } from "./_lib/branding.mjs";
 import { demoStudioAnlegen } from "./_lib/app-demo.mjs";
+import { geraeteWiderrufen } from "./_lib/app-geraete.mjs";
 
 export default handler(async (req) => {
   if (!isAdmin(req)) return fail("Nicht berechtigt", 401);
@@ -133,9 +134,13 @@ export default handler(async (req) => {
       if (liste.length > 5) return fail("Höchstens 5 Team-Adressen");
       const falsch = liste.find((e) => !/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(e));
       if (falsch) return fail(`Keine gültige E-Mail: ${falsch}`);
+      const bleibt = new Set(liste.map(normEmail));
+      const entfernt = new Set((s.teamEmails || []).map(normEmail).filter((n) => !bleibt.has(n)));
       s.teamEmails = liste;
       await saveStudio(s);
-      await log("admin-team", { admin: adminName(req), studioId: s.id, anzahl: liste.length });
+      // App-Geräte entfernter Adressen sofort abmelden (wie PUT /api/app/team): kein Zugriff und keine Mitteilungen mehr
+      const widerrufen = entfernt.size ? await geraeteWiderrufen(s.id, (g) => entfernt.has(g.email), "team-entfernt") : 0;
+      await log("admin-team", { admin: adminName(req), studioId: s.id, anzahl: liste.length, entfernt: entfernt.size, widerrufen });
       return json({ email: s.email, teamEmails: s.teamEmails });
     }
     if (aktion === "branding" && req.method === "GET") return json({ branding: s.branding || null, oeffentlich: brandingOeffentlich(s) });

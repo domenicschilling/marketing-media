@@ -4,6 +4,9 @@
 // Gespeichert wird nur sha256(geheimnis) (hex). Schlüssel:
 //   appgeraet/<studioId>/<geraetId>   Gerät (Name, Modell, Rolle, Push-Token, Mitteilungen, sv = Sitzungsversion beim Anmelden)
 //   idx/appgeraet/<geraetId>          -> studioId
+//   appwiderruf/<studioId>/<geraetId> Widerruf (getrennt gespeichert, wird nie überschrieben; seit 13.11.2026)
+//   idx/apppush/<sha256(pushToken)>   -> "studioId/geraetId" (ein Push-Token gehört immer nur zu einem Gerät, auch über Studios hinweg)
+// Schreiben nach dem Anlegen nur über geraetAktualisieren (frisch laden, nur Änderung übernehmen, widerrufene Geräte nie wieder beleben).
 // Ein Token gilt nicht mehr, wenn das Gerät widerrufen ist, die Sitzungsversion des Studios hochgezählt wurde („Auf allen Geräten
 // abmelden“), die Adresse weder Haupt- noch Team-Adresse ist, 180 Tage keine Nutzung war oder das Studio fehlt (siehe auth.mjs appStudio).
 import crypto from "node:crypto";
@@ -17,6 +20,8 @@ const ZULETZT_SCHREIBEN_MS = 3600e3;    // zuletztAm höchstens stündlich speic
 const sha = (x) => crypto.createHash("sha256").update(String(x)).digest("hex");
 export const neueGeraetId = () => "ag_" + crypto.randomBytes(9).toString("base64url");
 const schluessel = (studioId, geraetId) => `appgeraet/${studioId}/${geraetId}`;
+const widerrufSchluessel = (studioId, geraetId) => `appwiderruf/${studioId}/${geraetId}`;
+export const pushIndex = (token) => "idx/apppush/" + sha(token);
 
 // ---- Token ----
 export function tokenErzeugen(geraetId) {
@@ -54,12 +59,34 @@ export async function geraetLaden(geraetId) {
   if (!sid) return null;
   return store.get(schluessel(sid, geraetId));
 }
-export const geraetSpeichern = (g) => store.set(schluessel(g.studioId, g.id), g);
+// Nur zum Anlegen und Widerrufen. Alle anderen Änderungen über geraetAktualisieren.
+const geraetSpeichern = (g) => store.set(schluessel(g.studioId, g.id), g);
+
+// Widerrufen? (Feld im Gerät ODER eigener Widerrufs-Schlüssel; Letzterer bleibt, auch wenn ein paralleler Schreibvorgang
+// ein veraltetes Gerät zurückschreibt)
+export async function istWiderrufen(g) {
+  if (!g) return true;
+  if (g.widerrufenAm) return true;
+  return Boolean(await store.get(widerrufSchluessel(g.studioId, g.id)));
+}
+
+// Änderung an einem Gerät: frisch laden, nur die Änderung anwenden, speichern. Widerrufene Geräte werden nie wieder geschrieben.
+// aendern(frisch) darf false zurückgeben = nichts zu speichern. Ergebnis: das gespeicherte Gerät oder null (weg/widerrufen/nichts geändert).
+export async function geraetAktualisieren(g, aendern) {
+  if (!g?.studioId || !g?.id) return null;
+  const frisch = await store.get(schluessel(g.studioId, g.id));
+  if (!frisch || (await istWiderrufen(frisch))) return null;
+  if (aendern(frisch) === false) return null;
+  await geraetSpeichern(frisch);
+  Object.assign(g, frisch);
+  return frisch;
+}
 
 // Alle Geräte eines Studios (Standard: nur aktive), zuletzt genutzte zuerst
 export async function geraeteVon(studioId, { auchWiderrufen = false } = {}) {
   const alle = await store.all(`appgeraet/${studioId}/`);
-  return alle.filter((g) => auchWiderrufen || !g.widerrufenAm)
+  const widerrufen = auchWiderrufen ? new Set() : new Set((await store.list(`appwiderruf/${studioId}/`)).map((k) => k.split("/").pop()));
+  return alle.filter((g) => auchWiderrufen || (!g.widerrufenAm && !widerrufen.has(g.id)))
     .sort((a, b) => (b.zuletztAm || b.createdAt || "").localeCompare(a.zuletztAm || a.createdAt || ""));
 }
 
@@ -88,11 +115,16 @@ export async function geraetAnlegen(s, { email, rolle, platform, name, modell, o
 // Abmelden: Token und Push-Token sind danach weg. Der Eintrag bleibt kurz als Protokoll (die täglichen Jobs löschen ihn nach 30 Tagen).
 export async function geraetWiderrufen(g, grund = "abgemeldet") {
   if (!g || g.widerrufenAm) return g;
-  g.widerrufenAm = new Date().toISOString();
+  const am = new Date().toISOString();
+  // Zuerst der eigene Widerrufs-Schlüssel: Er gilt sofort, egal was danach ins Gerät geschrieben wird
+  await store.set(widerrufSchluessel(g.studioId, g.id), { am, grund });
+  const pushToken = g.push?.token;
+  g.widerrufenAm = am;
   g.widerrufGrund = grund;
   delete g.tokenHash;
   g.push = null;
   await geraetSpeichern(g);
+  if (pushToken && (await store.get(pushIndex(pushToken))) === `${g.studioId}/${g.id}`) await store.del(pushIndex(pushToken));
   return g;
 }
 
@@ -106,9 +138,7 @@ export async function geraeteWiderrufen(studioId, filter, grund) {
 // Nutzung vermerken (höchstens einmal pro Stunde schreiben)
 export async function nutzungVermerken(g, jetzt = Date.now()) {
   if (g.zuletztAm && jetzt - new Date(g.zuletztAm).getTime() < ZULETZT_SCHREIBEN_MS) return false;
-  g.zuletztAm = new Date(jetzt).toISOString();
-  await geraetSpeichern(g);
-  return true;
+  return Boolean(await geraetAktualisieren(g, (x) => { x.zuletztAm = new Date(jetzt).toISOString(); }));
 }
 export const zuLangeUngenutzt = (g, jetzt = Date.now()) => jetzt - new Date(g.zuletztAm || g.createdAt).getTime() > APP_TAGE * 864e5;
 
@@ -134,6 +164,8 @@ export async function geraeteAufraeumen(jetzt = Date.now()) {
     if (!weg) continue;
     await store.del(k);
     await store.del("idx/appgeraet/" + g.id);
+    await store.del(widerrufSchluessel(g.studioId, g.id));
+    if (g.push?.token && (await store.get(pushIndex(g.push.token))) === `${g.studioId}/${g.id}`) await store.del(pushIndex(g.push.token));
     out.push(["app-geraet-geloescht", g.studioId, g.id]);
   }
   return out;

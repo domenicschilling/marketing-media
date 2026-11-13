@@ -47,7 +47,7 @@ struct TeamView: View {
 
                 if darfAendern && t.team.count < max {
                     Section(Texte.Team.hinzufuegen) {
-                        TextField(Texte.Team.adressePlatzhalter, text: $neueAdresse)
+                        TextField(Texte.Team.hinzufuegen, text: $neueAdresse, prompt: tfPlatzhalter(Texte.Team.adressePlatzhalter))
                             .textContentType(.emailAddress)
                             .keyboardType(.emailAddress)
                             .textInputAutocapitalization(.never)

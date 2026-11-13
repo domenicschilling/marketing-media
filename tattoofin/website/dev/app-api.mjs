@@ -151,6 +151,36 @@ try {
   rlReset();
 
   // ==================================================================================================
+  teil("Grenzen atomar: 50 gleichzeitige Versuche, Tagesgrenzen je Adresse");
+  const plaetze = (prefix) => dateien(prefix).map((f) => decodeURIComponent(f.replace(/\.json$/, ""))).filter((k) => /\/\d+$/.test(k));
+  const cP = await codeAnfordern("tom@ink-c.test");
+  const falschP = cP.code === "000000" ? "111111" : "000000";
+  const par = await Promise.all(Array.from({ length: 50 }, (_, i) => call("POST", "/api/app/anmelden", { body: { email: "tom@ink-c.test", code: i === 49 ? cP.code : falschP, geraet: GERAET("Parallel") } })));
+  const pFalsch = par.filter((r) => r.data.code === "code_falsch").length, pOk = par.filter((r) => r.status === 200).length, pIp = par.filter((r) => r.data.code === "zu_viele").length;
+  check(pIp === 20 && pFalsch <= 4 && pOk <= 1 && plaetze("rl/appversuch/").length === 5 && plaetze("rl/appversuch-tag/").length === 15, "50 gleichzeitige Anmelde-Versuche: genau 30 durch die IP-Grenze, 15 durch die Tagesgrenze der Adresse, höchstens 5 Code-Vergleiche (5 Plätze)", `ip=${pIp} falsch=${pFalsch} ok=${pOk} plaetze=${plaetze("rl/appversuch/").length}/${plaetze("rl/appversuch-tag/").length}`);
+  rlReset();
+  const parCode = await Promise.all(Array.from({ length: 40 }, (_, i) => call("POST", "/api/app/code", { body: { email: `p${i}@nirgends.test` } })));
+  check(parCode.every((r) => r.status === 200) && plaetze("rl/appcode-ip/").length === 20, "40 gleichzeitige Code-Anforderungen: genau 20 Plätze je IP und Stunde belegt", `${plaetze("rl/appcode-ip/").length}`);
+  rlReset();
+  await codeAnfordern("tom@ink-c.test");
+  const tagMail = plaetze("rl/appcode-tag/")[0];
+  for (let n = 2; n <= 10; n++) setBlob(tagMail.replace(/\/1$/, "/" + n), { am: Date.now() });
+  for (const f of dateien("rl/appcode-mail/")) fs.rmSync(path.join(dataDir, f));
+  const elf = await codeAnfordern("tom@ink-c.test");
+  check(Boolean(tagMail) && elf.r.status === 200 && elf.r.data.ok === true && !elf.neu, "Tagesgrenze je Adresse: die 11. Code-Mail an einem Tag wird still nicht gesendet (Antwort gleich)", `neu=${elf.neu}`);
+  rlReset();
+  const cT = await codeAnfordern("tom@ink-c.test");
+  const fT = await call("POST", "/api/app/anmelden", { body: { email: "tom@ink-c.test", code: cT.code === "000000" ? "111111" : "000000", geraet: GERAET() } });
+  const tagV = plaetze("rl/appversuch-tag/")[0];
+  for (let n = 2; n <= 15; n++) setBlob(tagV.replace(/\/1$/, "/" + n), { am: Date.now() });
+  const sechzehn = await call("POST", "/api/app/anmelden", { body: { email: "tom@ink-c.test", code: cT.code, geraet: GERAET() } });
+  check(fT.data.code === "code_falsch" && sechzehn.status === 429 && sechzehn.data.code === "zu_viele_heute" && mailsAn("admin@app.test").some((m) => /sehr viele Code-Versuche/.test(m.subject)), "Tagesgrenze je Adresse: nach 15 Versuchen (über alle Codes) → 429 zu_viele_heute, auch mit richtigem Code; Admin bekommt einen Hinweis", sechzehn.text);
+  setBlob("rl/appcode-ip/alt/1500000000000/1", { am: 1 });
+  const jobsRl = await admin("jobs", {});
+  check(!blob("rl/appcode-ip/alt/1500000000000/1") && Boolean(blob(tagV)) && JSON.stringify(jobsRl).includes("app-grenzen-aufgeraeumt"), "Tägliche Jobs löschen abgelaufene Plätze der Grenzen, laufende bleiben", JSON.stringify(jobsRl).slice(0, 160));
+  rlReset();
+
+  // ==================================================================================================
   teil("Mehrere Studios: Auswahl mit Einmal-Token");
   const cM = await codeAnfordern("lisa@ink-a.test");
   const mz = await call("POST", "/api/app/anmelden", { body: { email: "lisa@ink-a.test", code: cM.code, geraet: GERAET() } });
@@ -211,6 +241,14 @@ try {
   const gBchef = (await call("GET", "/api/app/geraete", { token: tB })).data.geraete;
   check(gBchef.length === 2 && gBchef.some((x) => x.email === "lisa@ink-a.test") && gBchef.filter((x) => x.diesesGeraet).length === 1, "Geräteliste für den Inhaber: alle Adressen sichtbar, genau ein „dieses Gerät“", JSON.stringify(gBchef.map((x) => [x.email, x.diesesGeraet])));
   check((await call("DELETE", `/api/app/geraete/${g1.id}`, { token: tB })).status === 404, "Gerät eines anderen Studios abmelden → 404");
+  const teamSperren = [];
+  for (const [m, u, b] of [["POST", "/api/portal/kuendigung", { grund: "Test" }], ["DELETE", "/api/portal/kuendigung"], ["POST", "/api/portal/stripe-dashboard", {}], ["PATCH", "/api/portal/kontakt", { email: "fremd@x.test" }]]) {
+    const r = await call(m, u, { token: tLisaB, body: b });
+    teamSperren.push(`${r.status}/${r.data.code}`);
+  }
+  check(teamSperren.join(",") === "403/nur_inhaber,403/nur_web,403/nur_inhaber,403/nur_inhaber" && blob("studio/" + B.id).status !== "gekuendigt" && !blob("studio/" + B.id).benachrichtigungEmail, "Team-Rolle im Portal: kündigen, Stripe-Dashboard-Link, Kontakt ändern → 403 nur_inhaber; Kündigung zurücknehmen → 403 nur_web", teamSperren.join(","));
+  const appZurueck = await call("DELETE", "/api/portal/kuendigung", { token: tA });
+  check(appZurueck.status === 403 && appZurueck.data.code === "nur_web", "Kündigung zurücknehmen mit App-Token (auch Inhaber) → 403 nur_web (Abo fortsetzen nur im Dashboard, Apple 3.1.1)", appZurueck.text);
   const ichInhaber = await call("DELETE", "/api/app/team/ich", { token: tB });
   check(ichInhaber.status === 403 && ichInhaber.data.code === "nur_team", "Inhaber kann sich nicht selbst aus dem Team entfernen → 403", ichInhaber.text);
 
@@ -279,6 +317,11 @@ try {
   check(perT.status === 200 && perT.data.id === zG && perT.data.gutschein.code === gz.gutschein.code && !("token" in perT.data.gutschein), "GET /api/portal/gutschein-code?t=<token> findet den eigenen Gutschein (ohne Token in der Antwort)", perT.text.slice(0, 160));
   check((await call("GET", `/api/portal/gutschein-code?t=${gz.gutschein.token}`, { token: tA })).status === 404 && (await call("GET", `/api/portal/gutschein-code?t=xxxxxxxxxxxxxxxxxxxxxxxx`, { token: tC })).status === 404, "Fremdes Studio bzw. unbekanntes Token → 404");
   check((await call("GET", `/api/portal/gutschein-code?code=${encodeURIComponent(gz.gutschein.code.toLowerCase().replace(/-/g, " "))}`, { token: tC })).data.id === zG, "?code= funktioniert weiter (tolerant)");
+  const zGblob = blob(`zahlung/${C.id}/${zG}`);
+  setBlob(`zahlung/${C.id}/${zG}`, { ...zGblob, email: "" });
+  const ohneMail = await call("POST", `/api/portal/gutschein/${zG}/senden`, { token: tC });
+  setBlob(`zahlung/${C.id}/${zG}`, zGblob);
+  check(ohneMail.status === 409 && ohneMail.data.code === "keine_email" && /keine E-Mail-Adresse des Käufers/.test(ohneMail.data.error), "Gutschein ohne Käufer-Adresse „erneut mailen“ → 409 keine_email mit passendem Text", ohneMail.text);
   const pdf = await fetch(`${BASE}/api/portal/gutschein/${zG}/pdf`, { headers: { authorization: "Bearer " + tC } });
   check(pdf.status === 200 && pdf.headers.get("content-type") === "application/pdf" && (await pdf.arrayBuffer()).byteLength > 3000, "Gutschein-PDF mit App-Token abrufbar");
   const qrSrc = fs.readFileSync(path.join(root, "netlify/functions/_lib/qr.mjs"), "utf8"), qrPub = fs.readFileSync(path.join(root, "public/js/qrcode.min.js"), "utf8");
@@ -323,6 +366,18 @@ try {
   delete antworten[TOK_C];
   const okTest = await call("POST", "/api/app/push/test", { token: tC });
   check(okTest.data.gesendet === true && apns.empfangen.at(-1).payload.aps.alert.body === "Mitteilungen funktionieren. So meldet sich die App bei neuen Zahlungen.", "Push-Test mit Schlüssel → {gesendet:true}, „Mitteilungen funktionieren …“", okTest.text);
+  const pushLib = await import("../netlify/functions/_lib/push.mjs");
+  const sCp = blob("studio/" + C.id);
+  const empf = (await pushLib.pushEmpfaenger(sCp, "zahlungen")).length;
+  const empfSv = (await pushLib.pushEmpfaenger({ ...sCp, sessionVersion: (sCp.sessionVersion || 0) + 1 }, "zahlungen")).length;
+  const empfAdr = (await pushLib.pushEmpfaenger({ ...sCp, email: "neu@ink-c.test" }, "zahlungen")).length;
+  check(empf >= 1 && empfSv === 0 && empfAdr === 0, "Mitteilungen nur an Geräte mit gültigem Zugang: andere Sitzungsversion („überall abgemeldet“) oder Adresse nicht mehr im Studio → kein Push", `${empf}/${empfSv}/${empfAdr}`);
+  // Gleicher Push-Token in einem anderen Studio (Handy jetzt bei Studio A angemeldet) → beim alten Studio entfernt
+  const tAp = await loginA(A.id, "Handy von C");
+  await call("PUT", "/api/app/push", { token: tAp, body: { token: TOK_C, platform: "ios", umgebung: "sandbox" } });
+  check(blob(`appgeraet/${C.id}/${g1.id}`).push === null && blob("idx/apppush/" + crypto.createHash("sha256").update(TOK_C).digest("hex"))?.startsWith(A.id + "/"), "Gleicher Push-Token bei einem anderen Studio → beim alten Studio entfernt (Index über alle Studios)");
+  await call("POST", "/api/app/abmelden", { token: tAp });
+  await call("PUT", "/api/app/push", { token: tC, body: { token: TOK_C, platform: "ios", umgebung: "sandbox" } });
   rlReset();
   // Android: Token wird gespeichert, aber nicht genutzt (FCM fehlt noch)
   const andr = await appLogin("tom@ink-c.test", GERAET("Pixel", "android"));
@@ -395,17 +450,29 @@ try {
   const alle = await call("PUT", "/api/app/team", { token: tB, body: { emails: ["anna@ink-b.test"], alleAbmelden: true } });
   check(alle.status === 200 && (blob("studio/" + B.id).sessionVersion || 0) === svVor + 1 && (await call("GET", "/api/portal", { token: tAnna2 })).status === 401 && (await call("GET", "/api/portal", { cookie: B.cookie })).status === 401 && (await call("GET", "/api/portal", { token: tB })).status === 200, "alleAbmelden: Sitzungsversion +1 → andere App-Geräte und Web-Cookies raus, dieses Gerät bleibt angemeldet");
 
+  const tAnna3 = (await appLogin("anna@ink-b.test")).token;
+  await admin(`studio/${B.id}/team`, { emails: [] });
+  check((await call("GET", "/api/portal", { token: tAnna3 })).status === 401 && (await geraeteLib.geraeteVon(B.id)).every((x) => x.email !== "anna@ink-b.test"), "Admin entfernt eine Team-Adresse → deren App-Geräte sofort abgemeldet (kein Zugriff, kein Push)");
+
   // ==================================================================================================
   teil("Abmelden: App-Gerät, „Auf allen Geräten abmelden“, Gerät eines anderen abmelden");
   const tA2 = await loginA(A.id, "iPad");
   const gA2 = (await call("GET", "/api/app/geraete", { token: tA2 })).data.geraete.find((x) => x.diesesGeraet);
   check((await call("DELETE", `/api/app/geraete/${gA2.id}`, { token: tA })).data.ok === true && (await call("GET", "/api/portal", { token: tA2 })).status === 401, "Inhaber meldet ein anderes Gerät ab → dessen Token 401");
+  const tDieb = await loginA(A.id, "iPhone gestohlen");
+  const gDieb = (await call("GET", "/api/app/geraete", { token: tDieb })).data.geraete.find((x) => x.diesesGeraet);
+  const altDieb = blob(`appgeraet/${A.id}/${gDieb.id}`);
+  const [abDieb] = await Promise.all([call("DELETE", `/api/app/geraete/${gDieb.id}`, { token: tA }), ...Array.from({ length: 10 }, () => call("PATCH", "/api/app/geraet", { token: tDieb, body: { mitteilungen: { zahlungen: true } } }))]);
+  setBlob(`appgeraet/${A.id}/${gDieb.id}`, altDieb);   // so hat früher ein paralleler Schreibvorgang das Gerät wiederbelebt
+  const nachDieb = await Promise.all([call("PATCH", "/api/app/geraet", { token: tDieb, body: {} }), call("GET", "/api/portal", { token: tDieb }), call("PUT", "/api/app/push", { token: tDieb, body: { token: crypto.randomBytes(32).toString("hex"), platform: "ios", umgebung: "sandbox" } })]);
+  check(abDieb.data.ok === true && nachDieb.every((r) => r.status === 401) && Boolean(blob(`appwiderruf/${A.id}/${gDieb.id}`)) && !(await geraeteLib.geraeteVon(A.id)).some((x) => x.id === gDieb.id), "Abmelden lässt sich nicht rückgängig machen: auch wenn das Gerät veraltet zurückgeschrieben wird, bleibt das Token tot (Widerrufs-Schlüssel)", nachDieb.map((r) => r.status).join(","));
   const ab = await call("POST", "/api/app/abmelden", { token: tC2 });
   check(ab.data.ok === true && (await call("GET", "/api/app/geraete", { token: tC2 })).status === 401 && blob(`appgeraet/${C.id}/${tC2.slice(4, 19)}`)?.tokenHash === undefined, "POST /api/app/abmelden → Token ungültig, Hash gelöscht");
   const tA3 = await loginA(A.id, "iPhone 2");
   check((await call("GET", "/api/portal", { token: tA3 })).status === 200, "Vorher: App-Token von A gültig");
   await call("POST", "/api/portal/abmelden", { cookie: A.cookie });
   check((await call("GET", "/api/portal", { token: tA3 })).status === 401 && (await call("GET", "/api/portal", { token: tA })).status === 401, "POST /api/portal/abmelden (Dashboard) widerruft auch alle App-Tokens (sv-Vergleich)");
+  check((await geraeteLib.geraeteVon(A.id)).length === 0, "„Auf allen Geräten abmelden“ widerruft die App-Geräte (kein Push mehr an abgemeldete Handys)");
 
   // ==================================================================================================
   teil("Grenze 10 Geräte, 180 Tage, zuletztAm höchstens stündlich");
@@ -452,10 +519,21 @@ try {
   check(rl.status === 200 && rl.data.studio.id === demo.studioId && rl.data.geraet.rolle === "inhaber", "Review: fester Code → Token für das Demo-Studio", rl.text.slice(0, 160));
   const pR = await call("GET", "/api/portal", { token: tR });
   check(pR.data.studio?.kannKassieren === true && pR.data.zahlungen.length >= 5 && pR.data.zahlungen.some((z) => z.gutschein?.code), "Demo-Studio: Beispiel-Zahlungen und Gutscheine, darf Links anlegen (ohne Stripe)", `${pR.data.zahlungen?.length}`);
+  const dSt = pR.data.studio?.stripe || {};
+  check(pR.data.studio.demo === true && dSt.verbunden && dSt.freigegeben && dSt.auszahlungen && pR.data.studio.connectUrl === null, "Demo-Studio: Stripe als eingerichtet angezeigt, keine Stripe-Einrichtung (connectUrl null)", JSON.stringify(dSt));
+  const dCon = await call("GET", `/api/connect?id=${demo.studioId}`, { token: tR });
+  check(dCon.status === 302 && dCon.headers.get("location") === "/app.html" && !blob("studio/" + demo.studioId).stripe?.accountId, "GET /api/connect im Demo-Studio legt kein Stripe-Konto an", `${dCon.status} ${dCon.headers.get("location")}`);
+  const dGs = pR.data.zahlungen.find((z) => z.gutschein?.code);
+  const dSend = await call("POST", `/api/portal/gutschein/${dGs.id}/senden`, { token: tR });
+  check(dSend.status === 200 && dSend.data.gesendet === true && mails().every((m) => ![].concat(m.to).includes(dGs.email)), "Demo-Gutschein „erneut mailen“ → gesendet (ohne echte Mail)", dSend.text.slice(0, 120));
   const dz = await call("POST", "/api/portal/zahlung", { token: tR, body: { betrag: "300", kunde: "Test", beschreibung: "Demo" } });
   const dpay = await call("POST", "/api/pay", { body: { z: dz.data.zahlung?.id, inhaltOk: true } });
   const dpay2 = await call("POST", "/api/pay", { body: { s: blob("studio/" + demo.studioId).slug, betrag: "100", kunde: "X", inhaltOk: true } });
   check(dz.status === 201 && dpay.status === 409 && dpay.data.error === "Demo-Studio: hier wird nichts bezahlt" && dpay2.status === 409, "Demo-Studio: Link anlegen geht, Bezahlen (Link und Zahlseite) → 409", `${dz.status} ${dpay.text} ${dpay2.status}`);
+  const dTest = await call("POST", `/api/app/demo-zahlung/${dz.data.zahlung.id}`, { token: tR });
+  const dTest2 = await call("POST", `/api/app/demo-zahlung/${dz.data.zahlung.id}`, { token: tR });
+  const nichtDemoZ = await call("POST", `/api/app/demo-zahlung/${zid}`, { token: tB });
+  check(dTest.status === 200 && dTest.data.status === "bezahlt" && dTest.data.demoZahlung === true && dTest2.status === 409 && nichtDemoZ.status === 404 && blob(`zahlung/${C.id}/${zid}`).status !== "bezahlt", "Testzahlung nur im Demo-Studio: offener Link → bezahlt (kein Stripe), zweimal → 409, echtes Studio → 404", `${dTest.status} ${dTest2.status} ${nichtDemoZ.status}`);
   const dAz = await call("GET", "/api/app/auszahlungen", { token: tR });
   check(dAz.data.auszahlungen?.length === 3 && dAz.data.konto.verbunden === true && dAz.data.auszahlungen.every((x) => x.statusText), "Demo-Studio: feste Beispiel-Auszahlungen", dAz.text.slice(0, 120));
   check(mailsAn("review@tattoofin.test").length === 0, "Demo-Studio bekommt keine Mails (auch kein „Neues Gerät“)");
@@ -481,8 +559,11 @@ try {
   check(loe2.status === 200 && loe2.data.ok === true && loe2.data.kuendigungZum === loe.data.kuendigungZum, "Schon gekündigt → kein Fehler, nur Löschanfrage", loe2.text.slice(0, 120));
   const tBneu = (await appLogin("chef@ink-b.test")).token;
   const sBc = await call("GET", "/api/portal", { token: tBneu });
-  const zur = await call("DELETE", "/api/portal/kuendigung", { token: tBneu });
-  check(sBc.data.studio?.loeschAnfrage && zur.status === 200 && zur.data.status !== "gekuendigt" && zur.data.loeschAnfrage === null && !blob("studio/" + B.id).loeschAnfrage && blob("studio/" + B.id).loeschAnfrageHistorie?.length === 1, "DELETE /api/portal/kuendigung nimmt Kündigung UND Löschanfrage zurück", zur.text.slice(0, 160));
+  const zurApp = await call("DELETE", "/api/portal/kuendigung", { token: tBneu });
+  const cookieB = auth.sessionCookie(blob("studio/" + B.id)).split(";")[0];
+  const zur = await call("DELETE", "/api/portal/kuendigung", { cookie: cookieB });
+  check(sBc.data.studio?.loeschAnfrage && zur.status === 200 && zur.data.status !== "gekuendigt" && zur.data.loeschAnfrage === null && !blob("studio/" + B.id).loeschAnfrage && blob("studio/" + B.id).loeschAnfrageHistorie?.length === 1, "DELETE /api/portal/kuendigung im Dashboard nimmt Kündigung UND Löschanfrage zurück (in der App 403 nur_web)", zur.text.slice(0, 160));
+  check(zurApp.status === 403 && zurApp.data.code === "nur_web", "Zurücknehmen geht nicht mit App-Token", zurApp.text);
   // Dashboard-Kündigung (ausgelagert nach domain.mjs) verhält sich wie bisher
   const kw = await call("POST", "/api/portal/kuendigung", { cookie: C.cookie, body: { grund: "Test" } });
   const kw2 = await call("POST", "/api/portal/kuendigung", { cookie: C.cookie, body: { grund: "Test" } });

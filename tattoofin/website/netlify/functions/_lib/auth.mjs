@@ -3,7 +3,7 @@ import crypto from "node:crypto";
 import { SECRETS, CFG } from "./config.mjs";
 import { getStudio, store, normEmail } from "./store.mjs";
 import { randomBytes } from "node:crypto";
-import { tokenZerlegen, geraetLaden, tokenPruefen, rolleFuer, zuLangeUngenutzt, nutzungVermerken } from "./app-geraete.mjs";
+import { tokenZerlegen, geraetLaden, tokenPruefen, rolleFuer, zuLangeUngenutzt, nutzungVermerken, istWiderrufen } from "./app-geraete.mjs";
 
 // Vorschau: Sitzungs-Geheimnis zufällig erzeugen und im (eigenen) Vorschau-Speicher ablegen, statt einen Schlüssel zu hinterlegen
 export async function vorschauVorbereiten() {
@@ -88,6 +88,8 @@ export async function appStudio(req) {
   if ((g.sv || 0) !== (s.sessionVersion || 0)) return null;
   const rolle = rolleFuer(s, g.email);
   if (!rolle || zuLangeUngenutzt(g)) return null;
+  // Eigener Widerrufs-Schlüssel (appwiderruf/…): gilt auch, wenn ein paralleler Schreibvorgang das Gerät veraltet zurückgeschrieben hat
+  if (await istWiderrufen(g)) return null;
   await nutzungVermerken(g);
   Object.defineProperty(s, "_app", { value: { geraetId: g.id, email: g.email, rolle, platform: g.platform }, enumerable: false });
   Object.defineProperty(s, "_geraet", { value: g, enumerable: false });

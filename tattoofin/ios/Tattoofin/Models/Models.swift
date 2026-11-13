@@ -21,13 +21,12 @@ struct Studio: Codable, Sendable, Hashable {
     var kannKassieren: Bool?
     var zahlseite: String?
     var connectUrl: String?
+    /// Demo-Studio für die App-Prüfung bei Apple (Testzahlungen ohne Geld)
+    var demo: Bool?
 
     var name: String { firma ?? "Dein Studio" }
     var darfKassieren: Bool { kannKassieren ?? false }
-    /// Offene Kündigung, die das Studio selbst zurücknehmen kann
-    var kuendigungZuruecknehmbar: Bool {
-        status == "gekuendigt" && kuendigung != nil && kuendigung?.garantie != true && kuendigung?.durchAnbieter != true
-    }
+    var istDemo: Bool { demo ?? false }
 }
 
 struct Kuendigung: Codable, Sendable, Hashable {

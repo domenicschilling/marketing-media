@@ -30,7 +30,7 @@ struct GutscheineView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Text(Texte.Gutscheine.codeEingeben).font(.dm(.subheadline, weight: .semibold)).foregroundStyle(Color.tfTinte)
                         HStack(spacing: 8) {
-                            TextField(Texte.Gutscheine.codePlatzhalter, text: $code)
+                            TextField(Texte.Gutscheine.codeEingeben, text: $code, prompt: tfPlatzhalter(Texte.Gutscheine.codePlatzhalter))
                                 .font(.system(.title3, design: .monospaced).weight(.semibold))
                                 .textInputAutocapitalization(.characters)
                                 .autocorrectionDisabled()

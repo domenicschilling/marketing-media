@@ -43,7 +43,10 @@ DerivedData danach löschen (Speicher).
 ## Wichtige Regeln
 
 - Token nur im Schlüsselbund (`WhenUnlockedThisDeviceOnly`, kein iCloud). Bei 401 meldet die App sich selbst ab.
-- Keine Preise, kein Kauf, keine Abo-Verwaltung, keine Erstattungen in der App (Apple 3.1).
+- Keine Preise, kein Kauf, keine Abo-Verwaltung, keine Erstattungen in der App (Apple 3.1). Kündigen/Löschen ja (5.1.1(v)), Zurücknehmen nein (nur Hinweis auf info@tattoofin.de; der Server sperrt `DELETE /api/portal/kuendigung` mit App-Token).
+- Rechtstexte (Impressum, Datenschutz, Vertrag) nur über `RechtsAnsicht` (WKWebView ohne gespeicherte Daten, `?app=1`, Inhaltsblocker für Tracking/Meta, nur die drei Seiten ladbar), erreichbar auch auf Anmelde- und Code-Bildschirm.
+- Platzhalter in Eingabefeldern immer mit `prompt: tfPlatzhalter(…)` (Systemgrau erreicht kein WCAG AA).
+- Demo-Studio (App-Prüfung): Stripe gilt als eingerichtet, „Testzahlung auslösen“ im Zahlungslink-Sheet (`POST /api/app/demo-zahlung/:id`). Angaben für App Store Connect: `AppStore/README.md`.
 - Keine Raten- oder Später-zahlen-Aussagen. Falls je nötig: nur `KlarnaAussageView` (Warnsatz gleich groß direkt daneben + Fußnote). Gutscheine nie mit Klarna. Die Zahlart Klarna erscheint nur als Name.
 - Push: Code ist fertig (Erlaubnis, APNs-Token an `PUT /api/app/push`, Banner im Vordergrund, Sprung zur Zahlung/Auszahlung). **Echt-Versand wartet auf Apple-Team-ID und APNs-Schlüssel (.p8).** Im Simulator ohne Signatur schlägt die APNs-Registrierung erwartungsgemäß fehl und wird nur protokolliert.
 - Vor der Einreichung: `DEVELOPMENT_TEAM` setzen, `aps-environment` für Release auf `production` (macht Xcode beim Archivieren mit Distribution-Profil), App-Icon in höherer Auflösung prüfen (die Figur liegt nur als 300-px-PNG vor).

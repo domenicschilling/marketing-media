@@ -107,12 +107,17 @@ struct GutscheinDetailView: View {
                         }
                         .disabled(arbeitet)
                     }
-                    Button {
-                        Task { await erneutSenden() }
-                    } label: {
-                        Label(Texte.Gutscheine.erneutMailen, systemImage: "envelope")
+                    // Nur mit hinterlegter Käufer-Adresse (sonst gäbe es nur eine Fehlermeldung)
+                    if zahlung.email?.leerAlsNil != nil {
+                        Button {
+                            Task { await erneutSenden() }
+                        } label: {
+                            Label(Texte.Gutscheine.erneutMailen, systemImage: "envelope")
+                        }
+                        .disabled(arbeitet)
+                    } else {
+                        Text(Texte.Gutscheine.keineKaeuferEmail).font(.dm(.footnote)).foregroundStyle(Color.tfLeise)
                     }
-                    .disabled(arbeitet)
                 }
                 if let meldung { Text(meldung).font(.dm(.subheadline)).foregroundStyle(Color.tfGruen) }
                 if let fehler { FehlerZeile(text: fehler) }

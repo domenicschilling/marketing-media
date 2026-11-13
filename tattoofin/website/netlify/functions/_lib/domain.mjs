@@ -5,13 +5,13 @@ import { sendMail } from "./mail.mjs";
 import { mails } from "./emails.mjs";
 import { stripe, taxRateId, ensureCustomer, TATTOOFIN_BRANDING } from "./stripe.mjs";
 import { checkoutBranding } from "./branding.mjs";
-import { allStudios, zahlungenVon, saveZahlung, getZahlung, getAbrechnung, saveAbrechnung, saveStudio, getStudio, log, store } from "./store.mjs";
+import { allStudios, zahlungenVon, saveZahlung, getZahlung, getAbrechnung, saveAbrechnung, saveStudio, getStudio, log, store, plaetzeAufraeumen } from "./store.mjs";
 import { gutscheinAusstellen } from "./gutschein.mjs";
 import { gutscheinWort } from "./klarna-texte.mjs";
 import { monatsende, now, HttpError, clean } from "./util.mjs";
 import { loginLink, zweckToken } from "./auth.mjs";
-import { pushAnStudio, mitZeitlimit, nachrichtZahlung, nachrichtAuszahlung, apnsAktiv } from "./push.mjs";
-import { geraeteVon, geraeteAufraeumen } from "./app-geraete.mjs";
+import { pushAnStudio, pushEmpfaenger, mitZeitlimit, nachrichtZahlung, nachrichtAuszahlung, apnsAktiv } from "./push.mjs";
+import { geraeteAufraeumen } from "./app-geraete.mjs";
 
 export const STATUS = {
   entwurf: "Abschluss begonnen",
@@ -662,6 +662,8 @@ export async function taeglicheJobs(heute = new Date()) {
   for (const k of await store.list("anfrage/")) if (k.slice(8) < grenze) { await store.del(k); out.push(["anfrage-geloescht", k]); }
   // App-Geräte: widerrufene nach 30 Tagen, ungenutzte nach 180 Tagen löschen (Datenschutzerklärung „Tattoofin-App für Studios“)
   try { out.push(...(await geraeteAufraeumen())); } catch (e) { out.push(["app-geraete-aufraeumen-fehler", e.message]); }
+  // Abgelaufene Plätze der atomaren Grenzen der App-Anmeldung (rl/app…/<fenster>/<n>) löschen
+  try { const n = await plaetzeAufraeumen(); if (n) out.push(["app-grenzen-aufgeraeumt", n]); } catch (e) { out.push(["app-grenzen-aufraeumen-fehler", e.message]); }
   // Rückfall, falls payout.paid/payout.failed am Connect-Endpoint nicht abonniert ist: fehlende Auszahlungs-Mitteilungen nachholen
   try { out.push(...(await auszahlungenNachholen())); } catch (e) { out.push(["auszahlungen-nachholen-fehler", e.message]); }
   for (const s of await allStudios()) {
@@ -792,7 +794,7 @@ export async function auszahlungenNachholen() {
   const seit = Math.floor(Date.now() / 1000) - 48 * 3600;
   for (const s of await allStudios()) {
     if (s.demo || !s.stripe?.accountId) continue;
-    const geraete = (await geraeteVon(s.id)).filter((g) => g.push?.token && g.mitteilungen?.auszahlungen !== false);
+    const geraete = await pushEmpfaenger(s, "auszahlungen");
     if (!geraete.length) continue;
     try {
       const liste = await stripe("GET", "/payouts", { limit: 20, created: { gte: seit } }, { account: s.stripe.accountId });

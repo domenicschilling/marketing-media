@@ -133,6 +133,37 @@ export async function zaehleVersuch(key, max, fensterMs) {
   return alt.length <= max;
 }
 
+// Atomare Begrenzung (seit 13.11.2026, App-Anmeldung): Jeder Versuch belegt einen eigenen Platz <key>/<fenster>/<n> (n = 1..max)
+// mit setNeu. Parallele Anfragen können sich so nicht gegenseitig „überzählen“ (zaehleVersuch liest und schreibt ohne Sperre).
+// Ergebnis: Nummer des belegten Platzes (1..max) oder 0 = Grenze erreicht.
+// Der Merker <key>/<fenster>/h (nicht atomar) hält den höchsten vergebenen Platz, damit nicht jede Anfrage bei 1 anfängt;
+// alle Plätze bis zu einem gemerkten Wert sind sicher belegt, ein veralteter Merker kostet nur ein paar Versuche mehr.
+export async function belegePlatz(key, max, fenster) {
+  const basis = `${key}/${fenster}`;
+  const merker = Number((await store.get(basis + "/h"))?.n) || 0;
+  for (let n = Math.max(1, merker + 1); n <= max; n++) {
+    if (await store.setNeu(`${basis}/${n}`, { am: Date.now() })) {
+      await store.set(basis + "/h", { n });
+      return n;
+    }
+  }
+  return 0;
+}
+// Feste Zeitfenster: Fenster-Kennung = Ende des Fensters in ms (für das Aufräumen lesbar). true = noch innerhalb der Grenze.
+export const zaehleAtomar = async (key, max, fensterMs, jetzt = Date.now()) =>
+  (await belegePlatz(key, max, (Math.floor(jetzt / fensterMs) + 1) * fensterMs)) > 0;
+// Tägliches Aufräumen: Plätze, deren Fenster (Zahl am Anfang der Fenster-Kennung) seit einem Tag vorbei ist
+export async function plaetzeAufraeumen(prefix = "rl/app", jetzt = Date.now()) {
+  let n = 0;
+  for (const k of await store.list(prefix)) {
+    const teile = k.split("/");
+    if (teile.length < 5) continue;
+    const ende = parseInt(teile[teile.length - 2], 10);
+    if (ende > 1e12 && ende < jetzt - 864e5) { await store.del(k); n++; }
+  }
+  return n;
+}
+
 // Alle Studios zu einer E-Mail-Adresse (normalisiert). Der Index idx/email zeigt nur auf den zuletzt gespeicherten
 // Datensatz – bei mehreren Anmeldungen mit derselben Adresse (z. B. Test-Abschlüsse) kann das ein Entwurf sein.
 export const AKTIV = (s) => s && !["entwurf", "abgebrochen"].includes(s.status);

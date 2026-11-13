@@ -58,9 +58,9 @@ struct GutscheinVerkaufenView: View {
 
                 Section {
                     // Daten des Käufers, nicht des Studios: kein Autofill mit den eigenen Kontaktdaten
-                    TextField(Texte.Gutscheine.kaeufer, text: $kaeufer)
+                    TextField(Texte.Gutscheine.kaeufer, text: $kaeufer, prompt: tfPlatzhalter(Texte.Gutscheine.kaeufer))
                         .textInputAutocapitalization(.words)
-                    TextField(Texte.Gutscheine.kaeuferEmail, text: $email)
+                    TextField(Texte.Gutscheine.kaeuferEmail, text: $email, prompt: tfPlatzhalter(Texte.Gutscheine.kaeuferEmail))
                         .keyboardType(.emailAddress)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
@@ -71,8 +71,8 @@ struct GutscheinVerkaufenView: View {
                 }
 
                 Section {
-                    TextField(Texte.Gutscheine.empfaenger, text: $empfaenger)
-                    TextField(Texte.Gutscheine.nachricht, text: $nachricht, axis: .vertical)
+                    TextField(Texte.Gutscheine.empfaenger, text: $empfaenger, prompt: tfPlatzhalter(Texte.Gutscheine.empfaenger))
+                    TextField(Texte.Gutscheine.nachricht, text: $nachricht, prompt: tfPlatzhalter(Texte.Gutscheine.nachricht), axis: .vertical)
                         .lineLimit(3...6)
                         .onChange(of: nachricht) { _, neu in
                             if neu.count > Self.maxNachricht { nachricht = String(neu.prefix(Self.maxNachricht)) }

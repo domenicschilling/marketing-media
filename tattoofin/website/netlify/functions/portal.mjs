@@ -30,13 +30,16 @@
 //   GET    /api/portal/zahlung/:id[?abgleich=1]   eine Zahlung (App); abgleich: Status bei Stripe nachsehen (höchstens alle 10 s)
 // Anmeldung: Session-Cookie (Dashboard) ODER App-Token „Authorization: Bearer tfa_…“ (Tattoofin-App, siehe _lib/auth.mjs).
 // Mit App-Token gesperrt (403 nur_web): stripe-session, rechnungen, aufsteller, aufsteller-pruefen, umstellung, erstattung
-// (Apple-Richtlinie 3.1: keine Käufe/Abschlüsse in der App; in Version 1 kein Geldrückfluss aus der App).
+// (Apple-Richtlinie 3.1: keine Käufe/Abschlüsse in der App; in Version 1 kein Geldrückfluss aus der App), außerdem DELETE kuendigung
+// (eine Kündigung zurücknehmen = Abo fortsetzen, nur im Dashboard; Kündigen und Löschen bleiben in der App, Apple 5.1.1(v)).
+// Mit App-Token einer Team-Adresse zusätzlich gesperrt (403 nur_inhaber): kuendigung, stripe-dashboard, kontakt, abmelden.
 // Mandantentrennung: Jede Abfrage nutzt ausschließlich das Studio aus dem Session-Cookie bzw. App-Token; Zahlungen werden
 // über zahlung/<studioId>/<id> gelesen, fremde IDs ergeben immer 404.
 import { CFG, plattformgebuehr, provisionSatz, paketVon, BAUSTEINE_SIMULIERT } from "./_lib/config.mjs";
 import { json, fail, body, clean, id, now, handler, isEmail, parseBetrag, clientIp } from "./_lib/util.mjs";
 import { saveStudio, zahlungenVon, getZahlung, saveZahlung, abrechnungenVon, getLeistung, store, log } from "./_lib/store.mjs";
 import { currentStudio, clearCookie } from "./_lib/auth.mjs";
+import { geraeteWiderrufen } from "./_lib/app-geraete.mjs";
 import { stripe, dashboardLink, accountSession, ensureConnectedAccount } from "./_lib/stripe.mjs";
 import { hatUmstellungsangebot, umstellungCheckout, notify, notifyAdmin, connectUrl, connectUrlGehostet, darfKassieren, provisionVerdient, kontoAbgleichen, eingebettet, klarnaFuer, provisionZahlung, aufstellerUrl, aufstellerCheckout, aufstellerBezahlt, kuendigungEinreichen, kuendigungZuruecknehmen, zahlungAbgleichen } from "./_lib/domain.mjs";
 import { fuerStudio, oeffentlich, zahlseite } from "./_lib/studio-ansicht.mjs";
@@ -80,13 +83,16 @@ import { mails } from "./_lib/emails.mjs";
 
 // Mit App-Token gesperrte Bereiche (nur im Dashboard)
 const NUR_WEB = ["stripe-session", "rechnungen", "aufsteller", "aufsteller-pruefen", "umstellung", "erstattung"];
+// Mit App-Token einer Team-Adresse gesperrt (nur der Inhaber darf das; im Web gilt das Cookie wie bisher)
+const NUR_INHABER = ["kuendigung", "stripe-dashboard", "kontakt", "abmelden"];
 
 export default handler(async (req, context) => {
   const s = await currentStudio(req);
   if (!s) return json({ error: "Bitte einloggen", code: "nicht_angemeldet" }, 401);
   const url = new URL(req.url);
   const [bereich, sub] = url.pathname.replace(/^\/api\/portal\/?/, "").split("/").filter(Boolean);
-  if (s._app && NUR_WEB.includes(bereich)) return json({ error: "Das geht nur im Dashboard.", code: "nur_web" }, 403);
+  if (s._app && (NUR_WEB.includes(bereich) || (bereich === "kuendigung" && req.method === "DELETE"))) return json({ error: "Das geht nur im Dashboard.", code: "nur_web" }, 403);
+  if (s._app && s._app.rolle !== "inhaber" && NUR_INHABER.includes(bereich)) return json({ error: "Das kann nur der Inhaber.", code: "nur_inhaber" }, 403);
   // Admin-Ansicht („Dashboard ansehen“): nur lesen. Keine Änderungen, kein Geld bewegen, nichts an Kunden schicken.
   if (s._ansicht) {
     if (bereich === "stripe-session") return json({ modus: "ansicht", hinweis: "In der Admin-Ansicht werden die Stripe-Bausteine nicht geladen (sie würden echte Änderungen am Konto des Studios erlauben). Den Stripe-Status siehst du oben und im Admin." });
@@ -439,7 +445,8 @@ export default handler(async (req, context) => {
       return json(fuerStudio(z));
     }
     if (aktion === "senden" && req.method === "POST") {
-      if (!z.gutschein?.code || !z.email) return fail("Der Gutschein entsteht, sobald er bezahlt ist.", 409);
+      if (!z.gutschein?.code) return fail("Der Gutschein entsteht, sobald er bezahlt ist.", 409);
+      if (!z.email) return json({ error: "Für diesen Gutschein ist keine E-Mail-Adresse des Käufers hinterlegt.", code: "keine_email" }, 409);
       const ok = await gutscheinSenden(s, z);
       return json({ ...fuerStudio(z), gesendet: ok });
     }
@@ -450,6 +457,8 @@ export default handler(async (req, context) => {
     if (s._app && s._app.rolle !== "inhaber") return json({ error: "Nur der Inhaber kann alle Geräte abmelden.", code: "nur_inhaber" }, 403);
     s.sessionVersion = (s.sessionVersion || 0) + 1;
     await saveStudio(s);
+    // App-Geräte zusätzlich widerrufen: Token weg UND kein Push mehr an abgemeldete Handys (Sitzungsversion allein ließe den Push-Token stehen)
+    await geraeteWiderrufen(s.id, () => true, "alle-abgemeldet");
     return json({ ok: true }, 200, { "Set-Cookie": clearCookie() });
   }
 

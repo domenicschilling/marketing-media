@@ -103,7 +103,22 @@ window.TFTrack = (function () {
     document.body.appendChild(a);
   }
 
+  // Rechtstexte in der Tattoofin-App (…?app=1, Apple 5.1.2/3.1.1): kein Cookie-Hinweis, kein Pixel, kein WhatsApp-Knopf, kein Menü
+  // und keine Links auf andere Seiten von Tattoofin (keine Wege zu Anmeldung oder Preisen aus der App heraus)
+  var APP = /[?&]app=1(&|#|$)/.test(location.search);
+  function appModus() {
+    var st = document.createElement("style"); st.textContent = "header.nav,nav.webnav,footer{display:none!important}"; document.head.appendChild(st);
+    document.querySelectorAll("a[href]").forEach(function (a) {
+      var h = a.getAttribute("href") || "";
+      var eigen = /^\/(?!\/)/.test(h) || /^https?:\/\/(www\.)?tattoofin\.de/.test(h);
+      if (eigen && !/(impressum|datenschutz|vertrag)\.html/.test(h) || a.hasAttribute("data-cookies")) {
+        var sp = document.createElement("span"); sp.textContent = a.textContent; a.replaceWith(sp);
+      }
+    });
+  }
+
   function init() {
+    if (APP) { appModus(); return; }
     var st = document.createElement("style"); st.textContent = CSS; document.head.appendChild(st);
     waButton();
     // Klicks: WhatsApp → Contact, Muster-Anzahlungsbedingungen → Lead

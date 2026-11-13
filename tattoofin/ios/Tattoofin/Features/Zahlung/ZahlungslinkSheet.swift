@@ -105,6 +105,13 @@ struct ZahlungslinkSheet: View {
 
                 Button(Texte.Zahlung.stornieren, role: .destructive) { stornoFrage = true }
                     .buttonStyle(.gefahr)
+
+                // Nur im Demo-Studio (App-Prüfung bei Apple): Testzahlung ohne Geld
+                if portal.studio?.istDemo == true {
+                    HinweisKarte(text: Texte.Zahlung.demoHinweis, symbol: "info.circle.fill")
+                    Button(Texte.Zahlung.demoZahlen) { demoZahlen() }
+                        .buttonStyle(.zweit)
+                }
             }
             if let fehler { FehlerZeile(text: fehler) }
         }
@@ -150,6 +157,19 @@ struct ZahlungslinkSheet: View {
         zahlung = a.zahlung
         portal.aktualisieren(a.zahlung)
         if warOffen && a.zahlung.istBezahlt { bezahltZaehler += 1 }
+    }
+
+    private func demoZahlen() {
+        Task {
+            do {
+                let z = try await APIClient.shared.demoZahlung(zahlung.id)
+                zahlung = z
+                portal.aktualisieren(z)
+                if z.istBezahlt { bezahltZaehler += 1 }
+            } catch {
+                fehler = fehlerText(error)
+            }
+        }
     }
 
     private func stornieren() {

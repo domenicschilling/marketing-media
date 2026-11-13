@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// Bildschirm 17: Konto löschen (Apple 5.1.1(v)). Inhaber: Kündigung + Löschung. Team: eigenen Zugang entfernen.
+/// Bildschirm 17: Konto kündigen und löschen (Apple 5.1.1(v)). Inhaber: Kündigung + Löschung. Team: eigenen Zugang entfernen.
+/// Zurücknehmen gibt es in der App nicht (das würde das Abo fortsetzen, Apple 3.1.1), nur den Hinweis auf info@tattoofin.de.
 struct KontoLoeschenView: View {
     @Environment(AppState.self) private var app
     @Environment(PortalStore.self) private var portal
@@ -10,7 +11,6 @@ struct KontoLoeschenView: View {
     @State private var arbeitet = false
     @State private var fehler: String?
     @State private var ergebnis: KontoLoeschenAntwort?
-    @State private var zurueckGenommen = false
 
     private var istInhaber: Bool { app.sitzung?.istInhaber ?? false }
 
@@ -18,7 +18,7 @@ struct KontoLoeschenView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 if istInhaber {
-                    if zurueckGenommen { zurueckAnsicht } else if let ergebnis { erledigt(ergebnis) } else { formular }
+                    if let ergebnis { erledigt(ergebnis) } else { formular }
                 } else {
                     teamAnsicht
                 }
@@ -43,7 +43,7 @@ struct KontoLoeschenView: View {
             }
             VStack(alignment: .leading, spacing: 6) {
                 Text(Texte.Loeschen.grund).font(.dm(.subheadline, weight: .semibold)).foregroundStyle(Color.tfTinte)
-                TextField(Texte.Loeschen.grundPlatzhalter, text: $grund, axis: .vertical)
+                TextField(Texte.Loeschen.grund, text: $grund, prompt: tfPlatzhalter(Texte.Loeschen.grundPlatzhalter), axis: .vertical)
                     .lineLimit(2...5)
                     .font(.dm(.body))
                     .padding(12)
@@ -52,7 +52,7 @@ struct KontoLoeschenView: View {
             }
             VStack(alignment: .leading, spacing: 6) {
                 Text(Texte.Loeschen.bestaetigen).font(.dm(.subheadline, weight: .semibold)).foregroundStyle(Color.tfTinte)
-                TextField("LÖSCHEN", text: $eingabe)
+                TextField(Texte.Loeschen.bestaetigen, text: $eingabe, prompt: tfPlatzhalter("LÖSCHEN"))
                     .textInputAutocapitalization(.characters)
                     .autocorrectionDisabled()
                     .font(.dm(.body, weight: .semibold))
@@ -82,21 +82,8 @@ struct KontoLoeschenView: View {
             }
             .karte()
             Text(Texte.Loeschen.erledigtText).font(.dm(.body)).foregroundStyle(Color.tfTinte).fixedSize(horizontal: false, vertical: true)
-            Button(Texte.Loeschen.zuruecknehmen) { zuruecknehmen() }
-                .buttonStyle(.zweit)
-                .disabled(arbeitet)
-            if let fehler { FehlerZeile(text: fehler) }
-        }
-    }
-
-    /// Nach „Löschen zurücknehmen“: nur noch die Bestätigung, nicht mehr die Daten der Löschung
-    private var zurueckAnsicht: some View {
-        Group {
-            Image(systemName: "checkmark.circle.fill").font(.system(size: 56)).foregroundStyle(Color.tfGruen).accessibilityHidden(true)
-            Ueberschrift(Texte.Loeschen.zurueckTitel, groesse: 26)
-            Text(Texte.Loeschen.zurueckErledigt).font(.dm(.body)).foregroundStyle(Color.tfTinte).fixedSize(horizontal: false, vertical: true)
             Button(Texte.Loeschen.zumKonto) { dismiss() }
-                .buttonStyle(.haupt)
+                .buttonStyle(.zweit)
         }
     }
 
@@ -136,18 +123,4 @@ struct KontoLoeschenView: View {
         }
     }
 
-    private func zuruecknehmen() {
-        arbeitet = true
-        fehler = nil
-        Task {
-            defer { arbeitet = false }
-            do {
-                _ = try await APIClient.shared.kuendigungZuruecknehmen()
-                zurueckGenommen = true
-                await portal.laden()
-            } catch {
-                fehler = fehlerText(error)
-            }
-        }
-    }
 }

@@ -1,5 +1,4 @@
 import SwiftUI
-import SafariServices
 
 // MARK: - Status-Chips
 
@@ -176,25 +175,9 @@ struct WertZeile: View {
     }
 }
 
-// MARK: - Safari im Sheet (Rechtstexte)
-
-struct SafariAnsicht: UIViewControllerRepresentable {
-    let url: URL
-
-    func makeUIViewController(context: Context) -> SFSafariViewController {
-        let c = SFSafariViewController(url: url)
-        c.preferredControlTintColor = UIColor(hex: 0x1F3D5C)
-        c.dismissButtonStyle = .close
-        return c
-    }
-
-    func updateUIViewController(_ controller: SFSafariViewController, context: Context) {}
-}
-
-/// Identifizierbare URL für .sheet(item:)
-struct WebSeite: Identifiable, Hashable {
-    let url: URL
-    var id: String { url.absoluteString }
+/// Platzhalter im Eingabefeld in tfLeise (die Systemfarbe erreicht nur 1,7:1 hell bzw. 2,5:1 dunkel, tfLeise 6,5:1 bzw. 8,9:1; WCAG AA)
+func tfPlatzhalter(_ text: String) -> Text {
+    Text(text).foregroundStyle(Color.tfLeise)
 }
 
 /// Systemmenü „Teilen“ zum direkten Öffnen (z. B. sobald das Gutschein-PDF geladen ist)

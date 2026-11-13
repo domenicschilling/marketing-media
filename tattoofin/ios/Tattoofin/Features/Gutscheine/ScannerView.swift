@@ -95,7 +95,7 @@ struct ScannerView: View {
             VStack(alignment: .leading, spacing: 16) {
                 HinweisKarte(text: grund, symbol: "camera.fill")
                 Text(Texte.Gutscheine.codeEingeben).font(.dm(.subheadline, weight: .semibold)).foregroundStyle(Color.tfTinte)
-                TextField(Texte.Gutscheine.codePlatzhalter, text: $code)
+                TextField(Texte.Gutscheine.codeEingeben, text: $code, prompt: tfPlatzhalter(Texte.Gutscheine.codePlatzhalter))
                     .font(.system(.title2, design: .monospaced).weight(.semibold))
                     .textInputAutocapitalization(.characters)
                     .autocorrectionDisabled()

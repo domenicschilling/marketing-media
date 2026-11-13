@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!-- Datenschutz-Manifest der Tattoofin-App. Kein Tracking, keine Werbe-IDs, keine Analyse-Dienste.
-     Erhoben wird nur, was die App für ihre Funktion braucht: E-Mail-Adresse (Anmeldung), Namen von Kunden/Käufern
-     (Zahlungslinks, Gutscheine), Geräte-Kennung und Push-Token (angemeldete Geräte, Mitteilungen). -->
+     Erhoben wird nur, was die App für ihre Funktion braucht (alles mit dem Studio verknüpft, Zweck App Functionality):
+     EmailAddress: Anmeldung, E-Mail von Kunden/Käufern · Name: Namen von Kunden/Käufern/Empfängern
+     DeviceID: Geräte-Kennung und Push-Token (angemeldete Geräte, Mitteilungen)
+     OtherUserContent: Freitext (Motiv/Beschreibung, Sitzungen, Gutschein-Nachricht, Notiz beim Einlösen, Grund beim Löschen)
+     OtherFinancialInfo: Zahlungsbeträge, Zahlungen, Auszahlungen, Bank und letzte 4 Ziffern des Bankkontos
+     OtherDataTypes: Gerätename, Gerätemodell, iOS- und App-Version (Liste der angemeldeten Geräte)
+     Die Angaben „App-Datenschutz“ in App Store Connect genau gleich ausfüllen (tattoofin/ios/AppStore/README.md). -->
 <plist version="1.0">
 <dict>
 	<key>NSPrivacyTracking</key>
@@ -38,6 +43,42 @@
 		<dict>
 			<key>NSPrivacyCollectedDataType</key>
 			<string>NSPrivacyCollectedDataTypeDeviceID</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<true/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypeOtherUserContent</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<true/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypeOtherFinancialInfo</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<true/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypeOtherDataTypes</string>
 			<key>NSPrivacyCollectedDataTypeLinked</key>
 			<true/>
 			<key>NSPrivacyCollectedDataTypeTracking</key>

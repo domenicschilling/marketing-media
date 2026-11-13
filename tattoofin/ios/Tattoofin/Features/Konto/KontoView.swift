@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// Bildschirm 14: Konto (Tab 4). Keine Preise, kein Kauf, keine Abo-Verwaltung in der App (Apple 3.1).
+/// Bildschirm 14: Konto (Tab 4). Keine Preise, kein Kauf, keine Abo-Verwaltung in der App (Apple 3.1):
+/// Kündigen/Löschen ja (Apple 5.1.1(v)), Zurücknehmen nein (nur Hinweis auf info@tattoofin.de).
 struct KontoView: View {
     @Environment(AppState.self) private var app
     @Environment(PortalStore.self) private var portal
@@ -10,15 +11,15 @@ struct KontoView: View {
     @State private var geraet: Geraet?
     @State private var mitteilungenZahlungen = true
     @State private var mitteilungenAuszahlungen = true
+    @State private var kundenname = false
     @State private var faceID = Einstellungen.faceIDAn
     @State private var faceIDFehler: String?
     @State private var pushErlaubt: Bool?
     @State private var prueftStripe = false
     @State private var fehler: String?
-    @State private var webseite: WebSeite?
+    @State private var rechtsseite: Rechtsseite?
     @State private var abmeldenFrage = false
     @State private var ueberallFrage = false
-    @State private var zuruecknehmenFrage = false
     @State private var arbeitet = false
     @State private var testErgebnis: String?
 
@@ -46,7 +47,7 @@ struct KontoView: View {
             .navigationBarTitleDisplayMode(.inline)
             .refreshable { await allesLaden() }
             .task { await allesLaden() }
-            .sheet(item: $webseite) { SafariAnsicht(url: $0.url).ignoresSafeArea() }
+            .sheet(item: $rechtsseite) { RechtsAnsicht(seite: $0) }
             .alert(Texte.Konto.abmeldenFrage, isPresented: $abmeldenFrage) {
                 Button(Texte.Konto.abmelden, role: .destructive) { Task { await app.abmelden() } }
                 Button(Texte.Allgemein.abbrechen, role: .cancel) {}
@@ -56,10 +57,6 @@ struct KontoView: View {
                 Button(Texte.Allgemein.abbrechen, role: .cancel) {}
             } message: {
                 Text(Texte.Konto.ueberallText)
-            }
-            .alert(Texte.Konto.zuruecknehmenFrage, isPresented: $zuruecknehmenFrage) {
-                Button(Texte.Konto.zuruecknehmenJa) { kuendigungZuruecknehmen() }
-                Button(Texte.Allgemein.abbrechen, role: .cancel) {}
             }
         }
     }
@@ -78,8 +75,8 @@ struct KontoView: View {
                 if let st = s.statusText?.leerAlsNil { WertZeile(titel: Texte.Konto.vertrag, wert: st) }
                 if let k = s.kuendigung, let zum = Datum.tag(k.zum) {
                     WertZeile(titel: Texte.Konto.vertragEndet, wert: zum)
-                    if s.kuendigungZuruecknehmbar && istInhaber {
-                        Button(Texte.Konto.zuruecknehmen) { zuruecknehmenFrage = true }
+                    if istInhaber {
+                        Text(Texte.Konto.bleiben).font(.dm(.footnote)).foregroundStyle(Color.tfLeise)
                     }
                 }
                 if let sitzung = app.sitzung {
@@ -147,6 +144,8 @@ struct KontoView: View {
                 .onChange(of: mitteilungenZahlungen) { alt, neu in if alt != neu { mitteilungenSpeichern() } }
             Toggle(Texte.Konto.pushAuszahlung, isOn: $mitteilungenAuszahlungen)
                 .onChange(of: mitteilungenAuszahlungen) { alt, neu in if alt != neu { mitteilungenSpeichern() } }
+            Toggle(Texte.Konto.pushVorname, isOn: $kundenname)
+                .onChange(of: kundenname) { alt, neu in if alt != neu { kundennameSpeichern() } }
         } header: {
             Text(Texte.Konto.mitteilungen)
         } footer: {
@@ -186,9 +185,9 @@ struct KontoView: View {
 
     private var rechtAbschnitt: some View {
         Section(Texte.Konto.rechtliches) {
-            Button { webseite = WebSeite(url: basis.appending(path: "impressum.html")) } label: { Label(Texte.Konto.impressum, systemImage: "doc.text") }
-            Button { webseite = WebSeite(url: basis.appending(path: "datenschutz.html")) } label: { Label(Texte.Konto.datenschutz, systemImage: "hand.raised") }
-            Button { webseite = WebSeite(url: basis.appending(path: "vertrag.html")) } label: { Label(Texte.Konto.vertragText, systemImage: "signature") }
+            Button { rechtsseite = .impressum } label: { Label(Texte.Konto.impressum, systemImage: "doc.text") }
+            Button { rechtsseite = .datenschutz } label: { Label(Texte.Konto.datenschutz, systemImage: "hand.raised") }
+            Button { rechtsseite = .vertrag } label: { Label(Texte.Konto.vertragText, systemImage: "signature") }
             Link(destination: URL(string: "mailto:info@tattoofin.de")!) {
                 Label(Texte.Konto.hilfe, systemImage: "envelope")
             }
@@ -251,6 +250,7 @@ struct KontoView: View {
             mitteilungenZahlungen = m.zahlungen
             mitteilungenAuszahlungen = m.auszahlungen
         }
+        kundenname = ich.kundennameInMitteilung ?? false
     }
 
     private func pushStatusLaden() async {
@@ -269,6 +269,19 @@ struct KontoView: View {
                 geraet = try await APIClient.shared.geraetAendern(.init(mitteilungen: m))
                 fehler = nil
             } catch {
+                fehler = fehlerText(error)
+            }
+        }
+    }
+
+    private func kundennameSpeichern() {
+        guard kundenname != (geraet?.kundennameInMitteilung ?? false) else { return }
+        Task {
+            do {
+                geraet = try await APIClient.shared.geraetAendern(.init(kundennameInMitteilung: kundenname))
+                fehler = nil
+            } catch {
+                kundenname = geraet?.kundennameInMitteilung ?? false
                 fehler = fehlerText(error)
             }
         }
@@ -300,14 +313,4 @@ struct KontoView: View {
         }
     }
 
-    private func kuendigungZuruecknehmen() {
-        Task {
-            do {
-                _ = try await APIClient.shared.kuendigungZuruecknehmen()
-                await portal.laden()
-            } catch {
-                fehler = fehlerText(error)
-            }
-        }
-    }
 }

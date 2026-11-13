@@ -10,23 +10,27 @@
 //   GET    /api/app/auszahlungen?limit=20&nach=po_…   Auszahlungen + Saldo vom Stripe-Konto des Studios
 //   GET    /api/app/team · PUT /api/app/team { emails, alleAbmelden? } (nur Inhaber) · DELETE /api/app/team/ich (nur Team)
 //   POST   /api/app/konto-loeschen   { bestaetigung: "LÖSCHEN", grund? }  (nur Inhaber) → Kündigung zum Monatsende + Löschanfrage
-// Grenzen (zaehleVersuch): Code-Mails 3 pro Adresse in 15 Min. und 20 pro IP und Stunde, Anmelde-Versuche 30 pro IP und Stunde,
-// Code 10 Min. gültig (APP_CODE_MINUTEN), höchstens 5 falsche Versuche. Alle Antworten mit Cache-Control: no-store.
+//   POST   /api/app/demo-zahlung/:id  nur Demo-Studio (App-Prüfung): offenen Link als bezahlt markieren (Testzahlung, kein Geld) + Mitteilung
+// Grenzen (atomar, store.zaehleAtomar/belegePlatz: jeder Versuch belegt einen eigenen Platz, parallele Anfragen zählen richtig):
+// Code-Mails 3 pro Adresse in 15 Min., 10 pro Adresse und Tag, 20 pro IP und Stunde; Anmelde-Versuche 30 pro IP und Stunde,
+// 15 pro Adresse und Tag (über alle Codes); Code 10 Min. gültig (APP_CODE_MINUTEN), höchstens 5 Versuche je Code.
+// Alle Antworten mit Cache-Control: no-store.
 // Review-Zugang für Apple: APP_REVIEW_EMAIL + APP_REVIEW_CODE (6 Ziffern) + APP_REVIEW_STUDIO_ID, nur wenn alle drei gesetzt sind und das
 // Studio demo:true hat (_lib/app-demo.mjs). Nur lokal (http://localhost, nicht auf Netlify): APP_LOKAL_CODE = fester Code statt Zufall.
 import crypto from "node:crypto";
 import { CFG, SECRETS } from "./_lib/config.mjs";
 import { json, body, clean, handler, clientIp, isEmail, now } from "./_lib/util.mjs";
-import { store, getStudio, saveStudio, studiosPerEmail, AKTIV, zaehleVersuch, normEmail, log } from "./_lib/store.mjs";
+import { store, getStudio, saveStudio, studiosPerEmail, AKTIV, zaehleVersuch, zaehleAtomar, belegePlatz, normEmail, log, getZahlung, saveZahlung } from "./_lib/store.mjs";
 import { currentStudio, sign, verify } from "./_lib/auth.mjs";
 import { notify, notifyAdmin, kuendigungEinreichen } from "./_lib/domain.mjs";
 import { mails } from "./_lib/emails.mjs";
 import { warteschlangeStatus } from "./_lib/mail.mjs";
 import { stripe } from "./_lib/stripe.mjs";
-import { PLATTFORMEN, geraetAnlegen, geraetLaden, geraetSpeichern, geraeteVon, geraetWiderrufen, geraeteWiderrufen, geraetOeffentlich, rolleFuer } from "./_lib/app-geraete.mjs";
-import { apnsAktiv, pushTest } from "./_lib/push.mjs";
+import { PLATTFORMEN, geraetAnlegen, geraetLaden, geraetAktualisieren, geraetWiderrufen, geraeteWiderrufen, geraetOeffentlich, geraeteVon, rolleFuer, pushIndex } from "./_lib/app-geraete.mjs";
+import { apnsAktiv, pushTest, pushAnStudio, mitZeitlimit, nachrichtZahlung } from "./_lib/push.mjs";
 import { demoAuszahlungen } from "./_lib/app-demo.mjs";
-import { oeffentlich } from "./_lib/studio-ansicht.mjs";
+import { oeffentlich, fuerStudio } from "./_lib/studio-ansicht.mjs";
+import { gutscheinAusstellen } from "./_lib/gutschein.mjs";
 
 const aj = (daten, status = 200) => json(daten, status, { "cache-control": "no-store" });
 const fehler = (error, status, code, extra = {}) => aj({ error, ...(code ? { code } : {}), ...extra }, status);
@@ -35,11 +39,14 @@ const codeHash = (email, code) => crypto.createHmac("sha256", SECRETS.sessionSec
 const gleich = (a, b) => { const x = Buffer.from(String(a)), y = Buffer.from(String(b)); return x.length === y.length && crypto.timingSafeEqual(x, y); };
 const minuten = () => Math.min(60, Math.max(1, Math.round(Number(process.env.APP_CODE_MINUTEN) || 10)));
 const berlinTag = (ms) => new Date(ms).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" });
-const MAX_VERSUCHE = 5;
+const MAX_VERSUCHE = 5;                 // je Code
+const MAX_MAILS_TAG = 10, MAX_VERSUCHE_TAG = 15;   // je Adresse und Tag (über alle Codes)
+const TAG_MS = 864e5;
 const T = {
   login: "Bitte einloggen", eingabe: "Bitte E-Mail und den 6-stelligen Code eingeben.", falsch: "Der Code stimmt nicht.",
   abgelaufen: "Der Code ist abgelaufen. Fordere einfach einen neuen an.", gesperrt: "Zu viele falsche Versuche. Bitte fordere einen neuen Code an.",
   zuViele: "Zu viele Versuche. Bitte warte kurz.", auswahl: "Ungültige Auswahl.", platform: "Unbekannte Plattform.",
+  zuVieleHeute: "Zu viele Anmelde-Versuche mit dieser Adresse. Aus Sicherheitsgründen geht es erst morgen wieder. Fragen? info@tattoofin.de",
   nurInhaber: "Nur der Inhaber kann das ändern.",
 };
 
@@ -64,18 +71,21 @@ const lokalerCode = () => {
 async function codeAnfordern(req, context) {
   const b = await body(req);
   const lokal = lokalerCode();   // nur lokal: fester Code, ohne Grenzen (damit man im Simulator beliebig oft testen kann)
-  const ipOk = lokal || (await zaehleVersuch(`rl/appcode-ip/${hash(clientIp(req, context) || "?")}`, 20, 3600e3));
+  const ipOk = lokal || (await zaehleAtomar(`rl/appcode-ip/${hash(clientIp(req, context) || "?")}`, 20, 3600e3));
   const antwort = async () => aj({ ok: true, verzoegert: (await warteschlangeStatus()).anzahl > 0 });
   const email = normEmail(clean(b.email, 160));
   if (!ipOk || !isEmail(email)) return antwort();
   if (await reviewFuer(email)) return antwort();   // Review: keine Mail, kein gespeicherter Code (fester APP_REVIEW_CODE)
-  if (!lokal && !(await zaehleVersuch(`rl/appcode-mail/${hash(email)}`, 3, 15 * 60e3))) return antwort();
+  if (!lokal && !(await zaehleAtomar(`rl/appcode-mail/${hash(email)}`, 3, 15 * 60e3))) return antwort();
+  // Obergrenze pro Tag (gegen Raten über viele neue Codes und gegen Mail-Flut an den Inhaber)
+  if (!lokal && !(await zaehleAtomar(`rl/appcode-tag/${hash(email)}`, MAX_MAILS_TAG, TAG_MS))) return antwort();
   const studios = (await studiosPerEmail(email)).filter((s) => AKTIV(s) && !s.demo).slice(0, 3);
   if (!studios.length) return antwort();
   const code = lokal || String(crypto.randomInt(0, 1e6)).padStart(6, "0");
   const min = minuten();
   // Ein neuer Code ersetzt den alten (und setzt die Fehlversuche zurück)
-  await store.set(`appcode/${hash(email)}`, { codeHash: codeHash(email, code), exp: Date.now() + min * 60e3, versuche: 0, studioIds: studios.map((s) => s.id), am: now() });
+  // id: Kennung dieses Codes für die Versuchs-Plätze (rl/appversuch/…/<exp>-<id>/<n>)
+  await store.set(`appcode/${hash(email)}`, { codeHash: codeHash(email, code), exp: Date.now() + min * 60e3, versuche: 0, id: crypto.randomBytes(6).toString("hex"), studioIds: studios.map((s) => s.id), am: now() });
   // Eine Mail genügt (der Code gilt für alle Studios dieser Adresse). Team-Adresse bekommt sie an sich selbst (wie login.mjs).
   const s = studios[0];
   const an = normEmail(s.email) === email ? undefined : (s.teamEmails || []).find((t) => normEmail(t) === email);
@@ -86,7 +96,7 @@ async function codeAnfordern(req, context) {
 
 // ---------------------------------------------------------------- Anmelden
 async function anmelden(req, context) {
-  if (!(await zaehleVersuch(`rl/appanmelden-ip/${hash(clientIp(req, context) || "?")}`, 30, 3600e3))) return fehler(T.zuViele, 429, "zu_viele");
+  if (!(await zaehleAtomar(`rl/appanmelden-ip/${hash(clientIp(req, context) || "?")}`, 30, 3600e3))) return fehler(T.zuViele, 429, "zu_viele");
   const b = await body(req);
   const gd = b.geraet && typeof b.geraet === "object" ? b.geraet : {};
   if (!PLATTFORMEN.includes(gd.platform)) return fehler(T.platform, 400, "platform");
@@ -108,32 +118,48 @@ async function anmelden(req, context) {
   const code = String(b.code ?? "").replace(/\s+/g, "");
   if (!isEmail(email) || !/^\d{6}$/.test(code)) return fehler(T.eingabe, 400, "eingabe");
 
+  // Tagesgrenze je Adresse (über alle Codes, atomar). Lokal (fester Code im Simulator) ohne Tagesgrenze.
+  const tagesPlatz = async () => {
+    if (lokalerCode() || (await zaehleAtomar(`rl/appversuch-tag/${hash(email)}`, MAX_VERSUCHE_TAG, TAG_MS))) return true;
+    // Einmal pro Adresse und Tag dem Admin Bescheid geben (atomar, damit es nicht mehrfach kommt)
+    if (await store.setNeu(`rl/appsperre-hinweis/${hash(email)}/${(Math.floor(Date.now() / TAG_MS) + 1) * TAG_MS}/1`, { am: now() })) {
+      await log("app-anmeldung-tagesgrenze", { adresse: hash(email) });
+      await notifyAdmin("App-Anmeldung: sehr viele Code-Versuche für eine Adresse (für heute gesperrt)", null, { Adresse: email.replace(/^(.)[^@]*(@.*)$/, "$1•••••$2"), Grenze: `${MAX_VERSUCHE_TAG} Versuche pro Tag` });
+    }
+    return false;
+  };
+
   const review = await reviewFuer(email);
   if (review) {
-    const key = `appreview/${hash(email)}`;
-    const rr = (await store.get(key)) || { versuche: 0 };
-    if (rr.gesperrtBis && Date.parse(rr.gesperrtBis) > Date.now()) return fehler(T.gesperrt, 410, "code_gesperrt");
+    // Fester Review-Code: 5 Versuche je 15 Minuten (atomar), dazu die Tagesgrenze
+    if (!(await tagesPlatz())) return fehler(T.zuVieleHeute, 429, "zu_viele_heute");
+    const fenster = (Math.floor(Date.now() / (15 * 60e3)) + 1) * 15 * 60e3;
+    const n = await belegePlatz(`rl/appreview/${hash(email)}`, MAX_VERSUCHE, fenster);
+    if (!n) return fehler(T.gesperrt, 410, "code_gesperrt");
     if (!gleich(code, review.code)) {
-      const versuche = (rr.gesperrtBis ? 0 : rr.versuche || 0) + 1;
-      if (versuche >= MAX_VERSUCHE) { await store.set(key, { versuche: 0, gesperrtBis: new Date(Date.now() + 15 * 60e3).toISOString() }); return fehler(T.gesperrt, 410, "code_gesperrt"); }
-      await store.set(key, { versuche });
-      return fehler(T.falsch, 400, "code_falsch", { restVersuche: MAX_VERSUCHE - versuche });
+      if (n >= MAX_VERSUCHE) return fehler(T.gesperrt, 410, "code_gesperrt");
+      return fehler(T.falsch, 400, "code_falsch", { restVersuche: MAX_VERSUCHE - n });
     }
-    await store.del(key);
     return fertig(review.s, email, gd);
   }
 
   const key = `appcode/${hash(email)}`;
   const rec = await store.get(key);
   if (!rec || !(Number(rec.exp) > Date.now())) { if (rec) await store.del(key); return fehler(T.abgelaufen, 410, "code_abgelaufen"); }
+  if (!(await tagesPlatz())) return fehler(T.zuVieleHeute, 429, "zu_viele_heute");
+  // Jeder Versuch belegt atomar einen von 5 Plätzen dieses Codes, ERST DANN wird verglichen.
+  // Auch hunderte gleichzeitige Anfragen bekommen so zusammen höchstens 5 Vergleiche.
+  const n = await belegePlatz(`rl/appversuch/${hash(email)}`, MAX_VERSUCHE, `${Number(rec.exp)}-${rec.id || Date.parse(rec.am) || 0}`);
+  if (!n) { await store.del(key); return fehler(T.gesperrt, 410, "code_gesperrt"); }
   if (!gleich(rec.codeHash, codeHash(email, code))) {
-    rec.versuche = (rec.versuche || 0) + 1;
-    if (rec.versuche >= MAX_VERSUCHE) { await store.del(key); await log("app-code-gesperrt", { studios: rec.studioIds?.length || 0 }); return fehler(T.gesperrt, 410, "code_gesperrt"); }
-    await store.set(key, rec);
-    return fehler(T.falsch, 400, "code_falsch", { restVersuche: MAX_VERSUCHE - rec.versuche });
+    if (n >= MAX_VERSUCHE) { await store.del(key); await log("app-code-gesperrt", { studios: rec.studioIds?.length || 0 }); return fehler(T.gesperrt, 410, "code_gesperrt"); }
+    return fehler(T.falsch, 400, "code_falsch", { restVersuche: MAX_VERSUCHE - n });
   }
   // Richtiger Code: genau einmal verwendbar (atomar), dann löschen
   if (!(await store.setNeu(`einmal/appcode-${rec.codeHash.slice(0, 32)}-${Date.parse(rec.am) || 0}`, { am: now(), t: "appcode", exp: rec.exp }))) return fehler(T.abgelaufen, 410, "code_abgelaufen");
+  // Zwischendurch neuer Code angefordert oder gesperrt? Dann gilt dieser nicht mehr.
+  const nochDa = await store.get(key);
+  if (!nochDa || nochDa.codeHash !== rec.codeHash || nochDa.id !== rec.id) return fehler(T.abgelaufen, 410, "code_abgelaufen");
   await store.del(key);
   const studios = (await Promise.all((rec.studioIds || []).map((sid) => getStudio(sid)))).filter((s) => AKTIV(s) && !s.demo && rolleFuer(s, email));
   if (!studios.length) return fehler(T.abgelaufen, 410, "code_abgelaufen");
@@ -224,7 +250,7 @@ async function teamSetzen(s, ich, g, req) {
   // App-Geräte entfernter Adressen sofort abmelden. Web-Cookies lassen sich nicht einzeln trennen → Option „alleAbmelden“.
   const widerrufen = await geraeteWiderrufen(s.id, (x) => entfernt.has(x.email), "team-entfernt");
   // Bei „alle abmelden“ bleibt dieses Gerät angemeldet (der Inhaber hat es gerade selbst ausgelöst)
-  if (alleAbmelden) { g.sv = s.sessionVersion; await geraetSpeichern(g); }
+  if (alleAbmelden) await geraetAktualisieren(g, (x) => { x.sv = s.sessionVersion; });
   await log("app-team", { studioId: s.id, geraetId: ich.geraetId, anzahl: liste.length, entfernt: entfernt.size, widerrufen, alleAbmelden });
   await notifyAdmin("Team-Adressen in der App geändert", s, { Vorher: vorher.join(", ") || "–", Nachher: liste.join(", ") || "–", Alle_abgemeldet: alleAbmelden ? "ja" : "nein" });
   return aj(teamAntwort(s, ich));
@@ -278,13 +304,18 @@ async function route(req, context) {
 
   if (bereich === "geraet" && m === "PATCH") {
     const b = await body(req);
-    if (b.name !== undefined) { const n = clean(b.name, 60); if (!n) return fehler("Bitte gib dem Gerät einen Namen.", 400, "eingabe"); g.name = n; }
-    if (b.mitteilungen && typeof b.mitteilungen === "object") {
-      for (const k of ["zahlungen", "auszahlungen"]) if (typeof b.mitteilungen[k] === "boolean") g.mitteilungen = { ...(g.mitteilungen || {}), [k]: b.mitteilungen[k] };
-    }
-    if (typeof b.kundennameInMitteilung === "boolean") g.kundennameInMitteilung = b.kundennameInMitteilung;
-    await geraetSpeichern(g);
-    return aj({ geraet: geraetOeffentlich(g, { aktuell: ich }) });
+    let name = null;
+    if (b.name !== undefined) { name = clean(b.name, 60); if (!name) return fehler("Bitte gib dem Gerät einen Namen.", 400, "eingabe"); }
+    // Frisch laden und nur die Änderung schreiben (ein inzwischen abgemeldetes Gerät wird nie wieder belebt)
+    const neu = await geraetAktualisieren(g, (x) => {
+      if (name) x.name = name;
+      if (b.mitteilungen && typeof b.mitteilungen === "object") {
+        for (const k of ["zahlungen", "auszahlungen"]) if (typeof b.mitteilungen[k] === "boolean") x.mitteilungen = { ...(x.mitteilungen || {}), [k]: b.mitteilungen[k] };
+      }
+      if (typeof b.kundennameInMitteilung === "boolean") x.kundennameInMitteilung = b.kundennameInMitteilung;
+    });
+    if (!neu) return fehler(T.login, 401, "nicht_angemeldet");
+    return aj({ geraet: geraetOeffentlich(neu, { aktuell: ich }) });
   }
 
   if (bereich === "push") {
@@ -300,16 +331,35 @@ async function route(req, context) {
       if (!okToken) return fehler("Ungültiger Geräte-Token.", 400, "token");
       const umgebung = ["sandbox", "production"].includes(b.umgebung) ? b.umgebung : g.platform === "ios" ? null : "production";
       if (!umgebung) return fehler("Bitte umgebung sandbox oder production angeben.", 400, "umgebung");
-      g.push = { token: g.platform === "ios" ? token.toLowerCase() : token, umgebung, am: now() };
-      if (b.mitteilungen && typeof b.mitteilungen === "object") {
-        for (const k of ["zahlungen", "auszahlungen"]) if (typeof b.mitteilungen[k] === "boolean") g.mitteilungen = { ...(g.mitteilungen || {}), [k]: b.mitteilungen[k] };
+      const pt = g.platform === "ios" ? token.toLowerCase() : token;
+      // Derselbe Token an einem anderen Gerät (App neu installiert, anderes Studio …) → dort entfernen. Index über alle Studios.
+      const ziel = `${s.id}/${g.id}`;
+      const bisher = await store.get(pushIndex(pt));
+      if (bisher && bisher !== ziel) {
+        const [sid, gid] = String(bisher).split("/");
+        const alt = sid && gid ? await store.get(`appgeraet/${sid}/${gid}`) : null;
+        if (alt) await geraetAktualisieren(alt, (x) => { if (x.push?.token !== pt) return false; x.push = null; });
       }
-      // Derselbe Token an einem anderen Gerät desselben Studios (App neu installiert) → dort entfernen
-      for (const x of await geraeteVon(s.id)) if (x.id !== g.id && x.push?.token === g.push.token) { x.push = null; await geraetSpeichern(x); }
-      await geraetSpeichern(g);
+      // Ältere Einträge ohne Index (vor dem 13.11.2026) im eigenen Studio
+      for (const x of await geraeteVon(s.id)) if (x.id !== g.id && x.push?.token === pt) await geraetAktualisieren(x, (y) => { if (y.push?.token !== pt) return false; y.push = null; });
+      const altToken = g.push?.token;
+      const neu = await geraetAktualisieren(g, (x) => {
+        x.push = { token: pt, umgebung, am: now() };
+        if (b.mitteilungen && typeof b.mitteilungen === "object") {
+          for (const k of ["zahlungen", "auszahlungen"]) if (typeof b.mitteilungen[k] === "boolean") x.mitteilungen = { ...(x.mitteilungen || {}), [k]: b.mitteilungen[k] };
+        }
+      });
+      if (!neu) return fehler(T.login, 401, "nicht_angemeldet");
+      await store.set(pushIndex(pt), ziel);
+      if (altToken && altToken !== pt && (await store.get(pushIndex(altToken))) === ziel) await store.del(pushIndex(altToken));
       return aj({ ok: true, apnsAktiv: apnsAktiv() });
     }
-    if (!sub && m === "DELETE") { g.push = null; await geraetSpeichern(g); return aj({ ok: true }); }
+    if (!sub && m === "DELETE") {
+      const altToken = g.push?.token;
+      await geraetAktualisieren(g, (x) => { x.push = null; });
+      if (altToken && (await store.get(pushIndex(altToken))) === `${s.id}/${g.id}`) await store.del(pushIndex(altToken));
+      return aj({ ok: true });
+    }
   }
 
   if (bereich === "auszahlungen" && m === "GET") return auszahlungen(s, url);
@@ -328,6 +378,21 @@ async function route(req, context) {
   }
 
   if (bereich === "konto-loeschen" && m === "POST") return kontoLoeschen(s, ich, req);
+
+  // Nur Demo-Studio (App-Prüfung bei Apple): Testzahlung, damit der Prüfer den Ablauf „Link → bezahlt → Mitteilung“ sieht.
+  // Kein Geld, kein Stripe, keine Mails (notify/gutscheinSenden schicken bei Demo-Studios nichts).
+  if (bereich === "demo-zahlung" && sub && m === "POST") {
+    if (!s.demo) return fehler("Nicht gefunden", 404);
+    const z = await getZahlung(s.id, sub);
+    if (!z) return fehler("Nicht gefunden", 404);
+    if (z.status !== "offen") return fehler("Dieser Link ist nicht mehr offen.", 409, "nicht_offen");
+    z.status = "bezahlt"; z.bezahltAm = now(); z.zahlart = "card"; z.zahlartText = "Karte (Testzahlung)"; z.demoZahlung = true;
+    await saveZahlung(z);
+    if (z.art === "gutschein") await gutscheinAusstellen(s, z);
+    await mitZeitlimit(pushAnStudio(s, "zahlungen", nachrichtZahlung(z)));
+    await log("app-demo-zahlung", { studioId: s.id, zahlungId: z.id });
+    return aj(fuerStudio(z));
+  }
 
   return fehler("Nicht gefunden", 404);
 }

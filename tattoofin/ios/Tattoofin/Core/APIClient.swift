@@ -210,8 +210,10 @@ extension APIClient {
         let _: OK = try await senden("POST", "api/portal/abmelden", body: B())
     }
 
-    func kuendigungZuruecknehmen() async throws -> Studio {
-        try await senden("DELETE", "api/portal/kuendigung")
+    /// Nur Demo-Studio (App-Prüfung): Testzahlung ohne Geld, damit „bezahlt“ und die Mitteilung zu sehen sind
+    func demoZahlung(_ id: String) async throws -> Zahlung {
+        struct B: Encodable, Sendable {}
+        return try await senden("POST", "api/app/demo-zahlung/\(id)", body: B())
     }
 
     // Gutscheine

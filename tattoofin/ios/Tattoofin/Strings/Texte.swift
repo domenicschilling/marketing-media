@@ -88,11 +88,11 @@ enum Texte {
         static let anzahlung = "Anzahlung"
         static let details = "Kunde und Motiv (optional)"
         static let kunde = "Name des Kunden"
-        static let email = "E-Mail des Kunden"
+        static let email = "E-Mail des Kunden (freiwillig, für die Quittung)"
         static let motiv = "Motiv / Beschreibung"
         static let sitzungen = "Sitzungen"
         static let kundeBeispiel = "z. B. Lena Beispiel"
-        static let emailBeispiel = "Für die Quittung (freiwillig)"
+        static let emailBeispiel = "z. B. lena@beispiel.de"
         static let motivBeispiel = "z. B. Rose Unterarm"
         static let sitzungenBeispiel = "z. B. Sitzung 1 von 2"
         static let erstellen = "Zahlungslink erstellen"
@@ -127,6 +127,9 @@ enum Texte {
         static let istStorniert = "Dieser Zahlungslink ist storniert."
         static func bezahlt(_ cent: Int) -> String { "\(Euro.text(cent)) bezahlt" }
         static let inPruefung = "Die Zahlung ist angekommen und wird noch kurz geprüft."
+        // Nur im Demo-Studio (App-Prüfung bei Apple): Testzahlung ohne echtes Geld
+        static let demoHinweis = "Demo-Studio: Hier wird nichts wirklich bezahlt. Mit der Testzahlung siehst du, was nach einer Zahlung passiert."
+        static let demoZahlen = "Testzahlung auslösen"
     }
 
     enum Theke {
@@ -235,6 +238,7 @@ enum Texte {
         static let pdfLaden = "PDF laden"
         static let pdfTeilen = "PDF teilen"
         static let erneutMailen = "Erneut an Käufer mailen"
+        static let keineKaeuferEmail = "Für diesen Gutschein ist keine E-Mail des Käufers hinterlegt. Teile stattdessen das PDF."
         static func mailGesendet(_ an: String) -> String { an.isEmpty ? "Gutschein wurde erneut gemailt." : "Gutschein wurde erneut an \(an) gemailt." }
         static let mailFehler = "Die Mail konnte gerade nicht verschickt werden. Bitte versuch es später nochmal."
     }
@@ -258,9 +262,7 @@ enum Texte {
         static let rolle = "Rolle"
         static let rolleInhaber = "Inhaber (Hauptadresse)"
         static let rolleTeam = "Team"
-        static let zuruecknehmen = "Kündigung zurücknehmen"
-        static let zuruecknehmenFrage = "Kündigung zurücknehmen? Dein Vertrag läuft dann normal weiter."
-        static let zuruecknehmenJa = "Ja, zurücknehmen"
+        static let bleiben = "Du willst doch bleiben? Schreib uns an info@tattoofin.de."
         static let stripe = "Stripe"
         static let stripeVerbunden = "Verbunden"
         static let stripeFreigegeben = "Freigegeben"
@@ -269,7 +271,8 @@ enum Texte {
         static let mitteilungen = "Mitteilungen auf diesem iPhone"
         static let pushZahlung = "Mitteilung bei Zahlung"
         static let pushAuszahlung = "Mitteilung bei Auszahlung"
-        static let mitteilungenHinweis = "Gilt nur für dieses Gerät."
+        static let pushVorname = "Vorname des Kunden in der Mitteilung"
+        static let mitteilungenHinweis = "Gilt nur für dieses Gerät. Den Vornamen zeigt das iPhone auch auf dem Sperrbildschirm."
         static let pushAus = "Mitteilungen sind in den iPhone-Einstellungen ausgeschaltet."
         static let einstellungenOeffnen = "iPhone-Einstellungen öffnen"
         static let sicherheit = "Sicherheit und Team"
@@ -280,6 +283,7 @@ enum Texte {
         static let impressum = "Impressum"
         static let datenschutz = "Datenschutz"
         static let vertragText = "Vertrag"
+        static let seiteFehler = "Die Seite lädt gerade nicht. Bitte prüf dein Internet und versuch es nochmal."
         static let hilfe = "Hilfe: info@tattoofin.de"
         static let abmelden = "Abmelden"
         static let abmeldenFrage = "Auf diesem iPhone abmelden?"
@@ -288,7 +292,7 @@ enum Texte {
         static let ueberallText = "Alle iPhones und alle Browser (Web-Dashboard) werden abgemeldet, auch dieses Gerät."
         static let ueberallJa = "Überall abmelden"
         static let ueberallErledigt = "Alle Geräte wurden abgemeldet."
-        static let loeschen = "Konto löschen"
+        static let loeschen = "Konto kündigen und löschen"
         static func version(_ v: String) -> String { "Tattoofin-App \(v)" }
     }
 
@@ -326,31 +330,32 @@ enum Texte {
         static let geradeAktiv = "Gerade aktiv"
         static let pushAn = "Mitteilungen an"
         static let pushAus = "Mitteilungen aus"
+        static let umbenennen = "Namen ändern"
+        static let umbenennenTitel = "Name dieses Geräts"
+        static let umbenennenHinweis = "So erkennst du das Gerät in der Liste, z. B. „iPhone Theke“."
+        static let namePlatzhalter = "z. B. iPhone Theke"
+        static let speichern = "Speichern"
     }
 
     enum Loeschen {
-        static let titel = "Konto löschen"
+        static let titel = "Konto kündigen und löschen"
         static let ueberschrift = "Was passiert beim Löschen?"
         static let punkte = [
             "Löschen bedeutet die Kündigung deines Tattoofin-Vertrags.",
             "Er endet zum regulären Termin (Paket Monatlich: Ende des laufenden Abrechnungsmonats).",
             "Bis zum Vertragsende kannst du weiter kassieren.",
-            "Danach löschen wir deine Daten.",
-            "Was wir laut Gesetz aufbewahren müssen (Rechnungen, Buchungen: 6 bzw. 10 Jahre), sperren wir und löschen es nach Ablauf.",
-            "Daten deiner Kunden löschen wir spätestens 30 Tage nach Vertragsende.",
-            "Bis zum Vertragsende kannst du das Löschen zurücknehmen.",
+            "30 Tage nach Vertragsende löschen wir deine Daten und die Daten deiner Kunden.",
+            "Was wir laut Gesetz aufbewahren müssen (z. B. Rechnungen und Buchungsbelege 8 Jahre, Bücher 10 Jahre, Geschäftsbriefe 6 Jahre), sperren wir und löschen es nach Ablauf.",
+            "Du willst doch bleiben? Schreib uns bis zum Vertragsende an info@tattoofin.de.",
         ]
         static let grund = "Warum gehst du? (optional)"
         static let grundPlatzhalter = "Dein Grund hilft uns, besser zu werden."
         static let bestaetigen = "Tippe LÖSCHEN zur Bestätigung"
-        static let knopf = "Konto endgültig löschen"
+        static let knopf = "Konto kündigen und löschen"
         static let erledigtTitel = "Deine Löschung ist eingegangen"
         static let vertragEndet = "Vertrag endet am"
         static let loeschungAb = "Löschung ab"
-        static let erledigtText = "Wir haben dir eine Bestätigung per Mail geschickt. Bis zum Vertragsende kannst du weiter kassieren und das Löschen zurücknehmen."
-        static let zuruecknehmen = "Löschen zurücknehmen"
-        static let zurueckErledigt = "Erledigt. Dein Vertrag läuft normal weiter."
-        static let zurueckTitel = "Löschen zurückgenommen"
+        static let erledigtText = "Wir haben dir eine Bestätigung per Mail geschickt. Bis zum Vertragsende kannst du weiter kassieren. Du willst doch bleiben? Schreib uns an info@tattoofin.de."
         static let zumKonto = "Zurück zum Konto"
     }
 }

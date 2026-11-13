@@ -1,11 +1,14 @@
 import SwiftUI
 
 /// Bildschirm 16: Angemeldete Geräte. Inhaber können jedes Gerät abmelden, Team-Mitglieder nur ihre eigenen.
+/// Den Namen dieses Geräts kann man ändern (iOS liefert Apps nur „iPhone“, nicht den eigenen Gerätenamen).
 struct GeraeteView: View {
     @Environment(AppState.self) private var app
     @State private var geraete: [Geraet]?
     @State private var fehler: String?
     @State private var abmeldenFrage: Geraet?
+    @State private var umbenennen = false
+    @State private var neuerName = ""
 
     private var istInhaber: Bool { app.sitzung?.istInhaber ?? false }
 
@@ -42,6 +45,14 @@ struct GeraeteView: View {
             Button(Texte.Geraete.abmelden, role: .destructive) { if let g = abmeldenFrage { abmelden(g) } }
             Button(Texte.Allgemein.abbrechen, role: .cancel) {}
         }
+        .alert(Texte.Geraete.umbenennenTitel, isPresented: $umbenennen) {
+            TextField(Texte.Geraete.umbenennenTitel, text: $neuerName, prompt: Text(Texte.Geraete.namePlatzhalter))
+            Button(Texte.Geraete.speichern) { nameSpeichern() }
+                .disabled(neuerName.leerAlsNil == nil)
+            Button(Texte.Allgemein.abbrechen, role: .cancel) {}
+        } message: {
+            Text(Texte.Geraete.umbenennenHinweis)
+        }
     }
 
     private func darfAbmelden(_ g: Geraet) -> Bool {
@@ -76,12 +87,21 @@ struct GeraeteView: View {
                   systemImage: g.push == true ? "bell.fill" : "bell.slash")
                 .font(.dm(.caption))
                 .foregroundStyle(Color.tfLeise)
-            if darfAbmelden(g) {
-                Button(Texte.Geraete.abmelden, role: .destructive) { abmeldenFrage = g }
-                    .font(.dm(.subheadline, weight: .semibold))
-                    .buttonStyle(.borderless)
-                    .padding(.top, 2)
+            HStack(spacing: 20) {
+                if g.diesesGeraet == true {
+                    Button(Texte.Geraete.umbenennen) {
+                        neuerName = g.name ?? ""
+                        umbenennen = true
+                    }
+                    .foregroundStyle(Color.tfTinte)
+                }
+                if darfAbmelden(g) {
+                    Button(Texte.Geraete.abmelden, role: .destructive) { abmeldenFrage = g }
+                }
             }
+            .font(.dm(.subheadline, weight: .semibold))
+            .buttonStyle(.borderless)
+            .padding(.top, 2)
         }
         .padding(.vertical, 4)
     }
@@ -93,6 +113,19 @@ struct GeraeteView: View {
         } catch is CancellationError {
         } catch {
             fehler = fehlerText(error)
+        }
+    }
+
+    private func nameSpeichern() {
+        guard let name = neuerName.leerAlsNil else { return }
+        Task {
+            do {
+                let neu = try await APIClient.shared.geraetAendern(.init(name: String(name.prefix(60))))
+                if let i = geraete?.firstIndex(where: { $0.id == neu.id }) { geraete?[i] = neu }
+                fehler = nil
+            } catch {
+                fehler = fehlerText(error)
+            }
         }
     }
 

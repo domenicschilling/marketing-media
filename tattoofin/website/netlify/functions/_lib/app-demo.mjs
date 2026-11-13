@@ -1,6 +1,8 @@
 // Demo-Studio für die App-Prüfung bei Apple (App Review) und für Vorführungen. Kennzeichen: studio.demo = true.
-// Demo-Studios bekommen nie Mails (notify), laufen nicht durch tägliche Jobs/Monatsabrechnung, zählen nicht in den Admin-Kennzahlen
-// und können nicht bezahlt werden (pay.mjs → 409). Zahlungslinks lassen sich anlegen (darfKassieren gilt auch ohne Stripe).
+// Demo-Studios bekommen nie Mails (notify, gutscheinSenden), laufen nicht durch tägliche Jobs/Monatsabrechnung, zählen nicht in den Admin-Kennzahlen
+// und können nicht bezahlt werden (pay.mjs → 409). Zahlungslinks lassen sich anlegen (darfKassieren gilt auch ohne Stripe);
+// eine Testzahlung ohne Geld löst POST /api/app/demo-zahlung/:id aus (Prüfer sieht „bezahlt“ und die Mitteilung).
+// Stripe zeigt die App als fertig eingerichtet an (studio-ansicht.mjs), eine Stripe-Einrichtung gibt es nicht (connect.mjs).
 // Anmeldung in der App nur über den Review-Zugang: APP_REVIEW_EMAIL + APP_REVIEW_CODE (6 Ziffern) + APP_REVIEW_STUDIO_ID (siehe app.mjs).
 // Anlegen: lokal `node dev/app-demo.mjs`, live POST /api/admin/app-demo (Bearer Admin; erst nach Deploy mit Domenics OK).
 // Alle Beträge, Namen und Codes hier sind Beispieldaten.
@@ -39,7 +41,8 @@ export async function demoStudioAnlegen({ email = "app-review@tattoofin.de" } = 
   // Gutscheine: einer gültig, einer eingelöst (mit Code und Token wie echte, damit Scannen und Suchen funktionieren)
   for (const [betragCent, empfaenger, tage, eingeloest] of [[10000, "Mia", 4, false], [5000, "", 20, true]]) {
     const code = neuerCode(), token = crypto.randomBytes(18).toString("base64url"), am = tageZurueck(tage, 15);
-    const g = z({ createdAt: am, art: "gutschein", status: "bezahlt", bezahltAm: am, betragCent, kunde: "Sven Beispiel", email: "", beschreibung: "Wertgutschein", zahlart: "card", zahlartText: "Karte",
+    // Käufer-Adresse aus der reservierten Beispiel-Domain; Demo-Studios verschicken ohnehin nie Mails (gutscheinSenden)
+    const g = z({ createdAt: am, art: "gutschein", status: "bezahlt", bezahltAm: am, betragCent, kunde: "Sven Beispiel", email: "sven.beispiel@example.com", beschreibung: "Wertgutschein", zahlart: "card", zahlartText: "Karte",
       gutschein: { empfaenger, nachricht: empfaenger ? "Alles Gute zum Geburtstag!" : "", code, token, ausgestelltAm: am, gueltigBis: gueltigBis(am), ...(eingeloest ? { eingeloestAm: tageZurueck(2, 14) } : {}) } });
     liste.push(g);
     await store.set("idx/gutschein/" + code, `${s.id}/${g.id}`);

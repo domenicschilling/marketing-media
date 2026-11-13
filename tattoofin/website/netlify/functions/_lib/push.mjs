@@ -8,7 +8,7 @@
 // Die Funktionen werfen nie einen Fehler: Ein Problem beim Push darf nie eine Zahlung oder einen Webhook stören.
 import crypto from "node:crypto";
 import http2 from "node:http2";
-import { geraeteVon, geraetSpeichern } from "./app-geraete.mjs";
+import { geraeteVon, geraetAktualisieren, rolleFuer, zuLangeUngenutzt } from "./app-geraete.mjs";
 import { log, store } from "./store.mjs";
 
 const ZEITLIMIT_MS = 5000;
@@ -82,8 +82,9 @@ function verbinde(host) {
 async function auswerten(g, r) {
   if (r.status === 200) return true;
   if (r.status === 410 || (r.status === 400 && ["BadDeviceToken", "DeviceTokenNotForTopic"].includes(r.grund))) {
-    g.push = null;
-    await geraetSpeichern(g);
+    const alt = g.push?.token;
+    // Frisch laden und nur entfernen, wenn es noch derselbe Token ist (nie ein widerrufenes Gerät zurückschreiben)
+    await geraetAktualisieren(g, (x) => { if (!alt || x.push?.token !== alt) return false; x.push = null; });
     await log("push-token-entfernt", { studioId: g.studioId, geraetId: g.id, status: r.status, grund: r.grund });
     return false;
   }
@@ -130,11 +131,20 @@ async function anGeraete(geraete, nachricht, ereignis) {
   return { gesendet };
 }
 
+// Geräte, die Mitteilungen dieser Art bekommen dürfen: nicht widerrufen (geraeteVon), Token noch gültig – gleiche Sitzungsversion wie das
+// Studio („Auf allen Geräten abmelden“), Adresse noch Haupt- oder Team-Adresse, nicht zu lange ungenutzt –, Push-Token da, Art nicht ausgeschaltet.
+// Dieselben Regeln wie bei der Anmeldung (auth.mjs appStudio): Wer sich nicht mehr anmelden kann, bekommt auch keine Mitteilungen.
+export async function pushEmpfaenger(s, art) {
+  if (!s?.id) return [];
+  return (await geraeteVon(s.id)).filter((g) => g.push?.token && g.mitteilungen?.[art] !== false
+    && (g.sv || 0) === (s.sessionVersion || 0) && rolleFuer(s, g.email) && !zuLangeUngenutzt(g));
+}
+
 // An alle Geräte eines Studios, die Mitteilungen dieser Art wollen (art: "zahlungen" | "auszahlungen"). Wirft nie.
 export async function pushAnStudio(s, art, nachricht) {
   try {
     if (!s?.id) return { gesendet: 0 };
-    const geraete = (await geraeteVon(s.id)).filter((g) => g.mitteilungen?.[art] !== false);
+    const geraete = await pushEmpfaenger(s, art);
     return await anGeraete(geraete, nachricht, art);
   } catch (e) {
     console.error("[push]", e.message);
