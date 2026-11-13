@@ -1,0 +1,11 @@
+# Xcode
+DerivedData/
+build/
+*.xcuserstate
+xcuserdata/
+*.xcscmblueprint
+*.xccheckout
+.DS_Store
+# Swift Package Manager (nicht genutzt, nur zur Sicherheit)
+.build/
+.swiftpm/
