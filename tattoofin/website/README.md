@@ -124,3 +124,26 @@ und `stripe listen --forward-to localhost:8888/api/stripe-webhook --forward-conn
 | Warnhinweis | „Achtung! Kreditaufnahme kostet Geld.“ überall, wo mit Raten geworben wird: fett, mind. Fließtextgröße, direkt bei der Raten-Aussage. Test: `dev/betrieb.mjs` Abschnitt 17 (Größe, Fett, Kontrast, Abstand, 390 px + 1440 px). |
 | Verträge | Neue Fassung `2026-11` (`/vertrag.html`), bisherige Fassung als `/vertrag-2026-10d.html` archiviert (nie rückwirkend ändern). Rechtsblatt `rechtVersion` 2026-11. |
 | Nicht im Code | Instagram-Beiträge, Reels, `public/media/*.mp4` (Videos), gerenderte PDFs in `public/` und `tattoofin/pdf/` (z. B. `einrichtung-anleitung.pdf`) tragen ggf. noch den alten Hinweis und müssen aus den Quellen neu erzeugt werden. |
+
+## Stand 13.11.2026: API für die Tattoofin-App (iPhone, Branch `claude/tattoofin-app`)
+
+Die native App (`tattoofin/ios/`) spricht dieselben Funktionen an wie das Dashboard, angemeldet mit einem Gerätetoken
+`Authorization: Bearer tfa_<geraetId>.<geheimnis>` statt Cookie. Plattformneutral (`platform: "ios" | "android"`), Android folgt später.
+
+- `netlify/functions/app.mjs` (`/api/app/*`): Code per Mail anfordern und anmelden (6 Ziffern, 10 Min., 5 Versuche, Grenzen je Adresse und IP),
+  Geräte, Mitteilungen (Push-Token), Auszahlungen + Saldo (Stripe `/v1/payouts`, `/v1/balance` am Studio-Konto), Team, Konto löschen (= Kündigung + Löschanfrage).
+- Alle `/api/portal/*` gehen auch mit App-Token. Gesperrt mit App-Token (403 `nur_web`): stripe-session, rechnungen, aufsteller, aufsteller-pruefen, umstellung, erstattung.
+  Neu: `GET /api/portal/zahlung/:id[?abgleich=1]`, `GET /api/portal/gutschein-code?t=<token>` (QR auf Gutschein-PDF und gutschein.html).
+- „Auf allen Geräten abmelden“ (Dashboard) meldet auch alle App-Geräte ab; entfernte Team-Adressen verlieren ihre App-Geräte sofort.
+- Push (`_lib/push.mjs`): APNs HTTP/2 mit ES256-Token. **Echt-Versand wartet auf Apple-Team-ID und APNs-Schlüssel.** Ohne `APNS_KEY_P8` (oder `APNS_KEY_P8_BASE64`),
+  `APNS_KEY_ID`, `APNS_TEAM_ID` (optional `APNS_BUNDLE_ID`, Standard `de.tattoofin.app`) wird nichts gesendet, nur `push-uebersprungen` protokolliert.
+  Auslöser: Zahlung eingegangen / Gutschein verkauft, Stripe `payout.paid` und `payout.failed` (am Connect-Endpoint abonnieren; sonst holen die täglichen Jobs die letzten 48 Stunden nach).
+- App-Prüfung bei Apple: Demo-Studio (`demo: true`, keine Mails, nicht bezahlbar, nicht in Jobs/Abrechnung/Kennzahlen). Nach dem Deploy mit Domenics OK:
+  `POST /api/admin/app-demo { email }` (Admin-Token), dann `APP_REVIEW_EMAIL`, `APP_REVIEW_CODE` (6 Ziffern), `APP_REVIEW_STUDIO_ID` setzen.
+
+```
+NODE_PATH=… node dev/app-api.mjs     # 125 Prüfungen der App-API inkl. Missbrauch, mit Stripe- und APNs-Nachbau
+NODE_PATH=… node dev/app-lokal.mjs   # lokaler Server für den Simulator: fester Code 123456 (nur localhost), Beispiel-Studios,
+                                     # Mitteilungen über xcrun simctl push; App mit -TFApiBase http://localhost:8888 starten
+node dev/app-demo.mjs [email]        # Demo-Studio lokal anlegen
+```

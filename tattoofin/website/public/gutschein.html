@@ -19,6 +19,10 @@
         <p class="gs-daten" id="gs-daten"></p>
         <p class="gs-daten" id="gs-ort"></p>
         <div id="gs-status"></div>
+        <div class="gs-qr hidden" id="gs-qr-box" style="margin-top:14px;display:flex;align-items:center;gap:12px">
+          <div id="gs-qr" style="background:#fff;padding:6px;border-radius:8px;line-height:0" aria-hidden="true"></div>
+          <small class="muted">Im Studio kann dieser QR-Code mit der Tattoofin-App gescannt werden. Der Code oben reicht aber genauso.</small>
+        </div>
       </div>
     </div>
     <a class="btn gold big w100" id="gs-pdf" target="_blank" rel="noopener">Gutschein als PDF (zum Ausdrucken)</a>
@@ -27,6 +31,7 @@
   <p class="powered"><img src="/assets/figur.png" alt=""> Bereitgestellt von Tattoofin</p>
 </main>
 <script src="/js/common.js"></script>
+<script src="/js/qrcode.min.js"></script>
 <script>
 (async function () {
   var $ = function (id) { return document.getElementById(id); };
@@ -45,6 +50,11 @@
     $("gs-ort").textContent = "Einlösbar bei " + [s.firma, s.strasse, [s.plz, s.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ");
     var st = { eingeloest: ["Eingelöst am " + TF.datum(g.eingeloestAm), "info"], abgelaufen: ["Abgelaufen", "err"], erstattet: ["Erstattet, nicht mehr gültig", "err"] }[g.status];
     if (st) $("gs-status").innerHTML = '<div class="alert-a ' + st[1] + '" style="margin-top:12px">' + TF.esc(st[0]) + "</div>";
+    // QR-Code mit genau diesem Link (wie im PDF): die Tattoofin-App des Studios scannt ihn beim Termin
+    if (g.status === "gueltig" && window.QRCode && t) {
+      new QRCode($("gs-qr"), { text: location.origin + "/gutschein.html?t=" + encodeURIComponent(t), width: 112, height: 112, colorDark: "#13243d", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M });
+      $("gs-qr-box").classList.remove("hidden");
+    }
     $("gs-pdf").href = "/api/gutschein?t=" + encodeURIComponent(t) + "&pdf=1";
     $("gs").classList.remove("hidden");
   } catch (err) { $("alert").innerHTML = '<div class="alert-a err">' + TF.esc(err.message) + "</div>"; }

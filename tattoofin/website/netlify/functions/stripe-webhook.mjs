@@ -10,6 +10,9 @@
 //      checkout.session.async_payment_failed, checkout.session.expired, charge.refunded, charge.updated, charge.dispute.created, charge.dispute.closed
 //      charge.updated: Bei Klarna hängt Stripe Transfer und Plattformgebühr erst NACH der Zahlung an den Charge → dann werden die IDs nachgetragen
 //      (zusätzlich Notanker vor Rückbuchung/Erstattung und täglicher Job, falls das Ereignis nicht abonniert ist).
+//      Für die Tattoofin-App zusätzlich: payout.paid, payout.failed (Auszahlung auf dem Konto des Studios angekommen bzw. fehlgeschlagen
+//      → Mitteilung an die App-Geräte mit „Auszahlungen“, Doppelschutz push/payout/<id>). Ist das nicht abonniert, holen die täglichen
+//      Jobs die Mitteilungen der letzten 48 Stunden nach (domain.mjs auszahlungenNachholen).
 //      Für das Paket Monatlich (Abo) zusätzlich empfohlen: customer.subscription.deleted (Abo von Stripe beendet,
 //      z. B. nach endgültig fehlgeschlagenen Zahlungen) – wird unten verarbeitet, sobald das Ereignis abonniert ist.
 //   Secrets: STRIPE_WEBHOOK_SECRET (1) und STRIPE_CONNECT_WEBHOOK_SECRET (2)
@@ -17,7 +20,7 @@ import { CFG } from "./_lib/config.mjs";
 import { json, fail, now, brutto, handler } from "./_lib/util.mjs";
 import { stripe, verifyWebhook } from "./_lib/stripe.mjs";
 import { getStudio, saveStudio, studioBy, store, log, zahlungBy, saveZahlung } from "./_lib/store.mjs";
-import { umstellungAbschliessen, notify, notifyAdmin, zaehleAktion, einrichtungUrl, kontoAbgleichen, provisionVerdient, zahlungBezahlt, paketDetails, aufstellerBezahlt, provisionZahlung, stripeDatenNachtragen, fehlerEintrag } from "./_lib/domain.mjs";
+import { auszahlungMelden, umstellungAbschliessen, notify, notifyAdmin, zaehleAktion, einrichtungUrl, kontoAbgleichen, provisionVerdient, zahlungBezahlt, paketDetails, aufstellerBezahlt, provisionZahlung, stripeDatenNachtragen, fehlerEintrag } from "./_lib/domain.mjs";
 import { mails } from "./_lib/emails.mjs";
 import { loginLink } from "./_lib/auth.mjs";
 
@@ -176,6 +179,12 @@ async function kundenEreignis(event) {
 }
 
 async function connectEreignis(event) {
+  // Auszahlung an das Studio (Connect-Ereignis): event.account → Studio (auch ein altes Konto nach der Umstellung, idx/acct bleibt bestehen)
+  if (event.type === "payout.paid" || event.type === "payout.failed") {
+    const s = await studioBy("acct", event.account);
+    if (s && !s.demo) await auszahlungMelden(s, event.data.object);
+    return;
+  }
   if (event.type === "account.updated") {
     const o = event.data.object;
     const s = await studioBy("acct", o.id || event.account);

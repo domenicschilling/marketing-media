@@ -9,7 +9,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PORT = Number(process.env.PORT || 8888);
 
-export async function startDev({ port = PORT, mock = !process.env.STRIPE_SECRET_KEY, dataDir, quiet = false } = {}) {
+export async function startDev({ port = PORT, mock = !process.env.STRIPE_SECRET_KEY, dataDir, quiet = false, mockPort = Number(process.env.STRIPE_MOCK_PORT || 12111) } = {}) {
   const log = quiet ? () => {} : console.log;
   process.env.SITE_URL = `http://localhost:${port}`;
   process.env.DATA_DIR = dataDir || path.join(root, ".data");
@@ -17,11 +17,11 @@ export async function startDev({ port = PORT, mock = !process.env.STRIPE_SECRET_
   process.env.SESSION_SECRET = process.env.SESSION_SECRET || "dev-session-secret";
   if (mock) {
     process.env.STRIPE_SECRET_KEY = "sk_test_mock";
-    process.env.STRIPE_API_BASE = "http://localhost:12111";
+    process.env.STRIPE_API_BASE = `http://localhost:${mockPort}`;
     process.env.STRIPE_WEBHOOK_SECRET = "whsec_mock";
     const { startStripeMock } = await import("./stripe-mock.mjs");
-    await startStripeMock({ port: 12111, webhookUrl: `http://localhost:${port}/api/stripe-webhook`, webhookSecret: "whsec_mock", log });
-    log("Stripe-Mock auf http://localhost:12111");
+    await startStripeMock({ port: mockPort, webhookUrl: `http://localhost:${port}/api/stripe-webhook`, webhookSecret: "whsec_mock", log });
+    log(`Stripe-Mock auf http://localhost:${mockPort}`);
   }
 
   // Funktionen laden und Pfade registrieren

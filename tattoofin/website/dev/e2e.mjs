@@ -607,6 +607,24 @@ try {
     const glaeser = [kt.KLARNA_WARNSATZ, kt.KLARNA_NAME.verfuegbar, kt.KLARNA_NAME.mitKlarna, kt.KLARNA_AUSSAGE.spaeter, kt.KLARNA_AUSSAGE.tage30, kt.KLARNA_AUSSAGE.finanzierung, kt.KLARNA_ZUSATZ, kt.KLARNA_ZUSATZ_STUDIO];
     check(glaeser.every((t) => jsSrc.includes(t)), "klarna-texte.js (Browser) enthält alle Texte der Backend-Konstante wortgleich");
     check(kt.KLARNA_WARNSATZ === "Achtung! Kreditaufnahme kostet Geld." && kt.KLARNA_AUSSAGE.spaeter === "Jetzt shoppen. Bezahle später mit Klarna." && kt.KLARNA_AUSSAGE.tage30 === "In bis zu 30 Tagen bezahlen mit Klarna." && kt.KLARNA_AUSSAGE.finanzierung === "Bezahle in 6, 12, 24 oder 36 Monatsraten mit Klarna.", "Klarna-Wortlaut exakt wie von Klarna freigegeben (später, 30 Tage, Monatsraten, Warnsatz)");
+    // Tattoofin-App (iOS): Klarna-Texte nur aus …/KlarnaTexte.swift, Werte wortgleich mit _lib/klarna-texte.mjs; keine Kopien in anderen Swift-Dateien
+    {
+      const iosDir = path.join(root, "..", "ios", "Tattoofin");
+      const swiftDateien = [];
+      const sammeln = (d) => { try { for (const e of fs.readdirSync(d, { withFileTypes: true })) { const p2 = path.join(d, e.name); if (e.isDirectory()) sammeln(p2); else if (e.name.endsWith(".swift")) swiftDateien.push(p2); } } catch { /* keine App */ } };
+      sammeln(iosDir);
+      const kts = swiftDateien.find((f) => path.basename(f) === "KlarnaTexte.swift");
+      if (!kts) check(!swiftDateien.some((f) => /Kreditaufnahme|Monatsraten|später mit Klarna|Raten über Klarna/.test(fs.readFileSync(f, "utf8"))), "App (iOS): keine KlarnaTexte.swift, also auch keine Klarna-Raten-Texte in Swift-Dateien");
+      else {
+        const src = fs.readFileSync(kts, "utf8");
+        const wert = (name) => (src.match(new RegExp(`static let ${name}\\s*=\\s*"((?:[^"\\\\]|\\\\.)*)"`)) || [])[1];
+        const paare = [["warnsatz", kt.KLARNA_WARNSATZ], ["nameVerfuegbar", kt.KLARNA_NAME.verfuegbar], ["nameMitKlarna", kt.KLARNA_NAME.mitKlarna], ["spaeter", kt.KLARNA_AUSSAGE.spaeter], ["tage30", kt.KLARNA_AUSSAGE.tage30], ["finanzierung", kt.KLARNA_AUSSAGE.finanzierung], ["zusatz", kt.KLARNA_ZUSATZ], ["zusatzStudio", kt.KLARNA_ZUSATZ_STUDIO], ["gutscheinHinweis", kt.GUTSCHEIN_HINWEIS]];
+        const abweichend = paare.filter(([n, v]) => wert(n) !== undefined && wert(n) !== v).map(([n]) => n);
+        check(wert("warnsatz") === kt.KLARNA_WARNSATZ && !abweichend.length, "App (iOS): KlarnaTexte.swift wortgleich mit _lib/klarna-texte.mjs", abweichend.join(", "));
+        const kopien = swiftDateien.filter((f) => f !== kts && paare.some(([, v]) => fs.readFileSync(f, "utf8").includes(`"${v}"`) || fs.readFileSync(f, "utf8").includes("Kreditaufnahme")));
+        check(!kopien.length, "App (iOS): Klarna-Texte nur aus KlarnaTexte.swift, keine Kopien in anderen Swift-Dateien", kopien.map((f) => path.basename(f)).join(", "));
+      }
+    }
     check(kt.gutscheinWort("Gutschein") && kt.gutscheinWort("Guthaben aufladen") && kt.gutscheinWort("Geschenkkarte") && !kt.gutscheinWort("Rose Unterarm", "Sitzung 2 von 3"), "Gutschein-Wörter werden erkannt (Gutschein, Guthaben, Geschenkkarte), normale Motive nicht");
     for (const f of ["public/js/app-kit.js", "public/bezahlt.html", "public/zahlung.html", "public/zahlen.html"]) {
       const src = fs.readFileSync(path.join(root, f), "utf8");

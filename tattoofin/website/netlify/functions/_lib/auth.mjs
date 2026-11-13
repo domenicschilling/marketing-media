@@ -3,6 +3,7 @@ import crypto from "node:crypto";
 import { SECRETS, CFG } from "./config.mjs";
 import { getStudio, store, normEmail } from "./store.mjs";
 import { randomBytes } from "node:crypto";
+import { tokenZerlegen, geraetLaden, tokenPruefen, rolleFuer, zuLangeUngenutzt, nutzungVermerken } from "./app-geraete.mjs";
 
 // Vorschau: Sitzungs-Geheimnis zufällig erzeugen und im (eigenen) Vorschau-Speicher ablegen, statt einen Schlüssel zu hinterlegen
 export async function vorschauVorbereiten() {
@@ -68,9 +69,36 @@ function readCookie(req, name = COOKIE) {
   return m ? m[1] : null;
 }
 
+// App-Token aus dem Header „Authorization: Bearer tfa_…“ (Tattoofin-App für Studios, siehe _lib/app-geraete.mjs)
+const appToken = (req) => {
+  const h = req.headers.get("authorization") || "";
+  return h.startsWith("Bearer tfa_") ? h.slice(7) : null;
+};
+
+// Studio zum App-Token oder null. Prüft: Gerät vorhanden und nicht widerrufen, Geheimnis (sha256, zeitkonstant), Sitzungsversion,
+// Adresse noch Haupt- oder Team-Adresse, höchstens 180 Tage ohne Nutzung. Das Studio bekommt die nicht aufzählbare Eigenschaft
+// _app = { geraetId, email, rolle, platform } (wird nie gespeichert).
+export async function appStudio(req) {
+  const t = tokenZerlegen(appToken(req));
+  if (!t) return null;
+  const g = await geraetLaden(t.geraetId);
+  if (!g || g.widerrufenAm || !tokenPruefen(g, t.geheimnis)) return null;
+  const s = await getStudio(g.studioId);
+  if (!s) return null;
+  if ((g.sv || 0) !== (s.sessionVersion || 0)) return null;
+  const rolle = rolleFuer(s, g.email);
+  if (!rolle || zuLangeUngenutzt(g)) return null;
+  await nutzungVermerken(g);
+  Object.defineProperty(s, "_app", { value: { geraetId: g.id, email: g.email, rolle, platform: g.platform }, enumerable: false });
+  Object.defineProperty(s, "_geraet", { value: g, enumerable: false });
+  return s;
+}
+
 // Studio aus dem Sitzungs-Cookie. Admin-Ansicht („Dashboard ansehen“): Cookie mit ro=true und admin=<E-Mail>;
 // das Studio-Objekt bekommt dann die (nicht gespeicherte) Eigenschaft _ansicht = { admin }.
+// Mit „Authorization: Bearer tfa_…“ gilt NUR das App-Token (kein Rückfall auf das Cookie).
 export async function currentStudio(req) {
+  if (appToken(req)) return appStudio(req);
   const p = verify(readCookie(req), "session");
   if (!p) return null;
   const s = await getStudio(p.sid);
@@ -112,7 +140,8 @@ export function ansichtCookie(studioId, adminEmail) {
 export function isAdmin(req) {
   const h = req.headers.get("authorization") || "";
   const t = h.startsWith("Bearer ") ? h.slice(7) : "";
-  const perToken = Boolean(SECRETS.adminToken) && t.length === SECRETS.adminToken.length &&
+  // App-Tokens (tfa_…) sind nie der Admin-Token
+  const perToken = !t.startsWith("tfa_") && Boolean(SECRETS.adminToken) && t.length === SECRETS.adminToken.length &&
     crypto.timingSafeEqual(Buffer.from(t), Buffer.from(SECRETS.adminToken));
   return perToken || Boolean(adminVonCookie(req));
 }

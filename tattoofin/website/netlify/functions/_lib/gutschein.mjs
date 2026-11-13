@@ -13,6 +13,7 @@ import { ladeBild } from "./branding.mjs";
 import { sendMail } from "./mail.mjs";
 import { mails } from "./emails.mjs";
 import { now, euro, datum } from "./util.mjs";
+import { qrMatrix } from "./qr.mjs";
 
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // ohne 0/O, 1/I – gut vorlesbar
 export function neuerCode() {
@@ -163,16 +164,30 @@ export async function gutscheinPdf(s, z) {
   let y = bandY - 44;
   if (g.empfaenger) { text("für " + g.empfaenger, R + 6, y, fb, 16, navy); y -= 50; } else y -= 22;
   text(euro(z.betragCent).replace(",00 €", " €"), R + 6, y, fb, 52, navy);
-  text("Wertgutschein · für alle Leistungen bei " + s.firma, R + 8, y - 20, f, 12, grau);
-  let my = y - 46;
-  for (const zeile of umbrechen(sauber(g.nachricht) ? "„" + sauber(g.nachricht) + "“" : "", fi, 12, 300, 3)) { text(zeile, R + 6, my, fi, 12, grau); my -= 16; }
+  // Links bis vor den Code-Kasten umbrechen (lange Studionamen liefen sonst unter den Kasten)
+  const linksMax = W - R - 210 - (R + 8) - 14;
+  let ay = y - 20;
+  for (const zeile of umbrechen("Wertgutschein · für alle Leistungen bei " + s.firma, f, 12, linksMax, 2)) { text(zeile, R + 8, ay, f, 12, grau); ay -= 15; }
+  let my = ay - 11;
+  for (const zeile of umbrechen(sauber(g.nachricht) ? "„" + sauber(g.nachricht) + "“" : "", fi, 12, Math.min(300, linksMax), 3)) { text(zeile, R + 6, my, fi, 12, grau); my -= 16; }
 
-  // Code-Kasten rechts
-  const kx = W - R - 210, ky = bandY - 150, kw = 210, kh = 92;
+  // Code-Kasten rechts. Seit 13.11.2026 mit QR-Code (Link gutschein.html?t=…), den die Tattoofin-App beim Termin scannt.
+  // Gutscheine ohne Token (vor der Zahlung) bekommen keinen QR; ältere, schon verschickte PDFs haben keinen (dort hilft die Code-Erkennung der App).
+  const mitQr = Boolean(g.code && g.token);
+  const kx = W - R - 210, kw = 210, kh = mitQr ? 133 : 92, ky = bandY - 58 - kh; // Oberkante wie bisher
   page.drawRectangle({ x: kx, y: ky, width: kw, height: kh, color: hex("#fff5d6"), borderColor: hex("#f5d77a"), borderWidth: 1.2 });
   text("Gutschein-Code", kx + 14, ky + kh - 22, f, 10, grau);
   text(g.code || "wird nach Zahlung vergeben", kx + 14, ky + kh - 52, g.code ? fm : f, g.code ? 21 : 11, navy);
-  text("Bitte beim Termin angeben.", kx + 14, ky + 14, f, 9.5, grau);
+  if (mitQr) {
+    const m = qrMatrix(gutscheinUrl(g));
+    const gesamt = 66, modul = gesamt / (m.n + 4), qx = kx + kw - 12 - gesamt, qy = ky + 10;
+    page.drawRectangle({ x: qx, y: qy, width: gesamt, height: gesamt, color: weiss });
+    for (let r = 0; r < m.n; r++) for (let c = 0; c < m.n; c++) {
+      if (m.dunkel(r, c)) page.drawRectangle({ x: qx + (c + 2) * modul, y: qy + gesamt - (r + 3) * modul, width: modul + 0.02, height: modul + 0.02, color: navy });
+    }
+    text("Beim Termin den Code", kx + 14, ky + 30, f, 9.5, grau);
+    text("oder QR-Code zeigen.", kx + 14, ky + 17, f, 9.5, grau);
+  } else text("Bitte beim Termin angeben.", kx + 14, ky + 14, f, 9.5, grau);
 
   // Fuß: Daten + Einlöseort
   const adr = [s.strasse, [s.plz, s.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ");

@@ -147,6 +147,40 @@ export const mails = {
     cta: "Jetzt einloggen", ctaUrl: url,
   }),
 
+  // ---- Tattoofin-App für Studios ----
+  // Anmelde-Code (6 Ziffern) für die App. Betreff mit Code, damit er in der Mitteilung des Mail-Programms schon zu sehen ist.
+  appCode: (s, { code, minuten = 10 }) => mk(`${code} ist dein Tattoofin-Code`, {
+    preheader: `Gib den Code in der Tattoofin-App ein. Er gilt ${minuten} Minuten.`,
+    title: "Dein Code für die Tattoofin-App",
+    body: hallo(s) + p("gib diesen Code in der Tattoofin-App ein:") +
+      `<p style="margin:6px 0 16px;font:700 34px/1.2 'SF Mono',Menlo,Consolas,monospace;letter-spacing:8px;color:${navy}">${esc(code)}</p>` +
+      p(`Der Code gilt ${minuten} Minuten und funktioniert nur einmal.`) +
+      p("Nicht angefordert? Ignoriere diese Mail. Ohne den Code kann sich niemand anmelden."),
+  }),
+
+  // Hinweis an die Hauptadresse: ein neues Gerät hat sich in der App angemeldet
+  appNeuesGeraet: (s, { name, email, modell }) => mk(`Neues Gerät angemeldet: ${name}`, {
+    preheader: "In der Tattoofin-App hat sich ein neues Gerät angemeldet.",
+    title: "Neues Gerät in der Tattoofin-App",
+    body: hallo(s) + p(`in der Tattoofin-App hat sich gerade ein neues Gerät für <b>${esc(s.firma)}</b> angemeldet:`) +
+      rows([["Gerät", esc(name)], ["Modell", esc(modell)], ["Angemeldet mit", esc(email)]]) +
+      p("Warst du das oder jemand aus deinem Team? Dann ist alles gut.") +
+      box("Kennst du das Gerät nicht? Öffne die App oder das Dashboard und tippe auf „Auf allen Geräten abmelden“. Schreib uns danach kurz, wir helfen dir."),
+    cta: "Dashboard öffnen", ctaUrl: `${CFG.siteUrl}/app.html`,
+  }),
+
+  // Löschanfrage aus der App: Kündigung zum Datum, danach werden die Daten gelöscht (soweit keine Aufbewahrungspflicht)
+  loeschAnfrage: (s, { zum, loeschungAb }) => mk("Deine Kündigung und Löschanfrage sind eingegangen", {
+    preheader: `Tattoofin läuft noch bis ${datum(zum)}.`,
+    title: "Kündigung und Löschanfrage bestätigt",
+    body: hallo(s) + p(`du hast in der Tattoofin-App dein Konto gekündigt und die Löschung deiner Daten angefordert. Dein Vertrag endet zum <b>${datum(zum)}</b>. Bis dahin funktionieren Zahlungslinks und Zahlseite ganz normal.`) +
+      p(`Ab dem <b>${datum(loeschungAb)}</b> löschen wir deine Daten bei Tattoofin. Rechnungen und Zahlungsbelege müssen wir nach Handels- und Steuerrecht aufbewahren; die löschen wir erst nach Ablauf dieser Fristen.`) +
+      (s.paket === "monatlich" ? p("Dein Monatsbetrag wird ab dem Vertragsende nicht mehr abgebucht. Bereits gezahlte Monate werden nicht anteilig erstattet.") : "") +
+      box("Dein Stripe-Konto gehört deinem Studio und bleibt bestehen. Das löschst du bei Bedarf selbst bei Stripe. Bitte entferne nach dem Vertragsende Aufkleber und QR-Codes, die auf die Tattoofin-Zahlseite zeigen.") +
+      p("Falls du es dir anders überlegst: Im Dashboard kannst du die Kündigung bis zum Stichtag mit einem Klick zurücknehmen. Damit ist auch die Löschanfrage zurückgenommen."),
+    cta: "Kündigung zurücknehmen", ctaUrl: `${CFG.siteUrl}/portal.html#vertrag`,
+  }),
+
   fragebogen: (s) => mk("Fragebogen erhalten. Wir legen los!", {
     preheader: "Danke! Jetzt richten wir Tattoofin für dein Studio ein.",
     title: "Fragebogen erhalten 👍",

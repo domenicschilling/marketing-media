@@ -5,7 +5,7 @@
 // Seiten (Bezahlseite, Onboarding, Express-Dashboard) liegen unter pageBase (lokal :12111, Vorschau /api/sim).
 import crypto from "node:crypto";
 
-export const leereDb = () => ({ subscriptions: {}, customers: {}, sessions: {}, invoices: {}, items: [], setupIntents: {}, refunds: [], taxRates: {}, accounts: {}, paymentIntents: {}, feeRefunds: [], transfers: [], reversals: [], accountSessions: [], idem: {}, invoiceNr: 1000 });
+export const leereDb = () => ({ payouts: {}, balances: {}, subscriptions: {}, customers: {}, sessions: {}, invoices: {}, items: [], setupIntents: {}, refunds: [], taxRates: {}, accounts: {}, paymentIntents: {}, feeRefunds: [], transfers: [], reversals: [], accountSessions: [], idem: {}, invoiceNr: 1000 });
 
 // Stripe-Gebühren im Nachbau: Karte EWR 1,5 % + 0,25 €, Klarna 2,99 % + 0,35 €
 const gebuehr = (betrag, pm) => (pm === "klarna" ? Math.round(betrag * 0.0299) + 35 : Math.round(betrag * 0.015) + 25);
@@ -180,6 +180,22 @@ export function createSim({ load, save, pageBase, webhook }) {
       }
       if (res1 === "refunds") { const r = { id: rid("re"), payment_intent: p.payment_intent, amount: Number(p.amount || 0), status: "succeeded" }; db.refunds.push(r); return done(r); }
       if (res1 === "billing_portal") return done({ id: rid("bps"), url: `${pageBase}/invoice` });
+      // Auszahlungen und Saldo je verbundenem Konto (Stripe-Account-Header), für die App (GET /api/app/auszahlungen)
+      if ((res1 === "payouts" || res1 === "balance") && method === "GET" && account && !db.accounts[account]) throw new SimFehler(403, "Konto nicht gefunden oder keine Berechtigung");
+      if (res1 === "payouts" && method === "GET" && !id1) {
+        let liste = [...((db.payouts || {})[account] || [])].sort((a, b) => b.created - a.created || (a.id < b.id ? 1 : -1));
+        if (p.created?.gte) liste = liste.filter((x) => x.created >= Number(p.created.gte));
+        if (p.starting_after) { const i = liste.findIndex((x) => x.id === p.starting_after); liste = i >= 0 ? liste.slice(i + 1) : []; }
+        const limit = Math.min(100, Math.max(1, Number(p.limit) || 10));
+        const mitZiel = [].concat(p.expand || []).includes("data.destination");
+        const data = liste.slice(0, limit).map((x) => (mitZiel ? { ...x, destination: { id: x.destination, object: "bank_account", bank_name: "Testbank", last4: "3000", currency: "eur" } } : x));
+        return { object: "list", data, has_more: liste.length > limit, url: "/v1/payouts" };
+      }
+      if (res1 === "payouts" && method === "GET" && id1) { const x = ((db.payouts || {})[account] || []).find((y) => y.id === id1); if (!x) throw new SimFehler(404, "Auszahlung fehlt"); return x; }
+      if (res1 === "balance" && method === "GET") {
+        const b = (db.balances || {})[account] || { verfuegbar: 0, unterwegs: 0 };
+        return { object: "balance", livemode: false, available: [{ amount: b.verfuegbar, currency: "eur" }], pending: [{ amount: b.unterwegs, currency: "eur" }] };
+      }
       throw new SimFehler(404, "Simulation: " + path + " nicht nachgebildet");
     });
   }
@@ -289,10 +305,32 @@ export function createSim({ load, save, pageBase, webhook }) {
   }
 
   // ---------- Test-Hilfen (nur lokal über /mock/…) ----------
-  async function mock(parts, query) {
+  async function mock(parts, query, daten = {}) {
     const [art, id] = parts;
     if (art === "state") return load();
     return tx(async (db, emit) => {
+      // Auszahlung an ein verbundenes Konto anlegen und payout.paid bzw. payout.failed als Connect-Webhook senden
+      //   POST /mock/payout { account, amount, status: "paid"|"failed"|"in_transit"|"pending", arrival_date? }
+      if (art === "payout") {
+        const account = daten.account || query.get("account");
+        if (!db.accounts[account]) return { error: "Konto unbekannt" };
+        const status = ["paid", "failed", "in_transit", "pending", "canceled"].includes(daten.status) ? daten.status : "paid";
+        const jetzt = Math.floor(Date.now() / 1000);
+        const po = {
+          id: rid("po"), object: "payout", amount: Number(daten.amount) || 10000, currency: "eur", status, method: "standard", type: "bank_account",
+          created: Number(daten.created) || jetzt, arrival_date: Number(daten.arrival_date) || jetzt + 2 * 86400, destination: "ba_" + account.slice(5, 17),
+          failure_code: status === "failed" ? daten.failure_code || "account_closed" : null, failure_message: status === "failed" ? "The bank account has been closed." : null,
+        };
+        db.payouts = db.payouts || {};
+        (db.payouts[account] = db.payouts[account] || []).push(po);
+        if (status === "paid" || status === "failed") emit("payout." + status, po, account);
+        return po;
+      }
+      if (art === "saldo") {
+        db.balances = db.balances || {};
+        db.balances[id] = { verfuegbar: Number(query.get("verfuegbar")) || 0, unterwegs: Number(query.get("unterwegs")) || 0 };
+        return { ok: true };
+      }
       if (art === "dispute") {
         const pi = db.paymentIntents[id];
         const d = { id: rid("dp"), object: "dispute", payment_intent: pi.id, charge: pi.latest_charge.id, amount: pi.amount, reason: "product_not_received", status: "needs_response", evidence_details: { due_by: Math.floor(Date.now() / 1000) + 7 * 86400 } };

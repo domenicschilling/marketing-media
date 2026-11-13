@@ -3,6 +3,7 @@
 //   /v1/…           REST-API          /pay/<cs>, /onboard/<acct>, /express/<acct>, /invoice   Seiten
 //   /onboarding-fertig/<acct>, /bestaetigen   Aktionen der eingebetteten Simulation
 //   /mock/state | dispute/<pi> | refund/<pi> | pay-invoice/<in> | fail-invoice/<in>         Test-Hilfen
+//   POST /mock/payout { account, amount, status } (Auszahlung + Webhook payout.paid/failed) · /mock/saldo/<acct>?verfuegbar=&unterwegs=
 import http from "node:http";
 import { createSim, leereDb, nest, sendeWebhook } from "../netlify/functions/_lib/stripe-sim.mjs";
 
@@ -30,7 +31,7 @@ export function startStripeMock({ port = 12111, webhookUrl, webhookSecret, log =
     const send = (code, obj, type = "application/json") => { res.writeHead(code, { "content-type": type }); res.end(type === "application/json" ? JSON.stringify(obj) : obj); };
     const parts = url.pathname.split("/").filter(Boolean);
     try {
-      if (parts[0] === "mock") return send(200, await sim.mock(parts.slice(1), url.searchParams));
+      if (parts[0] === "mock") return send(200, await sim.mock(parts.slice(1), url.searchParams, p));
       if (parts[0] !== "v1") {
         const r = await sim.page(req.method, parts, p, url.searchParams);
         if (r.redirect) { res.writeHead(303, { Location: r.redirect }); return res.end(); }

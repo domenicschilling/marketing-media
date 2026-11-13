@@ -24,6 +24,8 @@ export const schonBezahltDurchAusweich = (z) => Boolean(z.ausweich?.bezahltAm);
 const DOPPELT = "Für diesen Link wurde schon eine Anzahlung bezahlt. Den Rest zahlst du direkt im Studio. Hier ist nichts mehr zu bezahlen.";
 const NICHT_BESTAETIGT = "Bitte bestätige die Anzahlungsbedingungen des Studios.";
 const INHALT_FEHLT = "Bitte bestätige kurz, dass Studio, Projekt und Betrag stimmen.";
+// Demo-Studio (App-Prüfung bei Apple, _lib/app-demo.mjs): Zahlungslinks lassen sich anlegen, bezahlt wird nie etwas
+const DEMO = "Demo-Studio: hier wird nichts bezahlt";
 
 // Text, den der Kunde mit dem Häkchen bestätigt (wird so gespeichert)
 export function inhaltText(s, z) {
@@ -110,6 +112,7 @@ export default handler(async (req, context) => {
     if (schonBezahltDurchAusweich(z)) return fail(DOPPELT, 409);
     if (z.ausweichVon) { const orig = await zahlungBy("zahlung", z.ausweichVon); if (orig?.status === "bezahlt") return fail("Der ursprüngliche Betrag wurde schon bezahlt. Hier ist nichts mehr zu bezahlen.", 409); }
     const s = await getStudio(z.studioId);
+    if (s?.demo) return fail(DEMO, 409);
     // Ausweg „Anzahlung jetzt per Karte, Rest direkt im Studio“: eigene Zahlung (art anzahlung), mit dem Original verknüpft
     if (b.ausweich === "anzahlung") {
       const an = ausweichAngebot(s, z);
@@ -141,6 +144,7 @@ export default handler(async (req, context) => {
 
   const s = await studioBy("slug", clean(b.s, 60));
   if (!s) return fail("Studio nicht gefunden", 404);
+  if (s.demo) return fail(DEMO, 409);
   if (!darfKassieren(s)) return fail("Bei diesem Studio ist die Online-Zahlung gerade nicht verfügbar.", 409);
   const betragCent = parseBetrag(b.betrag);
   if (!(betragCent >= CFG.minBetragCent && betragCent <= CFG.maxBetragCent)) return fail(`Bitte einen Betrag zwischen ${CFG.minBetragCent / 100} € und ${CFG.maxBetragCent / 100} € eingeben.`);

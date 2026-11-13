@@ -26,17 +26,23 @@
 //   POST   /api/portal/gutschein/:id/senden      Gutschein-Mail erneut an den Käufer senden
 //   GET    /api/portal/gutschein/:id/pdf         Gutschein als PDF
 //   GET    /api/portal/gutschein-code?code=…      Gutschein per Code finden (nur eigene)
-// Mandantentrennung: Jede Abfrage nutzt ausschließlich das Studio aus dem Session-Cookie; Zahlungen werden
+//   GET    /api/portal/gutschein-code?t=<token>   Gutschein per QR-Code (Token aus gutschein.html?t=…) finden (nur eigene)
+//   GET    /api/portal/zahlung/:id[?abgleich=1]   eine Zahlung (App); abgleich: Status bei Stripe nachsehen (höchstens alle 10 s)
+// Anmeldung: Session-Cookie (Dashboard) ODER App-Token „Authorization: Bearer tfa_…“ (Tattoofin-App, siehe _lib/auth.mjs).
+// Mit App-Token gesperrt (403 nur_web): stripe-session, rechnungen, aufsteller, aufsteller-pruefen, umstellung, erstattung
+// (Apple-Richtlinie 3.1: keine Käufe/Abschlüsse in der App; in Version 1 kein Geldrückfluss aus der App).
+// Mandantentrennung: Jede Abfrage nutzt ausschließlich das Studio aus dem Session-Cookie bzw. App-Token; Zahlungen werden
 // über zahlung/<studioId>/<id> gelesen, fremde IDs ergeben immer 404.
-import { CFG, plattformgebuehr, provisionSatz, paketVon, aufstellerInklusive, BAUSTEINE_SIMULIERT } from "./_lib/config.mjs";
+import { CFG, plattformgebuehr, provisionSatz, paketVon, BAUSTEINE_SIMULIERT } from "./_lib/config.mjs";
 import { json, fail, body, clean, id, now, handler, isEmail, parseBetrag, clientIp } from "./_lib/util.mjs";
 import { saveStudio, zahlungenVon, getZahlung, saveZahlung, abrechnungenVon, getLeistung, store, log } from "./_lib/store.mjs";
 import { currentStudio, clearCookie } from "./_lib/auth.mjs";
 import { stripe, dashboardLink, accountSession, ensureConnectedAccount } from "./_lib/stripe.mjs";
-import { hatUmstellungsangebot, umstellungCheckout, notify, notifyAdmin, kuendigungsDatum, connectUrl, connectUrlGehostet, darfKassieren, anzahlungsbedingungen, provisionVerdient, kontoAbgleichen, eingebettet, klarnaFuer, klarnaDauerhaft, provisionZahlung, STATUS, aboKuendigen, aufstellerUrl, aufstellerCheckout, aufstellerBezahlt } from "./_lib/domain.mjs";
+import { hatUmstellungsangebot, umstellungCheckout, notify, notifyAdmin, connectUrl, connectUrlGehostet, darfKassieren, provisionVerdient, kontoAbgleichen, eingebettet, klarnaFuer, provisionZahlung, aufstellerUrl, aufstellerCheckout, aufstellerBezahlt, kuendigungEinreichen, kuendigungZuruecknehmen, zahlungAbgleichen } from "./_lib/domain.mjs";
+import { fuerStudio, oeffentlich, zahlseite } from "./_lib/studio-ansicht.mjs";
 import { randomBytes } from "node:crypto";
 import { KLARNA_NAME, PFLICHTSATZ_STUDIO, gutscheinWort, GUTSCHEIN_HINWEIS } from "./_lib/klarna-texte.mjs";
-import { gutscheinStatus, gutscheinPdf, gutscheinSenden, gutscheinUrl, normCode } from "./_lib/gutschein.mjs";
+import { gutscheinStatus, gutscheinPdf, gutscheinSenden, normCode, gutscheinPerToken } from "./_lib/gutschein.mjs";
 
 // Extras (Zusatzangebote): nur Anzeige + Anfrage, keine Abrechnung. Preise sind Vorschläge.
 export const EXTRAS = [
@@ -60,47 +66,15 @@ export const ratenWhatsapp = ({ vorname = "", projekt = "dein Tattoo", betrag = 
 const CHECK_MANUELL = ["app", "werbung", "theke"];
 import { mails } from "./_lib/emails.mjs";
 
-// Geld-zurück-Garantie: nur Einmalzahlung (und Altverträge „Kauf“), nicht Monatlich und nicht Geschenk
-const hatGarantie = (s) => s.modell === "kauf" && ["einmal"].includes(paketVon(s).id);
-const zahlseite = (s) => `${CFG.siteUrl}/zahlen/${s.slug}`;
-// Zahlung für die Ausgabe an das Studio (ohne interne Werte wie den Client-Schlüssel des Bezahlfelds, IP/Browser des Kunden)
-const fuerStudio = (z) => {
-  const { clientSecret, betragFuerPi, leistungToken, ...rest } = z;
-  if (rest.kundeBestaetigt) rest.kundeBestaetigt = { am: rest.kundeBestaetigt.am, inhalt: rest.kundeBestaetigt.inhalt, version: rest.kundeBestaetigt.version };
-  if (leistungToken) rest.leistungLink = `${CFG.siteUrl}/bestaetigung.html?t=${leistungToken.t}`;
-  if (rest.gutschein) {
-    const { token, ...g } = rest.gutschein;
-    rest.gutschein = { ...g, status: gutscheinStatus(z), link: token ? gutscheinUrl(rest.gutschein) : null };
-  }
-  return rest;
-};
-const oeffentlich = (s) => ({
-  id: s.id, firma: s.firma, inhaber: s.inhaber, email: s.email, telefon: s.telefon, studioTelefon: s.studioTelefon,
-  strasse: s.strasse, plz: s.plz, ort: s.ort, modell: s.modell, zahlart: s.zahlart, preisNetto: s.preisNetto, slug: s.slug,
-  status: s.status, statusText: STATUS[s.status] || s.status, createdAt: s.createdAt, goLiveAt: s.goLiveAt,
-  vertrag: { version: s.vertrag?.version, akzeptiertAm: s.vertrag?.akzeptiertAm, name: s.vertrag?.name },
-  kuendigung: s.kuendigung || null, fragebogenAm: s.fragebogen?.updatedAt || null,
-  benachrichtigung: { email: s.benachrichtigungEmail || s.email },
-  garantieBis: hatGarantie(s) ? (s.goLiveAt ? new Date(new Date(s.goLiveAt).getTime() + CFG.garantieTage * 864e5).toISOString() : "ab Go-live") : null,
-  stripe: { klarnaAktiv: s.stripe?.klarnaAktiv, verbunden: Boolean(s.stripe?.accountId), freigegeben: Boolean(s.stripe?.chargesEnabled), auszahlungen: Boolean(s.stripe?.payoutsEnabled), express: s.stripe?.kontoTyp === "express", angabenGemacht: Boolean(s.stripe?.detailsSubmitted), kontoTyp: s.stripe?.kontoTyp || (s.modell === "provision" ? "express" : "standard") },
-  klarna: klarnaFuer(s), klarnaDauerhaft: klarnaDauerhaft(s),
-  paket: paketVon(s).id, paketName: paketVon(s).name, provisionProzent: provisionSatz(s), monatNetto: s.monatNetto || null, aufstellerInklusive: aufstellerInklusive(s),
-  recht: s.recht ? { version: s.recht.version, am: s.recht.am, aktuell: s.recht.version === CFG.rechtVersion } : null,
-  checkliste: s.checkliste || {}, extrasAngefragt: Object.keys(s.extras || {}), eingebettet: eingebettet(), simulation: BAUSTEINE_SIMULIERT,
-  anzahlungsbedingungen: anzahlungsbedingungen(s),
-  ausweichAnzahlung: { an: Boolean(s.ausweichAnzahlung?.an), prozent: s.ausweichAnzahlung?.prozent || 30 },
-  zahlartenHinweis: Boolean(s.zahlartenHinweis),
-  umstellungAngebot: hatUmstellungsangebot(s) ? { monatNetto: s.umstellung.monatNetto } : null,
-  altKonto: s.stripe?.altKonto ? { bis: s.stripe.altKonto.bis } : null,
-  kannKassieren: Boolean(darfKassieren(s)), zahlseite: zahlseite(s), connectUrl: connectUrl(s),
-  aufsteller: { inklusive: CFG.aufstellerPakete.includes(paketVon(s).id), holz: s.aufsteller?.holz || "hell", variante: s.aufsteller?.variante || "name", hatLogo: Boolean(s.aufsteller?.hatLogo), angefordertAm: s.aufsteller?.angefordertAm || null, preisNetto: CFG.aufstellerPreisNetto, bezahltAm: s.aufsteller?.kauf?.bezahltAm || null },
-});
+// Mit App-Token gesperrte Bereiche (nur im Dashboard)
+const NUR_WEB = ["stripe-session", "rechnungen", "aufsteller", "aufsteller-pruefen", "umstellung", "erstattung"];
 
 export default handler(async (req, context) => {
   const s = await currentStudio(req);
-  if (!s) return fail("Bitte einloggen", 401);
+  if (!s) return json({ error: "Bitte einloggen", code: "nicht_angemeldet" }, 401);
   const url = new URL(req.url);
   const [bereich, sub] = url.pathname.replace(/^\/api\/portal\/?/, "").split("/").filter(Boolean);
+  if (s._app && NUR_WEB.includes(bereich)) return json({ error: "Das geht nur im Dashboard.", code: "nur_web" }, 403);
   // Admin-Ansicht („Dashboard ansehen“): nur lesen. Keine Änderungen, kein Geld bewegen, nichts an Kunden schicken.
   if (s._ansicht) {
     if (bereich === "stripe-session") return json({ modus: "ansicht", hinweis: "In der Admin-Ansicht werden die Stripe-Bausteine nicht geladen (sie würden echte Änderungen am Konto des Studios erlauben). Den Stripe-Status siehst du oben und im Admin." });
@@ -168,6 +142,20 @@ export default handler(async (req, context) => {
       await log("zahlungslink", { studioId: s.id, zahlungId: z.id, betragCent });
       return json({ zahlung: fuerStudio(z), link, whatsappText: text, ...(gutscheinImProjekt ? { hinweis: GUTSCHEIN_HINWEIS } : {}) }, 201);
     }
+    // Eine Zahlung (App: Detailansicht, nach dem Teilen des Links regelmäßig neu laden). abgleich=1: Status bei Stripe nachsehen,
+    // nur bei offen/in_pruefung und höchstens alle 10 Sekunden pro Zahlung (Sperre abgleich/<id>), damit die App Stripe nicht flutet.
+    if (req.method === "GET" && sub) {
+      let z = await getZahlung(s.id, sub);
+      if (!z) return fail("Nicht gefunden", 404);
+      if (url.searchParams.get("abgleich") && ["offen", "in_pruefung"].includes(z.status) && !s.demo && !s._ansicht) {
+        const sperre = await store.get("abgleich/" + z.id);
+        if (!sperre?.am || Date.now() - new Date(sperre.am).getTime() >= 10e3) {
+          await store.set("abgleich/" + z.id, { am: now() });
+          if (await zahlungAbgleichen(s, z)) z = await getZahlung(s.id, sub);
+        }
+      }
+      return json({ zahlung: fuerStudio(z), link: `${CFG.siteUrl}/zahlung.html?z=${z.id}` });
+    }
     if (req.method === "DELETE" && sub) {
       const z = await getZahlung(s.id, sub);
       if (!z) return fail("Nicht gefunden", 404);
@@ -213,43 +201,10 @@ export default handler(async (req, context) => {
 
   if (bereich === "kuendigung") {
     if (req.method === "POST") {
-      if (["gekuendigt", "beendet", "erstattet"].includes(s.status)) return fail("Der Vertrag ist bereits gekündigt.");
       const b = await body(req);
-      const garantie = Boolean(b.garantie) && hatGarantie(s) && s.stripe?.paymentIntentId &&
-        (!s.goLiveAt || Date.now() - new Date(s.goLiveAt).getTime() <= CFG.garantieTage * 864e5);
-      // Paket Monatlich: Ende des laufenden Abrechnungsmonats des Abos (Stripe beendet das Abo dann selbst)
-      let zum = garantie ? now() : kuendigungsDatum();
-      if (!garantie && s.paket === "monatlich" && s.stripe?.subscriptionId) {
-        try { zum = (await aboKuendigen(s, true)) || zum; }
-        catch (e) { await notifyAdmin("⚠️ Abo konnte bei Stripe nicht gekündigt werden – bitte im Stripe-Dashboard zum Periodenende kündigen", s, { Abo: s.stripe.subscriptionId, Fehler: e.message }); }
-      }
-      s.kuendigung = { eingegangenAm: now(), zum, grund: clean(b.grund, 1000), garantie: Boolean(garantie), vorherStatus: s.status };
-      s.status = "gekuendigt";
-      await saveStudio(s);
-      await log("kuendigung", { studioId: s.id, garantie });
-      if (garantie) await notifyAdmin("⚠️ Garantie-Erstattung angefordert: bitte im Admin erstatten", s, { Grund: s.kuendigung.grund });
-      else {
-        await notify(s, mails.kuendigung(s, { zum: s.kuendigung.zum }));
-        await notifyAdmin("Kündigung eingegangen", s, { zum: s.kuendigung.zum, Grund: s.kuendigung.grund });
-      }
-      return json(oeffentlich(s));
+      return json(oeffentlich(await kuendigungEinreichen(s, { grund: b.grund, garantie: b.garantie })));
     }
-    if (req.method === "DELETE") {
-      if (s.status !== "gekuendigt" || s.kuendigung?.garantie) return fail("Keine offene Kündigung, die zurückgenommen werden kann.");
-      if (s.kuendigung?.durchAnbieter) return fail("Diese Kündigung kam von Tattoofin. Bitte melde dich bei uns.", 409);
-      if (s.paket === "monatlich" && s.stripe?.subscriptionId) {
-        if (s.stripe.aboBeendetAm || new Date(s.kuendigung.zum) <= new Date()) return fail("Dein Abo ist schon beendet. Bitte melde dich bei uns, dann starten wir es neu.", 409);
-        try { await aboKuendigen(s, false); }
-        catch (e) { return fail("Die Kündigung konnte gerade nicht zurückgenommen werden. Bitte versuch es gleich noch einmal oder schreib uns.", 502); }
-      }
-      s.status = s.kuendigung.vorherStatus || (s.goLiveAt ? "live" : "einrichtung");
-      s.kuendigungHistorie = [...(s.kuendigungHistorie || []), { ...s.kuendigung, zurueckgenommenAm: now() }];
-      s.kuendigung = null;
-      await saveStudio(s);
-      await notify(s, mails.kuendigungZurueck(s));
-      await notifyAdmin("Kündigung zurückgenommen", s, {});
-      return json(oeffentlich(s));
-    }
+    if (req.method === "DELETE") return json(oeffentlich(await kuendigungZuruecknehmen(s)));
   }
 
   // Erstattung bei Provision: Tattoofin hat kassiert, also läuft die Erstattung über die Plattform.
@@ -439,6 +394,13 @@ export default handler(async (req, context) => {
 
   // ---- Gutscheine ----
   if (bereich === "gutschein-code" && req.method === "GET") {
+    // ?t=<token>: QR-Code auf PDF/Gutscheinseite (gutschein.html?t=…), die App scannt ihn
+    const t = url.searchParams.get("t");
+    if (t) {
+      const r = await gutscheinPerToken(clean(t, 60));
+      if (!r || r.z.studioId !== s.id) return fail("Kein Gutschein mit diesem Code gefunden.", 404);
+      return json(fuerStudio(r.z));
+    }
     const code = normCode(url.searchParams.get("code"));
     const ref = code ? await store.get("idx/gutschein/" + code) : null;
     const [sid, zid] = (ref || "").split("/");

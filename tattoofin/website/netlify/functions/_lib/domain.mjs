@@ -8,8 +8,10 @@ import { checkoutBranding } from "./branding.mjs";
 import { allStudios, zahlungenVon, saveZahlung, getZahlung, getAbrechnung, saveAbrechnung, saveStudio, getStudio, log, store } from "./store.mjs";
 import { gutscheinAusstellen } from "./gutschein.mjs";
 import { gutscheinWort } from "./klarna-texte.mjs";
-import { monatsende, now, HttpError } from "./util.mjs";
+import { monatsende, now, HttpError, clean } from "./util.mjs";
 import { loginLink, zweckToken } from "./auth.mjs";
+import { pushAnStudio, mitZeitlimit, nachrichtZahlung, nachrichtAuszahlung, apnsAktiv } from "./push.mjs";
+import { geraeteVon, geraeteAufraeumen } from "./app-geraete.mjs";
 
 export const STATUS = {
   entwurf: "Abschluss begonnen",
@@ -24,12 +26,14 @@ export const STATUS = {
 
 export const ZAHLART = { card: "Karte", klarna: "Klarna (Raten / später bezahlen)", sepa_debit: "SEPA-Lastschrift", paypal: "PayPal", link: "Link", apple_pay: "Apple Pay", google_pay: "Google Pay" };
 
+// Demo-Studios (App-Review, s.demo) bekommen nie Mails – auch nicht ihre „Kunden“.
 export async function notify(studio, mail, to) {
+  if (studio?.demo) return false;
   return sendMail({ to: to || studio.email, subject: mail.subject, html: mail.html, text: mail.text });
 }
 
 export async function notifyAdmin(titel, studio, details) {
-  if (!CFG.adminEmail) return;
+  if (!CFG.adminEmail || studio?.demo) return;
   // Gleiche Meldung (Titel, Studio, Details) höchstens einmal in 30 Minuten – schont das Mail-Limit (18.10.: 6 gleiche Fehler-Mails)
   const key = "rl/admin-mail/" + crypto.createHash("sha256").update(JSON.stringify([titel, studio?.id || "", details || {}])).digest("hex").slice(0, 32);
   const zuletzt = await store.get(key);
@@ -142,7 +146,9 @@ export async function zaehleAktion() {
   await store.set("meta/aktion-zaehler", z);
 }
 
+// Demo-Studio (App-Review): darf Zahlungslinks anlegen, auch ohne Stripe-Konto. Bezahlen sperrt pay.mjs (409).
 export function darfKassieren(s) {
+  if (s?.demo) return ["einrichtung", "live", "gekuendigt"].includes(s.status);
   return s.stripe?.accountId && s.stripe?.chargesEnabled && ["einrichtung", "live", "gekuendigt"].includes(s.status);
 }
 
@@ -453,6 +459,7 @@ export async function stripeDatenNachholen() {
   const grenze = Date.now() - 180 * 864e5;
   let n = 0;
   for (const s of await allStudios()) {
+    if (s.demo) continue;
     for (const z of await zahlungenVon(s.id)) {
       if (z.status !== "bezahlt" || n >= 100 || !stripeLuecken(z).length || new Date(z.bezahltAm || z.createdAt).getTime() < grenze || (z.nachtragVersuche || 0) >= 14) continue;
       n++;
@@ -520,6 +527,8 @@ async function zahlungBezahltAusfuehren(z, account) {
     if (orig) { orig.ausweich = { ...(orig.ausweich || {}), anzahlungId: z.id, bezahltAm: z.bezahltAm, betragCent: z.betragCent }; await saveZahlung(orig); }
   }
   await notify(s, mails.zahlungEingegangen(s, z));
+  // Mitteilung an die App (nur Geräte mit „Zahlungen“). Wirft nie und wartet höchstens 3 s, damit der Webhook nicht hängt.
+  try { await mitZeitlimit(pushAnStudio(s, "zahlungen", nachrichtZahlung(z))); } catch (e) { console.error("[push]", e.message); }
   if (z.email && z.art !== "gutschein") await notify(s, mails.zahlungKunde(s, z), z.email);
   await log("kundenzahlung", { studioId: s.id, zahlungId: z.id, betragCent: z.betragCent, gebuehrBruttoCent: z.gebuehrBruttoCent, stripeGebuehrCent: z.stripeGebuehrCent });
 }
@@ -558,7 +567,7 @@ export async function offeneZahlungenAbgleichen() {
   const grenze = Date.now() - 30 * 864e5;
   let n = 0;
   for (const s of await allStudios()) {
-    if (!s.stripe?.accountId) continue;
+    if (!s.stripe?.accountId || s.demo) continue;
     for (const z of await zahlungenVon(s.id)) {
       if (!["offen", "in_pruefung"].includes(z.status) || !z.checkoutSessionId || new Date(z.createdAt).getTime() < grenze || n >= 100) continue;
       n++;
@@ -579,6 +588,7 @@ export function provisionVerdient(z) {
 export async function monatsabrechnung(monat, { dryRun = false } = {}) {
   const ergebnis = [];
   for (const s of await allStudios()) {
+    if (s.demo) continue;
     // Umgestellte Studios: Provisions-Zahlungen aus der Zeit vor der Umstellung werden noch abgerechnet
     const umgestellt = Boolean(s.stripe?.altKonto);
     if (!umgestellt && (s.modell !== "provision" || !s.stripe?.accountId)) continue;
@@ -650,7 +660,12 @@ export async function taeglicheJobs(heute = new Date()) {
   // Kurz-Anfragen von /studios nach 6 Monaten löschen (Datenschutzerklärung, Abschnitt Anfrageformular)
   const grenze = new Date(Date.now() - 183 * 864e5).toISOString();
   for (const k of await store.list("anfrage/")) if (k.slice(8) < grenze) { await store.del(k); out.push(["anfrage-geloescht", k]); }
+  // App-Geräte: widerrufene nach 30 Tagen, ungenutzte nach 180 Tagen löschen (Datenschutzerklärung „Tattoofin-App für Studios“)
+  try { out.push(...(await geraeteAufraeumen())); } catch (e) { out.push(["app-geraete-aufraeumen-fehler", e.message]); }
+  // Rückfall, falls payout.paid/payout.failed am Connect-Endpoint nicht abonniert ist: fehlende Auszahlungs-Mitteilungen nachholen
+  try { out.push(...(await auszahlungenNachholen())); } catch (e) { out.push(["auszahlungen-nachholen-fehler", e.message]); }
   for (const s of await allStudios()) {
+    if (s.demo) continue;
     const alterStd = (Date.now() - new Date(s.createdAt).getTime()) / 3600e3;
     // Alte Entwürfe im (geschlossenen) Paket Risikofrei bekommen keine Erinnerung: Der Link würde in eine Sackgasse führen.
     if (s.status === "entwurf" && !s.erinnertAbbruch && alterStd > 20 && s.paket !== "risikofrei") {
@@ -706,6 +721,86 @@ export async function kontoAbgleichen(s, acct) {
   }
 }
 
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Kündigung durch das Studio (Dashboard: POST/DELETE /api/portal/kuendigung, App: POST /api/app/konto-loeschen).
+// Geld-zurück-Garantie: nur Einmalzahlung (und Altverträge „Kauf“), nicht Monatlich und nicht Geschenk
+export const hatGarantie = (s) => s.modell === "kauf" && ["einmal"].includes(paketVon(s).id);
+// mitMails=false: keine Bestätigungs-Mail an das Studio und keine Admin-Mail (die App schickt stattdessen die Löschanfrage-Mail)
+export async function kuendigungEinreichen(s, { grund = "", garantie: wunschGarantie = false, quelle, mitMails = true } = {}) {
+  if (["gekuendigt", "beendet", "erstattet"].includes(s.status)) throw new HttpError(400, "Der Vertrag ist bereits gekündigt.");
+  const garantie = Boolean(wunschGarantie) && hatGarantie(s) && s.stripe?.paymentIntentId &&
+    (!s.goLiveAt || Date.now() - new Date(s.goLiveAt).getTime() <= CFG.garantieTage * 864e5);
+  // Paket Monatlich: Ende des laufenden Abrechnungsmonats des Abos (Stripe beendet das Abo dann selbst)
+  let zum = garantie ? now() : kuendigungsDatum();
+  if (!garantie && s.paket === "monatlich" && s.stripe?.subscriptionId) {
+    try { zum = (await aboKuendigen(s, true)) || zum; }
+    catch (e) { await notifyAdmin("⚠️ Abo konnte bei Stripe nicht gekündigt werden – bitte im Stripe-Dashboard zum Periodenende kündigen", s, { Abo: s.stripe.subscriptionId, Fehler: e.message }); }
+  }
+  s.kuendigung = { eingegangenAm: now(), zum, grund: clean(grund, 1000), garantie: Boolean(garantie), vorherStatus: s.status, ...(quelle ? { quelle } : {}) };
+  s.status = "gekuendigt";
+  await saveStudio(s);
+  await log("kuendigung", { studioId: s.id, garantie, ...(quelle ? { quelle } : {}) });
+  if (garantie) await notifyAdmin("⚠️ Garantie-Erstattung angefordert: bitte im Admin erstatten", s, { Grund: s.kuendigung.grund });
+  else if (mitMails) {
+    await notify(s, mails.kuendigung(s, { zum: s.kuendigung.zum }));
+    await notifyAdmin("Kündigung eingegangen", s, { zum: s.kuendigung.zum, Grund: s.kuendigung.grund });
+  }
+  return s;
+}
+
+// Kündigung zurücknehmen. Entfernt auch eine Löschanfrage aus der App (s.loeschAnfrage).
+export async function kuendigungZuruecknehmen(s) {
+  if (s.status !== "gekuendigt" || s.kuendigung?.garantie) throw new HttpError(400, "Keine offene Kündigung, die zurückgenommen werden kann.");
+  if (s.kuendigung?.durchAnbieter) throw new HttpError(409, "Diese Kündigung kam von Tattoofin. Bitte melde dich bei uns.");
+  if (s.paket === "monatlich" && s.stripe?.subscriptionId) {
+    if (s.stripe.aboBeendetAm || new Date(s.kuendigung.zum) <= new Date()) throw new HttpError(409, "Dein Abo ist schon beendet. Bitte melde dich bei uns, dann starten wir es neu.");
+    try { await aboKuendigen(s, false); }
+    catch (e) { throw new HttpError(502, "Die Kündigung konnte gerade nicht zurückgenommen werden. Bitte versuch es gleich noch einmal oder schreib uns."); }
+  }
+  s.status = s.kuendigung.vorherStatus || (s.goLiveAt ? "live" : "einrichtung");
+  s.kuendigungHistorie = [...(s.kuendigungHistorie || []), { ...s.kuendigung, zurueckgenommenAm: now() }];
+  s.kuendigung = null;
+  if (s.loeschAnfrage) {
+    s.loeschAnfrageHistorie = [...(s.loeschAnfrageHistorie || []), { ...s.loeschAnfrage, zurueckgenommenAm: now() }];
+    delete s.loeschAnfrage;
+  }
+  await saveStudio(s);
+  await notify(s, mails.kuendigungZurueck(s));
+  await notifyAdmin("Kündigung zurückgenommen", s, {});
+  return s;
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Auszahlungen (Stripe payout.paid / payout.failed am Connect-Konto des Studios) → Mitteilung an die App.
+// Doppelschutz: push/payout/<id> wird atomar angelegt (Webhook und täglicher Rückfall teilen ihn). Wirft nie.
+export async function auszahlungMelden(s, po) {
+  try {
+    if (!s || !po?.id || !["paid", "failed"].includes(po.status)) return false;
+    if (!(await store.setNeu("push/payout/" + po.id, { am: now(), studioId: s.id, status: po.status }))) return false;
+    await log("auszahlung-" + (po.status === "paid" ? "angekommen" : "fehlgeschlagen"), { studioId: s.id, payoutId: po.id, betragCent: po.amount });
+    await mitZeitlimit(pushAnStudio(s, "auszahlungen", nachrichtAuszahlung(po)));
+    return true;
+  } catch (e) { console.error("[auszahlung]", e.message); return false; }
+}
+
+// Täglicher Rückfall: Auszahlungen der letzten 48 Stunden je Studio mit Konto (nur Studios mit App-Geräten, die Auszahlungs-
+// Mitteilungen wollen und einen Push-Token haben; nur wenn APNs eingerichtet ist, sonst würde der Doppelschutz ohne Versand gesetzt).
+export async function auszahlungenNachholen() {
+  const out = [];
+  if (!apnsAktiv()) return out;
+  const seit = Math.floor(Date.now() / 1000) - 48 * 3600;
+  for (const s of await allStudios()) {
+    if (s.demo || !s.stripe?.accountId) continue;
+    const geraete = (await geraeteVon(s.id)).filter((g) => g.push?.token && g.mitteilungen?.auszahlungen !== false);
+    if (!geraete.length) continue;
+    try {
+      const liste = await stripe("GET", "/payouts", { limit: 20, created: { gte: seit } }, { account: s.stripe.accountId });
+      for (const po of liste.data || []) if (await auszahlungMelden(s, po)) out.push(["auszahlung-nachgeholt", s.firma, po.id]);
+    } catch (e) { out.push(["auszahlungen-nachholen-fehler", s.firma, String(e.message).slice(0, 120)]); }
+  }
+  return out;
+}
 
 export { loginLink };
 

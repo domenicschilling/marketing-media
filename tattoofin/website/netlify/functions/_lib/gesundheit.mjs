@@ -16,7 +16,7 @@ async function testSlug() {
   if (process.env.TF_TEST_SLUG) return process.env.TF_TEST_SLUG; // ausdrücklich gesetzt: genau diese Seite prüfen
   const wunsch = TEST_SLUG_STANDARD;
   if (await studioBy("slug", wunsch)) return wunsch;
-  const ersatz = (await allStudios()).find((s) => s.slug && s.stripe?.chargesEnabled && ["live", "einrichtung"].includes(s.status));
+  const ersatz = (await allStudios()).find((s) => !s.demo && s.slug && s.stripe?.chargesEnabled && ["live", "einrichtung"].includes(s.status));
   return ersatz?.slug || wunsch;
 }
 const MAIL_ALARM_MIN = 30;   // Mails, die länger als 30 Minuten hängen, gelten als Störung

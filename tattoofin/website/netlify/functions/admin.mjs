@@ -27,6 +27,8 @@
 //                                             speichert fürs Studio (Zahlseite + Checkout) und setzt mit stripe:true auch das Branding des verbundenen Stripe-Kontos
 //   GET   /api/admin/studio/:id/team          Team-Adressen (zusätzliche Login-Adressen, z. B. Mitarbeiter, die Zahlungslinks erstellen)
 //   POST  /api/admin/studio/:id/team          { emails: ["a@b.de", …] } ersetzt die Liste (höchstens 5; leer = keine)
+//   POST  /api/admin/app-demo                { email? } Demo-Studio für die App-Prüfung (Apple) anlegen bzw. Beispieldaten erneuern → { studioId, env }
+//                                             (danach APP_REVIEW_EMAIL/APP_REVIEW_CODE/APP_REVIEW_STUDIO_ID setzen; nur mit Domenics OK nach Deploy)
 //   POST  /api/admin/checkout-test            unbezahlte Test-Sitzung (1 €) mit Tattoofin-Branding → { id, url }; { expire: "cs_…" } beendet sie
 import { CFG, netto, paketVon, provisionSatz } from "./_lib/config.mjs";
 import { json, fail, body, clean, now, handler } from "./_lib/util.mjs";
@@ -38,6 +40,7 @@ import { mails } from "./_lib/emails.mjs";
 import { sendMail, warteschlangeStatus, warteschlangeAbarbeiten } from "./_lib/mail.mjs";
 import { randomBytes } from "node:crypto";
 import { brandingSetzen, brandingOeffentlich } from "./_lib/branding.mjs";
+import { demoStudioAnlegen } from "./_lib/app-demo.mjs";
 
 export default handler(async (req) => {
   if (!isAdmin(req)) return fail("Nicht berechtigt", 401);
@@ -61,7 +64,8 @@ export default handler(async (req) => {
   }
 
   if (bereich === "studios" && req.method === "GET") {
-    const list = await allStudios();
+    // Demo-Studios (App-Prüfung) zählen nicht in den Kennzahlen
+    const list = (await allStudios()).filter((s) => !s.demo);
     const out = [];
     for (const s of list) {
       const z = await zahlungenVon(s.id);
@@ -214,6 +218,15 @@ export default handler(async (req) => {
     const out = [];
     for (const k of keys) { const m = await store.get(k); out.push({ at: m.at, to: m.to, subject: m.subject }); }
     return json(out);
+  }
+  if (bereich === "app-demo" && req.method === "POST") {
+    const b = await body(req);
+    const email = clean(b.email, 160).toLowerCase() || process.env.APP_REVIEW_EMAIL || "app-review@tattoofin.de";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return fail("Bitte eine gültige E-Mail angeben.");
+    const r = await demoStudioAnlegen({ email });
+    await log("admin-app-demo", { admin: adminName(req), studioId: r.studio.id });
+    return json({ studioId: r.studio.id, email: r.studio.email, zahlungen: r.zahlungen, neu: r.neu,
+      env: { APP_REVIEW_EMAIL: r.studio.email, APP_REVIEW_STUDIO_ID: r.studio.id, APP_REVIEW_CODE: "<6 Ziffern selbst wählen>" } });
   }
   if (bereich === "checkout-test" && req.method === "POST") {
     const b = await body(req);
