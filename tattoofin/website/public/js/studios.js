@@ -4,7 +4,7 @@
 //                  oder Klick auf WhatsApp. Ein Klick auf „Online abschließen“ ist KEIN Lead mehr
 //                  (der echte Abschluss wird auf /start und /danke als InitiateCheckout/CompleteRegistration gemessen).
 //   Meta nur mit Cookie-Einwilligung (tf-track.js) und nur auf tattoofin.de.
-//   Umami (cookielos): cta-klick, whatsapp, online-start, formular-start, formular-gesendet, formular-fehler, anfrage-auf, scroll-50/90,
+//   Umami (cookielos): start-auftakt/-preis/-schluss/-leiste (data-umami-event), whatsapp, online-start, formular-start, formular-gesendet, formular-fehler, anfrage-auf, scroll-50/90,
 //                      kunde-weiter (Link zur Endkunden-Seite /raten, 19.10.2026).
 (function () {
   var j = document.getElementById("jahr");
@@ -13,12 +13,14 @@
 
   // utm_* / fbclid an die Links zum Online-Abschluss hängen (Herkunft bleibt sichtbar).
   // Die Links tragen als Standard utm_source=studios&utm_medium=seite&utm_content=<ort>; kommt der Besucher mit eigenen
-  // utm_* (z. B. aus der Meta-Anzeige), gehen diese vor, damit die Kampagne auf /start erkennbar bleibt.
+  // utm_* (z. B. aus der Meta-Anzeige), ersetzen diese die Standardwerte KOMPLETT (keine Mischung aus Anzeige und „seite“),
+  // damit die Kampagne auf /start sauber erkennbar bleibt.
   var q = new URLSearchParams(location.search), mit = [], utm = {};
   q.forEach(function (v, k) { if (/^utm_|^fbclid$/.test(k)) { mit.push([k, v]); if (/^utm_/.test(k)) utm[k] = v; } });
   if (q.get("ref")) utm.ref = q.get("ref"); // z. B. ref=kunde (Kunde hat uns seinem Studio empfohlen, /raten)
   if (mit.length) document.querySelectorAll('a[href^="/start"]').forEach(function (a) {
     var url = new URL(a.getAttribute("href"), location.origin);
+    if (Object.keys(utm).some(function (k) { return /^utm_/.test(k); })) ["utm_source", "utm_medium", "utm_content", "utm_campaign", "utm_term"].forEach(function (k) { url.searchParams.delete(k); });
     mit.forEach(function (p) { url.searchParams.set(p[0], p[1]); });
     a.setAttribute("href", url.pathname + url.search);
   });
@@ -42,8 +44,7 @@
       u("whatsapp", { ort: a.closest(".leiste") ? "leiste" : a.closest(".auftakt, .kopf") ? "held" : "seite" });
       if (consent() !== "nein" && einmalHeute("lp-wa") && window.TFTrack) TFTrack.track("Lead", { content_name: "WhatsApp (Kampagnen-Seite)", content_category: "Tattoo-Studio" });
     } else if (/^\/start/.test(h)) u("online-start", { paket: (h.match(/paket=(\w+)/) || [])[1] || "monatlich" });
-    else if (a.dataset.cta) u("cta-klick", { ort: a.dataset.cta });
-    else if (a.dataset.lp === "raten") u("kunde-weiter", { ort: a.closest(".auftakt") ? "held" : "formular" });
+    else if (a.dataset.lp === "raten") u("kunde-weiter", { ort: a.closest(".fuss") ? "fuss" : "formular" });
   }, true);
 
   // Formular

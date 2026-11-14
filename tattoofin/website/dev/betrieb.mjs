@@ -18,7 +18,7 @@ try { ({ chromium } = require("playwright")); } catch { ({ chromium } = require(
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const RUNDE = process.argv[2] || "1";
-const PORT = 8898, BASE = `http://localhost:${PORT}`, STRIPE = "http://localhost:12111";
+const PORT = Number(process.env.BETRIEB_PORT || 8898), BASE = `http://localhost:${PORT}`, STRIPE = `http://localhost:${Number(process.env.STRIPE_MOCK_PORT || 12111)}`;
 const shots = path.join(os.tmpdir(), "tf-betrieb-" + RUNDE);
 fs.mkdirSync(shots, { recursive: true });
 const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "tf-betrieb-data-"));
@@ -1018,7 +1018,7 @@ await abschnitt("18 Paket Risikofrei geschlossen (26.10.2026): Neukunden gesperr
     const lp = await (await fetch(BASE + "/")).text();
     check(/class="knopf" href="\/start\.html"[^>]*>Jetzt starten/.test(lp), "Hero-Knopf: „Jetzt starten“ → /start.html", "");
     const wann = await (await fetch(BASE + "/")).text();
-    check(/49&nbsp;€ netto im Monat/.test(wann) && !/999 €/.test(wann) && /49 € im Monat/.test(wann), "Preise auf der Startseite: 49 € netto im Monat, keine 999 €", "");
+    check(/49&nbsp;€ netto im Monat/.test(wann) && !/999 €/.test(wann) && /49&nbsp;€ netto im Monat\. Dazu nur Stripe/.test(wann) && /nur für Unternehmer/i.test(wann), "Preise auf der Startseite: 49 € netto im Monat (auch in der Preis-Überschrift), nur für Unternehmer, keine 999 €", "");
     check(/Achtung! Kreditaufnahme kostet Geld\./.test(wann), "Pflicht-Warnhinweis steht weiter auf der Startseite", "");
     // --- Bestandsstudio läuft unverändert ---
     const pt = await json("/api/portal", {}, best.cookie);

@@ -14,7 +14,7 @@ let chromium;
 try { ({ chromium } = require("playwright")); } catch { ({ chromium } = require("/opt/node22/lib/node_modules/playwright")); }
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const PORT = 8899, BASE = `http://localhost:${PORT}`;
+const PORT = Number(process.env.E2E_PORT || 8899), MOCK_PORT = Number(process.env.STRIPE_MOCK_PORT || 12111), RESEND_FAKE_PORT = Number(process.env.E2E_RESEND_PORT || 12199), BASE = `http://localhost:${PORT}`;
 const shots = process.argv[2] || path.join(os.tmpdir(), "tf-e2e");
 const handyShots = process.argv[3] || path.join(shots, "handy");
 fs.mkdirSync(shots, { recursive: true }); fs.mkdirSync(handyShots, { recursive: true });
@@ -34,7 +34,7 @@ const check = (cond, name) => { if (cond) { ok++; console.log("  ✓", name); } 
 const admin = (p, opts = {}) => fetch(`${BASE}/api/admin/${p}`, { method: opts.body ? "POST" : "GET", ...opts, headers: { Authorization: "Bearer admin", "content-type": "application/json" }, body: opts.body ? JSON.stringify(opts.body) : undefined }).then((r) => r.json());
 const mailsAn = (to) => fs.readdirSync(dataDir).filter((f) => f.startsWith("mail%2F")).map((f) => JSON.parse(fs.readFileSync(path.join(dataDir, f)))).filter((m) => [].concat(m.to).includes(to));
 const linkAus = (m, re) => (m.html.match(re) || [])[1]?.replace(/&amp;/g, "&");
-const mock = (p, opts) => fetch("http://localhost:12111/" + (opts ? "" : "mock/") + p, opts).then((r) => r.json());
+const mock = (p, opts) => fetch(`http://localhost:${MOCK_PORT}/` + (opts ? "" : "mock/") + p, opts).then((r) => r.json());
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const post = (url, b, cookie) => fetch(BASE + url, { method: "POST", headers: { "content-type": "application/json", ...(cookie ? { cookie } : {}) }, body: JSON.stringify(b) });
 // Formular absenden wie die Zwischenseite beim Login per Link (POST, application/x-www-form-urlencoded)
@@ -166,7 +166,7 @@ try {
   console.log("Paket Einmalzahlung (alter Link ?modell=kauf)");
   const pB = await neueSeite();
   await signup(pB, { modell: "kauf", email: "kauf@example.com", firma: "Ink Kauf" });
-  await pB.waitForURL(/localhost:12111\/pay\//);
+  await pB.waitForURL(new RegExp(`localhost:${MOCK_PORT}/pay/`));
   check((await pB.textContent("body")).includes("1188.81"), "Stripe-Betrag 999 € netto + 19 % = 1.188,81 €");
   await pB.click("#pay");
   await einrichtungEingebettet(pB);
@@ -182,7 +182,7 @@ try {
   check(mailsAn("rechnung@example.com").some((m) => m.subject.includes("Rechnung")), "E-Mail: Rechnung");
   const pC2 = await neueSeite();
   await signup(pC2, { paket: "einmal", email: "abbruch@example.com", firma: "Ink Abbruch" });
-  await pC2.waitForURL(/localhost:12111\/pay\//);
+  await pC2.waitForURL(new RegExp(`localhost:${MOCK_PORT}/pay/`));
   await pC2.click("#cancel");
   await pC2.waitForURL(/start\.html\?resume=/);
   await pC2.waitForFunction(() => document.getElementById("firma").value === "Ink Abbruch");
@@ -199,7 +199,7 @@ try {
   console.log("Paket Monatlich: Abo 49 € netto auf dem DSX-Konto → Dashboard → eigenes Standard-Konto");
   const pD = await neueSeite();
   await signup(pD, { paket: "monatlich", email: "abo@example.com", firma: "Ink Abo" });
-  await pD.waitForURL(/localhost:12111\/pay\//);
+  await pD.waitForURL(new RegExp(`localhost:${MOCK_PORT}/pay/`));
   const kasse = await pD.textContent("body");
   check(kasse.includes("subscription") && kasse.includes("58.31"), "Stripe-Abo: 49 € netto + 19 % = 58,31 €");
   state = await mock("state");
@@ -232,7 +232,7 @@ try {
   const fbId = (await studioPer("fallback@example.com")).id;
   const fbMailLink = linkAus(mailsAn("fallback@example.com").find((m) => m.subject.startsWith("Willkommen")), /href="([^"]*\/api\/connect\?id=[^"]+)"/);
   const fbConnect = await fetch(fbMailLink, { redirect: "manual" });
-  check(fb.status === 200 && /&t=/.test(fbMailLink || "") && /localhost:12111\/onboard\//.test(fbConnect.headers.get("location") || ""), "Ohne Einbettung: Stripe-Onboarding per signiertem Mail-Link");
+  check(fb.status === 200 && /&t=/.test(fbMailLink || "") && new RegExp(`localhost:${MOCK_PORT}/onboard/`).test(fbConnect.headers.get("location") || ""), "Ohne Einbettung: Stripe-Onboarding per signiertem Mail-Link");
   const ohneToken = await fetch(`${BASE}/api/connect?id=${fbId}`, { redirect: "manual" });
   check(/\/login\.html/.test(ohneToken.headers.get("location") || ""), "Sicherheit: /api/connect nur mit Studio-ID → Login statt Stripe-Link");
   const falschToken = await fetch(`${BASE}/api/connect?id=${(await studioPer("prov@example.com")).id}&t=${new URL(fbMailLink).searchParams.get("t")}`, { redirect: "manual" });
@@ -325,12 +325,12 @@ try {
   check((await post("/api/pay", { s: slug, betrag: "200", kunde: "x" })).status === 400, "Ohne Inhalts-Bestätigung keine Zahlung (auch per API)");
   process.env.TF_EINBETTEN = "aus";
   const alt = await (await post("/api/pay", { s: slug, betrag: "200", kunde: "Alt", inhaltOk: true })).json();
-  check(/localhost:12111\/pay\//.test(alt.url || ""), "Notlösung: ohne Einbettung weiter Stripe-Checkout");
+  check(new RegExp(`localhost:${MOCK_PORT}/pay/`).test(alt.url || ""), "Notlösung: ohne Einbettung weiter Stripe-Checkout");
   delete process.env.TF_EINBETTEN;
   process.env.TF_BEZAHLFELD = "aus";
   const live = await (await post("/api/pay", { s: slug, betrag: "200", kunde: "Live", inhaltOk: true })).json();
   const liveSession = await api(pA, "/api/portal/stripe-session", { method: "POST", body: {} });
-  check(/localhost:12111\/pay\//.test(live.url || "") && !live.clientSecret && liveSession.data.modus !== "weiterleitung", "Live-Einstellung ohne payment_intent-Webhooks (TF_BEZAHLFELD aus): Kunde zahlt im Stripe-Checkout, Einrichtung bleibt eingebettet");
+  check(new RegExp(`localhost:${MOCK_PORT}/pay/`).test(live.url || "") && !live.clientSecret && liveSession.data.modus !== "weiterleitung", "Live-Einstellung ohne payment_intent-Webhooks (TF_BEZAHLFELD aus): Kunde zahlt im Stripe-Checkout, Einrichtung bleibt eingebettet");
   delete process.env.TF_BEZAHLFELD;
 
   // ---------------------------------------------------------------- H2: Branding je Studio (Logo/Farbe)
@@ -542,7 +542,7 @@ try {
     check((await pK.textContent("#alert")).includes("Anzahlungsbedingungen"), "Ausweg-Anzahlung nur mit bestätigten Anzahlungsbedingungen");
     await pK.check("#aw-bed-ok"); await pK.check("#aw-inhalt-ok");
     await pK.click("#aw-anz-los");
-    await pK.waitForURL(/localhost:12111\/pay\//);
+    await pK.waitForURL(new RegExp(`localhost:${MOCK_PORT}/pay/`));
     st = await mock("state");
     const csA = st.sessions[pK.url().split("/pay/")[1]];
     check(csA.amount_total === 36000 && JSON.stringify(csA.payment_method_types) === '["card"]' && /^Anzahlung für Tattoo bei Ink Provision – Rückenstück Drache/.test(csA.line_items[0].price_data.product_data.name) && /Anzahlungsbedingungen/.test(csA.custom_text?.submit?.message || ""), "Ausweg-Checkout: 360 € nur Karte, Artikel „Anzahlung für Tattoo bei …“, Bedingungen im Checkout");
@@ -1099,7 +1099,7 @@ try {
   check(ohneKauf === 400, "Aufsteller (nicht im Paket): kostenlos anfordern nicht möglich");
   const nwStatusVor = (await admin(`studio/${nwId}`)).studio.status;
   await h.click("#auf-kaufen");
-  await h.waitForURL(/localhost:12111\/pay\//);
+  await h.waitForURL(new RegExp(`localhost:${MOCK_PORT}/pay/`));
   check((await h.textContent("body")).includes("34.51"), "Aufsteller-Checkout: 29 € netto + 19 % USt. = 34,51 €");
   await h.click("#pay");
   await h.waitForURL(/app\.html/);
@@ -1125,8 +1125,8 @@ try {
   {
     const { sendMail, warteschlangeStatus, warteschlangeAbarbeiten } = await import("../netlify/functions/_lib/mail.mjs");
     let antwort = 500, aufrufe = 0;
-    const fake = (await import("node:http")).createServer((req, res) => { aufrufe++; let b = ""; req.on("data", (c) => (b += c)); req.on("end", () => { res.writeHead(antwort, { "content-type": "application/json" }); res.end(antwort === 200 ? '{"id":"re_1"}' : '{"message":"450 Mail send limit exceeded"}'); }); }).listen(12199);
-    process.env.RESEND_API_KEY = "re_test"; process.env.RESEND_API_BASE = "http://localhost:12199/emails";
+    const fake = (await import("node:http")).createServer((req, res) => { aufrufe++; let b = ""; req.on("data", (c) => (b += c)); req.on("end", () => { res.writeHead(antwort, { "content-type": "application/json" }); res.end(antwort === 200 ? '{"id":"re_1"}' : '{"message":"450 Mail send limit exceeded"}'); }); }).listen(RESEND_FAKE_PORT);
+    process.env.RESEND_API_KEY = "re_test"; process.env.RESEND_API_BASE = `http://localhost:${RESEND_FAKE_PORT}/emails`;
     antwort = 200;
     check(await sendMail({ to: "resend@example.com", subject: "Test Resend", html: "<p>x</p>" }) === true && aufrufe === 1, "Mit RESEND_API_KEY: Versand über Resend");
     const mResend = fs.readdirSync(dataDir).filter((f) => f.startsWith("mail%2F")).map((f) => JSON.parse(fs.readFileSync(path.join(dataDir, f)))).find((m) => m.to === "resend@example.com");

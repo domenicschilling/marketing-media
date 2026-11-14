@@ -121,8 +121,8 @@ def bauen(seite):
 <meta property="og:url" content="https://tattoofin.de/"><meta property="og:image" content="https://tattoofin.de/assets/og.jpg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">"""
 
-    kunde = ('\n        <p class="kunde-link">Kein Studio, sondern Kunde? <a href="/raten?utm_source=studios&amp;utm_medium=seite&amp;utm_content=held" data-lp="raten">Hier entlang →</a></p>'
-             if studios else "")
+    # /studios: Link für Endkunden nicht mehr im ersten Bildschirm (lenkt Studios ab), sondern im Fuß
+    kunde = ""
 
     anfrage = ""
     if studios:
@@ -162,7 +162,7 @@ def bauen(seite):
           <p class="klein">Mit dem Absenden verarbeiten wir deine Angaben, um dich zu kontaktieren. Mehr in der <a href="/datenschutz#anfrage">Datenschutzerklärung</a>.</p>
         </form>
         <div class="danke" id="a-danke" hidden tabindex="-1">
-          <img src="/assets/start/figur.png" alt="" width="88" height="91" loading="lazy" decoding="async">
+          <img src="/assets/start/figur.webp" alt="" width="88" height="91" loading="lazy" decoding="async">
           <h3>Danke, deine Anfrage ist angekommen.</h3>
           <p>Unser Team meldet sich per WhatsApp bei dir. Bis dahin musst du nichts vorbereiten.</p>
         </div>
@@ -211,6 +211,7 @@ def bauen(seite):
     <div class="auftakt-kopf">
       <p class="kicker">Sleeve für 2.000&nbsp;€, aber dein Kunde hat's nicht auf einmal?</p>
       <h1>Raten* für deine Kunden.</h1>
+      <p class="unterzeile">Link per WhatsApp. Kunde zahlt am Handy.</p>
     </div>
     <div class="buehne">
       {motiv("deko-stern")}
@@ -222,7 +223,7 @@ def bauen(seite):
       {motiv("flash-3")}
       {motiv("flash-4")}
       {motiv("flash-5")}
-      <img class="hausherr" src="/assets/start/figur.png" alt="Tattoofin-Figur mit tätowierten Armen zeigt den Daumen hoch" width="300" height="310" fetchpriority="high">
+      <img class="hausherr" src="/assets/start/figur.webp" alt="Tattoofin-Figur mit tätowierten Armen zeigt den Daumen hoch" width="300" height="310" decoding="async">
       <figure class="auftakt-handy">
         <span class="klebe" aria-hidden="true"></span>
         <span class="handy-rahmen"><img src="/assets/start/handy-kunde-oben.webp" alt="Echte Tattoofin-Zahlseite am Handy: Hi Lena, deine Zahlung an Ink Studio Bamberg, Schritt 1 von 2, 2.000,00 Euro, Sleeve linker Arm. Beispieldaten." width="600" height="545" fetchpriority="high"><button type="button" class="film-knopf" data-film aria-haspopup="dialog"><span aria-hidden="true">▶</span> 10 Sek. ansehen</button></span>
@@ -231,7 +232,7 @@ def bauen(seite):
     </div>
     <div class="auftakt-fuss">
       <div class="auftakt-knopf">{start("auftakt")}</div>
-      <p class="preiszeile">49&nbsp;€ netto im Monat · keine Provision · monatlich kündbar</p>
+      <p class="preiszeile">49&nbsp;€ netto im Monat · keine Provision · monatlich kündbar <span class="b2b">· nur für Unternehmer</span></p>
       <p class="raten-fn">{FN_LANG}</p>{kunde}
     </div>
   </section>
@@ -242,8 +243,8 @@ def bauen(seite):
       <h2 id="fall-titel">900<span class="eur">€</span> per Klarna.</h2>
     </div>
     <div class="fall-bild">
-      <button type="button" class="motiv-knopf" data-stechen aria-label="Herz neu stechen">
-        {motiv("herz-bezahlt")}
+      <button type="button" class="motiv-knopf" data-stechen aria-label="Bezahlt 1: Herz neu stechen">
+        {motiv("herz-bezahlt").replace('role="img" aria-label="Flash-Herz mit Banderole: Bezahlt"', 'aria-hidden="true" focusable="false"')}
         <span class="nr" aria-hidden="true">1</span>
       </button>
       <figure class="bon">
@@ -274,7 +275,7 @@ def bauen(seite):
             </button>
             <figcaption>Beispieldaten</figcaption>
           </figure>
-          <button type="button" class="motiv-knopf sticker" data-stechen aria-label="Schwalbe neu stechen">{motiv("motiv-2")}<span class="nr" aria-hidden="true">2</span></button>
+          <button type="button" class="motiv-knopf sticker" data-stechen aria-label="Nr. 2: Schwalbe neu stechen">{motiv("motiv-2")}<span class="nr" aria-hidden="true">2</span></button>
         </div>
         <div class="stueck-text">
           <h3>Link per WhatsApp.</h3>
@@ -291,7 +292,7 @@ def bauen(seite):
             </button>
             <figcaption>Beispieldaten</figcaption>
           </figure>
-          <button type="button" class="motiv-knopf sticker" data-stechen aria-label="Anker neu stechen">{motiv("motiv-3")}<span class="nr" aria-hidden="true">3</span></button>
+          <button type="button" class="motiv-knopf sticker" data-stechen aria-label="Nr. 3: Termin, Anker neu stechen">{motiv("motiv-3")}<span class="nr" aria-hidden="true">3</span></button>
         </div>
         <div class="stueck-text">
           <h3>Anzahlung gegen No-Shows.</h3>
@@ -301,7 +302,7 @@ def bauen(seite):
       </article>
       <article class="stueck nur-motiv" id="nr4">
         <div class="stueck-bild">
-          <button type="button" class="motiv-knopf" data-stechen aria-label="Spielkarte mit QR-Code neu stechen">{motiv("motiv-4")}<span class="nr" aria-hidden="true">4</span></button>
+          <button type="button" class="motiv-knopf" data-stechen aria-label="Nr. 4: Theke, Spielkarte mit QR-Code neu stechen">{motiv("motiv-4")}<span class="nr" aria-hidden="true">4</span></button>
         </div>
         <div class="stueck-text">
           <h3>QR an der Theke.</h3>
@@ -310,7 +311,7 @@ def bauen(seite):
       </article>
       <article class="stueck nur-motiv" id="nr5">
         <div class="stueck-bild">
-          <button type="button" class="motiv-knopf" data-stechen aria-label="Rose mit Gutschein neu stechen">{motiv("motiv-5")}<span class="nr" aria-hidden="true">5</span></button>
+          <button type="button" class="motiv-knopf" data-stechen aria-label="Nr. 5: Gutschein, Rose neu stechen">{motiv("motiv-5")}<span class="nr" aria-hidden="true">5</span></button>
         </div>
         <div class="stueck-text">
           <h3>Gutscheine verkaufen.</h3>
@@ -331,7 +332,7 @@ def bauen(seite):
 
   <section class="preis" id="preis" aria-labelledby="preis-titel">
     <div class="preis-innen">
-      <h2 id="preis-titel">49 € im Monat. Dazu nur Stripe.</h2>
+      <h2 id="preis-titel">49&nbsp;€ netto im Monat. Dazu nur Stripe.</h2>
       <div class="preis-schild">
         <svg class="faden" viewBox="0 0 120 90" aria-hidden="true" focusable="false"><path d="M60 8 C42 30 78 52 60 86" fill="none" stroke="#fff7e3" stroke-width="4" stroke-linecap="round"/></svg>
         <span class="reisszwecke" aria-hidden="true"></span>
@@ -344,14 +345,14 @@ def bauen(seite):
       </div>
       <div class="beleg">
         <table>
-          <caption>Dein Kunde zahlt 1.000<span class="eur">€</span></caption>
+          <caption>Dein Kunde zahlt 2.000<span class="eur">€</span> per Klarna</caption>
           <tbody>
-            <tr><th scope="row">Stripe-Gebühr Karte</th><td>ab ca. 15&nbsp;€</td></tr>
+            <tr><th scope="row">Stripe-Gebühr Klarna</th><td>ab ca. 60&nbsp;€</td></tr>
             <tr><th scope="row">An Tattoofin</th><td>0&nbsp;€</td></tr>
-            <tr class="summe"><th scope="row">Bei dir</th><td>bis ca. 985&nbsp;€</td></tr>
+            <tr class="summe"><th scope="row">Bei dir</th><td>bis ca. 1.940&nbsp;€</td></tr>
           </tbody>
         </table>
-        <p class="beleg-hinweis">Beispiel Karte mit Mindestgebühr. Keine Garantie.</p>
+        <p class="beleg-hinweis">Mit Karte ab ca. 30&nbsp;€ Gebühr. Keine Garantie.</p>
       </div>
       <div class="preis-rest">
         <ul class="sticker-reihe" aria-label="Das gehört dazu">
@@ -375,11 +376,11 @@ def bauen(seite):
   <section class="schluss">
     <div class="schluss-kopf">
       <h2>Nächster Sleeve? Schick den Link.</h2>
-      <p class="zeile">49&nbsp;€ netto im Monat · monatlich kündbar</p>
+      <p class="zeile">49&nbsp;€ netto im Monat · monatlich kündbar <span class="b2b">· nur für Unternehmer</span></p>
       <div class="wege">{start("schluss")}<a class="wa" href="{wa}" data-umami-event="whatsapp-schluss">Fragen? Schreib unserem Team per WhatsApp.</a></div>
     </div>
     <div class="hausherr-rahmen">
-      <img class="hausherr-klein" src="/assets/start/figur.png" alt="" width="300" height="310" loading="lazy" decoding="async">
+      <img class="hausherr-klein" src="/assets/start/figur.webp" alt="" width="300" height="310" loading="lazy" decoding="async">
     </div>
   </section>
 {anfrage}  </main>
@@ -391,9 +392,10 @@ def bauen(seite):
         <a href="/impressum.html">Impressum</a>
         <a href="/datenschutz.html">Datenschutz</a>
         <a href="/vertrag.html">Vertrag</a>
-        <a href="/ratgeber.html">Ratgeber</a>{'''
+        <a href="/ratgeber.html">Ratgeber</a>
         <a href="/login.html">Studio-Login</a>
-        <a href="#" data-cookies>Cookie-Einstellungen</a>''' if studios else ''}
+        <a href="#" data-cookies>Cookie-Einstellungen</a>{'''
+        <a href="/raten?utm_source=studios&amp;utm_medium=seite&amp;utm_content=fuss" data-lp="raten">Du bist Kunde?</a>''' if studios else ''}
       </nav>
       <p>DSX Media Solutions UG (haftungsbeschränkt), Am Weingarten 9, 96117 Memmelsdorf. Tattoofin ist kein Kreditinstitut.</p>
     </div>
