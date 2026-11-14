@@ -8,6 +8,7 @@
      OtherFinancialInfo: Zahlungsbeträge, Zahlungen, Auszahlungen, Bank und letzte 4 Ziffern des Bankkontos
      OtherDataTypes: Gerätename, Gerätemodell, iOS- und App-Version (Liste der angemeldeten Geräte)
      PurchaseHistory: Apple-Abo (In-App-Kauf): signierte Transaktion mit Kennungen, Produkt, Kauf-/Ablaufdatum an unseren Server
+     PhotosorVideos: Studio-Logo für den QR-Aufsteller (vom Inhaber in Fotos gewählt, schwarz/weiß an unseren Server, nur für die Gravur)
      Die Angaben „App-Datenschutz“ in App Store Connect genau gleich ausfüllen (tattoofin/ios/AppStore/README.md). -->
 <plist version="1.0">
 <dict>
@@ -92,6 +93,18 @@
 		<dict>
 			<key>NSPrivacyCollectedDataType</key>
 			<string>NSPrivacyCollectedDataTypePurchaseHistory</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<true/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypePhotosorVideos</string>
 			<key>NSPrivacyCollectedDataTypeLinked</key>
 			<true/>
 			<key>NSPrivacyCollectedDataTypeTracking</key>

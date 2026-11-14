@@ -101,6 +101,7 @@ struct ZahlungDetailView: View {
                         }
                     }
                     .disabled(laedtBestaetigung)
+                    NachweisKnopf(zahlungId: z.id)
                 }
                 if let aktionFehler { FehlerZeile(text: aktionFehler) }
             } footer: {

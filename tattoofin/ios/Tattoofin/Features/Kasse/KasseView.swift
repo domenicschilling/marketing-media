@@ -11,6 +11,7 @@ struct KasseView: View {
     @State private var erstellt: ZahlungErstellt?
     @State private var thekeOffen = false
     @State private var erfolgZaehler = 0
+    @State private var heute = false
 
     var body: some View {
         NavigationStack {
@@ -87,6 +88,7 @@ struct KasseView: View {
                     Text(betragFehler ?? Texte.Kasse.grenzen(min: portal.config.min, max: portal.config.max))
                         .font(.dm(.footnote, weight: betragFehler == nil ? .regular : .semibold))
                         .foregroundStyle(betragFehler == nil ? Color.tfLeise : Color.tfRot)
+                    if betragFehler == nil { GebuehrHinweis(cent: eingabe.cent) }
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.top, 6)
@@ -96,6 +98,8 @@ struct KasseView: View {
                     Text(Texte.Kasse.anzahlung).tag(true)
                 }
                 .pickerStyle(.segmented)
+
+                if !entwurf.anzahlung { HeuteSchalter(an: $heute) }
 
                 Ziffernblock(eingabe: $eingabe)
 
@@ -147,7 +151,8 @@ struct KasseView: View {
                 let neu = APIClient.NeueZahlung(
                     betrag: Euro.fuerServer(cent), art: e.anzahlung ? "anzahlung" : "gesamt",
                     kunde: e.kunde.leerAlsNil, email: e.email.trimmingCharacters(in: .whitespaces).lowercased().leerAlsNil,
-                    beschreibung: e.beschreibung.leerAlsNil, sitzungen: e.anzahlung ? nil : e.sitzungen.leerAlsNil)
+                    beschreibung: e.beschreibung.leerAlsNil, sitzungen: e.anzahlung ? nil : e.sitzungen.leerAlsNil,
+                    heute: !e.anzahlung && heute ? true : nil)
                 let r = try await APIClient.shared.zahlungErstellen(neu)
                 portal.aktualisieren(r.zahlung)
                 erfolgZaehler += 1
@@ -156,6 +161,7 @@ struct KasseView: View {
                 entwurf = KasseEntwurf()
                 eingabe.leeren()
                 detailsOffen = false
+                heute = false
             } catch {
                 fehler = fehlerText(error)
             }

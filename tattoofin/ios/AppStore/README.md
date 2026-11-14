@@ -85,8 +85,9 @@ Tracking: **Nein**. Für alle Datenarten: mit der Identität verknüpft (Studio-
 | Kennungen → Geräte-ID | Geräte-Kennung der App und Push-Token |
 | Andere Daten | Gerätename, Gerätemodell, iOS- und App-Version (Liste der angemeldeten Geräte) |
 | Käufe → Kaufverlauf | Apple-Abo: signierte Transaktion (Kennungen, Produkt, Kauf- und Ablaufdatum) an unseren Server |
+| Benutzerinhalte → Fotos oder Videos | Nur das Studio-Logo, das der Inhaber für den QR-Aufsteller in Fotos auswählt (schwarz/weiß an unseren Server, für die Gravur). Speichern in Fotos (Werbung) liest nichts. |
 
-Nicht erhoben: Standort, Kontakte, Fotos (die Kamera scannt nur Codes, Bilder werden nicht gespeichert oder gesendet), Browserverlauf,
+Nicht erhoben: Standort, Kontakte, sonstige Fotos (die Kamera scannt nur Codes, Bilder werden nicht gespeichert oder gesendet), Browserverlauf,
 Suchverlauf, Nutzungsdaten, Diagnosedaten, Werbe-ID.
 
 ## Kategorie, Alter, Export

@@ -78,6 +78,18 @@ Nur Debug: `-TFZuruecksetzen YES` startet ohne Anmeldung und ohne offene Registr
 - „So geht's“ (`Features/SoGehts`): Erklärvideo mit Kapiteln, ohne das Web-App-Kapitel „App auf den Startbildschirm“ (wird beim Abspielen übersprungen).
 - Start-Bereich oben in der Kasse (`Features/Start`): Checkliste wie im Web, „Diesen Monat“, So-geht's-Karte (beides ausblendbar).
 
+## Dein Studio: Einstellungen, Recht, Fragebogen, Nachweis, Aufsteller (14.11.2026)
+
+Konto → Abschnitt „Dein Studio“ (`Features/StudioMehr`, Daten über `StudioMehrStore` aus `GET /api/portal`, eigene API-Methoden in `Core/APIClient+Studio.swift`):
+
+- Einstellungen (nur Inhaber, `PATCH /api/portal/kontakt`): Anzahlungsbedingungen, Anzahlung als Ausweg 10–50 %, Zahlseiten-Hinweis (beides nur mit `klarna`, Pflichtsatz klein darunter), E-Mail.
+- Deine rechtliche Lage: `recht.html?app=1` in der Rechtsansicht (nur lesen), Bestätigung nativ mit Häkchen und Name (`POST /api/portal/recht`, nur Inhaber).
+- Fragebogen nativ wie `onboarding.html` (gleiche Feldnamen, nur Inhaber). Klarna-Wunsch nur bei `klarna`, ohne Raten-Aussage.
+- Abrechnungen nur bei Provision + Stripe-Abrechnung. „Bei Stripe ansehen“ (nur Inhaber) und Rechnungen in `SFSafariViewController`. Hilfe per WhatsApp (`wa.me/491624502375`, „unser Team“).
+- QR-Aufsteller (nur Inhaber): Vorschau nativ (`AufstellerVorschau`, Maße wie `aufsteller.js`), Logo per `PhotosPicker` → schwarz/weiß-JPEG, Daten/Texte von `GET /api/app/aufsteller` (ohne Paket), Bestellen mit `bestellen: true`; bei Kauf Stripe-Checkout in der Safari-Ansicht, Rückkehr `app-fertig.html` → „Fertig“ → `POST /api/portal/aufsteller-pruefen { cs }`. Keine Hersteller-Dateien in der App.
+- Zahlungsdetail: „Nachweis als PDF teilen“ (Server-PDF `?pdf=1`, Rückfall: PDF aus dem JSON mit `UIGraphicsPDFRenderer`). Kasse: Schalter „heute im Studio“ (nur Gesamtpreis) und Gebührenhinweis.
+- Tests: `StudioMehrTests` (Unit), `StudioMehrUITests` (Ende zu Ende gegen `dev/app-lokal.mjs`; Kauf des Aufstellers mit `AUFSTELLER_PAKETE=einmal` am Server und `TEST_RUNNER_TF_UI_AUFSTELLER_KAUF=1`).
+
 ## Server
 
 - Debug: `http://localhost:8888` (aus `TF_API_BASE` → Info.plist `TFApiBasis`), Release: `https://tattoofin.de`.

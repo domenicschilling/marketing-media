@@ -92,6 +92,7 @@ final class AppState {
         Einstellungen.abmelden()
         portal.leeren()
         WerbungStore.shared.leeren()
+        StudioMehrStore.shared.leeren()
         sitzung = nil
         sprungziel = nil
         sperre.entsperrt()
