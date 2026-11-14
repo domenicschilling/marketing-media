@@ -168,6 +168,62 @@ h1,h2,h3{padding-top:.08em}
   .dk-diamant{left:90%;top:88%;width:4%}
 }
 
+/* Sehr niedrige Handys hochkant (iPhone SE in Safari ~548 px, SE 1 ~460 px): Knopf bleibt im ersten Bildschirm */
+@media (max-width:599px) and (max-height:600px){
+  .kicker{font-size:14px}
+  .auftakt h1{font-size:34px}
+  .unterzeile{font-size:14px}
+  .buehne{height:calc(36vw + 52px)}
+  .auftakt-handy{width:44%;left:48%}
+  .hausherr{width:28%}
+  .fl-1{width:31%}
+  .film-knopf{min-height:34px;font-size:12px;bottom:-17px}
+  /* Hinweis „Echte App · Beispieldaten“ passt hier nicht mehr unter das Bild, ohne den Knopf zu verdecken */
+  .auftakt-handy figcaption{display:none}
+  .dk-blitz{display:none}
+  .auftakt-knopf .knopf{min-height:52px;font-size:22px}
+}
+@media (max-width:599px) and (max-height:500px){
+  .kicker{font-size:13px}
+  .auftakt h1{font-size:31px}
+  .buehne{height:calc(30vw + 66px)}
+  .auftakt-handy{width:42%;left:50%}
+}
+/* Handy quer (niedrig und breit): Text links, Bild rechts, Knopf im ersten Bildschirm */
+@media (orientation:landscape) and (max-height:500px) and (min-width:600px){
+  .kopf{min-height:40px;padding-top:2px}
+  .kopf-marke img{width:120px}
+  .auftakt{grid-template-columns:minmax(0,11fr) minmax(0,9fr);grid-template-rows:auto auto;column-gap:24px;padding-top:2px;padding-bottom:18px}
+  .auftakt-kopf{grid-column:1;grid-row:1;align-self:end;text-align:left;justify-self:stretch}
+  .auftakt-fuss{grid-column:1;grid-row:2;align-self:start;justify-items:start;text-align:left;margin-top:10px;gap:6px}
+  .kicker{font-size:15px;margin-inline:0;max-width:none}
+  .auftakt h1{font-size:clamp(30px,11vh,46px);margin-top:4px}
+  .unterzeile{font-size:15px;margin-top:4px}
+  .buehne{grid-column:2;grid-row:1/3;height:min(74vh,300px);aspect-ratio:auto;width:100%;max-width:none;margin:0}
+  .nur-gross,.dk-mond,.dk-diamant,.dk-blitz{display:none}
+  .fl-1 .nr{display:none}
+  .auftakt-handy{left:30%;top:4%;width:60%}
+  .handy-rahmen{border-radius:18px;padding:5px 5px 20px}
+  .film-knopf{min-height:34px;font-size:12px;bottom:-17px}
+  .auftakt-handy figcaption{margin-top:20px;font-size:12px}
+  .hausherr{left:0;bottom:0;top:auto;width:30%;max-width:none}
+  .fl-1{left:-2%;top:-2%;width:30%;max-width:none}
+  .auftakt-knopf{width:auto}
+  .auftakt-knopf .knopf{min-height:48px;font-size:22px}
+  .preiszeile{font-size:14px}
+}
+/* Große Bildschirme: Bühne wächst mit, statt klein in der Ecke zu stehen */
+@media (min-width:1600px){
+  .kopf,.auftakt,.fall,.werkzeuge,.ablauf,.fragen,.schluss,.anfrage,.preis-innen,.fuss-innen{max-width:1480px}
+  .auftakt h1{font-size:clamp(88px,5.6vw,116px)}
+  .kicker{font-size:24px}
+  .unterzeile{font-size:23px}
+  .preiszeile{font-size:18px}
+}
+@media (min-width:1600px) and (min-height:1000px){
+  .auftakt{padding-top:3vh;padding-bottom:9vh}
+}
+
 /* ---------- Nr. 1: echter Fall ---------- */
 .fall{position:relative;padding:26px var(--rand) 30px;display:grid;gap:14px}
 .stempel-schild{display:inline-block;background:var(--blau);color:var(--gelb);font:400 17px/1 var(--anzeige);text-transform:uppercase;padding:8px 14px 5px;border-radius:6px;transform:rotate(-3deg);box-shadow:3px 3px 0 var(--gelb)}

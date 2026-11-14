@@ -76,7 +76,7 @@ window.TFTrack = (function () {
     // beide Knöpfe gleich groß und gleich gestaltet (kein Dark Pattern)
     ".tf-cc .r{margin-top:6px;gap:8px;flex-wrap:nowrap}.tf-cc button,.tf-cc button.ja{min-width:0;padding:7px 6px;font-size:13.5px;border-width:2px;background:#fff;color:#1f3d5c}}" +
     // Handy quer / sehr niedrige Fenster: Text links, Knöpfe rechts in einer Zeile (statt halber Bildschirm); Platz für die Sicherheitsränder (Notch)
-    "@media (max-height:520px){.tf-cc{max-width:none;margin:0;left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right));bottom:max(8px,env(safe-area-inset-bottom));display:flex;align-items:center;gap:14px;padding:8px 12px;font-size:13px;line-height:1.35}" +
+    "@media (max-height:520px) and (min-width:601px){.tf-cc{max-width:none;margin:0;left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right));bottom:max(8px,env(safe-area-inset-bottom));display:flex;align-items:center;gap:14px;padding:8px 12px;font-size:13px;line-height:1.35}" +
     ".tf-cc b,.tf-cc .lang{display:none}.tf-cc .kurz{display:inline}.tf-cc .r{margin:0;flex:none;flex-wrap:nowrap}.tf-cc button{flex:none;min-width:0;padding:8px 14px;font-size:14px;border-width:2px}body.tf-cc-offen{padding-bottom:84px}}";
 
   function banner() {
