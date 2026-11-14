@@ -2,7 +2,7 @@ import SwiftUI
 import Observation
 
 enum HauptTab: Hashable {
-    case kasse, zahlungen, gutscheine, konto
+    case kasse, zahlungen, gutscheine, werbung, konto
 }
 
 /// Sprungziel aus einer Push-Mitteilung
@@ -24,6 +24,8 @@ final class AppState {
     var phase: Phase = .start
     var tab: HauptTab = .kasse
     var sprungziel: Sprungziel?
+    /// Sprung in einen Abschnitt des Tabs „Werbung“ (z. B. aus der Checkliste: „QR-Code an die Theke“ → Zahlseite)
+    var werbungSprung: WerbungAbschnitt?
     /// Wird bei jeder Zahlungs-Mitteilung hochgezählt (offenes Zahlungslink-Sheet lädt dann sofort neu)
     var pushZahlung: (id: String, zaehler: Int)?
     var sitzung: SitzungInfo?
@@ -91,6 +93,8 @@ final class AppState {
         ZahlungenCache.loeschen()
         Einstellungen.abmelden()
         portal.leeren()
+        WerbungStore.shared.leeren()
+        StudioMehrStore.shared.leeren()
         sitzung = nil
         sprungziel = nil
         sperre.entsperrt()

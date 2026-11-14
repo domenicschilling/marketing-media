@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>Druckvorlagen – Tattoofin</title>
+<link rel="icon" href="/favicon.png" type="image/png">
+<link rel="stylesheet" href="assets/tattoofin.css">
+<style>
+body{background:#fdf6e9}
+.liste{max-width:560px;margin:20px auto;padding:0 16px}
+.liste h1{font:700 26px/1.2 var(--head);margin:8px 0 6px;color:var(--ink)}
+.liste p{margin:0 0 16px;color:#4a5568}
+.liste a{display:block;background:#fff;border:1px solid #e6dcc8;border-radius:12px;padding:14px 16px;margin:0 0 10px;color:var(--ink);text-decoration:none;font-weight:600}
+.liste a span{display:block;font-weight:400;font-size:14px;color:#4a5568;margin-top:2px}
+</style>
+</head><body>
+<main class="liste">
+  <h1>Druckvorlagen</h1>
+  <p>Mit deinem Studionamen und dem QR-Code deiner Zahlseite. Öffnen, dann drucken oder als PDF sichern.</p>
+  <div id="vorlagen"></div>
+</main>
+<script>
+(function () {
+  var q = location.search;
+  var v = [["20-fensteraufkleber", "Fensteraufkleber", "Rund und A4, für die Scheibe"], ["21-flyer-a6", "Flyer A6", "Zum Mitgeben"],
+    ["22-thekenaufsteller-a5", "Thekenaufsteller A5", "Für die Theke"], ["23-kundeninfo", "Kundeninfo", "So bezahlen deine Kunden"],
+    ["24-social-kit", "Bilder für Instagram", "Story, Beitrag, Badge"]];
+  document.getElementById("vorlagen").innerHTML = v.map(function (x) {
+    return '<a href="kunden/' + x[0] + '.html' + q.replace(/"/g, "%22") + '">' + x[1] + "<span>" + x[2] + "</span></a>";
+  }).join("");
+})();
+</script>
+</body></html>

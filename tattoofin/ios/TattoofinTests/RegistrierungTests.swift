@@ -221,12 +221,18 @@ struct RegistrierungTests {
         #expect(Texte.Abo.statusText(AppleAbo(status: "aktiv", laeuftBis: "2026-11-21T10:00:00.000Z", autoVerlaengerung: false, probe: true)) == "endet am 21.11.2026")
     }
 
+    /// Registrierung und Abo: nie Preis von der Website, nie Klarna/Raten (Apple 3.1.1). Seit 14.11.2026 (Domenic) gibt es Klarna in der App
+    /// bewusst NUR im Werbebereich und nur, wenn das Studio Klarna dauerhaft anbietet (WerbungRegeln.klarnaMaterial, geprüft in
+    /// WerbungTests.klarnaNurMitKlarnaDauerhaft/texteOhneKlarnaUndOhnePreis). Hier bleibt Klarna verboten.
     @Test func keinWebPreisKeinKlarna() {
         for t in registrierTexte + aboTexte {
             for verboten in ["49", "netto", "tattoofin.de", "Klarna", "Raten", "Probe", "kostenlos testen"] {
                 #expect(!t.localizedCaseInsensitiveContains(verboten), "„\(verboten)“ in: \(t)")
             }
         }
+        // Ohne Angabe zu klarnaDauerhaft zeigt die App kein Klarna-Material (auch nicht für Apple-Abo-Studios)
+        #expect(!WerbungRegeln.klarnaMaterial(werbung: nil, start: nil))
+        #expect(!WerbungRegeln.klarnaMaterial(werbung: WerbungAntwort(klarnaDauerhaft: false), start: StartStudio(klarnaDauerhaft: true)))
     }
 
     @Test func aboStatusTexte() {

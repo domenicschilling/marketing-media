@@ -140,8 +140,8 @@ actor APIClient {
     }
 
     /// Rohdaten (z. B. PDF)
-    func daten(_ pfad: String) async throws -> Data {
-        var r = anfrage("GET", pfad, auth: true)
+    func daten(_ pfad: String, query: [URLQueryItem] = []) async throws -> Data {
+        var r = anfrage("GET", pfad, query: query, auth: true)
         r.setValue("application/pdf", forHTTPHeaderField: "Accept")
         return try await ausfuehren(r, auth: true).0
     }
@@ -183,6 +183,8 @@ extension APIClient {
         var sitzungen: String?
         var empfaenger: String?
         var nachricht: String?
+        /// Nur bei Art „gesamt“: Kunde wird heute im Studio tätowiert (steht dann so beim Bezahlen)
+        var heute: Bool? = nil
     }
 
     func zahlungErstellen(_ z: NeueZahlung) async throws -> ZahlungErstellt {

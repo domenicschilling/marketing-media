@@ -9,6 +9,8 @@ import UniformTypeIdentifiers
 /// Apple 3.1.1). Links zu fremden Seiten (z. B. Datenschutz von Stripe) öffnen in Safari, E-Mail/Telefon in der passenden App.
 enum Rechtsseite: String, Identifiable, CaseIterable, Sendable {
     case impressum, datenschutz, vertrag, avv
+    /// „Deine rechtliche Lage“ (nur lesen, bestätigt wird nativ in RechtView)
+    case recht
 
     var id: String { rawValue }
     var datei: String { rawValue + ".html" }
@@ -19,6 +21,7 @@ enum Rechtsseite: String, Identifiable, CaseIterable, Sendable {
         case .datenschutz: Texte.Konto.datenschutz
         case .vertrag: Texte.Konto.vertragText
         case .avv: Texte.Registrieren.avvTitel
+        case .recht: Texte.Recht.titel
         }
     }
 
@@ -26,7 +29,7 @@ enum Rechtsseite: String, Identifiable, CaseIterable, Sendable {
         APIClient.basisURL().appending(path: datei).appending(queryItems: [URLQueryItem(name: "app", value: "1")])
     }
 
-    /// Darf diese Adresse in der Ansicht geladen werden? Nur die vier Rechtsseiten auf unserem Server.
+    /// Darf diese Adresse in der Ansicht geladen werden? Nur die Rechtsseiten auf unserem Server.
     static func erlaubt(_ url: URL, basis: URL = APIClient.basisURL()) -> Bool {
         guard url.scheme == basis.scheme, url.host() == basis.host(), url.port == basis.port else { return false }
         return Rechtsseite.allCases.contains { "/" + $0.datei == url.path() }
@@ -124,7 +127,8 @@ struct RechtsWebAnsicht: UIViewRepresentable {
       {"trigger": {"url-filter": "tf-track\\\\.js"}, "action": {"type": "block"}},
       {"trigger": {"url-filter": "facebook\\\\.net"}, "action": {"type": "block"}},
       {"trigger": {"url-filter": "facebook\\\\.com"}, "action": {"type": "block"}},
-      {"trigger": {"url-filter": ".*"}, "action": {"type": "css-display-none", "selector": "header.nav, nav.webnav, footer, .tf-cc, .tf-wa"}}
+      {"trigger": {"url-filter": ".*"}, "action": {"type": "css-display-none", "selector": "header.nav, nav.webnav, footer, .tf-cc, .tf-wa"}},
+      {"trigger": {"url-filter": "recht\\\\.html"}, "action": {"type": "css-display-none", "selector": ".knopf"}}
     ]
     """
 

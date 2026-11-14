@@ -97,6 +97,42 @@ abgeschlossen. Abschnittsköpfe und -fußzeilen in Listen über `ListenKopf`/`Li
 Beobachtung 14.11.: Die erste `SKTestSession` im UI-Test-Prozess wirkt nicht (Produkt „nicht gefunden“, auch nach „Nochmal versuchen“).
 `RegistrierungE2ETests` wärmt deshalb einmal auf (Sitzung + App-Start/-Ende), danach eine frische Sitzung.
 
+## Werbung, So geht's, Start-Bereich (14.11.2026)
+
+- Tab „Werbung“ (`Features/Werbung`): Werbevideo (AVKit, öffentliche Adressen von `GET /api/app/werbung`), Studio-Beiträge, Zahlseiten-QR, Druckvorlagen. Klarna/Raten-Material nur bei `klarnaDauerhaft` (`WerbungRegeln.klarnaMaterial`), mit kleiner Fußnote `KlarnaTexte.pflichtsatz`.
+- Studio-Beiträge zeichnet `app-kit.js` lokal in einem unsichtbaren `WKWebView` (Schema `tfkit://`, keine Netzzugriffe). Die Kit-Dateien liegen in `Tattoofin/Resources/WebKit` als Kopie aus `website/public`. **Nach jeder Änderung an app-kit.js, werbung-texte.js, klarna-texte.js, Figur, Wortmarke oder Schriften:** `bash scripts/web-kit-sync.sh` und die Kopie einchecken. `WerbungTests/kitGleichWieWebsite` schlägt sonst fehl.
+- Speichern in Fotos nur mit `.addOnly` (`NSPhotoLibraryAddUsageDescription`).
+- „So geht's“ (`Features/SoGehts`): Erklärvideo mit Kapiteln, ohne das Web-App-Kapitel „App auf den Startbildschirm“ (wird beim Abspielen übersprungen). Der Text sagt ehrlich, dass das Video Tattoofin im Browser zeigt (bis das iPhone-Video kommt); die Kapitel-Überschrift ohne Zahl. Raten-Fußnote nur mit Klarna dauerhaft, sonst „Im Video siehst du Klarna …“ (`soGehts.ohneKlarna`).
+- Start-Bereich oben in der Kasse (`Features/Start`): eine schmale Zeile „Einrichtung 4/8 ›“ + „So geht's“, darunter „Diesen Monat“ als kleine Zeile. Die Checkliste öffnet als Blatt (`ChecklistenBlatt`, Recht/Fragebogen direkt darin, „Werbung“ springt in den Tab, „QR-Code an die Theke“ direkt zur Zahlseite über `AppState.werbungSprung`). Ist alles erledigt, lässt sich die Einrichtung ausblenden. Regel: Bei 402 pt und normaler Schrift steht „Zahlungslink erstellen“ ohne Scrollen im Bild (UI-Test prüft es, leer und mit Betrag).
+- Werbung: Sprungleiste „Video · Beiträge · QR-Code · Drucken“, „In Fotos speichern“ beim Video im ersten Bildschirm, gleiche Bedienung wie bei Beiträgen („Text kopieren“ kopiert sofort, „Text ansehen“ zeigt ihn; Fußnote nicht doppelt). Knöpfe nebeneinander nur, wenn jede Beschriftung in eine Zeile passt (`GleichBreitOderUntereinander`). Anzeige ohne Fachwörter (`anzeigeTitel`/`anzeigeFormat`: „Bilder-Serie“, keine 9:16/4:5) – die Kit-Dateien bleiben bytegleich mit dem Web. Ohne Klarna: Hinweis mit nächstem Schritt + „Hilfe per WhatsApp“. Zahlseiten-Karte: zweiter Weg zum Holz-Aufsteller (nur Inhaber, ohne Preis); „Zahlseite ansehen“ öffnet `…?app=1` (Impressum/Datenschutz ohne Weg zur Startseite).
+- Videos: Lädt ein Video nicht (kein Internet), zeigt die App „Das Video lädt gerade nicht …“ und „Nochmal versuchen“ (`VideoLadeStatus`). Der Zwischenspeicher für Speichern/Teilen hängt am Stand der Datei auf dem Server (ETag/Last-Modified), ersetzte Videos werden neu geladen.
+- Druckvorlagen liegen seit 14.11.2026 auf tattoofin.de (`website/public/druck/kunden/`), nicht mehr bei GitHub Pages (dort 404).
+
+## Dein Studio: Einstellungen, Recht, Fragebogen, Nachweis, Aufsteller (14.11.2026)
+
+Konto → Abschnitt „Dein Studio“ (`Features/StudioMehr`, Daten über `StudioMehrStore` aus `GET /api/portal`, eigene API-Methoden in `Core/APIClient+Studio.swift`):
+
+- Einstellungen (nur Inhaber, `PATCH /api/portal/kontakt`): Anzahlungsbedingungen, Anzahlung als Ausweg 10–50 %, Zahlseiten-Hinweis (beides nur mit `klarna`, Pflichtsatz klein darunter), E-Mail.
+- Deine rechtliche Lage: `recht.html?app=1` in der Rechtsansicht (nur lesen), Bestätigung nativ mit Häkchen und Name (`POST /api/portal/recht`, nur Inhaber).
+- Fragebogen nativ wie `onboarding.html` (gleiche Feldnamen, nur Inhaber). Klarna-Wunsch nur bei `klarna`, ohne Raten-Aussage.
+- Abrechnungen nur bei Provision + Stripe-Abrechnung. „Bei Stripe ansehen“ (nur Inhaber) und Rechnungen in `SFSafariViewController`. Hilfe per WhatsApp (`wa.me/491624502375`, „unser Team“).
+- QR-Aufsteller (nur Inhaber): Lieferadresse steht über „Bestellen“, nach dem Bestellen nur eine Meldung (der Status). „Logo löschen“ schickt `logo: null` (Datenschutz). Vorschau nativ (`AufstellerVorschau`, Maße wie `aufsteller.js`), Logo per `PhotosPicker` → schwarz/weiß-JPEG, Daten/Texte von `GET /api/app/aufsteller` (ohne Paket), Bestellen mit `bestellen: true`; bei Kauf Stripe-Checkout in der Safari-Ansicht, Rückkehr `app-fertig.html` → „Fertig“ → `POST /api/portal/aufsteller-pruefen { cs }`. Keine Hersteller-Dateien in der App.
+- Zahlungsdetail: „Nachweis als PDF teilen“ (Server-PDF `?pdf=1`, Rückfall: PDF aus dem JSON mit `UIGraphicsPDFRenderer`). Kasse: Schalter „heute im Studio“ (nur Gesamtpreis) und Gebührenhinweis.
+- Tests: `StudioMehrTests` (Unit), `StudioMehrUITests` (Ende zu Ende gegen `dev/app-lokal.mjs`; Kauf des Aufstellers mit `AUFSTELLER_PAKETE=einmal` am Server und `TEST_RUNNER_TF_UI_AUFSTELLER_KAUF=1`).
+
+## Rundgang Web = App (Ende zu Ende, 14.11.2026)
+
+`TattoofinUITests/ParitaetRundgangUITests.swift` klickt jede neue Funktion durch und legt je Bildschirm ein Foto als Anhang ab
+(`p…` Inhaber Werbung/Kasse, `q…` Inhaber Konto/Dein Studio, `r…` So geht's/WhatsApp/Fotos-App, `t…` Team, `k…` ohne Klarna,
+`a…` Aufsteller kaufen, `d…` dunkel + große Schrift). Server: `dev/app-lokal.mjs` (enthält jetzt `ohne@beispiel.test`, Ink Studio Coburg,
+Risikofrei ohne dauerhaftes Klarna, Aufsteller kostenpflichtig). `testDunkelGross` stellt den Simulator selbst auf dunkel.
+Der lokale Server liefert Dateien jetzt mit Byte-Bereichen (206) wie Netlify, sonst spielt AVPlayer die Videos nicht ab.
+Seit der Prüfrunde 14.11. prüft der Rundgang zusätzlich: „Zahlungslink erstellen“ ohne Scrollen sichtbar (leer und mit 250 €), Sprungleiste,
+„In Fotos speichern“ beim Video im ersten Bildschirm, Druckvorlage ohne 404, Sprung aus der Checkliste zur Zahlseite, So geht's ohne Klarna
+(keine Raten-Fußnote), „Logo löschen“. Ablauf: frischer Server (`PORT=… node dev/app-lokal.mjs`), Simulator vorher `xcrun simctl erase`,
+dann alle Rundgang-Tests (`testDunkelGross` schaltet selbst auf dunkel und zurück). Für `dev/e2e.mjs` und `dev/betrieb.mjs`
+braucht `NODE_PATH` zusätzlich einen Ordner mit `playwright` (z. B. `…/Marketing-Maschine/node_modules`).
+
 ## Server
 
 - Debug: `http://localhost:8888` (aus `TF_API_BASE` → Info.plist `TFApiBasis`), Release: `https://tattoofin.de`.

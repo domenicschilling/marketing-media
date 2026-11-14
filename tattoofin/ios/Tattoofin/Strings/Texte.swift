@@ -28,6 +28,7 @@ enum Texte {
         static let kasse = "Kasse"
         static let zahlungen = "Zahlungen"
         static let gutscheine = "Gutscheine"
+        static let werbung = "Werbung"
         static let konto = "Konto"
     }
 

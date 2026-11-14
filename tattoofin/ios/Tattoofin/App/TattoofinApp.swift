@@ -69,7 +69,7 @@ struct StartBild: View {
     }
 }
 
-/// Die vier Tabs nach der Anmeldung
+/// Die fünf Tabs nach der Anmeldung
 struct HauptView: View {
     @Environment(AppState.self) private var app
     @Environment(PortalStore.self) private var portal
@@ -86,10 +86,14 @@ struct HauptView: View {
             Tab(Texte.Tabs.gutscheine, systemImage: "gift", value: HauptTab.gutscheine) {
                 GutscheineView()
             }
+            Tab(Texte.Tabs.werbung, systemImage: "megaphone", value: HauptTab.werbung) {
+                WerbungView()
+            }
             Tab(Texte.Tabs.konto, systemImage: "person.crop.circle", value: HauptTab.konto) {
                 KontoView()
             }
         }
+        .environment(WerbungStore.shared)
         .task {
             await portal.laden()
             // Apple-Studios: Stand des Abos höchstens alle 6 Stunden an den Server

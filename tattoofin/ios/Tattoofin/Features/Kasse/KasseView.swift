@@ -11,6 +11,7 @@ struct KasseView: View {
     @State private var erstellt: ZahlungErstellt?
     @State private var thekeOffen = false
     @State private var erfolgZaehler = 0
+    @State private var heute = false
 
     var body: some View {
         NavigationStack {
@@ -71,16 +72,20 @@ struct KasseView: View {
 
     private var formular: some View {
         ScrollView {
-            VStack(spacing: 16) {
+            // Enger gesetzt: Start-Zeile, Betrag, Ziffernblock und „Zahlungslink erstellen“ passen bei normaler Schrift in den ersten Bildschirm
+            VStack(spacing: 10) {
+                StartBereich()
+
                 // Nach einem Testkauf (Apple-Sandbox, auch App Review): Kasse offen im Testmodus, Testzahlung im Zahlungslink
                 if portal.studio?.istTestmodus == true {
                     HinweisKarte(text: Texte.Kasse.testmodusText, symbol: "testtube.2")
                         .accessibilityIdentifier("kasse-testmodus")
                 }
+
                 // Betrag
                 VStack(spacing: 4) {
                     Text(eingabe.anzeige)
-                        .font(.luckiest(54, relativeTo: .largeTitle))
+                        .font(.luckiest(46, relativeTo: .largeTitle))
                         .foregroundStyle(Color.tfTinte)
                         .lineLimit(1)
                         .minimumScaleFactor(0.4)
@@ -90,15 +95,17 @@ struct KasseView: View {
                     Text(betragFehler ?? Texte.Kasse.grenzen(min: portal.config.min, max: portal.config.max))
                         .font(.dm(.footnote, weight: betragFehler == nil ? .regular : .semibold))
                         .foregroundStyle(betragFehler == nil ? Color.tfLeise : Color.tfRot)
+                    if betragFehler == nil { GebuehrHinweis(cent: eingabe.cent) }
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.top, 6)
 
                 Picker(Texte.Kasse.artLabel, selection: $entwurf.anzahlung) {
                     Text(Texte.Kasse.gesamt).tag(false)
                     Text(Texte.Kasse.anzahlung).tag(true)
                 }
                 .pickerStyle(.segmented)
+
+                if !entwurf.anzahlung { HeuteSchalter(an: $heute) }
 
                 Ziffernblock(eingabe: $eingabe)
 
@@ -133,7 +140,9 @@ struct KasseView: View {
                 .buttonStyle(.haupt)
                 .disabled(!bereit)
             }
-            .padding(16)
+            .padding(.horizontal, 16)
+            .padding(.top, 8)
+            .padding(.bottom, 16)
         }
         .scrollDismissesKeyboard(.interactively)
         .refreshable { await portal.laden() }
@@ -150,7 +159,8 @@ struct KasseView: View {
                 let neu = APIClient.NeueZahlung(
                     betrag: Euro.fuerServer(cent), art: e.anzahlung ? "anzahlung" : "gesamt",
                     kunde: e.kunde.leerAlsNil, email: e.email.trimmingCharacters(in: .whitespaces).lowercased().leerAlsNil,
-                    beschreibung: e.beschreibung.leerAlsNil, sitzungen: e.anzahlung ? nil : e.sitzungen.leerAlsNil)
+                    beschreibung: e.beschreibung.leerAlsNil, sitzungen: e.anzahlung ? nil : e.sitzungen.leerAlsNil,
+                    heute: !e.anzahlung && heute ? true : nil)
                 let r = try await APIClient.shared.zahlungErstellen(neu)
                 portal.aktualisieren(r.zahlung)
                 erfolgZaehler += 1
@@ -159,6 +169,7 @@ struct KasseView: View {
                 entwurf = KasseEntwurf()
                 eingabe.leeren()
                 detailsOffen = false
+                heute = false
             } catch {
                 fehler = fehlerText(error)
             }
@@ -214,7 +225,7 @@ struct Ziffernblock: View {
     private let reihen = [["1", "2", "3"], ["4", "5", "6"], ["7", "8", "9"], [",", "0", "⌫"]]
 
     var body: some View {
-        Grid(horizontalSpacing: 10, verticalSpacing: 10) {
+        Grid(horizontalSpacing: 10, verticalSpacing: 8) {
             ForEach(reihen, id: \.self) { reihe in
                 GridRow {
                     ForEach(reihe, id: \.self) { t in
@@ -227,7 +238,7 @@ struct Ziffernblock: View {
                             }
                             .font(.dm(28, relativeTo: .title, weight: .semibold))
                             .foregroundStyle(Color.tfTinte)
-                            .frame(maxWidth: .infinity, minHeight: 58)
+                            .frame(maxWidth: .infinity, minHeight: 52)
                             .background(Color.tfKarte, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                             .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Color.tfLinie, lineWidth: 1))
                         }

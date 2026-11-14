@@ -10,53 +10,14 @@
 window.TFKit = (function () {
   // Im Beitrag des Studios spricht das Studio („wir“). Weder das Studio noch Tattoofin vergeben Kredite → beide nennen.
   // Zusatz + Warnsatz kommen aus der zentralen Konstante (ohne Sternchen: die Beiträge machen keine Raten-Aussage, der Hinweis bleibt als Zusatz)
-  var FUSS = TF_KLARNA.ZUSATZ_STUDIO + " " + TF_KLARNA.WARNSATZ;
+  var FUSS = TF_WERBUNG.fuss(TF_KLARNA);
   var NAVY = "#1f3d5c", NAVY2 = "#0f2236", GELB = "#fbb316", CREME = "#fffaf0";
   var HEAD = "'Luckiest Guy', 'Titan One', sans-serif", BODY = "'DM Sans', sans-serif";
 
   // ---------- Texte ----------
-  function hashtags(k) {
-    var ort = String(k.ort || "").toLowerCase().replace(/[^a-zäöüß0-9]/g, "");
-    var t = ["#tattoo", "#wunschtattoo", "#tattoostudio"];
-    if (ort && ort.length > 1) t.push("#" + ort + "tattoo", "#" + ort);
-    else t.push("#tattooart", "#ink");
-    return t.join(" ");
-  }
-  function beiUns(k) { return k.ort ? "bei uns in " + k.ort : "bei uns"; }
-  function caption(k, teile) { return teile.join("\n\n") + "\n\n" + FUSS + "\n\n" + hashtags(k); }
-
-  var MIT = TF_KLARNA.NAME.mitKlarna; // „Mit Klarna bezahlen“
-  var VORLAGEN = [
-    { id: "ankuendigung", titel: "Beitrag: Ab jetzt mit Klarna bezahlen", format: "Beitrag 4:5", art: "post",
-      wofuer: "Dein Start-Beitrag: Alle sehen sofort, dass man bei euch jetzt auch mit Klarna bezahlen kann.",
-      seiten: ["ankuendigung"],
-      text: function (k) { return caption(k, [
-        "Ab jetzt bei uns: " + MIT + " für dein Wunsch-Tattoo! 🖤",
-        "Dein Tattoo kannst du " + beiUns(k) + " jetzt ganz bequem übers Handy bezahlen, per Link oder QR-Code. Zum Beispiel mit Karte, Apple Pay oder Google Pay. " + TF_KLARNA.NAME.verfuegbar + ".",
-        "Sprich uns einfach drauf an oder schreib uns eine Nachricht. Wir freuen uns auf dein Projekt!"]); } },
-    { id: "karussell", titel: "Karussell: Wunsch-Tattoo mit Klarna bezahlen", format: "4 Bilder 4:5", art: "post",
-      wofuer: "Vier Bilder zum Durchwischen: Frage, Neuigkeit, So geht's, Frag uns. Alle vier zusammen als einen Beitrag posten.",
-      seiten: ["haken", "ankuendigung", "schritte", "fragpost"],
-      text: function (k) { return caption(k, [
-        "Dein Wunsch-Tattoo – jetzt ganz einfach bezahlen. Wisch mal rüber 👉",
-        "Ab jetzt kannst du " + beiUns(k) + " mit Klarna bezahlen. So einfach geht's: Design und Termin mit uns absprechen, Link oder QR-Code öffnen und am Handy bezahlen.",
-        "Fragen? Schreib uns eine Nachricht oder sprich uns im Studio an! 🖤"]); } },
-    { id: "qr-story", titel: "Story: Mit Klarna bezahlen, QR-Code", format: "Story 9:16", art: "story",
-      wofuer: "Für deine Story, mit dem QR-Code zu deiner Zahlseite. Tipp: In Instagram noch den Link-Sticker mit deiner Zahlseite dazu – dann können Kunden direkt antippen.",
-      seiten: ["qrstory"], kopieren: "link",
-      text: function (k) { return "Link für den Link-Sticker in deiner Story:\n" + k.zahlseite; } },
-    { id: "schritte", titel: "Beitrag: So einfach geht's", format: "Beitrag 4:5", art: "post",
-      wofuer: "Erklärt in drei Schritten, wie das Bezahlen bei euch funktioniert. Gut als zweiter Beitrag ein paar Tage später.",
-      seiten: ["schritte"],
-      text: function (k) { return caption(k, [
-        "Tattoo bezahlen? So einfach geht's 👇",
-        "1️⃣ Design & Termin: Wir planen dein Tattoo gemeinsam mit dir.\n2️⃣ Link oder QR-Code: Den Link schicken wir dir, oder du scannst den QR-Code bei uns im Studio.\n3️⃣ Bezahlen: Bequem am Handy. " + MIT + ".",
-        "Alles übers Handy, ohne Papierkram. Fragen? Schreib uns einfach!"]); } },
-    { id: "frag-story", titel: "Story: Frag uns!", format: "Story 9:16", art: "story",
-      wofuer: "Lädt deine Follower ein, euch zur Bezahlung zu schreiben. Tipp: In Instagram den Fragen-Sticker dazu – den Text dafür kannst du kopieren.",
-      seiten: ["fragstory"], kopieren: "sticker",
-      text: function () { return "Hast du Fragen zum Bezahlen?"; } },
-  ];
+  // Wortlaut, Vorlagen und Hashtags kommen aus /js/werbung-texte.js (eine Quelle für Dashboard und iPhone-App, GET /api/app/werbung)
+  var hashtags = TF_WERBUNG.hashtags;
+  var VORLAGEN = TF_WERBUNG.vorlagen(TF_KLARNA);
 
   // ---------- Zeichnen: Grundlagen ----------
   var BILDER = {};
