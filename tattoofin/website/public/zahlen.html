@@ -44,6 +44,8 @@
   <p class="fuss">Welche Zahlarten dir angeboten werden, siehst du beim Bezahlen. Dein Vertrag über das Tattoo besteht nur mit dem Studio; Tattoofin stellt nur die Technik bereit. Deine gesetzlichen Rechte bleiben von den Häkchen unberührt.</p>
   <p class="powered"><img src="/assets/figur.png" alt=""> Sichere Zahlung über Stripe · technisch bereitgestellt von Tattoofin · <a href="/impressum.html" target="_blank">Impressum</a> · <a href="/datenschutz.html#zahlseiten" target="_blank">Datenschutz</a></p>
 </main>
+<script>/* In der Tattoofin-App (?app=1, „Zahlseite ansehen“): Impressum/Datenschutz in der App-Fassung öffnen (ohne Menü und ohne Weg zur Startseite, Apple 3.1.1) */
+if (/[?&]app=1(&|#|$)/.test(location.search)) document.querySelectorAll(".powered a").forEach(function (a) { a.href = a.getAttribute("href").replace(/\.html/, ".html?app=1"); a.removeAttribute("target"); });</script>
 <script src="/js/common.js"></script>
 <script src="/js/stripe-bausteine.js"></script>
 <script src="/js/klarna-texte.js"></script>

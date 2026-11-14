@@ -6,7 +6,7 @@ import XCTest
 ///  - testInhaber: Kasse mit Start-Bereich, Werbung (Video, Speichern, Beiträge, Name, Großansicht, Zahlseiten-QR, Druck), So geht's,
 ///    Link mit „heute“, Nachweis-PDF, Einstellungen, Recht, Fragebogen, Aufsteller, Stripe, WhatsApp, zuletzt die Fotos-App.
 ///  - testTeam: team@beispiel.test, Inhaber-Funktionen gesperrt.  - testOhneKlarna: ohne@beispiel.test, kein Raten-Material.
-///  - testDunkelGross: Werbung + Einstellungen (Simulator vorher dunkel stellen: xcrun simctl ui <udid> appearance dark).
+///  - testDunkelGross: Werbung + Einstellungen, dunkel (stellt der Test selbst ein) mit großer Schrift.
 ///  - testZuletztAufstellerKauf (läuft nach testOhneKlarna, danach ist das Logo gesperrt): ohne@beispiel.test (Aufsteller nicht enthalten): Stripe-Checkout im Nachbau, Rückkehr, Prüfung.
 @MainActor
 final class ParitaetRundgangUITests: XCTestCase {
@@ -131,26 +131,30 @@ final class ParitaetRundgangUITests: XCTestCase {
 
         // Kasse mit Start-Bereich
         app.tabBars.buttons["Kasse"].tap()
-        let einrichtung = etwas(app, "Einrichtung:")
+        let einrichtung = app.buttons["start-einrichtung"]
         XCTAssertTrue(einrichtung.waitForExistence(timeout: 15), "Checkliste fehlt")
         XCTAssertTrue(etwas(app, "Diesen Monat").exists, "„Diesen Monat“ fehlt")
+        // Befund 14.11.: Der Start-Bereich darf den Knopf „Zahlungslink erstellen“ nicht aus dem ersten Bildschirm schieben
+        Thread.sleep(forTimeInterval: 1)
+        XCTAssertTrue(frei(app, knopf(app, "Zahlungslink erstellen")), "„Zahlungslink erstellen“ ist ohne Scrollen nicht sichtbar")
         foto("kasse-start-bereich")
         einrichtung.tap()
         XCTAssertTrue(etwas(app, "Fragebogen ausfüllen").waitForExistence(timeout: 5) || etwas(app, "Fragebogen").exists)
         foto("kasse-checkliste-offen")
-        // Knopf „Lesen“ öffnet die rechtliche Lage direkt
+        // Knopf „Lesen“ öffnet die rechtliche Lage direkt (in der Checkliste)
         let lesen = app.buttons["Lesen"].firstMatch
         if lesen.waitForExistence(timeout: 3) {
             bisSichtbar(app, lesen)
             lesen.tap()
             XCTAssertTrue(app.buttons["recht-lesen"].waitForExistence(timeout: 10), "„Lesen“ öffnet die rechtliche Lage nicht")
             foto("kasse-checkliste-recht-blatt")
-            app.buttons["Fertig"].firstMatch.tap()
-            Thread.sleep(forTimeInterval: 1)
+            zurueck(app)
         }
+        app.buttons["Fertig"].firstMatch.tap()
+        Thread.sleep(forTimeInterval: 1)
 
         // So geht's (Karte in der Kasse)
-        let sg = knopf(app, "So geht's")
+        let sg = app.buttons["start-so-gehts"]
         bisSichtbar(app, sg, hoch: false)
         sg.tap()
         let kap = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Übersicht und Einrichtung")).firstMatch
@@ -174,28 +178,33 @@ final class ParitaetRundgangUITests: XCTestCase {
         app.tabBars.buttons["Werbung"].tap()
         let videoTitel = app.staticTexts["Dein Werbevideo"]
         XCTAssertTrue(videoTitel.waitForExistence(timeout: 15), "Werbevideo fehlt")
+        XCTAssertTrue(app.buttons["Springen zu QR-Code"].exists, "Sprungleiste fehlt")
+        Thread.sleep(forTimeInterval: 1)
         foto("werbung-tab")
+        XCTAssertTrue(frei(app, knopf(app, "In Fotos speichern")), "„In Fotos speichern“ beim Video nicht im ersten Bildschirm")
         let poster = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Video abspielen")).firstMatch
         bisSichtbar(app, poster)
         poster.tap()
         Thread.sleep(forTimeInterval: 4)
         foto("werbevideo-player-reel")
-        app.buttons["Beitrag (4:5)"].firstMatch.tap()
+        app.segmentedControls.buttons["Beitrag"].firstMatch.tap()
         Thread.sleep(forTimeInterval: 1.5)
         foto("werbevideo-format-feed")
         let speichernVideo = knopf(app, "In Fotos speichern")
         bisSichtbar(app, speichernVideo)
         speichernVideo.tap()
         gespeichert(app, "werbevideo-gespeichert")
-        let textZeigen = knopf(app, "Text zum Posten")
-        bisSichtbar(app, textZeigen)
-        textZeigen.tap()
+        // Wie bei den Beiträgen: „Text kopieren“ kopiert sofort, „Text ansehen“ zeigt ihn (mit Fußnote, nur einmal)
         let kopieren = knopf(app, "Text kopieren")
         bisSichtbar(app, kopieren)
         kopieren.tap()
         XCTAssertTrue(etwas(app, "Kopiert").waitForExistence(timeout: 5))
-        XCTAssertTrue(etwas(app, "Kreditaufnahme kostet Geld").exists, "Fußnote im Video-Text fehlt")
+        let ansehenText = knopf(app, "Text ansehen")
+        bisSichtbar(app, ansehenText)
+        ansehenText.tap()
+        XCTAssertTrue(etwas(app, "Kreditaufnahme kostet Geld").waitForExistence(timeout: 5), "Fußnote im Video-Text fehlt")
         foto("werbevideo-text-kopiert")
+        knopf(app, "Text ausblenden").tap()
 
         // Beiträge
         let beitraege = app.staticTexts["Deine Beiträge"]
@@ -246,6 +255,10 @@ final class ParitaetRundgangUITests: XCTestCase {
         let qrSpeichern = knopf(app, "QR-Code in Fotos speichern")
         nachOben(app, app.staticTexts["Deine Zahlseite"])
         foto("zahlseite-karte")
+        let holz = app.buttons["werbung-aufsteller"]
+        bisSichtbar(app, holz)
+        XCTAssertTrue(holz.exists, "Weg zum Holz-Aufsteller in der Zahlseiten-Karte fehlt")
+        foto("zahlseite-holz-aufsteller-zeile")
         bisSichtbar(app, qrSpeichern)
         qrSpeichern.tap()
         gespeichert(app, "zahlseite-qr-gespeichert")
@@ -264,8 +277,23 @@ final class ParitaetRundgangUITests: XCTestCase {
         bisSichtbar(app, fenster)
         fenster.tap()
         Thread.sleep(forTimeInterval: 6)
+        XCTAssertFalse(etwas(app, "404").exists, "Druckvorlage nicht gefunden (404)")
         foto("druckmaterial-fensteraufkleber-safari")
         safariZu(app)
+
+        // Checkliste „QR-Code an die Theke“ → springt in „Werbung“ direkt zur Zahlseite
+        app.tabBars.buttons["Kasse"].tap()
+        app.buttons["start-einrichtung"].tap()
+        let theke = app.buttons["checkliste-theke"]
+        if theke.waitForExistence(timeout: 5) {
+            bisSichtbar(app, theke)
+            theke.tap()
+            Thread.sleep(forTimeInterval: 2)
+            XCTAssertTrue(frei(app, app.staticTexts["Deine Zahlseite"]), "Sprung zur Zahlseite klappt nicht")
+            foto("checkliste-sprung-zahlseite")
+        } else {
+            app.buttons["Fertig"].firstMatch.tap()
+        }
 
         // Kasse: Link mit „heute im Studio“ und Gebührenhinweis
         app.tabBars.buttons["Kasse"].tap()
@@ -276,6 +304,9 @@ final class ParitaetRundgangUITests: XCTestCase {
         if (heute.value as? String) == "0" { heute.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap() }
         XCTAssertEqual(heute.value as? String, "1", "Schalter „heute“ lässt sich nicht einschalten")
         XCTAssertTrue(app.staticTexts["gebuehr-hinweis"].exists, "Gebührenhinweis fehlt")
+        app.swipeDown()
+        Thread.sleep(forTimeInterval: 1)
+        XCTAssertTrue(frei(app, knopf(app, "Zahlungslink erstellen")), "Mit Betrag: „Zahlungslink erstellen“ ohne Scrollen nicht sichtbar")
         foto("kasse-link-heute-gebuehr")
         let erstellen = knopf(app, "Zahlungslink erstellen")
         bisSichtbar(app, erstellen)
@@ -460,10 +491,12 @@ final class ParitaetRundgangUITests: XCTestCase {
         let app = starten(email: "team@beispiel.test")
         anmelden(app)
         app.tabBars.buttons["Kasse"].tap()
-        XCTAssertTrue(etwas(app, "Einrichtung:").waitForExistence(timeout: 15))
-        etwas(app, "Einrichtung:").tap()
+        XCTAssertTrue(app.buttons["start-einrichtung"].waitForExistence(timeout: 15))
+        app.buttons["start-einrichtung"].tap()
         Thread.sleep(forTimeInterval: 1)
         foto("team-kasse-checkliste")
+        app.buttons["Fertig"].firstMatch.tap()
+        Thread.sleep(forTimeInterval: 1)
         app.tabBars.buttons["Werbung"].tap()
         XCTAssertTrue(app.staticTexts["Dein Werbevideo"].waitForExistence(timeout: 15), "Team sieht die Werbung nicht")
         foto("team-werbung")
@@ -502,9 +535,23 @@ final class ParitaetRundgangUITests: XCTestCase {
         XCTAssertFalse(app.staticTexts["Deine Beiträge"].exists, "Ohne Klarna keine Beiträge")
         XCTAssertFalse(app.staticTexts["Zum Ausdrucken"].exists, "Ohne Klarna keine Druckvorlagen mit Raten")
         XCTAssertFalse(etwas(app, "Kreditaufnahme").exists, "Ohne Klarna keine Raten-Fußnote")
+        XCTAssertTrue(etwas(app, "fest freigeschaltet").exists, "Hinweis ohne Klarna fehlt")
+        XCTAssertTrue(etwas(app, "Hilfe per WhatsApp").exists, "Hilfe-Knopf ohne Klarna fehlt")
         foto("ohne-klarna-werbung")
         app.swipeUp()
         foto("ohne-klarna-werbung-unten")
+        // So geht's: statt Raten-Fußnote „nicht dauerhaft“
+        app.tabBars.buttons["Kasse"].tap()
+        let sgO = app.buttons["start-so-gehts"]
+        XCTAssertTrue(sgO.waitForExistence(timeout: 10))
+        sgO.tap()
+        let fussO = etwas(app, "nicht dauerhaft")
+        bisSichtbar(app, fussO)
+        XCTAssertTrue(fussO.exists, "So geht's ohne Klarna: Satz „nicht dauerhaft“ fehlt")
+        XCTAssertFalse(etwas(app, "Kreditaufnahme").exists, "So geht's ohne Klarna: keine Raten-Fußnote")
+        foto("ohne-klarna-so-gehts")
+        app.buttons["Fertig"].firstMatch.tap()
+        Thread.sleep(forTimeInterval: 1)
         app.tabBars.buttons["Konto"].tap()
         let einst = knopf(app, "Einstellungen")
         nachOben(app, einst)
@@ -550,12 +597,21 @@ final class ParitaetRundgangUITests: XCTestCase {
         foto("aufsteller-logo-gespeichert")
         app.swipeDown(); app.swipeDown()
         foto("aufsteller-mit-logo")
+        // Logo wieder löschen (Datenschutz: so lange gespeichert, wie man es braucht)
+        let loeschen = app.buttons["logo-entfernen"]
+        bisSichtbar(app, loeschen)
+        loeschen.tap()
+        XCTAssertTrue(etwas(app, "Logo gelöscht").waitForExistence(timeout: 15), "Logo lässt sich nicht löschen")
+        foto("aufsteller-logo-geloescht")
     }
 
     // MARK: Dunkel + große Schrift
 
     func testDunkelGross() throws {
         praefix = "d"
+        // Dunkel direkt im Test (ein vorher gesetztes `simctl ui … appearance dark` griff nach `simctl erase` nicht zuverlässig)
+        XCUIDevice.shared.appearance = .dark
+        defer { XCUIDevice.shared.appearance = .light }
         let app = starten(email: "studio@beispiel.test", zusatz: ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityL"])
         anmelden(app)
         app.tabBars.buttons["Kasse"].tap()

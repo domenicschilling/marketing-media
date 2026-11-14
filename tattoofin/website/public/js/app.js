@@ -393,7 +393,9 @@
   }
 
   // ---------- Werbevideo für alle Studios (Reel 9:16 + Beitrag 4:5, Quelle spots/tfin-studio-universal-v2 in der Marketing-Maschine, Fassung 2) ----------
-  // Klarna-Regeln ab 20.11.2026: im Text nur der Name. Das Video selbst sagt „in Raten“ → nur für Studios mit Klarna dauerhaft (#wv hat data-klarna-dauer),
+  // Klarna-Regeln ab 20.11.2026: im Text nur der Name. Das Video selbst sagt „in Raten“ → nur für Studios mit Klarna dauerhaft (#wv hat data-klarna-dauer).
+  // OFFEN (Entscheidung Domenic bis 20.11.2026): Die Raten-Aussage im Video ist nicht der freigegebene Wortlaut (klarna-texte.js AUSSAGE)
+  // → neu schneiden, ab dem Stichtag ausblenden oder ausdrücklich so lassen. Gilt gleich für die iPhone-App (GET /api/app/werbung).
   // der Posting-Text trägt Zusatz + Warnsatz. Text aus /js/werbung-texte.js (gleiche Quelle wie die iPhone-App, GET /api/app/werbung).
   var WV_TEXT = TF_WERBUNG.videoText(TF_KLARNA);
   var WV_GESEHEN = "tf-werbevideo-gesehen";

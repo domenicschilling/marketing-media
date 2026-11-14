@@ -288,4 +288,52 @@ struct WerbungTests {
         #expect(TeilenDateien.slug("   ") == "studio")
         #expect(TeilenDateien.slug("Straße 1") == "strasse-1")
     }
+
+    // MARK: Befunde 14.11. (Prüfrunde)
+
+    /// Anzeige ohne Fachwörter: „Karussell“ → „Bilder-Serie“, keine Seitenverhältnisse; kurzer Titel für die Großansicht
+    @Test func beitragAnzeigeOhneFachwoerter() {
+        let k = GezeichneterBeitrag(id: "karussell", titel: "Karussell: Wunsch-Tattoo mit Klarna bezahlen", format: "4 Bilder 4:5", art: "post",
+                                    wofuer: "", kopieren: nil, text: "", bilder: [Data(), Data(), Data(), Data()])
+        #expect(k.anzeigeTitel == "Bilder-Serie: Wunsch-Tattoo mit Klarna bezahlen")
+        #expect(k.anzeigeFormat == "4 Bilder")
+        #expect(k.kurzTitel == "4 Bilder")
+        let st = GezeichneterBeitrag(id: "qr-story", titel: "Story: Mit Klarna bezahlen, QR-Code", format: "Story 9:16", art: "story",
+                                     wofuer: "", kopieren: "link", text: "", bilder: [Data()])
+        #expect(st.anzeigeFormat == "Story")
+        #expect(st.kurzTitel == "Story")
+        for t in [WerbungTexte.formatReel, WerbungTexte.formatFeed, WerbungTexte.zahlseiteText, WerbungTexte.nameHinweis] + WerbungTexte.schritte {
+            for wort in ["9:16", "4:5", "Bio-Link", "Rechtsform", "Pflichthinweis", "Karussell"] {
+                #expect(!t.contains(wort), "„\(wort)“ in: \(t)")
+            }
+        }
+    }
+
+    /// „Zahlseite ansehen“ öffnet die App-Fassung (?app=1): Impressum/Datenschutz ohne Weg zur Startseite mit Preisen
+    @Test func zahlseiteAppAnsicht() {
+        #expect(ZahlseiteKarte.appAnsicht("https://tattoofin.de/zahlen/ink-studio")?.absoluteString == "https://tattoofin.de/zahlen/ink-studio?app=1")
+        #expect(ZahlseiteKarte.appAnsicht("https://tattoofin.de/zahlen/x?app=1")?.absoluteString == "https://tattoofin.de/zahlen/x?app=1")
+    }
+
+    /// Zwischenspeicher der Videos: Kennung hängt am Stand (ETag), gleiche Eingabe → gleiche Kennung
+    @Test func videoZwischenspeicherNachStand() {
+        let a = TeilenDateien.kennung("https://tattoofin.de/media/studio-video/reel.mp4|\"abc\"")
+        let b = TeilenDateien.kennung("https://tattoofin.de/media/studio-video/reel.mp4|\"def\"")
+        #expect(a.count == 16 && a != b)
+        #expect(a == TeilenDateien.kennung("https://tattoofin.de/media/studio-video/reel.mp4|\"abc\""))
+    }
+
+    /// Texte der neuen Stellen: einfach, „unser Team“, kein Preis, kein Domenic
+    @Test func neueTexteEinfach() {
+        let t = [WerbungTexte.ohneKlarnaText, WerbungTexte.holzAufsteller, WerbungTexte.holzAufstellerText, WerbungTexte.soGehtsText,
+                 WerbungTexte.soGehtsOhneKlarna, WerbungTexte.videoFehler, WerbungTexte.Start.erledigt, Texte.Kasse2.heuteHinweis,
+                 Texte.Aufsteller.logoEntfernt, Texte.Frage.intro]
+        for x in t {
+            for verboten in ["Domenic", "€", "netto", "Paket", "tattoofin.de", "Branding", "Studio Kit"] {
+                #expect(!x.contains(verboten), "„\(verboten)“ in: \(x)")
+            }
+        }
+        #expect(WerbungTexte.ohneKlarnaText.contains("unserem Team"))
+        #expect(WerbungTexte.soGehtsText.contains("im Browser"))
+    }
 }

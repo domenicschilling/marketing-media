@@ -73,7 +73,7 @@ Garantie-Erstattung · Abschluss abgebrochen · Rückbuchung (Belege) · Rückbu
 | `ADMIN_EMAIL`, `MAIL_FROM`, `MAIL_REPLY_TO` | interne Meldungen, Absender, Antwortadresse |
 | `RESEND_API_KEY` **oder** `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | E-Mail-Versand |
 | `FIRMA_ADRESSE`, `FIRMA_REGISTER`, `FIRMA_USTID`, `GERICHTSSTAND`, `KONTAKT_EMAIL` | Firmendaten für Impressum, Vertrag, E-Mails |
-| `VIDEO_URL`, `MATERIALS_URL` | Werbevideo, Basis-URL des Studio Kits (`…/tattoofin/kunden/`) |
+| `VIDEO_URL`, `MATERIALS_URL` | Werbevideo; Basis-URL der Druckvorlagen. Standard seit 14.11.2026: `<SITE_URL>/druck/kunden/` (eigene Domain). Ein alter Wert mit `github.io` wird ignoriert (dort 404). |
 | optional | `RUECKLAST_GEBUEHR_CENT` (2000, wird bei Rückbuchungen mit zurückgeholt), `AUSZAHLUNG_TAGE` (leer; z. B. 7 = Auszahlung an Provisions-Studios erst nach 7 Tagen), `KAUF_NETTO_CENT` (149900), `AKTION_NETTO_CENT` (124900), `AKTION_CODE` (RATENJA), `AKTION_MAX` (20), `AKTION_BIS`, `PROVISION_PROZENT` (10), `GARANTIE_TAGE` (30), `MIN_BETRAG_CENT` (5000), `MAX_BETRAG_CENT` (2000000) |
 
 3. **Stripe (Plattform-Konto von Tattoofin)**
@@ -132,7 +132,7 @@ Die native App (`tattoofin/ios/`) spricht dieselben Funktionen an wie das Dashbo
 
 - `netlify/functions/app.mjs` (`/api/app/*`): Code per Mail anfordern und anmelden (6 Ziffern, 10 Min., 5 Versuche, Grenzen je Adresse und IP),
   Geräte, Mitteilungen (Push-Token), Auszahlungen + Saldo (Stripe `/v1/payouts`, `/v1/balance` am Studio-Konto), Team, Konto löschen (= Kündigung + Löschanfrage).
-- Alle `/api/portal/*` gehen auch mit App-Token. Gesperrt mit App-Token (403 `nur_web`): stripe-session, rechnungen, aufsteller, aufsteller-pruefen, umstellung, erstattung.
+- Alle `/api/portal/*` gehen auch mit App-Token. Gesperrt mit App-Token (403 `nur_web`): stripe-session, rechnungen, umstellung, erstattung, extra (aufsteller und aufsteller-pruefen seit 14.11.2026 frei, nur Inhaber).
   Neu: `GET /api/portal/zahlung/:id[?abgleich=1]`, `GET /api/portal/gutschein-code?t=<token>` (QR auf Gutschein-PDF und gutschein.html).
 - „Auf allen Geräten abmelden“ (Dashboard) meldet auch alle App-Geräte ab; entfernte Team-Adressen verlieren ihre App-Geräte sofort.
 - Push (`_lib/push.mjs`): APNs HTTP/2 mit ES256-Token. **Echt-Versand wartet auf Apple-Team-ID und APNs-Schlüssel.** Ohne `APNS_KEY_P8` (oder `APNS_KEY_P8_BASE64`),
@@ -174,3 +174,21 @@ Das Stripe-Konto für das Geld der Kunden richtet das Studio danach wie gewohnt 
 | `APPLE_TEST_ROOT_PEM` | nur lokal: Test-Wurzel statt Apple Root CA - G3 (`dev/apple-nachbau.mjs`, für `dev/app-api.mjs`) |
 
 Tests mit anderen Ports (wenn parallel ein Server läuft): `E2E_PORT`, `E2E_RESEND_PORT` (e2e), `BETRIEB_PORT` (betrieb), `STRIPE_MOCK_PORT` (betrieb, app-api).
+
+## Stand 14.11.2026: Alles aus dem Web-Dashboard auch in der App (Branch `claude/tattoofin-app-paritaet`)
+
+- `GET /api/app/werbung`, `GET /api/app/aufsteller`, `GET /api/app/start` (Checkliste) und `POST /api/portal/aufsteller`, `…/aufsteller-pruefen` mit App-Token (nur Inhaber).
+  Antworten für die App ohne Paket-, Abo- oder Website-Preise (Apple 3.1.1); einziger Preis: der QR-Aufsteller (körperliche Ware, 3.1.3(e)). Texte/Kapitel: `_lib/werbung.mjs`.
+- **Druckvorlagen** (Fensteraufkleber, Flyer A6, Thekenaufsteller A5, Kundeninfo, Bilder für Instagram) liegen jetzt unter `public/druck/kunden/` mit eigenem
+  `public/druck/assets/` (Kopie aus `tattoofin/kunden/` und `tattoofin/assets/`; `config.js` nur mit öffentlichen Werten, ohne Preise und Namen). `noindex` für `/druck/*`.
+  Übersicht `public/druck/index.html` („← Alle Vorlagen“). Vorher zeigten die Links auf GitHub Pages und lieferten 404. Ändert sich eine Vorlage in `tattoofin/kunden/`,
+  die Kopie hier nachziehen.
+- So geht's: `soGehts.fussnote` nur bei Klarna dauerhaft, sonst `soGehts.ohneKlarna` („Im Video siehst du Klarna. Bei deinem Studio gibt es Klarna nicht dauerhaft.“);
+  im Dashboard gleich (`so-gehts.js`, `data-klarna-dauer`).
+- Zahlseite mit `?app=1` (aus der App „Zahlseite ansehen“): Impressum/Datenschutz öffnen in der App-Fassung (ohne Menü, ohne Weg zur Startseite).
+- Demo-Studio (`POST /api/admin/app-demo`): setzt den QR-Aufsteller und das Logo bei jedem Anlegen zurück (App-Prüfung).
+- Datenschutzerklärung `#app`: Dein Studio in der App, QR-Aufsteller (Logo, Weitergabe an den Betrieb, der fertigt, Löschung), Werbung (Fotos nur hinzufügen, Druckvorlagen-Adresse).
+- **Offen (Entscheidung Domenic bis 20.11.2026):** Das Werbevideo sagt „Bei uns geht das ganz bequem in Raten.“ – nicht der freigegebene Klarna-Wortlaut
+  (`klarna-texte.js` AUSSAGE). Neu schneiden, ab dem Stichtag ausblenden oder ausdrücklich so lassen. Vermerk steht in `public/js/app.js` und `_lib/werbung.mjs`.
+- Tests: `dev/app-api.mjs` prüft u. a. Druckvorlagen auf der eigenen Domain (200, noindex), So geht's ohne Fußnote ohne Klarna, Demo-Reset des Aufstellers.
+

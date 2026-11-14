@@ -38,12 +38,16 @@ export const SO_GEHTS = {
   ],
 };
 
+// „So geht's“ bei Studios ohne Klarna dauerhaft (statt der Raten-Fußnote; gleicher Satz im Dashboard, so-gehts.js)
+export const SO_GEHTS_OHNE_KLARNA = "Im Video siehst du Klarna. Bei deinem Studio gibt es Klarna nicht dauerhaft.";
+
 // Druckvorlagen aus dem Studio Kit (HTML-Seiten zum Drucken, mit Studioname und QR der Zahlseite). Gleiche Liste wie GET /api/portal.
+// Seit 14.11.2026 auf der eigenen Domain (public/druck/kunden/, CFG.materialsUrl), vorher GitHub Pages (404).
 export function materialLinks(s) {
   const q = `studio=${encodeURIComponent(s.firma)}&tel=${encodeURIComponent(s.studioTelefon || "")}&zahlen=${encodeURIComponent(zahlseite(s))}`;
   return [
     ["20-fensteraufkleber", "Fensteraufkleber"], ["21-flyer-a6", "Flyer A6"], ["22-thekenaufsteller-a5", "Thekenaufsteller A5"],
-    ["23-kundeninfo", "Kundeninfo"], ["24-social-kit", "Social-Kit (Story, Post, Badge)"],
+    ["23-kundeninfo", "Kundeninfo"], ["24-social-kit", "Bilder für Instagram (Story, Beitrag, Badge)"],
   ].map(([n, titel]) => ({ name: n, titel, url: `${CFG.materialsUrl}${n}.html?${q}` }));
 }
 
@@ -67,7 +71,9 @@ export function werbungFuer(s) {
     studio: { firma: s.firma, ort: s.ort || "", zahlseite: k.zahlseite },
     zahlseite: k.zahlseite,
     hashtags: W.hashtags(k),
-    // Werbevideo: sagt „in Raten“ → nur mit Klarna
+    // Werbevideo: sagt „in Raten“ → nur mit Klarna. OFFEN (Entscheidung Domenic bis 20.11.2026): Die Raten-Aussage im Video
+    // („Bei uns geht das ganz bequem in Raten.“) ist nicht der freigegebene Wortlaut (klarna-texte.js AUSSAGE) → Video neu schneiden,
+    // ab dem Stichtag ausblenden oder ausdrücklich so lassen.
     video: klarna ? {
       formate: W.VIDEO.formate.map((f) => ({ id: f.id, titel: f.titel, url: abs(f.datei), cover: abs(f.cover), breite: f.breite, hoehe: f.hoehe, dauer: f.dauer, dateiname: W.VIDEO.dateiname(f.id) })),
       text: W.videoText(K),
@@ -82,7 +88,9 @@ export function werbungFuer(s) {
       kapitel: SO_GEHTS.kapitel.filter((x) => !x.nurWeb).map((x) => ({ ab: x.ab, name: x.name })),
       // Steht so auch unter dem Video im Dashboard (das Video zeigt die Fußnote selbst)
       hinweis: "Stimme mit KI erstellt · App-Bilder: Beispiel-Studio mit Testdaten",
-      fussnote: PFLICHTSATZ,
+      // Fußnote nur mit Klarna dauerhaft; sonst ein Satz, dass das Video Klarna zeigt, das Studio es aber nicht dauerhaft hat
+      fussnote: klarna ? PFLICHTSATZ : null,
+      ohneKlarna: klarna ? null : SO_GEHTS_OHNE_KLARNA,
     },
     hilfe: { whatsapp: "https://wa.me/491624502375", telefon: "0162 4502375", text: "Fragen? Schreib unserem Team per WhatsApp." },
   };

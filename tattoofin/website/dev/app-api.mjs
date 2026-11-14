@@ -527,6 +527,11 @@ try {
   const demo = await admin("app-demo", { email: "review@tattoofin.test" });
   check(/^st_/.test(demo.studioId || "") && demo.zahlungen >= 5 && blob("studio/" + demo.studioId)?.demo === true, "POST /api/admin/app-demo legt Demo-Studio mit Beispieldaten an", JSON.stringify(demo).slice(0, 160));
   check((await admin("studios")).every((s) => s.id !== demo.studioId), "Demo-Studio zählt nicht in den Admin-Kennzahlen (Studioliste)");
+  // Prüfer hat den QR-Aufsteller bestellt → nächstes Anlegen setzt ihn zurück (Logo inklusive)
+  setBlob("studio/" + demo.studioId, { ...blob("studio/" + demo.studioId), aufsteller: { holz: "dunkel", variante: "logo", hatLogo: true, angefordertAm: new Date().toISOString() } });
+  setBlob("aufsteller-logo/" + demo.studioId, { src: "data:image/jpeg;base64,AAAA", w: 1, h: 1 });
+  const demo2 = await admin("app-demo", { email: "review@tattoofin.test" });
+  check(demo2.studioId === demo.studioId && !blob("studio/" + demo.studioId)?.aufsteller && !blob("aufsteller-logo/" + demo.studioId), "Demo-Studio neu anlegen setzt den QR-Aufsteller (und das Logo) zurück", JSON.stringify(blob("studio/" + demo.studioId)?.aufsteller));
   rlReset();
   Object.assign(process.env, { APP_REVIEW_EMAIL: "review@tattoofin.test", APP_REVIEW_CODE: "246810" });
   await call("POST", "/api/app/code", { body: { email: "review@tattoofin.test" } });
@@ -637,13 +642,18 @@ try {
   check(/TF_WERBUNG\.vorlagen\(TF_KLARNA\)/.test(kitSrc) && !/"Ab jetzt bei uns: " +/.test(kitSrc) && !/Hast du Fragen zum Bezahlen\?"; }/.test(kitSrc) && /TF_WERBUNG\.videoText\(TF_KLARNA\)/.test(appJs) && !/Ohne Papierkram/.test(appJs) && appHtml.indexOf("/js/werbung-texte.js") > appHtml.indexOf("/js/klarna-texte.js") && appHtml.indexOf("/js/werbung-texte.js") < appHtml.indexOf("/js/app-kit.js") && swJs.includes('"/js/werbung-texte.js"'), "app-kit.js und app.js holen die Texte aus werbung-texte.js (geladen vor app-kit.js, im Service Worker), keine Kopie mehr");
   const syncSh = fs.existsSync(path.join(root, "../ios/scripts/web-kit-sync.sh")) ? fs.readFileSync(path.join(root, "../ios/scripts/web-kit-sync.sh"), "utf8") : "js/werbung-texte.js";
   check(syncSh.includes("js/werbung-texte.js"), "iOS: web-kit-sync.sh kopiert werbung-texte.js mit in die App");
+  check(wd.materialLinks?.every((m) => m.url.startsWith(`${BASE}/druck/kunden/`) && !/github/.test(m.url)), "Druckvorlagen liegen auf der eigenen Domain (/druck/kunden/), nicht mehr bei GitHub Pages", wd.materialLinks?.[0]?.url);
+  for (const m of wd.materialLinks || []) {
+    const r = await fetch(m.url.split("?")[0]);
+    check(r.status === 200 && /<meta name="robots" content="noindex">/.test(await r.text()), `Druckvorlage ${m.name} lädt (200, noindex)`, String(r.status));
+  }
   check(wd.materialLinks?.length === 5 && wd.materialLinks[0].name === "20-fensteraufkleber" && wd.materialLinks.every((m) => m.url.includes("studio=Ink%20Studio%20D%20UG%20(haftungsbeschr%C3%A4nkt)") && m.url.includes("zahlen=" + encodeURIComponent(zsD))), "Druckvorlagen: 5 Links mit Studio und Zahlseite (wie GET /api/portal)", JSON.stringify(wd.materialLinks?.[0]));
   const portalD = await call("GET", "/api/portal", { token: tD });
   check(JSON.stringify(portalD.data.materialLinks) === JSON.stringify(wd.materialLinks), "materialLinks gleich wie in GET /api/portal");
   const sg = wd.soGehts || {};
   const sgSrc = fs.readFileSync(path.join(root, "public/js/so-gehts.js"), "utf8");
   const sgWeb = [...sgSrc.matchAll(/\{ ab: ([\d.]+), name: "([^"]+)" \}/g)].map((m) => [Number(m[1]), m[2]]);
-  check(sg.url === `${BASE}/assets/app/hilfe/so-gehts-9x16.mp4` && sg.poster === `${BASE}/assets/app/hilfe/so-gehts-9x16.jpg` && sg.quer?.url.endsWith("so-gehts-16x9.mp4") && sg.dauer === 147.73 && sg.kapitel?.length === 9 && !sg.kapitel.some((k) => /Startbildschirm/.test(k.name)) && sg.fussnote === FUSSNOTE && /Stimme mit KI erstellt/.test(sg.hinweis), "So geht's: Video 9:16 + 16:9, 9 Kapitel ohne „App auf den Startbildschirm“, Fußnote + KI-Hinweis", JSON.stringify(sg.kapitel));
+  check(sg.url === `${BASE}/assets/app/hilfe/so-gehts-9x16.mp4` && sg.poster === `${BASE}/assets/app/hilfe/so-gehts-9x16.jpg` && sg.quer?.url.endsWith("so-gehts-16x9.mp4") && sg.dauer === 147.73 && sg.kapitel?.length === 9 && !sg.kapitel.some((k) => /Startbildschirm/.test(k.name)) && sg.fussnote === FUSSNOTE && sg.ohneKlarna === null && /Stimme mit KI erstellt/.test(sg.hinweis), "So geht's: Video 9:16 + 16:9, 9 Kapitel ohne „App auf den Startbildschirm“, Fußnote + KI-Hinweis", JSON.stringify(sg.kapitel));
   check(sgWeb.length === 10 && JSON.stringify(sgWeb.filter((k) => k[1] !== "App auf den Startbildschirm")) === JSON.stringify(sg.kapitel.map((k) => [k.ab, k.name])) && sgWeb.some((k) => k[0] === 120.8 && k[1] === "App auf den Startbildschirm"), "Kapitel-Zeiten und -Namen wortgleich mit so-gehts.js (Dashboard)", JSON.stringify(sgWeb));
   check(wd.hilfe?.whatsapp === "https://wa.me/491624502375" && /unserem Team/.test(wd.hilfe.text) && !/Domenic/.test(w.text), "Hilfe per WhatsApp an „unser Team“, nie ein Name");
   check(!/49[,.]00|49 €|netto|monatNetto|paketName|"Paket|preisNetto|tattoofin\.de\/(studios|start)|signup/i.test(w.text), "Keine Paket-, Abo- oder Website-Preise, kein Link zur Anmeldung in der Antwort (Apple 3.1.1)");
@@ -654,7 +664,7 @@ try {
   const eAlt = blob("studio/" + E.id);
   setBlob("studio/" + E.id, { ...eAlt, modell: "provision", paket: "risikofrei" });
   const wR = await call("GET", "/api/app/werbung", { token: tE });
-  check(wR.status === 200 && wR.data.klarna === false && wR.data.video === null && wR.data.beitraege.length === 0 && wR.data.materialLinks.length === 0 && wR.data.fussnote === null && !/Klarna|Raten/.test(JSON.stringify({ ...wR.data, soGehts: null })) && wR.data.soGehts?.kapitel.length === 9 && wR.data.zahlseite, "Risikofrei (Plattformkonto): klarna false → kein Video, keine Beiträge, keine Druckvorlagen, keine Fußnote; Zahlseite und So geht's bleiben", wR.text.slice(0, 200));
+  check(wR.status === 200 && wR.data.klarna === false && wR.data.video === null && wR.data.beitraege.length === 0 && wR.data.materialLinks.length === 0 && wR.data.fussnote === null && !/Klarna|Raten/.test(JSON.stringify({ ...wR.data, soGehts: null })) && wR.data.soGehts?.kapitel.length === 9 && wR.data.soGehts?.fussnote === null && /nicht dauerhaft/.test(wR.data.soGehts?.ohneKlarna || "") && wR.data.zahlseite, "Risikofrei (Plattformkonto): klarna false → kein Video, keine Beiträge, keine Druckvorlagen, keine Fußnote (auch nicht unter So geht's, dort nur „nicht dauerhaft“); Zahlseite und So geht's bleiben", wR.text.slice(0, 200));
   const startR = await call("GET", "/api/app/start", { token: tE });
   check(/QR-Code deiner Zahlseite/.test(startR.data.checkliste?.punkte.find((p) => p.id === "werbung")?.text || ""), "Checkliste ohne Klarna: Werbe-Punkt verweist auf den QR-Code");
   // Apple-Abo-Studio: eigenes Stripe-Konto, Klarna dauerhaft → Klarna-Material

@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 import Photos
 import UIKit
@@ -74,10 +75,27 @@ enum TeilenDateien {
         }
     }
 
-    /// Öffentliche Datei (Video) laden, einmal je Adresse; liegt sie schon da, sofort zurück
+    /// Öffentliche Datei (Video) laden, einmal je Adresse und Stand. Der Stand (ETag/Last-Modified vom Server) steckt im Ordnernamen:
+    /// Wird ein Video auf dem Server ersetzt, lädt die App die neue Fassung. Ohne Internet nimmt sie die zuletzt geladene.
     static func laden(_ url: URL, name: String) async throws -> URL {
-        let ziel = ordner.appending(path: name)
+        var kopf = URLRequest(url: url)
+        kopf.httpMethod = "HEAD"
+        kopf.timeoutInterval = 10
+        var stand: String?
+        if let (_, a) = try? await URLSession.shared.data(for: kopf), let h = a as? HTTPURLResponse, (200..<300).contains(h.statusCode) {
+            stand = h.value(forHTTPHeaderField: "ETag") ?? h.value(forHTTPHeaderField: "Last-Modified") ?? h.value(forHTTPHeaderField: "Content-Length")
+        }
+        guard let stand else {
+            // Server nicht erreichbar: vorhandene Fassung nehmen, sonst normal laden (und Fehler melden)
+            if let alt = vorhandene(name) { return alt }
+            return try await herunterladen(url, nach: unterordner("ohne-stand").appending(path: name))
+        }
+        let ziel = unterordner(kennung(url.absoluteString + "|" + stand)).appending(path: name)
         if FileManager.default.fileExists(atPath: ziel.path()) { return ziel }
+        return try await herunterladen(url, nach: ziel)
+    }
+
+    private static func herunterladen(_ url: URL, nach ziel: URL) async throws -> URL {
         let (tmp, antwort) = try await URLSession.shared.download(from: url)
         guard let http = antwort as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
             try? FileManager.default.removeItem(at: tmp)
@@ -86,6 +104,31 @@ enum TeilenDateien {
         try? FileManager.default.removeItem(at: ziel)
         try FileManager.default.moveItem(at: tmp, to: ziel)
         return ziel
+    }
+
+    private static func unterordner(_ n: String) -> URL {
+        let u = ordner.appending(path: n, directoryHint: .isDirectory)
+        try? FileManager.default.createDirectory(at: u, withIntermediateDirectories: true)
+        return u
+    }
+
+    /// Kurze, gleichbleibende Kennung (SHA-256, 16 Zeichen) für Adresse + Stand
+    static func kennung(_ text: String) -> String {
+        SHA256.hash(data: Data(text.utf8)).prefix(8).map { String(format: "%02x", $0) }.joined()
+    }
+
+    /// Zuletzt geladene Datei dieses Namens (in irgendeinem Stand-Ordner)
+    private static func vorhandene(_ name: String) -> URL? {
+        let fm = FileManager.default
+        let ordnerListe = (try? fm.contentsOfDirectory(at: ordner, includingPropertiesForKeys: [.contentModificationDateKey])) ?? []
+        return ordnerListe
+            .map { $0.appending(path: name) }
+            .filter { fm.fileExists(atPath: $0.path()) }
+            .max { a, b in
+                let da = (try? a.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast
+                let db = (try? b.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast
+                return da < db
+            }
     }
 
     /// Dateiname ohne Sonderzeichen („Ink & Art Köln“ → „ink-art-koeln“)

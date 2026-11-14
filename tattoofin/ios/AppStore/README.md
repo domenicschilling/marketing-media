@@ -61,6 +61,18 @@ The review account is a demo studio. No real money moves:
 - Konto: Impressum and privacy policy (also on the sign-in screen), notification settings, team, devices.
 - Account deletion: Konto → "Konto kündigen und löschen" (type LÖSCHEN). Please do not run it on the demo studio, or tell us and we reset it.
   For studios that subscribed in the app the screen also links to the Apple subscription settings.
+- Werbung (marketing tab): a ready-made promo video (streamed from our own server, can be saved to Photos with add-only access)
+  and ready-made Instagram posts with the studio's name and the QR code of its payment page. The post images are drawn on the
+  device from JavaScript files bundled with the app (an invisible WKWebView used only as a renderer, no remote code, no web UI);
+  all controls are native SwiftUI. "Zum Ausdrucken" opens printable sheets (window sticker, flyer) on tattoofin.de in
+  SFSafariViewController. Nothing in this tab is sold.
+- So geht's (Kasse → "So geht's", or Konto): a short tutorial video with chapters. It shows the same features in the browser
+  version of Tattoofin; the chapter about adding the web app to the home screen is skipped.
+- Konto → "QR-Aufsteller": a physical product. It is an engraved wooden counter stand (10 × 15 cm) with the studio's name or logo and
+  the QR code of its payment page, produced and shipped by post to the studio's address. Because it is a physical good that is
+  consumed outside the app, studios whose plan does not include it pay for it with Stripe Checkout in Safari (guideline 3.1.3(e));
+  no digital content or features are unlocked by this payment. In the demo studio the stand is included ("Kostenlos bestellen"),
+  so no payment page appears; the order is reset each time we recreate the demo studio.
 Push notifications are sent when a payment arrives (APNs).
 
 Contact: info@tattoofin.de
@@ -69,7 +81,7 @@ Contact: info@tattoofin.de
 ## URLs
 
 - Support-URL: `https://tattoofin.de/impressum.html` (Kontakt: Telefon, WhatsApp, info@tattoofin.de)
-- Datenschutz-URL: `https://tattoofin.de/datenschutz.html#app`
+- Datenschutz-URL: `https://tattoofin.de/datenschutz.html#app` (seit 14.11.2026 mit „Dein Studio in der App“, „QR-Aufsteller aus Holz“ und „Werbung“; Empfängerliste nennt den Betrieb, der den Aufsteller fertigt)
 - Marketing-URL: leer lassen. In der App gibt es keinen Hinweis und keinen Link auf die Website zum Bezahlen und keinen anderen Preis (Apple 3.1.3).
 
 ## App-Datenschutz („App Privacy“), genau wie `Tattoofin/Resources/PrivacyInfo.xcprivacy`
@@ -85,7 +97,8 @@ Tracking: **Nein**. Für alle Datenarten: mit der Identität verknüpft (Studio-
 | Kennungen → Geräte-ID | Geräte-Kennung der App und Push-Token |
 | Andere Daten | Gerätename, Gerätemodell, iOS- und App-Version (Liste der angemeldeten Geräte) |
 | Käufe → Kaufverlauf | Apple-Abo: signierte Transaktion (Kennungen, Produkt, Kauf- und Ablaufdatum) an unseren Server |
-| Benutzerinhalte → Fotos oder Videos | Nur das Studio-Logo, das der Inhaber für den QR-Aufsteller in Fotos auswählt (schwarz/weiß an unseren Server, für die Gravur). Speichern in Fotos (Werbung) liest nichts. |
+| Benutzerinhalte → Fotos oder Videos | Nur das Studio-Logo, das der Inhaber für den QR-Aufsteller in Fotos auswählt (iOS-Foto-Auswahl, nur dieses eine Bild; schwarz/weiß an unseren Server, nur für Vorschau und Gravur, beim Bestellen an den Betrieb, der den Aufsteller fertigt). Löschen: in der App „Logo löschen“ oder mit dem Studio-Konto. Speichern in Fotos (Werbung, nur „Hinzufügen“) liest nichts. |
+| Benutzerinhalte → Andere Benutzerinhalte (zusätzlich) | Fragebogen, Bestätigung der rechtlichen Lage (Name, Zeitpunkt), Einstellungen (Anzahlungsbedingungen, Ausweich-Anzahlung, Zahlseiten-Hinweis, Benachrichtigungs-Adresse) – nur Inhaber |
 
 Nicht erhoben: Standort, Kontakte, sonstige Fotos (die Kamera scannt nur Codes, Bilder werden nicht gespeichert oder gesendet), Browserverlauf,
 Suchverlauf, Nutzungsdaten, Diagnosedaten, Werbe-ID.

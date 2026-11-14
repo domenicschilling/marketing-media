@@ -10,10 +10,21 @@ enum WerbungTexte {
     static let titel = "Werbung"
 
     // Kopf
-    static let einleitungKlarna = "Fertiges Video und fertige Beiträge für Instagram und Facebook. Deine Kunden sehen: Bei dir bezahlen sie ganz einfach per Link oder QR-Code, auch mit Klarna. Speichern, Text kopieren, posten."
-    static let einleitung = "Dein QR-Code für die Theke und Vorlagen zum Ausdrucken."
-    static let ohneKlarnaTitel = "Video und Beiträge mit Klarna"
-    static let ohneKlarnaText = "Das Werbevideo und die fertigen Beiträge zeigen Klarna. Bei deinem Studio gibt es Klarna nicht dauerhaft, deshalb fehlen sie hier. Deine Zahlseite und den QR-Code findest du unten."
+    static let einleitungKlarna = "Speichern, Text kopieren, posten."
+    static let einleitung = "Dein QR-Code für die Theke."
+    static let ohneKlarnaTitel = "Werbevideo und fertige Beiträge"
+    static let ohneKlarnaText = "Die bekommst du, sobald Klarna bei dir fest freigeschaltet ist. Fragen? Schreib unserem Team."
+    static let hilfeWhatsApp = "Hilfe per WhatsApp"
+    // Sprungleiste oben
+    static let sprungLabel = "Springen zu"
+    static func sprung(_ a: WerbungAbschnitt) -> String {
+        switch a {
+        case .video: "Video"
+        case .beitraege: "Beiträge"
+        case .zahlseite: "QR-Code"
+        case .druck: "Drucken"
+        }
+    }
     static let vorFreigabe = "Werbung gibt es, sobald dein Zahlungskonto freigegeben ist. Dann funktioniert auch dein QR-Code."
     static let neuLaden = "Neu laden"
     /// Pflicht-Fußnote, wo Raten gemeint sind (klein, aber lesbar)
@@ -21,14 +32,15 @@ enum WerbungTexte {
 
     // Werbevideo
     static let videoTitel = "Dein Werbevideo"
-    static let videoText = "Fertiges Video für Instagram, Facebook und TikTok. Speichern, Text kopieren, posten."
+    static let videoText = "Fertiges Video für Instagram, Facebook und TikTok. Deine Kunden sehen: Bei dir zahlen sie per Link oder QR-Code, auch mit Klarna."
     static let formatLabel = "Format"
-    static let formatReel = "Reel / Story (9:16)"
-    static let formatFeed = "Beitrag (4:5)"
+    static let formatReel = "Reel / Story"
+    static let formatFeed = "Beitrag"
     static let videoSpeichern = "In Fotos speichern"
     static let videoLaedt = "Video wird geladen …"
     static let teilen = "Teilen"
-    static let textZeigen = "Text zum Posten"
+    static let videoFehler = "Das Video lädt gerade nicht. Bitte prüf dein Internet."
+    static let nochmal = "Nochmal versuchen"
     static let textAusblenden = "Text ausblenden"
     static let textKopieren = "Text kopieren"
     static let kopiert = "Kopiert"
@@ -43,11 +55,11 @@ enum WerbungTexte {
     static let beitraegeTitel = "Deine Beiträge"
     static let beitraegeText = "Fertige Bilder für Instagram und Facebook, mit deinem Studionamen und dem QR-Code zu deiner Zahlseite."
     static let schritte = ["Bilder speichern: Sie landen in deinen Fotos.",
-                           "Text kopieren: fertig mit Pflichthinweis und Hashtags.",
+                           "Text kopieren: mit Klarna-Hinweis und Hashtags.",
                            "In Instagram posten und den Text einfügen."]
     static let nameLabel = "Name auf den Bildern"
     static let nameUebernehmen = "Übernehmen"
-    static let nameHinweis = "Ohne Rechtsform, so wie deine Kunden dich kennen."
+    static let nameHinweis = "Ohne GmbH oder UG, so wie deine Kunden dich kennen."
     static let zeichnet = "Bilder werden erstellt …"
     static let zeichnenFehler = "Die Bilder konnten nicht erstellt werden. Bitte versuch es nochmal."
     static func alleSpeichern(_ n: Int) -> String { n > 1 ? "Alle \(n) Bilder speichern" : "Bild speichern" }
@@ -62,11 +74,13 @@ enum WerbungTexte {
 
     // Zahlseite
     static let zahlseiteTitel = "Deine Zahlseite"
-    static let zahlseiteText = "Für Theke, Flyer und Bio-Link. Kunden scannen, tragen den abgesprochenen Betrag ein und bezahlen."
+    static let zahlseiteText = "Für Theke, Flyer und den Link in deinem Instagram-Profil. Kunden scannen, tragen den abgesprochenen Betrag ein und bezahlen."
     static let qrSpeichern = "QR-Code in Fotos speichern"
     static let zahlseiteAnsehen = "Zahlseite ansehen"
     static let qrLabel = "QR-Code zu deiner Zahlseite"
     static let theke = "Der QR-Code steht an der Theke"
+    static let holzAufsteller = "QR-Aufsteller aus Holz"
+    static let holzAufstellerText = "Für deine Theke, mit deinem Namen oder Logo"
 
     // Druck
     static let druckTitel = "Zum Ausdrucken"
@@ -75,10 +89,11 @@ enum WerbungTexte {
 
     // So geht's
     static let soGehtsTitel = "So geht's"
-    static let soGehtsKurz = "Die App in gut 2 Minuten erklärt."
+    static let soGehtsKurz = "Tattoofin in gut 2 Minuten erklärt."
     static let soGehtsDauer = "Video, 2 Min."
     static let soGehtsAusblenden = "So geht's ausblenden"
-    static let soGehtsText = "Deine App Schritt für Schritt erklärt. Tipp auf ein Kapitel, um direkt dorthin zu springen."
+    static let soGehtsText = "Das Video zeigt Tattoofin im Browser. In der App findest du das Gleiche unter Kasse, Zahlungen, Gutscheine, Werbung und Konto. Tipp auf ein Kapitel, um direkt dorthin zu springen."
+    static let soGehtsOhneKlarna = "Im Video siehst du Klarna. Bei deinem Studio gibt es Klarna nicht dauerhaft."
     static let soGehtsLabel = "Erklärvideo: So funktioniert Tattoofin"
     static let kapitel = "Kapitel"
     static let soGehtsFuss = "Stimme mit KI erstellt · Bilder: Beispiel-Studio mit Testdaten"
@@ -90,7 +105,9 @@ enum WerbungTexte {
         static let einrichtung = "Einrichtung"
         static func stand(_ n: Int, _ von: Int) -> String { "\(n) von \(von)" }
         static let alleErledigt = "Alles eingerichtet. Viel Erfolg mit Tattoofin!"
-        static let erledigt = "Erledigt"
+        static let erledigt = "Hab ich gemacht"
+        static let einrichtungHinweis = "Öffnet die Liste mit den nächsten Schritten"
+        static let ausblendenLang = "Einrichtung in der Kasse ausblenden"
         static let diesenMonat = "Diesen Monat"
         static let gezahlt = "Kunden haben gezahlt"
         static let zahlungen = "Zahlungen"

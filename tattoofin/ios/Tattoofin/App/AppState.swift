@@ -24,6 +24,8 @@ final class AppState {
     var phase: Phase = .start
     var tab: HauptTab = .kasse
     var sprungziel: Sprungziel?
+    /// Sprung in einen Abschnitt des Tabs „Werbung“ (z. B. aus der Checkliste: „QR-Code an die Theke“ → Zahlseite)
+    var werbungSprung: WerbungAbschnitt?
     /// Wird bei jeder Zahlungs-Mitteilung hochgezählt (offenes Zahlungslink-Sheet lädt dann sofort neu)
     var pushZahlung: (id: String, zaehler: Int)?
     var sitzung: SitzungInfo?

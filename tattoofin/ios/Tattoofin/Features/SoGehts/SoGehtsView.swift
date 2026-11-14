@@ -22,10 +22,10 @@ struct SoGehtsView: View {
                     .fixedSize(horizontal: false, vertical: true)
 
                 Group {
-                    if let p = spieler.player {
+                    if let p = spieler.player, !spieler.status.fehler {
                         VideoPlayer(player: p).accessibilityLabel(WerbungTexte.soGehtsLabel)
                     } else {
-                        Button { starten(ab: 0) } label: {
+                        Button { spieler.neu(); starten(ab: 0) } label: {
                             ZStack {
                                 Color.tfBlau
                                 AsyncImage(url: WerbungRegeln.adresse(info?.poster ?? WerbungRegeln.SoGehts.poster, basis: basis)) { b in
@@ -33,7 +33,7 @@ struct SoGehtsView: View {
                                 } placeholder: {
                                     Image(.figur).resizable().scaledToFit().frame(width: 90).opacity(0.6)
                                 }
-                                Image(systemName: "play.circle.fill")
+                                Image(systemName: spieler.status.fehler ? "arrow.clockwise.circle.fill" : "play.circle.fill")
                                     .font(.system(size: 64))
                                     .symbolRenderingMode(.palette)
                                     .foregroundStyle(Color.tfBlau, Color.tfGelb)
@@ -41,7 +41,7 @@ struct SoGehtsView: View {
                             }
                         }
                         .buttonStyle(.plain)
-                        .accessibilityLabel("\(WerbungTexte.soGehtsLabel). \(WerbungTexte.abspielen)")
+                        .accessibilityLabel(spieler.status.fehler ? "\(WerbungTexte.videoFehler) \(WerbungTexte.nochmal)" : "\(WerbungTexte.soGehtsLabel). \(WerbungTexte.abspielen)")
                     }
                 }
                 .aspectRatio(9.0 / 16.0, contentMode: .fit)
@@ -50,8 +50,11 @@ struct SoGehtsView: View {
                 .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.tfLinie, lineWidth: 1))
                 .frame(maxWidth: .infinity)
 
+                if spieler.status.fehler { FehlerZeile(text: WerbungTexte.videoFehler) }
+
                 VStack(alignment: .leading, spacing: 0) {
-                    Text("\(WerbungTexte.kapitel) (\(kapitel.count))")
+                    // Ohne Zahl: Das Video zählt seine Kapitel selbst (mit dem Web-Kapitel), das passt sonst nicht zusammen
+                    Text(WerbungTexte.kapitel)
                         .font(.dm(.headline, weight: .bold)).foregroundStyle(Color.tfTinte)
                         .padding(.bottom, 6)
                         .accessibilityAddTraits(.isHeader)
@@ -84,7 +87,13 @@ struct SoGehtsView: View {
 
                 VStack(alignment: .leading, spacing: 6) {
                     Text(info?.hinweis ?? WerbungTexte.soGehtsFuss).font(.dm(.caption)).foregroundStyle(Color.tfLeise)
-                    KlarnaFussnote(text: info?.fussnote ?? WerbungTexte.fussnote)
+                    // Raten-Fußnote nur mit Klarna dauerhaft (Server: soGehts.fussnote), sonst ein kurzer Satz
+                    if werbung.klarnaMaterial {
+                        KlarnaFussnote(text: info?.fussnote ?? WerbungTexte.fussnote)
+                    } else {
+                        Text(info?.ohneKlarna ?? WerbungTexte.soGehtsOhneKlarna).font(.dm(.caption)).foregroundStyle(Color.tfLeise)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
             }
             .padding(16)
@@ -127,12 +136,26 @@ final class SoGehtsSpieler {
     var player: AVPlayer?
     var zeit: Double = 0
     var laeuft = false
+    let status = VideoLadeStatus()
     @ObservationIgnored private var beobachter: Any?
+
+    /// Nach einem Ladefehler: Player verwerfen, damit „Nochmal versuchen“ neu lädt
+    func neu() {
+        guard status.fehler else { return }
+        if let b = beobachter { player?.removeTimeObserver(b) }
+        beobachter = nil
+        player = nil
+        laeuft = false
+        status.zuruecksetzen()
+    }
 
     func abspielen(_ url: URL, ab: Double) {
         try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback)
+        neu()
         if player == nil {
-            let p = AVPlayer(url: url)
+            let item = AVPlayerItem(url: url)
+            status.beobachten(item)
+            let p = AVPlayer(playerItem: item)
             player = p
             beobachter = p.addPeriodicTimeObserver(forInterval: CMTime(seconds: 0.5, preferredTimescale: 600), queue: .main) { [weak self] t in
                 MainActor.assumeIsolated { self?.tick(t.seconds) }

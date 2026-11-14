@@ -77,6 +77,21 @@ extension APIClient {
         try await senden("POST", "api/portal/aufsteller", body: w)
     }
 
+    /// Logo löschen: schickt ausdrücklich „logo: null“ (fehlt das Feld, bliebe das Logo gespeichert)
+    func aufstellerLogoEntfernen(holz: String) async throws -> AufstellerAppAntwort {
+        struct B: Encodable, Sendable {
+            let holz: String
+            enum CodingKeys: String, CodingKey { case holz, variante, logo }
+            func encode(to encoder: any Encoder) throws {
+                var c = encoder.container(keyedBy: CodingKeys.self)
+                try c.encode(holz, forKey: .holz)
+                try c.encode("name", forKey: .variante)
+                try c.encodeNil(forKey: .logo)
+            }
+        }
+        return try await senden("POST", "api/portal/aufsteller", body: B(holz: holz))
+    }
+
     func aufstellerPruefen(cs: String) async throws -> AufstellerAppAntwort {
         struct B: Encodable, Sendable { let cs: String }
         return try await senden("POST", "api/portal/aufsteller-pruefen", body: B(cs: cs))

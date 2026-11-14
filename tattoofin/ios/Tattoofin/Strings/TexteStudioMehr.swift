@@ -69,7 +69,7 @@ extension Texte {
 
     enum Frage {
         static let titel = "Fragebogen"
-        static let intro = "Ca. 10 Minuten. Damit richten wir Zahlungsarten, Branding und dein Studio Kit passend ein. Du kannst jederzeit speichern und später weitermachen."
+        static let intro = "Ca. 10 Minuten. Damit richten wir Zahlungsarten, Farben, Logo und deine Werbe-Bilder passend ein. Du kannst jederzeit speichern und später weitermachen."
         static let senden = "Speichern und absenden"
         static let danke = "Danke, gespeichert! Unser Team meldet sich bei dir."
         static func zuletzt(_ d: String) -> String { "Zuletzt gespeichert: \(d)" }
@@ -77,9 +77,9 @@ extension Texte {
         static let a1 = "1. Studio"
         static let a2 = "2. Projekte und Preise"
         static let a3 = "3. Gewünschte Zahlungsarten"
-        static let a4 = "4. Branding"
+        static let a4 = "4. Farben und Logo"
         static let a5 = "5. Team und Schulung"
-        static let a6 = "6. Studio Kit"
+        static let a6 = "6. Werbe-Bilder und Vorlagen"
     }
 
     enum Nachweis {
@@ -133,8 +133,8 @@ extension Texte {
     }
 
     enum Kasse2 {
-        static let heute = "Kunde wird heute im Studio tätowiert"
-        static let heuteHinweis = "Nur dann steht das so beim Bezahlen."
+        static let heute = "Kunde wird heute tätowiert"
+        static let heuteHinweis = "Dann sieht er beim Bezahlen: „Tätowierung vor Ort“."
         static func provision(anDich: Int, prozent: String, gebuehr: Int) -> String {
             "Du bekommst \(Euro.text(anDich)) · Tattoofin \(prozent) % (\(Euro.text(gebuehr)), alles inklusive)"
         }
@@ -156,6 +156,8 @@ extension Texte {
         static let logoAendern = "Anderes Logo wählen"
         static let logoHinweis = "Am besten ein dunkles Logo auf hellem Grund. Wir machen es schwarz-weiß für die Gravur."
         static let logoGespeichert = "Logo gespeichert."
+        static let logoEntfernen = "Logo löschen"
+        static let logoEntfernt = "Logo gelöscht. Oben steht jetzt dein Studioname."
         static let logoNichtsDunkel = "Im Logo ist nichts Dunkles zu sehen. Bitte ein dunkles Logo auf hellem Grund wählen."
         static let logoFehler = "Das Bild konnte nicht gelesen werden. Bitte ein anderes wählen."
         static let logoZuerst = "Bitte wähle zuerst dein Logo oder nimm „Studioname“."

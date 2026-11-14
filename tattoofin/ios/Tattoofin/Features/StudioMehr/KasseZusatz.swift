@@ -6,14 +6,16 @@ struct HeuteSchalter: View {
     @Binding var an: Bool
 
     var body: some View {
+        // Flach (ohne Karte), damit Ziffernblock und „Zahlungslink erstellen“ in den ersten Bildschirm passen
         Toggle(isOn: $an) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(Texte.Kasse2.heute).font(.dm(.body, weight: .semibold)).foregroundStyle(Color.tfTinte)
-                Text(Texte.Kasse2.heuteHinweis).font(.dm(.footnote)).foregroundStyle(Color.tfLeise)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(Texte.Kasse2.heute).font(.dm(.subheadline, weight: .semibold)).foregroundStyle(Color.tfTinte)
+                Text(Texte.Kasse2.heuteHinweis).font(.dm(.caption)).foregroundStyle(Color.tfLeise)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
         .tint(Color.tfGruen)
-        .karte()
+        .padding(.horizontal, 4)
         .accessibilityIdentifier("heute-im-studio")
     }
 }

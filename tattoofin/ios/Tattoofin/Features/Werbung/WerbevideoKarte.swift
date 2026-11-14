@@ -32,7 +32,8 @@ struct WerbevideoKarte: View {
             if let videoURL {
                 PosterVideo(video: videoURL, poster: WerbungRegeln.adresse(datei.cover, basis: basis),
                             seitenverhaeltnis: feed ? 4.0 / 5.0 : 9.0 / 16.0, label: WerbungTexte.videoLabel)
-                    .frame(maxHeight: 400)
+                    // Etwas kleiner, damit „In Fotos speichern“ ohne Scrollen sichtbar ist
+                    .frame(maxHeight: 290)
                     .frame(maxWidth: .infinity)
             }
 
@@ -44,28 +45,30 @@ struct WerbevideoKarte: View {
             .buttonStyle(.haupt)
             .disabled(arbeitet || videoURL == nil)
 
+            // Gleiche Bedienung wie bei den Beiträgen: „Text kopieren“ kopiert sofort, „Text ansehen“ zeigt ihn
             KnopfReihe {
-                Button { teilenVorbereiten() } label: { Label(WerbungTexte.teilen, systemImage: "square.and.arrow.up") }
-                    .buttonStyle(.zweit)
-                    .disabled(arbeitet || videoURL == nil)
-                Button { withAnimation { textOffen.toggle() } } label: {
-                    Label(textOffen ? WerbungTexte.textAusblenden : WerbungTexte.textZeigen, systemImage: "text.alignleft")
-                }
-                .buttonStyle(.zweit)
-            }
-
-            if textOffen {
-                PostingText(text: werbung.videoText)
                 Button {
                     UIPasteboard.general.string = werbung.videoText
                     kurzZeigen(WerbungTexte.kopiert, in: $meldung)
                 } label: { Label(WerbungTexte.textKopieren, systemImage: "doc.on.doc") }
                     .buttonStyle(.zweit)
+                Button { teilenVorbereiten() } label: { Label(WerbungTexte.teilen, systemImage: "square.and.arrow.up") }
+                    .buttonStyle(.zweit)
+                    .disabled(arbeitet || videoURL == nil)
+            }
+            Button { withAnimation { textOffen.toggle() } } label: {
+                Text(textOffen ? WerbungTexte.textAusblenden : WerbungTexte.textAnsehen).font(.dm(.subheadline, weight: .semibold))
+            }
+            .foregroundStyle(Color.tfAkzent)
+
+            if textOffen {
+                PostingText(text: werbung.videoText)
             }
 
             if let fehler { FehlerZeile(text: fehler) }
             RueckmeldungsText(text: meldung)
-            KlarnaFussnote(text: werbung.fussnote)
+            // Der aufgeklappte Text enthält die Fußnote schon → nicht doppelt zeigen
+            if !textOffen { KlarnaFussnote(text: werbung.fussnote) }
         }
         .karte()
         .sheet(item: $teilen) { TeilenSheet(dinge: $0.dinge).presentationDetents([.medium, .large]) }
@@ -133,6 +136,7 @@ struct PostingText: View {
 }
 
 /// Video mit Vorschaubild: lädt erst beim Antippen (spart Datenvolumen), dann normaler iOS-Player.
+/// Lädt das Video nicht (kein Internet), erscheint ein kurzer Hinweis mit „Nochmal versuchen“.
 struct PosterVideo: View {
     let video: URL
     let poster: URL?
@@ -140,10 +144,11 @@ struct PosterVideo: View {
     let label: String
 
     @State private var player: AVPlayer?
+    @State private var status = VideoLadeStatus()
 
     var body: some View {
         ZStack {
-            if let player {
+            if let player, !status.fehler {
                 VideoPlayer(player: player)
                     .accessibilityLabel(label)
             } else {
@@ -155,7 +160,7 @@ struct PosterVideo: View {
                         } placeholder: {
                             Image(.figur).resizable().scaledToFit().frame(width: 90).opacity(0.6)
                         }
-                        Image(systemName: "play.circle.fill")
+                        Image(systemName: status.fehler ? "arrow.clockwise.circle.fill" : "play.circle.fill")
                             .font(.system(size: 64))
                             .symbolRenderingMode(.palette)
                             .foregroundStyle(Color.tfBlau, Color.tfGelb)
@@ -163,15 +168,30 @@ struct PosterVideo: View {
                     }
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("\(label). \(WerbungTexte.abspielen)")
+                .accessibilityLabel(status.fehler ? "\(WerbungTexte.videoFehler) \(WerbungTexte.nochmal)" : "\(label). \(WerbungTexte.abspielen)")
             }
         }
         .aspectRatio(seitenverhaeltnis, contentMode: .fit)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.tfLinie, lineWidth: 1))
+        .overlay(alignment: .bottom) {
+            if status.fehler {
+                Text(WerbungTexte.videoFehler)
+                    .font(.dm(.footnote, weight: .semibold))
+                    .foregroundStyle(Color.tfBlau)
+                    .multilineTextAlignment(.center)
+                    .padding(8)
+                    .frame(maxWidth: .infinity)
+                    .background(Color.tfGelbHell.opacity(0.95))
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .padding(8)
+                    .accessibilityHidden(true)
+            }
+        }
         .onChange(of: video) {
             player?.pause()
             player = nil
+            status.zuruecksetzen()
         }
         .onDisappear { player?.pause() }
     }
@@ -179,8 +199,38 @@ struct PosterVideo: View {
     private func abspielen() {
         // Ton auch bei stummgeschaltetem iPhone (wie jedes Video)
         try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback)
-        let p = AVPlayer(url: video)
+        let item = AVPlayerItem(url: video)
+        status.beobachten(item)
+        let p = AVPlayer(playerItem: item)
         player = p
         p.play()
+    }
+}
+
+/// Beobachtet, ob ein Video laden kann (AVPlayerItem.status == .failed → Hinweis statt schwarzem Bild)
+@MainActor
+@Observable
+final class VideoLadeStatus {
+    var fehler = false
+    @ObservationIgnored private var beobachter: NSKeyValueObservation?
+    @ObservationIgnored private var abbruch: NSObjectProtocol?
+
+    func beobachten(_ item: AVPlayerItem) {
+        zuruecksetzen()
+        beobachter = item.observe(\.status, options: [.new]) { [weak self] i, _ in
+            let kaputt = i.status == .failed
+            Task { @MainActor in if kaputt { self?.fehler = true } }
+        }
+        abbruch = NotificationCenter.default.addObserver(forName: AVPlayerItem.failedToPlayToEndTimeNotification, object: item, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.fehler = true }
+        }
+    }
+
+    func zuruecksetzen() {
+        fehler = false
+        beobachter?.invalidate()
+        beobachter = nil
+        if let abbruch { NotificationCenter.default.removeObserver(abbruch) }
+        abbruch = nil
     }
 }

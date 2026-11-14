@@ -165,6 +165,8 @@ struct SoGehtsInfo: Decodable, Sendable, Hashable {
     var kapitel: [VideoKapitel]?
     var hinweis: String?
     var fussnote: String?
+    /// Satz statt Fußnote bei Studios ohne Klarna dauerhaft
+    var ohneKlarna: String?
 
     init(from decoder: any Decoder) throws {
         let c = try decoder.container(keyedBy: FreierSchluessel.self)
@@ -173,6 +175,7 @@ struct SoGehtsInfo: Decodable, Sendable, Hashable {
         kapitel = c.erster([VideoKapitel].self, "kapitel")
         hinweis = c.text("hinweis")
         fussnote = c.text("fussnote")
+        ohneKlarna = c.text("ohneKlarna")
     }
 }
 

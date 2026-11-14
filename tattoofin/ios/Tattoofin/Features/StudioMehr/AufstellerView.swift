@@ -121,24 +121,31 @@ struct AufstellerView: View {
                     .foregroundStyle(Color.tfAkzent)
                     .accessibilityIdentifier("logo-waehlen")
                     Text(Texte.Aufsteller.logoHinweis).font(.dm(.footnote)).foregroundStyle(Color.tfLeise)
+                    if logo != nil {
+                        Button(Texte.Aufsteller.logoEntfernen, role: .destructive) { logoEntfernen() }
+                            .disabled(logoLaedt)
+                            .accessibilityIdentifier("logo-entfernen")
+                    }
                 }
             } header: {
                 Text(Texte.Aufsteller.oben)
             }
             .disabled(gesperrt)
 
-            Section {
-                bestellung(d)
-                if let meldung { HinweisKarte(text: meldung, symbol: "info.circle.fill").listRowInsets(EdgeInsets()).listRowBackground(Color.clear) }
-                if let fehler { FehlerZeile(text: fehler) }
-            } header: {
-                Text(Texte.Aufsteller.bestellenTitel)
-            }
-
+            // Lieferadresse vor dem Bestellknopf: Man sieht vorher, wohin er geht
             if let adr = d.lieferadresse?.leerAlsNil {
                 Section(Texte.Aufsteller.lieferung) {
                     Text(adr.replacingOccurrences(of: ", ", with: "\n")).font(.dm(.body)).foregroundStyle(Color.tfTinte)
                 }
+            }
+
+            Section {
+                bestellung(d)
+                // Nach dem Bestellen sagt der Status alles; eine zweite Meldung wäre doppelt
+                if let meldung, !d.istBestellt { HinweisKarte(text: meldung, symbol: "info.circle.fill").listRowInsets(EdgeInsets()).listRowBackground(Color.clear) }
+                if let fehler { FehlerZeile(text: fehler) }
+            } header: {
+                Text(Texte.Aufsteller.bestellenTitel)
             }
         }
         .font(.dm(.body))
@@ -249,6 +256,25 @@ struct AufstellerView: View {
                 fehler = Texte.Aufsteller.logoNichtsDunkel
             } catch GravurLogo.Fehler.unlesbar {
                 fehler = Texte.Aufsteller.logoFehler
+            } catch {
+                fehler = meldungFuer(error)
+            }
+        }
+    }
+
+    /// Logo beim Server löschen (Datenschutz: nur so lange gespeichert, wie du es brauchst) und zurück auf „Studioname“
+    private func logoEntfernen() {
+        logoLaedt = true
+        fehler = nil
+        meldung = nil
+        Task {
+            defer { logoLaedt = false }
+            do {
+                let r = try await APIClient.shared.aufstellerLogoEntfernen(holz: holz)
+                logo = nil
+                mitLogo = false
+                if let d = r.aufsteller { uebernehmen(d, ersteMal: false) }
+                meldung = Texte.Aufsteller.logoEntfernt
             } catch {
                 fehler = meldungFuer(error)
             }

@@ -1,45 +1,63 @@
 import SwiftUI
 
-/// Start-Bereich oben in der Kasse: Einrichtungs-Checkliste (wie im Web), „Diesen Monat“ und „So geht's“.
-/// Kompakt, damit der Ziffernblock gut erreichbar bleibt. Checkliste und So-geht's-Karte lassen sich ausblenden.
+/// Start-Bereich oben in der Kasse: eine schmale Zeile mit „Einrichtung 4/8 ›“ und „So geht's“, darunter „Diesen Monat“ als kleine Zeile.
+/// Die Checkliste (wie im Web) öffnet als Blatt. So bleiben Betrag, Ziffernblock und „Zahlungslink erstellen“ im ersten Bildschirm.
+/// Ist alles erledigt, lässt sich die Einrichtung ausblenden.
 struct StartBereich: View {
     @Environment(AppState.self) private var app
     @Environment(PortalStore.self) private var portal
     @Environment(WerbungStore.self) private var werbung
+    @Environment(\.dynamicTypeSize) private var schrift
+    /// Ab „größer als Standard“ untereinander (die App begrenzt die Schrift auf xxxLarge, Bedienungshilfen-Größen kommen nie an)
+    private var grosseSchrift: Bool { schrift > .large }
 
     @AppStorage("tf-start-checkliste-aus") private var checklisteAus = false
-    @AppStorage("tf-start-sogehts-aus") private var soGehtsAus = false
-    @State private var offen = false
     @State private var blatt: StartBlatt?
 
     var body: some View {
-        VStack(spacing: 8) {
-            if let s = portal.studio,
-               let punkte = werbung.punkte(studio: s, hatZahlungen: !portal.zahlungen.isEmpty, istInhaber: app.sitzung?.istInhaber == true) {
-                let fertig = punkte.filter(\.ok).count
-                if !(checklisteAus && fertig == punkte.count) {
-                    checkliste(punkte, fertig: fertig)
+        VStack(alignment: .leading, spacing: 6) {
+            let punkte = portal.studio.flatMap { s in
+                werbung.punkte(studio: s, hatZahlungen: !portal.zahlungen.isEmpty, istInhaber: app.sitzung?.istInhaber == true)
+            }
+            let fertig = punkte?.filter(\.ok).count ?? 0
+            let zeigeEinrichtung = punkte.map { !(checklisteAus && fertig == $0.count) } ?? false
+            Group {
+                if grosseSchrift {
+                    VStack(spacing: 8) {
+                        if zeigeEinrichtung, let punkte { einrichtungKnopf(fertig: fertig, von: punkte.count) }
+                        soGehtsKnopf
+                    }
+                } else {
+                    HStack(spacing: 8) {
+                        if zeigeEinrichtung, let punkte { einrichtungKnopf(fertig: fertig, von: punkte.count) }
+                        soGehtsKnopf
+                    }
+                    .fixedSize(horizontal: false, vertical: true)
                 }
             }
             monat
-            if !soGehtsAus { soGehtsKarte }
         }
         .task(id: portal.geladenAm) { await werbung.laden() }
         .sheet(item: $blatt, onDismiss: {
             // Nach Recht/Fragebogen: Häkchen neu holen
             Task { await werbung.laden(immer: true) }
         }) { b in
-            NavigationStack {
-                Group {
-                    switch b {
-                    case .soGehts: SoGehtsView()
-                    case .recht: RechtView()
-                    case .fragebogen: FragebogenView()
+            Group {
+                switch b {
+                case .soGehts:
+                    NavigationStack {
+                        SoGehtsView()
+                            .toolbar {
+                                ToolbarItem(placement: .confirmationAction) {
+                                    Button(Texte.Allgemein.fertig) { blatt = nil }.font(.dm(.body, weight: .semibold))
+                                }
+                            }
                     }
-                }
-                .toolbar {
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button(Texte.Allgemein.fertig) { blatt = nil }.font(.dm(.body, weight: .semibold))
+                case .checkliste:
+                    ChecklistenBlatt(checklisteAus: $checklisteAus) { ziel in
+                        blatt = nil
+                        app.werbungSprung = ziel
+                        app.tab = .werbung
                     }
                 }
             }
@@ -53,42 +71,146 @@ struct StartBereich: View {
         }
     }
 
-    // MARK: Checkliste
+    // MARK: Einrichtung (öffnet die Checkliste)
+
+    private func einrichtungKnopf(fertig: Int, von: Int) -> some View {
+        Button { blatt = .checkliste } label: {
+            HStack(spacing: 8) {
+                if fertig == von {
+                    Image(systemName: "checkmark.seal.fill").foregroundStyle(Color.tfGruen)
+                } else {
+                    ZStack {
+                        Circle().stroke(Color.tfLinie, lineWidth: 3)
+                        Circle().trim(from: 0, to: CGFloat(fertig) / CGFloat(max(von, 1)))
+                            .stroke(Color.tfGruen, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                            .rotationEffect(.degrees(-90))
+                    }
+                    .frame(width: 20, height: 20)
+                }
+                Text(WerbungTexte.Start.einrichtung).font(.dm(.subheadline, weight: .bold)).foregroundStyle(Color.tfTinte)
+                    .lineLimit(1)
+                Spacer(minLength: 2)
+                Text(fertig == von ? "✓" : "\(fertig)/\(von)").font(.dm(.subheadline, weight: .semibold).monospacedDigit())
+                    .foregroundStyle(Color.tfLeise)
+                Image(systemName: "chevron.right").font(.caption.weight(.bold)).foregroundStyle(Color.tfLeise)
+            }
+            .frame(maxWidth: .infinity, minHeight: 28)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .modifier(KompaktKarte())
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(fertig == von ? "\(WerbungTexte.Start.einrichtung): \(WerbungTexte.Start.alleErledigt)"
+                                          : "\(WerbungTexte.Start.einrichtung): \(WerbungTexte.Start.stand(fertig, von)) erledigt")
+        .accessibilityHint(WerbungTexte.Start.einrichtungHinweis)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityIdentifier("start-einrichtung")
+    }
+
+    // MARK: So geht's
+
+    private var soGehtsKnopf: some View {
+        Button { blatt = .soGehts } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "play.rectangle.fill").foregroundStyle(Color.tfAkzent)
+                Text(WerbungTexte.soGehtsTitel).font(.dm(.subheadline, weight: .bold)).foregroundStyle(Color.tfTinte)
+                    .lineLimit(1)
+            }
+            .frame(maxWidth: grosseSchrift ? .infinity : nil, minHeight: 28, alignment: .leading)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .modifier(KompaktKarte(breit: grosseSchrift))
+        .fixedSize(horizontal: !grosseSchrift, vertical: false)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(WerbungTexte.soGehtsTitel)
+        .accessibilityHint(WerbungTexte.soGehtsLabel)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityIdentifier("start-so-gehts")
+    }
+
+    // MARK: Diesen Monat (kleine Zeile)
 
     @ViewBuilder
-    private func checkliste(_ punkte: [StartCheckpunkt], fertig: Int) -> some View {
-        if fertig == punkte.count {
-            HStack(spacing: 10) {
-                Image(systemName: "checkmark.seal.fill").foregroundStyle(Color.tfGruen).accessibilityHidden(true)
-                Text(WerbungTexte.Start.alleErledigt).font(.dm(.subheadline, weight: .semibold)).foregroundStyle(Color.tfTinte)
-                    .fixedSize(horizontal: false, vertical: true)
-                Spacer(minLength: 4)
-                Button(WerbungTexte.ausblenden) { withAnimation { checklisteAus = true } }
-                    .font(.dm(.subheadline, weight: .semibold))
-                    .foregroundStyle(Color.tfAkzent)
-            }
-            .modifier(KompaktKarte())
-        } else {
-            DisclosureGroup(isExpanded: $offen) {
-                VStack(alignment: .leading, spacing: 12) {
-                    ForEach(punkte) { p in zeile(p) }
-                }
-                .padding(.top, 10)
-            } label: {
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack {
-                        Text(WerbungTexte.Start.einrichtung).font(.dm(.headline, weight: .bold)).foregroundStyle(Color.tfTinte)
-                        Spacer()
-                        Text(WerbungTexte.Start.stand(fertig, punkte.count)).font(.dm(.subheadline, weight: .semibold)).foregroundStyle(Color.tfLeise)
+    private var monat: some View {
+        if let k = portal.kpis {
+            // Paket mit Provision: „an dich“ (nur, wenn der Portal-Ausweg die Zahl kennt), sonst Anzahl der Zahlungen
+            let anDich = werbung.start?.studio.istProvision == true ? werbung.start?.kpis?.auszahlungMonatCent : nil
+            let zweiter = anDich.map { "\(Euro.text($0)) \(WerbungTexte.Start.anDich)" }
+                ?? "\(k.zahlungenMonat ?? 0) \(WerbungTexte.Start.zahlungen)"
+            (Text("\(WerbungTexte.Start.diesenMonat): ").foregroundStyle(Color.tfLeise)
+             + Text(Euro.text(k.umsatzMonatCent ?? 0)).fontWeight(.bold).foregroundStyle(Color.tfTinte)
+             + Text(" · \(zweiter)").foregroundStyle(Color.tfLeise))
+                .font(.dm(.footnote))
+                .padding(.horizontal, 4)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("\(WerbungTexte.Start.diesenMonat): \(WerbungTexte.Start.gezahlt) \(Euro.gesprochen(k.umsatzMonatCent ?? 0)). "
+                                    + (anDich.map { "\(WerbungTexte.Start.anDich) \(Euro.gesprochen($0))" } ?? "\(k.zahlungenMonat ?? 0) \(WerbungTexte.Start.zahlungen)"))
+        }
+    }
+}
+
+/// Einrichtungs-Checkliste als Blatt (wie im Web-Dashboard). Recht und Fragebogen öffnen direkt, „Werbung“ springt in den Tab.
+struct ChecklistenBlatt: View {
+    @Binding var checklisteAus: Bool
+    let zurWerbung: (WerbungAbschnitt) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @Environment(AppState.self) private var app
+    @Environment(PortalStore.self) private var portal
+    @Environment(WerbungStore.self) private var werbung
+    @State private var ziel: StartBlatt.Ziel?
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    if let s = portal.studio,
+                       let punkte = werbung.punkte(studio: s, hatZahlungen: !portal.zahlungen.isEmpty, istInhaber: app.sitzung?.istInhaber == true) {
+                        let fertig = punkte.filter(\.ok).count
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(fertig == punkte.count ? WerbungTexte.Start.alleErledigt : WerbungTexte.Start.stand(fertig, punkte.count) + " erledigt")
+                                .font(.dm(.headline, weight: .bold)).foregroundStyle(Color.tfTinte)
+                            ProgressView(value: Double(fertig), total: Double(max(punkte.count, 1)))
+                                .tint(Color.tfGruen)
+                                .accessibilityHidden(true)
+                        }
+                        VStack(alignment: .leading, spacing: 14) {
+                            ForEach(punkte) { p in zeile(p) }
+                        }
+                        .karte()
+                        if fertig == punkte.count {
+                            Button(WerbungTexte.Start.ausblendenLang) {
+                                withAnimation { checklisteAus = true }
+                                dismiss()
+                            }
+                            .buttonStyle(.zweit)
+                        }
+                    } else {
+                        LadeAnsicht().frame(minHeight: 160)
                     }
-                    ProgressView(value: Double(fertig), total: Double(punkte.count))
-                        .tint(Color.tfGruen)
-                        .accessibilityHidden(true)
                 }
-                .accessibilityElement(children: .combine)
-                .accessibilityLabel("\(WerbungTexte.Start.einrichtung): \(WerbungTexte.Start.stand(fertig, punkte.count)) erledigt")
+                .padding(16)
             }
-            .modifier(KompaktKarte())
+            .tfHintergrund()
+            .navigationTitle(WerbungTexte.Start.einrichtung)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(Texte.Allgemein.fertig) { dismiss() }.font(.dm(.body, weight: .semibold))
+                }
+            }
+            .navigationDestination(item: $ziel) { z in
+                switch z {
+                case .recht: RechtView()
+                case .fragebogen: FragebogenView()
+                }
+            }
+            .task { await werbung.laden(abstand: 5) }
+            .onChange(of: ziel) { _, neu in
+                // Zurück aus Recht/Fragebogen: Häkchen neu holen
+                if neu == nil { Task { await werbung.laden(immer: true) } }
+            }
         }
     }
 
@@ -100,20 +222,21 @@ struct StartBereich: View {
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 4) {
                 Text(p.titel).font(.dm(.body, weight: .semibold)).foregroundStyle(Color.tfTinte)
-                    .strikethrough(false)
                 Text(p.text).font(.dm(.footnote)).foregroundStyle(Color.tfLeise)
                     .fixedSize(horizontal: false, vertical: true)
                 if !p.ok && (p.aktion != nil || p.manuell != nil) {
                     HStack(spacing: 8) {
                         if let a = p.aktion {
-                            Button(a.knopf) { ausfuehren(a) }
+                            Button(a.knopf) { ausfuehren(a, punkt: p.id) }
                                 .buttonStyle(.bordered)
                                 .tint(Color.tfAkzent)
+                                .accessibilityIdentifier("checkliste-\(p.id)")
                         }
                         if let m = p.manuell {
+                            // Neutral, damit es nicht wie „schon erledigt“ aussieht
                             Button(WerbungTexte.Start.erledigt) { Task { await werbung.abhaken(m) } }
                                 .buttonStyle(.bordered)
-                                .tint(Color.tfGruen)
+                                .tint(Color.tfTinte)
                         }
                     }
                     .font(.dm(.subheadline, weight: .semibold))
@@ -125,84 +248,44 @@ struct StartBereich: View {
         .accessibilityLabel("\(p.titel), \(p.ok ? "erledigt" : p.wartet ? "wartet" : "offen")")
     }
 
-    private func ausfuehren(_ a: StartCheckpunkt.Aktion) {
+    private func ausfuehren(_ a: StartCheckpunkt.Aktion, punkt: String) {
         switch a {
-        case .werbung: app.tab = .werbung
-        // Rechtliche Lage und Fragebogen direkt als Blatt (stehen auch im Konto, Abschnitt „Dein Studio“)
-        case .recht: blatt = .recht
-        case .fragebogen: blatt = .fragebogen
+        case .werbung: zurWerbung(punkt == "theke" ? .zahlseite : .beitraege)
+        case .recht: ziel = .recht
+        case .fragebogen: ziel = .fragebogen
         }
-    }
-
-    // MARK: Diesen Monat
-
-    @ViewBuilder
-    private var monat: some View {
-        if let k = portal.kpis {
-            // Paket mit Provision: „an dich“ (nur, wenn der Portal-Ausweg die Zahl kennt), sonst Anzahl der Zahlungen
-            let anDich = werbung.start?.studio.istProvision == true ? werbung.start?.kpis?.auszahlungMonatCent : nil
-            let zweiter = anDich.map { "\(Euro.text($0)) \(WerbungTexte.Start.anDich)" }
-                ?? "\(k.zahlungenMonat ?? 0) \(WerbungTexte.Start.zahlungen)"
-            ViewThatFits(in: .horizontal) {
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text(WerbungTexte.Start.diesenMonat).font(.dm(.subheadline, weight: .semibold)).foregroundStyle(Color.tfLeise)
-                    Spacer(minLength: 4)
-                    Text(Euro.text(k.umsatzMonatCent ?? 0)).font(.dm(.headline, weight: .bold)).foregroundStyle(Color.tfTinte)
-                    Text("· \(zweiter)").font(.dm(.subheadline)).foregroundStyle(Color.tfLeise)
-                }
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(WerbungTexte.Start.diesenMonat).font(.dm(.subheadline, weight: .semibold)).foregroundStyle(Color.tfLeise)
-                    Text(Euro.text(k.umsatzMonatCent ?? 0)).font(.dm(.headline, weight: .bold)).foregroundStyle(Color.tfTinte)
-                    Text(zweiter).font(.dm(.subheadline)).foregroundStyle(Color.tfLeise)
-                }
-            }
-            .modifier(KompaktKarte())
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel("\(WerbungTexte.Start.diesenMonat): \(WerbungTexte.Start.gezahlt) \(Euro.gesprochen(k.umsatzMonatCent ?? 0)). "
-                                + (anDich.map { "\(WerbungTexte.Start.anDich) \(Euro.gesprochen($0))" } ?? "\(k.zahlungenMonat ?? 0) \(WerbungTexte.Start.zahlungen)"))
-        }
-    }
-
-    // MARK: So geht's
-
-    private var soGehtsKarte: some View {
-        HStack(spacing: 10) {
-            Button { blatt = .soGehts } label: {
-                HStack(spacing: 10) {
-                    Image(systemName: "play.rectangle.fill").foregroundStyle(Color.tfAkzent).accessibilityHidden(true)
-                    Text(WerbungTexte.soGehtsTitel).font(.dm(.headline, weight: .bold)).foregroundStyle(Color.tfTinte)
-                    Text(WerbungTexte.soGehtsDauer).font(.dm(.subheadline)).foregroundStyle(Color.tfLeise)
-                    Spacer(minLength: 0)
-                }
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityElement(children: .combine)
-            .accessibilityHint(WerbungTexte.soGehtsLabel)
-            Button { withAnimation { soGehtsAus = true } } label: {
-                Image(systemName: "xmark").font(.footnote.weight(.bold)).foregroundStyle(Color.tfLeise)
-                    .frame(minWidth: 44, minHeight: 32)
-            }
-            .accessibilityLabel(WerbungTexte.soGehtsAusblenden)
-        }
-        .modifier(KompaktKarte())
     }
 }
 
 /// Wie .karte(), nur flacher (Start-Bereich über dem Ziffernblock)
 struct KompaktKarte: ViewModifier {
+    /// false: so breit wie der Inhalt (z. B. „So geht's“ neben „Einrichtung“)
+    var breit = true
+
     func body(content: Content) -> some View {
         content
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: breit ? .infinity : nil, alignment: .leading)
             .background(Color.tfKarte, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.tfLinie, lineWidth: 1))
     }
 }
 
 enum StartBlatt: String, Identifiable {
-    case soGehts, recht, fragebogen
+    case soGehts, checkliste
+    var id: String { rawValue }
+
+    /// Unterseiten der Checkliste
+    enum Ziel: String, Hashable, Identifiable {
+        case recht, fragebogen
+        var id: String { rawValue }
+    }
+}
+
+/// Abschnitte im Tab „Werbung“ (Sprungleiste, Sprung aus der Checkliste)
+enum WerbungAbschnitt: String, Hashable, CaseIterable, Identifiable {
+    case video, beitraege, zahlseite, druck
     var id: String { rawValue }
 }
 

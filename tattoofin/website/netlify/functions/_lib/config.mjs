@@ -8,9 +8,13 @@ const VORSCHAU = env("TF_VORSCHAU", "") === "1";
 const rohKey = env("STRIPE_SECRET_KEY", "");
 const STRIPE_KEY = VORSCHAU ? (rohKey.startsWith("sk_test_") ? rohKey : "") : rohKey;
 const rohPk = env("STRIPE_PUBLISHABLE_KEY", "");
+const SITE = env("SITE_URL", env("URL", "http://localhost:8888")).replace(/\/$/, "");
+// Druckvorlagen des Studio Kits liegen seit 14.11.2026 auf der eigenen Domain (public/druck/kunden/). Der alte Ort bei
+// GitHub Pages lieferte 404 und zeigte einen Personennamen in der Adresse → ein altes MATERIALS_URL mit github.io wird ignoriert.
+const MATERIALS = env("MATERIALS_URL", "");
 
 export const CFG = {
-  siteUrl: env("SITE_URL", env("URL", "http://localhost:8888")).replace(/\/$/, ""),
+  siteUrl: SITE,
   vorschau: VORSCHAU,
   // Öffentlicher Stripe-Schlüssel (pk_…) für eingebettete Einrichtung/Auszahlungen (Connect Embedded Components) und
   // das eingebettete Bezahlfeld (Payment Element). Leer = wie bisher: Weiterleitung zu Stripe (Onboarding/Checkout).
@@ -29,7 +33,7 @@ export const CFG = {
   gerichtsstand: env("GERICHTSSTAND", "Bamberg"),
   whatsapp: env("KONTAKT_WHATSAPP", "491624502375"),
   videoUrl: env("VIDEO_URL", ""),       // z. B. /assets/werbevideo.mp4 oder YouTube-Datei-URL; leer = Videobereich ausgeblendet
-  materialsUrl: env("MATERIALS_URL", "https://domenicschilling.github.io/marketing-media/tattoofin/kunden/"),
+  materialsUrl: MATERIALS && !/github\.io/.test(MATERIALS) ? MATERIALS.replace(/\/?$/, "/") : `${SITE}/druck/kunden/`,
 
   // E-Mail
   mailFrom: env("MAIL_FROM", "Tattoofin <info@tattoofin.de>"),

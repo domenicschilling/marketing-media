@@ -56,13 +56,6 @@ struct BeitraegeKarte: View {
                     Text(WerbungTexte.nameHinweis).font(.dm(.caption)).foregroundStyle(Color.tfLeise)
                 }
 
-                Toggle(isOn: gepostet) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(WerbungTexte.gepostet).font(.dm(.body, weight: .semibold)).foregroundStyle(Color.tfTinte)
-                        Text(WerbungTexte.gepostetHinweis).font(.dm(.caption)).foregroundStyle(Color.tfLeise)
-                    }
-                }
-                .tint(Color.tfGruen)
                 KlarnaFussnote(text: werbung.fussnote)
             }
             .karte()
@@ -83,6 +76,17 @@ struct BeitraegeKarte: View {
                 .frame(maxWidth: .infinity, minHeight: 80)
                 .karte()
                 .accessibilityElement(children: .combine)
+            }
+            // Erst nach den Beiträgen: abhaken, wenn gepostet
+            if !werbung.beitraege.isEmpty {
+                Toggle(isOn: gepostet) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(WerbungTexte.gepostet).font(.dm(.body, weight: .semibold)).foregroundStyle(Color.tfTinte)
+                        Text(WerbungTexte.gepostetHinweis).font(.dm(.caption)).foregroundStyle(Color.tfLeise)
+                    }
+                }
+                .tint(Color.tfGruen)
+                .karte()
             }
         }
         .task(id: "\(firma)|\(ort ?? "")|\(zahlseite)") {
@@ -137,10 +141,10 @@ struct BeitragKachel: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
-                Text(beitrag.titel).font(.dm(.headline, weight: .bold)).foregroundStyle(Color.tfTinte)
+                Text(beitrag.anzeigeTitel).font(.dm(.headline, weight: .bold)).foregroundStyle(Color.tfTinte)
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 8)
-                Text(beitrag.format).font(.dm(.caption, weight: .semibold)).foregroundStyle(Color.tfLeise)
+                Text(beitrag.anzeigeFormat).font(.dm(.caption, weight: .semibold)).foregroundStyle(Color.tfLeise)
             }
             .accessibilityElement(children: .combine)
             Text(beitrag.wofuer).font(.dm(.subheadline)).foregroundStyle(Color.tfLeise)
@@ -158,7 +162,7 @@ struct BeitragKachel: View {
                                 .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).stroke(Color.tfLinie, lineWidth: 1))
                         }
                         .buttonStyle(.plain)
-                        .accessibilityLabel(WerbungTexte.bildLabel(beitrag.titel, i + 1, bilder.count))
+                        .accessibilityLabel(WerbungTexte.bildLabel(beitrag.anzeigeTitel, i + 1, bilder.count))
                         .accessibilityHint(WerbungTexte.grossHinweis)
                     }
                 }
@@ -256,7 +260,7 @@ struct BeitragGrossansicht: View {
                             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                             .padding(.horizontal, 16)
                             .tag(i)
-                            .accessibilityLabel(WerbungTexte.bildLabel(beitrag.titel, i + 1, bilder.count))
+                            .accessibilityLabel(WerbungTexte.bildLabel(beitrag.anzeigeTitel, i + 1, bilder.count))
                     }
                 }
                 .tabViewStyle(.page(indexDisplayMode: bilder.count > 1 ? .always : .never))
@@ -278,7 +282,7 @@ struct BeitragGrossansicht: View {
                 .padding(.bottom, 8)
             }
             .tfHintergrund()
-            .navigationTitle(beitrag.titel)
+            .navigationTitle(beitrag.kurzTitel)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
@@ -302,5 +306,25 @@ struct BeitragGrossansicht: View {
                 fehler = FotoSpeicher.text(error)
             }
         }
+    }
+}
+
+/// Anzeige in der App ohne Fachwörter (Titel/Format kommen aus app-kit.js bzw. werbung-texte.js, gleich wie im Web;
+/// die Dateien bleiben unverändert, hier nur die Anzeige): „Karussell“ → „Bilder-Serie“, keine Seitenverhältnisse.
+extension GezeichneterBeitrag {
+    var anzeigeTitel: String {
+        titel.replacingOccurrences(of: "Karussell:", with: "Bilder-Serie:")
+    }
+
+    var anzeigeFormat: String {
+        let ohne = format.replacingOccurrences(of: #"\s*\d+:\d+"#, with: "", options: .regularExpression)
+            .trimmingCharacters(in: .whitespaces)
+        return ohne.isEmpty ? format : ohne
+    }
+
+    /// Kurzer Titel für die Großansicht (passt in die Titelleiste)
+    var kurzTitel: String {
+        if bilder.count > 1 { return "\(bilder.count) Bilder" }
+        return art == "story" ? "Story" : "Beitrag"
     }
 }

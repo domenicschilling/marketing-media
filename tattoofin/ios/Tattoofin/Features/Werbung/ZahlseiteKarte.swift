@@ -7,6 +7,7 @@ struct ZahlseiteKarte: View {
     let firma: String
 
     @Environment(WerbungStore.self) private var werbung
+    @Environment(AppState.self) private var app
     @State private var ansehen: URL?
     @State private var arbeitet = false
     @State private var fehler: String?
@@ -52,7 +53,7 @@ struct ZahlseiteKarte: View {
                         .buttonStyle(.zweit)
                 }
             }
-            if let u = URL(string: zahlseite) {
+            if let u = Self.appAnsicht(zahlseite) {
                 Button { ansehen = u } label: { Label(WerbungTexte.zahlseiteAnsehen, systemImage: "safari") }
                     .buttonStyle(.zweit)
             }
@@ -64,11 +65,38 @@ struct ZahlseiteKarte: View {
 
             if let fehler { FehlerZeile(text: fehler) }
             RueckmeldungsText(text: meldung)
+
+            // Zweiter Weg zum Holz-Aufsteller (steht auch im Konto). Nur Inhaber, ohne Preis.
+            if app.sitzung?.istInhaber == true {
+                Divider().overlay(Color.tfLinie)
+                NavigationLink { AufstellerView() } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: "qrcode").foregroundStyle(Color.tfAkzent).accessibilityHidden(true)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(WerbungTexte.holzAufsteller).font(.dm(.body, weight: .semibold)).foregroundStyle(Color.tfTinte)
+                            Text(WerbungTexte.holzAufstellerText).font(.dm(.caption)).foregroundStyle(Color.tfLeise)
+                        }
+                        Spacer(minLength: 8)
+                        Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(Color.tfLeise)
+                            .accessibilityHidden(true)
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("werbung-aufsteller")
+            }
         }
         .karte()
         .sheet(item: Binding(get: { ansehen.map(WebZiel.init) }, set: { ansehen = $0?.url })) { z in
             SafariFenster(url: z.url).ignoresSafeArea()
         }
+    }
+
+    /// Zahlseite in der App-Fassung (?app=1): Impressum/Datenschutz ohne Weg zur Startseite mit Preisen (Apple 3.1.1)
+    nonisolated static func appAnsicht(_ zahlseite: String) -> URL? {
+        guard var c = URLComponents(string: zahlseite) else { return nil }
+        c.queryItems = (c.queryItems ?? []).filter { $0.name != "app" } + [URLQueryItem(name: "app", value: "1")]
+        return c.url
     }
 
     /// QR-Code als PNG (1200 px, weißer Rand) in Fotos
