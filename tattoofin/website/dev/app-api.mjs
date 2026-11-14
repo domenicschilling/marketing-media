@@ -781,7 +781,13 @@ try {
   const bX = await bestaetigen(X.entwurfToken, apple.jws(apple.transaktion({ appAccountToken: X.appAccountToken, environment: "Xcode", originalTransactionId: "0", transactionId: "0" }), { kette: "xcode" }));
   const sX = blob("studio/" + X.entwurfId);
   check(bX.status === 200 && sX.apple?.umgebung === "Xcode" && sX.sandbox === true && blob(`idx/appleotx/xcode-${X.appAccountToken}-0`) === sX.id, "APPLE_XCODE_TEST=1 (nur lokal): StoreKit-Testkauf aus Xcode angenommen, Abo-Kette je appAccountToken eindeutig", bX.text.slice(0, 160));
+  // Echtes Xcode-Zertifikat ist selbstsigniert, aber kein CA-Zertifikat (Fehler im Simulator-Test 14.11.: jws_ungueltig)
+  const X2 = await entwurf("xenia@neu-app.test", "Xcode Studio Zwei");
+  const bX2 = await bestaetigen(X2.entwurfToken, apple.jws(apple.transaktion({ appAccountToken: X2.appAccountToken, environment: "Xcode", originalTransactionId: "0", transactionId: "0" }), { kette: "xcodeBlatt" }));
+  check(bX2.status === 200 && blob("studio/" + X2.entwurfId)?.apple?.umgebung === "Xcode", "APPLE_XCODE_TEST=1: selbstsigniertes Xcode-Zertifikat ohne CA-Kennzeichen wird angenommen", bX2.text.slice(0, 160));
   delete process.env.APPLE_XCODE_TEST;
+  const bX3 = await bestaetigen(X2.entwurfToken, apple.jws(apple.transaktion({ appAccountToken: X2.appAccountToken, environment: "Xcode", originalTransactionId: "1", transactionId: "1" }), { kette: "xcodeBlatt" }));
+  check(bX3.status === 400 && bX3.data.code === "jws_ungueltig", "Ohne APPLE_XCODE_TEST: Xcode-Zertifikat ohne CA-Kennzeichen abgelehnt", bX3.text.slice(0, 120));
 
   // ==================================================================================================
   teil("Apple-Abo: derselbe Kauf zweimal, Benachrichtigung vor der App");

@@ -108,7 +108,10 @@ export function jwsPruefen(jws, { jetzt = Date.now(), schalter = appleTestSchalt
   // Nur lokal mit APPLE_XCODE_TEST=1: StoreKit-Test in Xcode (Kette in sich stimmig, letztes Zertifikat selbstsigniert, environment „Xcode“)
   if (schalter?.xcode) {
     for (let i = 0; i < kette.length - 1; i++) if (!ausgestellt(kette[i], kette[i + 1])) throw kaputt("kette");
-    if (!ausgestellt(kette.at(-1), kette.at(-1))) throw kaputt("kette");
+    // Xcode-Testzertifikat ist kein CA-Zertifikat → checkIssued schlägt fehl; selbstsigniert reicht hier (nur lokal).
+    const letztes = kette.at(-1);
+    const selbstsigniert = (() => { try { return letztes.subject === letztes.issuer && letztes.verify(letztes.publicKey); } catch { return false; } })();
+    if (!ausgestellt(letztes, letztes) && !selbstsigniert) throw kaputt("kette");
     if (!signaturOk(kette[0])) throw kaputt("signatur");
     const p = nutzlast();
     if ((p.environment ?? p.data?.environment) !== "Xcode") throw kaputt("xcode");

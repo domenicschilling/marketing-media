@@ -63,6 +63,10 @@ export function appleNachbau({ bundleId = "de.tattoofin.app", produktId = "de.ta
   csr("leaf2", "Fremdes Blatt"); signiere("leaf2", "inter2", "leaf", 365);
   // Xcode-ähnlich: ein selbstsigniertes Zertifikat
   wurzel("xcode", "StoreKit Testing in Xcode (Nachbau)");
+  // Wie das echte Xcode-Zertifikat: selbstsigniert, aber KEIN CA-Zertifikat (checkIssued schlägt dabei fehl)
+  schluessel("xcodeblatt");
+  fs.writeFileSync(f("xcodeblatt.cnf"), "[req]\ndistinguished_name = dn\nprompt = no\n[dn]\nCN = StoreKit Testing in Xcode\n[blatt]\nbasicConstraints = critical,CA:false\nkeyUsage = critical,digitalSignature\n");
+  ossl("req", "-new", "-x509", "-key", "xcodeblatt.key", "-out", "xcodeblatt.pem", "-days", "365", "-config", "xcodeblatt.cnf", "-extensions", "blatt");
 
   const pem = (n) => fs.readFileSync(f(n + ".pem"), "utf8");
   const der64 = (n) => new crypto.X509Certificate(pem(n)).raw.toString("base64");
@@ -74,6 +78,7 @@ export function appleNachbau({ bundleId = "de.tattoofin.app", produktId = "de.ta
     abgelaufen: { x5c: ["leaf", "interalt", "root"], key: "leaf" },
     zwei: { x5c: ["leaf", "inter"], key: "leaf" },
     xcode: { x5c: ["xcode"], key: "xcode" },
+    xcodeBlatt: { x5c: ["xcodeblatt"], key: "xcodeblatt" },
   };
   const ketten = Object.fromEntries(Object.entries(KETTEN).map(([k, v]) => [k, { x5c: v.x5c.map(der64), key: key(v.key) }]));
   const b64u = (o) => Buffer.from(typeof o === "string" ? o : JSON.stringify(o)).toString("base64url");

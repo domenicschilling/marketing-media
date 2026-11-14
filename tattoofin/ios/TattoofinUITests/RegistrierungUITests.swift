@@ -39,6 +39,17 @@ final class RegistrierungUITests: XCTestCase {
         add(a)
     }
 
+    /// Tab wählen und prüfen, dass er wirklich offen ist (direkt nach einem Neuladen der Kasse geht der erste Tipp manchmal verloren)
+    private func tabWaehlen(_ app: XCUIApplication, _ name: String) {
+        let knopf = app.tabBars.buttons[name]
+        XCTAssertTrue(knopf.waitForExistence(timeout: 10), "Tab \(name) fehlt")
+        for _ in 0..<3 {
+            knopf.tap()
+            if app.navigationBars[name].waitForExistence(timeout: 3) { return }
+        }
+        XCTFail("Tab \(name) öffnet nicht")
+    }
+
     private func tastaturWeiter(_ app: XCUIApplication) {
         let w = app.toolbars.buttons["Weiter"]
         XCTAssertTrue(w.waitForExistence(timeout: 3), "„Weiter“ über der Tastatur fehlt")
@@ -138,13 +149,13 @@ final class RegistrierungUITests: XCTestCase {
         foto(app, "09-kasse-stripe")
 
         // Konto-Tab: Abschnitt Abo
-        app.tabBars.buttons["Konto"].tap()
+        tabWaehlen(app, "Konto")
         XCTAssertTrue(app.staticTexts["Apple (App Store)"].waitForExistence(timeout: 10))
         foto(app, "10-konto-abo")
 
         // Stripe verbinden: Einrichtung im Simulator-Safari (Stripe-Nachbau des lokalen Servers), zurück, Status prüfen → Kasse offen
         guard zusatz.isEmpty else { return }
-        app.tabBars.buttons["Kasse"].tap()
+        tabWaehlen(app, "Kasse")
         XCTAssertTrue(stripe.waitForExistence(timeout: 5))
         stripe.tap()
         let safari = XCUIApplication(bundleIdentifier: "com.apple.mobilesafari")
@@ -164,7 +175,7 @@ final class RegistrierungUITests: XCTestCase {
         foto(app, "13-kasse-offen")
 
         // Konto kündigen und löschen: Hinweis, das Apple-Abo zusätzlich bei Apple zu kündigen (nichts auslösen)
-        app.tabBars.buttons["Konto"].tap()
+        tabWaehlen(app, "Konto")
         let loeschen = app.buttons["Konto kündigen und löschen"]
         // Die Liste lädt Zeilen erst beim Scrollen
         for _ in 0..<10 where !(loeschen.exists && loeschen.isHittable) { app.swipeUp() }

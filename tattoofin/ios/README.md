@@ -70,6 +70,19 @@ xcrun xcresulttool export attachments --path <scratch>/e2e.xcresult --output-pat
 
 Nur Debug: `-TFZuruecksetzen YES` startet ohne Anmeldung und ohne offene Registrierung (UI-Tests).
 
+Abnahme-Lauf mit Fehlerfällen (`RegistrierungE2ETests`, Bildschirmfotos r01–r26: Anlegen, Kauf abgebrochen, Netz weg nach dem Kauf,
+Einrichtung, Kasse/Stripe, Konto, Löschen-Hinweis, Abmelden/Anmelden, Käufe wiederherstellen, bekannte Adresse, dunkel + große Schrift,
+Abo verwalten). „Netz weg“ geht über einen schaltbaren Vorschalt-Proxy vor dem lokalen Server:
+
+```sh
+node tattoofin/website/dev/netz-schalter.mjs            # 8890 → 8888, /__netz/aus und /__netz/an
+TEST_RUNNER_TF_UI_API=http://localhost:8890 TEST_RUNNER_TF_UI_NETZ=http://localhost:8890/__netz \
+  xcodebuild test-without-building … -only-testing:TattoofinUITests/RegistrierungE2ETests
+```
+
+Beobachtung 14.11.: Die erste `SKTestSession` im UI-Test-Prozess wirkt nicht (Produkt „nicht gefunden“, auch nach „Nochmal versuchen“).
+`RegistrierungE2ETests` wärmt deshalb einmal auf (Sitzung + App-Start/-Ende), danach eine frische Sitzung.
+
 ## Server
 
 - Debug: `http://localhost:8888` (aus `TF_API_BASE` → Info.plist `TFApiBasis`), Release: `https://tattoofin.de`.
