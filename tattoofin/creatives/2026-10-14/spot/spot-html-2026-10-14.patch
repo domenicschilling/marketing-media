@@ -1,0 +1,54 @@
+--- /Users/domi/marketing-media/tattoofin/social/instagram/spot.html	2026-10-11 23:30:27
++++ tattoofin/social/instagram/spot.html	2026-10-14 15:40:27
+@@ -187,11 +187,11 @@
+ }
+ function bug(parent) { el(`<img class="bug" src="${WORT}">`, parent); }
+ 
+-const VO = [ // Start (s) und Text je Sprecherzeile, Tempo 1,08
++const VO = [ // Start (s) je Sprecherzeile, Tempo 1,08 – seit 14.10.2026 Sprecher Benji (Higgsfield elevenlabs_v4, vorher Julian)
+   [0.3, "vo0"], [4.65, "vo1"], [6.6, "vo2"], [12.0, "vo3"], [18.5, "vo4"], [22.45, "vo5"], [27.0, "vo6"], [33.1, "vo7"],
+ ];
+ 
+-const SPOT = { id: "creatives/2026-10-10/spot", dauer: 39.6, cover: 5.6, vo: VO, build() {
++const SPOT = { id: "creatives/2026-10-14/spot", dauer: 39.6, cover: 5.6, vo: VO, build() {
+   // 1 · Haken: Stechen (Makro), dann die zögernde Kundin
+   const s1 = szene("s1", 150, 0, 0.4); bug(s1);
+   pop(el(`<span class="stk ab" data-b="rotate(-2.5deg)" style="left:60px;top:290px;font-size:38px">Für Tattoo-Studios</span>`, s1), 0.15, false);
+@@ -221,7 +221,7 @@
+   type(ph.querySelector(".b"), "Lena · Sleeve", 9.9, 10.5);
+   press(ph.querySelector(".pbtn"), 10.75);
+   pop(el(`<div class="bub me" style="right:60px;top:1150px;max-width:880px;font-size:40px">Hi Lena, hier ist dein Link fürs Sleeve 👇<div class="lnk"><img src="${FIG}">Ink Studio · 1.800 €</div><span class="t">Gesendet ✓✓</span></div>`, p5), 11.1);
+-  cap("Dauert <b>10 Sekunden.</b>", 10.6, 11.95, p5);
++  cap("Dauert <b>10 Sekunden.</b>", 9.95, 11.95, p5);
+ 
+   // 4 · Kundin zahlt, wie sie will
+   const s3 = szene("s3", 150, 12.0, 0.2); bug(s3);
+@@ -239,14 +239,14 @@
+     if (i < 2) { at(o, t + 0.65, { background: "#fbb316", transform: "rotate(-1.5deg) scale(1.04)", boxShadow: "8px 8px 0 #1f3d5c" }); at(o, t + 0.8, { background: "#ffffff", transform: "rotate(0deg) scale(1)", boxShadow: "0 0 0 #1f3d5c" }); }
+     sfx(t, "tick");
+   });
+-  cap('Karte, Apple Pay oder <b>in Raten*</b>', 14.9, 18.4, p7);
++  cap('Karte, Apple Pay oder <b>in Raten*</b>', 14.3, 18.4, p7);
+   el(`<p class="fnote" style="left:72px;right:72px;bottom:auto;top:1330px;font-size:26px">${WARN}</p>`, p7);
+ 
+   // 5 · Geld kommt auf einmal
+   const s5 = szene("s4", 150, 18.5, 0.1); bug(s5);
+   toast(s5, "✓ Zahlung eingegangen<small>Auf einmal, nicht in Raten</small>", 72, 1010, 19.3);
+-  cap("Du bekommst dein Geld <b>auf einmal.</b>", 18.6, 20.4, s5);
+-  cap("<b>Automatisch</b> aufs Konto.", 20.4, 22.4, s5);
++  cap("Du bekommst dein Geld <b>auf einmal.</b>", 18.6, 20.7, s5);
++  cap("<b>Automatisch</b> aufs Konto.", 20.7, 22.4, s5);
+ 
+   // 6 · Anzahlung mit Bedingungen
+   const p9 = panel("dark", 22.45, 50, 50); sun(p9, 3200, -1060, -640, .3);
+@@ -260,8 +260,8 @@
+   const chk = an.querySelector(".chk"), hk = an.querySelector(".hk");
+   at(hk, 23.9, { opacity: 0 }); at(hk, 24.0, { opacity: 1 }); at(chk, 23.9, { background: "#ffffff" }); at(chk, 24.0, { background: "#fbb316" }); press(chk, 23.9);
+   toast(p9, "✓ Anzahlung bezahlt<small>Bedingungen bestätigt · 14:32 Uhr</small>", 72, 1180, 24.6);
+-  cap("Anzahlungen mit <b>deinen Bedingungen.</b>", 22.6, 25.0, p9);
+-  cap("No-Show? <b>Geregelt.</b>", 25.0, 26.95, p9);
++  cap("Anzahlungen mit <b>deinen Bedingungen.</b>", 22.6, 25.3, p9);
++  cap("No-Show? <b>Geregelt.</b>", 25.3, 26.95, p9);
+ 
+   // 7 · Service + Angebot
+   const s6 = szene("s5", 150, 27.0, 0.3); bug(s6);
