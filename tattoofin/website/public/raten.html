@@ -40,8 +40,8 @@ p{margin:0}
 .rahmen{max-width:1120px;margin:0 auto;padding:0 24px}
 .unter{font-size:20px;line-height:1.5;max-width:34em;margin-top:18px}
 .klein{font-size:14px;line-height:1.5;color:var(--grau)}
-.pflicht{font-size:1em;line-height:1.5;max-width:46em}
-.pflicht strong{font-weight:800}
+/* Pflicht-Fußnote zu Raten* (Entscheidung Domenic 14.11.2026): klein wie eine Fußnote, normal gesetzt, Kontrast AA */
+.pflicht,.raten-fn{font-size:12.5px;font-weight:400;line-height:1.45;max-width:60em}
 
 /* Knöpfe */
 .knopf{display:inline-flex;align-items:center;justify-content:center;gap:12px;background:var(--navy);color:var(--gelb);text-decoration:none;
@@ -134,7 +134,7 @@ p{margin:0}
 .fuss{background:var(--navy-tief);color:#dfe7ee;padding:40px 0 110px;font-size:15px;border-top:2px solid rgba(255,255,255,.12)}
 .fuss-raster{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:32px}
 .fuss .wm{width:132px;filter:brightness(0) invert(1);margin-bottom:14px}
-.fuss .pflicht{margin-top:12px;color:#fff;font-size:16px}
+.fuss .pflicht{margin-top:12px;color:#fff}
 .fuss nav{display:flex;flex-wrap:wrap;gap:10px 22px;align-content:start;justify-content:flex-end}
 .fuss nav a{color:var(--weiss);text-underline-offset:3px;padding:4px 0}
 
@@ -202,7 +202,7 @@ body.tf-cc-offen .leiste{display:none}
   .teilen h2{font-size:24px}
   .teilen > p.klein{display:none}
   .knopf-gross{padding:12px 16px 9px;font-size:17px}
-  .held .pflicht{font-size:15px;margin-top:8px}
+  .held .pflicht{margin-top:8px}
   .punkte{display:none}
 }
 </style>
@@ -229,7 +229,7 @@ body.tf-cc-offen .leiste{display:none}
       <p class="blase">„Kann ich mein Tattoo auch per Link bezahlen?“</p>
       <h1 id="h-held">Bezahl dein Tattoo per Link.</h1>
       <p class="einstieg">Frag dein Studio nach einem Zahlungslink über <b>Tattoofin</b>. Welche Zahlarten, zum Beispiel Karte, Apple&nbsp;Pay oder Klarna*, angeboten werden, siehst du beim Bezahlen.</p>
-      <p class="pflicht">*Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, nicht Tattoofin. <strong>Achtung! Kreditaufnahme kostet Geld.</strong></p>
+      <p class="pflicht raten-fn">*Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, nicht Tattoofin. Achtung! Kreditaufnahme kostet Geld.</p>
     </div>
     <div class="held-mehr">
       <ul class="punkte">
@@ -277,7 +277,7 @@ body.tf-cc-offen .leiste{display:none}
         <li><h3>Dein Studio schickt dir einen Zahlungslink</h3><p>Für das ganze Tattoo oder die Anzahlung. Du öffnest ihn am Handy, ohne App und ohne Anmeldung.</p></li>
         <li><h3>Du bezahlst</h3><p>Welche Zahlarten, zum Beispiel Karte, Apple&nbsp;Pay oder Klarna*, angeboten werden, siehst du beim Bezahlen. Dein Vertrag über das Tattoo besteht nur mit dem Studio.</p></li>
       </ol>
-      <p class="pflicht">*Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, nicht Tattoofin. <strong>Achtung! Kreditaufnahme kostet Geld.</strong></p>
+      <p class="pflicht raten-fn">*Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, nicht Tattoofin. Achtung! Kreditaufnahme kostet Geld.</p>
     </div>
     <figure class="schirm-wrap" style="margin:0">
       <div class="schirm"><img src="/assets/lp/handy-kunde.webp" alt="Beispiel einer Zahlseite: Hi Lena, hier ist dein Zahlungslink, 2.000 Euro, Sleeve linker Arm, Knopf Weiter zur Zahlung" width="300" height="649" loading="lazy"></div>
@@ -306,7 +306,7 @@ body.tf-cc-offen .leiste{display:none}
   <div class="rahmen">
     <h2 id="h-studio">Du hast selbst ein Studio?</h2>
     <p class="unter">Zahlungslinks, Anzahlungen und mehr Zahlarten* für deine Kunden. Alles für Studios, mit Video und kostenloser Einrichtung.</p>
-    <p class="pflicht">*Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, nicht Tattoofin. <strong>Achtung! Kreditaufnahme kostet Geld.</strong></p>
+    <p class="pflicht raten-fn">*Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, nicht Tattoofin. Achtung! Kreditaufnahme kostet Geld.</p>
     <a class="knopf knopf-gross" href="/studios?utm_source=raten&amp;utm_medium=seite&amp;utm_content=studio-teil" data-r="studios">Zur Seite für Studios</a>
   </div>
 </section>
@@ -318,7 +318,7 @@ body.tf-cc-offen .leiste{display:none}
     <img class="wm" src="/assets/wortmarke.png" alt="Tattoofin" width="132" height="30" loading="lazy">
     <p>© <span id="jahr">2026</span> DSX Media Solutions UG (haftungsbeschränkt). Tattoofin ist kein Kreditinstitut.</p>
     <p>Bilder auf dieser Website sind KI-generierte Symbolbilder. Bildschirmaufnahmen der App zeigen Beispieldaten.</p>
-    <p class="pflicht">*Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, nicht Tattoofin. <strong>Achtung! Kreditaufnahme kostet Geld.</strong></p>
+    <p class="pflicht raten-fn">*Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, nicht Tattoofin. Achtung! Kreditaufnahme kostet Geld.</p>
   </div>
   <nav aria-label="Rechtliches"><a href="/">Startseite</a><a href="/studios">Für Studios</a><a href="/impressum">Impressum</a><a href="/datenschutz#studio-tipp">Datenschutz</a><a href="#" data-cookies>Cookie-Einstellungen</a></nav>
 </div></footer>

@@ -49,7 +49,7 @@
   Array.prototype.forEach.call(erste, function (s, i) { vorbereiten(s); stechen(s, 180 + i * 170); });
 
   // Weiter unten: einmal, wenn das Motiv ins Bild kommt
-  var rest = document.querySelectorAll('.haupt svg.stech, .stueck svg.stech');
+  var rest = document.querySelectorAll('.fall svg.stech, .stueck svg.stech');
   if (!ruhig && 'IntersectionObserver' in window) {
     var io = new IntersectionObserver(function (es) {
       es.forEach(function (e) {
@@ -84,10 +84,32 @@
     });
   });
 
+  // 10 Sekunden echte App-Aufnahme: erst beim Antippen laden und abspielen (kein Autoplay, kein Ton)
+  var film = document.getElementById('film');
+  Array.prototype.forEach.call(document.querySelectorAll('[data-film]'), function (b) {
+    b.addEventListener('click', function () {
+      if (!film || typeof film.showModal !== 'function') { location.href = '/assets/lp/zahlungslink.mp4'; return; }
+      var box = film.querySelector('.film-box');
+      var v = document.createElement('video');
+      v.src = '/assets/lp/zahlungslink.mp4'; v.poster = '/assets/lp/zahlungslink-poster.webp';
+      v.muted = true; v.playsInline = true; v.setAttribute('playsinline', ''); v.setAttribute('muted', '');
+      v.loop = true; v.controls = true; v.preload = 'none';
+      v.setAttribute('aria-label', 'Aufnahme aus der Tattoofin-App: 2.000 Euro für Lena eintippen, Zahlungslink erstellen, so sieht ihn die Kundin. Beispieldaten.');
+      box.innerHTML = ''; box.appendChild(v);
+      film.showModal();
+      var p = v.play(); if (p && p.catch) p.catch(function () {});
+      try { if (window.umami) window.umami.track('video-play', { ort: b.closest('.auftakt') ? 'auftakt' : 'seite' }); } catch (x) {}
+    });
+  });
+  if (film) {
+    film.addEventListener('close', function () { var box = film.querySelector('.film-box'); if (box) box.innerHTML = ''; });
+    film.addEventListener('click', function (e) { if (e.target === film) film.close(); });
+  }
+
   // Leiste am Handy: erscheint, sobald kein „Jetzt starten“-Knopf der Seite im Bild ist; weg am Schluss und am Seitenende
   var leiste = document.getElementById('leiste');
   var knoepfe = document.querySelectorAll('main .knopf');
-  var aus = [document.querySelector('.schluss'), document.querySelector('.fuss')];
+  var aus = [document.querySelector('.schluss'), document.querySelector('#anfrage'), document.querySelector('.fuss')];
   if (leiste && knoepfe.length && 'IntersectionObserver' in window) {
     var sichtbar = new Map(), ausDa = new Map();
     var pruefen = function () {
