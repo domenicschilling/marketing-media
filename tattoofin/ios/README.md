@@ -70,6 +70,14 @@ xcrun xcresulttool export attachments --path <scratch>/e2e.xcresult --output-pat
 
 Nur Debug: `-TFZuruecksetzen YES` startet ohne Anmeldung und ohne offene Registrierung (UI-Tests).
 
+## Werbung, So geht's, Start-Bereich (14.11.2026)
+
+- Tab „Werbung“ (`Features/Werbung`): Werbevideo (AVKit, öffentliche Adressen von `GET /api/app/werbung`), Studio-Beiträge, Zahlseiten-QR, Druckvorlagen. Klarna/Raten-Material nur bei `klarnaDauerhaft` (`WerbungRegeln.klarnaMaterial`), mit kleiner Fußnote `KlarnaTexte.pflichtsatz`.
+- Studio-Beiträge zeichnet `app-kit.js` lokal in einem unsichtbaren `WKWebView` (Schema `tfkit://`, keine Netzzugriffe). Die Kit-Dateien liegen in `Tattoofin/Resources/WebKit` als Kopie aus `website/public`. **Nach jeder Änderung an app-kit.js, werbung-texte.js, klarna-texte.js, Figur, Wortmarke oder Schriften:** `bash scripts/web-kit-sync.sh` und die Kopie einchecken. `WerbungTests/kitGleichWieWebsite` schlägt sonst fehl.
+- Speichern in Fotos nur mit `.addOnly` (`NSPhotoLibraryAddUsageDescription`).
+- „So geht's“ (`Features/SoGehts`): Erklärvideo mit Kapiteln, ohne das Web-App-Kapitel „App auf den Startbildschirm“ (wird beim Abspielen übersprungen).
+- Start-Bereich oben in der Kasse (`Features/Start`): Checkliste wie im Web, „Diesen Monat“, So-geht's-Karte (beides ausblendbar).
+
 ## Server
 
 - Debug: `http://localhost:8888` (aus `TF_API_BASE` → Info.plist `TFApiBasis`), Release: `https://tattoofin.de`.

@@ -380,6 +380,7 @@
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Zum Scannen von Gutschein-Codes";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Damit nur du die Tattoofin-App öffnen kannst";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Zum Speichern deiner Werbevideos und Bilder in Fotos";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
@@ -417,6 +418,7 @@
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Zum Scannen von Gutschein-Codes";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Damit nur du die Tattoofin-App öffnen kannst";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Zum Speichern deiner Werbevideos und Bilder in Fotos";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;

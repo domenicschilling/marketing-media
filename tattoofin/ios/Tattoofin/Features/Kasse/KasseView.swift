@@ -72,6 +72,8 @@ struct KasseView: View {
     private var formular: some View {
         ScrollView {
             VStack(spacing: 16) {
+                StartBereich()
+
                 // Betrag
                 VStack(spacing: 4) {
                     Text(eingabe.anzeige)

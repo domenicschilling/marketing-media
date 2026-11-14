@@ -36,6 +36,7 @@ struct KontoView: View {
                 studioAbschnitt
                 if studio?.istApple == true { aboAbschnitt }
                 stripeAbschnitt
+                SoGehtsAbschnitt()
                 mitteilungenAbschnitt
                 sicherheitAbschnitt
                 rechtAbschnitt

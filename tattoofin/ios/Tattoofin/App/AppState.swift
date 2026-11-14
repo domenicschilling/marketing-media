@@ -2,7 +2,7 @@ import SwiftUI
 import Observation
 
 enum HauptTab: Hashable {
-    case kasse, zahlungen, gutscheine, konto
+    case kasse, zahlungen, gutscheine, werbung, konto
 }
 
 /// Sprungziel aus einer Push-Mitteilung
@@ -91,6 +91,7 @@ final class AppState {
         ZahlungenCache.loeschen()
         Einstellungen.abmelden()
         portal.leeren()
+        WerbungStore.shared.leeren()
         sitzung = nil
         sprungziel = nil
         sperre.entsperrt()
