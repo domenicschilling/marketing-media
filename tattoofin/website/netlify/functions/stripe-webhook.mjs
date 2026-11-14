@@ -35,9 +35,17 @@ async function studioFuer(obj) {
 // dort nichts (kein Status, keine Rechnungsmails). Nur Admin-Mail. true = Ereignis erledigt.
 // Ausnahme: Ein Stripe-Abo, das für ein App-Studio entstanden ist (Web-Checkout kurz vor dem Wechsel in die App bezahlt), wird sofort
 // gekündigt, damit das Studio nicht doppelt zahlt (Apple + Stripe). Die erste Zahlung erstattet der Admin.
+// Ausnahme 2: Der QR-Aufsteller (körperliche Ware) läuft auch bei App-Studios über Stripe (DSX-Konto). Ereignisse, die nachweislich zu
+// seinem Kauf gehören (metadata typ "aufsteller" + dieses Studio + ein begonnener Kauf), sind normal → still erledigt, keine Alarm-Mail.
+// checkout.session.completed des Aufstellers verarbeitet der Aufrufer VOR appleWaechter (aufstellerBezahlt).
+const gehoertZumAufsteller = (s, o) => o?.metadata?.typ === "aufsteller" && o.metadata.studioId === s.id && Boolean(s.aufsteller?.kauf?.csId);
 async function appleWaechter(s, event) {
   if (!s || !istApple(s)) return false;
   const o = event.data?.object || {};
+  if (gehoertZumAufsteller(s, o)) {
+    await log("stripe-aufsteller-app-studio", { studioId: s.id, ereignis: event.type, objekt: o.id || null });
+    return true;
+  }
   if (event.type === "checkout.session.completed" && o.mode === "subscription" && o.subscription) {
     const subId = typeof o.subscription === "string" ? o.subscription : o.subscription.id;
     let gekuendigt = false;

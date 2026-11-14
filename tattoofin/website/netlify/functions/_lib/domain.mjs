@@ -87,6 +87,8 @@ const holzText = (h) => (h === "dunkel" ? "dunkel (Walnuss)" : "hell (Birke/Buch
 // app: Kauf aus der Tattoofin-App (Checkout im In-App-Browser) → Rückkehr auf die neutrale Seite app-fertig.html (ohne Links zur Website);
 // die App prüft danach selbst per POST /api/portal/aufsteller-pruefen { cs }.
 export async function aufstellerCheckout(s, { app = false } = {}) {
+  // Testkasse (Demo, Apple-Sandbox/TestFlight/App Review): nie eine echte Kasse (zweiter Schutz, portal.mjs prüft vorher)
+  if (testKasse(s)) throw new HttpError(409, "Im Testmodus kannst du den Aufsteller nicht bestellen. Es wird nichts bezahlt.", "testmodus");
   if (!s.stripe?.customerId) { const cus = await ensureCustomer(s); s.stripe = { ...(s.stripe || {}), customerId: cus.id }; }
   const name = "QR-Aufsteller aus Holz";
   const text = `Graviert mit QR-Code deiner Zahlseite, ${s.aufsteller?.variante === "logo" ? "mit deinem Logo" : "mit Studioname"}, Holz ${holzText(s.aufsteller?.holz)}. Lieferung an: ${lieferadresse(s)}`.slice(0, 480);

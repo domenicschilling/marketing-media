@@ -51,5 +51,5 @@ export const oeffentlich = (s) => ({
   umstellungAngebot: hatUmstellungsangebot(s) ? { monatNetto: s.umstellung.monatNetto } : null,
   altKonto: s.stripe?.altKonto ? { bis: s.stripe.altKonto.bis } : null,
   kannKassieren: Boolean(darfKassieren(s)), zahlseite: zahlseite(s), connectUrl: testKasse(s) ? null : connectUrl(s),
-  aufsteller: { inklusive: CFG.aufstellerPakete.includes(paketVon(s).id), holz: s.aufsteller?.holz || "hell", variante: s.aufsteller?.variante || "name", hatLogo: Boolean(s.aufsteller?.hatLogo), angefordertAm: s.aufsteller?.angefordertAm || null, preisNetto: CFG.aufstellerPreisNetto, bezahltAm: s.aufsteller?.kauf?.bezahltAm || null },
+  aufsteller: { inklusive: aufstellerInklusive(s), bestellbar: aufstellerInklusive(s) || !testKasse(s), holz: s.aufsteller?.holz || "hell", variante: s.aufsteller?.variante || "name", hatLogo: Boolean(s.aufsteller?.hatLogo), angefordertAm: s.aufsteller?.angefordertAm || null, preisNetto: CFG.aufstellerPreisNetto, bezahltAm: s.aufsteller?.kauf?.bezahltAm || null },
 });

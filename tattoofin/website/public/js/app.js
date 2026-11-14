@@ -385,7 +385,10 @@
   function werbung() {
     var s = D.studio;
     $("zs-url").value = s.zahlseite; $("zs-open").href = s.zahlseite; qr($("zs-qr"), s.zahlseite, 220);
-    $("mat").innerHTML = D.materialLinks.map(function (m) { return '<a target="_blank" rel="noopener" href="' + e(m.url) + '">' + e(m.titel) + "<small>Mit " + e(s.firma) + " und deinem QR-Code · Öffnen → Drucken/PDF</small></a>"; }).join("");
+    // Druckvorlagen sagen „Ratenzahlung möglich*“: der Server schickt sie nur bei Klarna dauerhaft, sonst ist die Liste leer → Karte aus
+    var mat = D.materialLinks || [];
+    $("mat").innerHTML = mat.map(function (m) { return '<a target="_blank" rel="noopener" href="' + e(m.url) + '">' + e(m.titel) + "<small>Mit " + e(s.firma) + " und deinem QR-Code · Öffnen → Drucken/PDF</small></a>"; }).join("");
+    $("mat-karte").classList.toggle("hidden", !mat.length);
     if (window.TFKit && s.klarnaDauerhaft !== false) TFKit.zeige($("kit"), { firma: s.firma, ort: s.ort, zahlseite: s.zahlseite, onPost: function () { abhaken("werbung", true); } });
     $("zs-png").onclick = function () { if (window.TFAufsteller) datei(TFAufsteller.qrBild(s.zahlseite, 1200), "tattoofin-qr-zahlseite.png"); };
     aufsteller();
@@ -472,6 +475,7 @@
     var knopf = a.bezahltAm ? '<span class="chip ok">✓ Bestellt und bezahlt am ' + dat(a.bezahltAm) + " – wir lassen ihn fertigen und melden uns</span>"
       : a.angefordertAm ? '<span class="chip ok">✓ ' + (a.inklusive ? "Angefordert" : "Angefragt") + " am " + dat(a.angefordertAm) + " – wir melden uns</span>"
       : a.inklusive ? '<button class="btn gold small" id="auf-anfordern">Aufsteller kostenlos anfordern</button>'
+      : a.bestellbar === false ? '<span class="klein muted">Im Testmodus kannst du den Aufsteller nicht bestellen. Es wird nichts bezahlt.</span>'
       : '<button class="btn gold small" id="auf-kaufen">QR-Aufsteller bestellen – ' + preis + '</button>';
     box.innerHTML = a.inklusive
       ? "<b>✓ In deinem Paket enthalten (im Wert von " + preis + ").</b> Wir lassen deinen Aufsteller fertigen und schicken ihn an deine Studio-Adresse. Wähle unten Holz und Variante, dann anfordern.<div class=\"row-a\">" + knopf + "</div>"

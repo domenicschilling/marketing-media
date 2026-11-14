@@ -233,10 +233,16 @@ enum Texte {
         static let sandboxText = "Testkauf (Apple-Sandbox). Die Stripe-Einrichtung ist für Testkonten ausgeschaltet."
         /// Kasse nach einem Testkauf (Apple-Sandbox, auch App Review): offen im Testmodus
         static let testmodusText = "Testkauf (Apple-Sandbox): Die Kasse läuft im Testmodus. Kunden können hier nicht wirklich bezahlen, die Stripe-Einrichtung ist aus. Erstelle einen Zahlungslink und tippe auf „Testzahlung auslösen“."
+        /// Testkauf (Apple-Sandbox): Der QR-Aufsteller (Ware mit Kosten) lässt sich nicht bestellen
+        /// Werbung-Tab im Testmodus (Testkauf): QR-Code und Zahlseite nehmen kein Geld an
+        static let werbungTestmodus = "Testmodus: Über diesen QR-Code kann niemand wirklich bezahlen."
+        static let aufstellerTestmodus = "Im Testmodus kannst du den Aufsteller nicht bestellen. Es wird nichts bezahlt."
         static let aboAbgelaufenTitel = "Dein Abo ist abgelaufen"
         static let aboAbgelaufenText = "Zahlungslinks und Zahlseite sind gesperrt. Deine Daten bleiben erhalten."
         static let aboWiederAbschliessen = "Abo wieder abschließen"
         static let aboTeamHinweis = "Bitte den Inhaber, das Abo zu erneuern."
+        /// Werbung bei beendetem Abo (Inhaber): wechselt zur Kasse mit „Abo wieder abschließen“
+        static let aboZurKasse = "Abo wieder abschließen"
         static let stripeTitel = "Letzter Schritt: Stripe verbinden"
         static let stripeText = "Über dein Stripe-Konto bekommst du das Geld deiner Kunden. Die Einrichtung dauert etwa 10 Minuten, danach prüft Stripe meist 1 bis 3 Werktage."
         static let stripeEinrichten = "Stripe-Konto einrichten"

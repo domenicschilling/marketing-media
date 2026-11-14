@@ -45,7 +45,10 @@
     renderAbr();
 
     $("zs-url").value = s.zahlseite; $("zs-open").href = s.zahlseite; qr($("zs-qr"), s.zahlseite);
-    $("mat").innerHTML = D.materialLinks.map(function (m) { return '<a class="card" style="text-decoration:none" target="_blank" href="' + e(m.url) + '"><h3>' + e(m.titel) + ' →</h3><p>Mit ' + e(s.firma) + " und deinem QR-Code</p></a>"; }).join("");
+    // Druckvorlagen nur bei Klarna dauerhaft (Raten-Aussage), sonst leere Liste → Bereich aus
+    var mat = D.materialLinks || [];
+    $("mat").innerHTML = mat.map(function (m) { return '<a class="card" style="text-decoration:none" target="_blank" href="' + e(m.url) + '"><h3>' + e(m.titel) + ' →</h3><p>Mit ' + e(s.firma) + " und deinem QR-Code</p></a>"; }).join("");
+    $("mat-karte").classList.toggle("hidden", !mat.length);
     $("fb-status").textContent = s.fragebogenAm ? "Zuletzt gespeichert am " + dat(s.fragebogenAm) + ". Änderungen jederzeit möglich." : "Noch nicht ausgefüllt.";
 
     $("vertrag-info").innerHTML = '<table class="tbl">' +

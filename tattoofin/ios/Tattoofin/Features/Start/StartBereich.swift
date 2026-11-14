@@ -316,8 +316,9 @@ extension StartCheckpunkt.Aktion {
 
 /// Punkte wie im Web-Dashboard (app.js checkliste()), für die App angepasst: kein Paket/Preis, „App“ ist erledigt.
 enum StartCheckpunkte {
-    /// Vom Server (GET /api/app/start). Ziele „stripe“ und „link“ brauchen hier keinen Knopf: Der Start-Bereich steht nur in der Kasse,
-    /// und die gibt es erst nach der Stripe-Freigabe. Punkte, die diese Rolle nicht erledigen darf, ohne Knopf.
+    /// Vom Server (GET /api/app/start). Ziele „stripe“ und „link“ brauchen hier keinen Knopf: Der Start-Bereich steht nur in der offenen Kasse.
+    /// Die ist offen nach der Stripe-Freigabe oder im Testmodus (Apple-Sandbox) bzw. Demo-Studio ohne Stripe; dann meldet der Server
+    /// den Stripe-Punkt als erledigt. Punkte, die diese Rolle nicht erledigen darf, ohne Knopf.
     static func punkte(server: [ServerCheckpunkt]) -> [StartCheckpunkt] {
         server.map { p in
             let darf = p.darf ?? true
@@ -335,19 +336,20 @@ enum StartCheckpunkte {
         }
     }
 
-    /// Selbst berechnet (älterer Server ohne /api/app/start)
+    /// Selbst berechnet (älterer Server ohne /api/app/start). Wie der Server: Im Testmodus (Apple-Sandbox) und im Demo-Studio
+    /// gibt es keine Stripe-Einrichtung, der Stripe-Punkt ist erledigt. Der Link-Punkt hängt an der offenen Kasse (darfKassieren).
     static func punkte(studio s: Studio, start: StartStudio?, hatZahlungen: Bool, istInhaber: Bool = true) -> [StartCheckpunkt] {
         typealias T = WerbungTexte.Start
-        let frei = s.stripe?.freigegeben == true
+        let frei = s.stripe?.freigegeben == true || s.hatTestkasse
         let wartet = !frei && s.stripe?.angabenGemacht == true
         let c = start?.checkliste ?? StartCheckliste()
         return [
             StartCheckpunkt(id: "konto", ok: true, titel: T.konto, text: T.kontoText),
-            StartCheckpunkt(id: "stripe", ok: frei, wartet: wartet, titel: T.stripe, text: frei ? T.stripeOk : wartet ? T.stripeWarte : T.stripeOffen),
+            StartCheckpunkt(id: "stripe", ok: frei, wartet: wartet, titel: T.stripe, text: s.hatTestkasse ? T.stripeTestmodus : frei ? T.stripeOk : wartet ? T.stripeWarte : T.stripeOffen),
             // Fragebogen und Recht darf nur der Inhaber erledigen (Server: nur_inhaber)
             StartCheckpunkt(id: "fragebogen", ok: start?.fragebogenAm != nil, titel: T.fragebogen, text: T.fragebogenText, aktion: istInhaber ? .fragebogen : nil),
             StartCheckpunkt(id: "recht", ok: start?.recht?.aktuell == true, titel: T.recht, text: T.rechtText, aktion: istInhaber ? .recht : nil),
-            StartCheckpunkt(id: "link", ok: hatZahlungen, titel: T.link, text: T.linkText),
+            StartCheckpunkt(id: "link", ok: hatZahlungen, titel: T.link, text: s.darfKassieren ? T.linkText : T.linkGesperrt),
             // In der iPhone-App immer erledigt (im Web: „auf den Startbildschirm“)
             StartCheckpunkt(id: "app", ok: true, titel: T.app, text: T.appText),
             StartCheckpunkt(id: "theke", ok: c.theke != nil, titel: T.theke, text: T.thekeText, aktion: .werbung, manuell: "theke"),

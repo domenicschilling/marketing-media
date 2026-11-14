@@ -6,7 +6,7 @@
 // Plattformkonto ab dem Stichtag; nicht, wenn ZAHLARTEN ohne klarna). Gutscheine kommen hier nie vor.
 // Apple 3.1.1/3.1.3: keine Paket-, Website- oder Abo-Preise in den Antworten für die App. Einziger Preis: der QR-Aufsteller (körperliche Ware).
 import "../../../public/js/werbung-texte.js";
-import { CFG, paketVon } from "./config.mjs";
+import { CFG, aufstellerInklusive, testKasse } from "./config.mjs";
 import { euro, brutto } from "./util.mjs";
 import { klarnaDauerhaft } from "./domain.mjs";
 import { KLARNA_NAME, KLARNA_ZUSATZ_STUDIO, KLARNA_WARNSATZ, PFLICHTSATZ } from "./klarna-texte.mjs";
@@ -97,10 +97,16 @@ export function werbungFuer(s) {
 }
 
 // QR-Aufsteller in der App: nur Artikel + Preis des Aufstellers (körperliche Ware, Apple 3.1.3(e)). Kein Paket, kein Abo, keine Website.
+// kostenlos: im Paket enthalten (config.aufstellerInklusive, also nicht beim Bestandskunden-Preis eines umgestellten Altstudios).
+// bestellbar false: Testkasse (Demo/Apple-Sandbox, config.testKasse) und nicht kostenlos → kein Preis, kein Knopf, nur testmodusHinweis
+// (POST /api/portal/aufsteller lehnt den Kauf dann mit 409 code "testmodus" ab, es wird nie eine echte Stripe-Kasse geöffnet).
 export const AUFSTELLER_ARTIKEL = "QR-Aufsteller aus Holz";
+export const AUFSTELLER_TESTMODUS = "Im Testmodus kannst du den Aufsteller nicht bestellen. Es wird nichts bezahlt.";
 export async function aufstellerFuerApp(s, { mitLogo = false, store } = {}) {
   const a = s.aufsteller || {};
-  const kostenlos = CFG.aufstellerPakete.includes(paketVon(s).id);
+  const kostenlos = aufstellerInklusive(s);
+  const bestellbar = kostenlos || !testKasse(s);
+  const mitPreis = !kostenlos && bestellbar;
   const netto = CFG.aufstellerPreisNetto, gesamt = brutto(netto);
   const bezahltAm = a.kauf?.bezahltAm || null, angefordertAm = a.angefordertAm || null;
   const status = bezahltAm ? "bezahlt" : angefordertAm ? "bestellt" : a.kauf?.csId ? "zahlung_offen" : "offen";
@@ -109,11 +115,12 @@ export async function aufstellerFuerApp(s, { mitLogo = false, store } = {}) {
   return {
     artikel: AUFSTELLER_ARTIKEL,
     beschreibung: "Aus Holz, graviert mit dem QR-Code deiner Zahlseite und deinem Studionamen oder Logo. Wir schicken ihn an deine Studio-Adresse.",
-    kostenlos,
-    preis: kostenlos ? null : { nettoCent: netto, gesamtCent: gesamt, ustProzent: CFG.ustProzent, text: `${euro(netto)} + ${CFG.ustProzent} % MwSt. = ${euro(gesamt)}` },
-    preisText: kostenlos ? "Für dich kostenlos" : `${euro(gesamt)} inkl. MwSt.`,
-    knopf: kostenlos ? "Kostenlos bestellen" : `Für ${euro(gesamt)} bestellen`,
-    bezahlenHinweis: kostenlos ? null : "Du bezahlst sicher bei Stripe. Danach geht es zurück in die App. Die Rechnung kommt per E-Mail.",
+    kostenlos, bestellbar,
+    preis: mitPreis ? { nettoCent: netto, gesamtCent: gesamt, ustProzent: CFG.ustProzent, text: `${euro(netto)} + ${CFG.ustProzent} % MwSt. = ${euro(gesamt)}` } : null,
+    preisText: kostenlos ? "Für dich kostenlos" : mitPreis ? `${euro(gesamt)} inkl. MwSt.` : null,
+    knopf: kostenlos ? "Kostenlos bestellen" : mitPreis ? `Für ${euro(gesamt)} bestellen` : null,
+    bezahlenHinweis: mitPreis ? "Du bezahlst sicher bei Stripe. Danach geht es zurück in die App. Die Rechnung kommt per E-Mail." : null,
+    testmodusHinweis: bestellbar ? null : AUFSTELLER_TESTMODUS,
     holz: a.holz || "hell", variante: logo || a.hatLogo ? a.variante || "name" : "name", hatLogo: Boolean(a.hatLogo),
     holzHinweis: {
       hell: "Helles Holz (Birke, Buche, Ahorn) hat den besten Kontrast. Der QR-Code lässt sich auch aus über 1 m scannen.",

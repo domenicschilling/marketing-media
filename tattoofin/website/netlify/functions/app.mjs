@@ -195,17 +195,23 @@ async function kontoLoeschen(s, ich, req) {
 // ---------------------------------------------------------------- Start: Einrichtungs-Checkliste (wie im Dashboard, ohne Paket und Preis)
 // ziel: wohin die App beim Tippen führt (stripe = Einrichtung im Browser, fragebogen, recht, link = neuer Zahlungslink, werbung).
 // manuell: Punkt, den das Studio selbst abhakt (POST /api/portal/checkliste { punkt, erledigt }). nurInhaber: Team kann ihn nicht erledigen.
+// Testkasse (Demo-Studio, Apple-Sandbox/TestFlight/App Review, config.testKasse): kein Zahlungskonto nötig → Stripe-Punkt erledigt,
+// ohne Ziel. Der Link-Punkt hängt an kannKassieren (darfKassieren), nicht an der Stripe-Freigabe: Testkassen dürfen Links anlegen.
 async function startDaten(s, ich) {
-  const o = oeffentlich(s), c = s.checkliste || {}, frei = Boolean(o.stripe.freigegeben);
+  const o = oeffentlich(s), c = s.checkliste || {}, test = testKasse(s), frei = Boolean(o.stripe.freigegeben), kassieren = Boolean(o.kannKassieren);
   const zahlungen = (await zahlungenVon(s.id)).filter((z) => z.art !== "zahlseite" || z.status === "bezahlt").length;
   const klarna = werbungMitKlarna(s);
+  const stripePunkt = test
+    ? { id: "stripe", ok: true, wartet: false, titel: "Zahlungskonto einrichten (ca. 10 Min.)", ziel: null, nurInhaber: true, text: "Testmodus: Für Testzahlungen brauchst du kein Zahlungskonto." }
+    : { id: "stripe", ok: frei, wartet: Boolean(o.stripe.angabenGemacht && !frei), titel: "Zahlungskonto einrichten (ca. 10 Min.)", ziel: frei || o.stripe.angabenGemacht ? null : "stripe", nurInhaber: true,
+      text: frei ? "Freigegeben. Stripe zahlt das Geld deiner Kunden auf dein Bankkonto aus. Bei neuen Konten erst 7 Tage nach der Zahlung." : o.stripe.angabenGemacht ? "Stripe prüft deine Angaben, meist 1 bis 3 Werktage." : "Ausweis und IBAN bereithalten. Danach geht alles andere." };
   const punkte = [
     { id: "konto", ok: true, titel: "Studio bei Tattoofin angelegt", text: "Dein Studio ist startklar eingerichtet." },
-    { id: "stripe", ok: frei, wartet: Boolean(o.stripe.angabenGemacht && !frei), titel: "Zahlungskonto einrichten (ca. 10 Min.)", ziel: frei || o.stripe.angabenGemacht ? null : "stripe", nurInhaber: true,
-      text: frei ? "Freigegeben. Stripe zahlt das Geld deiner Kunden auf dein Bankkonto aus. Bei neuen Konten erst 7 Tage nach der Zahlung." : o.stripe.angabenGemacht ? "Stripe prüft deine Angaben, meist 1 bis 3 Werktage." : "Ausweis und IBAN bereithalten. Danach geht alles andere." },
+    stripePunkt,
     { id: "fragebogen", ok: Boolean(o.fragebogenAm), titel: "Fragebogen ausfüllen", text: "Hilft uns bei der Einrichtung (10 Minuten).", ziel: "fragebogen", nurInhaber: true },
     { id: "recht", ok: Boolean(o.recht?.aktuell), titel: "Deine rechtliche Lage lesen", text: "5 Minuten: Wer trägt welches Risiko?", ziel: "recht", nurInhaber: true },
-    { id: "link", ok: zahlungen > 0, titel: "Ersten Zahlungslink erstellen", text: frei ? "Zum Ausprobieren gern an dich selbst." : "Geht, sobald dein Zahlungskonto freigegeben ist.", ziel: frei ? "link" : null, gesperrt: !frei },
+    { id: "link", ok: zahlungen > 0, titel: "Ersten Zahlungslink erstellen", ziel: kassieren ? "link" : null, gesperrt: !kassieren,
+      text: kassieren ? "Zum Ausprobieren gern an dich selbst." : frei || test ? "Geht, sobald dein Zugang aktiv ist." : "Geht, sobald dein Zahlungskonto freigegeben ist." },
     { id: "app", ok: true, titel: "Tattoofin-App auf dem Handy", text: "Erledigt: Du nutzt sie gerade." },
     { id: "theke", ok: Boolean(c.theke), titel: "QR-Code an die Theke", text: "QR-Code deiner Zahlseite unter Werbung.", ziel: "werbung", manuell: "theke" },
     { id: "werbung", ok: Boolean(c.werbung), titel: "Ersten Instagram-Beitrag posten", text: klarna ? "Fertige Bilder und ein Video unter Werbung." : "Zum Beispiel mit dem QR-Code deiner Zahlseite unter Werbung.", ziel: "werbung", manuell: "werbung" },

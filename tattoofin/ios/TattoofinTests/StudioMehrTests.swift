@@ -77,6 +77,36 @@ struct StudioMehrTests {
         #expect(bestellt.istBestellt)
     }
 
+    /// Testmodus (Testkauf): kein Kauf des Aufstellers, Anfordern ohne Kosten bleibt; Server-Feld bestellbar hat Vorrang
+    @Test func aufstellerTestmodus() throws {
+        let kauf: AufstellerApp = try dekodiere(#"{"kostenlos":false,"status":"offen","preis":{"gesamtCent":3451}}"#)
+        #expect(kauf.bestellbar == nil)
+        #expect(kauf.bestellweg(testmodus: false) == .knopf)
+        #expect(kauf.bestellweg(testmodus: true) == .testmodus)
+
+        let inklusive: AufstellerApp = try dekodiere(#"{"kostenlos":true,"status":"offen"}"#)
+        #expect(inklusive.bestellweg(testmodus: false) == .knopf)
+        #expect(inklusive.bestellweg(testmodus: true) == .knopf)   // Demo-Studio/inklusive: anfordern ohne Kosten
+
+        let gesperrt: AufstellerApp = try dekodiere(#"{"kostenlos":false,"bestellbar":false}"#)
+        #expect(gesperrt.bestellbar == false)
+        #expect(gesperrt.bestellweg(testmodus: false) == .testmodus)
+        #expect(gesperrt.bestellweg(testmodus: true) == .testmodus)
+        let gesperrtInklusive: AufstellerApp = try dekodiere(#"{"kostenlos":true,"bestellbar":false}"#)
+        #expect(gesperrtInklusive.bestellweg(testmodus: false) == .testmodus)
+
+        let frei: AufstellerApp = try dekodiere(#"{"kostenlos":false,"bestellbar":true}"#)
+        #expect(frei.bestellweg(testmodus: false) == .knopf)
+        #expect(frei.bestellweg(testmodus: true) == .testmodus)   // Testmodus sperrt den Kauf auch dann
+
+        // Text: einfach, ohne Preis, sagt klar, dass nichts bezahlt wird
+        #expect(Texte.Aufsteller.testmodus == "Im Testmodus kannst du den Aufsteller nicht bestellen. Es wird nichts bezahlt.")
+        for verboten in ["Domenic", "€", "Stripe", "Klarna"] {
+            #expect(!Texte.Aufsteller.testmodus.contains(verboten))
+            #expect(!Texte.Kasse.aboZurKasse.contains(verboten))
+        }
+    }
+
     @Test func checkoutSitzung() {
         #expect(CheckoutSitzung.id(aus: URL(string: "https://checkout.stripe.com/c/pay/cs_test_a1B2c3#fidkdWxOYHwnPyd1blpxYHZx")) == "cs_test_a1B2c3")
         #expect(CheckoutSitzung.id(aus: URL(string: "http://localhost:12113/pay/cs_mock_123")) == "cs_mock_123")

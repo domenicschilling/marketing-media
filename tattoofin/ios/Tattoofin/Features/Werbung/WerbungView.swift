@@ -48,13 +48,18 @@ struct WerbungView: View {
                 // VStack statt LazyVStack: Sprungziele weiter unten müssen schon da sein
                 VStack(alignment: .leading, spacing: 16) {
                     if !s.darfKassieren {
-                        HinweisKarte(text: WerbungTexte.vorFreigabe, symbol: "clock")
+                        gesperrt(s)
                     } else if werbung.start == nil && werbung.startServer == nil && werbung.werbung == nil && werbung.laedt {
                         LadeAnsicht().frame(minHeight: 160)
                     } else {
                         if let f = werbung.fehler, werbung.start == nil, werbung.startServer == nil {
                             FehlerZeile(text: f)
                             Button(WerbungTexte.neuLaden) { Task { await werbung.laden(immer: true) } }.buttonStyle(.zweit)
+                        }
+                        // Testkauf (Apple-Sandbox): gleicher Hinweis wie in der Kasse, über Sprungleiste und QR-Code
+                        if s.istTestmodus {
+                            HinweisKarte(text: Texte.Kasse.werbungTestmodus, symbol: "testtube.2")
+                                .accessibilityIdentifier("werbung-testmodus")
                         }
                         let liste = abschnitte(s)
                         if liste.count > 1 { sprungleiste(liste, leser) }
@@ -95,6 +100,33 @@ struct WerbungView: View {
                 // Daten kamen nach dem Sprungwunsch: nochmal versuchen
                 if let ziel = app.werbungSprung { springen(ziel, leser) }
             }
+        }
+    }
+
+    /// Kasse zu: beendetes Apple-Abo (gleiche Regel wie GesperrtKarte in der Kasse) oder Zahlungskonto noch nicht freigegeben
+    @ViewBuilder
+    private func gesperrt(_ s: Studio) -> some View {
+        if GesperrtKarte.fall(s) == .aboBeendet {
+            VStack(alignment: .leading, spacing: 12) {
+                Text(Texte.Kasse.aboAbgelaufenTitel).font(.dm(.headline, weight: .bold)).foregroundStyle(Color.tfTinte)
+                Text(Texte.Kasse.aboAbgelaufenText).font(.dm(.subheadline)).foregroundStyle(Color.tfTinte)
+                    .fixedSize(horizontal: false, vertical: true)
+                if app.sitzung?.istInhaber == true {
+                    // In der Kasse steht „Abo wieder abschließen“
+                    Button(Texte.Kasse.aboZurKasse) { app.tab = .kasse }
+                        .buttonStyle(.haupt)
+                        .accessibilityIdentifier("werbung-abo-kasse")
+                } else {
+                    HinweisKarte(text: Texte.Kasse.aboTeamHinweis, symbol: "person.fill")
+                }
+            }
+            .karte()
+            .accessibilityIdentifier("werbung-abo-beendet")
+        } else if GesperrtKarte.fall(s) == .sandbox {
+            // Testkauf mit geschlossener Kasse: ein Zahlungskonto gibt es hier nie
+            HinweisKarte(text: Texte.Kasse.werbungTestmodus, symbol: "testtube.2")
+        } else {
+            HinweisKarte(text: WerbungTexte.vorFreigabe, symbol: "clock")
         }
     }
 

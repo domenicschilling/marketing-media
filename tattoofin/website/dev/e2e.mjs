@@ -793,6 +793,13 @@ try {
   await pA.waitForSelector(".chip.ok");
   check(mailsAn("domenicschilling@gmail.com").some((m) => m.subject.includes("Extra angefragt")), "Extra angefragt → interne Meldung, keine Abrechnung");
   check((await api(pA, "/api/portal/checkliste", { method: "POST", body: { punkt: "theke", erledigt: true } })).data.checkliste?.theke, "Checklisten-Punkt gespeichert");
+  // Druckvorlagen sagen „Ratenzahlung möglich*“ → bei Risikofrei (Klarna nicht dauerhaft) keine Liste und keine Karte „Zum Ausdrucken“
+  await pA.goto(BASE + "/app.html#werbung");
+  await pA.waitForFunction(() => (document.getElementById("zs-url").value || "").includes("/zahlen/"), null, { timeout: 15000 });
+  check(await pA.evaluate(() => document.getElementById("mat-karte").classList.contains("hidden") && !document.querySelector("#mat a")), "Dashboard Risikofrei: Karte „Zum Ausdrucken“ ausgeblendet (keine Druckvorlagen mit Raten-Aussage)");
+  await pA.goto(BASE + "/portal.html");
+  await pA.waitForFunction(() => (document.getElementById("zs-url").value || "").includes("/zahlen/"), null, { timeout: 15000 });
+  check(await pA.evaluate(() => document.getElementById("mat-karte").classList.contains("hidden")), "Portal Risikofrei: Bereich „Studio Kit“ ausgeblendet");
 
   // ---------------------------------------------------------------- Kündigung, Garantie, Sicherheit
   console.log("Kündigung & Rücknahme, Garantie");
@@ -1010,6 +1017,7 @@ try {
   check(kit.every((x) => !/\b0\s?%|zinsfrei|zinslos|Geld sofort|voller Betrag|Anzahlung|garantiert|jeder bekommt/i.test(x.text)), "Werbung: keine verbotenen Aussagen (0 %, zinsfrei, Geld sofort, voller Betrag, Anzahlung, Zusagen)");
   check(kit.find((x) => x.id === "qr-story").text.includes(`${BASE}/zahlen/${nwSlug}`), "Werbung: QR-Story mit Link zur Zahlseite für den Link-Sticker");
   check(kit.find((x) => x.id === "karussell").knopf === "Alle 4 Bilder speichern", "Werbung: Karussell – alle 4 Bilder auf einmal speichern");
+  check(await h.evaluate(() => !document.getElementById("mat-karte").classList.contains("hidden") && document.querySelectorAll("#mat a").length === 5), "Werbung (Klarna dauerhaft): Karte „Zum Ausdrucken“ mit 5 Druckvorlagen");
   // Speichern am Computer: ohne Teilen-Menü → Download (Karussell als ZIP)
   await h.evaluate(() => { navigator.canShare = () => false; });
   const [dlKar] = await Promise.all([h.waitForEvent("download"), h.click('[data-vorlage="karussell"] [data-kit="bild"]')]);

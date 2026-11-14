@@ -1,6 +1,8 @@
 // Alle automatischen E-Mails (an Studios, Endkunden und intern). Jede Funktion liefert { subject, html, text }.
-import { CFG, provisionSatz, paketVon } from "./config.mjs";
+import { CFG, provisionSatz, paketVon, aufstellerInklusive } from "./config.mjs";
 import { PFLICHTSATZ_HTML } from "./klarna-texte.mjs";
+// Zyklischer Import (domain.mjs importiert emails.mjs): klarnaDauerhaft wird nur beim Aufruf benutzt, nicht beim Laden
+import { klarnaDauerhaft } from "./domain.mjs";
 import { esc, euro, brutto, datum, monatName } from "./util.mjs";
 
 // „Voraussichtlich verfügbar ab …“ nur, wenn Stripe das Datum (available_on) schon geliefert hat; sonst weglassen
@@ -44,8 +46,10 @@ const modellText = (s) => {
   if (istAppAbo(s)) return "Tattoofin über die App: Abo über deinen Apple-Account zum Preis aus dem App Store. Verkäufer des Abos ist Apple, den Beleg mit ausgewiesener Umsatzsteuer bekommst du von Apple (Kaufhistorie deines Apple-Accounts), von Tattoofin kommt dafür keine eigene Rechnung. Keine Tattoofin-Provision. Die Gebühren für Kundenzahlungen zahlst du direkt an Stripe. Kündigen kannst du in den Einstellungen deines Apple-Accounts.";
   if (p.id === "geschenk" && s.sonderkondition) return `${s.sonderkondition}: keine Einrichtungsgebühr, keine Grundgebühr, keine Provision. Du zahlst nur die normalen Zahlungsgebühren von Stripe (bzw. Klarna) direkt an Stripe, Tattoofin verdient nichts daran.`;
   if (p.id === "geschenk") return "Geschenk: keine Einrichtungsgebühr, keine Grundgebühr, keine Provision. Du zahlst nur die normalen Gebühren von Stripe (bzw. Klarna) direkt an Stripe, Tattoofin verdient nichts daran.";
-  if (p.id === "monatlich") return `Paket Monatlich: ${euro(s.monatNetto || CFG.monatNetto)} netto im Monat (${euro(brutto(s.monatNetto || CFG.monatNetto))} inkl. USt.), danach nur die Zahlungsgebühren, die du direkt an Stripe zahlst. Keine Tattoofin-Provision, monatlich kündbar. Inklusive QR-Aufsteller aus Holz (Wert 29 €) und digitalem QR-Code.`;
-  if (p.id === "einmal" && s.paket === "einmal") return `Paket Einmalzahlung: ${euro(s.preisNetto)} netto einmalig (${euro(brutto(s.preisNetto))} inkl. USt.), danach keine Tattoofin-Gebühr mehr, nur die Zahlungsgebühren, die du direkt an Stripe zahlst. Inklusive QR-Aufsteller aus Holz (Wert 29 €) und digitalem QR-Code.`;
+  // Beim Bestandskunden-Preis (umgestelltes Altstudio, s.stripe.altKonto) ist der Aufsteller nicht enthalten (config.aufstellerInklusive)
+  const inkl = aufstellerInklusive(s) ? "Inklusive QR-Aufsteller aus Holz (Wert 29 €) und digitalem QR-Code." : "Digitaler QR-Code inklusive.";
+  if (p.id === "monatlich") return `Paket Monatlich: ${euro(s.monatNetto || CFG.monatNetto)} netto im Monat (${euro(brutto(s.monatNetto || CFG.monatNetto))} inkl. USt.), danach nur die Zahlungsgebühren, die du direkt an Stripe zahlst. Keine Tattoofin-Provision, monatlich kündbar. ${inkl}`;
+  if (p.id === "einmal" && s.paket === "einmal") return `Paket Einmalzahlung: ${euro(s.preisNetto)} netto einmalig (${euro(brutto(s.preisNetto))} inkl. USt.), danach keine Tattoofin-Gebühr mehr, nur die Zahlungsgebühren, die du direkt an Stripe zahlst. ${inkl}`;
   if (s.modell === "kauf") return `Kauf: Einrichtung ${euro(s.preisNetto)} netto einmalig (${euro(brutto(s.preisNetto))} brutto), keine monatliche Grundgebühr, keine Provision`;
   return `Paket Risikofrei: ${CFG.provisionProzent} % vom Zahlbetrag jeder Zahlung über Tattoofin, alles inklusive (Zahlungsgebühren und USt.), keine Einrichtungs- und keine Grundgebühr, monatlich kündbar. Digitaler QR-Code inklusive.`;
 };
@@ -236,7 +240,8 @@ export const mails = {
     body: hallo(s) + p("ab sofort kannst du im Portal Zahlungslinks erstellen und deinen Kunden zusätzliche Zahlungsoptionen anbieten, je nach Freigabe durch den Anbieter auch Ratenzahlung*.") + rows([
       ["Zahlungslink erstellen", `<a href="${CFG.siteUrl}/app.html#link">in deiner Tattoofin-App</a> (Betrag, Kunde, Projekt, fertig)`],
       ["Deine Zahlseite mit QR", `<a href="${CFG.siteUrl}/zahlen/${esc(s.slug)}">${CFG.siteUrl}/zahlen/${esc(s.slug)}</a>`],
-      ["Studio Kit", "Fensteraufkleber, Flyer, Aufsteller und Social-Vorlagen im Portal unter „Studio Kit“"],
+      // Druckvorlagen haben eine Raten-Aussage: nur bei Klarna dauerhaft sichtbar (wie portal.mjs materialLinks)
+      ["Studio Kit", klarnaDauerhaft(s) ? "Fensteraufkleber, Flyer, Aufsteller und Social-Vorlagen im Portal unter „Studio Kit“" : null],
       s.zahlart === "geschenk" ? ["Abrechnung", "Keine Tattoofin-Gebühr. Zahlungsgebühren zahlst du direkt an Stripe."] :
       istAppAbo(s) ? ["Abrechnung", "Abo über deinen Apple-Account, kündbar in den Einstellungen deines Apple-Accounts. Zahlungsgebühren zahlst du direkt an Stripe."] :
       s.paket === "monatlich" ? ["Abrechnung", `${euro(s.monatNetto || CFG.monatNetto)} netto im Monat, die Rechnung kommt automatisch per E-Mail. Zahlungsgebühren zahlst du direkt an Stripe.`] :

@@ -186,6 +186,8 @@ extension Texte {
         static let pruefen = "Zahlung prüfen"
         static let lieferung = "Lieferadresse"
         static let nurInhaber = "Den Aufsteller kann nur der Inhaber bestellen."
+        /// Testkauf (Apple-Sandbox): Kauf gesperrt
+        static let testmodus = Texte.Kasse.aufstellerTestmodus
         static let nurWeb = "Die Bestellung ist in dieser Version noch nicht möglich. Unser Team hilft dir gern per WhatsApp."
         static let nameLabel = "dein Studioname"
         static let logoLabel = "dein Logo"

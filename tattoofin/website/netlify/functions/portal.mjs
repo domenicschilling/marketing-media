@@ -40,7 +40,7 @@
 // aufsteller-pruefen, recht (Bestätigung mit Namen), fragebogen (lesen und senden). Checkliste, Nachweis, Zahlungen, Gutscheine: auch Team.
 // Mandantentrennung: Jede Abfrage nutzt ausschließlich das Studio aus dem Session-Cookie bzw. App-Token; Zahlungen werden
 // über zahlung/<studioId>/<id> gelesen, fremde IDs ergeben immer 404.
-import { CFG, plattformgebuehr, provisionSatz, paketVon, BAUSTEINE_SIMULIERT } from "./_lib/config.mjs";
+import { CFG, plattformgebuehr, provisionSatz, paketVon, BAUSTEINE_SIMULIERT, aufstellerInklusive, testKasse } from "./_lib/config.mjs";
 import { json, fail, body, clean, id, now, handler, isEmail, parseBetrag, clientIp } from "./_lib/util.mjs";
 import { saveStudio, zahlungenVon, getZahlung, saveZahlung, abrechnungenVon, getLeistung, store, log } from "./_lib/store.mjs";
 import { currentStudio, clearCookie } from "./_lib/auth.mjs";
@@ -50,7 +50,7 @@ import { hatUmstellungsangebot, umstellungCheckout, notify, notifyAdmin, connect
 import { fuerStudio, oeffentlich } from "./_lib/studio-ansicht.mjs";
 import { randomBytes } from "node:crypto";
 import { KLARNA_NAME, PFLICHTSATZ_STUDIO, gutscheinWort, GUTSCHEIN_HINWEIS } from "./_lib/klarna-texte.mjs";
-import { materialLinks, aufstellerFuerApp } from "./_lib/werbung.mjs";
+import { materialLinks, aufstellerFuerApp, werbungMitKlarna, AUFSTELLER_TESTMODUS } from "./_lib/werbung.mjs";
 import { nachweisPdf } from "./_lib/nachweis-pdf.mjs";
 import { gutscheinStatus, gutscheinPdf, gutscheinSenden, normCode, gutscheinPerToken } from "./_lib/gutschein.mjs";
 
@@ -126,8 +126,8 @@ export default handler(async (req, context) => {
         anteilKlarna: bezahlt.length ? Math.round(100 * bezahlt.filter((z) => z.zahlart === "klarna").length / bezahlt.length) : 0,
       },
       ratenText: ratenWhatsapp({ vorname: "[Name]", projekt: "[Motiv]", betrag: "[Betrag]", link: "[Zahlungslink]", firma: s.firma, klarna: klarnaFuer(s) }),
-      materialien: `${CFG.materialsUrl}generator.html`,
-      materialLinks: materialLinks(s),
+      // Druckvorlagen sagen „Ratenzahlung möglich*“ → nur bei Klarna dauerhaft (gleiche Regel wie GET /api/app/werbung, _lib/werbung.mjs)
+      materialLinks: werbungMitKlarna(s) ? materialLinks(s) : [],
       config: { provisionProzent: provisionSatz(s), ustProzent: CFG.ustProzent, rechtVersion: CFG.rechtVersion, ruecklastGebuehrCent: CFG.ruecklastGebuehrCent, garantieTage: CFG.garantieTage, minBetragCent: CFG.minBetragCent, maxBetragCent: CFG.maxBetragCent },
     });
   }
@@ -378,9 +378,12 @@ export default handler(async (req, context) => {
       a.hatLogo = true;
     }
     if (variante === "logo" && !a.hatLogo) return fail(app ? "Bitte wähle zuerst dein Logo aus oder nimm „Mit Studioname“." : "Bitte lade zuerst dein Logo hoch oder wähle „Mit Studioname“.");
-    const inklusivePaket = CFG.aufstellerPakete.includes(paketVon(s).id);
+    // Im Paket enthalten? Nicht beim Bestandskunden-Preis eines umgestellten Altstudios (config.aufstellerInklusive)
+    const inklusivePaket = aufstellerInklusive(s);
     const kaufen = b.bestellen === true ? !inklusivePaket : Boolean(b.kaufen);
     const anfordern = b.bestellen === true ? inklusivePaket : Boolean(b.anfordern);
+    // Testkasse (Demo, Apple-Sandbox/TestFlight/App Review): nie eine echte Stripe-Kasse öffnen, keine Bestellung speichern (ein mitgeschicktes Logo bleibt gespeichert)
+    if (kaufen && !inklusivePaket && testKasse(s)) return json({ error: AUFSTELLER_TESTMODUS, code: "testmodus" }, 409);
     if (kaufen && !inklusivePaket) {
       if (a.angefordertAm || a.kauf?.bezahltAm) return fail("Dein Aufsteller ist schon bestellt. Wir melden uns bei dir.", 409);
       s.aufsteller = a;
@@ -394,7 +397,7 @@ export default handler(async (req, context) => {
       if (!inklusivePaket) return fail(app ? "Bitte bestelle den Aufsteller über „Bestellen“." : "Der QR-Aufsteller ist in deinem Paket nicht enthalten. Du kannst ihn für 29 € bestellen.", 400);
       if (a.angefordertAm) return fail("Dein Aufsteller ist schon angefordert. Wir melden uns bei dir.", 409);
       a.angefordertAm = now();
-      const inklusive = CFG.aufstellerPakete.includes(paketVon(s).id);
+      const inklusive = inklusivePaket;
       await notifyAdmin(`QR-Aufsteller ${inklusive ? "bestellen (im Paket enthalten)" : "angefragt (nicht im Paket)"}`, s, {
         Paket: paketVon(s).name, Holz: holz === "dunkel" ? "dunkel (Walnuss)" : "hell (Birke/Buche)", Variante: variante === "logo" ? "mit Studio-Logo" : "mit Studioname",
         Lieferadresse: [s.firma, s.strasse, [s.plz, s.ort].filter(Boolean).join(" ")].filter(Boolean).join(", "),

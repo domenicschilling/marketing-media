@@ -125,6 +125,8 @@ struct AufstellerApp: Codable, Sendable, Hashable {
     var klarna: Bool?
     var fussnote: String?
     var logo: Logo?
+    /// Darf jetzt bestellt werden? (neuere Server; false → kein Bestellknopf, z. B. Testmodus). Fehlt → wie bisher.
+    var bestellbar: Bool?
 
     struct Preis: Codable, Sendable, Hashable {
         var nettoCent: Int?
@@ -145,6 +147,22 @@ struct AufstellerApp: Codable, Sendable, Hashable {
     }
 
     var istBestellt: Bool { status == "bestellt" || status == "bezahlt" || bestelltAm != nil || bezahltAm != nil }
+
+    /// Was unter „Bestellen“ steht (noch nicht bestellt)
+    enum Bestellweg: Equatable {
+        /// Knopf „anfordern“ (inklusive) oder „kaufen“ (Stripe-Checkout im Browser)
+        case knopf
+        /// Testkauf (Apple-Sandbox) oder Server sagt „nicht bestellbar“ (nur bei Testkasse): Hinweis statt Knopf, es wird nichts bezahlt
+        case testmodus
+    }
+
+    /// Im Testmodus wird nichts gekauft (keine echte Zahlung aus einem Sandbox-Konto). Die Anforderung ohne Kosten
+    /// (inklusive, Demo-Studio) bleibt möglich. Sagt der Server bestellbar: false (nur Testkasse), kommt der Hinweis statt des Knopfs.
+    func bestellweg(testmodus: Bool) -> Bestellweg {
+        if bestellbar == false { return .testmodus }
+        if kostenlos == true { return .knopf }
+        return testmodus ? .testmodus : .knopf
+    }
 }
 
 struct AufstellerAppAntwort: Codable, Sendable {

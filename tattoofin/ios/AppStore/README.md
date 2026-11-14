@@ -15,8 +15,10 @@ Alles hier ist ein **Entwurf**. Eingereicht wird erst nach Domenics Freigabe. Vo
 5. Im Apple-Entwicklerkonto einen **APNs-Schlüssel (.p8)** anlegen (Certificates, Identifiers & Profiles → Keys → „Apple Push Notifications service“).
    In Netlify setzen: `APNS_KEY_P8` (Inhalt der .p8-Datei), `APNS_KEY_ID`, `APNS_TEAM_ID`, optional `APNS_BUNDLE_ID` (Standard `de.tattoofin.app`).
 6. Abo in App Store Connect anlegen (Abschnitt „In-App-Kauf“ unten), Preis bestätigen.
-7. Backend mit Domenics OK live stellen (Branch `claude/tattoofin-app`: `/api/app/*`, `/api/apple/benachrichtigung`, Demo-Logik, App-Fassung der
-   Rechtsseiten mit `?app=1`, Vertrag 2026-12b, AVV Stand 14.11.2026, Datenschutzerklärung mit App-Abschnitt).
+7. Backend mit Domenics OK live stellen (Branch `claude/tattoofin-gesamt`: `/api/app/*` inklusive `/api/app/werbung`, `/api/app/start` und
+   `/api/app/aufsteller`, `/api/apple/benachrichtigung`, Demo-Logik, Druckvorlagen `public/druck/`, Zahlseite in der App-Fassung
+   `zahlen.html?app=1`, App-Fassung der Rechtsseiten mit `?app=1`, Vertrag 2026-12b, AVV Stand 14.11.2026, Datenschutzerklärung mit den
+   App-Abschnitten „Dein Studio in der App“, „QR-Aufsteller aus Holz“ und „Werbung“).
    Vorher die Bestandskunden über den neuen Unterauftragsverarbeiter Apple (Push-Mitteilungen, AVV Anlage 3) informieren, 14 Tage vorher (§ 4 Abs. 2 AVV).
 8. Demo-Studio anlegen: `POST /api/admin/app-demo` mit `{ "email": "<Review-Adresse>" }` (Admin-Token). Die Antwort nennt die Studio-ID.
 9. In Netlify setzen: `APP_REVIEW_EMAIL` (z. B. `app-review@tattoofin.de`), `APP_REVIEW_CODE` (6 Ziffern, frei gewählt), `APP_REVIEW_STUDIO_ID`
@@ -93,8 +95,8 @@ Enter any business details (German postcode = 5 digits, phone numbers at least 6
 tap "Weiter zum Abo" and subscribe with your sandbox account (auto-renewable subscription "Tattoofin Monatlich", 1 month,
 with an introductory offer of 1 week free for eligible accounts; the free week unlocks the same features as the paid subscription).
 After the sandbox purchase the cash register ("Kasse") is unlocked in test mode: type an amount, tap "Zahlungslink erstellen",
-then "Testzahlung auslösen" marks the link as paid. No real money moves, and the Stripe setup is switched off for sandbox and
-TestFlight purchases on purpose (real studios connect their own Stripe account in Safari after the purchase; that is not a purchase).
+then "Testzahlung auslösen" marks the link as paid. No real money moves in the cash register, and the Stripe setup is switched off for
+sandbox and TestFlight purchases on purpose (real studios connect their own Stripe account in Safari after the purchase; that is not a purchase).
 This review address always starts a fresh account, so you can repeat it. To repeat the purchase, cancel the sandbox subscription first
 or use another sandbox account.
 Account deletion: Konto → "Konto kündigen und löschen" (type LÖSCHEN). You may run it on the account you created. The screen also
@@ -112,14 +114,18 @@ Sign-in (no password): enter the e-mail below and tap "Code schicken". No e-mail
   and ready-made Instagram posts with the studio's name and the QR code of its payment page. The post images are drawn on the
   device from JavaScript files bundled with the app (an invisible WKWebView used only as a renderer, no remote code, no web UI);
   all controls are native SwiftUI. "Zum Ausdrucken" opens printable sheets (window sticker, flyer) on tattoofin.de in
-  SFSafariViewController. Nothing in this tab is sold.
+  SFSafariViewController. No digital content or features are sold in this tab.
 - So geht's (Kasse → "So geht's", or Konto): a short tutorial video with chapters. It shows the same features in the browser
   version of Tattoofin; the chapter about adding the web app to the home screen is skipped.
 - Konto → "QR-Aufsteller": a physical product. It is an engraved wooden counter stand (10 × 15 cm) with the studio's name or logo and
   the QR code of its payment page, produced and shipped by post to the studio's address. Because it is a physical good that is
   consumed outside the app, studios whose plan does not include it pay for it with Stripe Checkout in Safari (guideline 3.1.3(e));
-  no digital content or features are unlocked by this payment. In the demo studio the stand is included ("Kostenlos bestellen"),
-  so no payment page appears; the order is reset each time we recreate the demo studio.
+  no digital content or features are unlocked by this payment. This wooden stand is the only thing in the app that can be bought
+  outside the App Store (also reachable from Werbung → QR code → "QR-Aufsteller aus Holz").
+  In the account from step 1 (sandbox purchase, test mode) ordering the stand is locked: the order button is replaced by the note
+  "Im Testmodus kannst du den Aufsteller nicht bestellen. Es wird nichts bezahlt." and no Stripe Checkout opens.
+  In the demo studio the stand is included ("Kostenlos bestellen"), so no payment page appears; the order is reset each time we
+  recreate the demo studio.
 Please run account deletion on the account from step 1, not on the demo studio.
 Push notifications are sent when a payment arrives (APNs).
 
@@ -150,7 +156,11 @@ Tracking: **Nein**. Für alle Datenarten: mit der Identität verknüpft (Studio-
 | Andere Daten | Gerätename, Gerätemodell, iOS- und App-Version (Liste der angemeldeten Geräte); Firmenname, USt-IdNr., Website (Konto anlegen) |
 | Käufe → Kaufverlauf | Apple-Abo: signierte Transaktion (Kennungen, Produkt, Kauf- und Ablaufdatum) an unseren Server |
 | Benutzerinhalte → Fotos oder Videos | Nur das Studio-Logo, das der Inhaber für den QR-Aufsteller in Fotos auswählt (iOS-Foto-Auswahl, nur dieses eine Bild; schwarz/weiß an unseren Server, nur für Vorschau und Gravur, beim Bestellen an den Betrieb, der den Aufsteller fertigt). Löschen: in der App „Logo löschen“ oder mit dem Studio-Konto. Speichern in Fotos (Werbung, nur „Hinzufügen“) liest nichts. |
-| Benutzerinhalte → Andere Benutzerinhalte (zusätzlich) | Fragebogen, Bestätigung der rechtlichen Lage (Name, Zeitpunkt), Einstellungen (Anzahlungsbedingungen, Ausweich-Anzahlung, Zahlseiten-Hinweis, Benachrichtigungs-Adresse) – nur Inhaber |
+| Benutzerinhalte → Andere Benutzerinhalte (zusätzlich) | Fragebogen, Bestätigung der rechtlichen Lage (Name, Zeitpunkt), Einstellungen (Anzahlungsbedingungen, Ausweich-Anzahlung, Zahlseiten-Hinweis, Benachrichtigungs-Adresse), Auswahl für den QR-Aufsteller (Holzton, Studioname oder Logo) – nur Inhaber; Häkchen der Einrichtungs-Checkliste (QR-Code an der Theke, erster Beitrag) |
+
+Required-Reason-APIs im Manifest (keine Angabe in App Store Connect nötig, nur zur Kontrolle): UserDefaults `CA92.1` (eigene
+App-Einstellungen), Datei-Zeitstempel `C617.1` (Änderungsdatum zwischengespeicherter Werbe-Dateien im eigenen App-Container). Nicht genutzt:
+Systemstartzeit, freier Speicher, aktive Tastaturen.
 
 Nicht erhoben: Standort, Kontakte, sonstige Fotos (die Kamera scannt nur Codes, Bilder werden nicht gespeichert oder gesendet), Browserverlauf,
 Suchverlauf, Nutzungsdaten, Diagnosedaten, Werbe-ID.

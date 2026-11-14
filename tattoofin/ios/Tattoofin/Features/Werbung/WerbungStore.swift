@@ -6,6 +6,8 @@ import Observation
 @Observable
 final class WerbungStore {
     static let shared = WerbungStore()
+    /// UserDefaults: Punkt „app“ wurde von diesem Gerät schon gemeldet (beim Abmelden löschen, damit ein anderes Studio ihn auch bekommt)
+    nonisolated static let appGemeldetSchluessel = "tf-checkliste-app-gemeldet"
 
     var werbung: WerbungAntwort?
     /// Checkliste vom Server (GET /api/app/start)
@@ -67,6 +69,7 @@ final class WerbungStore {
         beitraege = []
         gezeichnetFuer = nil
         bildName = ""
+        UserDefaults.standard.removeObject(forKey: Self.appGemeldetSchluessel)
     }
 
     // MARK: Abgeleitet
@@ -136,7 +139,7 @@ final class WerbungStore {
 
     /// Die App ist installiert: Punkt „app“ einmal je Gerät melden (das Web-Dashboard hakt „App“ dann auch ab)
     private func appAbhaken() async {
-        let schluessel = "tf-checkliste-app-gemeldet"
+        let schluessel = Self.appGemeldetSchluessel
         guard startServer != nil || start != nil, !UserDefaults.standard.bool(forKey: schluessel) else { return }
         if let c = start?.studio.checkliste, c.app != nil {
             UserDefaults.standard.set(true, forKey: schluessel)

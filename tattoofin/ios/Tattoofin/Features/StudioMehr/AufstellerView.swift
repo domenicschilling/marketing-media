@@ -8,6 +8,7 @@ import PhotosUI
 /// Hersteller-Dateien gibt es in der App nicht (sie gehören zur Bestellung). Nur Inhaber (Server: nur_inhaber).
 struct AufstellerView: View {
     @Environment(AppState.self) private var app
+    @Environment(PortalStore.self) private var portal
 
     @State private var daten: AufstellerApp?
     @State private var ladeFehler: String?
@@ -37,6 +38,8 @@ struct AufstellerView: View {
     private var holzName: String { holz == "dunkel" ? Texte.Aufsteller.dunkel.lowercased() : Texte.Aufsteller.hell.lowercased() }
     private var obenName: String { mitLogo ? Texte.Aufsteller.logoLabel : Texte.Aufsteller.nameLabel }
     private var kostenlos: Bool { daten?.kostenlos ?? false }
+    /// Testkauf (Apple-Sandbox, auch App Review): Kauf gesperrt, Anfordern ohne Kosten bleibt
+    private var testmodus: Bool { portal.studio?.hatTestkasse ?? false }
 
     var body: some View {
         Group {
@@ -167,24 +170,33 @@ struct AufstellerView: View {
                 Text(t).font(.dm(.title3, weight: .bold)).foregroundStyle(Color.tfTinte)
             }
             if let p = d.preis?.text?.leerAlsNil { Text(p).font(.dm(.footnote)).foregroundStyle(Color.tfLeise) }
-            if !kostenlos, let h = d.bezahlenHinweis?.leerAlsNil { Text(h).font(.dm(.footnote)).foregroundStyle(Color.tfLeise) }
+            let weg = d.bestellweg(testmodus: testmodus)
+            if !kostenlos, weg == .knopf, let h = d.bezahlenHinweis?.leerAlsNil { Text(h).font(.dm(.footnote)).foregroundStyle(Color.tfLeise) }
             if d.status == "zahlung_offen" {
                 Button(Texte.Aufsteller.pruefen) { pruefen(cs: nil) }
                     .buttonStyle(.zweit)
                     .disabled(arbeitet)
                     .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
             }
-            Button {
-                if mitLogo && logo == nil { fehler = Texte.Aufsteller.logoZuerst; return }
-                fehler = nil
-                bestellFrage = true
-            } label: {
-                if arbeitet { ProgressView().tint(Color.tfBlau) } else { Text(d.knopf ?? Texte.Aufsteller.anfordern) }
+            switch weg {
+            case .knopf:
+                Button {
+                    if mitLogo && logo == nil { fehler = Texte.Aufsteller.logoZuerst; return }
+                    fehler = nil
+                    bestellFrage = true
+                } label: {
+                    if arbeitet { ProgressView().tint(Color.tfBlau) } else { Text(d.knopf ?? Texte.Aufsteller.anfordern) }
+                }
+                .buttonStyle(.haupt)
+                .disabled(arbeitet)
+                .accessibilityIdentifier("aufsteller-bestellen")
+                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+            case .testmodus:
+                HinweisKarte(text: Texte.Aufsteller.testmodus, symbol: "testtube.2")
+                    .accessibilityIdentifier("aufsteller-testmodus")
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
             }
-            .buttonStyle(.haupt)
-            .disabled(arbeitet)
-            .accessibilityIdentifier("aufsteller-bestellen")
-            .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
         }
     }
 
@@ -282,6 +294,8 @@ struct AufstellerView: View {
     }
 
     private func bestellen() {
+        // Zweite Sicherung: im Testmodus kein Kauf (der Knopf fehlt dann ohnehin)
+        guard daten?.bestellweg(testmodus: testmodus) == .knopf else { return }
         arbeitet = true
         fehler = nil
         meldung = nil

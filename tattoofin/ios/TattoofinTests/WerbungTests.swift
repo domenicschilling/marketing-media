@@ -239,6 +239,57 @@ struct WerbungTests {
         #expect(stripe?.wartet == true)
     }
 
+    /// Testmodus (Testkauf, Apple-Sandbox): keine Stripe-Einrichtung, Kasse offen → Stripe-Punkt erledigt (wie der Server),
+    /// Link-Punkt hängt an der offenen Kasse
+    @Test func checklisteTestmodus() {
+        var s = Studio(id: "st_1")
+        s.testmodus = true
+        s.kannKassieren = true
+        s.stripe = StripeStatus(verbunden: false, freigegeben: false, angabenGemacht: false)
+        let p = StartCheckpunkte.punkte(studio: s, start: StartStudio(), hatZahlungen: false)
+        let stripe = p.first { $0.id == "stripe" }
+        #expect(stripe?.ok == true)
+        #expect(stripe?.wartet == false)
+        #expect(stripe?.text == WerbungTexte.Start.stripeTestmodus)
+        let link = p.first { $0.id == "link" }
+        #expect(link?.ok == false)
+        #expect(link?.text == WerbungTexte.Start.linkText)
+
+        // Ohne Testmodus und ohne Freigabe: Stripe offen, Link wartet auf die Kasse
+        var ohne = s
+        ohne.testmodus = false
+        ohne.kannKassieren = false
+        let q = StartCheckpunkte.punkte(studio: ohne, start: StartStudio(), hatZahlungen: false)
+        #expect(q.first { $0.id == "stripe" }?.ok == false)
+        #expect(q.first { $0.id == "stripe" }?.text == WerbungTexte.Start.stripeOffen)
+        #expect(q.first { $0.id == "link" }?.text == WerbungTexte.Start.linkGesperrt)
+
+        // Demo-Studio: ebenfalls ohne Stripe-Einrichtung
+        var demo = ohne
+        demo.demo = true
+        #expect(StartCheckpunkte.punkte(studio: demo, start: nil, hatZahlungen: true).first { $0.id == "stripe" }?.ok == true)
+    }
+
+    /// Abmelden: Der Merker „App gemeldet“ wird gelöscht, damit das nächste Studio auf diesem Gerät den Punkt „App“ bekommt
+    @MainActor
+    @Test func leerenLoeschtAppGemeldet() {
+        let d = UserDefaults.standard
+        let k = WerbungStore.appGemeldetSchluessel
+        #expect(k == "tf-checkliste-app-gemeldet")
+        let vorher = d.object(forKey: k)
+        defer { if let vorher { d.set(vorher, forKey: k) } else { d.removeObject(forKey: k) } }
+        let store = WerbungStore.shared
+        let alt = (store.werbung, store.start, store.startServer)
+        defer { store.werbung = alt.0; store.start = alt.1; store.startServer = alt.2 }
+        d.set(true, forKey: k)
+        store.start = PortalStart(studio: StartStudio(), materialLinks: [])
+        store.leeren()
+        #expect(d.object(forKey: k) == nil)
+        #expect(store.start == nil)
+        #expect(store.werbung == nil)
+        #expect(store.startServer == nil)
+    }
+
     // MARK: So geht's
 
     @Test func soGehtsOhneWebAppKapitel() {

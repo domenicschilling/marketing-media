@@ -567,6 +567,16 @@ try {
   check(dTest.status === 200 && dTest.data.status === "bezahlt" && dTest.data.demoZahlung === true && dTest2.status === 409 && nichtDemoZ.status === 404 && blob(`zahlung/${C.id}/${zid}`).status !== "bezahlt", "Testzahlung nur im Demo-Studio: offener Link → bezahlt (kein Stripe), zweimal → 409, echtes Studio → 404", `${dTest.status} ${dTest2.status} ${nichtDemoZ.status}`);
   const dAz = await call("GET", "/api/app/auszahlungen", { token: tR });
   check(dAz.data.auszahlungen?.length === 3 && dAz.data.konto.verbunden === true && dAz.data.auszahlungen.every((x) => x.statusText), "Demo-Studio: feste Beispiel-Auszahlungen", dAz.text.slice(0, 120));
+  // Start-Checkliste und QR-Aufsteller im Demo-Studio (Testkasse): Stripe-Punkt erledigt (Testmodus), Aufsteller im Paket → kostenlos bestellbar
+  const dStart = await call("GET", "/api/app/start", { token: tR });
+  const dPk = (id) => dStart.data.checkliste?.punkte.find((p) => p.id === id) || {};
+  check(dStart.status === 200 && dPk("stripe").ok === true && dPk("stripe").wartet === false && dPk("stripe").ziel === null && dPk("stripe").text === "Testmodus: Für Testzahlungen brauchst du kein Zahlungskonto." && dPk("link").ziel === "link" && dPk("link").gesperrt === false && dPk("link").text === "Zum Ausprobieren gern an dich selbst.", "Demo-Studio: Start-Checkliste mit Stripe-Punkt „Testmodus“ (ohne Ziel), Link-Punkt offen", JSON.stringify([dPk("stripe"), dPk("link")]));
+  const dAuf = await call("GET", "/api/app/aufsteller", { token: tR });
+  const DA = dAuf.data.aufsteller || {};
+  check(dAuf.status === 200 && DA.kostenlos === true && DA.bestellbar === true && DA.knopf === "Kostenlos bestellen" && DA.preis === null && DA.testmodusHinweis === null, "Demo-Studio: Aufsteller im Paket → kostenlos, bestellbar, Knopf „Kostenlos bestellen“", JSON.stringify(DA).slice(0, 200));
+  const dAdminVor = mailsAn("admin@app.test").length, dSessVor = Object.keys((await mock("state")).sessions || {}).length;
+  const dBest = await call("POST", "/api/portal/aufsteller", { token: tR, body: { holz: "hell", variante: "name", bestellen: true } });
+  check(dBest.status === 200 && dBest.data.aufsteller?.status === "bestellt" && !dBest.data.url && mailsAn("admin@app.test").length === dAdminVor && Object.keys((await mock("state")).sessions || {}).length === dSessVor && logs("aufsteller-angefordert").some((l) => l.studioId === demo.studioId), "Demo-Studio: „Kostenlos bestellen“ geht, ohne Admin-Mail (keine echte Fertigung) und ohne Stripe-Checkout", dBest.text.slice(0, 160));
   check(mailsAn("review@tattoofin.test").length === 0, "Demo-Studio bekommt keine Mails (auch kein „Neues Gerät“)");
   const jobsD = await admin("jobs", {});
   const abr = await admin("abrechnung", { dryRun: true });
@@ -603,6 +613,8 @@ try {
   const kz2 = await call("DELETE", "/api/portal/kuendigung", { cookie: C.cookie });
   check(kz.status === 200 && kz2.status === 400 && kz2.data.error === "Keine offene Kündigung, die zurückgenommen werden kann.", "Dashboard-Rücknahme unverändert", kz2.text);
 
+  // Studios D/E aus „Werbung“ für spätere Prüfungen im Apple-Block (dort gibt es eigene D/E)
+  let werbD, werbE, werbTD;
   { // Werbung, Start, Aufsteller, Nachweis-PDF, Rollen (App-Parität mit dem Web, 14.11.2026): eigene Studios D (Inhaberin + Team) und E
   // ==================================================================================================
   teil("Werbung in der App: GET /api/app/werbung (gleiche Texte wie im Dashboard, Klarna nur mit klarnaDauerhaft)");
@@ -776,6 +788,7 @@ try {
   check(pdfOffen.status === 200 && (await PDFDocument.load(Buffer.from(await pdfOffen.arrayBuffer()))).getPageCount() === 1, "Offene Zahlung ohne Nachweise → einseitiges PDF");
   const heute = await call("POST", "/api/portal/zahlung", { token: tD, body: { betrag: "300", kunde: "Hanna", beschreibung: "Schrift", art: "gesamt", heute: true } });
   check(heute.status === 201 && heute.data.zahlung.heute === true && (await call("GET", "/api/app/start", { token: tD })).data.checkliste.punkte.find((p) => p.id === "link").ok, "Link-Formular: heute im Studio (heute: true) per App, Checkliste „Erster Link“ erledigt");
+  werbD = D; werbE = E; werbTD = tD;
   } // Ende Werbung/Parität
 
   // ==================================================================================================
@@ -1105,6 +1118,72 @@ try {
   const wh2 = await sendeWebhook(`${BASE}/api/stripe-webhook`, "whsec_mock", "invoice.payment_failed", { id: "in_fremd", object: "invoice", metadata: { studioId: N.entwurfId }, amount_due: 5831 });
   const nachWebhook = aN();
   check(wh === 200 && wh2 === 200 && JSON.stringify({ ...nachWebhook, updatedAt: null }) === JSON.stringify({ ...JSON.parse(vorWebhook), updatedAt: null }) && logs("stripe-ereignis-app-studio").length === 2 && !mailsAn("mia@neu-app.test").some((m) => m.subject === "Zahlung fehlgeschlagen: bitte kurz prüfen"), "stripe-webhook (subscription.deleted, invoice.payment_failed) ändert beim Apple-Studio nichts, keine Rechnungsmail", `${wh} ${wh2}`);
+
+  // ==================================================================================================
+  teil("Testkasse (Apple-Sandbox): Start-Checkliste, QR-Aufsteller nicht kaufbar; Altstudio ohne Aufsteller; Aufsteller-Rechnung ohne Alarm");
+  const tS = bS.data.token;
+  check(blob("studio/" + S.entwurfId)?.sandbox === true && !process.env.APPLE_SANDBOX_STRIPE, "Vorbedingung: Sandbox-Studio im Testmodus (APPLE_SANDBOX_STRIPE aus)");
+  const sbStart = await call("GET", "/api/app/start", { token: tS });
+  const sbPk = (id) => sbStart.data.checkliste?.punkte.find((p) => p.id === id) || {};
+  check(sbStart.status === 200 && sbPk("stripe").ok === true && sbPk("stripe").wartet === false && sbPk("stripe").ziel === null && sbPk("stripe").text === "Testmodus: Für Testzahlungen brauchst du kein Zahlungskonto." && sbPk("link").ziel === "link" && sbPk("link").gesperrt === false && sbPk("link").text === "Zum Ausprobieren gern an dich selbst.", "Sandbox-Studio: Stripe-Punkt erledigt (Testmodus, kein Ziel), Link-Punkt offen (an kannKassieren statt Stripe-Freigabe)", JSON.stringify([sbPk("stripe"), sbPk("link")]));
+  // Gegenprobe: echtes Studio ohne Stripe-Freigabe → Stripe-Punkt offen, Link gesperrt
+  const nAlt = blob("studio/" + N.entwurfId);
+  setBlob("studio/" + N.entwurfId, { ...nAlt, stripe: { ...(nAlt.stripe || {}), chargesEnabled: false, detailsSubmitted: false } });
+  const nStart = await call("GET", "/api/app/start", { token: tN });
+  const nPk = (id) => nStart.data.checkliste?.punkte.find((p) => p.id === id) || {};
+  setBlob("studio/" + N.entwurfId, nAlt);
+  check(nPk("stripe").ok === false && nPk("stripe").ziel === "stripe" && nPk("link").gesperrt === true && nPk("link").ziel === null && /sobald dein Zahlungskonto freigegeben/.test(nPk("link").text || ""), "Echtes Studio ohne Freigabe: Stripe-Punkt mit Ziel „stripe“, Link gesperrt", JSON.stringify([nPk("stripe"), nPk("link")]));
+  const sbAuf = await call("GET", "/api/app/aufsteller", { token: tS });
+  const SA = sbAuf.data.aufsteller || {};
+  check(sbAuf.status === 200 && SA.kostenlos === false && SA.bestellbar === false && SA.preis === null && SA.knopf === null && SA.preisText === null && SA.bezahlenHinweis === null && SA.testmodusHinweis === "Im Testmodus kannst du den Aufsteller nicht bestellen. Es wird nichts bezahlt." && SA.status === "offen", "GET /api/app/aufsteller (Sandbox): bestellbar false, kein Preis, kein Knopf, Hinweis Testmodus", JSON.stringify(SA).slice(0, 240));
+  const sbSessVor = Object.keys((await mock("state")).sessions || {}).length, sbCusVor = Object.keys((await mock("state")).customers || {}).length;
+  const sbKauf = await call("POST", "/api/portal/aufsteller", { token: tS, body: { holz: "hell", variante: "name", bestellen: true } });
+  const sbKauf2 = await call("POST", "/api/portal/aufsteller", { token: tS, body: { kaufen: true } });
+  const sbState = await mock("state");
+  check(sbKauf.status === 409 && sbKauf.data.code === "testmodus" && sbKauf.data.error === "Im Testmodus kannst du den Aufsteller nicht bestellen. Es wird nichts bezahlt." && sbKauf2.status === 409 && sbKauf2.data.code === "testmodus" && Object.keys(sbState.sessions || {}).length === sbSessVor && Object.keys(sbState.customers || {}).length === sbCusVor && !blob("studio/" + S.entwurfId).aufsteller?.kauf, "Sandbox: Aufsteller kaufen (bestellen/kaufen) → 409 testmodus, kein Stripe-Aufruf (keine Sitzung, kein Kunde), nichts gespeichert", `${sbKauf.status} ${sbKauf.text.slice(0, 120)}`);
+  const sbWeb = await call("GET", "/api/portal", { token: tS });
+  check(sbWeb.data.studio?.aufsteller?.bestellbar === false && sbWeb.data.studio?.aufsteller?.inklusive === false, "GET /api/portal (Sandbox): studio.aufsteller.bestellbar false (Dashboard zeigt keinen Kaufknopf)");
+  const domainLib = await import("../netlify/functions/_lib/domain.mjs");
+  let domFehler = null; try { await domainLib.aufstellerCheckout({ id: "st_x", demo: true, status: "live", stripe: {} }); } catch (e) { domFehler = e; }
+  check(domFehler?.status === 409 && domFehler.fehlerCode === "testmodus", "Zweiter Schutz: aufstellerCheckout wirft bei Testkasse 409 testmodus", domFehler?.message);
+  // Altstudio (umgestellt auf den Bestandskunden-Preis, stripe.altKonto): Aufsteller nicht im Paket, auch wenn paket monatlich
+  const dAltBlob = blob("studio/" + werbD.id);
+  setBlob("studio/" + werbD.id, { ...dAltBlob, aufsteller: null, stripe: { ...(dAltBlob.stripe || {}), altKonto: { accountId: "acct_alt_test", kontoTyp: "express", bis: new Date().toISOString() } } });
+  const altAuf = (await call("GET", "/api/app/aufsteller", { token: werbTD })).data.aufsteller || {};
+  const altPortal = (await call("GET", "/api/portal", { cookie: werbD.cookie })).data.studio || {};
+  const altAnfordern = await call("POST", "/api/portal/aufsteller", { cookie: werbD.cookie, body: { anfordern: true } });
+  const emailsLib = await import("../netlify/functions/_lib/emails.mjs");
+  const altMail = emailsLib.mails.anmeldung(blob("studio/" + werbD.id), { loginUrl: "x", connectUrl: "y" }).html;
+  setBlob("studio/" + werbD.id, dAltBlob);
+  const neuMail = emailsLib.mails.anmeldung(blob("studio/" + werbD.id), { loginUrl: "x", connectUrl: "y" }).html;
+  check(altAuf.kostenlos === false && altAuf.bestellbar === true && altAuf.preis?.nettoCent === 2900 && /bestellen$/.test(altAuf.knopf || "") && altPortal.aufsteller?.inklusive === false && altPortal.aufstellerInklusive === false && altAnfordern.status === 400 && !/Inklusive QR-Aufsteller/.test(altMail) && /Digitaler QR-Code inklusive/.test(altMail) && /Inklusive QR-Aufsteller/.test(neuMail), "Altstudio (altKonto): Aufsteller nicht inklusive (App, Dashboard, kostenlos anfordern → 400, Mail ohne „Inklusive QR-Aufsteller“)", JSON.stringify({ k: altAuf.kostenlos, i: altPortal.aufsteller?.inklusive, a: altAnfordern.status }));
+  // Druckvorlagen (sagen „Ratenzahlung möglich*“) im Dashboard nur bei Klarna dauerhaft
+  const eBlob = blob("studio/" + werbE.id);
+  setBlob("studio/" + werbE.id, { ...eBlob, modell: "provision", paket: "risikofrei", abrechnung: undefined });
+  const matR = (await call("GET", "/api/portal", { cookie: werbE.cookie })).data;
+  setBlob("studio/" + werbE.id, eBlob);
+  check(Array.isArray(matR.materialLinks) && matR.materialLinks.length === 0 && matR.studio?.klarnaDauerhaft === false && !("materialien" in matR) && (await call("GET", "/api/portal", { cookie: werbD.cookie })).data.materialLinks?.length === 5, "GET /api/portal: Druckvorlagen leer ohne Klarna dauerhaft (Risikofrei), mit Klarna 5; kein Generator-Link mehr", JSON.stringify(matR.materialLinks));
+  const druck20 = await (await fetch(`${BASE}/druck/kunden/20-fensteraufkleber.html`)).text(), druck23 = await (await fetch(`${BASE}/druck/kunden/23-kundeninfo.html`)).text();
+  check(!/generator\.html|\?studio=/.test(druck20 + druck23) && /Keine konkreten Raten, Zinsen oder Beispielbeträge ergänzen/.test(druck20) && /Keine konkreten Raten, Zinsen oder Beispielbeträge ergänzen/.test(druck23) && /In der Druckerei/.test(druck20), "Druckvorlagen 20/23: kein technischer Hinweis auf Generator/?studio=…, Druckerei-Hinweis und „Keine konkreten Raten …“ bleiben");
+  // Stripe-Webhook: Aufsteller-Rechnung eines Apple-Studios (E hat den Aufsteller in der App gekauft) → keine Alarm-Mail
+  const eWebBlob = blob("studio/" + werbE.id);
+  setBlob("studio/" + werbE.id, { ...eWebBlob, abrechnung: "apple", paket: "app", zahlart: "apple", modell: "kauf", aufsteller: { holz: "hell", variante: "name", kauf: { csId: "cs_aufsteller_E", gestartetAm: new Date().toISOString(), quelle: "app" } } });
+  const eS = blob("studio/" + werbE.id);
+  check(eS.abrechnung === "apple" && eS.aufsteller?.kauf?.csId, "Vorbedingung: E als Apple-Studio mit begonnenem Aufsteller-Kauf");
+  const alarm = (firma) => mailsAn("admin@app.test").filter((m) => /Stripe-Ereignis für App-Studio/.test(m.subject) && m.subject.includes(firma)).length;
+  const alarmEVor = alarm("Ink Studio E"), stillVor = logs("stripe-aufsteller-app-studio").length, appEreignisVor = logs("stripe-ereignis-app-studio").length;
+  const whA = await sendeWebhook(`${BASE}/api/stripe-webhook`, "whsec_mock", "invoice.paid", { id: "in_aufsteller_E", object: "invoice", metadata: { studioId: werbE.id, typ: "aufsteller" }, amount_paid: 3451, customer: eS.stripe?.customerId });
+  const whA2 = await sendeWebhook(`${BASE}/api/stripe-webhook`, "whsec_mock", "invoice.payment_failed", { id: "in_aufsteller_E2", object: "invoice", metadata: { studioId: werbE.id, typ: "aufsteller" }, amount_due: 3451 });
+  check(whA === 200 && whA2 === 200 && alarm("Ink Studio E") === alarmEVor && logs("stripe-aufsteller-app-studio").length === stillVor + 2 && logs("stripe-ereignis-app-studio").length === appEreignisVor && !mailsAn("emil@ink-e.test").some((m) => m.subject === "Zahlung fehlgeschlagen: bitte kurz prüfen") && JSON.stringify(blob("studio/" + werbE.id).aufsteller) === JSON.stringify(eS.aufsteller) && blob("studio/" + werbE.id).status === eS.status, "invoice.paid/payment_failed der Aufsteller-Rechnung (Apple-Studio) → still erledigt, keine Alarm-Mail, nichts geändert", `${whA} ${whA2}`);
+  setBlob("studio/" + werbE.id, eWebBlob);
+  // Nur echte Aufsteller-Ereignisse: N (Apple, nie einen Aufsteller gekauft) mit typ aufsteller → weiter Alarm
+  const whFremd = await sendeWebhook(`${BASE}/api/stripe-webhook`, "whsec_mock", "invoice.paid", { id: "in_aufsteller_fremd", object: "invoice", metadata: { studioId: N.entwurfId, typ: "aufsteller" }, amount_paid: 3451 });
+  check(whFremd === 200 && logs("stripe-ereignis-app-studio").length === appEreignisVor + 1 && alarm("Ink App Studio Neu") >= 1, "Aufsteller-Metadaten ohne begonnenen Kauf (N) → weiter Alarm-Mail", String(whFremd));
+  // Reihenfolge: checkout.session.completed des Aufstellers läuft vor dem Apple-Wächter → aufstellerBezahlt (Admin-Mail „bestellen“), kein Alarm
+  const alarmNVor = alarm("Ink App Studio Neu");
+  const whCs = await sendeWebhook(`${BASE}/api/stripe-webhook`, "whsec_mock", "checkout.session.completed", { id: "cs_aufsteller_N", object: "checkout.session", mode: "payment", payment_status: "paid", amount_total: 3451, metadata: { studioId: N.entwurfId, typ: "aufsteller", quelle: "app" } });
+  const nNach = blob("studio/" + N.entwurfId);
+  check(whCs === 200 && nNach.aufsteller?.kauf?.csId === "cs_aufsteller_N" && nNach.aufsteller.kauf.bezahltAm && nNach.status === nAlt.status && alarm("Ink App Studio Neu") === alarmNVor && mailsAn("admin@app.test").some((m) => /QR-Aufsteller bestellen \(29 € bezahlt\)/.test(m.subject) && m.subject.includes("Ink App Studio Neu")), "checkout.session.completed (Aufsteller, Apple-Studio) → aufstellerBezahlt läuft weiter, Status unverändert, kein Alarm", String(whCs));
 
   // ==================================================================================================
   teil("Apple-Abo: Konto kündigen und löschen, Apple verlängert trotzdem");
