@@ -25,9 +25,18 @@ struct StartBereich: View {
             if !soGehtsAus { soGehtsKarte }
         }
         .task(id: portal.geladenAm) { await werbung.laden() }
-        .sheet(item: $blatt) { _ in
+        .sheet(item: $blatt, onDismiss: {
+            // Nach Recht/Fragebogen: Häkchen neu holen
+            Task { await werbung.laden(immer: true) }
+        }) { b in
             NavigationStack {
-                SoGehtsView()
+                Group {
+                    switch b {
+                    case .soGehts: SoGehtsView()
+                    case .recht: RechtView()
+                    case .fragebogen: FragebogenView()
+                    }
+                }
                 .toolbar {
                     ToolbarItem(placement: .confirmationAction) {
                         Button(Texte.Allgemein.fertig) { blatt = nil }.font(.dm(.body, weight: .semibold))
@@ -35,6 +44,8 @@ struct StartBereich: View {
                 }
             }
             .environment(werbung)
+            .environment(app)
+            .environment(portal)
         }
         .onChange(of: app.tab) { _, neu in
             // Zurück in der Kasse (z. B. nach Recht/Fragebogen im Konto): Häkchen neu holen
@@ -117,8 +128,9 @@ struct StartBereich: View {
     private func ausfuehren(_ a: StartCheckpunkt.Aktion) {
         switch a {
         case .werbung: app.tab = .werbung
-        // Rechtliche Lage und Fragebogen stehen im Konto (Abschnitt „Dein Studio“)
-        case .recht, .fragebogen: app.tab = .konto
+        // Rechtliche Lage und Fragebogen direkt als Blatt (stehen auch im Konto, Abschnitt „Dein Studio“)
+        case .recht: blatt = .recht
+        case .fragebogen: blatt = .fragebogen
         }
     }
 
@@ -190,7 +202,7 @@ struct KompaktKarte: ViewModifier {
 }
 
 enum StartBlatt: String, Identifiable {
-    case soGehts
+    case soGehts, recht, fragebogen
     var id: String { rawValue }
 }
 

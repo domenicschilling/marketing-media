@@ -13,7 +13,7 @@ enum WerbungTexte {
     static let einleitungKlarna = "Fertiges Video und fertige Beiträge für Instagram und Facebook. Deine Kunden sehen: Bei dir bezahlen sie ganz einfach per Link oder QR-Code, auch mit Klarna. Speichern, Text kopieren, posten."
     static let einleitung = "Dein QR-Code für die Theke und Vorlagen zum Ausdrucken."
     static let ohneKlarnaTitel = "Video und Beiträge mit Klarna"
-    static let ohneKlarnaText = "Das Werbevideo und die fertigen Beiträge zeigen Klarna. Klarna gibt es bei deinem Studio gerade nicht, deshalb fehlen sie hier. Deine Zahlseite und den QR-Code findest du unten."
+    static let ohneKlarnaText = "Das Werbevideo und die fertigen Beiträge zeigen Klarna. Bei deinem Studio gibt es Klarna nicht dauerhaft, deshalb fehlen sie hier. Deine Zahlseite und den QR-Code findest du unten."
     static let vorFreigabe = "Werbung gibt es, sobald dein Zahlungskonto freigegeben ist. Dann funktioniert auch dein QR-Code."
     static let neuLaden = "Neu laden"
     /// Pflicht-Fußnote, wo Raten gemeint sind (klein, aber lesbar)

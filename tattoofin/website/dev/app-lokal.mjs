@@ -82,6 +82,9 @@ async function bezahlt(token, daten) {
 // ---- Beispieldaten ----
 const bamberg = await studio("studio@beispiel.test", "Ink Studio Bamberg", "Bamberg");
 const hof = await studio("zwei@beispiel.test", "Ink Studio Hof", "Hof");
+// Studio ohne dauerhaftes Klarna (Risikofrei über das Plattformkonto): in der App kein Raten-/Klarna-Material
+const coburg = await studio("ohne@beispiel.test", "Ink Studio Coburg", "Coburg");
+{ const f = path.join(dataDir, encodeURIComponent("studio/" + coburg.id) + ".json"); fs.writeFileSync(f, JSON.stringify({ ...JSON.parse(fs.readFileSync(f, "utf8")), modell: "provision", paket: "risikofrei" }, null, 2)); }
 await call("POST", `/api/admin/studio/${bamberg.id}/team`, { admin: true, body: { emails: ["team@beispiel.test", "zwei@beispiel.test"] } });
 const t = await appToken("studio@beispiel.test", bamberg.id);
 await bezahlt(t, { betrag: "480", kunde: "Jonas Beispiel", beschreibung: "Unterarm Blackwork" });
@@ -112,6 +115,7 @@ z(`\n Anmelden in der App (fester Test-Code, NUR LOKAL): ${CODE}`);
 z("   studio@beispiel.test   Inhaber, Ink Studio Bamberg (Zahlungen, Gutschein, 3 Auszahlungen)");
 z("   team@beispiel.test     Team-Adresse von Ink Studio Bamberg");
 z("   zwei@beispiel.test     Inhaber Ink Studio Hof + Team Bamberg → Studio-Auswahl");
+z("   ohne@beispiel.test     Inhaber Ink Studio Coburg, Risikofrei ohne Klarna (kein Raten-Material)");
 z(`   review@beispiel.test   Demo-Studio (Review-Zugang), Code ${REVIEW_CODE}`);
 z("\n Neues Studio in der App (Apple-Abo):  „Neues Studio? Konto anlegen“ mit einer neuen Adresse, z. B. neu-<zeit>@beispiel.test, Code " + CODE);
 z("   StoreKit-Testkäufe aus Xcode werden NUR lokal angenommen (APPLE_XCODE_TEST=1), Stripe-Einrichtung danach über den Nachbau.");

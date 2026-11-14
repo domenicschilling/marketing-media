@@ -90,6 +90,14 @@ Konto → Abschnitt „Dein Studio“ (`Features/StudioMehr`, Daten über `Studi
 - Zahlungsdetail: „Nachweis als PDF teilen“ (Server-PDF `?pdf=1`, Rückfall: PDF aus dem JSON mit `UIGraphicsPDFRenderer`). Kasse: Schalter „heute im Studio“ (nur Gesamtpreis) und Gebührenhinweis.
 - Tests: `StudioMehrTests` (Unit), `StudioMehrUITests` (Ende zu Ende gegen `dev/app-lokal.mjs`; Kauf des Aufstellers mit `AUFSTELLER_PAKETE=einmal` am Server und `TEST_RUNNER_TF_UI_AUFSTELLER_KAUF=1`).
 
+## Rundgang Web = App (Ende zu Ende, 14.11.2026)
+
+`TattoofinUITests/ParitaetRundgangUITests.swift` klickt jede neue Funktion durch und legt je Bildschirm ein Foto als Anhang ab
+(`p…` Inhaber Werbung/Kasse, `q…` Inhaber Konto/Dein Studio, `r…` So geht's/WhatsApp/Fotos-App, `t…` Team, `k…` ohne Klarna,
+`a…` Aufsteller kaufen, `d…` dunkel + große Schrift). Server: `dev/app-lokal.mjs` (enthält jetzt `ohne@beispiel.test`, Ink Studio Coburg,
+Risikofrei ohne dauerhaftes Klarna, Aufsteller kostenpflichtig). `testDunkelGross` braucht vorher `xcrun simctl ui <udid> appearance dark`.
+Der lokale Server liefert Dateien jetzt mit Byte-Bereichen (206) wie Netlify, sonst spielt AVPlayer die Videos nicht ab.
+
 ## Server
 
 - Debug: `http://localhost:8888` (aus `TF_API_BASE` → Info.plist `TFApiBasis`), Release: `https://tattoofin.de`.

@@ -60,7 +60,18 @@ export async function startDev({ port = PORT, mock = !process.env.STRIPE_SECRET_
     if (url.pathname.endsWith("/")) p = path.join(p, "index.html");
     try {
       const data = await fs.readFile(p);
-      res.writeHead(200, { "content-type": types[path.extname(p)] || "application/octet-stream" });
+      const typ = types[path.extname(p)] || "application/octet-stream";
+      // Byte-Bereiche wie Netlify (206): AVPlayer in der iPhone-App spielt Videos nur damit ab
+      const bereich = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range || "");
+      if (bereich && (bereich[1] || bereich[2])) {
+        let von = bereich[1] ? Number(bereich[1]) : Math.max(0, data.length - Number(bereich[2]));
+        let bis = bereich[1] && bereich[2] ? Math.min(Number(bereich[2]), data.length - 1) : data.length - 1;
+        if (von > bis || von >= data.length) { res.writeHead(416, { "content-range": `bytes */${data.length}` }); res.end(); return; }
+        res.writeHead(206, { "content-type": typ, "accept-ranges": "bytes", "content-range": `bytes ${von}-${bis}/${data.length}`, "content-length": bis - von + 1 });
+        res.end(data.subarray(von, bis + 1));
+        return;
+      }
+      res.writeHead(200, { "content-type": typ, "accept-ranges": "bytes", "content-length": data.length });
       res.end(data);
     } catch { res.writeHead(404, { "content-type": "text/plain" }); res.end("404"); }
   });

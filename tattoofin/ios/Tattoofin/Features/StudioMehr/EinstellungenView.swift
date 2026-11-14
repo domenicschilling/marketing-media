@@ -60,6 +60,7 @@ struct EinstellungenView: View {
                     .font(.dm(.body))
                     .onChange(of: bedingungen) { _, neu in if neu.count > 1000 { bedingungen = String(neu.prefix(1000)) } }
                     .accessibilityLabel(Texte.Einst.anzahlungFeld)
+                    .disabled(!istInhaber)
                 Text(Texte.Einst.zeichen(bedingungen.count) + (bedingungen.leerAlsNil != nil && bedingungen.count < 30 ? " · " + Texte.Einst.anzahlungKurz : ""))
                     .font(.dm(.caption))
                     .foregroundStyle(Color.tfLeise)
@@ -73,14 +74,14 @@ struct EinstellungenView: View {
             if studio?.hatKlarna == true {
                 Section {
                     Text(Texte.Einst.ausweichText).font(.dm(.footnote)).foregroundStyle(Color.tfLeise)
-                    Toggle(Texte.Einst.ausweichAn, isOn: $ausweichAn)
+                    Toggle(Texte.Einst.ausweichAn, isOn: $ausweichAn).disabled(!istInhaber)
                     Stepper(value: $ausweichProzent, in: 10...50, step: 5) {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(Texte.Einst.ausweichHoehe)
                             Text(Texte.Einst.prozent(ausweichProzent)).font(.dm(.subheadline, weight: .semibold))
                         }
                     }
-                    .disabled(!ausweichAn)
+                    .disabled(!ausweichAn || !istInhaber)
                     .accessibilityValue(Texte.Einst.prozent(ausweichProzent))
                     speichernZeile(.ausweich) {
                         .init(ausweichAnzahlung: .init(an: ausweichAn, prozent: ausweichProzent))
@@ -91,7 +92,7 @@ struct EinstellungenView: View {
 
                 Section {
                     Text(Texte.Einst.hinweisText).font(.dm(.footnote)).foregroundStyle(Color.tfLeise)
-                    Toggle(Texte.Einst.hinweisAn, isOn: $hinweisAn)
+                    Toggle(Texte.Einst.hinweisAn, isOn: $hinweisAn).disabled(!istInhaber)
                     speichernZeile(.hinweis) { .init(zahlartenHinweis: hinweisAn) }
                 } header: {
                     Text(Texte.Einst.hinweisTitel)
@@ -109,6 +110,7 @@ struct EinstellungenView: View {
                     .autocorrectionDisabled()
                     .font(.dm(.body))
                     .accessibilityLabel(Texte.Einst.emailFeld)
+                    .disabled(!istInhaber)
                 speichernZeile(.email, pruefen: { emailOK ? nil : Texte.Einst.emailFalsch }) {
                     .init(email: email.trimmingCharacters(in: .whitespaces).lowercased())
                 }
@@ -119,7 +121,6 @@ struct EinstellungenView: View {
         .font(.dm(.body))
         .scrollContentBackground(.hidden)
         .scrollDismissesKeyboard(.interactively)
-        .disabled(!istInhaber)
         .refreshable {
             await mehr.laden()
             uebernehmen()
@@ -133,6 +134,11 @@ struct EinstellungenView: View {
     @ViewBuilder
     private func speichernZeile(_ b: Bereich, pruefen: (() -> String?)? = nil, aenderung: @escaping () -> APIClient.KontaktAenderung) -> some View {
         if let f = fehler[b] { FehlerZeile(text: f) }
+        // Team: nur lesen, kein Speichern-Knopf
+        if istInhaber { speichernKnopf(b, pruefen: pruefen, aenderung: aenderung) }
+    }
+
+    private func speichernKnopf(_ b: Bereich, pruefen: (() -> String?)?, aenderung: @escaping () -> APIClient.KontaktAenderung) -> some View {
         Button {
             if let meldung = pruefen?() { fehler[b] = meldung; return }
             speichern(b, aenderung())

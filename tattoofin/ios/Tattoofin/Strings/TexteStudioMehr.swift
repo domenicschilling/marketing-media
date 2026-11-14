@@ -185,7 +185,7 @@ extension Texte {
         static let lieferung = "Lieferadresse"
         static let nurInhaber = "Den Aufsteller kann nur der Inhaber bestellen."
         static let nurWeb = "Die Bestellung ist in dieser Version noch nicht möglich. Unser Team hilft dir gern per WhatsApp."
-        static let nameLabel = "studioname"
+        static let nameLabel = "dein Studioname"
         static let logoLabel = "dein Logo"
     }
 }
