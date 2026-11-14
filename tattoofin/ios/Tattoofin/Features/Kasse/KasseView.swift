@@ -239,47 +239,132 @@ struct Ziffernblock: View {
     }
 }
 
-/// Hinweis, wenn das Stripe-Konto noch nicht freigegeben ist
+/// Hinweis, wenn nicht kassiert werden kann: Apple-Abo beendet, Testkauf (Sandbox), Stripe noch nicht verbunden
+/// oder noch nicht freigegeben, Vertrag nicht aktiv.
 struct GesperrtKarte: View {
     let studio: Studio
+    @Environment(AppState.self) private var app
     @Environment(PortalStore.self) private var portal
     @Environment(\.openURL) private var openURL
+    @Environment(\.scenePhase) private var szene
     @State private var prueft = false
     @State private var meldung: String?
+    @State private var aboOffen = false
+
+    enum Fall: Equatable {
+        case aboBeendet, sandbox, stripeVerbinden, wartet
+    }
+
+    /// Welcher Hinweis gilt (Reihenfolge: beendetes Abo vor Testkauf, damit auch ein abgelaufener Testkauf neu abgeschlossen werden kann)
+    nonisolated static func fall(_ s: Studio) -> Fall {
+        if s.istApple, s.apple?.istBeendet == true { return .aboBeendet }
+        if s.stripe?.verbunden != true {
+            if s.istApple, s.apple?.istSandbox == true { return .sandbox }
+            return .stripeVerbinden
+        }
+        return .wartet
+    }
+
+    private var istInhaber: Bool { app.sitzung?.istInhaber ?? false }
+    private var connect: URL? { studio.connectUrl.flatMap(URL.init(string:)) }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                Image(systemName: "hourglass")
-                    .font(.system(size: 44))
-                    .foregroundStyle(Color.tfAkzent)
-                    .accessibilityHidden(true)
-                Ueberschrift(Texte.Kasse.gesperrtTitel, groesse: 26)
-                Text(studio.stripe?.freigegeben == true ? Texte.Kasse.vertragNichtAktiv : Texte.Kasse.gesperrtText)
-                    .font(.dm(.body))
-                    .foregroundStyle(Color.tfTinte)
-                    .fixedSize(horizontal: false, vertical: true)
-                if let meldung { HinweisKarte(text: meldung, symbol: "info.circle.fill") }
-                Button {
-                    neuPruefen()
-                } label: {
-                    if prueft { ProgressView().tint(Color.tfBlau) } else { Text(Texte.Kasse.statusPruefen) }
-                }
-                .buttonStyle(.haupt)
-                .disabled(prueft)
-                if let u = studio.connectUrl.flatMap(URL.init(string:)), studio.stripe?.freigegeben != true {
-                    Button {
-                        openURL(u)
-                    } label: {
-                        Label(Texte.Kasse.stripeOeffnen, systemImage: "safari")
-                    }
-                    .buttonStyle(.zweit)
+                switch Self.fall(studio) {
+                case .aboBeendet: aboBeendet
+                case .sandbox: sandbox
+                case .stripeVerbinden: stripeVerbinden
+                case .wartet: wartet
                 }
             }
             .karte()
             .padding(16)
         }
         .refreshable { await portal.laden() }
+        .sheet(isPresented: $aboOffen) { AboErneuernSheet() }
+        .onChange(of: szene) { _, neu in
+            // Zurück aus Safari (Stripe-Einrichtung) oder den Einstellungen: Stand neu holen
+            if neu == .active { Task { await portal.laden() } }
+        }
+    }
+
+    private func symbol(_ name: String) -> some View {
+        Image(systemName: name)
+            .font(.system(size: 44))
+            .foregroundStyle(Color.tfAkzent)
+            .accessibilityHidden(true)
+    }
+
+    private func text(_ t: String) -> some View {
+        Text(t)
+            .font(.dm(.body))
+            .foregroundStyle(Color.tfTinte)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    @ViewBuilder private var aboBeendet: some View {
+        symbol("calendar.badge.exclamationmark")
+        Ueberschrift(Texte.Kasse.aboAbgelaufenTitel, groesse: 26)
+        text(Texte.Kasse.aboAbgelaufenText)
+        if istInhaber {
+            Button(Texte.Kasse.aboWiederAbschliessen) { aboOffen = true }
+                .buttonStyle(.haupt)
+                .accessibilityIdentifier("abo-wieder-abschliessen")
+        } else {
+            HinweisKarte(text: Texte.Kasse.aboTeamHinweis, symbol: "person.fill")
+        }
+    }
+
+    @ViewBuilder private var sandbox: some View {
+        symbol("testtube.2")
+        Ueberschrift(Texte.Kasse.sandboxTitel, groesse: 26)
+        text(Texte.Kasse.sandboxText)
+        pruefenKnopf(haupt: false)
+    }
+
+    @ViewBuilder private var stripeVerbinden: some View {
+        symbol("link.circle.fill")
+        Ueberschrift(Texte.Kasse.stripeTitel, groesse: 26)
+        text(Texte.Kasse.stripeText)
+        if let meldung { HinweisKarte(text: meldung, symbol: "info.circle.fill") }
+        if let u = connect {
+            Button {
+                openURL(u)
+            } label: {
+                Label(Texte.Kasse.stripeEinrichten, systemImage: "safari")
+            }
+            .buttonStyle(.haupt)
+            .accessibilityIdentifier("stripe-einrichten")
+        }
+        pruefenKnopf(haupt: connect == nil)
+    }
+
+    @ViewBuilder private var wartet: some View {
+        symbol("hourglass")
+        Ueberschrift(Texte.Kasse.gesperrtTitel, groesse: 26)
+        text(studio.stripe?.freigegeben == true ? Texte.Kasse.vertragNichtAktiv : Texte.Kasse.gesperrtText)
+        if let meldung { HinweisKarte(text: meldung, symbol: "info.circle.fill") }
+        pruefenKnopf(haupt: true)
+        if let u = connect, studio.stripe?.freigegeben != true {
+            Button {
+                openURL(u)
+            } label: {
+                Label(Texte.Kasse.stripeOeffnen, systemImage: "safari")
+            }
+            .buttonStyle(.zweit)
+        }
+    }
+
+    @ViewBuilder private func pruefenKnopf(haupt: Bool) -> some View {
+        let knopf = Button {
+            neuPruefen()
+        } label: {
+            if prueft { ProgressView().tint(Color.tfBlau) } else { Text(Texte.Kasse.statusPruefen) }
+        }
+        .disabled(prueft)
+        .accessibilityIdentifier("status-pruefen")
+        if haupt { knopf.buttonStyle(.haupt) } else { knopf.buttonStyle(.zweit) }
     }
 
     private func neuPruefen() {

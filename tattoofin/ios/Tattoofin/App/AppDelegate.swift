@@ -1,11 +1,18 @@
 import UIKit
 import UserNotifications
 
-/// UIKit-Anbindung für Push: Geräte-Token von APNs und Mitteilungen im Vordergrund / beim Antippen.
+/// UIKit-Anbindung für Push (Geräte-Token, Mitteilungen) und Start des Kauf-Abgleichs (StoreKit).
 final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         UNUserNotificationCenter.current().delegate = self
+        // Käufe, die außerhalb des Kauf-Bildschirms durchgehen (Ask to Buy, Verlängerungen, abgebrochene Bestätigung),
+        // sofort beim Start beobachten (Pflicht laut Apple), noch bevor die Anmeldung geladen ist
+        // Ausnahme: gehostete Unit-Tests. Dort richtet SKTestSession StoreKit erst im Test ein, und StoreKit muss
+        // in diesem Prozess danach zum ersten Mal benutzt werden (sonst fragt es den echten App Store).
+        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
+            AboManager.shared.beobachten()
+        }
         return true
     }
 

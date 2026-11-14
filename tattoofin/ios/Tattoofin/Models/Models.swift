@@ -23,6 +23,10 @@ struct Studio: Codable, Sendable, Hashable {
     var connectUrl: String?
     /// Demo-Studio für die App-Prüfung bei Apple (Testzahlungen ohne Geld)
     var demo: Bool?
+    /// Wie das Tattoofin-Abo bezahlt wird: "apple" | "stripe" | "keine" (ältere Server: fehlt)
+    var abrechnung: String?
+    /// Apple-Abo (nur bei abrechnung "apple")
+    var apple: AppleAbo?
 
     var name: String { firma ?? "Dein Studio" }
     var darfKassieren: Bool { kannKassieren ?? false }
@@ -242,6 +246,8 @@ struct KontoLoeschenAntwort: Codable, Sendable, Hashable {
     var ok: Bool?
     var kuendigungZum: String?
     var loeschungAb: String?
+    /// Das Studio zahlt über Apple: Abo zusätzlich in den Apple-Einstellungen kündigen
+    var appleAbo: Bool?
 }
 
 // MARK: - Auszahlungen

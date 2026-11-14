@@ -6,16 +6,18 @@ Native SwiftUI-App für Tattoo-Studios (iOS 18+, Swift 6, nur Apple-Frameworks, 
 
 | Ordner | Inhalt |
 |---|---|
-| `Tattoofin.xcodeproj` | Von Hand angelegt (objectVersion 77). Die Ordner `Tattoofin/` und `TattoofinTests/` sind dateisystem-synchronisiert: neue Swift-Dateien gehören automatisch dazu. |
+| `Tattoofin.xcodeproj` | Von Hand angelegt (objectVersion 77). Die Ordner `Tattoofin/`, `TattoofinTests/` und `TattoofinUITests/` sind dateisystem-synchronisiert: neue Swift-Dateien gehören automatisch dazu. |
+| `StoreKit/Tattoofin.storekit` | StoreKit-Testdatei (Abo `de.tattoofin.app.abo.monatlich`, 59,99 € Testwert, de_DE, DEU). Liegt außerhalb des App-Ordners (kommt nicht in die App), ist im Schema (Ausführen) eingetragen und als Ressource in beiden Test-Zielen. |
 | `Config/` | `Info.plist` (Release) und `Info-Debug.plist` (mit ATS-Ausnahme nur für localhost), `Tattoofin.entitlements` (aps-environment). Liegt bewusst außerhalb des synchronisierten Ordners. |
 | `Tattoofin/App` | Einstieg, AppDelegate (Push), AppState (Anmeldung, Tabs, Sprungziele, Portal-Daten) |
-| `Tattoofin/Core` | APIClient (actor), Schlüsselbund, Einstellungen, App-Sperre (Face ID), Push, Zwischenspeicher, Formate |
+| `Tattoofin/Core` | APIClient (actor), Schlüsselbund (`app-token`, `app-registrierung`), Einstellungen, App-Sperre (Face ID), Push, Zwischenspeicher, Formate, `AboManager` (StoreKit 2), `RegistrierungSpeicher` |
 | `Tattoofin/Models` | Codable-Modelle wie der Server (Beträge in Cent) |
 | `Tattoofin/Strings` | `Texte.swift` (alle Texte), `KlarnaTexte.swift` (Spiegel von `website/netlify/functions/_lib/klarna-texte.mjs`) |
 | `Tattoofin/Design` | Farben, Schriften, Knöpfe, Karten, QR-Code (CoreImage) |
-| `Tattoofin/Features` | Bildschirme: Sperre, Anmeldung, Einrichtung, Kasse, Zahlungslink, Zahlungen, Auszahlungen, Gutscheine (Scanner), Konto (Team, Geräte, Konto löschen) |
+| `Tattoofin/Features` | Bildschirme: Sperre, Anmeldung, Registrierung (neues Studio), Abo (Apple), Einrichtung, Kasse, Zahlungslink, Zahlungen, Auszahlungen, Gutscheine (Scanner), Konto (Team, Geräte, Konto löschen) |
 | `Tattoofin/Resources` | Schriften (TTF aus den woff2 der Website), Assets (App-Icon, Logo, Wortmarke, Figur), `PrivacyInfo.xcprivacy` |
-| `TattoofinTests` | Swift Testing: Beträge, Gutschein-Codes, Token-Hex, Datum, API-Dekodierung, Klarna-Texte (Vergleich mit der .mjs-Datei) |
+| `TattoofinTests` | Swift Testing: Beträge, Gutschein-Codes, Token-Hex, Datum, API-Dekodierung, Klarna-Texte (Vergleich mit der .mjs-Datei), Registrierung (Feldprüfung wie `signup.mjs`, Texte nach Apple 3.1.2/3.1.3), Abo-Logik, StoreKit-Testkauf (`SKTestSession`) |
+| `TattoofinUITests` | XCUITest Ende zu Ende: neues Studio → Abo (StoreKit-Testkauf) → Einrichtung → Kasse → Stripe im Simulator-Safari → Kasse offen → Löschen-Hinweis; hell und dunkel/große Schrift; „Käufe wiederherstellen“ |
 
 ## Bauen und testen
 
@@ -32,6 +34,42 @@ sodass die ganze Kette Server → APNs-Nachbau (`dev/app-lokal.mjs`) → `xcrun 
 
 DerivedData danach löschen (Speicher).
 
+## Neues Studio in der App + Apple-Abo (StoreKit 2)
+
+Ablauf (Spezifikation 14.11.2026): Anmelden → „Neues Studio? Konto anlegen“ → E-Mail-Code (`/api/app/registrieren/code`, `…/pruefen`) →
+Studio-Angaben → Bestätigungen (Unternehmer, KMU, Vertrag, AVV; `/api/app/registrieren` legt den Entwurf an, Entwurf im Schlüsselbund) →
+Abo-Bildschirm (`AboView`, Preis nur `product.displayPrice`, Kleingedrucktes nach 3.1.2, Vertrag/Datenschutz/EULA, „Käufe wiederherstellen“) →
+`purchase(options: [.appAccountToken(uuid)])` → `/api/app/abo/bestaetigen` → Token → Einrichtung → Kasse „Letzter Schritt: Stripe verbinden“.
+
+- Erst nach 200 vom Server `transaction.finish()`. Netz/5xx: Kauf bleibt offen, „Nochmal versuchen“ sendet denselben JWS. `abo_vergeben`/`produkt`/`familie`: abschließen.
+- `AboManager.beobachten()` startet `Transaction.updates` in `AppDelegate` (vor der Anmeldung). Zuordnung: offener Entwurf mit gleicher UUID → bestätigen;
+  angemeldetes Apple-Studio → `abo/aktualisieren` (beendetes Abo + Inhaber + gleiche UUID → neu abschließen); sonst nur abschließen.
+  Eingeloggte Apple-Studios gleichen höchstens alle 6 Stunden ab.
+- Kasse: beendetes Abo → „Abo wieder abschließen“ (Inhaber), Testkauf (Sandbox) ohne Stripe → Hinweis, Stripe nicht verbunden → `connectUrl` in Safari, beim Zurückkehren lädt die Kasse neu.
+- Konto: Abschnitt „Abo“ nur bei `abrechnung == "apple"` (`manageSubscriptionsSheet`). Konto löschen: Hinweis + Knopf „Abo bei Apple kündigen“.
+- In der App nie: Web-Preis, „netto“, Link zur Website zum Bezahlen, Klarna/Raten (Test `keinWebPreisKeinKlarna`).
+
+### StoreKit testen (Ergebnis der Probe 14.11.2026, Xcode 27.2)
+
+- `SKTestSession` **im UI-Test-Prozess wirkt**: Produkt lädt in der App, Kauf ohne Dialog (`disableDialogs`). Das ist der Hauptweg.
+- Gehostete Unit-Tests: StoreKit darf im App-Prozess **vor** `SKTestSession` nicht benutzt werden, sonst fragt es den echten App Store
+  (leere Produktliste). Deshalb startet `AppDelegate` den `Transaction.updates`-Beobachter nicht, wenn `XCTestConfigurationFilePath` gesetzt ist.
+- `expireSubscription` ändert die Sitzung sofort, `Transaction.currentEntitlements` im selben Prozess bleibt aber zwischengespeichert → der Test prüft die Sitzung.
+- `xcrun simctl launch` nutzt die StoreKit-Datei des Schemas nicht.
+
+```sh
+cd tattoofin/website && PORT=8899 STRIPE_MOCK_PORT=12199 NODE_PATH=$PWD/node_modules node dev/app-lokal.mjs   # eigener Port, stört 8888 nicht
+cd tattoofin/ios
+xcodebuild build-for-testing … -derivedDataPath <scratch>/dd CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM=
+TEST_RUNNER_TF_LOKAL_SERVER=1 TEST_RUNNER_TF_API_BASE=http://localhost:8899 \
+  xcodebuild test-without-building … -only-testing:TattoofinTests            # inkl. Kette Code → Entwurf → Kauf → Token
+TEST_RUNNER_TF_UI_API=http://localhost:8899 \
+  xcodebuild test-without-building … -resultBundlePath <scratch>/e2e.xcresult -only-testing:TattoofinUITests
+xcrun xcresulttool export attachments --path <scratch>/e2e.xcresult --output-path <ordner>   # Bildschirmfotos 01-anmelden … 14-loeschen-apple-hinweis
+```
+
+Nur Debug: `-TFZuruecksetzen YES` startet ohne Anmeldung und ohne offene Registrierung (UI-Tests).
+
 ## Server
 
 - Debug: `http://localhost:8888` (aus `TF_API_BASE` → Info.plist `TFApiBasis`), Release: `https://tattoofin.de`.
@@ -43,8 +81,8 @@ DerivedData danach löschen (Speicher).
 ## Wichtige Regeln
 
 - Token nur im Schlüsselbund (`WhenUnlockedThisDeviceOnly`, kein iCloud). Bei 401 meldet die App sich selbst ab.
-- Keine Preise, kein Kauf, keine Abo-Verwaltung, keine Erstattungen in der App (Apple 3.1). Kündigen/Löschen ja (5.1.1(v)), Zurücknehmen nein (nur Hinweis auf info@tattoofin.de; der Server sperrt `DELETE /api/portal/kuendigung` mit App-Token).
-- Rechtstexte (Impressum, Datenschutz, Vertrag) nur über `RechtsAnsicht` (WKWebView ohne gespeicherte Daten, `?app=1`, Inhaltsblocker für Tracking/Meta, nur die drei Seiten ladbar), erreichbar auch auf Anmelde- und Code-Bildschirm.
+- Kauf nur über Apple (In-App-Abo, StoreKit 2) und nur auf dem Abo-Bildschirm; Preis ausschließlich `product.displayPrice`. Studios, die über die Website zahlen, sehen weiterhin keine Preise, keinen Kauf, keine Abo-Verwaltung (Apple 3.1.1/3.1.3). Keine Erstattungen in der App. Kündigen/Löschen ja (5.1.1(v)), Zurücknehmen nein (nur Hinweis auf info@tattoofin.de; der Server sperrt `DELETE /api/portal/kuendigung` mit App-Token).
+- Rechtstexte (Impressum, Datenschutz, Vertrag, AVV) nur über `RechtsAnsicht` (WKWebView ohne gespeicherte Daten, `?app=1`, Inhaltsblocker für Tracking/Meta, nur die vier Seiten ladbar), erreichbar auch auf Anmelde- und Code-Bildschirm. Apple-EULA öffnet in Safari.
 - Platzhalter in Eingabefeldern immer mit `prompt: tfPlatzhalter(…)` (Systemgrau erreicht kein WCAG AA).
 - Demo-Studio (App-Prüfung): Stripe gilt als eingerichtet, „Testzahlung auslösen“ im Zahlungslink-Sheet (`POST /api/app/demo-zahlung/:id`). Angaben für App Store Connect: `AppStore/README.md`.
 - Keine Raten- oder Später-zahlen-Aussagen. Falls je nötig: nur `KlarnaAussageView` (Warnsatz gleich groß direkt daneben + Fußnote). Gutscheine nie mit Klarna. Die Zahlart Klarna erscheint nur als Name.

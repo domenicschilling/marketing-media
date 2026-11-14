@@ -38,6 +38,14 @@ final class AppState {
     /// Beim Start: Schlüsselbund aufräumen (Neuinstallation), Token laden, Sperre prüfen.
     func starten() async {
         Einstellungen.ersterStartAufraeumen()
+        #if DEBUG
+        // Nur Debug (UI-Tests): Startargument -TFZuruecksetzen YES beginnt ohne Anmeldung und ohne offene Registrierung
+        if UserDefaults.standard.bool(forKey: "TFZuruecksetzen") {
+            KeychainStore.loeschen()
+            RegistrierungSpeicher.loeschen()
+            Einstellungen.abmelden()
+        }
+        #endif
         guard let token = KeychainStore.lesen(), let info = Einstellungen.sitzung else {
             KeychainStore.loeschen()
             phase = .anmeldung

@@ -8,6 +8,8 @@ struct APIFehler: Error, LocalizedError, Sendable, Equatable {
     var meldung: String
     var code: String?
     var restVersuche: Int?
+    /// Bei code "eingabe": Feldnamen wie im Server (firma, plz, …)
+    var felder: [String]? = nil
 
     var errorDescription: String? { meldung }
 
@@ -17,10 +19,10 @@ struct APIFehler: Error, LocalizedError, Sendable, Equatable {
 
     /// Fehlerkörper des Servers lesen
     static func aus(status: Int, daten: Data) -> APIFehler {
-        struct Koerper: Decodable { var error: String?; var code: String?; var restVersuche: Int? }
+        struct Koerper: Decodable { var error: String?; var code: String?; var restVersuche: Int?; var felder: [String]? }
         let k = try? JSONDecoder().decode(Koerper.self, from: daten)
         let text = k?.error?.isEmpty == false ? k!.error! : (status >= 500 ? Texte.Fehler.server : Texte.Fehler.unbekannt)
-        return APIFehler(status: status, meldung: text, code: k?.code, restVersuche: k?.restVersuche)
+        return APIFehler(status: status, meldung: text, code: k?.code, restVersuche: k?.restVersuche, felder: k?.felder)
     }
 }
 
@@ -291,6 +293,75 @@ extension APIClient {
 
     func eigenenZugangEntfernen() async throws {
         let _: OK = try await senden("DELETE", "api/app/team/ich")
+    }
+
+    // Neues Studio anlegen (ohne Auth)
+    func registrierenCode(email: String) async throws -> CodeAntwort {
+        struct B: Encodable, Sendable { let email: String; let platform = "ios" }
+        return try await senden("POST", "api/app/registrieren/code", body: B(email: email), auth: false)
+    }
+
+    func registrierenPruefen(email: String, code: String, geraet: GeraetAngaben) async throws -> RegistrierenPruefenAntwort {
+        struct B: Encodable, Sendable { let email: String; let code: String; let geraet: GeraetAngaben }
+        return try await senden("POST", "api/app/registrieren/pruefen", body: B(email: email, code: code, geraet: geraet), auth: false)
+    }
+
+    struct Registrierung: Encodable, Sendable {
+        var registrierToken: String
+        var firma: String
+        var inhaber: String
+        var strasse: String
+        var plz: String
+        var ort: String
+        var telefon: String
+        var studioTelefon: String
+        var ustid: String
+        var website: String
+        var unterzeichner: String
+        var akzeptiert: Bestaetigungen
+
+        init(registrierToken: String, daten d: StudioDaten, akzeptiert: Bestaetigungen) {
+            self.registrierToken = registrierToken
+            firma = d.bereinigt(.firma)
+            inhaber = d.bereinigt(.inhaber)
+            strasse = d.bereinigt(.strasse)
+            plz = d.bereinigt(.plz)
+            ort = d.bereinigt(.ort)
+            telefon = d.bereinigt(.telefon)
+            studioTelefon = d.bereinigt(.studioTelefon)
+            ustid = d.bereinigt(.ustid)
+            website = d.bereinigt(.website)
+            unterzeichner = d.bereinigt(.unterzeichner)
+            self.akzeptiert = akzeptiert
+        }
+    }
+
+    func registrieren(_ r: Registrierung) async throws -> RegistrierenAntwort {
+        try await senden("POST", "api/app/registrieren", body: r, auth: false)
+    }
+
+    // Apple-Abo
+    /// Neues Studio: Kauf bestätigen (Entwurf → Studio, Antwort mit Token)
+    func aboBestaetigen(entwurfToken: String, signedTransaction: String, geraet: GeraetAngaben) async throws -> AboBestaetigtAntwort {
+        struct B: Encodable, Sendable { let entwurfToken: String; let signedTransaction: String; let geraet: GeraetAngaben }
+        return try await senden("POST", "api/app/abo/bestaetigen",
+                                body: B(entwurfToken: entwurfToken, signedTransaction: signedTransaction, geraet: geraet), auth: false)
+    }
+
+    /// Angemeldeter Inhaber: abgelaufenes Abo neu abgeschlossen
+    func aboErneuern(signedTransaction: String) async throws -> AboBestaetigtAntwort {
+        struct B: Encodable, Sendable { let signedTransaction: String }
+        return try await senden("POST", "api/app/abo/bestaetigen", body: B(signedTransaction: signedTransaction))
+    }
+
+    func aboWiederherstellen(signedTransactions: [String]) async throws -> WiederherstellenAntwort {
+        struct B: Encodable, Sendable { let signedTransactions: [String] }
+        return try await senden("POST", "api/app/abo/wiederherstellen", body: B(signedTransactions: Array(signedTransactions.prefix(10))), auth: false)
+    }
+
+    func aboAktualisieren(signedTransaction: String) async throws -> AboAktualisiertAntwort {
+        struct B: Encodable, Sendable { let signedTransaction: String }
+        return try await senden("POST", "api/app/abo/aktualisieren", body: B(signedTransaction: signedTransaction))
     }
 
     // Konto löschen

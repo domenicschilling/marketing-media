@@ -2,6 +2,7 @@ import SwiftUI
 
 /// Bildschirm 17: Konto kündigen und löschen (Apple 5.1.1(v)). Inhaber: Kündigung + Löschung. Team: eigenen Zugang entfernen.
 /// Zurücknehmen gibt es in der App nicht (das würde das Abo fortsetzen, Apple 3.1.1), nur den Hinweis auf info@tattoofin.de.
+/// Apple-Abo: Vertrag endet mit dem bezahlten Zeitraum; Hinweis + Knopf, das Abo zusätzlich bei Apple zu kündigen (sonst bucht Apple weiter ab).
 struct KontoLoeschenView: View {
     @Environment(AppState.self) private var app
     @Environment(PortalStore.self) private var portal
@@ -11,8 +12,10 @@ struct KontoLoeschenView: View {
     @State private var arbeitet = false
     @State private var fehler: String?
     @State private var ergebnis: KontoLoeschenAntwort?
+    @State private var aboVerwalten = false
 
     private var istInhaber: Bool { app.sitzung?.istInhaber ?? false }
+    private var istApple: Bool { portal.studio?.istApple ?? false }
 
     var body: some View {
         ScrollView {
@@ -29,12 +32,27 @@ struct KontoLoeschenView: View {
         .tfHintergrund()
         .navigationTitle(istInhaber ? Texte.Loeschen.titel : Texte.Team.zugangEntfernen)
         .navigationBarTitleDisplayMode(.inline)
+        .manageSubscriptionsSheet(isPresented: $aboVerwalten)
+    }
+
+    /// Hinweis: Apple-Abo zusätzlich in den Einstellungen des Apple-Accounts kündigen
+    private var appleKarte: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HinweisKarte(text: Texte.Loeschen.appleHinweis, schrift: .dm(.body, weight: .semibold))
+            Button {
+                aboVerwalten = true
+            } label: {
+                Label(Texte.Loeschen.appleKuendigen, systemImage: "creditcard")
+            }
+            .buttonStyle(.zweit)
+            .accessibilityIdentifier("abo-bei-apple-kuendigen")
+        }
     }
 
     private var formular: some View {
         Group {
             Ueberschrift(Texte.Loeschen.ueberschrift, groesse: 26)
-            ForEach(Texte.Loeschen.punkte, id: \.self) { p in
+            ForEach(istApple ? Texte.Loeschen.punkteApple : Texte.Loeschen.punkte, id: \.self) { p in
                 HStack(alignment: .top, spacing: 10) {
                     Image(systemName: "circle.fill").font(.system(size: 6)).padding(.top, 8).accessibilityHidden(true)
                     Text(p).font(.dm(.body)).fixedSize(horizontal: false, vertical: true)
@@ -61,6 +79,7 @@ struct KontoLoeschenView: View {
                     .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.tfRot.opacity(0.6), lineWidth: 1.5))
                     .accessibilityLabel(Texte.Loeschen.bestaetigen)
             }
+            if istApple { appleKarte }
             if let fehler { FehlerZeile(text: fehler) }
             Button {
                 loeschen()
@@ -82,6 +101,7 @@ struct KontoLoeschenView: View {
             }
             .karte()
             Text(Texte.Loeschen.erledigtText).font(.dm(.body)).foregroundStyle(Color.tfTinte).fixedSize(horizontal: false, vertical: true)
+            if e.appleAbo == true || istApple { appleKarte }
             Button(Texte.Loeschen.zumKonto) { dismiss() }
                 .buttonStyle(.zweit)
         }

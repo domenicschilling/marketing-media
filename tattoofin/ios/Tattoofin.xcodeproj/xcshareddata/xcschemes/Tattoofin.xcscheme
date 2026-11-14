@@ -40,6 +40,17 @@
                ReferencedContainer = "container:Tattoofin.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "7F0A00000000000000000012"
+               BuildableName = "TattoofinUITests.xctest"
+               BlueprintName = "TattoofinUITests"
+               ReferencedContainer = "container:Tattoofin.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction
@@ -68,6 +79,9 @@
             isEnabled = "NO">
          </CommandLineArgument>
       </CommandLineArguments>
+      <StoreKitConfigurationFileReference
+         identifier = "../../StoreKit/Tattoofin.storekit">
+      </StoreKitConfigurationFileReference>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"

@@ -90,6 +90,10 @@ struct HauptView: View {
                 KontoView()
             }
         }
-        .task { await portal.laden() }
+        .task {
+            await portal.laden()
+            // Apple-Studios: Stand des Abos höchstens alle 6 Stunden an den Server
+            await AboManager.shared.abgleichWennNoetig(studio: portal.studio)
+        }
     }
 }

@@ -1,0 +1,66 @@
+{
+  "identifier" : "TF-STOREKIT-1",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+
+  ],
+  "settings" : {
+    "_applicationInternalID" : "6750000000",
+    "_developerTeamID" : "5WPPC8669J",
+    "_failTransactionsEnabled" : false,
+    "_locale" : "de_DE",
+    "_storefront" : "DEU",
+    "_storeKitErrors" : [
+
+    ]
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "21500001",
+      "localizations" : [
+        {
+          "description" : "",
+          "displayName" : "Tattoofin",
+          "locale" : "de_DE"
+        }
+      ],
+      "name" : "Tattoofin",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "59.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6750000001",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Zahlungslinks, Zahlseite und Gutscheine",
+              "displayName" : "Tattoofin Monatlich",
+              "locale" : "de_DE"
+            }
+          ],
+          "productID" : "de.tattoofin.app.abo.monatlich",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Tattoofin Monatlich",
+          "subscriptionGroupID" : "21500001",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

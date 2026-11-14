@@ -1,28 +1,95 @@
 import SwiftUI
 
-/// Bildschirme 2 und 3: E-Mail → 6-stelliger Code → (bei mehreren Studios) Auswahl
+/// Bildschirme 2 und 3: E-Mail → 6-stelliger Code → (bei mehreren Studios) Auswahl.
+/// Neues Studio (R1–R5): „Neues Studio? Konto anlegen“ → E-Mail bestätigen → Code → Studio-Angaben → Bestätigungen → Abo (Apple).
 struct AnmeldungFlow: View {
     enum Schritt: Hashable {
-        case code(email: String, verzoegert: Bool)
+        case code(email: String, verzoegert: Bool, modus: CodeView.Modus)
         case auswahl(email: String, studios: [StudioKurz], token: String)
+        case registrieren
+        case angaben
+        case bestaetigungen
+        case abo
     }
 
     @State private var pfad: [Schritt] = []
+    @State private var reg = RegistrierungModell()
 
     var body: some View {
         NavigationStack(path: $pfad) {
-            EmailView { email, verzoegert in pfad.append(.code(email: email, verzoegert: verzoegert)) }
-                .navigationDestination(for: Schritt.self) { s in
-                    switch s {
-                    case let .code(email, verzoegert):
-                        CodeView(email: email, verzoegert: verzoegert) { studios, token in
-                            pfad.append(.auswahl(email: email, studios: studios, token: token))
-                        }
-                    case let .auswahl(email, studios, token):
-                        StudioAuswahlView(email: email, studios: studios, auswahlToken: token)
-                    }
-                }
+            EmailView(weiter: { email, verzoegert in
+                pfad.append(.code(email: email, verzoegert: verzoegert, modus: .anmelden))
+            }, neuesStudio: {
+                reg.entwurfNeuLesen()
+                pfad.append(reg.entwurf != nil ? .abo : .registrieren)
+            })
+            .navigationDestination(for: Schritt.self) { s in
+                ziel(s)
+            }
         }
+        .environment(reg)
+    }
+
+    @ViewBuilder
+    private func ziel(_ s: Schritt) -> some View {
+        switch s {
+        case let .code(email, verzoegert, modus):
+            CodeView(email: email, verzoegert: verzoegert, modus: modus, auswahlNoetig: { studios, token in
+                pfad.append(.auswahl(email: email, studios: studios, token: token))
+            }, registrieren: { a in
+                reg.uebernehmen(a, email: email)
+                pfad.append(.angaben)
+            })
+        case let .auswahl(email, studios, token):
+            StudioAuswahlView(email: email, studios: studios, auswahlToken: token)
+        case .registrieren:
+            RegistrierenEmailView(weiter: { email, verzoegert in
+                pfad.append(.code(email: email, verzoegert: verzoegert, modus: .registrieren))
+            }, wiederhergestellt: wiederhergestellt)
+        case .angaben:
+            StudioAngabenView { pfad.append(.bestaetigungen) }
+        case .bestaetigungen:
+            BestaetigungenView(weiter: {
+                pfad.append(.abo)
+            }, neuAnfangen: neuAnfangen, zurAnmeldung: zurAnmeldung)
+        case .abo:
+            if let e = reg.entwurf {
+                AboView(modus: .neu(e), aktionen: AboView.Aktionen(
+                    neuAnfangen: neuAnfangen, zurAnmeldung: zurAnmeldung, wiederhergestellt: wiederhergestellt))
+            } else {
+                RegistrierenEmailView(weiter: { email, verzoegert in
+                    pfad.append(.code(email: email, verzoegert: verzoegert, modus: .registrieren))
+                }, wiederhergestellt: wiederhergestellt)
+            }
+        }
+    }
+
+    /// Registrierung/Entwurf abgelaufen: Entwurf löschen, zurück zu R1
+    private func neuAnfangen(_ hinweis: String) {
+        let email = reg.email
+        reg.zuruecksetzen()
+        reg.email = email
+        reg.registrierHinweis = hinweis
+        pfad = [.registrieren]
+    }
+
+    /// Adresse hat schon ein Studio: zur Anmeldung, E-Mail vorbelegt
+    private func zurAnmeldung(_ hinweis: String) {
+        reg.anmeldeHinweis = hinweis
+        reg.anmeldeEmail = reg.email.isEmpty ? nil : reg.email
+        reg.zuruecksetzen()
+        pfad = []
+    }
+
+    /// Ergebnis von „Käufe wiederherstellen“ ohne Anmeldung
+    private func wiederhergestellt(_ r: WiederherstellenErgebnis) {
+        if case .anmelden(let maskiert) = r {
+            reg.anmeldeHinweis = Texte.Registrieren.aboGehoertZu(maskiert)
+            reg.anmeldeEmail = nil
+            reg.entwurfNeuLesen()
+            pfad = []
+        }
+        // .angemeldet: AppState wechselt selbst zur Einrichtung
     }
 }
 
@@ -51,15 +118,17 @@ struct MarkenKopf: View {
 
 struct EmailView: View {
     let weiter: (_ email: String, _ verzoegert: Bool) -> Void
+    var neuesStudio: () -> Void = {}
 
     @Environment(AppState.self) private var app
+    @Environment(RegistrierungModell.self) private var reg
     @State private var email = EmailView.vorbelegung
     @State private var sendet = false
     @State private var fehler: String?
     @FocusState private var fokus: Bool
 
     /// Nur im Debug-Build: Startargument -TFTestEmail <adresse> füllt das Feld vor (lokale Tests im Simulator)
-    private static var vorbelegung: String {
+    static var vorbelegung: String {
         #if DEBUG
         UserDefaults.standard.string(forKey: "TFTestEmail") ?? ""
         #else
@@ -83,6 +152,7 @@ struct EmailView: View {
                     .fixedSize(horizontal: false, vertical: true)
 
                 if let h = app.abmeldeHinweis { HinweisKarte(text: h, symbol: "info.circle.fill") }
+                if let h = reg.anmeldeHinweis { HinweisKarte(text: h, symbol: "info.circle.fill") }
 
                 VStack(alignment: .leading, spacing: 6) {
                     Text(Texte.Anmelden.emailLabel).font(.dm(.subheadline, weight: .semibold)).foregroundStyle(Color.tfTinte)
@@ -98,6 +168,7 @@ struct EmailView: View {
                         .padding(14)
                         .background(Color.tfKarte, in: RoundedRectangle(cornerRadius: 14))
                         .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.tfLinie, lineWidth: 1.5))
+                        .accessibilityIdentifier("anmelden-email")
                 }
 
                 if let fehler { FehlerZeile(text: fehler) }
@@ -114,6 +185,20 @@ struct EmailView: View {
                     .font(.dm(.footnote))
                     .foregroundStyle(Color.tfLeise)
 
+                // Neues Studio: Konto in der App anlegen (bzw. offene Anmeldung fortsetzen)
+                VStack(spacing: 10) {
+                    Text(Texte.Registrieren.einstiegFrage)
+                        .font(.dm(.body, weight: .semibold))
+                        .foregroundStyle(Color.tfTinte)
+                    Button(reg.entwurf != nil ? Texte.Registrieren.fortsetzen : Texte.Registrieren.einstieg) {
+                        neuesStudio()
+                    }
+                    .buttonStyle(.zweit)
+                    .accessibilityIdentifier("neues-studio")
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.top, 8)
+
                 RechtsFuss()
             }
             .padding(20)
@@ -121,6 +206,13 @@ struct EmailView: View {
         .scrollDismissesKeyboard(.interactively)
         .tfHintergrund()
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            reg.entwurfNeuLesen()
+            if let e = reg.anmeldeEmail { email = e; reg.anmeldeEmail = nil }
+        }
+        .onChange(of: reg.anmeldeEmail) { _, neu in
+            if let neu { email = neu; reg.anmeldeEmail = nil }
+        }
     }
 
     private func senden() {
@@ -131,6 +223,7 @@ struct EmailView: View {
             defer { sendet = false }
             do {
                 let a = try await APIClient.shared.codeAnfordern(email: e)
+                reg.anmeldeHinweis = nil
                 weiter(e, a.verzoegert ?? false)
             } catch {
                 fehler = fehlerText(error)
@@ -142,9 +235,14 @@ struct EmailView: View {
 // MARK: - Code
 
 struct CodeView: View {
+    /// .anmelden: bestehendes Studio · .registrieren: neues Studio (R2), der Server erkennt bekannte Adressen selbst
+    enum Modus: Hashable { case anmelden, registrieren }
+
     let email: String
     let verzoegert: Bool
+    var modus: Modus = .anmelden
     let auswahlNoetig: (_ studios: [StudioKurz], _ token: String) -> Void
+    var registrieren: (RegistrierenPruefenAntwort) -> Void = { _ in }
 
     @Environment(AppState.self) private var app
     @State private var code = ""
@@ -163,7 +261,7 @@ struct CodeView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 Ueberschrift(Texte.Anmelden.codeTitel)
-                Text(Texte.Anmelden.codeHinweis)
+                Text(modus == .registrieren ? Texte.Registrieren.codeHinweis : Texte.Anmelden.codeHinweis)
                     .font(.dm(.body))
                     .foregroundStyle(Color.tfTinte)
                     .fixedSize(horizontal: false, vertical: true)
@@ -190,7 +288,9 @@ struct CodeView: View {
                 Button {
                     pruefen()
                 } label: {
-                    if prueft { ProgressView().tint(Color.tfBlau) } else { Text(Texte.Anmelden.anmelden) }
+                    if prueft { ProgressView().tint(Color.tfBlau) } else {
+                        Text(modus == .registrieren ? Texte.Registrieren.codeBestaetigen : Texte.Anmelden.anmelden)
+                    }
                 }
                 .buttonStyle(.haupt)
                 .disabled(code.count != 6 || prueft || codeTot)
@@ -233,6 +333,10 @@ struct CodeView: View {
         Task {
             defer { prueft = false }
             do {
+                if modus == .registrieren {
+                    try await registrierenPruefen()
+                    return
+                }
                 let a = try await APIClient.shared.anmelden(email: email, code: code, geraet: GeraetInfo.angaben())
                 if let token = a.token, let g = a.geraet, let s = a.studio {
                     await app.angemeldet(token: token, geraet: g, studio: s, email: email)
@@ -256,13 +360,34 @@ struct CodeView: View {
         }
     }
 
+    /// R2 im Modus „registrieren“: je nach Adresse angemeldet, Studio-Auswahl oder weiter zu den Studio-Angaben
+    private func registrierenPruefen() async throws {
+        let a = try await APIClient.shared.registrierenPruefen(email: email, code: code, geraet: GeraetInfo.angaben())
+        switch a.art {
+        case "angemeldet":
+            guard let token = a.token, let g = a.geraet, let s = a.studio else { fehler = Texte.Fehler.unbekannt; return }
+            await app.angemeldet(token: token, geraet: g, studio: s, email: email)
+        case "auswahl":
+            guard let liste = a.auswahl, let t = a.auswahlToken, !liste.isEmpty else { fehler = Texte.Fehler.unbekannt; return }
+            auswahlNoetig(liste, t)
+        case "registrieren" where a.registrierToken != nil:
+            registrieren(a)
+        default:
+            fehler = Texte.Fehler.unbekannt
+        }
+    }
+
     private func neuSchicken() {
         neuMoeglichAb = Date.now.addingTimeInterval(60)
         fehler = nil
         restVersuche = nil
         Task {
             do {
-                _ = try await APIClient.shared.codeAnfordern(email: email)
+                if modus == .registrieren {
+                    _ = try await APIClient.shared.registrierenCode(email: email)
+                } else {
+                    _ = try await APIClient.shared.codeAnfordern(email: email)
+                }
                 neuGeschickt = true
                 codeTot = false
                 code = ""

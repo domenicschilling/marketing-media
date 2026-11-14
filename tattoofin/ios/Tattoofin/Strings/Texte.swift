@@ -63,6 +63,107 @@ enum Texte {
         static let abgelaufen = "Du wurdest abgemeldet. Bitte melde dich neu an."
     }
 
+    /// Neues Studio in der App anlegen (R1–R4). Kein Preis, kein Hinweis auf die Website, kein Klarna (Apple 3.1.3).
+    enum Registrieren {
+        static let einstiegFrage = "Noch kein Tattoofin?"
+        static let einstieg = "Neues Studio? Konto anlegen"
+        static let fortsetzen = "Anmeldung fortsetzen"
+        static let navTitel = "Konto anlegen"
+        static let titel = "Dein Studio bei Tattoofin"
+        static let einleitung = "Wir schicken dir einen Code. Damit bestätigst du deine E-Mail-Adresse."
+        static let emailUngueltig = "Bitte gib eine gültige E-Mail-Adresse ein."
+        static let wiederherstellenLink = "Abo schon gekauft? Käufe wiederherstellen"
+        static let codeHinweis = "Gleich kommt eine Mail mit einem Code aus 6 Ziffern an diese Adresse:"
+        static let codeBestaetigen = "Bestätigen"
+
+        static let angabenTitel = "Dein Studio"
+        static let angabenEinleitung = "Diese Angaben kommen in deinen Vertrag. Tattoofin ist nur für Unternehmen."
+        static let firma = "Studio / Firma"
+        static let inhaber = "Inhaber/in"
+        static let strasse = "Straße und Hausnummer"
+        static let plz = "PLZ"
+        static let ort = "Ort"
+        static let telefon = "Mobilnummer"
+        static let studioTelefon = "Telefonnummer des Studios"
+        static let ustid = "USt-IdNr. (optional)"
+        static let website = "Website oder Instagram (optional)"
+        static let unterzeichner = "Name des Unterzeichners"
+        static func pflicht(_ feld: String) -> String { "Bitte ausfüllen: \(feld)" }
+        static let plzFalsch = "Die PLZ hat genau 5 Ziffern."
+        static let telefonFalsch = "Bitte mindestens 6 Ziffern eingeben."
+        static let weiter = "Weiter"
+        static let fehlerOben = "Bitte prüf die markierten Felder."
+
+        static let bestaetigungenTitel = "Fast geschafft"
+        static let bestaetigungenEinleitung = "Bitte bestätige diese vier Punkte. Ohne sie können wir keinen Vertrag mit dir schließen."
+        static let unternehmer = "Ich schließe den Vertrag als Unternehmer für mein Studio ab, nicht als Verbraucher."
+        static let kmu = "Mein Studio ist ein kleines oder mittleres Unternehmen (unter 250 Mitarbeitende, höchstens 50 Mio. € Umsatz oder 43 Mio. € Bilanzsumme)."
+        static let vertrag = "Ich akzeptiere den Vertrag."
+        static let avv = "Ich akzeptiere die AVV (Vertrag zur Auftragsverarbeitung)."
+        static let vertragLesen = "Vertrag lesen"
+        static let avvLesen = "AVV lesen"
+        static let datenschutzLesen = "Datenschutzerklärung"
+        static let datenschutzHinweis = "Wie wir mit deinen Daten umgehen, steht in der Datenschutzerklärung."
+        static let bitteBestaetigen = "Bitte bestätigen."
+        static let weiterZumAbo = "Weiter zum Abo"
+
+        static let keinAboGefunden = "Auf diesem Apple-Account haben wir kein Tattoofin-Abo gefunden."
+        static func aboGehoertZu(_ email: String) -> String { "Dieses Abo gehört zu \(email). Melde dich mit dieser Adresse an." }
+        static let avvTitel = "AVV"
+    }
+
+    /// Abo-Bildschirm (Apple 3.1.2): Preis nur aus dem App Store (product.displayPrice), keine Probezeit, kein anderer Kaufweg
+    enum Abo {
+        static let titel = "Tattoofin Monatlich"
+        static func zeitraum(_ monate: Int) -> String {
+            (monate == 1 ? "1 Monat" : "\(monate) Monate") + " · verlängert sich automatisch"
+        }
+        static let proMonat = "pro Monat"
+        static let inklMwSt = "inkl. MwSt."
+        static let leistungen = [
+            "Zahlungslinks und Zahlseite für dein Studio",
+            "Anzahlungen und Gutscheine",
+            "Mitteilung bei jeder Zahlung",
+            "Keine Provision von Tattoofin. Die Gebühren für Kundenzahlungen zahlst du direkt an Stripe.",
+        ]
+        static let kaufen = "Kostenpflichtig abonnieren"
+        static let kleingedruckt = "Die Zahlung wird bei Bestätigung des Kaufs über deinen Apple-Account abgebucht. Das Abo verlängert sich automatisch jeden Monat, wenn du es nicht mindestens 24 Stunden vor Ende des laufenden Zeitraums kündigst. Kündigen kannst du jederzeit in den Einstellungen deines Apple-Accounts unter Abos. Es gibt keine Mindestlaufzeit."
+        static let vertragLink = "Vertrag (Nutzungsbedingungen)"
+        static let datenschutzLink = "Datenschutz"
+        static let eulaLink = "Apple-Lizenzvertrag (EULA)"
+        static let wiederherstellen = "Käufe wiederherstellen"
+        static let ladeFehler = "Das Abo konnte gerade nicht geladen werden."
+        static let nichtBestaetigt = "Dein Kauf ist bei Apple durch. Wir konnten ihn gerade nicht bestätigen. Tippe auf „Nochmal versuchen“. Es wird nichts doppelt abgebucht."
+        static let wartet = "Dein Kauf wartet noch auf eine Bestätigung. Sobald Apple ihn bestätigt, geht es automatisch weiter."
+        static let unverifiziert = "Apple hat den Kauf nicht bestätigt. Bitte versuch es noch einmal."
+        static let erneuernTitel = "Abo wieder abschließen"
+        static let erneuert = "Dein Abo läuft wieder. Zahlungslinks und Zahlseite sind offen."
+        static let wiederhergestellt = "Dein Abo ist auf dem neuesten Stand."
+        static let leistungenLabel = "Das ist dabei"
+
+        // Konto-Tab
+        static let abschnitt = "Abo"
+        static let bezahltUeber = "Bezahlt über"
+        static let apple = "Apple (App Store)"
+        static let status = "Status"
+        static let laeuftBis = "Läuft bis"
+        static let verwalten = "Abo verwalten"
+        static let sandbox = "Testkauf (Apple-Sandbox)"
+        static func statusText(_ abo: AppleAbo) -> String {
+            switch abo.status {
+            case "aktiv" where abo.autoVerlaengerung == false, "gekuendigt":
+                if let d = Datum.tag(abo.laeuftBis) { return "endet am \(d)" }
+                return "gekündigt"
+            case "aktiv": return "aktiv"
+            case "zahlungsproblem": return "Zahlungsproblem bei Apple"
+            case "erstattet": return "erstattet"
+            case "widerrufen": return "widerrufen"
+            case "abgelaufen": return "abgelaufen"
+            default: return abo.status ?? "unbekannt"
+            }
+        }
+    }
+
     enum Einrichtung {
         static func schritt(_ n: Int, von: Int) -> String { "Schritt \(n) von \(von)" }
         static func faceIDTitel(_ art: String) -> String { "\(art) zum Öffnen nutzen?" }
@@ -110,6 +211,16 @@ enum Texte {
         static let statusPruefen = "Status neu prüfen"
         static let stripeOeffnen = "Stripe-Einrichtung im Browser öffnen"
         static let nochNichtFrei = "Stripe hat dein Konto noch nicht freigegeben. Schau später nochmal rein."
+        // Apple-Abo und Stripe-Einrichtung nach der Anmeldung in der App
+        static let sandboxTitel = "Testkauf"
+        static let sandboxText = "Testkauf (Apple-Sandbox). Die Stripe-Einrichtung ist für Testkonten ausgeschaltet."
+        static let aboAbgelaufenTitel = "Dein Abo ist abgelaufen"
+        static let aboAbgelaufenText = "Zahlungslinks und Zahlseite sind gesperrt. Deine Daten bleiben erhalten."
+        static let aboWiederAbschliessen = "Abo wieder abschließen"
+        static let aboTeamHinweis = "Bitte den Inhaber, das Abo zu erneuern."
+        static let stripeTitel = "Letzter Schritt: Stripe verbinden"
+        static let stripeText = "Über dein Stripe-Konto bekommst du das Geld deiner Kunden. Die Einrichtung dauert etwa 10 Minuten, danach prüft Stripe meist 1 bis 3 Werktage."
+        static let stripeEinrichten = "Stripe-Konto einrichten"
     }
 
     enum Zahlung {
@@ -357,6 +468,11 @@ enum Texte {
         static let loeschungAb = "Löschung ab"
         static let erledigtText = "Wir haben dir eine Bestätigung per Mail geschickt. Bis zum Vertragsende kannst du weiter kassieren. Du willst doch bleiben? Schreib uns an info@tattoofin.de."
         static let zumKonto = "Zurück zum Konto"
+        // Apple-Abo
+        static let punktApple = "Er endet, wenn der bezahlte Zeitraum deines Apple-Abos abläuft."
+        static var punkteApple: [String] { var p = punkte; p[1] = punktApple; return p }
+        static let appleHinweis = "Wichtig: Dein Abo läuft über Apple. Kündige es zusätzlich in den Einstellungen deines Apple-Accounts, sonst bucht Apple weiter ab."
+        static let appleKuendigen = "Abo bei Apple kündigen"
     }
 }
 

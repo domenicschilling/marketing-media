@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// Bildschirm 14: Konto (Tab 4). Keine Preise, kein Kauf, keine Abo-Verwaltung in der App (Apple 3.1):
-/// Kündigen/Löschen ja (Apple 5.1.1(v)), Zurücknehmen nein (nur Hinweis auf info@tattoofin.de).
+/// Bildschirm 14: Konto (Tab 4). Kündigen/Löschen ja (Apple 5.1.1(v)), Zurücknehmen nein (nur Hinweis auf info@tattoofin.de).
+/// Studios mit Apple-Abo (In-App-Kauf): Abschnitt „Abo“ mit Status, „Abo verwalten“ (Apple-Sheet) und bei beendetem Abo
+/// „Abo wieder abschließen“. Studios, die über die Website zahlen: keine Preise, kein Kauf, keine Abo-Verwaltung (Apple 3.1.3).
 struct KontoView: View {
     @Environment(AppState.self) private var app
     @Environment(PortalStore.self) private var portal
@@ -22,6 +23,8 @@ struct KontoView: View {
     @State private var ueberallFrage = false
     @State private var arbeitet = false
     @State private var testErgebnis: String?
+    @State private var aboVerwalten = false
+    @State private var aboErneuern = false
 
     private var studio: Studio? { portal.studio }
     private var istInhaber: Bool { app.sitzung?.istInhaber ?? false }
@@ -31,6 +34,7 @@ struct KontoView: View {
         NavigationStack {
             TFListe {
                 studioAbschnitt
+                if studio?.istApple == true { aboAbschnitt }
                 stripeAbschnitt
                 mitteilungenAbschnitt
                 sicherheitAbschnitt
@@ -48,6 +52,9 @@ struct KontoView: View {
             .refreshable { await allesLaden() }
             .task { await allesLaden() }
             .sheet(item: $rechtsseite) { RechtsAnsicht(seite: $0) }
+            .sheet(isPresented: $aboErneuern) { AboErneuernSheet() }
+            .manageSubscriptionsSheet(isPresented: $aboVerwalten)
+            .onChange(of: aboVerwalten) { _, offen in if !offen { Task { await portal.laden() } } }
             .alert(Texte.Konto.abmeldenFrage, isPresented: $abmeldenFrage) {
                 Button(Texte.Konto.abmelden, role: .destructive) { Task { await app.abmelden() } }
                 Button(Texte.Allgemein.abbrechen, role: .cancel) {}
@@ -85,6 +92,33 @@ struct KontoView: View {
                 }
             } else {
                 ProgressView()
+            }
+        }
+    }
+
+    /// Nur bei Studios, die ihr Tattoofin-Abo über Apple bezahlen
+    private var aboAbschnitt: some View {
+        Section(Texte.Abo.abschnitt) {
+            let abo = studio?.apple
+            WertZeile(titel: Texte.Abo.bezahltUeber, wert: Texte.Abo.apple)
+            if let abo {
+                WertZeile(titel: Texte.Abo.status, wert: Texte.Abo.statusText(abo))
+                if let d = Datum.tag(abo.laeuftBis) { WertZeile(titel: Texte.Abo.laeuftBis, wert: d) }
+                if abo.istSandbox { Text(Texte.Abo.sandbox).font(.dm(.footnote)).foregroundStyle(Color.tfLeise) }
+            }
+            Button {
+                aboVerwalten = true
+            } label: {
+                Label(Texte.Abo.verwalten, systemImage: "creditcard")
+            }
+            .foregroundStyle(Color.tfTinte)
+            if abo?.istBeendet == true && istInhaber {
+                Button {
+                    aboErneuern = true
+                } label: {
+                    Label(Texte.Kasse.aboWiederAbschliessen, systemImage: "arrow.clockwise.circle")
+                }
+                .foregroundStyle(Color.tfTinte)
             }
         }
     }

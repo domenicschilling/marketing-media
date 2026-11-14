@@ -23,6 +23,7 @@ enum Einstellungen {
         static let studioName = "tf.studioName"
         static let sitzung = "tf.sitzung"
         static let kasseEntwurf = "tf.kasseEntwurf"
+        static let aboAbgleichAm = "tf.aboAbgleichAm"
     }
 
     /// Schlüsselbund-Einträge überleben eine Neuinstallation. Beim allerersten Start nach der Installation
@@ -30,6 +31,7 @@ enum Einstellungen {
     static func ersterStartAufraeumen() {
         guard !d.bool(forKey: K.installiert) else { return }
         KeychainStore.loeschen()
+        RegistrierungSpeicher.loeschen()
         d.set(true, forKey: K.installiert)
     }
 
@@ -69,9 +71,15 @@ enum Einstellungen {
         set { d.set(newValue.flatMap { try? JSONEncoder().encode($0) }, forKey: K.kasseEntwurf) }
     }
 
+    /// Letzter Abgleich des Apple-Abos mit dem Server (höchstens alle 6 Stunden)
+    static var aboAbgleichAm: Date? {
+        get { d.object(forKey: K.aboAbgleichAm) as? Date }
+        set { d.set(newValue, forKey: K.aboAbgleichAm) }
+    }
+
     /// Beim Abmelden: alles Studio-Bezogene vergessen (Merker „installiert“ bleibt).
     static func abmelden() {
-        for k in [K.faceID, K.einrichtungFertig, K.zahlseite, K.studioName, K.sitzung, K.kasseEntwurf] {
+        for k in [K.faceID, K.einrichtungFertig, K.zahlseite, K.studioName, K.sitzung, K.kasseEntwurf, K.aboAbgleichAm] {
             d.removeObject(forKey: k)
         }
     }

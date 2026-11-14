@@ -126,11 +126,12 @@ struct LeerAnsicht: View {
 struct HinweisKarte: View {
     let text: String
     var symbol: String = "exclamationmark.triangle.fill"
+    var schrift: Font = .dm(.subheadline, weight: .medium)
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
             Image(systemName: symbol).accessibilityHidden(true)
-            Text(text).font(.dm(.subheadline, weight: .medium)).fixedSize(horizontal: false, vertical: true)
+            Text(text).font(schrift).fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
         }
         .foregroundStyle(Color.tfBlau)
