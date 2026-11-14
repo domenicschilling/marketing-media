@@ -58,7 +58,8 @@ export const CFG = {
   // nicht mehr, Hinweis „Achtung! Kreditaufnahme kostet Geld.“ in der Studio-Werbung). Ältere Fassungen (archiviert, nie rückwirkend ändern):
   // /vertrag-2026-10d.html, /vertrag-2026-10c.html, /vertrag-2026-10b.html
   // 2026-12 (02.11.2026): Software zum festen Preis, Vergütung unabhängig von der Zahlart, keine Mitwirkung an Krediten, KMU-Bestätigung (Rechtsprüfung 01.11.2026, U8). Archiv zusätzlich /vertrag-2026-11.html
-  vertragVersion: "2026-12",
+  // 2026-12b (14.11.2026): neuer § 13 „Abschluss über die Tattoofin-App (Apple)“ (Abo per In-App-Kauf), App-Ansicht ohne Web-Preis. Archiv /vertrag-2026-12.html
+  vertragVersion: "2026-12b",
   // Blatt „Deine rechtliche Lage“ und Leistungsbestätigung: Version bei inhaltlichen Änderungen hochzählen (wird mit der Zustimmung gespeichert)
   rechtVersion: "2026-12",
   bestaetigungVersion: "2026-10b",
@@ -133,6 +134,9 @@ export const PAKETE = {
   risikofrei: { id: "risikofrei", name: "Risikofrei", modell: "provision", einrichtungNetto: 0, einmalNetto: 0, monatNetto: 0, provisionProzent: CFG.provisionProzent },
   monatlich: { id: "monatlich", name: "Monatlich", modell: "kauf", einrichtungNetto: 0, einmalNetto: 0, monatNetto: CFG.monatNetto, provisionProzent: 0, empfohlen: true },
   einmal: { id: "einmal", name: "Einmalzahlung", modell: "kauf", einrichtungNetto: CFG.kaufNetto, einmalNetto: CFG.kaufNetto, monatNetto: 0, provisionProzent: 0 },
+  // Seit 14.11.2026: Anmeldung in der iPhone-App, Abo per Apple-In-App-Kauf (StoreKit 2). Nie im Web wählbar (paketNeuWaehlbar), kein Preis hier:
+  // Den Preis setzt Domenic in App Store Connect, gespeichert wird nur, was Apple im signierten Kauf meldet (s.apple.preisMilli/waehrung).
+  app: { id: "app", name: "Monatlich (App Store)", modell: "kauf", einrichtungNetto: 0, einmalNetto: 0, monatNetto: 0, provisionProzent: 0, nurApp: true },
 };
 // Seit 26.10.2026 (Entscheidung Domenic): Paket Risikofrei ist für NEUE Anmeldungen geschlossen. Bestandsstudios (Antisocial Ink, Chic Tattoo Augsburg,
 // Santo Tattoo Dachau, Color Lab, Different tattoo Mudersbach) laufen unverändert weiter: Das Paket bleibt in PAKETE (paketVon, Abrechnung, Webhooks,
@@ -140,7 +144,38 @@ export const PAKETE = {
 export const risikofreiNeuErlaubt = () => ["1", "an", "true", "ja"].includes(String(process.env.RISIKOFREI_NEU || "").trim().toLowerCase());
 // Seit 02.11.2026 (Entscheidung Domenic): Es gibt für neue Anmeldungen nur noch einen Preis, Monatlich. Einmalzahlung bleibt im Code für den Notschalter EINMAL_NEU=1.
 export const einmalNeuErlaubt = () => ["1", "an", "true", "ja"].includes(String(process.env.EINMAL_NEU || "").trim().toLowerCase());
-export const paketNeuWaehlbar = (id) => Boolean(PAKETE[id]) && (id !== "risikofrei" || risikofreiNeuErlaubt()) && (id !== "einmal" || einmalNeuErlaubt());
+export const paketNeuWaehlbar = (id) => Boolean(PAKETE[id]) && !PAKETE[id].nurApp && (id !== "risikofrei" || risikofreiNeuErlaubt()) && (id !== "einmal" || einmalNeuErlaubt());
+// Studio zahlt sein Tattoofin-Abo über Apple (Anmeldung in der App)
+export const istApple = (s) => s?.abrechnung === "apple";
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Apple-Abo (In-App-Kauf, StoreKit 2). Werte bei jedem Aufruf aus der Umgebung (Tests setzen sie zur Laufzeit).
+//   APPLE_BUNDLE_ID (de.tattoofin.app) · APPLE_PRODUKT_ID (de.tattoofin.app.abo.monatlich) · APPLE_APP_ID (optional, numerische App-ID;
+//   gesetzt → muss bei Production-Benachrichtigungen passen) · APPLE_SANDBOX_STRIPE=1 (Stripe-Einrichtung auch für Sandbox-/TestFlight-Käufe, Standard AUS)
+//   Nur lokal (nurLokal()): APPLE_XCODE_TEST=1 (StoreKit-Testkäufe aus Xcode annehmen), APPLE_TEST_ROOT_PEM (Test-Wurzel statt Apple Root CA - G3)
+export const APPLE_PRODUKT_ID_STANDARD = "de.tattoofin.app.abo.monatlich";
+const anSchalter = (v) => ["1", "an", "true", "ja"].includes(String(v || "").trim().toLowerCase());
+export function appleCfg() {
+  return {
+    bundleId: env("APPLE_BUNDLE_ID", "de.tattoofin.app"),
+    produktId: env("APPLE_PRODUKT_ID", APPLE_PRODUKT_ID_STANDARD),
+    appId: env("APPLE_APP_ID", ""),
+    sandboxStripe: anSchalter(process.env.APPLE_SANDBOX_STRIPE),
+  };
+}
+// Lokal-Wächter (wie der feste App-Code): nur http://localhost, nicht in der Vorschau, nicht auf Netlify
+export const nurLokal = ({ siteUrl = CFG.siteUrl, vorschau = CFG.vorschau, netlify = process.env.NETLIFY } = {}) =>
+  /^http:\/\/localhost:\d+$/.test(siteUrl) && !vorschau && !netlify;
+let testSchalterGemeldet = false;
+// Test-Schalter für die JWS-Prüfung. Außerhalb von localhost werden sie ignoriert (einmal protokolliert).
+export function appleTestSchalter(ort) {
+  const xcode = anSchalter(process.env.APPLE_XCODE_TEST), root = String(process.env.APPLE_TEST_ROOT_PEM || "").trim();
+  if (!nurLokal(ort)) {
+    if ((xcode || root) && !testSchalterGemeldet) { testSchalterGemeldet = true; console.warn("[apple] APPLE_XCODE_TEST/APPLE_TEST_ROOT_PEM gelten nur lokal und werden ignoriert"); }
+    return { xcode: false, testRootPem: null };
+  }
+  return { xcode, testRootPem: root || null };
+}
 export const PAKETE_NEU_TEXT = "Dieses Paket gibt es für neue Anmeldungen nicht mehr. Tattoofin kostet jetzt einheitlich 49 € netto im Monat.";
 // URL-/Formular-Aliase: ?modell=provision → Risikofrei, ?modell=kauf → Einmalzahlung (auch alte Vorschau-Namen start/profi)
 export const PAKET_ALIAS = { provision: "risikofrei", kauf: "einmal", risikofrei: "risikofrei", monatlich: "monatlich", einmal: "einmal", einmalzahlung: "einmal", start: "risikofrei", profi: "einmal" };

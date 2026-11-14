@@ -1,11 +1,11 @@
 // Geschäftslogik: Benachrichtigungen, Zahlungslinks, Kündigung, Monatsabrechnung.
 import crypto from "node:crypto";
-import { CFG, plattformgebuehr, netto, provisionSatz, BAUSTEINE_SIMULIERT, paketVon, aufstellerInklusive, klarnaPlattformAus, risikofreiDirect } from "./config.mjs";
+import { CFG, plattformgebuehr, netto, provisionSatz, BAUSTEINE_SIMULIERT, paketVon, aufstellerInklusive, klarnaPlattformAus, risikofreiDirect, istApple, appleCfg } from "./config.mjs";
 import { sendMail } from "./mail.mjs";
 import { mails } from "./emails.mjs";
 import { stripe, taxRateId, ensureCustomer, TATTOOFIN_BRANDING } from "./stripe.mjs";
 import { checkoutBranding } from "./branding.mjs";
-import { allStudios, zahlungenVon, saveZahlung, getZahlung, getAbrechnung, saveAbrechnung, saveStudio, getStudio, log, store, plaetzeAufraeumen } from "./store.mjs";
+import { allStudios, zahlungenVon, saveZahlung, getZahlung, getAbrechnung, saveAbrechnung, saveStudio, getStudio, log, store, plaetzeAufraeumen, normEmail } from "./store.mjs";
 import { gutscheinAusstellen } from "./gutschein.mjs";
 import { gutscheinWort } from "./klarna-texte.mjs";
 import { monatsende, now, HttpError, clean } from "./util.mjs";
@@ -125,6 +125,8 @@ export async function aufstellerBezahlt(s, session) {
 // Paket Monatlich: Abo auf dem DSX-Konto zum Ende des laufenden Abrechnungsmonats beenden (bzw. Kündigung zurücknehmen).
 // Liefert das Vertragsende (ISO) oder null, wenn es kein Abo gibt.
 export async function aboKuendigen(s, kuendigen = true) {
+  // Apple-Abo: kündigt das Studio selbst in den Einstellungen seines Apple-Accounts, kein Stripe-Aufruf
+  if (istApple(s)) return null;
   const subId = s.stripe?.subscriptionId;
   if (!subId) return null;
   const sub = await stripe("POST", `/subscriptions/${subId}`, { cancel_at_period_end: kuendigen ? "true" : "false" });
@@ -588,7 +590,8 @@ export function provisionVerdient(z) {
 export async function monatsabrechnung(monat, { dryRun = false } = {}) {
   const ergebnis = [];
   for (const s of await allStudios()) {
-    if (s.demo) continue;
+    // Apple-Studios zahlen über den App Store: nie über Stripe abrechnen
+    if (s.demo || istApple(s)) continue;
     // Umgestellte Studios: Provisions-Zahlungen aus der Zeit vor der Umstellung werden noch abgerechnet
     const umgestellt = Boolean(s.stripe?.altKonto);
     if (!umgestellt && (s.modell !== "provision" || !s.stripe?.accountId)) continue;
@@ -666,17 +669,33 @@ export async function taeglicheJobs(heute = new Date()) {
   try { const n = await plaetzeAufraeumen(); if (n) out.push(["app-grenzen-aufgeraeumt", n]); } catch (e) { out.push(["app-grenzen-aufraeumen-fehler", e.message]); }
   // Rückfall, falls payout.paid/payout.failed am Connect-Endpoint nicht abonniert ist: fehlende Auszahlungs-Mitteilungen nachholen
   try { out.push(...(await auszahlungenNachholen())); } catch (e) { out.push(["auszahlungen-nachholen-fehler", e.message]); }
+  // Apple: Doppelschutz der Server-Benachrichtigungen nach 90 Tagen löschen, abgelaufene Registrier-Codes nach einem Tag
+  try { out.push(...(await appleAufraeumen())); } catch (e) { out.push(["apple-aufraeumen-fehler", e.message]); }
   for (const s of await allStudios()) {
     if (s.demo) continue;
     const alterStd = (Date.now() - new Date(s.createdAt).getTime()) / 3600e3;
+    // App-Entwürfe (Anmeldung in der App ohne Kauf): keine Erinnerungs-Mail (die würde auf die Web-Anmeldung führen, Apple 3.1.3),
+    // nach 30 Tagen ohne Kauf löschen
+    if (s.status === "entwurf" && istApple(s)) {
+      const ablauf = Date.parse(s.appEntwurf?.ablauf || "") || new Date(s.createdAt).getTime() + 30 * 864e5;
+      if (ablauf < Date.now()) { await appEntwurfLoeschen(s); out.push(["app-entwurf-geloescht", s.id]); }
+      continue;
+    }
+    // Apple-Studios: hat Apple eine Verlängerung nicht gemeldet? Einmal pro Zeitraum Admin-Mail, KEINE Sperre ohne Apple-Ereignis
+    if (istApple(s) && ["aktiv", "gekuendigt", "zahlungsproblem"].includes(s.apple?.status) && s.apple?.laeuftBis &&
+      Date.parse(s.apple.laeuftBis) + 72 * 3600e3 < Date.now() && s.apple.fehltGemeldetFuer !== s.apple.laeuftBis) {
+      s.apple.fehltGemeldetFuer = s.apple.laeuftBis; await saveStudio(s);
+      await notifyAdmin("Apple hat keine Verlängerung gemeldet – Benachrichtigungen prüfen", s, { Laeuft_bis: s.apple.laeuftBis, Apple_Status: s.apple.status, Transaktion: s.apple.originalTransactionId, Hinweis: "Studio ist NICHT gesperrt. Im App Store Connect prüfen, ob die Server-Benachrichtigungen ankommen." });
+      out.push(["apple-verlaengerung-fehlt", s.firma]);
+    }
     // Alte Entwürfe im (geschlossenen) Paket Risikofrei bekommen keine Erinnerung: Der Link würde in eine Sackgasse führen.
     if (s.status === "entwurf" && !s.erinnertAbbruch && alterStd > 20 && s.paket !== "risikofrei") {
       s.erinnertAbbruch = now(); await saveStudio(s);
       await notify(s, mails.anmeldungAbgebrochen(s, { resumeUrl: resumeUrl(s) }));
       out.push(["abbruch-erinnerung", s.firma]);
     }
-    // Stripe-Konto nach 2 und 7 Tagen noch nicht freigegeben → erinnern
-    if (["einrichtung", "zahlung_offen"].includes(s.status) && !s.stripe?.chargesEnabled) {
+    // Stripe-Konto nach 2 und 7 Tagen noch nicht freigegeben → erinnern (nicht bei Apple-Testkäufen: dort ist die Stripe-Einrichtung aus)
+    if (["einrichtung", "zahlung_offen"].includes(s.status) && !s.stripe?.chargesEnabled && !(istApple(s) && s.sandbox && !appleCfg().sandboxStripe)) {
       const seit = (Date.now() - new Date(s.vertrag?.akzeptiertAm || s.createdAt).getTime()) / 864e5;
       const stufe = seit > 7 ? 2 : seit > 2 ? 1 : 0;
       if (stufe > (s.connectErinnert || 0)) {
@@ -701,6 +720,29 @@ export async function taeglicheJobs(heute = new Date()) {
         out.push(["beendet", s.firma]);
       }
     }
+  }
+  return out;
+}
+
+// App-Entwurf ohne Kauf löschen (Studio, Index der App-Kennung, E-Mail-/Slug-Index nur, wenn er auf diesen Entwurf zeigt)
+export async function appEntwurfLoeschen(s) {
+  const uuid = s.appEntwurf?.appAccountToken;
+  if (uuid && (await store.get("idx/appentwurf/" + uuid)) === s.id) await store.del("idx/appentwurf/" + uuid);
+  for (const k of [s.email && "idx/email/" + s.email.toLowerCase(), s.email && "idx/emailn/" + normEmail(s.email), s.slug && "idx/slug/" + s.slug]) {
+    if (k && (await store.get(k)) === s.id) await store.del(k);
+  }
+  await store.del("studio/" + s.id);
+  await log("app-entwurf-geloescht", { studioId: s.id });
+}
+async function appleAufraeumen(jetzt = Date.now()) {
+  const out = [];
+  for (const k of await store.list("apple/notif/")) {
+    const v = await store.get(k);
+    if (!v?.am || Date.parse(v.am) < jetzt - 90 * 864e5) { await store.del(k); out.push(["apple-notif-geloescht", k.slice(12)]); }
+  }
+  for (const k of await store.list("appreg/")) {
+    const v = await store.get(k);
+    if (!v || Number(v.exp) < jetzt - 864e5) await store.del(k);
   }
   return out;
 }
@@ -735,7 +777,9 @@ export async function kuendigungEinreichen(s, { grund = "", garantie: wunschGara
     (!s.goLiveAt || Date.now() - new Date(s.goLiveAt).getTime() <= CFG.garantieTage * 864e5);
   // Paket Monatlich: Ende des laufenden Abrechnungsmonats des Abos (Stripe beendet das Abo dann selbst)
   let zum = garantie ? now() : kuendigungsDatum();
-  if (!garantie && s.paket === "monatlich" && s.stripe?.subscriptionId) {
+  // Apple-Abo: Vertrag endet mit dem bezahlten Zeitraum (die Zahlungen an Apple beendet das Studio selbst in seinem Apple-Account)
+  if (istApple(s)) zum = s.apple?.laeuftBis || kuendigungsDatum();
+  else if (!garantie && s.paket === "monatlich" && s.stripe?.subscriptionId) {
     try { zum = (await aboKuendigen(s, true)) || zum; }
     catch (e) { await notifyAdmin("⚠️ Abo konnte bei Stripe nicht gekündigt werden – bitte im Stripe-Dashboard zum Periodenende kündigen", s, { Abo: s.stripe.subscriptionId, Fehler: e.message }); }
   }
@@ -755,6 +799,7 @@ export async function kuendigungEinreichen(s, { grund = "", garantie: wunschGara
 export async function kuendigungZuruecknehmen(s) {
   if (s.status !== "gekuendigt" || s.kuendigung?.garantie) throw new HttpError(400, "Keine offene Kündigung, die zurückgenommen werden kann.");
   if (s.kuendigung?.durchAnbieter) throw new HttpError(409, "Diese Kündigung kam von Tattoofin. Bitte melde dich bei uns.");
+  if (istApple(s) && ["abgelaufen", "erstattet", "widerrufen"].includes(s.apple?.status)) throw new HttpError(409, "Dein Abo ist schon beendet. Schließ es in der App neu ab.");
   if (s.paket === "monatlich" && s.stripe?.subscriptionId) {
     if (s.stripe.aboBeendetAm || new Date(s.kuendigung.zum) <= new Date()) throw new HttpError(409, "Dein Abo ist schon beendet. Bitte melde dich bei uns, dann starten wir es neu.");
     try { await aboKuendigen(s, false); }

@@ -70,11 +70,12 @@ export const handler = (fn) => async (req, context) => {
   }
   catch (e) {
     if (!e.status) console.error(e);
-    return json({ error: e.stripe?.message || e.message || "Unbekannter Fehler" }, e.status || 500);
+    // fehlerCode/extra (z. B. Apple-Abo, App-Registrierung): maschinenlesbarer code wie bei den App-Endpunkten
+    return json({ error: e.stripe?.message || e.message || "Unbekannter Fehler", ...(e.fehlerCode ? { code: e.fehlerCode } : {}), ...(e.extra || {}) }, e.status || 500);
   }
 };
 
-export class HttpError extends Error { constructor(status, message) { super(message); this.status = status; } }
+export class HttpError extends Error { constructor(status, message, fehlerCode, extra) { super(message); this.status = status; if (fehlerCode) this.fehlerCode = fehlerCode; if (extra) this.extra = extra; } }
 
 // "1.500,50 €" → 150050 (Cent)
 export function parseBetrag(v) {

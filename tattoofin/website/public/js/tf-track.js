@@ -111,7 +111,7 @@ window.TFTrack = (function () {
     document.querySelectorAll("a[href]").forEach(function (a) {
       var h = a.getAttribute("href") || "";
       var eigen = /^\/(?!\/)/.test(h) || /^https?:\/\/(www\.)?tattoofin\.de/.test(h);
-      if (eigen && !/(impressum|datenschutz|vertrag)\.html/.test(h) || a.hasAttribute("data-cookies")) {
+      if (eigen && !/(impressum|datenschutz|vertrag|avv)\.html/.test(h) || a.hasAttribute("data-cookies")) {
         var sp = document.createElement("span"); sp.textContent = a.textContent; a.replaceWith(sp);
       }
     });

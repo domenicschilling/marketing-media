@@ -18,7 +18,7 @@ try { ({ chromium } = require("playwright")); } catch { ({ chromium } = require(
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const RUNDE = process.argv[2] || "1";
-const PORT = 8898, BASE = `http://localhost:${PORT}`, STRIPE = "http://localhost:12111";
+const PORT = Number(process.env.BETRIEB_PORT || 8898), BASE = `http://localhost:${PORT}`, STRIPE = `http://localhost:${Number(process.env.STRIPE_MOCK_PORT || 12111)}`;
 const shots = path.join(os.tmpdir(), "tf-betrieb-" + RUNDE);
 fs.mkdirSync(shots, { recursive: true });
 const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "tf-betrieb-data-"));
@@ -920,7 +920,7 @@ await abschnitt("17 Recht (27.10.2026): Klarna-Stichtag 20.11.2026 für Risikofr
   const altVertrag = await holen("/vertrag-2026-10d.html");
   check(/kein Kreditvermittler/.test(altVertrag) && /archiviert/.test(altVertrag), "Alte Vertragsfassung 2026-10d bleibt unverändert als Archiv (nicht rückwirkend ändern)", "");
   const cfgV = (await json("/api/config")).data;
-  check(cfgV.vertragVersion === "2026-12" && cfgV.rechtVersion === "2026-12", "Versionen hochgezählt: Vertrag und Rechtsblatt 2026-12", `${cfgV.vertragVersion}/${cfgV.rechtVersion}`);
+  check(cfgV.vertragVersion === "2026-12b" && cfgV.rechtVersion === "2026-12", "Versionen hochgezählt: Vertrag 2026-12b (seit 14.11.2026 mit § 13 Apple-Abo) und Rechtsblatt 2026-12", `${cfgV.vertragVersion}/${cfgV.rechtVersion}`);
   const ratenText = raten.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g, " ").replace(/<[^>]+>/g, " ");
   const kopfDaten = (raten.match(/<title>[\s\S]*?<\/title>/) || [""])[0] + (raten.match(/<meta name="description"[^>]*>/) || [""])[0] + (raten.match(/<script type="application\/ld\+json">[\s\S]*?<\/script>/) || [""])[0];
   check(!/zinsfrei|ohne Schufa|ohne Gebühr|0\s?%|monatlich ab|pro Monat/i.test(ratenText) && !/Raten|Klarna/.test(kopfDaten), "/raten: kein zinsfrei/ohne Schufa/Ratenbeträge; Titel, Meta und Schema ohne Raten/Klarna", "");
@@ -1116,7 +1116,7 @@ await abschnitt("19 Altstudio stellt um: Zustimmung, 29 €, neues eigenes Konto
   const nach = await detail(a.id);
   const sn = nach.studio;
   check(sn.modell === "kauf" && sn.paket === "monatlich" && sn.monatNetto === 2900 && sn.status === "einrichtung" && sn.stripe.accountId === null && sn.stripe.altKonto?.accountId === altKonto && sn.stripe.subscriptionId, "Nach Zahlung: Monatlich 29 €, altes Konto vermerkt, neues Konto fehlt noch", JSON.stringify(sn.stripe.altKonto));
-  check(sn.vertrag.version === "2026-12" && sn.vertrag.kmu === true && sn.vertragAlt?.length === 1, "Neuer Vertrag gespeichert, alter bleibt nachvollziehbar", sn.vertrag.version);
+  check(sn.vertrag.version === "2026-12b" && sn.vertrag.kmu === true && sn.vertragAlt?.length === 1, "Neuer Vertrag gespeichert, alter bleibt nachvollziehbar", sn.vertrag.version);
   check(mailsAn("umstellung@betrieb.test").some((m) => /Wechsel ist bestätigt/.test(m.subject)), "Bestätigung per Mail", "");
 
   // Altes Konto meldet sich: darf den Status nicht verfälschen

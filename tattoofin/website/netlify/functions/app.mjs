@@ -9,88 +9,48 @@
 //   PUT    /api/app/push             { token, platform, umgebung, mitteilungen? }   DELETE /api/app/push   POST /api/app/push/test
 //   GET    /api/app/auszahlungen?limit=20&nach=po_…   Auszahlungen + Saldo vom Stripe-Konto des Studios
 //   GET    /api/app/team · PUT /api/app/team { emails, alleAbmelden? } (nur Inhaber) · DELETE /api/app/team/ich (nur Team)
-//   POST   /api/app/konto-loeschen   { bestaetigung: "LÖSCHEN", grund? }  (nur Inhaber) → Kündigung zum Monatsende + Löschanfrage
+//   POST   /api/app/konto-loeschen   { bestaetigung: "LÖSCHEN", grund? }  (nur Inhaber) → Kündigung zum Monatsende (Apple-Abo: zum Ende des
+//                                     bezahlten Zeitraums) + Löschanfrage; Antwort mit appleAbo: true|false
 //   POST   /api/app/demo-zahlung/:id  nur Demo-Studio (App-Prüfung): offenen Link als bezahlt markieren (Testzahlung, kein Geld) + Mitteilung
+//   POST   /api/app/registrieren/code | /registrieren/pruefen | /registrieren   neues Studio in der App (seit 14.11.2026, _lib/app-registrierung.mjs)
+//   POST   /api/app/abo/bestaetigen | /abo/wiederherstellen | /abo/aktualisieren   Apple-Abo (StoreKit 2, _lib/apple.mjs)
+//   Code-Prüfung, Grenzen und Geräte-Anlage gemeinsam in _lib/app-code.mjs
 // Grenzen (atomar, store.zaehleAtomar/belegePlatz: jeder Versuch belegt einen eigenen Platz, parallele Anfragen zählen richtig):
 // Code-Mails 3 pro Adresse in 15 Min., 10 pro Adresse und Tag, 20 pro IP und Stunde; Anmelde-Versuche 30 pro IP und Stunde,
 // 15 pro Adresse und Tag (über alle Codes); Code 10 Min. gültig (APP_CODE_MINUTEN), höchstens 5 Versuche je Code.
 // Alle Antworten mit Cache-Control: no-store.
 // Review-Zugang für Apple: APP_REVIEW_EMAIL + APP_REVIEW_CODE (6 Ziffern) + APP_REVIEW_STUDIO_ID, nur wenn alle drei gesetzt sind und das
 // Studio demo:true hat (_lib/app-demo.mjs). Nur lokal (http://localhost, nicht auf Netlify): APP_LOKAL_CODE = fester Code statt Zufall.
-import crypto from "node:crypto";
-import { CFG, SECRETS } from "./_lib/config.mjs";
-import { json, body, clean, handler, clientIp, isEmail, now } from "./_lib/util.mjs";
-import { store, getStudio, saveStudio, studiosPerEmail, AKTIV, zaehleVersuch, zaehleAtomar, belegePlatz, normEmail, log, getZahlung, saveZahlung } from "./_lib/store.mjs";
-import { currentStudio, sign, verify } from "./_lib/auth.mjs";
+import { body, clean, handler, now, clientIp, isEmail } from "./_lib/util.mjs";
+import { store, getStudio, saveStudio, AKTIV, zaehleVersuch, zaehleAtomar, normEmail, log, getZahlung, saveZahlung } from "./_lib/store.mjs";
+import { currentStudio, verify } from "./_lib/auth.mjs";
 import { notify, notifyAdmin, kuendigungEinreichen } from "./_lib/domain.mjs";
 import { mails } from "./_lib/emails.mjs";
 import { warteschlangeStatus } from "./_lib/mail.mjs";
 import { stripe } from "./_lib/stripe.mjs";
-import { PLATTFORMEN, geraetAnlegen, geraetLaden, geraetAktualisieren, geraetWiderrufen, geraeteWiderrufen, geraetOeffentlich, geraeteVon, rolleFuer, pushIndex } from "./_lib/app-geraete.mjs";
+import { PLATTFORMEN, geraetLaden, geraetAktualisieren, geraetWiderrufen, geraeteWiderrufen, geraetOeffentlich, geraeteVon, rolleFuer, pushIndex } from "./_lib/app-geraete.mjs";
 import { apnsAktiv, pushTest, pushAnStudio, mitZeitlimit, nachrichtZahlung } from "./_lib/push.mjs";
 import { demoAuszahlungen } from "./_lib/app-demo.mjs";
 import { oeffentlich, fuerStudio } from "./_lib/studio-ansicht.mjs";
 import { gutscheinAusstellen } from "./_lib/gutschein.mjs";
+import { istApple } from "./_lib/config.mjs";
+import { aj, fehler, hash, T, reviewFuer, codeIpErlaubt, codeAdresseErlaubt, aktiveStudios, anmeldeCodeSenden, reviewPruefen, codePruefen, nachAnmeldeCode, geraetFertig } from "./_lib/app-code.mjs";
+import { appRegistrierungRoute } from "./_lib/app-registrierung.mjs";
 
-const aj = (daten, status = 200) => json(daten, status, { "cache-control": "no-store" });
-const fehler = (error, status, code, extra = {}) => aj({ error, ...(code ? { code } : {}), ...extra }, status);
-const hash = (x) => crypto.createHmac("sha256", SECRETS.sessionSecret).update(String(x)).digest("hex").slice(0, 32);
-const codeHash = (email, code) => crypto.createHmac("sha256", SECRETS.sessionSecret).update(`${email}:${code}`).digest("hex");
-const gleich = (a, b) => { const x = Buffer.from(String(a)), y = Buffer.from(String(b)); return x.length === y.length && crypto.timingSafeEqual(x, y); };
-const minuten = () => Math.min(60, Math.max(1, Math.round(Number(process.env.APP_CODE_MINUTEN) || 10)));
 const berlinTag = (ms) => new Date(ms).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" });
-const MAX_VERSUCHE = 5;                 // je Code
-const MAX_MAILS_TAG = 10, MAX_VERSUCHE_TAG = 15;   // je Adresse und Tag (über alle Codes)
-const TAG_MS = 864e5;
-const T = {
-  login: "Bitte einloggen", eingabe: "Bitte E-Mail und den 6-stelligen Code eingeben.", falsch: "Der Code stimmt nicht.",
-  abgelaufen: "Der Code ist abgelaufen. Fordere einfach einen neuen an.", gesperrt: "Zu viele falsche Versuche. Bitte fordere einen neuen Code an.",
-  zuViele: "Zu viele Versuche. Bitte warte kurz.", auswahl: "Ungültige Auswahl.", platform: "Unbekannte Plattform.",
-  zuVieleHeute: "Zu viele Anmelde-Versuche mit dieser Adresse. Aus Sicherheitsgründen geht es erst morgen wieder. Fragen? info@tattoofin.de",
-  nurInhaber: "Nur der Inhaber kann das ändern.",
-};
-
-// Review-Zugang (App-Prüfung bei Apple): nur mit allen drei Variablen und Demo-Studio
-function reviewKonfig() {
-  const e = normEmail(process.env.APP_REVIEW_EMAIL || ""), c = String(process.env.APP_REVIEW_CODE || ""), sid = String(process.env.APP_REVIEW_STUDIO_ID || "");
-  return e && /^\d{6}$/.test(c) && sid ? { email: e, code: c, studioId: sid } : null;
-}
-async function reviewFuer(email) {
-  const k = reviewKonfig();
-  if (!k || k.email !== email) return null;
-  const s = await getStudio(k.studioId);
-  return s?.demo ? { ...k, s } : null;
-}
-// Fester Code nur für den lokalen Nachbau (dev/app-lokal.mjs), nie auf Netlify
-const lokalerCode = () => {
-  const c = String(process.env.APP_LOKAL_CODE || "");
-  return /^\d{6}$/.test(c) && /^http:\/\/localhost:\d+$/.test(CFG.siteUrl) && !CFG.vorschau && !process.env.NETLIFY ? c : null;
-};
 
 // ---------------------------------------------------------------- Code anfordern
 async function codeAnfordern(req, context) {
   const b = await body(req);
-  const lokal = lokalerCode();   // nur lokal: fester Code, ohne Grenzen (damit man im Simulator beliebig oft testen kann)
-  const ipOk = lokal || (await zaehleAtomar(`rl/appcode-ip/${hash(clientIp(req, context) || "?")}`, 20, 3600e3));
+  const ipOk = await codeIpErlaubt(req, context);
   const antwort = async () => aj({ ok: true, verzoegert: (await warteschlangeStatus()).anzahl > 0 });
   const email = normEmail(clean(b.email, 160));
   if (!ipOk || !isEmail(email)) return antwort();
   if (await reviewFuer(email)) return antwort();   // Review: keine Mail, kein gespeicherter Code (fester APP_REVIEW_CODE)
-  if (!lokal && !(await zaehleAtomar(`rl/appcode-mail/${hash(email)}`, 3, 15 * 60e3))) return antwort();
-  // Obergrenze pro Tag (gegen Raten über viele neue Codes und gegen Mail-Flut an den Inhaber)
-  if (!lokal && !(await zaehleAtomar(`rl/appcode-tag/${hash(email)}`, MAX_MAILS_TAG, TAG_MS))) return antwort();
-  const studios = (await studiosPerEmail(email)).filter((s) => AKTIV(s) && !s.demo).slice(0, 3);
+  if (!(await codeAdresseErlaubt(email))) return antwort();
+  const studios = await aktiveStudios(email);
   if (!studios.length) return antwort();
-  const code = lokal || String(crypto.randomInt(0, 1e6)).padStart(6, "0");
-  const min = minuten();
-  // Ein neuer Code ersetzt den alten (und setzt die Fehlversuche zurück)
-  // id: Kennung dieses Codes für die Versuchs-Plätze (rl/appversuch/…/<exp>-<id>/<n>)
-  await store.set(`appcode/${hash(email)}`, { codeHash: codeHash(email, code), exp: Date.now() + min * 60e3, versuche: 0, id: crypto.randomBytes(6).toString("hex"), studioIds: studios.map((s) => s.id), am: now() });
-  // Eine Mail genügt (der Code gilt für alle Studios dieser Adresse). Team-Adresse bekommt sie an sich selbst (wie login.mjs).
-  const s = studios[0];
-  const an = normEmail(s.email) === email ? undefined : (s.teamEmails || []).find((t) => normEmail(t) === email);
-  await notify(s, mails.appCode(s, { code, minuten: min }), an);
-  await log("app-code", { studioId: s.id, studios: studios.length });
+  await anmeldeCodeSenden(email, studios);
   return antwort();
 }
 
@@ -118,69 +78,18 @@ async function anmelden(req, context) {
   const code = String(b.code ?? "").replace(/\s+/g, "");
   if (!isEmail(email) || !/^\d{6}$/.test(code)) return fehler(T.eingabe, 400, "eingabe");
 
-  // Tagesgrenze je Adresse (über alle Codes, atomar). Lokal (fester Code im Simulator) ohne Tagesgrenze.
-  const tagesPlatz = async () => {
-    if (lokalerCode() || (await zaehleAtomar(`rl/appversuch-tag/${hash(email)}`, MAX_VERSUCHE_TAG, TAG_MS))) return true;
-    // Einmal pro Adresse und Tag dem Admin Bescheid geben (atomar, damit es nicht mehrfach kommt)
-    if (await store.setNeu(`rl/appsperre-hinweis/${hash(email)}/${(Math.floor(Date.now() / TAG_MS) + 1) * TAG_MS}/1`, { am: now() })) {
-      await log("app-anmeldung-tagesgrenze", { adresse: hash(email) });
-      await notifyAdmin("App-Anmeldung: sehr viele Code-Versuche für eine Adresse (für heute gesperrt)", null, { Adresse: email.replace(/^(.)[^@]*(@.*)$/, "$1•••••$2"), Grenze: `${MAX_VERSUCHE_TAG} Versuche pro Tag` });
-    }
-    return false;
-  };
-
   const review = await reviewFuer(email);
   if (review) {
-    // Fester Review-Code: 5 Versuche je 15 Minuten (atomar), dazu die Tagesgrenze
-    if (!(await tagesPlatz())) return fehler(T.zuVieleHeute, 429, "zu_viele_heute");
-    const fenster = (Math.floor(Date.now() / (15 * 60e3)) + 1) * 15 * 60e3;
-    const n = await belegePlatz(`rl/appreview/${hash(email)}`, MAX_VERSUCHE, fenster);
-    if (!n) return fehler(T.gesperrt, 410, "code_gesperrt");
-    if (!gleich(code, review.code)) {
-      if (n >= MAX_VERSUCHE) return fehler(T.gesperrt, 410, "code_gesperrt");
-      return fehler(T.falsch, 400, "code_falsch", { restVersuche: MAX_VERSUCHE - n });
-    }
-    return fertig(review.s, email, gd);
+    const r = await reviewPruefen(review, email, code);
+    return r.antwort || fertig(r.s, email, gd);
   }
-
-  const key = `appcode/${hash(email)}`;
-  const rec = await store.get(key);
-  if (!rec || !(Number(rec.exp) > Date.now())) { if (rec) await store.del(key); return fehler(T.abgelaufen, 410, "code_abgelaufen"); }
-  if (!(await tagesPlatz())) return fehler(T.zuVieleHeute, 429, "zu_viele_heute");
-  // Jeder Versuch belegt atomar einen von 5 Plätzen dieses Codes, ERST DANN wird verglichen.
-  // Auch hunderte gleichzeitige Anfragen bekommen so zusammen höchstens 5 Vergleiche.
-  const n = await belegePlatz(`rl/appversuch/${hash(email)}`, MAX_VERSUCHE, `${Number(rec.exp)}-${rec.id || Date.parse(rec.am) || 0}`);
-  if (!n) { await store.del(key); return fehler(T.gesperrt, 410, "code_gesperrt"); }
-  if (!gleich(rec.codeHash, codeHash(email, code))) {
-    if (n >= MAX_VERSUCHE) { await store.del(key); await log("app-code-gesperrt", { studios: rec.studioIds?.length || 0 }); return fehler(T.gesperrt, 410, "code_gesperrt"); }
-    return fehler(T.falsch, 400, "code_falsch", { restVersuche: MAX_VERSUCHE - n });
-  }
-  // Richtiger Code: genau einmal verwendbar (atomar), dann löschen
-  if (!(await store.setNeu(`einmal/appcode-${rec.codeHash.slice(0, 32)}-${Date.parse(rec.am) || 0}`, { am: now(), t: "appcode", exp: rec.exp }))) return fehler(T.abgelaufen, 410, "code_abgelaufen");
-  // Zwischendurch neuer Code angefordert oder gesperrt? Dann gilt dieser nicht mehr.
-  const nochDa = await store.get(key);
-  if (!nochDa || nochDa.codeHash !== rec.codeHash || nochDa.id !== rec.id) return fehler(T.abgelaufen, 410, "code_abgelaufen");
-  await store.del(key);
-  const studios = (await Promise.all((rec.studioIds || []).map((sid) => getStudio(sid)))).filter((s) => AKTIV(s) && !s.demo && rolleFuer(s, email));
-  if (!studios.length) return fehler(T.abgelaufen, 410, "code_abgelaufen");
-  if (studios.length === 1) return fertig(studios[0], email, gd);
-  const ids = studios.map((s) => s.id);
-  return aj({
-    auswahl: studios.map((s) => ({ id: s.id, firma: s.firma, ort: s.ort || "" })),
-    auswahlToken: sign({ t: "appauswahl", email, ids, exp: Date.now() + 5 * 60e3, n: crypto.randomBytes(9).toString("base64url") }),
-  });
+  const c = await codePruefen(`appcode/${hash(email)}`, email, code);
+  if (c.antwort) return c.antwort;
+  const n = await nachAnmeldeCode(c.rec, email, gd);
+  return n.antwort || aj(n.daten);
 }
 
-async function fertig(s, email, gd) {
-  const rolle = rolleFuer(s, email);
-  const { geraet, token } = await geraetAnlegen(s, {
-    email, rolle, platform: gd.platform, name: clean(gd.name, 60), modell: clean(gd.modell, 40), osVersion: clean(gd.osVersion, 20), appVersion: clean(gd.appVersion, 30),
-  });
-  await log("app-anmeldung", { studioId: s.id, geraetId: geraet.id, platform: geraet.platform, rolle });
-  // Hinweis an die Hauptadresse (Demo-Studio: notify schickt nichts)
-  await notify(s, mails.appNeuesGeraet(s, { name: geraet.name, email: geraet.email, modell: geraet.modell }));
-  return aj({ token, geraet: { id: geraet.id, name: geraet.name, platform: geraet.platform, rolle }, studio: { id: s.id, firma: s.firma, ort: s.ort || "" } });
-}
+const fertig = async (s, email, gd) => aj(await geraetFertig(s, email, gd));
 
 // ---------------------------------------------------------------- Auszahlungen
 const STATUS_TEXT = { paid: "Angekommen", in_transit: "Unterwegs", pending: "Wird vorbereitet", failed: "Fehlgeschlagen", canceled: "Abgebrochen" };
@@ -272,7 +181,8 @@ async function kontoLoeschen(s, ich, req) {
   await log("app-loeschanfrage", { studioId: s.id, geraetId: ich.geraetId, zum, loeschungAb });
   await notify(s, mails.loeschAnfrage(s, { zum, loeschungAb }));
   await notifyAdmin("Löschanfrage aus der App", s, { Kuendigung_zum: zum, Loeschung_ab: loeschungAb, Grund: grund || "–" });
-  return aj({ ok: true, kuendigungZum: zum, loeschungAb, studio: oeffentlich(s) });
+  // appleAbo: Die App zeigt dann „Kündige es zusätzlich in den Einstellungen deines Apple-Accounts“ (Zahlungen an Apple laufen sonst weiter)
+  return aj({ ok: true, kuendigungZum: zum, loeschungAb, appleAbo: istApple(s), studio: oeffentlich(s) });
 }
 
 // ---------------------------------------------------------------- Verteiler
@@ -284,6 +194,8 @@ async function route(req, context) {
 
   if (bereich === "code") return m === "POST" ? codeAnfordern(req, context) : fehler("Methode nicht erlaubt", 405);
   if (bereich === "anmelden") return m === "POST" ? anmelden(req, context) : fehler("Methode nicht erlaubt", 405);
+  // Neues Studio-Konto in der App + Apple-Abo (_lib/app-registrierung.mjs). Prüft die Anmeldung selbst (teils ohne Token).
+  if (bereich === "registrieren" || bereich === "abo") return appRegistrierungRoute(req, context, bereich, sub);
 
   // Ab hier nur mit App-Token (kein Cookie, keine Admin-Ansicht)
   const s = await currentStudio(req);

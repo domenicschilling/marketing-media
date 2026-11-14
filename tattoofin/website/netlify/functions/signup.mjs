@@ -10,8 +10,9 @@
 // GET  /api/signup?id=…  → Status für Danke-Seite bzw. Fortsetzen
 // GET  /api/signup?pakete=1 → die Pakete, die neu gewählt werden können (öffentlich; ohne Risikofrei)
 // Alte Links: ?modell=provision → Risikofrei, ?modell=kauf → Einmalzahlung. Der Aktionscode (RATENJA) ist abgeschaltet.
-import { CFG, PAKETE, PAKET_ALIAS, paketNeuWaehlbar, PAKETE_NEU_TEXT } from "./_lib/config.mjs";
-import { json, fail, body, clean, isEmail, id, now, handler, clientIp, brutto, addMonths } from "./_lib/util.mjs";
+import { CFG, PAKETE, PAKET_ALIAS, paketNeuWaehlbar, PAKETE_NEU_TEXT, istApple } from "./_lib/config.mjs";
+import { json, fail, body, clean, id, now, handler, clientIp, brutto, addMonths } from "./_lib/util.mjs";
+import { studioDatenPruefen } from "./_lib/anmeldung-daten.mjs";
 import { getStudio, saveStudio, studioBy, store, log, normEmail, studiosPerEmail, AKTIV } from "./_lib/store.mjs";
 import { stripe, ensureCustomer, taxRateId, TATTOOFIN_BRANDING } from "./_lib/stripe.mjs";
 import { notify, notifyAdmin, slugify, einrichtungUrl, paketDetails, resumeUrl } from "./_lib/domain.mjs";
@@ -55,21 +56,9 @@ export default handler(async (req, context) => {
   const paket = PAKETE[paketId];
   const modell = geschenk ? "kauf" : paket ? paket.modell : null;
   const zahlart = geschenk ? "geschenk" : paketId === "risikofrei" ? "provision" : paketId === "monatlich" ? "abo" : (b.zahlart === "rechnung" ? "rechnung" : "sofort");
-  const d = {
-    firma: clean(b.firma, 120), inhaber: clean(b.inhaber, 120), strasse: clean(b.strasse, 120), plz: clean(b.plz, 10),
-    ort: clean(b.ort, 80), email: clean(b.email, 160).toLowerCase(), telefon: clean(b.telefon, 40),
-    studioTelefon: clean(b.studioTelefon, 40), ustid: clean(b.ustid, 30).toUpperCase(), artists: clean(b.artists, 10),
-    unterzeichner: clean(b.unterzeichner, 120), website: clean(b.website, 160),
-  };
-  const fehlt = [];
-  if (!modell) fehlt.push("Paket");
-  for (const [k, n] of [["firma", "Studio/Firma"], ["inhaber", "Inhaber"], ["strasse", "Straße"], ["plz", "PLZ"], ["ort", "Ort"], ["telefon", "Mobilnummer"], ["studioTelefon", "Studio-Telefonnummer"], ["unterzeichner", "Name des Unterzeichners"]]) if (!d[k]) fehlt.push(n);
-  if (!isEmail(d.email)) fehlt.push("gültige E-Mail");
-  // Plausibilität (nicht nur „nicht leer“): PLZ 5 Ziffern, Telefonnummern mit mindestens 6 Ziffern
-  const ziffern = (x) => String(x || "").replace(/\D/g, "").length;
-  if (d.plz && !/^\d{5}$/.test(d.plz)) fehlt.push("PLZ (5 Ziffern)");
-  if (d.telefon && ziffern(d.telefon) < 6) fehlt.push("Mobilnummer (mindestens 6 Ziffern)");
-  if (d.studioTelefon && ziffern(d.studioTelefon) < 6) fehlt.push("Studio-Telefonnummer (mindestens 6 Ziffern)");
+  // Gleiche Prüfung wie in der App (_lib/anmeldung-daten.mjs). Paket „app“ gibt es im Web nicht (kein Alias) → „Paket“ fehlt.
+  const { d, fehlt: fehltDaten } = studioDatenPruefen(b);
+  const fehlt = [...(modell ? [] : ["Paket"]), ...fehltDaten];
   if (fehlt.length) return fail("Bitte ausfüllen: " + fehlt.join(", "));
   if (!(b.akzeptiert?.vertrag && b.akzeptiert?.avv && b.akzeptiert?.unternehmer)) return fail("Bitte Vertrag, AVV und Unternehmereigenschaft bestätigen.");
   // KMU-Bestätigung seit Vertrag 2026-12 (§ 34k Abs. 4 Nr. 3 GewO: Ausnahme nur für kleine und mittlere Unternehmen)
@@ -81,6 +70,9 @@ export default handler(async (req, context) => {
   let s = b.resumeId ? await getStudio(b.resumeId) : await studioBy("email", d.email);
   if (s && !["entwurf", "abgebrochen"].includes(s.status)) return fail("Für diese E-Mail gibt es schon einen Vertrag. Bitte logge dich im Studio-Portal ein.", 409);
   if (s && s.email !== d.email && b.resumeId) s = null;
+  // Offener App-Entwurf (Anmeldung in der App ohne Kauf) wird vom Web übernommen: Apple-Felder entfernen, damit ein späterer
+  // Apple-Kauf diesen Entwurf nicht mehr aktiviert (landet dann als „Apple-Abo ohne Studio“ beim Admin)
+  const appEntwurf = s && istApple(s) ? s.appEntwurf : null;
 
   if (geschenk && normEmail(geschenk.email) !== normEmail(d.email)) return fail(`Diese Einladung gilt für ${geschenk.email}. Bitte nutze diese E-Mail-Adresse.`);
   // preisNetto = einmaliger Betrag (Einmalzahlung), monatNetto = Monatsbetrag (Monatlich)
@@ -102,6 +94,11 @@ export default handler(async (req, context) => {
     },
     stripe: s?.stripe || {},
   };
+  if (appEntwurf !== null) {
+    delete s.abrechnung; delete s.appEntwurf;
+    if (appEntwurf?.appAccountToken && (await store.get("idx/appentwurf/" + appEntwurf.appAccountToken)) === s.id) await store.del("idx/appentwurf/" + appEntwurf.appAccountToken);
+    await log("app-entwurf-im-web-uebernommen", { studioId: s.id });
+  }
   if (!s.slug) {
     let slug = slugify(d.firma), n = 1;
     while (await studioBy("slug", slug)) slug = slugify(d.firma) + "-" + (++n);

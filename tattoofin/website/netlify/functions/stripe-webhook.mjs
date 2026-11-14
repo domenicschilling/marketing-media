@@ -16,7 +16,7 @@
 //      Für das Paket Monatlich (Abo) zusätzlich empfohlen: customer.subscription.deleted (Abo von Stripe beendet,
 //      z. B. nach endgültig fehlgeschlagenen Zahlungen) – wird unten verarbeitet, sobald das Ereignis abonniert ist.
 //   Secrets: STRIPE_WEBHOOK_SECRET (1) und STRIPE_CONNECT_WEBHOOK_SECRET (2)
-import { CFG } from "./_lib/config.mjs";
+import { CFG, istApple } from "./_lib/config.mjs";
 import { json, fail, now, brutto, handler } from "./_lib/util.mjs";
 import { stripe, verifyWebhook } from "./_lib/stripe.mjs";
 import { getStudio, saveStudio, studioBy, store, log, zahlungBy, saveZahlung } from "./_lib/store.mjs";
@@ -29,6 +29,15 @@ const id = (x) => (x && typeof x === "object" ? x.id : x || "");
 
 async function studioFuer(obj) {
   return (await getStudio(obj?.metadata?.studioId || obj?.client_reference_id)) || (await studioBy("cus", obj?.customer));
+}
+
+// Studios mit Apple-Abo (Anmeldung in der App) zahlen ihr Tattoofin-Paket über den App Store: Stripe-Ereignisse zum Paket ändern
+// dort nichts (kein Status, keine Rechnungsmails). Nur Admin-Mail. true = Ereignis erledigt.
+async function appleWaechter(s, event) {
+  if (!s || !istApple(s)) return false;
+  await notifyAdmin("Stripe-Ereignis für App-Studio (zahlt über Apple) – nichts geändert, bitte prüfen", s, { Ereignis: event.type, Objekt: event.data?.object?.id || "–" });
+  await log("stripe-ereignis-app-studio", { studioId: s.id, ereignis: event.type });
+  return true;
 }
 
 // Checkout, Erstattungen und Rückbuchungen von Kundenzahlungen (beide Modelle)
@@ -216,6 +225,7 @@ export default handler(async (req) => {
         // QR-Aufsteller einzeln gekauft (29 € netto): nur vermerken + Admin-Mail, Studio-Status bleibt unverändert
         if (o.metadata?.typ === "aufsteller") { await aufstellerBezahlt(s, o); break; }
         // Altstudio stellt auf den festen Monatspreis um
+        if (await appleWaechter(s, event)) break;
         if (s && o.mode === "subscription" && o.metadata?.umstellung === "1") { await umstellungAbschliessen(s, o); break; }
         // Paket Monatlich: Abo gestartet (erste Monatsrechnung ist bezahlt bzw. bei Lastschrift eingeleitet)
         if (s && o.mode === "subscription" && s.status === "entwurf") {
@@ -258,6 +268,7 @@ export default handler(async (req) => {
       }
       case "invoice.paid": {
         const s = await studioFuer(o);
+        if (await appleWaechter(s, event)) break;
         if (s && ["kauf", "setup"].includes(o.metadata?.typ) && s.status === "zahlung_offen") {
           s.status = "einrichtung";
           s.bezahltAm = now();
@@ -271,6 +282,7 @@ export default handler(async (req) => {
       // Paket Monatlich: Stripe hat das Abo beendet (Kündigung zum Periodenende oder endgültig fehlgeschlagene Zahlung)
       case "customer.subscription.deleted": {
         const s = (await getStudio(o.metadata?.studioId)) || (await studioBy("cus", o.customer));
+        if (await appleWaechter(s, event)) break;
         if (!s || s.stripe?.subscriptionId !== o.id) break;
         s.stripe.aboBeendetAm = now();
         await saveStudio(s);
@@ -280,7 +292,7 @@ export default handler(async (req) => {
       }
       case "invoice.payment_failed": {
         const s = await studioFuer(o);
-        if (!s) break;
+        if (!s || (await appleWaechter(s, event))) break;
         await notify(s, mails.zahlungFehlgeschlagen(s, { betragCent: o.amount_due, rechnungUrl: o.hosted_invoice_url }));
         await notifyAdmin("Zahlung fehlgeschlagen", s, { Rechnung: o.number, Betrag: (o.amount_due / 100).toFixed(2) + " €" });
         break;

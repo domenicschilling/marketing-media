@@ -4,7 +4,7 @@
 // Sicherheit (18.10.2026): nur mit gültiger Sitzung GENAU dieses Studios oder mit signiertem Link (HMAC, 24 h, Zweck
 // „connect“, an die Studio-ID gebunden; kommt nur per Mail an die hinterlegte Adresse bzw. als Stripe-Rücksprung).
 // Ohne beides → Login-Seite. Die Studio-ID allein reicht nicht mehr.
-import { CFG } from "./_lib/config.mjs";
+import { CFG, istApple, appleCfg } from "./_lib/config.mjs";
 import { handler } from "./_lib/util.mjs";
 import { getStudio, saveStudio } from "./_lib/store.mjs";
 import { stripe, ensureConnectedAccount, onboardingLink } from "./_lib/stripe.mjs";
@@ -24,10 +24,13 @@ export default handler(async (req) => {
   if (["entwurf", "abgebrochen", "beendet", "erstattet"].includes(s.status)) return redirect("/login.html");
   // Demo-Studio (App-Prüfung): nie ein echtes Stripe-Konto anlegen
   if (s.demo) return redirect("/app.html");
+  // Apple-Testkauf (Sandbox/TestFlight, auch App-Prüfung): kein echtes Stripe-Konto, außer APPLE_SANDBOX_STRIPE=1
+  if (istApple(s) && s.sandbox && !appleCfg().sandboxStripe) return redirect(`/danke.html?id=${s.id}&connect=sandbox&app=1`);
 
   if (u.pathname.endsWith("/zurueck")) {
     if (s.stripe?.accountId) await kontoAbgleichen(s, await stripe("GET", "/accounts/" + s.stripe.accountId));
-    return redirect(`/danke.html?id=${s.id}&stripe=1`);
+    // Anmeldung über die App: Danke-Seite ohne Preise, Messung und Links („zurück in die App“)
+    return redirect(`/danke.html?id=${s.id}&stripe=1${istApple(s) ? "&app=1" : ""}`);
   }
   if (s.stripe?.chargesEnabled) return redirect("/app.html");
   // Eingeloggt und eingebettete Einrichtung verfügbar → im Dashboard bleiben statt zu Stripe wechseln

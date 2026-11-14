@@ -33,12 +33,14 @@ body{background:#fbb316 radial-gradient(rgba(31,61,92,.13) 1.3px,transparent 1.6
   .form td:first-child{width:auto}
 }
 @media print{.webnav{display:none}body{background:#fff}.doc{border:0;box-shadow:none}}
+/* Fassung für die Tattoofin-App (?app=1): data-nur-web wird entfernt, data-nur-app eingeblendet (Skript unten). Ohne Skript gilt die Web-Fassung. */
+[data-nur-app]{display:none}
 </style>
 </head><body>
-<!-- Fassung 2026-12: direkt hier gepflegt. Archiv: vertrag-2026-11.html -->
+<!-- Fassung 2026-12b (14.11.2026, neuer § 13 Abschluss über die Tattoofin-App): direkt hier gepflegt. Archiv: vertrag-2026-12.html, vertrag-2026-11.html -->
 <nav class="webnav"><a href="/">← Tattoofin</a><button onclick="print()">Drucken / PDF</button></nav>
 <main class="doc">
-<p class="small" style="background:#fff4dc;border:1px solid #f3d79a;border-radius:8px;padding:8px 12px;margin:0 0 14px">Online-Fassung, Version <span data-cfg="vertragVersion"></span>. Der Vertrag kommt durch die Online-Bestellung zustande: Kundendaten werden dort angegeben, die Zahlung läuft über Stripe. Eine Bestätigung mit allen Angaben kommt per E-Mail.</p>
+<p class="small" style="background:#fff4dc;border:1px solid #f3d79a;border-radius:8px;padding:8px 12px;margin:0 0 14px">Online-Fassung, Version <span data-cfg="vertragVersion"></span>. <span data-nur-web>Der Vertrag kommt durch die Online-Bestellung zustande: Kundendaten werden dort angegeben, die Zahlung läuft über Stripe.</span><span data-nur-app>Beim Abschluss in der Tattoofin-App gibst du deine Angaben in der App an, das Abo bezahlst du über deinen Apple-Account (§ 13).</span> Eine Bestätigung mit allen Angaben kommt per E-Mail.</p>
 
 
 <div class="dochead">
@@ -65,7 +67,7 @@ body{background:#fbb316 radial-gradient(rgba(31,61,92,.13) 1.3px,transparent 1.6
 <ol class="abs">
   <li><b>Einrichtung:</b> Der Anbieter unterstützt den Kunden technisch bei der Eröffnung seines Stripe-Kontos oder der Verbindung eines bestehenden Kontos per Stripe Connect. Er nimmt die Grundeinstellungen und das Branding vor (z. B. Logo, Farben, Bezeichnung auf dem Kontoauszug) und testet den Zahlungsablauf. Er führt eine kurze Schulung der vom Kunden benannten Mitarbeitenden zur Bedienung der Software durch (online oder nach Absprache).</li>
   <li><b>Inbetriebnahme („Go-live“):</b> Die Inbetriebnahme ist erfolgt, wenn der Anbieter dem Kunden nach erfolgreichem Test in Textform mitteilt, dass die Software einsatzbereit ist. Ziel ist eine Inbetriebnahme innerhalb weniger Werktage nach Freigabe des Stripe-Kontos durch Stripe und Eingang der erforderlichen Angaben des Kunden; dies ist ein unverbindlicher Richtwert.</li>
-  <li><b>Studio Kit:</b> Der Anbieter stellt dem Kunden digitale Vorlagen bereit: QR-Code und Zahlseite des Studios (digitaler QR-Code), Fensteraufkleber, Flyer, Thekenaufsteller, Website-Badge, Instagram-Story und WhatsApp-Vorlagen. Druck und Versand sind nicht enthalten, soweit nicht gesondert vereinbart. <b>QR-Aufsteller:</b> Der Anbieter liefert einmalig einen QR-Aufsteller aus Holz mit dem gravierten QR-Code der Zahlseite und dem Namen des Studios (Gestaltung nach Vorlage des Anbieters) an die Anschrift des Kunden in Deutschland. Der Versand erfolgt nach Inbetriebnahme und nach Eingang des ersten Monatsbetrags; Lieferzeiten sind unverbindliche Richtwerte. Der Aufsteller geht mit Lieferung in das Eigentum des Kunden über und wird bei Vertragsende nicht zurückgefordert; Nach der Lieferung schuldet der Anbieter keinen Ersatz bei Verlust oder Beschädigung. Ansprüche des Kunden wegen Mängeln bleiben unberührt; der Anbieter kann zunächst nach seiner Wahl nachbessern oder einen neuen Aufsteller liefern.</li>
+  <li><b>Studio Kit:</b> Der Anbieter stellt dem Kunden digitale Vorlagen bereit: QR-Code und Zahlseite des Studios (digitaler QR-Code), Fensteraufkleber, Flyer, Thekenaufsteller, Website-Badge, Instagram-Story und WhatsApp-Vorlagen. Druck und Versand sind nicht enthalten, soweit nicht gesondert vereinbart. <span data-nur-app>Ein QR-Aufsteller aus Holz ist beim Abschluss über die App nicht enthalten (§ 13 Abs. 5).</span><span data-nur-web><b>QR-Aufsteller:</b> Der Anbieter liefert einmalig einen QR-Aufsteller aus Holz mit dem gravierten QR-Code der Zahlseite und dem Namen des Studios (Gestaltung nach Vorlage des Anbieters) an die Anschrift des Kunden in Deutschland. Der Versand erfolgt nach Inbetriebnahme und nach Eingang des ersten Monatsbetrags; Lieferzeiten sind unverbindliche Richtwerte. Der Aufsteller geht mit Lieferung in das Eigentum des Kunden über und wird bei Vertragsende nicht zurückgefordert; Nach der Lieferung schuldet der Anbieter keinen Ersatz bei Verlust oder Beschädigung. Ansprüche des Kunden wegen Mängeln bleiben unberührt; der Anbieter kann zunächst nach seiner Wahl nachbessern oder einen neuen Aufsteller liefern.</span></li>
   <li><b>Studio-Portal:</b> Der Anbieter stellt dem Kunden für die Vertragsdauer ein Online-Studio-Portal bereit, insbesondere zur Erstellung von Zahlungslinks, zur Übersicht der über die Tattoofin-Software abgewickelten Zahlungen und zum Abruf der Abrechnungen.</li>
   <li><b>Setup-Support und Betreuung:</b> Für <span data-cfg="setupSupportTage"></span> Tage ab Inbetriebnahme unterstützt der Anbieter den Kunden bevorzugt bei Fragen und Anpassungen (Setup-Support). Danach ist die Betreuung ohne gesonderte Vergütung enthalten. Erreichbarkeit per E-Mail und WhatsApp an Werktagen (Mo bis Fr, außer bundeseinheitliche Feiertage) von 9 bis 17 Uhr.</li>
   <li><b>Verfügbarkeit:</b> Der Anbieter strebt eine Verfügbarkeit des Studio-Portals und der Zahlseite von 98 % im Monatsmittel an. Ausgenommen sind angekündigte Wartungen sowie Störungen außerhalb des Einflussbereichs des Anbieters, insbesondere Störungen bei Stripe, weiteren Zahlungsanbietern, Hosting-Anbietern oder Telekommunikationsnetzen.</li>
@@ -97,7 +99,7 @@ body{background:#fbb316 radial-gradient(rgba(31,61,92,.13) 1.3px,transparent 1.6
 
 <h2>§ 5 Vergütung und Zahlung</h2>
 <ol class="abs">
-  <li>Der Kunde zahlt eine monatliche Vergütung in Höhe von <span data-cfg="monatPreis"></span> netto zzgl. Umsatzsteuer je Abrechnungsmonat, soweit in der Bestellung kein abweichender Preis ausgewiesen ist. Der erste Abrechnungsmonat beginnt mit Vertragsschluss; jeder weitere beginnt am entsprechenden Tag des Folgemonats. Die Vergütung ist jeweils zu Beginn des Abrechnungsmonats im Voraus fällig und wird über Stripe von dem bei Vertragsschluss hinterlegten Zahlungsmittel eingezogen; der Kunde erhält jeweils eine Rechnung mit ausgewiesener Umsatzsteuer per E-Mail. Damit sind Einrichtung, Studio Kit, QR-Aufsteller, Studio-Portal, Setup-Support und Betreuung abgegolten. Eine Einrichtungsgebühr oder Provision fällt nicht an; der Kunde trägt lediglich die Gebühren der Zahlungsanbieter nach § 3 Abs. 2. Gezahlte Monatsbeträge werden bei Kündigung nicht anteilig erstattet. Mit der Einrichtung beginnt der Anbieter nach Eingang des ersten Monatsbetrags.</li>
+  <li><span data-nur-app>Beim Abschluss über die Tattoofin-App gilt § 13: Preis wie beim Kauf im App Store angezeigt (inkl. USt.), Abrechnung über Apple.</span><span data-nur-web>Der Kunde zahlt eine monatliche Vergütung in Höhe von <span data-cfg="monatPreis"></span> netto zzgl. Umsatzsteuer je Abrechnungsmonat, soweit in der Bestellung kein abweichender Preis ausgewiesen ist. Der erste Abrechnungsmonat beginnt mit Vertragsschluss; jeder weitere beginnt am entsprechenden Tag des Folgemonats. Die Vergütung ist jeweils zu Beginn des Abrechnungsmonats im Voraus fällig und wird über Stripe von dem bei Vertragsschluss hinterlegten Zahlungsmittel eingezogen; der Kunde erhält jeweils eine Rechnung mit ausgewiesener Umsatzsteuer per E-Mail. Damit sind Einrichtung, Studio Kit, QR-Aufsteller, Studio-Portal, Setup-Support und Betreuung abgegolten. Eine Einrichtungsgebühr oder Provision fällt nicht an; der Kunde trägt lediglich die Gebühren der Zahlungsanbieter nach § 3 Abs. 2. Gezahlte Monatsbeträge werden bei Kündigung nicht anteilig erstattet. Mit der Einrichtung beginnt der Anbieter nach Eingang des ersten Monatsbetrags.</span></li>
   <li>Soweit eine Rechnung nicht über Stripe (z. B. per Karte) eingezogen wird, ist sie innerhalb von 7 Tagen nach Rechnungsdatum ohne Abzug zahlbar. Kosten einer vom Kunden verschuldeten Rücklastschrift oder Rückbelastung des Monatsbetrags trägt der Kunde.</li>
   <li>Gerät der Kunde mit fälligen Zahlungen in Verzug, darf der Anbieter den Zugang zum Studio-Portal und die Erstellung neuer Zahlungslinks nach vorheriger Ankündigung in Textform mit einer Frist von 7 Tagen vorübergehend sperren. Die Zahlungspflichten bleiben bestehen. Auszahlungen für bereits abgewickelte Zahlungen bleiben davon unberührt.</li>
   <li>Der Anbieter kann die monatliche Vergütung mit einer Ankündigungsfrist von sechs Wochen in Textform anpassen. Der Kunde kann in diesem Fall den Vertrag bis zum Inkrafttreten der Änderung mit Wirkung zu diesem Zeitpunkt kündigen; auf dieses Kündigungsrecht weist der Anbieter in der Ankündigung hin. Kündigt der Kunde, gelten bis zum Vertragsende die bisherigen Preise. Die Anpassung gilt nicht für Abrechnungsmonate vor ihrem Inkrafttreten.</li>
@@ -156,7 +158,17 @@ body{background:#fbb316 radial-gradient(rgba(31,61,92,.13) 1.3px,transparent 1.6
 </ol>
 
 
-<!-- Anlage A -->
+<h2>§ 13 Abschluss über die Tattoofin-App (Apple)</h2>
+<ol class="abs">
+  <li>Schließt der Kunde den Vertrag in der Tattoofin-App ab, zahlt er die Vergütung als automatisch verlängerndes Abo über seinen Apple-Account (In-App-Kauf). Preis und Abrechnungszeitraum (ein Monat) gelten so, wie sie beim Kauf im App Store angezeigt werden; der angezeigte Preis enthält die Umsatzsteuer. Die Zahlung wickelt Apple ab, den Kaufbeleg stellt Apple aus. § 5 Abs. 1 und 2 gelten insoweit nicht. Für Preisänderungen gilt § 5 Abs. 4 entsprechend; Apple kündigt sie zusätzlich nach seinen eigenen Regeln an.</li>
+  <li>Das Abo verlängert sich jeweils um einen Monat, wenn der Kunde es nicht spätestens 24 Stunden vor Ablauf des laufenden Zeitraums in den Einstellungen seines Apple-Accounts kündigt. Es gibt keine Mindestlaufzeit. Nach einer solchen Kündigung endet der Vertrag mit Ablauf des bezahlten Zeitraums. Eine Kündigung gegenüber dem Anbieter (§ 7) beendet den Vertrag ebenfalls zum Ablauf des bezahlten Zeitraums, beendet aber die Zahlungen an Apple nicht; dafür kündigt der Kunde das Abo zusätzlich in seinem Apple-Account. Verlängert Apple das Abo trotzdem, kann der Kunde den bezahlten Zeitraum weiter nutzen.</li>
+  <li>Erstattungen der an Apple gezahlten Beträge beantragt der Kunde bei Apple. Im Fall von § 7 Abs. 4 (keine Inbetriebnahme) erstattet der Anbieter die über Apple gezahlten Abo-Beträge per Überweisung, soweit Apple sie nicht erstattet.</li>
+  <li>Endet das Apple-Abo (Ablauf ohne Verlängerung, Erstattung durch Apple oder Widerruf), sperrt der Anbieter Zahlungslinks und Zahlseite. Bereits abgewickelte Zahlungen und die Daten des Kunden bleiben nach den Löschregeln (§ 9, Auftragsverarbeitungsvertrag) erhalten. Schließt der Kunde das Abo erneut ab, öffnet der Anbieter den Zugang wieder.</li>
+  <li>Der QR-Aufsteller aus Holz (§ 2 Abs. 3) ist beim Abschluss über die App nicht enthalten. Studio Kit (digital), Studio-Portal, App, Setup-Support und Betreuung sind enthalten.</li>
+  <li><b>Vertragsschluss in der App:</b> Der Kunde gibt sein Angebot ab, indem er in der App seine Angaben macht, diesen Vertrag und den Auftragsverarbeitungsvertrag bestätigt und anschließend das Abo im App Store kauft. Der Vertrag kommt mit der Bestätigung des Kaufs durch Apple zustande. § 12 Abs. 5 gilt im Übrigen entsprechend.</li>
+  <li>Im Verhältnis zwischen dem Kunden und Apple gelten zusätzlich die Bedingungen von Apple, insbesondere für Käufe im App Store. Apple ist nicht Partei dieses Vertrags.</li>
+</ol>
+
 <!-- Anlage A -->
 <h2 class="pb" style="font-size:15pt">Anlage A · Leistungsbeschreibung</h2>
 <table>
@@ -169,14 +181,29 @@ body{background:#fbb316 radial-gradient(rgba(31,61,92,.13) 1.3px,transparent 1.6
   <tr><td>Studio-Portal: Zahlungslinks für Projektpreise und Anzahlungen erstellen (inkl. Versand per WhatsApp/E-Mail und QR-Code), Anzahlungsbedingungen, Gutscheine, Zahlseite des Studios, Übersicht der abgewickelten Zahlungen</td></tr>
   <tr><td>Automatische E-Mail-Benachrichtigungen, z. B. bei Kundenzahlungen</td></tr>
   <tr><td><span data-cfg="setupSupportTage"></span> Tage Setup-Support ab Inbetriebnahme, danach Betreuung ohne gesonderte Vergütung</td></tr>
-  <tr><td>QR-Aufsteller aus Holz mit graviertem QR-Code der Zahlseite und Studioname, einmalige Lieferung nach § 2 Abs. 3</td></tr>
+  <tr data-nur-web><td>QR-Aufsteller aus Holz mit graviertem QR-Code der Zahlseite und Studioname, einmalige Lieferung nach § 2 Abs. 3</td></tr>
   <tr><th>Vergütung</th></tr>
-  <tr><td><span data-cfg="monatPreis"></span> netto zzgl. USt. je Abrechnungsmonat, soweit in der Bestellung kein abweichender Preis ausgewiesen ist, im Voraus per Stripe eingezogen; keine Einrichtungsgebühr, keine Provision; Gebühren der Zahlungsanbieter trägt der Kunde; keine Mindestlaufzeit, kündbar zum Ende des laufenden Abrechnungsmonats</td></tr>
+  <tr data-nur-app><td>Abschluss über die Tattoofin-App: Preis wie beim Kauf im App Store angezeigt (inkl. USt.), Abrechnung über Apple als automatisch verlängerndes Abo (§ 13); keine Einrichtungsgebühr, keine Provision; Gebühren der Zahlungsanbieter trägt der Kunde; keine Mindestlaufzeit</td></tr>
+  <tr data-nur-web><td><span data-cfg="monatPreis"></span> netto zzgl. USt. je Abrechnungsmonat, soweit in der Bestellung kein abweichender Preis ausgewiesen ist, im Voraus per Stripe eingezogen; keine Einrichtungsgebühr, keine Provision; Gebühren der Zahlungsanbieter trägt der Kunde; keine Mindestlaufzeit, kündbar zum Ende des laufenden Abrechnungsmonats</td></tr>
 </table>
 <p class="small">Nicht umfasst: die Gebühren von Stripe und weiteren Zahlungsanbietern, Kartenterminals und sonstige Hardware, Druck und Versand von Materialien, Rechts-, Steuer- und Finanzberatung, die Prüfung und Freigabe von Zahlungen (erfolgt ausschließlich durch die Zahlungsanbieter).</p>
 
-<p class="footer-note"><span data-cfg="marke"></span> · <span data-cfg="firma"></span> · Vertrag „<span data-cfg="produkt"></span>“ · Fassung 2026-12</p>
+<p class="footer-note"><span data-cfg="marke"></span> · <span data-cfg="firma"></span> · Vertrag „<span data-cfg="produkt"></span>“ · Fassung 2026-12b</p>
 
 </main>
+<script>
+// Ansicht in der Tattoofin-App (?app=1, Apple 3.1.3): ohne Menü, ohne Web-Preis und QR-Aufsteller (data-nur-web), mit App-Text (data-nur-app),
+// keine Links auf andere Seiten von Tattoofin außer Rechtstexten. Dieses Dokument lädt tf-track.js nicht, deshalb hier direkt.
+(function () {
+  if (!/[?&]app=1(&|#|$)/.test(location.search)) { document.querySelectorAll("[data-nur-app]").forEach(function (el) { el.remove(); }); return; }
+  var st = document.createElement("style"); st.textContent = "nav.webnav{display:none!important}"; document.head.appendChild(st);
+  document.querySelectorAll("[data-nur-web]").forEach(function (el) { el.remove(); });
+  document.querySelectorAll("[data-nur-app]").forEach(function (el) { el.removeAttribute("data-nur-app"); });
+  document.querySelectorAll("a[href]").forEach(function (a) {
+    var h = a.getAttribute("href") || "";
+    if ((/^\/(?!\/)/.test(h) || /^https?:\/\/(www\.)?tattoofin\.de/.test(h)) && !/(impressum|datenschutz|vertrag|avv)\.html/.test(h)) { var sp = document.createElement("span"); sp.textContent = a.textContent; a.replaceWith(sp); }
+  });
+})();
+</script>
 <script src="/js/doc-config.js"></script>
 </body></html>

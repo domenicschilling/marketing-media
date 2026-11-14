@@ -34,8 +34,12 @@ const rows = (pairs) => `<table role="presentation" cellpadding="0" cellspacing=
   .filter(([, v]) => v !== undefined && v !== null && v !== "")
   .map(([k, v]) => `<tr><td style="padding:5px 0;color:#5b6370;width:44%;vertical-align:top">${esc(k)}</td><td style="padding:5px 0;font-weight:600">${v}</td></tr>`).join("")}</table>`;
 const hallo = (s) => p(`Hey ${esc(s.inhaber?.split(" ")[0] || s.firma)},`);
+// Abo über Apple (Anmeldung in der App): nie Web-Preis, nie Link zur Web-Anmeldung, nie „Paket wechseln“ (Apple 3.1.3)
+const istAppAbo = (s) => s?.abrechnung === "apple" || s?.paket === "app";
+const APPLE_KUENDIGEN = "Wichtig: Dein Abo läuft über Apple. Kündige es zusätzlich in den Einstellungen deines Apple-Accounts unter Abos, sonst bucht Apple weiter ab. Erstattungen beantragst du direkt bei Apple.";
 const modellText = (s) => {
   const p = paketVon(s);
+  if (istAppAbo(s)) return "Tattoofin über die App: Abo über deinen Apple-Account zum Preis aus dem App Store. Keine Tattoofin-Provision. Die Gebühren für Kundenzahlungen zahlst du direkt an Stripe. Kündigen kannst du in den Einstellungen deines Apple-Accounts.";
   if (p.id === "geschenk" && s.sonderkondition) return `${s.sonderkondition}: keine Einrichtungsgebühr, keine Grundgebühr, keine Provision. Du zahlst nur die normalen Zahlungsgebühren von Stripe (bzw. Klarna) direkt an Stripe, Tattoofin verdient nichts daran.`;
   if (p.id === "geschenk") return "Geschenk: keine Einrichtungsgebühr, keine Grundgebühr, keine Provision. Du zahlst nur die normalen Gebühren von Stripe (bzw. Klarna) direkt an Stripe, Tattoofin verdient nichts daran.";
   if (p.id === "monatlich") return `Paket Monatlich: ${euro(s.monatNetto || CFG.monatNetto)} netto im Monat (${euro(brutto(s.monatNetto || CFG.monatNetto))} inkl. USt.), danach nur die Zahlungsgebühren, die du direkt an Stripe zahlst. Keine Tattoofin-Provision, monatlich kündbar. Inklusive QR-Aufsteller aus Holz (Wert 29 €) und digitalem QR-Code.`;
@@ -169,13 +173,40 @@ export const mails = {
     cta: "Dashboard öffnen", ctaUrl: `${CFG.siteUrl}/app.html`,
   }),
 
+  // Code für ein NEUES Studio-Konto in der App (Adresse hat noch kein Studio). Kein Studio-Datensatz → „Hey,“ ohne Namen.
+  appRegistrierCode: ({ code, minuten = 10 }) => mk(`${code} ist dein Tattoofin-Code`, {
+    preheader: `Gib den Code in der Tattoofin-App ein. Er gilt ${minuten} Minuten.`,
+    title: "Dein Code für die Tattoofin-App",
+    body: p("Hey,") + p("gib diesen Code in der Tattoofin-App ein, um dein Studio anzulegen:") +
+      `<p style="margin:6px 0 16px;font:700 34px/1.2 'SF Mono',Menlo,Consolas,monospace;letter-spacing:8px;color:${navy}">${esc(code)}</p>` +
+      p(`Der Code gilt ${minuten} Minuten und funktioniert nur einmal.`) +
+      p("Nicht angefordert? Ignoriere diese Mail. Ohne den Code kann niemand ein Studio mit deiner Adresse anlegen."),
+  }),
+
+  // Apple-Abo beendet (abgelaufen, erstattet, widerrufen): Zahlungslinks und Zahlseite gesperrt, Daten bleiben. Kein Web-Preis, kein Web-Link (Apple 3.1.3).
+  appleAboAbgelaufen: (s, { grund }) => mk("Dein Tattoofin-Abo ist beendet", {
+    preheader: "Zahlungslinks und Zahlseite sind gesperrt. Deine Daten bleiben erhalten.",
+    title: grund === "erstattet" ? "Dein Abo wurde erstattet" : grund === "widerrufen" ? "Dein Abo wurde von Apple beendet" : "Dein Abo ist abgelaufen",
+    body: hallo(s) + p(`Apple hat uns gemeldet, dass das Tattoofin-Abo für <b>${esc(s.firma)}</b> ${grund === "erstattet" ? "erstattet wurde" : grund === "widerrufen" ? "beendet wurde" : "abgelaufen ist"}. Deshalb sind Zahlungslinks und Zahlseite jetzt gesperrt. Bereits bezahlte Zahlungen und deine Daten bleiben erhalten.`) +
+      p("Du möchtest Tattoofin weiter nutzen? Öffne die Tattoofin-App und tippe auf „Abo wieder abschließen“. Danach geht alles sofort wieder.") +
+      box("Dein Stripe-Konto gehört deinem Studio und bleibt bestehen. Wenn du Tattoofin nicht mehr nutzt, entferne bitte Aufkleber und QR-Codes, die auf die Tattoofin-Zahlseite zeigen."),
+  }),
+
+  // Apple hat das Abo verlängert, obwohl das Studio bei Tattoofin gekündigt hat: Vertrag läuft bis zum Ende des bezahlten Zeitraums weiter
+  appleVerlaengertTrotzKuendigung: (s, { zum }) => mk("Apple hat dein Abo verlängert", {
+    preheader: `Tattoofin läuft jetzt bis ${datum(zum)}.`,
+    title: "Dein Abo wurde verlängert",
+    body: hallo(s) + p(`du hast Tattoofin gekündigt, aber Apple hat dein Abo trotzdem verlängert. Den bezahlten Zeitraum kannst du nutzen: Dein Vertrag läuft jetzt bis <b>${datum(zum)}</b>. Bis dahin funktionieren Zahlungslinks und Zahlseite ganz normal.`) +
+      box(`<b>${APPLE_KUENDIGEN}</b>`),
+  }),
+
   // Löschanfrage aus der App: Kündigung zum Datum, danach werden die Daten gelöscht (soweit keine Aufbewahrungspflicht)
   loeschAnfrage: (s, { zum, loeschungAb }) => mk("Deine Kündigung und Löschanfrage sind eingegangen", {
     preheader: `Tattoofin läuft noch bis ${datum(zum)}.`,
     title: "Kündigung und Löschanfrage bestätigt",
     body: hallo(s) + p(`du hast in der Tattoofin-App dein Konto gekündigt und die Löschung deiner Daten angefordert. Dein Vertrag endet zum <b>${datum(zum)}</b>. Bis dahin funktionieren Zahlungslinks und Zahlseite ganz normal.`) +
       p(`Ab dem <b>${datum(loeschungAb)}</b> löschen wir deine Daten bei Tattoofin. Rechnungen und Zahlungsbelege müssen wir nach Handels- und Steuerrecht aufbewahren; die löschen wir erst nach Ablauf dieser Fristen.`) +
-      (s.paket === "monatlich" ? p("Dein Monatsbetrag wird ab dem Vertragsende nicht mehr abgebucht. Bereits gezahlte Monate werden nicht anteilig erstattet.") : "") +
+      (istAppAbo(s) ? box(`<b>${APPLE_KUENDIGEN}</b>`) : s.paket === "monatlich" ? p("Dein Monatsbetrag wird ab dem Vertragsende nicht mehr abgebucht. Bereits gezahlte Monate werden nicht anteilig erstattet.") : "") +
       box("Dein Stripe-Konto gehört deinem Studio und bleibt bestehen. Das löschst du bei Bedarf selbst bei Stripe. Bitte entferne nach dem Vertragsende Aufkleber und QR-Codes, die auf die Tattoofin-Zahlseite zeigen.") +
       p("Falls du es dir anders überlegst: Im Dashboard kannst du die Kündigung bis zum Stichtag mit einem Klick zurücknehmen. Damit ist auch die Löschanfrage zurückgenommen."),
     cta: "Kündigung zurücknehmen", ctaUrl: `${CFG.siteUrl}/portal.html#vertrag`,
@@ -195,6 +226,7 @@ export const mails = {
       ["Deine Zahlseite mit QR", `<a href="${CFG.siteUrl}/zahlen/${esc(s.slug)}">${CFG.siteUrl}/zahlen/${esc(s.slug)}</a>`],
       ["Studio Kit", "Fensteraufkleber, Flyer, Aufsteller und Social-Vorlagen im Portal unter „Studio Kit“"],
       s.zahlart === "geschenk" ? ["Abrechnung", "Keine Tattoofin-Gebühr. Zahlungsgebühren zahlst du direkt an Stripe."] :
+      istAppAbo(s) ? ["Abrechnung", "Abo über deinen Apple-Account, kündbar in den Einstellungen deines Apple-Accounts. Zahlungsgebühren zahlst du direkt an Stripe."] :
       s.paket === "monatlich" ? ["Abrechnung", `${euro(s.monatNetto || CFG.monatNetto)} netto im Monat, die Rechnung kommt automatisch per E-Mail. Zahlungsgebühren zahlst du direkt an Stripe.`] :
       [s.modell === "kauf" && s.zahlart !== "geschenk" && s.paket !== "monatlich" ? "Geld-zurück-Garantie" : "Abrechnung", s.modell === "kauf" && s.zahlart !== "geschenk" && s.paket !== "monatlich" ? `bis ${datum(new Date(Date.now() + CFG.garantieTage * 864e5).toISOString())}` : `Stripe zahlt dir automatisch ${100 - provisionSatz(s)} % jeder Zahlung aus, die Rechnung über die ${provisionSatz(s)} % kommt einmal im Monat`],
     ]) + box("Wichtig fürs Team: keine Raten oder Zinsen versprechen. Einfach sagen: „Du kannst beim Bezahlen schauen, welche Zahlungsoptionen dir angeboten werden.“"),
@@ -365,7 +397,7 @@ ${g.nachricht ? `<div style="font-style:italic;color:#5b6370;margin-top:10px">�
     preheader: `Tattoofin läuft noch bis ${datum(zum)}.`,
     title: "Schade, aber verstanden. Kündigung bestätigt.",
     body: hallo(s) + p(`wir bestätigen deine Kündigung zum <b>${datum(zum)}</b>. Bis dahin funktionieren Zahlungslinks und Zahlseite ganz normal.`) +
-      (s.paket === "monatlich" ? p("Dein Monatsbetrag wird ab dann nicht mehr abgebucht. Bereits gezahlte Monate werden nicht anteilig erstattet.") : "") +
+      (istAppAbo(s) ? box(`<b>${APPLE_KUENDIGEN}</b>`) : s.paket === "monatlich" ? p("Dein Monatsbetrag wird ab dann nicht mehr abgebucht. Bereits gezahlte Monate werden nicht anteilig erstattet.") : "") +
       box(s.modell === "provision" ? "Offene Auszahlungen bekommst du auch nach dem Ende, abzüglich späterer Rückbuchungen. Bitte entferne nach dem Vertragsende Aufkleber und QR-Codes, die auf die Tattoofin-Zahlseite zeigen." : "Dein Stripe-Konto gehört deinem Studio und bleibt bestehen. Nach Vertragsende trennen wir nur die Verbindung zu Tattoofin. Bitte entferne dann Aufkleber und QR-Codes, die auf die Tattoofin-Zahlseite zeigen.") +
       p("Falls du es dir anders überlegst: Im Portal kannst du die Kündigung bis zum Stichtag mit einem Klick zurücknehmen."),
     cta: "Kündigung zurücknehmen", ctaUrl: `${CFG.siteUrl}/portal.html#vertrag`,
@@ -379,12 +411,14 @@ ${g.nachricht ? `<div style="font-style:italic;color:#5b6370;margin-top:10px">�
   vertragsendeBald: (s, { zum }) => mk("In 7 Tagen endet Tattoofin", {
     title: "Dein Vertrag endet bald", preheader: `Vertragsende am ${datum(zum)}`,
     body: hallo(s) + p(`am <b>${datum(zum)}</b> endet dein Tattoofin-Vertrag. Danach funktionieren Zahlungslinks und die Tattoofin-Zahlseite nicht mehr. Bitte entferne bis dahin QR-Codes und Aufkleber, die darauf verweisen.`) +
+      (istAppAbo(s) ? box(`<b>${APPLE_KUENDIGEN}</b>`) : "") +
       p("Dein Stripe-Konto bleibt dir erhalten. Danke, dass ihr Tattoofin genutzt habt. Die Tür bleibt offen. 🖤"),
   }),
 
   vertragsende: (s) => mk("Dein Tattoofin-Vertrag ist beendet", {
     title: "Tattoofin ist beendet", preheader: "Danke für die Zeit mit dir.",
-    body: hallo(s) + p("dein Vertrag ist heute ausgelaufen. Die Verbindung zu deinem Stripe-Konto ist getrennt, das Konto selbst gehört weiter deinem Studio. Deine Daten löschen wir gemäß Auftragsverarbeitungsvertrag, soweit keine Aufbewahrungspflichten bestehen."),
+    body: hallo(s) + p("dein Vertrag ist heute ausgelaufen. Die Verbindung zu deinem Stripe-Konto ist getrennt, das Konto selbst gehört weiter deinem Studio. Deine Daten löschen wir gemäß Auftragsverarbeitungsvertrag, soweit keine Aufbewahrungspflichten bestehen.") +
+      (istAppAbo(s) ? box(`<b>${APPLE_KUENDIGEN}</b>`) : ""),
   }),
 
   garantieErstattung: (s, { betragCent }) => mk("Erstattung veranlasst (Zufriedenheitsgarantie)", {

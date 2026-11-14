@@ -132,5 +132,16 @@ body{background:#fbb316 radial-gradient(rgba(31,61,92,.13) 1.3px,transparent 1.6
 <p class="small">Stand 18.10.2026. Änderungen werden nach § 4 Abs. 2 mitgeteilt.</p>
 
 </main>
+<script>
+// Ansicht in der Tattoofin-App (?app=1, Apple 3.1.3): ohne Menü, keine Links auf andere Seiten von Tattoofin außer Rechtstexten
+(function () {
+  if (!/[?&]app=1(&|#|$)/.test(location.search)) return;
+  var st = document.createElement("style"); st.textContent = "nav.webnav{display:none!important}"; document.head.appendChild(st);
+  document.querySelectorAll("a[href]").forEach(function (a) {
+    var h = a.getAttribute("href") || "";
+    if ((/^\/(?!\/)/.test(h) || /^https?:\/\/(www\.)?tattoofin\.de/.test(h)) && !/(impressum|datenschutz|vertrag|avv)\.html/.test(h)) { var sp = document.createElement("span"); sp.textContent = a.textContent; a.replaceWith(sp); }
+  });
+})();
+</script>
 <script src="/js/doc-config.js"></script>
 </body></html>

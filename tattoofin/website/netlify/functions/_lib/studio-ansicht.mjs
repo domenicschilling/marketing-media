@@ -1,5 +1,5 @@
 // Ausgabe von Studio und Zahlungen an das Studio selbst (Dashboard /api/portal und App /api/app). Ohne interne Werte.
-import { CFG, provisionSatz, paketVon, aufstellerInklusive, BAUSTEINE_SIMULIERT } from "./config.mjs";
+import { CFG, provisionSatz, paketVon, aufstellerInklusive, BAUSTEINE_SIMULIERT, istApple, appleCfg } from "./config.mjs";
 import { hatUmstellungsangebot, connectUrl, darfKassieren, anzahlungsbedingungen, eingebettet, klarnaFuer, klarnaDauerhaft, STATUS, hatGarantie } from "./domain.mjs";
 import { gutscheinStatus, gutscheinUrl } from "./gutschein.mjs";
 
@@ -17,6 +17,16 @@ export const fuerStudio = (z) => {
 };
 // Demo-Studio (App-Prüfung bei Apple): Stripe gilt als fertig eingerichtet (passt zu den Beispiel-Auszahlungen), keine Einrichtung
 // über Stripe (connectUrl null; connect.mjs lehnt Demo-Studios ab). Es fließt nie Geld (pay.mjs sperrt Demo-Studios).
+// Apple-Abo für die App (AppleAbo in der Spezifikation). appAccountToken braucht die App für „Abo wieder abschließen“.
+// sandbox = Testkauf (Umgebung nicht Production), bei dem die Stripe-Einrichtung aus ist. Mit APPLE_SANDBOX_STRIPE=1 (z. B. lokal im
+// Simulator, dev/app-lokal.mjs) ist sie an → sandbox false, damit die App den Knopf „Stripe-Konto einrichten“ zeigt.
+export const appleAboAusgabe = (s) => (istApple(s) && s.apple ? {
+  status: s.apple.status, laeuftBis: s.apple.laeuftBis || null,
+  autoVerlaengerung: typeof s.apple.autoVerlaengerung === "boolean" ? s.apple.autoVerlaengerung : null,
+  sandbox: s.apple.umgebung !== "Production" && !appleCfg().sandboxStripe, produktId: s.apple.produktId, appAccountToken: String(s.apple.appAccountToken || "").toLowerCase(),
+} : null);
+// Wie zahlt das Studio sein Tattoofin-Paket? apple = App Store, keine = Geschenk/Demo, sonst stripe (Abo, Einmalzahlung, Provision)
+export const abrechnungVon = (s) => (istApple(s) ? "apple" : s.demo || s.zahlart === "geschenk" ? "keine" : "stripe");
 const DEMO_STRIPE = { klarnaAktiv: false, verbunden: true, freigegeben: true, auszahlungen: true, express: false, angabenGemacht: true, kontoTyp: "standard" };
 export const oeffentlich = (s) => ({
   id: s.id, firma: s.firma, inhaber: s.inhaber, email: s.email, telefon: s.telefon, studioTelefon: s.studioTelefon,
@@ -27,6 +37,7 @@ export const oeffentlich = (s) => ({
   benachrichtigung: { email: s.benachrichtigungEmail || s.email },
   garantieBis: hatGarantie(s) ? (s.goLiveAt ? new Date(new Date(s.goLiveAt).getTime() + CFG.garantieTage * 864e5).toISOString() : "ab Go-live") : null,
   demo: Boolean(s.demo),
+  abrechnung: abrechnungVon(s), apple: appleAboAusgabe(s),
   stripe: s.demo ? DEMO_STRIPE : { klarnaAktiv: s.stripe?.klarnaAktiv, verbunden: Boolean(s.stripe?.accountId), freigegeben: Boolean(s.stripe?.chargesEnabled), auszahlungen: Boolean(s.stripe?.payoutsEnabled), express: s.stripe?.kontoTyp === "express", angabenGemacht: Boolean(s.stripe?.detailsSubmitted), kontoTyp: s.stripe?.kontoTyp || (s.modell === "provision" ? "express" : "standard") },
   klarna: klarnaFuer(s), klarnaDauerhaft: klarnaDauerhaft(s),
   paket: paketVon(s).id, paketName: paketVon(s).name, provisionProzent: provisionSatz(s), monatNetto: s.monatNetto || null, aufstellerInklusive: aufstellerInklusive(s),

@@ -14,7 +14,7 @@ let chromium;
 try { ({ chromium } = require("playwright")); } catch { ({ chromium } = require("/opt/node22/lib/node_modules/playwright")); }
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const PORT = 8899, BASE = `http://localhost:${PORT}`;
+const PORT = Number(process.env.E2E_PORT || 8899), BASE = `http://localhost:${PORT}`, RESEND_PORT = Number(process.env.E2E_RESEND_PORT || 12199);
 const shots = process.argv[2] || path.join(os.tmpdir(), "tf-e2e");
 const handyShots = process.argv[3] || path.join(shots, "handy");
 fs.mkdirSync(shots, { recursive: true }); fs.mkdirSync(handyShots, { recursive: true });
@@ -1119,8 +1119,8 @@ try {
   {
     const { sendMail, warteschlangeStatus, warteschlangeAbarbeiten } = await import("../netlify/functions/_lib/mail.mjs");
     let antwort = 500, aufrufe = 0;
-    const fake = (await import("node:http")).createServer((req, res) => { aufrufe++; let b = ""; req.on("data", (c) => (b += c)); req.on("end", () => { res.writeHead(antwort, { "content-type": "application/json" }); res.end(antwort === 200 ? '{"id":"re_1"}' : '{"message":"450 Mail send limit exceeded"}'); }); }).listen(12199);
-    process.env.RESEND_API_KEY = "re_test"; process.env.RESEND_API_BASE = "http://localhost:12199/emails";
+    const fake = (await import("node:http")).createServer((req, res) => { aufrufe++; let b = ""; req.on("data", (c) => (b += c)); req.on("end", () => { res.writeHead(antwort, { "content-type": "application/json" }); res.end(antwort === 200 ? '{"id":"re_1"}' : '{"message":"450 Mail send limit exceeded"}'); }); }).listen(RESEND_PORT);
+    process.env.RESEND_API_KEY = "re_test"; process.env.RESEND_API_BASE = `http://localhost:${RESEND_PORT}/emails`;
     antwort = 200;
     check(await sendMail({ to: "resend@example.com", subject: "Test Resend", html: "<p>x</p>" }) === true && aufrufe === 1, "Mit RESEND_API_KEY: Versand über Resend");
     const mResend = fs.readdirSync(dataDir).filter((f) => f.startsWith("mail%2F")).map((f) => JSON.parse(fs.readFileSync(path.join(dataDir, f)))).find((m) => m.to === "resend@example.com");

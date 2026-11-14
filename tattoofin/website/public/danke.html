@@ -13,14 +13,14 @@
       <div class="alert info"><b>Nächster Schritt: Auszahlungskonto deines Studios anlegen.</b><br>Dauert ca. 10 Minuten. Halte Ausweis, Steuernummer bzw. USt-IdNr. und die Bankverbindung des Studios bereit. Auf dieses Konto kommen die Zahlungen deiner Kunden automatisch.</div>
       <p style="text-align:center"><a class="btn gold" id="connect-btn" href="#">Auszahlungskonto anlegen</a></p>
     </div>
-    <div style="text-align:left;max-width:520px;margin:26px auto 0">
+    <div id="schritte" style="text-align:left;max-width:520px;margin:26px auto 0">
       <ol class="muted" style="font-size:16px;line-height:1.8">
         <li><b style="color:var(--text)">E-Mail checken:</b> Vertragsbestätigung und dein persönlicher Login-Link sind unterwegs.</li>
         <li><b style="color:var(--text)">Auszahlungskonto anlegen</b> und Fragebogen ausfüllen.</li>
         <li><b style="color:var(--text)">Wir richten alles ein,</b> testen den Ablauf mit dir und schulen dein Team. Dann bekommst du dein Studio Kit.</li>
       </ol>
     </div>
-    <p style="margin-top:22px"><a class="btn dark" href="/app.html">Zu deinem Studio-Bereich</a></p>
+    <p id="zum-bereich" style="margin-top:22px"><a class="btn dark" href="/app.html">Zu deinem Studio-Bereich</a></p>
   </div>
 </div></main>
 <script src="/js/common.js"></script>
@@ -37,6 +37,15 @@
     return true;
   }
   var msg = document.getElementById("msg");
+  // Anmeldung über die Tattoofin-App (Apple-Abo, ?app=1): keine Messung (kein Purchase), keine Preise, keine Links zur Anmeldung,
+  // nur der Hinweis, zurück in die App zu wechseln
+  function appEnde() {
+    document.getElementById("schritte").classList.add("hidden");
+    document.getElementById("zum-bereich").classList.add("hidden");
+    document.getElementById("connect").classList.add("hidden");
+    msg.textContent = q.get("connect") === "sandbox" ? "Testkonto: Die Stripe-Einrichtung ist hier ausgeschaltet. Wechsel jetzt zurück in die Tattoofin-App." : "Fertig. Wechsel jetzt zurück in die Tattoofin-App.";
+  }
+  if (q.get("app") === "1") { appEnde(); return; }
   if (!id) { msg.textContent = "Danke für deine Bestellung!"; return; }
   function zeigeConnect() {
     document.getElementById("connect").classList.remove("hidden");
@@ -45,6 +54,7 @@
   function check() {
     TF.api("/api/signup?id=" + encodeURIComponent(id)).then(function (s) {
       document.getElementById("firma").textContent = s.firma ? ", " + s.firma : "";
+      if (s.zahlart === "apple") { appEnde(); return; }
       if (s.kontoVerbunden) { msg.textContent = "Dein Auszahlungskonto ist freigegeben. Wir melden uns für Einrichtung, Test und Teamschulung."; return; }
       if (q.get("connect") === "spaeter") { msg.textContent = "Dein Vertrag ist abgeschlossen. Dein Auszahlungskonto richten wir gerade für dich ein. Du bekommst innerhalb von 24 Stunden eine E-Mail mit dem nächsten Schritt, du musst jetzt nichts weiter tun."; return; }
       if (q.get("stripe")) { msg.textContent = s.kontoBegonnen ? "Danke! Unser Zahlungspartner prüft jetzt deine Angaben, meist innerhalb von 1 bis 3 Werktagen. Du bekommst eine E-Mail, sobald das Konto freigegeben ist." : "Dein Auszahlungskonto ist noch nicht fertig eingerichtet."; if (!s.kontoBegonnen) zeigeConnect(); return; }

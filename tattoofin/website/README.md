@@ -142,8 +142,35 @@ Die native App (`tattoofin/ios/`) spricht dieselben Funktionen an wie das Dashbo
   `POST /api/admin/app-demo { email }` (Admin-Token), dann `APP_REVIEW_EMAIL`, `APP_REVIEW_CODE` (6 Ziffern), `APP_REVIEW_STUDIO_ID` setzen.
 
 ```
-NODE_PATH=… node dev/app-api.mjs     # 125 Prüfungen der App-API inkl. Missbrauch, mit Stripe- und APNs-Nachbau
+NODE_PATH=… node dev/app-api.mjs     # 262 Prüfungen der App-API inkl. Missbrauch und Apple-Abo, mit Stripe-, APNs- und Apple-Nachbau
 NODE_PATH=… node dev/app-lokal.mjs   # lokaler Server für den Simulator: fester Code 123456 (nur localhost), Beispiel-Studios,
                                      # Mitteilungen über xcrun simctl push; App mit -TFApiBase http://localhost:8888 starten
 node dev/app-demo.mjs [email]        # Demo-Studio lokal anlegen
 ```
+
+## Stand 14.11.2026: Neues Studio in der App mit Apple-Abo (StoreKit 2, Branch `claude/tattoofin-app`)
+
+Studios können sich direkt in der iPhone-App anmelden. Das Monats-Abo zahlen sie dort per **Apple-In-App-Kauf** (automatisch verlängerndes Abo,
+Produkt `de.tattoofin.app.abo.monatlich`, Preis nur in App Store Connect). Die Web-Anmeldung (`/api/signup`, Stripe-Checkout) bleibt unverändert.
+Das Stripe-Konto für das Geld der Kunden richtet das Studio danach wie gewohnt über `/api/connect` ein (kein Kauf).
+
+- Endpunkte (Ein-/Ausgaben im Kopf von `netlify/functions/_lib/app-registrierung.mjs`): `POST /api/app/registrieren/code`, `…/registrieren/pruefen`,
+  `…/registrieren`, `POST /api/app/abo/bestaetigen` (neu oder „Abo wieder abschließen“), `…/abo/wiederherstellen`, `…/abo/aktualisieren`.
+- Server-Benachrichtigungen V2: `POST /api/apple/benachrichtigung` (`apple-benachrichtigung.mjs`). In App Store Connect als Production- UND
+  Sandbox-URL `https://tattoofin.de/api/apple/benachrichtigung` (Version 2) eintragen.
+- Prüfung der Apple-Signaturen (JWS) nur mit `node:crypto` gegen die fest eingebaute „Apple Root CA - G3“ (`_lib/apple.mjs`, Fingerabdruck im Kommentar).
+- Studio: `paket: "app"` („Monatlich (App Store)“), `abrechnung: "apple"`, `s.apple = { status, laeuftBis, … }`. Nie in der Monatsabrechnung, keine
+  Stripe-Rechnungsmails, Stripe-Ereignisse dazu nur als Admin-Mail. Abo abgelaufen/erstattet/widerrufen → Studio `beendet` (Kasse gesperrt, Daten bleiben),
+  neues Abo öffnet wieder. Kündigung zum Ende des bezahlten Zeitraums; Mails sagen „zusätzlich in den Einstellungen deines Apple-Accounts kündigen“.
+- App-Entwürfe ohne Kauf: keine Erinnerungs-Mail, nach 30 Tagen gelöscht. Vertrag 2026-12b mit § 13 (App-Fassung `?app=1` ohne Web-Preis), Archiv `vertrag-2026-12.html`.
+
+| Umgebungsvariable | Wirkung |
+|---|---|
+| `APPLE_BUNDLE_ID` | Standard `de.tattoofin.app` |
+| `APPLE_PRODUKT_ID` | Standard `de.tattoofin.app.abo.monatlich` |
+| `APPLE_APP_ID` | optional, numerische App-ID; gesetzt → Production-Benachrichtigungen müssen dazu passen |
+| `APPLE_SANDBOX_STRIPE` | `1` = Stripe-Einrichtung auch nach Sandbox-/TestFlight-Käufen (Standard aus) |
+| `APPLE_XCODE_TEST` | nur lokal (http://localhost): StoreKit-Testkäufe aus Xcode annehmen (`dev/app-lokal.mjs` setzt es) |
+| `APPLE_TEST_ROOT_PEM` | nur lokal: Test-Wurzel statt Apple Root CA - G3 (`dev/apple-nachbau.mjs`, für `dev/app-api.mjs`) |
+
+Tests mit anderen Ports (wenn parallel ein Server läuft): `E2E_PORT`, `E2E_RESEND_PORT` (e2e), `BETRIEB_PORT` (betrieb), `STRIPE_MOCK_PORT` (betrieb, app-api).

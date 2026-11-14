@@ -4,6 +4,10 @@
 // anmelden. Der feste Code gilt NUR lokal (http://localhost, nie auf Netlify). Nichts verlässt den Rechner: keine Mails (nur Protokoll
 // in dev/.data-app/), kein echtes Stripe, kein echtes APNs. Mitteilungen gehen über `xcrun simctl push` an den gebooteten Simulator.
 // Bei jedem Start werden die Daten neu angelegt (der Stripe-Nachbau lebt nur im Arbeitsspeicher) → in der App einfach neu anmelden.
+// Neues Studio in der App (Apple-Abo, seit 14.11.2026): „Neues Studio? Konto anlegen“ mit beliebiger neuer Adresse, Code wie oben.
+// APPLE_XCODE_TEST=1 nimmt die StoreKit-Testkäufe aus Xcode an (selbstsignierte Kette, environment „Xcode“) – wirkt NUR lokal
+// (config.nurLokal: http://localhost, nicht auf Netlify). APPLE_SANDBOX_STRIPE=1: Stripe-Einrichtung (Nachbau) auch nach Testkäufen,
+// damit der ganze Ablauf Kauf → Stripe verbinden → Kasse offen im Simulator geht.
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -21,7 +25,8 @@ const dataDir = path.join(root, "dev", ".data-app");
 fs.rmSync(dataDir, { recursive: true, force: true });
 fs.mkdirSync(dataDir, { recursive: true });
 for (const k of ["RESEND_API_KEY", "SMTP_HOST", "STRIPE_SECRET_KEY", "META_CAPI_TOKEN", "TF_JETZT"]) delete process.env[k];
-Object.assign(process.env, { APP_LOKAL_CODE: CODE, TF_BEZAHLFELD: "aus", ADMIN_EMAIL: "admin@beispiel.test" });
+Object.assign(process.env, { APP_LOKAL_CODE: CODE, TF_BEZAHLFELD: "aus", ADMIN_EMAIL: "admin@beispiel.test", APPLE_XCODE_TEST: "1", APPLE_SANDBOX_STRIPE: "1" });
+delete process.env.APPLE_TEST_ROOT_PEM;
 
 // APNs-Nachbau: Schlüssel nur zur Laufzeit; jede Mitteilung wird an den gebooteten Simulator weitergereicht (falls vorhanden)
 const sch = testSchluessel();
@@ -108,6 +113,9 @@ z("   studio@beispiel.test   Inhaber, Ink Studio Bamberg (Zahlungen, Gutschein, 
 z("   team@beispiel.test     Team-Adresse von Ink Studio Bamberg");
 z("   zwei@beispiel.test     Inhaber Ink Studio Hof + Team Bamberg → Studio-Auswahl");
 z(`   review@beispiel.test   Demo-Studio (Review-Zugang), Code ${REVIEW_CODE}`);
+z("\n Neues Studio in der App (Apple-Abo):  „Neues Studio? Konto anlegen“ mit einer neuen Adresse, z. B. neu-<zeit>@beispiel.test, Code " + CODE);
+z("   StoreKit-Testkäufe aus Xcode werden NUR lokal angenommen (APPLE_XCODE_TEST=1), Stripe-Einrichtung danach über den Nachbau.");
+z(`   Neue Studios im Admin:  curl -s ${BASE}/api/admin/studios -H 'authorization: Bearer admin'`);
 z("\n Ausprobieren:");
 z(`   Gutschein-Seite (QR):  ${gs?.link || "-"}  Code ${gs?.code || "-"}`);
 z(`   Zahlung bezahlen:       Link aus der App im Simulator-Safari öffnen → Stripe-Testkasse (Nachbau)`);
