@@ -46,9 +46,16 @@ export function monatsende(date = new Date()) {
   return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0, 22, 59, 59)).toISOString();
 }
 
-export async function body(req) {
-  try { return await req.json(); } catch { return {}; }
+// JSON-Body lesen. max (Bytes): größere Anfragen → HttpError 413 (Apple-/App-Endpunkte: 64 KB), auch ohne content-length.
+export async function body(req, { max } = {}) {
+  if (!max) { try { return await req.json(); } catch { return {}; } }
+  if (Number(req.headers.get("content-length")) > max) throw new HttpError(413, "Anfrage zu groß", "zu_gross");
+  let text;
+  try { text = await req.text(); } catch { return {}; }
+  if (Buffer.byteLength(text) > max) throw new HttpError(413, "Anfrage zu groß", "zu_gross");
+  try { return JSON.parse(text); } catch { return {}; }
 }
+export const MAX_APP_BODY = 65536;
 
 export const clean = (v, max = 500) => (typeof v === "string" ? v.trim().slice(0, max) : "");
 

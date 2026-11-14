@@ -214,6 +214,8 @@ enum Texte {
         // Apple-Abo und Stripe-Einrichtung nach der Anmeldung in der App
         static let sandboxTitel = "Testkauf"
         static let sandboxText = "Testkauf (Apple-Sandbox). Die Stripe-Einrichtung ist für Testkonten ausgeschaltet."
+        /// Kasse nach einem Testkauf (Apple-Sandbox, auch App Review): offen im Testmodus
+        static let testmodusText = "Testkauf (Apple-Sandbox): Die Kasse läuft im Testmodus. Kunden können hier nicht wirklich bezahlen, die Stripe-Einrichtung ist aus. Erstelle einen Zahlungslink und tippe auf „Testzahlung auslösen“."
         static let aboAbgelaufenTitel = "Dein Abo ist abgelaufen"
         static let aboAbgelaufenText = "Zahlungslinks und Zahlseite sind gesperrt. Deine Daten bleiben erhalten."
         static let aboWiederAbschliessen = "Abo wieder abschließen"
@@ -241,6 +243,7 @@ enum Texte {
         // Nur im Demo-Studio (App-Prüfung bei Apple): Testzahlung ohne echtes Geld
         static let demoHinweis = "Demo-Studio: Hier wird nichts wirklich bezahlt. Mit der Testzahlung siehst du, was nach einer Zahlung passiert."
         static let demoZahlen = "Testzahlung auslösen"
+        static let testmodusHinweis = "Testmodus: Hier wird nichts wirklich bezahlt. Mit der Testzahlung siehst du, was nach einer Zahlung passiert."
     }
 
     enum Theke {
@@ -394,6 +397,8 @@ enum Texte {
         static let impressum = "Impressum"
         static let datenschutz = "Datenschutz"
         static let vertragText = "Vertrag"
+        static let seiteSichern = "Sichern"
+        static let seiteSichernHinweis = "Speichert die Seite als PDF, zum Sichern in Dateien, Drucken oder Teilen."
         static let seiteFehler = "Die Seite lädt gerade nicht. Bitte prüf dein Internet und versuch es nochmal."
         static let hilfe = "Hilfe: info@tattoofin.de"
         static let abmelden = "Abmelden"

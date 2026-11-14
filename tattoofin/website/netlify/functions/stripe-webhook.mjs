@@ -33,8 +33,19 @@ async function studioFuer(obj) {
 
 // Studios mit Apple-Abo (Anmeldung in der App) zahlen ihr Tattoofin-Paket über den App Store: Stripe-Ereignisse zum Paket ändern
 // dort nichts (kein Status, keine Rechnungsmails). Nur Admin-Mail. true = Ereignis erledigt.
+// Ausnahme: Ein Stripe-Abo, das für ein App-Studio entstanden ist (Web-Checkout kurz vor dem Wechsel in die App bezahlt), wird sofort
+// gekündigt, damit das Studio nicht doppelt zahlt (Apple + Stripe). Die erste Zahlung erstattet der Admin.
 async function appleWaechter(s, event) {
   if (!s || !istApple(s)) return false;
+  const o = event.data?.object || {};
+  if (event.type === "checkout.session.completed" && o.mode === "subscription" && o.subscription) {
+    const subId = typeof o.subscription === "string" ? o.subscription : o.subscription.id;
+    let gekuendigt = false;
+    try { await stripe("DELETE", "/subscriptions/" + subId); gekuendigt = true; } catch (e) { await log("stripe-abo-app-studio-kuendigen-fehler", { studioId: s.id, fehler: e.message }); }
+    await notifyAdmin(gekuendigt ? "Stripe-Abo für App-Studio sofort gekündigt (zahlt über Apple) – erste Zahlung bitte erstatten" : "⚠️ Stripe-Abo für App-Studio konnte nicht gekündigt werden – bitte sofort von Hand kündigen und erstatten", s, { Abo: subId, Sitzung: o.id || "–" });
+    await log("stripe-abo-app-studio", { studioId: s.id, subId, gekuendigt });
+    return true;
+  }
   await notifyAdmin("Stripe-Ereignis für App-Studio (zahlt über Apple) – nichts geändert, bitte prüfen", s, { Ereignis: event.type, Objekt: event.data?.object?.id || "–" });
   await log("stripe-ereignis-app-studio", { studioId: s.id, ereignis: event.type });
   return true;

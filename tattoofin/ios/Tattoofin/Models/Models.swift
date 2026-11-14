@@ -27,10 +27,15 @@ struct Studio: Codable, Sendable, Hashable {
     var abrechnung: String?
     /// Apple-Abo (nur bei abrechnung "apple")
     var apple: AppleAbo?
+    /// Testkauf (Apple-Sandbox, auch App Review): Kasse im Testmodus wie das Demo-Studio (Testzahlung ohne Geld, keine Stripe-Einrichtung)
+    var testmodus: Bool?
 
     var name: String { firma ?? "Dein Studio" }
     var darfKassieren: Bool { kannKassieren ?? false }
     var istDemo: Bool { demo ?? false }
+    var istTestmodus: Bool { testmodus ?? false }
+    /// Testzahlung ohne Geld möglich (Demo-Studio oder Testkauf)
+    var hatTestkasse: Bool { istDemo || istTestmodus }
 }
 
 struct Kuendigung: Codable, Sendable, Hashable {

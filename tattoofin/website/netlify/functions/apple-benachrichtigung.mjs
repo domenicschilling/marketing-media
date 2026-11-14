@@ -1,6 +1,8 @@
 // App Store Server Notifications V2 (Apple → Tattoofin). In App Store Connect als Production- UND Sandbox-URL eintragen:
 //   https://tattoofin.de/api/apple/benachrichtigung   (Version 2)
 // POST { signedPayload } → 200 { ok: true } (auch bei „doppelt“ und „ignoriert“), 400 nur bei ungültiger Signatur/Form (Apple versucht es dann erneut).
+// Body höchstens 64 KB. Ungültige Signaturen: höchstens 10 Log-Einträge je IP und Stunde.
+// Reihenfolge: ältere Benachrichtigungen (payload.signedDate < s.apple.letzteBenachrichtigung) nur protokollieren; laeuftBis nie rückwärts.
 // Ablauf: Signatur prüfen (Apple Root CA - G3, _lib/apple.mjs) → Bundle/Umgebung/App-ID → Doppelschutz apple/notif/<notificationUUID>
 // → signedTransactionInfo + signedRenewalInfo prüfen → Studio über idx/appleotx/<otx> (bei SUBSCRIBED/OFFER_REDEEMED auch über den Entwurf
 // idx/appentwurf/<appAccountToken>) → Wirkung je notificationType. Ohne Studio: apple/offen/<otx> + Admin-Mail.
@@ -12,8 +14,9 @@
 //   REFUND_REVERSED                wieder aktiv, wenn noch nicht abgelaufen      RENEWAL_EXTENDED/RENEWAL_EXTENSION → laeuftBis neu
 //   PRICE_INCREASE, CONSUMPTION_REQUEST, REFUND_DECLINED → Log + Admin-Mail      TEST → nur Log
 import { appleCfg, appleTestSchalter, istApple } from "./_lib/config.mjs";
-import { json, body, now, handler } from "./_lib/util.mjs";
-import { store, getStudio, log } from "./_lib/store.mjs";
+import { json, body, now, handler, clientIp, MAX_APP_BODY } from "./_lib/util.mjs";
+import crypto from "node:crypto";
+import { store, getStudio, saveStudio, log, zaehleAtomar } from "./_lib/store.mjs";
 import { notifyAdmin } from "./_lib/domain.mjs";
 import { jwsPruefen, transaktionPruefen, otxBeanspruchen, studioIdZuOtx, otxSchluessel, appleAktivieren, appleStatusAnwenden, kuendigungVerlaengern, uuidNorm } from "./_lib/apple.mjs";
 
@@ -56,6 +59,13 @@ async function verarbeiten(payload, notifKey) {
   if (s.status !== "entwurf" && s.apple?.otxKey && s.apple.otxKey !== otxSchluessel(tx)) {
     await log("apple-benachrichtigung-alte-kette", { studioId: s.id, typ });
     return { ergebnis: "alte-kette" };
+  }
+  // Reihenfolge-Schutz: Apple garantiert keine Reihenfolge und wiederholt fehlgeschlagene Zustellungen Stunden später (gleiches signedDate).
+  // Eine Benachrichtigung, die älter ist als die zuletzt verarbeitete dieses Studios, wird nur protokolliert.
+  const signiert = Number(payload.signedDate) || 0;
+  if (s.status !== "entwurf" && signiert && Date.parse(s.apple?.letzteBenachrichtigung || "") > signiert) {
+    await log("apple-benachrichtigung-veraltet", { studioId: s.id, typ, subtyp });
+    return { ergebnis: "veraltet", studioId: s.id };
   }
   const opt = { subtyp, uuid };
   const ereignis = "benachrichtigung:" + typ;
@@ -106,17 +116,24 @@ async function verarbeiten(payload, notifKey) {
       await log("apple-benachrichtigung-info", { studioId: s.id, typ, subtyp });
       return { ergebnis: "protokolliert", studioId: s.id };
   }
+  if (signiert && s.apple && !(Date.parse(s.apple.letzteBenachrichtigung || "") > signiert)) { s.apple.letzteBenachrichtigung = new Date(signiert).toISOString(); await saveStudio(s); }
   await log("apple-benachrichtigung", { studioId: s.id, typ, subtyp, status: s.apple?.status, notif: notifKey.slice(12) });
   return { ergebnis: "verarbeitet", studioId: s.id };
 }
 
-export default handler(async (req) => {
+// Ungültige Aufrufe (ohne Anmeldung erreichbar): höchstens 10 Log-Einträge je IP und Stunde (atomarer Zähler), damit niemand den Speicher füllt
+async function ungueltigMerken(req, context, daten) {
+  const ip = crypto.createHash("sha256").update(String(clientIp(req, context) || "?")).digest("hex").slice(0, 24);
+  if (await zaehleAtomar("rl/applenotif-ungueltig/" + ip, 10, 3600e3)) await log("apple-benachrichtigung-ungueltig", daten);
+}
+
+export default handler(async (req, context) => {
   if (req.method !== "POST") return json({ error: "Methode nicht erlaubt" }, 405);
-  const b = await body(req);
+  const b = await body(req, { max: MAX_APP_BODY });
   if (typeof b.signedPayload !== "string") return kaputt("signedPayload fehlt");
   let payload;
   try { payload = jwsPruefen(b.signedPayload); }
-  catch (e) { await log("apple-benachrichtigung-ungueltig", { grund: e.grund || e.message }); return kaputt("Signatur ungültig"); }
+  catch (e) { await ungueltigMerken(req, context, { grund: e.grund || e.message }); return kaputt("Signatur ungültig"); }
   const data = payload.data || {};
   const cfg = appleCfg(), schalter = appleTestSchalter();
   if (data.bundleId !== cfg.bundleId) return kaputt("Falsche App");
@@ -130,7 +147,7 @@ export default handler(async (req) => {
   try {
     return ok(await verarbeiten(payload, notifKey));
   } catch (e) {
-    if (e.fehlerCode === "jws_ungueltig") { await store.del(notifKey); await log("apple-benachrichtigung-ungueltig", { grund: e.grund || e.message, typ: payload.notificationType }); return kaputt("Signatur ungültig"); }
+    if (e.fehlerCode === "jws_ungueltig") { await store.del(notifKey); await ungueltigMerken(req, context, { grund: e.grund || e.message, typ: payload.notificationType }); return kaputt("Signatur ungültig"); }
     // Fachlich abgelehnt (z. B. Abo gehört schon zu einem anderen Studio): melden, aber nicht wiederholen lassen
     if (e.status && e.status < 500) {
       await log("apple-benachrichtigung-abgelehnt", { typ: payload.notificationType, code: e.fehlerCode || "", text: e.message });

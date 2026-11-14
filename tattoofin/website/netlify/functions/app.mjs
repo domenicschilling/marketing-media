@@ -33,7 +33,7 @@ import { apnsAktiv, pushTest, pushAnStudio, mitZeitlimit, nachrichtZahlung } fro
 import { demoAuszahlungen } from "./_lib/app-demo.mjs";
 import { oeffentlich, fuerStudio } from "./_lib/studio-ansicht.mjs";
 import { gutscheinAusstellen } from "./_lib/gutschein.mjs";
-import { istApple } from "./_lib/config.mjs";
+import { istApple, testKasse } from "./_lib/config.mjs";
 import { aj, fehler, hash, T, reviewFuer, codeIpErlaubt, codeAdresseErlaubt, aktiveStudios, anmeldeCodeSenden, reviewPruefen, codePruefen, nachAnmeldeCode, geraetFertig } from "./_lib/app-code.mjs";
 import { appRegistrierungRoute } from "./_lib/app-registrierung.mjs";
 
@@ -291,10 +291,10 @@ async function route(req, context) {
 
   if (bereich === "konto-loeschen" && m === "POST") return kontoLoeschen(s, ich, req);
 
-  // Nur Demo-Studio (App-Prüfung bei Apple): Testzahlung, damit der Prüfer den Ablauf „Link → bezahlt → Mitteilung“ sieht.
-  // Kein Geld, kein Stripe, keine Mails (notify/gutscheinSenden schicken bei Demo-Studios nichts).
+  // Nur Demo-Studio (App-Prüfung bei Apple) und Testkauf-Studio (Apple-Sandbox): Testzahlung, damit der Prüfer den Ablauf
+  // „Link → bezahlt → Mitteilung“ sieht. Kein Geld, kein Stripe, keine Gutschein-Mails (gutscheinSenden bei testKasse).
   if (bereich === "demo-zahlung" && sub && m === "POST") {
-    if (!s.demo) return fehler("Nicht gefunden", 404);
+    if (!testKasse(s)) return fehler("Nicht gefunden", 404);
     const z = await getZahlung(s.id, sub);
     if (!z) return fehler("Nicht gefunden", 404);
     if (z.status !== "offen") return fehler("Dieser Link ist nicht mehr offen.", 409, "nicht_offen");

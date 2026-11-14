@@ -140,9 +140,11 @@ Die native App (`tattoofin/ios/`) spricht dieselben Funktionen an wie das Dashbo
   Auslöser: Zahlung eingegangen / Gutschein verkauft, Stripe `payout.paid` und `payout.failed` (am Connect-Endpoint abonnieren; sonst holen die täglichen Jobs die letzten 48 Stunden nach).
 - App-Prüfung bei Apple: Demo-Studio (`demo: true`, keine Mails, nicht bezahlbar, nicht in Jobs/Abrechnung/Kennzahlen). Nach dem Deploy mit Domenics OK:
   `POST /api/admin/app-demo { email }` (Admin-Token), dann `APP_REVIEW_EMAIL`, `APP_REVIEW_CODE` (6 Ziffern), `APP_REVIEW_STUDIO_ID` setzen.
+  Zweiter Review-Zugang nur für „Konto anlegen“: `APP_REVIEW_REG_EMAIL` (gleicher Code, andere Adresse als `APP_REVIEW_EMAIL`). Führt immer zu
+  einem frischen Entwurf, frühere Prüf-Studios dieser Adresse werden abgehängt (Adresse `review-alt-<id>@tattoofin.invalid`, bleiben für den Admin).
 
 ```
-NODE_PATH=… node dev/app-api.mjs     # 262 Prüfungen der App-API inkl. Missbrauch und Apple-Abo, mit Stripe-, APNs- und Apple-Nachbau
+NODE_PATH=… node dev/app-api.mjs     # 285 Prüfungen der App-API inkl. Missbrauch und Apple-Abo, mit Stripe-, APNs- und Apple-Nachbau
 NODE_PATH=… node dev/app-lokal.mjs   # lokaler Server für den Simulator: fester Code 123456 (nur localhost), Beispiel-Studios,
                                      # Mitteilungen über xcrun simctl push; App mit -TFApiBase http://localhost:8888 starten
 node dev/app-demo.mjs [email]        # Demo-Studio lokal anlegen
@@ -162,6 +164,21 @@ Das Stripe-Konto für das Geld der Kunden richtet das Studio danach wie gewohnt 
 - Studio: `paket: "app"` („Monatlich (App Store)“), `abrechnung: "apple"`, `s.apple = { status, laeuftBis, … }`. Nie in der Monatsabrechnung, keine
   Stripe-Rechnungsmails, Stripe-Ereignisse dazu nur als Admin-Mail. Abo abgelaufen/erstattet/widerrufen → Studio `beendet` (Kasse gesperrt, Daten bleiben),
   neues Abo öffnet wieder. Kündigung zum Ende des bezahlten Zeitraums; Mails sagen „zusätzlich in den Einstellungen deines Apple-Accounts kündigen“.
+- Schutz gegen alte oder fremde Daten (Prüfung 14.11.2026): `abo/aktualisieren` (Abgleich aus der App) sperrt und öffnet nie und schiebt `laeuftBis`
+  nur nach vorne; `abo/wiederherstellen` ändert am Studio nichts (außer ein nie bestätigter Entwurf mit gültigem Kauf wird aktiviert). Ablauf,
+  Erstattung und Widerruf kommen nur über Apples Benachrichtigungen. Benachrichtigungen mit älterem `signedDate` als die zuletzt verarbeitete werden
+  nur protokolliert; ein Sperr-Ereignis zu einer früheren Transaktion sperrt nicht, solange ein späterer Zeitraum läuft (Admin-Mail). Ein Studio mit
+  echtem Abo (Production) lässt sich nicht durch einen Testkauf (Sandbox) ersetzen.
+- **Testmodus nach Testkauf** (Sandbox, TestFlight, App Review; `config.sandboxKasse`): Kasse offen wie im Demo-Studio (Zahlungslinks, „Testzahlung
+  auslösen“ über `/api/app/demo-zahlung/:id`), Kunden können nicht bezahlen (`pay.mjs` → 409), keine Gutschein-Mails, keine Stripe-Einrichtung.
+  `/api/portal` → `studio.testmodus`. Mit `APPLE_SANDBOX_STRIPE=1` aus (dann Stripe-Einrichtung wie bei echten Käufen).
+- Web-Anmeldung übernimmt einen offenen App-Entwurf (E-Mail per Code bestätigt, noch keine 30 Tage alt) nicht (409), erst nach Ablauf.
+  Ist eine Web-Checkout-Sitzung schon bezahlt, legt die App keinen Entwurf darüber (409 `schon_aktiv`); entsteht trotzdem ein Stripe-Abo für ein
+  App-Studio, kündigt der Webhook es sofort (Admin-Mail: erste Zahlung erstatten).
+- „Konto kündigen und löschen“ und Apple verlängert trotzdem: Kündigungs- und Löschdatum bleiben fest, Mail an das Studio „bei Apple kündigen,
+  Erstattung bei Apple“, Admin-Mail. Nur Kündigung (ohne Löschung): bezahlter Zeitraum bleibt nutzbar (wie bisher).
+- Mails an App-Studios verlinken Vertrag und AVV als App-Fassung (`?app=1`). Body der App-/Apple-Endpunkte höchstens 64 KB (413); ungültige
+  Benachrichtigungen höchstens 10 Log-Einträge je IP und Stunde.
 - App-Entwürfe ohne Kauf: keine Erinnerungs-Mail, nach 30 Tagen gelöscht. Vertrag 2026-12b mit § 13 (App-Fassung `?app=1` ohne Web-Preis), Archiv `vertrag-2026-12.html`.
 
 | Umgebungsvariable | Wirkung |
@@ -169,8 +186,10 @@ Das Stripe-Konto für das Geld der Kunden richtet das Studio danach wie gewohnt 
 | `APPLE_BUNDLE_ID` | Standard `de.tattoofin.app` |
 | `APPLE_PRODUKT_ID` | Standard `de.tattoofin.app.abo.monatlich` |
 | `APPLE_APP_ID` | optional, numerische App-ID; gesetzt → Production-Benachrichtigungen müssen dazu passen |
-| `APPLE_SANDBOX_STRIPE` | `1` = Stripe-Einrichtung auch nach Sandbox-/TestFlight-Käufen (Standard aus) |
+| `APPLE_SANDBOX_STRIPE` | `1` = Stripe-Einrichtung auch nach Sandbox-/TestFlight-Käufen (Standard aus = Kasse im Testmodus) |
+| `APP_REVIEW_REG_EMAIL` | Review-Zugang „Konto anlegen“ (mit `APP_REVIEW_CODE`), immer frischer Entwurf |
 | `APPLE_XCODE_TEST` | nur lokal (http://localhost): StoreKit-Testkäufe aus Xcode annehmen (`dev/app-lokal.mjs` setzt es) |
+| `TF_TESTMODUS` | nur `dev/app-lokal.mjs`: `1` = `APPLE_SANDBOX_STRIPE` aus, Testkäufe öffnen die Kasse im Testmodus (wie live bei Sandbox) |
 | `APPLE_TEST_ROOT_PEM` | nur lokal: Test-Wurzel statt Apple Root CA - G3 (`dev/apple-nachbau.mjs`, für `dev/app-api.mjs`) |
 
 Tests mit anderen Ports (wenn parallel ein Server läuft): `E2E_PORT`, `E2E_RESEND_PORT` (e2e), `BETRIEB_PORT` (betrieb), `STRIPE_MOCK_PORT` (betrieb, app-api).

@@ -106,9 +106,9 @@ struct ZahlungslinkSheet: View {
                 Button(Texte.Zahlung.stornieren, role: .destructive) { stornoFrage = true }
                     .buttonStyle(.gefahr)
 
-                // Nur im Demo-Studio (App-Prüfung bei Apple): Testzahlung ohne Geld
-                if portal.studio?.istDemo == true {
-                    HinweisKarte(text: Texte.Zahlung.demoHinweis, symbol: "info.circle.fill")
+                // Nur im Demo-Studio (App-Prüfung bei Apple) und nach einem Testkauf (Apple-Sandbox): Testzahlung ohne Geld
+                if portal.studio?.hatTestkasse == true {
+                    HinweisKarte(text: portal.studio?.istTestmodus == true ? Texte.Zahlung.testmodusHinweis : Texte.Zahlung.demoHinweis, symbol: "info.circle.fill")
                     Button(Texte.Zahlung.demoZahlen) { demoZahlen() }
                         .buttonStyle(.zweit)
                 }

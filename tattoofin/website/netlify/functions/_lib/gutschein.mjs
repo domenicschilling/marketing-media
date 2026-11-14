@@ -7,7 +7,7 @@
 // Gültigkeit: regelmäßige Verjährung 3 Jahre ab Ende des Kaufjahres (§§ 195, 199 BGB) → 31.12. des dritten Folgejahres.
 import crypto from "node:crypto";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
-import { CFG } from "./config.mjs";
+import { CFG, testKasse } from "./config.mjs";
 import { store, saveZahlung, getStudio, getZahlung } from "./store.mjs";
 import { ladeBild } from "./branding.mjs";
 import { sendMail } from "./mail.mjs";
@@ -64,8 +64,8 @@ export async function gutscheinAusstellen(s, z) {
 
 export async function gutscheinSenden(s, z) {
   const g = z.gutschein;
-  // Demo-Studio (App-Prüfung): nie echte Mails, aber wie „gesendet“ behandeln, damit die App keinen Fehler zeigt
-  if (s?.demo) {
+  // Demo-Studio (App-Prüfung) und Testkauf-Studio (Apple-Sandbox): nie echte Mails, aber wie „gesendet“ behandeln, damit die App keinen Fehler zeigt
+  if (testKasse(s)) {
     g.gesendetAm = now(); g.gesendetAn = z.email; g.versandOk = true; g.demo = true;
     z.gutschein = g;
     await saveZahlung(z);

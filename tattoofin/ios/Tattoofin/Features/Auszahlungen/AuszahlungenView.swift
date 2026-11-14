@@ -22,7 +22,7 @@ struct AuszahlungenView: View {
                     if a.konto?.auszahlungenAktiv == false {
                         Section { HinweisKarte(text: Texte.Auszahlungen.nichtAktiv).listRowInsets(EdgeInsets()).listRowBackground(Color.clear) }
                     }
-                    Section(Texte.Auszahlungen.listeTitel) {
+                    Section {
                         if liste.isEmpty {
                             Text(a.hinweis ?? Texte.Auszahlungen.leer).font(.dm(.body)).foregroundStyle(Color.tfLeise)
                         }
@@ -38,6 +38,8 @@ struct AuszahlungenView: View {
                             }
                             .disabled(laedtMehr)
                         }
+                    } header: {
+                        ListenKopf(Texte.Auszahlungen.listeTitel)
                     }
                 }
                 if let fehler { Section { FehlerZeile(text: fehler) } }

@@ -1,5 +1,7 @@
 import SwiftUI
 import WebKit
+import CoreTransferable
+import UniformTypeIdentifiers
 
 /// Rechtstexte in der App (Impressum, Datenschutz, Vertrag, AVV), erreichbar vor und nach der Anmeldung (§ 5 DDG, Apple 5.1.1(i)).
 /// Bewusst kein Safari: Die Seiten laden mit „?app=1“ (ohne Menü, Cookie-Hinweis, Pixel, WhatsApp-Knopf). Zusätzlich sperrt die App selbst
@@ -38,10 +40,11 @@ struct RechtsAnsicht: View {
     @State private var laedt = true
     @State private var fehler = false
     @State private var versuch = 0
+    @State private var halter = WebHalter()
 
     var body: some View {
         NavigationStack {
-            RechtsWebAnsicht(url: seite.url, versuch: versuch, laedt: $laedt, fehler: $fehler)
+            RechtsWebAnsicht(url: seite.url, versuch: versuch, laedt: $laedt, fehler: $fehler, halter: halter)
                 .ignoresSafeArea(edges: .bottom)
                 .overlay {
                     if fehler {
@@ -60,11 +63,49 @@ struct RechtsAnsicht: View {
                 .navigationTitle(seite.titel)
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
+                    // Vertrag und AVV beim Abschluss speichern oder drucken (§ 312i Abs. 1 Nr. 4 BGB): PDF der geladenen Seite
+                    if !laedt && !fehler {
+                        ToolbarItem(placement: .topBarLeading) {
+                            ShareLink(item: RechtsPDF(halter: halter, name: "Tattoofin-" + seite.titel.replacingOccurrences(of: " ", with: "-")),
+                                      preview: SharePreview(seite.titel)) {
+                                Label(Texte.Konto.seiteSichern, systemImage: "square.and.arrow.up")
+                            }
+                            .font(.dm(.body))
+                            .accessibilityHint(Texte.Konto.seiteSichernHinweis)
+                            .accessibilityIdentifier("rechtsseite-sichern")
+                        }
+                    }
                     ToolbarItem(placement: .confirmationAction) {
                         Button(Texte.Allgemein.fertig) { dismiss() }.font(.dm(.body, weight: .semibold))
                     }
                 }
         }
+    }
+}
+
+/// Hält die angezeigte Web-Ansicht, damit „Sichern“ daraus ein PDF machen kann
+@MainActor
+final class WebHalter {
+    weak var web: WKWebView?
+}
+
+/// Rechtsseite als PDF zum Teilen, Sichern in „Dateien“ oder Drucken (wird erst beim Teilen erzeugt)
+struct RechtsPDF: Transferable {
+    let halter: WebHalter
+    let name: String
+
+    static var transferRepresentation: some TransferRepresentation {
+        FileRepresentation(exportedContentType: .pdf) { pdf in
+            let daten = try await pdf.erzeugen()
+            let ziel = FileManager.default.temporaryDirectory.appending(path: pdf.name + ".pdf")
+            try daten.write(to: ziel, options: .atomic)
+            return SentTransferredFile(ziel)
+        }
+    }
+
+    @MainActor func erzeugen() async throws -> Data {
+        guard let web = halter.web else { throw URLError(.cancelled) }
+        return try await web.pdf()
     }
 }
 
@@ -74,6 +115,7 @@ struct RechtsWebAnsicht: UIViewRepresentable {
     let versuch: Int
     @Binding var laedt: Bool
     @Binding var fehler: Bool
+    var halter: WebHalter? = nil
 
     /// Inhaltsregeln (WebKit-Inhaltsblocker): Tracking-Skript und Meta nie laden, Menü und Fuß ausblenden.
     /// Achtung: Die Regex der Inhaltsblocker kennt kein „|“ (sonst lässt sich die Liste nicht übersetzen) → je Domain eine Regel.
@@ -96,6 +138,7 @@ struct RechtsWebAnsicht: UIViewRepresentable {
         web.allowsLinkPreview = false
         web.isOpaque = false
         web.backgroundColor = UIColor(Color.tfHintergrund)
+        halter?.web = web
         context.coordinator.versuch = versuch
         Task { @MainActor in
             // Erst die Regeln, dann laden (sonst könnte das Skript schon laufen)

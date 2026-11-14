@@ -71,7 +71,7 @@ struct KontoView: View {
     // MARK: Abschnitte
 
     private var studioAbschnitt: some View {
-        Section(Texte.Konto.studio) {
+        Section {
             if let s = studio {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(s.name).font(.luckiest(24, relativeTo: .title2)).foregroundStyle(Color.tfTinte)
@@ -93,12 +93,14 @@ struct KontoView: View {
             } else {
                 ProgressView()
             }
+        } header: {
+            ListenKopf(Texte.Konto.studio)
         }
     }
 
     /// Nur bei Studios, die ihr Tattoofin-Abo über Apple bezahlen
     private var aboAbschnitt: some View {
-        Section(Texte.Abo.abschnitt) {
+        Section {
             let abo = studio?.apple
             WertZeile(titel: Texte.Abo.bezahltUeber, wert: Texte.Abo.apple)
             if let abo {
@@ -120,6 +122,8 @@ struct KontoView: View {
                 }
                 .foregroundStyle(Color.tfTinte)
             }
+        } header: {
+            ListenKopf(Texte.Abo.abschnitt)
         }
     }
 
@@ -142,7 +146,7 @@ struct KontoView: View {
                 Button { openURL(u) } label: { Label(Texte.Kasse.stripeOeffnen, systemImage: "safari") }
             }
         } header: {
-            Text(Texte.Konto.stripe)
+            ListenKopf(Texte.Konto.stripe)
         }
     }
 
@@ -181,9 +185,9 @@ struct KontoView: View {
             Toggle(Texte.Konto.pushVorname, isOn: $kundenname)
                 .onChange(of: kundenname) { alt, neu in if alt != neu { kundennameSpeichern() } }
         } header: {
-            Text(Texte.Konto.mitteilungen)
+            ListenKopf(Texte.Konto.mitteilungen)
         } footer: {
-            Text(Texte.Konto.mitteilungenHinweis)
+            ListenFuss(Texte.Konto.mitteilungenHinweis)
         }
     }
 
@@ -213,18 +217,20 @@ struct KontoView: View {
             NavigationLink { TeamView() } label: { Label(Texte.Konto.team, systemImage: "person.2") }
             NavigationLink { GeraeteView() } label: { Label(Texte.Konto.geraete, systemImage: "iphone") }
         } header: {
-            Text(Texte.Konto.sicherheit)
+            ListenKopf(Texte.Konto.sicherheit)
         }
     }
 
     private var rechtAbschnitt: some View {
-        Section(Texte.Konto.rechtliches) {
+        Section {
             Button { rechtsseite = .impressum } label: { Label(Texte.Konto.impressum, systemImage: "doc.text") }
             Button { rechtsseite = .datenschutz } label: { Label(Texte.Konto.datenschutz, systemImage: "hand.raised") }
             Button { rechtsseite = .vertrag } label: { Label(Texte.Konto.vertragText, systemImage: "signature") }
             Link(destination: URL(string: "mailto:info@tattoofin.de")!) {
                 Label(Texte.Konto.hilfe, systemImage: "envelope")
             }
+        } header: {
+            ListenKopf(Texte.Konto.rechtliches)
         }
         .foregroundStyle(Color.tfTinte)
     }
@@ -243,7 +249,7 @@ struct KontoView: View {
                 Text(istInhaber ? Texte.Konto.loeschen : Texte.Team.zugangEntfernen).foregroundStyle(Color.tfRot)
             }
         } footer: {
-            Text(Texte.Konto.version(APIClient.appVersionText))
+            ListenFuss(Texte.Konto.version(APIClient.appVersionText))
         }
     }
 

@@ -26,7 +26,7 @@ struct GeraeteView: View {
                             }
                     }
                 } footer: {
-                    Text(Texte.Geraete.hinweis)
+                    ListenFuss(Texte.Geraete.hinweis)
                 }
             } else if fehler == nil {
                 LadeAnsicht().listRowBackground(Color.clear)

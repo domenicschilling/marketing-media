@@ -70,8 +70,12 @@ export default handler(async (req, context) => {
   let s = b.resumeId ? await getStudio(b.resumeId) : await studioBy("email", d.email);
   if (s && !["entwurf", "abgebrochen"].includes(s.status)) return fail("Für diese E-Mail gibt es schon einen Vertrag. Bitte logge dich im Studio-Portal ein.", 409);
   if (s && s.email !== d.email && b.resumeId) s = null;
-  // Offener App-Entwurf (Anmeldung in der App ohne Kauf) wird vom Web übernommen: Apple-Felder entfernen, damit ein späterer
-  // Apple-Kauf diesen Entwurf nicht mehr aktiviert (landet dann als „Apple-Abo ohne Studio“ beim Admin)
+  // Offener App-Entwurf (Anmeldung in der App, E-Mail per Code bestätigt, Kauf noch offen): Das Web prüft die Adresse nicht, darum
+  // darf es ihn nicht übernehmen (sonst könnte jemand mit fremder Adresse den Entwurf überschreiben und einen späteren Apple-Kauf ins
+  // Leere laufen lassen). Erst nach Ablauf (30 Tage) übernimmt das Web: Apple-Felder entfernen, damit ein späterer Kauf ihn nicht aktiviert.
+  if (s && istApple(s) && s.status === "entwurf" && Date.parse(s.appEntwurf?.ablauf || "") > Date.now()) {
+    return fail("Für diese E-Mail-Adresse läuft schon eine Anmeldung in der Tattoofin-App. Bitte schließ sie in der App ab. Fragen? info@tattoofin.de", 409);
+  }
   const appEntwurf = s && istApple(s) ? s.appEntwurf : null;
 
   if (geschenk && normEmail(geschenk.email) !== normEmail(d.email)) return fail(`Diese Einladung gilt für ${geschenk.email}. Bitte nutze diese E-Mail-Adresse.`);

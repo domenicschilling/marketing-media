@@ -190,33 +190,53 @@ export async function appleAktivieren(s, tx, { quelle = "app", renewal = null } 
   return { s, neu: true };
 }
 
-// Status aus einer Transaktion ableiten (ohne Benachrichtigung, z. B. Abgleich aus der App)
-function statusAus(tx, a, jetzt) {
-  if (tx?.revocationDate) return "erstattet";
-  if (a.laeuftBis && Date.parse(a.laeuftBis) <= jetzt) return "abgelaufen";
-  if (a.status === "zahlungsproblem") return "zahlungsproblem";
-  return a.autoVerlaengerung === false ? "gekuendigt" : "aktiv";
-}
-
 // Neuen Stand von Apple übernehmen und den Zugang anpassen.
-//   status: fester neuer Status (Benachrichtigung), sonst aus der Transaktion abgeleitet
+//   status: fester neuer Status (aus einer Apple-Benachrichtigung oder „Abo wieder abschließen“)
 //   oeffnen: gesperrten Zugang wieder öffnen, wenn der neue Status aktiv ist (Benachrichtigung, Abo erneuern in der App)
 //   auchNachKuendigung: auch ein nach Kündigung beendetes Studio wieder öffnen (neues Abo vom Inhaber)
-export async function appleStatusAnwenden(s, tx, renewal, ereignis, { status, oeffnen = false, auchNachKuendigung = false, subtyp, uuid, jetzt = Date.now() } = {}) {
+//   abgleich: Stand aus der App (abo/aktualisieren). Sperrt NIE, öffnet NIE und verschiebt laeuftBis nur nach vorne: Ablauf, Erstattung
+//             und Widerruf meldet allein Apple per Benachrichtigung (sonst könnte eine alte, gültig signierte Transaktion ein zahlendes
+//             Studio sperren, z. B. eine nicht abgeschlossene Verlängerung aus Transaction.updates).
+// Benachrichtigungen kommen in Reihenfolge (apple-benachrichtigung.mjs prüft signedDate). Zusätzlich sperrt ein Sperr-Ereignis zu einer
+// anderen, früheren Transaktion nicht, solange ein späterer bezahlter Zeitraum läuft (nur Admin-Mail).
+export async function appleStatusAnwenden(s, tx, renewal, ereignis, { status, oeffnen = false, auchNachKuendigung = false, abgleich = false, subtyp, uuid, jetzt = Date.now() } = {}) {
   const a = s.apple || (s.apple = {});
-  if (tx) {
+  const bisher = Date.parse(a.laeuftBis || "") || 0;
+  const txBis = Number(tx?.expiresDate) || 0;
+  const uebernehmen = () => {
     if (tx.transactionId !== undefined) a.letzteTransactionId = String(tx.transactionId);
-    if (Number(tx.expiresDate) > 0) a.laeuftBis = iso(tx.expiresDate);
+    if (txBis > 0) a.laeuftBis = iso(txBis);
     if (tx.price !== undefined && tx.price !== null && Number.isFinite(Number(tx.price))) a.preisMilli = Number(tx.price);
     if (tx.currency) a.waehrung = tx.currency;
     if (tx.storefront) a.storefront = tx.storefront;
     if (tx.signedDate) a.letzteSignatur = iso(tx.signedDate);
+  };
+  if (abgleich) {
+    if (tx && txBis > bisher) {
+      uebernehmen();
+      // Apple hat verlängert (Benachrichtigung fehlt noch) → Zahlungsproblem ist erledigt
+      if (a.status === "zahlungsproblem" && !a.gesperrt) a.status = "aktiv";
+    }
+    a.aktualisiertAm = now();
+    ereignisAnhaengen(a, ereignis, { subtyp, uuid });
+    await saveStudio(s);
+    return s;
   }
+  let neu = status || (a.autoVerlaengerung === false ? "gekuendigt" : "aktiv");
+  const andereTx = tx && tx.transactionId !== undefined && a.letzteTransactionId && String(tx.transactionId) !== String(a.letzteTransactionId);
+  if (SPERR_STATUS.includes(neu) && andereTx && txBis < bisher && bisher > jetzt) {
+    ereignisAnhaengen(a, ereignis + ":frueherer-zeitraum", { subtyp, uuid });
+    a.aktualisiertAm = now();
+    await saveStudio(s);
+    await log("apple-ereignis-frueherer-zeitraum", { studioId: s.id, ereignis, neu });
+    await notifyAdmin(`Apple: ${neu} für einen früheren Abo-Zeitraum – Zugang bleibt offen, bitte prüfen`, s, { Ereignis: ereignis, Transaktion: String(tx.transactionId ?? "–"), Laeuft_bis: a.laeuftBis || "–" });
+    return s;
+  }
+  if (tx) uebernehmen();
   if (renewal && typeof renewal.autoRenewStatus === "number") a.autoVerlaengerung = renewal.autoRenewStatus === 1;
   // Zahlungsproblem mit Kulanzzeit: Zugang bis zum Ende der Kulanzzeit
   if (status === "zahlungsproblem" && Number(renewal?.gracePeriodExpiresDate) > Date.parse(a.laeuftBis || 0)) a.laeuftBis = iso(renewal.gracePeriodExpiresDate);
-  let neu = status || statusAus(tx, a, jetzt);
-  // Ohne Freigabe zum Öffnen bleibt ein gesperrtes Studio gesperrt (der Abgleich aus der App kann nicht reaktivieren)
+  // Ohne Freigabe zum Öffnen bleibt ein gesperrtes Studio gesperrt
   if (!oeffnen && a.gesperrt && !SPERR_STATUS.includes(neu)) neu = a.status;
   a.status = neu;
   a.aktualisiertAm = now();
@@ -269,14 +289,24 @@ export async function appleZugangOeffnen(s, { auchNachKuendigung = false } = {})
   return true;
 }
 
-// Apple hat verlängert, obwohl das Studio bei Tattoofin gekündigt hat: bezahlten Zeitraum nutzbar machen (Kündigung zum neuen Ablauf)
+// Apple hat verlängert, obwohl das Studio bei Tattoofin gekündigt hat: bezahlten Zeitraum nutzbar machen (Kündigung zum neuen Ablauf).
+// Mit Löschanfrage (Konto kündigen und löschen in der App) NICHT: Kündigungs- und Löschdatum bleiben fest (Apple 5.1.1(v), das in der App
+// angezeigte Datum stimmt weiter). Das Studio bekommt den Hinweis, bei Apple zu kündigen und die Erstattung bei Apple zu beantragen.
 export async function kuendigungVerlaengern(s) {
   const zum = s.apple?.laeuftBis;
   if (!zum || !s.kuendigung || s.kuendigung.durchAnbieter || s.kuendigung.garantie || s.apple?.gesperrt) return false;
   if (!["gekuendigt", "beendet"].includes(s.status) || Date.parse(zum) <= Date.parse(s.kuendigung.zum || 0)) return false;
+  if (s.loeschAnfrage) {
+    if (s.loeschAnfrage.appleVerlaengertGemeldet === zum) return false;
+    s.loeschAnfrage.appleVerlaengertGemeldet = zum;
+    await saveStudio(s);
+    await log("apple-verlaengert-trotz-loeschung", { studioId: s.id, zum });
+    await notify(s, mails.appleVerlaengertTrotzLoeschung(s, { zum: s.kuendigung.zum, loeschungAb: s.loeschAnfrage.loeschungAb }));
+    await notifyAdmin("Apple hat verlängert, obwohl das Studio die Löschung beantragt hat – Löschung bleibt wie geplant, Studio informiert", s, { Kuendigung_zum: s.kuendigung.zum || "–", Loeschung_ab: s.loeschAnfrage.loeschungAb || "–", Apple_bis: zum });
+    return false;
+  }
   s.kuendigung = { ...s.kuendigung, zum, erinnert: null, verlaengertDurchApple: now() };
   if (s.status === "beendet") { s.status = "gekuendigt"; s.vertragsende = null; }
-  if (s.loeschAnfrage) s.loeschAnfrage.loeschungAb = new Date(Date.parse(zum) + 30 * 864e5).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" });
   await saveStudio(s);
   await log("apple-verlaengert-trotz-kuendigung", { studioId: s.id, zum });
   await notify(s, mails.appleVerlaengertTrotzKuendigung(s, { zum }));

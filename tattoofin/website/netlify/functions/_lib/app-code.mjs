@@ -41,6 +41,13 @@ export async function reviewFuer(email) {
   const s = await getStudio(k.studioId);
   return s?.demo ? { ...k, s } : null;
 }
+// Zweiter Review-Zugang nur für die Registrierung (App-Prüfung: Konto anlegen, Sandbox-Kauf, Löschen): APP_REVIEW_REG_EMAIL + APP_REVIEW_CODE.
+// Muss sich von APP_REVIEW_EMAIL unterscheiden. Ohne beide Variablen aus.
+export function reviewRegFuer(email) {
+  const e = normEmail(process.env.APP_REVIEW_REG_EMAIL || ""), c = String(process.env.APP_REVIEW_CODE || "");
+  if (!e || !/^\d{6}$/.test(c) || e === normEmail(process.env.APP_REVIEW_EMAIL || "") || e !== email) return null;
+  return { email: e, code: c };
+}
 // Fester Code nur für den lokalen Nachbau (dev/app-lokal.mjs), nie auf Netlify
 export const lokalerCode = () => {
   const c = String(process.env.APP_LOKAL_CODE || "");

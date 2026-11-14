@@ -241,6 +241,16 @@ struct RegistrierungTests {
         #expect(!Rechtsseite.erlaubt(URL(string: "https://tattoofin.de/preise.html")!, basis: basis))
     }
 
+    // MARK: Testkauf (Apple-Sandbox): Kasse im Testmodus
+
+    @Test func testmodusDekodieren() throws {
+        let s = try JSONDecoder().decode(Studio.self, from: Data(#"{"id":"st_1","abrechnung":"apple","testmodus":true,"kannKassieren":true}"#.utf8))
+        #expect(s.istTestmodus && s.hatTestkasse && !s.istDemo && s.darfKassieren)
+        let alt = try JSONDecoder().decode(Studio.self, from: Data(#"{"id":"st_2"}"#.utf8))
+        #expect(!alt.istTestmodus && !alt.hatTestkasse)
+        #expect(!Texte.Kasse.testmodusText.contains("tattoofin.de") && !Texte.Kasse.testmodusText.contains("49"))
+    }
+
     // MARK: Kasse: welcher Hinweis
 
     @Test func gesperrtFaelle() {
@@ -338,6 +348,16 @@ struct AboLogikTests {
         #expect(AboManager.zuordnung(appAccountToken: uuid, produktId: p, entwurf: nil, studio: stripe, istInhaber: true) == .nurAbschliessen)
         // Anderes Produkt → nur abschließen
         #expect(AboManager.zuordnung(appAccountToken: uuid, produktId: "x", entwurf: entwurf(uuid), studio: nil, istInhaber: false) == .nurAbschliessen)
+        // Abgelaufene oder widerrufene Transaktion (z. B. alte Verlängerung aus Transaction.updates) → nur abschließen, nie an den Server
+        for studio in [appleStudio("aktiv", uuid), appleStudio("abgelaufen", uuid)] {
+            #expect(AboManager.zuordnung(appAccountToken: uuid, produktId: p, entwurf: nil, studio: studio, istInhaber: true, gueltig: false) == .nurAbschliessen)
+        }
+        #expect(AboManager.zuordnung(appAccountToken: uuid, produktId: p, entwurf: entwurf(uuid), studio: nil, istInhaber: false, gueltig: false) == .nurAbschliessen)
+        let jetzt = Date.now
+        #expect(AboManager.istGueltig(ablauf: jetzt.addingTimeInterval(3600), widerrufen: false, jetzt: jetzt))
+        #expect(!AboManager.istGueltig(ablauf: jetzt.addingTimeInterval(-1), widerrufen: false, jetzt: jetzt))
+        #expect(!AboManager.istGueltig(ablauf: jetzt.addingTimeInterval(3600), widerrufen: true, jetzt: jetzt))
+        #expect(AboManager.istGueltig(ablauf: nil, widerrufen: false, jetzt: jetzt))
     }
 
     @Test func reaktionen() {
@@ -345,10 +365,10 @@ struct AboLogikTests {
         #expect(AboManager.reaktion(auf: APIFehler.keinNetz) == .nochmal(Texte.Abo.nichtBestaetigt))
         #expect(AboManager.reaktion(auf: f(502, nil)) == .nochmal(Texte.Abo.nichtBestaetigt))
         #expect(AboManager.reaktion(auf: f(429, "zu_viele")) == .nochmal("T"))
-        for c in ["abo_vergeben", "produkt", "familie"] { #expect(AboManager.reaktion(auf: f(409, c)) == .abschliessen("T")) }
+        for c in ["abo_vergeben", "produkt", "familie", "abo_abgelaufen", "token_passt_nicht"] { #expect(AboManager.reaktion(auf: f(409, c)) == .abschliessen("T")) }
         #expect(AboManager.reaktion(auf: f(410, "entwurf_abgelaufen")) == .neuAnfangen("T"))
         #expect(AboManager.reaktion(auf: f(409, "schon_aktiv")) == .zurAnmeldung("T"))
-        for c in ["jws_ungueltig", "umgebung", "abo_abgelaufen", "token_passt_nicht"] { #expect(AboManager.reaktion(auf: f(400, c)) == .text("T")) }
+        for c in ["jws_ungueltig", "umgebung"] { #expect(AboManager.reaktion(auf: f(400, c)) == .text("T")) }
         #expect(AboManager.reaktion(auf: CancellationError()) == .nochmal(Texte.Abo.nichtBestaetigt))
     }
 }

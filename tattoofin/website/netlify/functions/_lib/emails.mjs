@@ -36,10 +36,12 @@ const rows = (pairs) => `<table role="presentation" cellpadding="0" cellspacing=
 const hallo = (s) => p(`Hey ${esc(s.inhaber?.split(" ")[0] || s.firma)},`);
 // Abo über Apple (Anmeldung in der App): nie Web-Preis, nie Link zur Web-Anmeldung, nie „Paket wechseln“ (Apple 3.1.3)
 const istAppAbo = (s) => s?.abrechnung === "apple" || s?.paket === "app";
+// Vertragstext: App-Studios bekommen die App-Fassung (?app=1: ohne Web-Preis, Stripe-Einzug und Aufsteller), die sie akzeptiert haben
+const vertragLinks = (s) => { const q = istAppAbo(s) ? "?app=1" : ""; return `<a href="${CFG.siteUrl}/vertrag.html${q}">Vertrag</a> · <a href="${CFG.siteUrl}/avv.html${q}">AVV</a>`; };
 const APPLE_KUENDIGEN = "Wichtig: Dein Abo läuft über Apple. Kündige es zusätzlich in den Einstellungen deines Apple-Accounts unter Abos, sonst bucht Apple weiter ab. Erstattungen beantragst du direkt bei Apple.";
 const modellText = (s) => {
   const p = paketVon(s);
-  if (istAppAbo(s)) return "Tattoofin über die App: Abo über deinen Apple-Account zum Preis aus dem App Store. Keine Tattoofin-Provision. Die Gebühren für Kundenzahlungen zahlst du direkt an Stripe. Kündigen kannst du in den Einstellungen deines Apple-Accounts.";
+  if (istAppAbo(s)) return "Tattoofin über die App: Abo über deinen Apple-Account zum Preis aus dem App Store. Verkäufer des Abos ist Apple, den Beleg mit ausgewiesener Umsatzsteuer bekommst du von Apple (Kaufhistorie deines Apple-Accounts), von Tattoofin kommt dafür keine eigene Rechnung. Keine Tattoofin-Provision. Die Gebühren für Kundenzahlungen zahlst du direkt an Stripe. Kündigen kannst du in den Einstellungen deines Apple-Accounts.";
   if (p.id === "geschenk" && s.sonderkondition) return `${s.sonderkondition}: keine Einrichtungsgebühr, keine Grundgebühr, keine Provision. Du zahlst nur die normalen Zahlungsgebühren von Stripe (bzw. Klarna) direkt an Stripe, Tattoofin verdient nichts daran.`;
   if (p.id === "geschenk") return "Geschenk: keine Einrichtungsgebühr, keine Grundgebühr, keine Provision. Du zahlst nur die normalen Gebühren von Stripe (bzw. Klarna) direkt an Stripe, Tattoofin verdient nichts daran.";
   if (p.id === "monatlich") return `Paket Monatlich: ${euro(s.monatNetto || CFG.monatNetto)} netto im Monat (${euro(brutto(s.monatNetto || CFG.monatNetto))} inkl. USt.), danach nur die Zahlungsgebühren, die du direkt an Stripe zahlst. Keine Tattoofin-Provision, monatlich kündbar. Inklusive QR-Aufsteller aus Holz (Wert 29 €) und digitalem QR-Code.`;
@@ -95,7 +97,7 @@ export const mails = {
     body: hallo(s) + p("schön, dass du dabei bist. Hier ist die Zusammenfassung deines Vertrags:") + rows([
       ["Studio", esc(s.firma)], ["Paket", esc(modellText(s))],
       ["Vertrag / AVV", `Version ${esc(s.vertrag.version)}, akzeptiert am ${datum(s.vertrag.akzeptiertAm)} von ${esc(s.vertrag.name)}`],
-      ["Vertragstext", `<a href="${CFG.siteUrl}/vertrag.html">Vertrag</a> · <a href="${CFG.siteUrl}/avv.html">AVV</a>`],
+      ["Vertragstext", vertragLinks(s)],
     ]) + p("<b>So geht's weiter:</b>") +
       `<ol style="margin:0 0 14px;padding-left:20px">
       <li><b>Stripe-Konto verbinden</b> (ca. 10 Minuten): ${s.modell === "provision" ? "Über dieses Konto zahlt Stripe dir automatisch " + (100 - provisionSatz(s)) + " % jeder Kundenzahlung auf das Bankkonto deines Studios aus." : "Das Konto gehört deinem Studio."} Stripe prüft Identität und Bankverbindung, das dauert meist 1 bis 3 Werktage.</li>
@@ -198,6 +200,16 @@ export const mails = {
     title: "Dein Abo wurde verlängert",
     body: hallo(s) + p(`du hast Tattoofin gekündigt, aber Apple hat dein Abo trotzdem verlängert. Den bezahlten Zeitraum kannst du nutzen: Dein Vertrag läuft jetzt bis <b>${datum(zum)}</b>. Bis dahin funktionieren Zahlungslinks und Zahlseite ganz normal.`) +
       box(`<b>${APPLE_KUENDIGEN}</b>`),
+  }),
+
+  // Apple hat verlängert, obwohl das Studio „Konto kündigen und löschen“ gewählt hat: Kündigung und Löschung bleiben wie beantragt
+  appleVerlaengertTrotzLoeschung: (s, { zum, loeschungAb }) => mk("Apple hat dein Abo verlängert – bitte bei Apple kündigen", {
+    preheader: "Deine Kündigung und Löschung bleiben wie beantragt.",
+    title: "Apple bucht noch ab",
+    body: hallo(s) + p(`du hast Tattoofin gekündigt und die Löschung deines Kontos beantragt. Apple hat dein Abo trotzdem verlängert, weil es in deinem Apple-Account noch läuft.`) +
+      p(`Deine Kündigung und die Löschung bleiben wie beantragt: Tattoofin läuft bis <b>${datum(zum)}</b>${loeschungAb ? `, gelöscht wird ab <b>${datum(loeschungAb)}</b>` : ""}.`) +
+      box(`<b>Kündige das Abo jetzt in den Einstellungen deines Apple-Accounts unter Abos, sonst bucht Apple jeden Monat weiter ab. Die Erstattung des neuen Zeitraums beantragst du direkt bei Apple.</b>`) +
+      p("Du willst Tattoofin doch behalten? Antworte einfach auf diese Mail, dann nehmen wir die Kündigung zurück."),
   }),
 
   // Löschanfrage aus der App: Kündigung zum Datum, danach werden die Daten gelöscht (soweit keine Aufbewahrungspflicht)

@@ -17,8 +17,10 @@ struct TeamView: View {
     var body: some View {
         TFListe {
             if let t = team {
-                Section(Texte.Team.haupt) {
+                Section {
                     Label(t.hauptadresse ?? "–", systemImage: "person.crop.circle.badge.checkmark")
+                } header: {
+                    ListenKopf(Texte.Team.haupt)
                 }
                 Section {
                     if t.team.isEmpty {
@@ -40,13 +42,13 @@ struct TeamView: View {
                         }
                     }
                 } header: {
-                    Text(Texte.Team.teamTitel(t.team.count, max))
+                    ListenKopf(Texte.Team.teamTitel(t.team.count, max))
                 } footer: {
-                    Text(darfAendern ? Texte.Team.hinweisInhaber : Texte.Team.hinweisTeam)
+                    ListenFuss(darfAendern ? Texte.Team.hinweisInhaber : Texte.Team.hinweisTeam)
                 }
 
                 if darfAendern && t.team.count < max {
-                    Section(Texte.Team.hinzufuegen) {
+                    Section {
                         TextField(Texte.Team.hinzufuegen, text: $neueAdresse, prompt: tfPlatzhalter(Texte.Team.adressePlatzhalter))
                             .textContentType(.emailAddress)
                             .keyboardType(.emailAddress)
@@ -55,13 +57,15 @@ struct TeamView: View {
                             .onSubmit { hinzufuegen() }
                         Button(Texte.Team.hinzufuegenKnopf) { hinzufuegen() }
                             .disabled(neueAdresse.leerAlsNil == nil || speichert)
+                    } header: {
+                        ListenKopf(Texte.Team.hinzufuegen)
                     }
                 }
                 if darfAendern {
                     Section {
                         Toggle(Texte.Team.alleAbmelden, isOn: $alleAbmelden)
                     } footer: {
-                        Text(Texte.Team.alleAbmeldenHinweis)
+                        ListenFuss(Texte.Team.alleAbmeldenHinweis)
                     }
                 }
                 if !darfAendern {

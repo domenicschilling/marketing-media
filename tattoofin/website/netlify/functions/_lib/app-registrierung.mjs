@@ -8,14 +8,18 @@
 //                                         akzeptiert: { vertrag, avv, unternehmer, kmu } } → { entwurfId, entwurfToken (30 Tage), appAccountToken, produktId, email }
 //   POST /api/app/abo/bestaetigen       A) { entwurfToken, signedTransaction, geraet } → { token, geraet, studio, abo }
 //                                       B) Bearer tfa_… (Inhaber, Apple-Studio) { signedTransaction } → { abo, studio }
-//   POST /api/app/abo/wiederherstellen  { signedTransactions: [1–10] }   → { art: "anmelden", emailMaskiert } | 404 kein_konto
+//   POST /api/app/abo/wiederherstellen  { signedTransactions: [1–10] }   → { art: "anmelden", emailMaskiert } | 404 kein_konto (ändert am Studio nichts,
+//                                       außer ein nie bestätigter Entwurf mit gültigem Kauf wird aktiviert)
 //   POST /api/app/abo/aktualisieren     Bearer (jede Rolle) { signedTransaction } → { abo }
 // Grenzen (atomar): Code-Mails gemeinsam mit /api/app/code, Prüfen wie /api/app/anmelden (rl/appanmelden-ip 30/h, Plätze je Code, 15/Tag),
 // registrieren 20 pro IP und Stunde (rl/appreg-ip), abo/* 30 pro IP und Stunde (rl/appabo-ip). Lokal mit festem Code ohne Grenzen.
+// Review: APP_REVIEW_REG_EMAIL (+ APP_REVIEW_CODE) führt immer zu art „registrieren“ mit frischem Entwurf (für Apples Prüfer).
+// Body höchstens 64 KB (413 zu_gross).
 // Fehler immer { error, code, …extra } (Codes siehe Spezifikation, z. B. eingabe + felder, registrierung_abgelaufen, schon_aktiv, jws_ungueltig).
 import crypto from "node:crypto";
 import { CFG, appleCfg, istApple } from "./config.mjs";
-import { body, clean, clientIp, isEmail, now, id, HttpError } from "./util.mjs";
+import { body as bodyRoh, clean, clientIp, isEmail, now, id, HttpError, MAX_APP_BODY } from "./util.mjs";
+const body = (req) => bodyRoh(req, { max: MAX_APP_BODY });
 import { store, getStudio, saveStudio, studioBy, studiosPerEmail, normEmail, AKTIV, zaehleAtomar, log } from "./store.mjs";
 import { sign, verify, currentStudio } from "./auth.mjs";
 import { slugify, notifyAdmin } from "./domain.mjs";
@@ -27,7 +31,7 @@ import { studioDatenPruefen, bestaetigungenOk } from "./anmeldung-daten.mjs";
 import { stripe } from "./stripe.mjs";
 import {
   aj, fehler, hash, codeHash, minuten, T, lokalerCode, reviewFuer, codeIpErlaubt, codeAdresseErlaubt, aktiveStudios, anmeldeCodeSenden,
-  reviewPruefen, codePruefen, nachAnmeldeCode, geraetFertig, maskiereEmail,
+  reviewPruefen, reviewRegFuer, codePruefen, nachAnmeldeCode, geraetFertig, maskiereEmail,
 } from "./app-code.mjs";
 import { AT, appleFehler, jwsPruefen, transaktionPruefen, otxBeanspruchen, otxSchluessel, studioIdZuOtx, appleAktivieren, appleStatusAnwenden, uuidNorm } from "./apple.mjs";
 
@@ -73,7 +77,7 @@ async function registrierCode(req, context) {
   const antwort = async () => aj({ ok: true, verzoegert: (await warteschlangeStatus()).anzahl > 0 });
   const roh = emailRoh(b.email), email = normEmail(roh);
   if (!ipOk || !isEmail(email)) return antwort();
-  if (await reviewFuer(email)) return antwort();   // Review-Zugang: keine Mail (fester Code)
+  if ((await reviewFuer(email)) || reviewRegFuer(email)) return antwort();   // Review-Zugänge: keine Mail (fester Code)
   if (!(await codeAdresseErlaubt(email))) return antwort();
   // Adresse hat schon ein aktives Studio → ganz normaler Anmelde-Code (die App meldet sich damit an)
   const studios = await aktiveStudios(email);
@@ -98,6 +102,17 @@ async function registrierPruefen(req, context) {
   const code = String(b.code ?? "").replace(/\s+/g, "");
   if (!isEmail(email) || !/^\d{6}$/.test(code)) return fehler(T.eingabe, 400, "eingabe");
 
+  // Zweiter Review-Zugang (App-Prüfung): führt immer zu einem frischen Entwurf, damit der Prüfer Konto, Sandbox-Kauf und Löschen
+  // frei durchspielen kann. Frühere Prüf-Studios dieser Adresse werden abgehängt (Adresse umbenannt), sie bleiben für den Admin sichtbar.
+  const reviewReg = reviewRegFuer(email);
+  if (reviewReg) {
+    const r = await reviewPruefen(reviewReg, email, code);
+    if (r.antwort) return r.antwort;
+    await reviewStudiosAbhaengen(email);
+    const registrierToken = sign({ t: "appreg", email: roh, n: crypto.randomBytes(9).toString("base64url"), exp: Date.now() + 2 * 3600e3 });
+    await log("app-review-registrierung", {});
+    return aj({ art: "registrieren", registrierToken, email: roh, entwurf: null });
+  }
   const review = await reviewFuer(email);
   if (review) {
     const r = await reviewPruefen(review, email, code);
@@ -122,6 +137,20 @@ async function registrierPruefen(req, context) {
   return aj({ art: "registrieren", registrierToken, email: roh, entwurf });
 }
 
+// Frühere Studios des Registrier-Review-Zugangs abhängen: Adresse auf review-alt-<id>@… umstellen, Indizes der Review-Adresse lösen
+async function reviewStudiosAbhaengen(email) {
+  for (const alt of await studiosPerEmail(email)) {
+    if (!alt.reviewRegistrierung) continue;
+    const vorher = alt.email;
+    alt.email = `review-alt-${alt.id}@tattoofin.invalid`;
+    alt.reviewAbgehaengtAm = now();
+    await saveStudio(alt);
+    for (const k of ["idx/email/" + String(vorher).toLowerCase(), "idx/emailn/" + normEmail(vorher)]) if ((await store.get(k)) === alt.id) await store.del(k);
+    if (alt.appEntwurf?.appAccountToken && (await store.get("idx/appentwurf/" + alt.appEntwurf.appAccountToken)) === alt.id) await store.del("idx/appentwurf/" + alt.appEntwurf.appAccountToken);
+    await log("app-review-studio-abgehaengt", { studioId: alt.id });
+  }
+}
+
 // ---------------------------------------------------------------- Studio-Angaben + Vertrag → Entwurf
 async function registrieren(req, context) {
   if (!(await ipGrenze(req, context, "appreg-ip", 20))) return fehler(RT.zuViele, 429, "zu_viele");
@@ -137,9 +166,17 @@ async function registrieren(req, context) {
   // Vorhandenen Entwurf zu dieser Adresse wiederverwenden (App oder Web), sonst neu
   let s = await studioBy("email", email);
   if (s && !["entwurf", "abgebrochen"].includes(s.status)) return fehler(AT.schonAktiv, 409, "schon_aktiv");
-  // Web-Entwurf mit offener Checkout-Sitzung: Sitzung beenden, damit nicht zusätzlich über Stripe bezahlt wird (Fehler egal)
+  // Web-Entwurf mit offener Checkout-Sitzung: Sitzung beenden, damit nicht zusätzlich über Stripe bezahlt wird. Klappt das nicht, den
+  // Stand der Sitzung abfragen: schon bezahlt → 409 schon_aktiv (nicht überschreiben), abgelaufen → weiter, unklar → bitte gleich nochmal.
   if (s?.stripe?.checkoutSessionId) {
-    try { await stripe("POST", `/checkout/sessions/${s.stripe.checkoutSessionId}/expire`, {}); } catch { /* schon abgelaufen o. ä. */ }
+    const csId = s.stripe.checkoutSessionId;
+    try { await stripe("POST", `/checkout/sessions/${csId}/expire`, {}); }
+    catch {
+      let cs = null;
+      try { cs = await stripe("GET", `/checkout/sessions/${csId}`); } catch { /* unten */ }
+      if (cs?.status === "complete" || ["paid", "no_payment_required"].includes(cs?.payment_status)) return fehler(AT.schonAktiv, 409, "schon_aktiv");
+      if (cs?.status !== "expired") return fehler("Das hat gerade nicht geklappt. Bitte versuch es gleich noch einmal.", 503, "nochmal");
+    }
     delete s.stripe.checkoutSessionId;
   }
   const uuid = uuidNorm(s?.appEntwurf?.appAccountToken) || crypto.randomUUID();
@@ -158,6 +195,7 @@ async function registrieren(req, context) {
     },
     appEntwurf: { appAccountToken: uuid, am, ablauf },
     stripe: s?.stripe || {},
+    ...(reviewRegFuer(normEmail(email)) ? { reviewRegistrierung: true } : {}),
   };
   if (!s.slug) {
     let slug = slugify(d.firma), n = 1;
@@ -220,6 +258,8 @@ async function aboErneuern(req, b) {
   if (!istApple(s) || !s.apple) return fehler(AT.nichtApple, 403, "nicht_apple");
   const tx = signiertPruefen(b.signedTransaction);
   if (uuidNorm(tx.appAccountToken) !== String(s.apple.appAccountToken || "").toLowerCase()) return fehler(AT.tokenPasstNicht, 409, "token_passt_nicht");
+  // Ein Studio mit echtem Abo (Production) lässt sich nie durch einen kostenlosen Testkauf (Sandbox/TestFlight) ersetzen
+  if (s.apple.umgebung === "Production" && tx.environment !== "Production") return fehler(AT.umgebung, 400, "umgebung");
   const otxKey = otxSchluessel(tx);
   if (otxKey !== s.apple.otxKey) {
     // Neue Abo-Kette (z. B. anderer Apple-Account): zuordnen, alte merken
@@ -247,11 +287,10 @@ async function aboWiederherstellen(req, context) {
   }
   gueltig.sort((x, y) => Number(y.purchaseDate || y.signedDate || 0) - Number(x.purchaseDate || x.signedDate || 0));
   for (const tx of gueltig) {
-    // 1) Abo-Kette gehört schon zu einem Studio → Daten aktualisieren, Hinweis auf die Adresse
+    // 1) Abo-Kette gehört schon zu einem Studio → nur Hinweis auf die Adresse (ohne Anmeldung ändert sich am Studio nichts)
     const sid = await studioIdZuOtx(tx);
     const s = sid ? await getStudio(sid) : null;
     if (s && istApple(s)) {
-      if (s.apple?.otxKey === otxSchluessel(tx)) await appleStatusAnwenden(s, tx, null, "wiederherstellen", {});
       await log("apple-wiederherstellen", { studioId: s.id, art: "anmelden" });
       return aj({ art: "anmelden", emailMaskiert: maskiereEmail(s.email) });
     }
@@ -276,7 +315,7 @@ async function aboAktualisieren(req) {
   const b = await body(req);
   const tx = transaktionPruefen(jwsPruefen(b.signedTransaction), { kauf: false });
   if (otxSchluessel(tx) !== s.apple.otxKey) return fehler(AT.vergeben, 409, "abo_vergeben");
-  // Kann ein gesperrtes Studio NICHT wieder öffnen (nur „Abo wieder abschließen“ oder Apple-Benachrichtigung)
-  await appleStatusAnwenden(s, tx, null, "app-abgleich", {});
+  // Abgleich: sperrt nie, öffnet nie, laeuftBis nur nach vorne (Ablauf/Erstattung meldet allein Apple per Benachrichtigung)
+  await appleStatusAnwenden(s, tx, null, "app-abgleich", { abgleich: true });
   return aj({ abo: appleAboAusgabe(s) });
 }

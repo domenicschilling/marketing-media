@@ -1,6 +1,6 @@
 // Geschäftslogik: Benachrichtigungen, Zahlungslinks, Kündigung, Monatsabrechnung.
 import crypto from "node:crypto";
-import { CFG, plattformgebuehr, netto, provisionSatz, BAUSTEINE_SIMULIERT, paketVon, aufstellerInklusive, klarnaPlattformAus, risikofreiDirect, istApple, appleCfg } from "./config.mjs";
+import { CFG, plattformgebuehr, netto, provisionSatz, BAUSTEINE_SIMULIERT, paketVon, aufstellerInklusive, klarnaPlattformAus, risikofreiDirect, istApple, appleCfg, testKasse } from "./config.mjs";
 import { sendMail } from "./mail.mjs";
 import { mails } from "./emails.mjs";
 import { stripe, taxRateId, ensureCustomer, TATTOOFIN_BRANDING } from "./stripe.mjs";
@@ -148,9 +148,10 @@ export async function zaehleAktion() {
   await store.set("meta/aktion-zaehler", z);
 }
 
-// Demo-Studio (App-Review): darf Zahlungslinks anlegen, auch ohne Stripe-Konto. Bezahlen sperrt pay.mjs (409).
+// Demo-Studio (App-Review) und Testkauf-Studio (Apple-Sandbox, config.sandboxKasse): darf Zahlungslinks anlegen, auch ohne
+// Stripe-Konto. Bezahlen sperrt pay.mjs (409).
 export function darfKassieren(s) {
-  if (s?.demo) return ["einrichtung", "live", "gekuendigt"].includes(s.status);
+  if (testKasse(s)) return ["einrichtung", "live", "gekuendigt"].includes(s.status);
   return s.stripe?.accountId && s.stripe?.chargesEnabled && ["einrichtung", "live", "gekuendigt"].includes(s.status);
 }
 

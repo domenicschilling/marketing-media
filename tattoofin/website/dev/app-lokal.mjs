@@ -7,7 +7,9 @@
 // Neues Studio in der App (Apple-Abo, seit 14.11.2026): „Neues Studio? Konto anlegen“ mit beliebiger neuer Adresse, Code wie oben.
 // APPLE_XCODE_TEST=1 nimmt die StoreKit-Testkäufe aus Xcode an (selbstsignierte Kette, environment „Xcode“) – wirkt NUR lokal
 // (config.nurLokal: http://localhost, nicht auf Netlify). APPLE_SANDBOX_STRIPE=1: Stripe-Einrichtung (Nachbau) auch nach Testkäufen,
-// damit der ganze Ablauf Kauf → Stripe verbinden → Kasse offen im Simulator geht.
+// damit der ganze Ablauf Kauf → Stripe verbinden → Kasse offen im Simulator geht. Mit TF_TESTMODUS=1 ist APPLE_SANDBOX_STRIPE aus:
+// Testkäufe öffnen die Kasse dann im Testmodus (wie Sandbox/TestFlight/App Review live: keine Stripe-Einrichtung, „Testzahlung auslösen“).
+// Review-Zugang für die Registrierung: review-neu@beispiel.test mit Code 246810 (immer frischer Entwurf, wie APP_REVIEW_REG_EMAIL live).
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -25,7 +27,7 @@ const dataDir = path.join(root, "dev", ".data-app");
 fs.rmSync(dataDir, { recursive: true, force: true });
 fs.mkdirSync(dataDir, { recursive: true });
 for (const k of ["RESEND_API_KEY", "SMTP_HOST", "STRIPE_SECRET_KEY", "META_CAPI_TOKEN", "TF_JETZT"]) delete process.env[k];
-Object.assign(process.env, { APP_LOKAL_CODE: CODE, TF_BEZAHLFELD: "aus", ADMIN_EMAIL: "admin@beispiel.test", APPLE_XCODE_TEST: "1", APPLE_SANDBOX_STRIPE: "1" });
+Object.assign(process.env, { APP_LOKAL_CODE: CODE, TF_BEZAHLFELD: "aus", ADMIN_EMAIL: "admin@beispiel.test", APPLE_XCODE_TEST: "1", APPLE_SANDBOX_STRIPE: process.env.TF_TESTMODUS === "1" ? "" : "1" });
 delete process.env.APPLE_TEST_ROOT_PEM;
 
 // APNs-Nachbau: Schlüssel nur zur Laufzeit; jede Mitteilung wird an den gebooteten Simulator weitergereicht (falls vorhanden)
@@ -101,7 +103,7 @@ await mock("webhooks?an=1");
 await mock(`saldo/${bamberg.konto}?verfuegbar=12345&unterwegs=48000`);
 // Demo-Studio + Review-Zugang (wie später bei Apple)
 const demo = (await call("POST", "/api/admin/app-demo", { admin: true, body: { email: "review@beispiel.test" } })).data;
-Object.assign(process.env, { APP_REVIEW_EMAIL: "review@beispiel.test", APP_REVIEW_CODE: REVIEW_CODE, APP_REVIEW_STUDIO_ID: demo.studioId });
+Object.assign(process.env, { APP_REVIEW_EMAIL: "review@beispiel.test", APP_REVIEW_CODE: REVIEW_CODE, APP_REVIEW_STUDIO_ID: demo.studioId, APP_REVIEW_REG_EMAIL: "review-neu@beispiel.test" });
 
 const z = (s) => console.log(s);
 z("\n────────────────────────────────────────────────────────────────────────────");
@@ -113,8 +115,10 @@ z("   studio@beispiel.test   Inhaber, Ink Studio Bamberg (Zahlungen, Gutschein, 
 z("   team@beispiel.test     Team-Adresse von Ink Studio Bamberg");
 z("   zwei@beispiel.test     Inhaber Ink Studio Hof + Team Bamberg → Studio-Auswahl");
 z(`   review@beispiel.test   Demo-Studio (Review-Zugang), Code ${REVIEW_CODE}`);
+z(`   review-neu@beispiel.test  Review-Zugang „Konto anlegen“ (immer frischer Entwurf), Code ${REVIEW_CODE}`);
 z("\n Neues Studio in der App (Apple-Abo):  „Neues Studio? Konto anlegen“ mit einer neuen Adresse, z. B. neu-<zeit>@beispiel.test, Code " + CODE);
 z("   StoreKit-Testkäufe aus Xcode werden NUR lokal angenommen (APPLE_XCODE_TEST=1), Stripe-Einrichtung danach über den Nachbau.");
+z(process.env.APPLE_SANDBOX_STRIPE ? "   (TF_TESTMODUS=1: Testkäufe öffnen die Kasse im Testmodus ohne Stripe)" : "   TF_TESTMODUS=1 aktiv: Testkäufe öffnen die Kasse im Testmodus ohne Stripe (wie Sandbox/App Review live).");
 z(`   Neue Studios im Admin:  curl -s ${BASE}/api/admin/studios -H 'authorization: Bearer admin'`);
 z("\n Ausprobieren:");
 z(`   Gutschein-Seite (QR):  ${gs?.link || "-"}  Code ${gs?.code || "-"}`);

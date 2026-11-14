@@ -319,6 +319,62 @@ final class RegistrierungE2ETests: XCTestCase {
         foto("r25-abo-dunkel-grosse-schrift-unten")
     }
 
+    /// Testkauf ohne Stripe-Einrichtung (wie Sandbox/TestFlight/App Review live): Kasse offen im Testmodus, Zahlungslink mit
+    /// „Testzahlung auslösen“ → bezahlt. Konto hell und dunkel (Kontrast der Abschnittsköpfe), Vertrag mit „Sichern“ (PDF).
+    /// Nur mit einem zweiten lokalen Server im Testmodus: TF_TESTMODUS=1 PORT=8899 STRIPE_MOCK_PORT=12199 node dev/app-lokal.mjs
+    /// und TEST_RUNNER_TF_UI_TESTMODUS_API=http://localhost:8899
+    func testTestmodusNachTestkauf() async throws {
+        guard let api = env["TF_UI_TESTMODUS_API"] else { throw XCTSkip("TF_UI_TESTMODUS_API fehlt (Server mit TF_TESTMODUS=1)") }
+        try storeKitVorbereiten()
+        let app = XCUIApplication()
+        app.launchArguments = ["-TFApiBase", api, "-TFTestEmail", neueEmail(), "-TFZuruecksetzen", "YES",
+                               "-AppleLanguages", "(de)", "-AppleLocale", "de_DE"]
+        app.launch()
+        bisZumAbo(app, fotos: false)
+        app.buttons["abo-kaufen"].tap()
+        einrichtung(app, fotos: false)
+        let hinweis = app.descendants(matching: .any)["kasse-testmodus"]
+        XCTAssertTrue(hinweis.waitForExistence(timeout: 25), "Kasse zeigt den Testmodus nicht")
+        XCTAssertFalse(app.buttons["stripe-einrichten"].exists, "Testmodus darf keine Stripe-Einrichtung anbieten")
+        foto("r27-kasse-testmodus-nach-testkauf")
+        for t in ["1", "5", "0"] { app.buttons[t].firstMatch.tap() }
+        let erstellen = app.buttons["Zahlungslink erstellen"]
+        sichtbar(app, erstellen)
+        erstellen.tap()
+        let testzahlung = app.buttons["Testzahlung auslösen"]
+        for _ in 0..<4 where !(testzahlung.exists && testzahlung.isHittable) { _ = testzahlung.waitForExistence(timeout: 3); app.swipeUp() }
+        XCTAssertTrue(testzahlung.waitForExistence(timeout: 10), "Zahlungslink ohne „Testzahlung auslösen“")
+        foto("r28-zahlungslink-testzahlung")
+        testzahlung.tap()
+        let bezahlt = app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", "bezahlt")).firstMatch
+        XCTAssertTrue(bezahlt.waitForExistence(timeout: 15), "Testzahlung wird nicht als bezahlt angezeigt")
+        foto("r29-testzahlung-bezahlt")
+        let fertig = app.buttons["Fertig"].firstMatch
+        if fertig.exists { fertig.tap() } else { app.swipeDown(velocity: .fast) }
+
+        tabWaehlen(app, "Konto")
+        XCTAssertTrue(app.staticTexts["Apple (App Store)"].waitForExistence(timeout: 10))
+        foto("r30-konto-abo-hell")
+        XCUIDevice.shared.appearance = .dark
+        defer { XCUIDevice.shared.appearance = .light }
+        try await Task.sleep(for: .seconds(1))
+        foto("r31-konto-abo-dunkel")
+        XCUIDevice.shared.appearance = .light
+        let vertrag = app.buttons["Vertrag"].firstMatch
+        for _ in 0..<12 where !(vertrag.exists && vertrag.isHittable) { app.swipeUp() }
+        vertrag.tap()
+        let sichern = app.buttons["rechtsseite-sichern"]
+        XCTAssertTrue(sichern.waitForExistence(timeout: 20), "Vertrag ohne „Sichern“")
+        try await Task.sleep(for: .seconds(1))
+        foto("r32-vertrag-mit-sichern")
+        sichern.tap()
+        // Teilen-Fenster mit dem erzeugten PDF (Vorschau „Vertrag“, Aktionen wie „In Dateien sichern“, „Drucken“)
+        let teilen = app.otherElements["ActivityListView"]
+        _ = teilen.waitForExistence(timeout: 15)
+        try await Task.sleep(for: .seconds(6))
+        foto("r33-vertrag-als-pdf-teilen")
+    }
+
     /// Konto → „Abo verwalten“ öffnet Apples Abo-Verwaltung (StoreKit-Test)
     func testAboVerwalten() async throws {
         try storeKitVorbereiten()

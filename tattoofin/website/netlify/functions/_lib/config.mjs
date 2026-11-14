@@ -163,6 +163,11 @@ export function appleCfg() {
     sandboxStripe: anSchalter(process.env.APPLE_SANDBOX_STRIPE),
   };
 }
+// Testkauf (Apple-Sandbox/TestFlight, auch App Review) ohne Stripe-Einrichtung: Die Kasse läuft im Testmodus wie das Demo-Studio
+// (Zahlungslinks anlegen, „Testzahlung auslösen“), Kunden können nie wirklich bezahlen (pay.mjs → 409), keine Gutschein-Mails.
+// So schaltet der Kauf für den Prüfer sichtbar etwas frei (Apple 2.1, 3.1.1), und ein kostenloser Testkauf öffnet nie eine echte Kasse.
+export const sandboxKasse = (s) => istApple(s) && s?.sandbox === true && !appleCfg().sandboxStripe;
+export const testKasse = (s) => Boolean(s?.demo) || sandboxKasse(s);
 // Lokal-Wächter (wie der feste App-Code): nur http://localhost, nicht in der Vorschau, nicht auf Netlify
 export const nurLokal = ({ siteUrl = CFG.siteUrl, vorschau = CFG.vorschau, netlify = process.env.NETLIFY } = {}) =>
   /^http:\/\/localhost:\d+$/.test(siteUrl) && !vorschau && !netlify;

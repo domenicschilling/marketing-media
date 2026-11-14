@@ -17,7 +17,7 @@ import { appleNachbau } from "./apple-nachbau.mjs";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PORT = Number(process.env.APP_TEST_PORT || 8894), BASE = `http://localhost:${PORT}`, STRIPE = `http://localhost:${Number(process.env.STRIPE_MOCK_PORT || 12111)}`;
 const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "tf-app-api-"));
-for (const k of ["RESEND_API_KEY", "SMTP_HOST", "APNS_KEY_P8", "APNS_KEY_P8_BASE64", "APNS_KEY_ID", "APNS_TEAM_ID", "APP_REVIEW_EMAIL", "APP_REVIEW_CODE", "APP_REVIEW_STUDIO_ID", "APP_LOKAL_CODE", "TF_JETZT", "APPLE_XCODE_TEST", "APPLE_SANDBOX_STRIPE", "APPLE_APP_ID", "APPLE_BUNDLE_ID", "APPLE_PRODUKT_ID"]) delete process.env[k];
+for (const k of ["RESEND_API_KEY", "SMTP_HOST", "APNS_KEY_P8", "APNS_KEY_P8_BASE64", "APNS_KEY_ID", "APNS_TEAM_ID", "APP_REVIEW_EMAIL", "APP_REVIEW_CODE", "APP_REVIEW_STUDIO_ID", "APP_REVIEW_REG_EMAIL", "APP_LOKAL_CODE", "TF_JETZT", "APPLE_XCODE_TEST", "APPLE_SANDBOX_STRIPE", "APPLE_APP_ID", "APPLE_BUNDLE_ID", "APPLE_PRODUKT_ID"]) delete process.env[k];
 // Apple-Nachbau: Test-Wurzel statt Apple Root CA - G3 (wirkt nur lokal, siehe config.nurLokal)
 const apple = appleNachbau();
 process.env.APPLE_TEST_ROOT_PEM = apple.rootPem;
@@ -555,7 +555,7 @@ try {
   const dz = await call("POST", "/api/portal/zahlung", { token: tR, body: { betrag: "300", kunde: "Test", beschreibung: "Demo" } });
   const dpay = await call("POST", "/api/pay", { body: { z: dz.data.zahlung?.id, inhaltOk: true } });
   const dpay2 = await call("POST", "/api/pay", { body: { s: blob("studio/" + demo.studioId).slug, betrag: "100", kunde: "X", inhaltOk: true } });
-  check(dz.status === 201 && dpay.status === 409 && dpay.data.error === "Demo-Studio: hier wird nichts bezahlt" && dpay2.status === 409, "Demo-Studio: Link anlegen geht, Bezahlen (Link und Zahlseite) → 409", `${dz.status} ${dpay.text} ${dpay2.status}`);
+  check(dz.status === 201 && dpay.status === 409 && dpay.data.error === "Testmodus: Bei diesem Studio wird nichts bezahlt." && dpay2.status === 409, "Demo-Studio: Link anlegen geht, Bezahlen (Link und Zahlseite) → 409", `${dz.status} ${dpay.text} ${dpay2.status}`);
   const dTest = await call("POST", `/api/app/demo-zahlung/${dz.data.zahlung.id}`, { token: tR });
   const dTest2 = await call("POST", `/api/app/demo-zahlung/${dz.data.zahlung.id}`, { token: tR });
   const nichtDemoZ = await call("POST", `/api/app/demo-zahlung/${zid}`, { token: tB });
@@ -722,7 +722,7 @@ try {
   const adminNeu = adminMails(/Neuer Abschluss in der App \(Apple-Abo\)/).filter((m) => m.subject.includes("Ink App Studio Neu"));
   const willkommen = mailsAn("mia@neu-app.test").filter((m) => /^Willkommen bei Tattoofin/.test(m.subject));
   check(adminNeu.length === 1 && !/Sandbox/.test(adminNeu[0].subject) && /59,99 EUR/.test(adminNeu[0].html), "Admin-Mail „Neuer Abschluss in der App (Apple-Abo) 🎉“ mit Preis aus dem Kauf", adminNeu[0]?.subject);
-  check(willkommen.length === 1 && /Abo über deinen Apple-Account/.test(willkommen[0].html) && !/49\s?(€|&nbsp;€|,00)/.test(willkommen[0].text) && !/start\.html/.test(willkommen[0].html) && !/Aufsteller/.test(willkommen[0].html), "Studio-Mail „Willkommen“: Apple-Abo, ohne Web-Preis, ohne start.html, ohne Aufsteller", willkommen[0]?.subject);
+  check(willkommen.length === 1 && /Abo über deinen Apple-Account/.test(willkommen[0].html) && !/49\s?(€|&nbsp;€|,00)/.test(willkommen[0].text) && !/start\.html/.test(willkommen[0].html) && !/Aufsteller/.test(willkommen[0].html) && /vertrag\.html\?app=1/.test(willkommen[0].html) && /avv\.html\?app=1/.test(willkommen[0].html) && !/vertrag\.html"/.test(willkommen[0].html) && /Verkäufer des Abos ist Apple/.test(willkommen[0].html), "Studio-Mail „Willkommen“: Apple-Abo (Apple als Verkäufer), ohne Web-Preis, ohne start.html, ohne Aufsteller, Vertrag/AVV als App-Fassung (?app=1)", willkommen[0]?.subject);
   const portalN = await call("GET", "/api/portal", { token: tN });
   check(portalN.status === 200 && portalN.data.studio?.abrechnung === "apple" && portalN.data.studio?.apple?.status === "aktiv" && portalN.data.studio?.apple?.laeuftBis && portalN.data.studio?.paket === "app" && portalN.data.studio?.paketName === "Monatlich (App Store)" && portalN.data.studio?.garantieBis === null && portalN.data.studio?.aufsteller?.inklusive === false && portalN.data.studio?.connectUrl, "GET /api/portal: studio.abrechnung apple, studio.apple (AppleAbo), Paket „Monatlich (App Store)“, ohne Garantie und Aufsteller", JSON.stringify(portalN.data.studio?.apple));
   const portalC = await call("GET", "/api/portal", { cookie: C.cookie });
@@ -815,13 +815,23 @@ try {
   const zN = await call("POST", "/api/portal/zahlung", { token: tN, body: { betrag: "200", kunde: "Kunde Apple", beschreibung: "Testmotiv" } });
   check([200, 201].includes(zN.status) && zN.data.zahlung?.id, "Zahlungslink anlegen geht", zN.text.slice(0, 100));
   const sandboxStudio = await call("GET", "/api/portal", { token: bS.data.token });
-  const cUrlS = new URL(sandboxStudio.data.studio.connectUrl);
+  const sbS = sandboxStudio.data.studio || {};
+  check(sbS.apple?.sandbox === true && sbS.testmodus === true && sbS.kannKassieren === true && sbS.connectUrl === null && sbS.stripe?.verbunden === false, "Sandbox-Studio (Testkauf, App Review): Kasse offen im Testmodus, keine Stripe-Einrichtung (connectUrl null)", JSON.stringify({ t: sbS.testmodus, k: sbS.kannKassieren, c: sbS.connectUrl }));
+  const zSb = await call("POST", "/api/portal/zahlung", { token: bS.data.token, body: { betrag: "150", kunde: "Prüfer Kunde", beschreibung: "Testmotiv" } });
+  const paySb = await call("POST", "/api/pay", { body: { z: zSb.data.zahlung?.id, inhaltOk: true } });
+  const paySb2 = await call("POST", "/api/pay", { body: { s: blob("studio/" + S.entwurfId).slug, betrag: "50" } });
+  const dzSb = await call("POST", "/api/app/demo-zahlung/" + zSb.data.zahlung?.id, { token: bS.data.token });
+  check([200, 201].includes(zSb.status) && paySb.status === 409 && paySb2.status === 409 && dzSb.status === 200 && dzSb.data.status === "bezahlt", "Sandbox-Studio: Link anlegen geht, echte Zahlung → 409, „Testzahlung auslösen“ → bezahlt (kein Stripe)", `${zSb.status} ${paySb.status} ${paySb2.status} ${dzSb.status}`);
+  process.env.APPLE_SANDBOX_STRIPE = "1";
+  const sbMitStripe = await call("GET", "/api/portal", { token: bS.data.token });
+  const cUrlS = new URL(sbMitStripe.data.studio.connectUrl);
+  delete process.env.APPLE_SANDBOX_STRIPE;
   const cS = await fetch(BASE + cUrlS.pathname + cUrlS.search, { redirect: "manual" });
-  check(/\/danke\.html\?id=.*&connect=sandbox&app=1$/.test(cS.headers.get("location") || "") && !blob("studio/" + S.entwurfId).stripe?.accountId && sandboxStudio.data.studio?.apple?.sandbox === true, "Sandbox-Studio: Connect → /danke.html?…&connect=sandbox&app=1, kein Stripe-Konto", cS.headers.get("location"));
+  check(/\/danke\.html\?id=.*&connect=sandbox&app=1$/.test(cS.headers.get("location") || "") && !blob("studio/" + S.entwurfId).stripe?.accountId, "Sandbox-Studio: Connect → /danke.html?…&connect=sandbox&app=1, kein Stripe-Konto", cS.headers.get("location"));
   process.env.APPLE_SANDBOX_STRIPE = "1";
   const cS2 = await fetch(BASE + cUrlS.pathname + cUrlS.search, { redirect: "manual" });
   const sbOffen = await call("GET", "/api/portal", { token: bS.data.token });
-  check(/\/onboard\//.test(cS2.headers.get("location") || "") && sbOffen.data.studio?.apple?.sandbox === false, "APPLE_SANDBOX_STRIPE=1: Sandbox-Studio darf Stripe einrichten (apple.sandbox false für die App)", cS2.headers.get("location"));
+  check(/\/onboard\//.test(cS2.headers.get("location") || "") && sbOffen.data.studio?.apple?.sandbox === false && sbOffen.data.studio?.testmodus === false, "APPLE_SANDBOX_STRIPE=1: Sandbox-Studio darf Stripe einrichten (apple.sandbox false, kein Testmodus)", cS2.headers.get("location"));
   delete process.env.APPLE_SANDBOX_STRIPE;
   const danke = await (await fetch(`${BASE}/danke.html?id=x&stripe=1&app=1`)).text();
   check(/Wechsel jetzt zurück in die Tattoofin-App/.test(danke) && /q\.get\("app"\) === "1"\) \{ appEnde\(\); return; \}/.test(danke) && /Testkonto: Die Stripe-Einrichtung ist hier ausgeschaltet/.test(danke), "danke.html: App-Modus ohne Purchase-Messung, Text „Wechsel jetzt zurück in die Tattoofin-App“");
@@ -912,9 +922,85 @@ try {
   check(loeC.status === 200 && loeC.data.appleAbo === false, "Stripe-Studio: appleAbo false", loeC.text.slice(0, 100));
   const spaeter = apple.verlaengerung(kaufN.tx, { expiresDate: Date.parse(laeuftBisVorher) + 30 * 864e5 });
   await notif(apple.benachrichtigung({ typ: "DID_RENEW", tx: spaeter }));
-  check(aN().status === "gekuendigt" && Date.parse(aN().kuendigung.zum) === spaeter.expiresDate && mailsAn("mia@neu-app.test").some((m) => m.subject === "Apple hat dein Abo verlängert" && /Kündige es zusätzlich/.test(m.html)), "DID_RENEW nach Kündigung → kuendigung.zum verlängert + Mail „Apple hat dein Abo verlängert“", aN().kuendigung?.zum);
+  const loeschungAbVorher = blob("studio/" + N.entwurfId).loeschAnfrage?.loeschungAb;
+  check(aN().status === "gekuendigt" && aN().kuendigung.zum === laeuftBisVorher && aN().loeschAnfrage?.loeschungAb === loeschungAbVorher && Boolean(loeschungAbVorher) && mailsAn("mia@neu-app.test").some((m) => m.subject === "Apple hat dein Abo verlängert – bitte bei Apple kündigen" && /Kündige das Abo jetzt in den Einstellungen deines Apple-Accounts/.test(m.html)) && adminMails(/Apple hat verlängert, obwohl das Studio die Löschung beantragt hat/).length === 1, "DID_RENEW nach „Konto kündigen und löschen“ → Kündigungs- und Löschdatum bleiben fest, Mail „bitte bei Apple kündigen“ + Admin-Mail", aN().kuendigung?.zum);
   const zurueckN = await call("DELETE", "/api/portal/kuendigung", { cookie: auth.sessionCookie(aN()).split(";")[0] });
-  check(zurueckN.status === 200 && aN().status !== "gekuendigt", "Kündigung zurücknehmen geht bei aktivem Apple-Abo (Dashboard)", zurueckN.text.slice(0, 120));
+  check(zurueckN.status === 200 && aN().status !== "gekuendigt" && !aN().loeschAnfrage, "Kündigung zurücknehmen geht bei aktivem Apple-Abo (Dashboard)", zurueckN.text.slice(0, 120));
+  // Nur Kündigung (ohne Löschung): Apple verlängert trotzdem → bezahlten Zeitraum weiter nutzen
+  const kOhne = await call("POST", "/api/portal/kuendigung", { cookie: auth.sessionCookie(aN()).split(";")[0], body: { grund: "Test" } });
+  const nochSpaeter = apple.verlaengerung(kaufN.tx, { expiresDate: Date.parse(aN().apple.laeuftBis) + 30 * 864e5 });
+  await notif(apple.benachrichtigung({ typ: "DID_RENEW", tx: nochSpaeter }));
+  check(kOhne.status === 200 && aN().status === "gekuendigt" && Date.parse(aN().kuendigung.zum) === nochSpaeter.expiresDate && mailsAn("mia@neu-app.test").some((m) => m.subject === "Apple hat dein Abo verlängert" && /Kündige es zusätzlich/.test(m.html)), "DID_RENEW nach Kündigung (ohne Löschung) → kuendigung.zum verlängert + Mail „Apple hat dein Abo verlängert“", aN().kuendigung?.zum);
+  await call("DELETE", "/api/portal/kuendigung", { cookie: auth.sessionCookie(aN()).split(";")[0] });
+
+  // ==================================================================================================
+  teil("Apple-Abo: Schutz gegen alte oder fremde Daten (Prüfung 14.11.)");
+  {
+    rlReset();
+    const vorher = () => ({ st: aN().status, a: aN().apple.status, bis: aN().apple.laeuftBis });
+    const v0 = vorher();
+    const mailsV0 = mailsAn("mia@neu-app.test").length, adminV0 = mailsAn("admin@app.test").length;
+    // Alte, abgelaufene Verlängerung derselben Kette (wie aus Transaction.updates nach langer Pause)
+    const alt = apple.verlaengerung(kaufN.tx, { expiresDate: Date.now() - 20 * 864e5, purchaseDate: Date.now() - 50 * 864e5, signedDate: Date.now() - 50 * 864e5 });
+    const altAkt = await call("POST", "/api/app/abo/aktualisieren", { token: tN, body: { signedTransaction: apple.jws(alt) } });
+    check(altAkt.status === 200 && JSON.stringify(vorher()) === JSON.stringify(v0) && v0.st !== "beendet" && mailsAn("mia@neu-app.test").length === mailsV0, "abo/aktualisieren mit alter abgelaufener Transaktion: Studio bleibt offen, laeuftBis bleibt, keine Mail", JSON.stringify(vorher()));
+    const altW = await call("POST", "/api/app/abo/wiederherstellen", { body: { signedTransactions: [apple.jws(alt)] } });
+    check(altW.status === 200 && altW.data.art === "anmelden" && JSON.stringify(vorher()) === JSON.stringify(v0), "wiederherstellen (ohne Anmeldung) mit alter Transaktion ändert am Studio nichts", altW.text);
+    // Neuere Transaktion über den Abgleich: laeuftBis nur nach vorne
+    const vor = apple.verlaengerung(kaufN.tx, { expiresDate: Date.parse(v0.bis) + 10 * 864e5 });
+    await call("POST", "/api/app/abo/aktualisieren", { token: tN, body: { signedTransaction: apple.jws(vor) } });
+    check(Date.parse(aN().apple.laeuftBis) === vor.expiresDate && aN().status === v0.st, "abo/aktualisieren mit neuerer Transaktion → laeuftBis nach vorne", aN().apple.laeuftBis);
+    // Verspätete Benachrichtigung (signedDate älter als die zuletzt verarbeitete) wird nur protokolliert
+    const bisV = aN().apple.laeuftBis;
+    await notif(apple.benachrichtigung({ typ: "RENEWAL_EXTENDED", tx: { ...vor, expiresDate: vor.expiresDate + 864e5 } }));
+    const spaet = await notif(apple.benachrichtigung({ typ: "EXPIRED", subtyp: "VOLUNTARY", tx: { ...vor, expiresDate: Date.now() - 1000 }, signiert: Date.now() - 3 * 3600e3 }));
+    check(spaet.status === 200 && spaet.data.ergebnis === "veraltet" && aN().status === v0.st && aN().apple.status !== "abgelaufen" && Date.parse(aN().apple.laeuftBis) === vor.expiresDate + 864e5 && Date.parse(bisV) < Date.parse(aN().apple.laeuftBis), "Verspätetes EXPIRED (älteres signedDate) → nur protokolliert, Studio bleibt offen", spaet.text);
+    // Erstattung einer FRÜHEREN Transaktion, während ein späterer Zeitraum läuft → nicht sperren, Admin-Mail
+    const frueher = await notif(apple.benachrichtigung({ typ: "REFUND", tx: { ...alt, revocationDate: Date.now() } }));
+    check(frueher.status === 200 && aN().status === v0.st && aN().apple.status !== "erstattet" && adminMails(/erstattet für einen früheren Abo-Zeitraum/).length >= 1, "REFUND für eine frühere Transaktion → Zugang bleibt offen, Admin-Mail", frueher.text);
+    // Production-Studio: Testkauf (Sandbox) darf das echte Abo nicht ersetzen
+    const sbErsatz = apple.kauf({ appAccountToken: N.appAccountToken, environment: "Sandbox" });
+    const sbE = await call("POST", "/api/app/abo/bestaetigen", { token: tN, body: { signedTransaction: sbErsatz.jws } });
+    check(sbE.status === 400 && sbE.data.code === "umgebung" && aN().apple.umgebung === "Production" && !aN().sandbox && !blob("idx/appleotx/" + sbErsatz.tx.originalTransactionId), "Production-Studio + Sandbox-Kauf über „Abo wieder abschließen“ → 400 umgebung, nichts geändert", sbE.text);
+    // Benachrichtigungs-Endpunkt: zu groß → 413, ungültige Aufrufe höchstens 10 Log-Einträge je IP und Stunde
+    const gross = await call("POST", "/api/apple/benachrichtigung", { body: { signedPayload: "a".repeat(70000) } });
+    const logsVor = logs("apple-benachrichtigung-ungueltig").length;
+    for (let i = 0; i < 14; i++) await call("POST", "/api/apple/benachrichtigung", { body: { signedPayload: "aaa.bbb.ccc" } });
+    check(gross.status === 413 && logs("apple-benachrichtigung-ungueltig").length - logsVor <= 10, "Benachrichtigung: Body über 64 KB → 413; ungültige Signaturen höchstens 10 Log-Einträge je IP und Stunde", `${gross.status} ${logs("apple-benachrichtigung-ungueltig").length - logsVor}`);
+    const grossApp = await call("POST", "/api/app/abo/wiederherstellen", { body: { signedTransactions: ["a".repeat(70000)] } });
+    check(grossApp.status === 413 && grossApp.data.code === "zu_gross", "App-Endpunkt (abo/wiederherstellen): Body über 64 KB → 413 zu_gross", grossApp.text.slice(0, 80));
+    // Stripe-Abo, das für ein App-Studio entsteht (Web-Checkout kurz vor dem Wechsel), wird sofort gekündigt bzw. dem Admin gemeldet
+    const vorWh = JSON.stringify({ ...aN(), updatedAt: null });
+    const whC = await sendeWebhook(`${BASE}/api/stripe-webhook`, "whsec_mock", "checkout.session.completed", { id: "cs_test_app", object: "checkout.session", mode: "subscription", subscription: "sub_gibtsnicht", metadata: { studioId: N.entwurfId } });
+    await wait(200);
+    check(JSON.stringify({ ...aN(), updatedAt: null }) === vorWh && adminMails(/Stripe-Abo für App-Studio/).length >= 1 && logs("stripe-abo-app-studio").length >= 1, "checkout.session.completed (Abo) für App-Studio → Stripe-Abo kündigen + Admin-Mail, Studio unverändert", String(whC?.status ?? whC));
+    void adminV0;
+  }
+
+  // ==================================================================================================
+  teil("Apple-Abo: Review-Zugang für die Registrierung (App-Prüfung: Konto, Sandbox-Kauf, Löschen)");
+  {
+    rlReset();
+    const RV = "review-neu@tattoofin.test";
+    Object.assign(process.env, { APP_REVIEW_REG_EMAIL: RV, APP_REVIEW_CODE: "246810" });
+    const rvC = await call("POST", "/api/app/registrieren/code", { body: { email: RV, platform: "ios" } });
+    const rvF = await pruefen(RV, "135791");
+    const rv1 = await pruefen(RV, "246810");
+    check(rvC.status === 200 && mailsAn(RV).length === 0 && rvF.data.code === "code_falsch" && rv1.status === 200 && rv1.data.art === "registrieren" && rv1.data.entwurf === null, "Review-Registrierung: keine Mail, fester Code → art „registrieren“, falscher Code zählt", rv1.text.slice(0, 120));
+    const e1 = await call("POST", "/api/app/registrieren", { body: REG(rv1.data.registrierToken, { firma: "Apple Prüfstudio" }) });
+    const k1 = apple.kauf({ appAccountToken: e1.data.appAccountToken, environment: "Sandbox" });
+    const b1 = await bestaetigen(e1.data.entwurfToken, k1.jws);
+    const p1 = await call("GET", "/api/portal", { token: b1.data.token });
+    check(e1.status === 200 && blob("studio/" + e1.data.entwurfId).reviewRegistrierung === true && b1.status === 200 && p1.data.studio?.testmodus === true && p1.data.studio?.kannKassieren === true, "Review-Registrierung: Entwurf → Sandbox-Kauf → Kasse offen im Testmodus", b1.text.slice(0, 120));
+    rlReset();
+    const rv2 = await pruefen(RV, "246810");
+    const alt = blob("studio/" + e1.data.entwurfId);
+    const e2 = await call("POST", "/api/app/registrieren", { body: REG(rv2.data.registrierToken, { firma: "Apple Prüfstudio 2" }) });
+    check(rv2.data.art === "registrieren" && /^review-alt-/.test(alt.email) && alt.status === "einrichtung" && e2.status === 200 && e2.data.entwurfId !== e1.data.entwurfId && blob("idx/email/" + RV) === e2.data.entwurfId, "Zweiter Durchgang: frischer Entwurf, früheres Prüf-Studio abgehängt (bleibt für den Admin)", e2.text.slice(0, 120));
+    process.env.APP_REVIEW_EMAIL = RV;
+    check(!(await import("../netlify/functions/_lib/app-code.mjs")).reviewRegFuer(RV), "APP_REVIEW_REG_EMAIL gleich APP_REVIEW_EMAIL → Registrier-Review aus");
+    for (const k of ["APP_REVIEW_REG_EMAIL", "APP_REVIEW_CODE", "APP_REVIEW_EMAIL"]) delete process.env[k];
+  }
 
   // ==================================================================================================
   teil("Apple-Abo: Käufe wiederherstellen und Abgleich");
@@ -945,11 +1031,19 @@ try {
   const cfg = await call("GET", "/api/config");
   check(!pakete.data.pakete.some((x) => x.id === "app") && !cfg.data.pakete.some((x) => x.id === "app") && cfg.data.vertragVersion === "2026-12b", "GET /api/signup?pakete=1 und /api/config ohne „app“, Vertrag 2026-12b", JSON.stringify(pakete.data.pakete.map((x) => x.id)));
   const W = await entwurf("wanda@neu-app.test", "Wechsel Studio");
-  const sWeb = await call("POST", "/api/signup", { body: { ...DATEN("wanda@neu-app.test", "Wechsel Studio"), paket: "monatlich" } });
+  const sWeb = await call("POST", "/api/signup", { body: { ...DATEN("wanda@neu-app.test", "Fremd Studio"), paket: "monatlich" } });
   const sW = blob("studio/" + W.entwurfId);
-  check(sWeb.status === 200 && sW.paket === "monatlich" && sW.zahlart === "abo" && !sW.abrechnung && !sW.appEntwurf && !blob("idx/appentwurf/" + W.appAccountToken), "Offener App-Entwurf wird vom Web übernommen (Apple-Felder und Index weg)", JSON.stringify({ paket: sW.paket, abrechnung: sW.abrechnung }));
+  check(sWeb.status === 409 && /Anmeldung in der Tattoofin-App/.test(sWeb.data.error) && sW.paket === "app" && sW.abrechnung === "apple" && sW.firma === "Wechsel Studio" && sW.appEntwurf?.appAccountToken === W.appAccountToken && blob("idx/appentwurf/" + W.appAccountToken) === W.entwurfId, "Offener App-Entwurf: Web-Anmeldung (Adresse nicht bestätigt) darf ihn NICHT übernehmen → 409, Entwurf unverändert", sWeb.text);
   const bW = await bestaetigen(W.entwurfToken, apple.kauf({ appAccountToken: W.appAccountToken }).jws);
-  check(bW.status === 410 && bW.data.code === "entwurf_abgelaufen" && adminMails(/Apple-Kauf ohne Studio/).length >= 1, "Apple-Kauf danach → 410 entwurf_abgelaufen + Admin-Mail", bW.text);
+  check(bW.status === 200 && /^tfa_/.test(bW.data.token || "") && blob("studio/" + W.entwurfId).firma === "Wechsel Studio", "Apple-Kauf danach klappt mit den eigenen Angaben", bW.text.slice(0, 120));
+  const W2 = await entwurf("wolf@neu-app.test", "Wolf Alt");
+  const w2 = blob("studio/" + W2.entwurfId);
+  setBlob("studio/" + W2.entwurfId, { ...w2, appEntwurf: { ...w2.appEntwurf, ablauf: new Date(Date.now() - 864e5).toISOString() } });
+  const sWeb2 = await call("POST", "/api/signup", { body: { ...DATEN("wolf@neu-app.test", "Wolf Web"), paket: "monatlich" } });
+  const sW2 = blob("studio/" + W2.entwurfId);
+  check(sWeb2.status === 200 && sW2.paket === "monatlich" && !sW2.abrechnung && !sW2.appEntwurf && !blob("idx/appentwurf/" + W2.appAccountToken), "Abgelaufener App-Entwurf (über 30 Tage) wird vom Web übernommen (Apple-Felder und Index weg)", sWeb2.text.slice(0, 120));
+  const bW2 = await bestaetigen(W2.entwurfToken, apple.kauf({ appAccountToken: W2.appAccountToken }).jws);
+  check(bW2.status === 410 && bW2.data.code === "entwurf_abgelaufen" && adminMails(/Apple-Kauf ohne Studio/).length >= 1, "Apple-Kauf danach → 410 entwurf_abgelaufen + Admin-Mail", bW2.text);
   // Web-Entwurf mit offener Checkout-Sitzung → App übernimmt, Sitzung wird beendet
   const V = await call("POST", "/api/signup", { body: { ...DATEN("vera@neu-app.test", "Vera Web"), paket: "monatlich" } });
   const vId = (await admin("studios")).find((x) => x.email === "vera@neu-app.test").id;
@@ -957,6 +1051,13 @@ try {
   const V2 = await entwurf("vera@neu-app.test", "Vera App");
   const stV = await mock("state");
   check(V.status === 200 && V2.entwurfId === vId && !blob("studio/" + vId).stripe.checkoutSessionId && stV.sessions?.[csV]?.status === "expired" && blob("studio/" + vId).abrechnung === "apple", "Web-Entwurf mit offener Checkout-Sitzung: App übernimmt den Entwurf, Sitzung wird beendet", csV);
+  // Web-Checkout schon bezahlt (Webhook noch nicht da): App darf den Entwurf nicht überschreiben → 409 schon_aktiv
+  const Xw = await call("POST", "/api/signup", { body: { ...DATEN("yvo@neu-app.test", "Yvo Web"), paket: "monatlich" } });
+  const xId = (await admin("studios")).find((x) => x.email === "yvo@neu-app.test").id;
+  const csX = blob("studio/" + xId).stripe.checkoutSessionId;
+  await mock("sitzung-bezahlt/" + csX, {});
+  const Xa = await call("POST", "/api/app/registrieren", { body: REG(await registrierToken("yvo@neu-app.test"), { firma: "Yvo App" }) });
+  check(Xw.status === 200 && Xa.status === 409 && Xa.data.code === "schon_aktiv" && !blob("studio/" + xId).abrechnung && blob("studio/" + xId).stripe.checkoutSessionId === csX, "Web-Checkout schon bezahlt: App-Registrierung → 409 schon_aktiv, Web-Entwurf bleibt", Xa.text);
 
   // ==================================================================================================
   teil("Apple-Abo: tägliche Jobs (Entwürfe, fehlende Verlängerung)");
@@ -992,10 +1093,13 @@ try {
   const appText = ohneNurWeb(vertragHtml);
   check((vertragHtml.match(/data-nur-web/g) || []).length >= 5 && /data-cfg="monatPreis"/.test(vertragHtml) && !/data-cfg="monatPreis"/.test(appText) && !/per Stripe eingezogen/.test(appText) && !/graviertem QR-Code/.test(appText) && !/die Zahlung läuft über Stripe/.test(appText), "vertrag.html in der App-Fassung: ohne Web-Preis, ohne „per Stripe eingezogen“, ohne Aufsteller-Zeile (data-nur-web)");
   check(/Preis wie beim Kauf im App Store angezeigt \(inkl\. USt\.\), Abrechnung über Apple/.test(appText) && /§ 13 Abschluss über die Tattoofin-App \(Apple\)/.test(vertragHtml) && /24 Stunden vor Ablauf/.test(vertragHtml) && /\[\?&\]app=1/.test(vertragHtml) && /Fassung 2026-12b/.test(vertragHtml), "vertrag.html: § 13 (Apple-Abo, 24 Stunden, Erstattung über Apple), App-Text data-nur-app, Fassung 2026-12b");
+  const p6 = (vertragHtml.split("<h2>§ 6")[1] || "").split("<h2>")[0];
+  check((p6.match(/Achtung! Kreditaufnahme kostet Geld\./g) || []).length === 2 && /Verkäufer des In-App-Abos ist Apple \(Apple Distribution International Ltd\./.test(vertragHtml) && /keine eigene Rechnung/.test(vertragHtml), "vertrag.html: § 6 mit „Achtung! Kreditaufnahme kostet Geld.“ bei Raten/Kredit, § 13 nennt Apple als Verkäufer, keine eigene Rechnung");
   const archiv = await fetch(`${BASE}/vertrag-2026-12.html`);
   const archivText = await archiv.text();
   check(archiv.status === 200 && /noindex/.test(archivText) && /Archivfassung 2026-12/.test(archivText) && !/§ 13/.test(archivText), "Archiv vertrag-2026-12.html (noindex, ohne § 13)");
   const avvHtml = await (await fetch(`${BASE}/avv.html?app=1`)).text();
+  check(/Apple Distribution International Ltd\.[^<]*<\/td><td>Zustellung von Push-Mitteilungen/.test(avvHtml) && /Stand 14\.11\.2026/.test(avvHtml), "avv.html Anlage 3: Apple (Push-Mitteilungen an die App) als Unterauftragsverarbeiter, Stand 14.11.2026");
   const dsHtml = await (await fetch(`${BASE}/datenschutz.html`)).text();
   check(/\[\?&\]app=1/.test(avvHtml) && /<b>Abo über Apple:<\/b> Den Kauf wickelt Apple/.test(dsHtml) && /Apple-ID oder deren E-Mail-Adresse bekommen wir nicht/.test(dsHtml) && /Studio-Konto in der App anlegen/.test(dsHtml), "AVV mit App-Ansicht, Datenschutzerklärung #app: Abo über Apple, Konto in der App anlegen");
 

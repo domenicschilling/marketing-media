@@ -214,3 +214,18 @@ struct TFFormular<Inhalt: View>: View {
         }
     }
 }
+
+/// Überschrift eines Listen-Abschnitts mit genug Kontrast (tfLeise, etwa 6:1). Der System-Standard (secondaryLabel) hat auf dem
+/// Creme-Hintergrund nur 3,4:1 (WCAG 1.4.3 verlangt 4,5:1, Prüfung 14.11.2026).
+struct ListenKopf: View {
+    let text: String
+    init(_ text: String) { self.text = text }
+    var body: some View { Text(text).foregroundStyle(Color.tfLeise) }
+}
+
+/// Fußzeile eines Listen-Abschnitts mit genug Kontrast (wie ListenKopf)
+struct ListenFuss: View {
+    let text: String
+    init(_ text: String) { self.text = text }
+    var body: some View { Text(text).foregroundStyle(Color.tfLeise) }
+}

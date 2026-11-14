@@ -115,10 +115,10 @@ export function appleNachbau({ bundleId = "de.tattoofin.app", produktId = "de.ta
   // Verlängerung derselben Abo-Kette: neue transactionId, gleiche originalTransactionId
   const verlaengerung = (tx, felder = {}) => ({ ...tx, transactionId: naechsteId(), purchaseDate: Date.now(), expiresDate: Date.now() + 30 * 864e5, signedDate: Date.now(), transactionReason: "RENEWAL", ...felder });
   // Server-Benachrichtigung V2 (signedPayload)
-  function benachrichtigung({ typ, subtyp, tx, renewalInfo, uuid = crypto.randomUUID(), umgebung, bundle = bundleId, appId = appAppleId, kette = "gut", txKette = kette, ohneTx = false } = {}) {
+  function benachrichtigung({ typ, subtyp, tx, renewalInfo, uuid = crypto.randomUUID(), umgebung, bundle = bundleId, appId = appAppleId, kette = "gut", txKette = kette, ohneTx = false, signiert = Date.now() } = {}) {
     const env = umgebung || tx?.environment || "Production";
     const payload = {
-      notificationType: typ, ...(subtyp ? { subtype: subtyp } : {}), notificationUUID: uuid, version: "2.0", signedDate: Date.now(),
+      notificationType: typ, ...(subtyp ? { subtype: subtyp } : {}), notificationUUID: uuid, version: "2.0", signedDate: signiert,
       data: {
         appAppleId: appId, bundleId: bundle, bundleVersion: "1", environment: env, status: 1,
         ...(tx && !ohneTx ? { signedTransactionInfo: jws(tx, { kette: txKette }), signedRenewalInfo: jws(renewalInfo || renewal(tx), { kette: txKette }) } : {}),

@@ -72,6 +72,11 @@ struct KasseView: View {
     private var formular: some View {
         ScrollView {
             VStack(spacing: 16) {
+                // Nach einem Testkauf (Apple-Sandbox, auch App Review): Kasse offen im Testmodus, Testzahlung im Zahlungslink
+                if portal.studio?.istTestmodus == true {
+                    HinweisKarte(text: Texte.Kasse.testmodusText, symbol: "testtube.2")
+                        .accessibilityIdentifier("kasse-testmodus")
+                }
                 // Betrag
                 VStack(spacing: 4) {
                     Text(eingabe.anzeige)

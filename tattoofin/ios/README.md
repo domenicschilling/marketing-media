@@ -80,6 +80,20 @@ TEST_RUNNER_TF_UI_API=http://localhost:8890 TEST_RUNNER_TF_UI_NETZ=http://localh
   xcodebuild test-without-building … -only-testing:TattoofinUITests/RegistrierungE2ETests
 ```
 
+Testmodus nach Testkauf (wie Sandbox, TestFlight und App Review live: Kasse offen, „Testzahlung auslösen“, keine Stripe-Einrichtung,
+Bildschirmfotos r27–r33 inkl. Konto hell/dunkel und Vertrag „Sichern“ als PDF) braucht einen zweiten lokalen Server im Testmodus:
+
+```sh
+cd tattoofin/website && TF_TESTMODUS=1 PORT=8899 STRIPE_MOCK_PORT=12199 NODE_PATH=$PWD/node_modules node dev/app-lokal.mjs
+TEST_RUNNER_TF_UI_TESTMODUS_API=http://localhost:8899 \
+  xcodebuild test-without-building … -only-testing:TattoofinUITests/RegistrierungE2ETests/testTestmodusNachTestkauf
+```
+
+Prüfung 14.11.2026 (Befunde behoben): `Transaction.updates` schickt abgelaufene oder widerrufene Transaktionen nie an den Server, sondern
+schließt sie nur ab (`AboManager.zuordnung(…, gueltig:)`); bei `abo_abgelaufen` und `token_passt_nicht` wird die Transaktion ebenfalls
+abgeschlossen. Abschnittsköpfe und -fußzeilen in Listen über `ListenKopf`/`ListenFuss` (tfLeise, etwa 6:1 statt 3,4:1). Rechtsseiten haben
+„Sichern“ (PDF zum Teilen, Sichern in Dateien, Drucken; § 312i BGB). `PrivacyInfo.xcprivacy`: zusätzlich Anschrift und Telefonnummer.
+
 Beobachtung 14.11.: Die erste `SKTestSession` im UI-Test-Prozess wirkt nicht (Produkt „nicht gefunden“, auch nach „Nochmal versuchen“).
 `RegistrierungE2ETests` wärmt deshalb einmal auf (Sitzung + App-Start/-Ende), danach eine frische Sitzung.
 

@@ -123,6 +123,8 @@ export function createSim({ load, save, pageBase, webhook }) {
         if (csId) {
           const s = db.sessions[csId];
           if (!s) throw new SimFehler(404, "Sitzung fehlt");
+          // Wie Stripe: eine bezahlte Sitzung lässt sich nicht mehr beenden
+          if (path.endsWith("/expire") && s.status === "complete") throw new SimFehler(400, "Only Checkout Sessions with a status in [\"open\"] can be expired.");
           if (path.endsWith("/expire")) { s.status = "expired"; emit("checkout.session.expired", s, s.account || undefined); }
           return s;
         }
@@ -145,6 +147,7 @@ export function createSim({ load, save, pageBase, webhook }) {
         const sub = (db.subscriptions || {})[id1];
         if (!sub) throw new SimFehler(404, "Abo fehlt");
         if (method === "POST" && p.cancel_at_period_end !== undefined) sub.cancel_at_period_end = String(p.cancel_at_period_end) === "true";
+        if (method === "DELETE") { sub.status = "canceled"; sub.canceled_at = Math.floor(Date.now() / 1000); }
         return sub;
       }
       if (res1 === "setup_intents") return db.setupIntents[id1];
@@ -309,6 +312,13 @@ export function createSim({ load, save, pageBase, webhook }) {
     const [art, id] = parts;
     if (art === "state") return load();
     return tx(async (db, emit) => {
+      // Checkout-Sitzung als bezahlt markieren, OHNE Webhook (Test: Zahlung durch, Webhook noch unterwegs)   POST /mock/sitzung-bezahlt/<cs>
+      if (art === "sitzung-bezahlt") {
+        const s = db.sessions[id];
+        if (!s) return { error: "Sitzung unbekannt" };
+        s.status = "complete"; s.payment_status = "paid";
+        return { ok: true };
+      }
       // Auszahlung an ein verbundenes Konto anlegen und payout.paid bzw. payout.failed als Connect-Webhook senden
       //   POST /mock/payout { account, amount, status: "paid"|"failed"|"in_transit"|"pending", arrival_date? }
       if (art === "payout") {

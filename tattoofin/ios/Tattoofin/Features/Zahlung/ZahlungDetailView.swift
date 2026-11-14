@@ -72,9 +72,11 @@ struct ZahlungDetailView: View {
             }
 
             if z.kunde?.leerAlsNil != nil || z.email?.leerAlsNil != nil {
-                Section(Texte.Detail.kundeAbschnitt) {
+                Section {
                     if let k = z.kunde?.leerAlsNil { WertZeile(titel: Texte.Detail.kunde, wert: k) }
                     if let e = z.email?.leerAlsNil { WertZeile(titel: Texte.Detail.email, wert: e) }
+                } header: {
+                    ListenKopf(Texte.Detail.kundeAbschnitt)
                 }
             }
 

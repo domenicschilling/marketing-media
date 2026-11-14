@@ -19,7 +19,8 @@ enum KaufReaktion: Equatable, Sendable {
     case erfolg
     /// Netz, 5xx, 429: Transaktion offen lassen, gleichen JWS erneut senden
     case nochmal(String)
-    /// abo_vergeben, produkt, familie: Transaktion abschließen (sonst kommt sie endlos wieder), Text zeigen
+    /// abo_vergeben, produkt, familie, abo_abgelaufen, token_passt_nicht: Transaktion abschließen (sonst kommt sie bei jedem Start
+    /// wieder und scheitert gleich), Text zeigen. Der Server erfährt den Kauf ohnehin über die App-Store-Benachrichtigung.
     case abschliessen(String)
     /// entwurf_abgelaufen: Entwurf löschen, neu anfangen
     case neuAnfangen(String)
@@ -87,9 +88,11 @@ final class AboManager {
     }
 
     /// Zuordnung ohne Seiteneffekte (testbar)
+    /// gueltig: Transaktion weder abgelaufen noch widerrufen. Eine alte Transaktion (z. B. nicht abgeschlossene Verlängerung nach langer
+    /// Pause) wird nur abgeschlossen und nie an den Server geschickt: Ablauf und Erstattung meldet Apple dem Server selbst.
     nonisolated static func zuordnung(appAccountToken: UUID?, produktId: String, entwurf: RegistrierungEntwurf?,
-                          studio: Studio?, istInhaber: Bool) -> AboZuordnung {
-        guard produktId == AboKonstanten.produktId else { return .nurAbschliessen }
+                          studio: Studio?, istInhaber: Bool, gueltig: Bool = true) -> AboZuordnung {
+        guard produktId == AboKonstanten.produktId, gueltig else { return .nurAbschliessen }
         if let e = entwurf, let token = appAccountToken, e.uuid == token { return .entwurfBestaetigen }
         if let s = studio, s.istApple {
             if istInhaber, s.apple?.istBeendet == true, let token = appAccountToken, s.apple?.uuid == token { return .erneuern }
@@ -115,7 +118,8 @@ final class AboManager {
         let art = Self.zuordnung(appAccountToken: tx.appAccountToken, produktId: tx.productID,
                                  entwurf: RegistrierungSpeicher.lesen(),
                                  studio: app.sitzung != nil ? app.portal.studio : nil,
-                                 istInhaber: app.sitzung?.istInhaber ?? false)
+                                 istInhaber: app.sitzung?.istInhaber ?? false,
+                                 gueltig: Self.istGueltig(ablauf: tx.expirationDate, widerrufen: tx.revocationDate != nil))
         log.info("Abo: Transaktion \(tx.id, privacy: .public) aus updates → \(String(describing: art), privacy: .public)")
         switch art {
         case .entwurfBestaetigen:
@@ -132,6 +136,10 @@ final class AboManager {
         }
     }
 
+    nonisolated static func istGueltig(ablauf: Date?, widerrufen: Bool, jetzt: Date = .now) -> Bool {
+        !widerrufen && (ablauf.map { $0 > jetzt } ?? true)
+    }
+
     // MARK: Kauf am Server bestätigen
 
     nonisolated static func reaktion(auf fehler: Error) -> KaufReaktion {
@@ -139,7 +147,7 @@ final class AboManager {
         if a.status == 0 || a.status >= 500 { return .nochmal(Texte.Abo.nichtBestaetigt) }
         switch a.code {
         case "zu_viele": return .nochmal(a.meldung)
-        case "abo_vergeben", "produkt", "familie": return .abschliessen(a.meldung)
+        case "abo_vergeben", "produkt", "familie", "abo_abgelaufen", "token_passt_nicht": return .abschliessen(a.meldung)
         case "entwurf_abgelaufen": return .neuAnfangen(a.meldung)
         case "schon_aktiv": return .zurAnmeldung(a.meldung)
         default: return .text(a.meldung)

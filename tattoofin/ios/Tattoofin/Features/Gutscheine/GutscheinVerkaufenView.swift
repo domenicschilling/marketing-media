@@ -53,7 +53,7 @@ struct GutscheinVerkaufenView: View {
                     Ziffernblock(eingabe: $betrag)
                         .listRowInsets(EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8))
                 } header: {
-                    Text(Texte.Gutscheine.wert)
+                    ListenKopf(Texte.Gutscheine.wert)
                 }
 
                 Section {
@@ -65,9 +65,9 @@ struct GutscheinVerkaufenView: View {
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                 } header: {
-                    Text(Texte.Gutscheine.kaeuferAbschnitt)
+                    ListenKopf(Texte.Gutscheine.kaeuferAbschnitt)
                 } footer: {
-                    Text(Texte.Gutscheine.kaeuferHinweis)
+                    ListenFuss(Texte.Gutscheine.kaeuferHinweis)
                 }
 
                 Section {
@@ -81,7 +81,7 @@ struct GutscheinVerkaufenView: View {
                         .font(.dm(.caption))
                         .foregroundStyle(Color.tfLeise)
                 } header: {
-                    Text(Texte.Gutscheine.optional)
+                    ListenKopf(Texte.Gutscheine.optional)
                 }
 
                 Section {
