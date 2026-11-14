@@ -113,10 +113,13 @@ final class RegistrierungE2ETests: XCTestCase {
         XCTAssertTrue(schicken.waitForExistence(timeout: 5))
         if fotos { foto("r02-email-bestaetigen") }
         sichtbar(app, schicken)
-        schicken.tap()
-
         let code = app.textFields["6-stelliger Code"]
-        XCTAssertTrue(code.waitForExistence(timeout: 10))
+        // Tipp während der Seiten-Animation geht manchmal verloren → bis zu 3 Versuche
+        for _ in 0..<3 where !code.exists {
+            if schicken.isHittable { schicken.tap() }
+            _ = code.waitForExistence(timeout: 6)
+        }
+        XCTAssertTrue(code.waitForExistence(timeout: 4))
         if fotos { foto("r03-code") }
         code.tap()
         code.typeText("123456")
@@ -154,7 +157,9 @@ final class RegistrierungE2ETests: XCTestCase {
         }
         XCTAssertTrue(kaufen.waitForExistence(timeout: 20), "Abo-Bildschirm kommt nicht")
         let preis = app.otherElements["abo-preis"].exists ? app.otherElements["abo-preis"] : app.descendants(matching: .any)["abo-preis"]
-        XCTAssertTrue(preis.label.contains("59,99"), "Preis aus StoreKit fehlt: \(preis.label)")
+        XCTAssertTrue(preis.label.contains("49,90"), "Preis aus StoreKit fehlt: \(preis.label)")
+        XCTAssertTrue(preis.label.contains("7 Tage kostenlos"), "Gratis-Woche fehlt: \(preis.label)")
+        XCTAssertTrue(kaufen.label.contains("7 Tage kostenlos starten"), "Kaufknopf ohne Gratis-Woche: \(kaufen.label)")
     }
 
     /// Nach dem Kauf: Einrichtung (Face ID, Mitteilungen) bis zur Kasse
@@ -200,7 +205,7 @@ final class RegistrierungE2ETests: XCTestCase {
         try await sitzung.setSimulatedError(.generic(.userCancelled), forAPI: .purchase)
         kaufen.tap()
         try await Task.sleep(for: .seconds(3))
-        XCTAssertTrue(kaufen.exists && kaufen.label == "Kostenpflichtig abonnieren", "Nach Abbruch nicht mehr auf dem Abo-Bildschirm")
+        XCTAssertTrue(kaufen.exists && kaufen.label == "7 Tage kostenlos starten", "Nach Abbruch nicht mehr auf dem Abo-Bildschirm: \(kaufen.label)")
         foto("r07-fehler-kauf-abgebrochen")
         try await sitzung.setSimulatedError(nil, forAPI: .purchase)
 

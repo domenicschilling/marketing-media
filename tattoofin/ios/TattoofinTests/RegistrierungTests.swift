@@ -207,6 +207,20 @@ struct RegistrierungTests {
         #expect(Texte.Abo.kaufen == "Kostenpflichtig abonnieren")
     }
 
+    @Test func aboTexteGratisZeitraum() {
+        #expect(Texte.Abo.gratisDauer(tage: 7, monate: nil) == "7 Tage")
+        #expect(Texte.Abo.gratisDauer(tage: nil, monate: 1) == "1 Monat")
+        #expect(Texte.Abo.gratisAbzeichen("7 Tage") == "Die ersten 7 Tage kostenlos")
+        #expect(Texte.Abo.kaufenGratis("7 Tage") == "7 Tage kostenlos starten")
+        let k = Texte.Abo.kleingedrucktGratis("7 Tage", preis: "49,90 €")
+        // Apple 3.1.2: Folgepreis, Zeitpunkt der Abbuchung, automatische Verlängerung, Kündigung
+        for teil in ["Die ersten 7 Tage sind kostenlos", "49,90 € pro Monat", "24 Stunden vor Ende der kostenlosen Zeit", "verlängert sich", "Einstellungen deines Apple-Accounts", "keine Mindestlaufzeit"] {
+            #expect(k.localizedCaseInsensitiveContains(teil), "fehlt: \(teil)")
+        }
+        #expect(Texte.Abo.statusText(AppleAbo(status: "aktiv", laeuftBis: "2026-11-21T10:00:00.000Z", autoVerlaengerung: true, probe: true)) == "kostenlos bis 21.11.2026, danach Abo")
+        #expect(Texte.Abo.statusText(AppleAbo(status: "aktiv", laeuftBis: "2026-11-21T10:00:00.000Z", autoVerlaengerung: false, probe: true)) == "endet am 21.11.2026")
+    }
+
     @Test func keinWebPreisKeinKlarna() {
         for t in registrierTexte + aboTexte {
             for verboten in ["49", "netto", "tattoofin.de", "Klarna", "Raten", "Probe", "kostenlos testen"] {

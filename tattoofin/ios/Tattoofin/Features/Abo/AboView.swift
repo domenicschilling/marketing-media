@@ -3,7 +3,8 @@ import SwiftUI
 
 /// R5: Abo-Bildschirm nach Apple 3.1.2. Preis nur aus dem App Store (product.displayPrice), Zeitraum, automatische
 /// Verlängerung, Kündigung, Links zu Vertrag, Datenschutz und Apple-EULA, „Käufe wiederherstellen“.
-/// Kein Web-Preis, kein Hinweis auf einen anderen Kaufweg (Apple 3.1.3), keine Probezeit.
+/// Kein Web-Preis, kein Hinweis auf einen anderen Kaufweg (Apple 3.1.3).
+/// Gratis-Zeitraum (Einführungsangebot) nur, wenn der Apple-Account berechtigt ist; der Monatspreis bleibt die größte Preisangabe.
 struct AboView: View {
     enum Modus: Hashable {
         /// Neues Studio mit offenem Entwurf
@@ -32,6 +33,8 @@ struct AboView: View {
     @State private var hinweis: String?
     @State private var offenerKauf: OffenerKauf?
     @State private var seite: Rechtsseite?
+    /// Gratis-Zeitraum, falls Einführungsangebot „kostenlos“ und der Apple-Account berechtigt ist (sonst nil)
+    @State private var gratis: String?
 
     /// Kauf ist bei Apple durch, der Server hat ihn noch nicht bestätigt (gleicher JWS wird erneut gesendet)
     private struct OffenerKauf {
@@ -63,7 +66,10 @@ struct AboView: View {
         .tfHintergrund()
         .navigationTitle(erneuern ? Texte.Abo.erneuernTitel : Texte.Registrieren.navTitel)
         .navigationBarTitleDisplayMode(.inline)
-        .task { if abo.produkt == nil { await abo.produktLaden() } }
+        .task {
+            if abo.produkt == nil { await abo.produktLaden() }
+            if let p = abo.produkt { gratis = await Self.gratisDauer(p) }
+        }
         .sheet(item: $seite) { RechtsAnsicht(seite: $0) }
         .onChange(of: portal.studio?.apple?.istBeendet) { _, beendet in
             // Kauf kam über Transaction.updates (z. B. nach „wartet auf Bestätigung“)
@@ -86,14 +92,15 @@ struct AboView: View {
                     if let o = offenerKauf { Task { await bestaetigen(tx: o.tx, jws: o.jws) } } else { kaufen(p) }
                 } label: {
                     if kauft { ProgressView().tint(Color.tfBlau) } else {
-                        Text(offenerKauf != nil ? Texte.Allgemein.nochmal : Texte.Abo.kaufen)
+                        Text(offenerKauf != nil ? Texte.Allgemein.nochmal : gratis.map(Texte.Abo.kaufenGratis) ?? Texte.Abo.kaufen)
                     }
                 }
                 .buttonStyle(.haupt)
                 .disabled(kauft || stelltHer || kaufUUID == nil)
                 .accessibilityIdentifier("abo-kaufen")
 
-                Text(Texte.Abo.kleingedruckt)
+                Text(gratis.map { Texte.Abo.kleingedrucktGratis($0, preis: p.displayPrice) } ?? Texte.Abo.kleingedruckt)
+                    .accessibilityIdentifier("abo-kleingedruckt")
                     .font(.dm(.footnote))
                     .foregroundStyle(Color.tfLeise)
                     .fixedSize(horizontal: false, vertical: true)
@@ -135,6 +142,15 @@ struct AboView: View {
 
     private func preis(_ p: Product) -> some View {
         VStack(alignment: .leading, spacing: 4) {
+            if let g = gratis {
+                Text(Texte.Abo.gratisAbzeichen(g))
+                    .font(.dm(.subheadline, weight: .bold))
+                    .foregroundStyle(Color.tfTinte)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(Color.tfGelb, in: Capsule())
+                    .padding(.bottom, 4)
+            }
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text(p.displayPrice)
                     .font(.luckiest(40, relativeTo: .largeTitle))
@@ -145,13 +161,15 @@ struct AboView: View {
                     .font(.dm(.title3, weight: .semibold))
                     .foregroundStyle(Color.tfTinte)
             }
-            Text(Texte.Abo.inklMwSt)
+            Text(gratis.map { "\(Texte.Abo.inklMwSt) · \(Texte.Abo.danach($0))" } ?? Texte.Abo.inklMwSt)
                 .font(.dm(.subheadline))
                 .foregroundStyle(Color.tfLeise)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .karte()
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(p.displayPrice) \(Texte.Abo.proMonat), \(Texte.Abo.inklMwSt)")
+        .accessibilityLabel(gratis.map { "\(Texte.Abo.gratisAbzeichen($0)). Danach \(p.displayPrice) \(Texte.Abo.proMonat), \(Texte.Abo.inklMwSt)" }
+            ?? "\(p.displayPrice) \(Texte.Abo.proMonat), \(Texte.Abo.inklMwSt)")
         .accessibilityIdentifier("abo-preis")
     }
 
@@ -195,6 +213,21 @@ struct AboView: View {
         default: 1
         }
         return Texte.Abo.zeitraum(monate)
+    }
+
+    /// Gratis-Zeitraum des Einführungsangebots, nur wenn kostenlos und der Apple-Account berechtigt ist
+    static func gratisDauer(_ p: Product) async -> String? {
+        guard let sub = p.subscription, let offer = sub.introductoryOffer, offer.paymentMode == .freeTrial,
+              await sub.isEligibleForIntroOffer else { return nil }
+        let z = offer.period
+        let n = z.value * max(offer.periodCount, 1)
+        return switch z.unit {
+        case .day: Texte.Abo.gratisDauer(tage: n, monate: nil)
+        case .week: Texte.Abo.gratisDauer(tage: n * 7, monate: nil)
+        case .month: Texte.Abo.gratisDauer(tage: nil, monate: n)
+        case .year: Texte.Abo.gratisDauer(tage: nil, monate: n * 12)
+        @unknown default: nil
+        }
     }
 
     // MARK: Kauf

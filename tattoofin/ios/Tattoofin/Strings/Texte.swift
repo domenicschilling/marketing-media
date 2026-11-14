@@ -112,7 +112,8 @@ enum Texte {
         static let avvTitel = "AVV"
     }
 
-    /// Abo-Bildschirm (Apple 3.1.2): Preis nur aus dem App Store (product.displayPrice), keine Probezeit, kein anderer Kaufweg
+    /// Abo-Bildschirm (Apple 3.1.2): Preis nur aus dem App Store (product.displayPrice), Gratis-Zeitraum nur aus dem Einführungsangebot
+    /// (nur wenn der Apple-Account berechtigt ist), kein anderer Kaufweg. Der Monatspreis bleibt die größte Preisangabe.
     enum Abo {
         static let titel = "Tattoofin Monatlich"
         static func zeitraum(_ monate: Int) -> String {
@@ -127,6 +128,18 @@ enum Texte {
             "Keine Provision von Tattoofin. Die Gebühren für Kundenzahlungen zahlst du direkt an Stripe.",
         ]
         static let kaufen = "Kostenpflichtig abonnieren"
+        /// Gratis-Zeitraum aus dem Einführungsangebot, z. B. „7 Tage“
+        static func gratisDauer(tage: Int?, monate: Int?) -> String {
+            if let m = monate { return m == 1 ? "1 Monat" : "\(m) Monate" }
+            let t = tage ?? 7
+            return t == 1 ? "1 Tag" : "\(t) Tage"
+        }
+        static func gratisAbzeichen(_ dauer: String) -> String { "Die ersten \(dauer) kostenlos" }
+        static func danach(_ dauer: String) -> String { "nach der kostenlosen Zeit · monatlich kündbar" }
+        static func kaufenGratis(_ dauer: String) -> String { "\(dauer) kostenlos starten" }
+        static func kleingedrucktGratis(_ dauer: String, preis: String) -> String {
+            "Die ersten \(dauer) sind kostenlos. Danach bucht Apple \(preis) pro Monat über deinen Apple-Account ab, wenn du nicht mindestens 24 Stunden vor Ende der kostenlosen Zeit kündigst. Danach verlängert sich das Abo automatisch jeden Monat, wenn du es nicht mindestens 24 Stunden vor Ende des laufenden Zeitraums kündigst. Kündigen kannst du jederzeit in den Einstellungen deines Apple-Accounts unter Abos. Es gibt keine Mindestlaufzeit."
+        }
         static let kleingedruckt = "Die Zahlung wird bei Bestätigung des Kaufs über deinen Apple-Account abgebucht. Das Abo verlängert sich automatisch jeden Monat, wenn du es nicht mindestens 24 Stunden vor Ende des laufenden Zeitraums kündigst. Kündigen kannst du jederzeit in den Einstellungen deines Apple-Accounts unter Abos. Es gibt keine Mindestlaufzeit."
         static let vertragLink = "Vertrag (Nutzungsbedingungen)"
         static let datenschutzLink = "Datenschutz"
@@ -154,6 +167,9 @@ enum Texte {
             case "aktiv" where abo.autoVerlaengerung == false, "gekuendigt":
                 if let d = Datum.tag(abo.laeuftBis) { return "endet am \(d)" }
                 return "gekündigt"
+            case "aktiv" where abo.probe == true:
+                if let d = Datum.tag(abo.laeuftBis) { return "kostenlos bis \(d), danach Abo" }
+                return "kostenlose Probezeit"
             case "aktiv": return "aktiv"
             case "zahlungsproblem": return "Zahlungsproblem bei Apple"
             case "erstattet": return "erstattet"

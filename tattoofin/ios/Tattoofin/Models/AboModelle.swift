@@ -21,6 +21,8 @@ struct AppleAbo: Codable, Sendable, Hashable {
     var sandbox: Bool?
     var produktId: String?
     var appAccountToken: String?
+    /// Läuft gerade die kostenlose Probezeit (Einführungsangebot)?
+    var probe: Bool?
 
     /// Abo ist zu Ende (Zugang gesperrt), ein neues Abo öffnet ihn wieder
     var istBeendet: Bool { ["abgelaufen", "erstattet", "widerrufen"].contains(status ?? "") }

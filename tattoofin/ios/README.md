@@ -7,7 +7,7 @@ Native SwiftUI-App für Tattoo-Studios (iOS 18+, Swift 6, nur Apple-Frameworks, 
 | Ordner | Inhalt |
 |---|---|
 | `Tattoofin.xcodeproj` | Von Hand angelegt (objectVersion 77). Die Ordner `Tattoofin/`, `TattoofinTests/` und `TattoofinUITests/` sind dateisystem-synchronisiert: neue Swift-Dateien gehören automatisch dazu. |
-| `StoreKit/Tattoofin.storekit` | StoreKit-Testdatei (Abo `de.tattoofin.app.abo.monatlich`, 59,99 € Testwert, de_DE, DEU). Liegt außerhalb des App-Ordners (kommt nicht in die App), ist im Schema (Ausführen) eingetragen und als Ressource in beiden Test-Zielen. |
+| `StoreKit/Tattoofin.storekit` | StoreKit-Testdatei (Abo `de.tattoofin.app.abo.monatlich`, 49,90 € + Einführungsangebot 1 Woche kostenlos, de_DE, DEU). Liegt außerhalb des App-Ordners (kommt nicht in die App), ist im Schema (Ausführen) eingetragen und als Ressource in beiden Test-Zielen. |
 | `Config/` | `Info.plist` (Release) und `Info-Debug.plist` (mit ATS-Ausnahme nur für localhost), `Tattoofin.entitlements` (aps-environment). Liegt bewusst außerhalb des synchronisierten Ordners. |
 | `Tattoofin/App` | Einstieg, AppDelegate (Push), AppState (Anmeldung, Tabs, Sprungziele, Portal-Daten) |
 | `Tattoofin/Core` | APIClient (actor), Schlüsselbund (`app-token`, `app-registrierung`), Einstellungen, App-Sperre (Face ID), Push, Zwischenspeicher, Formate, `AboManager` (StoreKit 2), `RegistrierungSpeicher` |

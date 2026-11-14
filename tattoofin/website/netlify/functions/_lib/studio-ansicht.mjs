@@ -21,7 +21,7 @@ export const fuerStudio = (z) => {
 // sandbox = Testkauf (Umgebung nicht Production), bei dem die Stripe-Einrichtung aus ist. Mit APPLE_SANDBOX_STRIPE=1 (z. B. lokal im
 // Simulator, dev/app-lokal.mjs) ist sie an → sandbox false, damit die App den Knopf „Stripe-Konto einrichten“ zeigt.
 export const appleAboAusgabe = (s) => (istApple(s) && s.apple ? {
-  status: s.apple.status, laeuftBis: s.apple.laeuftBis || null,
+  status: s.apple.status, laeuftBis: s.apple.laeuftBis || null, probe: Boolean(s.apple.probe),
   autoVerlaengerung: typeof s.apple.autoVerlaengerung === "boolean" ? s.apple.autoVerlaengerung : null,
   sandbox: s.apple.umgebung !== "Production" && !appleCfg().sandboxStripe, produktId: s.apple.produktId, appAccountToken: String(s.apple.appAccountToken || "").toLowerCase(),
 } : null);

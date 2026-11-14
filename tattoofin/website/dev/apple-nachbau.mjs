@@ -103,7 +103,7 @@ export function appleNachbau({ bundleId = "de.tattoofin.app", produktId = "de.ta
       transactionId: tid, originalTransactionId: tid, webOrderLineItemId: tid, bundleId, productId: produktId, subscriptionGroupIdentifier: "21500001",
       purchaseDate: jetzt, originalPurchaseDate: jetzt, expiresDate: jetzt + 30 * 864e5, quantity: 1, type: "Auto-Renewable Subscription",
       appAccountToken: crypto.randomUUID(), inAppOwnershipType: "PURCHASED", signedDate: jetzt, environment: "Production",
-      transactionReason: "PURCHASE", storefront: "DEU", storefrontId: "143443", price: 59990, currency: "EUR", ...felder,
+      transactionReason: "PURCHASE", storefront: "DEU", storefrontId: "143443", price: 49900, currency: "EUR", ...felder,
     };
   }
   const renewal = (tx, felder = {}) => ({

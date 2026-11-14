@@ -718,10 +718,10 @@ try {
   const sN = blob("studio/" + N.entwurfId);
   const tN = bN.data.token;
   check(bN.status === 200 && /^tfa_/.test(tN || "") && bN.data.studio?.id === N.entwurfId && bN.data.geraet?.rolle === "inhaber" && bN.data.abo?.status === "aktiv" && bN.data.abo?.sandbox === false && bN.data.abo?.appAccountToken === N.appAccountToken && bN.data.abo?.produktId === "de.tattoofin.app.abo.monatlich", "Gültiger Kauf → Token tfa_…, Rolle inhaber, abo aktiv", bN.text.slice(0, 220));
-  check(sN.status === "einrichtung" && sN.sandbox === false && sN.apple?.originalTransactionId === kaufN.tx.originalTransactionId && sN.apple.umgebung === "Production" && sN.apple.preisMilli === 59990 && sN.apple.waehrung === "EUR" && sN.apple.storefront === "DEU" && !sN.appEntwurf && !blob("idx/appentwurf/" + N.appAccountToken) && blob("idx/appleotx/" + kaufN.tx.originalTransactionId) === sN.id && blob("apple/aktiviert/" + kaufN.tx.originalTransactionId), "Studio einrichtung, apple.* gesetzt, Entwurf-Index weg, idx/appleotx + apple/aktiviert", JSON.stringify(sN.apple).slice(0, 220));
+  check(sN.status === "einrichtung" && sN.sandbox === false && sN.apple?.originalTransactionId === kaufN.tx.originalTransactionId && sN.apple.umgebung === "Production" && sN.apple.preisMilli === 49900 && sN.apple.waehrung === "EUR" && sN.apple.storefront === "DEU" && !sN.appEntwurf && !blob("idx/appentwurf/" + N.appAccountToken) && blob("idx/appleotx/" + kaufN.tx.originalTransactionId) === sN.id && blob("apple/aktiviert/" + kaufN.tx.originalTransactionId), "Studio einrichtung, apple.* gesetzt, Entwurf-Index weg, idx/appleotx + apple/aktiviert", JSON.stringify(sN.apple).slice(0, 220));
   const adminNeu = adminMails(/Neuer Abschluss in der App \(Apple-Abo\)/).filter((m) => m.subject.includes("Ink App Studio Neu"));
   const willkommen = mailsAn("mia@neu-app.test").filter((m) => /^Willkommen bei Tattoofin/.test(m.subject));
-  check(adminNeu.length === 1 && !/Sandbox/.test(adminNeu[0].subject) && /59,99 EUR/.test(adminNeu[0].html), "Admin-Mail „Neuer Abschluss in der App (Apple-Abo) 🎉“ mit Preis aus dem Kauf", adminNeu[0]?.subject);
+  check(adminNeu.length === 1 && !/Sandbox/.test(adminNeu[0].subject) && /49,90 EUR/.test(adminNeu[0].html), "Admin-Mail „Neuer Abschluss in der App (Apple-Abo) 🎉“ mit Preis aus dem Kauf", adminNeu[0]?.subject);
   check(willkommen.length === 1 && /Abo über deinen Apple-Account/.test(willkommen[0].html) && !/49\s?(€|&nbsp;€|,00)/.test(willkommen[0].text) && !/start\.html/.test(willkommen[0].html) && !/Aufsteller/.test(willkommen[0].html) && /vertrag\.html\?app=1/.test(willkommen[0].html) && /avv\.html\?app=1/.test(willkommen[0].html) && !/vertrag\.html"/.test(willkommen[0].html) && /Verkäufer des Abos ist Apple/.test(willkommen[0].html), "Studio-Mail „Willkommen“: Apple-Abo (Apple als Verkäufer), ohne Web-Preis, ohne start.html, ohne Aufsteller, Vertrag/AVV als App-Fassung (?app=1)", willkommen[0]?.subject);
   const portalN = await call("GET", "/api/portal", { token: tN });
   check(portalN.status === 200 && portalN.data.studio?.abrechnung === "apple" && portalN.data.studio?.apple?.status === "aktiv" && portalN.data.studio?.apple?.laeuftBis && portalN.data.studio?.paket === "app" && portalN.data.studio?.paketName === "Monatlich (App Store)" && portalN.data.studio?.garantieBis === null && portalN.data.studio?.aufsteller?.inklusive === false && portalN.data.studio?.connectUrl, "GET /api/portal: studio.abrechnung apple, studio.apple (AppleAbo), Paket „Monatlich (App Store)“, ohne Garantie und Aufsteller", JSON.stringify(portalN.data.studio?.apple));
@@ -800,6 +800,22 @@ try {
   check(nSub.status === 200 && nSub.data.ok === true && sP.status === "einrichtung" && sP.apple?.status === "aktiv" && sP.apple.autoVerlaengerung === true && blob("idx/appleotx/" + kaufP.tx.originalTransactionId) === sP.id, "SUBSCRIBED vor „bestaetigen“ aktiviert den Entwurf", nSub.text);
   const bP = await bestaetigen(P.entwurfToken, kaufP.jws);
   check(bP.status === 200 && /^tfa_/.test(bP.data.token || "") && bP.data.studio?.id === P.entwurfId && adminMails(/Neuer Abschluss in der App/).filter((m) => m.subject.includes("Notif Studio")).length === 1 && mailsAn("paul@neu-app.test").filter((m) => /^Willkommen/.test(m.subject)).length === 1, "Danach liefert „bestaetigen“ trotzdem das Token, Mails nur einmal", bP.text.slice(0, 120));
+
+  // ==================================================================================================
+  teil("Apple-Abo: 7 Tage kostenlos (Einführungsangebot), danach bezahlt");
+  const Pr = await entwurf("probe@neu-app.test", "Probe Studio");
+  const kaufPr = apple.kauf({ appAccountToken: Pr.appAccountToken, offerType: 1, offerDiscountType: "FREE_TRIAL", price: 0, expiresDate: Date.now() + 7 * 864e5 });
+  rlReset();
+  const bPr = await bestaetigen(Pr.entwurfToken, kaufPr.jws);
+  const sPr = () => blob("studio/" + Pr.entwurfId);
+  check(bPr.status === 200 && /^tfa_/.test(bPr.data.token || "") && bPr.data.abo?.status === "aktiv" && bPr.data.abo?.probe === true && sPr().status === "einrichtung" && sPr().apple.probe === true && Math.abs(Date.parse(sPr().apple.laeuftBis) - kaufPr.tx.expiresDate) < 1000, "Gratis-Woche zählt als aktives Abo (probe true, läuft bis Ende der 7 Tage)", bPr.text.slice(0, 200));
+  const adminPr = adminMails(/Neuer Abschluss in der App/).filter((m) => m.subject.includes("Probe Studio"));
+  check(adminPr.length === 1 && /kostenlose Probezeit/.test(adminPr[0].html), "Admin-Mail nennt die kostenlose Probezeit statt 0,00 €", adminPr[0]?.html?.slice(0, 160));
+  const portalPr = await call("GET", "/api/portal", { token: bPr.data.token });
+  check(portalPr.data.studio?.apple?.probe === true && portalPr.data.studio?.apple?.status === "aktiv", "GET /api/portal: apple.probe true während der Gratis-Woche", JSON.stringify(portalPr.data.studio?.apple));
+  const renewPr = apple.verlaengerung(kaufPr.tx, { offerType: undefined, offerDiscountType: undefined, price: 49900, expiresDate: Date.now() + 37 * 864e5 });
+  const nPr = await notif(apple.benachrichtigung({ typ: "DID_RENEW", tx: renewPr }));
+  check(nPr.status === 200 && sPr().apple.probe === false && sPr().apple.preisMilli === 49900 && sPr().apple.status === "aktiv", "Erste Verlängerung nach der Gratis-Woche: probe false, Preis 49,90 €", JSON.stringify(sPr().apple).slice(0, 200));
 
   // ==================================================================================================
   teil("Apple-Abo: Stripe verbinden (Connect), Sandbox ohne Stripe");

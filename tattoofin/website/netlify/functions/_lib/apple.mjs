@@ -148,6 +148,10 @@ export async function otxBeanspruchen(tx, studioId) {
 }
 export const studioIdZuOtx = (tx) => store.get("idx/appleotx/" + otxSchluessel(tx));
 
+// Gratis-Probezeit (Einführungsangebot „7 Tage kostenlos“): offerType 1 = Einführungsangebot, offerDiscountType FREE_TRIAL (oder Preis 0).
+// Zählt als aktives Abo; nach Ende ohne Verlängerung meldet Apple EXPIRED → Sperre wie bei jedem Ablauf.
+export const istProbe = (tx) => Boolean(tx) && Number(tx.offerType) === 1 && (tx.offerDiscountType === "FREE_TRIAL" || Number(tx.price) === 0);
+
 function ereignisAnhaengen(a, typ, { subtyp = null, uuid = null } = {}) {
   a.ereignisse = [{ am: now(), typ, subtyp, uuid }, ...(a.ereignisse || [])].slice(0, 20);
 }
@@ -172,6 +176,7 @@ export async function appleAktivieren(s, tx, { quelle = "app", renewal = null } 
     autoVerlaengerung: renewal ? renewal.autoRenewStatus === 1 : null,
     gekauftAm: iso(tx.originalPurchaseDate || tx.purchaseDate), storefront: tx.storefront || null,
     preisMilli: Number.isFinite(Number(tx.price)) && tx.price !== null && tx.price !== undefined ? Number(tx.price) : null, waehrung: tx.currency || null,
+    probe: istProbe(tx),
     aktualisiertAm: am, letzteSignatur: iso(tx.signedDate), ereignisse: [],
   };
   ereignisAnhaengen(s.apple, "aktiviert", { subtyp: quelle });
@@ -182,7 +187,8 @@ export async function appleAktivieren(s, tx, { quelle = "app", renewal = null } 
   await log("apple-abo-gestartet", { studioId: s.id, umgebung: tx.environment, quelle });
   if (await store.setNeu("apple/aktiviert/" + otxKey, { am, studioId: s.id, quelle })) {
     await notify(s, mails.anmeldung(s, { loginUrl: loginLink(s.id), connectUrl: connectUrl(s) }));
-    const preis = s.apple.preisMilli !== null ? `${(s.apple.preisMilli / 1000).toFixed(2).replace(".", ",")} ${s.apple.waehrung || ""}`.trim() : "–";
+    const preis = s.apple.probe ? `0 (kostenlose Probezeit bis ${s.apple.laeuftBis}, danach Preis aus App Store Connect)`
+      : s.apple.preisMilli !== null ? `${(s.apple.preisMilli / 1000).toFixed(2).replace(".", ",")} ${s.apple.waehrung || ""}`.trim() : "–";
     await notifyAdmin("Neuer Abschluss in der App (Apple-Abo) 🎉" + (s.sandbox ? " [Sandbox/TestFlight, kein Geld]" : ""), s, {
       Umgebung: tx.environment, Produkt: tx.productId, Läuft_bis: s.apple.laeuftBis, Preis: preis, Storefront: s.apple.storefront || "–", Quelle: quelle,
     });
@@ -207,6 +213,7 @@ export async function appleStatusAnwenden(s, tx, renewal, ereignis, { status, oe
     if (tx.transactionId !== undefined) a.letzteTransactionId = String(tx.transactionId);
     if (txBis > 0) a.laeuftBis = iso(txBis);
     if (tx.price !== undefined && tx.price !== null && Number.isFinite(Number(tx.price))) a.preisMilli = Number(tx.price);
+    a.probe = istProbe(tx);
     if (tx.currency) a.waehrung = tx.currency;
     if (tx.storefront) a.storefront = tx.storefront;
     if (tx.signedDate) a.letzteSignatur = iso(tx.signedDate);

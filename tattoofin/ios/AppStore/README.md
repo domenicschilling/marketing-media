@@ -39,8 +39,9 @@ Das Stripe-Konto, auf dem das Studio das Geld seiner Kunden bekommt, richtet es 
 | Abo-Gruppe (Referenz / Anzeige) | `Tattoofin` / `Tattoofin` |
 | Produkt-ID | `de.tattoofin.app.abo.monatlich` (muss genau so heißen, App und Server prüfen sie) |
 | Referenzname | `Tattoofin Monatlich` |
-| Laufzeit | 1 Monat, automatisch verlängernd, **keine** Probezeit, **kein** Einführungsangebot, Familienfreigabe **aus** |
-| Preis | Domenic entscheidet, Vorschlag **59,99 € inkl. MwSt.** (ca. 50,41 € netto; davon behält Apple 15 % mit Small Business Program, sonst im ersten Jahr 30 %). Die App zeigt nur den Preis aus dem App Store. |
+| Laufzeit | 1 Monat, automatisch verlängernd, Familienfreigabe **aus** |
+| Preis | **49,90 € inkl. MwSt.** (Domenic 14.11.2026; ca. 41,93 € netto, davon behält Apple 15 % mit Small Business Program → ca. 35,64 €, sonst im ersten Jahr 30 %). Die App zeigt nur den Preis aus dem App Store. |
+| Einführungsangebot | **Kostenlos, 1 Woche** (in App Store Connect angelegt, Ultron 14.11.). Die App zeigt „Die ersten 7 Tage kostenlos“ nur, wenn Apple den Account für berechtigt hält; der Monatspreis bleibt die größte Preisangabe (Regel 3.1.2). Der Server zählt die Gratis-Woche als aktives Abo (`apple.probe`), Apple meldet danach `DID_RENEW` (bezahlt) oder `EXPIRED` (Zugang wird gesperrt). |
 | Anzeigename / Beschreibung (de-DE) | `Tattoofin Monatlich` / `Zahlungslinks, Zahlseite und Gutscheine` |
 | Prüf-Bildschirmfoto | Abo-Bildschirm (`r06-abo-preis-aus-storekit`, mit dem Release-Build auf 6,9 Zoll neu aufnehmen) |
 | Verfügbarkeit | Deutschland |
@@ -89,7 +90,8 @@ On the sign-in screen tap "Neues Studio? Konto anlegen" and use this review addr
   E-mail: <APP_REVIEW_REG_EMAIL>
   Code:   <APP_REVIEW_CODE>
 Enter any business details (German postcode = 5 digits, phone numbers at least 6 digits), switch on the four confirmations,
-tap "Weiter zum Abo" and subscribe with your sandbox account (auto-renewable subscription "Tattoofin Monatlich").
+tap "Weiter zum Abo" and subscribe with your sandbox account (auto-renewable subscription "Tattoofin Monatlich", 1 month,
+with an introductory offer of 1 week free for eligible accounts; the free week unlocks the same features as the paid subscription).
 After the sandbox purchase the cash register ("Kasse") is unlocked in test mode: type an amount, tap "Zahlungslink erstellen",
 then "Testzahlung auslösen" marks the link as paid. No real money moves, and the Stripe setup is switched off for sandbox and
 TestFlight purchases on purpose (real studios connect their own Stripe account in Safari after the purchase; that is not a purchase).
