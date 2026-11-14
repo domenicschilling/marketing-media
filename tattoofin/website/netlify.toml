@@ -23,6 +23,10 @@
   [headers.values]
     X-Robots-Tag = "noindex"
 [[headers]]
+  for = "/app-fertig.html"
+  [headers.values]
+    X-Robots-Tag = "noindex"
+[[headers]]
   for = "/bestaetigung.html"
   [headers.values]
     X-Robots-Tag = "noindex"

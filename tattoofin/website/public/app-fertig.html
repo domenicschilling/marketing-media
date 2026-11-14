@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fertig – Tattoofin</title><meta name="robots" content="noindex">
+<link rel="icon" href="/assets/figur.png"><link rel="stylesheet" href="/css/site.css">
+</head><body>
+<!-- Rückkehr aus einem Stripe-Checkout, der in der Tattoofin-App gestartet wurde (z. B. QR-Aufsteller, seit 14.11.2026).
+     Bewusst ohne Menü, ohne Links zur Website, ohne Preise und ohne Messung (Apple 3.1.1). Die App prüft die Zahlung selbst
+     (POST /api/portal/aufsteller-pruefen { cs }), sobald dieses Fenster geschlossen wird. -->
+<main class="sec"><div class="wrap narrow">
+  <div class="form" style="text-align:center">
+    <img src="/assets/figur.png" alt="" style="width:110px;margin:0 auto">
+    <h1 id="titel" style="font-size:34px;margin:12px 0 10px">Fertig!</h1>
+    <p id="msg" class="muted" style="font-size:18px">Tippe oben auf „Fertig“, um zurück in die Tattoofin-App zu gehen.</p>
+  </div>
+</div></main>
+<script>
+(function () {
+  var q = new URLSearchParams(location.search);
+  if (q.get("aufsteller") === "abgebrochen") {
+    document.getElementById("titel").textContent = "Abgebrochen";
+    document.getElementById("msg").textContent = "Es wurde nichts bezahlt. Tippe oben auf „Fertig“, um zurück in die Tattoofin-App zu gehen.";
+  } else if (q.get("aufsteller") === "bezahlt") {
+    document.getElementById("titel").textContent = "Danke für deine Bestellung!";
+    document.getElementById("msg").textContent = "Wir lassen deinen QR-Aufsteller fertigen. Tippe oben auf „Fertig“, um zurück in die Tattoofin-App zu gehen.";
+  }
+})();
+</script>
+</body></html>

@@ -84,7 +84,9 @@ const lieferadresse = (s) => [s.firma, s.strasse, [s.plz, s.ort].filter(Boolean)
 const holzText = (h) => (h === "dunkel" ? "dunkel (Walnuss)" : "hell (Birke/Buche)");
 
 // QR-Aufsteller einzeln kaufen (Pakete ohne Aufsteller): Stripe-Checkout auf dem DSX-Konto, Rechnung automatisch.
-export async function aufstellerCheckout(s) {
+// app: Kauf aus der Tattoofin-App (Checkout im In-App-Browser) → Rückkehr auf die neutrale Seite app-fertig.html (ohne Links zur Website);
+// die App prüft danach selbst per POST /api/portal/aufsteller-pruefen { cs }.
+export async function aufstellerCheckout(s, { app = false } = {}) {
   if (!s.stripe?.customerId) { const cus = await ensureCustomer(s); s.stripe = { ...(s.stripe || {}), customerId: cus.id }; }
   const name = "QR-Aufsteller aus Holz";
   const text = `Graviert mit QR-Code deiner Zahlseite, ${s.aufsteller?.variante === "logo" ? "mit deinem Logo" : "mit Studioname"}, Holz ${holzText(s.aufsteller?.holz)}. Lieferung an: ${lieferadresse(s)}`.slice(0, 480);
@@ -97,9 +99,9 @@ export async function aufstellerCheckout(s) {
     invoice_creation: { enabled: true, invoice_data: { description: name, metadata: { studioId: s.id, typ: "aufsteller" }, footer: RECHNUNG_FUSS } },
     customer_update: { address: "auto", name: "auto" }, tax_id_collection: { enabled: true },
     payment_intent_data: { metadata: { studioId: s.id, typ: "aufsteller" }, description: name },
-    metadata: { studioId: s.id, typ: "aufsteller" },
-    success_url: `${CFG.siteUrl}/app.html?aufsteller=bezahlt&cs={CHECKOUT_SESSION_ID}#werbung`,
-    cancel_url: `${CFG.siteUrl}/app.html#werbung`,
+    metadata: { studioId: s.id, typ: "aufsteller", ...(app ? { quelle: "app" } : {}) },
+    success_url: app ? `${CFG.siteUrl}/app-fertig.html?aufsteller=bezahlt&cs={CHECKOUT_SESSION_ID}` : `${CFG.siteUrl}/app.html?aufsteller=bezahlt&cs={CHECKOUT_SESSION_ID}#werbung`,
+    cancel_url: app ? `${CFG.siteUrl}/app-fertig.html?aufsteller=abgebrochen` : `${CFG.siteUrl}/app.html#werbung`,
   });
   return session;
 }

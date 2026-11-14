@@ -250,11 +250,11 @@ try {
   // ==================================================================================================
   teil("Sperren: nur_web und nur_inhaber");
   const nurWeb = [];
-  for (const [m, u] of [["POST", "/api/portal/stripe-session"], ["POST", "/api/portal/rechnungen"], ["POST", "/api/portal/aufsteller"], ["POST", "/api/portal/aufsteller-pruefen"], ["POST", "/api/portal/umstellung"], ["POST", "/api/portal/erstattung/zl_x"]]) {
+  for (const [m, u] of [["POST", "/api/portal/stripe-session"], ["POST", "/api/portal/rechnungen"], ["POST", "/api/portal/umstellung"], ["POST", "/api/portal/erstattung/zl_x"], ["POST", "/api/portal/extra"]]) {
     const r = await call(m, u, { token: tA, body: {} });
     nurWeb.push(r.status === 403 && r.data.code === "nur_web" && r.data.error === "Das geht nur im Dashboard.");
   }
-  check(nurWeb.every(Boolean), "Mit App-Token gesperrt (403 nur_web): stripe-session, rechnungen, aufsteller, aufsteller-pruefen, umstellung, erstattung", nurWeb.join(","));
+  check(nurWeb.every(Boolean), "Mit App-Token gesperrt (403 nur_web): stripe-session, rechnungen, umstellung, erstattung, extra (Aufsteller seit 14.11.2026 erlaubt, nur Inhaber)", nurWeb.join(","));
   check((await call("POST", "/api/portal/stripe-session", { cookie: A.cookie })).status === 200, "Im Dashboard (Cookie) geht stripe-session weiter");
   const teamPut = await call("PUT", "/api/app/team", { token: tLisaB, body: { emails: [] } });
   const teamLoesch = await call("POST", "/api/app/konto-loeschen", { token: tLisaB, body: { bestaetigung: "LÖSCHEN" } });
@@ -597,6 +597,176 @@ try {
   const kz = await call("DELETE", "/api/portal/kuendigung", { cookie: C.cookie });
   const kz2 = await call("DELETE", "/api/portal/kuendigung", { cookie: C.cookie });
   check(kz.status === 200 && kz2.status === 400 && kz2.data.error === "Keine offene Kündigung, die zurückgenommen werden kann.", "Dashboard-Rücknahme unverändert", kz2.text);
+
+  { // Werbung, Start, Aufsteller, Nachweis-PDF, Rollen (App-Parität mit dem Web, 14.11.2026): eigene Studios D (Inhaberin + Team) und E
+  // ==================================================================================================
+  teil("Werbung in der App: GET /api/app/werbung (gleiche Texte wie im Dashboard, Klarna nur mit klarnaDauerhaft)");
+  const D = await studioAnlegen("dora@ink-d.test", "Ink Studio D UG (haftungsbeschränkt)", "Bad Kissingen");
+  const E = await studioAnlegen("emil@ink-e.test", "Ink Studio E", "Coburg");
+  await admin(`studio/${D.id}/team`, { emails: ["tina@ink-d.test"] });
+  const tD = (await appLogin("dora@ink-d.test", GERAET("iPhone Dora"))).token;
+  const tDteam = (await appLogin("tina@ink-d.test", GERAET("iPhone Tina"))).token;
+  const tE = (await appLogin("emil@ink-e.test", GERAET("iPhone Emil"))).token;
+  check(tD && tDteam && tE, "Studios D (mit Team-Adresse) und E, drei App-Geräte");
+  const klarnaMod = await import("../netlify/functions/_lib/klarna-texte.mjs");
+  const FUSSNOTE = "*Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, nicht Tattoofin. Achtung! Kreditaufnahme kostet Geld.";
+  const w = await call("GET", "/api/app/werbung", { token: tD });
+  const wd = w.data;
+  const zsD = `${BASE}/zahlen/${blob("studio/" + D.id).slug}`;
+  check(w.status === 200 && w.headers.get("cache-control") === "no-store" && wd.klarna === true && wd.fussnote === FUSSNOTE && klarnaMod.PFLICHTSATZ === FUSSNOTE, "200, no-store, klarna: true, Fußnote im vollen Wortlaut (*Raten über Klarna … Achtung! Kreditaufnahme kostet Geld.)", w.text.slice(0, 200));
+  check(wd.zahlseite === zsD && wd.studio?.firma === "Ink Studio D UG (haftungsbeschränkt)" && wd.studio?.ort === "Bad Kissingen" && wd.hashtags === "#tattoo #wunschtattoo #tattoostudio #badkissingentattoo #badkissingen", "Zahlseite, Studio, Hashtags aus dem Ort", JSON.stringify([wd.zahlseite, wd.hashtags]));
+  const fm = wd.video?.formate || [];
+  check(fm.length === 2 && fm[0].id === "reel" && fm[0].url === `${BASE}/media/studio-video/reel.mp4` && fm[0].cover === `${BASE}/media/studio-video/cover.jpg` && fm[0].breite === 1080 && fm[0].hoehe === 1920 && fm[0].dateiname === "tattoofin-raten-reel.mp4" && fm[1].id === "feed" && fm[1].hoehe === 1350 && fm[1].cover.endsWith("/cover-feed.jpg"), "Werbevideo: Reel 9:16 + Beitrag 4:5 mit öffentlicher URL, Cover, Maßen, Dateiname", JSON.stringify(fm).slice(0, 200));
+  const vid = await fetch(fm[0]?.url || BASE);
+  check(vid.status === 200 && /video\/mp4/.test(vid.headers.get("content-type") || ""), "Video-URL liefert das MP4 aus", vid.headers.get("content-type")); await vid.arrayBuffer().catch(() => {});
+  check(wd.video?.text.includes("Klarna verfügbar. Ohne Papierkram.") && wd.video.text.includes(klarnaMod.KLARNA_ZUSATZ_STUDIO + " " + klarnaMod.KLARNA_WARNSATZ) && wd.video.text.endsWith("Stimme mit KI erstellt") && !/Raten zahlen|in Raten\b|später bezahlen/i.test(wd.video.text.replace(klarnaMod.KLARNA_ZUSATZ_STUDIO, "")), "Video-Text: nur der Name „Klarna verfügbar“, Fußnote (Zusatz + Warnsatz) ungekürzt, KI-Hinweis", wd.video?.text);
+  const bt = wd.beitraege || [];
+  const b = (id) => bt.find((x) => x.id === id) || {};
+  check(JSON.stringify(bt.map((x) => x.id)) === JSON.stringify(["ankuendigung", "karussell", "qr-story", "schritte", "frag-story"]) && JSON.stringify(b("karussell").seiten) === JSON.stringify(["haken", "ankuendigung", "schritte", "fragpost"]) && b("qr-story").hoehe === 1920 && b("ankuendigung").hoehe === 1350 && b("ankuendigung").breite === 1080, "5 Beiträge mit Bild-IDs (seiten) und Maßen", JSON.stringify(bt.map((x) => [x.id, x.seiten, x.hoehe])));
+  check(b("ankuendigung").text.includes("bei uns in Bad Kissingen") && b("ankuendigung").text.includes(klarnaMod.KLARNA_ZUSATZ_STUDIO + " " + klarnaMod.KLARNA_WARNSATZ) && b("ankuendigung").text.endsWith(wd.hashtags) && b("ankuendigung").kopieren === "text", "Posting-Text mit Ort, Fußnote ungekürzt, Hashtags", b("ankuendigung").text);
+  check(b("qr-story").kopieren === "link" && b("qr-story").text.endsWith(zsD) && b("frag-story").kopieren === "sticker" && b("frag-story").text === "Hast du Fragen zum Bezahlen?", "QR-Story kopiert den Link (Link-Sticker), Frag-Story den Sticker-Text");
+  check(!bt.some((x) => /gutschein/i.test(x.text + x.titel)), "Kein Gutschein-Material zusammen mit Klarna");
+  // Gleiche Quelle wie im Dashboard: werbung-texte.js mit den Browser-Klarna-Texten im Sandkasten ausführen
+  const vm = await import("node:vm");
+  const sk = { console }; sk.window = sk; sk.globalThis = sk; vm.createContext(sk);
+  for (const f of ["klarna-texte.js", "werbung-texte.js"]) vm.runInContext(await (await fetch(`${BASE}/js/${f}`)).text(), sk);
+  const kWeb = { firma: "egal", ort: "Bad Kissingen", zahlseite: zsD };
+  const webTexte = sk.TF_WERBUNG.vorlagen(sk.TF_KLARNA).map((v) => [v.id, v.titel, v.wofuer, v.text(kWeb)]);
+  check(JSON.stringify(webTexte) === JSON.stringify(bt.map((v) => [v.id, v.titel, v.wofuer, v.text])) && sk.TF_WERBUNG.videoText(sk.TF_KLARNA) === wd.video.text && sk.TF_WERBUNG.hashtags(kWeb) === wd.hashtags, "Dashboard (Browser, /js/werbung-texte.js + /js/klarna-texte.js) erzeugt wortgleich dieselben Titel, Texte, Video-Text und Hashtags");
+  const kitSrc = fs.readFileSync(path.join(root, "public/js/app-kit.js"), "utf8"), appJs = fs.readFileSync(path.join(root, "public/js/app.js"), "utf8"), appHtml = fs.readFileSync(path.join(root, "public/app.html"), "utf8"), swJs = fs.readFileSync(path.join(root, "public/sw.js"), "utf8");
+  check(/TF_WERBUNG\.vorlagen\(TF_KLARNA\)/.test(kitSrc) && !/"Ab jetzt bei uns: " +/.test(kitSrc) && !/Hast du Fragen zum Bezahlen\?"; }/.test(kitSrc) && /TF_WERBUNG\.videoText\(TF_KLARNA\)/.test(appJs) && !/Ohne Papierkram/.test(appJs) && appHtml.indexOf("/js/werbung-texte.js") > appHtml.indexOf("/js/klarna-texte.js") && appHtml.indexOf("/js/werbung-texte.js") < appHtml.indexOf("/js/app-kit.js") && swJs.includes('"/js/werbung-texte.js"'), "app-kit.js und app.js holen die Texte aus werbung-texte.js (geladen vor app-kit.js, im Service Worker), keine Kopie mehr");
+  const syncSh = fs.existsSync(path.join(root, "../ios/scripts/web-kit-sync.sh")) ? fs.readFileSync(path.join(root, "../ios/scripts/web-kit-sync.sh"), "utf8") : "js/werbung-texte.js";
+  check(syncSh.includes("js/werbung-texte.js"), "iOS: web-kit-sync.sh kopiert werbung-texte.js mit in die App");
+  check(wd.materialLinks?.length === 5 && wd.materialLinks[0].name === "20-fensteraufkleber" && wd.materialLinks.every((m) => m.url.includes("studio=Ink%20Studio%20D%20UG%20(haftungsbeschr%C3%A4nkt)") && m.url.includes("zahlen=" + encodeURIComponent(zsD))), "Druckvorlagen: 5 Links mit Studio und Zahlseite (wie GET /api/portal)", JSON.stringify(wd.materialLinks?.[0]));
+  const portalD = await call("GET", "/api/portal", { token: tD });
+  check(JSON.stringify(portalD.data.materialLinks) === JSON.stringify(wd.materialLinks), "materialLinks gleich wie in GET /api/portal");
+  const sg = wd.soGehts || {};
+  const sgSrc = fs.readFileSync(path.join(root, "public/js/so-gehts.js"), "utf8");
+  const sgWeb = [...sgSrc.matchAll(/\{ ab: ([\d.]+), name: "([^"]+)" \}/g)].map((m) => [Number(m[1]), m[2]]);
+  check(sg.url === `${BASE}/assets/app/hilfe/so-gehts-9x16.mp4` && sg.poster === `${BASE}/assets/app/hilfe/so-gehts-9x16.jpg` && sg.quer?.url.endsWith("so-gehts-16x9.mp4") && sg.dauer === 147.73 && sg.kapitel?.length === 9 && !sg.kapitel.some((k) => /Startbildschirm/.test(k.name)) && sg.fussnote === FUSSNOTE && /Stimme mit KI erstellt/.test(sg.hinweis), "So geht's: Video 9:16 + 16:9, 9 Kapitel ohne „App auf den Startbildschirm“, Fußnote + KI-Hinweis", JSON.stringify(sg.kapitel));
+  check(sgWeb.length === 10 && JSON.stringify(sgWeb.filter((k) => k[1] !== "App auf den Startbildschirm")) === JSON.stringify(sg.kapitel.map((k) => [k.ab, k.name])) && sgWeb.some((k) => k[0] === 120.8 && k[1] === "App auf den Startbildschirm"), "Kapitel-Zeiten und -Namen wortgleich mit so-gehts.js (Dashboard)", JSON.stringify(sgWeb));
+  check(wd.hilfe?.whatsapp === "https://wa.me/491624502375" && /unserem Team/.test(wd.hilfe.text) && !/Domenic/.test(w.text), "Hilfe per WhatsApp an „unser Team“, nie ein Name");
+  check(!/49[,.]00|49 €|netto|monatNetto|paketName|"Paket|preisNetto|tattoofin\.de\/(studios|start)|signup/i.test(w.text), "Keine Paket-, Abo- oder Website-Preise, kein Link zur Anmeldung in der Antwort (Apple 3.1.1)");
+  const wTeam = await call("GET", "/api/app/werbung", { token: tDteam });
+  check(wTeam.status === 200 && wTeam.text === w.text, "Team-Adresse bekommt dieselbe Werbung (darf posten)");
+  check((await call("GET", "/api/app/werbung")).status === 401 && (await call("GET", "/api/app/werbung", { cookie: D.cookie })).status === 401 && (await call("POST", "/api/app/werbung", { token: tD })).status === 404, "Ohne App-Token 401 (auch mit Cookie), andere Methode 404");
+  // Bestandsstudio Risikofrei über das Plattformkonto: Klarna nach dem Stichtag aus → kein Klarna-/Raten-Material
+  const eAlt = blob("studio/" + E.id);
+  setBlob("studio/" + E.id, { ...eAlt, modell: "provision", paket: "risikofrei" });
+  const wR = await call("GET", "/api/app/werbung", { token: tE });
+  check(wR.status === 200 && wR.data.klarna === false && wR.data.video === null && wR.data.beitraege.length === 0 && wR.data.materialLinks.length === 0 && wR.data.fussnote === null && !/Klarna|Raten/.test(JSON.stringify({ ...wR.data, soGehts: null })) && wR.data.soGehts?.kapitel.length === 9 && wR.data.zahlseite, "Risikofrei (Plattformkonto): klarna false → kein Video, keine Beiträge, keine Druckvorlagen, keine Fußnote; Zahlseite und So geht's bleiben", wR.text.slice(0, 200));
+  const startR = await call("GET", "/api/app/start", { token: tE });
+  check(/QR-Code deiner Zahlseite/.test(startR.data.checkliste?.punkte.find((p) => p.id === "werbung")?.text || ""), "Checkliste ohne Klarna: Werbe-Punkt verweist auf den QR-Code");
+  // Apple-Abo-Studio: eigenes Stripe-Konto, Klarna dauerhaft → Klarna-Material
+  setBlob("studio/" + E.id, { ...eAlt, abrechnung: "apple", paket: "app", zahlart: "apple", modell: "kauf" });
+  const wApple = await call("GET", "/api/app/werbung", { token: tE });
+  check(wApple.data.klarna === true && wApple.data.beitraege.length === 5 && wApple.data.video?.formate.length === 2 && (await call("GET", "/api/portal", { token: tE })).data.studio?.klarnaDauerhaft === true, "Apple-Abo-Studio (eigenes Stripe-Konto): klarna true wie studio.klarnaDauerhaft", wApple.text.slice(0, 120));
+
+  // ==================================================================================================
+  teil("Extras nicht in der App, Start-Checkliste ohne Paket/Preis");
+  check(portalD.data.extras?.length === 0 && (await call("GET", "/api/portal", { cookie: D.cookie })).data.extras?.length === 2, "GET /api/portal: extras leer mit App-Token, im Dashboard wie bisher (2)");
+  const ex = await call("POST", "/api/portal/extra", { token: tD, body: { extra: "insta-aktion", nachricht: "x" } });
+  check(ex.status === 403 && ex.data.code === "nur_web" && !blob("studio/" + D.id).extras, "POST /api/portal/extra mit App-Token → 403 nur_web", ex.text);
+  const st = await call("GET", "/api/app/start", { token: tD });
+  const pk = st.data.checkliste?.punkte || [];
+  check(st.status === 200 && JSON.stringify(pk.map((p) => p.id)) === JSON.stringify(["konto", "stripe", "fragebogen", "recht", "link", "app", "theke", "werbung"]) && st.data.checkliste.gesamt === 8 && pk.find((p) => p.id === "app").ok && pk.find((p) => p.id === "konto").ok && pk.find((p) => p.id === "stripe").ok && !pk.find((p) => p.id === "link").ok && pk.find((p) => p.id === "link").ziel === "link", "GET /api/app/start: 8 Punkte wie im Dashboard (App-Punkt automatisch erledigt), Stripe freigegeben, noch kein Link", JSON.stringify(pk.map((p) => [p.id, p.ok])));
+  check(!/€|netto|Paket|Monatlich|Provision/.test(st.text), "Checkliste nennt kein Paket und keinen Preis", st.text.slice(0, 160));
+  const stTeam = await call("GET", "/api/app/start", { token: tDteam });
+  check(stTeam.data.rolle === "team" && stTeam.data.checkliste.punkte.find((p) => p.id === "fragebogen").darf === false && stTeam.data.checkliste.punkte.find((p) => p.id === "theke").darf === true, "Team: Fragebogen/Recht/Stripe nicht erledigbar (darf false), manuelle Punkte schon");
+  const hak = await call("POST", "/api/portal/checkliste", { token: tDteam, body: { punkt: "theke", erledigt: true } });
+  const st2 = await call("GET", "/api/app/start", { token: tD });
+  check(hak.status === 200 && st2.data.checkliste.punkte.find((p) => p.id === "theke").ok && st2.data.checkliste.fertig === st.data.checkliste.fertig + 1, "Manueller Punkt per POST /api/portal/checkliste (auch Team) → in der Checkliste erledigt");
+  check((await call("POST", "/api/portal/checkliste", { token: tD, body: { punkt: "stripe", erledigt: true } })).status === 400, "Nur manuelle Punkte lassen sich abhaken");
+
+  // ==================================================================================================
+  teil("Rollen: Recht, Fragebogen, Einstellungen, Stripe-Dashboard per App-Token");
+  const rv = portalD.data.config?.rechtVersion;
+  const rTeam = await call("POST", "/api/portal/recht", { token: tDteam, body: { gelesen: true, version: rv, name: "Tina" } });
+  const fTeam = await call("GET", "/api/portal/fragebogen", { token: tDteam });
+  const fTeamP = await call("POST", "/api/portal/fragebogen", { token: tDteam, body: { instagram: "@x" } });
+  check(rTeam.status === 403 && rTeam.data.code === "nur_inhaber" && fTeam.status === 403 && fTeam.data.code === "nur_inhaber" && fTeamP.status === 403 && !blob("studio/" + D.id).recht && !blob("studio/" + D.id).fragebogen, "Team: Recht bestätigen, Fragebogen lesen/senden → 403 nur_inhaber");
+  const rAlt = await call("POST", "/api/portal/recht", { token: tD, body: { gelesen: true, version: "alt", name: "Dora" } });
+  const rOk = await call("POST", "/api/portal/recht", { token: tD, body: { gelesen: true, version: rv, name: "Dora Muster" } });
+  check(rAlt.status === 409 && rOk.status === 200 && rOk.data.recht?.aktuell === true && blob("studio/" + D.id).recht?.name === "Dora Muster" && (await call("GET", "/api/app/start", { token: tD })).data.checkliste.punkte.find((p) => p.id === "recht").ok, "Inhaber: Recht mit Name bestätigen (alte Version → 409), Checkliste erledigt", rOk.text.slice(0, 120));
+  const fb = await call("POST", "/api/portal/fragebogen", { token: tD, body: { instagram: "@ink_d", raten_nachfrage: "oft", team: "3", w_raten: true } });
+  const fbG = await call("GET", "/api/portal/fragebogen", { token: tD });
+  check(fb.status === 200 && fbG.data.instagram === "@ink_d" && fbG.data.w_raten === true && fbG.data.updatedAt && (await call("GET", "/api/app/start", { token: tD })).data.checkliste.punkte.find((p) => p.id === "fragebogen").ok, "Inhaber: Fragebogen senden und lesen (wie onboarding.html), Checkliste erledigt", fbG.text.slice(0, 120));
+  const ko = await call("PATCH", "/api/portal/kontakt", { token: tD, body: { email: "buero@ink-d.test", anzahlungsbedingungen: "Die Anzahlung wird verrechnet und bei Absage bis 48 Stunden vorher zurückgezahlt.", ausweichAnzahlung: { an: true, prozent: 20 }, zahlartenHinweis: true } });
+  const ko60 = await call("PATCH", "/api/portal/kontakt", { token: tD, body: { ausweichAnzahlung: { an: true, prozent: 60 } } });
+  const koTeam = await call("PATCH", "/api/portal/kontakt", { token: tDteam, body: { zahlartenHinweis: false } });
+  check(ko.status === 200 && ko.data.benachrichtigung.email === "buero@ink-d.test" && ko.data.ausweichAnzahlung.an === true && ko.data.ausweichAnzahlung.prozent === 20 && ko.data.zahlartenHinweis === true && /48 Stunden/.test(ko.data.anzahlungsbedingungen) && ko60.status === 400 && koTeam.status === 403 && koTeam.data.code === "nur_inhaber", "Einstellungen per App (nur Inhaber): E-Mail, Anzahlungsbedingungen, Ausweich-Anzahlung 10–50 %, Zahlseiten-Hinweis", ko.text.slice(0, 160));
+  const sdb = await call("POST", "/api/portal/stripe-dashboard", { token: tD });
+  check(sdb.status === 200 && /^https:\/\//.test(sdb.data.url || "") && (await call("POST", "/api/portal/stripe-dashboard", { token: tDteam })).data.code === "nur_inhaber", "„Bei Stripe ansehen“: Inhaber bekommt den Link, Team 403", sdb.text);
+  const rechtApp = await (await fetch(`${BASE}/recht.html?app=1`)).text();
+  check(/\[\?&\]app=1\(&\|\$\)\/\.test\(location\.search\)\) document\.querySelector\("\.knopf"\)\.remove\(\)/.test(rechtApp), "recht.html?app=1: ohne Drucken-Knopf und ohne Link ins Web-Dashboard");
+
+  // ==================================================================================================
+  teil("QR-Aufsteller in der App (nur Inhaber, ohne Paket-/Website-Preise)");
+  const LOGO = "data:image/jpeg;base64," + Buffer.from("logo-test").toString("base64");
+  const aTeam = await call("GET", "/api/app/aufsteller", { token: tDteam });
+  const aTeamP = await call("POST", "/api/portal/aufsteller", { token: tDteam, body: { holz: "dunkel", bestellen: true } });
+  const aTeamC = await call("POST", "/api/portal/aufsteller-pruefen", { token: tDteam, body: { cs: "cs_test" } });
+  check(aTeam.status === 403 && aTeam.data.code === "nur_inhaber" && aTeamP.status === 403 && aTeamP.data.code === "nur_inhaber" && aTeamC.status === 403 && !blob("studio/" + D.id).aufsteller, "Team: Aufsteller ansehen/bestellen/prüfen → 403 nur_inhaber");
+  const a0 = await call("GET", "/api/app/aufsteller", { token: tD });
+  const A0 = a0.data.aufsteller || {};
+  check(a0.status === 200 && A0.artikel === "QR-Aufsteller aus Holz" && A0.kostenlos === true && A0.preis === null && A0.preisText === "Für dich kostenlos" && A0.knopf === "Kostenlos bestellen" && A0.status === "offen" && A0.holz === "hell" && A0.variante === "name" && A0.zahlseite === zsD && A0.klarna === true && A0.fussnote === FUSSNOTE && A0.logo === null && /Ink Studio D UG/.test(A0.lieferadresse), "Studio mit enthaltenem Aufsteller: kostenlos, Status offen, Daten für die Vorschau", a0.text.slice(0, 200));
+  check(!/Paket|netto|49 €|49,00|Monatlich|signup|studios\.html/.test(a0.text), "Antwort ohne Paket, ohne netto, ohne Website", a0.text.slice(0, 160));
+  const ohneLogo = await call("POST", "/api/portal/aufsteller", { token: tD, body: { holz: "dunkel", variante: "logo" } });
+  check(ohneLogo.status === 400 && ohneLogo.data.error === "Bitte wähle zuerst dein Logo aus oder nimm „Mit Studioname“.", "Variante Logo ohne Logo → 400 mit App-Text", ohneLogo.text);
+  const mitLogo = await call("POST", "/api/portal/aufsteller", { token: tD, body: { holz: "dunkel", variante: "logo", logo: LOGO, logoW: 400, logoH: 200 } });
+  check(mitLogo.status === 200 && Object.keys(mitLogo.data).join() === "aufsteller" && mitLogo.data.aufsteller.hatLogo && mitLogo.data.aufsteller.variante === "logo" && mitLogo.data.aufsteller.holz === "dunkel" && !("paketName" in mitLogo.data) && blob("aufsteller-logo/" + D.id)?.w === 400, "Auswahl + Logo speichern: Antwort nur { aufsteller } (kein Studio-Objekt mit Paket)", mitLogo.text.slice(0, 160));
+  check((await call("GET", "/api/app/aufsteller", { token: tD })).data.aufsteller?.logo?.src === LOGO, "GET /api/app/aufsteller liefert das Logo für die Vorschau");
+  check((await call("POST", "/api/portal/aufsteller", { token: tD, body: { logo: "data:image/png;base64,AAAA" } })).status === 400, "Logo nur als JPEG-Daten-URL");
+  const best = await call("POST", "/api/portal/aufsteller", { token: tD, body: { holz: "dunkel", variante: "logo", bestellen: true } });
+  const adminBest = mailsAn("admin@app.test").filter((m) => /QR-Aufsteller bestellen \(im Paket enthalten\)/.test(m.subject) && m.subject.includes("Ink Studio D"));
+  check(best.status === 200 && best.data.aufsteller.status === "bestellt" && best.data.aufsteller.bestelltAm && !best.data.url && adminBest.length === 1 && /App/.test(adminBest[0].html) && blob("studio/" + D.id).aufsteller?.angefordertAm, "bestellen: true bei enthaltenem Aufsteller → kostenlos angefordert, Admin-Mail (Quelle App), kein Checkout", best.text.slice(0, 160));
+  const best2 = await call("POST", "/api/portal/aufsteller", { token: tD, body: { bestellen: true } });
+  check(best2.status === 409, "Zweite Bestellung → 409", best2.text);
+  // Apple-Abo-Studio E: Aufsteller nicht enthalten → kaufen per Stripe-Checkout im Browser
+  const aE = await call("GET", "/api/app/aufsteller", { token: tE });
+  const AE = aE.data.aufsteller || {};
+  check(AE.kostenlos === false && AE.preis?.nettoCent === 2900 && AE.preis?.gesamtCent === 3451 && AE.preisText === "34,51 € inkl. MwSt." && AE.knopf === "Für 34,51 € bestellen" && AE.preis.text === "29,00 € + 19 % MwSt. = 34,51 €" && /Stripe/.test(AE.bezahlenHinweis), "Apple-Abo-Studio: nur Artikel + Preis des Aufstellers (29 € + MwSt. = 34,51 €)", aE.text.slice(0, 200));
+  const kauf = await call("POST", "/api/portal/aufsteller", { token: tE, body: { holz: "hell", variante: "name", bestellen: true } });
+  const csE = kauf.data.cs;
+  const stE = await mock("state");
+  const sessE = stE.sessions?.[csE] || {};
+  check(kauf.status === 200 && /\/pay\/cs_/.test(kauf.data.url || "") && /^cs_/.test(csE || "") && sessE.metadata?.typ === "aufsteller" && sessE.metadata?.quelle === "app" && sessE.success_url === `${BASE}/app-fertig.html?aufsteller=bezahlt&cs={CHECKOUT_SESSION_ID}` && sessE.cancel_url === `${BASE}/app-fertig.html?aufsteller=abgebrochen` && kauf.data.aufsteller.status === "zahlung_offen" && !/Paket|monatNetto|paketName/.test(kauf.text), "bestellen: true ohne enthaltenen Aufsteller → Stripe-Checkout (url + cs), Rückkehr auf app-fertig.html, Antwort ohne Paket", kauf.text.slice(0, 200));
+  const vorher = await call("POST", "/api/portal/aufsteller-pruefen", { token: tE, body: { cs: csE } });
+  check(vorher.status === 200 && vorher.data.bezahlt === false && vorher.data.aufsteller.status === "zahlung_offen" && !("firma" in vorher.data && "paketName" in vorher.data), "Prüfen vor dem Bezahlen → bezahlt false", vorher.text.slice(0, 120));
+  const zahl = await stripeForm(new URL(kauf.data.url).pathname, { pm: "card" });
+  await wait(250);
+  const nach = await call("POST", "/api/portal/aufsteller-pruefen", { token: tE, body: { cs: csE } });
+  check(/app-fertig\.html\?aufsteller=bezahlt&cs=cs_/.test(zahl.headers.get("location") || "") && nach.data.bezahlt === true && nach.data.aufsteller.status === "bezahlt" && nach.data.aufsteller.bezahltAm && mailsAn("admin@app.test").some((m) => /QR-Aufsteller bestellen \(29 € bezahlt\)/.test(m.subject) && m.subject.includes("Ink Studio E")), "Nach dem Bezahlen: Rückkehr auf app-fertig.html, Prüfung → bezahlt, Admin-Mail", zahl.headers.get("location"));
+  check((await call("POST", "/api/portal/aufsteller-pruefen", { token: tD, body: { cs: csE } })).data.bezahlt === false, "Fremde Checkout-Sitzung (anderes Studio) zählt nicht");
+  const fertigSeite = await fetch(`${BASE}/app-fertig.html?aufsteller=bezahlt&cs=${csE}`);
+  const fertigHtml = await fertigSeite.text();
+  check(fertigSeite.status === 200 && /noindex/.test(fertigHtml) && /zurück in die Tattoofin-App/.test(fertigHtml) && !/<a\s/i.test(fertigHtml) && !/€|Paket|tf-track|fbq/.test(fertigHtml) && /for = "\/app-fertig\.html"/.test(fs.readFileSync(path.join(root, "netlify.toml"), "utf8")), "app-fertig.html: noindex, ohne Links, ohne Preise, ohne Messung");
+  setBlob("studio/" + E.id, eAlt);
+  const webAuf = await call("POST", "/api/portal/aufsteller", { cookie: E.cookie, body: { holz: "dunkel", variante: "name" } });
+  check(webAuf.status === 200 && webAuf.data.firma === "Ink Studio E" && webAuf.data.aufsteller?.holz === "dunkel" && "inklusive" in webAuf.data.aufsteller, "Dashboard (Cookie): Antwort wie bisher (Studio-Objekt)");
+
+  // ==================================================================================================
+  teil("Nachweis als PDF (GET /api/portal/nachweis/:id?pdf=1)");
+  const { PDFDocument } = await import("pdf-lib");
+  const zD = await zahlungBezahlen(tD, { betrag: "250", kunde: "Paula Probe", email: "paula@kunde.test", beschreibung: "Rose 😀 Unterarm", art: "gesamt" });
+  const PNG = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
+  setBlob(`leistung/${D.id}/${zD}`, { zahlungId: zD, studioId: D.id, am: new Date().toISOString(), version: "2026-10b", name: "Paula Probe", datum: "2026-11-14", text: "Ich bestätige, dass mein Termin stattgefunden hat. ".repeat(12), unterschrift: PNG, foto: "data:image/jpeg;base64,kaputt", fotoEinwilligung: "Ja", ip: "127.0.0.1", ua: "Test" });
+  const pdfR = await fetch(`${BASE}/api/portal/nachweis/${zD}?pdf=1`, { headers: { authorization: "Bearer " + tDteam } });
+  const pdfBuf = Buffer.from(await pdfR.arrayBuffer());
+  let pdfDoc = null; try { pdfDoc = await PDFDocument.load(pdfBuf); } catch { /* unten geprüft */ }
+  check(pdfR.status === 200 && pdfR.headers.get("content-type") === "application/pdf" && pdfR.headers.get("cache-control") === "no-store" && new RegExp(`filename="Nachweis-.+-${zD}\\.pdf"`).test(pdfR.headers.get("content-disposition") || "") && pdfBuf.subarray(0, 5).toString() === "%PDF-", "PDF mit App-Token (auch Team): application/pdf, no-store, Dateiname", pdfR.headers.get("content-disposition"));
+  check(pdfDoc && pdfDoc.getPageCount() >= 1 && pdfDoc.getTitle() === `Nachweis zur Zahlung ${zD}` && pdfBuf.length > 1500, "PDF lässt sich öffnen (Titel mit Zahlungs-Nr., Unterschrift eingebettet, Emoji und defektes Foto brechen nichts)", `${pdfDoc?.getPageCount()} Seiten, ${pdfBuf.length} Bytes`);
+  const jsonN = await call("GET", `/api/portal/nachweis/${zD}`, { token: tD });
+  check(jsonN.status === 200 && jsonN.data.zahlung?.id === zD && jsonN.data.leistung?.name === "Paula Probe" && jsonN.data.leistung.ua === undefined, "Ohne ?pdf=1 weiter JSON (wie nachweis.html)");
+  check((await call("GET", `/api/portal/nachweis/${zD}?pdf=1`, { token: tE })).status === 404 && (await call("GET", `/api/portal/nachweis/zl_gibtsnicht?pdf=1`, { token: tD })).status === 404, "Fremde oder unbekannte Zahlung → 404 (kein PDF)");
+  const pdfWeb = await fetch(`${BASE}/api/portal/nachweis/${zD}?pdf=1`, { headers: { cookie: D.cookie } });
+  check(pdfWeb.status === 200 && pdfWeb.headers.get("content-type") === "application/pdf", "PDF geht auch im Dashboard (Cookie)"); await pdfWeb.arrayBuffer();
+  const offen = await call("POST", "/api/portal/zahlung", { token: tD, body: { betrag: "80", kunde: "Otto", beschreibung: "Herz" } });
+  const pdfOffen = await fetch(`${BASE}/api/portal/nachweis/${offen.data.zahlung.id}?pdf=1`, { headers: { authorization: "Bearer " + tD } });
+  check(pdfOffen.status === 200 && (await PDFDocument.load(Buffer.from(await pdfOffen.arrayBuffer()))).getPageCount() === 1, "Offene Zahlung ohne Nachweise → einseitiges PDF");
+  const heute = await call("POST", "/api/portal/zahlung", { token: tD, body: { betrag: "300", kunde: "Hanna", beschreibung: "Schrift", art: "gesamt", heute: true } });
+  check(heute.status === 201 && heute.data.zahlung.heute === true && (await call("GET", "/api/app/start", { token: tD })).data.checkliste.punkte.find((p) => p.id === "link").ok, "Link-Formular: heute im Studio (heute: true) per App, Checkliste „Erster Link“ erledigt");
+  } // Ende Werbung/Parität
 
   // ==================================================================================================
   teil("Allgemein: no-store, Fehlerformat, unbekannte Pfade");

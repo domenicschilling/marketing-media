@@ -12,6 +12,7 @@ body.app{background:#fff;padding-bottom:20px}
 </head><body class="app">
 <div class="blatt">
 <div class="knopf"><button class="btn gold" onclick="print()">Als PDF speichern / drucken</button> <a class="btn ghost small" href="/app.html#recht">Zur App</a></div>
+<script>/* In der iPhone-App (?app=1, nur lesen): ohne Drucken-Knopf und ohne Link ins Web-Dashboard */ if (/[?&]app=1(&|$)/.test(location.search)) document.querySelector(".knopf").remove();</script>
 <main id="recht" class="recht-text">
 <p class="entwurf">Allgemeine Information, keine Rechtsberatung im Einzelfall. Stand: Version <span data-c="rechtVersion">2026-12</span>.</p>
 <h1>Deine rechtliche Lage – einfach erklärt</h1>

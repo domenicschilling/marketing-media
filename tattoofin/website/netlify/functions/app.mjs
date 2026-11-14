@@ -14,6 +14,11 @@
 //   POST   /api/app/demo-zahlung/:id  nur Demo-Studio (App-Prüfung): offenen Link als bezahlt markieren (Testzahlung, kein Geld) + Mitteilung
 //   POST   /api/app/registrieren/code | /registrieren/pruefen | /registrieren   neues Studio in der App (seit 14.11.2026, _lib/app-registrierung.mjs)
 //   POST   /api/app/abo/bestaetigen | /abo/wiederherstellen | /abo/aktualisieren   Apple-Abo (StoreKit 2, _lib/apple.mjs)
+//   GET    /api/app/werbung          Werbevideo, Studio-Beiträge (Texte), Hashtags, Fußnote, Zahlseite, Druckvorlagen, Erklärvideo „So geht's“
+//                                     (seit 14.11.2026, Inhaber + Team; Klarna-/Raten-Material nur mit klarna: true, _lib/werbung.mjs)
+//   GET    /api/app/aufsteller       QR-Aufsteller: Auswahl, Status, Artikel + Preis (ohne Paket), Logo für die Vorschau (nur Inhaber).
+//                                     Speichern/Bestellen: POST /api/portal/aufsteller { …, bestellen: true }, Rückkehr: POST /api/portal/aufsteller-pruefen
+//   GET    /api/app/start            Einrichtungs-Checkliste für die App (ohne Paket/Preis; manuelle Punkte per POST /api/portal/checkliste)
 //   Code-Prüfung, Grenzen und Geräte-Anlage gemeinsam in _lib/app-code.mjs
 // Grenzen (atomar, store.zaehleAtomar/belegePlatz: jeder Versuch belegt einen eigenen Platz, parallele Anfragen zählen richtig):
 // Code-Mails 3 pro Adresse in 15 Min., 10 pro Adresse und Tag, 20 pro IP und Stunde; Anmelde-Versuche 30 pro IP und Stunde,
@@ -36,6 +41,8 @@ import { gutscheinAusstellen } from "./_lib/gutschein.mjs";
 import { istApple } from "./_lib/config.mjs";
 import { aj, fehler, hash, T, reviewFuer, codeIpErlaubt, codeAdresseErlaubt, aktiveStudios, anmeldeCodeSenden, reviewPruefen, codePruefen, nachAnmeldeCode, geraetFertig } from "./_lib/app-code.mjs";
 import { appRegistrierungRoute } from "./_lib/app-registrierung.mjs";
+import { werbungFuer, aufstellerFuerApp, werbungMitKlarna } from "./_lib/werbung.mjs";
+import { zahlungenVon } from "./_lib/store.mjs";
 
 const berlinTag = (ms) => new Date(ms).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" });
 
@@ -185,6 +192,28 @@ async function kontoLoeschen(s, ich, req) {
   return aj({ ok: true, kuendigungZum: zum, loeschungAb, appleAbo: istApple(s), studio: oeffentlich(s) });
 }
 
+// ---------------------------------------------------------------- Start: Einrichtungs-Checkliste (wie im Dashboard, ohne Paket und Preis)
+// ziel: wohin die App beim Tippen führt (stripe = Einrichtung im Browser, fragebogen, recht, link = neuer Zahlungslink, werbung).
+// manuell: Punkt, den das Studio selbst abhakt (POST /api/portal/checkliste { punkt, erledigt }). nurInhaber: Team kann ihn nicht erledigen.
+async function startDaten(s, ich) {
+  const o = oeffentlich(s), c = s.checkliste || {}, frei = Boolean(o.stripe.freigegeben);
+  const zahlungen = (await zahlungenVon(s.id)).filter((z) => z.art !== "zahlseite" || z.status === "bezahlt").length;
+  const klarna = werbungMitKlarna(s);
+  const punkte = [
+    { id: "konto", ok: true, titel: "Studio bei Tattoofin angelegt", text: "Dein Studio ist startklar eingerichtet." },
+    { id: "stripe", ok: frei, wartet: Boolean(o.stripe.angabenGemacht && !frei), titel: "Zahlungskonto einrichten (ca. 10 Min.)", ziel: frei || o.stripe.angabenGemacht ? null : "stripe", nurInhaber: true,
+      text: frei ? "Freigegeben. Stripe zahlt das Geld deiner Kunden auf dein Bankkonto aus. Bei neuen Konten erst 7 Tage nach der Zahlung." : o.stripe.angabenGemacht ? "Stripe prüft deine Angaben, meist 1 bis 3 Werktage." : "Ausweis und IBAN bereithalten. Danach geht alles andere." },
+    { id: "fragebogen", ok: Boolean(o.fragebogenAm), titel: "Fragebogen ausfüllen", text: "Hilft uns bei der Einrichtung (10 Minuten).", ziel: "fragebogen", nurInhaber: true },
+    { id: "recht", ok: Boolean(o.recht?.aktuell), titel: "Deine rechtliche Lage lesen", text: "5 Minuten: Wer trägt welches Risiko?", ziel: "recht", nurInhaber: true },
+    { id: "link", ok: zahlungen > 0, titel: "Ersten Zahlungslink erstellen", text: frei ? "Zum Ausprobieren gern an dich selbst." : "Geht, sobald dein Zahlungskonto freigegeben ist.", ziel: frei ? "link" : null, gesperrt: !frei },
+    { id: "app", ok: true, titel: "Tattoofin-App auf dem Handy", text: "Erledigt: Du nutzt sie gerade." },
+    { id: "theke", ok: Boolean(c.theke), titel: "QR-Code an die Theke", text: "QR-Code deiner Zahlseite unter Werbung.", ziel: "werbung", manuell: "theke" },
+    { id: "werbung", ok: Boolean(c.werbung), titel: "Ersten Instagram-Beitrag posten", text: klarna ? "Fertige Bilder und ein Video unter Werbung." : "Zum Beispiel mit dem QR-Code deiner Zahlseite unter Werbung.", ziel: "werbung", manuell: "werbung" },
+  ].map((p) => ({ ...p, darf: !p.nurInhaber || ich.rolle === "inhaber" }));
+  const fertig = punkte.filter((p) => p.ok).length;
+  return { checkliste: { punkte, fertig, gesamt: punkte.length, alleErledigt: fertig === punkte.length }, rolle: ich.rolle };
+}
+
 // ---------------------------------------------------------------- Verteiler
 async function route(req, context) {
   const url = new URL(req.url);
@@ -290,6 +319,15 @@ async function route(req, context) {
   }
 
   if (bereich === "konto-loeschen" && m === "POST") return kontoLoeschen(s, ich, req);
+
+  // Werbung + Hilfe (Inhaber und Team: beide posten für das Studio)
+  if (bereich === "werbung" && !sub && m === "GET") return aj(werbungFuer(s));
+  if (bereich === "start" && !sub && m === "GET") return aj(await startDaten(s, ich));
+  // QR-Aufsteller (Bestellung mit Kosten → nur Inhaber, wie POST /api/portal/aufsteller)
+  if (bereich === "aufsteller" && !sub && m === "GET") {
+    if (ich.rolle !== "inhaber") return fehler("Das kann nur der Inhaber.", 403, "nur_inhaber");
+    return aj({ aufsteller: await aufstellerFuerApp(s, { mitLogo: true, store }) });
+  }
 
   // Nur Demo-Studio (App-Prüfung bei Apple): Testzahlung, damit der Prüfer den Ablauf „Link → bezahlt → Mitteilung“ sieht.
   // Kein Geld, kein Stripe, keine Mails (notify/gutscheinSenden schicken bei Demo-Studios nichts).
