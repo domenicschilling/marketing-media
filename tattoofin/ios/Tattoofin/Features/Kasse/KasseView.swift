@@ -76,11 +76,7 @@ struct KasseView: View {
             VStack(spacing: 10) {
                 StartBereich()
 
-                // Nach einem Testkauf (Apple-Sandbox, auch App Review): Kasse offen im Testmodus, Testzahlung im Zahlungslink
-                if portal.studio?.istTestmodus == true {
-                    HinweisKarte(text: Texte.Kasse.testmodusText, symbol: "testtube.2")
-                        .accessibilityIdentifier("kasse-testmodus")
-                }
+                // Nach einem Testkauf (Apple-Sandbox, auch App Review): Hinweis „Testmodus“ steht im StartBereich statt der Monatszeile
 
                 // Betrag
                 VStack(spacing: 4) {

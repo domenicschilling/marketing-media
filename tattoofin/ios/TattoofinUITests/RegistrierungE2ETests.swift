@@ -344,6 +344,9 @@ final class RegistrierungE2ETests: XCTestCase {
         foto("r27-kasse-testmodus-nach-testkauf")
         for t in ["1", "5", "0"] { app.buttons[t].firstMatch.tap() }
         let erstellen = app.buttons["Zahlungslink erstellen"]
+        // App Review sieht diesen Bildschirm zuerst: Knopf ohne Scrollen sichtbar, nicht unter der Tab-Leiste
+        XCTAssertTrue(erstellen.waitForExistence(timeout: 5))
+        XCTAssertLessThanOrEqual(erstellen.frame.maxY, app.tabBars.firstMatch.frame.minY + 1, "Testmodus: „Zahlungslink erstellen“ liegt unter der Tab-Leiste")
         sichtbar(app, erstellen)
         erstellen.tap()
         let testzahlung = app.buttons["Testzahlung auslösen"]

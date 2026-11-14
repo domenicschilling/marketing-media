@@ -133,7 +133,17 @@ struct StartBereich: View {
 
     @ViewBuilder
     private var monat: some View {
-        if let k = portal.kpis {
+        if portal.studio?.istTestmodus == true {
+            // Testkauf (Apple-Sandbox): statt Umsatz der Hinweis auf den Testmodus, gleiche Höhe wie die Monatszeile,
+            // damit „Zahlungslink erstellen“ ohne Scrollen sichtbar bleibt (App Review sieht diesen Bildschirm zuerst)
+            Label(Texte.Kasse.testmodusText, systemImage: "testtube.2")
+                .font(.dm(.footnote, weight: .semibold))
+                .foregroundStyle(Color.tfBlau)
+                .padding(.horizontal, 4)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("kasse-testmodus")
+        } else if let k = portal.kpis {
             // Paket mit Provision: „an dich“ (nur, wenn der Portal-Ausweg die Zahl kennt), sonst Anzahl der Zahlungen
             let anDich = werbung.start?.studio.istProvision == true ? werbung.start?.kpis?.auszahlungMonatCent : nil
             let zweiter = anDich.map { "\(Euro.text($0)) \(WerbungTexte.Start.anDich)" }
