@@ -1,23 +1,25 @@
-// Kampagnen-Landingpage /studios (v2, 17.10.2026)
+// Kampagnen-Landingpage /studios (v2, 17.10.2026; Kurzfassung 14.11.2026: gleicher Aufbau wie die Startseite, Anfrage zugeklappt)
 // Messung:
 //   Meta „Lead“  = Anfrage-Formular abgeschickt (Pixel + Server-Kopie mit gleicher event_id über /api/anfrage)
 //                  oder Klick auf WhatsApp. Ein Klick auf „Online abschließen“ ist KEIN Lead mehr
 //                  (der echte Abschluss wird auf /start und /danke als InitiateCheckout/CompleteRegistration gemessen).
 //   Meta nur mit Cookie-Einwilligung (tf-track.js) und nur auf tattoofin.de.
-//   Umami (cookielos): cta-klick, whatsapp, online-start, formular-start, formular-gesendet, formular-fehler, rechner, scroll-50/90,
+//   Umami (cookielos): cta-klick, whatsapp, online-start, formular-start, formular-gesendet, formular-fehler, anfrage-auf, scroll-50/90,
 //                      kunde-weiter (Link zur Endkunden-Seite /raten, 19.10.2026).
 (function () {
   var j = document.getElementById("jahr");
   if (j) j.textContent = new Date().getFullYear();
   function u(e, d) { try { if (window.umami) window.umami.track(e, d); } catch (x) {} }
 
-  // utm_* / fbclid an die Links zum Online-Abschluss hängen (Herkunft bleibt sichtbar)
+  // utm_* / fbclid an die Links zum Online-Abschluss hängen (Herkunft bleibt sichtbar).
+  // Die Links tragen als Standard utm_source=studios&utm_medium=seite&utm_content=<ort>; kommt der Besucher mit eigenen
+  // utm_* (z. B. aus der Meta-Anzeige), gehen diese vor, damit die Kampagne auf /start erkennbar bleibt.
   var q = new URLSearchParams(location.search), mit = [], utm = {};
   q.forEach(function (v, k) { if (/^utm_|^fbclid$/.test(k)) { mit.push([k, v]); if (/^utm_/.test(k)) utm[k] = v; } });
   if (q.get("ref")) utm.ref = q.get("ref"); // z. B. ref=kunde (Kunde hat uns seinem Studio empfohlen, /raten)
   if (mit.length) document.querySelectorAll('a[href^="/start"]').forEach(function (a) {
     var url = new URL(a.getAttribute("href"), location.origin);
-    mit.forEach(function (p) { if (!url.searchParams.has(p[0])) url.searchParams.set(p[0], p[1]); });
+    mit.forEach(function (p) { url.searchParams.set(p[0], p[1]); });
     a.setAttribute("href", url.pathname + url.search);
   });
 
@@ -37,46 +39,12 @@
     if (!a) return;
     var h = a.getAttribute("href") || "";
     if (/wa\.me|api\.whatsapp\.com/.test(h)) {
-      u("whatsapp", { ort: a.closest(".leiste") ? "leiste" : a.closest(".held") ? "held" : "seite" });
+      u("whatsapp", { ort: a.closest(".leiste") ? "leiste" : a.closest(".auftakt, .kopf") ? "held" : "seite" });
       if (consent() !== "nein" && einmalHeute("lp-wa") && window.TFTrack) TFTrack.track("Lead", { content_name: "WhatsApp (Kampagnen-Seite)", content_category: "Tattoo-Studio" });
     } else if (/^\/start/.test(h)) u("online-start", { paket: (h.match(/paket=(\w+)/) || [])[1] || "monatlich" });
     else if (a.dataset.cta) u("cta-klick", { ort: a.dataset.cta });
-    else if (a.dataset.lp === "raten") u("kunde-weiter", { ort: a.closest(".held") ? "held" : "formular" });
+    else if (a.dataset.lp === "raten") u("kunde-weiter", { ort: a.closest(".auftakt") ? "held" : "formular" });
   }, true);
-
-  // Video im Handy: nur abspielen, wenn sichtbar und „weniger Bewegung“ nicht gewünscht ist
-  var film = document.querySelector(".handy-film");
-  var ruhig = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-  if (film && !ruhig && "IntersectionObserver" in window) {
-    var geladen = false;
-    new IntersectionObserver(function (es) {
-      es.forEach(function (en) {
-        if (en.isIntersecting) {
-          if (!geladen) { film.preload = "auto"; geladen = true; }
-          var p = film.play(); if (p && p.catch) p.catch(function () {});
-        } else film.pause();
-      });
-    }, { threshold: 0.35 }).observe(film);
-  }
-
-  // Rechner: Kunde zahlt X → Tattoofin-Provision 0 € → Zahlungsgebühr von Stripe (Spanne: Karte ab 1,5 % + 0,25 €, Klarna ab 2,99 % + 0,35 €) → Rest auf dem Stripe-Konto
-  var rb = document.getElementById("r-betrag"), rr = document.getElementById("r-regler");
-  var fee = document.getElementById("r-fee"), du = document.getElementById("r-du");
-  function eur0(c) { return Math.round(c / 100).toLocaleString("de-DE"); }
-  function zahl(v) { var n = Number(String(v).replace(/\s|€/g, "").replace(/\.(?=\d{3}(\D|$))/g, "").replace(",", ".")); return isFinite(n) ? n : NaN; }
-  function rechne(betrag) {
-    var c = Math.round(betrag * 100); if (!(c > 0)) { fee.textContent = "–"; du.textContent = "–"; return; }
-    var kleinste = Math.round(c * 0.015) + 25, groesste = Math.round(c * 0.0299) + 35;
-    fee.innerHTML = "ca. " + eur0(kleinste) + "–" + eur0(groesste) + "&nbsp;€";
-    du.innerHTML = "ca. " + eur0(c - groesste) + "–" + eur0(c - kleinste) + '&nbsp;<span class="eur">€</span>';
-  }
-  var gerechnet = false;
-  function merk() { if (!gerechnet) { gerechnet = true; u("rechner"); } }
-  if (rb && rr) {
-    rb.addEventListener("input", function () { var n = zahl(rb.value); rechne(n); if (n > 0) rr.value = Math.min(6000, Math.max(100, n)); merk(); });
-    rr.addEventListener("input", function () { var n = Number(rr.value); rb.value = n.toLocaleString("de-DE"); rechne(n); merk(); });
-    rb.addEventListener("focus", function () { rb.select(); });
-  }
 
   // Formular
   var f = document.getElementById("anfrage-form");
@@ -145,15 +113,11 @@
     });
   }
 
-  // Handy-Leiste: zeigen, sobald der Startbereich weg ist; ausblenden, solange das Formular sichtbar ist
-  var leiste = document.getElementById("leiste"), held = document.querySelector(".held-cta"), ziel = document.getElementById("anfrage");
-  if (leiste && held && ziel && "IntersectionObserver" in window) {
-    leiste.hidden = false;
-    var heldSichtbar = true, zielSichtbar = false;
-    function setze() { leiste.classList.toggle("sichtbar", !heldSichtbar && !zielSichtbar); }
-    new IntersectionObserver(function (es) { heldSichtbar = es[0].isIntersecting; setze(); }).observe(held);
-    new IntersectionObserver(function (es) { zielSichtbar = es[0].isIntersecting; setze(); }, { rootMargin: "0px 0px -20% 0px" }).observe(ziel);
-  }
+  // Handy-Leiste: steuert /assets/start/app.js wie auf der Startseite (zeigt sich, wenn kein „Jetzt starten“ im Bild ist,
+  // weg an Schluss, Anfrage (#anfrage) und Fuß).
+  // Anfrage zugeklappt: Aufklappen zählen (Umami), damit sichtbar wird, ob jemand lieber erst mit dem Team spricht
+  var anfrage = document.getElementById("anfrage");
+  if (anfrage) anfrage.addEventListener("toggle", function () { if (anfrage.open) u("anfrage-auf"); });
 
   // Scrolltiefe (Umami)
   var tiefen = { 50: false, 90: false };

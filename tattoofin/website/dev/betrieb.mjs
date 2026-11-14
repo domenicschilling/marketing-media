@@ -925,31 +925,42 @@ await abschnitt("17 Recht (27.10.2026): Klarna-Stichtag 20.11.2026 für Risikofr
   const kopfDaten = (raten.match(/<title>[\s\S]*?<\/title>/) || [""])[0] + (raten.match(/<meta name="description"[^>]*>/) || [""])[0] + (raten.match(/<script type="application\/ld\+json">[\s\S]*?<\/script>/) || [""])[0];
   check(!/zinsfrei|ohne Schufa|ohne Gebühr|0\s?%|monatlich ab|pro Monat/i.test(ratenText) && !/Raten|Klarna/.test(kopfDaten), "/raten: kein zinsfrei/ohne Schufa/Ratenbeträge; Titel, Meta und Schema ohne Raten/Klarna", "");
 
-  // g) Browser: Warnhinweis „Achtung! Kreditaufnahme kostet Geld.“ lesbar (Größe, Fett, Kontrast, Nähe zur Raten-Aussage), Handy + Desktop
+  // g) Browser: Warnhinweis „Achtung! Kreditaufnahme kostet Geld.“ vorhanden und lesbar, Handy + Desktop.
+  //    Entscheidung Domenic 14.11.2026: klein wie eine Fußnote (mind. 12 px, normal gesetzt), Kontrast AA (≥ 4,5), nah an der Raten-Aussage.
+  //    Startseite und /studios: genau EINE Raten-Aussage im Hero, Fußnote im selben Abschnitt höchstens 560 px darunter (vorher 1000 px).
   const lesbar = () => {
     const parse = (c) => { const m = c.match(/rgba?\(([^)]+)\)/); if (!m) return [255, 255, 255, 1]; const p = m[1].split(",").map(Number); return [p[0], p[1], p[2], p[3] === undefined ? 1 : p[3]]; };
     const lum = ([r, g, b]) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
     const hintergrund = (el) => { let e = el; while (e) { const c = parse(getComputedStyle(e).backgroundColor); if (c[3] > 0.9) return c; e = e.parentElement; } return [255, 255, 255, 1]; };
     const sichtbar = (el) => { const r = el.getBoundingClientRect(), cs = getComputedStyle(el); return r.width > 0 && r.height > 0 && cs.visibility !== "hidden" && cs.display !== "none" && !el.closest("[hidden], .hidden"); };
     // Abbildungen (3D-Mockup des Aufstellers auf der Startseite) zählen nicht, sie sind keine Fließtext-Werbung
-    const warn = [...document.querySelectorAll("strong, b")].filter((e) => /Achtung! Kreditaufnahme kostet Geld\./.test(e.textContent) && sichtbar(e) && !e.closest(".mock"));
+    // kleinstes sichtbares Element, das den Warnsatz trägt (fett oder nicht)
+    const warn = [...document.querySelectorAll("body *")].filter((e) => /Achtung! Kreditaufnahme kostet Geld\./.test(e.textContent) && ![...e.children].some((k) => /Achtung! Kreditaufnahme kostet Geld\./.test(k.textContent)) && !e.closest("script, style, .mock") && sichtbar(e));
     if (!warn.length) return { n: 0 };
-    const claims = [...document.querySelectorAll("h1, h2, p, li, span, div")].filter((e) => !e.closest("nav, header, script, style, .tf-cc, [hidden], .hidden") && sichtbar(e) && e.children.length < 6 && /(Raten|Klarna|Ratenzahlung)\*/.test(e.textContent) && !/Achtung! Kreditaufnahme/.test(e.textContent));
+    const claims0 = [...document.querySelectorAll("h1, h2, p, li, span, div")].filter((e) => !e.closest("nav, header, script, style, .tf-cc, [hidden], .hidden, #fragen") && sichtbar(e) && e.children.length < 6 && /(Raten|Klarna|Ratenzahlung)\*/.test(e.textContent) && !/Achtung! Kreditaufnahme/.test(e.textContent));
+    // nur die innersten Elemente (die Aussage selbst, nicht der Rahmen drumherum)
+    const claims = claims0.filter((e) => !claims0.some((o) => o !== e && e.contains(o)));
     const y = (e) => e.getBoundingClientRect().top + scrollY;
     const cl = claims.sort((a, b) => y(a) - y(b))[0];
     const w0 = [...warn].sort((a, b) => y(a) - y(b))[0];
-    const abstand = cl ? y(w0) - y(cl) : 0;
+    // Abstand der Raten-Aussage zum nächstgelegenen Warnsatz
+    const abstand = cl ? [...warn].map((w) => y(w) - y(cl)).sort((a, b) => Math.abs(a) - Math.abs(b))[0] : 0;
+    const hero = cl ? cl.closest(".auftakt") : null;
+    const fnHero = hero ? warn.some((w) => w.closest(".auftakt") === hero && y(w) >= y(cl) && y(w) - y(cl) <= 560) : null;
+    const claimsAusserhalbHero = claims.filter((e) => !e.closest(".auftakt")).length;
     const res = warn.map((w) => { const cs = getComputedStyle(w); const fg = parse(cs.color), bg = hintergrund(w), l1 = lum(fg), l2 = lum(bg); return { px: parseFloat(cs.fontSize), gewicht: Number(cs.fontWeight), kontrast: (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05), elternPx: parseFloat(getComputedStyle(w.parentElement).fontSize) }; });
-    return { n: warn.length, abstand, claim: Boolean(cl), minPx: Math.min(...res.map((r) => r.px)), minElternPx: Math.min(...res.map((r) => r.elternPx)), minGewicht: Math.min(...res.map((r) => r.gewicht)), minKontrast: Math.min(...res.map((r) => r.kontrast)), breite: document.documentElement.scrollWidth <= innerWidth };
+    return { n: warn.length, abstand, claim: Boolean(cl), hero: Boolean(hero), fnHero, claimsAusserhalbHero, minPx: Math.min(...res.map((r) => r.px)), minElternPx: Math.min(...res.map((r) => r.elternPx)), minGewicht: Math.min(...res.map((r) => r.gewicht)), minKontrast: Math.min(...res.map((r) => r.kontrast)), breite: document.documentElement.scrollWidth <= innerWidth };
   };
-  for (const [name, pfad] of [["raten", "/raten.html"], ["start", "/"], ["studios", "/studios.html"], ["finanzieren", "/tattoo-finanzieren.html"], ["ratenzahlung", "/ratenzahlung-tattoostudio.html"]]) {
+  for (const [name, pfad] of [["raten", "/raten.html"], ["start", "/"], ["studios", "/studios.html"], ["finanzieren", "/tattoo-finanzieren.html"], ["ratenzahlung", "/ratenzahlung-tattoostudio.html"], ["klarna", "/klarna-tattoostudio.html"], ["ratgeber", "/ratgeber.html"]]) {
     for (const [w, h] of [[390, 844], [1440, 900]]) {
       const p = await neueSeite({ width: w, height: h });
       await p.goto(BASE + pfad, { waitUntil: "load" });
       await p.waitForTimeout(500);
       const r = await p.evaluate(lesbar);
-      const fertig = r.n > 0 && r.minPx >= 15.9 && r.minPx >= r.minElternPx - 0.5 && r.minGewicht >= 700 && r.minKontrast >= 4.5 && (!r.claim || Math.abs(r.abstand) <= 1000) && r.breite;
-      check(fertig, `${pfad} ${w}x${h}: Warnhinweis lesbar (≥16 px, nicht kleiner als der Fließtext, fett, Kontrast ≥ 4,5, nah an der Raten-Aussage, kein Querscrollen)`, `n=${r.n} px=${r.minPx} fließ=${r.minElternPx} gew=${r.minGewicht} kontrast=${(r.minKontrast || 0).toFixed(1)} abstand=${Math.round(r.abstand || 0)} breit=${r.breite}`);
+      const hauptseite = ["start", "studios"].includes(name);
+      const nah = hauptseite ? r.claim && r.hero && r.fnHero === true && r.claimsAusserhalbHero === 0 : (!r.claim || Math.abs(r.abstand) <= 1000);
+      const fertig = r.n > 0 && r.minPx >= 12 && r.minKontrast >= 4.5 && nah && r.breite;
+      check(fertig, `${pfad} ${w}x${h}: Warnhinweis vorhanden und lesbar (Fußnote ≥ 12 px, Kontrast ≥ 4,5, ${hauptseite ? "eine Raten-Aussage im Hero, Fußnote im selben Abschnitt ≤ 560 px darunter" : "nah an der Raten-Aussage"}, kein Querscrollen)`, `n=${r.n} px=${r.minPx} gew=${r.minGewicht} kontrast=${(r.minKontrast || 0).toFixed(1)} abstand=${Math.round(r.abstand || 0)} hero=${r.hero} fnHero=${r.fnHero} außerhalb=${r.claimsAusserhalbHero} breit=${r.breite}`);
       if (["raten", "start", "studios"].includes(name)) await p.screenshot({ path: path.join(shots, `recht-${name}-${w}.png`) });
       await p.context().close();
     }
@@ -994,7 +1005,8 @@ await abschnitt("18 Paket Risikofrei geschlossen (26.10.2026): Neukunden gesperr
     // --- Website ---
     const seiten = ["/", "/studios.html", "/start.html", "/ratgeber.html", "/tattoo-finanzieren.html", "/ratenzahlung-tattoostudio.html", "/tattoo-anzahlung.html", "/klarna-tattoostudio.html", "/video.html", "/raten.html", "/sitemap.xml"];
     for (const pf of seiten) {
-      const t = await (await fetch(BASE + pf)).text();
+      // Der echte, belegte Fall „900 € per Klarna“ (Abschnitt [data-beleg], 07.11.2026) ist kein Risikofrei-Versprechen und bleibt ausgenommen
+      const t = (await (await fetch(BASE + pf)).text()).replace(/<section[^>]*\bdata-beleg\b[\s\S]*?<\/section>/g, "");
       const treffer = (t.match(/risikofrei|0 € Einrichtung|10 ?(&nbsp;)? ?%|900 ?(&nbsp;)?€|0 ?(&nbsp;)?€ Grundgeb|Grundgebühr|ohne Fixkosten|nur bei Zahlung|Keine Zahlungen über Tattoofin = keine Kosten/gi) || []);
       check(treffer.length === 0, `${pf}: kein Risikofrei-Versprechen mehr („Risikofrei“, 10 %, 900 €, 0 € Einrichtung/Grundgebühr, Fixkosten)`, treffer.slice(0, 3).join(" | "));
     }
@@ -1046,7 +1058,7 @@ await abschnitt("18 Paket Risikofrei geschlossen (26.10.2026): Neukunden gesperr
 // =====================================================================================================
 await abschnitt("19 Optik nach dem Entfernen von Risikofrei: Hero-Knopf, zwei Paket-Karten, kein Querscrollen auf 14 Größen", async () => {
   const GROESSEN = [[320, 568], [375, 667], [390, 844], [414, 896], [430, 932], [844, 390], [768, 1024], [1024, 768], [1280, 720], [1366, 768], [1440, 900], [1536, 864], [1920, 1080], [2560, 1440]];
-  const SEITEN = [["/", ".auftakt-knopf .knopf", "#preis .preis-schild"], ["/studios.html", ".held-cta .knopf-gross", "#pakete .pk"], ["/start.html?paket=risikofrei", null, "section[data-step='1'] .choice.pakete label"]];
+  const SEITEN = [["/", ".auftakt-knopf .knopf", "#preis .preis-schild"], ["/studios.html", ".auftakt-knopf .knopf", "#preis .preis-schild"], ["/start.html?paket=risikofrei", null, "section[data-step='1'] .choice.pakete label"]];
   const probleme = [];
   for (const [w, h] of GROESSEN) {
     for (const [pf, cta, karten] of SEITEN) {

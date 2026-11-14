@@ -217,6 +217,11 @@ input:focus,select:focus,textarea:focus{outline:none;box-shadow:4px 4px 0 var(--
 .fn{font-size:16.5px;line-height:1.5;color:var(--ink);margin-top:12px}
 .fn strong,.fn b,.fussnote strong,.fussnote b{font-weight:800}
 .dark .fn{color:#fff}
+/* Pflicht-Fußnote zu Raten* (Entscheidung Domenic 14.11.2026): klein wie eine Fußnote, normal gesetzt, Kontrast AA */
+.raten-fn{font-size:12.5px;font-weight:400;line-height:1.45;color:var(--ink);margin-top:10px;max-width:70ch}
+.raten-fn strong,.raten-fn b{font-weight:400}
+.dark .raten-fn{color:#fff}
+details .raten-fn{margin-top:-6px;margin-bottom:12px}
 .sticker{background:#fff;border-radius:50%;padding:14px;border:var(--bw) solid var(--ink);box-shadow:var(--sh);display:inline-block}
 .co h4{font:700 15px var(--body);margin:0 0 4px}
 .co .amt{font:400 32px var(--head);margin:4px 0 14px;color:var(--ink)}

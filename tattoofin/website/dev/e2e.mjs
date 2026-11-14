@@ -124,10 +124,15 @@ try {
   const p0 = await neueSeite();
   await p0.goto(BASE + "/");
   check((await p0.textContent("h1")).includes("für deine Kunden"), "Hero lädt");
-  { const warnNachH1 = await p0.evaluate(() => { const n = document.querySelector("h1")?.nextElementSibling; return Boolean(n && /Achtung! Kreditaufnahme kostet Geld/.test(n.textContent)); }); check(warnNachH1, "Warnsatz direkt unter der Hero-Überschrift"); }
+  // Warnsatz klein als Fußnote bei der einen Raten-Aussage im Hero (Entscheidung Domenic 14.11.2026): im ersten Abschnitt, nah unter der h1
+  { const w = await p0.evaluate(() => { const h1 = document.querySelector("h1"), fn = [...document.querySelectorAll(".auftakt .raten-fn")].find((e) => /Achtung! Kreditaufnahme kostet Geld\./.test(e.textContent) && /Vertragspartner der Raten ist Klarna/.test(e.textContent)); if (!h1 || !fn) return null; return { abstand: fn.getBoundingClientRect().top - h1.getBoundingClientRect().top, inHero: h1.closest(".auftakt") === fn.closest(".auftakt") }; });
+    check(Boolean(w && w.inHero && w.abstand > 0 && w.abstand <= 560), "Warnsatz als Fußnote im Hero, höchstens 560 px unter der Raten-Überschrift" + (w ? ` (${Math.round(w.abstand)} px)` : "")); }
   check(await p0.locator("#preis").count() === 1 && await p0.locator("#r-monat").count() === 0, "Ein Preis auf der Startseite, kein Paket-Rechner");
   const preise = await p0.textContent("#preis");
-  check(preise.includes("49") && !preise.includes("999") && !preise.includes("Einmalzahlung") && !/Gründer|Profi\b|Risikofrei|10 %|900 €|Grundge/.test(preise) && /Achtung! Kreditaufnahme kostet Geld/.test(preise), "Preisbereich: nur 49 €, Pflichtsatz bei Klarna*");
+  check(preise.includes("49") && !preise.includes("999") && !preise.includes("Einmalzahlung") && !/Gründer|Profi\b|Risikofrei|10 %|900 €|Grundge/.test(preise) && !/Raten\*|Klarna\*/.test(preise), "Preisbereich: nur 49 €, keine Raten-Aussage (deshalb dort kein Warnsatz nötig)");
+  { const raten = await p0.evaluate(() => [...document.querySelectorAll("main h1, main h2, main h3, main p, main li, main span, main div")].filter((e) => !e.closest("#fragen, .fragen, [hidden]") && e.getBoundingClientRect().height > 1 && e.children.length < 6 && /(Raten|Klarna|Ratenzahlung)\*/.test(e.textContent) && !/Achtung! Kreditaufnahme/.test(e.textContent)).every((e) => e.closest(".auftakt")));
+    check(raten, "Raten*-Aussagen außerhalb der Fragen nur im ersten Bildschirm (dort steht die Fußnote)"); }
+  { const domenic = (await p0.content()).match(/Domenic/g) || []; check(domenic.length === 0, "Startseite: spricht vom Team, nicht von Domenic"); }
   { const sichtbar = await p0.evaluate(() => document.body.innerText); check(!/Ich spar noch|Einmalzahlung|beiden Paketen|999 €/.test(sichtbar), "Startseite: kein „Ich spar noch.“, keine Einmalzahlung, keine zwei Pakete"); }
   const ld = await p0.textContent('script[type="application/ld+json"]');
   check(/49/.test(ld) && !/Einmalzahlung|999 €/.test(ld) && !/Risikofrei|10 %/.test(ld), "Strukturierte Daten: nur 49 €, kein Risikofrei");
@@ -135,7 +140,8 @@ try {
   await p0.screenshot({ path: path.join(shots, "landing.png"), fullPage: true });
   const pS = await neueSeite();
   await pS.goto(BASE + "/studios.html");
-  { const sh = await pS.content(); check((await pS.textContent("#pakete")).includes("49") && (await pS.locator("#pakete .pk").count()) === 1 && !/risikofrei|999&nbsp;|Einmalzahlung/i.test(sh), "/studios: ein Preis, kein Risikofrei, keine Einmalzahlung"); }
+  { const sh = await pS.content(); check((await pS.textContent("#preis")).includes("49") && (await pS.locator("#preis .preis-schild").count()) === 1 && !/risikofrei|999&nbsp;|Einmalzahlung/i.test(sh), "/studios: ein Preis, kein Risikofrei, keine Einmalzahlung"); }
+  { const sh = await pS.content(); check(/noindex/.test(sh) && /utm_source=studios&amp;utm_medium=seite&amp;utm_content=auftakt/.test(sh) && (await pS.locator("#anfrage #anfrage-form input[autocomplete=tel]").count()) === 1 && !/Domenic/.test(sh), "/studios: noindex, Start-Links mit utm, Anfrage-Formular (zugeklappt) mit Autofill, Team statt Domenic"); }
 
   // ---------------------------------------------------------------- A: Paket Start
   console.log("Bestandsstudio Paket Risikofrei (angelegt wie vor der Schließung): Dashboard → eingebettete Einrichtung");
@@ -1164,7 +1170,13 @@ try {
     await cookiesAblehnen(pV);
     check(await pV.evaluate(() => document.documentElement.scrollWidth <= innerWidth && !document.querySelector("video[autoplay]")), "Startseite (neu, ohne Video-Abschnitt): kein Querscrollen, kein Autoplay-Video");
     await pV.goto(BASE + "/studios.html");
-    check(await pV.evaluate(() => Boolean(document.querySelector("#ablauf-video #tfv-play")) && document.documentElement.scrollWidth <= innerWidth), "/studios: Video-Abschnitt, kein Querscrollen");
+    check(await pV.evaluate(() => Boolean(document.querySelector(".auftakt [data-film]")) && !document.querySelector("video[autoplay]") && document.documentElement.scrollWidth <= innerWidth), "/studios: 10-Sekunden-Aufnahme per Tipp, kein Autoplay, kein Querscrollen");
+    await cookiesAblehnen(pV);
+    await pV.click(".auftakt [data-film]");
+    check(await pV.evaluate(() => { const d = document.getElementById("film"), v = d && d.querySelector("video"); return Boolean(d && d.open && v && v.muted && v.hasAttribute("playsinline") && /zahlungslink\.mp4$/.test(v.src)); }), "10 Sek. ansehen: echte App-Aufnahme im Fenster, stumm, playsinline");
+    await pV.click(".film-zu");
+    const zu = await pV.waitForFunction(() => !document.getElementById("film").open && !document.querySelector("#film video"), null, { timeout: 5000 }).then(() => true, () => false);
+    check(zu, "10 Sek. ansehen: Schließen beendet die Aufnahme");
   }
 
   // ---------------------------------------------------------------- Risikofrei für Neukunden geschlossen (26.10.2026)
