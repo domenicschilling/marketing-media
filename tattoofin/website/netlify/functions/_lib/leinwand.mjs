@@ -1,14 +1,12 @@
 // Kleine Zeichenfläche ohne zusätzliche Abhängigkeit: Flächen (Pfade, Kreise, abgerundete Rechtecke) mit Kantenglättung,
 // Text aus den Glyphen-Umrissen in /assets/aufsteller-glyphen.json (DM Sans 700/500 + Tattoofin-Wortmarke), PNG-Bilder
-// einsetzen (Dekodieren über @pdf-lib/upng, kommt mit pdf-lib) und als PNG ausgeben (node:zlib).
+// einsetzen und als PNG ausgeben (beides in _lib/png.mjs: Dekodieren über @pdf-lib/upng, Schreiben über node:zlib).
 // Verwendet für die Link-Vorschau der Zahlungslinks (tattoofin.de/z/<id>, _lib/vorschaubild.mjs).
 // Rasterung: Flächenanteil je Pixel über Linien-Akkumulation (Verfahren wie font-rs), Füllregel „nonzero“ (Betrag, höchstens 1).
-import zlib from "node:zlib";
-import UPNG_MODUL from "@pdf-lib/upng";
+import { pngLaden, pngKodieren } from "./png.mjs";
 import GLYPHEN from "../../../public/assets/aufsteller-glyphen.json" with { type: "json" };
 
-// CommonJS mit __esModule: unter Node liegt die Bibliothek in .default, im esbuild-Bündel direkt
-const UPNG = UPNG_MODUL?.decode ? UPNG_MODUL : UPNG_MODUL?.default;
+export { pngLaden };
 const hex = (f) => { const m = /^#?([0-9a-f]{6})$/i.exec(f || ""); const n = m ? parseInt(m[1], 16) : 0; return [n >> 16, (n >> 8) & 255, n & 255]; };
 
 // Eine Linie in den Akkumulations-Puffer eintragen (Koordinaten relativ zum Puffer, x ≥ 0)
@@ -245,57 +243,8 @@ export class Leinwand {
   }
 
   // Als PNG (RGB, 8 Bit) ausgeben; Filter je Zeile (keiner, Sub, Up, Paeth) nach kleinster Summe gewählt
-  png() {
-    const { w, h, px } = this, zeile = w * 3;
-    const roh = Buffer.alloc((zeile + 1) * h);
-    const f1 = new Uint8Array(zeile), f2 = new Uint8Array(zeile), f4 = new Uint8Array(zeile);
-    for (let y = 0; y < h; y++) {
-      const o = y * zeile, op = o - zeile;
-      let s0 = 0, s1 = 0, s2 = 0, s4 = 0;
-      for (let i = 0; i < zeile; i++) {
-        const x = px[o + i], a = i >= 3 ? px[o + i - 3] : 0, b = y ? px[op + i] : 0, c = y && i >= 3 ? px[op + i - 3] : 0;
-        const p = a + b - c, pa = p > a ? p - a : a - p, pb = p > b ? p - b : b - p, pc = p > c ? p - c : c - p;
-        const v1 = (x - a) & 255, v2 = (x - b) & 255, v4 = (x - (pa <= pb && pa <= pc ? a : pb <= pc ? b : c)) & 255;
-        f1[i] = v1; f2[i] = v2; f4[i] = v4;
-        s0 += x < 128 ? x : 256 - x; s1 += v1 < 128 ? v1 : 256 - v1; s2 += v2 < 128 ? v2 : 256 - v2; s4 += v4 < 128 ? v4 : 256 - v4;
-      }
-      const m = Math.min(s0, s1, s2, s4), z = y * (zeile + 1);
-      if (m === s0) { roh[z] = 0; roh.set(px.subarray(o, o + zeile), z + 1); }
-      else if (m === s1) { roh[z] = 1; roh.set(f1, z + 1); }
-      else if (m === s2) { roh[z] = 2; roh.set(f2, z + 1); }
-      else { roh[z] = 4; roh.set(f4, z + 1); }
-    }
-    const chunk = (typ, daten) => {
-      const len = Buffer.alloc(4); len.writeUInt32BE(daten.length);
-      const td = Buffer.concat([Buffer.from(typ, "ascii"), daten]);
-      const crc = Buffer.alloc(4); crc.writeUInt32BE(crc32(td));
-      return Buffer.concat([len, td, crc]);
-    };
-    const ihdr = Buffer.alloc(13);
-    ihdr.writeUInt32BE(w, 0); ihdr.writeUInt32BE(h, 4); ihdr[8] = 8; ihdr[9] = 2; ihdr[10] = 0; ihdr[11] = 0; ihdr[12] = 0;
-    return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk("IHDR", ihdr), chunk("IDAT", zlib.deflateSync(roh, { level: 7 })), chunk("IEND", Buffer.alloc(0))]);
-  }
+  png() { return pngKodieren(this.px, this.w, this.h, 3); }
 }
 
-// PNG dekodieren und leere (transparente) Ränder ermitteln; null, wenn kein lesbares PNG oder unvernünftig groß
-export function pngLaden(buf) {
-  let img, rgba;
-  try { img = UPNG.decode(buf); } catch { return null; }
-  const sw = img?.width, sh = img?.height;
-  if (!sw || !sh || sw * sh > 12e6) return null;
-  try { rgba = new Uint8Array(UPNG.toRGBA8(img)[0]); } catch { return null; }
-  let l = sw, t = sh, r = -1, b = -1;
-  for (let yy = 0; yy < sh; yy++) for (let xx = 0; xx < sw; xx++) if (rgba[(yy * sw + xx) * 4 + 3] > 8) { if (xx < l) l = xx; if (xx > r) r = xx; if (yy < t) t = yy; if (yy > b) b = yy; }
-  if (r < 0) return null;
-  return { rgba, sw, sh, l, t, cw: r - l + 1, ch: b - t + 1 };
-}
 // Größe nach dem Einpassen in eine Box
 export const eingepasst = (g, maxW, maxH) => { const f = Math.min(maxW / g.cw, maxH / g.ch); return { w: Math.max(1, Math.round(g.cw * f)), h: Math.max(1, Math.round(g.ch * f)) }; };
-
-let CRC_TAB = null;
-function crc32(buf) {
-  if (!CRC_TAB) { CRC_TAB = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; CRC_TAB[n] = c >>> 0; } }
-  let c = 0xffffffff;
-  for (let i = 0; i < buf.length; i++) c = CRC_TAB[(c ^ buf[i]) & 255] ^ (c >>> 8);
-  return (c ^ 0xffffffff) >>> 0;
-}

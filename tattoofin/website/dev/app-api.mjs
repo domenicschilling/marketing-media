@@ -466,7 +466,7 @@ try {
     const zvId = zv.data.zahlung.id, txt = zv.data.whatsappText || "";
     check(zv.status === 201 && zv.data.link === `${BASE}/z/${zvId}`, "Zahlungslink ist der Kurzlink /z/<id>", zv.data.link);
     const klarnaC = /Klarna verfügbar\./.test(txt);
-    check(txt === `Hi Kai 👋\nhier ist dein Zahlungslink für dein Tattoo:\n\n💳 1.500,00 € · Rücken Drache\n👉 ${zv.data.link}\n\nBezahlen per Karte, Apple Pay oder Google Pay.${klarnaC ? " Klarna verfügbar." : ""}\n\nLiebe Grüße\n${firmaC}`,
+    check(txt === `Hi Kai 👋\nHier ist dein Zahlungslink für dein Tattoo:\n\n💳 1.500,00 € · Rücken Drache\n👉 ${zv.data.link}\n\nBezahlen per Karte, Apple Pay oder Google Pay.${klarnaC ? " Klarna verfügbar." : ""}\n\nLiebe Grüße\n${firmaC}`,
       "Teilen-Text: Gruß mit Vorname, Betrag · Projekt, Link allein in einer Zeile, Zahlarten, Gruß vom Studio (Zeilenumbrüche)", JSON.stringify(txt));
     check(!/raten|später|kreditaufnahme/i.test(txt) && (txt.match(/\p{Extended_Pictographic}/gu) || []).length <= 3, "Teilen-Text: keine Raten-/Später-Aussage, höchstens 3 Emojis", txt);
     // Vorschau-Abrufer (WhatsApp, iMessage): OG-Angaben, KEINE Weiterleitung
@@ -495,12 +495,12 @@ try {
     check(/max-age=86400/.test(bild.headers.get("cache-control") || "") && /max-age=60\b/.test((await roh(`/z/${zvId}/bild.png?v=alt`)).headers.get("cache-control") || ""), "Bild-Cache: lang mit passender Version, kurz mit veralteter");
     // Anzahlung + Gutschein + nur Karte (Gutschein-Wort): Texte und Vorschau ohne Klarna
     const za = await call("POST", "/api/portal/zahlung", { token: tC, body: { betrag: "100", kunde: "Kai Vorschauname", beschreibung: "Rücken Drache", art: "anzahlung" } });
-    check(za.data.whatsappText === `Hi Kai 👋\nhier ist dein Link für die Anzahlung:\n\n💳 100,00 € · Anzahlung für Rücken Drache\n👉 ${BASE}/z/${za.data.zahlung.id}\n\nBezahlen per Karte, Apple Pay oder Google Pay.\n\nLiebe Grüße\n${firmaC}`,
+    check(za.data.whatsappText === `Hi Kai 👋\nHier ist dein Link für die Anzahlung:\n\n💳 100,00 € · Anzahlung für Rücken Drache\n👉 ${BASE}/z/${za.data.zahlung.id}\n\nBezahlen per Karte, Apple Pay oder Google Pay.\n\nLiebe Grüße\n${firmaC}`,
       "Teilen-Text Anzahlung: gleiche Form, ohne Klarna", JSON.stringify(za.data.whatsappText));
     const zaHtml = await (await roh(`/z/${za.data.zahlung.id}`, UA_WA)).text();
     check(meta(zaHtml, "og:description") === "Anzahlung · Rücken Drache · sicher bezahlen per Karte, Apple Pay oder Google Pay", "Vorschau Anzahlung: „Anzahlung · …“, ohne Klarna", meta(zaHtml, "og:description"));
     const zg = await call("POST", "/api/portal/zahlung", { token: tC, body: { art: "gutschein", betrag: "80", kunde: "Greta Käuferin", email: "greta@vorschau.test", empfaenger: "Max Beschenkt" } });
-    check(zg.data.whatsappText === `Hi Greta 👋\nhier ist dein Link für den Gutschein:\n\n🎁 80,00 € · Gutschein für Max Beschenkt\n👉 ${BASE}/z/${zg.data.zahlung.id}\n\nNach dem Bezahlen bekommst du den Gutschein mit Code per E-Mail.\n\nLiebe Grüße\n${firmaC}`,
+    check(zg.data.whatsappText === `Hi Greta 👋\nHier ist dein Link für den Gutschein:\n\n🎁 80,00 € · Gutschein für Max Beschenkt\n👉 ${BASE}/z/${zg.data.zahlung.id}\n\nNach dem Bezahlen bekommst du den Gutschein mit Code per E-Mail.\n\nLiebe Grüße\n${firmaC}`,
       "Teilen-Text Gutschein: gleiche Form, Empfänger im Text", JSON.stringify(zg.data.whatsappText));
     const zgHtml = await (await roh(`/z/${zg.data.zahlung.id}`, UA_WA)).text();
     check(meta(zgHtml, "og:description") === "Wertgutschein · sicher bezahlen per Karte, Apple Pay oder Google Pay" && !/Max Beschenkt|Greta/.test(zgHtml) && !/Klarna/.test(zgHtml), "Vorschau Gutschein: ohne Käufer/Empfänger, ohne Klarna");
@@ -512,6 +512,34 @@ try {
     for (const u of ["/z/zl_gibtsnichtXYZ", "/z/zl_gibtsnichtXYZ/bild.png", "/z/..%2Fstudio", "/z/" + zvId + "/etwas", "/z/"]) {
       const r = await roh(u, UA_WA), t = await r.text();
       check(r.status === 404 && !t.includes(firmaC) && !/og:image|og:title/.test(t) && !t.includes("1.500"), `${u} → 404 ohne Daten`, `${r.status} ${t.slice(0, 120)}`);
+    }
+    // Studio-Logo: großes PNG (15 Mio. Bildpunkte, stark gepackt) → beim Hochladen verkleinerte Vorschau, Bild nutzt sie;
+    // Packbombe (IHDR 20000 × 20000) wird vor dem Entpacken verworfen → Studioname statt Logo, kein Absturz
+    {
+      const { pngKodieren, pngLaden, pngGroesse } = await import("../netlify/functions/_lib/png.mjs");
+      const brandingVorher = blob("studio/" + C.id).branding;
+      const zaId = za.data.zahlung.id;
+      const bildVon = async (id) => { const h = await (await roh(`/z/${id}`, UA_WA)).text(), u = new URL(meta(h, "og:image")); const r = await roh(u.pathname + u.search, UA_WA); return { u: u.href, r, buf: Buffer.from(await r.arrayBuffer()) }; };
+      const ohneLogo = await bildVon(zaId);
+      const GW = 5000, GH = 3000, px = new Uint8Array(GW * GH * 4);
+      for (let y = 1000; y < 2000; y++) for (let x = 500; x < 4500; x++) { const o = (y * GW + x) * 4; px[o] = 17; px[o + 1] = 17; px[o + 2] = 17; px[o + 3] = 255; }
+      const gross = pngKodieren(px, GW, GH, 4);
+      check(gross.length < 1.5 * 1024 * 1024 && pngLaden(gross) === null && pngGroesse(gross).w === GW, "Test-Logo: 5000 × 3000 px unter 1,5 MB, zu groß für den direkten Bildabruf", `${gross.length} B`);
+      const br = await admin(`studio/${C.id}/branding`, { logo: "data:image/png;base64," + gross.toString("base64") });
+      const vz = blob(`studio-bild/${C.id}/logo-vorschau`), vzBuf = Buffer.from((vz?.src || "").split(",")[1] || "", "base64");
+      check(br.branding?.logo?.vorschau?.w === 736 && br.branding.logo.vorschau.h === 184 && pngGroesse(vzBuf)?.w === 736 && pngGroesse(vzBuf)?.h === 184 && vzBuf.length < 60e3,
+        "Logo-Upload: verkleinerte Vorschau (sichtbarer Teil 4000 × 1000 → 736 × 184, höchstens 1240 × 184) gespeichert", JSON.stringify(br.branding?.logo) + ` ${vzBuf.length} B`);
+      const mitLogo = await bildVon(zaId);
+      check(mitLogo.r.status === 200 && pngMasse(mitLogo.buf).w === 1200 && mitLogo.u !== ohneLogo.u && Buffer.compare(mitLogo.buf, ohneLogo.buf) !== 0,
+        "Vorschaubild mit großem Logo: neue Version, Logo statt Name", `${mitLogo.r.status} ${mitLogo.buf.length} B`);
+      const bombe = Buffer.from(vzBuf); bombe.writeUInt32BE(20000, 16); bombe.writeUInt32BE(20000, 20);
+      check(pngLaden(bombe) === null && pngGroesse(bombe).w === 20000, "Packbombe (IHDR 20000 × 20000): pngLaden liest nur den Kopf und lehnt ab");
+      const t0 = Date.now(), brB = await admin(`studio/${C.id}/branding`, { logo: "data:image/png;base64," + bombe.toString("base64") });
+      check(brB.branding?.logo && !brB.branding.logo.vorschau && Date.now() - t0 < 5000, "Logo-Upload mit Packbombe: gespeichert ohne Vorschau, nicht entpackt", JSON.stringify(brB.branding?.logo));
+      const t1 = Date.now(), mitBombe = await bildVon(zaId);
+      check(mitBombe.r.status === 200 && pngMasse(mitBombe.buf).w === 1200 && Buffer.compare(mitBombe.buf, ohneLogo.buf) === 0 && Date.now() - t1 < 5000,
+        "Vorschaubild mit Packbomben-Logo: sofort, Studioname wie ohne Logo", `${mitBombe.r.status} ${Date.now() - t1} ms`);
+      const s = blob("studio/" + C.id); s.branding = brandingVorher; setBlob("studio/" + C.id, s);
     }
     // Storniert → neutrale Vorschau (kein Studio, kein Betrag), Bild neutral
     await call("DELETE", `/api/portal/zahlung/${zvId}`, { token: tC });

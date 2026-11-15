@@ -71,7 +71,7 @@ export const RATEN_FUSS = PFLICHTSATZ_STUDIO;
 const gruss = (vorname) => `Hi${vorname ? " " + vorname : ""} 👋`;
 const zahlarten = "Bezahlen per Karte, Apple Pay oder Google Pay.";
 export const ratenWhatsapp = ({ vorname = "", projekt = "dein Tattoo", betrag = "", link = "", firma = "", klarna = true }) =>
-  `${gruss(vorname)}\nhier ist dein Zahlungslink für dein Tattoo:\n\n` +
+  `${gruss(vorname)}\nHier ist dein Zahlungslink für dein Tattoo:\n\n` +
   `💳 ${[betrag, projekt].filter(Boolean).join(" · ")}\n👉 ${link}\n\n` +
   `${zahlarten}${klarna ? ` ${KLARNA_NAME.verfuegbar}.` : ""}\n\n` +
   `Liebe Grüße\n${firma}`;
@@ -82,12 +82,12 @@ export const teilText = (s, z, link) => {
   const betragText = euro(z.betragCent);
   const vorname = z.kunde ? z.kunde.split(" ")[0] : "";
   if (z.art === "gutschein")
-    return `${gruss(vorname)}\nhier ist dein Link für den Gutschein:\n\n` +
+    return `${gruss(vorname)}\nHier ist dein Link für den Gutschein:\n\n` +
       `🎁 ${betragText} · Gutschein${z.gutschein?.empfaenger ? " für " + z.gutschein.empfaenger : ""}\n👉 ${link}\n\n` +
       `Nach dem Bezahlen bekommst du den Gutschein mit Code per E-Mail.\n\nLiebe Grüße\n${s.firma}`;
   if (z.art === "anzahlung") {
     const projekt = z.beschreibung || "Tattoo-Projekt";
-    return `${gruss(vorname)}\nhier ist dein Link für die Anzahlung:\n\n` +
+    return `${gruss(vorname)}\nHier ist dein Link für die Anzahlung:\n\n` +
       `💳 ${betragText} · ${/anzahlung/i.test(projekt) ? projekt : "Anzahlung für " + projekt}\n👉 ${link}\n\n` +
       `${zahlarten}\n\nLiebe Grüße\n${s.firma}`;
   }

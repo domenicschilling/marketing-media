@@ -10,7 +10,7 @@ import { CFG } from "./_lib/config.mjs";
 import { handler, euro } from "./_lib/util.mjs";
 import { getStudio, zahlungBy } from "./_lib/store.mjs";
 import { klarnaFuer } from "./_lib/domain.mjs";
-import { ladeBild } from "./_lib/branding.mjs";
+import { ladeBild, LOGO_VORSCHAU } from "./_lib/branding.mjs";
 import { KLARNA_NAME } from "./_lib/klarna-texte.mjs";
 import { vorschauBild, BREITE, HOEHE } from "./_lib/vorschaubild.mjs";
 import { zahlungsLink } from "./_lib/studio-ansicht.mjs";
@@ -38,7 +38,8 @@ export async function vorschauDaten(z, s, { mitLogo = false } = {}) {
   const daten = { neutral: false, titel, beschreibung, firma: s.firma, betrag, etikett, projekt: z.art === "gutschein" ? "Wertgutschein" : projekt, klarna, logoHell: Boolean(s.branding?.logoHell) };
   daten.version = createHash("sha256").update(JSON.stringify({ ...daten, logo: logoMeta?.am || "", v: 2 })).digest("base64url").slice(0, 12);
   if (mitLogo && logoMeta) {
-    const b = await ladeBild(s.id, "logo");
+    // verkleinerte Fassung vom Hochladen (billig zu entpacken); ältere Logos ohne sie: Original (pngLaden prüft die Größe vorher)
+    const b = (logoMeta.vorschau && (await ladeBild(s.id, LOGO_VORSCHAU.art))) || (await ladeBild(s.id, "logo"));
     const m = /^data:image\/png;base64,(.+)$/.exec(b?.src || "");
     if (m) daten.logo = Buffer.from(m[1], "base64");
   }
