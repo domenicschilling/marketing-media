@@ -258,12 +258,13 @@
         return '<li><span class="betrag">' + TF.euro(z.betragCent, true) + "</span><b>" + e(z.kunde || "–") + "</b> · " + e(z.status) + '<br><span class="klein">' + e(TF.datum(z.bezahltAm || z.createdAt)) + (z.zahlartText ? " · " + e(z.zahlartText) : "") + (z.beschreibung ? " · " + e(z.beschreibung) : "") + (z.gebuehrNettoCent ? " · Provision " + TF.euro(z.gebuehrNettoCent, true) : "") + (z.abgerechnet ? " · abgerechnet " + e(z.abgerechnet) : "") + "</span></li>";
       }).join("") + "</ul>" + (zahl.length > 40 ? '<p class="klein">… und ' + (zahl.length - 40) + " ältere.</p>" : "") : '<p class="leer">Noch keine.</p>') + "</div>" +
       '<div class="block"><h3>Abrechnungen</h3>' + (d.abrechnungen.length ? '<ul class="posten">' + d.abrechnungen.map(function (ab) { return '<li><span class="betrag">' + TF.euro(ab.provisionNettoCent || 0, true) + " netto</span><b>" + e(ab.monat) + '</b><br><span class="klein">Umsatz ' + TF.euro(ab.umsatzCent || 0, true) + (ab.rechnungNr ? " · Rechnung " + e(ab.rechnungNr) : "") + "</span></li>"; }).join("") + "</ul>" : '<p class="leer">Keine.</p>') + "</div>" +
-      // QR-Aufsteller aus Holz: eingestellt 15.11.2026. Nur noch lesend und nur bei Altdaten (Bestellung/Kauf von vorher oder Vertrag mit Aufsteller)
-      (a.angefordertAm || (a.kauf && a.kauf.csId) || v.aufsteller ? '<div class="block"><h3>QR-Aufsteller (alt)</h3><dl class="liste"><dt>Stand</dt><dd>' +
+      // QR-Aufsteller aus Holz: eingestellt. Nur bei Altdaten (Bestellung/Kauf von vorher, Vertrag mit Aufsteller oder gespeichertes Logo); Logo löschbar
+      (a.angefordertAm || (a.kauf && a.kauf.csId) || v.aufsteller || a.hatLogo ? '<div class="block"><h3>QR-Aufsteller (alt)</h3><dl class="liste"><dt>Stand</dt><dd>' +
         e(a.kauf && a.kauf.bezahltAm ? "bezahlt " + TF.datum(a.kauf.bezahltAm) : a.angefordertAm ? "angefordert " + TF.datum(a.angefordertAm) : a.kauf && a.kauf.csId ? "Kauf begonnen " + TF.datum(a.kauf.gestartetAm) + ", nicht bezahlt" : "nicht bestellt") + "</dd>" +
         (a.holz || a.variante ? "<dt>Ausführung</dt><dd>" + e([a.holz, a.variante].filter(Boolean).join(", ")) + (a.hatLogo ? ", Logo gespeichert" : "") + "</dd>" : "") +
         (v.aufsteller ? "<dt>Vertrag</dt><dd>Aufsteller war laut Vertrag (Fassung " + e(v.version || "–") + ") inklusive</dd>" : "") +
-        '</dl><p class="klein">Den Holz-Aufsteller gibt es nicht mehr. Bei Altfällen bitte direkt mit dem Studio klären (erstatten oder ausnahmsweise liefern).</p></div>' : "") +
+        '</dl><p class="klein">Den Holz-Aufsteller gibt es nicht mehr. Bei Altfällen bitte direkt mit dem Studio klären (erstatten oder ausnahmsweise liefern).' + (a.hatLogo ? " Das Logo danach löschen (Datenschutz). Logos ohne Bestellung löscht der Tagesjob." : "") + "</p>" +
+        (a.hatLogo ? '<button class="k" id="d-auflogo">Aufsteller-Logo löschen</button>' : "") + "</div>" : "") +
       '<details class="block"><summary>Fragebogen' + (s.fragebogen ? " ✓" : " (leer)") + "</summary><pre>" + e(JSON.stringify(s.fragebogen || {}, null, 2)) + "</pre></details>" +
       '<details class="block" id="d-brand"><summary>Logo/Farbe für Studio' + (s.branding ? " ✓" + (s.branding.stripeAm ? " (bei Stripe " + e(TF.datum(s.branding.stripeAm)) + ")" : "") : "") + "</summary>" +
         '<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:8px 0" id="b-vorschau"></div>' +
@@ -332,6 +333,7 @@
       } catch (err) { msg(err.message, "err"); }
       btn.disabled = false;
     };
+    if ($("d-auflogo")) $("d-auflogo").onclick = async function () { if (!confirm("Logo des früheren QR-Aufstellers endgültig löschen?")) return; try { zeig(await api("studio/" + id + "/aufsteller-logo", { body: {} }), "Aufsteller-Logo gelöscht."); msg("Logo gelöscht."); neuLaden(); } catch (err) { msg(err.message, "err"); } };
     var rf = $("d-refund"); if (rf) rf.onclick = async function () { if (!confirm("Kaufpreis wirklich vollständig erstatten?")) return; try { zeig(await api("studio/" + id + "/erstattung", { body: {} }), "Kaufpreis erstattet."); msg("Erstattet."); neuLaden(); } catch (err) { msg(err.message, "err"); } };
     if (s.email) api("mails?an=" + encodeURIComponent(s.email)).then(function (ms) {
       if (detailId !== id) return;

@@ -44,7 +44,7 @@ import { saveStudio, zahlungenVon, getZahlung, saveZahlung, abrechnungenVon, get
 import { currentStudio, clearCookie } from "./_lib/auth.mjs";
 import { geraeteWiderrufen } from "./_lib/app-geraete.mjs";
 import { stripe, dashboardLink, accountSession, ensureConnectedAccount } from "./_lib/stripe.mjs";
-import { hatUmstellungsangebot, umstellungCheckout, notify, notifyAdmin, connectUrl, connectUrlGehostet, darfKassieren, provisionVerdient, kontoAbgleichen, eingebettet, klarnaFuer, provisionZahlung, aufstellerBezahlt, kuendigungEinreichen, kuendigungZuruecknehmen, zahlungAbgleichen } from "./_lib/domain.mjs";
+import { hatUmstellungsangebot, umstellungCheckout, notify, notifyAdmin, connectUrl, connectUrlGehostet, darfKassieren, provisionVerdient, kontoAbgleichen, eingebettet, klarnaFuer, provisionZahlung, aufstellerBezahlt, aufstellerLogoLoeschen, kuendigungEinreichen, kuendigungZuruecknehmen, zahlungAbgleichen } from "./_lib/domain.mjs";
 import { fuerStudio, oeffentlich, zahlungsLink } from "./_lib/studio-ansicht.mjs";
 import { randomBytes } from "node:crypto";
 import { KLARNA_NAME, PFLICHTSATZ_STUDIO, gutscheinWort, GUTSCHEIN_HINWEIS } from "./_lib/klarna-texte.mjs";
@@ -375,9 +375,7 @@ export default handler(async (req, context) => {
     const b = await body(req);
     // Datenschutz: ein früher hochgeladenes Logo lässt sich weiter löschen (nur im Dashboard bzw. vom Inhaber)
     if (b.logo === null && (!s._app || s._app.rolle === "inhaber")) {
-      await store.del("aufsteller-logo/" + s.id);
-      if (s.aufsteller?.hatLogo) { s.aufsteller = { ...s.aufsteller, hatLogo: false, logoGeloeschtAm: now() }; await saveStudio(s); }
-      await log("aufsteller-logo-geloescht", { studioId: s.id, quelle: s._app ? "app" : "web" });
+      await aufstellerLogoLoeschen(s, s._app ? "app" : "web");
       if (!s._app) return json({ ok: true, logoGeloescht: true });
     }
     return aufstellerEntfallen();

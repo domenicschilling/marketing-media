@@ -4,9 +4,9 @@
 // Videos/Vorschaubilder liegen auf der eigenen Domain (/assets/app/hilfe/), keine Drittanbieter.
 (function () {
   var V = {
-    version: "2026-10-18",
-    hoch: { src: "/assets/app/hilfe/so-gehts-9x16.mp4", poster: "/assets/app/hilfe/so-gehts-9x16.jpg", w: 720, h: 1280 },
-    quer: { src: "/assets/app/hilfe/so-gehts-16x9.mp4", poster: "/assets/app/hilfe/so-gehts-16x9.jpg", w: 1280, h: 720 },
+    version: "2026-11-16", // Kapitel Werbung ohne QR-Aufsteller (gleiche Länge und Kapitel); ?v= gegen alte Kopien im Cache
+    hoch: { src: "/assets/app/hilfe/so-gehts-9x16.mp4?v=2026-11-16", poster: "/assets/app/hilfe/so-gehts-9x16.jpg", w: 720, h: 1280 },
+    quer: { src: "/assets/app/hilfe/so-gehts-16x9.mp4?v=2026-11-16", poster: "/assets/app/hilfe/so-gehts-16x9.jpg", w: 1280, h: 720 },
     dauer: 147.73,
     kapitel: [
       { ab: 0, name: "Übersicht und Einrichtung" },
