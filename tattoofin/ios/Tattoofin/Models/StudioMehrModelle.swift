@@ -1,6 +1,6 @@
 import Foundation
 
-// Zusätzliche Studio-Angaben für Einstellungen, Recht, Fragebogen, Abrechnungen, Aufsteller und Nachweis.
+// Zusätzliche Studio-Angaben für Einstellungen, Recht, Fragebogen, Abrechnungen und Nachweis.
 // Eigene Modelle (statt Studio zu erweitern), damit sie unabhängig vom Kassen-Bildschirm geladen werden.
 // Feldnamen wie oeffentlich() in website/netlify/functions/_lib/studio-ansicht.mjs. Alles optional: ältere Server dürfen Felder weglassen.
 
@@ -50,7 +50,7 @@ struct StudioMehr: Codable, Sendable, Hashable {
     var istStripeAbrechnung: Bool { (abrechnung ?? "stripe") == "stripe" }
     /// Klarna gibt es bei diesem Studio jetzt (Hinweise in den Einstellungen)
     var hatKlarna: Bool { klarna ?? false }
-    /// Klarna gibt es auch dauerhaft (für Dinge, die lange halten: Holz-Aufsteller, Werbung)
+    /// Klarna gibt es auch dauerhaft (für Dinge, die lange halten: Druckmaterial, Werbung)
     var hatKlarnaDauerhaft: Bool { klarnaDauerhaft ?? false }
 }
 
@@ -97,79 +97,6 @@ struct PortalMehr: Codable, Sendable {
 /// POST /api/portal/stripe-dashboard
 struct URLAntwort: Codable, Sendable {
     var url: String?
-}
-
-/// QR-Aufsteller für die App (aufstellerFuerApp in _lib/werbung.mjs): ohne Paket, nur Artikel und Preis des Aufstellers.
-/// GET /api/app/aufsteller (mit Logo), POST /api/portal/aufsteller und /aufsteller-pruefen liefern { aufsteller, url?, cs?, bezahlt? }.
-struct AufstellerApp: Codable, Sendable, Hashable {
-    var artikel: String?
-    var beschreibung: String?
-    var kostenlos: Bool?
-    var preis: Preis?
-    var preisText: String?
-    var knopf: String?
-    var bezahlenHinweis: String?
-    var holz: String?
-    var variante: String?
-    var hatLogo: Bool?
-    var holzHinweis: HolzHinweis?
-    /// offen | zahlung_offen | bestellt | bezahlt
-    var status: String?
-    var bestelltAm: String?
-    var bezahltAm: String?
-    var statusText: String?
-    var lieferadresse: String?
-    var firma: String?
-    var zahlseite: String?
-    /// Klarna-Zeile auf dem Schild (nur wenn das Studio Klarna dauerhaft anbietet)
-    var klarna: Bool?
-    var fussnote: String?
-    var logo: Logo?
-    /// Darf jetzt bestellt werden? (neuere Server; false → kein Bestellknopf, z. B. Testmodus). Fehlt → wie bisher.
-    var bestellbar: Bool?
-
-    struct Preis: Codable, Sendable, Hashable {
-        var nettoCent: Int?
-        var gesamtCent: Int?
-        var ustProzent: Double?
-        var text: String?
-    }
-
-    struct HolzHinweis: Codable, Sendable, Hashable {
-        var hell: String?
-        var dunkel: String?
-    }
-
-    struct Logo: Codable, Sendable, Hashable {
-        var src: String?
-        var w: Int?
-        var h: Int?
-    }
-
-    var istBestellt: Bool { status == "bestellt" || status == "bezahlt" || bestelltAm != nil || bezahltAm != nil }
-
-    /// Was unter „Bestellen“ steht (noch nicht bestellt)
-    enum Bestellweg: Equatable {
-        /// Knopf „anfordern“ (inklusive) oder „kaufen“ (Stripe-Checkout im Browser)
-        case knopf
-        /// Testkauf (Apple-Sandbox) oder Server sagt „nicht bestellbar“ (nur bei Testkasse): Hinweis statt Knopf, es wird nichts bezahlt
-        case testmodus
-    }
-
-    /// Im Testmodus wird nichts gekauft (keine echte Zahlung aus einem Sandbox-Konto). Die Anforderung ohne Kosten
-    /// (inklusive, Demo-Studio) bleibt möglich. Sagt der Server bestellbar: false (nur Testkasse), kommt der Hinweis statt des Knopfs.
-    func bestellweg(testmodus: Bool) -> Bestellweg {
-        if bestellbar == false { return .testmodus }
-        if kostenlos == true { return .knopf }
-        return testmodus ? .testmodus : .knopf
-    }
-}
-
-struct AufstellerAppAntwort: Codable, Sendable {
-    var aufsteller: AufstellerApp?
-    var url: String?
-    var cs: String?
-    var bezahlt: Bool?
 }
 
 // MARK: - Nachweis (GET /api/portal/nachweis/:id)

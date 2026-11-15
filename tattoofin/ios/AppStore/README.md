@@ -1,4 +1,20 @@
-# Tattoofin-App: Angaben für App Store Connect (Entwurf, Stand 14.11.2026)
+# Tattoofin-App: Angaben für App Store Connect (Entwurf, Stand 15.11.2026)
+
+## Version 1.1 (Build 2): ohne QR-Aufsteller (vorbereitet 15.11.2026, nicht gebaut, nicht eingereicht)
+
+Domenic 15.11.2026: Den QR-Aufsteller aus Holz gibt es nicht mehr. In 1.1 ist er ganz aus der App entfernt (Konto → „Dein Studio“,
+Werbung → Zahlseiten-Karte, Bestellung, Logo-Auswahl aus Fotos). Der QR-Code der Zahlseite („QR-Code in Fotos speichern“) und die
+Druckvorlagen (Fensteraufkleber, Flyer) bleiben. Die laufende 1.0 (1) zeigt bis zum Update beim Antippen der alten Zeile die Meldung
+des Servers (`GET /api/app/aufsteller` → 410, Code `aufsteller_entfallen`).
+
+In App Store Connect bei 1.1 (macht Domenic, erst nach seinem OK):
+- Review-Notiz unten ersetzen (der Absatz zum Aufsteller ist raus).
+- App-Datenschutz: **„Benutzerinhalte → Fotos oder Videos“ entfernen** (die App liest keine Bilder mehr aus Fotos). Bei
+  „Andere Benutzerinhalte“ fällt die Auswahl für den Aufsteller weg (Tabelle unten ist schon angepasst).
+- Neuerungen (de-DE), Vorschlag: `Aufgeräumt: Den QR-Aufsteller aus Holz gibt es nicht mehr. Deinen QR-Code speicherst du unter Werbung als Bild und druckst ihn aus, zum Beispiel als Aufkleber für die Theke.`
+
+Für die laufende Prüfung von 1.0 (1), falls der Server vorher umgestellt wird: in der Review-Notiz den Aufsteller-Absatz ersetzen durch
+`Konto → "QR-Aufsteller": discontinued. The row now only shows a short notice from our server. It will be removed in the next update. Nothing in the app can be bought outside the App Store.`
 
 Alles hier ist ein **Entwurf**. Eingereicht wird erst nach Domenics Freigabe. Vorher muss das Backend live sein
 (siehe „Vor der Einreichung“), sonst kann sich der Prüfer nicht anmelden.
@@ -15,10 +31,10 @@ Alles hier ist ein **Entwurf**. Eingereicht wird erst nach Domenics Freigabe. Vo
 5. Im Apple-Entwicklerkonto einen **APNs-Schlüssel (.p8)** anlegen (Certificates, Identifiers & Profiles → Keys → „Apple Push Notifications service“).
    In Netlify setzen: `APNS_KEY_P8` (Inhalt der .p8-Datei), `APNS_KEY_ID`, `APNS_TEAM_ID`, optional `APNS_BUNDLE_ID` (Standard `de.tattoofin.app`).
 6. Abo in App Store Connect anlegen (Abschnitt „In-App-Kauf“ unten), Preis bestätigen.
-7. Backend mit Domenics OK live stellen (Branch `claude/tattoofin-gesamt`: `/api/app/*` inklusive `/api/app/werbung`, `/api/app/start` und
-   `/api/app/aufsteller`, `/api/apple/benachrichtigung`, Demo-Logik, Druckvorlagen `public/druck/`, Zahlseite in der App-Fassung
+7. Backend mit Domenics OK live stellen (Branch `claude/tattoofin-gesamt`: `/api/app/*` inklusive `/api/app/werbung`, `/api/app/start`,
+   `/api/apple/benachrichtigung`, Demo-Logik, Druckvorlagen `public/druck/`, Zahlseite in der App-Fassung
    `zahlen.html?app=1`, App-Fassung der Rechtsseiten mit `?app=1`, Vertrag 2026-12b, AVV Stand 14.11.2026, Datenschutzerklärung mit den
-   App-Abschnitten „Dein Studio in der App“, „QR-Aufsteller aus Holz“ und „Werbung“).
+   App-Abschnitten „Dein Studio in der App“ und „Werbung“).
    Vorher die Bestandskunden über den neuen Unterauftragsverarbeiter Apple (Push-Mitteilungen, AVV Anlage 3) informieren, 14 Tage vorher (§ 4 Abs. 2 AVV).
 8. Demo-Studio anlegen: `POST /api/admin/app-demo` mit `{ "email": "<Review-Adresse>" }` (Admin-Token). Die Antwort nennt die Studio-ID.
 9. In Netlify setzen: `APP_REVIEW_EMAIL` (z. B. `app-review@tattoofin.de`), `APP_REVIEW_CODE` (6 Ziffern, frei gewählt), `APP_REVIEW_STUDIO_ID`
@@ -119,15 +135,7 @@ Sign-in (no password): enter the e-mail below and tap "Code schicken". No e-mail
   SFSafariViewController. No digital content or features are sold in this tab.
 - So geht's (Kasse → "So geht's", or Konto): a short tutorial video with chapters. It shows the same features in the browser
   version of Tattoofin; the chapter about adding the web app to the home screen is skipped.
-- Konto → "QR-Aufsteller": a physical product. It is an engraved wooden counter stand (10 × 15 cm) with the studio's name or logo and
-  the QR code of its payment page, produced and shipped by post to the studio's address. Because it is a physical good that is
-  consumed outside the app, studios whose plan does not include it pay for it with Stripe Checkout in Safari (guideline 3.1.3(e));
-  no digital content or features are unlocked by this payment. This wooden stand is the only thing in the app that can be bought
-  outside the App Store (also reachable from Werbung → QR code → "QR-Aufsteller aus Holz").
-  In the account from step 1 (sandbox purchase, test mode) ordering the stand is locked: the order button is replaced by the note
-  "Im Testmodus kannst du den Aufsteller nicht bestellen. Es wird nichts bezahlt." and no Stripe Checkout opens.
-  In the demo studio the stand is included ("Kostenlos bestellen"), so no payment page appears; the order is reset each time we
-  recreate the demo studio.
+Nothing in the app can be bought outside the App Store.
 Please run account deletion on the account from step 1, not on the demo studio.
 Push notifications are sent when a payment arrives (APNs).
 
@@ -137,7 +145,7 @@ Contact: info@tattoofin.de
 ## URLs
 
 - Support-URL: `https://tattoofin.de/impressum.html` (Kontakt: Telefon, WhatsApp, info@tattoofin.de)
-- Datenschutz-URL: `https://tattoofin.de/datenschutz.html#app` (seit 14.11.2026 mit „Dein Studio in der App“, „QR-Aufsteller aus Holz“ und „Werbung“; Empfängerliste nennt den Betrieb, der den Aufsteller fertigt)
+- Datenschutz-URL: `https://tattoofin.de/datenschutz.html#app` (mit „Dein Studio in der App“ und „Werbung“; der Abschnitt zum QR-Aufsteller entfällt seit 15.11.2026)
 - Marketing-URL: leer lassen. In der App gibt es keinen Hinweis und keinen Link auf die Website zum Bezahlen und keinen anderen Preis (Apple 3.1.3).
 - Nutzungsbedingungen: Apple-Standard-EULA `https://www.apple.com/legal/internet-services/itunes/dev/stdeula/` (Link in der Beschreibung und im
   Abo-Bildschirm der App), dazu der Vertrag `https://tattoofin.de/vertrag.html?app=1`.
@@ -157,14 +165,13 @@ Tracking: **Nein**. Für alle Datenarten: mit der Identität verknüpft (Studio-
 | Kennungen → Geräte-ID | Geräte-Kennung der App und Push-Token |
 | Andere Daten | Gerätename, Gerätemodell, iOS- und App-Version (Liste der angemeldeten Geräte); Firmenname, USt-IdNr., Website (Konto anlegen) |
 | Käufe → Kaufverlauf | Apple-Abo: signierte Transaktion (Kennungen, Produkt, Kauf- und Ablaufdatum) an unseren Server |
-| Benutzerinhalte → Fotos oder Videos | Nur das Studio-Logo, das der Inhaber für den QR-Aufsteller in Fotos auswählt (iOS-Foto-Auswahl, nur dieses eine Bild; schwarz/weiß an unseren Server, nur für Vorschau und Gravur, beim Bestellen an den Betrieb, der den Aufsteller fertigt). Löschen: in der App „Logo löschen“ oder mit dem Studio-Konto. Speichern in Fotos (Werbung, nur „Hinzufügen“) liest nichts. |
-| Benutzerinhalte → Andere Benutzerinhalte (zusätzlich) | Fragebogen, Bestätigung der rechtlichen Lage (Name, Zeitpunkt), Einstellungen (Anzahlungsbedingungen, Ausweich-Anzahlung, Zahlseiten-Hinweis, Benachrichtigungs-Adresse), Auswahl für den QR-Aufsteller (Holzton, Studioname oder Logo) – nur Inhaber; Häkchen der Einrichtungs-Checkliste (QR-Code an der Theke, erster Beitrag) |
+| Benutzerinhalte → Andere Benutzerinhalte (zusätzlich) | Fragebogen, Bestätigung der rechtlichen Lage (Name, Zeitpunkt), Einstellungen (Anzahlungsbedingungen, Ausweich-Anzahlung, Zahlseiten-Hinweis, Benachrichtigungs-Adresse) – nur Inhaber; Häkchen der Einrichtungs-Checkliste (QR-Code an der Theke, erster Beitrag) |
 
 Required-Reason-APIs im Manifest (keine Angabe in App Store Connect nötig, nur zur Kontrolle): UserDefaults `CA92.1` (eigene
 App-Einstellungen), Datei-Zeitstempel `C617.1` (Änderungsdatum zwischengespeicherter Werbe-Dateien im eigenen App-Container). Nicht genutzt:
 Systemstartzeit, freier Speicher, aktive Tastaturen.
 
-Nicht erhoben: Standort, Kontakte, sonstige Fotos (die Kamera scannt nur Codes, Bilder werden nicht gespeichert oder gesendet), Browserverlauf,
+Nicht erhoben: Standort, Kontakte, Fotos oder Videos (die App speichert nur in Fotos, nur „Hinzufügen“, und liest dort nichts; die Kamera scannt nur Codes, Bilder werden nicht gespeichert oder gesendet), Browserverlauf,
 Suchverlauf, Nutzungsdaten, Diagnosedaten, Werbe-ID.
 
 ## Kategorie, Alter, Export

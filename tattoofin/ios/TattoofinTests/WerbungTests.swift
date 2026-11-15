@@ -376,9 +376,9 @@ struct WerbungTests {
 
     /// Texte der neuen Stellen: einfach, „unser Team“, kein Preis, kein Domenic
     @Test func neueTexteEinfach() {
-        let t = [WerbungTexte.ohneKlarnaText, WerbungTexte.holzAufsteller, WerbungTexte.holzAufstellerText, WerbungTexte.soGehtsText,
+        let t = [WerbungTexte.ohneKlarnaText, WerbungTexte.soGehtsText,
                  WerbungTexte.soGehtsOhneKlarna, WerbungTexte.videoFehler, WerbungTexte.Start.erledigt, Texte.Kasse2.heuteHinweis,
-                 Texte.Aufsteller.logoEntfernt, Texte.Frage.intro]
+                 Texte.Frage.intro, WerbungTexte.druckText]
         for x in t {
             for verboten in ["Domenic", "€", "netto", "Paket", "tattoofin.de", "Branding", "Studio Kit"] {
                 #expect(!x.contains(verboten), "„\(verboten)“ in: \(x)")
@@ -386,5 +386,14 @@ struct WerbungTests {
         }
         #expect(WerbungTexte.ohneKlarnaText.contains("unserem Team"))
         #expect(WerbungTexte.soGehtsText.contains("im Browser"))
+    }
+
+    /// Den QR-Aufsteller aus Holz gibt es nicht mehr (Domenic 15.11.2026): Druckvorlagen nur Fensteraufkleber und Flyer
+    @Test func ohneAufsteller() {
+        for x in [WerbungTexte.druckText, WerbungTexte.zahlseiteText, WerbungTexte.theke, WerbungTexte.druckZeile] {
+            #expect(!x.localizedCaseInsensitiveContains("Aufsteller"), "„Aufsteller“ in: \(x)")
+            #expect(!x.localizedCaseInsensitiveContains("Holz"), "„Holz“ in: \(x)")
+        }
+        #expect(WerbungTexte.druckText.hasPrefix("Fensteraufkleber und Flyer"))
     }
 }

@@ -3,9 +3,9 @@ import Testing
 import UIKit
 @testable import Tattoofin
 
-/// Einstellungen, Recht, Fragebogen, Nachweis, Abrechnungen, Aufsteller, Gebührenhinweis (Teil B der Web-App-Parität, 14.11.2026)
+/// Einstellungen, Recht, Fragebogen, Nachweis, Abrechnungen, Gebührenhinweis (Teil B der Web-App-Parität, 14.11.2026)
 @MainActor
-@Suite("Studio: Einstellungen, Recht, Fragebogen, Nachweis, Aufsteller")
+@Suite("Studio: Einstellungen, Recht, Fragebogen, Nachweis")
 struct StudioMehrTests {
     private func dekodiere<T: Decodable>(_ json: String, als: T.Type = T.self) throws -> T {
         try JSONDecoder().decode(T.self, from: Data(json.utf8))
@@ -56,63 +56,6 @@ struct StudioMehrTests {
         #expect(a.anDichCent == 9200)
         #expect(a.anzahl == 0)
         #expect(a.monatText == "Januar 2026")
-    }
-
-    @Test func aufstellerApp() throws {
-        let a: AufstellerAppAntwort = try dekodiere("""
-        {"aufsteller":{"artikel":"QR-Aufsteller aus Holz","kostenlos":false,
-          "preis":{"nettoCent":2900,"gesamtCent":3451,"ustProzent":19,"text":"29,00 € + 19 % MwSt. = 34,51 €"},
-          "preisText":"34,51 € inkl. MwSt.","knopf":"Für 34,51 € bestellen","holz":"dunkel","variante":"logo","hatLogo":true,
-          "holzHinweis":{"hell":"h","dunkel":"d"},"status":"zahlung_offen","bestelltAm":null,"bezahltAm":null,
-          "lieferadresse":"Ink, Weg 1, 96047 Bamberg","firma":"Ink","zahlseite":"https://tattoofin.de/zahlen/ink","klarna":true,
-          "fussnote":"*Raten über Klarna …","logo":{"src":"data:image/jpeg;base64,AAAA","w":10,"h":4}},
-         "url":"https://checkout.stripe.com/c/pay/cs_test_a1B2#fid","cs":"cs_test_a1B2"}
-        """)
-        let d = try #require(a.aufsteller)
-        #expect(!d.istBestellt)
-        #expect(d.preis?.gesamtCent == 3451)
-        #expect(d.logo?.w == 10)
-        #expect(a.cs == "cs_test_a1B2")
-        let bestellt: AufstellerApp = try dekodiere(#"{"status":"bestellt","bestelltAm":"2026-11-14T10:00:00.000Z"}"#)
-        #expect(bestellt.istBestellt)
-    }
-
-    /// Testmodus (Testkauf): kein Kauf des Aufstellers, Anfordern ohne Kosten bleibt; Server-Feld bestellbar hat Vorrang
-    @Test func aufstellerTestmodus() throws {
-        let kauf: AufstellerApp = try dekodiere(#"{"kostenlos":false,"status":"offen","preis":{"gesamtCent":3451}}"#)
-        #expect(kauf.bestellbar == nil)
-        #expect(kauf.bestellweg(testmodus: false) == .knopf)
-        #expect(kauf.bestellweg(testmodus: true) == .testmodus)
-
-        let inklusive: AufstellerApp = try dekodiere(#"{"kostenlos":true,"status":"offen"}"#)
-        #expect(inklusive.bestellweg(testmodus: false) == .knopf)
-        #expect(inklusive.bestellweg(testmodus: true) == .knopf)   // Demo-Studio/inklusive: anfordern ohne Kosten
-
-        let gesperrt: AufstellerApp = try dekodiere(#"{"kostenlos":false,"bestellbar":false}"#)
-        #expect(gesperrt.bestellbar == false)
-        #expect(gesperrt.bestellweg(testmodus: false) == .testmodus)
-        #expect(gesperrt.bestellweg(testmodus: true) == .testmodus)
-        let gesperrtInklusive: AufstellerApp = try dekodiere(#"{"kostenlos":true,"bestellbar":false}"#)
-        #expect(gesperrtInklusive.bestellweg(testmodus: false) == .testmodus)
-
-        let frei: AufstellerApp = try dekodiere(#"{"kostenlos":false,"bestellbar":true}"#)
-        #expect(frei.bestellweg(testmodus: false) == .knopf)
-        #expect(frei.bestellweg(testmodus: true) == .testmodus)   // Testmodus sperrt den Kauf auch dann
-
-        // Text: einfach, ohne Preis, sagt klar, dass nichts bezahlt wird
-        #expect(Texte.Aufsteller.testmodus == "Im Testmodus kannst du den Aufsteller nicht bestellen. Es wird nichts bezahlt.")
-        for verboten in ["Domenic", "€", "Stripe", "Klarna"] {
-            #expect(!Texte.Aufsteller.testmodus.contains(verboten))
-            #expect(!Texte.Kasse.aboZurKasse.contains(verboten))
-        }
-    }
-
-    @Test func checkoutSitzung() {
-        #expect(CheckoutSitzung.id(aus: URL(string: "https://checkout.stripe.com/c/pay/cs_test_a1B2c3#fidkdWxOYHwnPyd1blpxYHZx")) == "cs_test_a1B2c3")
-        #expect(CheckoutSitzung.id(aus: URL(string: "http://localhost:12113/pay/cs_mock_123")) == "cs_mock_123")
-        #expect(CheckoutSitzung.id(aus: URL(string: "https://tattoofin.de/app-fertig.html?aufsteller=bezahlt&cs=cs_live_X9")) == "cs_live_X9")
-        #expect(CheckoutSitzung.id(aus: URL(string: "https://tattoofin.de/app-fertig.html?cs=cs_%3Cscript%3E")) == nil)
-        #expect(CheckoutSitzung.id(aus: nil) == nil)
     }
 
     @Test func nachweis() throws {
@@ -200,49 +143,11 @@ struct StudioMehrTests {
         #expect(!j2.contains("heute"))
     }
 
-    // MARK: Aufsteller
-
-    @Test func aufstellerHilfen() {
-        #expect(AufstellerVorschau.zweiZeilen("Ink Studio Bamberg Nord") == ["Ink Studio", "Bamberg Nord"])
-        #expect(AufstellerVorschau.zweiZeilen("Einwort") == ["Einwort"])
-        #expect(AufstellerVorschau.kurzLink("https://tattoofin.de/zahlen/ink-studio?x=1#a") == "tattoofin.de/zahlen/ink-studio")
-        let z = AufstellerVorschau.umbrechen("a bb ccc dddd", maxBreite: 6) { CGFloat($0.count) }
-        #expect(z == ["a bb", "ccc", "dddd"])
-        #expect(AufstellerVorschau.farben("dunkel").gravur != AufstellerVorschau.farben("hell").gravur)
-    }
-
-    @Test func logoSchwarzWeiss() throws {
-        // Weißes Bild mit dunklem Rechteck → auf das Rechteck zugeschnitten, JPEG-Data-URL unter der Server-Grenze
-        let bild = UIGraphicsImageRenderer(size: CGSize(width: 400, height: 200), format: { let f = UIGraphicsImageRendererFormat(); f.scale = 1; return f }()).image { _ in
-            UIColor.white.setFill(); UIRectFill(CGRect(x: 0, y: 0, width: 400, height: 200))
-            UIColor(white: 0.2, alpha: 1).setFill(); UIRectFill(CGRect(x: 100, y: 50, width: 100, height: 40))
-        }
-        let l = try GravurLogo.aus(daten: bild.pngData()!)
-        #expect(l.dataURL.hasPrefix("data:image/jpeg;base64,"))
-        #expect(l.dataURL.count <= 690_000)
-        // Faktor min(1600/400, 600/200, 4) = 3 → 300 × 120
-        #expect(abs(l.breite - 300) <= 3 && abs(l.hoehe - 120) <= 3)
-        // Gespeichertes Logo wieder einlesen (Vorschau)
-        let wieder = try GravurLogo.aus(dataURL: l.dataURL)
-        #expect(wieder.breite > 0)
-
-        let weiss = UIGraphicsImageRenderer(size: CGSize(width: 50, height: 50)).image { _ in UIColor.white.setFill(); UIRectFill(CGRect(x: 0, y: 0, width: 50, height: 50)) }
-        #expect(throws: GravurLogo.Fehler.self) { try GravurLogo.aus(daten: weiss.pngData()!) }
-        #expect(throws: GravurLogo.Fehler.self) { try GravurLogo.aus(daten: Data("kein Bild".utf8)) }
-    }
-
-    @Test func qrMaske() {
-        #expect(QRMaske.bild("https://tattoofin.de/zahlen/ink") != nil)
-    }
-
     // MARK: Texte (Apple 3.1.1/3.1.3, Klarna-Regeln, „unser Team“)
 
     @Test func texteOhnePaketUndWebPreis() {
-        let A = Texte.Aufsteller.self, M = Texte.Mehr.self
-        let texte = [A.titel, A.intro, A.hellHinweis, A.dunkelHinweis, A.bestellenTitel, A.kaufenText, A.weiter, A.anfordern,
-                     A.anfordernFrage, A.angefordertDanke, A.bezahltDanke, A.nochNichtBezahlt, A.nurWeb, A.bestellenFrage,
-                     A.kaufenFrageBrutto(3451), A.bezahlt("14.11.2026"), A.angefordert("14.11.2026"),
-                     M.abschnitt, M.einstellungen, M.einstellungenText, M.aufsteller, M.aufstellerText, M.hilfeWhatsapp,
+        let M = Texte.Mehr.self
+        let texte = [M.abschnitt, M.einstellungen, M.einstellungenText, M.hilfeWhatsapp,
                      M.hilfeWhatsappText, M.hilfeWhatsappNachricht, M.nichtInDerApp, M.stripeAnsehen, M.stripeAnsehenText]
         for t in texte {
             for verboten in ["Paket", "netto", "49", "tattoofin.de", "Website", "Domenic", "Raten", "Klarna"] {

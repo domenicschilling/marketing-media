@@ -233,10 +233,8 @@ enum Texte {
         static let sandboxText = "Testkauf (Apple-Sandbox). Die Stripe-Einrichtung ist für Testkonten ausgeschaltet."
         /// Kasse nach einem Testkauf (Apple-Sandbox, auch App Review): offen im Testmodus
         static let testmodusText = "Testmodus: Hier fließt kein echtes Geld."
-        /// Testkauf (Apple-Sandbox): Der QR-Aufsteller (Ware mit Kosten) lässt sich nicht bestellen
         /// Werbung-Tab im Testmodus (Testkauf): QR-Code und Zahlseite nehmen kein Geld an
         static let werbungTestmodus = "Testmodus: Über diesen QR-Code kann niemand wirklich bezahlen."
-        static let aufstellerTestmodus = "Im Testmodus kannst du den Aufsteller nicht bestellen. Es wird nichts bezahlt."
         static let aboAbgelaufenTitel = "Dein Abo ist abgelaufen"
         static let aboAbgelaufenText = "Zahlungslinks und Zahlseite sind gesperrt. Deine Daten bleiben erhalten."
         static let aboWiederAbschliessen = "Abo wieder abschließen"

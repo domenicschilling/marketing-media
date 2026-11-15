@@ -79,12 +79,10 @@ enum WerbungTexte {
     static let zahlseiteAnsehen = "Zahlseite ansehen"
     static let qrLabel = "QR-Code zu deiner Zahlseite"
     static let theke = "Der QR-Code steht an der Theke"
-    static let holzAufsteller = "QR-Aufsteller aus Holz"
-    static let holzAufstellerText = "Für deine Theke, mit deinem Namen oder Logo"
 
     // Druck
     static let druckTitel = "Zum Ausdrucken"
-    static let druckText = "Fensteraufkleber, Flyer und Aufsteller mit deinem Studionamen und QR-Code. Öffnen, dann über Teilen drucken oder als PDF sichern."
+    static let druckText = "Fensteraufkleber und Flyer mit deinem Studionamen und QR-Code. Öffnen, dann über Teilen drucken oder als PDF sichern."
     static let druckZeile = "Mit deinem Studionamen und QR-Code"
 
     // So geht's
