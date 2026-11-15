@@ -7,6 +7,7 @@ import { CFG, SECRETS, SIMULATION } from "./config.mjs";
 import { store } from "./store.mjs";
 import { stripe } from "./stripe.mjs";
 import { now, HttpError } from "./util.mjs";
+import { pngVerkleinern } from "./png.mjs";
 
 export const BILD_ARTEN = ["logo", "icon"];
 const MAX_BYTES = 1.5 * 1024 * 1024; // Stripe erlaubt bis 512 KB fürs Konto-Branding – größer wird nur hier gespeichert
@@ -24,6 +25,16 @@ export function bildAusDataUrl(src) {
 
 export const bildKey = (studioId, art) => `studio-bild/${studioId}/${art}`;
 export const ladeBild = (studioId, art) => store.get(bildKey(studioId, art));
+
+// Logo-Vorschau für die Link-Vorschau der Zahlungslinks (tattoofin.de/z/<id>, Logo-Fläche 620×92 px, hier doppelt so groß):
+// beim Hochladen einmal verkleinert und unter studio-bild/<studioId>/logo-vorschau gespeichert, damit jeder Bildabruf
+// nur das kleine Bild entpacken muss und auch große Logos (bis 25 Mio. Bildpunkte) genutzt werden. Nur PNG.
+export const LOGO_VORSCHAU = { art: "logo-vorschau", maxW: 1240, maxH: 184 };
+function logoVorschau(bild) {
+  if (bild.typ !== "image/png") return null;
+  const v = pngVerkleinern(bild.buf, { maxW: LOGO_VORSCHAU.maxW, maxH: LOGO_VORSCHAU.maxH });
+  return v ? { src: "data:image/png;base64," + v.png.toString("base64"), typ: "image/png", w: v.w, h: v.h, bytes: v.png.length } : null;
+}
 
 // Öffentliche Angaben für Zahlseite/Checkout (null, wenn nichts hinterlegt)
 export function brandingOeffentlich(s) {
@@ -70,6 +81,10 @@ export async function brandingSetzen(s, b) {
     const bild = bildAusDataUrl(b[art]);
     await store.set(bildKey(s.id, art), { src: b[art], typ: bild.typ, bytes: bild.buf.length, am: now() });
     neu[art] = { typ: bild.typ, bytes: bild.buf.length, am: now() };
+    if (art === "logo") {
+      const v = logoVorschau(bild);
+      if (v) { await store.set(bildKey(s.id, LOGO_VORSCHAU.art), { ...v, am: now() }); neu.logo.vorschau = { w: v.w, h: v.h }; }
+    }
   }
   for (const k of ["farbe", "akzent"]) {
     if (b[k] === undefined || b[k] === "") continue;

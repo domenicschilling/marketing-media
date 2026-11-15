@@ -79,7 +79,7 @@
     var prov = D.studio.modell === "provision";
     return '<table class="tbl"><tr><th>Datum</th><th>Kunde</th><th>Projekt</th><th>Betrag</th><th>Status</th><th>Zahlart</th>' + (prov ? "<th>Tattoofin " + D.config.provisionProzent + " %</th><th>an dich</th>" : "") + (actions ? "<th></th>" : "") + "</tr>" +
       list.map(function (z) {
-        var link = location.origin + "/zahlung.html?z=" + z.id;
+        var link = location.origin + "/z/" + z.id;
         var bez = ["bezahlt", "erstattet", "rueckgebucht"].indexOf(z.status) >= 0;
         var tf = z.status === "rueckgebucht" ? 0 : Math.max(0, (z.gebuehrBruttoCent || 0) - (z.gebuehrErstattetCent || 0));
         var rest = z.betragCent - (z.erstattetCent || 0);

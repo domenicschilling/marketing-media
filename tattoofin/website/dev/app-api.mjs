@@ -304,7 +304,7 @@ try {
   teil("Push ohne APNs-Schlüssel: Zahlung wird verbucht, Push übersprungen und protokolliert");
   const zOhne = await zahlungBezahlen(tC, { betrag: "120", kunde: "Paul Beispiel", beschreibung: "Kleines Herz" });
   const zOhneD = await call("GET", `/api/portal/zahlung/${zOhne}`, { token: tC });
-  check(zOhneD.data.zahlung?.status === "bezahlt" && zOhneD.data.link === `${BASE}/zahlung.html?z=${zOhne}`, "GET /api/portal/zahlung/:id → bezahlt + Link", zOhneD.text.slice(0, 160));
+  check(zOhneD.data.zahlung?.status === "bezahlt" && zOhneD.data.link === `${BASE}/z/${zOhne}`, "GET /api/portal/zahlung/:id → bezahlt + Kurzlink /z/<id>", zOhneD.text.slice(0, 160));
   check(logs("push-uebersprungen").some((l) => l.grund === "apns-nicht-eingerichtet" && l.ereignis === "zahlungen" && l.studioId === C.id), "log push-uebersprungen {grund: apns-nicht-eingerichtet}");
 
   // ==================================================================================================
@@ -444,14 +444,119 @@ try {
   await wait(30);
   await call("GET", `/api/portal/zahlung/${zid}?abgleich=1`, { token: tC });
   const sp2 = blob("abgleich/" + zid);
-  check(typeof ab1.data.whatsappText === "string" && ab1.data.whatsappText.startsWith("Hi Ina, ") && ab1.data.whatsappText.includes(ab1.data.link) && !/raten|später/i.test(ab1.data.whatsappText), "GET zahlung/:id (offen) liefert den Teilen-Text wie beim Erstellen (ohne Raten-Aussage)", ab1.text);
+  check(typeof ab1.data.whatsappText === "string" && ab1.data.whatsappText.startsWith("Hi Ina 👋\n") && ab1.data.whatsappText.includes(ab1.data.link) && !/raten|später/i.test(ab1.data.whatsappText), "GET zahlung/:id (offen) liefert den Teilen-Text wie beim Erstellen (ohne Raten-Aussage)", ab1.text);
   const zKarte = await call("POST", "/api/portal/zahlung", { token: tC, body: { betrag: "120", beschreibung: "Gutschein Weihnachten" } });
   const zKarteGet = await call("GET", `/api/portal/zahlung/${zKarte.data.zahlung.id}`, { token: tC });
-  check(zKarte.data.hinweis && !/klarna/i.test(zKarte.data.whatsappText) && zKarte.data.whatsappText.startsWith("Hi, ") && !/klarna/i.test(zKarteGet.data.whatsappText || "x klarna"), "Link mit Gutschein-Wort (nur Karte): Teilen-Text ohne Klarna, ohne Name „Hi, …“", zKarte.data.whatsappText);
+  check(zKarte.data.hinweis && !/klarna/i.test(zKarte.data.whatsappText) && zKarte.data.whatsappText.startsWith("Hi 👋\n") && !/klarna/i.test(zKarteGet.data.whatsappText || "x klarna"), "Link mit Gutschein-Wort (nur Karte): Teilen-Text ohne Klarna, ohne Name „Hi 👋“", zKarte.data.whatsappText);
   check(ab1.status === 200 && ab1.data.zahlung.status === "offen" && sp1?.am && sp2?.am === sp1.am, "abgleich=1 fragt Stripe höchstens alle 10 s (Sperre abgleich/<id> bleibt beim 2. Aufruf unverändert)", `${sp1?.am} / ${sp2?.am}`);
   setBlob("abgleich/" + zid, { am: new Date(Date.now() - 11e3).toISOString() });
   await call("GET", `/api/portal/zahlung/${zid}?abgleich=1`, { token: tC });
   check(blob("abgleich/" + zid).am !== sp1.am, "Nach 10 s wird wieder abgeglichen");
+
+  // ==================================================================================================
+  teil("Kurzlink tattoofin.de/z/<id> + Link-Vorschau (WhatsApp/iMessage) + Teilen-Text");
+  {
+    const UA_WA = "WhatsApp/2.24.21.80 A", UA_IMSG = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1) AppleWebKit/601.2.4 (KHTML, like Gecko) Version/9.0.1 Safari/601.2.4 facebookexternalhit/1.1 Facebot Twitterbot/1.0";
+    const UA_IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Mobile/15E148 Safari/604.1";
+    const roh = (url, ua) => fetch(BASE + url, { headers: ua ? { "user-agent": ua } : {}, redirect: "manual" });
+    const meta = (html, p) => (html.match(new RegExp(`<meta (?:property|name)="${p}" content="([^"]*)"`)) || [])[1];
+    const pngMasse = (buf) => ({ sig: buf.subarray(0, 8).toString("hex"), w: buf.readUInt32BE(16), h: buf.readUInt32BE(20) });
+    const firmaC = blob("studio/" + C.id).firma;
+    const zv = await call("POST", "/api/portal/zahlung", { token: tC, body: { betrag: "1.500", kunde: "Kai Vorschauname", email: "kai@vorschau.test", beschreibung: "Rücken Drache" } });
+    const zvId = zv.data.zahlung.id, txt = zv.data.whatsappText || "";
+    check(zv.status === 201 && zv.data.link === `${BASE}/z/${zvId}`, "Zahlungslink ist der Kurzlink /z/<id>", zv.data.link);
+    const klarnaC = /Klarna verfügbar\./.test(txt);
+    check(txt === `Hi Kai 👋\nHier ist dein Zahlungslink für dein Tattoo:\n\n💳 1.500,00 € · Rücken Drache\n👉 ${zv.data.link}\n\nBezahlen per Karte, Apple Pay oder Google Pay.${klarnaC ? " Klarna verfügbar." : ""}\n\nLiebe Grüße\n${firmaC}`,
+      "Teilen-Text: Gruß mit Vorname, Betrag · Projekt, Link allein in einer Zeile, Zahlarten, Gruß vom Studio (Zeilenumbrüche)", JSON.stringify(txt));
+    check(!/raten|später|kreditaufnahme/i.test(txt) && (txt.match(/\p{Extended_Pictographic}/gu) || []).length <= 3, "Teilen-Text: keine Raten-/Später-Aussage, höchstens 3 Emojis", txt);
+    // Vorschau-Abrufer (WhatsApp, iMessage): OG-Angaben, KEINE Weiterleitung
+    const wa = await roh(`/z/${zvId}`, UA_WA), waHtml = await wa.text();
+    const ogBild = meta(waHtml, "og:image") || "";
+    check(wa.status === 200 && /text\/html/.test(wa.headers.get("content-type")) && meta(waHtml, "og:title") === `${firmaC} · 1.500,00 €` && meta(waHtml, "og:url") === `${BASE}/z/${zvId}`,
+      "WhatsApp-Abruf /z/<id>: 200 + og:title „<Studio> · 1.500,00 €“ + og:url", waHtml.slice(0, 300));
+    check((meta(waHtml, "og:description") || "").startsWith("Rücken Drache · sicher bezahlen per Karte, Apple Pay oder Google Pay") && !/raten|später/i.test(meta(waHtml, "og:description")),
+      "og:description: Projekt + Zahlarten, keine Raten-/Später-Aussage", meta(waHtml, "og:description"));
+    check(ogBild.startsWith(`${BASE}/z/${zvId}/bild.png?v=`) && meta(waHtml, "og:image:width") === "1200" && meta(waHtml, "og:image:height") === "630" && meta(waHtml, "twitter:card") === "summary_large_image",
+      "og:image 1200 × 630 + summary_large_image (große Vorschau)", ogBild);
+    check(!/http-equiv="refresh"|location\.replace/.test(waHtml) && wa.headers.get("x-robots-tag") === "noindex", "Vorschau-Abrufer wird nicht weitergeleitet, noindex");
+    check(!/Vorschauname|kai@vorschau/.test(waHtml) && !/>Kai\b|"Kai\b| Kai /.test(waHtml), "Datenschutz: kein Kundenname, keine E-Mail in der öffentlichen Vorschau");
+    const im = await roh(`/z/${zvId}`, UA_IMSG), imHtml = await im.text();
+    check(im.status === 200 && meta(imHtml, "og:title") === `${firmaC} · 1.500,00 €` && !/http-equiv="refresh"/.test(imHtml), "iMessage-Abruf (facebookexternalhit/Twitterbot): gleiche Vorschau, ohne Weiterleitung");
+    // Menschen (Safari auf dem iPhone): sofort weiter zur Zahlseite, Link als Rückfall
+    const ip = await roh(`/z/${zvId}`, UA_IPHONE), ipHtml = await ip.text();
+    check(ip.status === 200 && ipHtml.includes(`<meta http-equiv="refresh" content="0;url=/zahlung.html?z=${zvId}">`) && ipHtml.includes(`location.replace("/zahlung.html?z=${zvId}")`) && ipHtml.includes(`href="/zahlung.html?z=${zvId}"`),
+      "iPhone-Safari: Weiterleitung zu /zahlung.html?z=<id> (meta refresh + JS + Link)", ipHtml.slice(-400));
+    const alt = await roh(`/zahlung.html?z=${zvId}`, UA_IPHONE);
+    check(alt.status === 200 && /<title>Zahlung – Tattoofin<\/title>/.test(await alt.text()), "Alte Adresse /zahlung.html?z=<id> funktioniert weiter");
+    // Vorschaubild
+    const bild = await roh(new URL(ogBild).pathname + new URL(ogBild).search, UA_WA), bildBuf = Buffer.from(await bild.arrayBuffer()), m = pngMasse(bildBuf);
+    check(bild.status === 200 && bild.headers.get("content-type") === "image/png" && m.sig === "89504e470d0a1a0a" && m.w === 1200 && m.h === 630 && bildBuf.length < 300e3,
+      "Vorschaubild: PNG 1200 × 630, unter 300 KB (WhatsApp)", `${bild.status} ${m.w}x${m.h} ${bildBuf.length} B`);
+    check(/max-age=86400/.test(bild.headers.get("cache-control") || "") && /max-age=60\b/.test((await roh(`/z/${zvId}/bild.png?v=alt`)).headers.get("cache-control") || ""), "Bild-Cache: lang mit passender Version, kurz mit veralteter");
+    // Anzahlung + Gutschein + nur Karte (Gutschein-Wort): Texte und Vorschau ohne Klarna
+    const za = await call("POST", "/api/portal/zahlung", { token: tC, body: { betrag: "100", kunde: "Kai Vorschauname", beschreibung: "Rücken Drache", art: "anzahlung" } });
+    check(za.data.whatsappText === `Hi Kai 👋\nHier ist dein Link für die Anzahlung:\n\n💳 100,00 € · Anzahlung für Rücken Drache\n👉 ${BASE}/z/${za.data.zahlung.id}\n\nBezahlen per Karte, Apple Pay oder Google Pay.\n\nLiebe Grüße\n${firmaC}`,
+      "Teilen-Text Anzahlung: gleiche Form, ohne Klarna", JSON.stringify(za.data.whatsappText));
+    const zaHtml = await (await roh(`/z/${za.data.zahlung.id}`, UA_WA)).text();
+    check(meta(zaHtml, "og:description") === "Anzahlung · Rücken Drache · sicher bezahlen per Karte, Apple Pay oder Google Pay", "Vorschau Anzahlung: „Anzahlung · …“, ohne Klarna", meta(zaHtml, "og:description"));
+    const zg = await call("POST", "/api/portal/zahlung", { token: tC, body: { art: "gutschein", betrag: "80", kunde: "Greta Käuferin", email: "greta@vorschau.test", empfaenger: "Max Beschenkt" } });
+    check(zg.data.whatsappText === `Hi Greta 👋\nHier ist dein Link für den Gutschein:\n\n🎁 80,00 € · Gutschein für Max Beschenkt\n👉 ${BASE}/z/${zg.data.zahlung.id}\n\nNach dem Bezahlen bekommst du den Gutschein mit Code per E-Mail.\n\nLiebe Grüße\n${firmaC}`,
+      "Teilen-Text Gutschein: gleiche Form, Empfänger im Text", JSON.stringify(zg.data.whatsappText));
+    const zgHtml = await (await roh(`/z/${zg.data.zahlung.id}`, UA_WA)).text();
+    check(meta(zgHtml, "og:description") === "Wertgutschein · sicher bezahlen per Karte, Apple Pay oder Google Pay" && !/Max Beschenkt|Greta/.test(zgHtml) && !/Klarna/.test(zgHtml), "Vorschau Gutschein: ohne Käufer/Empfänger, ohne Klarna");
+    const zk = await call("POST", "/api/portal/zahlung", { token: tC, body: { betrag: "120", beschreibung: "Gutschein Weihnachten" } });
+    const zkHtml = await (await roh(`/z/${zk.data.zahlung.id}`, UA_WA)).text();
+    check(!/Klarna/.test(zk.data.whatsappText) && !/Klarna/.test(zkHtml), "Nur Karte (Gutschein-Wort): Text und Vorschau ohne Klarna");
+    check(klarnaC === /Klarna verfügbar/.test(meta(waHtml, "og:description")), "Vorschau nennt Klarna genau dann, wenn der Teilen-Text es nennt (nur den Namen)", `${klarnaC}`);
+    // Unbekannte / ungültige ID → 404 ohne Daten
+    for (const u of ["/z/zl_gibtsnichtXYZ", "/z/zl_gibtsnichtXYZ/bild.png", "/z/..%2Fstudio", "/z/" + zvId + "/etwas", "/z/"]) {
+      const r = await roh(u, UA_WA), t = await r.text();
+      check(r.status === 404 && !t.includes(firmaC) && !/og:image|og:title/.test(t) && !t.includes("1.500"), `${u} → 404 ohne Daten`, `${r.status} ${t.slice(0, 120)}`);
+    }
+    // Studio-Logo: großes PNG (15 Mio. Bildpunkte, stark gepackt) → beim Hochladen verkleinerte Vorschau, Bild nutzt sie;
+    // Packbombe (IHDR 20000 × 20000) wird vor dem Entpacken verworfen → Studioname statt Logo, kein Absturz
+    {
+      const { pngKodieren, pngLaden, pngGroesse } = await import("../netlify/functions/_lib/png.mjs");
+      const brandingVorher = blob("studio/" + C.id).branding;
+      const zaId = za.data.zahlung.id;
+      const bildVon = async (id) => { const h = await (await roh(`/z/${id}`, UA_WA)).text(), u = new URL(meta(h, "og:image")); const r = await roh(u.pathname + u.search, UA_WA); return { u: u.href, r, buf: Buffer.from(await r.arrayBuffer()) }; };
+      const ohneLogo = await bildVon(zaId);
+      const GW = 5000, GH = 3000, px = new Uint8Array(GW * GH * 4);
+      for (let y = 1000; y < 2000; y++) for (let x = 500; x < 4500; x++) { const o = (y * GW + x) * 4; px[o] = 17; px[o + 1] = 17; px[o + 2] = 17; px[o + 3] = 255; }
+      const gross = pngKodieren(px, GW, GH, 4);
+      check(gross.length < 1.5 * 1024 * 1024 && pngLaden(gross) === null && pngGroesse(gross).w === GW, "Test-Logo: 5000 × 3000 px unter 1,5 MB, zu groß für den direkten Bildabruf", `${gross.length} B`);
+      const br = await admin(`studio/${C.id}/branding`, { logo: "data:image/png;base64," + gross.toString("base64") });
+      const vz = blob(`studio-bild/${C.id}/logo-vorschau`), vzBuf = Buffer.from((vz?.src || "").split(",")[1] || "", "base64");
+      check(br.branding?.logo?.vorschau?.w === 736 && br.branding.logo.vorschau.h === 184 && pngGroesse(vzBuf)?.w === 736 && pngGroesse(vzBuf)?.h === 184 && vzBuf.length < 60e3,
+        "Logo-Upload: verkleinerte Vorschau (sichtbarer Teil 4000 × 1000 → 736 × 184, höchstens 1240 × 184) gespeichert", JSON.stringify(br.branding?.logo) + ` ${vzBuf.length} B`);
+      const mitLogo = await bildVon(zaId);
+      check(mitLogo.r.status === 200 && pngMasse(mitLogo.buf).w === 1200 && mitLogo.u !== ohneLogo.u && Buffer.compare(mitLogo.buf, ohneLogo.buf) !== 0,
+        "Vorschaubild mit großem Logo: neue Version, Logo statt Name", `${mitLogo.r.status} ${mitLogo.buf.length} B`);
+      const bombe = Buffer.from(vzBuf); bombe.writeUInt32BE(20000, 16); bombe.writeUInt32BE(20000, 20);
+      check(pngLaden(bombe) === null && pngGroesse(bombe).w === 20000, "Packbombe (IHDR 20000 × 20000): pngLaden liest nur den Kopf und lehnt ab");
+      const t0 = Date.now(), brB = await admin(`studio/${C.id}/branding`, { logo: "data:image/png;base64," + bombe.toString("base64") });
+      check(brB.branding?.logo && !brB.branding.logo.vorschau && Date.now() - t0 < 5000, "Logo-Upload mit Packbombe: gespeichert ohne Vorschau, nicht entpackt", JSON.stringify(brB.branding?.logo));
+      const t1 = Date.now(), mitBombe = await bildVon(zaId);
+      check(mitBombe.r.status === 200 && pngMasse(mitBombe.buf).w === 1200 && Buffer.compare(mitBombe.buf, ohneLogo.buf) === 0 && Date.now() - t1 < 5000,
+        "Vorschaubild mit Packbomben-Logo: sofort, Studioname wie ohne Logo", `${mitBombe.r.status} ${Date.now() - t1} ms`);
+      const s = blob("studio/" + C.id); s.branding = brandingVorher; setBlob("studio/" + C.id, s);
+    }
+    // Storniert → neutrale Vorschau (kein Studio, kein Betrag), Bild neutral
+    await call("DELETE", `/api/portal/zahlung/${zvId}`, { token: tC });
+    const st = await roh(`/z/${zvId}`, UA_WA), stHtml = await st.text();
+    const stBild = meta(stHtml, "og:image") || "";
+    check(st.status === 200 && meta(stHtml, "og:title") === "Zahlungslink · Tattoofin" && !stHtml.includes(firmaC) && !stHtml.includes("1.500") && !/Rücken Drache/.test(stHtml) && stBild !== ogBild,
+      "Stornierter Link: neutrale Vorschau ohne Studio/Betrag/Projekt, anderes Bild", stHtml.slice(0, 300));
+    const stB = Buffer.from(await (await roh(new URL(stBild).pathname + new URL(stBild).search)).arrayBuffer());
+    check(pngMasse(stB).w === 1200 && stB.length !== bildBuf.length, "Neutrales Vorschaubild 1200 × 630");
+    // Bezahlt → ebenfalls neutral
+    const zbId = await zahlungBezahlen(tC, { betrag: "90", kunde: "Paula Bezahlt", beschreibung: "Fineline Rose" });
+    const zbHtml = await (await roh(`/z/${zbId}`, UA_WA)).text();
+    check(meta(zbHtml, "og:title") === "Zahlungslink · Tattoofin" && !/Fineline|90,00/.test(zbHtml), "Bezahlter Link: neutrale Vorschau");
+    const head = await fetch(`${BASE}/z/${za.data.zahlung.id}`, { method: "HEAD", headers: { "user-agent": UA_WA } });
+    check(head.status === 200 && (await head.text()) === "", "HEAD /z/<id> → 200 ohne Inhalt");
+    check((await fetch(`${BASE}/z/${za.data.zahlung.id}`, { method: "POST" })).status === 405, "POST /z/<id> → 405");
+  }
 
   // ==================================================================================================
   teil("Team: Adresse entfernen → App-Token tot; selbst austreten; alle abmelden");
