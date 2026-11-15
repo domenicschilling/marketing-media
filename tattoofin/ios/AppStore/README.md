@@ -64,14 +64,16 @@ seinem Handy. Du siehst sofort, was bezahlt ist, und bekommst bei jeder Zahlung 
 • Anzahlungen und Gesamtbeträge
 • Gutscheine verkaufen, prüfen und einlösen
 • Zahlungen und Auszahlungen deines Stripe-Kontos im Blick
+• Fertige Werbung: Video und Beiträge mit deinem Studionamen
 • Team-Zugang für deine Mitarbeitenden
 
 Das Geld deiner Kunden geht direkt auf das Stripe-Konto deines Studios. Tattoofin nimmt keine Provision.
 Tattoofin ist nur für Unternehmer (Tattoo-Studios in Deutschland).
 
 Abo „Tattoofin Monatlich“: Neue Studios legen ihr Konto in der App an und schließen das Abo über ihren Apple-Account ab. Das Abo
-verlängert sich automatisch jeden Monat, wenn du es nicht mindestens 24 Stunden vor Ende des laufenden Zeitraums kündigst. Die
-Zahlung wird bei Bestätigung des Kaufs über deinen Apple-Account abgebucht. Kündigen kannst du jederzeit in den Einstellungen
+verlängert sich automatisch jeden Monat, wenn du es nicht mindestens 24 Stunden vor Ende des laufenden Zeitraums kündigst. Neue
+Studios können die ersten 7 Tage kostenlos testen (wenn dein Apple-Account dafür berechtigt ist); kündigst du in dieser Zeit
+nicht mindestens 24 Stunden vor Ende, beginnt danach das bezahlte Abo. Die Zahlung wird über deinen Apple-Account abgebucht. Kündigen kannst du jederzeit in den Einstellungen
 deines Apple-Accounts unter Abos. Es gibt keine Mindestlaufzeit.
 
 Nutzungsbedingungen (Apple-Standard-EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
