@@ -8,7 +8,7 @@
 //   POST  /api/admin/studio/:id/konto         Stripe-Kontostatus neu abfragen
 //   POST  /api/admin/abrechnung               { monat: "YYYY-MM", dryRun }
 //   POST  /api/admin/jobs                     tägliche Jobs sofort ausführen
-//   GET   /api/admin/mails                    letzte E-Mails
+//   GET   /api/admin/mails[?an=<email>]       letzte E-Mails (mit an: nur an diese Adresse)
 //   POST  /api/admin/anleitung                { email, firma } → Einrichtungs-Anleitung per E-Mail
 //   POST  /api/admin/einladen   (ABGESCHALTET, 410)  { email, firma, bezeichnung?, senden? } → Einladung mit Sonderkondition „eigenes Konto, 0 € Einrichtung,
 //                                             0 % Provision, nur Zahlungsgebühren“ per E-Mail. bezeichnung (z. B. „Partner – nur Zahlungsgebühren“)
@@ -29,6 +29,8 @@
 //   POST  /api/admin/studio/:id/team          { emails: ["a@b.de", …] } ersetzt die Liste (höchstens 5; leer = keine)
 //   POST  /api/admin/app-demo                { email? } Demo-Studio für die App-Prüfung (Apple) anlegen bzw. Beispieldaten erneuern → { studioId, env }
 //                                             (danach APP_REVIEW_EMAIL/APP_REVIEW_CODE/APP_REVIEW_STUDIO_ID setzen; nur mit Domenics OK nach Deploy)
+//   GET   /api/admin/uebersicht?monat=YYYY-MM   Handy-Übersicht: Kennzahlen (ohne Demo- und Sandbox-Studios), abgebrochene Anmeldungen (14 Tage),
+//                                             Studio-Karten, Mail-Status, Demo-Studios getrennt (siehe _lib/admin-uebersicht.mjs)
 //   POST  /api/admin/checkout-test            unbezahlte Test-Sitzung (1 €) mit Tattoofin-Branding → { id, url }; { expire: "cs_…" } beendet sie
 import { CFG, netto, paketVon, provisionSatz } from "./_lib/config.mjs";
 import { json, fail, body, clean, now, handler } from "./_lib/util.mjs";
@@ -42,6 +44,7 @@ import { randomBytes } from "node:crypto";
 import { brandingSetzen, brandingOeffentlich } from "./_lib/branding.mjs";
 import { demoStudioAnlegen } from "./_lib/app-demo.mjs";
 import { geraeteWiderrufen } from "./_lib/app-geraete.mjs";
+import { adminUebersicht } from "./_lib/admin-uebersicht.mjs";
 
 export default handler(async (req) => {
   if (!isAdmin(req)) return fail("Nicht berechtigt", 401);
@@ -62,6 +65,10 @@ export default handler(async (req) => {
   // (st_fJZzFDQBg3hR) bleiben bei 0 Kosten; deren Abrechnung und bereits ausgegebene Codes (geschenk/<code>) laufen unverändert weiter.
   if (bereich === "einladen" && req.method === "POST") {
     return fail("Neue Einladungen mit 0 € Einrichtung und ohne Provision gibt es nicht mehr. Neue Studios melden sich im Paket Monatlich an (49,90 € im Monat inkl. MwSt.). Bereits ausgestellte Einladungs-Codes funktionieren weiter.", 410);
+  }
+
+  if (bereich === "uebersicht" && req.method === "GET") {
+    return json(await adminUebersicht({ monat: new URL(req.url).searchParams.get("monat") || "" }), 200, { "cache-control": "no-store" });
   }
 
   if (bereich === "studios" && req.method === "GET") {
@@ -219,10 +226,15 @@ export default handler(async (req) => {
   }
   if (bereich === "gesundheit" && req.method === "GET") return json((await store.get("meta/gesundheit")) || { hinweis: "Noch kein Check gelaufen." });
   if (bereich === "mails" && req.method === "GET") {
-    const keys = (await store.list("mail/")).slice(-50).reverse();
+    // ?an=<E-Mail>: nur Mails an diese Adresse (aus den letzten 300), z. B. in der Studio-Ansicht
+    const an = normEmail(new URL(req.url).searchParams.get("an") || "");
+    const keys = (await store.list("mail/")).slice(an ? -300 : -50).reverse();
     const out = [];
-    for (const k of keys) { const m = await store.get(k); out.push({ at: m.at, to: m.to, subject: m.subject }); }
-    return json(out);
+    for (let i = 0; i < keys.length; i += 25) {
+      const teil = await Promise.all(keys.slice(i, i + 25).map((k) => store.get(k)));
+      for (const m of teil) if (m && (!an || String(m.to || "").split(",").some((x) => normEmail(x) === an))) out.push({ at: m.at, to: m.to, subject: m.subject });
+    }
+    return json(an ? out.slice(0, 30) : out);
   }
   if (bereich === "app-demo" && req.method === "POST") {
     const b = await body(req);

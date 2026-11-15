@@ -153,11 +153,18 @@ export function createSim({ load, save, pageBase, webhook }) {
       if (res1 === "setup_intents") return db.setupIntents[id1];
       if (res1 === "invoiceitems") { const it = { id: rid("ii"), ...p, amount: Number(p.amount) }; db.items.push(it); return done(it); }
       if (res1 === "invoices") {
+        // Liste (Admin-Übersicht „unsere Einnahmen“): Filter status und created[gte], ohne Seiten (alles auf einmal)
+        if (method === "GET" && !id1) {
+          const ab = Number(p.created?.gte) || 0;
+          const data = Object.values(db.invoices).filter((i) => (!p.status || i.status === p.status) && (i.created || 0) >= ab)
+            .map((i) => ({ ...i, status_transitions: i.status_transitions || { paid_at: i.status === "paid" ? (i.created || Math.floor(Date.now() / 1000)) : null } }));
+          return { object: "list", data, has_more: false };
+        }
         if (method === "GET") return db.invoices[id1];
         if (!id1) {
           const items = db.items.filter((i) => i.customer === p.customer && !i.invoice);
           const net = items.reduce((s, i) => s + i.amount, 0);
-          const inv = { id: rid("in"), object: "invoice", status: "draft", ...p, lines: items, amount_due: Math.round(net * 1.19), metadata: p.metadata || {} };
+          const inv = { id: rid("in"), object: "invoice", status: "draft", created: Math.floor(Date.now() / 1000), ...p, lines: items, amount_due: Math.round(net * 1.19), metadata: p.metadata || {} };
           items.forEach((i) => (i.invoice = inv.id));
           db.invoices[inv.id] = inv;
           return done(inv);
@@ -169,7 +176,7 @@ export function createSim({ load, save, pageBase, webhook }) {
           return done(inv);
         }
         if (act === "send") return done(inv);
-        if (act === "pay") { inv.status = "paid"; inv.paid_out_of_band = p.paid_out_of_band === "true" || p.paid_out_of_band === true; return done(inv); }
+        if (act === "pay") { inv.status = "paid"; inv.amount_paid = inv.amount_due; inv.paid_out_of_band = p.paid_out_of_band === "true" || p.paid_out_of_band === true; return done(inv); }
       }
       if (res1 === "refunds" && db.paymentIntents[p.payment_intent]) {
         const pi = db.paymentIntents[p.payment_intent];
@@ -254,12 +261,12 @@ export function createSim({ load, save, pageBase, webhook }) {
           // Paket Monatlich: Abo + erste Monatsrechnung (bezahlt)
           const sub = { id: rid("sub"), object: "subscription", customer: s.customer, status: "active", cancel_at_period_end: false, metadata: s.subscription_data?.metadata || {}, current_period_end: Math.floor(Date.now() / 1000) + 30 * 86400 };
           db.subscriptions = db.subscriptions || {}; db.subscriptions[sub.id] = sub;
-          const inv = { id: rid("in"), object: "invoice", customer: s.customer, subscription: sub.id, number: "TEST-" + db.invoiceNr++, status: "paid", amount_due: s.amount_total, amount_paid: s.amount_total, hosted_invoice_url: `${pageBase}/invoice`, metadata: {} };
+          const inv = { id: rid("in"), object: "invoice", created: Math.floor(Date.now() / 1000), customer: s.customer, subscription: sub.id, number: "TEST-" + db.invoiceNr++, status: "paid", amount_due: s.amount_total, amount_paid: s.amount_total, hosted_invoice_url: `${pageBase}/invoice`, metadata: {} };
           db.invoices[inv.id] = inv; s.invoice = inv.id; s.subscription = sub.id; s.payment_status = "paid";
         } else if (s.mode === "payment") {
           s.payment_intent = rid("pi"); s.payment_status = "paid";
           if (String(s.invoice_creation?.enabled) === "true") {
-            const inv = { id: rid("in"), object: "invoice", customer: s.customer, number: "TEST-" + db.invoiceNr++, status: "paid", amount_due: s.amount_total, amount_paid: s.amount_total, hosted_invoice_url: `${pageBase}/invoice`, metadata: s.invoice_creation.invoice_data?.metadata || {}, payment_intent: s.payment_intent };
+            const inv = { id: rid("in"), object: "invoice", created: Math.floor(Date.now() / 1000), customer: s.customer, number: "TEST-" + db.invoiceNr++, status: "paid", amount_due: s.amount_total, amount_paid: s.amount_total, hosted_invoice_url: `${pageBase}/invoice`, metadata: s.invoice_creation.invoice_data?.metadata || {}, payment_intent: s.payment_intent };
             db.invoices[inv.id] = inv; s.invoice = inv.id;
           }
         } else {

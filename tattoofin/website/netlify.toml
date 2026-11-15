@@ -86,6 +86,26 @@
   for = "/admin.html"
   [headers.values]
     X-Robots-Tag = "noindex"
+    Cache-Control = "no-cache"
+# Admin-App „TF Admin“ (Homescreen): Manifest und Icons nicht in Suchmaschinen
+[[headers]]
+  for = "/admin.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+    X-Robots-Tag = "noindex"
+    Cache-Control = "public, max-age=3600"
+[[headers]]
+  for = "/assets/admin/*"
+  [headers.values]
+    X-Robots-Tag = "noindex"
+[[headers]]
+  for = "/css/admin.css"
+  [headers.values]
+    X-Robots-Tag = "noindex"
+[[headers]]
+  for = "/js/admin.js"
+  [headers.values]
+    X-Robots-Tag = "noindex"
 [[headers]]
   for = "/einrichtung-anleitung.pdf"
   [headers.values]

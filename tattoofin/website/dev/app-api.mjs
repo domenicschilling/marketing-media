@@ -527,6 +527,24 @@ try {
   const demo = await admin("app-demo", { email: "review@tattoofin.test" });
   check(/^st_/.test(demo.studioId || "") && demo.zahlungen >= 5 && blob("studio/" + demo.studioId)?.demo === true, "POST /api/admin/app-demo legt Demo-Studio mit Beispieldaten an", JSON.stringify(demo).slice(0, 160));
   check((await admin("studios")).every((s) => s.id !== demo.studioId), "Demo-Studio zählt nicht in den Admin-Kennzahlen (Studioliste)");
+  {
+    // Admin-App (Handy): GET /api/admin/uebersicht – Demo getrennt, nie in den Kennzahlen; Apple-Studios zählen als „Apple“
+    const u = await admin("uebersicht");
+    const dz = Object.values(u.kennzahlen.zahlend).reduce((a2, b2) => a2 + b2, 0);
+    check(u.demo.some((x) => x.id === demo.studioId && x.zahlungenGesamt >= 5) && !u.studios.some((x) => x.id === demo.studioId) && !u.entwuerfe.some((x) => x.id === demo.studioId), "Übersicht: Demo-Studio nur unter „demo“", JSON.stringify(u.demo).slice(0, 160));
+    const ohneDemo = u.studios.filter((x) => ["einrichtung", "live", "gekuendigt"].includes(x.status) && !x.test).length;
+    check(u.kennzahlen.zahlend.gesamt + u.kennzahlen.zahlend.kostenlos === ohneDemo && dz > 0, "Übersicht: zahlende Studios ohne Demo-Studio gezählt", JSON.stringify(u.kennzahlen.zahlend));
+    const imMonat = (z) => z.status === "bezahlt" && (z.bezahltAm || "").slice(0, 7) === u.monat;
+    const demoMonat = (await admin(`studio/${demo.studioId}`)).zahlungen.filter(imMonat).length;
+    const echteMonat = (await Promise.all(u.studios.filter((x) => !x.test).map(async (x) => (await admin(`studio/${x.id}`)).zahlungen))).flat().filter(imMonat);
+    check(u.kennzahlen.umsatzStudios.zahlungen === echteMonat.length && u.kennzahlen.umsatzStudios.cent === echteMonat.reduce((a2, z) => a2 + z.betragCent - (z.erstattetCent || 0), 0), `Übersicht: Umsatz der Studios ohne die ${demoMonat} bezahlten Beispielzahlungen des Demo-Studios`, JSON.stringify(u.kennzahlen.umsatzStudios));
+    const appStudios = u.studios.filter((x) => x.paket?.abrechnung === "apple" && ["einrichtung", "live", "gekuendigt"].includes(x.status) && !x.test);
+    check(u.kennzahlen.zahlend.apple === appStudios.length && u.studios.filter((x) => x.test).every((x) => x.paket?.abrechnung === "apple"), "Übersicht: Apple-Abos getrennt gezählt, Sandbox-/TestFlight-Käufe als Test (nicht gezählt)", JSON.stringify({ k: u.kennzahlen.zahlend, app: appStudios.length }));
+    for (const [name, opt] of [["ohne Anmeldung", {}], ["App-Token", { token: tA }], ["Studio-Cookie", { cookie: C.cookie }]]) {
+      const r = await call("GET", "/api/admin/uebersicht", opt);
+      check(r.status === 401 && !r.data.studios && !r.data.kennzahlen, `/api/admin/uebersicht ${name} → 401`, r.status);
+    }
+  }
   // Prüfer hat den QR-Aufsteller bestellt → nächstes Anlegen setzt ihn zurück (Logo inklusive)
   setBlob("studio/" + demo.studioId, { ...blob("studio/" + demo.studioId), aufsteller: { holz: "dunkel", variante: "logo", hatLogo: true, angefordertAm: new Date().toISOString() } });
   setBlob("aufsteller-logo/" + demo.studioId, { src: "data:image/jpeg;base64,AAAA", w: 1, h: 1 });

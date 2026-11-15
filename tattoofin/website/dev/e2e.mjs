@@ -923,9 +923,90 @@ try {
   await pAdm.click("#login details summary");
   await pAdm.fill("#token", "admin");
   await pAdm.click("#login-token button");
-  await pAdm.waitForSelector("#liste table");
+  await pAdm.waitForSelector("#kacheln .kachel");
   await pAdm.screenshot({ path: path.join(shots, "admin.png"), fullPage: true });
   check(true, "Admin-Oberfläche lädt");
+
+  // ---------------------------------------------------------------- Admin-App fürs Handy (15.11.2026)
+  console.log("Admin-App (Handy): Übersicht, Entwürfe, Demo-Studio getrennt, Anmeldung per Code");
+  for (const [name, h] of [["ohne Anmeldung", {}], ["falscher Token", { Authorization: "Bearer falsch" }], ["App-Token", { Authorization: "Bearer tfa_x.y" }], ["gefälschtes Admin-Cookie", { cookie: "tf_admin=gefaelscht.x" }]]) {
+    const r = await fetch(`${BASE}/api/admin/uebersicht`, { headers: h });
+    check(r.status === 401 && !/firma|email/i.test(await r.text()), `/api/admin/uebersicht ${name} → 401 ohne Daten`);
+  }
+  check((await fetch(`${BASE}/api/admin/mails?an=kauf@example.com`)).status === 401, "/api/admin/mails?an= nur für Admins");
+  const u0 = await admin("uebersicht");
+  const zaehlbar = u0.studios.filter((x) => ["einrichtung", "live", "gekuendigt"].includes(x.status) && !x.test);
+  check(Array.isArray(u0.studios) && u0.studios.length > 3 && typeof u0.kennzahlen.zahlend.gesamt === "number" && u0.kennzahlen.zahlend.gesamt + u0.kennzahlen.zahlend.kostenlos === zaehlbar.length && u0.kennzahlen.zahlend.web + u0.kennzahlen.zahlend.apple === u0.kennzahlen.zahlend.gesamt, "Übersicht: Kennzahl zahlende Studios passt zur Studioliste (Web + Apple)", JSON.stringify(u0.kennzahlen.zahlend));
+  const umsatzSoll = (await Promise.all(u0.studios.filter((x) => !x.test).map(async (x) => (await admin(`studio/${x.id}`)).zahlungen))).flat()
+    .filter((z) => z.status === "bezahlt" && (z.bezahltAm || "").slice(0, 7) === u0.monat).reduce((a2, z) => a2 + z.betragCent - (z.erstattetCent || 0), 0);
+  check(u0.kennzahlen.umsatzStudios.cent === umsatzSoll && umsatzSoll > 0, `Übersicht: Umsatz der Studios im Monat = Summe der Kundenzahlungen (${umsatzSoll} Cent)`);
+  const ein = u0.kennzahlen.einnahmen.stripe;
+  check(!ein.fehler && ein.rechnungen >= 1 && ein.bruttoCent > 0 && ein.nettoCent < ein.bruttoCent, "Übersicht: unsere Einnahmen = bezahlte Stripe-Rechnungen von Tattoofin-Kunden", JSON.stringify(ein));
+  check(u0.mail && typeof u0.mail.ok === "boolean" && u0.studios.every((x) => x.paket && x.paket.name && typeof x.stripeFrei === "boolean" && "letzteZahlung" in x), "Übersicht: Mail-Status und Studio-Karten (Paket, Stripe frei, letzte Zahlung)");
+  // Abgebrochene Anmeldung mit 3-D-Secure-Fehler (Webhook payment_intent.payment_failed auf dem DSX-Konto)
+  check((await post("/api/signup", { ...basis, firma: "Entwurf Dreids", paket: "monatlich", email: "entwurf-3ds@example.com" })).status === 200, "Entwurf angelegt (Kasse offen)");
+  const ent = await studioPer("entwurf-3ds@example.com");
+  const entCus = (await admin(`studio/${ent.id}`)).studio.stripe.customerId;
+  await sendeWebhook(`${BASE}/api/stripe-webhook`, "whsec_mock", "payment_intent.payment_failed", { id: "pi_3ds_e2e", object: "payment_intent", customer: entCus, metadata: {}, last_payment_error: { code: "payment_intent_authentication_failure", message: "3-D-Secure abgelehnt (Test)" } });
+  const kaufS = (await admin(`studio/${kaufId}`)).studio;
+  if (kaufS.stripe?.customerId) await sendeWebhook(`${BASE}/api/stripe-webhook`, "whsec_mock", "payment_intent.payment_failed", { id: "pi_3ds_aktiv", object: "payment_intent", customer: kaufS.stripe.customerId, metadata: {}, last_payment_error: { code: "card_declined" } });
+  const u1 = await admin("uebersicht");
+  const e1 = u1.entwuerfe.find((x) => x.id === ent.id);
+  check(e1 && e1.fehler?.dreiDS === true && e1.schritt === "Zahlung fehlgeschlagen" && e1.paket.name === "Monatlich" && e1.wann && u1.kennzahlen.zahlungFehlgeschlagen14 >= 1 && u1.kennzahlen.abgebrochen14 >= 1, "Entwürfe-Liste: Name, Paket, wann, „3-D-Secure nicht bestätigt“", JSON.stringify(e1).slice(0, 200));
+  check(!(await admin(`studio/${kaufId}`)).studio.anmeldungFehler && u1.entwuerfe.every((x) => !["live", "einrichtung", "gekuendigt"].includes(u1.studios.find((y) => y.id === x.id)?.status)), "Fehlgeschlagene Zahlung eines aktiven Studios ändert nichts, Entwürfe-Liste nur Entwürfe");
+  // Demo-Studio (Apple) getrennt, nie in den Kennzahlen
+  const demoE = await admin("app-demo", { body: { email: "review@example.com" } });
+  const u2 = await admin("uebersicht");
+  check(u2.demo.some((x) => x.id === demoE.studioId && x.appleReview) && !u2.studios.some((x) => x.id === demoE.studioId) && !u2.entwuerfe.some((x) => x.id === demoE.studioId), "Demo-Studio steht nur unter „demo“, nicht bei den Studios/Entwürfen");
+  check(JSON.stringify(u2.kennzahlen.zahlend) === JSON.stringify(u1.kennzahlen.zahlend) && u2.kennzahlen.umsatzStudios.cent === u1.kennzahlen.umsatzStudios.cent && u2.kennzahlen.einrichtung === u1.kennzahlen.einrichtung, "Demo-Studio (mit bezahlten Beispielzahlungen) ändert keine Kennzahl");
+  // Anmeldung per Code (Homescreen-App hat eigene Cookies)
+  await post("/api/admin-login", { email: "domenicschilling@googlemail.com" });
+  const codeMail = mailsAn("domenicschilling@googlemail.com").filter((m) => /Admin-Login/.test(m.subject)).pop();
+  const code = (codeMail?.html.match(/letter-spacing:6px">(\d{6})</) || [])[1];
+  check(Boolean(code) && /TF Admin/.test(codeMail.html), "Admin-Login-Mail enthält 6-stelligen Code für die App „TF Admin“");
+  const falsch = code === "000000" ? "111111" : "000000";
+  check((await post("/api/admin-login/code", { email: "domenicschilling@gmail.com", code: falsch })).status === 401, "Code: falscher Code → 401");
+  check((await post("/api/admin-login/code", { email: "fremd@example.com", code })).status === 401, "Code: fremde Adresse → 401");
+  const cOk = await post("/api/admin-login/code", { email: "domenicschilling@gmail.com", code });
+  const cCookie = (cOk.headers.get("set-cookie") || "").split(";")[0];
+  check(cOk.status === 200 && /^tf_admin=/.test(cCookie) && /HttpOnly/i.test(cOk.headers.get("set-cookie")) && (await fetch(`${BASE}/api/admin/uebersicht`, { headers: { cookie: cCookie } })).status === 200, "Code: richtiger Code → Admin-Sitzung (httpOnly), Übersicht erlaubt");
+  check((await post("/api/admin-login/code", { email: "domenicschilling@gmail.com", code })).status === 401, "Code: nur einmal verwendbar");
+  await post("/api/admin-login", { email: "domenicschilling@googlemail.com" });
+  const code2 = (mailsAn("domenicschilling@googlemail.com").filter((m) => /Admin-Login/.test(m.subject)).pop()?.html.match(/letter-spacing:6px">(\d{6})</) || [])[1];
+  const falsch2 = code2 === "000000" ? "111111" : "000000";
+  for (let i = 0; i < 5; i++) await post("/api/admin-login/code", { email: "domenicschilling@gmail.com", code: falsch2 });
+  check(Boolean(code2) && (await post("/api/admin-login/code", { email: "domenicschilling@gmail.com", code: code2 })).status === 401, "Code: nach 5 falschen Versuchen gesperrt (auch der richtige)");
+  // Handy 390 px: kein Querscrollen, alle Bereiche, Demo-Knopf mit Rückfrage
+  {
+    const ph = await neueSeite({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+    const fragen = []; ph.on("dialog", (d) => fragen.push(d.message()));
+    await ph.goto(BASE + "/admin.html");
+    await ph.evaluate(() => sessionStorage.setItem("tf-admin", "admin"));
+    await ph.reload();
+    await ph.waitForSelector("#kacheln .kachel");
+    const quer = () => ph.evaluate(() => document.documentElement.scrollWidth <= innerWidth);
+    let ok390 = await quer();
+    check((await ph.textContent("#entwuerfe")).includes("Entwurf Dreids") && (await ph.textContent("#entwuerfe")).includes("3-D-Secure nicht bestätigt"), "390 px Übersicht: abgebrochene Anmeldung mit 3-D-Secure-Hinweis");
+    const man2 = await (await fetch(BASE + "/admin.webmanifest")).json();
+    check(man2.name === "TF Admin" && man2.display === "standalone" && man2.start_url.startsWith("/admin.html") && await ph.evaluate(() => Boolean(document.querySelector('link[rel=apple-touch-icon][href*="/assets/admin/"]')) && /noindex/.test(document.querySelector("meta[name=robots]").content)) && (await fetch(BASE + "/assets/admin/apple-touch-icon.png")).status === 200, "Homescreen: Manifest „TF Admin“, eigenes apple-touch-icon, noindex");
+    check(!/\d+,\d\d\s?€|\d+ ?€|Provision|Umsatz|Einnahmen/.test((await (await fetch(BASE + "/admin.html")).text()).replace(/<script[\s\S]*?<\/script>/g, "") + JSON.stringify(man2)), "admin.html und Manifest enthalten keine Preise/Interna (alles erst nach Anmeldung)");
+    await ph.click('#tabs a[data-v="studios"]'); await ph.waitForSelector("#liste .karte"); ok390 = ok390 && await quer();
+    await ph.click('#filter button[data-f="entwurf"]');
+    check((await ph.$$eval("#liste .karte", (k) => k.length)) === u2.studios.filter((x) => x.gruppe === "entwurf").length, "Filter „Entwurf“ zeigt genau die Entwürfe");
+    await ph.click('#filter button[data-f="alle"]'); await ph.fill("#suche", "Ink Provision");
+    await ph.click("#liste .karte"); await ph.waitForSelector("#d-ansehen"); await ph.waitForFunction(() => !/geladen/.test(document.getElementById("d-mails").textContent)); ok390 = ok390 && await quer();
+    check((await ph.textContent("#detail")).includes("Ink Provision") && !(await ph.$("#d-live")) && await ph.$("#d-ansehen") && await ph.$("#d-konto") && await ph.$("#d-link") && await ph.$("#d-einr") && await ph.$("#b-save") && await ph.$("#d-notiz") && (await ph.$$("#d-mails li")).length >= 1, "390 px Studio-Detail: alle bisherigen Funktionen (Live-Knopf nur, solange nicht live) + E-Mails an das Studio");
+    await ph.click('#tabs a[data-v="demo"]'); await ph.waitForSelector("#v-demo:not(.hidden) #demo-neu"); ok390 = ok390 && await quer();
+    check((await ph.textContent("#demo")).includes("review@example.com"), "390 px Demo-Studio (Apple) als eigener Bereich");
+    const vorDemo = (await ph.evaluate(() => document.getElementById("demo").textContent));
+    await ph.click("#demo-neu");
+    await ph.waitForFunction(() => /Beispieldaten erneuert/.test(document.getElementById("alert").textContent));
+    check(Boolean(vorDemo) && fragen.some((f) => /^Sicher\?/.test(f)), "„Beispieldaten erneuern“ mit Rückfrage „Sicher?“ → erneuert", fragen.join(" | "));
+    await ph.click('#tabs a[data-v="mehr"]'); await ph.waitForFunction(() => !/geladen/.test(document.getElementById("mails").textContent)); ok390 = ok390 && await quer();
+    check(ok390, "Admin-Seite bei 390 px ohne horizontales Scrollen (Übersicht, Studios, Detail, Demo, Mehr)");
+    await ph.screenshot({ path: path.join(shots, "admin-handy.png") });
+    await ph.context().close();
+  }
 
   // ---------------------------------------------------------------- Handy-Screenshots (390 px)
   console.log("Handy-Screenshots: Einladung → Einrichtung → Dashboard → Zahlungslink → Zahlseite → Leistungsbestätigung");

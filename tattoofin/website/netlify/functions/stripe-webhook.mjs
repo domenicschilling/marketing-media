@@ -59,6 +59,19 @@ async function appleWaechter(s, event) {
   return true;
 }
 
+// Anmeldung (Paket-Zahlung auf dem DSX-Konto) fehlgeschlagen, z. B. 3-D-Secure nicht bestätigt: nur beim Entwurf vermerken,
+// damit der Admin sieht, warum ein Studio nicht abgeschlossen hat (Admin-Übersicht). Ändert sonst nichts (kein Status, keine Mail).
+const DREI_DS = /authentication|3d_secure|three_d_secure/i;
+async function anmeldungFehlerMerken(s, err) {
+  if (!s || s.demo || !["entwurf", "abgebrochen", "zahlung_offen"].includes(s.status)) return false;
+  const f = fehlerEintrag(err || {});
+  f.dreiDS = DREI_DS.test(`${f.code} ${f.declineCode}`);
+  s.anmeldungFehler = f;
+  await saveStudio(s);
+  await log("anmeldung-zahlung-fehlgeschlagen", { studioId: s.id, code: f.code, declineCode: f.declineCode, dreiDS: f.dreiDS });
+  return true;
+}
+
 // Checkout, Erstattungen und Rückbuchungen von Kundenzahlungen (beide Modelle)
 async function kundenEreignis(event) {
   const o = event.data.object, account = event.account;
@@ -309,9 +322,17 @@ export default handler(async (req) => {
         await log("abo.beendet", { studioId: s.id, subscriptionId: o.id });
         break;
       }
+      // Paket-Zahlung beim Abschluss abgelehnt (Karte, 3-D-Secure, Lastschrift): nur beim Entwurf vermerken
+      case "payment_intent.payment_failed":
+      case "checkout.session.async_payment_failed": {
+        const s = await studioFuer(o);
+        if (s && !istApple(s)) await anmeldungFehlerMerken(s, o.last_payment_error || { text: "Zahlung fehlgeschlagen" });
+        break;
+      }
       case "invoice.payment_failed": {
         const s = await studioFuer(o);
         if (!s || (await appleWaechter(s, event))) break;
+        await anmeldungFehlerMerken(s, { text: "Rechnung nicht bezahlt" });
         await notify(s, mails.zahlungFehlgeschlagen(s, { betragCent: o.amount_due, rechnungUrl: o.hosted_invoice_url }));
         await notifyAdmin("Zahlung fehlgeschlagen", s, { Rechnung: o.number, Betrag: (o.amount_due / 100).toFixed(2) + " €" });
         break;
