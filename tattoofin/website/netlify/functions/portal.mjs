@@ -41,13 +41,13 @@
 // Mandantentrennung: Jede Abfrage nutzt ausschließlich das Studio aus dem Session-Cookie bzw. App-Token; Zahlungen werden
 // über zahlung/<studioId>/<id> gelesen, fremde IDs ergeben immer 404.
 import { CFG, plattformgebuehr, provisionSatz, paketVon, BAUSTEINE_SIMULIERT, aufstellerInklusive, testKasse } from "./_lib/config.mjs";
-import { json, fail, body, clean, id, now, handler, isEmail, parseBetrag, clientIp } from "./_lib/util.mjs";
+import { json, fail, body, clean, id, now, handler, isEmail, parseBetrag, clientIp, euro } from "./_lib/util.mjs";
 import { saveStudio, zahlungenVon, getZahlung, saveZahlung, abrechnungenVon, getLeistung, store, log } from "./_lib/store.mjs";
 import { currentStudio, clearCookie } from "./_lib/auth.mjs";
 import { geraeteWiderrufen } from "./_lib/app-geraete.mjs";
 import { stripe, dashboardLink, accountSession, ensureConnectedAccount } from "./_lib/stripe.mjs";
 import { hatUmstellungsangebot, umstellungCheckout, notify, notifyAdmin, connectUrl, connectUrlGehostet, darfKassieren, provisionVerdient, kontoAbgleichen, eingebettet, klarnaFuer, provisionZahlung, aufstellerUrl, aufstellerCheckout, aufstellerBezahlt, kuendigungEinreichen, kuendigungZuruecknehmen, zahlungAbgleichen } from "./_lib/domain.mjs";
-import { fuerStudio, oeffentlich } from "./_lib/studio-ansicht.mjs";
+import { fuerStudio, oeffentlich, zahlungsLink } from "./_lib/studio-ansicht.mjs";
 import { randomBytes } from "node:crypto";
 import { KLARNA_NAME, PFLICHTSATZ_STUDIO, gutscheinWort, GUTSCHEIN_HINWEIS } from "./_lib/klarna-texte.mjs";
 import { materialLinks, aufstellerFuerApp, werbungMitKlarna, AUFSTELLER_TESTMODUS } from "./_lib/werbung.mjs";
@@ -65,22 +65,32 @@ export const EXTRAS = [
 // WhatsApp-Text fürs Studio (Zahlungslink Projektpreis). Klarna-Regeln ab 20.11.2026: nur der Name („Klarna verfügbar“) ohne Raten-/Später-Bezug,
 // damit kein Warnsatz nötig ist. Texte kommen aus _lib/klarna-texte.mjs. RATEN_FUSS bleibt als Zusatz-Pflichtsatz für Texte mit Raten-Aussage.
 // Ohne Klarna (z. B. Paket Risikofrei ab dem Stichtag, siehe klarnaFuer): schlichter Text ohne Klarna.
+// Form seit 15.11.2026: kurz, mit Zeilenumbrüchen und wenigen Emojis, der Link steht allein in einer Zeile (WhatsApp/iMessage zeigen
+// dazu die Vorschau-Karte von tattoofin.de/z/<id>). Die App übernimmt den Text unverändert vom Server.
 export const RATEN_FUSS = PFLICHTSATZ_STUDIO;
+const gruss = (vorname) => `Hi${vorname ? " " + vorname : ""} 👋`;
+const zahlarten = "Bezahlen per Karte, Apple Pay oder Google Pay.";
 export const ratenWhatsapp = ({ vorname = "", projekt = "dein Tattoo", betrag = "", link = "", firma = "", klarna = true }) =>
-  `Hi${vorname ? " " + vorname : ""}, hier ist dein Zahlungslink für ${projekt}${betrag ? " (" + betrag + ")" : ""}: ${link}\n\n` +
-  (klarna
-    ? `Bezahlen kannst du per Karte, Apple Pay oder Google Pay. ${KLARNA_NAME.verfuegbar}.\n\nLiebe Grüße, ${firma}`
-    : `Bezahlen kannst du per Karte, Apple Pay oder Google Pay.\n\nLiebe Grüße, ${firma}`);
+  `${gruss(vorname)}\nhier ist dein Zahlungslink für dein Tattoo:\n\n` +
+  `💳 ${[betrag, projekt].filter(Boolean).join(" · ")}\n👉 ${link}\n\n` +
+  `${zahlarten}${klarna ? ` ${KLARNA_NAME.verfuegbar}.` : ""}\n\n` +
+  `Liebe Grüße\n${firma}`;
 
 // Text zum Teilen eines Zahlungslinks (beim Erstellen und später in der App-Detailansicht).
 // Links mit Gutschein-Wort (nurKarte) haben Klarna aus → Text ohne Klarna.
 export const teilText = (s, z, link) => {
-  const betragText = (z.betragCent / 100).toLocaleString("de-DE", { minimumFractionDigits: 2 }) + " €";
+  const betragText = euro(z.betragCent);
   const vorname = z.kunde ? z.kunde.split(" ")[0] : "";
   if (z.art === "gutschein")
-    return `Hi${vorname ? " " + vorname : ""}, hier ist dein Link für den Gutschein von ${s.firma} über ${betragText}${z.gutschein?.empfaenger ? " für " + z.gutschein.empfaenger : ""}: ${link} . Nach dem Bezahlen bekommst du den Gutschein mit Code per E-Mail. Liebe Grüße, ${s.firma}`;
-  if (z.art === "anzahlung")
-    return `Hi${vorname ? " " + vorname : ""}, hier ist dein Link für die Anzahlung (${z.beschreibung}, ${betragText}): ${link} . Am einfachsten zahlst du per Karte, Apple Pay oder Google Pay. Liebe Grüße, ${s.firma}`;
+    return `${gruss(vorname)}\nhier ist dein Link für den Gutschein:\n\n` +
+      `🎁 ${betragText} · Gutschein${z.gutschein?.empfaenger ? " für " + z.gutschein.empfaenger : ""}\n👉 ${link}\n\n` +
+      `Nach dem Bezahlen bekommst du den Gutschein mit Code per E-Mail.\n\nLiebe Grüße\n${s.firma}`;
+  if (z.art === "anzahlung") {
+    const projekt = z.beschreibung || "Tattoo-Projekt";
+    return `${gruss(vorname)}\nhier ist dein Link für die Anzahlung:\n\n` +
+      `💳 ${betragText} · ${/anzahlung/i.test(projekt) ? projekt : "Anzahlung für " + projekt}\n👉 ${link}\n\n` +
+      `${zahlarten}\n\nLiebe Grüße\n${s.firma}`;
+  }
   return ratenWhatsapp({ vorname, projekt: z.beschreibung, betrag: betragText, link, firma: s.firma, klarna: klarnaFuer(s) && !z.nurKarte });
 };
 
@@ -155,7 +165,7 @@ export default handler(async (req, context) => {
         ...(gutschein ? { gutschein: { empfaenger: clean(b.empfaenger, 80), nachricht: clean(b.nachricht, 240) } } : {}),
       };
       await saveZahlung(z);
-      const link = `${CFG.siteUrl}/zahlung.html?z=${z.id}`;
+      const link = zahlungsLink(z.id);
       const text = teilText(s, z, link);
       await log("zahlungslink", { studioId: s.id, zahlungId: z.id, betragCent });
       return json({ zahlung: fuerStudio(z), link, whatsappText: text, ...(gutscheinImProjekt ? { hinweis: GUTSCHEIN_HINWEIS } : {}) }, 201);
@@ -172,7 +182,7 @@ export default handler(async (req, context) => {
           if (await zahlungAbgleichen(s, z)) z = await getZahlung(s.id, sub);
         }
       }
-      const link = `${CFG.siteUrl}/zahlung.html?z=${z.id}`;
+      const link = zahlungsLink(z.id);
       return json({ zahlung: fuerStudio(z), link, ...(z.status === "offen" ? { whatsappText: teilText(s, z, link) } : {}) });
     }
     if (req.method === "DELETE" && sub) {

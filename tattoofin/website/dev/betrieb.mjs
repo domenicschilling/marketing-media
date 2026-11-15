@@ -302,7 +302,12 @@ await abschnitt("5 Go-live, Zahlungslink, Kunde zahlt (Karte + Klarna), Provisio
   check(Boolean(mailAnMit("risikofrei@betrieb.test", /live/)), "Mail „Tattoofin ist live“", "");
   const zlG = await post("/api/portal/zahlung", { betrag: "1500", kunde: "Lena Beispiel", email: "lena@kunde.test", beschreibung: "Rückenstück Drache", sitzungen: "3 Sitzungen" }, ST.rf.cookie);
   ST.zl1 = zlG.data.zahlung;
-  check(zlG.status === 201 && /zahlung\.html\?z=zl_/.test(zlG.data.link) && /Klarna/.test(zlG.data.whatsappText), "Zahlungslink erstellt, WhatsApp-Text nennt Klarna", `${ST.zl1?.id}`);
+  check(zlG.status === 201 && /\/z\/zl_/.test(zlG.data.link) && /Klarna/.test(zlG.data.whatsappText), "Zahlungslink (Kurzlink /z/<id>) erstellt, WhatsApp-Text nennt Klarna", `${ST.zl1?.id}`);
+  // Link-Vorschau in WhatsApp: Studio + Betrag, Klarna nur als Name, kein Kundenname
+  const vorschau = await (await fetch(zlG.data.link, { headers: { "user-agent": "WhatsApp/2.24.21.80 A" } })).text();
+  const og = (p) => (vorschau.match(new RegExp(`<meta property="${p}" content="([^"]*)"`)) || [])[1] || "";
+  check(ST.rf.firma && og("og:title") === `${ST.rf.firma} · 1.500,00 €` && /Klarna verfügbar/.test(og("og:description")) && !/Raten|später|Kreditaufnahme/i.test(vorschau) && !/Lena/.test(vorschau) && /bild\.png\?v=/.test(og("og:image")),
+    "WhatsApp-Vorschau des Links: „<Studio> · 1.500,00 €“, „Klarna verfügbar“ ohne Raten-Aussage, kein Kundenname, Vorschaubild", og("og:title") + " | " + og("og:description"));
   // Kunde öffnet den Link
   const pub = await json(`/api/pay?z=${ST.zl1.id}`);
   check(pub.status === 200 && pub.data.zahlung.betragCent === 150000 && pub.data.zahlung.zahlarten[0] === "card", "Kundenseite: Betrag stimmt, Karte steht zuerst", `${pub.data.zahlung?.zahlarten}`);
@@ -851,6 +856,8 @@ await abschnitt("17 Recht (27.10.2026): Klarna-Stichtag 20.11.2026 für Risikofr
   check(JSON.stringify(inf.zahlung.zahlarten) === '["card"]' && inf.studio.klarna === false, "Ab dem Stichtag (20.11. 00:00): Risikofrei zeigt nur Karte/Wallets, kein Klarna", `${inf.zahlung.zahlarten} klarna=${inf.studio.klarna}`);
   check(JSON.stringify(st1.pmt) === '["card"]' && st1.cs.payment_intent_data?.transfer_data?.destination === ST.rf.konto, "Checkout nur mit Karte (weiter als Destination Charge, nur ohne Klarna)", `${st1.pmt}`);
   check(!/Klarna|Raten/.test(nach.whatsappText) && /Karte, Apple Pay oder Google Pay/.test(nach.whatsappText), "WhatsApp-Text für Kunden: keine Raten-Werbung, wo Klarna fehlt", nach.whatsappText.slice(0, 80).replace(/\n/g, " "));
+  const nachVorschau = await (await fetch(`${BASE}/z/${nach.zahlung.id}`, { headers: { "user-agent": "WhatsApp/2.24.21.80 A" } })).text();
+  check(!/Klarna|Raten/.test(nachVorschau) && /sicher bezahlen per Karte, Apple Pay oder Google Pay/.test(nachVorschau), "Link-Vorschau ab dem Stichtag (Risikofrei): ohne Klarna", "");
   const vorLink = await starte(vor.zahlung.id);
   check(JSON.stringify(vorLink.pmt) === '["card"]', "Vor dem Stichtag erstellter Link, nach dem Stichtag bezahlt: ohne Klarna", `${vorLink.pmt}`);
   const portal = (await json("/api/portal", {}, ST.rf.cookie)).data;
@@ -1024,7 +1031,7 @@ await abschnitt("18 Paket Risikofrei geschlossen (26.10.2026): Neukunden gesperr
     const pt = await json("/api/portal", {}, best.cookie);
     check(pt.status === 200 && pt.data.studio.paket === "risikofrei" && pt.data.studio.provisionProzent === 10 && pt.data.studio.modell === "provision", "Bestandsstudio: Dashboard lädt, Paket Risikofrei, 10 %", `HTTP ${pt.status} ${pt.data.studio?.paket}`);
     const zl = await post("/api/portal/zahlung", { betrag: "1000", kunde: "Bestandskunde", email: "bk@kunde.test", beschreibung: "Unterarm" }, best.cookie);
-    check(zl.status === 201 && /zahlung\.html\?z=zl_/.test(zl.data.link), "Bestandsstudio: Zahlungslink erstellen", `${zl.status}`);
+    check(zl.status === 201 && /\/z\/zl_/.test(zl.data.link), "Bestandsstudio: Zahlungslink erstellen", `${zl.status}`);
     const stt = await post("/api/pay", { z: zl.data.zahlung.id, inhaltOk: true });
     const cs18 = await lastSession(); const pd18 = cs18.payment_intent_data || {};
     check(stt.status === 200 && pd18.transfer_data?.destination === eb.konto && Number(pd18.application_fee_amount) === 10000, "Bestandsstudio: Checkout als Destination Charge, Provision 100,00 € (10 % von 1.000 €)", `fee=${pd18.application_fee_amount}`);

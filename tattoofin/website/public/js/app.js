@@ -216,7 +216,7 @@
     var bez = ["bezahlt", "erstattet", "rueckgebucht"].indexOf(z.status) >= 0;
     var tf = z.status === "rueckgebucht" ? 0 : Math.max(0, (z.gebuehrBruttoCent || 0) - (z.gebuehrErstattetCent || 0));
     var rest = z.betragCent - (z.erstattetCent || 0);
-    var zl = location.origin + "/zahlung.html?z=" + z.id;
+    var zl = location.origin + "/z/" + z.id;
     var anz = z.art === "anzahlung" || z.anzahlung;
     var zeilen = [["Projekt", e(z.beschreibung || "")], z.sitzungen ? ["Sitzungen", e(z.sitzungen)] : null, ["Art", anz ? "Anzahlung" : z.art === "zahlseite" ? "über deine Zahlseite" : "Projektpreis"],
       ["Erstellt", dat(z.createdAt)], bez ? ["Bezahlt am", dat(z.bezahltAm)] : null, z.zahlartText ? ["Zahlart", e(z.zahlartText)] : null,

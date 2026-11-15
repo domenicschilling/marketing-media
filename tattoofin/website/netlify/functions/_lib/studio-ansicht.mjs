@@ -4,6 +4,8 @@ import { hatUmstellungsangebot, connectUrl, darfKassieren, anzahlungsbedingungen
 import { gutscheinStatus, gutscheinUrl } from "./gutschein.mjs";
 
 export const zahlseite = (s) => `${CFG.siteUrl}/zahlen/${s.slug}`;
+// Kurzer Zahlungslink zum Teilen (seit 15.11.2026, mit Link-Vorschau, netlify/functions/teilen.mjs). /zahlung.html?z=<id> bleibt gültig.
+export const zahlungsLink = (id) => `${CFG.siteUrl}/z/${id}`;
 // Zahlung für die Ausgabe an das Studio (ohne interne Werte wie den Client-Schlüssel des Bezahlfelds, IP/Browser des Kunden)
 export const fuerStudio = (z) => {
   const { clientSecret, betragFuerPi, leistungToken, ...rest } = z;

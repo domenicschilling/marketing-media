@@ -272,10 +272,12 @@ try {
   await pA.waitForSelector("#l-out [data-copytext]");
   const zahlLink = await pA.getAttribute("#l-out [data-copytext]", "data-copytext");
   await pA.screenshot({ path: path.join(shots, "app-zahlungslink.png"), fullPage: true });
-  check(/zahlung\.html\?z=zl_/.test(zahlLink), "Zahlungslink erzeugt");
-  const lenaId = zahlLink.split("z=")[1];
+  check(new RegExp(`^${BASE}/z/zl_[A-Za-z0-9_-]+$`).test(zahlLink), "Zahlungslink erzeugt (Kurzlink /z/<id>)", zahlLink);
+  const lenaId = zahlLink.split("/z/")[1];
   const pK = await neueSeite();
   await pK.goto(zahlLink);
+  await pK.waitForURL(/zahlung\.html\?z=zl_/);
+  check(pK.url() === `${BASE}/zahlung.html?z=${lenaId}`, "Kurzlink führt im Browser sofort zur Zahlseite", pK.url());
   await pK.waitForFunction(() => document.getElementById("betrag").textContent.includes("1.500"));
   await pK.click("#weiter");
   check((await pK.textContent("#alert")).includes("Projekt und Betrag"), "Ohne Inhalts-Häkchen geht es nicht weiter");
@@ -300,6 +302,7 @@ try {
   const lenaZ = det.zahlungen.find((z) => z.id === lenaId);
   check(lenaZ?.zahlart === "klarna" && lenaZ?.kundeBestaetigt?.inhalt?.includes("1.500,00 €"), "Zahlart Klarna erkannt, Inhalts-Bestätigung mit Zeitstempel gespeichert");
   await pK.goto(zahlLink);
+  await pK.waitForURL(/zahlung\.html\?z=zl_/);
   await pK.waitForSelector(".alert-a.ok");
   check(true, "Bereits bezahlter Link zeigt Hinweis statt erneuter Zahlung");
 
@@ -423,10 +426,11 @@ try {
     await pA.waitForSelector("#g-out [data-copytext]");
     await pA.screenshot({ path: path.join(shots, "app-gutschein-link.png"), fullPage: true });
     const gsLink = await pA.getAttribute("#g-out [data-copytext]", "data-copytext");
-    const gsId = gsLink.split("z=")[1];
-    check(/zahlung\.html\?z=zl_/.test(gsLink), "Gutschein-Link erstellt");
+    const gsId = gsLink.split("/z/")[1];
+    check(/\/z\/zl_/.test(gsLink), "Gutschein-Link erstellt (Kurzlink /z/<id>)");
     check((await api(pA, "/api/portal/zahlung", { method: "POST", body: { art: "gutschein", betrag: "100", kunde: "Ohne Mail" } })).status === 400, "Gutschein ohne Käufer-E-Mail wird abgelehnt");
     await pK.goto(gsLink);
+    await pK.waitForURL(/zahlung\.html\?z=zl_/);
     await pK.waitForFunction(() => document.getElementById("betrag").textContent.includes("150"));
     check((await pK.textContent("#sub")).includes("Wertgutschein für Max") && (await pK.textContent("#inhalt-text")).includes("Wertgutschein über 150,00 €"), "Kaufseite: Wertgutschein für Max, Häkchen-Text passt");
     check(!/Kreditaufnahme/.test(await pK.textContent("#fuss-raten")), "Kaufseite Gutschein: keine Raten-Hinweise (nur Karte)");
