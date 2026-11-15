@@ -47,6 +47,8 @@ export const CFG = {
   // Seit 15.11.2026 (Entscheidung Domenic): gleicher Preis wie in der App, 49,90 € inkl. MwSt. = 4193 netto (+797 USt. = 4990), ohne Gratiszeit.
   // Vorher 4900 (49 € netto). Bestandskunden behalten ihren Preis: er steht je Studio in s.monatNetto und im Stripe-Abo.
   monatNetto: Number(env("MONAT_NETTO_CENT", 4193)),
+  // Ersatzwert für Monatlich-Altdatensätze ohne gespeichertes s.monatNetto (alter Preis 49 € netto); gleicher Wert wie in public/js/app.js und portal.js
+  monatNettoAlt: 4900,
   // Einmalzahlung: Nutzungszusage (Anbieter kündigt ordentlich frühestens nach so vielen Jahren ab Inbetriebnahme)
   nutzungJahre: Number(env("NUTZUNG_JAHRE", 5)),
   provisionProzent: Number(env("PROVISION_PROZENT", 10)),

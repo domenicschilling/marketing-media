@@ -157,7 +157,7 @@ export default handler(async (req) => {
       if (s.modell !== "provision") return fail("Nur für Studios im Paket Risikofrei.", 409);
       const b = await body(req);
       const monatNetto = Math.round(Number(b.monatNetto) || 2900);
-      if (monatNetto < 100 || monatNetto > CFG.monatNetto) return fail("Preis prüfen (Cent, höchstens der normale Monatspreis).");
+      if (monatNetto < 100 || monatNetto >= CFG.monatNetto) return fail("Preis prüfen (Cent, muss unter dem normalen Monatspreis liegen, die Mail verspricht einen günstigeren Preis).");
       const antwortBis = clean(b.antwortBis, 10) || "2026-11-16";
       s.umstellung = { ...(s.umstellung || {}), monatNetto, antwortBis, angebotAm: now() };
       await saveStudio(s);

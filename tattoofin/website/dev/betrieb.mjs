@@ -1110,6 +1110,9 @@ await abschnitt("19 Altstudio stellt um: Zustimmung, 29 €, neues eigenes Konto
   const ohne = await post("/api/portal/umstellung", { unterzeichner: "Alex Muster", akzeptiert: { vertrag: true, avv: true, unternehmer: true, kmu: true } }, a.cookie);
   check(ohne.status === 409, "Ohne Angebot keine Umstellung", `HTTP ${ohne.status}`);
   const mailsVor = mailsAn("umstellung@betrieb.test").length;
+  // Angebot muss unter dem neuen Monatspreis liegen, die Mail verspricht „den günstigeren Preis“
+  const gleich = await admin(`studio/${a.id}/umstellung`, { body: { monatNetto: 4193 } });
+  check(gleich._status === 400 && mailsAn("umstellung@betrieb.test").length === mailsVor, "Angebot zum normalen Preis (4193) wird abgelehnt, „günstiger“ stimmt immer", `HTTP ${gleich._status}`);
   const ang = await admin(`studio/${a.id}/umstellung`, { body: { monatNetto: 2900 } });
   check(ang.ok && ang.gesendet === false && /29,00 €|29 €/.test(ang.html) && /Achtung! Kreditaufnahme kostet Geld/.test(ang.html) && mailsAn("umstellung@betrieb.test").length === mailsVor, "Angebot: nur Vorschau, keine Mail ohne senden:true, Preis + Pflichtsatz im Text", ang.betreff);
   const dash = (await json("/api/portal", {}, a.cookie)).data;
@@ -1205,6 +1208,12 @@ await abschnitt("20 Preis seit 15.11.2026: 49,90 € inkl. MwSt. (41,93 € nett
   check(bd.monatNetto === 4900 && bd.vertrag?.monatNetto === 4900 && bd.vertrag?.version === "2026-12", "Bestandsstudio: monatNetto 4900 und alte Vertragsfassung bleiben", `${bd.monatNetto}/${bd.vertrag?.version}`);
   const m1 = M.aboGestartet(bestand, { betragCent: 5831 }), t1 = m1.html + m1.text;
   check(/58,31 € im Monat inkl\. MwSt\. \(49,00 € netto\)/.test(t1) && !/41,93|49,90/.test(t1), "Bestandsstudio: Mail nennt weiter seinen Preis (49,00 € netto), nicht den neuen", "");
+  // Altdatensatz Monatlich ohne gespeichertes monatNetto: Mail nennt den alten Preis wie Portal/App (4900), nicht den neuen
+  const ohnePreis = { ...bestand, id: "st_ohne_preis", monatNetto: undefined };
+  const m0 = M.aboGestartet(ohnePreis, { betragCent: 5831 }), l0 = M.live(ohnePreis), t0 = m0.html + m0.text + l0.html + l0.text;
+  check(/58,31 € im Monat inkl\. MwSt\. \(49,00 € netto\)/.test(t0) && !/41,93|49,90/.test(t0), "Altdatensatz ohne monatNetto: Mail nennt 49,00 € netto, gleicher Ersatzwert wie Portal und App", "");
+  const appJs = fs.readFileSync(path.join(root, "public/js/app.js"), "utf8") + fs.readFileSync(path.join(root, "public/js/portal.js"), "utf8");
+  check((appJs.match(/s\.monatNetto \|\| 4900/g) || []).length >= 3 && (await import("../netlify/functions/_lib/config.mjs")).CFG.monatNettoAlt === 4900, "Ersatzwert 4900 einheitlich in Mails, Portal und App", "");
   const m2 = M.umstellungAngebot({ ...bestand, modell: "provision" }, { monatNetto: 2900, antwortBis: "2026-11-30", loginUrl: "x" });
   check(/29,00 € netto im Monat/.test(m2.html) && !/49,90/.test(m2.html), "Sonderpreis 29 € (Altstudio) bleibt in der Mail", "");
   check(JSON.stringify((await mockState()).subscriptions || {}) === subsVor, "Keine Änderung an bestehenden Stripe-Abos", "");

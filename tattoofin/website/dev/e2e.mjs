@@ -640,6 +640,9 @@ try {
       const src = fs.readFileSync(path.join(root, f), "utf8");
       check(!/in 3 Raten|3 Teilzahlungen/i.test(src), `${f}: kein „In 3 Raten/Teilzahlungen“ (gibt es nur auf Anfrage bei Klarna)`);
     }
+    // Tippfehler aus der Preisumstellung 15.11.2026 („inkl. MwSt..“) darf nirgends stehen
+    const doppelPunkt = fs.readdirSync(path.join(root, "public")).filter((f) => f.endsWith(".html") && fs.readFileSync(path.join(root, "public", f), "utf8").includes("MwSt.."));
+    check(doppelPunkt.length === 0, "public/*.html: kein „MwSt..“ (doppelter Punkt)", doppelPunkt.join(", "));
   }
 
   // ---------------------------------------------------------------- K4: Auszahlungs-Korrektur (01.11.2026)

@@ -8,7 +8,7 @@ import { checkoutBranding } from "./branding.mjs";
 import { allStudios, zahlungenVon, saveZahlung, getZahlung, getAbrechnung, saveAbrechnung, saveStudio, getStudio, log, store, plaetzeAufraeumen, normEmail } from "./store.mjs";
 import { gutscheinAusstellen } from "./gutschein.mjs";
 import { gutscheinWort } from "./klarna-texte.mjs";
-import { monatsende, now, HttpError, clean } from "./util.mjs";
+import { monatsende, now, HttpError, clean, euro } from "./util.mjs";
 import { loginLink, zweckToken } from "./auth.mjs";
 import { pushAnStudio, pushEmpfaenger, mitZeitlimit, nachrichtZahlung, nachrichtAuszahlung, apnsAktiv } from "./push.mjs";
 import { geraeteAufraeumen } from "./app-geraete.mjs";
@@ -919,7 +919,7 @@ export async function umstellungAbschliessen(s, session) {
     await saveZahlung(z);
   }
   await notify(s, mails.umstellungBestaetigt(s, { loginUrl: loginLink(s.id) }));
-  await notifyAdmin("Altstudio umgestellt: festes Monatsabo, neues Stripe-Konto wird eingerichtet", s, { Preis: s.monatNetto / 100 + " € netto", AltesKonto: s.stripe.altKonto.accountId, Abo: s.stripe.subscriptionId });
+  await notifyAdmin("Altstudio umgestellt: festes Monatsabo, neues Stripe-Konto wird eingerichtet", s, { Preis: euro(s.monatNetto) + " netto", AltesKonto: s.stripe.altKonto.accountId, Abo: s.stripe.subscriptionId });
   await log("umstellung.fertig", { studioId: s.id, altKonto: s.stripe.altKonto.accountId });
   return true;
 }

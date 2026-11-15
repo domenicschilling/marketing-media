@@ -52,7 +52,7 @@ const modellText = (s) => {
   if (p.id === "geschenk") return "Geschenk: keine Einrichtungsgebühr, keine Grundgebühr, keine Provision. Du zahlst nur die normalen Gebühren von Stripe (bzw. Klarna) direkt an Stripe, Tattoofin verdient nichts daran.";
   // Beim Bestandskunden-Preis (umgestelltes Altstudio, s.stripe.altKonto) ist der Aufsteller nicht enthalten (config.aufstellerInklusive)
   const inkl = aufstellerInklusive(s) ? "Inklusive QR-Aufsteller aus Holz (Wert 29 €) und digitalem QR-Code." : "Digitaler QR-Code inklusive.";
-  if (p.id === "monatlich") return `Paket Monatlich: ${monatPreisText(s.monatNetto || CFG.monatNetto)}, danach nur die Zahlungsgebühren, die du direkt an Stripe zahlst. Keine Tattoofin-Provision, monatlich kündbar. ${inkl}`;
+  if (p.id === "monatlich") return `Paket Monatlich: ${monatPreisText(s.monatNetto || CFG.monatNettoAlt)}, danach nur die Zahlungsgebühren, die du direkt an Stripe zahlst. Keine Tattoofin-Provision, monatlich kündbar. ${inkl}`;
   if (p.id === "einmal" && s.paket === "einmal") return `Paket Einmalzahlung: ${euro(s.preisNetto)} netto einmalig (${euro(brutto(s.preisNetto))} inkl. USt.), danach keine Tattoofin-Gebühr mehr, nur die Zahlungsgebühren, die du direkt an Stripe zahlst. ${inkl}`;
   if (s.modell === "kauf") return `Kauf: Einrichtung ${euro(s.preisNetto)} netto einmalig (${euro(brutto(s.preisNetto))} brutto), keine monatliche Grundgebühr, keine Provision`;
   return `Paket Risikofrei: ${CFG.provisionProzent} % vom Zahlbetrag jeder Zahlung über Tattoofin, alles inklusive (Zahlungsgebühren und USt.), keine Einrichtungs- und keine Grundgebühr, monatlich kündbar. Digitaler QR-Code inklusive.`;
@@ -126,7 +126,7 @@ export const mails = {
   aboGestartet: (s, { betragCent, rechnungUrl }) => mk("Dein Paket Monatlich läuft. Danke!", {
     preheader: "Deine erste Monatszahlung ist eingegangen.",
     title: "Paket Monatlich gestartet ✅",
-    body: hallo(s) + p(`danke! Deine erste Monatszahlung über <b>${euro(betragCent)}</b> (inkl. USt.) ist da. Ab jetzt zahlst du ${monatPreisText(s.monatNetto || CFG.monatNetto)} und sonst nur die Zahlungsgebühren deiner Kunden-Zahlungen, direkt an Stripe. Tattoofin nimmt keine Provision.`) +
+    body: hallo(s) + p(`danke! Deine erste Monatszahlung über <b>${euro(betragCent)}</b> (inkl. USt.) ist da. Ab jetzt zahlst du ${monatPreisText(s.monatNetto || CFG.monatNettoAlt)} und sonst nur die Zahlungsgebühren deiner Kunden-Zahlungen, direkt an Stripe. Tattoofin nimmt keine Provision.`) +
       (rechnungUrl ? p(`Deine Rechnung: <a href="${esc(rechnungUrl)}">ansehen / herunterladen</a>. Jeden Monat bekommst du automatisch eine neue Rechnung per E-Mail.`) : "") +
       box("<b>Dein QR-Aufsteller aus Holz</b> (Wert 29 €) ist inklusive. Wir schicken ihn dir nach dem Go-live an die Studio-Adresse.") +
       p("Kündigen kannst du jederzeit zum Ende des laufenden Monats, mit einem Klick im Studio-Portal."),
@@ -248,7 +248,7 @@ export const mails = {
       ["Studio Kit", klarnaDauerhaft(s) ? "Fensteraufkleber, Flyer, Aufsteller und Social-Vorlagen im Portal unter „Studio Kit“" : null],
       s.zahlart === "geschenk" ? ["Abrechnung", "Keine Tattoofin-Gebühr. Zahlungsgebühren zahlst du direkt an Stripe."] :
       istAppAbo(s) ? ["Abrechnung", "Abo über deinen Apple-Account, kündbar in den Einstellungen deines Apple-Accounts. Zahlungsgebühren zahlst du direkt an Stripe."] :
-      s.paket === "monatlich" ? ["Abrechnung", `${monatPreisText(s.monatNetto || CFG.monatNetto)}, die Rechnung kommt automatisch per E-Mail. Zahlungsgebühren zahlst du direkt an Stripe.`] :
+      s.paket === "monatlich" ? ["Abrechnung", `${monatPreisText(s.monatNetto || CFG.monatNettoAlt)}, die Rechnung kommt automatisch per E-Mail. Zahlungsgebühren zahlst du direkt an Stripe.`] :
       [s.modell === "kauf" && s.zahlart !== "geschenk" && s.paket !== "monatlich" ? "Geld-zurück-Garantie" : "Abrechnung", s.modell === "kauf" && s.zahlart !== "geschenk" && s.paket !== "monatlich" ? `bis ${datum(new Date(Date.now() + CFG.garantieTage * 864e5).toISOString())}` : `Stripe zahlt dir automatisch ${100 - provisionSatz(s)} % jeder Zahlung aus, die Rechnung über die ${provisionSatz(s)} % kommt einmal im Monat`],
     ]) + box("Wichtig fürs Team: keine Raten oder Zinsen versprechen. Einfach sagen: „Du kannst beim Bezahlen schauen, welche Zahlungsoptionen dir angeboten werden.“"),
     cta: "Zur Tattoofin-App", ctaUrl: `${CFG.siteUrl}/app.html`,

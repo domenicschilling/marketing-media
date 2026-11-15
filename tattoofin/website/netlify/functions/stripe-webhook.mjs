@@ -257,7 +257,7 @@ export default handler(async (req) => {
           }
           await saveStudio(s);
           await notify(s, mails.anmeldung(s, { loginUrl: loginLink(s.id), connectUrl: einrichtungUrl(s) }));
-          await notify(s, mails.aboGestartet(s, { betragCent: o.amount_total ?? brutto(s.monatNetto || CFG.monatNetto), rechnungUrl }));
+          await notify(s, mails.aboGestartet(s, { betragCent: o.amount_total ?? brutto(s.monatNetto || CFG.monatNettoAlt), rechnungUrl }));
           await notifyAdmin("Neuer Abschluss (Paket Monatlich) 🎉 – QR-Aufsteller bestellen", s, { ...paketDetails(s, { aufsteller: true }), Erste_Zahlung: euroText(o.amount_total || 0) + " brutto", Abo: s.stripe.subscriptionId });
           await log("abo.gestartet", { studioId: s.id, subscriptionId: s.stripe.subscriptionId });
           break;
