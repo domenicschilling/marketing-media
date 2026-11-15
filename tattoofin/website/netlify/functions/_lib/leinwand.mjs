@@ -1,10 +1,10 @@
 // Kleine Zeichenfläche ohne zusätzliche Abhängigkeit: Flächen (Pfade, Kreise, abgerundete Rechtecke) mit Kantenglättung,
-// Text aus den Glyphen-Umrissen in /assets/aufsteller-glyphen.json (DM Sans 700/500 + Tattoofin-Wortmarke), PNG-Bilder
+// Text aus den Glyphen-Umrissen in /assets/schrift-glyphen.json (DM Sans 700/500 + Tattoofin-Wortmarke), PNG-Bilder
 // einsetzen und als PNG ausgeben (beides in _lib/png.mjs: Dekodieren über @pdf-lib/upng, Schreiben über node:zlib).
 // Verwendet für die Link-Vorschau der Zahlungslinks (tattoofin.de/z/<id>, _lib/vorschaubild.mjs).
 // Rasterung: Flächenanteil je Pixel über Linien-Akkumulation (Verfahren wie font-rs), Füllregel „nonzero“ (Betrag, höchstens 1).
 import { pngLaden, pngKodieren } from "./png.mjs";
-import GLYPHEN from "../../../public/assets/aufsteller-glyphen.json" with { type: "json" };
+import GLYPHEN from "../../../public/assets/schrift-glyphen.json" with { type: "json" };
 
 export { pngLaden };
 const hex = (f) => { const m = /^#?([0-9a-f]{6})$/i.exec(f || ""); const n = m ? parseInt(m[1], 16) : 0; return [n >> 16, (n >> 8) & 255, n & 255]; };

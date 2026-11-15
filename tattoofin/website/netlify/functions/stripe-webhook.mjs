@@ -35,8 +35,8 @@ async function studioFuer(obj) {
 // dort nichts (kein Status, keine Rechnungsmails). Nur Admin-Mail. true = Ereignis erledigt.
 // Ausnahme: Ein Stripe-Abo, das für ein App-Studio entstanden ist (Web-Checkout kurz vor dem Wechsel in die App bezahlt), wird sofort
 // gekündigt, damit das Studio nicht doppelt zahlt (Apple + Stripe). Die erste Zahlung erstattet der Admin.
-// Ausnahme 2: Der QR-Aufsteller (körperliche Ware) läuft auch bei App-Studios über Stripe (DSX-Konto). Ereignisse, die nachweislich zu
-// seinem Kauf gehören (metadata typ "aufsteller" + dieses Studio + ein begonnener Kauf), sind normal → still erledigt, keine Alarm-Mail.
+// Ausnahme 2: Der QR-Aufsteller (körperliche Ware, eingestellt 15.11.2026) lief auch bei App-Studios über Stripe (DSX-Konto). Ereignisse
+// eines vorher begonnenen Kaufs, die nachweislich dazu gehören (metadata typ "aufsteller" + dieses Studio + ein begonnener Kauf), sind normal → still erledigt, keine Alarm-Mail.
 // checkout.session.completed des Aufstellers verarbeitet der Aufrufer VOR appleWaechter (aufstellerBezahlt).
 const gehoertZumAufsteller = (s, o) => o?.metadata?.typ === "aufsteller" && o.metadata.studioId === s.id && Boolean(s.aufsteller?.kauf?.csId);
 async function appleWaechter(s, event) {
@@ -262,7 +262,7 @@ export default handler(async (req) => {
     switch (event.type) {
       case "checkout.session.completed": {
         const s = await studioFuer(o);
-        // QR-Aufsteller einzeln gekauft (29 € netto): nur vermerken + Admin-Mail, Studio-Status bleibt unverändert
+        // QR-Aufsteller (alt, vor dem 15.11.2026 begonnener Checkout): nur vermerken + Admin-Mail, Studio-Status bleibt unverändert
         if (o.metadata?.typ === "aufsteller") { await aufstellerBezahlt(s, o); break; }
         // Altstudio stellt auf den festen Monatspreis um
         if (await appleWaechter(s, event)) break;
@@ -279,7 +279,7 @@ export default handler(async (req) => {
           await saveStudio(s);
           await notify(s, mails.anmeldung(s, { loginUrl: loginLink(s.id), connectUrl: einrichtungUrl(s) }));
           await notify(s, mails.aboGestartet(s, { betragCent: o.amount_total ?? brutto(s.monatNetto || CFG.monatNettoAlt), rechnungUrl }));
-          await notifyAdmin("Neuer Abschluss (Paket Monatlich) 🎉 – QR-Aufsteller bestellen", s, { ...paketDetails(s, { aufsteller: true }), Erste_Zahlung: euroText(o.amount_total || 0) + " brutto", Abo: s.stripe.subscriptionId });
+          await notifyAdmin("Neuer Abschluss (Paket Monatlich) 🎉", s, { ...paketDetails(s), Erste_Zahlung: euroText(o.amount_total || 0) + " brutto", Abo: s.stripe.subscriptionId });
           await log("abo.gestartet", { studioId: s.id, subscriptionId: s.stripe.subscriptionId });
           break;
         }
@@ -297,7 +297,7 @@ export default handler(async (req) => {
         if (s.aktion) await zaehleAktion();
         await notify(s, mails.anmeldung(s, { loginUrl: loginLink(s.id), connectUrl: einrichtungUrl(s) }));
         await notify(s, mails.kaufBezahlt(s, { betragCent: o.amount_total ?? brutto(s.preisNetto), rechnungUrl }));
-        await notifyAdmin(s.paket === "einmal" ? "Einmalzahlung bezahlt 🎉 – QR-Aufsteller bestellen" : "Neuer Kauf bezahlt 🎉", s, { ...paketDetails(s, { aufsteller: true }), Betrag: euroText(o.amount_total || 0) + " brutto" });
+        await notifyAdmin(s.paket === "einmal" ? "Einmalzahlung bezahlt 🎉" : "Neuer Kauf bezahlt 🎉", s, { ...paketDetails(s), Betrag: euroText(o.amount_total || 0) + " brutto" });
         await log("kauf.bezahlt", { studioId: s.id });
         break;
       }
@@ -315,7 +315,7 @@ export default handler(async (req) => {
           s.stripe.paymentIntentId = o.payment_intent;
           await saveStudio(s);
           await notify(s, mails.kaufBezahlt(s, { betragCent: o.amount_paid, rechnungUrl: o.hosted_invoice_url }));
-          await notifyAdmin(s.paket === "einmal" ? "Rechnung Einmalzahlung bezahlt – QR-Aufsteller bestellen" : "Rechnung Setup bezahlt", s, { ...paketDetails(s, { aufsteller: true }), Betrag: (o.amount_paid / 100).toFixed(2) + " €" });
+          await notifyAdmin(s.paket === "einmal" ? "Rechnung Einmalzahlung bezahlt" : "Rechnung Setup bezahlt", s, { ...paketDetails(s), Betrag: (o.amount_paid / 100).toFixed(2) + " €" });
         }
         break;
       }

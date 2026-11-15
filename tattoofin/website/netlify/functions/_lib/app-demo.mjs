@@ -25,7 +25,7 @@ export async function demoStudioAnlegen({ email = "app-review@tattoofin.de" } = 
     modell: "kauf", paket: "monatlich", zahlart: "abo", monatNetto: CFG.monatNetto, teamEmails: [],
     vertrag: s.vertrag || { version: CFG.vertragVersion, akzeptiertAm: tageZurueck(60), name: "Demo Studio" },
     stripe: {}, kuendigung: null,
-    // QR-Aufsteller bei jedem Anlegen zurücksetzen: Der Prüfer soll „Bestellen“ wieder sehen (nicht „Bestellt“ vom letzten Durchgang)
+    // QR-Aufsteller (eingestellt 15.11.2026): alte Testdaten des Demo-Studios bei jedem Anlegen entfernen
     aufsteller: null,
   });
   delete s.loeschAnfrage;

@@ -38,7 +38,7 @@ FRAGEN = [
     ("Was kostet es genau?",
      "49,90 € im Monat inkl. MwSt. (41,93 € netto), keine Provision. Dazu Stripe-Gebühren je Zahlung: Karte ab 1,5 % + 0,25 €, Klarna ab 2,99 % + 0,35 €. Der erste Monat ist beim Start fällig.", False),
     ("Wie kündige ich? Und wenn Stripe mich ablehnt?",
-     "Im Portal, zum Ende des Abrechnungsmonats. Stripe-Konto und Aufsteller bleiben bei dir, Zahlungslinks und QR-Code enden. Lehnt Stripe dein Studio endgültig ab, bekommst du die gezahlten Monate zurück, außer bei falschen Angaben oder Pflichtverletzung.", False),
+     "Im Portal, zum Ende des Abrechnungsmonats. Dein Stripe-Konto bleibt bei dir, Zahlungslinks und QR-Code enden. Lehnt Stripe dein Studio endgültig ab, bekommst du die gezahlten Monate zurück, außer bei falschen Angaben oder Pflichtverletzung.", False),
     ("Wann kommt das Geld, und was brauche ich?",
      "Stripe zahlt auf dein Bankkonto aus, nach den Fristen von Stripe. Du brauchst dein Studio als Unternehmen, ein Bankkonto und deinen Ausweis.", False),
 ]
@@ -66,7 +66,7 @@ def jsonld(seite):
          "provider": {"@id": "https://tattoofin.de/#org"}, "areaServed": {"@type": "Country", "name": "Deutschland"},
          "audience": {"@type": "BusinessAudience", "name": "Tattoo-Studios"},
          "offers": [{"@type": "Offer", "name": "Paket Monatlich",
-                     "description": "49,90 € im Monat inkl. MwSt. (41,93 € netto), keine Provision, danach nur die Zahlungsgebühren von Stripe. QR-Aufsteller aus Holz im Paket. Monatlich kündbar.",
+                     "description": "49,90 € im Monat inkl. MwSt. (41,93 € netto), keine Provision, danach nur die Zahlungsgebühren von Stripe. QR-Code zum Ausdrucken im Paket. Monatlich kündbar.",
                      "price": "49.90", "priceCurrency": "EUR",
                      "priceSpecification": {"@type": "UnitPriceSpecification", "price": "49.90", "priceCurrency": "EUR", "valueAddedTaxIncluded": True, "unitText": "Monat",
                                             "referenceQuantity": {"@type": "QuantitativeValue", "value": 1, "unitCode": "MON"}}}]},
@@ -306,7 +306,7 @@ def bauen(seite):
         </div>
         <div class="stueck-text">
           <h3>QR an der Theke.</h3>
-          <p>Holz-Aufsteller mit deinem Studionamen. Ist dabei.</p>
+          <p>Dein QR-Code zum Ausdrucken, als Aufkleber oder Flyer. Ist dabei.</p>
         </div>
       </article>
       <article class="stueck nur-motiv" id="nr5">
@@ -359,7 +359,7 @@ def bauen(seite):
           <li>Keine Provision</li>
           <li>Keine Einrichtungsgebühr</li>
           <li>Monatlich kündbar</li>
-          <li>Holz-Aufsteller dabei</li>
+          <li>QR-Code zum Ausdrucken</li>
         </ul>
         <div class="wege">{start("preis")}<a class="wa" href="/vertrag.html">Vertrag vorab lesen</a></div>
       </div>

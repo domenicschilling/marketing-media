@@ -57,7 +57,7 @@
         TF.monatPreis(C.monatNetto, C.ustProzent) + ", keine Einrichtungsgebühr.",
         "Danach nur die Zahlungsgebühren von Stripe (je nach Zahlart ca. 1,5–3 % plus fester Betrag je Zahlung, laut Preisliste von Stripe), die du direkt an Stripe zahlst. 0 % Tattoofin-Provision.",
         "Alles läuft über dein eigenes Zahlungskonto bei Stripe. Rückbuchungen und ihre Gebühren laufen direkt über dieses Konto.",
-        "Inklusive QR-Aufsteller aus Holz für deine Theke (Wert 29 €) und digitalem QR-Code.",
+        "Inklusive digitalem QR-Code deiner Zahlseite, zum Ausdrucken für Theke und Flyer.",
         "Monatlich kündbar zum Ende des laufenden Abrechnungsmonats, keine Mindestlaufzeit. Bereits bezahlte Monate werden nicht anteilig erstattet.",
       ];
     } else {
@@ -67,7 +67,7 @@
       sub.textContent = z === "rechnung" ? "Zahlungspflichtig bestellen (Rechnung)" : "Zahlungspflichtig bestellen & bezahlen";
       kurz = [
         "Einmalig " + TF.euro(C.kaufNetto) + " netto. Danach keine Tattoofin-Gebühr mehr, nur die Zahlungsgebühren, die du direkt an Stripe zahlst.",
-        "Inklusive QR-Aufsteller aus Holz für deine Theke (Wert 29 €) und digitalem QR-Code.",
+        "Inklusive digitalem QR-Code deiner Zahlseite, zum Ausdrucken für Theke und Flyer.",
         C.garantieTage + " Tage Geld-zurück-Garantie ab Go-live (Kündigung in dieser Zeit, § 6 Vertrag).",
         "Alles läuft über dein eigenes Zahlungskonto bei Stripe. Rückbuchungen und ihre Gebühren laufen direkt über dieses Konto.",
         z === "rechnung" ? "Die Einrichtung startet nach Zahlungseingang." : "Nach der Zahlung legen wir sofort los.",
@@ -150,7 +150,7 @@
         firma: c.firma, adresse: c.adresse,
         vertragVersion: c.vertragVersion, gerichtsstand: c.gerichtsstand, geschaeftsfuehrer: c.geschaeftsfuehrer, registergericht: c.registergericht, ustid: c.ustid,
         email: c.email, marke: c.marke, produkt: c.produkt, kuendigungProvision: "jederzeit zum Monatsende", websiteUrl: location.origin, setupSupportTage: c.setupSupportTage,
-        monatPreis: TF.euro(c.monatNetto), monatPreisBrutto: TF.euro(Math.round(c.monatNetto * (100 + c.ustProzent) / 100), true), nutzungJahre: c.nutzungJahre, aufstellerPreis: TF.euro(c.aufstellerPreisNetto || 2900) };
+        monatPreis: TF.euro(c.monatNetto), monatPreisBrutto: TF.euro(Math.round(c.monatNetto * (100 + c.ustProzent) / 100), true), nutzungJahre: c.nutzungJahre };
       box.querySelectorAll("[data-cfg]").forEach(function (el) { if (map[el.dataset.cfg] !== undefined) el.textContent = map[el.dataset.cfg]; });
     });
   });

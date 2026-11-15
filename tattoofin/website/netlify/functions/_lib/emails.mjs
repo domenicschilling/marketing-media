@@ -1,5 +1,5 @@
 // Alle automatischen E-Mails (an Studios, Endkunden und intern). Jede Funktion liefert { subject, html, text }.
-import { CFG, provisionSatz, paketVon, aufstellerInklusive } from "./config.mjs";
+import { CFG, provisionSatz, paketVon } from "./config.mjs";
 import { PFLICHTSATZ_HTML } from "./klarna-texte.mjs";
 // Zyklischer Import (domain.mjs importiert emails.mjs): klarnaDauerhaft wird nur beim Aufruf benutzt, nicht beim Laden
 import { klarnaDauerhaft } from "./domain.mjs";
@@ -42,7 +42,7 @@ const rows = (pairs) => `<table role="presentation" cellpadding="0" cellspacing=
 const hallo = (s) => p(`Hey ${esc(s.inhaber?.split(" ")[0] || s.firma)},`);
 // Abo über Apple (Anmeldung in der App): nie Web-Preis, nie Link zur Web-Anmeldung, nie „Paket wechseln“ (Apple 3.1.3)
 const istAppAbo = (s) => s?.abrechnung === "apple" || s?.paket === "app";
-// Vertragstext: App-Studios bekommen die App-Fassung (?app=1: ohne Web-Preis, Stripe-Einzug und Aufsteller), die sie akzeptiert haben
+// Vertragstext: App-Studios bekommen die App-Fassung (?app=1: ohne Web-Preis und Stripe-Einzug), die sie akzeptiert haben
 const vertragLinks = (s) => { const q = istAppAbo(s) ? "?app=1" : ""; return `<a href="${CFG.siteUrl}/vertrag.html${q}">Vertrag</a> · <a href="${CFG.siteUrl}/avv.html${q}">AVV</a>`; };
 const APPLE_KUENDIGEN = "Wichtig: Dein Abo läuft über Apple. Kündige es zusätzlich in den Einstellungen deines Apple-Accounts unter Abos, sonst bucht Apple weiter ab. Erstattungen beantragst du direkt bei Apple.";
 const modellText = (s) => {
@@ -50,8 +50,8 @@ const modellText = (s) => {
   if (istAppAbo(s)) return "Tattoofin über die App: Abo über deinen Apple-Account zum Preis aus dem App Store. Verkäufer des Abos ist Apple, den Beleg mit ausgewiesener Umsatzsteuer bekommst du von Apple (Kaufhistorie deines Apple-Accounts), von Tattoofin kommt dafür keine eigene Rechnung. Keine Tattoofin-Provision. Die Gebühren für Kundenzahlungen zahlst du direkt an Stripe. Kündigen kannst du in den Einstellungen deines Apple-Accounts.";
   if (p.id === "geschenk" && s.sonderkondition) return `${s.sonderkondition}: keine Einrichtungsgebühr, keine Grundgebühr, keine Provision. Du zahlst nur die normalen Zahlungsgebühren von Stripe (bzw. Klarna) direkt an Stripe, Tattoofin verdient nichts daran.`;
   if (p.id === "geschenk") return "Geschenk: keine Einrichtungsgebühr, keine Grundgebühr, keine Provision. Du zahlst nur die normalen Gebühren von Stripe (bzw. Klarna) direkt an Stripe, Tattoofin verdient nichts daran.";
-  // Beim Bestandskunden-Preis (umgestelltes Altstudio, s.stripe.altKonto) ist der Aufsteller nicht enthalten (config.aufstellerInklusive)
-  const inkl = aufstellerInklusive(s) ? "Inklusive QR-Aufsteller aus Holz (Wert 29 €) und digitalem QR-Code." : "Digitaler QR-Code inklusive.";
+  // Seit 15.11.2026 ohne QR-Aufsteller aus Holz (eingestellt): in allen Paketen nur noch der digitale QR-Code
+  const inkl = "Digitaler QR-Code inklusive.";
   if (p.id === "monatlich") return `Paket Monatlich: ${monatPreisText(s.monatNetto || CFG.monatNettoAlt)}, danach nur die Zahlungsgebühren, die du direkt an Stripe zahlst. Keine Tattoofin-Provision, monatlich kündbar. ${inkl}`;
   if (p.id === "einmal" && s.paket === "einmal") return `Paket Einmalzahlung: ${euro(s.preisNetto)} netto einmalig (${euro(brutto(s.preisNetto))} inkl. USt.), danach keine Tattoofin-Gebühr mehr, nur die Zahlungsgebühren, die du direkt an Stripe zahlst. ${inkl}`;
   if (s.modell === "kauf") return `Kauf: Einrichtung ${euro(s.preisNetto)} netto einmalig (${euro(brutto(s.preisNetto))} brutto), keine monatliche Grundgebühr, keine Provision`;
@@ -118,7 +118,7 @@ export const mails = {
   kaufBezahlt: (s, { betragCent, rechnungUrl }) => mk("Zahlung erhalten. Danke!", {
     preheader: s.paket === "einmal" ? "Deine Einmalzahlung für Tattoofin ist eingegangen." : "Deine Zahlung für das Tattoofin Setup ist eingegangen.",
     title: "Zahlung erhalten ✅",
-    body: hallo(s) + p(`wir haben deine Zahlung über <b>${euro(betragCent)}</b> erhalten. ${s.paket === "einmal" ? "Ab jetzt gibt es keine Tattoofin-Gebühr mehr, du zahlst nur noch die Zahlungsgebühren direkt an Stripe. Dein QR-Aufsteller aus Holz (Wert 29 €) ist inklusive, wir schicken ihn dir nach dem Go-live." : "Es gibt keine monatliche Grundgebühr und keine Provision."} Die Betreuung bleibt kostenlos.`) +
+    body: hallo(s) + p(`wir haben deine Zahlung über <b>${euro(betragCent)}</b> erhalten. ${s.paket === "einmal" ? "Ab jetzt gibt es keine Tattoofin-Gebühr mehr, du zahlst nur noch die Zahlungsgebühren direkt an Stripe." : "Es gibt keine monatliche Grundgebühr und keine Provision."} Die Betreuung bleibt kostenlos.`) +
       (rechnungUrl ? p(`Deine Rechnung: <a href="${esc(rechnungUrl)}">ansehen / herunterladen</a>`) : "") +
       box(`<b>Zufriedenheitsgarantie:</b> ${CFG.garantieTage} Tage ab Go-live. Passt es nicht, bekommst du dein Geld zurück.`),
   }),
@@ -128,7 +128,7 @@ export const mails = {
     title: "Paket Monatlich gestartet ✅",
     body: hallo(s) + p(`danke! Deine erste Monatszahlung über <b>${euro(betragCent)}</b> (inkl. USt.) ist da. Ab jetzt zahlst du ${monatPreisText(s.monatNetto || CFG.monatNettoAlt)} und sonst nur die Zahlungsgebühren deiner Kunden-Zahlungen, direkt an Stripe. Tattoofin nimmt keine Provision.`) +
       (rechnungUrl ? p(`Deine Rechnung: <a href="${esc(rechnungUrl)}">ansehen / herunterladen</a>. Jeden Monat bekommst du automatisch eine neue Rechnung per E-Mail.`) : "") +
-      box("<b>Dein QR-Aufsteller aus Holz</b> (Wert 29 €) ist inklusive. Wir schicken ihn dir nach dem Go-live an die Studio-Adresse.") +
+      box("<b>Dein QR-Code</b> ist dabei: im Portal unter Werbung als Bild speichern und ausdrucken, zum Beispiel als Aufkleber für die Theke.") +
       p("Kündigen kannst du jederzeit zum Ende des laufenden Monats, mit einem Klick im Studio-Portal."),
   }),
 
@@ -245,7 +245,7 @@ export const mails = {
       ["Zahlungslink erstellen", `<a href="${CFG.siteUrl}/app.html#link">in deiner Tattoofin-App</a> (Betrag, Kunde, Projekt, fertig)`],
       ["Deine Zahlseite mit QR", `<a href="${CFG.siteUrl}/zahlen/${esc(s.slug)}">${CFG.siteUrl}/zahlen/${esc(s.slug)}</a>`],
       // Druckvorlagen haben eine Raten-Aussage: nur bei Klarna dauerhaft sichtbar (wie portal.mjs materialLinks)
-      ["Studio Kit", klarnaDauerhaft(s) ? "Fensteraufkleber, Flyer, Aufsteller und Social-Vorlagen im Portal unter „Studio Kit“" : null],
+      ["Studio Kit", klarnaDauerhaft(s) ? "Fensteraufkleber, Flyer und Social-Vorlagen im Portal unter „Studio Kit“" : null],
       s.zahlart === "geschenk" ? ["Abrechnung", "Keine Tattoofin-Gebühr. Zahlungsgebühren zahlst du direkt an Stripe."] :
       istAppAbo(s) ? ["Abrechnung", "Abo über deinen Apple-Account, kündbar in den Einstellungen deines Apple-Accounts. Zahlungsgebühren zahlst du direkt an Stripe."] :
       s.paket === "monatlich" ? ["Abrechnung", `${monatPreisText(s.monatNetto || CFG.monatNettoAlt)}, die Rechnung kommt automatisch per E-Mail. Zahlungsgebühren zahlst du direkt an Stripe.`] :
@@ -392,7 +392,7 @@ ${g.nachricht ? `<div style="font-style:italic;color:#5b6370;margin-top:10px">�
       p(`<b>Unser Angebot an dich:</b> Du wechselst auf dein eigenes Stripe-Konto. Dann bleibt Klarna möglich, soweit Klarna es freigibt, und das Geld läuft auf dein eigenes Konto. Statt 10 % zahlst du <b>${euro(monatNetto)} netto im Monat</b>. Neue Studios zahlen ${euro(CFG.monatNetto)} netto, du als Bestandskunde bekommst den günstigeren Preis. Dazu kommen die Zahlungsgebühren, die du direkt an Stripe zahlst (je nach Zahlart ca. 1,5–3 %). Du kannst monatlich kündigen.`) +
       p("<b>So geht's:</b> Im Studio-Bereich das Angebot bestätigen, den ersten Monat zahlen und dein neues Stripe-Konto einrichten, das dauert etwa 10 Minuten. Klarna schaltest du danach selbst in deinem Stripe-Konto ein. Stripe prüft das neue Konto meist in 1 bis 3 Werktagen. Bis zur Freigabe kannst du keine neuen Zahlungslinks nutzen, nimm dir dafür also am besten einen ruhigen Tag.") +
       box(`Wenn es für dich passt, entscheide dich bitte bis zum ${antwortBis.split("-").reverse().join(".")}, damit dein neues Konto zum 20.11. fertig ist. Wenn du nicht wechseln möchtest, ist das völlig in Ordnung. Dein Vertrag läuft dann erst einmal ohne Klarna weiter, und wir beenden ihn später mit der vertraglichen Frist, weil wir das alte Modell nicht fortführen. Dazu bekommst du vorher noch eine eigene Nachricht.`) +
-      p("<b>Noch ein Hinweis zu deiner Werbung:</b> Wenn du nach dem Wechsel mit Raten wirbst, muss ab dem 20.11. direkt daneben stehen: <b>Achtung! Kreditaufnahme kostet Geld.</b> Das gilt auch für Instagram, Flyer und Aufsteller. Wenn du nicht wechselst, nimm die Raten-Werbung bitte bis dahin heraus.") +
+      p("<b>Noch ein Hinweis zu deiner Werbung:</b> Wenn du nach dem Wechsel mit Raten wirbst, muss ab dem 20.11. direkt daneben stehen: <b>Achtung! Kreditaufnahme kostet Geld.</b> Das gilt auch für Instagram und Flyer. Wenn du nicht wechselst, nimm die Raten-Werbung bitte bis dahin heraus.") +
       p("Wenn du Fragen hast, antworte einfach auf diese Mail, wir helfen dir gern.<br><br>Viele Grüße<br>Dein Tattoofin-Team"),
     cta: "Angebot ansehen", ctaUrl: loginUrl,
   }),

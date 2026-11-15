@@ -122,7 +122,23 @@ async function signatur(p) {
 
 try {
   // ---------------------------------------------------------------- Startseite
-  console.log("Startseite: ein Preis (49,90 € inkl. MwSt.) + QR-Aufsteller, kein Risikofrei, keine Einmalzahlung");
+  console.log("Startseite: ein Preis (49,90 € inkl. MwSt.) + QR-Code zum Ausdrucken, kein Risikofrei, keine Einmalzahlung");
+  // QR-Aufsteller eingestellt (15.11.2026): keine öffentliche Seite nennt ihn mehr (sichtbarer Text ohne Kommentare/Skripte).
+  // Ausnahmen: archivierte Vertragsfassungen (vertrag-20*.html, unverändert) und die Datenschutzerklärung (nur der Hinweis „entfallen“).
+  {
+    const alle = [];
+    const lauf = (d) => { for (const f of fs.readdirSync(d, { withFileTypes: true })) { const x = path.join(d, f.name); if (f.isDirectory()) lauf(x); else if (/\.html$/.test(f.name)) alle.push(x); } };
+    lauf(path.join(root, "public"));
+    const sichtbar = (h) => h.replace(/<!--[\s\S]*?-->/g, "").replace(/<script[\s\S]*?<\/script>/gi, "").replace(/<style[\s\S]*?<\/style>/gi, "");
+    const treffer = alle.filter((f) => !/\/vertrag-20[^/]*\.html$/.test(f)).map((f) => [path.relative(path.join(root, "public"), f), sichtbar(fs.readFileSync(f, "utf8"))])
+      .map(([f, h]) => [f, f === "datenschutz.html" ? h.replace(/<li><b>QR-Aufsteller aus Holz \(entfallen seit 15\.11\.2026\):<\/b>[^<]*<\/li>/, "") : h])
+      .filter(([, h]) => /aufsteller|Gravur|Holzschild/i.test(h)).map(([f]) => f);
+    check(alle.length > 30 && treffer.length === 0, `Öffentliche Seiten (${alle.length} HTML-Dateien): kein QR-Aufsteller mehr (außer Vertragsarchiv und „entfallen“-Hinweis im Datenschutz)`, treffer.join(", "));
+    const jsTreffer = ["js/start.js", "js/app.js", "js/studios.js", "js/landing.js", "js/doc-defaults.js", "js/werbung-texte.js", "js/app-kit.js"].filter((f) => /Aufsteller aus Holz|Holz-Aufsteller|Wert 29 €/.test(fs.readFileSync(path.join(root, "public", f), "utf8")));
+    check(jsTreffer.length === 0 && !fs.existsSync(path.join(root, "public/js/aufsteller.js")) && !fs.existsSync(path.join(root, "public/aufsteller.html")), "Skripte der Website ohne Aufsteller-Texte; aufsteller.js und aufsteller.html gelöscht", jsTreffer.join(", "));
+    const cfgOeff = await (await fetch(BASE + "/api/config")).json();
+    check(!/aufsteller/i.test(JSON.stringify(cfgOeff)) && cfgOeff.vertragVersion === "2026-12d", "GET /api/config ohne Aufsteller-Preis/-Pakete, Vertrag 2026-12d");
+  }
   const p0 = await neueSeite();
   await p0.goto(BASE + "/");
   check((await p0.textContent("h1")).includes("für deine Kunden"), "Hero lädt");
@@ -174,7 +190,7 @@ try {
   await einrichtungEingebettet(pB);
   check(mailsAn("kauf@example.com").some((m) => m.subject.includes("Zahlung erhalten")), "E-Mail: Zahlung erhalten; danach direkt ins Dashboard");
   const mAdminKauf = mailsAn("domenicschilling@gmail.com").find((m) => m.subject.includes("Einmalzahlung bezahlt") && m.subject.includes("Ink Kauf"));
-  check(mAdminKauf && mAdminKauf.html.includes("/aufsteller.html?s=ink-kauf") && mAdminKauf.html.includes("Einmalzahlung"), "Admin-Mail Einmalzahlung: Paket + „QR-Aufsteller bestellen“ mit Link zur Gravurdatei");
+  check(mAdminKauf && !/Aufsteller|aufsteller\.html|Gravurdatei/.test(mAdminKauf.subject + mAdminKauf.html) && mAdminKauf.html.includes("Einmalzahlung"), "Admin-Mail Einmalzahlung: Paket, ohne QR-Aufsteller (eingestellt)");
 
   console.log("Rechnung, Abbruch, Fehlerfälle");
   const pC = await neueSeite();
@@ -215,19 +231,20 @@ try {
   const aboStudio = await studioPer("abo@example.com");
   check(aboStudio?.status === "einrichtung" && aboStudio?.paket === "Monatlich" && aboStudio?.provisionProzent === 0, "Abo-Studio in Einrichtung, Paket Monatlich, 0 % Provision");
   check(mailsAn("abo@example.com").some((m) => m.subject.includes("Monatlich")), "E-Mail: Paket Monatlich gestartet");
-  check(mailsAn("domenicschilling@gmail.com").some((m) => m.subject.includes("Paket Monatlich") && m.html.includes("aufsteller.html?s=ink-abo")), "Admin-Mail Monatlich: „QR-Aufsteller bestellen“ mit Gravurdatei-Link");
+  check(mailsAn("domenicschilling@gmail.com").some((m) => m.subject.includes("Paket Monatlich") && m.subject.includes("Ink Abo")) && !mailsAn("domenicschilling@gmail.com").some((m) => /Aufsteller|aufsteller\.html|Gravurdatei/.test(m.subject + m.html) && m.subject.includes("Ink Abo")), "Admin-Mail Monatlich: ohne QR-Aufsteller (eingestellt)");
+  check(!mailsAn("abo@example.com").some((m) => /Aufsteller/i.test(m.subject + m.html)), "Mails an das Abo-Studio: kein Aufsteller");
   check(Object.values((await mock("state")).accounts).find((a) => a.email === "abo@example.com")?.type === "standard", "Monatlich: eigenes Standard-Konto");
   const kAbo = await api(pD, "/api/portal/kuendigung", { method: "POST", body: { grund: "Test", garantie: true } });
   check(kAbo.data.status === "gekuendigt" && !kAbo.data.kuendigung?.garantie && Object.values((await mock("state")).subscriptions)[0]?.cancel_at_period_end === true, "Kündigung Monatlich: keine Garantie, Abo endet zum Periodenende");
   const zAbo = await api(pD, "/api/portal/kuendigung", { method: "DELETE" });
   check(zAbo.data.status !== "gekuendigt" && Object.values((await mock("state")).subscriptions)[0]?.cancel_at_period_end === false, "Kündigung zurückgenommen: Abo läuft weiter");
-  const aufApi = (await api(pD, "/api/aufsteller?s=ink-abo")).data;
-  check(aufApi.zahlseite?.endsWith("/zahlen/ink-abo") && aufApi.firma === "Ink Abo", "Aufsteller-API (eigene Sitzung): Zahlseite /zahlen/<studio>");
-  check((await fetch(`${BASE}/api/aufsteller?s=ink-abo`)).status === 403, "Aufsteller-API ohne Sitzung/signierten Link: 403");
-  const aufLink = (await admin(`studio/${aboStudio.id}`)).aufstellerLink;
-  check(/aufsteller\.html\?s=ink-abo&t=/.test(aufLink || "") && (await fetch(`${BASE}/api/aufsteller?s=ink-abo&t=${new URL(aufLink).searchParams.get("t")}`)).status === 200, "Signierter Aufsteller-Link (Admin) funktioniert");
+  // QR-Aufsteller eingestellt (15.11.2026): Hersteller-Daten, Admin-Link und Studio-Felder gibt es nicht mehr
+  const aufApi = await api(pD, "/api/aufsteller?s=ink-abo");
+  check(aufApi.status === 410 && aufApi.data.code === "aufsteller_entfallen" && (await fetch(`${BASE}/api/aufsteller?s=ink-abo`)).status === 410, "GET /api/aufsteller (Hersteller-Daten) → 410 aufsteller_entfallen, mit und ohne Sitzung");
+  const aboAdmin = await admin(`studio/${aboStudio.id}`);
+  check(!("aufstellerLink" in aboAdmin) && aboAdmin.studio && !("aufsteller" in (aboAdmin.studio.vertrag || {})), "Admin: kein Gravur-Link mehr, neuer Vertrag ohne Aufsteller-Feld");
   const inklAbo = await api(pD, "/api/portal");
-  check(inklAbo.data.studio.aufsteller.inklusive === true && inklAbo.data.studio.paketName === "Monatlich", "App: Aufsteller im Paket Monatlich inklusive");
+  check(!("aufsteller" in inklAbo.data.studio) && !("aufstellerInklusive" in inklAbo.data.studio) && inklAbo.data.studio.paketName === "Monatlich", "Dashboard-Daten: Paket Monatlich ohne Aufsteller-Felder");
 
   // ---------------------------------------------------------------- E: Notlösung ohne Einbettung
   console.log("Notlösung: ohne öffentlichen Stripe-Schlüssel wie bisher zu Stripe weiterleiten");
@@ -1124,7 +1141,7 @@ try {
   check(kit.every((x) => !/\b0\s?%|zinsfrei|zinslos|Geld sofort|voller Betrag|Anzahlung|garantiert|jeder bekommt/i.test(x.text)), "Werbung: keine verbotenen Aussagen (0 %, zinsfrei, Geld sofort, voller Betrag, Anzahlung, Zusagen)");
   check(kit.find((x) => x.id === "qr-story").text.includes(`${BASE}/zahlen/${nwSlug}`), "Werbung: QR-Story mit Link zur Zahlseite für den Link-Sticker");
   check(kit.find((x) => x.id === "karussell").knopf === "Alle 4 Bilder speichern", "Werbung: Karussell – alle 4 Bilder auf einmal speichern");
-  check(await h.evaluate(() => !document.getElementById("mat-karte").classList.contains("hidden") && document.querySelectorAll("#mat a").length === 5), "Werbung (Klarna dauerhaft): Karte „Zum Ausdrucken“ mit 5 Druckvorlagen");
+  check(await h.evaluate(() => !document.getElementById("mat-karte").classList.contains("hidden") && document.querySelectorAll("#mat a").length === 4 && ![...document.querySelectorAll("#mat a")].some((a) => /aufsteller/i.test(a.href + a.textContent))), "Werbung (Klarna dauerhaft): Karte „Zum Ausdrucken“ mit 4 Druckvorlagen (ohne Thekenaufsteller)");
   // Speichern am Computer: ohne Teilen-Menü → Download (Karussell als ZIP)
   await h.evaluate(() => { navigator.canShare = () => false; });
   const [dlKar] = await Promise.all([h.waitForEvent("download"), h.click('[data-vorlage="karussell"] [data-kit="bild"]')]);
@@ -1177,66 +1194,38 @@ try {
   await h.goto(`${BASE}/app.html#start`); await h.reload(); await h.waitForSelector("#so-gehts video", { state: "attached", timeout: 15000 });
   check(await h.evaluate(() => !document.getElementById("so-gehts").classList.contains("hidden")), "So geht's: wieder auf der Startseite eingeblendet");
 
-  // ---- QR-Aufsteller: Vorschau, Dateien (PDF/SVG/PNG), Logo, Anfordern, Hersteller-Seite ----
-  console.log("QR-Aufsteller");
+  // ---- QR-Aufsteller eingestellt (15.11.2026): Werbung ohne Holz-Aufsteller, digitaler QR-Code als PNG bleibt ----
+  console.log("Werbung ohne QR-Aufsteller (eingestellt), QR-Code als PNG bleibt");
   await h.goto(`${BASE}/app.html#werbung`);
-  await h.waitForFunction(() => (document.getElementById("auf-img").getAttribute("src") || "").startsWith("data:image/png"), null, { timeout: 15000 });
-  check(true, "Aufsteller: Vorschau mit echtem QR-Code wird gezeichnet");
+  await h.waitForSelector("#zs-qr canvas, #zs-qr img", { state: "attached", timeout: 15000 });
+  const werbText = await h.evaluate(() => document.querySelector("[data-view=werbung]").innerText);
+  check(await h.locator("#auf, #auf-paket, #auf-img, [data-auf], input[name=auf-holz]").count() === 0 && !/Aufsteller|Holz|Gravur|Formulor/i.test(werbText) && /als Aufkleber für die Theke/.test(werbText), "Werbung: kein QR-Aufsteller mehr (keine Karte, kein Text), stattdessen Tipp „QR-Code ausdrucken, als Aufkleber für die Theke“");
   const nwZahlseite = `${BASE}/zahlen/${nwSlug}`;
   const runter = async (sel) => { const [d] = await Promise.all([h.waitForEvent("download"), h.click(sel)]); return { name: d.suggestedFilename(), buf: fs.readFileSync(await d.path()) }; };
-  const pdfD = await runter('[data-auf="pdf"]');
-  check(pdfD.buf.subarray(0, 5).toString() === "%PDF-" && /\/MediaBox \[0 0 283\.465 425\.197\]/.test(pdfD.buf.toString("latin1")) && /%%EOF\s*$/.test(pdfD.buf.toString("latin1")), "Aufsteller: PDF 100 × 150 mm (" + pdfD.name + ")");
-  const svgD = await runter('[data-auf="svg"]');
-  const svgT = svgD.buf.toString();
-  check(/width="100mm" height="150mm"/.test(svgT) && svgT.includes(nwZahlseite) && /<g id="schnitt" fill="none" stroke="#0000ff" stroke-width="0.01">/.test(svgT) && !/<text|<image/.test(svgT), "Aufsteller: SVG 1:1, Schrift in Pfaden, blaue Schnittlinie, QR-Link der Zahlseite");
-  const fSvg = (await runter('[data-auf="fsvg"]')).buf.toString();
-  const fFarben = [...new Set(fSvg.match(/(?:fill|stroke)="#[0-9a-f]{6}"/gi).map((x) => x.split('"')[1].toLowerCase()))].sort().join(",");
-  check(/width="181mm" height="181mm"/.test(fSvg) && fFarben === "#000000,#0000ff" && !/<image|<text/.test(fSvg) && fSvg.includes(nwZahlseite), "Aufsteller: Formulor-Platte P1 mit Fuß (nur Schwarz/Blau, keine Pixelbilder)");
-  const fPdf = await runter('[data-auf="fpdf"]');
-  check(/\/MediaBox \[0 0 513\.071 513\.071\]/.test(fPdf.buf.toString("latin1")) && fPdf.name.includes("formulor-P1-birke-3mm"), "Aufsteller: Formulor-PDF 181 × 181 mm (" + fPdf.name + ")");
-  const pngD = await runter('[data-auf="png"]');
-  check(pngD.buf.readUInt32BE(16) === 2362 && pngD.buf.readUInt32BE(20) === 3543, "Aufsteller: PNG mit 600 dpi (2362 × 3543 px)");
   const qrD = await runter("#zs-png");
-  check(qrD.buf.subarray(1, 4).toString() === "PNG" && qrD.buf.readUInt32BE(16) >= 1000, "Digitaler QR-Code als PNG (" + qrD.buf.readUInt32BE(16) + " px)");
-  const inkl = await h.evaluate(() => fetch("/api/portal").then((r) => r.json()).then((d) => d.studio.aufsteller.inklusive));
-  check((await h.textContent("#auf-paket")).includes(inkl ? "In deinem Paket enthalten" : "Fertig graviert für 29 € netto"), "Aufsteller: Hinweis passt zum Paket (" + (inkl ? "inklusive" : "Anfrage") + ")");
-  await h.click('label:has(> input[name="auf-var"][value="logo"])');
-  await h.setInputFiles("#auf-logo", path.join(root, "public/assets/wortmarke.png"));
-  await h.waitForFunction(() => /Logo gespeichert/.test(document.getElementById("toast").textContent), null, { timeout: 10000 });
-  const oeff = (await api(h, `/api/aufsteller?s=${nwSlug}`)).data;
-  check(oeff.variante === "logo" && /^data:image\/jpeg;base64,/.test(oeff.logo?.src || "") && oeff.zahlseite.endsWith("/zahlen/" + nwSlug), "Aufsteller: Logo hochgeladen (schwarz/weiß) und gespeichert");
-  const pdfL = await runter('[data-auf="pdf"]');
-  check(!/\/Subtype \/Image/.test(pdfL.buf.toString("latin1")) && pdfL.buf.length > pdfD.buf.length && pdfL.name.includes("-logo"), "Aufsteller: PDF mit Logo als Vektor (kein Pixelbild)");
-  await h.click('label:has(> input[name="auf-holz"][value="dunkel"])');
-  await h.waitForTimeout(600);
-  await appShot(h, path.join(S, "18b-qr-aufsteller.png"));
-  // Geschenk-Paket: Aufsteller nicht inklusive → für 29 € netto bestellen (Stripe-Checkout auf dem DSX-Konto)
-  check((await h.textContent("#auf-kaufen")).includes("QR-Aufsteller bestellen – 29 €") && (await h.textContent("#auf-paket")).includes("29 € netto"), "Aufsteller (nicht im Paket): Knopf „QR-Aufsteller bestellen – 29 €“ mit Netto-Hinweis");
-  const ohneKauf = await h.evaluate(() => fetch("/api/portal/aufsteller", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ anfordern: true }) }).then((r) => r.status));
-  check(ohneKauf === 400, "Aufsteller (nicht im Paket): kostenlos anfordern nicht möglich");
-  const nwStatusVor = (await admin(`studio/${nwId}`)).studio.status;
-  await h.click("#auf-kaufen");
-  await h.waitForURL(MOCK_PAY);
-  check((await h.textContent("body")).includes("34.51"), "Aufsteller-Checkout: 29 € netto + 19 % USt. = 34,51 €");
-  await h.click("#pay");
-  await h.waitForURL(/app\.html/);
-  await h.waitForSelector("#auf-paket .chip.ok", { timeout: 15000 });
-  check(/Bestellt und bezahlt/.test(await h.textContent("#auf-paket")) && !/cs=/.test(h.url()), "Aufsteller: nach Zahlung „Bestellt und bezahlt“, Adresse aufgeräumt");
-  const nwA = (await admin(`studio/${nwId}`)).studio?.aufsteller || (await studioPer("hallo@nadelwerk-test.de")).aufsteller;
-  check(nwA?.angefordertAm && nwA?.kauf?.bezahltAm && nwA.holz === "dunkel" && nwA.variante === "logo", "Aufsteller: gekauft (Holz dunkel, mit Logo)");
-  const aufMails = mailsAn("domenicschilling@gmail.com").filter((m) => m.subject.includes("QR-Aufsteller bestellen (29 € bezahlt)") && m.subject.includes("Nadelwerk"));
-  check(aufMails.length === 1 && aufMails[0].html.includes("/aufsteller.html?s=" + nwSlug), "Admin-Mail „QR-Aufsteller bestellen (29 € bezahlt)“ genau einmal (Webhook + Rückkehr) mit Gravurdatei");
-  const nwStatus = (await admin(`studio/${nwId}`)).studio.status;
-  check(nwStatus === nwStatusVor, "Aufsteller-Kauf ändert den Studio-Status nicht (" + nwStatus + ")");
-  const doppelt = await h.evaluate(() => fetch("/api/portal/aufsteller", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ kaufen: true }) }).then((r) => r.status));
-  check(doppelt === 409, "Aufsteller: nicht doppelt bestellbar");
-  const hH = await neueSeite();
-  await hH.goto((await admin(`studio/${nwId}`)).aufstellerLink);
-  await hH.waitForFunction(() => (document.getElementById("auf-img").getAttribute("src") || "").startsWith("data:image/png"), null, { timeout: 15000 });
-  check((await hH.textContent("#auf-titel")).includes("Nadelwerk Studio") && (await hH.textContent("#auf-qr")).includes("/zahlen/" + nwSlug), "Hersteller-Seite /aufsteller.html zeigt Vorlage + Dateien");
-  await hH.screenshot({ path: path.join(S, "18c-aufsteller-hersteller.png"), fullPage: true });
-  const aufFremd = (await fetch(`${BASE}/api/aufsteller?s=gibt-es-nicht`)).status;
-  check(aufFremd === 404, "Hersteller-Seite: unbekanntes Studio → 404");
+  check(qrD.buf.subarray(1, 4).toString() === "PNG" && qrD.buf.readUInt32BE(16) >= 1000 && qrD.name === "tattoofin-qr-zahlseite.png", "Digitaler QR-Code als PNG (" + qrD.buf.readUInt32BE(16) + " px, js/qr-bild.js)");
+  check(await h.evaluate(() => !window.TFAufsteller && typeof window.TFQr?.qrBild === "function" && ![...document.scripts].some((s) => /aufsteller\.js/.test(s.src))), "Dashboard lädt js/aufsteller.js nicht mehr (QR-Bild aus js/qr-bild.js)");
+  check(!(await h.isVisible("#mat-karte")) || /Fensteraufkleber und Flyer aus deinem Studio Kit/.test(werbText), "Karte „Zum Ausdrucken“: Fensteraufkleber und Flyer (ohne Aufsteller)");
+  check((await h.inputValue("#zs-url")) === nwZahlseite, "Zahlseite mit QR-Code bleibt unter Werbung");
+  await appShot(h, path.join(S, "18b-werbung-ohne-aufsteller.png"));
+  const nwStatusVor = (await admin(`studio/${nwId}`)).studio.status, sessVorAuf = Object.keys((await mock("state")).sessions || {}).length, mailVorAuf = mailsAn("domenicschilling@gmail.com").length;
+  const kaufAlt = await api(h, "/api/portal/aufsteller", { method: "POST", body: { holz: "dunkel", variante: "name", kaufen: true } });
+  const anfAlt = await api(h, "/api/portal/aufsteller", { method: "POST", body: { anfordern: true } });
+  const pruefAlt = await api(h, "/api/portal/aufsteller-pruefen", { method: "POST", body: { cs: "cs_test_x" } });
+  check([kaufAlt, anfAlt, pruefAlt].every((r) => r.status === 410 && r.data.code === "aufsteller_entfallen") && Object.keys((await mock("state")).sessions || {}).length === sessVorAuf && mailsAn("domenicschilling@gmail.com").length === mailVorAuf && !(await admin(`studio/${nwId}`)).studio.aufsteller && (await admin(`studio/${nwId}`)).studio.status === nwStatusVor, "Dashboard: Aufsteller kaufen/anfordern/prüfen → 410, kein Checkout, keine Admin-Mail, nichts gespeichert");
+  // Rückkehr eines alten Checkouts (?aufsteller=…): Seite lädt ohne Fehler, Adresse wird aufgeräumt
+  const fehlerVor = errors.length;
+  await h.goto(`${BASE}/app.html?aufsteller=bezahlt&cs=cs_test_x#werbung`);
+  await h.waitForSelector("#zs-qr canvas, #zs-qr img", { state: "attached", timeout: 15000 });
+  await h.waitForTimeout(400);
+  check(!/aufsteller|cs=/.test(h.url()) && errors.length === fehlerVor, "app.html?aufsteller=bezahlt (alter Checkout): Adresse aufgeräumt, kein Fehler");
+  check((await fetch(`${BASE}/aufsteller.html`)).status === 404 && (await fetch(`${BASE}/js/aufsteller.js`)).status === 404 && (await fetch(`${BASE}/druck/kunden/22-thekenaufsteller-a5.html`)).status === 404, "Hersteller-Seite, Gravur-Skript und Druckvorlage Thekenaufsteller gibt es nicht mehr (404)");
+  // Admin: Altdaten eines Studios bleiben sichtbar als „QR-Aufsteller (alt)“
+  const nwBlobPfad = path.join(dataDir, encodeURIComponent("studio/" + nwId) + ".json");
+  const nwBlob = JSON.parse(fs.readFileSync(nwBlobPfad, "utf8"));
+  fs.writeFileSync(nwBlobPfad, JSON.stringify({ ...nwBlob, aufsteller: { holz: "dunkel", variante: "name", angefordertAm: "2026-11-10T10:00:00.000Z" } }));
+  check(Boolean((await admin(`studio/${nwId}`)).studio.aufsteller?.angefordertAm), "Altdaten bleiben erhalten (Admin liest s.aufsteller weiter)");
+  fs.writeFileSync(nwBlobPfad, JSON.stringify(nwBlob));
 
   console.log("Mailversand: Resend zuerst, IONOS/SMTP als Rückfall, Warteschlange, Gesundheits-Check");
   {

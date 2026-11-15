@@ -1,6 +1,6 @@
 // Geschäftslogik: Benachrichtigungen, Zahlungslinks, Kündigung, Monatsabrechnung.
 import crypto from "node:crypto";
-import { CFG, plattformgebuehr, netto, provisionSatz, BAUSTEINE_SIMULIERT, paketVon, aufstellerInklusive, klarnaPlattformAus, risikofreiDirect, istApple, appleCfg, testKasse } from "./config.mjs";
+import { CFG, plattformgebuehr, netto, provisionSatz, BAUSTEINE_SIMULIERT, paketVon, klarnaPlattformAus, risikofreiDirect, istApple, appleCfg, testKasse } from "./config.mjs";
 import { sendMail } from "./mail.mjs";
 import { mails } from "./emails.mjs";
 import { stripe, taxRateId, ensureCustomer, TATTOOFIN_BRANDING } from "./stripe.mjs";
@@ -60,22 +60,12 @@ export const bezahlfeld = () => eingebettet() && process.env.TF_BEZAHLFELD !== "
 // Link aus E-Mails: mit Login direkt in die Einrichtung im Dashboard (sonst wie bisher Stripe-Seite)
 export const einrichtungUrl = (s) => (eingebettet() ? `${loginLink(s.id)}&next=${encodeURIComponent("/app.html#einrichtung")}` : connectUrl(s));
 
-// Zahlseite des Studios. Kurze Adresse /zahlen/<studio> (für QR-Codes, v. a. den gravierten Holz-Aufsteller);
+// Zahlseite des Studios. Kurze Adresse /zahlen/<studio> (für QR-Codes: Bild, Aufkleber, Flyer);
 // die alte Adresse /zahlen.html?s=<studio> funktioniert weiter.
 export const zahlseiteUrl = (s) => `${CFG.siteUrl}/zahlen/${encodeURIComponent(s.slug)}`;
-// Hersteller-Seite für den QR-Aufsteller (Gravurdatei als PDF/SVG/PNG)
-// Signiert (90 Tage), damit Logo/Gravurdaten nicht allein über den (erratbaren) Studionamen abrufbar sind
-export const aufstellerUrl = (s) => `${CFG.siteUrl}/aufsteller.html?s=${encodeURIComponent(s.slug)}&t=${zweckToken(s.id, "aufsteller", 24 * 90)}`;
-// Zusatzzeilen für Admin-Mails: Paket und – bei Monatlich/Einmalzahlung – „QR-Aufsteller bestellen“ mit Gravurdatei
-export function paketDetails(s, { aufsteller = false } = {}) {
-  const d = { Paket: paketVon(s).name };
-  if (aufsteller && aufstellerInklusive(s)) {
-    d["QR-Aufsteller bestellen"] = "im Paket enthalten – Gravurdatei unten (Standard: Holz hell, mit Studioname). Das Studio kann in der App unter Werbung → QR-Aufsteller Holzton/Logo wählen und anfordern; spätestens nach Go-live bestellen.";
-    d.Gravurdatei = aufstellerUrl(s);
-    d.Lieferadresse = [s.firma, s.strasse, [s.plz, s.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ");
-    d["QR-Code zeigt auf"] = zahlseiteUrl(s);
-  }
-  return d;
+// Zusatzzeilen für Admin-Mails (seit 15.11.2026 ohne QR-Aufsteller: den Holz-Aufsteller gibt es nicht mehr)
+export function paketDetails(s) {
+  return { Paket: paketVon(s).name };
 }
 
 // Rechnungsfuß für Rechnungen vom DSX-Konto (Stripe)
@@ -83,32 +73,8 @@ export const RECHNUNG_FUSS = `${CFG.firma} · ${CFG.adresse} · USt-IdNr. ${CFG.
 const lieferadresse = (s) => [s.firma, s.strasse, [s.plz, s.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ");
 const holzText = (h) => (h === "dunkel" ? "dunkel (Walnuss)" : "hell (Birke/Buche)");
 
-// QR-Aufsteller einzeln kaufen (Pakete ohne Aufsteller): Stripe-Checkout auf dem DSX-Konto, Rechnung automatisch.
-// app: Kauf aus der Tattoofin-App (Checkout im In-App-Browser) → Rückkehr auf die neutrale Seite app-fertig.html (ohne Links zur Website);
-// die App prüft danach selbst per POST /api/portal/aufsteller-pruefen { cs }.
-export async function aufstellerCheckout(s, { app = false } = {}) {
-  // Testkasse (Demo, Apple-Sandbox/TestFlight/App Review): nie eine echte Kasse (zweiter Schutz, portal.mjs prüft vorher)
-  if (testKasse(s)) throw new HttpError(409, "Im Testmodus kannst du den Aufsteller nicht bestellen. Es wird nichts bezahlt.", "testmodus");
-  if (!s.stripe?.customerId) { const cus = await ensureCustomer(s); s.stripe = { ...(s.stripe || {}), customerId: cus.id }; }
-  const name = "QR-Aufsteller aus Holz";
-  const text = `Graviert mit QR-Code deiner Zahlseite, ${s.aufsteller?.variante === "logo" ? "mit deinem Logo" : "mit Studioname"}, Holz ${holzText(s.aufsteller?.holz)}. Lieferung an: ${lieferadresse(s)}`.slice(0, 480);
-  // Klarna ist für B2B-Käufe laut Klarna-Regeln nicht erlaubt (Studios kaufen als Unternehmer).
-  const session = await stripe("POST", "/checkout/sessions", {
-    excluded_payment_method_types: ["klarna"],
-    mode: "payment", customer: s.stripe.customerId, locale: "de", client_reference_id: s.id,
-    branding_settings: TATTOOFIN_BRANDING,
-    line_items: [{ quantity: 1, tax_rates: [await taxRateId()], price_data: { currency: "eur", unit_amount: CFG.aufstellerPreisNetto, product_data: { name, description: text } } }],
-    invoice_creation: { enabled: true, invoice_data: { description: name, metadata: { studioId: s.id, typ: "aufsteller" }, footer: RECHNUNG_FUSS } },
-    customer_update: { address: "auto", name: "auto" }, tax_id_collection: { enabled: true },
-    payment_intent_data: { metadata: { studioId: s.id, typ: "aufsteller" }, description: name },
-    metadata: { studioId: s.id, typ: "aufsteller", ...(app ? { quelle: "app" } : {}) },
-    success_url: app ? `${CFG.siteUrl}/app-fertig.html?aufsteller=bezahlt&cs={CHECKOUT_SESSION_ID}` : `${CFG.siteUrl}/app.html?aufsteller=bezahlt&cs={CHECKOUT_SESSION_ID}#werbung`,
-    cancel_url: app ? `${CFG.siteUrl}/app-fertig.html?aufsteller=abgebrochen` : `${CFG.siteUrl}/app.html#werbung`,
-  });
-  return session;
-}
-
-// Aufsteller-Kauf bezahlt (Webhook checkout.session.completed oder Rückkehr aus dem Checkout): einmalig vermerken + Admin-Mail
+// Aufsteller-Kauf bezahlt – nur noch für Checkouts, die VOR der Einstellung (15.11.2026) begonnen wurden (Webhook checkout.session.completed
+// oder Rückkehr aus dem Checkout): einmalig vermerken + Admin-Mail „(alt) bezahlt – erstatten oder liefern“. Neue Checkouts gibt es nicht mehr.
 export async function aufstellerBezahlt(s, session) {
   if (!s || session?.metadata?.typ !== "aufsteller" || session.metadata.studioId !== s.id || session.payment_status !== "paid") return false;
   const a = s.aufsteller || {};
@@ -117,10 +83,11 @@ export async function aufstellerBezahlt(s, session) {
   a.angefordertAm = a.angefordertAm || a.kauf.bezahltAm;
   s.aufsteller = a;
   await saveStudio(s);
-  await notifyAdmin("QR-Aufsteller bestellen (29 € bezahlt)", s, {
+  await notifyAdmin("QR-Aufsteller (alt) bezahlt – erstatten oder liefern", s, {
+    Hinweis: "Den Holz-Aufsteller gibt es seit 15.11.2026 nicht mehr. Dieser Kauf wurde vorher begonnen. Bitte erstatten (Stripe) oder ausnahmsweise liefern.",
     Paket: paketVon(s).name, Bezahlt: (session.amount_total / 100).toFixed(2).replace(".", ",") + " € brutto",
     Holz: holzText(a.holz), Variante: a.variante === "logo" ? "mit Studio-Logo" : "mit Studioname",
-    Lieferadresse: lieferadresse(s), Gravurdatei: aufstellerUrl(s), "QR-Code zeigt auf": zahlseiteUrl(s), Telefon: s.telefon,
+    Lieferadresse: lieferadresse(s), "QR-Code zeigt auf": zahlseiteUrl(s), Telefon: s.telefon,
   });
   await log("aufsteller-bezahlt", { studioId: s.id, cs: session.id });
   return true;

@@ -37,7 +37,7 @@ import { json, fail, body, clean, now, handler } from "./_lib/util.mjs";
 import { allStudios, getStudio, saveStudio, zahlungenVon, abrechnungenVon, store, log, normEmail } from "./_lib/store.mjs";
 import { isAdmin, loginLink, sign, adminName } from "./_lib/auth.mjs";
 import { stripe, TATTOOFIN_BRANDING } from "./_lib/stripe.mjs";
-import { anbieterKuendigungZum, notify, monatsabrechnung, taeglicheJobs, kontoAbgleichen, provisionVerdient, STATUS, aufstellerUrl, connectUrl, connectUrlGehostet } from "./_lib/domain.mjs";
+import { anbieterKuendigungZum, notify, monatsabrechnung, taeglicheJobs, kontoAbgleichen, provisionVerdient, STATUS, connectUrl, connectUrlGehostet } from "./_lib/domain.mjs";
 import { mails } from "./_lib/emails.mjs";
 import { sendMail, warteschlangeStatus, warteschlangeAbarbeiten } from "./_lib/mail.mjs";
 import { randomBytes } from "node:crypto";
@@ -97,7 +97,7 @@ export default handler(async (req) => {
   if (bereich === "studio" && sid) {
     const s = await getStudio(sid);
     if (!s) return fail("Studio nicht gefunden", 404);
-    if (!aktion && req.method === "GET") return json({ studio: s, aufstellerLink: aufstellerUrl(s), zahlungen: await zahlungenVon(s.id), abrechnungen: await abrechnungenVon(s.id) });
+    if (!aktion && req.method === "GET") return json({ studio: s, zahlungen: await zahlungenVon(s.id), abrechnungen: await abrechnungenVon(s.id) });
     if (!aktion && req.method === "PATCH") {
       const b = await body(req);
       for (const k of ["notiz", "benachrichtigungEmail"]) if (b[k] !== undefined) s[k] = clean(b[k], 1000);

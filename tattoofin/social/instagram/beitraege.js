@@ -157,7 +157,7 @@ Du brauchst noch Anzahlungsbedingungen für dein Studio? Kommentiere „ANZAHLUN
 Link in Bio.
 
 #tattoostudio #anzahlung #noshow #tattoobusiness #tattoofin`,
-      alt: "Animiertes Video: Ein Handy scannt den QR-Code auf einem Thekenaufsteller. Auf der Zahlseite erscheinen 150 € Anzahlung und die Anzahlungsbedingungen, der Haken wird gesetzt, Meldung „Anzahlung bezahlt, Bedingungen bestätigt 14:32 Uhr“.",
+      alt: "Animiertes Video: Ein Handy scannt den QR-Code an der Theke. Auf der Zahlseite erscheinen 150 € Anzahlung und die Anzahlungsbedingungen, der Haken wird gesetzt, Meldung „Anzahlung bezahlt, Bedingungen bestätigt 14:32 Uhr“.",
     },
     {
       datum: "2026-10-23", uhrzeit: "18:00", format: "Slider", ordner: "2026-10-23_abend", start: "s01",

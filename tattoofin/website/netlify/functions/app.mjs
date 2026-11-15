@@ -16,8 +16,8 @@
 //   POST   /api/app/abo/bestaetigen | /abo/wiederherstellen | /abo/aktualisieren   Apple-Abo (StoreKit 2, _lib/apple.mjs)
 //   GET    /api/app/werbung          Werbevideo, Studio-Beiträge (Texte), Hashtags, Fußnote, Zahlseite, Druckvorlagen, Erklärvideo „So geht's“
 //                                     (seit 14.11.2026, Inhaber + Team; Klarna-/Raten-Material nur mit klarna: true, _lib/werbung.mjs)
-//   GET    /api/app/aufsteller       QR-Aufsteller: Auswahl, Status, Artikel + Preis (ohne Paket), Logo für die Vorschau (nur Inhaber).
-//                                     Speichern/Bestellen: POST /api/portal/aufsteller { …, bestellen: true }, Rückkehr: POST /api/portal/aufsteller-pruefen
+//   GET    /api/app/aufsteller       entfallen (QR-Aufsteller aus Holz eingestellt 15.11.2026): immer 410 { error, code: "aufsteller_entfallen" }.
+//                                     Die App 1.0 (1) zeigt den Text aus „error“ statt der Holz-Vorschau (_lib/werbung.mjs AUFSTELLER_ENTFALLEN).
 //   GET    /api/app/start            Einrichtungs-Checkliste für die App (ohne Paket/Preis; manuelle Punkte per POST /api/portal/checkliste)
 //   Code-Prüfung, Grenzen und Geräte-Anlage gemeinsam in _lib/app-code.mjs
 // Grenzen (atomar, store.zaehleAtomar/belegePlatz: jeder Versuch belegt einen eigenen Platz, parallele Anfragen zählen richtig):
@@ -41,7 +41,7 @@ import { gutscheinAusstellen } from "./_lib/gutschein.mjs";
 import { istApple, testKasse } from "./_lib/config.mjs";
 import { aj, fehler, hash, T, reviewFuer, codeIpErlaubt, codeAdresseErlaubt, aktiveStudios, anmeldeCodeSenden, reviewPruefen, codePruefen, nachAnmeldeCode, geraetFertig } from "./_lib/app-code.mjs";
 import { appRegistrierungRoute } from "./_lib/app-registrierung.mjs";
-import { werbungFuer, aufstellerFuerApp, werbungMitKlarna } from "./_lib/werbung.mjs";
+import { werbungFuer, werbungMitKlarna, AUFSTELLER_ENTFALLEN } from "./_lib/werbung.mjs";
 import { zahlungenVon } from "./_lib/store.mjs";
 
 const berlinTag = (ms) => new Date(ms).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" });
@@ -329,11 +329,8 @@ async function route(req, context) {
   // Werbung + Hilfe (Inhaber und Team: beide posten für das Studio)
   if (bereich === "werbung" && !sub && m === "GET") return aj(werbungFuer(s));
   if (bereich === "start" && !sub && m === "GET") return aj(await startDaten(s, ich));
-  // QR-Aufsteller (Bestellung mit Kosten → nur Inhaber, wie POST /api/portal/aufsteller)
-  if (bereich === "aufsteller" && !sub && m === "GET") {
-    if (ich.rolle !== "inhaber") return fehler("Das kann nur der Inhaber.", 403, "nur_inhaber");
-    return aj({ aufsteller: await aufstellerFuerApp(s, { mitLogo: true, store }) });
-  }
+  // QR-Aufsteller aus Holz: eingestellt (15.11.2026). Für alle Studios und Rollen 410 mit freundlichem Text (App 1.0 (1) zeigt ihn an).
+  if (bereich === "aufsteller") return fehler(AUFSTELLER_ENTFALLEN.error, 410, AUFSTELLER_ENTFALLEN.code);
 
   // Nur Demo-Studio (App-Prüfung bei Apple) und Testkauf-Studio (Apple-Sandbox): Testzahlung, damit der Prüfer den Ablauf
   // „Link → bezahlt → Mitteilung“ sieht. Kein Geld, kein Stripe, keine Gutschein-Mails (gutscheinSenden bei testKasse).

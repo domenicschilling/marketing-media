@@ -105,7 +105,7 @@ function entwurfInfo(s, aktiveEmails) {
 }
 
 // Unsere Einnahmen im Monat: bezahlte Rechnungen bei Stripe, NUR von Kunden, die ein Tattoofin-Studio sind
-// (das DSX-Konto teilen sich mehrere Marken). Abos, Einmalzahlung, QR-Aufsteller, Provisionsrechnungen.
+// (das DSX-Konto teilen sich mehrere Marken). Abos, Einmalzahlung, QR-Aufsteller (alt, bis 15.11.2026), Provisionsrechnungen.
 // Erstattungen im Monat (Garantie-Erstattung auf den PaymentIntent, Erstattungen zu Rechnungen, auch per Gutschrift) werden
 // abgezogen und getrennt ausgewiesen. Rechnungen werden 120 Tage zurück gesucht (spät bezahlte, z. B. Mahnlauf oder Zahlart Rechnung).
 // Endet die Suche an der Seitengrenze, steht unvollstaendig: true (Anzeige „mindestens …“).

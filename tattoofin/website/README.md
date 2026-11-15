@@ -17,7 +17,7 @@ Keine Build-Schritte, kein Framework.
 | `/zahlung.html?z=…` | Seite für den Endkunden zu einem Zahlungslink → Stripe Checkout (Karte, Apple/Google Pay, Klarna nach Freigabe). Bei Anzahlungen Pflicht-Häkchen für die Anzahlungsbedingungen |
 | `/z/<id>` | **Kurzlink zum Teilen** (seit 15.11.2026, `netlify/functions/teilen.mjs`): liefert WhatsApp/iMessage & Co. eine Vorschau-Karte (og:title „<Studio> · Betrag“, og:description, Bild `/z/<id>/bild.png` 1200 × 630, gezeichnet ohne Zusatz-Abhängigkeit in `_lib/leinwand.mjs` + `_lib/vorschaubild.mjs`) und leitet Menschen sofort auf `/zahlung.html?z=<id>` weiter. Kein Kundenname in der Vorschau; bezahlte/stornierte Links: neutrale Vorschau; unbekannte ID: 404. Teilen-Texte (`teilText` in `portal.mjs`) mit Zeilenumbrüchen und Kurzlink |
 | `/zahlen.html?s=<studio>` | Zahlseite des Studios (Ziel des QR-Codes auf Aufklebern/Flyern): Kunde trägt den abgesprochenen Betrag ein, optional „Das ist eine Anzahlung“ mit Bedingungen |
-| `/admin.html` | Admin-App „TF Admin“ (seit 15.11.2026 fürs iPhone, Homescreen: Manifest `admin.webmanifest`, Icons `assets/admin/`, Code `js/admin.js`, `css/admin.css`): **Übersicht** (zahlende Studios Web/Apple, in Einrichtung, abgebrochene Anmeldungen 14 Tage mit fehlgeschlagener Zahlung/3-D-Secure, Umsatz der Studios im Monat, unsere Einnahmen = bezahlte Stripe-Rechnungen der Tattoofin-Kunden minus Erstattungen im Monat + Abos laut Vertrag + Apple-Abos, Mail-Status; Apple-Probezeit zählt nicht als zahlend; Kachel → gleichnamiger Filter mit derselben Zahl, Test-Studios nur unter „Test“), **Studios** (Karten, Suche, Filter), **Detail** (Live schalten, Login-/Einrichtungslink, Dashboard ansehen, Stripe abgleichen, Branding, Erstattung, Zahlungen, Abrechnungen, Aufsteller, Fragebogen, Mails), **Demo** (Demo-Studio Apple getrennt, „Beispieldaten erneuern“), **Mehr** (Monatsabrechnung, Jobs, Stripe-Abgleich, E-Mail-Protokoll). Daten: `GET /api/admin/uebersicht` (`_lib/admin-uebersicht.mjs`). Beispieldaten lokal: `node dev/admin-beispiel.mjs [screenshot-ordner]` |
+| `/admin.html` | Admin-App „TF Admin“ (seit 15.11.2026 fürs iPhone, Homescreen: Manifest `admin.webmanifest`, Icons `assets/admin/`, Code `js/admin.js`, `css/admin.css`): **Übersicht** (zahlende Studios Web/Apple, in Einrichtung, abgebrochene Anmeldungen 14 Tage mit fehlgeschlagener Zahlung/3-D-Secure, Umsatz der Studios im Monat, unsere Einnahmen = bezahlte Stripe-Rechnungen der Tattoofin-Kunden minus Erstattungen im Monat + Abos laut Vertrag + Apple-Abos, Mail-Status; Apple-Probezeit zählt nicht als zahlend; Kachel → gleichnamiger Filter mit derselben Zahl, Test-Studios nur unter „Test“), **Studios** (Karten, Suche, Filter), **Detail** (Live schalten, Login-/Einrichtungslink, Dashboard ansehen, Stripe abgleichen, Branding, Erstattung, Zahlungen, Abrechnungen, „QR-Aufsteller (alt)“ nur bei Altdaten, Fragebogen, Mails), **Demo** (Demo-Studio Apple getrennt, „Beispieldaten erneuern“), **Mehr** (Monatsabrechnung, Jobs, Stripe-Abgleich, E-Mail-Protokoll). Daten: `GET /api/admin/uebersicht` (`_lib/admin-uebersicht.mjs`). Beispieldaten lokal: `node dev/admin-beispiel.mjs [screenshot-ordner]` |
 | Monatlich (1., 06:00 UTC) | Provisionsrechnung des Vormonats (in Stripe als bereits bezahlt markiert, da schon einbehalten) + E-Mail-Übersicht |
 | Täglich (07:00 UTC) | Erinnerung bei abgebrochenem Abschluss, Erinnerung „Stripe-Konto verbinden“ (nach 2 und 7 Tagen), Vertragsende |
 | Erstattungen (Provision) | Nur über den Portal-Button: Refund mit `reverse_transfer` (Betrag vom Studio-Konto zurück). Webhook `charge.refunded` erstattet die Provision anteilig, abzüglich Stripe-Gebühr + USt. **Nie direkt im Tattoofin-Dashboard erstatten, ohne „Transfer zurückbuchen“ anzuhaken.** |
@@ -42,7 +42,7 @@ Garantie-Erstattung · Abschluss abgebrochen · Rückbuchung (Belege) · Rückbu
 | Absicherung | Vor dem Bezahlen: Häkchen „Inhalt stimmt“ (+ Anzahlungsbedingungen), gespeichert mit Zeit/IP. Nach dem Termin: Leistungsbestätigung `/bestaetigung.html?t=…` (Name, Datum, Unterschrift, optional Foto), Nachweis-PDF `/nachweis.html?z=…`. Entwurf, Rechtsprüfung offen |
 | `/recht.html` | „Deine rechtliche Lage – einfach erklärt“ (Entwurf), Zustimmung mit Version/Zeitstempel (`CFG.rechtVersion`) |
 | Extras | Anfrage-Knopf im Dashboard (`EXTRAS` in `portal.mjs`), keine Abrechnung |
-| QR-Aufsteller | Werbung → „Dein QR-Aufsteller“: Gravurvorlage 100 × 150 mm mit echtem QR-Code der Zahlseite (`js/aufsteller.js`, Glyphen `assets/aufsteller-glyphen.json`), Vorschau Holz hell/dunkel, Studioname oder eigenes Logo (s/w), Download **Formulor-Platte P1 (181 × 181 mm, Birke 3 mm) mit Schild + 2 Fußteilen (Kreuz-Steckverbindung, Schlitze = Materialstärke)** als SVG/PDF, dazu nur Schild SVG/PDF/PNG 600 dpi + digitaler QR (PNG). Farben nach Formulor: Schwarz gefüllt = Gravur, Blau 0,01 mm = Schnitt; Logo als Vektor (keine Pixelbilder). Testdatei: `tattoofin/qr-aufsteller/formulor-test/`. Anfordern → Admin-Mail mit Lieferadresse und Link `/aufsteller.html?s=<studio>` (Dateien für den Hersteller, Daten über `/api/aufsteller`). Inklusive-Pakete: `AUFSTELLER_PAKETE` (Standard `profi`). Muster + KI-Bilder: `tattoofin/qr-aufsteller/` |
+| QR-Aufsteller | **Eingestellt am 15.11.2026** (Entscheidung Domenic). Werbung zeigt nur noch die Zahlseite mit QR-Code („QR-Code speichern (PNG)“, `js/qr-bild.js`, Tipp: ausdrucken, als Aufkleber für die Theke). Gelöscht: `aufsteller.html`, `js/aufsteller.js`, Druckvorlage 22 (Thekenaufsteller), `tattoofin/qr-aufsteller/`. Glyphen für die Link-Vorschau heißen jetzt `assets/schrift-glyphen.json`. |
 | Vorschau | Eigene Site `tattoofin-vorschau.netlify.app` (Env nur `TF_VORSCHAU=1`, `SITE_URL`): eigener Speicher, keine Mails, kein Tracking, Stripe-Simulation (`_lib/stripe-sim.mjs`, `/api/sim/*`), Steuerseite `/vorschau.html`. Bauen + veröffentlichen: `node dev/vorschau-deploy.mjs --deploy` |
 | Tests | `NODE_PATH=… node dev/e2e.mjs [ordner] [handy-ordner]` – 100 Prüfungen inkl. Mandantentrennung, Zahlseite, Leistungsbestätigung, Handy-Screenshots |
 
@@ -51,11 +51,11 @@ Garantie-Erstattung · Abschluss abgebrochen · Rückbuchung (Belege) · Rückbu
 | Thema | Kurz |
 |---|---|
 | Pakete | `risikofrei` (10 % inkl. Zahlungsgebühr, modell provision) · `monatlich` (seit 15.11.2026 49,90 € inkl. MwSt. = 4193 Cent netto + 19 % USt., ohne Gratiszeit, `MONAT_NETTO_CENT`; Bestandskunden behalten ihren Preis in `s.monatNetto`; Abo auf dem DSX-Konto, Stripe Billing, eigenes Standard-Konto, 0 %) · `einmal` (999 € netto, eigenes Standard-Konto, 0 %, Garantie 30 Tage, Nutzungszusage 5 Jahre). Alte Links `?modell=provision|kauf` funktionieren. Aktionscode RATENJA aus. Vertrag 2026-10c, alte Fassung `/vertrag-2026-10b.html`. |
-| QR-Aufsteller | inklusive bei Monatlich/Einmalzahlung (`AUFSTELLER_PAKETE`), Admin-Mail mit signiertem Link auf `/aufsteller.html` (Gravurdatei PDF/SVG/PNG). |
+| QR-Aufsteller | entfallen: `POST /api/portal/aufsteller`, `/aufsteller-pruefen`, `GET /api/app/aufsteller` und `GET /api/aufsteller` antworten 410 `{ error, code: "aufsteller_entfallen" }` (Text in `_lib/werbung.mjs` `AUFSTELLER_ENTFALLEN`). Ausnahmen: `{ logo: null }` löscht ein altes Logo; ein vor dem 15.11.2026 begonnener Checkout wird noch verarbeitet (Webhook, Admin-Mail „QR-Aufsteller (alt) bezahlt – erstatten oder liefern“). Altdaten (`s.aufsteller`) zeigt der Admin als „QR-Aufsteller (alt)“. |
 | Eingebettete Einrichtung | mit `STRIPE_PUBLISHABLE_KEY` im Dashboard (`/app.html#einrichtung`); `TF_EINBETTEN=aus` = Notlösung Weiterleitung. |
 | Bezahlfeld für Endkunden | nur mit `TF_BEZAHLFELD=an` UND den Webhook-Ereignissen `payment_intent.succeeded`, `payment_intent.processing`, `payment_intent.payment_failed` an beiden Endpoints. Sonst Stripe-Checkout (Standard). |
 | Abo Monatlich | Kündigung im Portal = `cancel_at_period_end`. Empfohlen: Ereignis `customer.subscription.deleted` am Endpoint „Ihr Konto“. |
-| Sicherheit | `/api/connect` nur mit Sitzung oder signiertem Link (24 h), `/api/signup?id=` ohne Sitzung nur Status, `/api/aufsteller` nur signiert, Login-Rate-Limit, E-Mail-Vergleich normalisiert (gmail = googlemail). |
+| Sicherheit | `/api/connect` nur mit Sitzung oder signiertem Link (24 h), `/api/signup?id=` ohne Sitzung nur Status, Login-Rate-Limit, E-Mail-Vergleich normalisiert (gmail = googlemail). |
 | Admin | Login per E-Mail-Link oder 6-stelligem Code aus derselben Mail (`POST /api/admin-login/code`, 15 Min., einmal, max. 5 Versuche je Code und 10 falsche Codes je Adresse in 24 Std., danach nur noch der Link + Admin-Mail; für die Homescreen-App, die eigene Cookies hat) (`ADMIN_EMAILS`/`ADMIN_EMAIL`, 12 h Sitzung) oder `ADMIN_TOKEN`. „Dashboard ansehen“ = Studio-Dashboard nur lesend, protokolliert. |
 | Mails | Vorübergehende Fehler (z. B. IONOS „450 Mail send limit exceeded“) → Warteschlange, `mail-nachsenden.mjs` alle 10 Min. Gleiche Admin-Meldung max. 1×/30 Min. |
 
@@ -105,7 +105,7 @@ node dev/e2e.mjs        # kompletter Durchlauf im Browser (156 Prüfungen)
 
 Betriebs-Durchlauf (27.10.2026, `dev/betrieb.mjs`, ca. 170 Prüfungen, Protokoll mit Beweis je Schritt; konfiguriert wie live: Checkout statt Bezahlfeld, Karte + Klarna):
 alle 3 Pakete im Browser mit offenem Cookie-Fenster, Connect-Einrichtung (eingebettet + Stripe-Seite), Login-Link, Zahlungslink, Karte/Klarna, Provision 10 %, Anzahlung/No-Show/Teil-Erstattung,
-Klarna abgelehnt/nicht aktiviert, abgelaufene/stornierte Links, Webhook-Ausfall (Nachtragen per Rückkehr + Tagesjob), Dispute, Monatsrechnung, Abo-Ereignisse, QR-Aufsteller, Einladung, Admin, Anfrage-Formular, tägliche Jobs, Resend/Warteschlange, /api/status.
+Klarna abgelehnt/nicht aktiviert, abgelaufene/stornierte Links, Webhook-Ausfall (Nachtragen per Rückkehr + Tagesjob), Dispute, Monatsrechnung, Abo-Ereignisse, QR-Aufsteller entfallen (410), Einladung, Admin, Anfrage-Formular, tägliche Jobs, Resend/Warteschlange, /api/status.
 ```
 NODE_PATH=… node dev/betrieb.mjs [runde]     # oder: npm run test:betrieb;  PROTOKOLL=datei.md schreibt die Tabelle
 ```
@@ -134,7 +134,7 @@ Die native App (`tattoofin/ios/`) spricht dieselben Funktionen an wie das Dashbo
 
 - `netlify/functions/app.mjs` (`/api/app/*`): Code per Mail anfordern und anmelden (6 Ziffern, 10 Min., 5 Versuche, Grenzen je Adresse und IP),
   Geräte, Mitteilungen (Push-Token), Auszahlungen + Saldo (Stripe `/v1/payouts`, `/v1/balance` am Studio-Konto), Team, Konto löschen (= Kündigung + Löschanfrage).
-- Alle `/api/portal/*` gehen auch mit App-Token. Gesperrt mit App-Token (403 `nur_web`): stripe-session, rechnungen, umstellung, erstattung, extra (aufsteller und aufsteller-pruefen seit 14.11.2026 frei, nur Inhaber).
+- Alle `/api/portal/*` gehen auch mit App-Token. Gesperrt mit App-Token (403 `nur_web`): stripe-session, rechnungen, umstellung, erstattung, extra. aufsteller und aufsteller-pruefen: seit 15.11.2026 immer 410 (eingestellt).
   Neu: `GET /api/portal/zahlung/:id[?abgleich=1]`, `GET /api/portal/gutschein-code?t=<token>` (QR auf Gutschein-PDF und gutschein.html).
 - „Auf allen Geräten abmelden“ (Dashboard) meldet auch alle App-Geräte ab; entfernte Team-Adressen verlieren ihre App-Geräte sofort.
 - Push (`_lib/push.mjs`): APNs HTTP/2 mit ES256-Token. **Echt-Versand wartet auf Apple-Team-ID und APNs-Schlüssel.** Ohne `APNS_KEY_P8` (oder `APNS_KEY_P8_BASE64`),
@@ -198,18 +198,18 @@ Tests mit anderen Ports (wenn parallel ein Server läuft): `E2E_PORT`, `E2E_RESE
 
 ## Stand 14.11.2026: Alles aus dem Web-Dashboard auch in der App (Branch `claude/tattoofin-app-paritaet`)
 
-- `GET /api/app/werbung`, `GET /api/app/aufsteller`, `GET /api/app/start` (Checkliste) und `POST /api/portal/aufsteller`, `…/aufsteller-pruefen` mit App-Token (nur Inhaber).
-  Antworten für die App ohne Paket-, Abo- oder Website-Preise (Apple 3.1.1); einziger Preis: der QR-Aufsteller (körperliche Ware, 3.1.3(e)). Texte/Kapitel: `_lib/werbung.mjs`.
-- **Druckvorlagen** (Fensteraufkleber, Flyer A6, Thekenaufsteller A5, Kundeninfo, Bilder für Instagram) liegen jetzt unter `public/druck/kunden/` mit eigenem
+- `GET /api/app/werbung`, `GET /api/app/start` (Checkliste) mit App-Token. `GET /api/app/aufsteller` und `POST /api/portal/aufsteller`, `…/aufsteller-pruefen`: seit 15.11.2026 immer 410 `aufsteller_entfallen`; die App 1.0 (1) zeigt dann den Text aus `error` (kein Abmelden, nie 401).
+  Antworten für die App ohne Paket-, Abo- oder Website-Preise (Apple 3.1.1). Texte/Kapitel: `_lib/werbung.mjs`.
+- **Druckvorlagen** (Fensteraufkleber, Flyer A6, Kundeninfo, Bilder für Instagram) liegen jetzt unter `public/druck/kunden/` mit eigenem
   `public/druck/assets/` (Kopie aus `tattoofin/kunden/` und `tattoofin/assets/`; `config.js` nur mit öffentlichen Werten, ohne Preise und Namen). `noindex` für `/druck/*`.
   Übersicht `public/druck/index.html` („← Alle Vorlagen“). Vorher zeigten die Links auf GitHub Pages und lieferten 404. Ändert sich eine Vorlage in `tattoofin/kunden/`,
   die Kopie hier nachziehen.
 - So geht's: `soGehts.fussnote` nur bei Klarna dauerhaft, sonst `soGehts.ohneKlarna` („Im Video siehst du Klarna. Bei deinem Studio gibt es Klarna nicht dauerhaft.“);
   im Dashboard gleich (`so-gehts.js`, `data-klarna-dauer`).
 - Zahlseite mit `?app=1` (aus der App „Zahlseite ansehen“): Impressum/Datenschutz öffnen in der App-Fassung (ohne Menü, ohne Weg zur Startseite).
-- Demo-Studio (`POST /api/admin/app-demo`): setzt den QR-Aufsteller und das Logo bei jedem Anlegen zurück (App-Prüfung).
-- Datenschutzerklärung `#app`: Dein Studio in der App, QR-Aufsteller (Logo, Weitergabe an den Betrieb, der fertigt, Löschung), Werbung (Fotos nur hinzufügen, Druckvorlagen-Adresse).
+- Demo-Studio (`POST /api/admin/app-demo`): entfernt bei jedem Anlegen alte Aufsteller-Testdaten und das Logo.
+- Datenschutzerklärung `#app`: Dein Studio in der App, QR-Aufsteller (entfallen seit 15.11.2026; altes Logo auf Wunsch löschen), Werbung (Fotos nur hinzufügen, Druckvorlagen-Adresse).
 - **Offen (Entscheidung Domenic bis 20.11.2026):** Das Werbevideo sagt „Bei uns geht das ganz bequem in Raten.“ – nicht der freigegebene Klarna-Wortlaut
   (`klarna-texte.js` AUSSAGE). Neu schneiden, ab dem Stichtag ausblenden oder ausdrücklich so lassen. Vermerk steht in `public/js/app.js` und `_lib/werbung.mjs`.
-- Tests: `dev/app-api.mjs` prüft u. a. Druckvorlagen auf der eigenen Domain (200, noindex), So geht's ohne Fußnote ohne Klarna, Demo-Reset des Aufstellers.
+- Tests: `dev/app-api.mjs` prüft u. a. Druckvorlagen auf der eigenen Domain (200, noindex), So geht's ohne Fußnote ohne Klarna, Aufsteller entfallen (410 für Inhaber, Team, Apple-Abo, Demo, Sandbox; keine Bestellung, keine Mail, kein Checkout).
 

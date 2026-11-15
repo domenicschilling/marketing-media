@@ -587,18 +587,18 @@ await abschnitt("10 Monatsrechnung (Provision) und Abo-Ereignisse", async () => 
 });
 
 // =====================================================================================================
-await abschnitt("11 QR-Aufsteller (Kauf + Paket) und Geschenk-Einladung", async () => {
+await abschnitt("11 QR-Aufsteller eingestellt (410, keine Bestellung) und Geschenk-Einladung", async () => {
+  // Den QR-Aufsteller aus Holz gibt es seit 15.11.2026 nicht mehr: kein Kauf, kein Anfordern, kein Checkout, keine Admin-Mail
+  const sessVor = (await sessions()).length, mailVor = mails().filter((m) => m.to === "admin@betrieb.test").length;
   const kaufen = await post("/api/portal/aufsteller", { holz: "hell", variante: "name", kaufen: true }, ST.rf.cookie);
-  check(kaufen.status === 200 && /\/pay\//.test(kaufen.data.url || ""), "Risikofrei: QR-Aufsteller kaufen startet Checkout (29 € netto)", (kaufen.data.url || "").replace(STRIPE, ""));
-  const cs = await lastSession();
-  check(Number(cs.line_items[0].price_data.unit_amount) === 2900 && cs.metadata?.typ === "aufsteller", "Aufsteller-Checkout: 29,00 € netto, Typ aufsteller", `${cs.line_items[0].price_data.unit_amount}`);
-  await stripeBezahlen(kaufen.data.url, "card");
-  const adminMails = mails().filter((m) => m.to === "admin@betrieb.test" && /QR-Aufsteller bestellen \(29 € bezahlt\)/.test(m.subject));
-  check(adminMails.length === 1 && /aufsteller\.html\?s=/.test(adminMails[0].html), "Admin-Mail „QR-Aufsteller bestellen (29 € bezahlt)“ genau einmal, mit Gravur-Link", `${adminMails.length}`);
   const anf = await post("/api/portal/aufsteller", { holz: "dunkel", variante: "name", anfordern: true }, ST.mo.cookie);
-  check(anf.status === 200 && mails().some((m) => m.to === "admin@betrieb.test" && /QR-Aufsteller bestellen \(im Paket enthalten\)/.test(m.subject)), "Monatlich: Aufsteller anfordern → Admin-Mail (im Paket enthalten)", `${anf.status}`);
-  const anf2 = await post("/api/portal/aufsteller", { holz: "dunkel", variante: "name", anfordern: true }, ST.mo.cookie);
-  check(anf2.status === 409, "Aufsteller nicht doppelt bestellbar", `HTTP ${anf2.status}`);
+  const best = await post("/api/portal/aufsteller", { bestellen: true }, ST.ei.cookie);
+  const pruef = await post("/api/portal/aufsteller-pruefen", { cs: "cs_test_x" }, ST.mo.cookie);
+  const herst = await json(`/api/aufsteller?s=${(await detail(ST.mo.id)).studio.slug}`, {}, ST.mo.cookie);
+  check([kaufen, anf, best, pruef, herst].every((x) => x.status === 410 && x.data.code === "aufsteller_entfallen" && /gibt es nicht mehr/.test(x.data.error || "")), "Aufsteller kaufen (Risikofrei), anfordern (Monatlich), bestellen (Einmalzahlung), prüfen, Hersteller-Daten → 410 aufsteller_entfallen", [kaufen, anf, best, pruef, herst].map((x) => x.status).join(","));
+  check((await sessions()).length === sessVor && mails().filter((m) => m.to === "admin@betrieb.test").length === mailVor && !mails().some((m) => /QR-Aufsteller bestellen/.test(m.subject)), "Kein Stripe-Checkout, keine Admin-Mail „QR-Aufsteller bestellen“", `${(await sessions()).length - sessVor}`);
+  const seite = await fetch(BASE + "/aufsteller.html"), vorlage = await fetch(BASE + "/druck/kunden/22-thekenaufsteller-a5.html");
+  check(seite.status === 404 && vorlage.status === 404, "Hersteller-Seite und Druckvorlage Thekenaufsteller gibt es nicht mehr (404)", `${seite.status}/${vorlage.status}`);
 
   // Geschenk-Einladung
   const einNeu = await admin("einladen", { body: { email: "gast0@betrieb.test", firma: "Gast Null", senden: false } });
@@ -845,8 +845,8 @@ await abschnitt("17 Recht (27.10.2026): Klarna-Stichtag 20.11.2026 für Risikofr
   check(iv.zahlung.zahlarten.includes("klarna") && iv.studio.klarna === true && /Klarna verfügbar/.test(vor.whatsappText) && !/Raten|später bezahlen/i.test(vor.whatsappText), "Vor dem Stichtag (19.11. 23:59:59): Risikofrei bietet Klarna, WhatsApp-Text nennt nur den Namen „Klarna verfügbar“ (keine Raten-Aussage)", `${iv.zahlung.zahlarten}`);
   const cfgVor = (await json("/api/config")).data;
   check(cfgVor.klarnaPlattformAus === false && cfgVor.klarnaPlattformBis === "2026-11-19T23:00:00.000Z", "Öffentliche Konfiguration: Stichtag als Zeitpunkt, noch nicht erreicht", `${cfgVor.klarnaPlattformBis}`);
-  const aufV = (await json(`/api/aufsteller?s=${await slug("rf")}`, {}, ST.rf.cookie)).data;
-  check(aufV.klarna === false, "QR-Aufsteller (Gravur hält länger als der Stichtag): Risikofrei schon heute ohne Klarna", `${aufV.klarna}`);
+  const matV = (await json("/api/portal", {}, ST.rf.cookie)).data.materialLinks;
+  check(Array.isArray(matV) && matV.length === 0, "Druckvorlagen (halten länger als der Stichtag): Risikofrei schon heute ohne Raten-Material", `${matV?.length}`);
 
   // c) genau AM Stichtag (00:00:00 deutscher Zeit)
   setze("TF_JETZT", "2026-11-19T23:00:00Z");
@@ -870,8 +870,8 @@ await abschnitt("17 Recht (27.10.2026): Klarna-Stichtag 20.11.2026 für Risikofr
   const im = await info(eiL.zahlung.id);
   const stm = await starte(eiL.zahlung.id);
   check(im.zahlung.zahlarten.includes("klarna") && im.studio.klarna === true && stm.pmt.includes("klarna") && stm.cs.account === ST.ei.konto, "Einmalzahlung (eigenes Stripe-Konto) behält Klarna auch nach dem Stichtag", `${stm.pmt}`);
-  const aufM = (await json(`/api/aufsteller?s=${await slug("ei")}`, {}, ST.ei.cookie)).data;
-  check(aufM.klarna === true, "QR-Aufsteller Einmalzahlung: Klarna bleibt", `${aufM.klarna}`);
+  const matM = (await json("/api/portal", {}, ST.ei.cookie)).data.materialLinks;
+  check(matM?.length === 4 && !matM.some((m) => /aufsteller/i.test(m.name)), "Druckvorlagen Einmalzahlung: mit Klarna, 4 Vorlagen (ohne Thekenaufsteller)", `${matM?.length}`);
 
   // d) Steuerung: Datum ändern / abschalten
   setze("TF_JETZT", "2026-12-01T12:00:00Z");
@@ -927,7 +927,7 @@ await abschnitt("17 Recht (27.10.2026): Klarna-Stichtag 20.11.2026 für Risikofr
   const altVertrag = await holen("/vertrag-2026-10d.html");
   check(/kein Kreditvermittler/.test(altVertrag) && /archiviert/.test(altVertrag), "Alte Vertragsfassung 2026-10d bleibt unverändert als Archiv (nicht rückwirkend ändern)", "");
   const cfgV = (await json("/api/config")).data;
-  check(cfgV.vertragVersion === "2026-12c" && cfgV.rechtVersion === "2026-12", "Versionen hochgezählt: Vertrag 2026-12c (seit 15.11.2026 Web-Preis 49,90 € inkl. MwSt.) und Rechtsblatt 2026-12", `${cfgV.vertragVersion}/${cfgV.rechtVersion}`);
+  check(cfgV.vertragVersion === "2026-12d" && cfgV.rechtVersion === "2026-12", "Versionen hochgezählt: Vertrag 2026-12d (seit 15.11.2026 ohne QR-Aufsteller, Web-Preis 49,90 € inkl. MwSt.) und Rechtsblatt 2026-12", `${cfgV.vertragVersion}/${cfgV.rechtVersion}`);
   const ratenText = raten.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g, " ").replace(/<[^>]+>/g, " ");
   const kopfDaten = (raten.match(/<title>[\s\S]*?<\/title>/) || [""])[0] + (raten.match(/<meta name="description"[^>]*>/) || [""])[0] + (raten.match(/<script type="application\/ld\+json">[\s\S]*?<\/script>/) || [""])[0];
   check(!/zinsfrei|ohne Schufa|ohne Gebühr|0\s?%|monatlich ab|pro Monat/i.test(ratenText) && !/Raten|Klarna/.test(kopfDaten), "/raten: kein zinsfrei/ohne Schufa/Ratenbeträge; Titel, Meta und Schema ohne Raten/Klarna", "");
@@ -940,7 +940,7 @@ await abschnitt("17 Recht (27.10.2026): Klarna-Stichtag 20.11.2026 für Risikofr
     const lum = ([r, g, b]) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
     const hintergrund = (el) => { let e = el; while (e) { const c = parse(getComputedStyle(e).backgroundColor); if (c[3] > 0.9) return c; e = e.parentElement; } return [255, 255, 255, 1]; };
     const sichtbar = (el) => { const r = el.getBoundingClientRect(), cs = getComputedStyle(el); return r.width > 0 && r.height > 0 && cs.visibility !== "hidden" && cs.display !== "none" && !el.closest("[hidden], .hidden"); };
-    // Abbildungen (3D-Mockup des Aufstellers auf der Startseite) zählen nicht, sie sind keine Fließtext-Werbung
+    // Abbildungen (Mockups auf der Startseite) zählen nicht, sie sind keine Fließtext-Werbung
     // kleinstes sichtbares Element, das den Warnsatz trägt (fett oder nicht)
     const warn = [...document.querySelectorAll("body *")].filter((e) => /Achtung! Kreditaufnahme kostet Geld\./.test(e.textContent) && ![...e.children].some((k) => /Achtung! Kreditaufnahme kostet Geld\./.test(k.textContent)) && !e.closest("script, style, .mock") && sichtbar(e));
     if (!warn.length) return { n: 0 };
@@ -994,7 +994,7 @@ await abschnitt("18 Paket Risikofrei geschlossen (26.10.2026): Neukunden gesperr
     check(mails().length === mailsVor, "Gesperrte Anmeldungen verschicken keine Mail (weder an Interessent noch Admin)", "");
     const pak = await json("/api/signup?pakete=1"), cfg = await json("/api/config");
     check(JSON.stringify(pak.data.pakete.map((x) => x.id)) === '["monatlich"]' && JSON.stringify(cfg.data.pakete.map((x) => x.id)) === '["monatlich"]', "Paketlisten für die Website: nur Monatlich", pak.data.pakete.map((x) => x.id).join(","));
-    check(cfg.data.monatNetto === 4193 && cfg.data.kaufNetto === 99900 && cfg.data.aufstellerPreisNetto === 2900, "Preise: Monatlich 41,93 € netto (49,90 € inkl. MwSt., seit 15.11.2026), Einmalzahlung 999 €, QR-Aufsteller einzeln 29 € (alles netto)", `${cfg.data.monatNetto}/${cfg.data.kaufNetto}/${cfg.data.aufstellerPreisNetto}`);
+    check(cfg.data.monatNetto === 4193 && cfg.data.kaufNetto === 99900 && !("aufstellerPreisNetto" in cfg.data) && !("aufstellerPakete" in cfg.data), "Preise: Monatlich 41,93 € netto (49,90 € inkl. MwSt., seit 15.11.2026), Einmalzahlung 999 € (netto); kein Aufsteller-Preis mehr", `${cfg.data.monatNetto}/${cfg.data.kaufNetto}`);
     const mo = await post("/api/signup", { ...DATEN("neu-monatlich@betrieb.test", "Neu Monatlich"), paket: "monatlich" });
     const ein = await post("/api/signup", { ...DATEN("neu-einmal@betrieb.test", "Neu Einmal"), paket: "einmal", zahlart: "rechnung" });
     check(mo.status === 200 && /\/pay\//.test(mo.data.url || "") && ein.status === 410, "Monatlich lässt sich abschließen, Einmalzahlung nicht mehr", `${mo.status} ${ein.status}`);
@@ -1138,7 +1138,7 @@ await abschnitt("19 Altstudio stellt um: Zustimmung, 29 €, neues eigenes Konto
   const nach = await detail(a.id);
   const sn = nach.studio;
   check(sn.modell === "kauf" && sn.paket === "monatlich" && sn.monatNetto === 2900 && sn.status === "einrichtung" && sn.stripe.accountId === null && sn.stripe.altKonto?.accountId === altKonto && sn.stripe.subscriptionId, "Nach Zahlung: Monatlich 29 €, altes Konto vermerkt, neues Konto fehlt noch", JSON.stringify(sn.stripe.altKonto));
-  check(sn.vertrag.version === "2026-12c" && sn.vertrag.monatNetto === 2900 && sn.vertrag.kmu === true && sn.vertragAlt?.length === 1, "Neuer Vertrag gespeichert (Sonderpreis 29 € bleibt), alter bleibt nachvollziehbar", sn.vertrag.version);
+  check(sn.vertrag.version === "2026-12d" && sn.vertrag.monatNetto === 2900 && sn.vertrag.kmu === true && sn.vertragAlt?.length === 1, "Neuer Vertrag gespeichert (Sonderpreis 29 € bleibt), alter bleibt nachvollziehbar", sn.vertrag.version);
   check(mailsAn("umstellung@betrieb.test").some((m) => /Wechsel ist bestätigt/.test(m.subject)), "Bestätigung per Mail", "");
 
   // Altes Konto meldet sich: darf den Status nicht verfälschen
@@ -1200,7 +1200,7 @@ await abschnitt("20 Preis seit 15.11.2026: 49,90 € inkl. MwSt. (41,93 € nett
   const sd = cs?.subscription_data || {};
   check(sd.trial_period_days === undefined && sd.trial_end === undefined && cs?.trial_period_days === undefined && cs?.trial_end === undefined && !/trial/.test(JSON.stringify(cs || {})), "Keine Gratiszeit auf der Website (kein trial_period_days/trial_end)", JSON.stringify(sd).slice(0, 90));
   const st = (await detail(cs?.client_reference_id)).studio || {};
-  check(st.monatNetto === 4193 && st.vertrag?.monatNetto === 4193 && st.vertrag?.version === "2026-12c", "Studio speichert seinen Preis (4193) und die Vertragsfassung 2026-12c", `${st.monatNetto}/${st.vertrag?.monatNetto}/${st.vertrag?.version}`);
+  check(st.monatNetto === 4193 && st.vertrag?.monatNetto === 4193 && st.vertrag?.version === "2026-12d", "Studio speichert seinen Preis (4193) und die Vertragsfassung 2026-12d", `${st.monatNetto}/${st.vertrag?.monatNetto}/${st.vertrag?.version}`);
   const mo = mailAnMit("monatlich@betrieb.test", /Willkommen/) || {};
   check(/49,90 € im Monat inkl\. MwSt\. \(41,93 € netto\)/.test((mo.html || "") + (mo.text || "")) && !/58,31|49,00 € netto/.test((mo.html || "") + (mo.text || "")), "Willkommens-Mail (neues Studio): 49,90 € im Monat inkl. MwSt. (41,93 € netto)", (mo.subject || "").slice(0, 60));
 
@@ -1230,7 +1230,9 @@ await abschnitt("20 Preis seit 15.11.2026: 49,90 € inkl. MwSt. (41,93 € nett
   const pg = await ctx.newPage();
   const text = async (u) => { await pg.goto(BASE + u, { waitUntil: "networkidle" }); await wait(300); return pg.evaluate(() => document.body.innerText); };
   const v = await text("/vertrag.html");
-  check(/41,93 € netto zzgl\. Umsatzsteuer \(bei 19 % Umsatzsteuer 49,90 €\)/.test(v) && /41,93 € netto zzgl\. USt\. \(49,90 € inkl\. USt\.\)/.test(v) && /Fassung 2026-12c/.test(v), "vertrag.html: 41,93 € netto (49,90 € inkl. USt.), Fassung 2026-12c", "");
+  check(/41,93 € netto zzgl\. Umsatzsteuer \(bei 19 % Umsatzsteuer 49,90 €\)/.test(v) && /41,93 € netto zzgl\. USt\. \(49,90 € inkl\. USt\.\)/.test(v) && /Fassung 2026-12d/.test(v) && !/Aufsteller/i.test(v), "vertrag.html: 41,93 € netto (49,90 € inkl. USt.), Fassung 2026-12d, ohne QR-Aufsteller", "");
+  { const t12c = await text("/vertrag-2026-12c.html");
+    check(/41,93 € netto zzgl\. Umsatzsteuer \(bei 19 % Umsatzsteuer 49,90 €\)/.test(t12c) && /Archivfassung 2026-12c/.test(t12c) && /QR-Aufsteller/.test(t12c), "Archiv 2026-12c: Preis fest 41,93 € netto (49,90 € inkl. USt.), Aufsteller wie damals vereinbart", ""); }
   for (const [u, n] of [["/vertrag-2026-12b.html", "2026-12b"], ["/vertrag-2026-12.html", "2026-12"], ["/vertrag-2026-11.html", "2026-11"], ["/vertrag-2026-10d.html", "2026-10d"]]) {
     const t = await text(u);
     check(/49 € netto zzgl\. U/.test(t) && !/41,93|49,90/.test(t), `Archiv ${n}: Monatspreis fest 49 € netto, nicht der neue Preis`, "");

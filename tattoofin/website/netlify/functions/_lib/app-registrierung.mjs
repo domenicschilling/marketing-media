@@ -191,7 +191,7 @@ async function registrieren(req, context) {
     sonderkondition: null, quelle: { source: "app", medium: "ios" },
     vertrag: {
       version: CFG.vertragVersion, akzeptiertAm: am, name: d.unterzeichner, ip: clientIp(req, context), ua: (req.headers.get("user-agent") || "").slice(0, 200),
-      vertrag: true, avv: true, unternehmer: true, kmu: true, modell: "kauf", paket: "app", quelle: "app", aufsteller: false,
+      vertrag: true, avv: true, unternehmer: true, kmu: true, modell: "kauf", paket: "app", quelle: "app",
     },
     appEntwurf: { appAccountToken: uuid, am, ablauf },
     stripe: s?.stripe || {},

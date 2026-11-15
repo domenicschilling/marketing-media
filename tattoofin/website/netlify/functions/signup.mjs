@@ -23,7 +23,7 @@ import { loginLink, sessionCookie, currentStudio, zweckOk } from "./_lib/auth.mj
 const weiter = (s) => `/danke.html?id=${s.id}&weiter=app`;
 
 const PRODUKT_EINMAL = "Tattoofin Paket Einmalzahlung";
-const TEXT_EINMAL = "Einrichtung der Zahlungsstruktur inkl. Studio Kit, QR-Aufsteller aus Holz (Wert 29 €), Schulung und Betreuung. Danach keine Tattoofin-Gebühr, nur die Zahlungsgebühren von Stripe";
+const TEXT_EINMAL = "Einrichtung der Zahlungsstruktur inkl. Studio Kit, Schulung und Betreuung. Danach keine Tattoofin-Gebühr, nur die Zahlungsgebühren von Stripe";
 const RECHNUNG_FUSS = `${CFG.firma} · ${CFG.adresse} · USt-IdNr. ${CFG.ustid}`;
 
 export default handler(async (req, context) => {
@@ -94,7 +94,6 @@ export default handler(async (req, context) => {
       version: CFG.vertragVersion, akzeptiertAm: now(), name: d.unterzeichner, ip: clientIp(req, context),
       ua: (req.headers.get("user-agent") || "").slice(0, 200), vertrag: true, avv: true, unternehmer: true, kmu: true,
       modell, paket: paketId, preisNetto, monatNetto, provisionProzent: modell === "provision" ? CFG.provisionProzent : null,
-      aufsteller: ["monatlich", "einmal"].includes(paketId),
     },
     stripe: s?.stripe || {},
   };
@@ -136,7 +135,7 @@ export default handler(async (req, context) => {
         quantity: 1, tax_rates: [await taxRateId()],
         price_data: {
           currency: "eur", unit_amount: monatNetto, recurring: { interval: "month" },
-          product_data: { name: "Tattoofin Paket Monatlich", description: "Zahlungsstruktur, Studio-Portal, Studio Kit, QR-Aufsteller aus Holz (Wert 29 €) und Betreuung. Keine Provision, monatlich kündbar." },
+          product_data: { name: "Tattoofin Paket Monatlich", description: "Zahlungsstruktur, Studio-Portal, Studio Kit und Betreuung. Keine Provision, monatlich kündbar." },
         },
       }],
       subscription_data: { description: "Tattoofin Paket Monatlich", metadata: { studioId: s.id, typ: "abo", paket: "monatlich" } },
@@ -191,7 +190,7 @@ export default handler(async (req, context) => {
     const faellig = fin.due_date ? new Date(fin.due_date * 1000).toISOString() : addMonths(now(), 0);
     await notify(s, mails.anmeldung(s, { loginUrl: loginLink(s.id), connectUrl: einrichtungUrl(s) }));
     await notify(s, mails.rechnungVersendet(s, { betragCent: brutto(preisNetto), rechnungUrl: fin.hosted_invoice_url, faellig }));
-    await notifyAdmin("Neuer Abschluss (Einmalzahlung auf Rechnung) – QR-Aufsteller erst nach Zahlungseingang bestellen", s, { ...paketDetails(s), Betrag: preisNetto / 100 + " € netto" });
+    await notifyAdmin("Neuer Abschluss (Einmalzahlung auf Rechnung)", s, { ...paketDetails(s), Betrag: preisNetto / 100 + " € netto" });
     return eingeloggt(s, { next: weiter(s) });
   }
 

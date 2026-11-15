@@ -19,7 +19,6 @@
         kuendigungProvision: "jederzeit zum Monatsende",
         vertragVersion: api.vertragVersion,
       });
-      if (api.aufstellerPreisNetto) C.aufstellerPreis = api.aufstellerPreisNetto / 100;
     }
     C.websiteUrl = location.origin;
     document.querySelectorAll("[data-cfg]").forEach(function (el) {

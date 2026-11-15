@@ -186,7 +186,7 @@
         '<div class="knopfgitter" style="margin-top:12px"><a class="k" href="#' + e(s.id) + '">Details</a><button class="k" data-ansehen="' + e(s.id) + '">Wie das Studio sehen</button></div></div>';
     }).join("") : '<p class="leer">Noch kein Demo-Studio angelegt.</p>') +
       '<button class="k dunkel" id="demo-neu" style="width:100%">' + (d.length ? "Beispieldaten erneuern" : "Demo-Studio anlegen") + "</button>" +
-      '<p class="klein">Setzt Zahlungen, Gutscheine und QR-Aufsteller des Demo-Studios auf die Beispieldaten zurück. Echte Studios bleiben unberührt.</p>';
+      '<p class="klein">Setzt Zahlungen und Gutscheine des Demo-Studios auf die Beispieldaten zurück. Echte Studios bleiben unberührt.</p>';
     $("demo-neu").onclick = async function () {
       if (!confirm("Sicher? Die Beispieldaten des Demo-Studios werden neu angelegt.")) return;
       var b = $("demo-neu"); b.disabled = true;
@@ -258,9 +258,12 @@
         return '<li><span class="betrag">' + TF.euro(z.betragCent, true) + "</span><b>" + e(z.kunde || "–") + "</b> · " + e(z.status) + '<br><span class="klein">' + e(TF.datum(z.bezahltAm || z.createdAt)) + (z.zahlartText ? " · " + e(z.zahlartText) : "") + (z.beschreibung ? " · " + e(z.beschreibung) : "") + (z.gebuehrNettoCent ? " · Provision " + TF.euro(z.gebuehrNettoCent, true) : "") + (z.abgerechnet ? " · abgerechnet " + e(z.abgerechnet) : "") + "</span></li>";
       }).join("") + "</ul>" + (zahl.length > 40 ? '<p class="klein">… und ' + (zahl.length - 40) + " ältere.</p>" : "") : '<p class="leer">Noch keine.</p>') + "</div>" +
       '<div class="block"><h3>Abrechnungen</h3>' + (d.abrechnungen.length ? '<ul class="posten">' + d.abrechnungen.map(function (ab) { return '<li><span class="betrag">' + TF.euro(ab.provisionNettoCent || 0, true) + " netto</span><b>" + e(ab.monat) + '</b><br><span class="klein">Umsatz ' + TF.euro(ab.umsatzCent || 0, true) + (ab.rechnungNr ? " · Rechnung " + e(ab.rechnungNr) : "") + "</span></li>"; }).join("") + "</ul>" : '<p class="leer">Keine.</p>') + "</div>" +
-      '<div class="block"><h3>QR-Aufsteller</h3><dl class="liste"><dt>Stand</dt><dd>' + e(a.status || (a.angefordertAm ? "angefordert" : "noch nicht bestellt")) + (a.angefordertAm ? " · " + e(TF.datum(a.angefordertAm)) : "") + (a.kauf && a.kauf.bezahltAm ? " · bezahlt " + e(TF.datum(a.kauf.bezahltAm)) : "") + "</dd>" +
-        (a.holz || a.variante ? "<dt>Ausführung</dt><dd>" + e([a.holz, a.variante].filter(Boolean).join(", ")) + "</dd>" : "") + "</dl>" +
-        (d.aufstellerLink ? '<a class="k" style="margin-top:10px" href="' + e(d.aufstellerLink) + '" target="_blank" rel="noopener">Gravurdatei öffnen</a>' : "") + "</div>" +
+      // QR-Aufsteller aus Holz: eingestellt 15.11.2026. Nur noch lesend und nur bei Altdaten (Bestellung/Kauf von vorher oder Vertrag mit Aufsteller)
+      (a.angefordertAm || (a.kauf && a.kauf.csId) || v.aufsteller ? '<div class="block"><h3>QR-Aufsteller (alt)</h3><dl class="liste"><dt>Stand</dt><dd>' +
+        e(a.kauf && a.kauf.bezahltAm ? "bezahlt " + TF.datum(a.kauf.bezahltAm) : a.angefordertAm ? "angefordert " + TF.datum(a.angefordertAm) : a.kauf && a.kauf.csId ? "Kauf begonnen " + TF.datum(a.kauf.gestartetAm) + ", nicht bezahlt" : "nicht bestellt") + "</dd>" +
+        (a.holz || a.variante ? "<dt>Ausführung</dt><dd>" + e([a.holz, a.variante].filter(Boolean).join(", ")) + (a.hatLogo ? ", Logo gespeichert" : "") + "</dd>" : "") +
+        (v.aufsteller ? "<dt>Vertrag</dt><dd>Aufsteller war laut Vertrag (Fassung " + e(v.version || "–") + ") inklusive</dd>" : "") +
+        '</dl><p class="klein">Den Holz-Aufsteller gibt es nicht mehr. Bei Altfällen bitte direkt mit dem Studio klären (erstatten oder ausnahmsweise liefern).</p></div>' : "") +
       '<details class="block"><summary>Fragebogen' + (s.fragebogen ? " ✓" : " (leer)") + "</summary><pre>" + e(JSON.stringify(s.fragebogen || {}, null, 2)) + "</pre></details>" +
       '<details class="block" id="d-brand"><summary>Logo/Farbe für Studio' + (s.branding ? " ✓" + (s.branding.stripeAm ? " (bei Stripe " + e(TF.datum(s.branding.stripeAm)) + ")" : "") : "") + "</summary>" +
         '<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:8px 0" id="b-vorschau"></div>' +

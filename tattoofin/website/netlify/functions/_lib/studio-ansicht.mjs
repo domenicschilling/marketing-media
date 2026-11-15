@@ -1,5 +1,5 @@
 // Ausgabe von Studio und Zahlungen an das Studio selbst (Dashboard /api/portal und App /api/app). Ohne interne Werte.
-import { CFG, provisionSatz, paketVon, aufstellerInklusive, BAUSTEINE_SIMULIERT, istApple, appleCfg, sandboxKasse, testKasse } from "./config.mjs";
+import { CFG, provisionSatz, paketVon, BAUSTEINE_SIMULIERT, istApple, appleCfg, sandboxKasse, testKasse } from "./config.mjs";
 import { hatUmstellungsangebot, connectUrl, darfKassieren, anzahlungsbedingungen, eingebettet, klarnaFuer, klarnaDauerhaft, STATUS, hatGarantie } from "./domain.mjs";
 import { gutscheinStatus, gutscheinUrl } from "./gutschein.mjs";
 
@@ -44,7 +44,7 @@ export const oeffentlich = (s) => ({
   abrechnung: abrechnungVon(s), apple: appleAboAusgabe(s),
   stripe: s.demo ? DEMO_STRIPE : { klarnaAktiv: s.stripe?.klarnaAktiv, verbunden: Boolean(s.stripe?.accountId), freigegeben: Boolean(s.stripe?.chargesEnabled), auszahlungen: Boolean(s.stripe?.payoutsEnabled), express: s.stripe?.kontoTyp === "express", angabenGemacht: Boolean(s.stripe?.detailsSubmitted), kontoTyp: s.stripe?.kontoTyp || (s.modell === "provision" ? "express" : "standard") },
   klarna: klarnaFuer(s), klarnaDauerhaft: klarnaDauerhaft(s),
-  paket: paketVon(s).id, paketName: paketVon(s).name, provisionProzent: provisionSatz(s), monatNetto: s.monatNetto || null, aufstellerInklusive: aufstellerInklusive(s),
+  paket: paketVon(s).id, paketName: paketVon(s).name, provisionProzent: provisionSatz(s), monatNetto: s.monatNetto || null,
   recht: s.recht ? { version: s.recht.version, am: s.recht.am, aktuell: s.recht.version === CFG.rechtVersion } : null,
   checkliste: s.checkliste || {}, extrasAngefragt: Object.keys(s.extras || {}), eingebettet: eingebettet(), simulation: BAUSTEINE_SIMULIERT,
   anzahlungsbedingungen: anzahlungsbedingungen(s),
@@ -53,5 +53,4 @@ export const oeffentlich = (s) => ({
   umstellungAngebot: hatUmstellungsangebot(s) ? { monatNetto: s.umstellung.monatNetto } : null,
   altKonto: s.stripe?.altKonto ? { bis: s.stripe.altKonto.bis } : null,
   kannKassieren: Boolean(darfKassieren(s)), zahlseite: zahlseite(s), connectUrl: testKasse(s) ? null : connectUrl(s),
-  aufsteller: { inklusive: aufstellerInklusive(s), bestellbar: aufstellerInklusive(s) || !testKasse(s), holz: s.aufsteller?.holz || "hell", variante: s.aufsteller?.variante || "name", hatLogo: Boolean(s.aufsteller?.hatLogo), angefordertAm: s.aufsteller?.angefordertAm || null, preisNetto: CFG.aufstellerPreisNetto, bezahltAm: s.aufsteller?.kauf?.bezahltAm || null },
 });

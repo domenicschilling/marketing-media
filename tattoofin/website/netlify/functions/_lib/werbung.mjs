@@ -1,13 +1,14 @@
-// Werbung und Hilfe für die Tattoofin-App (GET /api/app/werbung, GET /api/app/aufsteller) – seit 14.11.2026.
+// Werbung und Hilfe für die Tattoofin-App (GET /api/app/werbung) – seit 14.11.2026.
 // Texte der Beiträge und des Werbevideos kommen aus public/js/werbung-texte.js: dieselbe Datei nutzt das Dashboard im Browser,
 // damit Web und App nie auseinanderlaufen. Klarna-Wortlaut aus _lib/klarna-texte.mjs (gleich mit public/js/klarna-texte.js, e2e prüft das).
 // Klarna/Raten-Material (Video sagt „in Raten“, Beiträge „Mit Klarna bezahlen“, Druckmaterial „Ratenzahlung möglich*“) nur, wenn das
 // Studio Klarna dauerhaft anbietet (klarnaDauerhaft: alle Studios mit eigenem Stripe-Konto inkl. Apple-Abo; nicht Risikofrei über das
 // Plattformkonto ab dem Stichtag; nicht, wenn ZAHLARTEN ohne klarna). Gutscheine kommen hier nie vor.
-// Apple 3.1.1/3.1.3: keine Paket-, Website- oder Abo-Preise in den Antworten für die App. Einziger Preis: der QR-Aufsteller (körperliche Ware).
+// Apple 3.1.1/3.1.3: keine Paket-, Website- oder Abo-Preise in den Antworten für die App.
+// Den QR-Aufsteller aus Holz gibt es seit 15.11.2026 nicht mehr (Entscheidung Domenic). Die App 1.0 (1) ruft GET /api/app/aufsteller noch auf
+// und bekommt dann AUFSTELLER_ENTFALLEN (410): Die App zeigt genau diesen Text (AufstellerView → FehlerAnsicht), ohne Absturz und ohne Abmelden.
 import "../../../public/js/werbung-texte.js";
-import { CFG, aufstellerInklusive, testKasse } from "./config.mjs";
-import { euro, brutto } from "./util.mjs";
+import { CFG } from "./config.mjs";
 import { klarnaDauerhaft } from "./domain.mjs";
 import { KLARNA_NAME, KLARNA_ZUSATZ_STUDIO, KLARNA_WARNSATZ, PFLICHTSATZ } from "./klarna-texte.mjs";
 import { zahlseite } from "./studio-ansicht.mjs";
@@ -46,7 +47,7 @@ export const SO_GEHTS_OHNE_KLARNA = "Im Video siehst du Klarna. Bei deinem Studi
 export function materialLinks(s) {
   const q = `studio=${encodeURIComponent(s.firma)}&tel=${encodeURIComponent(s.studioTelefon || "")}&zahlen=${encodeURIComponent(zahlseite(s))}`;
   return [
-    ["20-fensteraufkleber", "Fensteraufkleber"], ["21-flyer-a6", "Flyer A6"], ["22-thekenaufsteller-a5", "Thekenaufsteller A5"],
+    ["20-fensteraufkleber", "Fensteraufkleber"], ["21-flyer-a6", "Flyer A6"],
     ["23-kundeninfo", "Kundeninfo"], ["24-social-kit", "Bilder für Instagram (Story, Beitrag, Badge)"],
   ].map(([n, titel]) => ({ name: n, titel, url: `${CFG.materialsUrl}${n}.html?${q}` }));
 }
@@ -66,7 +67,7 @@ export function werbungFuer(s) {
   })) : [];
   return {
     klarna,
-    // klein, aber lesbar, überall in der App, wo Raten vorkommt (Video, Beiträge, Druckmaterial, Aufsteller)
+    // klein, aber lesbar, überall in der App, wo Raten vorkommt (Video, Beiträge, Druckmaterial)
     fussnote: klarna ? PFLICHTSATZ : null,
     studio: { firma: s.firma, ort: s.ort || "", zahlseite: k.zahlseite },
     zahlseite: k.zahlseite,
@@ -96,41 +97,9 @@ export function werbungFuer(s) {
   };
 }
 
-// QR-Aufsteller in der App: nur Artikel + Preis des Aufstellers (körperliche Ware, Apple 3.1.3(e)). Kein Paket, kein Abo, keine Website.
-// kostenlos: im Paket enthalten (config.aufstellerInklusive, also nicht beim Bestandskunden-Preis eines umgestellten Altstudios).
-// bestellbar false: Testkasse (Demo/Apple-Sandbox, config.testKasse) und nicht kostenlos → kein Preis, kein Knopf, nur testmodusHinweis
-// (POST /api/portal/aufsteller lehnt den Kauf dann mit 409 code "testmodus" ab, es wird nie eine echte Stripe-Kasse geöffnet).
-export const AUFSTELLER_ARTIKEL = "QR-Aufsteller aus Holz";
-export const AUFSTELLER_TESTMODUS = "Im Testmodus kannst du den Aufsteller nicht bestellen. Es wird nichts bezahlt.";
-export async function aufstellerFuerApp(s, { mitLogo = false, store } = {}) {
-  const a = s.aufsteller || {};
-  const kostenlos = aufstellerInklusive(s);
-  const bestellbar = kostenlos || !testKasse(s);
-  const mitPreis = !kostenlos && bestellbar;
-  const netto = CFG.aufstellerPreisNetto, gesamt = brutto(netto);
-  const bezahltAm = a.kauf?.bezahltAm || null, angefordertAm = a.angefordertAm || null;
-  const status = bezahltAm ? "bezahlt" : angefordertAm ? "bestellt" : a.kauf?.csId ? "zahlung_offen" : "offen";
-  const logo = mitLogo && a.hatLogo && store ? await store.get("aufsteller-logo/" + s.id) : null;
-  const klarna = werbungMitKlarna(s);
-  return {
-    artikel: AUFSTELLER_ARTIKEL,
-    beschreibung: "Aus Holz, graviert mit dem QR-Code deiner Zahlseite und deinem Studionamen oder Logo. Wir schicken ihn an deine Studio-Adresse.",
-    kostenlos, bestellbar,
-    preis: mitPreis ? { nettoCent: netto, gesamtCent: gesamt, ustProzent: CFG.ustProzent, text: `${euro(netto)} + ${CFG.ustProzent} % MwSt. = ${euro(gesamt)}` } : null,
-    preisText: kostenlos ? "Für dich kostenlos" : mitPreis ? `${euro(gesamt)} inkl. MwSt.` : null,
-    knopf: kostenlos ? "Kostenlos bestellen" : mitPreis ? `Für ${euro(gesamt)} bestellen` : null,
-    bezahlenHinweis: mitPreis ? "Du bezahlst sicher bei Stripe. Danach geht es zurück in die App. Die Rechnung kommt per E-Mail." : null,
-    testmodusHinweis: bestellbar ? null : AUFSTELLER_TESTMODUS,
-    holz: a.holz || "hell", variante: logo || a.hatLogo ? a.variante || "name" : "name", hatLogo: Boolean(a.hatLogo),
-    holzHinweis: {
-      hell: "Helles Holz (Birke, Buche, Ahorn) hat den besten Kontrast. Der QR-Code lässt sich auch aus über 1 m scannen.",
-      dunkel: "Dunkles Holz (Walnuss) sieht edel aus. Der QR-Code hat aber weniger Kontrast (sicher bis etwa 80 cm).",
-    },
-    status, bestelltAm: angefordertAm, bezahltAm,
-    statusText: bezahltAm ? "Bestellt und bezahlt. Wir lassen ihn fertigen und melden uns." : angefordertAm ? "Bestellt. Wir lassen ihn fertigen und melden uns." : null,
-    lieferadresse: [s.firma, s.strasse, [s.plz, s.ort].filter(Boolean).join(" ")].filter(Boolean).join(", "),
-    // Für die Vorschau (gleiche Daten wie die Gravur): Name, Link der Zahlseite, Klarna-Zeile nur bei klarnaDauerhaft
-    firma: s.firma, zahlseite: zahlseite(s), klarna, fussnote: klarna ? PFLICHTSATZ : null,
-    ...(mitLogo ? { logo: logo ? { src: logo.src, w: logo.w, h: logo.h } : null } : {}),
-  };
-}
+// QR-Aufsteller aus Holz: seit 15.11.2026 eingestellt. Antwort für alles, was noch danach fragt (App 1.0 (1), alte Dashboard-Seiten):
+// HTTP 410 mit diesem Text. Nie 401 (die App meldet dann ab) und nie die Codes "nur_web"/"nur_inhaber" (dafür hat die App eigene Texte).
+export const AUFSTELLER_ENTFALLEN = {
+  error: "Den QR-Aufsteller aus Holz gibt es nicht mehr. Deinen QR-Code findest du unter Werbung: in Fotos speichern und ausdrucken, zum Beispiel als Aufkleber für die Theke.",
+  code: "aufsteller_entfallen",
+};

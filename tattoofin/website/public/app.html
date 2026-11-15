@@ -29,7 +29,7 @@
       <p class="klein">Deine Kunden können gerade per Karte, Apple Pay und Google Pay zahlen. Klarna schaltest du bei Bedarf selbst in deinem Stripe-Konto ein. Das entscheidest allein du.</p>
       <a class="btn dark small" href="https://dashboard.stripe.com/settings/payment_methods" target="_blank" rel="noopener">Zahlungsmethoden bei Stripe öffnen</a></div>
     <div class="card-a hidden" id="umst-karte"><h2>Neu ab 20.11.: dein eigenes Stripe-Konto</h2>
-      <p class="klein">Am 20.11. ändert sich das Gesetz. Klarna bleibt nur möglich, wenn das Geld direkt auf dein eigenes Stripe-Konto läuft. Dann zahlst du keine 10 % mehr, sondern <b id="umst-preis"></b> netto im Monat, <span id="umst-brutto-zeile">(<span id="umst-brutto"></span> inkl. USt.)</span>, dazu die Zahlungsgebühren direkt an Stripe. Monatlich kündbar. Der QR-Aufsteller ist bei diesem Preis nicht enthalten.</p>
+      <p class="klein">Am 20.11. ändert sich das Gesetz. Klarna bleibt nur möglich, wenn das Geld direkt auf dein eigenes Stripe-Konto läuft. Dann zahlst du keine 10 % mehr, sondern <b id="umst-preis"></b> netto im Monat, <span id="umst-brutto-zeile">(<span id="umst-brutto"></span> inkl. USt.)</span>, dazu die Zahlungsgebühren direkt an Stripe. Monatlich kündbar.</p>
       <p class="klein">Bei einem eigenen Konto laufen auch Streitfälle (z. B. Rückbuchungen) über dein Konto. Wie Klarna dich dabei schützt, können wir dir nicht zusagen.</p>
       <p class="klein">Nach der Bestätigung richtest du das neue Konto ein (ca. 10 Minuten). Stripe prüft es meist in 1 bis 3 Werktagen. Bis zur Freigabe kannst du keine neuen Zahlungslinks nutzen, und offene Links gehen in dieser Zeit auch nicht.</p>
       <label class="haken"><input type="checkbox" id="umst-vertrag"> <span>Ich akzeptiere den <a href="/vertrag.html" target="_blank">Vertrag</a> und den <a href="/avv.html" target="_blank">AVV</a> und handle als Unternehmer/in für mein Studio.</span></label>
@@ -179,37 +179,10 @@
       <p class="klein muted fussnote">*Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, nicht Tattoofin. <strong>Achtung! Kreditaufnahme kostet Geld.</strong></p>
     </div>
     <div id="kit" data-klarna-dauer></div>
-    <div class="card-a"><h2>Deine Zahlseite</h2><p class="muted klein">Für Theke, Flyer und Bio-Link. Kunden scannen, tragen den abgesprochenen Betrag ein und bezahlen.</p>
+    <div class="card-a"><h2>Deine Zahlseite</h2><p class="muted klein">Für Theke, Flyer und Bio-Link. Kunden scannen, tragen den abgesprochenen Betrag ein und bezahlen. Tipp: QR-Code speichern und ausdrucken, zum Beispiel als Aufkleber für die Theke.</p>
       <div class="zs"><div class="qr" id="zs-qr"></div><div><input type="text" id="zs-url" readonly aria-label="Link zu deiner Zahlseite"><div class="row-a"><button class="btn dark small" data-copy="zs-url">Link kopieren</button><a class="btn ghost small" id="zs-open" target="_blank" rel="noopener">Ansehen</a><button class="btn ghost small" id="zs-png">QR-Code speichern (PNG)</button></div></div></div>
     </div>
-    <div class="card-a" id="auf">
-      <h2>Dein QR-Aufsteller</h2>
-      <p class="muted klein">Holzschild für deine Theke, 10 × 15 cm mit kleinem Fuß. Kunden scannen und bezahlen: Tattoo oder Anzahlung<span data-klarna-dauer>, auch mit Klarna</span>. Der QR-Code führt direkt auf deine Zahlseite.</p>
-      <div id="auf-paket" class="auf-paket"></div>
-      <div class="seg" role="radiogroup" aria-label="Holzton">
-        <label><input type="radio" name="auf-holz" value="hell" checked><span>Holz hell</span></label>
-        <label><input type="radio" name="auf-holz" value="dunkel"><span>Holz dunkel</span></label>
-      </div>
-      <div class="seg" role="radiogroup" aria-label="Was oben steht">
-        <label><input type="radio" name="auf-var" value="name" checked><span>Mit Studioname</span></label>
-        <label><input type="radio" name="auf-var" value="logo"><span>Mit deinem Logo</span></label>
-      </div>
-      <div id="auf-logo-box" class="hidden">
-        <label class="lbl" for="auf-logo">Dein Logo (PNG, JPG oder SVG, dunkel auf hellem oder transparentem Grund)</label>
-        <input type="file" id="auf-logo" accept="image/png,image/jpeg,image/svg+xml,image/webp">
-        <p class="klein muted">Wir wandeln es für die Gravur in Schwarz-Weiß um. Was dunkel ist, wird ins Holz gebrannt.</p>
-      </div>
-      <div class="auf-vorschau"><img id="auf-img" alt="Vorschau deines QR-Aufstellers"><p class="klein muted" id="auf-laden">Vorschau wird erstellt …</p></div>
-      <p class="klein muted" id="auf-holz-hinweis"></p>
-      <h3 class="auf-h3">Dateien für den Hersteller</h3>
-      <p class="klein muted"><b>Fertig zum Hochladen bei Formulor</b> (Platte P1, 181 × 181 mm, Sperrholz Birke 3 mm): Schild und Holzfuß auf einer Platte, einfach zusammenstecken.</p>
-      <div class="row-a"><button class="btn dark small" data-auf="fpdf">PDF mit Fuß</button><button class="btn dark small" data-auf="fsvg">SVG mit Fuß</button></div>
-      <p class="klein muted">Nur das Schild (für Anbieter mit eigenem Fuß):</p>
-      <div class="row-a"><button class="btn ghost small" data-auf="pdf">PDF</button><button class="btn ghost small" data-auf="svg">SVG</button><button class="btn ghost small" data-auf="png">PNG (600 dpi)</button></div>
-      <p class="klein muted">Maßstab 1:1. Schwarz = gravieren, blaue Haarlinie = Schnitt. Schriften und Logo sind schon Vektoren. Die unteren 17 mm des Schilds bleiben frei für den Fuß.</p>
-      <p class="klein muted fussnote" data-klarna-dauer>*Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, nicht Tattoofin. <strong>Achtung! Kreditaufnahme kostet Geld.</strong></p>
-    </div>
-    <div class="card-a" id="mat-karte"><h2>Zum Ausdrucken</h2><p class="muted klein">Fensteraufkleber, Flyer und Aufsteller aus deinem Studio Kit.</p><div id="mat" class="liste-links"></div></div>
+    <div class="card-a" id="mat-karte"><h2>Zum Ausdrucken</h2><p class="muted klein">Fensteraufkleber und Flyer aus deinem Studio Kit.</p><div id="mat" class="liste-links"></div></div>
   </section>
 
   <!-- MEHR -->
@@ -297,7 +270,7 @@
 <script src="/js/werbung-texte.js?v=20261114a"></script>
 <script src="/js/stripe-bausteine.js?v=20261111a"></script>
 <script src="/js/app-kit.js?v=20261114a"></script>
-<script src="/js/aufsteller.js?v=20261111a"></script>
+<script src="/js/qr-bild.js?v=20261115a"></script>
 <script src="/js/so-gehts.js?v=20261114b"></script>
-<script src="/js/app.js?v=20261114c"></script>
+<script src="/js/app.js?v=20261115a"></script>
 </body></html>

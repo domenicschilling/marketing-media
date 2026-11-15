@@ -42,7 +42,7 @@
   document.addEventListener("visibilitychange", function () { if (!document.hidden && D) frisch(10000).then(route); });
 
   // Klarna-Elemente nur zeigen, wenn das Studio Klarna anbietet (Paket Risikofrei: ab dem Stichtag nicht mehr, siehe domain.klarnaFuer).
-  // data-klarna = nur mit Klarna, data-ohne-klarna = nur ohne Klarna. Werbung/Aufsteller richten sich nach klarnaDauerhaft (halten länger).
+  // data-klarna = nur mit Klarna, data-ohne-klarna = nur ohne Klarna. Werbung und Druckvorlagen richten sich nach klarnaDauerhaft (halten länger).
   function klarnaSicht() {
     var an = !D || !D.studio || D.studio.klarna !== false, dauer = !D || !D.studio || D.studio.klarnaDauerhaft !== false;
     document.querySelectorAll("[data-klarna]").forEach(function (el) { el.classList.toggle("hidden", !an); });
@@ -390,8 +390,7 @@
     $("mat").innerHTML = mat.map(function (m) { return '<a target="_blank" rel="noopener" href="' + e(m.url) + '">' + e(m.titel) + "<small>Mit " + e(s.firma) + " und deinem QR-Code · Öffnen → Drucken/PDF</small></a>"; }).join("");
     $("mat-karte").classList.toggle("hidden", !mat.length);
     if (window.TFKit && s.klarnaDauerhaft !== false) TFKit.zeige($("kit"), { firma: s.firma, ort: s.ort, zahlseite: s.zahlseite, onPost: function () { abhaken("werbung", true); } });
-    $("zs-png").onclick = function () { if (window.TFAufsteller) datei(TFAufsteller.qrBild(s.zahlseite, 1200), "tattoofin-qr-zahlseite.png"); };
-    aufsteller();
+    $("zs-png").onclick = function () { if (window.TFQr) datei(TFQr.qrBild(s.zahlseite, 1200), "tattoofin-qr-zahlseite.png"); };
     werbevideo();
   }
 
@@ -439,125 +438,23 @@
     };
   }
 
-  // ---------- QR-Aufsteller aus Holz ----------
-  // Vorschau + Dateien (SVG/PDF/PNG) entstehen im Browser aus dem echten Link der Zahlseite (js/aufsteller.js).
-  var AUF = { logo: null, geladen: false, nr: 0 };
+  // Datei speichern (Canvas → PNG oder Blob), z. B. „QR als PNG“
   function datei(inhalt, name) {
     var fertig = function (blob) { var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000); };
     if (inhalt instanceof HTMLCanvasElement) inhalt.toBlob(fertig, "image/png"); else fertig(inhalt);
   }
-  function aufWahl() {
-    var h = document.querySelector('input[name="auf-holz"]:checked'), v = document.querySelector('input[name="auf-var"]:checked');
-    return { holz: h ? h.value : "hell", variante: v ? v.value : "name" };
-  }
-  function aufOpts() { var s = D.studio, w = aufWahl(); return { url: s.zahlseite, firma: s.firma, klarna: s.klarnaDauerhaft !== false, variante: w.variante === "logo" && AUF.logo ? "logo" : w.variante, logo: AUF.logo }; }
-  async function aufZeichnen() {
-    var nr = ++AUF.nr, w = aufWahl();
-    $("auf-logo-box").classList.toggle("hidden", w.variante !== "logo");
-    $("auf-holz-hinweis").textContent = w.holz === "dunkel"
-      ? "Dunkles Holz (Walnuss) sieht edel aus, der QR-Code hat aber weniger Kontrast (im Test sicher bis etwa 80 cm). Bei Formulor gibt es kein dunkles Sperrholz – dafür einen anderen Anbieter wählen."
-      : "Helles Holz (Birke, Buche, Ahorn) hat den besten Kontrast. Im Test ließ sich der QR-Code auch aus über 1 m scannen.";
-    try {
-      var cv = await TFAufsteller.vorschau(aufOpts(), w.holz, 720);
-      if (nr !== AUF.nr) return;
-      $("auf-img").src = cv.toDataURL("image/png"); $("auf-laden").classList.add("hidden");
-    } catch (err) { $("auf-laden").textContent = "Vorschau nicht möglich: " + err.message; }
-  }
-  async function aufSpeichern(extra) {
-    var w = aufWahl(), b = { holz: w.holz, variante: w.variante };
-    Object.assign(b, extra || {});
-    D.studio = await TF.api("/api/portal/aufsteller", { body: b });
-    aufPaket();
-  }
-  function aufPaket() {
-    var a = D.studio.aufsteller || {}, box = $("auf-paket");
-    var preis = euro(a.preisNetto || 2900).replace(",00", "");
-    var knopf = a.bezahltAm ? '<span class="chip ok">✓ Bestellt und bezahlt am ' + dat(a.bezahltAm) + " – wir lassen ihn fertigen und melden uns</span>"
-      : a.angefordertAm ? '<span class="chip ok">✓ ' + (a.inklusive ? "Angefordert" : "Angefragt") + " am " + dat(a.angefordertAm) + " – wir melden uns</span>"
-      : a.inklusive ? '<button class="btn gold small" id="auf-anfordern">Aufsteller kostenlos anfordern</button>'
-      : a.bestellbar === false ? '<span class="klein muted">Im Testmodus kannst du den Aufsteller nicht bestellen. Es wird nichts bezahlt.</span>'
-      : '<button class="btn gold small" id="auf-kaufen">QR-Aufsteller bestellen – ' + preis + '</button>';
-    box.innerHTML = a.inklusive
-      ? "<b>✓ In deinem Paket enthalten (im Wert von " + preis + ").</b> Wir lassen deinen Aufsteller fertigen und schicken ihn an deine Studio-Adresse. Wähle unten Holz und Variante, dann anfordern.<div class=\"row-a\">" + knopf + "</div>"
-      : "<b>Fertig graviert für " + preis + " netto</b> (zzgl. USt., inkl. Versand an deine Studio-Adresse, Rechnung kommt automatisch). Oder kostenlos selbst machen: Die Dateien unten kannst du bei jedem Laser-Dienst gravieren lassen.<div class=\"row-a\">" + knopf + "</div>";
-    var w0 = function () {
-      var w = aufWahl();
-      if (w.variante === "logo" && !AUF.logo) { toast("Bitte lade zuerst dein Logo hoch oder wähle „Mit Studioname“.", true); return null; }
-      return w;
-    };
-    var k = $("auf-anfordern");
-    if (k) k.onclick = async function () {
-      var w = w0(); if (!w) return;
-      if (!confirm("Aufsteller jetzt anfordern? Holz " + (w.holz === "dunkel" ? "dunkel" : "hell") + ", " + (w.variante === "logo" ? "mit deinem Logo" : "mit Studioname") + ". Lieferung an deine Studio-Adresse.")) return;
-      k.disabled = true;
-      try { await aufSpeichern({ anfordern: true }); toast("Danke! Wir kümmern uns um deinen Aufsteller."); }
-      catch (err) { k.disabled = false; toast(err.message, true); }
-    };
-    var kk = $("auf-kaufen");
-    if (kk) kk.onclick = async function () {
-      var w = w0(); if (!w) return;
-      if (!confirm("QR-Aufsteller für " + preis + " netto (zzgl. USt.) bestellen? Holz " + (w.holz === "dunkel" ? "dunkel" : "hell") + ", " + (w.variante === "logo" ? "mit deinem Logo" : "mit Studioname") + ". Lieferung an deine Studio-Adresse. Du wirst zur sicheren Bezahlseite von Stripe weitergeleitet.")) return;
-      kk.disabled = true;
-      try {
-        var b = aufWahl(), r = await TF.api("/api/portal/aufsteller", { body: { holz: b.holz, variante: b.variante, kaufen: true } });
-        if (r.url) { location.href = r.url; return; }
-        D.studio = r; aufPaket();
-      } catch (err) { kk.disabled = false; toast(err.message, true); }
-    };
-  }
-  // Rückkehr aus dem Aufsteller-Checkout (Stripe): Zahlung prüfen, Adresse aufräumen
+  // Den QR-Aufsteller gibt es seit 15.11.2026 nicht mehr. Nur noch: Rückkehr aus einem Stripe-Checkout, der vorher begonnen
+  // wurde (?aufsteller=bezahlt&cs=…) → Zahlung prüfen, damit sie nicht verloren geht; Adresse aufräumen.
   async function aufRueckkehr() {
     var q = new URLSearchParams(location.search);
-    if (q.get("aufsteller") !== "bezahlt" || !q.get("cs")) return;
+    if (!q.get("aufsteller")) return;
     try { history.replaceState(null, "", "/app.html" + location.hash); } catch (x) {}
+    if (q.get("aufsteller") !== "bezahlt" || !q.get("cs")) return;
     try {
       var r = await TF.api("/api/portal/aufsteller-pruefen", { body: { cs: q.get("cs") } });
       D.studio = r;
-      toast(r.bezahlt ? "Danke! Dein QR-Aufsteller ist bestellt. Wir melden uns, sobald er unterwegs ist." : "Die Zahlung ist noch nicht bestätigt. Wir melden uns, sobald sie da ist.", !r.bezahlt);
-      if ($("auf-paket")) aufPaket();
-    } catch (err) { toast(err.message, true); }
-  }
-  async function aufsteller() {
-    if (!window.TFAufsteller) return;
-    var s = D.studio, a = s.aufsteller || {};
-    aufPaket();
-    if (!AUF.geladen) {
-      AUF.geladen = true;
-      try {
-        await TFAufsteller.laden();
-        if (a.hatLogo) { var p = await (await fetch("/api/aufsteller?s=" + encodeURIComponent(s.zahlseite.split("/").pop()))).json(); if (p.logo) AUF.logo = await TFAufsteller.logoAusDaten(p.logo); }
-      } catch (err) { $("auf-laden").textContent = "Vorschau konnte nicht geladen werden."; AUF.geladen = false; return; }
-      document.querySelectorAll('input[name="auf-holz"]').forEach(function (r) { r.checked = r.value === (a.holz || "hell"); r.onchange = function () { aufZeichnen(); aufSpeichern().catch(function () {}); }; });
-      document.querySelectorAll('input[name="auf-var"]').forEach(function (r) {
-        r.checked = r.value === (a.variante || "name");
-        r.onchange = function () { aufZeichnen(); if (r.value === "name" || AUF.logo) aufSpeichern().catch(function () {}); };
-      });
-      $("auf-logo").onchange = async function () {
-        var f = this.files && this.files[0]; if (!f) return;
-        if (f.size > 8e6) return toast("Die Datei ist zu groß (max. 8 MB).", true);
-        try {
-          AUF.logo = await TFAufsteller.logoVorbereiten(f);
-          aufZeichnen();
-          await aufSpeichern({ variante: "logo", logo: AUF.logo.src, logoW: AUF.logo.w, logoH: AUF.logo.h });
-          toast("Logo gespeichert.");
-        } catch (err) { toast(err.message, true); }
-      };
-      document.querySelectorAll("[data-auf]").forEach(function (b) {
-        b.onclick = async function () {
-          var o = aufOpts(), art = b.dataset.auf, name = "tattoofin-qr-aufsteller-" + (s.zahlseite.split("/").pop() || "studio") + (o.variante === "logo" ? "-logo" : "");
-          if (aufWahl().variante === "logo" && !AUF.logo) return toast("Bitte lade zuerst dein Logo hoch – oder wähle „Mit Studioname“.", true);
-          try {
-            var fo = { formulor: true, dicke: 3 };
-            if (art === "fsvg") datei(new Blob([TFAufsteller.svg(o, fo)], { type: "image/svg+xml" }), name + "-formulor-P1-birke-3mm.svg");
-            else if (art === "fpdf") datei(new Blob([TFAufsteller.pdf(o, fo)], { type: "application/pdf" }), name + "-formulor-P1-birke-3mm.pdf");
-            else if (art === "svg") datei(new Blob([TFAufsteller.svg(o)], { type: "image/svg+xml" }), name + "-schild.svg");
-            else if (art === "pdf") datei(new Blob([TFAufsteller.pdf(o)], { type: "application/pdf" }), name + "-schild.pdf");
-            else datei(await TFAufsteller.png(o), name + "-600dpi.png");
-          } catch (err) { toast(err.message, true); }
-        };
-      });
-    }
-    aufZeichnen();
+      toast(r.bezahlt ? "Danke, deine Zahlung ist da. Wir melden uns bei dir." : "Die Zahlung ist noch nicht bestätigt. Wir melden uns, sobald sie da ist.", !r.bezahlt);
+    } catch (err) { /* entfallen (410) oder schon erledigt: nichts anzeigen */ }
   }
 
   // ---------- Mehr ----------

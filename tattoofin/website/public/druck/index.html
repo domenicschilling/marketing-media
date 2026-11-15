@@ -21,7 +21,7 @@ body{background:#fdf6e9}
 (function () {
   var q = location.search;
   var v = [["20-fensteraufkleber", "Fensteraufkleber", "Rund und A4, für die Scheibe"], ["21-flyer-a6", "Flyer A6", "Zum Mitgeben"],
-    ["22-thekenaufsteller-a5", "Thekenaufsteller A5", "Für die Theke"], ["23-kundeninfo", "Kundeninfo", "So bezahlen deine Kunden"],
+    ["23-kundeninfo", "Kundeninfo", "So bezahlen deine Kunden"],
     ["24-social-kit", "Bilder für Instagram", "Story, Beitrag, Badge"]];
   document.getElementById("vorlagen").innerHTML = v.map(function (x) {
     return '<a href="kunden/' + x[0] + '.html' + q.replace(/"/g, "%22") + '">' + x[1] + "<span>" + x[2] + "</span></a>";

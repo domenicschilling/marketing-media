@@ -15,10 +15,9 @@
 //   GET    /api/portal/nachweis/:id        Alle Nachweise zu einer Zahlung (für PDF/Druck); ?pdf=1 → fertiges PDF (A4, für die App)
 //   POST   /api/portal/recht               { version } „Deine rechtliche Lage“ gelesen (Zeitstempel + Version)
 //   POST   /api/portal/extra               { extra, nachricht } Interesse an einem Extra (Anfrage, keine Abrechnung)
-//   POST   /api/portal/aufsteller          { holz, variante, logo?, logoW, logoH, anfordern?, kaufen?, bestellen? } QR-Aufsteller speichern/anfordern
-//                                          (anfordern: im Paket enthalten; kaufen: sonst 29 € netto per Stripe-Checkout → { url };
-//                                          bestellen: Server wählt selbst – kostenlos anfordern oder kaufen, so nutzt es die App)
-//   POST   /api/portal/aufsteller-pruefen  { cs } Rückkehr aus dem Aufsteller-Checkout: Zahlung prüfen (falls der Webhook fehlt)
+//   POST   /api/portal/aufsteller          entfallen (QR-Aufsteller aus Holz eingestellt 15.11.2026) → 410 { error, code: "aufsteller_entfallen" }.
+//                                          Einzige Ausnahme: { logo: null } löscht ein früher gespeichertes Logo (Datenschutz) → { ok, logoGeloescht }
+//   POST   /api/portal/aufsteller-pruefen  { cs } nur noch für einen Aufsteller-Checkout, der vor dem 15.11.2026 begonnen wurde (sonst 410)
 //   POST   /api/portal/checkliste          { punkt, erledigt } Einrichtungs-Checkliste (manuelle Punkte)
 //   POST   /api/portal/abmelden            Auf allen Geräten abmelden (Sitzungsversion hochzählen)
 //   POST   /api/portal/zahlung { art: "gutschein", betrag, kunde (Käufer), email (Pflicht), empfaenger?, nachricht? }  Gutschein-Zahlungslink
@@ -34,23 +33,22 @@
 // (Apple-Richtlinie 3.1: keine Käufe/Abschlüsse digitaler Leistungen in der App, Extras mit Preisen nicht in der App; in Version 1 kein
 // Geldrückfluss aus der App), außerdem DELETE kuendigung (eine Kündigung zurücknehmen = Abo fortsetzen, nur im Dashboard; Kündigen und
 // Löschen bleiben in der App, Apple 5.1.1(v)).
-// Seit 14.11.2026 mit App-Token erlaubt: aufsteller, aufsteller-pruefen (QR-Aufsteller = körperliche Ware, Apple 3.1.3(e): Bezahlen per
-// Stripe-Checkout im Browser). Antworten für die App ohne Paket-/Abo-/Website-Preise: { aufsteller: <App-Block aus _lib/werbung.mjs>, url?, cs? }.
-// Mit App-Token einer Team-Adresse zusätzlich gesperrt (403 nur_inhaber): kuendigung, stripe-dashboard, kontakt, abmelden, aufsteller,
-// aufsteller-pruefen, recht (Bestätigung mit Namen), fragebogen (lesen und senden). Checkliste, Nachweis, Zahlungen, Gutscheine: auch Team.
+// Mit App-Token einer Team-Adresse zusätzlich gesperrt (403 nur_inhaber): kuendigung, stripe-dashboard, kontakt, abmelden,
+// recht (Bestätigung mit Namen), fragebogen (lesen und senden). Checkliste, Nachweis, Zahlungen, Gutscheine: auch Team.
+// aufsteller und aufsteller-pruefen antworten für die App immer 410 (_lib/werbung.mjs AUFSTELLER_ENTFALLEN), auch für das Team.
 // Mandantentrennung: Jede Abfrage nutzt ausschließlich das Studio aus dem Session-Cookie bzw. App-Token; Zahlungen werden
 // über zahlung/<studioId>/<id> gelesen, fremde IDs ergeben immer 404.
-import { CFG, plattformgebuehr, provisionSatz, paketVon, BAUSTEINE_SIMULIERT, aufstellerInklusive, testKasse } from "./_lib/config.mjs";
+import { CFG, plattformgebuehr, provisionSatz, paketVon, BAUSTEINE_SIMULIERT, testKasse } from "./_lib/config.mjs";
 import { json, fail, body, clean, id, now, handler, isEmail, parseBetrag, clientIp, euro } from "./_lib/util.mjs";
 import { saveStudio, zahlungenVon, getZahlung, saveZahlung, abrechnungenVon, getLeistung, store, log } from "./_lib/store.mjs";
 import { currentStudio, clearCookie } from "./_lib/auth.mjs";
 import { geraeteWiderrufen } from "./_lib/app-geraete.mjs";
 import { stripe, dashboardLink, accountSession, ensureConnectedAccount } from "./_lib/stripe.mjs";
-import { hatUmstellungsangebot, umstellungCheckout, notify, notifyAdmin, connectUrl, connectUrlGehostet, darfKassieren, provisionVerdient, kontoAbgleichen, eingebettet, klarnaFuer, provisionZahlung, aufstellerUrl, aufstellerCheckout, aufstellerBezahlt, kuendigungEinreichen, kuendigungZuruecknehmen, zahlungAbgleichen } from "./_lib/domain.mjs";
+import { hatUmstellungsangebot, umstellungCheckout, notify, notifyAdmin, connectUrl, connectUrlGehostet, darfKassieren, provisionVerdient, kontoAbgleichen, eingebettet, klarnaFuer, provisionZahlung, aufstellerBezahlt, kuendigungEinreichen, kuendigungZuruecknehmen, zahlungAbgleichen } from "./_lib/domain.mjs";
 import { fuerStudio, oeffentlich, zahlungsLink } from "./_lib/studio-ansicht.mjs";
 import { randomBytes } from "node:crypto";
 import { KLARNA_NAME, PFLICHTSATZ_STUDIO, gutscheinWort, GUTSCHEIN_HINWEIS } from "./_lib/klarna-texte.mjs";
-import { materialLinks, aufstellerFuerApp, werbungMitKlarna, AUFSTELLER_TESTMODUS } from "./_lib/werbung.mjs";
+import { materialLinks, werbungMitKlarna, AUFSTELLER_ENTFALLEN } from "./_lib/werbung.mjs";
 import { nachweisPdf } from "./_lib/nachweis-pdf.mjs";
 import { gutscheinStatus, gutscheinPdf, gutscheinSenden, normCode, gutscheinPerToken } from "./_lib/gutschein.mjs";
 
@@ -101,7 +99,7 @@ import { mails } from "./_lib/emails.mjs";
 // Mit App-Token gesperrte Bereiche (nur im Dashboard)
 const NUR_WEB = ["stripe-session", "rechnungen", "umstellung", "erstattung", "extra"];
 // Mit App-Token einer Team-Adresse gesperrt (nur der Inhaber darf das; im Web gilt das Cookie wie bisher)
-const NUR_INHABER = ["kuendigung", "stripe-dashboard", "kontakt", "abmelden", "aufsteller", "aufsteller-pruefen", "recht", "fragebogen"];
+const NUR_INHABER = ["kuendigung", "stripe-dashboard", "kontakt", "abmelden", "recht", "fragebogen"];
 
 export default handler(async (req, context) => {
   const s = await currentStudio(req);
@@ -221,7 +219,7 @@ export default handler(async (req, context) => {
     if (name.length < 3) return fail("Bitte trage deinen Vor- und Nachnamen ein.");
     s.umstellung.zustimmung = {
       version: CFG.vertragVersion, akzeptiertAm: now(), am: now(), name, ip: clientIp(req, context), ua: (req.headers.get("user-agent") || "").slice(0, 200),
-      vertrag: true, avv: true, unternehmer: true, kmu: true, modell: "kauf", paket: "monatlich", preisNetto: null, monatNetto: s.umstellung.monatNetto, provisionProzent: null, aufsteller: false,
+      vertrag: true, avv: true, unternehmer: true, kmu: true, modell: "kauf", paket: "monatlich", preisNetto: null, monatNetto: s.umstellung.monatNetto, provisionProzent: null,
     };
     await saveStudio(s);
     await log("umstellung.zustimmung", { studioId: s.id, monatNetto: s.umstellung.monatNetto });
@@ -370,62 +368,29 @@ export default handler(async (req, context) => {
     return json({ ok: true });
   }
 
-  // ---- QR-Aufsteller aus Holz: Auswahl speichern (Holzton, Variante, Logo) und optional anfordern ----
-  // Logo: schwarz/weiß-JPEG aus dem Browser (für einfarbige Gravur), getrennt gespeichert unter aufsteller-logo/<studioId>
-  // App (nur Inhaber): gleiche Abläufe, aber Antwort ohne Paket-/Abo-/Website-Preise ({ aufsteller, url?, cs? }) und Texte ohne „Paket“;
-  // bestellen: true → kostenlos anfordern (wenn enthalten) oder kaufen (Stripe-Checkout, Rückkehr über app-fertig.html, Prüfung per cs).
+  // ---- QR-Aufsteller aus Holz: eingestellt (15.11.2026, Entscheidung Domenic). Keine neuen Bestellungen, kein Checkout, keine Admin-Mail.
+  // Bestandsdaten (s.aufsteller) bleiben für den Admin lesbar. App (auch App 1.0 (1)): immer 410 mit freundlichem Text.
+  const aufstellerEntfallen = () => json(AUFSTELLER_ENTFALLEN, 410);
   if (bereich === "aufsteller" && req.method === "POST") {
-    const app = Boolean(s._app);
-    const antwort = async (extra = {}) => (app ? json({ aufsteller: await aufstellerFuerApp(s), ...extra }) : json({ ...oeffentlich(s), ...extra }));
     const b = await body(req);
-    const holz = ["hell", "dunkel"].includes(b.holz) ? b.holz : "hell";
-    const variante = ["name", "logo"].includes(b.variante) ? b.variante : "name";
-    const a = { ...(s.aufsteller || {}), holz, variante, am: now() };
-    if (b.logo === null) { await store.del("aufsteller-logo/" + s.id); a.hatLogo = false; }
-    else if (typeof b.logo === "string") {
-      if (!/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(b.logo) || b.logo.length > 700000) return fail("Logo bitte als Bild unter 500 KB hochladen.");
-      await store.set("aufsteller-logo/" + s.id, { src: b.logo, w: Math.round(Number(b.logoW) || 0), h: Math.round(Number(b.logoH) || 0), am: now() });
-      a.hatLogo = true;
+    // Datenschutz: ein früher hochgeladenes Logo lässt sich weiter löschen (nur im Dashboard bzw. vom Inhaber)
+    if (b.logo === null && (!s._app || s._app.rolle === "inhaber")) {
+      await store.del("aufsteller-logo/" + s.id);
+      if (s.aufsteller?.hatLogo) { s.aufsteller = { ...s.aufsteller, hatLogo: false, logoGeloeschtAm: now() }; await saveStudio(s); }
+      await log("aufsteller-logo-geloescht", { studioId: s.id, quelle: s._app ? "app" : "web" });
+      if (!s._app) return json({ ok: true, logoGeloescht: true });
     }
-    if (variante === "logo" && !a.hatLogo) return fail(app ? "Bitte wähle zuerst dein Logo aus oder nimm „Mit Studioname“." : "Bitte lade zuerst dein Logo hoch oder wähle „Mit Studioname“.");
-    // Im Paket enthalten? Nicht beim Bestandskunden-Preis eines umgestellten Altstudios (config.aufstellerInklusive)
-    const inklusivePaket = aufstellerInklusive(s);
-    const kaufen = b.bestellen === true ? !inklusivePaket : Boolean(b.kaufen);
-    const anfordern = b.bestellen === true ? inklusivePaket : Boolean(b.anfordern);
-    // Testkasse (Demo, Apple-Sandbox/TestFlight/App Review): nie eine echte Stripe-Kasse öffnen, keine Bestellung speichern (ein mitgeschicktes Logo bleibt gespeichert)
-    if (kaufen && !inklusivePaket && testKasse(s)) return json({ error: AUFSTELLER_TESTMODUS, code: "testmodus" }, 409);
-    if (kaufen && !inklusivePaket) {
-      if (a.angefordertAm || a.kauf?.bezahltAm) return fail("Dein Aufsteller ist schon bestellt. Wir melden uns bei dir.", 409);
-      s.aufsteller = a;
-      const cs = await aufstellerCheckout(s, { app });
-      s.aufsteller.kauf = { csId: cs.id, gestartetAm: now(), ...(app ? { quelle: "app" } : {}) };
-      await saveStudio(s);
-      await log("aufsteller-checkout", { studioId: s.id, cs: cs.id, quelle: app ? "app" : "web" });
-      return antwort({ url: cs.url, ...(app ? { cs: cs.id } : {}) });
-    }
-    if (anfordern) {
-      if (!inklusivePaket) return fail(app ? "Bitte bestelle den Aufsteller über „Bestellen“." : "Der QR-Aufsteller ist in deinem Paket nicht enthalten. Du kannst ihn für 29 € bestellen.", 400);
-      if (a.angefordertAm) return fail("Dein Aufsteller ist schon angefordert. Wir melden uns bei dir.", 409);
-      a.angefordertAm = now();
-      const inklusive = inklusivePaket;
-      await notifyAdmin(`QR-Aufsteller ${inklusive ? "bestellen (im Paket enthalten)" : "angefragt (nicht im Paket)"}`, s, {
-        Paket: paketVon(s).name, Holz: holz === "dunkel" ? "dunkel (Walnuss)" : "hell (Birke/Buche)", Variante: variante === "logo" ? "mit Studio-Logo" : "mit Studioname",
-        Lieferadresse: [s.firma, s.strasse, [s.plz, s.ort].filter(Boolean).join(" ")].filter(Boolean).join(", "),
-        Dateien: aufstellerUrl(s), Telefon: s.telefon, Quelle: app ? "App" : "Dashboard",
-      });
-      await log("aufsteller-angefordert", { studioId: s.id, inklusive, holz, variante, quelle: app ? "app" : "web" });
-    }
-    s.aufsteller = a;
-    await saveStudio(s);
-    return antwort();
+    return aufstellerEntfallen();
   }
 
+  // Rückkehr aus einem Aufsteller-Checkout, der VOR der Einstellung begonnen wurde: Zahlung nicht verlieren (Admin-Mail „alt bezahlt“).
   if (bereich === "aufsteller-pruefen" && req.method === "POST") {
+    const offen = s.aufsteller?.kauf?.csId && !s.aufsteller.kauf.bezahltAm;
+    if (s._app || !offen) return aufstellerEntfallen();
     const cs = clean((await body(req)).cs, 200);
-    if (!/^cs_[A-Za-z0-9_]+$/.test(cs)) return fail("Ungültig");
+    if (!/^cs_[A-Za-z0-9_]+$/.test(cs) || cs !== s.aufsteller.kauf.csId) return fail("Ungültig");
     const session = await stripe("GET", "/checkout/sessions/" + cs);
     const ok = await aufstellerBezahlt(s, session);
-    if (s._app) return json({ aufsteller: await aufstellerFuerApp(s), bezahlt: ok });
     return json({ ...oeffentlich(s), bezahlt: ok });
   }
 

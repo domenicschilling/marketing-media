@@ -48,6 +48,9 @@ const blob = (k) => { try { return JSON.parse(fs.readFileSync(path.join(dataDir,
 const setBlob = (k, v) => fs.writeFileSync(path.join(dataDir, encodeURIComponent(k) + ".json"), JSON.stringify(v, null, 2));
 const mails = () => dateien("mail/").map((f) => JSON.parse(fs.readFileSync(path.join(dataDir, f)))).sort((a, b) => a.at.localeCompare(b.at));
 const mailsAn = (to) => mails().filter((m) => [].concat(m.to).includes(to));
+// QR-Aufsteller eingestellt (15.11.2026): Antwort, die die App 1.0 (1) als freundlichen Text zeigt (nie 401, nie nur_web/nur_inhaber)
+const ENTFALLEN_TEXT = "Den QR-Aufsteller aus Holz gibt es nicht mehr. Deinen QR-Code findest du unter Werbung: in Fotos speichern und ausdrucken, zum Beispiel als Aufkleber für die Theke.";
+const entfallen = (r) => r.status === 410 && r.data.code === "aufsteller_entfallen" && r.data.error === ENTFALLEN_TEXT && Object.keys(r.data).sort().join() === "code,error";
 const logs = (typ) => dateien("log/").map((f) => JSON.parse(fs.readFileSync(path.join(dataDir, f)))).filter((l) => l.type === typ);
 // Grenzen (Rate-Limits) der App zurücksetzen, damit die Abschnitte unabhängig sind
 const rlReset = () => { for (const f of fs.readdirSync(dataDir)) if (/^rl%2Fapp/.test(f)) fs.rmSync(path.join(dataDir, f)); };
@@ -254,7 +257,7 @@ try {
     const r = await call(m, u, { token: tA, body: {} });
     nurWeb.push(r.status === 403 && r.data.code === "nur_web" && r.data.error === "Das geht nur im Dashboard.");
   }
-  check(nurWeb.every(Boolean), "Mit App-Token gesperrt (403 nur_web): stripe-session, rechnungen, umstellung, erstattung, extra (Aufsteller seit 14.11.2026 erlaubt, nur Inhaber)", nurWeb.join(","));
+  check(nurWeb.every(Boolean), "Mit App-Token gesperrt (403 nur_web): stripe-session, rechnungen, umstellung, erstattung, extra", nurWeb.join(","));
   check((await call("POST", "/api/portal/stripe-session", { cookie: A.cookie })).status === 200, "Im Dashboard (Cookie) geht stripe-session weiter");
   const teamPut = await call("PUT", "/api/app/team", { token: tLisaB, body: { emails: [] } });
   const teamLoesch = await call("POST", "/api/app/konto-loeschen", { token: tLisaB, body: { bestaetigung: "LÖSCHEN" } });
@@ -653,11 +656,11 @@ try {
       check(r.status === 401 && !r.data.studios && !r.data.kennzahlen, `/api/admin/uebersicht ${name} → 401`, r.status);
     }
   }
-  // Prüfer hat den QR-Aufsteller bestellt → nächstes Anlegen setzt ihn zurück (Logo inklusive)
+  // Alte Aufsteller-Testdaten im Demo-Studio (vor der Einstellung) → nächstes Anlegen entfernt sie (Logo inklusive)
   setBlob("studio/" + demo.studioId, { ...blob("studio/" + demo.studioId), aufsteller: { holz: "dunkel", variante: "logo", hatLogo: true, angefordertAm: new Date().toISOString() } });
   setBlob("aufsteller-logo/" + demo.studioId, { src: "data:image/jpeg;base64,AAAA", w: 1, h: 1 });
   const demo2 = await admin("app-demo", { email: "review@tattoofin.test" });
-  check(demo2.studioId === demo.studioId && !blob("studio/" + demo.studioId)?.aufsteller && !blob("aufsteller-logo/" + demo.studioId), "Demo-Studio neu anlegen setzt den QR-Aufsteller (und das Logo) zurück", JSON.stringify(blob("studio/" + demo.studioId)?.aufsteller));
+  check(demo2.studioId === demo.studioId && !blob("studio/" + demo.studioId)?.aufsteller && !blob("aufsteller-logo/" + demo.studioId), "Demo-Studio neu anlegen entfernt alte Aufsteller-Daten (und das Logo)", JSON.stringify(blob("studio/" + demo.studioId)?.aufsteller));
   rlReset();
   Object.assign(process.env, { APP_REVIEW_EMAIL: "review@tattoofin.test", APP_REVIEW_CODE: "246810" });
   await call("POST", "/api/app/code", { body: { email: "review@tattoofin.test" } });
@@ -697,12 +700,13 @@ try {
   const dStart = await call("GET", "/api/app/start", { token: tR });
   const dPk = (id) => dStart.data.checkliste?.punkte.find((p) => p.id === id) || {};
   check(dStart.status === 200 && dPk("stripe").ok === true && dPk("stripe").wartet === false && dPk("stripe").ziel === null && dPk("stripe").text === "Testmodus: Für Testzahlungen brauchst du kein Zahlungskonto." && dPk("link").ziel === "link" && dPk("link").gesperrt === false && dPk("link").text === "Zum Ausprobieren gern an dich selbst.", "Demo-Studio: Start-Checkliste mit Stripe-Punkt „Testmodus“ (ohne Ziel), Link-Punkt offen", JSON.stringify([dPk("stripe"), dPk("link")]));
-  const dAuf = await call("GET", "/api/app/aufsteller", { token: tR });
-  const DA = dAuf.data.aufsteller || {};
-  check(dAuf.status === 200 && DA.kostenlos === true && DA.bestellbar === true && DA.knopf === "Kostenlos bestellen" && DA.preis === null && DA.testmodusHinweis === null, "Demo-Studio: Aufsteller im Paket → kostenlos, bestellbar, Knopf „Kostenlos bestellen“", JSON.stringify(DA).slice(0, 200));
+  // QR-Aufsteller eingestellt: auch das Demo-Studio (Apple-Prüfer, App 1.0 (1)) bekommt 410 mit freundlichem Text, keine Bestellung, keine Mail, kein Checkout
   const dAdminVor = mailsAn("admin@app.test").length, dSessVor = Object.keys((await mock("state")).sessions || {}).length;
+  const dAuf = await call("GET", "/api/app/aufsteller", { token: tR });
   const dBest = await call("POST", "/api/portal/aufsteller", { token: tR, body: { holz: "hell", variante: "name", bestellen: true } });
-  check(dBest.status === 200 && dBest.data.aufsteller?.status === "bestellt" && !dBest.data.url && mailsAn("admin@app.test").length === dAdminVor && Object.keys((await mock("state")).sessions || {}).length === dSessVor && logs("aufsteller-angefordert").some((l) => l.studioId === demo.studioId), "Demo-Studio: „Kostenlos bestellen“ geht, ohne Admin-Mail (keine echte Fertigung) und ohne Stripe-Checkout", dBest.text.slice(0, 160));
+  const dPruef = await call("POST", "/api/portal/aufsteller-pruefen", { token: tR, body: { cs: "cs_test_x" } });
+  check(entfallen(dAuf) && entfallen(dBest) && entfallen(dPruef) && dAuf.headers.get("cache-control") === "no-store" && rl.data.token && (await call("GET", "/api/portal", { token: tR })).status === 200, "Demo-Studio (App 1.0 (1)): Aufsteller ansehen/bestellen/prüfen → 410 aufsteller_entfallen mit freundlichem Text, Token bleibt gültig (kein Abmelden)", dAuf.text.slice(0, 200));
+  check(mailsAn("admin@app.test").length === dAdminVor && Object.keys((await mock("state")).sessions || {}).length === dSessVor && !blob("studio/" + demo.studioId).aufsteller && !logs("aufsteller-angefordert").length && !logs("aufsteller-checkout").length, "Demo-Studio: keine Bestellung gespeichert, keine Admin-Mail, kein Stripe-Checkout");
   check(mailsAn("review@tattoofin.test").length === 0, "Demo-Studio bekommt keine Mails (auch kein „Neues Gerät“)");
   const jobsD = await admin("jobs", {});
   const abr = await admin("abrechnung", { dryRun: true });
@@ -741,7 +745,7 @@ try {
 
   // Studios D/E aus „Werbung“ für spätere Prüfungen im Apple-Block (dort gibt es eigene D/E)
   let werbD, werbE, werbTD;
-  { // Werbung, Start, Aufsteller, Nachweis-PDF, Rollen (App-Parität mit dem Web, 14.11.2026): eigene Studios D (Inhaberin + Team) und E
+  { // Werbung, Start, Aufsteller (entfallen), Nachweis-PDF, Rollen (App-Parität mit dem Web, 14.11.2026): eigene Studios D (Inhaberin + Team) und E
   // ==================================================================================================
   teil("Werbung in der App: GET /api/app/werbung (gleiche Texte wie im Dashboard, Klarna nur mit klarnaDauerhaft)");
   const D = await studioAnlegen("dora@ink-d.test", "Ink Studio D UG (haftungsbeschränkt)", "Bad Kissingen");
@@ -785,7 +789,7 @@ try {
     const r = await fetch(m.url.split("?")[0]);
     check(r.status === 200 && /<meta name="robots" content="noindex">/.test(await r.text()), `Druckvorlage ${m.name} lädt (200, noindex)`, String(r.status));
   }
-  check(wd.materialLinks?.length === 5 && wd.materialLinks[0].name === "20-fensteraufkleber" && wd.materialLinks.every((m) => m.url.includes("studio=Ink%20Studio%20D%20UG%20(haftungsbeschr%C3%A4nkt)") && m.url.includes("zahlen=" + encodeURIComponent(zsD))), "Druckvorlagen: 5 Links mit Studio und Zahlseite (wie GET /api/portal)", JSON.stringify(wd.materialLinks?.[0]));
+  check(wd.materialLinks?.length === 4 && wd.materialLinks[0].name === "20-fensteraufkleber" && !wd.materialLinks.some((m) => /aufsteller/i.test(m.name + m.titel)) && wd.materialLinks.every((m) => m.url.includes("studio=Ink%20Studio%20D%20UG%20(haftungsbeschr%C3%A4nkt)") && m.url.includes("zahlen=" + encodeURIComponent(zsD))), "Druckvorlagen: 4 Links mit Studio und Zahlseite (wie GET /api/portal), ohne Thekenaufsteller", JSON.stringify(wd.materialLinks?.[0]));
   const portalD = await call("GET", "/api/portal", { token: tD });
   check(JSON.stringify(portalD.data.materialLinks) === JSON.stringify(wd.materialLinks), "materialLinks gleich wie in GET /api/portal");
   const sg = wd.soGehts || {};
@@ -849,49 +853,50 @@ try {
   check(/\[\?&\]app=1\(&\|\$\)\/\.test\(location\.search\)\) document\.querySelector\("\.knopf"\)\.remove\(\)/.test(rechtApp), "recht.html?app=1: ohne Drucken-Knopf und ohne Link ins Web-Dashboard");
 
   // ==================================================================================================
-  teil("QR-Aufsteller in der App (nur Inhaber, ohne Paket-/Website-Preise)");
+  teil("QR-Aufsteller eingestellt (15.11.2026): App 1.0 (1) bekommt 410 mit freundlichem Text, keine Bestellung, kein Checkout");
   const LOGO = "data:image/jpeg;base64," + Buffer.from("logo-test").toString("base64");
-  const aTeam = await call("GET", "/api/app/aufsteller", { token: tDteam });
-  const aTeamP = await call("POST", "/api/portal/aufsteller", { token: tDteam, body: { holz: "dunkel", bestellen: true } });
-  const aTeamC = await call("POST", "/api/portal/aufsteller-pruefen", { token: tDteam, body: { cs: "cs_test" } });
-  check(aTeam.status === 403 && aTeam.data.code === "nur_inhaber" && aTeamP.status === 403 && aTeamP.data.code === "nur_inhaber" && aTeamC.status === 403 && !blob("studio/" + D.id).aufsteller, "Team: Aufsteller ansehen/bestellen/prüfen → 403 nur_inhaber");
-  const a0 = await call("GET", "/api/app/aufsteller", { token: tD });
-  const A0 = a0.data.aufsteller || {};
-  check(a0.status === 200 && A0.artikel === "QR-Aufsteller aus Holz" && A0.kostenlos === true && A0.preis === null && A0.preisText === "Für dich kostenlos" && A0.knopf === "Kostenlos bestellen" && A0.status === "offen" && A0.holz === "hell" && A0.variante === "name" && A0.zahlseite === zsD && A0.klarna === true && A0.fussnote === FUSSNOTE && A0.logo === null && /Ink Studio D UG/.test(A0.lieferadresse), "Studio mit enthaltenem Aufsteller: kostenlos, Status offen, Daten für die Vorschau", a0.text.slice(0, 200));
-  check(!/Paket|netto|49 €|49,00|41[,.]93|49,90|Monatlich|signup|studios\.html/.test(a0.text), "Antwort ohne Paket, ohne netto, ohne Website", a0.text.slice(0, 160));
-  const ohneLogo = await call("POST", "/api/portal/aufsteller", { token: tD, body: { holz: "dunkel", variante: "logo" } });
-  check(ohneLogo.status === 400 && ohneLogo.data.error === "Bitte wähle zuerst dein Logo aus oder nimm „Mit Studioname“.", "Variante Logo ohne Logo → 400 mit App-Text", ohneLogo.text);
-  const mitLogo = await call("POST", "/api/portal/aufsteller", { token: tD, body: { holz: "dunkel", variante: "logo", logo: LOGO, logoW: 400, logoH: 200 } });
-  check(mitLogo.status === 200 && Object.keys(mitLogo.data).join() === "aufsteller" && mitLogo.data.aufsteller.hatLogo && mitLogo.data.aufsteller.variante === "logo" && mitLogo.data.aufsteller.holz === "dunkel" && !("paketName" in mitLogo.data) && blob("aufsteller-logo/" + D.id)?.w === 400, "Auswahl + Logo speichern: Antwort nur { aufsteller } (kein Studio-Objekt mit Paket)", mitLogo.text.slice(0, 160));
-  check((await call("GET", "/api/app/aufsteller", { token: tD })).data.aufsteller?.logo?.src === LOGO, "GET /api/app/aufsteller liefert das Logo für die Vorschau");
-  check((await call("POST", "/api/portal/aufsteller", { token: tD, body: { logo: "data:image/png;base64,AAAA" } })).status === 400, "Logo nur als JPEG-Daten-URL");
-  const best = await call("POST", "/api/portal/aufsteller", { token: tD, body: { holz: "dunkel", variante: "logo", bestellen: true } });
-  const adminBest = mailsAn("admin@app.test").filter((m) => /QR-Aufsteller bestellen \(im Paket enthalten\)/.test(m.subject) && m.subject.includes("Ink Studio D"));
-  check(best.status === 200 && best.data.aufsteller.status === "bestellt" && best.data.aufsteller.bestelltAm && !best.data.url && adminBest.length === 1 && /App/.test(adminBest[0].html) && blob("studio/" + D.id).aufsteller?.angefordertAm, "bestellen: true bei enthaltenem Aufsteller → kostenlos angefordert, Admin-Mail (Quelle App), kein Checkout", best.text.slice(0, 160));
-  const best2 = await call("POST", "/api/portal/aufsteller", { token: tD, body: { bestellen: true } });
-  check(best2.status === 409, "Zweite Bestellung → 409", best2.text);
-  // Apple-Abo-Studio E: Aufsteller nicht enthalten → kaufen per Stripe-Checkout im Browser
-  const aE = await call("GET", "/api/app/aufsteller", { token: tE });
-  const AE = aE.data.aufsteller || {};
-  check(AE.kostenlos === false && AE.preis?.nettoCent === 2900 && AE.preis?.gesamtCent === 3451 && AE.preisText === "34,51 € inkl. MwSt." && AE.knopf === "Für 34,51 € bestellen" && AE.preis.text === "29,00 € + 19 % MwSt. = 34,51 €" && /Stripe/.test(AE.bezahlenHinweis), "Apple-Abo-Studio: nur Artikel + Preis des Aufstellers (29 € + MwSt. = 34,51 €)", aE.text.slice(0, 200));
-  const kauf = await call("POST", "/api/portal/aufsteller", { token: tE, body: { holz: "hell", variante: "name", bestellen: true } });
-  const csE = kauf.data.cs;
-  const stE = await mock("state");
-  const sessE = stE.sessions?.[csE] || {};
-  check(kauf.status === 200 && /\/pay\/cs_/.test(kauf.data.url || "") && /^cs_/.test(csE || "") && sessE.metadata?.typ === "aufsteller" && sessE.metadata?.quelle === "app" && sessE.success_url === `${BASE}/app-fertig.html?aufsteller=bezahlt&cs={CHECKOUT_SESSION_ID}` && sessE.cancel_url === `${BASE}/app-fertig.html?aufsteller=abgebrochen` && kauf.data.aufsteller.status === "zahlung_offen" && !/Paket|monatNetto|paketName/.test(kauf.text), "bestellen: true ohne enthaltenen Aufsteller → Stripe-Checkout (url + cs), Rückkehr auf app-fertig.html, Antwort ohne Paket", kauf.text.slice(0, 200));
-  const vorher = await call("POST", "/api/portal/aufsteller-pruefen", { token: tE, body: { cs: csE } });
-  check(vorher.status === 200 && vorher.data.bezahlt === false && vorher.data.aufsteller.status === "zahlung_offen" && !("firma" in vorher.data && "paketName" in vorher.data), "Prüfen vor dem Bezahlen → bezahlt false", vorher.text.slice(0, 120));
-  const zahl = await stripeForm(new URL(kauf.data.url).pathname, { pm: "card" });
-  await wait(250);
-  const nach = await call("POST", "/api/portal/aufsteller-pruefen", { token: tE, body: { cs: csE } });
-  check(/app-fertig\.html\?aufsteller=bezahlt&cs=cs_/.test(zahl.headers.get("location") || "") && nach.data.bezahlt === true && nach.data.aufsteller.status === "bezahlt" && nach.data.aufsteller.bezahltAm && mailsAn("admin@app.test").some((m) => /QR-Aufsteller bestellen \(29 € bezahlt\)/.test(m.subject) && m.subject.includes("Ink Studio E")), "Nach dem Bezahlen: Rückkehr auf app-fertig.html, Prüfung → bezahlt, Admin-Mail", zahl.headers.get("location"));
-  check((await call("POST", "/api/portal/aufsteller-pruefen", { token: tD, body: { cs: csE } })).data.bezahlt === false, "Fremde Checkout-Sitzung (anderes Studio) zählt nicht");
-  const fertigSeite = await fetch(`${BASE}/app-fertig.html?aufsteller=bezahlt&cs=${csE}`);
-  const fertigHtml = await fertigSeite.text();
-  check(fertigSeite.status === 200 && /noindex/.test(fertigHtml) && /zurück in die Tattoofin-App/.test(fertigHtml) && !/<a\s/i.test(fertigHtml) && !/€|Paket|tf-track|fbq/.test(fertigHtml) && /for = "\/app-fertig\.html"/.test(fs.readFileSync(path.join(root, "netlify.toml"), "utf8")), "app-fertig.html: noindex, ohne Links, ohne Preise, ohne Messung");
-  setBlob("studio/" + E.id, eAlt);
+  const adminVorAuf = mailsAn("admin@app.test").length, sessVorAuf = Object.keys((await mock("state")).sessions || {}).length;
+  // Inhaber (D, Aufsteller früher im Paket), Team (D) und Apple-Abo-Studio E: alle Wege der App 1.0 (1) → 410, nie 401/403/nur_web/nur_inhaber
+  const wegeApp = [];
+  for (const [tok, name] of [[tD, "Inhaber"], [tDteam, "Team"], [tE, "Apple-Abo"]]) {
+    for (const [m, u, body] of [["GET", "/api/app/aufsteller"], ["POST", "/api/portal/aufsteller", { holz: "dunkel", variante: "logo", logo: LOGO, logoW: 400, logoH: 200 }], ["POST", "/api/portal/aufsteller", { holz: "hell", variante: "name", bestellen: true }],
+      ["POST", "/api/portal/aufsteller", { kaufen: true }], ["POST", "/api/portal/aufsteller", { anfordern: true }], ["POST", "/api/portal/aufsteller-pruefen", { cs: "cs_test_x" }]]) {
+      const r = await call(m, u, { token: tok, body });
+      wegeApp.push([name + " " + m + " " + u + " " + JSON.stringify(body || {}).slice(0, 30), entfallen(r), r.status]);
+    }
+  }
+  check(wegeApp.every((x) => x[1]), "App: GET /api/app/aufsteller, POST /api/portal/aufsteller (speichern, Logo, bestellen, kaufen, anfordern), /aufsteller-pruefen → 410 aufsteller_entfallen (Inhaber, Team, Apple-Abo)", JSON.stringify(wegeApp.filter((x) => !x[1])));
+  check(tD && (await call("GET", "/api/portal", { token: tD })).status === 200 && (await call("GET", "/api/app/werbung", { token: tD })).status === 200, "Nach den 410-Antworten bleibt die App angemeldet (kein 401)");
+  check(!blob("studio/" + D.id).aufsteller && !blob("studio/" + E.id).aufsteller && !blob("aufsteller-logo/" + D.id) && mailsAn("admin@app.test").length === adminVorAuf && Object.keys((await mock("state")).sessions || {}).length === sessVorAuf && !logs("aufsteller-angefordert").length && !logs("aufsteller-checkout").length,
+    "Keine Auswahl, kein Logo, keine Bestellung gespeichert; keine Admin-Mail „QR-Aufsteller bestellen“; kein Stripe-Checkout");
+  check(!/aufsteller/i.test(JSON.stringify((await call("GET", "/api/portal", { token: tD })).data.studio)) && !/aufsteller/i.test(JSON.stringify((await call("GET", "/api/app/werbung", { token: tD })).data)), "GET /api/portal (studio) und GET /api/app/werbung ohne Aufsteller-Felder");
+  // Dashboard (Cookie): ebenfalls 410; einzige Ausnahme: ein früher gespeichertes Logo löschen (Datenschutz)
   const webAuf = await call("POST", "/api/portal/aufsteller", { cookie: E.cookie, body: { holz: "dunkel", variante: "name" } });
-  check(webAuf.status === 200 && webAuf.data.firma === "Ink Studio E" && webAuf.data.aufsteller?.holz === "dunkel" && "inklusive" in webAuf.data.aufsteller, "Dashboard (Cookie): Antwort wie bisher (Studio-Objekt)");
+  const webKauf = await call("POST", "/api/portal/aufsteller", { cookie: E.cookie, body: { kaufen: true } });
+  const webGet = await call("GET", `/api/aufsteller?s=${encodeURIComponent(blob("studio/" + E.id).slug)}`, { cookie: E.cookie });
+  check(entfallen(webAuf) && entfallen(webKauf) && entfallen(webGet) && Object.keys((await mock("state")).sessions || {}).length === sessVorAuf, "Dashboard: POST /api/portal/aufsteller und GET /api/aufsteller (Hersteller-Daten) → 410, kein Checkout");
+  setBlob("studio/" + D.id, { ...blob("studio/" + D.id), aufsteller: { holz: "dunkel", variante: "logo", hatLogo: true, am: new Date().toISOString() } });
+  setBlob("aufsteller-logo/" + D.id, { src: LOGO, w: 400, h: 200 });
+  const logoTeam = await call("POST", "/api/portal/aufsteller", { token: tDteam, body: { logo: null } });
+  check(entfallen(logoTeam) && blob("aufsteller-logo/" + D.id), "Team kann ein altes Logo nicht löschen (410, Logo bleibt)");
+  const logoWeg = await call("POST", "/api/portal/aufsteller", { cookie: D.cookie, body: { logo: null } });
+  check(logoWeg.status === 200 && logoWeg.data.logoGeloescht === true && !blob("aufsteller-logo/" + D.id) && blob("studio/" + D.id).aufsteller?.hatLogo === false && blob("studio/" + D.id).aufsteller?.logoGeloeschtAm && logs("aufsteller-logo-geloescht").length === 1, "Dashboard: { logo: null } löscht ein früher gespeichertes Logo (Datenschutz), Altdaten bleiben sonst erhalten");
+  // Altfall: Checkout VOR der Einstellung begonnen (E) → Webhook und Rückkehr im Dashboard verarbeiten die Zahlung weiter („(alt) bezahlt – erstatten oder liefern“)
+  const csAlt = "cs_test_altkauf_E";
+  setBlob("studio/" + E.id, { ...blob("studio/" + E.id), aufsteller: { holz: "hell", variante: "name", kauf: { csId: csAlt, gestartetAm: new Date(Date.now() - 864e5).toISOString() } } });
+  const altApp = await call("POST", "/api/portal/aufsteller-pruefen", { token: tE, body: { cs: csAlt } });
+  const altFremd = await call("POST", "/api/portal/aufsteller-pruefen", { cookie: E.cookie, body: { cs: "cs_test_fremd" } });
+  check(entfallen(altApp) && altFremd.status === 400, "Altfall: Prüfen aus der App → 410; fremde Sitzungsnummer im Dashboard → 400", `${altApp.status} ${altFremd.status}`);
+  const whAlt = await sendeWebhook(`${BASE}/api/stripe-webhook`, "whsec_mock", "checkout.session.completed", { id: csAlt, object: "checkout.session", mode: "payment", payment_status: "paid", amount_total: 3451, metadata: { studioId: E.id, typ: "aufsteller" } });
+  const eNach = blob("studio/" + E.id);
+  const altMail = mailsAn("admin@app.test").filter((m) => m.subject.includes("QR-Aufsteller (alt) bezahlt – erstatten oder liefern") && m.subject.includes("Ink Studio E"));
+  check(whAlt === 200 && eNach.aufsteller?.kauf?.bezahltAm && altMail.length === 1 && /gibt es seit 15\.11\.2026 nicht mehr/.test(altMail[0].html) && !/Gravurdatei|aufsteller\.html/.test(altMail[0].html), "Altfall: bezahlter Checkout von vorher → vermerkt + Admin-Mail „(alt) bezahlt – erstatten oder liefern“ (ohne Gravurdatei)", String(whAlt));
+  const altNochmal = await call("POST", "/api/portal/aufsteller-pruefen", { cookie: E.cookie, body: { cs: csAlt } });
+  check(entfallen(altNochmal), "Altfall schon bezahlt → Prüfen liefert 410 (nichts mehr offen)", altNochmal.text);
+  const fertigSeite = await fetch(`${BASE}/app-fertig.html?aufsteller=bezahlt&cs=${csAlt}`);
+  const fertigHtml = await fertigSeite.text();
+  check(fertigSeite.status === 200 && /noindex/.test(fertigHtml) && /zurück in die Tattoofin-App/.test(fertigHtml) && !/<a\s/i.test(fertigHtml) && !/€|Paket|tf-track|fbq/.test(fertigHtml) && !/QR-Aufsteller fertigen|deine Bestellung/i.test(fertigHtml) && /for = "\/app-fertig\.html"/.test(fs.readFileSync(path.join(root, "netlify.toml"), "utf8")), "app-fertig.html (Rückkehr alter Checkouts): noindex, ohne Links, ohne Preise, ohne Messung, ohne Aufsteller-Text");
+  setBlob("studio/" + E.id, eAlt);
 
   // ==================================================================================================
   teil("Nachweis als PDF (GET /api/portal/nachweis/:id?pdf=1)");
@@ -1019,7 +1024,7 @@ try {
   const e1 = await reg(REG(rt));
   const s1 = blob("studio/" + e1.data.entwurfId);
   check(e1.status === 200 && /^st_/.test(e1.data.entwurfId) && e1.data.produktId === "de.tattoofin.app.abo.monatlich" && e1.data.email === "mia@neu-app.test" && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(e1.data.appAccountToken) && e1.data.entwurfToken, "Gültig → { entwurfId, entwurfToken, appAccountToken (UUID v4), produktId, email }", e1.text);
-  check(s1?.status === "entwurf" && s1.paket === "app" && s1.abrechnung === "apple" && s1.zahlart === "apple" && s1.modell === "kauf" && s1.appEntwurf?.appAccountToken === e1.data.appAccountToken && s1.vertrag?.kmu && s1.vertrag.version === "2026-12c" && s1.vertrag.quelle === "app" && s1.vertrag.aufsteller === false && blob("idx/appentwurf/" + e1.data.appAccountToken) === s1.id, "Entwurf: status entwurf, paket app, abrechnung apple, Vertrag 2026-12c mit KMU, idx/appentwurf", JSON.stringify(s1)?.slice(0, 200));
+  check(s1?.status === "entwurf" && s1.paket === "app" && s1.abrechnung === "apple" && s1.zahlart === "apple" && s1.modell === "kauf" && s1.appEntwurf?.appAccountToken === e1.data.appAccountToken && s1.vertrag?.kmu && s1.vertrag.version === "2026-12d" && s1.vertrag.quelle === "app" && !("aufsteller" in s1.vertrag) && blob("idx/appentwurf/" + e1.data.appAccountToken) === s1.id, "Entwurf: status entwurf, paket app, abrechnung apple, Vertrag 2026-12d mit KMU (ohne Aufsteller-Feld), idx/appentwurf", JSON.stringify(s1)?.slice(0, 200));
   check(Object.keys((await mock("state")).customers || {}).length === kundenVorher && !s1.stripe?.customerId && mailsAn("admin@app.test").length === adminVorher && mailsAn("mia@neu-app.test").filter((m) => !/Tattoofin-Code$/.test(m.subject)).length === 0, "Kein Stripe-Kunde, keine Admin-Mail, keine Mail an das Studio");
   const e1b = await reg(REG(rt, { firma: "Ink App Studio Neu" }));
   check(e1b.data.entwurfId === e1.data.entwurfId && e1b.data.appAccountToken === e1.data.appAccountToken && blob("studio/" + e1.data.entwurfId).firma === "Ink App Studio Neu", "Zweiter Aufruf (Korrektur): gleicher Entwurf, gleiche UUID", e1b.text);
@@ -1043,7 +1048,7 @@ try {
   check(adminNeu.length === 1 && !/Sandbox/.test(adminNeu[0].subject) && /49,90 EUR/.test(adminNeu[0].html), "Admin-Mail „Neuer Abschluss in der App (Apple-Abo) 🎉“ mit Preis aus dem Kauf", adminNeu[0]?.subject);
   check(willkommen.length === 1 && /Abo über deinen Apple-Account/.test(willkommen[0].html) && !/49\s?(€|&nbsp;€|,00)/.test(willkommen[0].text) && !/start\.html/.test(willkommen[0].html) && !/Aufsteller/.test(willkommen[0].html) && /vertrag\.html\?app=1/.test(willkommen[0].html) && /avv\.html\?app=1/.test(willkommen[0].html) && !/vertrag\.html"/.test(willkommen[0].html) && /Verkäufer des Abos ist Apple/.test(willkommen[0].html), "Studio-Mail „Willkommen“: Apple-Abo (Apple als Verkäufer), ohne Web-Preis, ohne start.html, ohne Aufsteller, Vertrag/AVV als App-Fassung (?app=1)", willkommen[0]?.subject);
   const portalN = await call("GET", "/api/portal", { token: tN });
-  check(portalN.status === 200 && portalN.data.studio?.abrechnung === "apple" && portalN.data.studio?.apple?.status === "aktiv" && portalN.data.studio?.apple?.laeuftBis && portalN.data.studio?.paket === "app" && portalN.data.studio?.paketName === "Monatlich (App Store)" && portalN.data.studio?.garantieBis === null && portalN.data.studio?.aufsteller?.inklusive === false && portalN.data.studio?.connectUrl, "GET /api/portal: studio.abrechnung apple, studio.apple (AppleAbo), Paket „Monatlich (App Store)“, ohne Garantie und Aufsteller", JSON.stringify(portalN.data.studio?.apple));
+  check(portalN.status === 200 && portalN.data.studio?.abrechnung === "apple" && portalN.data.studio?.apple?.status === "aktiv" && portalN.data.studio?.apple?.laeuftBis && portalN.data.studio?.paket === "app" && portalN.data.studio?.paketName === "Monatlich (App Store)" && portalN.data.studio?.garantieBis === null && !("aufsteller" in portalN.data.studio) && portalN.data.studio?.connectUrl, "GET /api/portal: studio.abrechnung apple, studio.apple (AppleAbo), Paket „Monatlich (App Store)“, ohne Garantie und Aufsteller", JSON.stringify(portalN.data.studio?.apple));
   const portalC = await call("GET", "/api/portal", { cookie: C.cookie });
   check(portalC.data.studio?.abrechnung === "stripe" && portalC.data.studio?.apple === null, "Stripe-Studio: abrechnung stripe, apple null");
   check((await admin("studios")).find((x) => x.id === sN.id)?.paket === "Monatlich (App Store)", "Admin-Liste zeigt „Monatlich (App Store)“");
@@ -1256,7 +1261,7 @@ try {
   check(wh === 200 && wh2 === 200 && JSON.stringify({ ...nachWebhook, updatedAt: null }) === JSON.stringify({ ...JSON.parse(vorWebhook), updatedAt: null }) && logs("stripe-ereignis-app-studio").length === 2 && !mailsAn("mia@neu-app.test").some((m) => m.subject === "Zahlung fehlgeschlagen: bitte kurz prüfen"), "stripe-webhook (subscription.deleted, invoice.payment_failed) ändert beim Apple-Studio nichts, keine Rechnungsmail", `${wh} ${wh2}`);
 
   // ==================================================================================================
-  teil("Testkasse (Apple-Sandbox): Start-Checkliste, QR-Aufsteller nicht kaufbar; Altstudio ohne Aufsteller; Aufsteller-Rechnung ohne Alarm");
+  teil("Testkasse (Apple-Sandbox): Start-Checkliste, QR-Aufsteller entfallen; Mails ohne Aufsteller; alte Aufsteller-Rechnung ohne Alarm");
   const tS = bS.data.token;
   check(blob("studio/" + S.entwurfId)?.sandbox === true && !process.env.APPLE_SANDBOX_STRIPE, "Vorbedingung: Sandbox-Studio im Testmodus (APPLE_SANDBOX_STRIPE aus)");
   const sbStart = await call("GET", "/api/app/start", { token: tS });
@@ -1269,39 +1274,35 @@ try {
   const nPk = (id) => nStart.data.checkliste?.punkte.find((p) => p.id === id) || {};
   setBlob("studio/" + N.entwurfId, nAlt);
   check(nPk("stripe").ok === false && nPk("stripe").ziel === "stripe" && nPk("link").gesperrt === true && nPk("link").ziel === null && /sobald dein Zahlungskonto freigegeben/.test(nPk("link").text || ""), "Echtes Studio ohne Freigabe: Stripe-Punkt mit Ziel „stripe“, Link gesperrt", JSON.stringify([nPk("stripe"), nPk("link")]));
-  const sbAuf = await call("GET", "/api/app/aufsteller", { token: tS });
-  const SA = sbAuf.data.aufsteller || {};
-  check(sbAuf.status === 200 && SA.kostenlos === false && SA.bestellbar === false && SA.preis === null && SA.knopf === null && SA.preisText === null && SA.bezahlenHinweis === null && SA.testmodusHinweis === "Im Testmodus kannst du den Aufsteller nicht bestellen. Es wird nichts bezahlt." && SA.status === "offen", "GET /api/app/aufsteller (Sandbox): bestellbar false, kein Preis, kein Knopf, Hinweis Testmodus", JSON.stringify(SA).slice(0, 240));
   const sbSessVor = Object.keys((await mock("state")).sessions || {}).length, sbCusVor = Object.keys((await mock("state")).customers || {}).length;
+  const sbAuf = await call("GET", "/api/app/aufsteller", { token: tS });
   const sbKauf = await call("POST", "/api/portal/aufsteller", { token: tS, body: { holz: "hell", variante: "name", bestellen: true } });
-  const sbKauf2 = await call("POST", "/api/portal/aufsteller", { token: tS, body: { kaufen: true } });
   const sbState = await mock("state");
-  check(sbKauf.status === 409 && sbKauf.data.code === "testmodus" && sbKauf.data.error === "Im Testmodus kannst du den Aufsteller nicht bestellen. Es wird nichts bezahlt." && sbKauf2.status === 409 && sbKauf2.data.code === "testmodus" && Object.keys(sbState.sessions || {}).length === sbSessVor && Object.keys(sbState.customers || {}).length === sbCusVor && !blob("studio/" + S.entwurfId).aufsteller?.kauf, "Sandbox: Aufsteller kaufen (bestellen/kaufen) → 409 testmodus, kein Stripe-Aufruf (keine Sitzung, kein Kunde), nichts gespeichert", `${sbKauf.status} ${sbKauf.text.slice(0, 120)}`);
+  check(entfallen(sbAuf) && entfallen(sbKauf) && Object.keys(sbState.sessions || {}).length === sbSessVor && Object.keys(sbState.customers || {}).length === sbCusVor && !blob("studio/" + S.entwurfId).aufsteller, "Sandbox (App-Prüfung/TestFlight): Aufsteller → 410 mit freundlichem Text, kein Stripe-Aufruf, nichts gespeichert", sbAuf.text.slice(0, 160));
   const sbWeb = await call("GET", "/api/portal", { token: tS });
-  check(sbWeb.data.studio?.aufsteller?.bestellbar === false && sbWeb.data.studio?.aufsteller?.inklusive === false, "GET /api/portal (Sandbox): studio.aufsteller.bestellbar false (Dashboard zeigt keinen Kaufknopf)");
+  check(sbWeb.status === 200 && !("aufsteller" in (sbWeb.data.studio || {})) && !("aufstellerInklusive" in (sbWeb.data.studio || {})), "GET /api/portal (Sandbox): keine Aufsteller-Felder mehr");
   const domainLib = await import("../netlify/functions/_lib/domain.mjs");
-  let domFehler = null; try { await domainLib.aufstellerCheckout({ id: "st_x", demo: true, status: "live", stripe: {} }); } catch (e) { domFehler = e; }
-  check(domFehler?.status === 409 && domFehler.fehlerCode === "testmodus", "Zweiter Schutz: aufstellerCheckout wirft bei Testkasse 409 testmodus", domFehler?.message);
-  // Altstudio (umgestellt auf den Bestandskunden-Preis, stripe.altKonto): Aufsteller nicht im Paket, auch wenn paket monatlich
+  check(!("aufstellerCheckout" in domainLib) && !("aufstellerUrl" in domainLib) && typeof domainLib.aufstellerBezahlt === "function", "domain.mjs: kein Aufsteller-Checkout und keine Gravur-Adresse mehr; nur aufstellerBezahlt für Altfälle");
+  // Willkommens-Mails: in keinem Paket mehr ein Aufsteller (auch nicht beim Altstudio mit altKonto)
   const dAltBlob = blob("studio/" + werbD.id);
-  setBlob("studio/" + werbD.id, { ...dAltBlob, aufsteller: null, stripe: { ...(dAltBlob.stripe || {}), altKonto: { accountId: "acct_alt_test", kontoTyp: "express", bis: new Date().toISOString() } } });
-  const altAuf = (await call("GET", "/api/app/aufsteller", { token: werbTD })).data.aufsteller || {};
-  const altPortal = (await call("GET", "/api/portal", { cookie: werbD.cookie })).data.studio || {};
-  const altAnfordern = await call("POST", "/api/portal/aufsteller", { cookie: werbD.cookie, body: { anfordern: true } });
+  setBlob("studio/" + werbD.id, { ...dAltBlob, stripe: { ...(dAltBlob.stripe || {}), altKonto: { accountId: "acct_alt_test", kontoTyp: "express", bis: new Date().toISOString() } } });
   const emailsLib = await import("../netlify/functions/_lib/emails.mjs");
   const altMail = emailsLib.mails.anmeldung(blob("studio/" + werbD.id), { loginUrl: "x", connectUrl: "y" }).html;
   setBlob("studio/" + werbD.id, dAltBlob);
-  const neuMail = emailsLib.mails.anmeldung(blob("studio/" + werbD.id), { loginUrl: "x", connectUrl: "y" }).html;
-  check(altAuf.kostenlos === false && altAuf.bestellbar === true && altAuf.preis?.nettoCent === 2900 && /bestellen$/.test(altAuf.knopf || "") && altPortal.aufsteller?.inklusive === false && altPortal.aufstellerInklusive === false && altAnfordern.status === 400 && !/Inklusive QR-Aufsteller/.test(altMail) && /Digitaler QR-Code inklusive/.test(altMail) && /Inklusive QR-Aufsteller/.test(neuMail), "Altstudio (altKonto): Aufsteller nicht inklusive (App, Dashboard, kostenlos anfordern → 400, Mail ohne „Inklusive QR-Aufsteller“)", JSON.stringify({ k: altAuf.kostenlos, i: altPortal.aufsteller?.inklusive, a: altAnfordern.status }));
+  const neuS = blob("studio/" + werbD.id);
+  const neuMail = emailsLib.mails.anmeldung(neuS, { loginUrl: "x", connectUrl: "y" }).html;
+  const aboMail = emailsLib.mails.aboGestartet(neuS, { betragCent: 4990, rechnungUrl: "" }).html;
+  const kaufMail = emailsLib.mails.kaufBezahlt({ ...neuS, paket: "einmal" }, { betragCent: 118881, rechnungUrl: "" }).html;
+  check(![altMail, neuMail, aboMail, kaufMail].some((h) => /Aufsteller/i.test(h)) && /Digitaler QR-Code inklusive/.test(altMail) && /Digitaler QR-Code inklusive/.test(neuMail) && /QR-Code/.test(aboMail), "Mails (Anmeldung, Abo gestartet, Einmalzahlung bezahlt): kein Aufsteller, „Digitaler QR-Code inklusive“");
   // Druckvorlagen (sagen „Ratenzahlung möglich*“) im Dashboard nur bei Klarna dauerhaft
   const eBlob = blob("studio/" + werbE.id);
   setBlob("studio/" + werbE.id, { ...eBlob, modell: "provision", paket: "risikofrei", abrechnung: undefined });
   const matR = (await call("GET", "/api/portal", { cookie: werbE.cookie })).data;
   setBlob("studio/" + werbE.id, eBlob);
-  check(Array.isArray(matR.materialLinks) && matR.materialLinks.length === 0 && matR.studio?.klarnaDauerhaft === false && !("materialien" in matR) && (await call("GET", "/api/portal", { cookie: werbD.cookie })).data.materialLinks?.length === 5, "GET /api/portal: Druckvorlagen leer ohne Klarna dauerhaft (Risikofrei), mit Klarna 5; kein Generator-Link mehr", JSON.stringify(matR.materialLinks));
+  check(Array.isArray(matR.materialLinks) && matR.materialLinks.length === 0 && matR.studio?.klarnaDauerhaft === false && !("materialien" in matR) && (await call("GET", "/api/portal", { cookie: werbD.cookie })).data.materialLinks?.length === 4, "GET /api/portal: Druckvorlagen leer ohne Klarna dauerhaft (Risikofrei), mit Klarna 4 (ohne Thekenaufsteller); kein Generator-Link mehr", JSON.stringify(matR.materialLinks));
   const druck20 = await (await fetch(`${BASE}/druck/kunden/20-fensteraufkleber.html`)).text(), druck23 = await (await fetch(`${BASE}/druck/kunden/23-kundeninfo.html`)).text();
   check(!/generator\.html|\?studio=/.test(druck20 + druck23) && /Keine konkreten Raten, Zinsen oder Beispielbeträge ergänzen/.test(druck20) && /Keine konkreten Raten, Zinsen oder Beispielbeträge ergänzen/.test(druck23) && /In der Druckerei/.test(druck20), "Druckvorlagen 20/23: kein technischer Hinweis auf Generator/?studio=…, Druckerei-Hinweis und „Keine konkreten Raten …“ bleiben");
-  // Stripe-Webhook: Aufsteller-Rechnung eines Apple-Studios (E hat den Aufsteller in der App gekauft) → keine Alarm-Mail
+  // Stripe-Webhook: Aufsteller-Rechnung eines Apple-Studios (Altfall: E hatte den Aufsteller vor dem 15.11.2026 in der App gekauft) → keine Alarm-Mail
   const eWebBlob = blob("studio/" + werbE.id);
   setBlob("studio/" + werbE.id, { ...eWebBlob, abrechnung: "apple", paket: "app", zahlart: "apple", modell: "kauf", aufsteller: { holz: "hell", variante: "name", kauf: { csId: "cs_aufsteller_E", gestartetAm: new Date().toISOString(), quelle: "app" } } });
   const eS = blob("studio/" + werbE.id);
@@ -1315,11 +1316,11 @@ try {
   // Nur echte Aufsteller-Ereignisse: N (Apple, nie einen Aufsteller gekauft) mit typ aufsteller → weiter Alarm
   const whFremd = await sendeWebhook(`${BASE}/api/stripe-webhook`, "whsec_mock", "invoice.paid", { id: "in_aufsteller_fremd", object: "invoice", metadata: { studioId: N.entwurfId, typ: "aufsteller" }, amount_paid: 3451 });
   check(whFremd === 200 && logs("stripe-ereignis-app-studio").length === appEreignisVor + 1 && alarm("Ink App Studio Neu") >= 1, "Aufsteller-Metadaten ohne begonnenen Kauf (N) → weiter Alarm-Mail", String(whFremd));
-  // Reihenfolge: checkout.session.completed des Aufstellers läuft vor dem Apple-Wächter → aufstellerBezahlt (Admin-Mail „bestellen“), kein Alarm
+  // Reihenfolge: checkout.session.completed des Aufstellers (Altfall) läuft vor dem Apple-Wächter → aufstellerBezahlt (Admin-Mail „(alt) bezahlt“), kein Alarm
   const alarmNVor = alarm("Ink App Studio Neu");
   const whCs = await sendeWebhook(`${BASE}/api/stripe-webhook`, "whsec_mock", "checkout.session.completed", { id: "cs_aufsteller_N", object: "checkout.session", mode: "payment", payment_status: "paid", amount_total: 3451, metadata: { studioId: N.entwurfId, typ: "aufsteller", quelle: "app" } });
   const nNach = blob("studio/" + N.entwurfId);
-  check(whCs === 200 && nNach.aufsteller?.kauf?.csId === "cs_aufsteller_N" && nNach.aufsteller.kauf.bezahltAm && nNach.status === nAlt.status && alarm("Ink App Studio Neu") === alarmNVor && mailsAn("admin@app.test").some((m) => /QR-Aufsteller bestellen \(29 € bezahlt\)/.test(m.subject) && m.subject.includes("Ink App Studio Neu")), "checkout.session.completed (Aufsteller, Apple-Studio) → aufstellerBezahlt läuft weiter, Status unverändert, kein Alarm", String(whCs));
+  check(whCs === 200 && nNach.aufsteller?.kauf?.csId === "cs_aufsteller_N" && nNach.aufsteller.kauf.bezahltAm && nNach.status === nAlt.status && alarm("Ink App Studio Neu") === alarmNVor && mailsAn("admin@app.test").some((m) => m.subject.includes("QR-Aufsteller (alt) bezahlt – erstatten oder liefern") && m.subject.includes("Ink App Studio Neu")), "checkout.session.completed (Aufsteller-Altfall, Apple-Studio) → aufstellerBezahlt läuft weiter (Admin-Mail „(alt) bezahlt“), Status unverändert, kein Alarm", String(whCs));
 
   // ==================================================================================================
   teil("Apple-Abo: Konto kündigen und löschen, Apple verlängert trotzdem");
@@ -1440,7 +1441,7 @@ try {
   check(sApp.status === 400 && /Bitte ausfüllen: Paket/.test(sApp.data.error), "/api/signup mit paket „app“ → 400 „Paket“", sApp.text);
   const pakete = await call("GET", "/api/signup?pakete=1");
   const cfg = await call("GET", "/api/config");
-  check(!pakete.data.pakete.some((x) => x.id === "app") && !cfg.data.pakete.some((x) => x.id === "app") && cfg.data.vertragVersion === "2026-12c", "GET /api/signup?pakete=1 und /api/config ohne „app“, Vertrag 2026-12c", JSON.stringify(pakete.data.pakete.map((x) => x.id)));
+  check(!pakete.data.pakete.some((x) => x.id === "app") && !cfg.data.pakete.some((x) => x.id === "app") && cfg.data.vertragVersion === "2026-12d", "GET /api/signup?pakete=1 und /api/config ohne „app“, Vertrag 2026-12d", JSON.stringify(pakete.data.pakete.map((x) => x.id)));
   const W = await entwurf("wanda@neu-app.test", "Wechsel Studio");
   const sWeb = await call("POST", "/api/signup", { body: { ...DATEN("wanda@neu-app.test", "Fremd Studio"), paket: "monatlich" } });
   const sW = blob("studio/" + W.entwurfId);
@@ -1501,9 +1502,11 @@ try {
   delete process.env.APPLE_XCODE_TEST;
   check(appleMod.APPLE_ROOT_G3_FP === "63:34:3A:BF:B8:9A:6A:03:EB:B5:7E:9B:3F:5F:A7:BE:7C:4F:5C:75:6F:30:17:B3:A8:C4:88:C3:65:3E:91:79" && new crypto.X509Certificate(appleMod.APPLE_ROOT_G3_PEM).subject.includes("Apple Root CA - G3"), "Apple Root CA - G3 fest eingebaut, Fingerabdruck stimmt");
   const vertragHtml = await (await fetch(`${BASE}/vertrag.html?app=1`)).text();
+  const dsHtmlVorab = await (await fetch(`${BASE}/datenschutz.html`)).text();
   const appText = ohneNurWeb(vertragHtml);
-  check((vertragHtml.match(/data-nur-web/g) || []).length >= 5 && /data-cfg="monatPreis"/.test(vertragHtml) && !/data-cfg="monatPreis(Brutto)?"/.test(appText) && !/41,93|49,90/.test(appText) && !/per Stripe eingezogen/.test(appText) && !/graviertem QR-Code/.test(appText) && !/die Zahlung läuft über Stripe/.test(appText), "vertrag.html in der App-Fassung: ohne Web-Preis, ohne „per Stripe eingezogen“, ohne Aufsteller-Zeile (data-nur-web)");
-  check(/Preis wie beim Kauf im App Store angezeigt \(inkl\. USt\.\), Abrechnung über Apple/.test(appText) && /§ 13 Abschluss über die Tattoofin-App \(Apple\)/.test(vertragHtml) && /24 Stunden vor Ablauf/.test(vertragHtml) && /\[\?&\]app=1/.test(vertragHtml) && /Fassung 2026-12c/.test(vertragHtml), "vertrag.html: § 13 (Apple-Abo, 24 Stunden, Erstattung über Apple), App-Text data-nur-app, Fassung 2026-12c");
+  check((vertragHtml.match(/data-nur-web/g) || []).length >= 5 && /data-cfg="monatPreis"/.test(vertragHtml) && !/data-cfg="monatPreis(Brutto)?"/.test(appText) && !/41,93|49,90/.test(appText) && !/per Stripe eingezogen/.test(appText) && !/graviertem QR-Code/.test(appText) && !/die Zahlung läuft über Stripe/.test(appText), "vertrag.html in der App-Fassung: ohne Web-Preis, ohne „per Stripe eingezogen“");
+  check(!/Aufsteller/i.test(vertragHtml.replace(/<!--[\s\S]*?-->/g, "")) && !/Aufsteller|Logo-Gravur|fertigt und verschickt/i.test(dsHtmlVorab.replace(/<li><b>QR-Aufsteller aus Holz \(entfallen seit 15\.11\.2026\):<\/b>[^<]*<\/li>/, "")) && /QR-Aufsteller aus Holz \(entfallen seit 15\.11\.2026\)/.test(dsHtmlVorab), "vertrag.html (Fassung 2026-12d) ganz ohne Aufsteller; Datenschutz: Aufsteller nur noch als „entfallen“ (keine Weitergabe an Hersteller)");
+  check(/Preis wie beim Kauf im App Store angezeigt \(inkl\. USt\.\), Abrechnung über Apple/.test(appText) && /§ 13 Abschluss über die Tattoofin-App \(Apple\)/.test(vertragHtml) && /24 Stunden vor Ablauf/.test(vertragHtml) && /\[\?&\]app=1/.test(vertragHtml) && /Fassung 2026-12d/.test(vertragHtml), "vertrag.html: § 13 (Apple-Abo, 24 Stunden, Erstattung über Apple), App-Text data-nur-app, Fassung 2026-12d");
   const p6 = (vertragHtml.split("<h2>§ 6")[1] || "").split("<h2>")[0];
   check((p6.match(/Achtung! Kreditaufnahme kostet Geld\./g) || []).length === 2 && /Verkäufer des In-App-Abos ist Apple \(Apple Distribution International Ltd\./.test(vertragHtml) && /keine eigene Rechnung/.test(vertragHtml), "vertrag.html: § 6 mit „Achtung! Kreditaufnahme kostet Geld.“ bei Raten/Kredit, § 13 nennt Apple als Verkäufer, keine eigene Rechnung");
   const archiv = await fetch(`${BASE}/vertrag-2026-12.html`);
@@ -1511,6 +1514,8 @@ try {
   check(archiv.status === 200 && /noindex/.test(archivText) && /Archivfassung 2026-12/.test(archivText) && !/§ 13/.test(archivText), "Archiv vertrag-2026-12.html (noindex, ohne § 13)");
   { const a12b = await fetch(`${BASE}/vertrag-2026-12b.html`), t12b = await a12b.text();
     check(a12b.status === 200 && /noindex/.test(t12b) && /Archivfassung 2026-12b/.test(t12b) && /§ 13 Abschluss über die Tattoofin-App/.test(t12b) && /49 € netto zzgl\. Umsatzsteuer/.test(t12b) && !/data-cfg="monatPreis/.test(t12b), "Archiv vertrag-2026-12b.html (noindex, mit § 13, Monatspreis fest 49 € netto)"); }
+  { const a12c = await fetch(`${BASE}/vertrag-2026-12c.html`), t12c = await a12c.text();
+    check(a12c.status === 200 && /noindex/.test(t12c) && /Archivfassung 2026-12c/.test(t12c) && /Fassung 2026-12d/.test(t12c) && /QR-Aufsteller aus Holz/.test(t12c) && /41,93 € netto zzgl\. Umsatzsteuer/.test(t12c) && !/data-cfg="monatPreis/.test(t12c) && /for = "\/vertrag-2026-12c\.html"/.test(fs.readFileSync(path.join(root, "netlify.toml"), "utf8")), "Archiv vertrag-2026-12c.html (noindex, Aufsteller wie damals vereinbart, Monatspreis fest 41,93 € netto)"); }
   const avvHtml = await (await fetch(`${BASE}/avv.html?app=1`)).text();
   check(/Apple Distribution International Ltd\.[^<]*<\/td><td>Zustellung von Push-Mitteilungen/.test(avvHtml) && /Stand 14\.11\.2026/.test(avvHtml), "avv.html Anlage 3: Apple (Push-Mitteilungen an die App) als Unterauftragsverarbeiter, Stand 14.11.2026");
   const dsHtml = await (await fetch(`${BASE}/datenschutz.html`)).text();

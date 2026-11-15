@@ -26,8 +26,8 @@ window.CFG = {
 
   // Drei Pakete (seit 18.10.2026). Das Studio wählt EINES:
   //  Risikofrei (Modell B): 10 % vom Zahlbetrag jeder Zahlung, alles inklusive (Zahlungsgebühren + USt.), monatlich kündbar
-  //  Monatlich (Modell A): 49 € netto im Monat, eigenes Stripe-Konto, Zahlungsgebühren direkt an Stripe, inkl. QR-Aufsteller
-  //  Einmalzahlung (Modell A): einmalig 999 € netto, danach nur Zahlungsgebühren an Stripe, inkl. QR-Aufsteller, Nutzungszusage 5 Jahre
+  //  Monatlich (Modell A): 49 € netto im Monat, eigenes Stripe-Konto, Zahlungsgebühren direkt an Stripe, inkl. digitalem QR-Code
+  //  Einmalzahlung (Modell A): einmalig 999 € netto, danach nur Zahlungsgebühren an Stripe, inkl. digitalem QR-Code, Nutzungszusage 5 Jahre
   kaufPreis: 999,                 // Einmalzahlung
   monatPreis: 49,                 // Monatlich
   nutzungJahre: 5,

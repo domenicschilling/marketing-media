@@ -68,16 +68,14 @@ export const CFG = {
   // 2026-12 (02.11.2026): Software zum festen Preis, Vergütung unabhängig von der Zahlart, keine Mitwirkung an Krediten, KMU-Bestätigung (Rechtsprüfung 01.11.2026, U8). Archiv zusätzlich /vertrag-2026-11.html
   // 2026-12b (14.11.2026): neuer § 13 „Abschluss über die Tattoofin-App (Apple)“ (Abo per In-App-Kauf), App-Ansicht ohne Web-Preis. Archiv /vertrag-2026-12.html
   // 2026-12c (15.11.2026): Paket Monatlich auf der Website 49,90 € inkl. USt. (41,93 € netto), Bestandskunden behalten ihren Preis. Archiv /vertrag-2026-12b.html
-  vertragVersion: "2026-12c",
+  // 2026-12d (15.11.2026): ohne QR-Aufsteller aus Holz (eingestellt, Entscheidung Domenic); der digitale QR-Code und die Druckvorlagen
+  // (Fensteraufkleber, Flyer) bleiben. Archiv /vertrag-2026-12c.html (dort § 2 Abs. 3 Aufsteller, gilt für Abschlüsse bis 15.11.2026)
+  vertragVersion: "2026-12d",
   // Blatt „Deine rechtliche Lage“ und Leistungsbestätigung: Version bei inhaltlichen Änderungen hochzählen (wird mit der Zustimmung gespeichert)
   rechtVersion: "2026-12",
   bestaetigungVersion: "2026-10b",
   // Zahlarten im Checkout. Bewusst ohne SEPA-Lastschrift: Die kann der Kunde 8 Wochen lang ohne Grund zurückbuchen.
   zahlarten: env("ZAHLARTEN", "card,klarna").split(",").map((x) => x.trim()).filter(Boolean),
-  // QR-Aufsteller aus Holz: in diesen Paketen inklusive (digitaler QR-Code ist in allen Paketen dabei); andere können ihn anfragen
-  aufstellerPakete: env("AUFSTELLER_PAKETE", "monatlich,einmal").split(",").map((x) => x.trim()).filter(Boolean),
-  // QR-Aufsteller einzeln (Pakete ohne Aufsteller, z. B. Risikofrei): Preis netto zzgl. USt., Kauf per Stripe-Checkout (DSX-Konto)
-  aufstellerPreisNetto: Number(env("AUFSTELLER_PREIS_NETTO_CENT", 2900)),
 };
 
 export const SECRETS = {
@@ -198,8 +196,6 @@ export function paketVon(s) {
   if (s?.zahlart === "geschenk") return { id: "geschenk", name: s.sonderkondition || "Geschenk (eigenes Konto)", modell: "kauf", einrichtungNetto: 0, einmalNetto: 0, monatNetto: 0, provisionProzent: 0 };
   return PAKETE[s?.paket] || (s?.modell === "kauf" ? PAKETE.einmal : PAKETE.risikofrei);
 }
-// Beim Bestandskunden-Preis (umgestelltes Altstudio) ist der Aufsteller nicht enthalten
-export const aufstellerInklusive = (s) => CFG.aufstellerPakete.includes(paketVon(s).id) && !s?.stripe?.altKonto;
 
 // Provisionssatz eines Studios in Prozent (0 bei Kauf/Profi)
 export function provisionSatz(s) {
@@ -227,7 +223,7 @@ export function publicConfig() {
     produkt: c.produkt, marke: c.marke, firma: c.firma, adresse: c.adresse, registergericht: c.registergericht,
     ustid: c.ustid, geschaeftsfuehrer: c.geschaeftsfuehrer, telefon: c.telefon, email: c.email,
     gerichtsstand: c.gerichtsstand, whatsapp: c.whatsapp, videoUrl: c.videoUrl,
-    kaufNetto: c.kaufNetto, monatNetto: c.monatNetto, nutzungJahre: c.nutzungJahre, aufstellerPakete: c.aufstellerPakete, aufstellerPreisNetto: c.aufstellerPreisNetto,
+    kaufNetto: c.kaufNetto, monatNetto: c.monatNetto, nutzungJahre: c.nutzungJahre,
     pakete: Object.values(PAKETE).filter((x) => paketNeuWaehlbar(x.id)).map(({ id, name, modell, einmalNetto, monatNetto, provisionProzent, empfohlen }) => ({ id, name, modell, einmalNetto, monatNetto, provisionProzent, empfohlen: Boolean(empfohlen) })),
     provisionProzent: c.provisionProzent, ustProzent: c.ustProzent, garantieTage: c.garantieTage,
     setupSupportTage: c.setupSupportTage, vertragVersion: c.vertragVersion,

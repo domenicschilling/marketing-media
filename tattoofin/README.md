@@ -7,7 +7,7 @@ Alles für Vertrieb, Umsetzung, Studios und deren Kunden rund um Tattoofin: flex
 |---|---|
 | `intern/` | Produkt & Kalkulation, Vertriebs-Playbook, Direct-Mail-Kampagne „Das Sparschwein geht in Rente“, Umsetzung & Onboarding, Nachrichtenvorlagen |
 | `studios/` | Überblick (Verkaufs-Flyer), So funktioniert's, Team-Leitfaden, Mailing-Brief, Vertrag, AVV, Fragebogen, Postkarte, Paket-Aufkleber |
-| `kunden/` | Fensteraufkleber, Flyer A6, Thekenaufsteller A5, Kundeninfo „Flexibel bezahlen“, Social-Kit, Generator pro Studio |
+| `kunden/` | Fensteraufkleber, Flyer A6, Kundeninfo „Flexibel bezahlen“, Social-Kit, Generator pro Studio |
 | `pdf/` | Fertige PDFs (neu erzeugen mit `node tools/render-pdf.mjs`) |
 | `website/` | Website: Online-Abschluss mit Stripe (Kauf 1.499 € oder 10 % Provision), Studio-Portal mit Zahlungslinks und Zahlseite, automatische Provisionsabrechnung, E-Mails. Siehe `website/README.md` |
 | `video.html` | Mobile Seite mit Werbevideo (`assets/werbevideo.mp4`), Ziel der QR-Codes im Mailing |
