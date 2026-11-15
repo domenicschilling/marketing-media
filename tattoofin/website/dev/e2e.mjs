@@ -131,11 +131,22 @@ try {
     lauf(path.join(root, "public"));
     const sichtbar = (h) => h.replace(/<!--[\s\S]*?-->/g, "").replace(/<script[\s\S]*?<\/script>/gi, "").replace(/<style[\s\S]*?<\/style>/gi, "");
     const treffer = alle.filter((f) => !/\/vertrag-20[^/]*\.html$/.test(f)).map((f) => [path.relative(path.join(root, "public"), f), sichtbar(fs.readFileSync(f, "utf8"))])
-      .map(([f, h]) => [f, f === "datenschutz.html" ? h.replace(/<li><b>QR-Aufsteller aus Holz \(entfallen seit 15\.11\.2026\):<\/b>[^<]*<\/li>/, "") : h])
+      .map(([f, h]) => [f, f === "datenschutz.html" ? h.replace(/<li><b>QR-Aufsteller aus Holz \(entfallen seit November 2026\):<\/b>[^<]*<\/li>/, "").replace(/; nur zur Abwicklung einer früheren, bezahlten oder vertraglich zugesagten Bestellung des QR-Aufstellers aus Holz der Betrieb, der ihn fertigt und verschickt \(Abschnitt 7\)\./, ".") : h])
       .filter(([, h]) => /aufsteller|Gravur|Holzschild/i.test(h)).map(([f]) => f);
     check(alle.length > 30 && treffer.length === 0, `Öffentliche Seiten (${alle.length} HTML-Dateien): kein QR-Aufsteller mehr (außer Vertragsarchiv und „entfallen“-Hinweis im Datenschutz)`, treffer.join(", "));
     const jsTreffer = ["js/start.js", "js/app.js", "js/studios.js", "js/landing.js", "js/doc-defaults.js", "js/werbung-texte.js", "js/app-kit.js"].filter((f) => /Aufsteller aus Holz|Holz-Aufsteller|Wert 29 €/.test(fs.readFileSync(path.join(root, "public", f), "utf8")));
     check(jsTreffer.length === 0 && !fs.existsSync(path.join(root, "public/js/aufsteller.js")) && !fs.existsSync(path.join(root, "public/aufsteller.html")), "Skripte der Website ohne Aufsteller-Texte; aufsteller.js und aufsteller.html gelöscht", jsTreffer.join(", "));
+    // Bilder vom Holz-Aufsteller (KI-Visualisierung) werden nicht mehr ausgeliefert
+    const bilder = ["/assets/lp/aufsteller-theke-480.webp", "/assets/lp/aufsteller-theke-800.webp", "/assets/lp/aufsteller-scannen-480.webp", "/assets/lp/aufsteller-scannen-800.webp", "/assets/start/aufsteller-scannen-800.webp"];
+    const bildStatus = await Promise.all(bilder.map(async (u) => (await fetch(BASE + u)).status));
+    const reste = [];
+    const lauf2 = (d) => { for (const f of fs.readdirSync(d, { withFileTypes: true })) { const x = path.join(d, f.name); if (f.isDirectory()) lauf2(x); else if (/aufsteller/i.test(f.name)) reste.push(path.relative(root, x)); } };
+    lauf2(path.join(root, "public"));
+    check(bildStatus.every((st) => st === 404) && reste.length === 0, "Aufsteller-Bilder (lp/aufsteller-*.webp, start/aufsteller-scannen-800.webp) liefern 404, keine Datei mit „aufsteller“ im Namen unter public/", bildStatus.join(",") + " " + reste.join(", "));
+    // Datenschutz: Aufsteller „entfallen seit November 2026“ (kein Datum vor dem Deploy), Logos ohne Bestellung löschen wir von uns aus,
+    // Hersteller nur bei Altfällen (Abschnitt 7 und Empfänger)
+    const ds = fs.readFileSync(path.join(root, "public/datenschutz.html"), "utf8");
+    check(/entfallen seit November 2026/.test(ds) && /löschen sie von uns aus/.test(ds) && !/auf deinen Wunsch sofort/.test(ds) && /Bestellung des QR-Aufstellers aus Holz der Betrieb/.test(ds), "Datenschutz: Aufsteller entfallen, Logos werden von uns gelöscht, Hersteller nur für Altfälle genannt");
     const cfgOeff = await (await fetch(BASE + "/api/config")).json();
     check(!/aufsteller/i.test(JSON.stringify(cfgOeff)) && cfgOeff.vertragVersion === "2026-12d", "GET /api/config ohne Aufsteller-Preis/-Pakete, Vertrag 2026-12d");
   }
@@ -1173,7 +1184,7 @@ try {
   await h.evaluate(() => document.getElementById("so-gehts").scrollIntoView());
   await h.waitForSelector("#so-gehts video[poster]", { timeout: 15000 });
   const sg = await h.evaluate(() => { const v = document.querySelector("#so-gehts video"); return { preload: v.preload, poster: v.getAttribute("poster"), src: v.querySelector("source").getAttribute("src"), kap: document.querySelectorAll("#so-gehts .sg-kap button").length, fuss: /Achtung! Kreditaufnahme kostet Geld/.test(document.getElementById("so-gehts").textContent) }; });
-  check(sg.preload === "none" && /9x16\.jpg$/.test(sg.poster) && /9x16\.mp4$/.test(sg.src), "So geht's: Video auf der Startseite lädt erst beim Abspielen (Hochformat am Handy, mit Vorschaubild)");
+  check(sg.preload === "none" && /9x16\.jpg$/.test(sg.poster) && /9x16\.mp4\?v=2026-11-16$/.test(sg.src), "So geht's: Video auf der Startseite lädt erst beim Abspielen (Hochformat am Handy, mit Vorschaubild)");
   check(sg.kap === 10 && sg.fuss, "So geht's: 10 Kapitel + Raten-Fußnote unter dem Video");
   const vr = await fetch(BASE + sg.src, { headers: { range: "bytes=0-1023" } });
   check([200, 206].includes(vr.status) && /video\/mp4/.test(vr.headers.get("content-type") || ""), "So geht's: Videodatei wird ausgeliefert (video/mp4)");

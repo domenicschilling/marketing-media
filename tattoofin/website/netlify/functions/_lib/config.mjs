@@ -68,10 +68,13 @@ export const CFG = {
   // 2026-12 (02.11.2026): Software zum festen Preis, Vergütung unabhängig von der Zahlart, keine Mitwirkung an Krediten, KMU-Bestätigung (Rechtsprüfung 01.11.2026, U8). Archiv zusätzlich /vertrag-2026-11.html
   // 2026-12b (14.11.2026): neuer § 13 „Abschluss über die Tattoofin-App (Apple)“ (Abo per In-App-Kauf), App-Ansicht ohne Web-Preis. Archiv /vertrag-2026-12.html
   // 2026-12c (15.11.2026): Paket Monatlich auf der Website 49,90 € inkl. USt. (41,93 € netto), Bestandskunden behalten ihren Preis. Archiv /vertrag-2026-12b.html
-  // 2026-12d (15.11.2026): ohne QR-Aufsteller aus Holz (eingestellt, Entscheidung Domenic); der digitale QR-Code und die Druckvorlagen
-  // (Fensteraufkleber, Flyer) bleiben. Archiv /vertrag-2026-12c.html (dort § 2 Abs. 3 Aufsteller, gilt für Abschlüsse bis 15.11.2026)
+  // 2026-12d (Entscheidung Domenic 15.11.2026, gilt ab dem Deploy): ohne QR-Aufsteller aus Holz; der digitale QR-Code und die Druckvorlagen
+  // (Fensteraufkleber, Flyer) bleiben. Archiv /vertrag-2026-12c.html (dort § 2 Abs. 3 Aufsteller, gilt für Abschlüsse bis zur Veröffentlichung
+  // von 2026-12d; wer bis dahin mit 12c abschließt, steht über vertrag.aufsteller in der Admin-Box „QR-Aufsteller (alt)“)
   vertragVersion: "2026-12d",
   // Blatt „Deine rechtliche Lage“ und Leistungsbestätigung: Version bei inhaltlichen Änderungen hochzählen (wird mit der Zustimmung gespeichert)
+  // rechtVersion bleibt bewusst 2026-12: Mit dem Aufsteller wurde nur ein Beispiel aus der Aufzählung „Das gilt auch für …“ gestrichen
+  // (jetzt „alles, was du ausdruckst“), die Klarna-Pflicht selbst ist unverändert. Keine inhaltliche Änderung, keine neue Bestätigung nötig.
   rechtVersion: "2026-12",
   bestaetigungVersion: "2026-10b",
   // Zahlarten im Checkout. Bewusst ohne SEPA-Lastschrift: Die kann der Kunde 8 Wochen lang ohne Grund zurückbuchen.

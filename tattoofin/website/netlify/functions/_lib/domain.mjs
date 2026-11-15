@@ -84,13 +84,35 @@ export async function aufstellerBezahlt(s, session) {
   s.aufsteller = a;
   await saveStudio(s);
   await notifyAdmin("QR-Aufsteller (alt) bezahlt – erstatten oder liefern", s, {
-    Hinweis: "Den Holz-Aufsteller gibt es seit 15.11.2026 nicht mehr. Dieser Kauf wurde vorher begonnen. Bitte erstatten (Stripe) oder ausnahmsweise liefern.",
+    Hinweis: "Den Holz-Aufsteller gibt es nicht mehr. Dieser Kauf wurde vorher begonnen. Bitte erstatten (Stripe) oder ausnahmsweise liefern.",
     Paket: paketVon(s).name, Bezahlt: (session.amount_total / 100).toFixed(2).replace(".", ",") + " € brutto",
     Holz: holzText(a.holz), Variante: a.variante === "logo" ? "mit Studio-Logo" : "mit Studioname",
     Lieferadresse: lieferadresse(s), "QR-Code zeigt auf": zahlseiteUrl(s), Telefon: s.telefon,
   });
   await log("aufsteller-bezahlt", { studioId: s.id, cs: session.id });
   return true;
+}
+
+// Logo eines früheren QR-Aufstellers löschen (Studio, Tagesjob oder Admin) und vermerken
+export async function aufstellerLogoLoeschen(s, quelle) {
+  await store.del("aufsteller-logo/" + s.id);
+  if (s.aufsteller?.hatLogo) { s.aufsteller = { ...s.aufsteller, hatLogo: false, logoGeloeschtAm: now() }; await saveStudio(s); }
+  await log("aufsteller-logo-geloescht", { studioId: s.id, quelle });
+}
+// Datenschutz (Art. 5 Abs. 1 lit. c/e, Art. 17 Abs. 1 lit. a DSGVO): Den Holz-Aufsteller gibt es nicht mehr, gespeicherte Logos haben
+// keinen Zweck mehr. Der Tagesjob löscht jedes Logo, dessen Studio den Aufsteller weder angefordert noch bezahlt hat (Datenschutzerklärung
+// Abschnitt 7). Logos zu einer früheren Bestellung bleiben bis zur Abwicklung; der Admin löscht sie danach im Studio-Detail.
+export async function aufstellerLogosAufraeumen() {
+  const out = [];
+  for (const k of await store.list("aufsteller-logo/")) {
+    const s = await getStudio(k.slice("aufsteller-logo/".length));
+    const a = s?.aufsteller || {};
+    if (s && (a.angefordertAm || a.kauf?.bezahltAm)) continue;
+    if (s) await aufstellerLogoLoeschen(s, "tagesjob");
+    else { await store.del(k); await log("aufsteller-logo-geloescht", { key: k, quelle: "tagesjob", grund: "ohne Studio" }); }
+    out.push(["aufsteller-logo-geloescht", s?.id || k]);
+  }
+  return out;
 }
 
 // Paket Monatlich: Abo auf dem DSX-Konto zum Ende des laufenden Abrechnungsmonats beenden (bzw. Kündigung zurücknehmen).
@@ -643,6 +665,8 @@ export async function taeglicheJobs(heute = new Date()) {
   try { out.push(...(await auszahlungenNachholen())); } catch (e) { out.push(["auszahlungen-nachholen-fehler", e.message]); }
   // Apple: Doppelschutz der Server-Benachrichtigungen nach 90 Tagen löschen, abgelaufene Registrier-Codes nach einem Tag
   try { out.push(...(await appleAufraeumen())); } catch (e) { out.push(["apple-aufraeumen-fehler", e.message]); }
+  // QR-Aufsteller aus Holz (eingestellt): Logos ohne Bestellung löschen
+  try { out.push(...(await aufstellerLogosAufraeumen())); } catch (e) { out.push(["aufsteller-logos-aufraeumen-fehler", e.message]); }
   for (const s of await allStudios()) {
     if (s.demo) continue;
     const alterStd = (Date.now() - new Date(s.createdAt).getTime()) / 3600e3;

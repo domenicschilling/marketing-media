@@ -22,9 +22,10 @@ export const KLARNA_FUER_WERBUNG = K;
 // Erklärvideo „So geht's“ (gleiche Kapitel wie public/js/so-gehts.js; app-api prüft den Gleichstand). Das Kapitel
 // „App auf den Startbildschirm“ (Web-App-Installation, 120,8–135,9 s) gibt es in der iPhone-App nicht → weggelassen.
 export const SO_GEHTS = {
-  version: "2026-10-18", dauer: 147.73,
-  hoch: { pfad: "/assets/app/hilfe/so-gehts-9x16.mp4", poster: "/assets/app/hilfe/so-gehts-9x16.jpg", breite: 720, hoehe: 1280 },
-  quer: { pfad: "/assets/app/hilfe/so-gehts-16x9.mp4", poster: "/assets/app/hilfe/so-gehts-16x9.jpg", breite: 1280, hoehe: 720 },
+  // 2026-11-16: Kapitel Werbung ohne QR-Aufsteller neu vertont und neu aufgenommen (gleiche Länge, gleiche Kapitelmarken). ?v= gegen alte Kopien im Browser-Cache (/assets/* 1 Woche)
+  version: "2026-11-16", dauer: 147.73,
+  hoch: { pfad: "/assets/app/hilfe/so-gehts-9x16.mp4?v=2026-11-16", poster: "/assets/app/hilfe/so-gehts-9x16.jpg", breite: 720, hoehe: 1280 },
+  quer: { pfad: "/assets/app/hilfe/so-gehts-16x9.mp4?v=2026-11-16", poster: "/assets/app/hilfe/so-gehts-16x9.jpg", breite: 1280, hoehe: 720 },
   kapitel: [
     { ab: 0, name: "Übersicht und Einrichtung" },
     { ab: 22.6, name: "Zahlungslink erstellen" },

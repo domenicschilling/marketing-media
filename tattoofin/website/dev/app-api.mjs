@@ -795,7 +795,7 @@ try {
   const sg = wd.soGehts || {};
   const sgSrc = fs.readFileSync(path.join(root, "public/js/so-gehts.js"), "utf8");
   const sgWeb = [...sgSrc.matchAll(/\{ ab: ([\d.]+), name: "([^"]+)" \}/g)].map((m) => [Number(m[1]), m[2]]);
-  check(sg.url === `${BASE}/assets/app/hilfe/so-gehts-9x16.mp4` && sg.poster === `${BASE}/assets/app/hilfe/so-gehts-9x16.jpg` && sg.quer?.url.endsWith("so-gehts-16x9.mp4") && sg.dauer === 147.73 && sg.kapitel?.length === 9 && !sg.kapitel.some((k) => /Startbildschirm/.test(k.name)) && sg.fussnote === FUSSNOTE && sg.ohneKlarna === null && /Stimme mit KI erstellt/.test(sg.hinweis), "So geht's: Video 9:16 + 16:9, 9 Kapitel ohne „App auf den Startbildschirm“, Fußnote + KI-Hinweis", JSON.stringify(sg.kapitel));
+  check(sg.url === `${BASE}/assets/app/hilfe/so-gehts-9x16.mp4?v=2026-11-16` && sg.poster === `${BASE}/assets/app/hilfe/so-gehts-9x16.jpg` && sg.quer?.url.endsWith("so-gehts-16x9.mp4?v=2026-11-16") && sg.dauer === 147.73 && sg.kapitel?.length === 9 && !sg.kapitel.some((k) => /Startbildschirm/.test(k.name)) && sg.fussnote === FUSSNOTE && sg.ohneKlarna === null && /Stimme mit KI erstellt/.test(sg.hinweis), "So geht's: Video 9:16 + 16:9, 9 Kapitel ohne „App auf den Startbildschirm“, Fußnote + KI-Hinweis", JSON.stringify(sg.kapitel));
   check(sgWeb.length === 10 && JSON.stringify(sgWeb.filter((k) => k[1] !== "App auf den Startbildschirm")) === JSON.stringify(sg.kapitel.map((k) => [k.ab, k.name])) && sgWeb.some((k) => k[0] === 120.8 && k[1] === "App auf den Startbildschirm"), "Kapitel-Zeiten und -Namen wortgleich mit so-gehts.js (Dashboard)", JSON.stringify(sgWeb));
   check(wd.hilfe?.whatsapp === "https://wa.me/491624502375" && /unserem Team/.test(wd.hilfe.text) && !/Domenic/.test(w.text), "Hilfe per WhatsApp an „unser Team“, nie ein Name");
   check(!/49[,.]00|49 €|41[,.]93|49,90|netto|monatNetto|paketName|"Paket|preisNetto|tattoofin\.de\/(studios|start)|signup/i.test(w.text), "Keine Paket-, Abo- oder Website-Preise, kein Link zur Anmeldung in der Antwort (Apple 3.1.1)");
@@ -890,12 +890,28 @@ try {
   const whAlt = await sendeWebhook(`${BASE}/api/stripe-webhook`, "whsec_mock", "checkout.session.completed", { id: csAlt, object: "checkout.session", mode: "payment", payment_status: "paid", amount_total: 3451, metadata: { studioId: E.id, typ: "aufsteller" } });
   const eNach = blob("studio/" + E.id);
   const altMail = mailsAn("admin@app.test").filter((m) => m.subject.includes("QR-Aufsteller (alt) bezahlt – erstatten oder liefern") && m.subject.includes("Ink Studio E"));
-  check(whAlt === 200 && eNach.aufsteller?.kauf?.bezahltAm && altMail.length === 1 && /gibt es seit 15\.11\.2026 nicht mehr/.test(altMail[0].html) && !/Gravurdatei|aufsteller\.html/.test(altMail[0].html), "Altfall: bezahlter Checkout von vorher → vermerkt + Admin-Mail „(alt) bezahlt – erstatten oder liefern“ (ohne Gravurdatei)", String(whAlt));
+  check(whAlt === 200 && eNach.aufsteller?.kauf?.bezahltAm && altMail.length === 1 && /Den Holz-Aufsteller gibt es nicht mehr/.test(altMail[0].html) && !/Gravurdatei|aufsteller\.html/.test(altMail[0].html), "Altfall: bezahlter Checkout von vorher → vermerkt + Admin-Mail „(alt) bezahlt – erstatten oder liefern“ (ohne Gravurdatei)", String(whAlt));
   const altNochmal = await call("POST", "/api/portal/aufsteller-pruefen", { cookie: E.cookie, body: { cs: csAlt } });
   check(entfallen(altNochmal), "Altfall schon bezahlt → Prüfen liefert 410 (nichts mehr offen)", altNochmal.text);
   const fertigSeite = await fetch(`${BASE}/app-fertig.html?aufsteller=bezahlt&cs=${csAlt}`);
   const fertigHtml = await fertigSeite.text();
   check(fertigSeite.status === 200 && /noindex/.test(fertigHtml) && /zurück in die Tattoofin-App/.test(fertigHtml) && !/<a\s/i.test(fertigHtml) && !/€|Paket|tf-track|fbq/.test(fertigHtml) && !/QR-Aufsteller fertigen|deine Bestellung/i.test(fertigHtml) && /for = "\/app-fertig\.html"/.test(fs.readFileSync(path.join(root, "netlify.toml"), "utf8")), "app-fertig.html (Rückkehr alter Checkouts): noindex, ohne Links, ohne Preise, ohne Messung, ohne Aufsteller-Text");
+  // Tagesjob (Datenschutz): Logos ohne angeforderte/bezahlte Bestellung löschen; Logo eines bezahlten Altfalls bleibt bis der Admin es löscht
+  setBlob("studio/" + D.id, { ...blob("studio/" + D.id), aufsteller: { holz: "hell", variante: "logo", hatLogo: true, am: new Date().toISOString() } });
+  setBlob("aufsteller-logo/" + D.id, { src: LOGO, w: 400, h: 200 });
+  setBlob("studio/" + E.id, { ...blob("studio/" + E.id), aufsteller: { ...blob("studio/" + E.id).aufsteller, variante: "logo", hatLogo: true } });
+  setBlob("aufsteller-logo/" + E.id, { src: LOGO, w: 400, h: 200 });
+  setBlob("aufsteller-logo/st_gibtesnicht", { src: LOGO, w: 1, h: 1 });
+  const logVorJob = logs("aufsteller-logo-geloescht").length;
+  const jobLogo = await admin("jobs", {});
+  const geloeschtJob = (jobLogo || []).filter((x) => x[0] === "aufsteller-logo-geloescht").map((x) => x[1]);
+  check(!blob("aufsteller-logo/" + D.id) && blob("studio/" + D.id).aufsteller?.hatLogo === false && blob("studio/" + D.id).aufsteller?.logoGeloeschtAm && !blob("aufsteller-logo/st_gibtesnicht") &&
+    blob("aufsteller-logo/" + E.id) && blob("studio/" + E.id).aufsteller?.hatLogo === true && geloeschtJob.includes(D.id) && !geloeschtJob.includes(E.id) && logs("aufsteller-logo-geloescht").length === logVorJob + 2,
+    "Tagesjob löscht Aufsteller-Logos ohne Bestellung (auch ohne Studio), Logo eines bezahlten Altfalls bleibt", JSON.stringify(geloeschtJob));
+  const admLogo = await call("POST", "/api/admin/studio/" + E.id + "/aufsteller-logo", { body: {}, headers: { authorization: "Bearer admin" } });
+  const admLogoStudio = await call("POST", "/api/admin/studio/" + E.id + "/aufsteller-logo", { cookie: E.cookie, body: {} });
+  check(admLogo.status === 200 && !blob("aufsteller-logo/" + E.id) && blob("studio/" + E.id).aufsteller?.hatLogo === false && blob("studio/" + E.id).aufsteller?.kauf?.bezahltAm && admLogoStudio.status === 401,
+    "Admin: „Aufsteller-Logo löschen“ entfernt das Logo eines Altfalls (Bestelldaten bleiben), ohne Admin-Anmeldung 401", `${admLogo.status} ${admLogoStudio.status}`);
   setBlob("studio/" + E.id, eAlt);
 
   // ==================================================================================================
@@ -1505,7 +1521,7 @@ try {
   const dsHtmlVorab = await (await fetch(`${BASE}/datenschutz.html`)).text();
   const appText = ohneNurWeb(vertragHtml);
   check((vertragHtml.match(/data-nur-web/g) || []).length >= 5 && /data-cfg="monatPreis"/.test(vertragHtml) && !/data-cfg="monatPreis(Brutto)?"/.test(appText) && !/41,93|49,90/.test(appText) && !/per Stripe eingezogen/.test(appText) && !/graviertem QR-Code/.test(appText) && !/die Zahlung läuft über Stripe/.test(appText), "vertrag.html in der App-Fassung: ohne Web-Preis, ohne „per Stripe eingezogen“");
-  check(!/Aufsteller/i.test(vertragHtml.replace(/<!--[\s\S]*?-->/g, "")) && !/Aufsteller|Logo-Gravur|fertigt und verschickt/i.test(dsHtmlVorab.replace(/<li><b>QR-Aufsteller aus Holz \(entfallen seit 15\.11\.2026\):<\/b>[^<]*<\/li>/, "")) && /QR-Aufsteller aus Holz \(entfallen seit 15\.11\.2026\)/.test(dsHtmlVorab), "vertrag.html (Fassung 2026-12d) ganz ohne Aufsteller; Datenschutz: Aufsteller nur noch als „entfallen“ (keine Weitergabe an Hersteller)");
+  check(!/Aufsteller/i.test(vertragHtml.replace(/<!--[\s\S]*?-->/g, "")) && !/Aufsteller|Logo-Gravur|fertigt und verschickt/i.test(dsHtmlVorab.replace(/<li><b>QR-Aufsteller aus Holz \(entfallen seit November 2026\):<\/b>[^<]*<\/li>/, "").replace(/; nur zur Abwicklung einer früheren, bezahlten oder vertraglich zugesagten Bestellung des QR-Aufstellers aus Holz der Betrieb, der ihn fertigt und verschickt \(Abschnitt 7\)/, "")) && /QR-Aufsteller aus Holz \(entfallen seit November 2026\):<\/b>[^<]*löschen sie von uns aus[^<]*Nur um eine solche frühere, bezahlte oder vertraglich zugesagte Bestellung abzuwickeln/.test(dsHtmlVorab), "vertrag.html (Fassung 2026-12d) ganz ohne Aufsteller; Datenschutz: Aufsteller „entfallen“, Logos löschen wir von uns aus, Hersteller nur noch für Altfälle (Abschnitt 7 und Empfänger)");
   check(/Preis wie beim Kauf im App Store angezeigt \(inkl\. USt\.\), Abrechnung über Apple/.test(appText) && /§ 13 Abschluss über die Tattoofin-App \(Apple\)/.test(vertragHtml) && /24 Stunden vor Ablauf/.test(vertragHtml) && /\[\?&\]app=1/.test(vertragHtml) && /Fassung 2026-12d/.test(vertragHtml), "vertrag.html: § 13 (Apple-Abo, 24 Stunden, Erstattung über Apple), App-Text data-nur-app, Fassung 2026-12d");
   const p6 = (vertragHtml.split("<h2>§ 6")[1] || "").split("<h2>")[0];
   check((p6.match(/Achtung! Kreditaufnahme kostet Geld\./g) || []).length === 2 && /Verkäufer des In-App-Abos ist Apple \(Apple Distribution International Ltd\./.test(vertragHtml) && /keine eigene Rechnung/.test(vertragHtml), "vertrag.html: § 6 mit „Achtung! Kreditaufnahme kostet Geld.“ bei Raten/Kredit, § 13 nennt Apple als Verkäufer, keine eigene Rechnung");
