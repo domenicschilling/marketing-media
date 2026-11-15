@@ -153,10 +153,10 @@ export function createSim({ load, save, pageBase, webhook }) {
       if (res1 === "setup_intents") return db.setupIntents[id1];
       if (res1 === "invoiceitems") { const it = { id: rid("ii"), ...p, amount: Number(p.amount) }; db.items.push(it); return done(it); }
       if (res1 === "invoices") {
-        // Liste (Admin-Übersicht „unsere Einnahmen“): Filter status und created[gte], ohne Seiten (alles auf einmal)
+        // Liste (Admin-Übersicht „unsere Einnahmen“): Filter status und created[gte/lt], ohne Seiten (alles auf einmal)
         if (method === "GET" && !id1) {
-          const ab = Number(p.created?.gte) || 0;
-          const data = Object.values(db.invoices).filter((i) => (!p.status || i.status === p.status) && (i.created || 0) >= ab)
+          const ab = Number(p.created?.gte) || 0, bis = Number(p.created?.lt) || Infinity;
+          const data = Object.values(db.invoices).filter((i) => (!p.status || i.status === p.status) && (i.created || 0) >= ab && (i.created || 0) < bis)
             .map((i) => ({ ...i, status_transitions: i.status_transitions || { paid_at: i.status === "paid" ? (i.created || Math.floor(Date.now() / 1000)) : null } }));
           return { object: "list", data, has_more: false };
         }
@@ -178,17 +178,24 @@ export function createSim({ load, save, pageBase, webhook }) {
         if (act === "send") return done(inv);
         if (act === "pay") { inv.status = "paid"; inv.amount_paid = inv.amount_due; inv.paid_out_of_band = p.paid_out_of_band === "true" || p.paid_out_of_band === true; return done(inv); }
       }
+      // Liste (Admin-Übersicht: Erstattungen im Monat): created[gte/lt], nur das angefragte Konto, charge mit customer (wie expand data.charge)
+      if (res1 === "refunds" && method === "GET" && !id1) {
+        const ab = Number(p.created?.gte) || 0, bis = Number(p.created?.lt) || Infinity;
+        const data = db.refunds.filter((r) => (r.created || 0) >= ab && (r.created || 0) < bis && (db.paymentIntents[r.payment_intent]?.account || undefined) === (account || undefined))
+          .map((r) => ({ ...r, charge: { id: db.paymentIntents[r.payment_intent]?.latest_charge?.id || "ch_sim", customer: db.paymentIntents[r.payment_intent]?.customer || r.customer || null } }));
+        return { object: "list", data, has_more: false };
+      }
       if (res1 === "refunds" && db.paymentIntents[p.payment_intent]) {
         const pi = db.paymentIntents[p.payment_intent];
         const amount = Number(p.amount || pi.amount - pi.refunded);
         if (pi.refunded + amount > pi.amount) throw new SimFehler(400, "Betrag zu hoch");
         pi.refunded += amount;
-        const r = { id: rid("re"), payment_intent: pi.id, amount, reverse_transfer: String(p.reverse_transfer) === "true", refund_application_fee: String(p.refund_application_fee) === "true", status: "succeeded" };
+        const r = { id: rid("re"), created: Math.floor(Date.now() / 1000), payment_intent: pi.id, amount, reverse_transfer: String(p.reverse_transfer) === "true", refund_application_fee: String(p.refund_application_fee) === "true", status: "succeeded" };
         db.refunds.push(r);
         emit("charge.refunded", { id: pi.latest_charge.id, object: "charge", payment_intent: pi.id, amount: pi.amount, amount_refunded: pi.refunded, application_fee: pi.latest_charge.application_fee }, pi.account || undefined);
         return done(r);
       }
-      if (res1 === "refunds") { const r = { id: rid("re"), payment_intent: p.payment_intent, amount: Number(p.amount || 0), status: "succeeded" }; db.refunds.push(r); return done(r); }
+      if (res1 === "refunds") { const r = { id: rid("re"), created: Math.floor(Date.now() / 1000), payment_intent: p.payment_intent, amount: Number(p.amount || 0), status: "succeeded" }; db.refunds.push(r); return done(r); }
       if (res1 === "billing_portal") return done({ id: rid("bps"), url: `${pageBase}/invoice` });
       // Auszahlungen und Saldo je verbundenem Konto (Stripe-Account-Header), für die App (GET /api/app/auszahlungen)
       if ((res1 === "payouts" || res1 === "balance") && method === "GET" && account && !db.accounts[account]) throw new SimFehler(403, "Konto nicht gefunden oder keine Berechtigung");

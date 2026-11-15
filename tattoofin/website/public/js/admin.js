@@ -5,11 +5,15 @@
   var $ = function (i) { return document.getElementById(i); }, e = TF.esc;
   var token = "";
   try { token = sessionStorage.getItem("tf-admin") || ""; } catch (x) {}
-  var daten = null, filter = "alle", detailId = null, loginEmail = "", zuletzt = "studios";
+  var daten = null, filter = "alle", detailId = null, zuletzt = "studios";
+  // Adresse fürs Code-Login merken: Die Homescreen-App lädt beim Wechsel in die Mail-App oft neu
+  function gemerkteEmail() { try { return localStorage.getItem("tf-admin-email") || ""; } catch (x) { return ""; } }
+  function emailMerken(v) { try { localStorage.setItem("tf-admin-email", v); } catch (x) {} }
 
   function api(p, o) { o = o || {}; if (token) o.headers = { Authorization: "Bearer " + token }; return TF.api("/api/admin/" + p, o); }
   function msg(t, ty) { $("alert").innerHTML = t ? '<div class="alert ' + (ty || "ok") + '">' + e(t) + "</div>" : ""; if (t) window.scrollTo(0, 0); }
-  function zeig(x) { $("out-json").textContent = JSON.stringify(x, null, 2); }
+  // Ergebnis unter „Mehr“: erst ein Satz, die Technik (JSON) aufklappbar
+  function zeig(x, satz) { $("out-satz").textContent = satz || "Erledigt."; $("out-json").textContent = JSON.stringify(x, null, 2); $("out-details").classList.remove("hidden"); }
   function euro(c) { return c === null || c === undefined ? "–" : TF.euro(c); }
   function zeit(iso) {
     if (!iso) return "–";
@@ -23,6 +27,9 @@
   var TAGFARBE = { live: "gruen", einrichtung: "gelb", zahlung_offen: "gelb", entwurf: "grau", abgebrochen: "grau", gekuendigt: "rot", beendet: "rot", erstattet: "rot" };
   function statusPille(s) { return '<span class="pille status ' + (TAGFARBE[s.status] || "grau") + '">' + e(s.statusText || s.status) + "</span>"; }
   function paketText(p) { return p ? e(p.name) + (p.preis ? " · " + e(p.preis) : "") : "–"; }
+  // Preis-Art: echter Sonderpreis, alter Preis eines Bestandsstudios oder Einladung (0 €)
+  var PREISART = { sonder: ["gelb", "Sonderpreis"], altpreis: ["grau", "Altpreis"], einladung: ["blau", "Einladung"] };
+  function preisPille(p) { var a = p && PREISART[p.art]; return a ? '<span class="pille ' + a[0] + '">' + a[1] + "</span>" : ""; }
 
   // ---------------------------------------------------------------- Ansichten (Hash: #uebersicht, #studios, #demo, #mehr, #st_…)
   var ANSICHTEN = ["uebersicht", "studios", "detail", "demo", "mehr"];
@@ -42,7 +49,8 @@
     if (v === "mehr") mailsLaden();
     window.scrollTo(0, 0);
   }
-  window.addEventListener("hashchange", route);
+  // Wechsel durch Tippen: alte Meldung weg (start() nach einer Aktion ruft route() direkt auf und behält sie)
+  window.addEventListener("hashchange", function () { msg(""); route(); });
 
   // ---------------------------------------------------------------- Laden
   async function start() {
@@ -59,23 +67,37 @@
   }
 
   // ---------------------------------------------------------------- Übersicht
+  // Kachel mit Ziel = Knopf (springt zur passenden Liste), ohne Ziel = reine Anzeige
   function kachel(wert, was, dazu, klasse, ziel) {
-    return '<button type="button" class="kachel ' + (klasse || "") + '"' + (ziel ? ' data-ziel="' + e(ziel) + '"' : "") + "><b>" + wert + '</b><span class="was">' + e(was) + "</span>" + (dazu ? '<span class="dazu">' + dazu + "</span>" : "") + "</button>";
+    var tag = ziel ? "button" : "div";
+    return "<" + tag + (ziel ? ' type="button"' : "") + ' class="kachel ' + (klasse || "") + (ziel ? "" : " still") + '"' + (ziel ? ' data-ziel="' + e(ziel) + '"' : "") + "><b>" + wert + '</b><span class="was">' + e(was) + "</span>" + (dazu ? '<span class="dazu">' + dazu + "</span>" : "") + "</" + tag + ">";
   }
+  function mz(n, eins, viele) { return n + " " + (n === 1 ? eins : viele); }
   function uebersicht() {
-    var k = daten.kennzahlen, ein = k.einnahmen, st = ein.stripe || {}, m = daten.mail;
+    var k = daten.kennzahlen, ein = k.einnahmen, st = ein.stripe || {}, m = daten.mail, z = k.zahlend;
     var monat = new Date(daten.monat + "-15").toLocaleDateString("de-DE", { month: "long" });
-    var apple = ein.apple.abos ? ein.apple.abos + " Apple-Abo" + (ein.apple.abos === 1 ? "" : "s") + " (" + ein.apple.preise.map(function (p) { return p.anzahl + "× " + e(p.preis); }).join(", ") + ", zahlt Apple aus)" : "";
+    var mind = st.unvollstaendig ? "mind. " : "";
     var h = [
-      kachel(k.zahlend.gesamt, "Zahlende Studios", "Web " + k.zahlend.web + " · Apple " + k.zahlend.apple + "<br>davon live " + k.zahlend.live + (k.zahlend.kostenlos ? "<br>+" + k.zahlend.kostenlos + " kostenlos (Einladung)" : "") + (k.tests ? "<br>ohne " + k.tests + " Test-Studio" + (k.tests === 1 ? "" : "s") : ""), "dunkel", "studios:alle"),
-      kachel(k.einrichtung, "In Einrichtung", "bezahlt, Stripe noch nicht fertig", "", "studios:einrichtung"),
+      kachel(z.gesamt, "Zahlende Studios", "Web " + z.web + " · Apple " + z.apple + (z.probe ? "<br>+" + z.probe + " in Probezeit" : ""), "dunkel", "studios:zahlend"),
+      kachel(k.einrichtung, "In Einrichtung", "Stripe noch nicht fertig" + (k.rechnungOffen ? "<br>davon " + k.rechnungOffen + " Rechnung offen" : ""), "", "studios:einrichtung"),
       kachel(k.abgebrochen14, "Abgebrochen", "letzte 14 Tage" + (k.zahlungFehlgeschlagen14 ? '<br><span style="color:#8f1515">' + k.zahlungFehlgeschlagen14 + "× Zahlung fehlgeschlagen</span>" : ""), "", "entwuerfe"),
-      kachel('<span class="geld">' + euro(k.umsatzStudios.cent) + "</span>", "Umsatz der Studios", k.umsatzStudios.zahlungen + " Kundenzahlung" + (k.umsatzStudios.zahlungen === 1 ? "" : "en") + " im " + e(monat), "", "studios:alle"),
-      kachel('<span class="geld">' + (st.fehler ? "–" : euro(st.bruttoCent)) + "</span>", "Unsere Einnahmen", st.fehler ? e(st.fehler) : (st.rechnungen + " bezahlte Rechnung" + (st.rechnungen === 1 ? "" : "en") + " im " + e(monat) + " (" + euro(st.nettoCent) + " netto)") +
-        "<br>Abos laut Vertrag: " + euro(ein.aboVertragNettoCent) + " netto/Monat" + (apple ? "<br>" + apple : ""), "breit2", ""),
+      kachel('<span class="geld">' + euro(k.umsatzStudios.cent) + "</span>", "Umsatz der Studios", mz(k.umsatzStudios.zahlungen, "Zahlung", "Zahlungen") + " im " + e(monat), "", "studios:umsatz"),
+      kachel('<span class="geld">' + (st.fehler ? "–" : mind + euro(st.bruttoCent)) + "</span>", "Unsere Einnahmen", st.fehler ? e(st.fehler) :
+        "brutto · " + mz(st.rechnungen, "Rechnung", "Rechnungen") + " im " + e(monat) + (st.erstattetCent ? "<br>nach " + euro(st.erstattetCent) + " Erstattung" : "") + (ein.apple.abos ? "<br>+" + mz(ein.apple.abos, "Apple-Abo", "Apple-Abos") : ""), "breit2", ""),
       kachel(m.ok ? "OK" : m.anzahl, "E-Mails", m.ok ? "Warteschlange leer" : (m.anzahl === 1 ? "1 Mail hängt" : m.anzahl + " Mails hängen") + (m.aeltesteSeit ? " seit " + e(zeit(m.aeltesteSeit)) : ""), (m.ok ? "gut" : "schlecht") + " breit zeile", "mehr"),
     ];
     $("kacheln").innerHTML = h.join("");
+    // Weitere Zahlen aufklappbar (wenig Text in den Kacheln)
+    var mehr = [["davon live", z.live], ["Kostenlos (Einladung)", z.kostenlos], ["In Probezeit (Apple, noch nicht bezahlt)", z.probe],
+      ["Test-Studios (zählen nicht)", k.tests]];
+    if (!st.fehler) {
+      mehr.push(["Einnahmen netto im " + monat, mind + euro(st.nettoCent)]);
+      if (st.erstattetCent) mehr.push(["Erstattungen im " + monat, mz(st.erstattungen, "Erstattung", "Erstattungen") + " · " + euro(st.erstattetCent)]);
+      if (st.unvollstaendig) mehr.push(["Hinweis", "Stripe hatte mehr Rechnungen, als wir abfragen. Die Summe kann höher sein."]);
+    }
+    mehr.push(["Web-Abos laut Vertrag", mz(ein.webAbos, "Abo", "Abos") + " · " + euro(ein.aboVertragNettoCent) + " netto/Monat"]);
+    if (ein.apple.abos) mehr.push(["Apple-Abos", ein.apple.preise.map(function (p) { return p.anzahl + "× " + p.preis; }).join(", ") + " (zahlt Apple aus)"]);
+    $("mehrzahlen").innerHTML = "<summary>Mehr Zahlen</summary><dl class=\"liste\">" + mehr.map(function (r) { return "<dt>" + e(r[0]) + "</dt><dd>" + e(String(r[1])) + "</dd>"; }).join("") + "</dl>";
     var en = daten.entwuerfe;
     $("entwuerfe").innerHTML = en.length ? en.map(entwurfKarte).join("") : '<p class="leer">Keine abgebrochenen Anmeldungen in den letzten 14 Tagen.</p>';
     hinweise();
@@ -102,23 +124,33 @@
     if (g && g.ok === false) h.push('<div class="alert err"><b>Gesundheits-Check ' + e(g.am ? new Date(g.am).toLocaleString("de-DE") : "") + ":</b> " + e((g.fehler || []).join(" · ")) + "</div>");
     $("hinweise").innerHTML = h.join("");
     var b = $("mail-nach");
-    if (b) b.onclick = async function () { b.disabled = true; try { zeig(await api("mail-nachsenden", { body: {} })); msg("Erneut versucht."); } catch (err) { msg(err.message, "err"); } start(); };
+    if (b) b.onclick = async function () { b.disabled = true; try { zeig(await api("mail-nachsenden", { body: {} }), "Mails erneut versucht."); msg("Erneut versucht."); } catch (err) { msg(err.message, "err"); } start(); };
   }
   $("kacheln").addEventListener("click", function (ev) {
     var k = ev.target.closest(".kachel"); if (!k || !k.dataset.ziel) return;
     var z = k.dataset.ziel;
-    if (z === "entwuerfe") { $("entwuerfe").scrollIntoView({ behavior: "smooth", block: "start" }); return; }
+    if (z === "entwuerfe") { $("entwuerfe-titel").scrollIntoView({ behavior: "smooth", block: "start" }); return; }
     if (z.indexOf("studios:") === 0) { filter = z.split(":")[1]; liste(); location.hash = "studios"; return; }
     location.hash = z;
   });
 
   // ---------------------------------------------------------------- Studios
-  var FILTER = [["alle", "Alle"], ["aktiv", "Aktiv"], ["einrichtung", "Einrichtung"], ["entwurf", "Entwurf"], ["gekuendigt", "Gekündigt"]];
-  function passt(s, f) { return f === "alle" || s.gruppe === f; }
+  // Gleiche Zählweise wie die Kacheln: Test-Studios (Apple-Sandbox/TestFlight) nur unter „Test“, sonst nirgends mitgezählt.
+  // „Umsatz“ erscheint nur, wenn man über die Kachel kommt (Studios mit Kundenzahlungen diesen Monat).
+  var FILTER = [["alle", "Alle"], ["zahlend", "Zahlend"], ["aktiv", "Aktiv"], ["einrichtung", "Einrichtung"], ["entwurf", "Abgebrochen"], ["gekuendigt", "Gekündigt"], ["umsatz", "Umsatz"], ["test", "Test"]];
+  function passt(s, f) {
+    if (f === "test") return s.test;
+    if (s.test) return false;
+    if (f === "alle") return true;
+    if (f === "zahlend") return s.zahlend;
+    if (f === "umsatz") return s.umsatzMonatCent !== 0;
+    return s.gruppe === f;
+  }
   function liste() {
     var st = daten.studios, q = ($("suche").value || "").trim().toLowerCase();
     $("filter").innerHTML = FILTER.map(function (f) {
       var n = st.filter(function (s) { return passt(s, f[0]); }).length;
+      if ((f[0] === "test" && !n) || (f[0] === "umsatz" && filter !== "umsatz")) return "";
       return '<button type="button" data-f="' + f[0] + '" aria-pressed="' + (filter === f[0]) + '">' + f[1] + " " + n + "</button>";
     }).join("");
     var RANG = { aktiv: 0, einrichtung: 1, gekuendigt: 2, entwurf: 3 };
@@ -131,9 +163,10 @@
     return '<a class="karte" href="#' + e(s.id) + '"><div class="kopf"><div class="name">' + e(s.firma) + "</div>" + statusPille(s) + "</div>" +
       '<div class="zeile">' + (s.ort ? e(s.ort) + " · " : "") + paketText(s.paket) + "</div>" +
       '<div class="zeile">Letzte Zahlung: <b>' + (lz ? e(TF.datum(lz.am)) + " · " + euro(lz.betragCent) : "noch keine") + "</b>" + (s.offen ? " · " + s.offen + " offen" : "") + "</div>" +
+      (filter === "umsatz" ? '<div class="zeile">Diesen Monat: <b>' + euro(s.umsatzMonatCent) + "</b></div>" : "") +
       '<div class="fuss"><span class="pille ' + (s.stripeFrei ? "gruen" : "gelb") + '">Stripe ' + (s.stripeFrei ? "frei ✓" : e(s.stripe)) + "</span>" +
       (s.paket && s.paket.abrechnung === "apple" ? '<span class="pille blau">Apple</span>' : "") +
-      (s.paket && s.paket.sonder ? '<span class="pille gelb">Sonderpreis</span>' : "") +
+      preisPille(s.paket) + (s.probe ? '<span class="pille blau">Probezeit</span>' : "") +
       (s.test ? '<span class="pille grau">Test (Sandbox)</span>' : "") + "</div></a>";
   }
   $("filter").addEventListener("click", function (ev) { var b = ev.target.closest("button[data-f]"); if (!b) return; filter = b.dataset.f; liste(); });
@@ -157,7 +190,7 @@
     $("demo-neu").onclick = async function () {
       if (!confirm("Sicher? Die Beispieldaten des Demo-Studios werden neu angelegt.")) return;
       var b = $("demo-neu"); b.disabled = true;
-      try { var r = await api("app-demo", { body: {} }); zeig(r); msg("Beispieldaten erneuert (" + r.zahlungen + " Einträge)."); await start(); }
+      try { var r = await api("app-demo", { body: {} }); zeig(r, "Beispieldaten erneuert."); msg("Beispieldaten erneuert (" + r.zahlungen + " Einträge)."); await start(); }
       catch (err) { msg(err.message, "err"); b.disabled = false; }
     };
   }
@@ -176,10 +209,12 @@
       $("mails").innerHTML = mails.length ? mails.map(function (m) { return "<li><b>" + e(m.subject) + '</b><br><span class="klein">' + e(new Date(m.at).toLocaleString("de-DE")) + " · " + e(m.to) + "</span></li>"; }).join("") : '<li class="leer">Noch keine E-Mails.</li>';
     } catch (err) { $("mails").innerHTML = '<li class="leer">' + e(err.message) + "</li>"; }
   }
-  $("abr-test").onclick = async function () { try { zeig(await api("abrechnung", { body: { monat: $("monat").value, dryRun: true } })); msg("Test fertig, Ergebnis unten."); } catch (err) { msg(err.message, "err"); } };
-  $("abr-los").onclick = async function () { if (!confirm("Abrechnung für " + $("monat").value + " wirklich erstellen? Rechnungen werden erzeugt und eingezogen.")) return; try { zeig(await api("abrechnung", { body: { monat: $("monat").value, dryRun: false } })); msg("Abrechnung erstellt."); } catch (err) { msg(err.message, "err"); } };
-  $("jobs").onclick = async function () { try { zeig(await api("jobs", { body: {} })); msg("Tägliche Jobs gelaufen, Ergebnis unten."); } catch (err) { msg(err.message, "err"); } };
-  $("konten").onclick = async function () { try { var r = await api("konten-abgleichen", { body: {} }); zeig(r); msg(r.length + " Stripe-Konten abgeglichen."); start(); } catch (err) { msg(err.message, "err"); } };
+  function monatText(v) { return /^\d{4}-\d{2}$/.test(v || "") ? new Date(v + "-15").toLocaleDateString("de-DE", { month: "long", year: "numeric" }) : (v || "?"); }
+  function anzahl(r) { return Array.isArray(r) ? r.length : r && Array.isArray(r.ergebnis) ? r.ergebnis.length : null; }
+  $("abr-test").onclick = async function () { try { var r = await api("abrechnung", { body: { monat: $("monat").value, dryRun: true } }); var n = anzahl(r); zeig(r, "Test für " + monatText($("monat").value) + (n !== null ? ": " + mz(n, "Studio", "Studios") + " betroffen" : "") + ". Es wurde nichts verschickt."); msg("Test fertig, Ergebnis unten."); } catch (err) { msg(err.message, "err"); } };
+  $("abr-los").onclick = async function () { if (!confirm("Abrechnung für " + monatText($("monat").value) + " wirklich erstellen? Rechnungen werden erzeugt und das Geld wird eingezogen.")) return; try { zeig(await api("abrechnung", { body: { monat: $("monat").value, dryRun: false } }), "Abrechnung für " + monatText($("monat").value) + " erstellt."); msg("Abrechnung erstellt."); } catch (err) { msg(err.message, "err"); } };
+  $("jobs").onclick = async function () { try { zeig(await api("jobs", { body: {} }), "Tägliche Aufgaben sind gelaufen."); msg("Tägliche Aufgaben gelaufen, Ergebnis unten."); } catch (err) { msg(err.message, "err"); } };
+  $("konten").onclick = async function () { try { var r = await api("konten-abgleichen", { body: {} }); zeig(r, mz(r.length, "Studio", "Studios") + " bei Stripe geprüft."); msg(mz(r.length, "Studio", "Studios") + " bei Stripe geprüft."); start(); } catch (err) { msg(err.message, "err"); } };
 
   // ---------------------------------------------------------------- Studio-Detail (alle bisherigen Admin-Funktionen)
   async function detail(id) {
@@ -192,11 +227,16 @@
     var s = d.studio, v = s.vertrag || {}, sk = s.stripe || {}, k = (daten.studios.concat(daten.demo)).find(function (x) { return x.id === id; }) || {};
     var a = s.aufsteller || {};
     var zeilen = [["Inhaber", s.inhaber], ["E-Mail", s.email], ["Handy", s.telefon], ["Studio-Tel.", s.studioTelefon], ["Adresse", [s.strasse, [s.plz, s.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ")],
-      ["Paket", k.paket ? k.paket.name + (k.paket.preis ? " · " + k.paket.preis : "") + (k.paket.netto ? " (" + k.paket.netto + ")" : "") + (k.paket.sonder ? " · Sonderpreis" : "") : (s.paket || s.modell)], ["Zahlart", s.zahlart],
-      ["Vertrag", (v.version || "–") + " · " + TF.datum(v.akzeptiertAm) + " · " + (v.name || "") + (v.ip ? " · IP " + v.ip : "")],
+      ["Paket", k.paket ? k.paket.name + (k.paket.preis ? " · " + k.paket.preis : "") + (k.paket.netto ? " (" + k.paket.netto + ")" : "") + (PREISART[k.paket.art] ? " · " + PREISART[k.paket.art][1] : "") : (s.paket || s.modell)],
+      ["Zahlart", k.zahlartText || s.zahlart],
+      ["Vertrag", v.akzeptiertAm ? "angenommen am " + TF.datum(v.akzeptiertAm) + (v.name ? " von " + v.name : "") + (v.version ? " (Fassung " + v.version + ")" : "") + (v.ip ? " · IP " + v.ip : "") : "–"],
       ["Stripe-Konto", (sk.accountId || "–") + (sk.chargesEnabled ? " · freigegeben" : " · nicht freigegeben")], ["Zahlseite", location.origin + "/zahlen/" + s.slug],
       ["Seit", TF.datum(s.createdAt)], ["Live seit", TF.datum(s.goLiveAt)],
       ["Kündigung", s.kuendigung ? TF.datum(s.kuendigung.zum) + (s.kuendigung.garantie ? " (GARANTIE)" : "") + " · " + (s.kuendigung.grund || "") : "–"]];
+    if (k.provision) zeilen.push(["Provision", k.provision.prozent + " % · gesamt " + euro(k.provision.nettoCent) + " netto"], ["Nach Stripe-Gebühren", euro(k.provision.nachGebuehrenCent)]);
+    if (k.recht) zeilen.push(["Rechtstexte", "Fassung " + k.recht.version + (k.recht.am ? " vom " + TF.datum(k.recht.am) : "") + (k.recht.aktuell ? " (aktuell)" : " (alt)")]);
+    if (k.extras && k.extras.length) zeilen.push(["Extras", k.extras.join(", ")]);
+    if (k.probe) zeilen.push(["Probezeit", "Apple-Abo in der kostenlosen Probezeit, noch nicht bezahlt"]);
     if (s.apple) zeilen.push(["Apple-Abo", (s.apple.status || "–") + " · bis " + TF.datum(s.apple.laeuftBis) + (s.sandbox ? " · Sandbox/Test" : "")]);
     if (s.anmeldungFehler && ["entwurf", "abgebrochen", "zahlung_offen"].indexOf(s.status) >= 0) zeilen.push(["Letzter Fehler", (s.anmeldungFehler.dreiDS ? "3-D-Secure nicht bestätigt · " : "") + (s.anmeldungFehler.text || s.anmeldungFehler.code || "") + " · " + zeit(s.anmeldungFehler.am)]);
     var zahl = d.zahlungen;
@@ -235,12 +275,12 @@
       '<div class="block"><h3>E-Mails an das Studio</h3><ul class="posten" id="d-mails"><li class="leer">Wird geladen …</li></ul></div>';
     window.scrollTo(0, 0);
 
-    $("d-save").onclick = async function () { try { zeig(await api("studio/" + id, { method: "PATCH", body: { notiz: $("d-notiz").value } })); msg("Gespeichert."); } catch (err) { msg(err.message, "err"); } };
+    $("d-save").onclick = async function () { try { zeig(await api("studio/" + id, { method: "PATCH", body: { notiz: $("d-notiz").value } }), "Notiz gespeichert."); msg("Gespeichert."); } catch (err) { msg(err.message, "err"); } };
     $("d-ansehen").onclick = async function () { try { var r = await api("studio/" + id + "/ansehen", { body: {} }); location.href = r.url; } catch (err) { msg(err.message, "err"); } };
-    if ($("d-live")) $("d-live").onclick = async function () { if (!confirm("Live schalten und Go-live-E-Mail senden?")) return; try { zeig(await api("studio/" + id + "/live", { body: {} })); msg("Live geschaltet."); neuLaden(); } catch (err) { msg(err.message, "err"); } };
+    if ($("d-live")) $("d-live").onclick = async function () { if (!confirm("Live schalten und Go-live-E-Mail senden?")) return; try { zeig(await api("studio/" + id + "/live", { body: {} }), "Live geschaltet."); msg("Live geschaltet."); neuLaden(); } catch (err) { msg(err.message, "err"); } };
     $("d-konto").onclick = async function () {
       try {
-        var r = await api("studio/" + id + "/konto", { body: {} }); zeig(r);
+        var r = await api("studio/" + id + "/konto", { body: {} }); zeig(r, "Stripe abgeglichen.");
         var o = r.offen || {}, fehlt = (o.faellig || []).concat(o.ueberfaellig || []);
         msg("Stripe abgeglichen: " + (r.nachher.freigegeben ? "Zahlungen freigegeben" : "noch nicht freigegeben") + ", Auszahlungen " + (r.nachher.auszahlungen ? "an" : "aus") + ", Angaben " + (r.nachher.angaben ? "gemacht" : "unvollständig") + (fehlt.length ? ". Stripe braucht noch: " + fehlt.join(", ") : "") + (o.inPruefung && o.inPruefung.length ? ". In Prüfung: " + o.inPruefung.join(", ") : "") + (o.sperrgrund ? ". Grund: " + o.sperrgrund : "") + ".", r.nachher.freigegeben ? "ok" : "info");
         neuLaden();
@@ -284,12 +324,12 @@
       var btn = $("b-save"); btn.disabled = true;
       try {
         var b = { icon: await bildLesen($("b-icon"), true), logo: await bildLesen($("b-logo"), false), farbe: $("b-farbe").value, akzent: $("b-akzent").value, kurzbezeichnung: $("b-kurz").value, logoHell: $("b-hell").checked, stripe: $("b-stripe").checked };
-        var r = await api("studio/" + id + "/branding", { body: b }); zeig(r); brandVorschau(r.oeffentlich);
+        var r = await api("studio/" + id + "/branding", { body: b }); zeig(r, "Branding gespeichert."); brandVorschau(r.oeffentlich);
         msg("Branding gespeichert" + (b.stripe ? (r.stripe && r.stripe.fehler ? " – Stripe meldet: " + r.stripe.fehler : " und bei Stripe gesetzt.") : "."), r.stripe && r.stripe.fehler ? "err" : "ok");
       } catch (err) { msg(err.message, "err"); }
       btn.disabled = false;
     };
-    var rf = $("d-refund"); if (rf) rf.onclick = async function () { if (!confirm("Kaufpreis wirklich vollständig erstatten?")) return; try { zeig(await api("studio/" + id + "/erstattung", { body: {} })); msg("Erstattet."); neuLaden(); } catch (err) { msg(err.message, "err"); } };
+    var rf = $("d-refund"); if (rf) rf.onclick = async function () { if (!confirm("Kaufpreis wirklich vollständig erstatten?")) return; try { zeig(await api("studio/" + id + "/erstattung", { body: {} }), "Kaufpreis erstattet."); msg("Erstattet."); neuLaden(); } catch (err) { msg(err.message, "err"); } };
     if (s.email) api("mails?an=" + encodeURIComponent(s.email)).then(function (ms) {
       if (detailId !== id) return;
       $("d-mails").innerHTML = ms.length ? ms.map(function (m) { return "<li><b>" + e(m.subject) + '</b><br><span class="klein">' + e(new Date(m.at).toLocaleString("de-DE")) + "</span></li>"; }).join("") : '<li class="leer">Keine in den letzten Mails.</li>';
@@ -302,18 +342,24 @@
   // ---------------------------------------------------------------- Anmeldung
   $("neu").onclick = function () { mailsGeladen = false; neuLaden(); };
   $("login-token").addEventListener("submit", function (ev) { ev.preventDefault(); token = $("token").value; try { sessionStorage.setItem("tf-admin", token); } catch (x) {} start(); });
+  // Code-Feld ist immer da: Kommt man aus der Mail-App zurück und die Seite hat neu geladen, ist kein neuer Code nötig
+  // (ein neuer würde den aus der Mail ersetzen). Die Adresse steht dann wieder im Feld.
+  if (gemerkteEmail() && !$("admin-email").value) $("admin-email").value = gemerkteEmail();
   $("login-mail").addEventListener("submit", async function (ev) {
     ev.preventDefault();
-    loginEmail = $("admin-email").value.trim();
+    var adresse = $("admin-email").value.trim(); emailMerken(adresse);
     try {
-      await TF.api("/api/admin-login", { body: { email: loginEmail } });
+      await TF.api("/api/admin-login", { body: { email: adresse } });
       msg("Wenn die Adresse als Admin hinterlegt ist, ist die Mail unterwegs. Schau auch im Spam-Ordner nach.");
-      $("login-code").classList.remove("hidden"); $("admin-code").focus();
+      $("admin-code").focus();
     } catch (err) { msg(err.message, "err"); }
   });
   $("login-code").addEventListener("submit", async function (ev) {
     ev.preventDefault();
-    try { await TF.api("/api/admin-login/code", { body: { email: loginEmail || $("admin-email").value.trim(), code: $("admin-code").value.replace(/\s+/g, "") } }); msg(""); start(); }
+    var adresse = $("admin-email").value.trim() || gemerkteEmail();
+    if (!adresse) { msg("Bitte oben deine E-Mail eintragen.", "err"); $("admin-email").focus(); return; }
+    emailMerken(adresse);
+    try { await TF.api("/api/admin-login/code", { body: { email: adresse, code: $("admin-code").value.replace(/\s+/g, "") } }); msg(""); start(); }
     catch (err) { msg(err.message, "err"); }
   });
   $("out").onclick = async function (ev) { ev.preventDefault(); try { sessionStorage.removeItem("tf-admin"); } catch (x) {} try { await TF.api("/api/admin-login/abmelden", { body: {} }); } catch (x) {} location.href = "/admin.html"; };

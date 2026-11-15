@@ -4,6 +4,8 @@
 //   GET  /api/admin-login?token=…          → Zwischenseite (schickt sich selbst ab; Mail-Scanner verbrauchen den Link nicht)
 //   POST /api/admin-login (Formular token)  → Admin-Sitzung (Cookie tf_admin, 12 Std., httpOnly, SameSite=Strict) → /admin.html
 //   POST /api/admin-login/code { email, code } → Admin-Sitzung per 6-stelligem Code aus derselben Mail (15 Min., einmal, höchstens 5 Versuche).
+//                                            Zusätzlich höchstens 10 falsche Codes je Adresse in 24 Std. (zählt über neue Codes hinweg, sonst ließe
+//                                            sich mit jeder neuen Mail weiterraten). Danach Code gesperrt + Admin-Mail; der Link aus der Mail geht weiter.
 //                                            Für die Admin-App auf dem Homescreen (iPhone): Dort öffnet der Link aus der Mail Safari, und die
 //                                            Homescreen-App hat eigene Cookies. Der Code wird in der App eingetippt. Begrenzung zusätzlich 20/Std. pro IP.
 //   POST /api/admin-login/abmelden         → Admin-Sitzung beenden
@@ -13,13 +15,17 @@
 import crypto from "node:crypto";
 import { json, fail, body, clean, handler, clientIp, now } from "./_lib/util.mjs";
 import { zaehleVersuch, getStudio, log, store, normEmail } from "./_lib/store.mjs";
+import { notifyAdmin } from "./_lib/domain.mjs";
 import { verify, istAdminEmail, adminLoginLink, adminCookie, clearAdminCookie, ansichtCookie, clearCookie, einmalBenutzt, einmalVerbrauchen, adminVonCookie, ADMIN_LOGIN_STUNDEN } from "./_lib/auth.mjs";
 import { zwischenseite } from "./_lib/seiten.mjs";
 import { sendMail } from "./_lib/mail.mjs";
 import { SECRETS } from "./_lib/config.mjs";
 
 const hash = (x) => crypto.createHmac("sha256", SECRETS.sessionSecret).update(String(x)).digest("hex").slice(0, 32);
-const CODE_MIN = 15, CODE_VERSUCHE = 5;
+const CODE_MIN = 15, CODE_VERSUCHE = 5, CODE_FEHL_TAG = 10;
+const fehlSchluessel = (email) => `rl/admin-code-email/${hash(normEmail(email))}`;
+// Falsche Codes je Adresse der letzten 24 Std. (nur lesen, zählt nicht hoch)
+const fehlVersuche = async (email) => (((await store.get(fehlSchluessel(email)))?.t) || []).filter((t) => Date.now() - t < 24 * 3600e3).length;
 const codeSchluessel = (email) => "adminlogincode/" + hash("code:" + normEmail(email));
 const gleich = (a, b) => a.length === b.length && crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
 const weiter = (to, cookie) => new Response(null, { status: 303, headers: { Location: to, "Cache-Control": "no-store", ...(cookie ? { "Set-Cookie": cookie } : {}) } });
@@ -71,12 +77,21 @@ export default handler(async (req, context) => {
     const nein = () => fail("Der Code stimmt nicht oder ist abgelaufen. Fordere einfach einen neuen an.", 401);
     if (!(await zaehleVersuch(`rl/admin-code-ip/${hash(clientIp(req, context) || "?")}`, 20, 3600e3))) return fail("Zu viele Versuche. Bitte später nochmal.", 429);
     if (!email || !/^\d{6}$/.test(code) || !istAdminEmail(email)) return nein();
-    const key = codeSchluessel(email), rec = await store.get(key);
+    const key = codeSchluessel(email);
+    const gesperrt = () => fail("Zu viele falsche Codes. Bitte melde dich über den Link in der Mail an.", 429);
+    if ((await fehlVersuche(email)) >= CODE_FEHL_TAG) { await store.del(key); return gesperrt(); }
+    const rec = await store.get(key);
     if (!rec || !(rec.exp > Date.now()) || (rec.versuche || 0) >= CODE_VERSUCHE) { if (rec) await store.del(key); return nein(); }
     if (!gleich(String(rec.h), hash("wert:" + normEmail(email) + ":" + code))) {
       rec.versuche = (rec.versuche || 0) + 1;
       if (rec.versuche >= CODE_VERSUCHE) await store.del(key); else await store.set(key, rec);
-      await log("admin-login-code-falsch", { email: normEmail(email), versuche: rec.versuche });
+      const unterGrenze = await zaehleVersuch(fehlSchluessel(email), CODE_FEHL_TAG, 24 * 3600e3);
+      await log("admin-login-code-falsch", { email: normEmail(email), versuche: rec.versuche, gesperrt: !unterGrenze });
+      if (!unterGrenze || (await fehlVersuche(email)) >= CODE_FEHL_TAG) {
+        await store.del(key);
+        await notifyAdmin("Admin-Code gesperrt: zu viele falsche Codes", null, { Adresse: normEmail(email), Hinweis: "24 Stunden kein Code-Login für diese Adresse. Der Link aus der Mail funktioniert weiter." });
+        return gesperrt();
+      }
       return nein();
     }
     await store.del(key);

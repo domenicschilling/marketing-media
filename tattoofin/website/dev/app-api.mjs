@@ -533,12 +533,15 @@ try {
     const dz = Object.values(u.kennzahlen.zahlend).reduce((a2, b2) => a2 + b2, 0);
     check(u.demo.some((x) => x.id === demo.studioId && x.zahlungenGesamt >= 5) && !u.studios.some((x) => x.id === demo.studioId) && !u.entwuerfe.some((x) => x.id === demo.studioId), "Übersicht: Demo-Studio nur unter „demo“", JSON.stringify(u.demo).slice(0, 160));
     const ohneDemo = u.studios.filter((x) => ["einrichtung", "live", "gekuendigt"].includes(x.status) && !x.test).length;
-    check(u.kennzahlen.zahlend.gesamt + u.kennzahlen.zahlend.kostenlos === ohneDemo && dz > 0, "Übersicht: zahlende Studios ohne Demo-Studio gezählt", JSON.stringify(u.kennzahlen.zahlend));
+    const zk = u.kennzahlen.zahlend;
+    check(zk.gesamt + zk.kostenlos + zk.probe === ohneDemo && dz > 0 && zk.gesamt === u.studios.filter((x) => x.zahlend).length, "Übersicht: zahlende Studios ohne Demo-Studio gezählt (zahlend + kostenlos + Probezeit = laufende Studios, Kennzeichen zahlend je Karte passt)", JSON.stringify(zk));
+    const probeKarten = u.studios.filter((x) => x.probe && !x.test);
+    check(probeKarten.every((x) => !x.zahlend) && zk.probe === probeKarten.filter((x) => ["einrichtung", "live", "gekuendigt"].includes(x.status)).length, "Übersicht: Apple-Studios in der Probezeit zählen nicht als zahlend", JSON.stringify({ probe: zk.probe, karten: probeKarten.length }));
     const imMonat = (z) => z.status === "bezahlt" && (z.bezahltAm || "").slice(0, 7) === u.monat;
     const demoMonat = (await admin(`studio/${demo.studioId}`)).zahlungen.filter(imMonat).length;
     const echteMonat = (await Promise.all(u.studios.filter((x) => !x.test).map(async (x) => (await admin(`studio/${x.id}`)).zahlungen))).flat().filter(imMonat);
     check(u.kennzahlen.umsatzStudios.zahlungen === echteMonat.length && u.kennzahlen.umsatzStudios.cent === echteMonat.reduce((a2, z) => a2 + z.betragCent - (z.erstattetCent || 0), 0), `Übersicht: Umsatz der Studios ohne die ${demoMonat} bezahlten Beispielzahlungen des Demo-Studios`, JSON.stringify(u.kennzahlen.umsatzStudios));
-    const appStudios = u.studios.filter((x) => x.paket?.abrechnung === "apple" && ["einrichtung", "live", "gekuendigt"].includes(x.status) && !x.test);
+    const appStudios = u.studios.filter((x) => x.paket?.abrechnung === "apple" && ["einrichtung", "live", "gekuendigt"].includes(x.status) && !x.test && !x.probe);
     check(u.kennzahlen.zahlend.apple === appStudios.length && u.studios.filter((x) => x.test).every((x) => x.paket?.abrechnung === "apple"), "Übersicht: Apple-Abos getrennt gezählt, Sandbox-/TestFlight-Käufe als Test (nicht gezählt)", JSON.stringify({ k: u.kennzahlen.zahlend, app: appStudios.length }));
     for (const [name, opt] of [["ohne Anmeldung", {}], ["App-Token", { token: tA }], ["Studio-Cookie", { cookie: C.cookie }]]) {
       const r = await call("GET", "/api/admin/uebersicht", opt);
@@ -1024,9 +1027,19 @@ try {
   check(adminPr.length === 1 && /kostenlose Probezeit/.test(adminPr[0].html), "Admin-Mail nennt die kostenlose Probezeit statt 0,00 €", adminPr[0]?.html?.slice(0, 160));
   const portalPr = await call("GET", "/api/portal", { token: bPr.data.token });
   check(portalPr.data.studio?.apple?.probe === true && portalPr.data.studio?.apple?.status === "aktiv", "GET /api/portal: apple.probe true während der Gratis-Woche", JSON.stringify(portalPr.data.studio?.apple));
+  {
+    // Admin-Übersicht: Probezeit zählt nicht als zahlend, sondern eigen („+1 in Probezeit“)
+    const u = await admin("uebersicht"), k = u.studios.find((x) => x.id === Pr.entwurfId);
+    check(k && k.probe === true && k.zahlend === false && k.paket.preis === "Probezeit" && u.kennzahlen.zahlend.probe >= 1 && u.kennzahlen.zahlend.gesamt === u.studios.filter((x) => x.zahlend).length, "Admin-Übersicht: Apple-Studio in der Gratis-Woche unter „in Probezeit“, nicht bei den zahlenden", JSON.stringify({ k: k && { probe: k.probe, zahlend: k.zahlend }, z: u.kennzahlen.zahlend }));
+    globalThis.__probeVorher = u.kennzahlen.zahlend;
+  }
   const renewPr = apple.verlaengerung(kaufPr.tx, { offerType: undefined, offerDiscountType: undefined, price: 49900, expiresDate: Date.now() + 37 * 864e5 });
   const nPr = await notif(apple.benachrichtigung({ typ: "DID_RENEW", tx: renewPr }));
   check(nPr.status === 200 && sPr().apple.probe === false && sPr().apple.preisMilli === 49900 && sPr().apple.status === "aktiv", "Erste Verlängerung nach der Gratis-Woche: probe false, Preis 49,90 €", JSON.stringify(sPr().apple).slice(0, 200));
+  {
+    const u = await admin("uebersicht"), k = u.studios.find((x) => x.id === Pr.entwurfId), v = globalThis.__probeVorher;
+    check(k && k.zahlend === true && k.paket.preis === "49,90 €/Monat" && u.kennzahlen.zahlend.apple === v.apple + 1 && u.kennzahlen.zahlend.probe === v.probe - 1 && u.kennzahlen.einnahmen.apple.preise.some((p) => p.preis === "49,90 €"), "Admin-Übersicht: nach der ersten Zahlung zahlend (Apple), Preis „49,90 €/Monat“ wie alle anderen Preise", JSON.stringify({ z: u.kennzahlen.zahlend, preis: k?.paket?.preis }));
+  }
 
   // ==================================================================================================
   teil("Apple-Abo: Stripe verbinden (Connect), Sandbox ohne Stripe");

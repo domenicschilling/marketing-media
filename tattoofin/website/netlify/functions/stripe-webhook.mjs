@@ -66,6 +66,14 @@ async function anmeldungFehlerMerken(s, err) {
   if (!s || s.demo || !["entwurf", "abgebrochen", "zahlung_offen"].includes(s.status)) return false;
   const f = fehlerEintrag(err || {});
   f.dreiDS = DREI_DS.test(`${f.code} ${f.declineCode}`);
+  // Stripe schickt payment_intent.payment_failed (mit echtem Grund) und invoice.payment_failed (ohne Grund) in beliebiger
+  // Reihenfolge. Ein genauerer Eintrag der letzten 10 Minuten bleibt deshalb erhalten: nur ergänzen, 3-D-Secure nie zurücknehmen.
+  const alt = s.anmeldungFehler;
+  if (alt && Date.now() - Date.parse(alt.am || "") < 10 * 60e3 && (alt.code || alt.dreiDS)) {
+    if (!f.code && !f.dreiDS) return false;
+    f.dreiDS = f.dreiDS || Boolean(alt.dreiDS);
+    if (!f.declineCode) f.declineCode = alt.declineCode || "";
+  }
   s.anmeldungFehler = f;
   await saveStudio(s);
   await log("anmeldung-zahlung-fehlgeschlagen", { studioId: s.id, code: f.code, declineCode: f.declineCode, dreiDS: f.dreiDS });

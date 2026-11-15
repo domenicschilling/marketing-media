@@ -11,8 +11,10 @@ body.adm{background:var(--cream);min-height:100vh;padding-bottom:calc(var(--tab-
 .top .in{max-width:1100px;margin:0 auto;height:var(--top-h);display:flex;align-items:center;gap:10px;padding:0 16px}
 .top .marke{display:flex;align-items:center;gap:8px;color:var(--yellow);text-decoration:none;font:400 22px var(--head);margin-right:auto}
 .top .marke img{width:36px;height:36px;object-fit:contain}
-.top button,.top a.knopf{background:transparent;border:2px solid rgba(255,255,255,.55);color:#fff;border-radius:99px;min-height:40px;min-width:40px;padding:0 14px;font:700 15px var(--body);display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;text-decoration:none}
+.top button,.top a.knopf{background:transparent;border:2px solid rgba(255,255,255,.55);color:#fff;border-radius:99px;min-height:44px;min-width:44px;padding:0 14px;font:700 15px var(--body);display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;text-decoration:none}
 .top button:active{background:rgba(255,255,255,.12)}
+.top .kreis{font-size:19px;line-height:1}
+@media (max-width:400px){.top .in{gap:8px;padding:0 12px}.top .marke{font-size:19px;gap:6px}.top .marke img{width:30px;height:30px}.top button,.top a.knopf{padding:0 11px;font-size:14px}}
 .top .stand{font-size:12px;color:var(--muted-d);white-space:nowrap}
 @media (max-width:420px){.top .stand{display:none}}
 
@@ -36,6 +38,11 @@ body.adm{background:var(--cream);min-height:100vh;padding-bottom:calc(var(--tab-
 .seite{max-width:1100px;margin:0 auto;padding:16px}
 .ansicht h2{font-size:24px;margin:22px 0 10px}
 .ansicht h2:first-child{margin-top:4px}
+/* Sprung von der Kachel „Abgebrochen“: Überschrift nicht unter der festen Kopfleiste */
+#entwuerfe-titel{scroll-margin-top:calc(var(--top-h) + env(safe-area-inset-top) + 12px)}
+.mehrzahlen{margin:14px 0 0}
+.mehrzahlen>summary{font-weight:800;cursor:pointer;display:flex;align-items:center}
+.mehrzahlen .liste{margin-top:8px}
 .leer{color:var(--muted);font-size:15px;padding:14px 0}
 .klein{font-size:13px;color:var(--muted)}
 
@@ -43,7 +50,8 @@ body.adm{background:var(--cream);min-height:100vh;padding-bottom:calc(var(--tab-
 .kacheln{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media (min-width:640px){.kacheln{grid-template-columns:repeat(3,1fr)}}
 .kachel{display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:2px;background:#fff;border:3px solid var(--ink);border-radius:18px;padding:14px;box-shadow:4px 4px 0 var(--ink);color:var(--ink);font:inherit;min-height:112px;width:100%;cursor:pointer;min-width:0}
-.kachel:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+button.kachel:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+.kachel.still{cursor:default}
 .kachel b{font:400 34px/1.05 var(--head);word-break:break-word}
 .kachel .was{font-weight:800;font-size:14px}
 .kachel .dazu{font-size:13px;color:var(--muted);font-weight:600;line-height:1.35}
@@ -79,7 +87,7 @@ a.karte{text-decoration:none}
 .suche input{width:100%;font:500 17px var(--body);padding:13px 16px;border:3px solid var(--ink);border-radius:14px;background:#fff;color:var(--ink);min-height:50px}
 .chips{display:flex;flex-wrap:wrap;gap:8px;padding:10px 0 2px}
 .chips::-webkit-scrollbar{display:none}
-.chips button{flex:none;min-height:42px;padding:0 16px;border-radius:99px;border:2.5px solid var(--ink);background:#fff;color:var(--ink);font:800 14px var(--body);cursor:pointer}
+.chips button{flex:none;min-height:44px;padding:0 16px;border-radius:99px;border:2.5px solid var(--ink);background:#fff;color:var(--ink);font:800 14px var(--body);cursor:pointer}
 .chips button[aria-pressed="true"]{background:var(--ink);color:var(--yellow)}
 
 /* Knöpfe */

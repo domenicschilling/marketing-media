@@ -936,7 +936,7 @@ try {
   check((await fetch(`${BASE}/api/admin/mails?an=kauf@example.com`)).status === 401, "/api/admin/mails?an= nur für Admins");
   const u0 = await admin("uebersicht");
   const zaehlbar = u0.studios.filter((x) => ["einrichtung", "live", "gekuendigt"].includes(x.status) && !x.test);
-  check(Array.isArray(u0.studios) && u0.studios.length > 3 && typeof u0.kennzahlen.zahlend.gesamt === "number" && u0.kennzahlen.zahlend.gesamt + u0.kennzahlen.zahlend.kostenlos === zaehlbar.length && u0.kennzahlen.zahlend.web + u0.kennzahlen.zahlend.apple === u0.kennzahlen.zahlend.gesamt, "Übersicht: Kennzahl zahlende Studios passt zur Studioliste (Web + Apple)", JSON.stringify(u0.kennzahlen.zahlend));
+  check(Array.isArray(u0.studios) && u0.studios.length > 3 && typeof u0.kennzahlen.zahlend.gesamt === "number" && u0.kennzahlen.zahlend.gesamt + u0.kennzahlen.zahlend.kostenlos + u0.kennzahlen.zahlend.probe === zaehlbar.length && u0.kennzahlen.zahlend.gesamt === u0.studios.filter((x) => x.zahlend).length && u0.kennzahlen.zahlend.web + u0.kennzahlen.zahlend.apple === u0.kennzahlen.zahlend.gesamt, "Übersicht: Kennzahl zahlende Studios passt zur Studioliste (Web + Apple)", JSON.stringify(u0.kennzahlen.zahlend));
   const umsatzSoll = (await Promise.all(u0.studios.filter((x) => !x.test).map(async (x) => (await admin(`studio/${x.id}`)).zahlungen))).flat()
     .filter((z) => z.status === "bezahlt" && (z.bezahltAm || "").slice(0, 7) === u0.monat).reduce((a2, z) => a2 + z.betragCent - (z.erstattetCent || 0), 0);
   check(u0.kennzahlen.umsatzStudios.cent === umsatzSoll && umsatzSoll > 0, `Übersicht: Umsatz der Studios im Monat = Summe der Kundenzahlungen (${umsatzSoll} Cent)`);
@@ -950,9 +950,11 @@ try {
   await sendeWebhook(`${BASE}/api/stripe-webhook`, "whsec_mock", "payment_intent.payment_failed", { id: "pi_3ds_e2e", object: "payment_intent", customer: entCus, metadata: {}, last_payment_error: { code: "payment_intent_authentication_failure", message: "3-D-Secure abgelehnt (Test)" } });
   const kaufS = (await admin(`studio/${kaufId}`)).studio;
   if (kaufS.stripe?.customerId) await sendeWebhook(`${BASE}/api/stripe-webhook`, "whsec_mock", "payment_intent.payment_failed", { id: "pi_3ds_aktiv", object: "payment_intent", customer: kaufS.stripe.customerId, metadata: {}, last_payment_error: { code: "card_declined" } });
+  // Stripe schickt danach invoice.payment_failed (ohne Grund): der 3-D-Secure-Hinweis darf nicht verloren gehen
+  await sendeWebhook(`${BASE}/api/stripe-webhook`, "whsec_mock", "invoice.payment_failed", { id: "in_3ds_e2e", object: "invoice", customer: entCus, metadata: {}, amount_due: 4990, number: "TEST-3DS" });
   const u1 = await admin("uebersicht");
   const e1 = u1.entwuerfe.find((x) => x.id === ent.id);
-  check(e1 && e1.fehler?.dreiDS === true && e1.schritt === "Zahlung fehlgeschlagen" && e1.paket.name === "Monatlich" && e1.wann && u1.kennzahlen.zahlungFehlgeschlagen14 >= 1 && u1.kennzahlen.abgebrochen14 >= 1, "Entwürfe-Liste: Name, Paket, wann, „3-D-Secure nicht bestätigt“", JSON.stringify(e1).slice(0, 200));
+  check(e1 && e1.fehler?.dreiDS === true && e1.schritt === "Zahlung fehlgeschlagen" && e1.paket.name === "Monatlich" && e1.wann && u1.kennzahlen.zahlungFehlgeschlagen14 >= 1 && u1.kennzahlen.abgebrochen14 >= 1, "Entwürfe-Liste: Name, Paket, wann, „3-D-Secure nicht bestätigt“ (auch wenn invoice.payment_failed danach kommt)", JSON.stringify(e1).slice(0, 200));
   check(!(await admin(`studio/${kaufId}`)).studio.anmeldungFehler && u1.entwuerfe.every((x) => !["live", "einrichtung", "gekuendigt"].includes(u1.studios.find((y) => y.id === x.id)?.status)), "Fehlgeschlagene Zahlung eines aktiven Studios ändert nichts, Entwürfe-Liste nur Entwürfe");
   // Demo-Studio (Apple) getrennt, nie in den Kennzahlen
   const demoE = await admin("app-demo", { body: { email: "review@example.com" } });
@@ -976,6 +978,15 @@ try {
   const falsch2 = code2 === "000000" ? "111111" : "000000";
   for (let i = 0; i < 5; i++) await post("/api/admin-login/code", { email: "domenicschilling@gmail.com", code: falsch2 });
   check(Boolean(code2) && (await post("/api/admin-login/code", { email: "domenicschilling@gmail.com", code: code2 })).status === 401, "Code: nach 5 falschen Versuchen gesperrt (auch der richtige)");
+  // Neuer Code setzt die Fehlversuche je Adresse NICHT zurück: höchstens 10 falsche in 24 Std., dann gesperrt (+ Admin-Mail), Link geht weiter
+  // (andere Schreibweise derselben Adresse: das Mail-Limit 3/15 Min. zählt je Schreibweise, der Code-Zähler je normalisierter Adresse)
+  await post("/api/admin-login", { email: "domenicschilling@gmail.com" });
+  const code3 = (mailsAn("domenicschilling@gmail.com").filter((m) => /Admin-Login/.test(m.subject)).pop()?.html.match(/letter-spacing:6px">(\d{6})</) || [])[1];
+  const falsch3 = code3 === "000000" ? "111111" : "000000";
+  const st3 = [];
+  for (let i = 0; i < 4; i++) st3.push((await post("/api/admin-login/code", { email: "domenicschilling@gmail.com", code: falsch3 })).status);
+  const richtig3 = await post("/api/admin-login/code", { email: "domenicschilling@gmail.com", code: code3 });
+  check(Boolean(code3) && code3 !== code2 && st3.join() === "401,401,401,429" && richtig3.status === 429 && !richtig3.headers.get("set-cookie") && mailsAn("domenicschilling@gmail.com").some((m) => /Admin-Code gesperrt/.test(m.subject)), "Code: 10 falsche Codes je Adresse über neue Codes hinweg → gesperrt (auch der richtige) + Admin-Mail", st3.join() + " / " + richtig3.status);
   // Handy 390 px: kein Querscrollen, alle Bereiche, Demo-Knopf mit Rückfrage
   {
     const ph = await neueSeite({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
@@ -992,10 +1003,16 @@ try {
     check(!/\d+,\d\d\s?€|\d+ ?€|Provision|Umsatz|Einnahmen/.test((await (await fetch(BASE + "/admin.html")).text()).replace(/<script[\s\S]*?<\/script>/g, "") + JSON.stringify(man2)), "admin.html und Manifest enthalten keine Preise/Interna (alles erst nach Anmeldung)");
     await ph.click('#tabs a[data-v="studios"]'); await ph.waitForSelector("#liste .karte"); ok390 = ok390 && await quer();
     await ph.click('#filter button[data-f="entwurf"]');
-    check((await ph.$$eval("#liste .karte", (k) => k.length)) === u2.studios.filter((x) => x.gruppe === "entwurf").length, "Filter „Entwurf“ zeigt genau die Entwürfe");
+    check((await ph.$$eval("#liste .karte", (k) => k.length)) === u2.studios.filter((x) => x.gruppe === "entwurf" && !x.test).length && /Abgebrochen/.test(await ph.textContent('#filter button[data-f="entwurf"]')), "Filter „Abgebrochen“ zeigt genau die abgebrochenen Anmeldungen");
+    // Kachel „Zahlende Studios“ springt auf den Filter „Zahlend“ mit derselben Zahl
+    await ph.click('#tabs a[data-v="uebersicht"]'); await ph.click('#kacheln .kachel[data-ziel="studios:zahlend"]'); await ph.waitForSelector("#v-studios:not(.hidden) #liste .karte");
+    const zKachel = u2.kennzahlen.zahlend.gesamt, zChip = await ph.textContent('#filter button[data-f="zahlend"][aria-pressed="true"]'), zKarten = await ph.$$eval("#liste .karte", (k) => k.length);
+    check(zChip.includes(String(zKachel)) && zKarten === zKachel, "Kachel „Zahlende Studios“ → Filter „Zahlend“ mit gleicher Zahl", `${zKachel} / ${zChip} / ${zKarten}`);
+    check(!(await ph.$('#kacheln div.kachel[data-ziel]')) && Boolean(await ph.$("#kacheln div.kachel.still")), "Kachel ohne Ziel („Unsere Einnahmen“) ist kein Knopf");
     await ph.click('#filter button[data-f="alle"]'); await ph.fill("#suche", "Ink Provision");
     await ph.click("#liste .karte"); await ph.waitForSelector("#d-ansehen"); await ph.waitForFunction(() => !/geladen/.test(document.getElementById("d-mails").textContent)); ok390 = ok390 && await quer();
     check((await ph.textContent("#detail")).includes("Ink Provision") && !(await ph.$("#d-live")) && await ph.$("#d-ansehen") && await ph.$("#d-konto") && await ph.$("#d-link") && await ph.$("#d-einr") && await ph.$("#b-save") && await ph.$("#d-notiz") && (await ph.$$("#d-mails li")).length >= 1, "390 px Studio-Detail: alle bisherigen Funktionen (Live-Knopf nur, solange nicht live) + E-Mails an das Studio");
+    check(/Provision/.test(await ph.textContent("#detail")) && /Nach Stripe-Gebühren/.test(await ph.textContent("#detail")) && /Zahlart\s*Provision/.test(await ph.textContent("#detail")), "390 px Studio-Detail (Provision): Provision netto und nach Stripe-Gebühren wie in der alten Admin-Seite, Zahlart in Worten");
     await ph.click('#tabs a[data-v="demo"]'); await ph.waitForSelector("#v-demo:not(.hidden) #demo-neu"); ok390 = ok390 && await quer();
     check((await ph.textContent("#demo")).includes("review@example.com"), "390 px Demo-Studio (Apple) als eigener Bereich");
     const vorDemo = (await ph.evaluate(() => document.getElementById("demo").textContent));

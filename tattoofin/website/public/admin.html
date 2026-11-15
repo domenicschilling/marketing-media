@@ -6,12 +6,12 @@
 <meta name="apple-mobile-web-app-title" content="TF Admin"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="/admin.webmanifest">
 <link rel="icon" href="/assets/admin/icon-192.png"><link rel="apple-touch-icon" href="/assets/admin/apple-touch-icon.png">
-<link rel="stylesheet" href="/css/site.css"><link rel="stylesheet" href="/css/admin.css?v=1">
+<link rel="stylesheet" href="/css/site.css"><link rel="stylesheet" href="/css/admin.css?v=2">
 </head><body class="adm">
 <header class="top"><div class="in">
   <a class="marke" href="#uebersicht"><img src="/assets/figur.png" alt="">TF Admin</a>
   <span class="stand" id="stand"></span>
-  <button type="button" id="neu" class="hidden" aria-label="Aktualisieren">&#8635;</button>
+  <button type="button" id="neu" class="hidden"><span aria-hidden="true" class="kreis">&#8635;</span>Neu laden</button>
   <a href="#" id="out" class="knopf hidden">Abmelden</a>
 </div></header>
 <nav class="reiter hidden" id="tabs" aria-label="Bereiche"><div class="in">
@@ -27,10 +27,10 @@
   <div id="login" class="hidden anmeldung">
     <form id="login-mail" class="block form"><h2 style="font-size:24px;margin:0 0 12px">Anmelden</h2>
       <div class="field"><label for="admin-email">Deine E-Mail</label><input type="email" id="admin-email" name="email" autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false" required></div>
-      <button class="k dunkel" style="width:100%">Code schicken</button>
+      <button class="k dunkel" style="width:100%">Code per Mail schicken</button>
       <p class="klein" style="margin:10px 0 0">Du bekommst eine Mail mit Link und Code. Nur für Admin-Adressen.</p></form>
-    <form id="login-code" class="block form hidden"><h2 style="font-size:22px;margin:0 0 8px">Code eingeben</h2>
-      <p class="klein" style="margin:0 0 10px">Steht in der Mail (15 Minuten gültig). Oder tipp in der Mail auf den Link.</p>
+    <form id="login-code" class="block form"><h2 style="font-size:22px;margin:0 0 8px">Code schon bekommen? Hier eingeben</h2>
+      <p class="klein" style="margin:0 0 10px">Steht in der Mail (15 Minuten gültig). Nicht noch einen anfordern, sonst gilt der alte nicht mehr.</p>
       <div class="field"><label for="admin-code">6-stelliger Code</label><input type="text" id="admin-code" class="code-feld" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required></div>
       <button class="k gelb" style="width:100%">Anmelden</button></form>
     <details style="margin-top:18px"><summary>Anmeldung mit Admin-Token</summary>
@@ -41,7 +41,8 @@
     <section class="ansicht" id="v-uebersicht">
       <div id="hinweise"></div>
       <div class="kacheln" id="kacheln"></div>
-      <h2>Abgebrochene Anmeldungen <span class="klein">(14 Tage)</span></h2>
+      <details class="block mehrzahlen" id="mehrzahlen"></details>
+      <h2 id="entwuerfe-titel">Abgebrochen <span class="klein">(letzte 14 Tage)</span></h2>
       <div class="karten" id="entwuerfe"></div>
     </section>
 
@@ -67,21 +68,21 @@
       <div class="block">
         <h3>Monatsabrechnung</h3>
         <div class="field"><label for="monat">Monat</label><input type="month" id="monat"></div>
-        <div class="knopfgitter">
-          <button class="k" id="abr-test">Abrechnung testen</button>
-          <button class="k dunkel" id="abr-los">Abrechnung erstellen</button>
-        </div>
+        <button class="k dunkel" id="abr-test" style="width:100%">Abrechnung testen (verschickt nichts)</button>
+        <button class="k rot" id="abr-los" style="width:100%;margin-top:18px">Abrechnung wirklich erstellen</button>
+        <p class="klein" style="margin:8px 0 0">Erstellt echte Rechnungen und zieht das Geld ein. Vorher testen.</p>
       </div>
       <div class="knopfgitter">
-        <button class="k" id="jobs">Tägliche Jobs</button>
-        <button class="k" id="konten">Alle Stripe-Status abgleichen</button>
+        <button class="k" id="jobs">Tägliche Aufgaben jetzt starten</button>
+        <button class="k" id="konten">Stripe bei allen Studios prüfen</button>
       </div>
+      <div class="block"><h3>Ergebnis</h3><p id="out-satz" style="margin:0">Noch nichts gestartet.</p>
+        <details id="out-details" class="hidden"><summary>Technische Einzelheiten</summary><pre id="out-json">–</pre></details></div>
       <div class="block"><h3>Letzte E-Mails</h3><ul class="posten" id="mails"><li class="leer">Wird geladen …</li></ul></div>
-      <div class="block"><h3>Ergebnis</h3><pre id="out-json">–</pre></div>
       <div class="block"><h3>Als App aufs Handy</h3><p class="klein" style="margin:0">iPhone: Seite in Safari öffnen, unten auf „Teilen“ tippen, dann „Zum Home-Bildschirm“. Danach mit dem Code aus der Mail anmelden.</p></div>
     </section>
   </div>
 </main>
 <script src="/js/common.js"></script>
-<script src="/js/admin.js?v=1"></script>
+<script src="/js/admin.js?v=2"></script>
 </body></html>

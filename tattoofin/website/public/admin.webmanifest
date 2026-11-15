@@ -4,7 +4,7 @@
   "short_name": "TF Admin",
   "lang": "de",
   "start_url": "/admin.html#uebersicht",
-  "scope": "/admin.html",
+  "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#fffaf0",

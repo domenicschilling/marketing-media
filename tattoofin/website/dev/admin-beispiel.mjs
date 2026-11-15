@@ -39,6 +39,13 @@ await studio({ firma: "Testkauf TestFlight", ort: "Bamberg", email: "testflight@
 const e = await studio({ firma: "Altstadt Tattoo", ort: "Augsburg", email: "alt@beispiel.test", status: "live", goLiveAt: vor(90), modell: "provision", paket: "risikofrei", zahlart: "provision", stripe: frei, alt: 120, kunde: true });
 await studio({ firma: "Color Beispiel", ort: "Dachau", email: "color@beispiel.test", status: "gekuendigt", modell: "provision", paket: "risikofrei", zahlart: "provision", stripe: frei, kuendigung: { zum: vor(-10), grund: "Neues Verbraucherkreditrecht" }, alt: 100 });
 await studio({ firma: "Partner Studio München", ort: "München", email: "partner@beispiel.test", status: "live", modell: "kauf", zahlart: "geschenk", sonderkondition: "Partner – nur Zahlungsgebühren", stripe: frei, alt: 50 });
+// Apple-Studio in der Gratis-Woche (zählt nicht als zahlend), Bestandsstudio mit altem Preis, offene Rechnung
+await studio({ firma: "Probezeit Ink", ort: "Schweinfurt", email: "probe@beispiel.test", status: "einrichtung", modell: "kauf", paket: "app", abrechnung: "apple", alt: 3,
+  apple: { status: "aktiv", laeuftBis: vor(-5), preisMilli: 0, waehrung: "EUR", umgebung: "Production", probe: true } });
+const alt = await studio({ firma: "Alte Liebe Tattoo", ort: "Regensburg", email: "alteliebe@beispiel.test", status: "live", goLiveAt: vor(70), modell: "kauf", paket: "monatlich", zahlart: "abo", monatNetto: 4900, kunde: true, stripe: { ...frei, subscriptionId: "sub_b6" }, alt: 75 });
+await studio({ firma: "Rechnung Offen Studio", ort: "Fürth", email: "offen@beispiel.test", status: "zahlung_offen", modell: "kauf", paket: "einmal", zahlart: "rechnung", kunde: true, alt: 2 });
+// Einmalzahlung mit Garantie-Erstattung in diesem Monat (Einnahme und Erstattung heben sich auf)
+const garantie = await studio({ firma: "Garantie Studio", ort: "Ansbach", email: "garantie@beispiel.test", status: "erstattet", modell: "kauf", paket: "einmal", zahlart: "sofort", kunde: true, stripe: { ...frei, paymentIntentId: "pi_beispiel_garantie" }, alt: 20 });
 // Abgebrochene Anmeldungen
 await studio({ firma: "Black Rose Ink", ort: "Bayreuth", email: "rose@beispiel.test", status: "entwurf", modell: "kauf", paket: "monatlich", zahlart: "abo", monatNetto: 4193, alt: 1, updatedAt: vor(0, 9),
   stripe: { checkoutSessionId: "cs_b1" }, anmeldungFehler: { am: vor(0, 9), code: "payment_intent_authentication_failure", declineCode: "", typ: "ablehnung", text: "3-D-Secure-Bestätigung abgelehnt.", dreiDS: true } });
@@ -49,12 +56,13 @@ const zl = async (s, betragCent, tag, kunde) => saveZahlung({ studioId: s.id, id
 await zl(a, 32000, 3, "Lena M."); await zl(a, 15000, 9, "Tom K."); await zl(b, 48000, 6, "Sara P."); await zl(d, 22000, 12, "Max B."); await zl(e, 90000, 2, "Jana R.");
 await saveZahlung({ studioId: a.id, id: "zl_offen1", createdAt: vor(0), status: "offen", betragCent: 12000, kunde: "Paul S.", art: "anzahlung" });
 // Unsere Einnahmen: bezahlte Rechnungen im Stripe-Nachbau (Abo-Rechnungen)
-for (const s of [a, b, c]) {
-  await stripe("POST", "/invoiceitems", { customer: s.stripe.customerId, currency: "eur", amount: s.monatNetto });
+for (const s of [a, b, c, alt, garantie]) {
+  await stripe("POST", "/invoiceitems", { customer: s.stripe.customerId, currency: "eur", amount: s.monatNetto || 59900 });
   const inv = await stripe("POST", "/invoices", { customer: s.stripe.customerId, metadata: { studioId: s.id } });
   await stripe("POST", `/invoices/${inv.id}/finalize`, {});
   await stripe("POST", `/invoices/${inv.id}/pay`, { paid_out_of_band: true });
 }
+await stripe("POST", "/refunds", { payment_intent: "pi_beispiel_garantie", amount: Math.round(59900 * 1.19) });
 const demo = await demoStudioAnlegen({ email: "app-review@beispiel.test" });
 console.log(`Admin mit Beispieldaten: ${BASE}/admin.html  (Token: admin)  Daten: ${dataDir}`);
 
@@ -94,12 +102,18 @@ for (const breite of [390, 768, 1440]) {
   };
   await p.waitForSelector("#kacheln .kachel"); await shot("1-uebersicht");
   await geh("studios"); await p.waitForSelector("#liste .karte"); await shot("2-studios");
+  await geh("uebersicht"); await p.click('#kacheln .kachel[data-ziel="studios:zahlend"]'); await p.waitForSelector("#v-studios:not(.hidden) #liste .karte"); await shot("2b-zahlend");
   await geh(a.id); await p.waitForSelector("#d-ansehen"); await p.waitForFunction(() => !/geladen/.test(document.getElementById("d-mails").textContent)); await shot("3-studio-detail");
   await geh("demo"); await p.waitForSelector("#v-demo:not(.hidden) #demo-neu"); await shot("4-demo");
   await geh("mehr"); await p.waitForFunction(() => !/geladen/.test(document.getElementById("mails").textContent)); await shot("5-werkzeuge");
   if (breite === 390) {
     await p.evaluate(() => sessionStorage.removeItem("tf-admin")); await p.goto(BASE + "/admin.html"); await p.waitForSelector("#login-mail");
-    await p.fill("#admin-email", "admin@beispiel.test"); await p.click("#login-mail button"); await p.waitForSelector("#login-code:not(.hidden)"); await shot("0-anmelden");
+    await shot("0-anmelden");
+    await p.fill("#admin-email", "admin@beispiel.test"); await p.click("#login-mail button"); await p.waitForFunction(() => /unterwegs/.test(document.getElementById("alert").textContent));
+    // Homescreen-App lädt nach dem Wechsel in die Mail-App neu: Adresse und Code-Feld müssen noch da sein
+    await p.reload(); await p.waitForSelector("#login-code:not(.hidden)");
+    if ((await p.inputValue("#admin-email")) !== "admin@beispiel.test") fehler.push("390: Adresse nach Neuladen vergessen");
+    await shot("0b-anmelden-nach-neuladen");
   }
   await ctx.close();
 }
