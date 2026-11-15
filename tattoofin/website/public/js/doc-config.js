@@ -13,7 +13,8 @@
       Object.assign(C, {
         firma: api.firma, adresse: api.adresse, registergericht: api.registergericht, ustid: api.ustid,
         geschaeftsfuehrer: api.geschaeftsfuehrer, ansprechpartner: api.geschaeftsfuehrer, telefon: api.telefon, email: api.email,
-        gerichtsstand: api.gerichtsstand, kaufPreis: api.kaufNetto / 100, monatPreis: api.monatNetto / 100, nutzungJahre: api.nutzungJahre,
+        gerichtsstand: api.gerichtsstand, kaufPreis: api.kaufNetto / 100, monatPreis: api.monatNetto / 100,
+        monatPreisBrutto: Math.round(api.monatNetto * (100 + (api.ustProzent || 19)) / 100) / 100, nutzungJahre: api.nutzungJahre,
         provisionSatz: api.provisionProzent + " %", garantieTage: api.garantieTage, setupSupportTage: api.setupSupportTage,
         kuendigungProvision: "jederzeit zum Monatsende",
         vertragVersion: api.vertragVersion,
@@ -25,6 +26,8 @@
       var k = el.dataset.cfg, v = C[k];
       if (v === undefined) return;
       if (/^(kaufPreis|monatPreis|aufstellerPreis)$/.test(k)) v = Number(v).toLocaleString("de-DE") + " €";
+      // Brutto immer mit zwei Nachkommastellen (49,90 €, nicht 49,9 €)
+      if (k === "monatPreisBrutto") v = Number(v).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
       el.textContent = v;
     });
   });

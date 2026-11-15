@@ -61,7 +61,7 @@ export default handler(async (req) => {
   // Neue 0-€-Einladungen sind abgeschaltet (Entscheidung Domenic 02.11.2026). Nur Tattoo Fashion Munich (st_nqoyv1Q2wj7F) und Elite Tattoo
   // (st_fJZzFDQBg3hR) bleiben bei 0 Kosten; deren Abrechnung und bereits ausgegebene Codes (geschenk/<code>) laufen unverändert weiter.
   if (bereich === "einladen" && req.method === "POST") {
-    return fail("Neue Einladungen mit 0 € Einrichtung und ohne Provision gibt es nicht mehr. Neue Studios melden sich im Paket Monatlich an (49 € netto im Monat). Bereits ausgestellte Einladungs-Codes funktionieren weiter.", 410);
+    return fail("Neue Einladungen mit 0 € Einrichtung und ohne Provision gibt es nicht mehr. Neue Studios melden sich im Paket Monatlich an (49,90 € im Monat inkl. MwSt.). Bereits ausgestellte Einladungs-Codes funktionieren weiter.", 410);
   }
 
   if (bereich === "studios" && req.method === "GET") {

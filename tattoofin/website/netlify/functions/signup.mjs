@@ -1,7 +1,7 @@
 // Online-Abschluss: Paket wählen, Vertrag + AVV akzeptieren, Stripe-Kunde anlegen, dann je nach Paket:
 //   Risikofrei   (modell provision): NUR NOCH FÜR BESTANDSSTUDIOS. Seit 26.10.2026 für Neuanmeldungen gesperrt (siehe paketNeuWaehlbar in config.mjs),
 //                der Zweig unten bleibt für den Notschalter RISIKOFREI_NEU=1 und die Tests der Bestandsabläufe erhalten.
-//   Monatlich    (modell kauf, zahlart abo): Stripe-Checkout im Abo-Modus auf dem DSX-Konto (49 € netto + USt. im Monat)
+//   Monatlich    (modell kauf, zahlart abo): Stripe-Checkout im Abo-Modus auf dem DSX-Konto (seit 15.11.2026: 41,93 € netto + 19 % USt. = 49,90 € im Monat, ohne Gratiszeit)
 //                → danach eigenes Stripe-Konto (Standard) verbinden wie bei der Einmalzahlung
 //   Einmalzahlung (modell kauf, zahlart sofort|rechnung): einmalig 999 € netto per Checkout oder Rechnung
 // Danach ist das Studio direkt eingeloggt (Session-Cookie) und landet im Dashboard (/app.html), wo es sein
@@ -36,7 +36,7 @@ export default handler(async (req, context) => {
     const sitzung = await currentStudio(req);
     const berechtigt = (sitzung && sitzung.id === s.id) || zweckOk(u.searchParams.get("t"), "resume", s.id);
     if (!berechtigt) return json({ id: s.id, status: s.status });
-    const kurz = { id: s.id, status: s.status, modell: s.modell, paket: s.paket || (s.modell === "kauf" ? "einmal" : "risikofrei"), zahlart: s.zahlart, firma: s.firma, preisNetto: s.preisNetto || null, kontoVerbunden: Boolean(s.stripe?.chargesEnabled), kontoBegonnen: Boolean(s.stripe?.detailsSubmitted) };
+    const kurz = { id: s.id, status: s.status, modell: s.modell, paket: s.paket || (s.modell === "kauf" ? "einmal" : "risikofrei"), zahlart: s.zahlart, firma: s.firma, preisNetto: s.preisNetto || null, monatNetto: s.monatNetto || null, kontoVerbunden: Boolean(s.stripe?.chargesEnabled), kontoBegonnen: Boolean(s.stripe?.detailsSubmitted) };
     // Vollständige Angaben nur zum Fortsetzen eines nicht abgeschlossenen Entwurfs
     if (!["entwurf", "abgebrochen"].includes(s.status)) return json(kurz);
     return json({ ...kurz, email: s.email, inhaber: s.inhaber, strasse: s.strasse, plz: s.plz, ort: s.ort, telefon: s.telefon, studioTelefon: s.studioTelefon, ustid: s.ustid });

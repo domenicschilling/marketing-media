@@ -43,8 +43,10 @@ export const CFG = {
   // Preise (Cent, netto). Drei Pakete seit 18.10.2026 (Entscheidung Domenic), siehe PAKETE unten.
   // Einmalzahlung (früher „Kauf“ 1.499 € bzw. 1.249 € mit Aktionscode RATENJA – Aktionscode ist abgeschaltet)
   kaufNetto: Number(env("KAUF_NETTO_CENT", 99900)),
-  // Monatlich: Abo auf dem DSX-Konto (Stripe Billing), zzgl. USt.
-  monatNetto: Number(env("MONAT_NETTO_CENT", 4900)),
+  // Monatlich: Abo auf dem DSX-Konto (Stripe Billing), Netto-Cent, Stripe rechnet 19 % USt. drauf (exklusiver Steuersatz).
+  // Seit 15.11.2026 (Entscheidung Domenic): gleicher Preis wie in der App, 49,90 € inkl. MwSt. = 4193 netto (+797 USt. = 4990), ohne Gratiszeit.
+  // Vorher 4900 (49 € netto). Bestandskunden behalten ihren Preis: er steht je Studio in s.monatNetto und im Stripe-Abo.
+  monatNetto: Number(env("MONAT_NETTO_CENT", 4193)),
   // Einmalzahlung: Nutzungszusage (Anbieter kündigt ordentlich frühestens nach so vielen Jahren ab Inbetriebnahme)
   nutzungJahre: Number(env("NUTZUNG_JAHRE", 5)),
   provisionProzent: Number(env("PROVISION_PROZENT", 10)),
@@ -63,7 +65,8 @@ export const CFG = {
   // /vertrag-2026-10d.html, /vertrag-2026-10c.html, /vertrag-2026-10b.html
   // 2026-12 (02.11.2026): Software zum festen Preis, Vergütung unabhängig von der Zahlart, keine Mitwirkung an Krediten, KMU-Bestätigung (Rechtsprüfung 01.11.2026, U8). Archiv zusätzlich /vertrag-2026-11.html
   // 2026-12b (14.11.2026): neuer § 13 „Abschluss über die Tattoofin-App (Apple)“ (Abo per In-App-Kauf), App-Ansicht ohne Web-Preis. Archiv /vertrag-2026-12.html
-  vertragVersion: "2026-12b",
+  // 2026-12c (15.11.2026): Paket Monatlich auf der Website 49,90 € inkl. USt. (41,93 € netto), Bestandskunden behalten ihren Preis. Archiv /vertrag-2026-12b.html
+  vertragVersion: "2026-12c",
   // Blatt „Deine rechtliche Lage“ und Leistungsbestätigung: Version bei inhaltlichen Änderungen hochzählen (wird mit der Zustimmung gespeichert)
   rechtVersion: "2026-12",
   bestaetigungVersion: "2026-10b",
@@ -185,7 +188,7 @@ export function appleTestSchalter(ort) {
   }
   return { xcode, testRootPem: root || null };
 }
-export const PAKETE_NEU_TEXT = "Dieses Paket gibt es für neue Anmeldungen nicht mehr. Tattoofin kostet jetzt einheitlich 49 € netto im Monat.";
+export const PAKETE_NEU_TEXT = "Dieses Paket gibt es für neue Anmeldungen nicht mehr. Tattoofin kostet jetzt 49,90 € im Monat inkl. MwSt.";
 // URL-/Formular-Aliase: ?modell=provision → Risikofrei, ?modell=kauf → Einmalzahlung (auch alte Vorschau-Namen start/profi)
 export const PAKET_ALIAS = { provision: "risikofrei", kauf: "einmal", risikofrei: "risikofrei", monatlich: "monatlich", einmal: "einmal", einmalzahlung: "einmal", start: "risikofrei", profi: "einmal" };
 // Paket eines Studios. Ältere Datensätze ohne „paket“: provision → Risikofrei, kauf → Einmalzahlung (Altvertrag „Kauf“).

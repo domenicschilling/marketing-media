@@ -36,7 +36,7 @@ FRAGEN = [
     ("Ist Tattoofin der Kreditgeber?",
      "Nein. Den Vertrag über die Raten* schließt dein Kunde mit Klarna. Du berätst nicht zu Krediten und sagst keine Raten* zu.", True),
     ("Was kostet es genau?",
-     "49 € netto im Monat (58,31 € inkl. USt.), keine Provision. Dazu Stripe-Gebühren je Zahlung: Karte ab 1,5 % + 0,25 €, Klarna ab 2,99 % + 0,35 €. Der erste Monat ist beim Start fällig.", False),
+     "49,90 € im Monat inkl. MwSt. (41,93 € netto), keine Provision. Dazu Stripe-Gebühren je Zahlung: Karte ab 1,5 % + 0,25 €, Klarna ab 2,99 % + 0,35 €. Der erste Monat ist beim Start fällig.", False),
     ("Wie kündige ich? Und wenn Stripe mich ablehnt?",
      "Im Portal, zum Ende des Abrechnungsmonats. Stripe-Konto und Aufsteller bleiben bei dir, Zahlungslinks und QR-Code enden. Lehnt Stripe dein Studio endgültig ab, bekommst du die gezahlten Monate zurück, außer bei falschen Angaben oder Pflichtverletzung.", False),
     ("Wann kommt das Geld, und was brauche ich?",
@@ -45,7 +45,7 @@ FRAGEN = [
 
 
 def nbsp_zahlen(t):
-    """1,5 % / 49 € / 0,25 € ohne Umbruch zwischen Zahl und Einheit."""
+    """1,5 % / 49,90 € / 0,25 € ohne Umbruch zwischen Zahl und Einheit."""
     t = re.sub(r"(\d) (€|%)", "\\1&nbsp;\\2", t)
     t = t.replace("% + ", "%&nbsp;+&nbsp;")
     return t
@@ -66,9 +66,9 @@ def jsonld(seite):
          "provider": {"@id": "https://tattoofin.de/#org"}, "areaServed": {"@type": "Country", "name": "Deutschland"},
          "audience": {"@type": "BusinessAudience", "name": "Tattoo-Studios"},
          "offers": [{"@type": "Offer", "name": "Paket Monatlich",
-                     "description": "49 € netto im Monat, keine Provision, danach nur die Zahlungsgebühren von Stripe. QR-Aufsteller aus Holz im Paket. Monatlich kündbar.",
-                     "price": "49.00", "priceCurrency": "EUR",
-                     "priceSpecification": {"@type": "UnitPriceSpecification", "price": "49.00", "priceCurrency": "EUR", "valueAddedTaxIncluded": False, "unitText": "Monat",
+                     "description": "49,90 € im Monat inkl. MwSt. (41,93 € netto), keine Provision, danach nur die Zahlungsgebühren von Stripe. QR-Aufsteller aus Holz im Paket. Monatlich kündbar.",
+                     "price": "49.90", "priceCurrency": "EUR",
+                     "priceSpecification": {"@type": "UnitPriceSpecification", "price": "49.90", "priceCurrency": "EUR", "valueAddedTaxIncluded": True, "unitText": "Monat",
                                             "referenceQuantity": {"@type": "QuantitativeValue", "value": 1, "unitCode": "MON"}}}]},
         {"@type": "FAQPage", "mainEntity": faq},
     ]
@@ -102,22 +102,22 @@ def bauen(seite):
 
     if studios:
         kopf_meta = """<title>Tattoofin für Tattoo-Studios – Zahlungslinks, Anzahlungen und mehr Zahlarten für deine Kunden</title>
-<meta name="description" content="Zahlungslink per WhatsApp, Anzahlung vorab per Link gegen No-Shows und mehrere Zahlarten für dein Tattoo-Studio. Keine Provision: 49 € netto im Monat, keine Einrichtungsgebühr.">
+<meta name="description" content="Zahlungslink per WhatsApp, Anzahlung vorab per Link gegen No-Shows und mehrere Zahlarten für dein Tattoo-Studio. Keine Provision: 49,90 € im Monat inkl. MwSt., keine Einrichtungsgebühr.">
 <meta name="robots" content="noindex,follow">
 <meta name="theme-color" content="#f5ead2">
 <link rel="canonical" href="https://tattoofin.de/">
 <meta property="og:type" content="website"><meta property="og:locale" content="de_DE"><meta property="og:site_name" content="Tattoofin">
 <meta property="og:title" content="Tattoofin – Zahlungslinks, Anzahlungen und mehr Zahlarten für deine Kunden">
-<meta property="og:description" content="Zahlungslink per WhatsApp, Anzahlung vorab per Link gegen No-Shows und mehrere Zahlarten für Tattoo-Studios. Keine Provision: 49 € netto im Monat.">
+<meta property="og:description" content="Zahlungslink per WhatsApp, Anzahlung vorab per Link gegen No-Shows und mehrere Zahlarten für Tattoo-Studios. Keine Provision: 49,90 € im Monat inkl. MwSt.">
 <meta property="og:url" content="https://tattoofin.de/studios"><meta property="og:image" content="https://tattoofin.de/assets/og.jpg">"""
     else:
         kopf_meta = """<title>Tattoofin – Zahlungslinks, Anzahlungen &amp; Raten* für Tattoo-Studios</title>
-<meta name="description" content="Software für Tattoo-Studios: Zahlungslink per WhatsApp, QR-Zahlseite an der Theke, Anzahlung mit Bedingungen, Gutscheine. 49 € netto im Monat.">
+<meta name="description" content="Software für Tattoo-Studios: Zahlungslink per WhatsApp, QR-Zahlseite an der Theke, Anzahlung mit Bedingungen, Gutscheine. 49,90 € im Monat inkl. MwSt.">
 <meta name="theme-color" content="#f5ead2">
 <link rel="canonical" href="https://tattoofin.de/">
 <meta property="og:type" content="website"><meta property="og:locale" content="de_DE"><meta property="og:site_name" content="Tattoofin">
 <meta property="og:title" content="Tattoofin für Tattoo-Studios: Zahlungslink, Anzahlung, Raten*">
-<meta property="og:description" content="Zahlungslink per WhatsApp, QR-Zahlseite, Anzahlung vorab und Raten* über Klarna. 49 € netto im Monat, ohne Provision.">
+<meta property="og:description" content="Zahlungslink per WhatsApp, QR-Zahlseite, Anzahlung vorab und Raten* über Klarna. 49,90 € im Monat inkl. MwSt., ohne Provision.">
 <meta property="og:url" content="https://tattoofin.de/"><meta property="og:image" content="https://tattoofin.de/assets/og.jpg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">"""
 
@@ -232,7 +232,7 @@ def bauen(seite):
     </div>
     <div class="auftakt-fuss">
       <div class="auftakt-knopf">{start("auftakt")}</div>
-      <p class="preiszeile">49&nbsp;€ netto im Monat · keine Provision · monatlich kündbar <span class="b2b">· nur für Unternehmer</span></p>
+      <p class="preiszeile">49,90&nbsp;€ im Monat inkl. MwSt. · keine Provision · monatlich kündbar <span class="b2b">· nur für Unternehmer</span></p>
       <p class="raten-fn">{FN_LANG}</p>{kunde}
     </div>
   </section>
@@ -332,15 +332,15 @@ def bauen(seite):
 
   <section class="preis" id="preis" aria-labelledby="preis-titel">
     <div class="preis-innen">
-      <h2 id="preis-titel">49&nbsp;€ netto im Monat. Dazu nur Stripe.</h2>
+      <h2 id="preis-titel">49,90&nbsp;€ im Monat. Dazu nur Stripe.</h2>
       <div class="preis-schild">
         <svg class="faden" viewBox="0 0 120 90" aria-hidden="true" focusable="false"><path d="M60 8 C42 30 78 52 60 86" fill="none" stroke="#fff7e3" stroke-width="4" stroke-linecap="round"/></svg>
         <span class="reisszwecke" aria-hidden="true"></span>
         <div class="anhaenger">
           <span class="loch" aria-hidden="true"></span>
-          <strong class="betrag">49<span class="eur">€</span></strong>
-          <span class="einheit">netto im Monat</span>
-          <span class="brutto">58,31&nbsp;€ inkl. USt. · Nur für Unternehmer.</span>
+          <strong class="betrag">49,90<span class="eur">€</span></strong>
+          <span class="einheit">im Monat, inkl. MwSt.</span>
+          <span class="brutto">(41,93&nbsp;€ netto) · Nur für Unternehmer.</span>
         </div>
       </div>
       <div class="beleg">
@@ -376,7 +376,7 @@ def bauen(seite):
   <section class="schluss">
     <div class="schluss-kopf">
       <h2>Nächster Sleeve? Schick den Link.</h2>
-      <p class="zeile">49&nbsp;€ netto im Monat · monatlich kündbar <span class="b2b">· nur für Unternehmer</span></p>
+      <p class="zeile">49,90&nbsp;€ im Monat inkl. MwSt. · monatlich kündbar <span class="b2b">· nur für Unternehmer</span></p>
       <div class="wege">{start("schluss")}<a class="wa" href="{wa}" data-umami-event="whatsapp-schluss">Fragen? Schreib unserem Team per WhatsApp.</a></div>
     </div>
     <div class="hausherr-rahmen">
@@ -402,7 +402,7 @@ def bauen(seite):
   </footer>
 
   <aside class="leiste" id="leiste" aria-label="Schnellzugriff">
-    <span class="leiste-preis">49&nbsp;€ netto<br>im Monat</span>
+    <span class="leiste-preis">49,90&nbsp;€ im Monat<br>inkl. MwSt.</span>
     {start("leiste").replace('class="knopf"', 'class="knopf"')}
     <a class="leiste-wa" href="{wa}" aria-label="WhatsApp an das Tattoofin-Team" data-umami-event="whatsapp-leiste">{wa_icon}</a>
   </aside>

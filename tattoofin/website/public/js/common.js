@@ -5,8 +5,15 @@ window.Ted = window.TF = (function () {
     if (!cfgPromise) cfgPromise = fetch("/api/config").then(function (r) { return r.json(); });
     return cfgPromise;
   }
+  // Ohne zweites Argument: ganze Euro ohne Nachkomma („49 €“), sonst automatisch mit Cent („49,90 €“, „41,93 €“), damit nie gerundet wird.
   function euro(cent, nachkomma) {
+    if (nachkomma === undefined) nachkomma = Math.round(Number(cent) || 0) % 100 !== 0;
     return (cent / 100).toLocaleString("de-DE", { minimumFractionDigits: nachkomma ? 2 : 0, maximumFractionDigits: nachkomma ? 2 : 0 }) + " €";
+  }
+  // Monatspreis: Hauptzahl inkl. MwSt., netto klein dahinter („49,90 € im Monat inkl. MwSt. (41,93 € netto)“)
+  function monatPreis(nettoCent, ustProzent) {
+    var u = ustProzent == null ? 19 : ustProzent;
+    return euro(Math.round(nettoCent * (100 + u) / 100), true) + " im Monat inkl. MwSt. (" + euro(nettoCent, true) + " netto)";
   }
   function datum(iso) {
     if (!iso) return "–";
@@ -42,9 +49,10 @@ window.Ted = window.TF = (function () {
       if (parts[1] === "euro") v = euro(v);
       if (parts[1] === "brutto") v = euro(Math.round(v * (100 + c.ustProzent) / 100));
       if (parts[1] === "cent2") v = euro(v, true);
+      if (parts[1] === "brutto2") v = euro(Math.round(v * (100 + c.ustProzent) / 100), true);
       if (parts[1] === "rest") v = 100 - v;
       el.textContent = v;
     });
   }
-  return { config: config, euro: euro, datum: datum, api: api, esc: esc, fill: fill };
+  return { config: config, euro: euro, monatPreis: monatPreis, datum: datum, api: api, esc: esc, fill: fill };
 })();

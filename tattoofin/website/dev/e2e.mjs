@@ -122,7 +122,7 @@ async function signatur(p) {
 
 try {
   // ---------------------------------------------------------------- Startseite
-  console.log("Startseite: ein Preis (49 €) + QR-Aufsteller, kein Risikofrei, keine Einmalzahlung");
+  console.log("Startseite: ein Preis (49,90 € inkl. MwSt.) + QR-Aufsteller, kein Risikofrei, keine Einmalzahlung");
   const p0 = await neueSeite();
   await p0.goto(BASE + "/");
   check((await p0.textContent("h1")).includes("für deine Kunden"), "Hero lädt");
@@ -131,18 +131,18 @@ try {
     check(Boolean(w && w.inHero && w.abstand > 0 && w.abstand <= 560), "Warnsatz als Fußnote im Hero, höchstens 560 px unter der Raten-Überschrift" + (w ? ` (${Math.round(w.abstand)} px)` : "")); }
   check(await p0.locator("#preis").count() === 1 && await p0.locator("#r-monat").count() === 0, "Ein Preis auf der Startseite, kein Paket-Rechner");
   const preise = await p0.textContent("#preis");
-  check(preise.includes("49") && !preise.includes("999") && !preise.includes("Einmalzahlung") && !/Gründer|Profi\b|Risikofrei|10 %|900 €|Grundge/.test(preise) && !/Raten\*|Klarna\*/.test(preise), "Preisbereich: nur 49 €, keine Raten-Aussage (deshalb dort kein Warnsatz nötig)");
+  check(preise.includes("49,90") && preise.includes("41,93") && !preise.includes("58,31") && !preise.includes("999") && !preise.includes("Einmalzahlung") && !/Gründer|Profi\b|Risikofrei|10 %|900 €|Grundge/.test(preise) && !/Raten\*|Klarna\*/.test(preise), "Preisbereich: nur 49,90 € inkl. MwSt. (klein 41,93 € netto), kein 58,31 €, keine Raten-Aussage (deshalb dort kein Warnsatz nötig)");
   { const raten = await p0.evaluate(() => [...document.querySelectorAll("main h1, main h2, main h3, main p, main li, main span, main div")].filter((e) => !e.closest("#fragen, .fragen, [hidden]") && e.getBoundingClientRect().height > 1 && e.children.length < 6 && /(Raten|Klarna|Ratenzahlung)\*/.test(e.textContent) && !/Achtung! Kreditaufnahme/.test(e.textContent)).every((e) => e.closest(".auftakt")));
     check(raten, "Raten*-Aussagen außerhalb der Fragen nur im ersten Bildschirm (dort steht die Fußnote)"); }
   { const domenic = (await p0.content()).match(/Domenic/g) || []; check(domenic.length === 0, "Startseite: spricht vom Team, nicht von Domenic"); }
   { const sichtbar = await p0.evaluate(() => document.body.innerText); check(!/Ich spar noch|Einmalzahlung|beiden Paketen|999 €/.test(sichtbar), "Startseite: kein „Ich spar noch.“, keine Einmalzahlung, keine zwei Pakete"); }
   const ld = await p0.textContent('script[type="application/ld+json"]');
-  check(/49/.test(ld) && !/Einmalzahlung|999 €/.test(ld) && !/Risikofrei|10 %/.test(ld), "Strukturierte Daten: nur 49 €, kein Risikofrei");
+  check(/"price": "49\.90"/.test(ld) && /"valueAddedTaxIncluded": true/.test(ld) && !/"price": "49\.00"|58,31/.test(ld) && !/Einmalzahlung|999 €/.test(ld) && !/Risikofrei|10 %/.test(ld), "Strukturierte Daten: 49.90 inkl. MwSt., kein Risikofrei");
   await p0.waitForTimeout(1000);
   await p0.screenshot({ path: path.join(shots, "landing.png"), fullPage: true });
   const pS = await neueSeite();
   await pS.goto(BASE + "/studios.html");
-  { const sh = await pS.content(); check((await pS.textContent("#preis")).includes("49") && (await pS.locator("#preis .preis-schild").count()) === 1 && !/risikofrei|999&nbsp;|Einmalzahlung/i.test(sh), "/studios: ein Preis, kein Risikofrei, keine Einmalzahlung"); }
+  { const sh = await pS.content(); check((await pS.textContent("#preis")).includes("49,90") && !/58,31/.test(sh) && (await pS.locator("#preis .preis-schild").count()) === 1 && !/risikofrei|999&nbsp;|Einmalzahlung/i.test(sh), "/studios: ein Preis, kein Risikofrei, keine Einmalzahlung"); }
   { const sh = await pS.content(); check(/noindex/.test(sh) && /utm_source=studios&amp;utm_medium=seite&amp;utm_content=auftakt/.test(sh) && (await pS.locator("#anfrage #anfrage-form input[autocomplete=tel]").count()) === 1 && !/Domenic/.test(sh), "/studios: noindex, Start-Links mit utm, Anfrage-Formular (zugeklappt) mit Autofill, Team statt Domenic"); }
 
   // ---------------------------------------------------------------- A: Paket Start
@@ -198,15 +198,17 @@ try {
   check(!Object.values((await mock("state")).sessions).some((x) => x.amount_total === 148631), "Aktionscode RATENJA abgeschaltet (Preis bleibt 999 €)");
 
   // ---------------------------------------------------------------- D: Paket Monatlich (Abo)
-  console.log("Paket Monatlich: Abo 49 € netto auf dem DSX-Konto → Dashboard → eigenes Standard-Konto");
+  console.log("Paket Monatlich: Abo 41,93 € netto (49,90 € inkl. MwSt.) auf dem DSX-Konto → Dashboard → eigenes Standard-Konto");
   const pD = await neueSeite();
   await signup(pD, { paket: "monatlich", email: "abo@example.com", firma: "Ink Abo" });
   await pD.waitForURL(MOCK_PAY);
   const kasse = await pD.textContent("body");
-  check(kasse.includes("subscription") && kasse.includes("58.31"), "Stripe-Abo: 49 € netto + 19 % = 58,31 €");
+  check(kasse.includes("subscription") && kasse.includes("49.90"), "Stripe-Abo: 41,93 € netto + 19 % = 49,90 €");
   state = await mock("state");
   const sessAbo = Object.values(state.sessions).find((x) => x.mode === "subscription");
   check(sessAbo?.line_items?.[0]?.price_data?.recurring?.interval === "month" && sessAbo?.metadata?.paket === "monatlich" && !sessAbo.account, "Abo monatlich auf dem DSX-Konto, Metadaten Paket");
+  { const li = sessAbo?.line_items?.[0] || {}, n = Number(li.price_data?.unit_amount);
+    check(n === 4193 && li.tax_rates?.length === 1 && n + Math.round(n * 19 / 100) === 4990 && Number(sessAbo.amount_total) === 4990 && !/trial/.test(JSON.stringify(sessAbo)), "Abo: 4193 netto + 797 USt. = 4990 brutto, ohne Gratiszeit"); }
   check(/USt-IdNr\. DE456133925/.test(Object.values(state.customers).find((c) => c.email === "abo@example.com")?.invoice_settings?.footer || ""), "Rechnungsfuß mit DSX + USt-IdNr.");
   await pD.click("#pay");
   await einrichtungEingebettet(pD);
@@ -1196,7 +1198,7 @@ try {
     const pR = await neueSeite({ viewport: { width: 390, height: 844 } });
     await pR.goto(`${BASE}/start.html?${q}`); await cookiesAblehnen(pR);
     const info = await pR.textContent("#alert");
-    check(/nicht mehr/.test(info) && /49 €/.test(info), `start.html?${q}: freundlicher Hinweis auf den Preis`);
+    check(/nicht mehr/.test(info) && /49,90 € im Monat inkl\. MwSt\./.test(info), `start.html?${q}: freundlicher Hinweis auf den Preis`);
     check(await pR.locator("input[name=paket][value=risikofrei]").count() === 0 && await pR.locator("input[name=paket]").count() === 1 && await pR.locator("input[name=paket][value=monatlich]:checked").count() === 1, `start.html?${q}: nur Monatlich, vorgewählt`);
     await pR.context().close();
   }

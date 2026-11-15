@@ -118,7 +118,7 @@
     var s = D.studio, c = s.checkliste || {};
     var frei = s.stripe.freigegeben, ab = frei ? null : "ab Freigabe";
     var punkte = [
-      { ok: true, t: "Vertrag abgeschlossen", s: "Paket " + s.paketName + (s.provisionProzent ? " · " + s.provisionProzent + " % pro Zahlung, alles inklusive" : s.paket === "monatlich" ? " · " + TF.euro(s.monatNetto || 4900) + " netto im Monat, keine Provision" : " · keine Provision") },
+      { ok: true, t: "Vertrag abgeschlossen", s: "Paket " + s.paketName + (s.provisionProzent ? " · " + s.provisionProzent + " % pro Zahlung, alles inklusive" : s.paket === "monatlich" ? " · " + TF.monatPreis(s.monatNetto || 4900) + ", keine Provision" : " · keine Provision") },
       { ok: s.stripe.freigegeben, warte: s.stripe.angabenGemacht && !s.stripe.freigegeben, t: "Zahlungskonto einrichten (ca. 10 Min.)",
         s: s.stripe.freigegeben ? "Freigegeben. Stripe zahlt das Geld deiner Kunden auf dein Bankkonto aus. Bei neuen Konten wird es erst 7 Tage nach der Zahlung freigegeben." : s.stripe.angabenGemacht ? "Stripe prüft deine Angaben, meist 1 bis 3 Werktage." : "Ca. 10 Minuten. Ausweis und IBAN bereithalten. Das ist der nächste Schritt, danach geht alles andere.",
         knopf: s.stripe.freigegeben || s.stripe.angabenGemacht ? null : ["#einrichtung", "Jetzt einrichten", "gold"] },
@@ -565,7 +565,7 @@
     var s = D.studio;
     $("mehr-recht").textContent = s.recht && s.recht.aktuell ? "Gelesen am " + dat(s.recht.am) + " ✓" : "Wer trägt welches Risiko? Einfach erklärt.";
     $("mehr-fb").textContent = s.fragebogenAm ? "Ausgefüllt am " + dat(s.fragebogenAm) : "Hilft uns bei der Einrichtung (10 Minuten)";
-    $("mehr-paket").textContent = "Dein Paket: " + s.paketName + (s.provisionProzent ? " · " + s.provisionProzent + " % pro Zahlung, alles inklusive" : s.paket === "monatlich" ? " · " + TF.euro(s.monatNetto || 4900) + " netto im Monat, keine Provision" : " · keine Provision") + " · Angemeldet als " + s.email;
+    $("mehr-paket").textContent = "Dein Paket: " + s.paketName + (s.provisionProzent ? " · " + s.provisionProzent + " % pro Zahlung, alles inklusive" : s.paket === "monatlich" ? " · " + TF.monatPreis(s.monatNetto || 4900) + ", keine Provision" : " · keine Provision") + " · Angemeldet als " + s.email;
   }
 
   // ---------- Recht ----------

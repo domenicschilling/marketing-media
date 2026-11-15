@@ -174,7 +174,7 @@ await abschnitt("2 Anmeldung: Monatlich + Einmalzahlung im Browser (Cookie-Fenst
   ST.mo = await studioPer("monatlich@betrieb.test");
   const sAbo = (await sessions()).find((x) => x.mode === "subscription");
   check(/app\.html/.test(p.url()) && ST.mo?.status === "einrichtung" && ST.mo?.paket === "Monatlich" && ST.mo?.provisionProzent === 0, "Paket Monatlich: nach Zahlung im Dashboard, Status Einrichtung, 0 %", `${ST.mo?.id}`);
-  check(sAbo && sAbo.excluded_payment_method_types?.includes("klarna") && Number(sAbo.line_items[0].price_data.unit_amount) === 4900 && sAbo.line_items[0].price_data.recurring.interval === "month", "Abo: 49 € netto monatlich, Klarna ausgeschlossen (B2B)", `${sAbo?.line_items?.[0]?.price_data?.unit_amount}`);
+  check(sAbo && sAbo.excluded_payment_method_types?.includes("klarna") && Number(sAbo.line_items[0].price_data.unit_amount) === 4193 && sAbo.line_items[0].price_data.recurring.interval === "month", "Abo: 41,93 € netto (49,90 € inkl. MwSt.) monatlich, Klarna ausgeschlossen (B2B)", `${sAbo?.line_items?.[0]?.price_data?.unit_amount}`);
   ST.mo.cookie = (await p.context().cookies()).map((c) => `${c.name}=${c.value}`).join("; ");
   await p.context().close();
 
@@ -920,7 +920,7 @@ await abschnitt("17 Recht (27.10.2026): Klarna-Stichtag 20.11.2026 für Risikofr
   const altVertrag = await holen("/vertrag-2026-10d.html");
   check(/kein Kreditvermittler/.test(altVertrag) && /archiviert/.test(altVertrag), "Alte Vertragsfassung 2026-10d bleibt unverändert als Archiv (nicht rückwirkend ändern)", "");
   const cfgV = (await json("/api/config")).data;
-  check(cfgV.vertragVersion === "2026-12b" && cfgV.rechtVersion === "2026-12", "Versionen hochgezählt: Vertrag 2026-12b (seit 14.11.2026 mit § 13 Apple-Abo) und Rechtsblatt 2026-12", `${cfgV.vertragVersion}/${cfgV.rechtVersion}`);
+  check(cfgV.vertragVersion === "2026-12c" && cfgV.rechtVersion === "2026-12", "Versionen hochgezählt: Vertrag 2026-12c (seit 15.11.2026 Web-Preis 49,90 € inkl. MwSt.) und Rechtsblatt 2026-12", `${cfgV.vertragVersion}/${cfgV.rechtVersion}`);
   const ratenText = raten.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g, " ").replace(/<[^>]+>/g, " ");
   const kopfDaten = (raten.match(/<title>[\s\S]*?<\/title>/) || [""])[0] + (raten.match(/<meta name="description"[^>]*>/) || [""])[0] + (raten.match(/<script type="application\/ld\+json">[\s\S]*?<\/script>/) || [""])[0];
   check(!/zinsfrei|ohne Schufa|ohne Gebühr|0\s?%|monatlich ab|pro Monat/i.test(ratenText) && !/Raten|Klarna/.test(kopfDaten), "/raten: kein zinsfrei/ohne Schufa/Ratenbeträge; Titel, Meta und Schema ohne Raten/Klarna", "");
@@ -981,13 +981,13 @@ await abschnitt("18 Paket Risikofrei geschlossen (26.10.2026): Neukunden gesperr
     const mailsVor = mails().length;
     for (const [name, extra] of [["paket=risikofrei", { paket: "risikofrei" }], ["modell=provision", { modell: "provision" }], ["paket=start (alter Name)", { paket: "start" }], ["paket=Risikofrei (Schreibweise)", { paket: " Risikofrei " }]]) {
       const r = await post("/api/signup", { ...DATEN("neukunde-rf@betrieb.test", "Neukunde Risikofrei"), ...extra });
-      check(r.status === 410 && r.data.gesperrt === true && /gibt es für neue Anmeldungen nicht mehr/.test(r.data.error || "") && /49 €/.test(r.data.error || ""), `Neuanmeldung ${name}: klare Fehlermeldung (HTTP 410)`, `${r.status} ${(r.data.error || "").slice(0, 70)}`);
+      check(r.status === 410 && r.data.gesperrt === true && /gibt es für neue Anmeldungen nicht mehr/.test(r.data.error || "") && /49,90 € im Monat inkl\. MwSt\./.test(r.data.error || ""), `Neuanmeldung ${name}: klare Fehlermeldung (HTTP 410)`, `${r.status} ${(r.data.error || "").slice(0, 70)}`);
     }
     check((await studios()).length === zuvor && !(await studioPer("neukunde-rf@betrieb.test", 1)), "Gesperrte Anmeldungen legen kein Studio an", `${zuvor} Studios`);
     check(mails().length === mailsVor, "Gesperrte Anmeldungen verschicken keine Mail (weder an Interessent noch Admin)", "");
     const pak = await json("/api/signup?pakete=1"), cfg = await json("/api/config");
     check(JSON.stringify(pak.data.pakete.map((x) => x.id)) === '["monatlich"]' && JSON.stringify(cfg.data.pakete.map((x) => x.id)) === '["monatlich"]', "Paketlisten für die Website: nur Monatlich", pak.data.pakete.map((x) => x.id).join(","));
-    check(cfg.data.monatNetto === 4900 && cfg.data.kaufNetto === 99900 && cfg.data.aufstellerPreisNetto === 2900, "Preise unverändert: Monatlich 49 €, Einmalzahlung 999 €, QR-Aufsteller einzeln 29 € (alles netto)", `${cfg.data.monatNetto}/${cfg.data.kaufNetto}/${cfg.data.aufstellerPreisNetto}`);
+    check(cfg.data.monatNetto === 4193 && cfg.data.kaufNetto === 99900 && cfg.data.aufstellerPreisNetto === 2900, "Preise: Monatlich 41,93 € netto (49,90 € inkl. MwSt., seit 15.11.2026), Einmalzahlung 999 €, QR-Aufsteller einzeln 29 € (alles netto)", `${cfg.data.monatNetto}/${cfg.data.kaufNetto}/${cfg.data.aufstellerPreisNetto}`);
     const mo = await post("/api/signup", { ...DATEN("neu-monatlich@betrieb.test", "Neu Monatlich"), paket: "monatlich" });
     const ein = await post("/api/signup", { ...DATEN("neu-einmal@betrieb.test", "Neu Einmal"), paket: "einmal", zahlart: "rechnung" });
     check(mo.status === 200 && /\/pay\//.test(mo.data.url || "") && ein.status === 410, "Monatlich lässt sich abschließen, Einmalzahlung nicht mehr", `${mo.status} ${ein.status}`);
@@ -1018,7 +1018,7 @@ await abschnitt("18 Paket Risikofrei geschlossen (26.10.2026): Neukunden gesperr
     const lp = await (await fetch(BASE + "/")).text();
     check(/class="knopf" href="\/start\.html"[^>]*>Jetzt starten/.test(lp), "Hero-Knopf: „Jetzt starten“ → /start.html", "");
     const wann = await (await fetch(BASE + "/")).text();
-    check(/49&nbsp;€ netto im Monat/.test(wann) && !/999 €/.test(wann) && /49&nbsp;€ netto im Monat\. Dazu nur Stripe/.test(wann) && /nur für Unternehmer/i.test(wann), "Preise auf der Startseite: 49 € netto im Monat (auch in der Preis-Überschrift), nur für Unternehmer, keine 999 €", "");
+    check(/49,90&nbsp;€ im Monat inkl\. MwSt\./.test(wann) && !/999 €/.test(wann) && /49,90&nbsp;€ im Monat\. Dazu nur Stripe/.test(wann) && /41,93&nbsp;€ netto/.test(wann) && !/58,31|49&nbsp;€ netto/.test(wann) && /nur für Unternehmer/i.test(wann), "Preise auf der Startseite: 49,90 € im Monat inkl. MwSt. (auch in der Preis-Überschrift), klein 41,93 € netto, kein 58,31 €, nur für Unternehmer, keine 999 €", "");
     check(/Achtung! Kreditaufnahme kostet Geld\./.test(wann), "Pflicht-Warnhinweis steht weiter auf der Startseite", "");
     // --- Bestandsstudio läuft unverändert ---
     const pt = await json("/api/portal", {}, best.cookie);
@@ -1128,7 +1128,7 @@ await abschnitt("19 Altstudio stellt um: Zustimmung, 29 €, neues eigenes Konto
   const nach = await detail(a.id);
   const sn = nach.studio;
   check(sn.modell === "kauf" && sn.paket === "monatlich" && sn.monatNetto === 2900 && sn.status === "einrichtung" && sn.stripe.accountId === null && sn.stripe.altKonto?.accountId === altKonto && sn.stripe.subscriptionId, "Nach Zahlung: Monatlich 29 €, altes Konto vermerkt, neues Konto fehlt noch", JSON.stringify(sn.stripe.altKonto));
-  check(sn.vertrag.version === "2026-12b" && sn.vertrag.kmu === true && sn.vertragAlt?.length === 1, "Neuer Vertrag gespeichert, alter bleibt nachvollziehbar", sn.vertrag.version);
+  check(sn.vertrag.version === "2026-12c" && sn.vertrag.monatNetto === 2900 && sn.vertrag.kmu === true && sn.vertragAlt?.length === 1, "Neuer Vertrag gespeichert (Sonderpreis 29 € bleibt), alter bleibt nachvollziehbar", sn.vertrag.version);
   check(mailsAn("umstellung@betrieb.test").some((m) => /Wechsel ist bestätigt/.test(m.subject)), "Bestätigung per Mail", "");
 
   // Altes Konto meldet sich: darf den Status nicht verfälschen
@@ -1173,6 +1173,58 @@ await abschnitt("19 Altstudio stellt um: Zustimmung, 29 €, neues eigenes Konto
   check(ks.gesendet === true && kd.status === "gekuendigt" && kd.kuendigung.durchAnbieter === true && zurueck.status === 409 && mailsAn("kuendig@betrieb.test").some((m) => /Kündigung deines/.test(m.subject)), "Kündigung gesendet, Studio kann sie nicht selbst zurücknehmen", `${kd.status} ${zurueck.status}`);
   const { anbieterKuendigungZum } = await import("../netlify/functions/_lib/domain.mjs");
   check(anbieterKuendigungZum(new Date("2026-11-30T10:00:00Z")).startsWith("2026-12-31") && anbieterKuendigungZum(new Date("2026-11-02T10:00:00Z")).startsWith("2026-12-31") && anbieterKuendigungZum(new Date("2026-12-01T10:00:00Z")).startsWith("2027-01-31"), "Frist: Kündigung bis 30.11. wirkt zum 31.12., ab 01.12. zum 31.01.", "");
+});
+
+// =====================================================================================================
+await abschnitt("20 Preis seit 15.11.2026: 49,90 € inkl. MwSt. (41,93 € netto), ohne Gratiszeit; Bestandskunden behalten ihren Preis", async () => {
+  const cfg = (await json("/api/config")).data;
+  check(cfg.monatNetto === 4193 && cfg.ustProzent === 19, "Konfiguration: 4193 Cent netto, 19 % USt.", `${cfg.monatNetto}/${cfg.ustProzent}`);
+  // Neuer Web-Abschluss Monatlich: Stripe-Checkout 4193 netto + exklusiver Steuersatz 19 % → 4990 brutto, keine Gratiszeit
+  const a = await post("/api/signup", { ...DATEN("preis-4990@betrieb.test", "Preis Studio"), paket: "monatlich" });
+  const sid = new URL(a.data.url || "http://x/").pathname.split("/").pop();
+  const cs = (await sessions()).find((x) => x.id === sid);
+  const li = cs?.line_items?.[0] || {};
+  const netto = Number(li.price_data?.unit_amount), steuer = Math.round(netto * 19 / 100);
+  check(a.status === 200 && cs?.mode === "subscription" && netto === 4193 && li.price_data?.recurring?.interval === "month", "Checkout: Abo-Modus, 4193 Cent netto im Monat", `${cs?.mode} ${netto}`);
+  check(Array.isArray(li.tax_rates) && li.tax_rates.length === 1 && netto + steuer === 4990 && Number(cs.amount_total) === 4990, "Brutto genau 49,90 € (4193 + 797 USt. = 4990, wie Stripe mit exklusivem Satz rechnet)", `${netto}+${steuer}=${netto + steuer} sim=${cs?.amount_total}`);
+  const sd = cs?.subscription_data || {};
+  check(sd.trial_period_days === undefined && sd.trial_end === undefined && cs?.trial_period_days === undefined && cs?.trial_end === undefined && !/trial/.test(JSON.stringify(cs || {})), "Keine Gratiszeit auf der Website (kein trial_period_days/trial_end)", JSON.stringify(sd).slice(0, 90));
+  const st = (await detail(cs?.client_reference_id)).studio || {};
+  check(st.monatNetto === 4193 && st.vertrag?.monatNetto === 4193 && st.vertrag?.version === "2026-12c", "Studio speichert seinen Preis (4193) und die Vertragsfassung 2026-12c", `${st.monatNetto}/${st.vertrag?.monatNetto}/${st.vertrag?.version}`);
+  const mo = mailAnMit("monatlich@betrieb.test", /Willkommen/) || {};
+  check(/49,90 € im Monat inkl\. MwSt\. \(41,93 € netto\)/.test((mo.html || "") + (mo.text || "")) && !/58,31|49,00 € netto/.test((mo.html || "") + (mo.text || "")), "Willkommens-Mail (neues Studio): 49,90 € im Monat inkl. MwSt. (41,93 € netto)", (mo.subject || "").slice(0, 60));
+
+  // Bestandskunde mit 49 € netto: Preis bleibt in Daten, Mails und Stripe-Abo unverändert
+  const storeMod = await import("../netlify/functions/_lib/store.mjs");
+  const { mails: M } = await import("../netlify/functions/_lib/emails.mjs");
+  const subsVor = JSON.stringify((await mockState()).subscriptions || {});
+  const bestand = { id: "st_bestand_49", email: "bestand-49@betrieb.test", firma: "Bestand 49", inhaber: "Alex Muster", status: "live", paket: "monatlich", modell: "kauf", zahlart: "abo", monatNetto: 4900, createdAt: "2026-10-20T10:00:00Z", slug: "bestand-49",
+    vertrag: { version: "2026-12", monatNetto: 4900, paket: "monatlich" }, stripe: { customerId: "cus_bestand", subscriptionId: "sub_bestand" } };
+  await storeMod.saveStudio(bestand);
+  const bd = (await detail(bestand.id)).studio || {};
+  check(bd.monatNetto === 4900 && bd.vertrag?.monatNetto === 4900 && bd.vertrag?.version === "2026-12", "Bestandsstudio: monatNetto 4900 und alte Vertragsfassung bleiben", `${bd.monatNetto}/${bd.vertrag?.version}`);
+  const m1 = M.aboGestartet(bestand, { betragCent: 5831 }), t1 = m1.html + m1.text;
+  check(/58,31 € im Monat inkl\. MwSt\. \(49,00 € netto\)/.test(t1) && !/41,93|49,90/.test(t1), "Bestandsstudio: Mail nennt weiter seinen Preis (49,00 € netto), nicht den neuen", "");
+  const m2 = M.umstellungAngebot({ ...bestand, modell: "provision" }, { monatNetto: 2900, antwortBis: "2026-11-30", loginUrl: "x" });
+  check(/29,00 € netto im Monat/.test(m2.html) && !/49,90/.test(m2.html), "Sonderpreis 29 € (Altstudio) bleibt in der Mail", "");
+  check(JSON.stringify((await mockState()).subscriptions || {}) === subsVor, "Keine Änderung an bestehenden Stripe-Abos", "");
+
+  // Verträge: aktuelle Fassung 41,93 € netto (49,90 € inkl. USt.), Archive fest auf 49 €
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const pg = await ctx.newPage();
+  const text = async (u) => { await pg.goto(BASE + u, { waitUntil: "networkidle" }); await wait(300); return pg.evaluate(() => document.body.innerText); };
+  const v = await text("/vertrag.html");
+  check(/41,93 € netto zzgl\. Umsatzsteuer \(bei 19 % Umsatzsteuer 49,90 €\)/.test(v) && /41,93 € netto zzgl\. USt\. \(49,90 € inkl\. USt\.\)/.test(v) && /Fassung 2026-12c/.test(v), "vertrag.html: 41,93 € netto (49,90 € inkl. USt.), Fassung 2026-12c", "");
+  for (const [u, n] of [["/vertrag-2026-12b.html", "2026-12b"], ["/vertrag-2026-12.html", "2026-12"], ["/vertrag-2026-11.html", "2026-11"], ["/vertrag-2026-10d.html", "2026-10d"]]) {
+    const t = await text(u);
+    check(/49 € netto zzgl\. U/.test(t) && !/41,93|49,90/.test(t), `Archiv ${n}: Monatspreis fest 49 € netto, nicht der neue Preis`, "");
+  }
+  const ar = await fetch(BASE + "/vertrag-2026-12b.html");
+  check(/noindex/.test(await ar.text()), "Archiv 2026-12b: noindex", "");
+  // Abschluss-Seite: Preis mit Cent, nie gerundet auf „42 €“/„50 €“
+  const sv = await text("/start.html");
+  check(/49,90 €/.test(sv) && /41,93 € netto/.test(sv) && !/\b42 €|\b50 €|58,31/.test(sv), "start.html: 49,90 € im Monat inkl. MwSt., klein 41,93 € netto (keine Rundung)", "");
+  await ctx.close();
 });
 
 await browser.close();

@@ -65,7 +65,7 @@ export const artikel = [
     faq: [
       ["Trägt mein Studio das Risiko, wenn ein Kunde seine Raten nicht zahlt?", "Nein, wenn die Ratenzahlung über einen Anbieter wie Klarna läuft. Der Kunde schließt den Vertrag mit dem Anbieter, dein Studio bekommt den Betrag nach Freigabe ausgezahlt. Das Ausfallrisiko der Raten liegt beim Anbieter."],
       ["Brauche ich eine Erlaubnis als Kreditvermittler?", "Nicht, solange du keine Kredite vermittelst oder berätst, sondern nur eine Zahlungsart anbietest, deren Bedingungen der Anbieter festlegt. Wichtig: keine eigenen Ratenpläne versprechen, keine Zinsen oder Raten zusagen und den Kunden für die Bedingungen auf den Checkout verweisen."],
-      ["Was kostet Ratenzahlung fürs Studio?", "Bei Tattoofin zahlst du 49 € netto im Monat oder einmalig 999 € netto (inklusive QR-Aufsteller aus Holz), ohne Provision auf deine Zahlungen. Dazu kommen nur die Gebühren des Zahlungsanbieters, die du direkt an Stripe zahlst."],
+      ["Was kostet Ratenzahlung fürs Studio?", "Bei Tattoofin zahlst du 49,90 € im Monat inkl. MwSt. oder einmalig 999 € netto (inklusive QR-Aufsteller aus Holz), ohne Provision auf deine Zahlungen. Dazu kommen nur die Gebühren des Zahlungsanbieters, die du direkt an Stripe zahlst."],
       ["Darf ich für Ratenzahlung einen Aufpreis verlangen?", "Nein. Für die Nutzung bestimmter Zahlungsarten darfst du von Verbrauchern grundsätzlich keinen Aufschlag verlangen, und auch die Bedingungen der Anbieter verbieten das in der Regel."],
       ["Was ändert sich ab 20.11.2026?", "Mit der neuen EU-Verbraucherkreditrichtlinie fallen auch kurze Ratenkäufe unter das Verbraucherkreditrecht. Die Pflichten (Prüfung, Informationen) liegen beim Anbieter. Für Studios wichtig: Werbung mit Raten braucht den Hinweis „Achtung! Kreditaufnahme kostet Geld.“ und konkrete Zahlen nur mit Pflichtangaben."],
     ],
@@ -92,7 +92,7 @@ export const artikel = [
 <h2 id="kosten">Was es kostet</h2>
 <table>
 <tr><th></th><th>Monatlich</th><th>Einmalzahlung</th></tr>
-<tr><td>An Tattoofin</td><td>49 € netto im Monat</td><td>999 € netto einmalig</td></tr>
+<tr><td>An Tattoofin</td><td>49,90 € im Monat inkl. MwSt.</td><td>999 € netto einmalig</td></tr>
 <tr><td>Zahlungsgebühr</td><td colspan="2">direkt an Stripe, ca. 1,5–3 % je nach Zahlart (z. B. Karte ab 1,5 % + 0,25 €, Klarna ab 2,99 % + 0,35 €)</td></tr>
 <tr><td>Beispiel 1.000 €</td><td colspan="2">ca. 970–985 € an dich, 0 % Provision</td></tr>
 <tr><td>QR-Aufsteller aus Holz</td><td>–</td><td>inklusive</td><td>inklusive</td></tr>
@@ -202,7 +202,7 @@ export const artikel = [
 
 <h2 id="kosten">Kosten</h2>
 <ul>
-<li><b>Tattoofin:</b> keine Provision auf deine Zahlungen. Du zahlst 49 € netto im Monat oder einmalig 999 € netto, die Klarna-Gebühr (über Stripe ab 2,99 % + 0,35 €) zahlst du direkt an Stripe.</li>
+<li><b>Tattoofin:</b> keine Provision auf deine Zahlungen. Du zahlst 49,90 € im Monat inkl. MwSt. oder einmalig 999 € netto, die Klarna-Gebühr (über Stripe ab 2,99 % + 0,35 €) zahlst du direkt an Stripe.</li>
 </ul>
 
 <h2 id="regeln">Regeln, die du kennen musst</h2>

@@ -49,7 +49,7 @@ Garantie-Erstattung · Abschluss abgebrochen · Rückbuchung (Belege) · Rückbu
 
 | Thema | Kurz |
 |---|---|
-| Pakete | `risikofrei` (10 % inkl. Zahlungsgebühr, modell provision) · `monatlich` (49 € netto Abo auf dem DSX-Konto, Stripe Billing, eigenes Standard-Konto, 0 %) · `einmal` (999 € netto, eigenes Standard-Konto, 0 %, Garantie 30 Tage, Nutzungszusage 5 Jahre). Alte Links `?modell=provision|kauf` funktionieren. Aktionscode RATENJA aus. Vertrag 2026-10c, alte Fassung `/vertrag-2026-10b.html`. |
+| Pakete | `risikofrei` (10 % inkl. Zahlungsgebühr, modell provision) · `monatlich` (seit 15.11.2026 49,90 € inkl. MwSt. = 4193 Cent netto + 19 % USt., ohne Gratiszeit, `MONAT_NETTO_CENT`; Bestandskunden behalten ihren Preis in `s.monatNetto`; Abo auf dem DSX-Konto, Stripe Billing, eigenes Standard-Konto, 0 %) · `einmal` (999 € netto, eigenes Standard-Konto, 0 %, Garantie 30 Tage, Nutzungszusage 5 Jahre). Alte Links `?modell=provision|kauf` funktionieren. Aktionscode RATENJA aus. Vertrag 2026-10c, alte Fassung `/vertrag-2026-10b.html`. |
 | QR-Aufsteller | inklusive bei Monatlich/Einmalzahlung (`AUFSTELLER_PAKETE`), Admin-Mail mit signiertem Link auf `/aufsteller.html` (Gravurdatei PDF/SVG/PNG). |
 | Eingebettete Einrichtung | mit `STRIPE_PUBLISHABLE_KEY` im Dashboard (`/app.html#einrichtung`); `TF_EINBETTEN=aus` = Notlösung Weiterleitung. |
 | Bezahlfeld für Endkunden | nur mit `TF_BEZAHLFELD=an` UND den Webhook-Ereignissen `payment_intent.succeeded`, `payment_intent.processing`, `payment_intent.payment_failed` an beiden Endpoints. Sonst Stripe-Checkout (Standard). |
@@ -180,7 +180,7 @@ Das Stripe-Konto für das Geld der Kunden richtet das Studio danach wie gewohnt 
   Erstattung bei Apple“, Admin-Mail. Nur Kündigung (ohne Löschung): bezahlter Zeitraum bleibt nutzbar (wie bisher).
 - Mails an App-Studios verlinken Vertrag und AVV als App-Fassung (`?app=1`). Body der App-/Apple-Endpunkte höchstens 64 KB (413); ungültige
   Benachrichtigungen höchstens 10 Log-Einträge je IP und Stunde.
-- App-Entwürfe ohne Kauf: keine Erinnerungs-Mail, nach 30 Tagen gelöscht. Vertrag 2026-12b mit § 13 (App-Fassung `?app=1` ohne Web-Preis), Archiv `vertrag-2026-12.html`.
+- App-Entwürfe ohne Kauf: keine Erinnerungs-Mail, nach 30 Tagen gelöscht. Vertrag 2026-12b mit § 13 (App-Fassung `?app=1` ohne Web-Preis), Archiv `vertrag-2026-12.html`. Seit 15.11.2026 Fassung 2026-12c (Web-Preis 41,93 € netto = 49,90 € inkl. USt.), Archiv `vertrag-2026-12b.html`; die Archive zeigen den Monatspreis fest (49 €), nicht mehr aus `/api/config`.
 
 | Umgebungsvariable | Wirkung |
 |---|---|

@@ -11,7 +11,7 @@
   var ALIAS = { kauf: "monatlich", monatlich: "monatlich", einmal: "monatlich", einmalzahlung: "monatlich", profi: "monatlich" };
   var GESCHLOSSEN = { provision: 1, risikofrei: 1, start: 1 };
   var NAMEN = { monatlich: "Monatlich", einmal: "Einmalzahlung" };
-  var HINWEIS_RISIKOFREI = "Das Paket Risikofrei gibt es für neue Anmeldungen nicht mehr. Tattoofin kostet jetzt einheitlich 49 € netto im Monat.";
+  var HINWEIS_RISIKOFREI = "Das Paket Risikofrei gibt es für neue Anmeldungen nicht mehr. Tattoofin kostet jetzt 49,90 € im Monat inkl. MwSt.";
   function paket() { var r = f.querySelector("input[name=paket]:checked"); return r ? r.value : ""; }
   function modell() { return paket() ? "kauf" : ""; }
   function zahlart() { var r = f.querySelector("input[name=zahlart]:checked"); return r ? r.value : "sofort"; }
@@ -50,11 +50,11 @@
       sub.textContent = "Einladung annehmen";
       kurz = ["Keine Einrichtungsgebühr, keine Grundgebühr, keine Provision.", "Du zahlst nur die normalen Gebühren von Stripe bzw. Klarna, direkt an Stripe.", "Die Zahlungen deiner Kunden laufen auf das Konto deines Studios.", "Wir richten alles mit dir ein."];
     } else if (p === "monatlich") {
-      html = "<p><b>Paket Monatlich</b> · " + TF.esc(TF.euro(C.monatNetto)) + " netto im Monat zzgl. " + C.ustProzent + " % USt. (" + TF.esc(TF.euro(Math.round(C.monatNetto * (100 + C.ustProzent) / 100), true)) + " brutto)</p>" +
+      html = "<p><b>Paket Monatlich</b> · " + TF.esc(TF.monatPreis(C.monatNetto, C.ustProzent)) + "</p>" +
         "<p>Im nächsten Schritt startest du das Abo sicher über Stripe (z. B. per Karte). Die Rechnung kommt jeden Monat automatisch per E-Mail. Danach richtest du in deinem Studio-Bereich das Zahlungskonto deines Studios ein.</p>";
       sub.textContent = "Zahlungspflichtig bestellen & Abo starten";
       kurz = [
-        TF.euro(C.monatNetto) + " netto im Monat, keine Einrichtungsgebühr.",
+        TF.monatPreis(C.monatNetto, C.ustProzent) + ", keine Einrichtungsgebühr.",
         "Danach nur die Zahlungsgebühren von Stripe (je nach Zahlart ca. 1,5–3 % plus fester Betrag je Zahlung, laut Preisliste von Stripe), die du direkt an Stripe zahlst. 0 % Tattoofin-Provision.",
         "Alles läuft über dein eigenes Zahlungskonto bei Stripe. Rückbuchungen und ihre Gebühren laufen direkt über dieses Konto.",
         "Inklusive QR-Aufsteller aus Holz für deine Theke (Wert 29 €) und digitalem QR-Code.",
@@ -150,7 +150,7 @@
         firma: c.firma, adresse: c.adresse,
         vertragVersion: c.vertragVersion, gerichtsstand: c.gerichtsstand, geschaeftsfuehrer: c.geschaeftsfuehrer, registergericht: c.registergericht, ustid: c.ustid,
         email: c.email, marke: c.marke, produkt: c.produkt, kuendigungProvision: "jederzeit zum Monatsende", websiteUrl: location.origin, setupSupportTage: c.setupSupportTage,
-        monatPreis: TF.euro(c.monatNetto), nutzungJahre: c.nutzungJahre, aufstellerPreis: TF.euro(c.aufstellerPreisNetto || 2900) };
+        monatPreis: TF.euro(c.monatNetto), monatPreisBrutto: TF.euro(Math.round(c.monatNetto * (100 + c.ustProzent) / 100), true), nutzungJahre: c.nutzungJahre, aufstellerPreis: TF.euro(c.aufstellerPreisNetto || 2900) };
       box.querySelectorAll("[data-cfg]").forEach(function (el) { if (map[el.dataset.cfg] !== undefined) el.textContent = map[el.dataset.cfg]; });
     });
   });

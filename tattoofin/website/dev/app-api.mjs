@@ -668,7 +668,7 @@ try {
   check(sg.url === `${BASE}/assets/app/hilfe/so-gehts-9x16.mp4` && sg.poster === `${BASE}/assets/app/hilfe/so-gehts-9x16.jpg` && sg.quer?.url.endsWith("so-gehts-16x9.mp4") && sg.dauer === 147.73 && sg.kapitel?.length === 9 && !sg.kapitel.some((k) => /Startbildschirm/.test(k.name)) && sg.fussnote === FUSSNOTE && sg.ohneKlarna === null && /Stimme mit KI erstellt/.test(sg.hinweis), "So geht's: Video 9:16 + 16:9, 9 Kapitel ohne „App auf den Startbildschirm“, Fußnote + KI-Hinweis", JSON.stringify(sg.kapitel));
   check(sgWeb.length === 10 && JSON.stringify(sgWeb.filter((k) => k[1] !== "App auf den Startbildschirm")) === JSON.stringify(sg.kapitel.map((k) => [k.ab, k.name])) && sgWeb.some((k) => k[0] === 120.8 && k[1] === "App auf den Startbildschirm"), "Kapitel-Zeiten und -Namen wortgleich mit so-gehts.js (Dashboard)", JSON.stringify(sgWeb));
   check(wd.hilfe?.whatsapp === "https://wa.me/491624502375" && /unserem Team/.test(wd.hilfe.text) && !/Domenic/.test(w.text), "Hilfe per WhatsApp an „unser Team“, nie ein Name");
-  check(!/49[,.]00|49 €|netto|monatNetto|paketName|"Paket|preisNetto|tattoofin\.de\/(studios|start)|signup/i.test(w.text), "Keine Paket-, Abo- oder Website-Preise, kein Link zur Anmeldung in der Antwort (Apple 3.1.1)");
+  check(!/49[,.]00|49 €|41[,.]93|49,90|netto|monatNetto|paketName|"Paket|preisNetto|tattoofin\.de\/(studios|start)|signup/i.test(w.text), "Keine Paket-, Abo- oder Website-Preise, kein Link zur Anmeldung in der Antwort (Apple 3.1.1)");
   const wTeam = await call("GET", "/api/app/werbung", { token: tDteam });
   check(wTeam.status === 200 && wTeam.text === w.text, "Team-Adresse bekommt dieselbe Werbung (darf posten)");
   check((await call("GET", "/api/app/werbung")).status === 401 && (await call("GET", "/api/app/werbung", { cookie: D.cookie })).status === 401 && (await call("POST", "/api/app/werbung", { token: tD })).status === 404, "Ohne App-Token 401 (auch mit Cookie), andere Methode 404");
@@ -732,7 +732,7 @@ try {
   const a0 = await call("GET", "/api/app/aufsteller", { token: tD });
   const A0 = a0.data.aufsteller || {};
   check(a0.status === 200 && A0.artikel === "QR-Aufsteller aus Holz" && A0.kostenlos === true && A0.preis === null && A0.preisText === "Für dich kostenlos" && A0.knopf === "Kostenlos bestellen" && A0.status === "offen" && A0.holz === "hell" && A0.variante === "name" && A0.zahlseite === zsD && A0.klarna === true && A0.fussnote === FUSSNOTE && A0.logo === null && /Ink Studio D UG/.test(A0.lieferadresse), "Studio mit enthaltenem Aufsteller: kostenlos, Status offen, Daten für die Vorschau", a0.text.slice(0, 200));
-  check(!/Paket|netto|49 €|49,00|Monatlich|signup|studios\.html/.test(a0.text), "Antwort ohne Paket, ohne netto, ohne Website", a0.text.slice(0, 160));
+  check(!/Paket|netto|49 €|49,00|41[,.]93|49,90|Monatlich|signup|studios\.html/.test(a0.text), "Antwort ohne Paket, ohne netto, ohne Website", a0.text.slice(0, 160));
   const ohneLogo = await call("POST", "/api/portal/aufsteller", { token: tD, body: { holz: "dunkel", variante: "logo" } });
   check(ohneLogo.status === 400 && ohneLogo.data.error === "Bitte wähle zuerst dein Logo aus oder nimm „Mit Studioname“.", "Variante Logo ohne Logo → 400 mit App-Text", ohneLogo.text);
   const mitLogo = await call("POST", "/api/portal/aufsteller", { token: tD, body: { holz: "dunkel", variante: "logo", logo: LOGO, logoW: 400, logoH: 200 } });
@@ -893,7 +893,7 @@ try {
   const e1 = await reg(REG(rt));
   const s1 = blob("studio/" + e1.data.entwurfId);
   check(e1.status === 200 && /^st_/.test(e1.data.entwurfId) && e1.data.produktId === "de.tattoofin.app.abo.monatlich" && e1.data.email === "mia@neu-app.test" && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(e1.data.appAccountToken) && e1.data.entwurfToken, "Gültig → { entwurfId, entwurfToken, appAccountToken (UUID v4), produktId, email }", e1.text);
-  check(s1?.status === "entwurf" && s1.paket === "app" && s1.abrechnung === "apple" && s1.zahlart === "apple" && s1.modell === "kauf" && s1.appEntwurf?.appAccountToken === e1.data.appAccountToken && s1.vertrag?.kmu && s1.vertrag.version === "2026-12b" && s1.vertrag.quelle === "app" && s1.vertrag.aufsteller === false && blob("idx/appentwurf/" + e1.data.appAccountToken) === s1.id, "Entwurf: status entwurf, paket app, abrechnung apple, Vertrag 2026-12b mit KMU, idx/appentwurf", JSON.stringify(s1)?.slice(0, 200));
+  check(s1?.status === "entwurf" && s1.paket === "app" && s1.abrechnung === "apple" && s1.zahlart === "apple" && s1.modell === "kauf" && s1.appEntwurf?.appAccountToken === e1.data.appAccountToken && s1.vertrag?.kmu && s1.vertrag.version === "2026-12c" && s1.vertrag.quelle === "app" && s1.vertrag.aufsteller === false && blob("idx/appentwurf/" + e1.data.appAccountToken) === s1.id, "Entwurf: status entwurf, paket app, abrechnung apple, Vertrag 2026-12c mit KMU, idx/appentwurf", JSON.stringify(s1)?.slice(0, 200));
   check(Object.keys((await mock("state")).customers || {}).length === kundenVorher && !s1.stripe?.customerId && mailsAn("admin@app.test").length === adminVorher && mailsAn("mia@neu-app.test").filter((m) => !/Tattoofin-Code$/.test(m.subject)).length === 0, "Kein Stripe-Kunde, keine Admin-Mail, keine Mail an das Studio");
   const e1b = await reg(REG(rt, { firma: "Ink App Studio Neu" }));
   check(e1b.data.entwurfId === e1.data.entwurfId && e1b.data.appAccountToken === e1.data.appAccountToken && blob("studio/" + e1.data.entwurfId).firma === "Ink App Studio Neu", "Zweiter Aufruf (Korrektur): gleicher Entwurf, gleiche UUID", e1b.text);
@@ -1304,7 +1304,7 @@ try {
   check(sApp.status === 400 && /Bitte ausfüllen: Paket/.test(sApp.data.error), "/api/signup mit paket „app“ → 400 „Paket“", sApp.text);
   const pakete = await call("GET", "/api/signup?pakete=1");
   const cfg = await call("GET", "/api/config");
-  check(!pakete.data.pakete.some((x) => x.id === "app") && !cfg.data.pakete.some((x) => x.id === "app") && cfg.data.vertragVersion === "2026-12b", "GET /api/signup?pakete=1 und /api/config ohne „app“, Vertrag 2026-12b", JSON.stringify(pakete.data.pakete.map((x) => x.id)));
+  check(!pakete.data.pakete.some((x) => x.id === "app") && !cfg.data.pakete.some((x) => x.id === "app") && cfg.data.vertragVersion === "2026-12c", "GET /api/signup?pakete=1 und /api/config ohne „app“, Vertrag 2026-12c", JSON.stringify(pakete.data.pakete.map((x) => x.id)));
   const W = await entwurf("wanda@neu-app.test", "Wechsel Studio");
   const sWeb = await call("POST", "/api/signup", { body: { ...DATEN("wanda@neu-app.test", "Fremd Studio"), paket: "monatlich" } });
   const sW = blob("studio/" + W.entwurfId);
@@ -1366,13 +1366,15 @@ try {
   check(appleMod.APPLE_ROOT_G3_FP === "63:34:3A:BF:B8:9A:6A:03:EB:B5:7E:9B:3F:5F:A7:BE:7C:4F:5C:75:6F:30:17:B3:A8:C4:88:C3:65:3E:91:79" && new crypto.X509Certificate(appleMod.APPLE_ROOT_G3_PEM).subject.includes("Apple Root CA - G3"), "Apple Root CA - G3 fest eingebaut, Fingerabdruck stimmt");
   const vertragHtml = await (await fetch(`${BASE}/vertrag.html?app=1`)).text();
   const appText = ohneNurWeb(vertragHtml);
-  check((vertragHtml.match(/data-nur-web/g) || []).length >= 5 && /data-cfg="monatPreis"/.test(vertragHtml) && !/data-cfg="monatPreis"/.test(appText) && !/per Stripe eingezogen/.test(appText) && !/graviertem QR-Code/.test(appText) && !/die Zahlung läuft über Stripe/.test(appText), "vertrag.html in der App-Fassung: ohne Web-Preis, ohne „per Stripe eingezogen“, ohne Aufsteller-Zeile (data-nur-web)");
-  check(/Preis wie beim Kauf im App Store angezeigt \(inkl\. USt\.\), Abrechnung über Apple/.test(appText) && /§ 13 Abschluss über die Tattoofin-App \(Apple\)/.test(vertragHtml) && /24 Stunden vor Ablauf/.test(vertragHtml) && /\[\?&\]app=1/.test(vertragHtml) && /Fassung 2026-12b/.test(vertragHtml), "vertrag.html: § 13 (Apple-Abo, 24 Stunden, Erstattung über Apple), App-Text data-nur-app, Fassung 2026-12b");
+  check((vertragHtml.match(/data-nur-web/g) || []).length >= 5 && /data-cfg="monatPreis"/.test(vertragHtml) && !/data-cfg="monatPreis(Brutto)?"/.test(appText) && !/41,93|49,90/.test(appText) && !/per Stripe eingezogen/.test(appText) && !/graviertem QR-Code/.test(appText) && !/die Zahlung läuft über Stripe/.test(appText), "vertrag.html in der App-Fassung: ohne Web-Preis, ohne „per Stripe eingezogen“, ohne Aufsteller-Zeile (data-nur-web)");
+  check(/Preis wie beim Kauf im App Store angezeigt \(inkl\. USt\.\), Abrechnung über Apple/.test(appText) && /§ 13 Abschluss über die Tattoofin-App \(Apple\)/.test(vertragHtml) && /24 Stunden vor Ablauf/.test(vertragHtml) && /\[\?&\]app=1/.test(vertragHtml) && /Fassung 2026-12c/.test(vertragHtml), "vertrag.html: § 13 (Apple-Abo, 24 Stunden, Erstattung über Apple), App-Text data-nur-app, Fassung 2026-12c");
   const p6 = (vertragHtml.split("<h2>§ 6")[1] || "").split("<h2>")[0];
   check((p6.match(/Achtung! Kreditaufnahme kostet Geld\./g) || []).length === 2 && /Verkäufer des In-App-Abos ist Apple \(Apple Distribution International Ltd\./.test(vertragHtml) && /keine eigene Rechnung/.test(vertragHtml), "vertrag.html: § 6 mit „Achtung! Kreditaufnahme kostet Geld.“ bei Raten/Kredit, § 13 nennt Apple als Verkäufer, keine eigene Rechnung");
   const archiv = await fetch(`${BASE}/vertrag-2026-12.html`);
   const archivText = await archiv.text();
   check(archiv.status === 200 && /noindex/.test(archivText) && /Archivfassung 2026-12/.test(archivText) && !/§ 13/.test(archivText), "Archiv vertrag-2026-12.html (noindex, ohne § 13)");
+  { const a12b = await fetch(`${BASE}/vertrag-2026-12b.html`), t12b = await a12b.text();
+    check(a12b.status === 200 && /noindex/.test(t12b) && /Archivfassung 2026-12b/.test(t12b) && /§ 13 Abschluss über die Tattoofin-App/.test(t12b) && /49 € netto zzgl\. Umsatzsteuer/.test(t12b) && !/data-cfg="monatPreis/.test(t12b), "Archiv vertrag-2026-12b.html (noindex, mit § 13, Monatspreis fest 49 € netto)"); }
   const avvHtml = await (await fetch(`${BASE}/avv.html?app=1`)).text();
   check(/Apple Distribution International Ltd\.[^<]*<\/td><td>Zustellung von Push-Mitteilungen/.test(avvHtml) && /Stand 14\.11\.2026/.test(avvHtml), "avv.html Anlage 3: Apple (Push-Mitteilungen an die App) als Unterauftragsverarbeiter, Stand 14.11.2026");
   const dsHtml = await (await fetch(`${BASE}/datenschutz.html`)).text();

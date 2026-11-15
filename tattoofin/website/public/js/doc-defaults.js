@@ -26,10 +26,11 @@ window.CFG = {
 
   // Drei Pakete (seit 18.10.2026). Das Studio wählt EINES:
   //  Risikofrei (Modell B): 10 % vom Zahlbetrag jeder Zahlung, alles inklusive (Zahlungsgebühren + USt.), monatlich kündbar
-  //  Monatlich (Modell A): 49 € netto im Monat, eigenes Stripe-Konto, Zahlungsgebühren direkt an Stripe, inkl. QR-Aufsteller
+  //  Monatlich (Modell A): 49,90 € im Monat inkl. USt. (41,93 € netto, seit 15.11.2026; vorher 49 € netto), eigenes Stripe-Konto, Zahlungsgebühren direkt an Stripe, inkl. QR-Aufsteller
   //  Einmalzahlung (Modell A): einmalig 999 € netto, danach nur Zahlungsgebühren an Stripe, inkl. QR-Aufsteller, Nutzungszusage 5 Jahre
   kaufPreis: 999,                 // Einmalzahlung
-  monatPreis: 49,                 // Monatlich
+  monatPreis: 41.93,              // Monatlich, netto
+  monatPreisBrutto: 49.9,         // Monatlich, inkl. 19 % USt.
   nutzungJahre: 5,
   // Nur noch für die alten Mailing-Vorlagen (Postkarte, Brief) – Aktion RATENJA ist seit 18.10.2026 abgeschaltet
   kaufPreisAlt: 1499,
