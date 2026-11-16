@@ -1308,10 +1308,13 @@ await abschnitt("19 Altstudio stellt um: Zustimmung, 29 €, neues eigenes Konto
   // Zweite Mail „Jetzt upgraden“ (Domenic 17.11.2026): Vorschau ohne Versand, Inhalt, Knopf = Login-Link direkt in den Studio-Bereich
   const up = await admin(`studio/${a.id}/umstellung-upgrade`, { body: {} });
   check(up.ok && up.gesendet === false && mailsAn("umstellung@betrieb.test").length === mailsVor && (up.html.match(/>Jetzt upgraden</g) || []).length === 2
-    && /29,00 € netto im Monat<\/b> \(34,51 € inkl\. 19 % USt\.\)/.test(up.html) && /41,93 € netto \(49,90 € inkl\. USt\.\)/.test(up.html)
+    && /34,51 € im Monat<\/b> inkl\. 19 % USt\. \(29,00 € netto\)/.test(up.html) && /Neue Studios zahlen.*49,90 € im Monat inkl\. USt\./.test(up.html) && !/41,93/.test(up.html) && /iPhone-App/.test(up.html)
     && /nur noch mit Karte, Apple Pay und Google Pay, ohne Klarna/.test(up.html) && /Achtung! Kreditaufnahme kostet Geld/.test(up.html) && /Verbraucherkrediten/.test(up.html) && !/paypal|sofort/i.test(up.html)
-    && /Dein Bestandskunden-Preis: 29,00 € netto im Monat/.test(up.text) && /Jetzt upgraden: http/.test(up.text),
+    && /Dein Bestandskunden-Preis: 34,51 € im Monat inkl\. 19 % USt\. \(29,00 € netto\)/.test(up.text) && /Jetzt upgraden: http/.test(up.text),
     "Upgrade-Mail: nur Vorschau ohne senden:true, Preis netto + brutto, Vergleich neue Studios, ohne Upgrade nur Karte, Pflichtsatz, Knopf 2×, Klartext-Fassung", up.betreff);
+  // Preis „29 € brutto“ (Domenic 17.11.2026): 2437 Cent netto → 29,00 € inkl. USt.
+  { const { mails } = await import("../netlify/functions/_lib/emails.mjs"); const m29 = mails.umstellungUpgrade({ firma: "X", inhaber: "Alex" }, { monatNetto: 2437, loginUrl: "https://x.test/a" });
+    check(/29,00 € im Monat<\/b> inkl\. 19 % USt\. \(24,37 € netto\)/.test(m29.html) && Math.round(2437 * 1.19) === 2900, "Bestandskunden-Preis 29 € brutto = 24,37 € netto (2437 × 1,19 = 29,00 €)", ""); }
   const upLink = ((up.html.match(/href="([^"]*\/api\/auth\?token=[^"]+)"/) || [])[1] || "").replace(/&amp;/g, "&");
   const upU = new URL(upLink);
   const upLogin = await fetch(BASE + "/api/auth", { method: "POST", redirect: "manual", headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ token: upU.searchParams.get("token"), next: upU.searchParams.get("next") }) });
@@ -1400,7 +1403,7 @@ await abschnitt("19b Sonderpreis 19 € brutto (Antisocial, Domenic 17.11.2026):
   check(ang.ok && zu.status === 200 && (await detail(a.id)).studio.modell === "provision", "Zustimmung zu 15,97 € netto, noch nicht bezahlt: Paket bleibt Risikofrei", "");
   const up = await admin(`studio/${a.id}/umstellung-upgrade`, { body: {} });
   check(/nur noch die erste Zahlung zu deinem Sonderpreis/.test(up.betreff) && /schon zugestimmt/.test(up.html) && /Dein Sonderpreis/.test(up.html)
-    && /15,97 € netto im Monat<\/b> \(19,00 € inkl\. 19 % USt\.\)/.test(up.html) && /ersten Monatszahlung über 19,00 €|erste Monatszahlung über 19,00 €/.test(up.html)
+    && /19,00 € im Monat<\/b> inkl\. 19 % USt\. \(15,97 € netto\)/.test(up.html) && /iPhone-App/.test(up.html) && /ersten Monatszahlung über 19,00 €|erste Monatszahlung über 19,00 €/.test(up.html)
     && !/neue Studios|im Studio-Bereich zustimmen/.test(up.html) && (up.html.match(/>Jetzt upgraden</g) || []).length === 2 && /Achtung! Kreditaufnahme kostet Geld/.test(up.html),
     "Upgrade-Mail für schon zugestimmte Studios: Sonderpreis 15,97 € netto = 19,00 € brutto, kein Vergleich mit neuen Studios, keine zweite Zustimmung, Knopf 2×", up.betreff);
   const u = new URL(((up.html.match(/href="([^"]*\/api\/auth\?token=[^"]+)"/) || [])[1] || "").replace(/&amp;/g, "&"));
