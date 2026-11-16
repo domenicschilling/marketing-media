@@ -201,7 +201,9 @@ window.TFTrack = (function () {
       var anmeldung = /^\/start(\.html)?$/.test(location.pathname);
       if ((document.querySelector(".auftakt") || anmeldung) && window.innerWidth < 1000) {
         var spaeter = function () { window.removeEventListener("scroll", spaeter); document.removeEventListener("change", spaeter, true); clearTimeout(uhr); banner(); };
-        var uhr = anmeldung ? 0 : setTimeout(spaeter, 5000);
+        // Kein Zeitgeber mehr (16.11.2026): Im echten iPhone-Safari lag der Hinweis nach 5 s über dem Hero-Knopf
+        // (Safari-Leiste unten macht den sichtbaren Bereich kleiner). Jetzt nur beim Scrollen bzw. nach der ersten Eingabe.
+        var uhr = 0;
         window.addEventListener("scroll", spaeter, { passive: true });
         if (anmeldung) document.addEventListener("change", spaeter, true);
       } else banner();
