@@ -152,7 +152,15 @@ window.TFTrack = (function () {
     } catch (e) {}
     var c = lies();
     if (c === "ja") ladePixel();
-    else if (c !== "nein") banner();
+    else if (c !== "nein") {
+      // Landingpages am Handy/Tablet (16.11.2026): Hinweis erst beim ersten Scrollen oder nach 5 s, damit der erste Bildschirm
+      // (Überschrift, Knopf, Preis) frei bleibt. Vorher lädt nichts: Der Pixel startet weiterhin erst nach „Einverstanden“.
+      if (document.querySelector(".auftakt") && window.innerWidth < 1000) {
+        var spaeter = function () { window.removeEventListener("scroll", spaeter); clearTimeout(uhr); banner(); };
+        var uhr = setTimeout(spaeter, 5000);
+        window.addEventListener("scroll", spaeter, { passive: true });
+      } else banner();
+    }
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 

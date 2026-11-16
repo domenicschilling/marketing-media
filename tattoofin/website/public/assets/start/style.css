@@ -449,14 +449,17 @@ svg.stech.los .f,svg.stech.los .t{opacity:1;transition:opacity .4s .55s}
 @media (max-width:899px){.tf-wa{display:none!important}}
 
 /* ---------- Vertriebs-Umbau 16.11.2026: Entscheidungszone, App-Schild, Einwände, Preis-Rechnung ---------- */
-.hero-chips{margin-top:6px;font-weight:700;font-size:14px;line-height:1.3}
+.hero-chips{display:block;margin-top:6px;font-weight:700;font-size:14px;line-height:1.3}
 .hero-beleg a{display:inline-block;background:var(--hell);border:2.5px dashed var(--blau);border-radius:6px;padding:4px 10px 3px;font-weight:800;font-size:14px;line-height:1.3;text-decoration:none;transform:rotate(-1.5deg)}
 .hero-beleg a::before{content:"✓ ";color:#1f7a3a}
 .hero-wa{font-weight:700;font-size:15px;line-height:1.35}
 .hero-wa a{text-underline-offset:3px}
 .auftakt h1{font-size:clamp(34px,9.4vw,76px)}
-@media (min-width:900px){.hero-chips{display:none}.hero-beleg a{font-size:15px}.hero-wa{font-size:16px}}
-@media (max-width:599px){.buehne{height:clamp(220px,58vw,280px)}.hausherr{width:27%}}
+/* Kein Aufblähen der Spalte durch lange Knopftexte (Varianten je Anzeige) */
+@media (max-width:899px){.auftakt{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:599px){.auftakt-knopf .knopf{white-space:normal;text-align:center;font-size:clamp(20px,5.6vw,26px);line-height:1.05}}
+.hero-beleg{margin-top:4px}
+@media (min-width:900px){.hero-beleg a{font-size:15px}.hero-wa{font-size:16px}}
 @media (max-width:599px) and (max-height:700px){.auftakt h1{font-size:31px}.hero-chips{display:none}}
 .app-schild{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px;max-width:46em;font-weight:700;line-height:1.35}
 .app-neu{display:inline-block;background:var(--gelb);border:2.5px solid var(--blau);border-radius:6px;padding:2px 8px 0;font:400 15px/1.2 var(--anzeige);text-transform:uppercase;transform:rotate(-4deg)}
@@ -468,3 +471,6 @@ svg.stech.los .f,svg.stech.los .t{opacity:1;transition:opacity .4s .55s}
 @media (min-width:1100px){.einwand-liste{grid-template-columns:repeat(4,minmax(0,1fr))}.einwaende{padding-top:36px;padding-bottom:40px}}
 .preis-rechnung{font-weight:700;font-size:17px;line-height:1.4;max-width:40em}
 @media (min-width:900px){.preis-rechnung{grid-column:1/-1;margin-top:-8px;font-size:19px}}
+@media (min-width:900px){.auftakt h1{font-size:clamp(40px,4.3vw,66px)}}
+@media (max-width:899px){.preis-innen{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:374px){.preis h2{font-size:27px}}

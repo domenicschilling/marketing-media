@@ -128,7 +128,7 @@ await abschnitt("1 Start-Seite: Cookie-Fenster verdeckt keinen Knopf (ohne es we
     const banner = Boolean(await p.waitForSelector(".tf-cc", { timeout: 3000 }).catch(() => null));
     const klick = async (sel) => { try { await p.click(sel, { timeout: 3000 }); return true; } catch { return false; } };
     const trial = async (sel) => { try { await p.click(sel, { timeout: 3000, trial: true }); return true; } catch { return false; } };
-    const s1 = await klick("section[data-step='1'] [data-next]");
+    const s1 = (await p.isVisible("section[data-step='1'] [data-next]")) ? await klick("section[data-step='1'] [data-next]") : true; // ohne Preisschritt seit 16.11.2026
     for (const [k, v] of Object.entries({ firma: "Cookie Test", inhaber: "A M", strasse: "Musterstr. 1", plz: "96047", ort: "Bamberg", email: "c@test.de", telefon: "0151 1234567", studioTelefon: "0951 123456" })) await p.fill("#" + k, v).catch(() => {});
     const s2 = await klick("section[data-step='2'] [data-next]");
     await p.check("input[name=ak_alle]").catch(() => {}); await p.check("input[name=ak_kmu]").catch(() => {});
@@ -145,7 +145,7 @@ async function browserAnmeldung(paket, email, firma, viewport) {
   await p.goto(`${BASE}/start.html?paket=${paket}`);
   // Einmalzahlung ist seit 02.11.2026 nicht mehr wählbar (Notschalter EINMAL_NEU): Auswahl für die Bestandsabläufe nachbilden
   if (paket === "einmal") await p.evaluate(() => document.getElementById("f").insertAdjacentHTML("beforeend", '<input type="radio" name="paket" value="einmal" checked style="display:none"><input type="radio" name="zahlart" value="sofort" checked style="display:none">'));
-  await p.click("section[data-step='1'] [data-next]");
+  if (await p.isVisible("section[data-step='1'] [data-next]")) await p.click("section[data-step='1'] [data-next]"); // Schritt 1 nur noch bei Einladungen (16.11.2026)
   for (const [k, v] of Object.entries({ firma, inhaber: "Alex Muster", strasse: "Musterstr. 1", plz: "96047", ort: "Bamberg", email, telefon: "0151 1234567", studioTelefon: "0951 123456" })) await p.fill("#" + k, v);
   await p.click("section[data-step='2'] [data-next]");
   await p.check("input[name=ak_alle]");
@@ -1013,7 +1013,7 @@ await abschnitt("18 Paket Risikofrei geschlossen (26.10.2026): Neukunden gesperr
     const seiten = ["/", "/studios.html", "/start.html", "/ratgeber.html", "/tattoo-finanzieren.html", "/ratenzahlung-tattoostudio.html", "/tattoo-anzahlung.html", "/klarna-tattoostudio.html", "/video.html", "/raten.html", "/sitemap.xml"];
     for (const pf of seiten) {
       // Der echte, belegte Fall „900 € per Klarna“ (Abschnitt [data-beleg], 07.11.2026) ist kein Risikofrei-Versprechen und bleibt ausgenommen
-      const t = (await (await fetch(BASE + pf)).text()).replace(/<section[^>]*\bdata-beleg\b[\s\S]*?<\/section>/g, "");
+      const t = (await (await fetch(BASE + pf)).text()).replace(/<section[^>]*\bdata-beleg\b[\s\S]*?<\/section>/g, "").replace(/<p class="hero-beleg">[\s\S]*?<\/p>/g, "");
       const treffer = (t.match(/risikofrei|0 € Einrichtung|10 ?(&nbsp;)? ?%|900 ?(&nbsp;)?€|0 ?(&nbsp;)?€ Grundgeb|Grundgebühr|ohne Fixkosten|nur bei Zahlung|Keine Zahlungen über Tattoofin = keine Kosten/gi) || []);
       check(treffer.length === 0, `${pf}: kein Risikofrei-Versprechen mehr („Risikofrei“, 10 %, 900 €, 0 € Einrichtung/Grundgebühr, Fixkosten)`, treffer.slice(0, 3).join(" | "));
     }
@@ -1023,9 +1023,9 @@ await abschnitt("18 Paket Risikofrei geschlossen (26.10.2026): Neukunden gesperr
       check(auf.every((x) => x === "monatlich") && !/href="\/start[^"]*einmal/.test(t), `${pf}: kein Start-Knopf zeigt auf Einmalzahlung`, [...new Set(auf)].join(","));
     }
     const lp = await (await fetch(BASE + "/")).text();
-    check(/class="knopf" href="\/start\.html"[^>]*>Jetzt starten/.test(lp), "Hero-Knopf: „Jetzt starten“ → /start.html", "");
+    check(/class="knopf" href="\/start\.html"[^>]*>Studio anmelden – 3&nbsp;Min\./.test(lp), "Hero-Knopf: „Studio anmelden – 3 Min.“ → /start.html", "");
     const wann = await (await fetch(BASE + "/")).text();
-    check(/49,90&nbsp;€ im Monat inkl\. MwSt\./.test(wann) && !/999 €/.test(wann) && /49,90&nbsp;€ im Monat\. Dazu nur Stripe/.test(wann) && /41,93&nbsp;€ netto/.test(wann) && !/58,31|49&nbsp;€ netto/.test(wann) && /nur für Unternehmer/i.test(wann), "Preise auf der Startseite: 49,90 € im Monat inkl. MwSt. (auch in der Preis-Überschrift), klein 41,93 € netto, kein 58,31 €, nur für Unternehmer, keine 999 €", "");
+    check(/49,90&nbsp;€ im Monat inkl\. MwSt\./.test(wann) && !/999 €/.test(wann) && /class="betrag">49,90<span class="eur">€/.test(wann) && /41,93&nbsp;€ netto/.test(wann) && !/58,31|49&nbsp;€ netto/.test(wann) && /nur für Unternehmer/i.test(wann), "Preise auf der Startseite: 49,90 € im Monat inkl. MwSt. (auch in der Preis-Überschrift), klein 41,93 € netto, kein 58,31 €, nur für Unternehmer, keine 999 €", "");
     check(/Achtung! Kreditaufnahme kostet Geld\./.test(wann), "Pflicht-Warnhinweis steht weiter auf der Startseite", "");
     // --- Bestandsstudio läuft unverändert ---
     const pt = await json("/api/portal", {}, best.cookie);

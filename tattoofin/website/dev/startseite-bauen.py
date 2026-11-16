@@ -89,9 +89,22 @@ def bauen(seite):
         h = "/start.html"
         if studios:
             h += "?utm_source=studios&amp;utm_medium=seite&amp;utm_content=" + ort
-        return '<a class="knopf" href="%s" data-umami-event="start-%s">Jetzt starten</a>' % (h, ort)
+        # Knopftext konkret (Vertriebs-Umbau 16.11.2026); in der schmalen Leiste nur „Studio anmelden“
+        text = "Studio anmelden" if ort == "leiste" else "Studio anmelden – 3&nbsp;Min."
+        return '<a class="knopf" href="%s" data-umami-event="start-%s">%s</a>' % (h, ort, text)
 
     stern = motiv("stern")
+    # Einwände (Vertriebs-Umbau 16.11.2026): je 1 Frage, 1–2 Sätze Antwort
+    EINWAENDE = [
+        ("Ich hab schon SumUp &amp; Co.", "Behalt es. Dein Kartengerät kassiert an der Theke. Tattoofin kassiert vorher: Anzahlung per WhatsApp, Klarna, Gutscheine."),
+        ("Meine Kunden zahlen bar.", "Bar bleibt. Für eine Anzahlung muss dein Kunde dann aber extra vorbeikommen. Mit dem Link zahlt er sofort vom Sofa."),
+        ("Technik ist nicht meins.", "Musst du nicht können. Unser Team richtet alles mit dir ein, per WhatsApp."),
+        ("Brauch ich nicht.", "Denk an deine letzten No-Shows. Jeder davon hätte vorher anzahlen können."),
+    ]
+    einwaende = ('  <section class="einwaende" aria-labelledby="einwaende-titel">\n'
+                 '    <h2 id="einwaende-titel">Klingt gut, aber …</h2>\n    <ul class="einwand-liste">\n'
+                 + "".join('      <li class="einwand"><p class="einwand-frage">„%s“</p><p>%s</p></li>\n' % (f, a) for f, a in EINWAENDE)
+                 + '    </ul>\n  </section>\n\n')
     fragen = []
     for q, a, fn in FRAGEN:
         antwort = "<p>%s</p>" % nbsp_zahlen(html.escape(a, quote=False))
@@ -172,7 +185,7 @@ def bauen(seite):
   </details>
 """ % {"stern": stern}
 
-    skripte = """<script src="/assets/start/app.js" defer></script>
+    skripte = """<script src="/assets/start/app.js?v=20261116" defer></script>
 <script defer src="https://cloud.umami.is/script.js" data-website-id="507b740f-264e-4ba1-a7d0-9dbe49db75af" data-domains="tattoofin.de"></script>
 <script src="/js/tf-track.js"></script>"""
     if studios:
@@ -189,8 +202,8 @@ def bauen(seite):
 <link rel="icon" href="/favicon.png" type="image/png"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preload" href="/assets/start/fonts/LuckiestGuy.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/start/fonts/DMSans.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/assets/start/handy-kunde-oben.webp" as="image" type="image/webp">
-<link rel="stylesheet" href="/assets/start/style.css">
+<link rel="preload" href="/assets/start/handy-kunde-oben.webp?v=20261116" as="image" type="image/webp">
+<link rel="stylesheet" href="/assets/start/style.css?v=20261116">
 {ld}</head>
 <body{' data-wa="aus"' if studios else ''}>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><pattern id="tf-punkte" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><circle cx="2.2" cy="2.2" r="2.1" fill="#1f3d5c"/><circle cx="6.7" cy="6.7" r="2.1" fill="#1f3d5c"/></pattern></defs></svg>
@@ -209,9 +222,10 @@ def bauen(seite):
   <main id="inhalt">
   <section class="auftakt">
     <div class="auftakt-kopf">
-      <p class="kicker">Sleeve für 2.000&nbsp;€, aber dein Kunde hat's nicht auf einmal?</p>
-      <h1>Raten* für deine Kunden.</h1>
-      <p class="unterzeile">Link per WhatsApp. Kunde zahlt am Handy.</p>
+      <p class="kicker" data-hero="k">Tattoostudio-Besitzer, aufgepasst!</p>
+      <h1 data-hero="h">Ganzer Rücken? Du kriegst die 2.000&nbsp;€ auf einmal.</h1>
+      <p class="unterzeile" data-hero="s">Betrag rein, Link per WhatsApp raus. Dein Kunde zahlt am Handy, auch per Klarna.</p>
+      <p class="hero-chips">Anzahlung · Raten* · Gutscheine – alles per Link</p>
     </div>
     <div class="buehne">
       {motiv("deko-stern")}
@@ -226,14 +240,16 @@ def bauen(seite):
       <img class="hausherr" src="/assets/start/figur.webp" alt="Tattoofin-Figur mit tätowierten Armen zeigt den Daumen hoch" width="300" height="310" decoding="async">
       <figure class="auftakt-handy">
         <span class="klebe" aria-hidden="true"></span>
-        <span class="handy-rahmen"><img src="/assets/start/handy-kunde-oben.webp" alt="Echte Tattoofin-Zahlseite am Handy: Hi Lena, deine Zahlung an Ink Studio Bamberg, Schritt 1 von 2, 2.000,00 Euro, Sleeve linker Arm. Beispieldaten." width="600" height="545" fetchpriority="high"><button type="button" class="film-knopf" data-film aria-haspopup="dialog"><span aria-hidden="true">▶</span> 10 Sek. ansehen</button></span>
+        <span class="handy-rahmen"><img src="/assets/start/handy-kunde-oben.webp?v=20261116" alt="Echte Tattoofin-Zahlseite am Handy: Hi Lena, deine Zahlung an Ink Studio Bamberg, Schritt 1 von 2, 2.000,00 Euro, Ganzer Rücken. Beispieldaten." width="600" height="545" fetchpriority="high"><button type="button" class="film-knopf" data-film aria-haspopup="dialog"><span aria-hidden="true">▶</span> 10 Sek. ansehen</button></span>
         <figcaption>Echte App · Beispieldaten</figcaption>
       </figure>
     </div>
     <div class="auftakt-fuss">
+      <p class="hero-beleg"><a href="#nr1">Echter Fall: Rücken-Tattoo, 900&nbsp;€ per Klarna – 07.11.</a></p>
       <div class="auftakt-knopf">{start("auftakt")}</div>
       <p class="preiszeile">49,90&nbsp;€ im Monat inkl. MwSt. · keine Provision · monatlich kündbar <span class="b2b">· nur für Unternehmer</span></p>
-      <p class="raten-fn">{FN_LANG}</p>{kunde}
+      <p class="raten-fn">{FN_LANG}</p>
+      <p class="hero-wa"><a href="{wa}" data-umami-event="whatsapp-auftakt">Lieber erst fragen? Schreib unserem Team per WhatsApp&nbsp;→</a></p>{kunde}
     </div>
   </section>
 
@@ -265,6 +281,7 @@ def bauen(seite):
 
   <section class="werkzeuge" aria-labelledby="werkzeuge-titel">
     <h2 id="werkzeuge-titel">Alles läuft übers Handy.</h2>
+    <p class="app-schild"><span class="app-neu">Neu</span> Tattoofin gibt’s auch als iPhone-App. Nach der Anmeldung bekommst du sie von uns.</p>
     <div class="stuecke">
       <article class="stueck" id="nr2">
         <div class="stueck-bild">
@@ -321,7 +338,7 @@ def bauen(seite):
     </div>
   </section>
 
-  <section class="ablauf" id="ablauf" aria-labelledby="ablauf-titel">
+{einwaende}  <section class="ablauf" id="ablauf" aria-labelledby="ablauf-titel">
     <h2 id="ablauf-titel">In 3 Schritten startklar.</h2>
     <ol>
       <li><div class="stufe-bild">{motiv("stufe-1")}<span class="nr" aria-hidden="true">1</span></div><p><b>Online anmelden.</b> Dauert ein paar Minuten.</p></li>
@@ -332,7 +349,8 @@ def bauen(seite):
 
   <section class="preis" id="preis" aria-labelledby="preis-titel">
     <div class="preis-innen">
-      <h2 id="preis-titel">49,90&nbsp;€ im Monat. Dazu nur Stripe.</h2>
+      <h2 id="preis-titel">Eine Anzahlung zahlt Tattoofin für Monate.</h2>
+      <p class="preis-rechnung">Kunde kommt nicht? Seine 100&nbsp;€ Anzahlung liegt schon bei dir. Das sind 2&nbsp;Monate Tattoofin.</p>
       <div class="preis-schild">
         <svg class="faden" viewBox="0 0 120 90" aria-hidden="true" focusable="false"><path d="M60 8 C42 30 78 52 60 86" fill="none" stroke="#fff7e3" stroke-width="4" stroke-linecap="round"/></svg>
         <span class="reisszwecke" aria-hidden="true"></span>
@@ -359,7 +377,8 @@ def bauen(seite):
           <li>Keine Provision</li>
           <li>Keine Einrichtungsgebühr</li>
           <li>Monatlich kündbar</li>
-          <li>QR-Code zum Ausdrucken</li>
+          <li>Unser Team richtet’s mit dir ein</li>
+          <li>iPhone-App inklusive</li>
         </ul>
         <div class="wege">{start("preis")}<a class="wa" href="/vertrag.html">Vertrag vorab lesen</a></div>
       </div>
@@ -375,7 +394,7 @@ def bauen(seite):
 
   <section class="schluss">
     <div class="schluss-kopf">
-      <h2>Nächster Sleeve? Schick den Link.</h2>
+      <h2>Nächster Termin? Schick den Link.</h2>
       <p class="zeile">49,90&nbsp;€ im Monat inkl. MwSt. · monatlich kündbar <span class="b2b">· nur für Unternehmer</span></p>
       <div class="wege">{start("schluss")}<a class="wa" href="{wa}" data-umami-event="whatsapp-schluss">Fragen? Schreib unserem Team per WhatsApp.</a></div>
     </div>

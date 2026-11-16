@@ -16,7 +16,11 @@
   function modell() { return paket() ? "kauf" : ""; }
   function zahlart() { var r = f.querySelector("input[name=zahlart]:checked"); return r ? r.value : "sofort"; }
 
+  // Vertriebs-Umbau 16.11.2026: Es gibt nur ein Paket, darum fällt Schritt 1 „Dein Preis“ weg (Preis steht oben).
+  // Ausnahme: Einladungen (?geschenk) und alte Links ohne gültiges Paket behalten Schritt 1.
+  var ohnePreisSchritt = false;
   function go(n) {
+    if (ohnePreisSchritt && n < 2) n = 2;
     step = n;
     document.querySelectorAll("[data-step]").forEach(function (s) { s.classList.toggle("hidden", +s.dataset.step !== n); });
     document.querySelectorAll(".steps-bar span").forEach(function (s) { s.classList.toggle("on", +s.dataset.s <= n); });
@@ -52,7 +56,7 @@
     } else if (p === "monatlich") {
       html = "<p><b>Paket Monatlich</b> · " + TF.esc(TF.monatPreis(C.monatNetto, C.ustProzent)) + "</p>" +
         "<p>Im nächsten Schritt startest du das Abo sicher über Stripe (z. B. per Karte). Die Rechnung kommt jeden Monat automatisch per E-Mail. Danach richtest du in deinem Studio-Bereich das Zahlungskonto deines Studios ein.</p>";
-      sub.textContent = "Zahlungspflichtig bestellen & Abo starten";
+      sub.textContent = "Weiter zur Zahlung · " + TF.euro(Math.round(C.monatNetto * (100 + C.ustProzent) / 100), true) + " im Monat";
       kurz = [
         TF.monatPreis(C.monatNetto, C.ustProzent) + ", keine Einrichtungsgebühr.",
         "Danach nur die Zahlungsgebühren von Stripe (je nach Zahlart ca. 1,5–3 % plus fester Betrag je Zahlung, laut Preisliste von Stripe), die du direkt an Stripe zahlst. 0 % Tattoofin-Provision.",
@@ -110,7 +114,7 @@
   f.addEventListener("click", function (e) {
     if (e.target.matches("[data-next]")) {
       var err = pruefe(step); show(err);
-      if (!err && step === 1 && window.TFTrack) TFTrack.track("InitiateCheckout", { content_name: "Paket " + (NAMEN[paket()] || "Geschenk") }, "ic-" + new Date().toISOString().slice(0, 10));
+      if (!err && step === (ohnePreisSchritt ? 2 : 1) && window.TFTrack) TFTrack.track("InitiateCheckout", { content_name: "Paket " + (NAMEN[paket()] || "Geschenk") }, "ic-" + new Date().toISOString().slice(0, 10));
       if (!err) go(step + 1);
     }
     if (e.target.matches("[data-back]")) { show(""); go(step - 1); }
@@ -172,9 +176,18 @@
       if (q.get("abbruch")) {
         // Direkt zurück zum letzten Schritt (Angaben sind vorbelegt; Vertrag muss nur erneut bestätigt werden)
         if (!pruefe(1) && !pruefe(2)) go(3);
-        show("Die Zahlung wurde abgebrochen. Kein Problem: Deine Angaben sind gespeichert. Bestätige unten kurz den Vertrag, dann geht es weiter zur Zahlung.", "info");
+        show("Die Zahlung hat nicht geklappt. Kein Problem: Deine Angaben sind gespeichert. Bestätige unten kurz den Vertrag, dann geht es nochmal zur Zahlung.", "info");
+        alertBox.insertAdjacentHTML("beforeend", '<p style="margin:8px 0 0"><a href="https://wa.me/491624502375?text=Hi%20Tattoofin-Team%2C%20bei%20meiner%20Anmeldung%20hat%20die%20Zahlung%20nicht%20geklappt.%20K%C3%B6nnt%20ihr%20mir%20helfen%3F" target="_blank" rel="noopener" data-umami-event="whatsapp-abbruch"><b>Hängt es? Schreib unserem Team per WhatsApp, wir helfen dir sofort →</b></a></p>');
       }
     }).catch(function () { resumeId = null; });
+  }
+  if (!geschenk && paket() === "monatlich") {
+    ohnePreisSchritt = true;
+    var s2 = document.querySelector("[data-step='2']"), s3 = document.querySelector("[data-step='3']");
+    s2.querySelector("h2").textContent = "1. Dein Studio";
+    s3.querySelector("h2").textContent = "2. Prüfen & starten";
+    var zur = s2.querySelector("[data-back]"); if (zur) zur.style.visibility = "hidden";
+    var p1 = document.querySelector(".steps-bar [data-s='1']"); if (p1) p1.remove();
   }
   go(1);
 })();

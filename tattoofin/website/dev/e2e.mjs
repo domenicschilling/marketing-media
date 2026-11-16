@@ -84,7 +84,7 @@ async function signup(p, { paket, modell, email, firma, zahlart, geschenk, shot 
   await cookiesAblehnen(p);
   if (shot) await p.screenshot({ path: path.join(shot, "01-einladung.png"), fullPage: true });
   if (paket === "einmal" || modell === "kauf") await einmalNachbilden(p, zahlart);
-  await p.click("section[data-step='1'] [data-next]");
+  if (await p.isVisible("section[data-step='1'] [data-next]")) await p.click("section[data-step='1'] [data-next]"); // Schritt 1 nur noch bei Einladungen (16.11.2026)
   for (const [k, v] of Object.entries({ firma, inhaber: "Alex Muster", strasse: "Musterstr. 1", plz: "96047", ort: "Bamberg", email, telefon: "0151 1234567", studioTelefon: "0951 123456" })) await p.fill("#" + k, v);
   if (shot) await p.screenshot({ path: path.join(shot, "02-einladung-daten.png"), fullPage: true });
   await p.click("section[data-step='2'] [data-next]");
@@ -152,7 +152,7 @@ try {
   }
   const p0 = await neueSeite();
   await p0.goto(BASE + "/");
-  check((await p0.textContent("h1")).includes("für deine Kunden"), "Hero lädt");
+  check((await p0.textContent("h1")).includes("auf einmal"), "Hero lädt (Überschrift für Studio-Inhaber, 16.11.2026)");
   // Warnsatz klein als Fußnote bei der einen Raten-Aussage im Hero (Entscheidung Domenic 14.11.2026): im ersten Abschnitt, nah unter der h1
   { const w = await p0.evaluate(() => { const h1 = document.querySelector("h1"), fn = [...document.querySelectorAll(".auftakt .raten-fn")].find((e) => /Achtung! Kreditaufnahme kostet Geld\./.test(e.textContent) && /Vertragspartner der Raten ist Klarna/.test(e.textContent)); if (!h1 || !fn) return null; return { abstand: fn.getBoundingClientRect().top - h1.getBoundingClientRect().top, inHero: h1.closest(".auftakt") === fn.closest(".auftakt") }; });
     check(Boolean(w && w.inHero && w.abstand > 0 && w.abstand <= 560), "Warnsatz als Fußnote im Hero, höchstens 560 px unter der Raten-Überschrift" + (w ? ` (${Math.round(w.abstand)} px)` : "")); }

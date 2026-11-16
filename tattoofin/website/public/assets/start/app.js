@@ -139,10 +139,10 @@
     else if (/(^|[^a-z])tv-?c([^a-z]|$)|10-?sek|link/.test(u)) v = 'link';
     else if (/(^|[^a-z])tv-?d([^a-z]|$)|gutschein|weihnacht/.test(u)) v = new Date() < new Date('2026-12-25T00:00:00+01:00') ? 'gutschein' : 'link';
     var V = {
-      noshow: { k: 'Termin geblockt, Kunde kommt nicht?', h: 'Erst Anzahlung. Dann Termin.', s: 'Anzahlungs-Link per WhatsApp. Kunde zahlt am Handy, dann blockst du den Termin.', c: 'Anzahlungen einrichten – 3\u00a0Min.',
+      noshow: { k: 'Termin geblockt, Kunde kommt nicht?', h: 'Erst Anzahlung. Dann Termin.', s: 'Anzahlungs-Link per WhatsApp. Kunde zahlt am Handy, dann blockst du den Termin.', c: 'Anzahlung einrichten',
         bild: '/assets/start/handy-anzahlung-oben.webp', alt: 'Echte Tattoofin-Zahlseite am Handy: Hi Kai, deine Zahlung an Ink Studio Bamberg, 150 Euro, Rückenstück, Termin Freitag, Anzahlung. Beispieldaten.' },
-      link: { k: 'Schluss mit Überweisung und Hinterherschreiben.', h: 'Betrag rein. Link raus. Bezahlt.', s: 'Karte, Apple Pay, Google Pay oder Raten* über Klarna. Das Geld geht auf dein eigenes Stripe-Konto.' },
-      gutschein: { k: 'Weihnachten kommt.', h: 'Gutscheine per Link verkaufen.', s: 'Kunde zahlt am Handy und bekommt Code und PDF zum Verschenken. Das Geld ist schon bei dir.', c: 'Gutscheine einrichten – 3\u00a0Min.' }
+      link: { k: 'Schluss mit Überweisung und Hinterherschreiben.', h: 'Betrag rein. Link raus. Bezahlt.', s: 'Karte, Apple Pay, Google Pay oder Klarna. Das Geld geht auf dein eigenes Stripe-Konto.' },
+      gutschein: { k: 'Weihnachten kommt.', h: 'Gutscheine per Link verkaufen.', s: 'Kunde zahlt am Handy und bekommt Code und PDF zum Verschenken. Das Geld ist schon bei dir.', c: 'Gutscheine einrichten' }
     }[v];
     var knopf = document.querySelector('.auftakt-knopf .knopf');
     if (knopf) knopf.setAttribute('data-umami-event-hero', v || 'ruecken');
