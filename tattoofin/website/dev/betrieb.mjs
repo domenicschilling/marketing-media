@@ -1004,8 +1004,9 @@ await abschnitt("17 Recht (27.10.2026): Klarna-Stichtag 20.11.2026 für Risikofr
 // =====================================================================================================
 await abschnitt("17b Erster Bildschirm je Anzeige (Runde 2, 16.11.2026): richtige Variante ab dem ersten Bild, Bild und Stempel passend", async () => {
   const FAELLE = [
-    ["", "Ganzer Rücken? 2.000 € auf einmal.", "handy-kunde-oben", true],
-    ["tv-b", "Ganzer Rücken? 2.000 € auf einmal.", "handy-kunde-oben", true],
+    // Ganzer Rücken = 4.000 € (Domenic 16.11.2026: „für 2.000 € macht keiner einen ganzen Rücken“)
+    ["", "Ganzer Rücken? 4.000 € auf einmal.", "handy-kunde-oben", true],
+    ["tv-b", "Ganzer Rücken? 4.000 € auf einmal.", "handy-kunde-oben", true],
     ["tv-a", "No-Show? Erst Anzahlung. Dann Termin.", "handy-anzahlung-oben", false],
     ["bild-d2", "No-Show? Erst Anzahlung. Dann Termin.", "handy-anzahlung-oben", false],
     ["tv-c", "Betrag rein. Link raus. Bezahlt.", "handy-kunde-oben", true],
@@ -1029,6 +1030,33 @@ await abschnitt("17b Erster Bildschirm je Anzeige (Runde 2, 16.11.2026): richtig
       check(gut, `Hero ${utm || "ohne utm"} ${w}x${h}: nur „${h1}“ sichtbar, Bild ${bild}, Klarna-Herz/-Stempel ${klarna ? "da" : "weg"}`, JSON.stringify({ ...m, gesehen: m.gesehen }).slice(0, 220));
       await p.context().close();
     }
+  }
+});
+
+// =====================================================================================================
+await abschnitt("17c Zahlen im Hero und im Preisblock passen zusammen (16.11.2026: ganzer Rücken 4.000 €)", async () => {
+  const eur = (s) => Number(String(s).replace(/\./g, "").replace(",", "."));
+  for (const pfad of ["/", "/studios.html"]) {
+    const p = await neueSeite({ width: 390, height: 844 });
+    await p.goto(BASE + pfad, { waitUntil: "load" });
+    const m = await p.evaluate(() => {
+      const t = (s) => (document.querySelector(s)?.textContent || "").replace(/\u00a0/g, " ").replace(/\s+/g, " ").trim();
+      const zeilen = Object.fromEntries([...document.querySelectorAll(".beleg tr")].map((tr) => [tr.querySelector("th").textContent.trim(), tr.querySelector("td").textContent.replace(/\u00a0/g, " ").trim()]));
+      const faq = [...document.querySelectorAll(".frage")].map((f) => f.textContent.replace(/\u00a0/g, " ")).find((x) => /Was kostet es genau/.test(x)) || "";
+      return { h1: t(".auftakt h1"), alt: document.querySelector(".auftakt-handy img").getAttribute("alt"), src: document.querySelector(".auftakt-handy img").getAttribute("src"),
+        caption: t(".beleg caption"), zeilen, hinweis: t(".beleg-hinweis"), faq };
+    });
+    await p.context().close();
+    const betrag = eur((m.h1.match(/([\d.]+) €/) || [])[1]);
+    const kl = m.faq.match(/Klarna ab ([\d,]+) % \+ ([\d,]+) €/), ka = m.faq.match(/Karte ab ([\d,]+) % \+ ([\d,]+) €/);
+    const klGeb = kl ? betrag * eur(kl[1]) / 100 + eur(kl[2]) : NaN, kaGeb = ka ? betrag * eur(ka[1]) / 100 + eur(ka[2]) : NaN;
+    const ca = (s, re) => eur((String(s).match(re) || [])[1]);
+    const tabKl = ca(m.zeilen["Stripe-Gebühr Klarna"], /ab ca\. ([\d.]+) €/), tabRest = ca(m.zeilen["Bei dir"], /bis ca\. ([\d.]+) €/), tabKa = ca(m.hinweis, /Mit Karte ab ca\. ([\d.]+) €/);
+    const gut = betrag === 4000 && /Ganzer Rücken/.test(m.h1)
+      && m.alt.includes("4.000,00 Euro, Ganzer Rücken") && !/2\.000/.test(m.alt) && /handy-kunde-oben\.webp\?v=/.test(m.src)
+      && eur((m.caption.match(/zahlt ([\d.]+)/) || [])[1]) === betrag && /Klarna/.test(m.caption)
+      && Math.abs(tabKl - klGeb) <= 1 && Math.abs(tabRest - (betrag - klGeb)) <= 1 && Math.abs(tabKa - kaGeb) <= 1 && m.zeilen["An Tattoofin"] === "0 €";
+    check(gut, `${pfad}: H1 „${m.h1}“ = Handybild (Alt) = Preisblock ${betrag} €; Gebühren aus den Fragen nachgerechnet (Klarna ${klGeb.toFixed(2)} → ca. ${tabKl} €, bei dir ca. ${tabRest} €, Karte ${kaGeb.toFixed(2)} → ca. ${tabKa} €)`, JSON.stringify(m).slice(0, 300));
   }
 });
 

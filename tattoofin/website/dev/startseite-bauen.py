@@ -48,7 +48,7 @@ FRAGEN = [
 # Kopf-Skript (steht vor dem Stylesheet, damit es nicht auf style.css wartet und das Variantenbild sofort vorlädt): utm_content → html[data-hero] (CSS blendet die wechselnden Texte bis zum Tausch aus, höchstens 1,5 s) und lädt das passende Handybild vor.
 # Tausch-Skript direkt hinter dem Hero: Texte, Knopf, Stempel und Bild tauschen, dann html.hero-ok. Ohne Skript bleibt der Standard (Rücken).
 # Zuordnung: tv-a / bild-d2 / d → noshow, tv-b / ohne → Rücken (Standard), tv-c → link, tv-d → gutschein (bis 24.12., danach link).
-HERO_BILDER = {"": "handy-kunde-oben.webp?v=20261116", "noshow": "handy-anzahlung-oben.webp?v=20261116b", "gutschein": "handy-gutschein-oben.webp?v=20261116b"}
+HERO_BILDER = {"": "handy-kunde-oben.webp?v=20261116c", "noshow": "handy-anzahlung-oben.webp?v=20261116b", "gutschein": "handy-gutschein-oben.webp?v=20261116b"}
 HERO_KOPF = """<script>(function(){try{var q=new URLSearchParams(location.search),u=(q.get('utm_content')||q.get('hero')||'').toLowerCase(),v='';
 if(/(^|[^a-z])tv-?a([^a-z]|$)|^d$|bild-?d2?|no-?show|anzahlung/.test(u))v='noshow';
 else if(/(^|[^a-z])tv-?c([^a-z]|$)|10-?sek|link/.test(u))v='link';
@@ -254,7 +254,7 @@ def bauen(seite):
   <section class="auftakt">
     <div class="auftakt-kopf">
       <p class="kicker">Tattoostudio-Besitzer, aufgepasst!</p>
-      <h1 data-hero="h">Ganzer&nbsp;Rücken? 2.000&nbsp;€ auf&nbsp;einmal.</h1>
+      <h1 data-hero="h">Ganzer&nbsp;Rücken? 4.000&nbsp;€ auf&nbsp;einmal.</h1>
       <p class="unterzeile" data-hero="s">Betrag rein, Link per WhatsApp raus. Dein Kunde zahlt am Handy, auch per Klarna.</p>
       <p class="hero-chips">Anzahlung · Raten* · Gutscheine – alles per Link</p>
     </div>
@@ -271,7 +271,7 @@ def bauen(seite):
       <img class="hausherr" src="/assets/start/figur.webp" alt="Tattoofin-Figur mit tätowierten Armen zeigt den Daumen hoch" width="300" height="310" decoding="async">
       <figure class="auftakt-handy">
         <span class="klebe" aria-hidden="true"></span>
-        <span class="handy-rahmen"><img src="/assets/start/handy-kunde-oben.webp?v=20261116" alt="Echte Tattoofin-Zahlseite am Handy: Hi Lena, deine Zahlung an Ink Studio Bamberg, Schritt 1 von 2, 2.000,00 Euro, Ganzer Rücken. Beispieldaten." width="600" height="545"><button type="button" class="film-knopf" data-film aria-haspopup="dialog"><span aria-hidden="true">▶</span> 10 Sek. ansehen</button></span>
+        <span class="handy-rahmen"><img src="/assets/start/{HERO_BILDER['']}" alt="Echte Tattoofin-Zahlseite am Handy: Hi Lena, deine Zahlung an Ink Studio Bamberg, Schritt 1 von 2, 4.000,00 Euro, Ganzer Rücken. Beispieldaten." width="600" height="545"><button type="button" class="film-knopf" data-film aria-haspopup="dialog"><span aria-hidden="true">▶</span> 10 Sek. ansehen</button></span>
         <figcaption>Echte App · Beispieldaten</figcaption>
       </figure>
     </div>
@@ -394,14 +394,14 @@ def bauen(seite):
       </div>
       <div class="beleg">
         <table>
-          <caption>Dein Kunde zahlt 2.000<span class="eur">€</span> per Klarna</caption>
+          <caption>Dein Kunde zahlt 4.000<span class="eur">€</span> per Klarna</caption>
           <tbody>
-            <tr><th scope="row">Stripe-Gebühr Klarna</th><td>ab ca. 60&nbsp;€</td></tr>
+            <tr><th scope="row">Stripe-Gebühr Klarna</th><td>ab ca. 120&nbsp;€</td></tr>
             <tr><th scope="row">An Tattoofin</th><td>0&nbsp;€</td></tr>
-            <tr class="summe"><th scope="row">Bei dir</th><td>bis ca. 1.940&nbsp;€</td></tr>
+            <tr class="summe"><th scope="row">Bei dir</th><td>bis ca. 3.880&nbsp;€</td></tr>
           </tbody>
         </table>
-        <p class="beleg-hinweis">Mit Karte ab ca. 30&nbsp;€ Gebühr. Keine Garantie.</p>
+        <p class="beleg-hinweis">Mit Karte ab ca. 60&nbsp;€ Gebühr. Keine Garantie.</p>
       </div>
       <div class="preis-rest">
         <ul class="sticker-reihe" aria-label="Das gehört dazu">
