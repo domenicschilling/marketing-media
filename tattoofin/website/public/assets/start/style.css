@@ -730,3 +730,7 @@ html[data-hero=noshow] .auftakt .raten-fn,html[data-hero=gutschein] .auftakt .ra
   .auftakt .auftakt-knopf .knopf{width:auto;min-height:46px;font-size:21px}
   .auftakt .preiszeile{font-size:14px}
 }
+
+/* Tablet hochkant ab 900 px (iPad Pro): Knopf und Preiszeile mittig wie bei 768 (die Desktop-Regel align-self:start schob sie nach links).
+   Der Cookie-Hinweis weicht dem Knopf aus (tf-track.js), nicht umgekehrt. */
+@media (orientation:portrait) and (min-width:600px){.auftakt>.auftakt-fuss{align-self:stretch;justify-items:center;text-align:center}}

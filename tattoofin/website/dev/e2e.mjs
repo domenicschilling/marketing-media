@@ -170,10 +170,12 @@ try {
           const k = b(".auftakt-knopf .knopf"), pr = b(".preiszeile"), s = b(".unterzeile"), ha = b(".auftakt-handy");
           const deckt = (a, c) => a.left < c.right && a.right > c.left && a.top < c.bottom - 2 && a.bottom > c.top + 2;
           return { vh: innerHeight, unten: Math.round(h.getBoundingClientRect().bottom), knopf: Math.round(k.bottom), preis: Math.round(pr.bottom),
-            quer: document.documentElement.scrollWidth > innerWidth, deckt: deckt(ha, s) || deckt(ha, k) };
+            quer: document.documentElement.scrollWidth > innerWidth, deckt: deckt(ha, s) || deckt(ha, k),
+            // einspaltiger Hero (hochkant): Knopfmitte = Seitenmitte ±4 px
+            mitte: matchMedia("(orientation:portrait)").matches ? Math.round(Math.abs((k.left + k.right) / 2 - document.documentElement.clientWidth / 2)) : 0 };
         });
         await p.context().close();
-        if (!(Math.abs(m.unten - m.vh) <= 8 && m.knopf <= m.vh && m.preis <= m.vh && !m.quer && !m.deckt)) fehler.push(`${pf} ${w}x${h} ${JSON.stringify(m)}`);
+        if (!(Math.abs(m.unten - m.vh) <= 8 && m.knopf <= m.vh && m.preis <= m.vh && !m.quer && !m.deckt && m.mitte <= 4)) fehler.push(`${pf} ${w}x${h} ${JSON.stringify(m)}`);
       }
     }
     // Untere Leiste („49,90 € … | Studio anmelden | WhatsApp“): beim Laden nie sichtbar (sie läge sonst über dem Hero-Knopf), erst nach dem
@@ -206,7 +208,7 @@ try {
       await p.context().close();
       if (deckt || !spaeter || !gleich) fehler.push(`Cookie-Hinweis ${w}x${h}: deckt Knopf/Preis ${deckt}, nach dem Hero da ${spaeter}, Knöpfe gleich ${gleich}`);
     }
-    check(fehler.length === 0, "Hero = genau der erste Bildschirm auf 14 Geräten (inkl. 320×460 und Handy quer) (Start, /studios, Varianten No-Show und Gutschein): Unterkante = Fensterhöhe ±8 px, Knopf und Preiszeile sichtbar, nichts verdeckt; untere Leiste beim Laden nie sichtbar, am Handy nach dem Hero-Knopf da; Cookie-Hinweis verdeckt nie Knopf/Preiszeile, nach dem Hero da, Knöpfe gleich groß", fehler.slice(0, 2).join(" ; ").slice(0, 400)); }
+    check(fehler.length === 0, "Hero = genau der erste Bildschirm auf 14 Geräten (inkl. 320×460 und Handy quer) (Start, /studios, Varianten No-Show und Gutschein): Unterkante = Fensterhöhe ±8 px, Knopf und Preiszeile sichtbar, nichts verdeckt, hochkant Knopf mittig (±4 px); untere Leiste beim Laden nie sichtbar, am Handy nach dem Hero-Knopf da; Cookie-Hinweis verdeckt nie Knopf/Preiszeile, nach dem Hero da, Knöpfe gleich groß", fehler.slice(0, 2).join(" ; ").slice(0, 400)); }
   check(await p0.locator("#preis").count() === 1 && await p0.locator("#r-monat").count() === 0, "Ein Preis auf der Startseite, kein Paket-Rechner");
   const preise = await p0.textContent("#preis");
   check(preise.includes("49,90") && preise.includes("41,93") && !preise.includes("58,31") && !preise.includes("999") && !preise.includes("Einmalzahlung") && !/Gründer|Profi\b|Risikofrei|10 %|900 €|Grundge/.test(preise) && !/Raten\*|Klarna\*/.test(preise), "Preisbereich: nur 49,90 € inkl. MwSt. (klein 41,93 € netto), kein 58,31 €, keine Raten-Aussage (deshalb dort kein Warnsatz nötig)");
