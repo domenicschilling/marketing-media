@@ -32,7 +32,7 @@ FRAGEN = [
     ("Bekommt jeder Kunde Raten*?",
      "Nein. Klarna prüft jeden Kunden selbst. Sagt Klarna nein, zahlt dein Kunde mit Karte, Apple Pay oder Google Pay.", True),
     ("Und wenn der Kunde nicht zahlt?",
-     "Bei Raten* liegt das Ausfallrisiko laut Stripe grundsätzlich bei Klarna. Reklamiert dein Kunde die Leistung, kann er bis zu 180 Tage zurückbuchen lassen. Bei einer Anzahlung hilft dir seine gespeicherte Bestätigung deiner Bedingungen als Nachweis. Unser Team hilft dir dabei.", True),
+     "Zahlt dein Kunde seine Raten* nicht, trägt laut Stripe Klarna das Risiko. Reklamiert er das Tattoo bei Klarna oder seiner Bank, kann ein Streitfall entstehen. Dann reichst du deine Nachweise ein, zum Beispiel seine gespeicherte Bestätigung deiner Anzahlungsbedingungen. Unser Team hilft dir dabei.", True),
     ("Ist Tattoofin der Kreditgeber?",
      "Nein. Den Vertrag über die Raten* schließt dein Kunde mit Klarna. Du berätst nicht zu Krediten und sagst keine Raten* zu.", True),
     ("Was kostet es genau?",
