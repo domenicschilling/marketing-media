@@ -90,9 +90,12 @@ window.TFTrack = (function () {
       "<div class=\"r\"><button type=\"button\" class=\"nein\">Nur notwendige</button><button type=\"button\" class=\"ja\">Einverstanden</button></div>";
     document.body.appendChild(d);
     document.body.classList.add("tf-cc-offen");
+    // Höhe des Hinweises (inkl. Abstand unten) als CSS-Variable: feste Leisten der Seite (z. B. .leiste) rutschen darüber statt verdeckt zu werden
+    function hoehe() { try { document.body.style.setProperty("--tf-cc-h", Math.ceil(window.innerHeight - d.getBoundingClientRect().top - 2) + "px"); } catch (e) {} }
+    hoehe(); window.addEventListener("resize", hoehe);
     d.querySelector(".ja").onclick = function () { speichere("ja"); schliesse(); ladePixel(); };
     d.querySelector(".nein").onclick = function () { speichere("nein"); queue.length = 0; schliesse(); };
-    function schliesse() { d.remove(); document.body.classList.remove("tf-cc-offen"); }
+    function schliesse() { d.remove(); document.body.classList.remove("tf-cc-offen"); document.body.style.removeProperty("--tf-cc-h"); window.removeEventListener("resize", hoehe); }
   }
 
   function waLink() { return "https://wa.me/" + WA_NUMMER + "?text=" + encodeURIComponent(WA_TEXT); }
@@ -155,10 +158,13 @@ window.TFTrack = (function () {
     else if (c !== "nein") {
       // Landingpages am Handy/Tablet (16.11.2026): Hinweis erst beim ersten Scrollen oder nach 5 s, damit der erste Bildschirm
       // (Überschrift, Knopf, Preis) frei bleibt. Vorher lädt nichts: Der Pixel startet weiterhin erst nach „Einverstanden“.
-      if (document.querySelector(".auftakt") && window.innerWidth < 1000) {
-        var spaeter = function () { window.removeEventListener("scroll", spaeter); clearTimeout(uhr); banner(); };
-        var uhr = setTimeout(spaeter, 5000);
+      // Anmeldeseite /start (Runde 2): ebenso erst nach Scrollen oder nach der ersten fertigen Eingabe (nicht über dem ersten Feld)
+      var anmeldung = /^\/start(\.html)?$/.test(location.pathname);
+      if ((document.querySelector(".auftakt") || anmeldung) && window.innerWidth < 1000) {
+        var spaeter = function () { window.removeEventListener("scroll", spaeter); document.removeEventListener("change", spaeter, true); clearTimeout(uhr); banner(); };
+        var uhr = anmeldung ? 0 : setTimeout(spaeter, 5000);
         window.addEventListener("scroll", spaeter, { passive: true });
+        if (anmeldung) document.addEventListener("change", spaeter, true);
       } else banner();
     }
   }

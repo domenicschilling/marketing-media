@@ -44,6 +44,37 @@ FRAGEN = [
 ]
 
 
+# Erster Bildschirm passend zur Anzeige (16.11.2026, Runde 2): Die Variante steht fest, bevor etwas gezeichnet wird.
+# Kopf-Skript: utm_content → html[data-hero] (CSS blendet die wechselnden Texte bis zum Tausch aus, höchstens 1,5 s) und lädt das passende Handybild vor.
+# Tausch-Skript direkt hinter dem Hero: Texte, Knopf, Stempel und Bild tauschen, dann html.hero-ok. Ohne Skript bleibt der Standard (Rücken).
+# Zuordnung: tv-a / bild-d2 / d → noshow, tv-b / ohne → Rücken (Standard), tv-c → link, tv-d → gutschein (bis 24.12., danach link).
+HERO_BILDER = {"": "handy-kunde-oben.webp?v=20261116", "noshow": "handy-anzahlung-oben.webp?v=20261116b", "gutschein": "handy-gutschein-oben.webp?v=20261116b"}
+HERO_KOPF = """<script>(function(){try{var q=new URLSearchParams(location.search),u=(q.get('utm_content')||q.get('hero')||'').toLowerCase(),v='';
+if(/(^|[^a-z])tv-?a([^a-z]|$)|^d$|bild-?d2?|no-?show|anzahlung/.test(u))v='noshow';
+else if(/(^|[^a-z])tv-?c([^a-z]|$)|10-?sek|link/.test(u))v='link';
+else if(/(^|[^a-z])tv-?d([^a-z]|$)|gutschein|weihnacht/.test(u))v=new Date()<new Date('2026-12-25T00:00:00+01:00')?'gutschein':'link';
+var d=document.documentElement,B=%s,l=document.createElement('link');
+l.rel='preload';l.as='image';l.type='image/webp';l.href='/assets/start/'+(B[v]||B['']);l.setAttribute('fetchpriority','high');document.head.appendChild(l);
+if(v){d.setAttribute('data-hero',v);setTimeout(function(){d.classList.add('hero-ok')},1500);}}catch(e){}})();</script>
+""" % json.dumps(HERO_BILDER)
+HERO_VARIANTEN = {
+    "noshow": {"h": "No-Show? Erst Anzahlung. Dann Termin.", "s": "Anzahlungs-Link per WhatsApp. Kunde zahlt am Handy, dann blockst du den Termin.", "c": "Anzahlung einrichten",
+               "b": "Kunde zahlt an und bestätigt deine Bedingungen – dann blockst du den\u00a0Termin.", "bh": "#nr3",
+               "bild": HERO_BILDER["noshow"], "alt": "Echte Tattoofin-Zahlseite am Handy: Hi Kai, deine Zahlung an Ink Studio Bamberg, 150 Euro, Rückenstück, Termin Freitag, Anzahlung. Beispieldaten."},
+    "link": {"h": "Betrag rein. Link raus. Bezahlt.", "s": "Karte, Apple Pay, Google Pay oder Klarna. Das Geld geht auf dein eigenes Stripe-Konto."},
+    "gutschein": {"h": "Weihnachten: Gutscheine per Link verkaufen.", "s": "Kunde zahlt am Handy und bekommt Code und PDF zum Verschenken. Das Geld geht direkt auf dein Stripe-Konto.", "c": "Gutscheine einrichten",
+                  "b": "Kunde bekommt Code und PDF sofort aufs\u00a0Handy.", "bh": "#nr5",
+                  "bild": HERO_BILDER["gutschein"], "alt": "Echte Tattoofin-Gutschein-Kaufseite am Handy: Hi Greta, dein Gutschein von Ink Studio Bamberg, 150 Euro, Wertgutschein für Max. Beispieldaten."},
+}
+HERO_TAUSCH = """<script>(function(){var d=document.documentElement,V=(%s)[d.getAttribute('data-hero')];
+if(V){var t=function(s,x){var e=document.querySelector(s);if(e&&x)e.textContent=x;};
+t('.auftakt [data-hero="h"]',V.h);t('.auftakt [data-hero="s"]',V.s);t('.auftakt-knopf .knopf',V.c);t('.auftakt [data-hero="b"]',V.b);
+var a=document.querySelector('.auftakt [data-hero="b"]');if(a&&V.bh)a.setAttribute('href',V.bh);
+var i=document.querySelector('.auftakt-handy img');if(i&&V.bild){i.src='/assets/start/'+V.bild;i.alt=V.alt;}}
+d.classList.add('hero-ok');})();</script>
+""" % json.dumps(HERO_VARIANTEN, ensure_ascii=False).replace("\\u00a0", "\u00a0")
+
+
 def nbsp_zahlen(t):
     """1,5 % / 49,90 € / 0,25 € ohne Umbruch zwischen Zahl und Einheit."""
     t = re.sub(r"(\d) (€|%)", "\\1&nbsp;\\2", t)
@@ -99,7 +130,7 @@ def bauen(seite):
         ("Ich hab schon SumUp &amp; Co.", "Behalt es. Dein Kartengerät kassiert an der Theke. Tattoofin kassiert vorher: Anzahlung per WhatsApp, Klarna, Gutscheine."),
         ("Meine Kunden zahlen bar.", "Bar bleibt. Für eine Anzahlung muss dein Kunde dann aber extra vorbeikommen. Mit dem Link zahlt er sofort vom Sofa."),
         ("Technik ist nicht meins.", "Musst du nicht können. Unser Team richtet alles mit dir ein, per WhatsApp."),
-        ("Brauch ich nicht.", "Denk an deine letzten No-Shows. Jeder davon hätte vorher anzahlen können."),
+        ("Anzahlung? Mach ich per PayPal.", "Und schreibst hinterher, bis sie da ist. Mit dem Link zahlt dein Kunde sofort und bestätigt dabei deine Bedingungen. Du siehst: bezahlt."),
     ]
     einwaende = ('  <section class="einwaende" aria-labelledby="einwaende-titel">\n'
                  '    <h2 id="einwaende-titel">Klingt gut, aber …</h2>\n    <ul class="einwand-liste">\n'
@@ -185,7 +216,7 @@ def bauen(seite):
   </details>
 """ % {"stern": stern}
 
-    skripte = """<script src="/assets/start/app.js?v=20261116" defer></script>
+    skripte = """<script src="/assets/start/app.js?v=20261116b" defer></script>
 <script defer src="https://cloud.umami.is/script.js" data-website-id="507b740f-264e-4ba1-a7d0-9dbe49db75af" data-domains="tattoofin.de"></script>
 <script src="/js/tf-track.js"></script>"""
     if studios:
@@ -202,9 +233,8 @@ def bauen(seite):
 <link rel="icon" href="/favicon.png" type="image/png"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preload" href="/assets/start/fonts/LuckiestGuy.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/start/fonts/DMSans.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/assets/start/handy-kunde-oben.webp?v=20261116" as="image" type="image/webp">
-<link rel="stylesheet" href="/assets/start/style.css?v=20261116">
-{ld}</head>
+<link rel="stylesheet" href="/assets/start/style.css?v=20261116b">
+{ld}{HERO_KOPF}</head>
 <body{' data-wa="aus"' if studios else ''}>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><pattern id="tf-punkte" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><circle cx="2.2" cy="2.2" r="2.1" fill="#1f3d5c"/><circle cx="6.7" cy="6.7" r="2.1" fill="#1f3d5c"/></pattern></defs></svg>
 <a class="sprung" href="#inhalt">Zum Inhalt springen</a>
@@ -222,8 +252,8 @@ def bauen(seite):
   <main id="inhalt">
   <section class="auftakt">
     <div class="auftakt-kopf">
-      <p class="kicker" data-hero="k">Tattoostudio-Besitzer, aufgepasst!</p>
-      <h1 data-hero="h">Ganzer Rücken? Du kriegst die 2.000&nbsp;€ auf einmal.</h1>
+      <p class="kicker">Tattoostudio-Besitzer, aufgepasst!</p>
+      <h1 data-hero="h">Ganzer Rücken? 2.000&nbsp;€ auf einmal.</h1>
       <p class="unterzeile" data-hero="s">Betrag rein, Link per WhatsApp raus. Dein Kunde zahlt am Handy, auch per Klarna.</p>
       <p class="hero-chips">Anzahlung · Raten* · Gutscheine – alles per Link</p>
     </div>
@@ -245,14 +275,14 @@ def bauen(seite):
       </figure>
     </div>
     <div class="auftakt-fuss">
-      <p class="hero-beleg"><a href="#nr1">Echter Fall: Rücken-Tattoo, 900&nbsp;€ per Klarna – 07.11.</a></p>
+      <p class="hero-beleg"><a href="#nr1" data-hero="b">Echter&nbsp;Fall 07.11.: Rücken-Tattoo per&nbsp;Klarna&nbsp;bezahlt</a></p>
       <div class="auftakt-knopf">{start("auftakt")}</div>
       <p class="preiszeile">49,90&nbsp;€ im Monat inkl. MwSt. · keine Provision · monatlich kündbar <span class="b2b">· nur für Unternehmer</span></p>
       <p class="raten-fn">{FN_LANG}</p>
       <p class="hero-wa"><a href="{wa}" data-umami-event="whatsapp-auftakt">Lieber erst fragen? Schreib unserem Team per WhatsApp&nbsp;→</a></p>{kunde}
     </div>
   </section>
-
+{HERO_TAUSCH}
   <section class="fall" id="nr1" data-beleg aria-labelledby="fall-titel">
     <div class="fall-kopf">
       <span class="stempel-schild">Echter Fall</span>
@@ -305,7 +335,7 @@ def bauen(seite):
           <figure class="abzug">
             <button type="button" class="abzug-knopf" data-abzug aria-expanded="false" aria-label="Bild größer zeigen">
               <span class="klebe" aria-hidden="true"></span>
-              <img src="/assets/start/handy-anzahlung-oben.webp" alt="Ausschnitt der Tattoofin-Zahlseite am Handy: Hi Kai, deine Zahlung an Ink Studio Bamberg, 150 Euro, Rückenstück, Termin Freitag, Anzahlung. Beispieldaten." width="600" height="600" loading="lazy" decoding="async">
+              <img src="/assets/start/handy-anzahlung-oben.webp?v=20261116b" alt="Ausschnitt der Tattoofin-Zahlseite am Handy: Hi Kai, deine Zahlung an Ink Studio Bamberg, 150 Euro, Rückenstück, Termin Freitag, Anzahlung. Beispieldaten." width="600" height="545" loading="lazy" decoding="async">
             </button>
             <figcaption>Beispieldaten</figcaption>
           </figure>
@@ -349,8 +379,8 @@ def bauen(seite):
 
   <section class="preis" id="preis" aria-labelledby="preis-titel">
     <div class="preis-innen">
-      <h2 id="preis-titel">Eine Anzahlung zahlt Tattoofin für Monate.</h2>
-      <p class="preis-rechnung">Kunde kommt nicht? Seine 100&nbsp;€ Anzahlung liegt schon bei dir. Das sind 2&nbsp;Monate Tattoofin.</p>
+      <h2 id="preis-titel">Eine Anzahlung zahlt Tattoofin fast 3&nbsp;Monate.</h2>
+      <p class="preis-rechnung">150&nbsp;€ Anzahlung, minus Stripe-Gebühr ca.&nbsp;2,50&nbsp;€ =&nbsp;147,50&nbsp;€. Tattoofin kostet 49,90&nbsp;€ im Monat.</p>
       <div class="preis-schild">
         <svg class="faden" viewBox="0 0 120 90" aria-hidden="true" focusable="false"><path d="M60 8 C42 30 78 52 60 86" fill="none" stroke="#fff7e3" stroke-width="4" stroke-linecap="round"/></svg>
         <span class="reisszwecke" aria-hidden="true"></span>
@@ -379,6 +409,7 @@ def bauen(seite):
           <li>Monatlich kündbar</li>
           <li>Unser Team richtet’s mit dir ein</li>
           <li>iPhone-App inklusive</li>
+          <li>Stripe sagt nein? Geld zurück.</li>
         </ul>
         <div class="wege">{start("preis")}<a class="wa" href="/vertrag.html">Vertrag vorab lesen</a></div>
       </div>

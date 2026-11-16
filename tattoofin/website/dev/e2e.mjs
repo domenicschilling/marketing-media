@@ -221,6 +221,12 @@ try {
   { const r1 = await post("/api/signup", { ...basis, plz: "x", telefon: "1", studioTelefon: "1", paket: "monatlich", email: "unsinn@example.com" }); const t = (await r1.json()).error || "";
     check(r1.status === 400 && /PLZ/.test(t) && /Mobilnummer/.test(t), "Anmeldung: PLZ „x“ und Telefon „1“ werden abgelehnt (PLZ 5 Ziffern, Telefon mind. 6 Ziffern)"); }
   check((await post("/api/signup", { paket: "einmal", email: "neu@example.com" })).status === 400, "Signup ohne Pflichtangaben abgelehnt");
+  // Runde 2 (16.11.2026): Studio-Telefon im Web optional, leer → Handynummer; ohne Handynummer weiterhin abgelehnt
+  { const r0 = await post("/api/signup", { ...basis, studioTelefon: "", paket: "monatlich", email: "ohne-studiotel@example.com" });
+    const s0 = await storeMod.studioBy("email", "ohne-studiotel@example.com");
+    check(r0.status === 200 && s0?.studioTelefon === "0151 123456" && s0?.telefon === "0151 123456", "Anmeldung ohne Studio-Telefon: Handynummer wird übernommen", `${r0.status} ${s0?.studioTelefon}`);
+    const r0b = await post("/api/signup", { ...basis, studioTelefon: "", telefon: "", paket: "monatlich", email: "ohne-tel@example.com" });
+    check(r0b.status === 400 && /Mobilnummer/.test((await r0b.json()).error || ""), "Anmeldung ohne Handy- und Studio-Telefon abgelehnt"); }
   await post("/api/signup", { ...basis, paket: "einmal", aktionscode: "RATENJA", email: "code@example.com" });
   check(!Object.values((await mock("state")).sessions).some((x) => x.amount_total === 148631), "Aktionscode RATENJA abgeschaltet (Preis bleibt 999 €)");
 

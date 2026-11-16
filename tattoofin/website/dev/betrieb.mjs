@@ -125,16 +125,19 @@ await abschnitt("1 Start-Seite: Cookie-Fenster verdeckt keinen Knopf (ohne es we
   for (const [w, h] of groessen) {
     const p = await neueSeite({ width: w, height: h });
     await p.goto(`${BASE}/start.html?paket=monatlich`);
-    const banner = Boolean(await p.waitForSelector(".tf-cc", { timeout: 3000 }).catch(() => null));
+    // Runde 2 (16.11.2026): unter 1000 px erscheint der Hinweis erst nach Scrollen oder der ersten fertigen Eingabe (nicht über dem ersten Feld)
+    await p.waitForTimeout(600);
+    const vorher = Boolean(await p.$(".tf-cc"));
     const klick = async (sel) => { try { await p.click(sel, { timeout: 3000 }); return true; } catch { return false; } };
     const trial = async (sel) => { try { await p.click(sel, { timeout: 3000, trial: true }); return true; } catch { return false; } };
     const s1 = (await p.isVisible("section[data-step='1'] [data-next]")) ? await klick("section[data-step='1'] [data-next]") : true; // ohne Preisschritt seit 16.11.2026
     for (const [k, v] of Object.entries({ firma: "Cookie Test", inhaber: "A M", strasse: "Musterstr. 1", plz: "96047", ort: "Bamberg", email: "c@test.de", telefon: "0151 1234567", studioTelefon: "0951 123456" })) await p.fill("#" + k, v).catch(() => {});
+    const banner = Boolean(await p.waitForSelector(".tf-cc", { timeout: 3000 }).catch(() => null)) && vorher === (w >= 1000);
     const s2 = await klick("section[data-step='2'] [data-next]");
     await p.check("input[name=ak_alle]").catch(() => {}); await p.check("input[name=ak_kmu]").catch(() => {});
     await p.fill("#unterzeichner", "Alex Muster").catch(() => {});
     const s3 = await trial("#submit");
-    check(banner && s1 && s2 && s3, `start.html ${w}x${h}: Banner da, „Weiter“ (Schritt 1+2) und „Verbindlich abschließen“ klickbar`, `banner=${banner} s1=${s1} s2=${s2} abschluss=${s3}`);
+    check(banner && s1 && s2 && s3, `start.html ${w}x${h}: Banner da (am Handy erst nach der ersten Eingabe), „Weiter“ (Schritt 1+2) und „Verbindlich abschließen“ klickbar`, `banner=${banner} sofort=${vorher} s1=${s1} s2=${s2} abschluss=${s3}`);
     await p.context().close();
   }
 });
@@ -958,17 +961,46 @@ await abschnitt("17 Recht (27.10.2026): Klarna-Stichtag 20.11.2026 für Risikofr
     const res = warn.map((w) => { const cs = getComputedStyle(w); const fg = parse(cs.color), bg = hintergrund(w), l1 = lum(fg), l2 = lum(bg); return { px: parseFloat(cs.fontSize), gewicht: Number(cs.fontWeight), kontrast: (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05), elternPx: parseFloat(getComputedStyle(w.parentElement).fontSize) }; });
     return { n: warn.length, abstand, claim: Boolean(cl), hero: Boolean(hero), fnHero, claimsAusserhalbHero, minPx: Math.min(...res.map((r) => r.px)), minElternPx: Math.min(...res.map((r) => r.elternPx)), minGewicht: Math.min(...res.map((r) => r.gewicht)), minKontrast: Math.min(...res.map((r) => r.kontrast)), breite: document.documentElement.scrollWidth <= innerWidth };
   };
-  for (const [name, pfad] of [["raten", "/raten.html"], ["start", "/"], ["studios", "/studios.html"], ["finanzieren", "/tattoo-finanzieren.html"], ["ratenzahlung", "/ratenzahlung-tattoostudio.html"], ["klarna", "/klarna-tattoostudio.html"], ["ratgeber", "/ratgeber.html"]]) {
+  for (const [name, pfad] of [["raten", "/raten.html"], ["start", "/"], ["start-tv-a", "/?utm_content=tv-a"], ["start-tv-d", "/?utm_content=tv-d"], ["studios", "/studios.html"], ["finanzieren", "/tattoo-finanzieren.html"], ["ratenzahlung", "/ratenzahlung-tattoostudio.html"], ["klarna", "/klarna-tattoostudio.html"], ["ratgeber", "/ratgeber.html"]]) {
     for (const [w, h] of [[390, 844], [1440, 900]]) {
       const p = await neueSeite({ width: w, height: h });
       await p.goto(BASE + pfad, { waitUntil: "load" });
       await p.waitForTimeout(500);
       const r = await p.evaluate(lesbar);
-      const hauptseite = ["start", "studios"].includes(name);
+      const hauptseite = name.startsWith("start") || name === "studios";
       const nah = hauptseite ? r.claim && r.hero && r.fnHero === true && r.claimsAusserhalbHero === 0 : (!r.claim || Math.abs(r.abstand) <= 1000);
       const fertig = r.n > 0 && r.minPx >= 12 && r.minKontrast >= 4.5 && nah && r.breite;
       check(fertig, `${pfad} ${w}x${h}: Warnhinweis vorhanden und lesbar (Fußnote ≥ 12 px, Kontrast ≥ 4,5, ${hauptseite ? "eine Raten-Aussage im Hero, Fußnote im selben Abschnitt ≤ 560 px darunter" : "nah an der Raten-Aussage"}, kein Querscrollen)`, `n=${r.n} px=${r.minPx} gew=${r.minGewicht} kontrast=${(r.minKontrast || 0).toFixed(1)} abstand=${Math.round(r.abstand || 0)} hero=${r.hero} fnHero=${r.fnHero} außerhalb=${r.claimsAusserhalbHero} breit=${r.breite}`);
       if (["raten", "start", "studios"].includes(name)) await p.screenshot({ path: path.join(shots, `recht-${name}-${w}.png`) });
+      await p.context().close();
+    }
+  }
+});
+
+// =====================================================================================================
+await abschnitt("17b Erster Bildschirm je Anzeige (Runde 2, 16.11.2026): richtige Variante ab dem ersten Bild, Bild und Stempel passend", async () => {
+  const FAELLE = [
+    ["", "Ganzer Rücken? 2.000 € auf einmal.", "handy-kunde-oben", true],
+    ["tv-b", "Ganzer Rücken? 2.000 € auf einmal.", "handy-kunde-oben", true],
+    ["tv-a", "No-Show? Erst Anzahlung. Dann Termin.", "handy-anzahlung-oben", false],
+    ["bild-d2", "No-Show? Erst Anzahlung. Dann Termin.", "handy-anzahlung-oben", false],
+    ["tv-c", "Betrag rein. Link raus. Bezahlt.", "handy-kunde-oben", true],
+    ["tv-d", "Weihnachten: Gutscheine per Link verkaufen.", "handy-gutschein-oben", false],
+  ];
+  for (const [utm, h1, bild, klarna] of FAELLE) {
+    for (const [w, h] of [[390, 844], [1440, 900]]) {
+      const p = await neueSeite({ width: w, height: h });
+      // Jeder gezeichnete Rahmen wird protokolliert: Überschrift darf nie mit dem Standardtext sichtbar sein, wenn eine Variante gilt
+      await p.addInitScript(() => { window.__rahmen = []; (function t() { const e = document.querySelector("h1"); if (e) window.__rahmen.push([getComputedStyle(e).visibility, e.textContent.replace(/\u00a0/g, " ")]); requestAnimationFrame(t); })(); });
+      await p.goto(BASE + "/" + (utm ? "?utm_content=" + utm : ""), { waitUntil: "load" });
+      await p.waitForTimeout(300);
+      const m = await p.evaluate(() => {
+        const sichtbar = (s) => { const e = document.querySelector(s); if (!e) return false; const r = e.getBoundingClientRect(), cs = getComputedStyle(e); return r.width > 0 && cs.display !== "none" && cs.visibility !== "hidden"; };
+        return { kicker: document.querySelector(".kicker").textContent, gesehen: [...new Set(window.__rahmen.filter((x) => x[0] === "visible").map((x) => x[1]))],
+          bild: document.querySelector(".auftakt-handy img").getAttribute("src"), herz: sichtbar(".fl-1"), beleg: document.querySelector(".hero-beleg a").textContent };
+      });
+      const gut = m.kicker === "Tattoostudio-Besitzer, aufgepasst!" && m.gesehen.length === 1 && m.gesehen[0] === h1 && m.bild.includes(bild) && m.herz === klarna && /Klarna/.test(m.beleg) === klarna && !/900/.test(m.beleg);
+      check(gut, `Hero ${utm || "ohne utm"} ${w}x${h}: nur „${h1}“ sichtbar, Bild ${bild}, Klarna-Herz/-Stempel ${klarna ? "da" : "weg"}`, JSON.stringify({ ...m, gesehen: m.gesehen }).slice(0, 220));
       await p.context().close();
     }
   }
@@ -1065,7 +1097,7 @@ await abschnitt("18 Paket Risikofrei geschlossen (26.10.2026): Neukunden gesperr
 // =====================================================================================================
 await abschnitt("19 Optik nach dem Entfernen von Risikofrei: Hero-Knopf, zwei Paket-Karten, kein Querscrollen auf 14 Größen", async () => {
   const GROESSEN = [[320, 568], [375, 667], [390, 844], [414, 896], [430, 932], [844, 390], [768, 1024], [1024, 768], [1280, 720], [1366, 768], [1440, 900], [1536, 864], [1920, 1080], [2560, 1440]];
-  const SEITEN = [["/", ".auftakt-knopf .knopf", "#preis .preis-schild"], ["/studios.html", ".auftakt-knopf .knopf", "#preis .preis-schild"], ["/start.html?paket=risikofrei", null, "section[data-step='1'] .choice.pakete label"]];
+  const SEITEN = [["/", ".auftakt-knopf .knopf", "#preis .preis-schild"], ["/?utm_content=tv-a", ".auftakt-knopf .knopf", "#preis .preis-schild"], ["/?utm_content=tv-d", ".auftakt-knopf .knopf", "#preis .preis-schild"], ["/studios.html", ".auftakt-knopf .knopf", "#preis .preis-schild"], ["/start.html?paket=risikofrei", null, "section[data-step='1'] .choice.pakete label"]];
   const probleme = [];
   for (const [w, h] of GROESSEN) {
     for (const [pf, cta, karten] of SEITEN) {
@@ -1094,7 +1126,7 @@ await abschnitt("19 Optik nach dem Entfernen von Risikofrei: Hero-Knopf, zwei Pa
       await p.context().close();
     }
   }
-  check(probleme.length === 0, "14 Größen × 3 Seiten: kein Querscrollen, Hero-Knopf im ersten Bildschirm und nach Scrollen nicht verdeckt (Cookie-Fenster), genau 1 Preis-Karte, nichts ragt über den Rand", probleme.slice(0, 2).join(" ; ") || "42 Seitenaufrufe geprüft");
+  check(probleme.length === 0, "14 Größen × 5 Seiten (Start, Varianten tv-a und tv-d, /studios, /start): kein Querscrollen, Hero-Knopf im ersten Bildschirm und nach Scrollen nicht verdeckt (Cookie-Fenster), genau 1 Preis-Karte, nichts ragt über den Rand", probleme.slice(0, 2).join(" ; ") || "70 Seitenaufrufe geprüft");
 });
 
 // =====================================================================================================

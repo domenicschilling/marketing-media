@@ -24,6 +24,8 @@
     step = n;
     document.querySelectorAll("[data-step]").forEach(function (s) { s.classList.toggle("hidden", +s.dataset.step !== n); });
     document.querySelectorAll(".steps-bar span").forEach(function (s) { s.classList.toggle("on", +s.dataset.s <= n); });
+    // Unterzeichner/in aus Inhaber/in vorbelegen, wenn noch leer (bleibt änderbar)
+    if (n === 3 && !val("unterzeichner") && val("inhaber")) f.elements.unterzeichner.value = val("inhaber");
     if (n === 3) final();
     window.scrollTo({ top: 0, behavior: "smooth" });
     try { sessionStorage.setItem("tf-start", JSON.stringify(daten())); } catch (e) {}
@@ -32,7 +34,7 @@
   function pruefe(n) {
     if (n === 1 && !paket() && !geschenk) return "Bitte wähle ein Paket.";
     if (n === 2) {
-      var fehlt = ["firma", "inhaber", "strasse", "plz", "ort", "email", "telefon", "studioTelefon"].filter(function (k) { return !val(k); });
+      var fehlt = ["firma", "inhaber", "strasse", "plz", "ort", "email", "telefon"].filter(function (k) { return !val(k); });
       if (fehlt.length) { f.elements[fehlt[0]].focus(); return "Bitte fülle alle Pflichtfelder aus."; }
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(val("email"))) { f.elements.email.focus(); return "Bitte gib eine gültige E-Mail-Adresse ein."; }
     }
@@ -81,7 +83,15 @@
     kurz.push("Wir richten alles für dich ein und sind per WhatsApp und E-Mail für dich da.");
     kurz.push("Für die Daten deiner Kunden schließen wir mit dir einen Auftragsverarbeitungsvertrag (AVV) nach Art. 28 DSGVO.");
     kurz.push("Nur für Unternehmer (§ 14 BGB), deshalb kein Widerrufsrecht wie für Verbraucher.");
-    document.getElementById("kurz").innerHTML = kurz.map(function (x) { return "<li>" + TF.esc(x) + "</li>"; }).join("");
+    // Runde 2 (16.11.2026): drei Punkte sichtbar, alle Punkte vollständig im aufklappbaren Teil darunter
+    var oben = p === "monatlich" && !geschenk ? [
+      TF.monatPreis(C.monatNetto, C.ustProzent) + ", monatlich kündbar.",
+      "0 % Provision, nur die Zahlungsgebühren von Stripe.",
+      "Unser Team richtet alles mit dir ein, per WhatsApp.",
+    ] : kurz.slice(0, 3);
+    var li = function (x) { return "<li>" + TF.esc(x) + "</li>"; };
+    document.getElementById("kurz").innerHTML = oben.map(li).join("");
+    document.getElementById("kurz-mehr").innerHTML = kurz.map(li).join("");
   }
 
   function daten() {

@@ -15,9 +15,15 @@
 <link rel="icon" href="/favicon.png" type="image/png"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preload" href="/assets/start/fonts/LuckiestGuy.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/start/fonts/DMSans.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/assets/start/handy-kunde-oben.webp?v=20261116" as="image" type="image/webp">
-<link rel="stylesheet" href="/assets/start/style.css?v=20261116">
+<link rel="stylesheet" href="/assets/start/style.css?v=20261116b">
 <script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "Organization", "@id": "https://tattoofin.de/#org", "name": "Tattoofin", "legalName": "DSX Media Solutions UG (haftungsbeschränkt)", "url": "https://tattoofin.de/", "logo": "https://tattoofin.de/assets/logo.png", "email": "info@tattoofin.de", "telephone": "+491624502375", "address": {"@type": "PostalAddress", "streetAddress": "Am Weingarten 9", "postalCode": "96117", "addressLocality": "Memmelsdorf", "addressCountry": "DE"}, "sameAs": ["https://www.instagram.com/tattoofin.de/"]}, {"@type": "WebSite", "@id": "https://tattoofin.de/#website", "url": "https://tattoofin.de/", "name": "Tattoofin", "inLanguage": "de-DE", "publisher": {"@id": "https://tattoofin.de/#org"}}, {"@type": "Service", "name": "Zahlungsstruktur für Tattoo-Studios", "serviceType": "Zahlungslinks, QR-Zahlseite, Anzahlungen und Ratenzahlung über externe Anbieter für Tattoo-Studios", "provider": {"@id": "https://tattoofin.de/#org"}, "areaServed": {"@type": "Country", "name": "Deutschland"}, "audience": {"@type": "BusinessAudience", "name": "Tattoo-Studios"}, "offers": [{"@type": "Offer", "name": "Paket Monatlich", "description": "49,90 € im Monat inkl. MwSt. (41,93 € netto), keine Provision, danach nur die Zahlungsgebühren von Stripe. QR-Code zum Ausdrucken im Paket. Monatlich kündbar.", "price": "49.90", "priceCurrency": "EUR", "priceSpecification": {"@type": "UnitPriceSpecification", "price": "49.90", "priceCurrency": "EUR", "valueAddedTaxIncluded": true, "unitText": "Monat", "referenceQuantity": {"@type": "QuantitativeValue", "value": 1, "unitCode": "MON"}}}]}, {"@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Bekommt jeder Kunde Raten*?", "acceptedAnswer": {"@type": "Answer", "text": "Nein. Klarna prüft jeden Kunden selbst. Sagt Klarna nein, zahlt dein Kunde mit Karte, Apple Pay oder Google Pay. *Raten über Klarna, nach deren Bonitätsprüfung. Achtung! Kreditaufnahme kostet Geld."}}, {"@type": "Question", "name": "Und wenn der Kunde nicht zahlt?", "acceptedAnswer": {"@type": "Answer", "text": "Bei Raten* liegt das Ausfallrisiko laut Stripe grundsätzlich bei Klarna. Reklamiert dein Kunde die Leistung, kann er bis zu 180 Tage zurückbuchen lassen. Bei einer Anzahlung hilft dir seine gespeicherte Bestätigung deiner Bedingungen als Nachweis. Unser Team hilft dir dabei. *Raten über Klarna, nach deren Bonitätsprüfung. Achtung! Kreditaufnahme kostet Geld."}}, {"@type": "Question", "name": "Ist Tattoofin der Kreditgeber?", "acceptedAnswer": {"@type": "Answer", "text": "Nein. Den Vertrag über die Raten* schließt dein Kunde mit Klarna. Du berätst nicht zu Krediten und sagst keine Raten* zu. *Raten über Klarna, nach deren Bonitätsprüfung. Achtung! Kreditaufnahme kostet Geld."}}, {"@type": "Question", "name": "Was kostet es genau?", "acceptedAnswer": {"@type": "Answer", "text": "49,90 € im Monat inkl. MwSt. (41,93 € netto), keine Provision. Dazu Stripe-Gebühren je Zahlung: Karte ab 1,5 % + 0,25 €, Klarna ab 2,99 % + 0,35 €. Der erste Monat ist beim Start fällig."}}, {"@type": "Question", "name": "Wie kündige ich? Und wenn Stripe mich ablehnt?", "acceptedAnswer": {"@type": "Answer", "text": "Im Portal, zum Ende des Abrechnungsmonats. Dein Stripe-Konto bleibt bei dir, Zahlungslinks und QR-Code enden. Lehnt Stripe dein Studio endgültig ab, bekommst du die gezahlten Monate zurück, außer bei falschen Angaben oder Pflichtverletzung."}}, {"@type": "Question", "name": "Wann kommt das Geld, und was brauche ich?", "acceptedAnswer": {"@type": "Answer", "text": "Stripe zahlt auf dein Bankkonto aus, nach den Fristen von Stripe. Du brauchst dein Studio als Unternehmen, ein Bankkonto und deinen Ausweis."}}]}]}</script>
+<script>(function(){try{var q=new URLSearchParams(location.search),u=(q.get('utm_content')||q.get('hero')||'').toLowerCase(),v='';
+if(/(^|[^a-z])tv-?a([^a-z]|$)|^d$|bild-?d2?|no-?show|anzahlung/.test(u))v='noshow';
+else if(/(^|[^a-z])tv-?c([^a-z]|$)|10-?sek|link/.test(u))v='link';
+else if(/(^|[^a-z])tv-?d([^a-z]|$)|gutschein|weihnacht/.test(u))v=new Date()<new Date('2026-12-25T00:00:00+01:00')?'gutschein':'link';
+var d=document.documentElement,B={"": "handy-kunde-oben.webp?v=20261116", "noshow": "handy-anzahlung-oben.webp?v=20261116b", "gutschein": "handy-gutschein-oben.webp?v=20261116b"},l=document.createElement('link');
+l.rel='preload';l.as='image';l.type='image/webp';l.href='/assets/start/'+(B[v]||B['']);l.setAttribute('fetchpriority','high');document.head.appendChild(l);
+if(v){d.setAttribute('data-hero',v);setTimeout(function(){d.classList.add('hero-ok')},1500);}}catch(e){}})();</script>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><pattern id="tf-punkte" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><circle cx="2.2" cy="2.2" r="2.1" fill="#1f3d5c"/><circle cx="6.7" cy="6.7" r="2.1" fill="#1f3d5c"/></pattern></defs></svg>
@@ -36,8 +42,8 @@
   <main id="inhalt">
   <section class="auftakt">
     <div class="auftakt-kopf">
-      <p class="kicker" data-hero="k">Tattoostudio-Besitzer, aufgepasst!</p>
-      <h1 data-hero="h">Ganzer Rücken? Du kriegst die 2.000&nbsp;€ auf einmal.</h1>
+      <p class="kicker">Tattoostudio-Besitzer, aufgepasst!</p>
+      <h1 data-hero="h">Ganzer Rücken? 2.000&nbsp;€ auf einmal.</h1>
       <p class="unterzeile" data-hero="s">Betrag rein, Link per WhatsApp raus. Dein Kunde zahlt am Handy, auch per Klarna.</p>
       <p class="hero-chips">Anzahlung · Raten* · Gutscheine – alles per Link</p>
     </div>
@@ -59,13 +65,19 @@
       </figure>
     </div>
     <div class="auftakt-fuss">
-      <p class="hero-beleg"><a href="#nr1">Echter Fall: Rücken-Tattoo, 900&nbsp;€ per Klarna – 07.11.</a></p>
+      <p class="hero-beleg"><a href="#nr1" data-hero="b">Echter&nbsp;Fall 07.11.: Rücken-Tattoo per&nbsp;Klarna&nbsp;bezahlt</a></p>
       <div class="auftakt-knopf"><a class="knopf" href="/start.html" data-umami-event="start-auftakt">Studio anmelden – 3&nbsp;Min.</a></div>
       <p class="preiszeile">49,90&nbsp;€ im Monat inkl. MwSt. · keine Provision · monatlich kündbar <span class="b2b">· nur für Unternehmer</span></p>
       <p class="raten-fn">*Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, nicht Tattoofin. Achtung! Kreditaufnahme kostet Geld.</p>
       <p class="hero-wa"><a href="https://wa.me/491624502375?text=Hi%20Tattoofin-Team%2C%20ich%20habe%20ein%20Tattoo-Studio%20und%20eine%20Frage%20zu%20Tattoofin%3A" data-umami-event="whatsapp-auftakt">Lieber erst fragen? Schreib unserem Team per WhatsApp&nbsp;→</a></p>
     </div>
   </section>
+<script>(function(){var d=document.documentElement,V=({"noshow": {"h": "No-Show? Erst Anzahlung. Dann Termin.", "s": "Anzahlungs-Link per WhatsApp. Kunde zahlt am Handy, dann blockst du den Termin.", "c": "Anzahlung einrichten", "b": "Kunde zahlt an und bestätigt deine Bedingungen – dann blockst du den Termin.", "bh": "#nr3", "bild": "handy-anzahlung-oben.webp?v=20261116b", "alt": "Echte Tattoofin-Zahlseite am Handy: Hi Kai, deine Zahlung an Ink Studio Bamberg, 150 Euro, Rückenstück, Termin Freitag, Anzahlung. Beispieldaten."}, "link": {"h": "Betrag rein. Link raus. Bezahlt.", "s": "Karte, Apple Pay, Google Pay oder Klarna. Das Geld geht auf dein eigenes Stripe-Konto."}, "gutschein": {"h": "Weihnachten: Gutscheine per Link verkaufen.", "s": "Kunde zahlt am Handy und bekommt Code und PDF zum Verschenken. Das Geld geht direkt auf dein Stripe-Konto.", "c": "Gutscheine einrichten", "b": "Kunde bekommt Code und PDF sofort aufs Handy.", "bh": "#nr5", "bild": "handy-gutschein-oben.webp?v=20261116b", "alt": "Echte Tattoofin-Gutschein-Kaufseite am Handy: Hi Greta, dein Gutschein von Ink Studio Bamberg, 150 Euro, Wertgutschein für Max. Beispieldaten."}})[d.getAttribute('data-hero')];
+if(V){var t=function(s,x){var e=document.querySelector(s);if(e&&x)e.textContent=x;};
+t('.auftakt [data-hero="h"]',V.h);t('.auftakt [data-hero="s"]',V.s);t('.auftakt-knopf .knopf',V.c);t('.auftakt [data-hero="b"]',V.b);
+var a=document.querySelector('.auftakt [data-hero="b"]');if(a&&V.bh)a.setAttribute('href',V.bh);
+var i=document.querySelector('.auftakt-handy img');if(i&&V.bild){i.src='/assets/start/'+V.bild;i.alt=V.alt;}}
+d.classList.add('hero-ok');})();</script>
 
   <section class="fall" id="nr1" data-beleg aria-labelledby="fall-titel">
     <div class="fall-kopf">
@@ -119,7 +131,7 @@
           <figure class="abzug">
             <button type="button" class="abzug-knopf" data-abzug aria-expanded="false" aria-label="Bild größer zeigen">
               <span class="klebe" aria-hidden="true"></span>
-              <img src="/assets/start/handy-anzahlung-oben.webp" alt="Ausschnitt der Tattoofin-Zahlseite am Handy: Hi Kai, deine Zahlung an Ink Studio Bamberg, 150 Euro, Rückenstück, Termin Freitag, Anzahlung. Beispieldaten." width="600" height="600" loading="lazy" decoding="async">
+              <img src="/assets/start/handy-anzahlung-oben.webp?v=20261116b" alt="Ausschnitt der Tattoofin-Zahlseite am Handy: Hi Kai, deine Zahlung an Ink Studio Bamberg, 150 Euro, Rückenstück, Termin Freitag, Anzahlung. Beispieldaten." width="600" height="545" loading="lazy" decoding="async">
             </button>
             <figcaption>Beispieldaten</figcaption>
           </figure>
@@ -158,7 +170,7 @@
       <li class="einwand"><p class="einwand-frage">„Ich hab schon SumUp &amp; Co.“</p><p>Behalt es. Dein Kartengerät kassiert an der Theke. Tattoofin kassiert vorher: Anzahlung per WhatsApp, Klarna, Gutscheine.</p></li>
       <li class="einwand"><p class="einwand-frage">„Meine Kunden zahlen bar.“</p><p>Bar bleibt. Für eine Anzahlung muss dein Kunde dann aber extra vorbeikommen. Mit dem Link zahlt er sofort vom Sofa.</p></li>
       <li class="einwand"><p class="einwand-frage">„Technik ist nicht meins.“</p><p>Musst du nicht können. Unser Team richtet alles mit dir ein, per WhatsApp.</p></li>
-      <li class="einwand"><p class="einwand-frage">„Brauch ich nicht.“</p><p>Denk an deine letzten No-Shows. Jeder davon hätte vorher anzahlen können.</p></li>
+      <li class="einwand"><p class="einwand-frage">„Anzahlung? Mach ich per PayPal.“</p><p>Und schreibst hinterher, bis sie da ist. Mit dem Link zahlt dein Kunde sofort und bestätigt dabei deine Bedingungen. Du siehst: bezahlt.</p></li>
     </ul>
   </section>
 
@@ -173,8 +185,8 @@
 
   <section class="preis" id="preis" aria-labelledby="preis-titel">
     <div class="preis-innen">
-      <h2 id="preis-titel">Eine Anzahlung zahlt Tattoofin für Monate.</h2>
-      <p class="preis-rechnung">Kunde kommt nicht? Seine 100&nbsp;€ Anzahlung liegt schon bei dir. Das sind 2&nbsp;Monate Tattoofin.</p>
+      <h2 id="preis-titel">Eine Anzahlung zahlt Tattoofin fast 3&nbsp;Monate.</h2>
+      <p class="preis-rechnung">150&nbsp;€ Anzahlung, minus Stripe-Gebühr ca.&nbsp;2,50&nbsp;€ =&nbsp;147,50&nbsp;€. Tattoofin kostet 49,90&nbsp;€ im Monat.</p>
       <div class="preis-schild">
         <svg class="faden" viewBox="0 0 120 90" aria-hidden="true" focusable="false"><path d="M60 8 C42 30 78 52 60 86" fill="none" stroke="#fff7e3" stroke-width="4" stroke-linecap="round"/></svg>
         <span class="reisszwecke" aria-hidden="true"></span>
@@ -203,6 +215,7 @@
           <li>Monatlich kündbar</li>
           <li>Unser Team richtet’s mit dir ein</li>
           <li>iPhone-App inklusive</li>
+          <li>Stripe sagt nein? Geld zurück.</li>
         </ul>
         <div class="wege"><a class="knopf" href="/start.html" data-umami-event="start-preis">Studio anmelden – 3&nbsp;Min.</a><a class="wa" href="/vertrag.html">Vertrag vorab lesen</a></div>
       </div>
@@ -260,7 +273,7 @@
     <form method="dialog"><button class="film-zu" type="submit">Schließen</button></form>
   </dialog>
 </div>
-<script src="/assets/start/app.js?v=20261116" defer></script>
+<script src="/assets/start/app.js?v=20261116b" defer></script>
 <script defer src="https://cloud.umami.is/script.js" data-website-id="507b740f-264e-4ba1-a7d0-9dbe49db75af" data-domains="tattoofin.de"></script>
 <script src="/js/tf-track.js"></script>
 </body>

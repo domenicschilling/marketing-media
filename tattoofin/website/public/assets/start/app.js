@@ -130,27 +130,9 @@
     aus.forEach(function (el) { if (el) ioAus.observe(el); });
   }
 
-  // Erster Bildschirm passend zur Anzeige (16.11.2026): nur Dachzeile, Überschrift, Unterzeile und Knopftext wechseln.
-  // Kennung kommt aus utm_content der Meta-Anzeigen (tv-a No-Show, tv-b Rücken, tv-c 10 Sekunden, tv-d Weihnachten, bild-d2/d Anzahlung).
-  (function () {
-    var q = new URLSearchParams(location.search), u = (q.get('utm_content') || q.get('hero') || '').toLowerCase();
-    var v = '';
-    if (/(^|[^a-z])tv-?a([^a-z]|$)|^d$|bild-?d2?|no-?show|anzahlung/.test(u)) v = 'noshow';
-    else if (/(^|[^a-z])tv-?c([^a-z]|$)|10-?sek|link/.test(u)) v = 'link';
-    else if (/(^|[^a-z])tv-?d([^a-z]|$)|gutschein|weihnacht/.test(u)) v = new Date() < new Date('2026-12-25T00:00:00+01:00') ? 'gutschein' : 'link';
-    var V = {
-      noshow: { k: 'Termin geblockt, Kunde kommt nicht?', h: 'Erst Anzahlung. Dann Termin.', s: 'Anzahlungs-Link per WhatsApp. Kunde zahlt am Handy, dann blockst du den Termin.', c: 'Anzahlung einrichten',
-        bild: '/assets/start/handy-anzahlung-oben.webp', alt: 'Echte Tattoofin-Zahlseite am Handy: Hi Kai, deine Zahlung an Ink Studio Bamberg, 150 Euro, Rückenstück, Termin Freitag, Anzahlung. Beispieldaten.' },
-      link: { k: 'Schluss mit Überweisung und Hinterherschreiben.', h: 'Betrag rein. Link raus. Bezahlt.', s: 'Karte, Apple Pay, Google Pay oder Klarna. Das Geld geht auf dein eigenes Stripe-Konto.' },
-      gutschein: { k: 'Weihnachten kommt.', h: 'Gutscheine per Link verkaufen.', s: 'Kunde zahlt am Handy und bekommt Code und PDF zum Verschenken. Das Geld ist schon bei dir.', c: 'Gutscheine einrichten' }
-    }[v];
-    var knopf = document.querySelector('.auftakt-knopf .knopf');
-    if (knopf) knopf.setAttribute('data-umami-event-hero', v || 'ruecken');
-    if (!V) return;
-    var setze = function (sel, txt) { var el = document.querySelector(sel); if (el && txt) el.textContent = txt; };
-    setze('[data-hero="k"]', V.k); setze('[data-hero="h"]', V.h); setze('[data-hero="s"]', V.s);
-    if (knopf && V.c) knopf.textContent = V.c;
-    if (V.bild) { var b = document.querySelector('.auftakt-handy img'); if (b) { b.src = V.bild; b.alt = V.alt; } }
-    document.documentElement.setAttribute('data-hero', v);
-  })();
+  // Erster Bildschirm passend zur Anzeige: Variante setzt das Kopf-Skript (html[data-hero]), getauscht wird direkt hinter dem Hero
+  // (beides in dev/startseite-bauen.py, damit nichts flackert). Hier nur noch Umami-Kennung am Hero-Knopf und Sicherheitsnetz.
+  var heroKnopf = document.querySelector('.auftakt-knopf .knopf');
+  if (heroKnopf) heroKnopf.setAttribute('data-umami-event-hero', document.documentElement.getAttribute('data-hero') || 'ruecken');
+  document.documentElement.classList.add('hero-ok');
 })();
