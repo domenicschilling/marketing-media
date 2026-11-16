@@ -483,6 +483,8 @@ try {
   await pK.waitForURL(/zahlung\.html\?z=zl_/);
   check(pK.url() === `${BASE}/zahlung.html?z=${lenaId}`, "Kurzlink führt im Browser sofort zur Zahlseite", pK.url());
   await pK.waitForFunction(() => document.getElementById("betrag").textContent.includes("1.500"));
+  { const ortT = (await pK.textContent("#ort")).trim(), studT = (await pK.textContent("#studio")).trim();
+    check(!ortT || !studT.toLowerCase().includes(ortT.toLowerCase()), "Zahlseite: Ortszeile nie doppelt zum Studionamen (z. B. nicht „Ink Studio Bamberg / Bamberg“)", `${studT} / ${ortT}`); }
   await pK.click("#weiter");
   check((await pK.textContent("#alert")).includes("Projekt und Betrag"), "Ohne Inhalts-Häkchen geht es nicht weiter");
   check((await pK.textContent("#inhalt-text")).includes("Sleeve linker Arm, 3 Sitzungen"), "Kunde sieht Motiv, Sitzungen und Betrag im Häkchen-Text");

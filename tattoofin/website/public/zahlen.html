@@ -63,7 +63,7 @@ if (/[?&]app=1(&|#|$)/.test(location.search)) document.querySelectorAll(".powere
   try {
     var d = await TF.api("/api/pay?s=" + encodeURIComponent(slug || ""));
     studio = d.studio; B.branding(studio);
-    $("studio").textContent = studio.firma; $("ort").textContent = studio.ort || "";
+    $("studio").textContent = studio.firma; $("ort").textContent = (function (f, o) { o = String(o || "").trim(); return o && String(f || "").toLowerCase().indexOf(o.toLowerCase()) < 0 ? o : ""; })(studio.firma, studio.ort) /* Ort nur, wenn er nicht schon im Studionamen steht (sonst „Ink Studio Bamberg / Bamberg“) */;
     document.title = "Bezahlen bei " + studio.firma;
     // Ohne Klarna (z. B. Paket Risikofrei ab dem Stichtag): keine Raten-Hinweise, nur Karte/Wallets
     if (studio.klarna === false) document.querySelector(".fuss").innerHTML = "Bezahlt wird per Karte (auch Apple Pay / Google Pay). Dein Vertrag über das Tattoo besteht nur mit dem Studio; Tattoofin stellt nur die Technik bereit. Deine gesetzlichen Rechte bleiben von den Häkchen unberührt.";

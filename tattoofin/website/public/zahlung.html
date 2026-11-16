@@ -70,7 +70,7 @@
     B.meldung(err.status === 404 ? "Bitte prüfe den Link oder frag im Studio nach einem neuen." : err.message); return;
   }
   var z = d.zahlung, anz = z.art === "anzahlung", gs = z.art === "gutschein";
-  $("studio").textContent = d.studio.firma; $("ort").textContent = d.studio.ort || ""; B.branding(d.studio);
+  $("studio").textContent = d.studio.firma; $("ort").textContent = (function (f, o) { o = String(o || "").trim(); return o && String(f || "").toLowerCase().indexOf(o.toLowerCase()) < 0 ? o : ""; })(d.studio.firma, d.studio.ort) /* Ort nur, wenn er nicht schon im Studionamen steht (sonst „Ink Studio Bamberg / Bamberg“) */; B.branding(d.studio);
   $("hallo").textContent = gs ? (z.kunde ? "Hi " + z.kunde + ", dein Gutschein von" : "Dein Gutschein von") : z.kunde ? "Hi " + z.kunde + ", deine Zahlung an" : "Zahlung an";
   $("betrag").textContent = TF.euro(z.betragCent, true);
   $("sub").textContent = gs ? "Wertgutschein" + (z.empfaenger ? " für " + z.empfaenger : "") + " · für alle Leistungen bei " + d.studio.firma : (z.beschreibung || "Tattoo-Projekt") + (z.sitzungen ? " · " + z.sitzungen : "") + (anz ? " · Anzahlung" : "");

@@ -7,7 +7,7 @@
 if(/(^|[^a-z])tv-?a([^a-z]|$)|^d$|bild-?d2?|no-?show|anzahlung/.test(u))v='noshow';
 else if(/(^|[^a-z])tv-?c([^a-z]|$)|10-?sek|link/.test(u))v='link';
 else if(/(^|[^a-z])tv-?d([^a-z]|$)|gutschein|weihnacht/.test(u))v=new Date()<new Date('2026-12-25T00:00:00+01:00')?'gutschein':'link';
-var d=document.documentElement,B={"": "handy-kunde-oben.webp?v=20261116c", "noshow": "handy-anzahlung-oben.webp?v=20261116b", "gutschein": "handy-gutschein-oben.webp?v=20261116b"},l=document.createElement('link');
+var d=document.documentElement,B={"": "handy-kunde-oben.webp?v=20261116d", "noshow": "handy-anzahlung-oben.webp?v=20261116b", "gutschein": "handy-gutschein-oben.webp?v=20261116b"},l=document.createElement('link');
 if(!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)){d.classList.add('stech-warten');setTimeout(function(){d.classList.remove('stech-warten')},4000);}
 l.rel='preload';l.as='image';l.type='image/webp';l.href='/assets/start/'+(B[v]||B['']);l.setAttribute('fetchpriority','high');document.head.appendChild(l);
 if(v){d.setAttribute('data-hero',v);setTimeout(function(){d.classList.add('hero-ok')},1500);}}catch(e){}})();</script>
@@ -61,7 +61,7 @@ if(v){d.setAttribute('data-hero',v);setTimeout(function(){d.classList.add('hero-
       <img class="hausherr" src="/assets/start/figur.webp" alt="Tattoofin-Figur mit tätowierten Armen zeigt den Daumen hoch" width="300" height="310" decoding="async">
       <figure class="auftakt-handy">
         <span class="klebe" aria-hidden="true"></span>
-        <span class="handy-rahmen"><img src="/assets/start/handy-kunde-oben.webp?v=20261116c" alt="Echte Tattoofin-Zahlseite am Handy: Hi Lena, deine Zahlung an Ink Studio Bamberg, Schritt 1 von 2, 4.000,00 Euro, Ganzer Rücken. Beispieldaten." width="600" height="545"><button type="button" class="film-knopf" data-film aria-haspopup="dialog"><span aria-hidden="true">▶</span> 10 Sek. ansehen</button></span>
+        <span class="handy-rahmen"><img src="/assets/start/handy-kunde-oben.webp?v=20261116d" alt="Echte Tattoofin-Zahlseite am Handy: Hi Lena, deine Zahlung an Ink Studio Bamberg, Schritt 1 von 2, 4.000,00 Euro, Ganzer Rücken. Beispieldaten." width="600" height="545"><button type="button" class="film-knopf" data-film aria-haspopup="dialog"><span aria-hidden="true">▶</span> 10 Sek. ansehen</button></span>
         <figcaption>Echte App · Beispieldaten</figcaption>
       </figure>
     </div>

@@ -48,7 +48,7 @@ FRAGEN = [
 # Kopf-Skript (steht vor dem Stylesheet, damit es nicht auf style.css wartet und das Variantenbild sofort vorlädt): utm_content → html[data-hero] (CSS blendet die wechselnden Texte bis zum Tausch aus, höchstens 1,5 s) und lädt das passende Handybild vor.
 # Tausch-Skript direkt hinter dem Hero: Texte, Knopf, Stempel und Bild tauschen, dann html.hero-ok. Ohne Skript bleibt der Standard (Rücken).
 # Zuordnung: tv-a / bild-d2 / d → noshow, tv-b / ohne → Rücken (Standard), tv-c → link, tv-d → gutschein (bis 24.12., danach link).
-HERO_BILDER = {"": "handy-kunde-oben.webp?v=20261116c", "noshow": "handy-anzahlung-oben.webp?v=20261116b", "gutschein": "handy-gutschein-oben.webp?v=20261116b"}
+HERO_BILDER = {"": "handy-kunde-oben.webp?v=20261116d", "noshow": "handy-anzahlung-oben.webp?v=20261116b", "gutschein": "handy-gutschein-oben.webp?v=20261116b"}
 HERO_KOPF = """<script>(function(){try{var q=new URLSearchParams(location.search),u=(q.get('utm_content')||q.get('hero')||'').toLowerCase(),v='';
 if(/(^|[^a-z])tv-?a([^a-z]|$)|^d$|bild-?d2?|no-?show|anzahlung/.test(u))v='noshow';
 else if(/(^|[^a-z])tv-?c([^a-z]|$)|10-?sek|link/.test(u))v='link';
