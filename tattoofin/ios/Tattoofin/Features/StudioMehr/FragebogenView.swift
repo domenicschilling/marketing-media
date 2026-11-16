@@ -42,7 +42,6 @@ struct FragebogenView: View {
         if klarna { zahlarten.append(Feld(name: "w_raten", titel: "Klarna (nach Freigabe)", art: .haken(standard: true))) }
         zahlarten += [
             Feld(name: "w_sepa", titel: "SEPA-Lastschrift", art: .haken(standard: false)),
-            Feld(name: "w_paypal", titel: "PayPal (falls verfügbar)", art: .haken(standard: false)),
             Feld(name: "anzahlung_tattoofin", titel: "Sollen Kunden auch Anzahlungen über Tattoofin zahlen können?", art: .auswahl(["ja", "nein, nur Projektpreise"])),
         ]
         return [
@@ -76,8 +75,9 @@ struct FragebogenView: View {
                 Feld(name: "termin", titel: "Wunschtermin für Test und Schulung", art: .text(platzhalter: nil, max: nil)),
             ]),
             Abschnitt(titel: F.a6, felder: [
-                Feld(name: "aufkleber", titel: "Fensteraufkleber", art: .auswahl(["innen an die Scheibe", "außen", "keiner"])),
-                Feld(name: "flyer", titel: "Flyer A6 (Stück)", art: .auswahl(["100", "250", "500", "keine"])),
+                // Studio Kit nur digital, zum Selbstdrucken (Vertrag § 2, Entscheidung Domenic 16.11.2026): keine Stückzahlen, wie im Web
+                Feld(name: "vorlage_aufkleber", titel: "Vorlage Fensteraufkleber (zum Selbstdrucken)", art: .haken(standard: false)),
+                Feld(name: "vorlage_flyer", titel: "Vorlage Flyer A6 (zum Selbstdrucken)", art: .haken(standard: false)),
                 Feld(name: "sonstiges", titel: "Sonst noch etwas?", art: .lang),
             ]),
         ]

@@ -103,10 +103,12 @@ struct StudioMehrTests {
         let ohne = FragebogenView.abschnitte(klarna: false).flatMap(\.felder).map(\.name)
         #expect(FragebogenView.abschnitte(klarna: true).count == 6)
         for n in ["website", "instagram", "rechtsform", "kleinunternehmer", "kontoauszug", "preis_gross", "projekte_monat", "anzahlung",
-                  "raten_nachfrage", "z_bar", "z_ec", "z_kredit", "z_paypal", "z_ueberweisung", "z_terminal", "w_karte", "w_sepa", "w_paypal",
-                  "anzahlung_tattoofin", "logo_quelle", "farbe", "team", "zustaendig", "termin", "aufkleber", "flyer", "sonstiges"] {
+                  "raten_nachfrage", "z_bar", "z_ec", "z_kredit", "z_paypal", "z_ueberweisung", "z_terminal", "w_karte", "w_sepa",
+                  "anzahlung_tattoofin", "logo_quelle", "farbe", "team", "zustaendig", "termin", "vorlage_aufkleber", "vorlage_flyer", "sonstiges"] {
             #expect(ohne.contains(n), "Feld fehlt: \(n)")
         }
+        // Kein PayPal-Wunsch (über Stripe Connect nicht möglich), keine Druck-Stückzahlen (Studio Kit nur digital)
+        for n in ["w_paypal", "aufkleber", "flyer"] { #expect(!mit.contains(n), "Feld noch da: \(n)") }
         #expect(mit.contains("w_raten"))
         #expect(!ohne.contains("w_raten"))
         #expect(Set(mit).count == mit.count)
