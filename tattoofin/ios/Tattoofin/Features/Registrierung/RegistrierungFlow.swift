@@ -64,6 +64,7 @@ struct RegistrierenEmailView: View {
     private var gueltig: Bool { StudioDaten.emailGueltig(bereinigt) }
 
     var body: some View {
+        ScrollViewReader { leser in
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 MarkenKopf().padding(.top, 12)
@@ -78,6 +79,7 @@ struct RegistrierenEmailView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(Texte.Anmelden.emailLabel).font(.dm(.subheadline, weight: .semibold)).foregroundStyle(Color.tfTinte)
                     TextField(Texte.Anmelden.emailLabel, text: $email, prompt: tfPlatzhalter(Texte.Anmelden.emailPlatzhalter))
+                        .accessibilityLabel(Texte.Anmelden.emailLabel)
                         .textContentType(.emailAddress)
                         .keyboardType(.emailAddress)
                         .textInputAutocapitalization(.never)
@@ -88,7 +90,7 @@ struct RegistrierenEmailView: View {
                         .font(.dm(.body))
                         .padding(14)
                         .background(Color.tfKarte, in: RoundedRectangle(cornerRadius: 14))
-                        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.tfLinie, lineWidth: 1.5))
+                        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.tfFeldRahmen, lineWidth: 1.5))
                         .accessibilityIdentifier("reg-email")
                 }
 
@@ -102,6 +104,7 @@ struct RegistrierenEmailView: View {
                 .buttonStyle(.haupt)
                 .disabled(!gueltig || sendet)
                 .accessibilityIdentifier("reg-code-schicken")
+                .id("reg-code-schicken")
 
                 Text(Texte.Anmelden.keinPasswort)
                     .font(.dm(.footnote))
@@ -127,6 +130,15 @@ struct RegistrierenEmailView: View {
             .padding(20)
         }
         .scrollDismissesKeyboard(.interactively)
+        .onChange(of: fokus) { _, neu in
+            // Bei offener Tastatur „Code schicken“ ins Bild holen
+            guard neu else { return }
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(350))
+                withAnimation(.easeOut(duration: 0.25)) { leser.scrollTo("reg-code-schicken", anchor: .bottom) }
+            }
+        }
+        }
         .tfHintergrund()
         .navigationTitle(Texte.Registrieren.navTitel)
         .navigationBarTitleDisplayMode(.inline)

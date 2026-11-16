@@ -1,4 +1,5 @@
 import SwiftUI
+import UserNotifications
 
 /// Bildschirm 4: Einrichtung nach dem ersten Login (2 Seiten).
 /// Seite 1: Face ID an/aus. Seite 2: Mitteilungen erklären, erst dann die Systemabfrage.
@@ -7,6 +8,8 @@ struct EinrichtungView: View {
     @Environment(SperreManager.self) private var sperre
     @State private var seite = 0
     @State private var arbeitet = false
+    /// Hat das iPhone schon einmal nach Mitteilungen gefragt? (vorab gelesen, damit „Weiter“ nicht warten muss)
+    @State private var pushSchonEntschieden: Bool?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -29,6 +32,7 @@ struct EinrichtungView: View {
         }
         .tfHintergrund()
         .animation(.easeInOut, value: seite)
+        .task { pushSchonEntschieden = await PushManager.shared.status() != .notDetermined }
     }
 
     private var seiteFaceID: some View {
@@ -40,7 +44,7 @@ struct EinrichtungView: View {
                 .padding(.top, 30)
                 .accessibilityHidden(true)
             Ueberschrift(Texte.Einrichtung.faceIDTitel(sperre.artName))
-            Text(Texte.Einrichtung.faceIDText)
+            Text(Texte.Einrichtung.faceIDText(sperre.artName))
                 .font(.dm(.body))
                 .foregroundStyle(Color.tfTinte)
                 .fixedSize(horizontal: false, vertical: true)
@@ -52,7 +56,7 @@ struct EinrichtungView: View {
                 Task {
                     _ = await sperre.einschalten()
                     arbeitet = false
-                    seite = 1
+                    zuMitteilungen()
                 }
             } label: {
                 Text(Texte.Einrichtung.faceIDJa(sperre.artName))
@@ -62,9 +66,19 @@ struct EinrichtungView: View {
 
             Button(Texte.Einrichtung.faceIDNein) {
                 sperre.ausschalten()
-                seite = 1
+                zuMitteilungen()
             }
             .buttonStyle(.zweit)
+        }
+    }
+
+    /// „Mitteilungen erlauben?“ nur, wenn das iPhone noch nie gefragt hat (z. B. nach Abmelden und neu Anmelden nicht nochmal)
+    /// Status noch unbekannt: lieber fragen (wie bisher)
+    private func zuMitteilungen() {
+        if pushSchonEntschieden == true {
+            app.einrichtungFertig()
+        } else {
+            seite = 1
         }
     }
 

@@ -47,6 +47,7 @@ struct WerbungView: View {
             ScrollView {
                 // VStack statt LazyVStack: Sprungziele weiter unten müssen schon da sein
                 VStack(alignment: .leading, spacing: 16) {
+                    AktualisierenFehlerZeile()
                     if !s.darfKassieren {
                         gesperrt(s)
                     } else if werbung.start == nil && werbung.startServer == nil && werbung.werbung == nil && werbung.laedt {
@@ -74,7 +75,9 @@ struct WerbungView: View {
                                                ort: werbung.werbung?.ort ?? s.ort, zahlseite: z)
                                     .id(WerbungAbschnitt.beitraege)
                             }
-                        } else {
+                        } else if werbung.werbung != nil || werbung.start != nil {
+                            // Nur wenn die Daten wirklich da sind und Klarna fehlt. Bei einem Ladefehler stehen oben nur
+                            // Fehlerzeile und „Neu laden“, sonst sähe ein Klarna-Studio fälschlich „ohne Klarna“.
                             ohneKlarnaKarte
                         }
                         if let z = zahlseite(s) {

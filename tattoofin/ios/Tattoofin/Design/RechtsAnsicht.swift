@@ -211,15 +211,19 @@ struct RechtsFuss: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            Button(Texte.Konto.impressum) { seite = .impressum }
+            Button { seite = .impressum } label: {
+                Text(Texte.Konto.impressum).frame(minHeight: 44).padding(.horizontal, 6).contentShape(Rectangle())
+            }
             Text("·").accessibilityHidden(true)
-            Button(Texte.Konto.datenschutz) { seite = .datenschutz }
+            Button { seite = .datenschutz } label: {
+                Text(Texte.Konto.datenschutz).frame(minHeight: 44).padding(.horizontal, 6).contentShape(Rectangle())
+            }
         }
         .font(.dm(.footnote, weight: .semibold))
         .foregroundStyle(Color.tfLeise)
         .buttonStyle(.plain)
         .frame(maxWidth: .infinity)
         .padding(.top, 8)
-        .sheet(item: $seite) { RechtsAnsicht(seite: $0) }
+        .sheet(item: $seite) { RechtsAnsicht(seite: $0).tfSchriftGrenze() }
     }
 }

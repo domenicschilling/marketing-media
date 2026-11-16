@@ -157,6 +157,7 @@ struct EmailView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(Texte.Anmelden.emailLabel).font(.dm(.subheadline, weight: .semibold)).foregroundStyle(Color.tfTinte)
                     TextField(Texte.Anmelden.emailLabel, text: $email, prompt: tfPlatzhalter(Texte.Anmelden.emailPlatzhalter))
+                        .accessibilityLabel(Texte.Anmelden.emailLabel)
                         .textContentType(.emailAddress)
                         .keyboardType(.emailAddress)
                         .textInputAutocapitalization(.never)
@@ -167,7 +168,7 @@ struct EmailView: View {
                         .font(.dm(.body))
                         .padding(14)
                         .background(Color.tfKarte, in: RoundedRectangle(cornerRadius: 14))
-                        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.tfLinie, lineWidth: 1.5))
+                        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.tfFeldRahmen, lineWidth: 1.5))
                         .accessibilityIdentifier("anmelden-email")
                 }
 
@@ -431,7 +432,7 @@ struct CodeFelder: View {
                         .background(Color.tfKarte, in: RoundedRectangle(cornerRadius: 12))
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)
-                                .stroke(i == code.count && fokus.wrappedValue ? Color.tfAkzent : Color.tfLinie,
+                                .stroke(i == code.count && fokus.wrappedValue ? Color.tfAkzent : Color.tfFeldRahmen,
                                         lineWidth: i == code.count && fokus.wrappedValue ? 2.5 : 1.5)
                         )
                 }

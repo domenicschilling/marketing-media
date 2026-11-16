@@ -26,12 +26,17 @@ extension Color {
     static let tfLeise = Color(UIColor.hellDunkel(0x4A5D72, 0xA9BBCE))
     static let tfHintergrund = Color(UIColor.hellDunkel(0xFFF9EC, 0x0E1B29))
     static let tfKarte = Color(UIColor.hellDunkel(0xFFFFFF, 0x172B40))
+    /// Trennlinien und Kartenränder (nur Schmuck)
     static let tfLinie = Color(UIColor.hellDunkel(0xE6DCC6, 0x2A4460))
+    /// Rahmen von Eingabefeldern und Code-Kästchen: mindestens 3:1 zum Hintergrund (WCAG 1.4.11), sonst sieht man das Feld kaum
+    static let tfFeldRahmen = Color(UIColor.hellDunkel(0x9C8F73, 0x5F7A98))
     /// Akzent für Text/Symbole: hell Blau, dunkel Gelb (Gelb auf Dunkelblau ist kontrastreich)
     static let tfAkzent = Color(UIColor.hellDunkel(0x1F3D5C, 0xFBB316))
     static let tfGruen = Color(UIColor.hellDunkel(0x1B7343, 0x5BD69A))
     static let tfRot = Color(UIColor.hellDunkel(0xB3261E, 0xFF8F86))
     static let tfOrange = Color(UIColor.hellDunkel(0x8A4B00, 0xFFC266))
+    /// Schrift auf dem deaktivierten Hauptknopf: hell 6,1:1 auf dem blassen Gelb, dunkel 5,4:1 (vorher 2,8:1)
+    static let tfKnopfAusSchrift = Color(UIColor.hellDunkel(0x3B5068, 0xEEF3F8))
     /// Helle Gelb-Fläche für Hinweise (Text darauf: tfBlau)
     static let tfGelbHell = Color(UIColor.hellDunkel(0xFFE7B0, 0xFBB316))
 }
@@ -79,7 +84,7 @@ struct HauptKnopfStil: ButtonStyle {
         configuration.label
             .font(.dm(.headline, weight: .bold))
             .multilineTextAlignment(.center)
-            .foregroundStyle(Color.tfBlau.opacity(aktiv ? 1 : 0.55))
+            .foregroundStyle(aktiv ? Color.tfBlau : Color.tfKnopfAusSchrift)
             .frame(maxWidth: .infinity, minHeight: 54)
             .padding(.horizontal, 16)
             .padding(.vertical, 4)
@@ -99,13 +104,14 @@ struct ZweitKnopfStil: ButtonStyle {
         configuration.label
             .font(.dm(.body, weight: .semibold))
             .multilineTextAlignment(.center)
-            .foregroundStyle(farbe)
+            // Deaktiviert: nur der Rahmen wird schwächer, die Schrift bleibt lesbar (tfLeise, ≥ 4,5:1; vorher 2,4:1 durch 0,45 Deckkraft)
+            .foregroundStyle(aktiv ? farbe : Color.tfLeise)
             .frame(maxWidth: .infinity, minHeight: 48)
             .padding(.horizontal, 14)
             .padding(.vertical, 2)
             .background(Color.tfKarte, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(farbe.opacity(0.5), lineWidth: 1.5))
-            .opacity(aktiv ? (configuration.isPressed ? 0.7 : 1) : 0.45)
+            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(aktiv ? farbe.opacity(0.5) : Color.tfLinie, lineWidth: 1.5))
+            .opacity(aktiv && configuration.isPressed ? 0.7 : 1)
     }
 }
 
@@ -132,6 +138,12 @@ struct KarteModifier: ViewModifier {
 
 extension View {
     func karte() -> some View { modifier(KarteModifier()) }
+
+    /// Obergrenze für die Schriftgröße. Sitzt an der Wurzel, muss aber an jedes Blatt (.sheet/.fullScreenCover) einzeln,
+    /// weil Blätter sie nicht erben. Nicht nötig bei reinen UIKit-Blättern (Teilen, Safari): Dort wirkt sie nicht.
+    func tfSchriftGrenze() -> some View {
+        dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+    }
 
     /// Hintergrund der Bildschirme
     func tfHintergrund() -> some View {

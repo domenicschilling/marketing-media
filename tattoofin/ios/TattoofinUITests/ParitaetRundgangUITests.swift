@@ -35,7 +35,7 @@ final class ParitaetRundgangUITests: XCTestCase {
         let schicken = app.buttons["Code schicken"]
         XCTAssertTrue(schicken.waitForExistence(timeout: 15))
         schicken.tap()
-        let code = app.textFields["6-stelliger Code"]
+        let code = app.textFields["Code mit 6 Ziffern"]
         XCTAssertTrue(code.waitForExistence(timeout: 10))
         code.tap()
         code.typeText("123456")

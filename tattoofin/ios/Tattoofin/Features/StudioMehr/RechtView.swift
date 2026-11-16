@@ -29,7 +29,7 @@ struct RechtView: View {
         .tfHintergrund()
         .navigationTitle(Texte.Recht.titel)
         .navigationBarTitleDisplayMode(.inline)
-        .sheet(isPresented: $lesen) { RechtsAnsicht(seite: .recht) }
+        .sheet(isPresented: $lesen) { RechtsAnsicht(seite: .recht).tfSchriftGrenze() }
         .task {
             await mehr.laden()
             if name.isEmpty { name = mehr.studio?.inhaber ?? "" }
@@ -86,6 +86,7 @@ struct RechtView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(Texte.Recht.name).font(.dm(.subheadline, weight: .semibold)).foregroundStyle(Color.tfTinte)
                         TextField(Texte.Recht.name, text: $name, prompt: tfPlatzhalter(Texte.Recht.name))
+                            .accessibilityLabel(Texte.Recht.name)
                             .textContentType(.name)
                             .textInputAutocapitalization(.words)
                             .autocorrectionDisabled()

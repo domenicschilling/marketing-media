@@ -33,9 +33,12 @@ struct KontoView: View {
     var body: some View {
         NavigationStack {
             TFListe {
+                // Ohne Daten (kein Netz, Server weg): oben ein klarer Fehler statt Lade-Kreisel und roter Kreuze
+                if studio == nil, let f = portal.fehler { ladeFehlerAbschnitt(f) }
+                AktualisierenFehlerZeile()
                 studioAbschnitt
                 if studio?.istApple == true { aboAbschnitt }
-                stripeAbschnitt
+                if studio != nil { stripeAbschnitt }
                 StudioMehrAbschnitt()
                 SoGehtsAbschnitt()
                 mitteilungenAbschnitt
@@ -53,8 +56,8 @@ struct KontoView: View {
             .navigationBarTitleDisplayMode(.inline)
             .refreshable { await allesLaden() }
             .task { await allesLaden() }
-            .sheet(item: $rechtsseite) { RechtsAnsicht(seite: $0) }
-            .sheet(isPresented: $aboErneuern) { AboErneuernSheet() }
+            .sheet(item: $rechtsseite) { RechtsAnsicht(seite: $0).tfSchriftGrenze() }
+            .sheet(isPresented: $aboErneuern) { AboErneuernSheet().tfSchriftGrenze() }
             .manageSubscriptionsSheet(isPresented: $aboVerwalten)
             .onChange(of: aboVerwalten) { _, offen in if !offen { Task { await portal.laden() } } }
             .alert(Texte.Konto.abmeldenFrage, isPresented: $abmeldenFrage) {
@@ -72,6 +75,23 @@ struct KontoView: View {
 
     // MARK: Abschnitte
 
+    private func ladeFehlerAbschnitt(_ f: String) -> some View {
+        Section {
+            VStack(alignment: .leading, spacing: 10) {
+                Label(Texte.Fehler.titel, systemImage: FehlerAnsicht.symbol(f))
+                    .font(.dm(.headline, weight: .bold))
+                    .foregroundStyle(Color.tfTinte)
+                Text(f).font(.dm(.body)).foregroundStyle(Color.tfTinte)
+                    .fixedSize(horizontal: false, vertical: true)
+                Button(Texte.Allgemein.nochmal) { Task { await allesLaden() } }
+                    .buttonStyle(.zweit)
+                    .disabled(portal.laedt)
+                    .accessibilityIdentifier("konto-nochmal")
+            }
+            .padding(.vertical, 6)
+        }
+    }
+
     private var studioAbschnitt: some View {
         Section {
             if let s = studio {
@@ -81,7 +101,11 @@ struct KontoView: View {
                 }
                 .padding(.vertical, 4)
                 if let p = s.paketName?.leerAlsNil { WertZeile(titel: Texte.Konto.paket, wert: p) }
-                if let st = s.statusText?.leerAlsNil { WertZeile(titel: Texte.Konto.vertrag, wert: st) }
+                if s.istTestmodus {
+                    WertZeile(titel: Texte.Konto.vertrag, wert: Texte.Konto.vertragTestmodus)
+                } else if let st = s.statusText?.leerAlsNil {
+                    WertZeile(titel: Texte.Konto.vertrag, wert: st)
+                }
                 if let k = s.kuendigung, let zum = Datum.tag(k.zum) {
                     WertZeile(titel: Texte.Konto.vertragEndet, wert: zum)
                     if istInhaber {
@@ -92,8 +116,10 @@ struct KontoView: View {
                     WertZeile(titel: Texte.Konto.angemeldetAls, wert: sitzung.email)
                     WertZeile(titel: Texte.Konto.rolle, wert: sitzung.istInhaber ? Texte.Konto.rolleInhaber : Texte.Konto.rolleTeam)
                 }
-            } else {
+            } else if portal.fehler == nil {
                 ProgressView()
+            } else if let sitzung = app.sitzung {
+                WertZeile(titel: Texte.Konto.angemeldetAls, wert: sitzung.email)
             }
         } header: {
             ListenKopf(Texte.Konto.studio)
@@ -132,9 +158,16 @@ struct KontoView: View {
     private var stripeAbschnitt: some View {
         Section {
             let st = studio?.stripe
-            statusZeile(Texte.Konto.stripeVerbunden, st?.verbunden == true)
-            statusZeile(Texte.Konto.stripeFreigegeben, st?.freigegeben == true)
-            statusZeile(Texte.Konto.stripeAuszahlungen, st?.auszahlungen == true)
+            if studio?.istTestmodus == true && st?.verbunden != true {
+                // Testkauf: Stripe ist absichtlich aus, drei rote Kreuze wären falsch
+                Label(Texte.Konto.stripeTestmodus, systemImage: "testtube.2")
+                    .foregroundStyle(Color.tfTinte)
+                    .accessibilityIdentifier("stripe-testmodus")
+            } else {
+                statusZeile(Texte.Konto.stripeVerbunden, st?.verbunden == true)
+                statusZeile(Texte.Konto.stripeFreigegeben, st?.freigegeben == true)
+                statusZeile(Texte.Konto.stripeAuszahlungen, st?.auszahlungen == true)
+            }
             Button {
                 stripePruefen()
             } label: {
@@ -144,7 +177,7 @@ struct KontoView: View {
                 }
             }
             .disabled(prueftStripe)
-            if let u = studio?.connectUrl.flatMap(URL.init(string:)), st?.freigegeben != true {
+            if let u = studio?.connectUrl.flatMap(URL.init(string:)), st?.freigegeben != true, studio?.istTestmodus != true {
                 Button { openURL(u) } label: { Label(Texte.Kasse.stripeOeffnen, systemImage: "safari") }
             }
         } header: {

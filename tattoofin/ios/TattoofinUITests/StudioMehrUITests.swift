@@ -31,7 +31,7 @@ final class StudioMehrUITests: XCTestCase {
         let schicken = app.buttons["Code schicken"]
         XCTAssertTrue(schicken.waitForExistence(timeout: 15))
         schicken.tap()
-        let code = app.textFields["6-stelliger Code"]
+        let code = app.textFields["Code mit 6 Ziffern"]
         XCTAssertTrue(code.waitForExistence(timeout: 10))
         code.tap()
         code.typeText("123456")
@@ -86,8 +86,17 @@ final class StudioMehrUITests: XCTestCase {
         // Zahlungsdetail: Nachweis als PDF teilen
         if !kurz {
             app.tabBars.buttons["Zahlungen"].tap()
+            // Unabhängig von der Reihenfolge (z. B. nach dem Rundgang mit neuen Links): erst über die Suche, sonst scrollen
             let bezahlt = app.staticTexts["Jonas Beispiel"].firstMatch
-            XCTAssertTrue(bezahlt.waitForExistence(timeout: 10))
+            let suche = app.searchFields.firstMatch
+            if !suche.waitForExistence(timeout: 3) { app.collectionViews.firstMatch.swipeDown() }
+            if suche.waitForExistence(timeout: 5) {
+                suche.tap()
+                suche.typeText("Jonas")
+            } else {
+                bisSichtbar(app, bezahlt)
+            }
+            XCTAssertTrue(bezahlt.waitForExistence(timeout: 10), "Zahlung von Jonas Beispiel nicht gefunden")
             bezahlt.tap()
             let nachweis = app.buttons["nachweis-pdf"]
             bisSichtbar(app, nachweis)

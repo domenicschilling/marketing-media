@@ -17,6 +17,7 @@ struct GutscheineView: View {
             TFListe {
                 Section {
                     Button {
+                        codeFokus = false
                         scannerOffen = true
                     } label: {
                         Label(Texte.Gutscheine.scannen, systemImage: "camera.viewfinder")
@@ -24,6 +25,19 @@ struct GutscheineView: View {
                     .buttonStyle(.haupt)
                     .listRowInsets(EdgeInsets())
                     .listRowBackground(Color.clear)
+                    // Unter iOS 27 zeigt die Leiste nur das „+“: darum hier ein großer Knopf mit Text
+                    if portal.studio?.darfKassieren == true {
+                        Button {
+                            codeFokus = false
+                            verkaufenOffen = true
+                        } label: {
+                            Label(Texte.Gutscheine.verkaufen, systemImage: "gift")
+                        }
+                        .buttonStyle(.zweit)
+                        .listRowInsets(EdgeInsets(top: 10, leading: 0, bottom: 0, trailing: 0))
+                        .listRowBackground(Color.clear)
+                        .accessibilityIdentifier("gutschein-verkaufen")
+                    }
                 }
 
                 Section {
@@ -41,6 +55,8 @@ struct GutscheineView: View {
                                 .onChange(of: code) { _, neu in
                                     let f = GutscheinCode.formatieren(neu)
                                     if f != neu { code = f }
+                                    // Alte Meldung („nicht gefunden“) passt nicht mehr zum neuen Code
+                                    if !sucht { fehler = nil }
                                 }
                                 .accessibilityLabel(Texte.Gutscheine.codeEingeben)
                             Button {
@@ -48,6 +64,8 @@ struct GutscheineView: View {
                             } label: {
                                 if sucht { ProgressView() } else { Image(systemName: "arrow.right.circle.fill").font(.title) }
                             }
+                            .frame(minWidth: 44, minHeight: 44)
+                            .contentShape(Rectangle())
                             .disabled(!GutscheinCode.vollstaendig(code) || sucht)
                             .accessibilityLabel(Texte.Gutscheine.suchen)
                         }
@@ -72,6 +90,7 @@ struct GutscheineView: View {
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
             .tfHintergrund()
+            .scrollDismissesKeyboard(.immediately)
             .refreshable { await portal.laden() }
             .navigationTitle(Texte.Gutscheine.titel)
             .navigationBarTitleDisplayMode(.inline)
@@ -79,6 +98,7 @@ struct GutscheineView: View {
                 if portal.studio?.darfKassieren == true {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button {
+                            codeFokus = false
                             verkaufenOffen = true
                         } label: {
                             Label(Texte.Gutscheine.verkaufen, systemImage: "plus")
@@ -89,12 +109,13 @@ struct GutscheineView: View {
                 }
             }
             .navigationDestination(for: Zahlung.self) { GutscheinDetailView(zahlung: $0) }
-            .sheet(isPresented: $verkaufenOffen) { GutscheinVerkaufenView() }
+            .sheet(isPresented: $verkaufenOffen) { GutscheinVerkaufenView().tfSchriftGrenze() }
             .fullScreenCover(isPresented: $scannerOffen) {
                 ScannerView { treffer in
                     scannerOffen = false
                     Task { await nachScan(treffer) }
                 }
+                .tfSchriftGrenze()
             }
             .sensoryFeedback(.success, trigger: trefferZaehler)
         }
@@ -119,6 +140,8 @@ struct GutscheineView: View {
             code = ""
             codeFokus = false
             portal.aktualisieren(z)
+            // Erst Tastatur und Fokus loslassen, dann im nächsten Durchlauf öffnen: sonst fehlen Titel und Leiste im Detail
+            try? await Task.sleep(for: .milliseconds(250))
             pfad = [z]
         } catch {
             // Gesuchten Code stehen lassen, damit man ihn korrigieren kann
@@ -137,6 +160,8 @@ struct GutscheinZeile: View {
                 Text(zahlung.gutschein?.code ?? Texte.Gutscheine.ohneCode)
                     .font(.system(.body, design: .monospaced).weight(.semibold))
                     .foregroundStyle(Color.tfTinte)
+                    .lineLimit(zahlung.gutschein?.code == nil ? 2 : 1)
+                    .minimumScaleFactor(0.7)
                 Text([zahlung.kunde, zahlung.gutschein?.empfaenger?.leerAlsNil.map { "für \($0)" }].verbunden(" "))
                     .font(.dm(.subheadline))
                     .foregroundStyle(Color.tfLeise)
@@ -144,6 +169,8 @@ struct GutscheinZeile: View {
             Spacer()
             VStack(alignment: .trailing, spacing: 6) {
                 Text(Euro.text(zahlung.betragCent)).font(.dm(.body, weight: .bold)).foregroundStyle(Color.tfTinte)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
                 StatusChip(gutschein: zahlung.gutschein?.status)
             }
         }

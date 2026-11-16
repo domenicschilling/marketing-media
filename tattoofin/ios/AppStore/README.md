@@ -10,8 +10,8 @@ des Servers (`GET /api/app/aufsteller` → 410, Code `aufsteller_entfallen`).
 In App Store Connect bei 1.1 (macht Domenic, erst nach seinem OK):
 - Review-Notiz unten ersetzen (der Absatz zum Aufsteller ist raus).
 - App-Datenschutz: **„Benutzerinhalte → Fotos oder Videos“ entfernen** (die App liest keine Bilder mehr aus Fotos). Bei
-  „Andere Benutzerinhalte“ fällt die Auswahl für den Aufsteller weg (Tabelle unten ist schon angepasst).
-- Neuerungen (de-DE), Vorschlag: `Aufgeräumt: Den QR-Aufsteller aus Holz gibt es nicht mehr. Deinen QR-Code speicherst du unter Werbung als Bild und druckst ihn aus, zum Beispiel als Aufkleber für die Theke.`
+  „Andere Benutzerinhalte“ fällt die Logo-Auswahl weg (Tabelle unten ist schon angepasst). Nur intern: Im Store-Text selbst kommt das Wort „Aufsteller“ nicht vor.
+- Neuerungen (de-DE), Vorschlag (für alle sichtbar, darum ohne Aufsteller): `Deinen QR-Code für die Theke findest du unter Werbung: als Bild speichern und ausdrucken, zum Beispiel als Aufkleber. Dazu viele kleine Verbesserungen.`
 
 Für die laufende Prüfung von 1.0 (1), falls der Server vorher umgestellt wird: in der Review-Notiz den Aufsteller-Absatz ersetzen durch
 `Konto → "QR-Aufsteller": discontinued. The row now only shows a short notice from our server. It will be removed in the next update. Nothing in the app can be bought outside the App Store.`
@@ -83,7 +83,7 @@ seinem Handy. Du siehst sofort, was bezahlt ist, und bekommst bei jeder Zahlung 
 • Fertige Werbung: Video und Beiträge mit deinem Studionamen
 • Team-Zugang für deine Mitarbeitenden
 
-Das Geld deiner Kunden geht direkt auf das Stripe-Konto deines Studios. Tattoofin nimmt keine Provision.
+Mit dem Abo nimmt Tattoofin keine Provision. Das Geld deiner Kunden geht direkt auf das Stripe-Konto deines Studios.
 Tattoofin ist nur für Unternehmer (Tattoo-Studios in Deutschland).
 
 Abo „Tattoofin Monatlich“: Neue Studios legen ihr Konto in der App an und schließen das Abo über ihren Apple-Account ab. Das Abo

@@ -34,8 +34,8 @@ struct ZahlungDetailView: View {
         .navigationTitle(Texte.Detail.titel)
         .navigationBarTitleDisplayMode(.inline)
         .task { await laden() }
-        .sheet(item: $linkSheet) { ZahlungslinkSheet(erstellt: $0) }
-        .sheet(item: $bestaetigung) { b in BestaetigungSheet(antwort: b, betragCent: zahlung?.betragCent ?? 0) }
+        .sheet(item: $linkSheet) { ZahlungslinkSheet(erstellt: $0).tfSchriftGrenze() }
+        .sheet(item: $bestaetigung) { b in BestaetigungSheet(antwort: b, betragCent: zahlung?.betragCent ?? 0).tfSchriftGrenze() }
         .alert(Texte.Zahlung.stornoFrage, isPresented: $stornoFrage) {
             Button(Texte.Zahlung.stornoJa, role: .destructive) { stornieren() }
             Button(Texte.Allgemein.abbrechen, role: .cancel) {}

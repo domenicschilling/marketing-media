@@ -10,21 +10,21 @@ extension Texte {
         static let einstellungen = "Einstellungen"
         static let einstellungenText = "Anzahlung, Zahlseite, E-Mail"
         static let recht = "Deine rechtliche Lage"
-        static let rechtOffen = "Wer trägt welches Risiko? Einfach erklärt."
+        static let rechtOffen = "Wer trägt welches Risiko? Kurz erklärt."
         static func rechtGelesen(_ d: String) -> String { "Gelesen am \(d)" }
         static let fragebogen = "Fragebogen"
-        static let fragebogenOffen = "Hilft uns bei der Einrichtung (10 Minuten)"
+        static let fragebogenOffen = "Hilft uns bei der Einrichtung."
         static func fragebogenAm(_ d: String) -> String { "Ausgefüllt am \(d)" }
         static let abrechnungen = "Abrechnungen"
         static let stripeAnsehen = "Bei Stripe ansehen"
         static let stripeAnsehenText = "Bankkonto, Firmendaten, Auszahlungen"
         static let hilfeWhatsapp = "Hilfe per WhatsApp"
-        static let hilfeWhatsappText = "Unser Team hilft dir · Mo–Fr 9–17 Uhr"
+        static let hilfeWhatsappText = "Unser Team hilft dir per WhatsApp"
         static let hilfeWhatsappNachricht = "Hallo Tattoofin-Team, ich habe eine Frage zur App:"
         static let nurInhaber = "Das kann nur der Inhaber ändern."
         static let rechtNurInhaber = "Bestätigen kann nur der Inhaber."
         /// Vertragsänderungen (Paketwechsel, Umstellung) und Erstattungen: in der App bewusst nicht (ohne Link auf die Website). Kündigen geht unten über „Konto kündigen und löschen“.
-        static let nichtInDerApp = "Vertragsänderungen und Erstattungen klärst du mit unserem Team. Schreib uns einfach."
+        static let nichtInDerApp = "Fragen zu deinem Vertrag klärst du mit unserem Team. Schreib uns einfach."
     }
 
     enum Einst {
@@ -67,7 +67,7 @@ extension Texte {
 
     enum Frage {
         static let titel = "Fragebogen"
-        static let intro = "Ca. 10 Minuten. Damit richten wir Zahlungsarten, Farben, Logo und deine Werbe-Bilder passend ein. Du kannst jederzeit speichern und später weitermachen."
+        static let intro = "Damit richten wir Zahlungsarten, Farben, Logo und deine Werbe-Bilder passend ein. Du kannst jederzeit speichern und später weitermachen."
         static let senden = "Speichern und absenden"
         static let danke = "Danke, gespeichert! Unser Team meldet sich bei dir."
         static func zuletzt(_ d: String) -> String { "Zuletzt gespeichert: \(d)" }
@@ -87,7 +87,7 @@ extension Texte {
         static let einleitung = "Zusammenstellung der in Tattoofin gespeicherten Nachweise. Keine Rechtsberatung; ob sie im Einzelfall ausreichen, entscheiden Bank bzw. Zahlungsanbieter."
         static func kopf(_ d: String, _ id: String) -> String { "Erstellt am \(d) mit Tattoofin · Zahlungs-Nr. \(id)" }
         static let studio = "Studio"
-        static let inhaber = "Inhaber/in"
+        static let inhaber = "Inhaber"
         static let adresse = "Adresse"
         static let zahlung = "Zahlung"
         static let kunde = "Kunde"
@@ -115,7 +115,7 @@ extension Texte {
         static let unterschrift = "Unterschrift:"
         static func foto(_ einw: String) -> String { "Foto (Einwilligung: „\(einw)“):" }
         static func ip(_ ip: String) -> String { "IP-Adresse: \(ip)" }
-        static let schluss = "Hinweis: Dieser Nachweis hilft bei Rückfragen und Rückbuchungen. Ob eine Rückbuchung zugunsten des Studios entschieden wird, entscheiden Bank bzw. Zahlungsanbieter. Er enthält personenbezogene Daten des Kunden: Nutze ihn nur zur Klärung dieser Zahlung (z. B. gegenüber Stripe, Klarna oder der Bank), bewahre ihn sicher auf und lösche ihn, wenn du ihn nicht mehr brauchst."
+        static let schluss = "Hinweis: Dieser Nachweis hilft bei Rückfragen und Rückbuchungen. Über eine Rückbuchung entscheiden Bank oder Zahlungsanbieter. Er enthält personenbezogene Daten des Kunden: Nutze ihn nur zur Klärung dieser Zahlung (z. B. gegenüber Stripe, Klarna oder der Bank), bewahre ihn sicher auf und lösche ihn, wenn du ihn nicht mehr brauchst."
         static func dateiname(_ id: String) -> String { "Nachweis-\(id).pdf" }
     }
 
@@ -124,7 +124,7 @@ extension Texte {
         static let leer = "Noch keine Abrechnungen. Die erste kommt am 1. des Folgemonats nach deiner ersten Zahlung über Tattoofin."
         static func zahlungen(_ n: Int) -> String { n == 1 ? "1 Zahlung" : "\(n) Zahlungen" }
         static let umsatz = "Kunden haben gezahlt"
-        static func tattoofin(_ p: String) -> String { "Tattoofin \(p) % inkl. USt." }
+        static func tattoofin(_ p: String) -> String { "Tattoofin \(p)\u{00A0}% inkl. MwSt." }
         static let anDich = "An dich ausgezahlt"
         static func rechnung(_ nr: String?) -> String { nr.map { "Rechnung \($0) ansehen" } ?? "Rechnung ansehen" }
         static let fuss = "Die Provision wurde bei jeder Zahlung schon automatisch einbehalten, die Gebühren der Zahlungsanbieter sind darin enthalten. Die Rechnung ist für deine Buchhaltung."
@@ -134,8 +134,8 @@ extension Texte {
         static let heute = "Kunde wird heute tätowiert"
         static let heuteHinweis = "Dann sieht er beim Bezahlen: „Tätowierung vor Ort“."
         static func provision(anDich: Int, prozent: String, gebuehr: Int) -> String {
-            "Du bekommst \(Euro.text(anDich)) · Tattoofin \(prozent) % (\(Euro.text(gebuehr)), alles inklusive)"
+            "Du bekommst \(Euro.text(anDich)) · Tattoofin \(prozent)\u{00A0}% (\(Euro.text(gebuehr)), alles inklusive)"
         }
-        static let gebuehrStripe = "Die Gebühr des Zahlungsanbieters (z. B. Karte ab 1,5 % + 0,25 €) zahlst du direkt an Stripe."
+        static let gebuehrStripe = "Die Gebühr des Zahlungsanbieters (z. B. Karte ab 1,5\u{00A0}% + 0,25\u{00A0}€) zahlst du direkt an Stripe."
     }
 }

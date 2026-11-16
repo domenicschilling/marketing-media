@@ -83,8 +83,13 @@ enum GutscheinCode {
     static let alphabet = Set("ABCDEFGHJKLMNPQRSTUVWXYZ23456789")
 
     /// Formatiert eine Eingabe beim Tippen: „gsab“ → „GS-AB“, „abcd2345“ → „GS-ABCD-2345“
+    /// Steht ein vollständiger Code in der Eingabe (z. B. eingefügt hinter einen alten Code), gilt der letzte vollständige Code.
     static func formatieren(_ eingabe: String) -> String {
-        var t = eingabe.uppercased().filter { $0.isASCII && ($0.isLetter || $0.isNumber) }
+        let gross = eingabe.uppercased()
+        if let letzter = gross.matches(of: /GS-?([A-HJ-NP-Z2-9]{4})-?([A-HJ-NP-Z2-9]{4})/).last {
+            return "GS-\(letzter.1)-\(letzter.2)"
+        }
+        var t = gross.filter { $0.isASCII && ($0.isLetter || $0.isNumber) }
         // „G“ bzw. „GS“ allein: der Nutzer tippt gerade das Präfix
         if "GS".hasPrefix(t) { return t }
         if t.hasPrefix("GS") { t.removeFirst(2) }

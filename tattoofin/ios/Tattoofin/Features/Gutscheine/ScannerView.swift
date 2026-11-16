@@ -96,13 +96,14 @@ struct ScannerView: View {
                 HinweisKarte(text: grund, symbol: "camera.fill")
                 Text(Texte.Gutscheine.codeEingeben).font(.dm(.subheadline, weight: .semibold)).foregroundStyle(Color.tfTinte)
                 TextField(Texte.Gutscheine.codeEingeben, text: $code, prompt: tfPlatzhalter(Texte.Gutscheine.codePlatzhalter))
+                    .accessibilityLabel(Texte.Gutscheine.codeEingeben)
                     .font(.system(.title2, design: .monospaced).weight(.semibold))
                     .textInputAutocapitalization(.characters)
                     .autocorrectionDisabled()
                     .keyboardType(.asciiCapable)
                     .padding(14)
                     .background(Color.tfKarte, in: RoundedRectangle(cornerRadius: 14))
-                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.tfLinie, lineWidth: 1.5))
+                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.tfFeldRahmen, lineWidth: 1.5))
                     .onChange(of: code) { _, neu in
                         let f = GutscheinCode.formatieren(neu)
                         if f != neu { code = f }

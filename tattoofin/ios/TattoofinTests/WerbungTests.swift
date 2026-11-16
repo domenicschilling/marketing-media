@@ -388,12 +388,12 @@ struct WerbungTests {
         #expect(WerbungTexte.soGehtsText.contains("im Browser"))
     }
 
-    /// Den QR-Aufsteller aus Holz gibt es nicht mehr (Domenic 15.11.2026): Druckvorlagen nur Fensteraufkleber und Flyer
+    /// Den QR-Aufsteller aus Holz gibt es nicht mehr (Domenic 15.11.2026): Druckvorlagen beginnen mit Fensteraufkleber und Flyer
     @Test func ohneAufsteller() {
         for x in [WerbungTexte.druckText, WerbungTexte.zahlseiteText, WerbungTexte.theke, WerbungTexte.druckZeile] {
             #expect(!x.localizedCaseInsensitiveContains("Aufsteller"), "„Aufsteller“ in: \(x)")
             #expect(!x.localizedCaseInsensitiveContains("Holz"), "„Holz“ in: \(x)")
         }
-        #expect(WerbungTexte.druckText.hasPrefix("Fensteraufkleber und Flyer"))
+        #expect(WerbungTexte.druckText.hasPrefix("Fensteraufkleber, Flyer und mehr"))
     }
 }

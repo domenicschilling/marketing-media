@@ -56,7 +56,7 @@ struct FragebogenView: View {
             Abschnitt(titel: F.a2, felder: [
                 Feld(name: "preis_gross", titel: "Typischer Preis eines großen Projekts", art: .text(platzhalter: "z. B. 800 bis 2.500 €", max: nil)),
                 Feld(name: "projekte_monat", titel: "Wie viele große Projekte pro Monat?", art: .text(platzhalter: "z. B. 4", max: nil), tastatur: .numbersAndPunctuation),
-                Feld(name: "anzahlung", titel: "Wie handhabt ihr Anzahlungen heute?", art: .text(platzhalter: "z. B. 100 € bar bei der Beratung, wird verrechnet", max: nil)),
+                Feld(name: "anzahlung", titel: "Wie machst du Anzahlungen heute?", art: .text(platzhalter: "z. B. 100 € bar bei der Beratung, wird verrechnet", max: nil)),
                 Feld(name: "raten_nachfrage", titel: "Fragen Kunden heute schon nach Ratenzahlung? Wie oft?", art: .text(platzhalter: nil, max: nil)),
                 Feld(name: "z_bar", titel: "Kunden zahlen bisher: Bar", art: .haken(standard: false)),
                 Feld(name: "z_ec", titel: "EC-Karte", art: .haken(standard: false)),
@@ -67,12 +67,12 @@ struct FragebogenView: View {
             ]),
             Abschnitt(titel: F.a3, felder: zahlarten),
             Abschnitt(titel: F.a4, felder: [
-                Feld(name: "logo_quelle", titel: "Logo schicken wir per", art: .auswahl(["WhatsApp", "E-Mail", "nehmt das von Instagram"])),
+                Feld(name: "logo_quelle", titel: "Dein Logo schickst du uns per", art: .auswahl(["WhatsApp", "E-Mail", "nehmt das von Instagram"])),
                 Feld(name: "farbe", titel: "Studio-Farbe (falls vorhanden)", art: .text(platzhalter: "z. B. schwarz / gold", max: nil)),
             ]),
             Abschnitt(titel: F.a5, felder: [
                 Feld(name: "team", titel: "Wer soll an der Schulung teilnehmen (ca. 30 Min.)?", art: .text(platzhalter: nil, max: nil)),
-                Feld(name: "zustaendig", titel: "Wer erstellt bei euch die Zahlungslinks?", art: .text(platzhalter: nil, max: nil)),
+                Feld(name: "zustaendig", titel: "Wer erstellt bei dir die Zahlungslinks?", art: .text(platzhalter: nil, max: nil)),
                 Feld(name: "termin", titel: "Wunschtermin für Test und Schulung", art: .text(platzhalter: nil, max: nil)),
             ]),
             Abschnitt(titel: F.a6, felder: [
@@ -146,6 +146,7 @@ struct FragebogenView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(f.titel).font(.dm(.subheadline, weight: .semibold)).foregroundStyle(Color.tfTinte)
                 TextField(f.titel, text: textBindung(f.name, max: max), prompt: tfPlatzhalter(platzhalter ?? f.titel))
+                    .accessibilityLabel(f.titel)
                     .textContentType(f.inhalt)
                     .keyboardType(f.tastatur)
                     .textInputAutocapitalization(f.tastatur == .URL ? .never : .sentences)
@@ -157,6 +158,7 @@ struct FragebogenView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(f.titel).font(.dm(.subheadline, weight: .semibold)).foregroundStyle(Color.tfTinte)
                 TextField(f.titel, text: textBindung(f.name, max: 4000), prompt: tfPlatzhalter(f.titel), axis: .vertical)
+                    .accessibilityLabel(f.titel)
                     .lineLimit(3...10)
                     .font(.dm(.body))
             }

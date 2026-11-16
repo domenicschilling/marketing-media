@@ -129,12 +129,13 @@ struct GutscheinDetailView: View {
         .navigationTitle(Texte.Gutscheine.detailTitel)
         .navigationBarTitleDisplayMode(.inline)
         .sensoryFeedback(.success, trigger: eingeloestZaehler)
-        .sheet(item: $linkSheet) { ZahlungslinkSheet(erstellt: $0) }
+        .sheet(item: $linkSheet) { ZahlungslinkSheet(erstellt: $0).tfSchriftGrenze() }
         .sheet(isPresented: $pdfTeilen) {
             if let pdf { TeilenSheet(dinge: [pdf]).presentationDetents([.medium, .large]).ignoresSafeArea() }
         }
         .alert(Texte.Gutscheine.einloesenFrage, isPresented: $einloesenFrage) {
             TextField(Texte.Gutscheine.notizOptional, text: $notiz)
+                .accessibilityLabel(Texte.Gutscheine.notizOptional)
             Button(Texte.Gutscheine.einloesenJa) { Task { await einloesen() } }
             Button(Texte.Allgemein.abbrechen, role: .cancel) {}
         } message: {

@@ -64,6 +64,7 @@ struct StartBereich: View {
             .environment(werbung)
             .environment(app)
             .environment(portal)
+            .tfSchriftGrenze()
         }
         .onChange(of: app.tab) { _, neu in
             // Zurück in der Kasse (z. B. nach Recht/Fragebogen im Konto): Häkchen neu holen
@@ -235,10 +236,12 @@ struct ChecklistenBlatt: View {
                 Text(p.text).font(.dm(.footnote)).foregroundStyle(Color.tfLeise)
                     .fixedSize(horizontal: false, vertical: true)
                 if !p.ok && (p.aktion != nil || p.manuell != nil) {
-                    HStack(spacing: 8) {
+                    // Nebeneinander nur, wenn beide Beschriftungen in eine Zeile passen (große Schrift: untereinander, kein Buchstabensalat)
+                    GleichBreitOderUntereinander(abstand: 8) {
                         if let a = p.aktion {
                             Button(a.knopf) { ausfuehren(a, punkt: p.id) }
                                 .buttonStyle(.bordered)
+                                .controlSize(.large)
                                 .tint(Color.tfAkzent)
                                 .accessibilityIdentifier("checkliste-\(p.id)")
                         }
@@ -246,6 +249,7 @@ struct ChecklistenBlatt: View {
                             // Neutral, damit es nicht wie „schon erledigt“ aussieht
                             Button(WerbungTexte.Start.erledigt) { Task { await werbung.abhaken(m) } }
                                 .buttonStyle(.bordered)
+                                .controlSize(.large)
                                 .tint(Color.tfTinte)
                         }
                     }

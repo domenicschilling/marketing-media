@@ -80,9 +80,14 @@ struct FehlerAnsicht: View {
     let text: String
     var nochmal: (() -> Void)?
 
+    /// WLAN-Symbol nur, wenn wirklich das Internet fehlt; sonst ein allgemeines Warnzeichen
+    static func symbol(_ text: String) -> String {
+        text == Texte.Fehler.keinNetz ? "wifi.exclamationmark" : "exclamationmark.triangle"
+    }
+
     var body: some View {
         ContentUnavailableView {
-            Label(Texte.Fehler.titel, systemImage: "wifi.exclamationmark")
+            Label(Texte.Fehler.titel, systemImage: Self.symbol(text))
                 .font(.dm(.title3, weight: .bold))
         } description: {
             Text(text).font(.dm(.body))
@@ -138,6 +143,23 @@ struct HinweisKarte: View {
         .padding(14)
         .background(Color.tfGelbHell, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// Kleine Zeile, wenn Daten da sind, das Aktualisieren aber nicht geklappt hat: „Aktualisieren hat nicht geklappt. Stand von 14:05.“
+struct AktualisierenFehlerZeile: View {
+    @Environment(PortalStore.self) private var portal
+
+    var body: some View {
+        if portal.studio != nil, portal.fehler != nil {
+            Label(Texte.Fehler.aktualisierenFehlgeschlagen(portal.geladenAm.map { $0.formatted(date: .omitted, time: .shortened) }),
+                  systemImage: FehlerAnsicht.symbol(portal.fehler ?? ""))
+                .font(.dm(.footnote, weight: .medium))
+                .foregroundStyle(Color.tfLeise)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityIdentifier("aktualisieren-fehler")
+        }
     }
 }
 

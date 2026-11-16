@@ -16,6 +16,10 @@ struct KontoLoeschenView: View {
 
     private var istInhaber: Bool { app.sitzung?.istInhaber ?? false }
     private var istApple: Bool { portal.studio?.istApple ?? false }
+    private var normiert: String { eingabe.trimmingCharacters(in: .whitespaces).uppercased() }
+    private var bestaetigt: Bool { normiert == "LÖSCHEN" }
+    /// Falsch erst, wenn das Eingetippte nicht mehr zu „LÖSCHEN“ passen kann
+    private var eingabeFalsch: Bool { !normiert.isEmpty && !"LÖSCHEN".hasPrefix(normiert) }
 
     var body: some View {
         ScrollView {
@@ -62,22 +66,31 @@ struct KontoLoeschenView: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text(Texte.Loeschen.grund).font(.dm(.subheadline, weight: .semibold)).foregroundStyle(Color.tfTinte)
                 TextField(Texte.Loeschen.grund, text: $grund, prompt: tfPlatzhalter(Texte.Loeschen.grundPlatzhalter), axis: .vertical)
+                    .accessibilityLabel(Texte.Loeschen.grund)
                     .lineLimit(2...5)
                     .font(.dm(.body))
                     .padding(12)
                     .background(Color.tfKarte, in: RoundedRectangle(cornerRadius: 12))
-                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.tfLinie, lineWidth: 1.5))
+                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.tfFeldRahmen, lineWidth: 1.5))
             }
             VStack(alignment: .leading, spacing: 6) {
                 Text(Texte.Loeschen.bestaetigen).font(.dm(.subheadline, weight: .semibold)).foregroundStyle(Color.tfTinte)
-                TextField(Texte.Loeschen.bestaetigen, text: $eingabe, prompt: tfPlatzhalter("LÖSCHEN"))
+                // Platzhalter in normaler Stärke, damit er nicht wie schon eingetippt aussieht; Rahmen erst bei falscher Eingabe rot
+                TextField(Texte.Loeschen.bestaetigen, text: $eingabe, prompt: tfPlatzhalter(Texte.Loeschen.bestaetigenPlatzhalter))
                     .textInputAutocapitalization(.characters)
                     .autocorrectionDisabled()
-                    .font(.dm(.body, weight: .semibold))
+                    .font(.dm(.body, weight: eingabe.isEmpty ? .regular : .semibold))
                     .padding(12)
                     .background(Color.tfKarte, in: RoundedRectangle(cornerRadius: 12))
-                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.tfRot.opacity(0.6), lineWidth: 1.5))
+                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(eingabeFalsch ? Color.tfRot : Color.tfFeldRahmen, lineWidth: 1.5))
                     .accessibilityLabel(Texte.Loeschen.bestaetigen)
+                    .accessibilityIdentifier("loeschen-bestaetigen")
+                if !bestaetigt {
+                    Text(eingabeFalsch ? Texte.Loeschen.eingabeFalsch : Texte.Loeschen.knopfNochGrau)
+                        .font(.dm(.footnote, weight: eingabeFalsch ? .semibold : .regular))
+                        .foregroundStyle(eingabeFalsch ? Color.tfRot : Color.tfLeise)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
             if istApple { appleKarte }
             if let fehler { FehlerZeile(text: fehler) }
@@ -87,7 +100,7 @@ struct KontoLoeschenView: View {
                 if arbeitet { ProgressView() } else { Text(Texte.Loeschen.knopf) }
             }
             .buttonStyle(.gefahr)
-            .disabled(eingabe.trimmingCharacters(in: .whitespaces).uppercased() != "LÖSCHEN" || arbeitet)
+            .disabled(!bestaetigt || arbeitet)
         }
     }
 

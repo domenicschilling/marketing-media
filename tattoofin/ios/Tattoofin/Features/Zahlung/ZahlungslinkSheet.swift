@@ -77,7 +77,8 @@ struct ZahlungslinkSheet: View {
                 Text(Euro.text(zahlung.betragCent))
                     .font(.luckiest(40, relativeTo: .largeTitle))
                     .foregroundStyle(Color.tfTinte)
-                Text(([zahlung.artText, zahlung.titel, zahlung.kunde] as [String?]).verbunden())
+                // Beim Gutschein steht „Gutschein“ schon im Titel, die Art nicht doppelt
+                Text(([zahlung.istGutschein ? nil : zahlung.artText, zahlung.titel, zahlung.kunde] as [String?]).verbunden())
                     .font(.dm(.body))
                     .foregroundStyle(Color.tfLeise)
                     .multilineTextAlignment(.center)
@@ -193,6 +194,7 @@ struct TheckenQRView: View {
 
     private var adresse: String? { portal.studio?.zahlseite ?? Einstellungen.zahlseite }
     private var name: String { portal.studio?.name ?? Einstellungen.studioName ?? "" }
+    @Environment(\.dynamicTypeSize) private var schrift
 
     var body: some View {
         ZStack {
@@ -219,8 +221,9 @@ struct TheckenQRView: View {
                     .lineLimit(2)
                     .minimumScaleFactor(0.5)
                 if let adresse {
+                    // Große Schrift: QR etwas kleiner, damit die Anleitung ganz Platz hat
                     QRCodeView(inhalt: adresse, beschreibung: Texte.Theke.qrLabel(name))
-                        .frame(maxWidth: 420)
+                        .frame(maxWidth: schrift.isAccessibilitySize || schrift >= .xxLarge ? 300 : 420)
                 } else {
                     Text(Texte.Theke.fehlt).font(.dm(.body)).foregroundStyle(Color.tfBlau)
                 }
@@ -228,6 +231,7 @@ struct TheckenQRView: View {
                     .font(.dm(.title3, weight: .semibold))
                     .foregroundStyle(Color.tfBlau)
                     .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 0)
                 Image(.wortmarke)
                     .resizable()

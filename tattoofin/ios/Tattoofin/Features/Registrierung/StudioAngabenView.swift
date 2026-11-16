@@ -11,6 +11,7 @@ struct StudioAngabenView: View {
     private var fehler: [StudioFeld: String] { reg.daten.fehler(felder: StudioFeld.angaben) }
 
     var body: some View {
+        ScrollViewReader { leser in
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 Ueberschrift(Texte.Registrieren.angabenTitel)
@@ -29,6 +30,7 @@ struct StudioAngabenView: View {
                                           fehler: fehlerText(f), fokus: $fokus) {
                             naechstes(nach: f)
                         }
+                        .id(f)
                     }
                 }
                 .karte()
@@ -40,8 +42,19 @@ struct StudioAngabenView: View {
                     .accessibilityIdentifier("angaben-weiter")
             }
             .padding(20)
+            // Platz unter dem letzten Feld für Tastatur-Leiste und Vorschlagsleiste
+            .padding(.bottom, 60)
         }
         .scrollDismissesKeyboard(.interactively)
+        .onChange(of: fokus) { _, neu in
+            // Das aktive Feld immer sichtbar über der Tastatur (sonst tippt man bei Ort/Telefon blind)
+            guard let neu else { return }
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(350))
+                withAnimation(.easeOut(duration: 0.25)) { leser.scrollTo(neu, anchor: .center) }
+            }
+        }
+        }
         .tfHintergrund()
         .navigationTitle(Texte.Registrieren.navTitel)
         .navigationBarTitleDisplayMode(.inline)
@@ -106,7 +119,7 @@ struct StudioFeldEingabe: View {
                 .font(.dm(.body))
                 .padding(12)
                 .background(Color.tfHintergrund, in: RoundedRectangle(cornerRadius: 12))
-                .overlay(RoundedRectangle(cornerRadius: 12).stroke(fehler == nil ? Color.tfLinie : Color.tfRot, lineWidth: 1.5))
+                .overlay(RoundedRectangle(cornerRadius: 12).stroke(fehler == nil ? Color.tfFeldRahmen : Color.tfRot, lineWidth: 1.5))
                 .accessibilityLabel(feld.label)
                 .accessibilityHint(fehler ?? "")
                 .accessibilityIdentifier("feld-\(feld.rawValue)")

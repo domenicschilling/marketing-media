@@ -58,6 +58,8 @@ struct WerbevideoKarte: View {
             }
             Button { withAnimation { textOffen.toggle() } } label: {
                 Text(textOffen ? WerbungTexte.textAusblenden : WerbungTexte.textAnsehen).font(.dm(.subheadline, weight: .semibold))
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
             }
             .foregroundStyle(Color.tfAkzent)
 

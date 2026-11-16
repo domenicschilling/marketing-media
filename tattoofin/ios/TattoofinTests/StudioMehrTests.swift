@@ -122,15 +122,17 @@ struct StudioMehrTests {
         var s = StudioMehr(id: "st_1")
         s.modell = "provision"
         s.provisionProzent = 8
-        #expect(GebuehrHinweis.text(cent: 100_000, studio: s) == "Du bekommst \(Euro.text(92_000)) · Tattoofin 8 % (\(Euro.text(8_000)), alles inklusive)")
+        #expect(GebuehrHinweis.text(cent: 100_000, studio: s) == "Du bekommst \(Euro.text(92_000)) · Tattoofin 8\u{00A0}% (\(Euro.text(8_000)), alles inklusive)")
         #expect(GebuehrHinweis.text(cent: 12_345, studio: s)?.contains("(\(Euro.text(988))") == true)   // 987,6 → 988 wie Math.round
         s.provisionProzent = 7.5
-        #expect(GebuehrHinweis.text(cent: 10_000, studio: s)?.contains("Tattoofin 7,5 %") == true)
+        #expect(GebuehrHinweis.text(cent: 10_000, studio: s)?.contains("Tattoofin 7,5\u{00A0}%") == true)
         s.modell = "kauf"
         #expect(GebuehrHinweis.text(cent: 10_000, studio: s) == Texte.Kasse2.gebuehrStripe)
         #expect(GebuehrHinweis.text(cent: nil, studio: s) == nil)
         #expect(GebuehrHinweis.text(cent: 0, studio: s) == nil)
         #expect(GebuehrHinweis.text(cent: 10_000, studio: nil) == nil)
+        // Geschützte Leerzeichen: „1,5 %“ und „0,25 €“ brechen nie auseinander
+        #expect(Texte.Kasse2.gebuehrStripe.contains("1,5\u{00A0}%") && Texte.Kasse2.gebuehrStripe.contains("0,25\u{00A0}€"))
     }
 
     @Test func heuteNurBeiGesamt() throws {

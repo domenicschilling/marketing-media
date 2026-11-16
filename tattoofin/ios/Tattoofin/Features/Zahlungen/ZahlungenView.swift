@@ -171,6 +171,8 @@ struct ZahlungZeile: View {
                 Text(Euro.text(zahlung.betragCent))
                     .font(.dm(.body, weight: .bold))
                     .foregroundStyle(Color.tfTinte)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
                 StatusChip(zahlung: zahlung.status)
             }
         }

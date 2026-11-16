@@ -154,6 +154,17 @@ braucht `NODE_PATH` zusätzlich einen Ordner mit `playwright` (z. B. `…/Market
 - Push: Code ist fertig (Erlaubnis, APNs-Token an `PUT /api/app/push`, Banner im Vordergrund, Sprung zur Zahlung/Auszahlung). **Echt-Versand wartet auf Apple-Team-ID und APNs-Schlüssel (.p8).** Im Simulator ohne Signatur schlägt die APNs-Registrierung erwartungsgemäß fehl und wird nur protokolliert.
 - Vor der Einreichung: `DEVELOPMENT_TEAM` setzen, `aps-environment` für Release auf `production` (macht Xcode beim Archivieren mit Distribution-Profil), App-Icon in höherer Auflösung prüfen (die Figur liegt nur als 300-px-PNG vor).
 
+## Prüfung 16.11.2026 (App 1.1, Build 2)
+
+- Kasse: Gebührenhinweis, Grenzen-Zeile und „heute im Studio“ haben immer ihren Platz (unsichtbar statt weg), damit beim Tippen nichts
+  über dem Ziffernblock verrutscht. „Zahlungslink erstellen“ hängt per `.safeAreaInset(edge: .bottom)` über der Tab-Leiste; bei wenig
+  Höhe (iPhone SE) sind die Ziffern-Tasten 44 statt 52 pt hoch. UI-Test `KasseLayoutUITests` (normal und xxxLarge), Abnahme auch auf
+  einem iPhone SE (3. Generation).
+- Schriftgrenze `.tfSchriftGrenze()` an jedem SwiftUI-Blatt (Blätter erben die Grenze der Wurzel nicht).
+- Feldrahmen und Code-Kästchen in `tfFeldRahmen` (≥ 3:1), deaktivierte Knöpfe mit lesbarer Schrift (≥ 4,5:1).
+- Konto ohne Netz: Fehler mit „Nochmal versuchen“ statt Lade-Kreisel und roter Stripe-Kreuze; Testmodus zeigt „kein Stripe nötig“.
+- Einrichtung: „Mitteilungen erlauben?“ nur, solange das iPhone noch nie gefragt hat.
+
 ## Schriften und Lizenzen
 
 - Luckiest Guy (Apache License 2.0) und DM Sans (SIL Open Font License 1.1), beide frei nutzbar, aus `website/public/assets/fonts` nach TTF gewandelt:
