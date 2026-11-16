@@ -103,6 +103,8 @@ export async function aufstellerLogoLoeschen(s, quelle) {
 // keinen Zweck mehr. Der Tagesjob löscht jedes Logo, dessen Studio den Aufsteller weder angefordert noch bezahlt hat (Datenschutzerklärung
 // Abschnitt 7). Logos zu einer früheren Bestellung bleiben bis zur Abwicklung; der Admin löscht sie danach im Studio-Detail.
 export async function aufstellerLogosAufraeumen() {
+  // Endgültiges Löschen von Kundendaten erst nach Domenics OK (16.11.2026): Netlify-Variable AUFSTELLER_LOGOS_AUFRAEUMEN=1 setzen
+  if (process.env.AUFSTELLER_LOGOS_AUFRAEUMEN !== "1") return [];
   const out = [];
   for (const k of await store.list("aufsteller-logo/")) {
     const s = await getStudio(k.slice("aufsteller-logo/".length));

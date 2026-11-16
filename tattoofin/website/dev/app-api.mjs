@@ -903,6 +903,10 @@ try {
   setBlob("aufsteller-logo/" + E.id, { src: LOGO, w: 400, h: 200 });
   setBlob("aufsteller-logo/st_gibtesnicht", { src: LOGO, w: 1, h: 1 });
   const logVorJob = logs("aufsteller-logo-geloescht").length;
+  delete process.env.AUFSTELLER_LOGOS_AUFRAEUMEN;
+  await admin("jobs", {});
+  check(blob("aufsteller-logo/" + D.id) && logs("aufsteller-logo-geloescht").length === logVorJob, "Tagesjob löscht ohne AUFSTELLER_LOGOS_AUFRAEUMEN=1 keine Logos (wartet auf Domenics OK)");
+  process.env.AUFSTELLER_LOGOS_AUFRAEUMEN = "1";
   const jobLogo = await admin("jobs", {});
   const geloeschtJob = (jobLogo || []).filter((x) => x[0] === "aufsteller-logo-geloescht").map((x) => x[1]);
   check(!blob("aufsteller-logo/" + D.id) && blob("studio/" + D.id).aufsteller?.hatLogo === false && blob("studio/" + D.id).aufsteller?.logoGeloeschtAm && !blob("aufsteller-logo/st_gibtesnicht") &&
