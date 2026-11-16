@@ -152,7 +152,7 @@ try {
   }
   const p0 = await neueSeite();
   await p0.goto(BASE + "/");
-  check((await p0.textContent("h1")).includes("auf einmal"), "Hero lädt (Überschrift für Studio-Inhaber, 16.11.2026)");
+  check((await p0.textContent("h1")).replace(/\u00a0/g, " ").includes("auf einmal"), "Hero lädt (Überschrift für Studio-Inhaber, 16.11.2026)");
   // Warnsatz klein als Fußnote bei der einen Raten-Aussage im Hero (Entscheidung Domenic 14.11.2026): im ersten Abschnitt, nah unter der h1
   { const w = await p0.evaluate(() => { const h1 = document.querySelector("h1"), fn = [...document.querySelectorAll(".auftakt .raten-fn")].find((e) => /Achtung! Kreditaufnahme kostet Geld\./.test(e.textContent) && /Vertragspartner der Raten ist Klarna/.test(e.textContent)); if (!h1 || !fn) return null; return { abstand: fn.getBoundingClientRect().top - h1.getBoundingClientRect().top, inHero: h1.closest(".auftakt") === fn.closest(".auftakt") }; });
     check(Boolean(w && w.inHero && w.abstand > 0 && w.abstand <= 560), "Warnsatz als Fußnote im Hero, höchstens 560 px unter der Raten-Überschrift" + (w ? ` (${Math.round(w.abstand)} px)` : "")); }
@@ -221,6 +221,16 @@ try {
   { const r1 = await post("/api/signup", { ...basis, plz: "x", telefon: "1", studioTelefon: "1", paket: "monatlich", email: "unsinn@example.com" }); const t = (await r1.json()).error || "";
     check(r1.status === 400 && /PLZ/.test(t) && /Mobilnummer/.test(t), "Anmeldung: PLZ „x“ und Telefon „1“ werden abgelehnt (PLZ 5 Ziffern, Telefon mind. 6 Ziffern)"); }
   check((await post("/api/signup", { paket: "einmal", email: "neu@example.com" })).status === 400, "Signup ohne Pflichtangaben abgelehnt");
+  // Runde 2 (16.11.2026): Studio-Telefon im Web optional, leer → Handynummer; ohne Handynummer weiterhin abgelehnt
+  { const r0 = await post("/api/signup", { ...basis, studioTelefon: "", paket: "monatlich", email: "ohne-studiotel@example.com" });
+    const s0 = await storeMod.studioBy("email", "ohne-studiotel@example.com");
+    check(r0.status === 200 && s0?.studioTelefon === "0151 123456" && s0?.telefon === "0151 123456", "Anmeldung ohne Studio-Telefon: Handynummer wird übernommen", `${r0.status} ${s0?.studioTelefon}`);
+    const r0b = await post("/api/signup", { ...basis, studioTelefon: "", telefon: "", paket: "monatlich", email: "ohne-tel@example.com" });
+    const t0b = (await r0b.json()).error || "";
+    check(r0b.status === 400 && /Mobilnummer/.test(t0b) && !/Studio-Telefon/.test(t0b), "Anmeldung ohne Handy- und Studio-Telefon abgelehnt, Meldung nennt nur die Mobilnummer (Studio-Telefon ist optional)", t0b);
+    const r0c = await post("/api/signup", { ...basis, studioTelefon: "", telefon: "12", paket: "monatlich", email: "kurz-tel@example.com" });
+    const t0c = (await r0c.json()).error || "";
+    check(r0c.status === 400 && /Mobilnummer \(mindestens 6 Ziffern\)/.test(t0c) && !/Studio-Telefon/.test(t0c), "Zu kurze Handynummer ohne Studio-Telefon: nur die Mobilnummer wird bemängelt", t0c); }
   await post("/api/signup", { ...basis, paket: "einmal", aktionscode: "RATENJA", email: "code@example.com" });
   check(!Object.values((await mock("state")).sessions).some((x) => x.amount_total === 148631), "Aktionscode RATENJA abgeschaltet (Preis bleibt 999 €)");
 

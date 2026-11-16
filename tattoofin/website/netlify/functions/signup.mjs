@@ -57,7 +57,11 @@ export default handler(async (req, context) => {
   const modell = geschenk ? "kauf" : paket ? paket.modell : null;
   const zahlart = geschenk ? "geschenk" : paketId === "risikofrei" ? "provision" : paketId === "monatlich" ? "abo" : (b.zahlart === "rechnung" ? "rechnung" : "sofort");
   // Gleiche Prüfung wie in der App (_lib/anmeldung-daten.mjs). Paket „app“ gibt es im Web nicht (kein Alias) → „Paket“ fehlt.
-  const { d, fehlt: fehltDaten } = studioDatenPruefen(b);
+  // Web (Runde 2, 16.11.2026): Studio-Telefon ist optional, leer → Handynummer (in der App bleibt es Pflicht)
+  const studioTelefonLeer = !clean(b.studioTelefon, 40);
+  const { d, fehlt: fehltAlle } = studioDatenPruefen({ ...b, studioTelefon: studioTelefonLeer ? b.telefon : b.studioTelefon });
+  // Leeres Studio-Telefon ist kein Fehler: fehlt die Handynummer, meldet nur „Mobilnummer“ (nicht zusätzlich das optionale Feld)
+  const fehltDaten = studioTelefonLeer ? fehltAlle.filter((t) => !t.startsWith("Studio-Telefonnummer")) : fehltAlle;
   const fehlt = [...(modell ? [] : ["Paket"]), ...fehltDaten];
   if (fehlt.length) return fail("Bitte ausfüllen: " + fehlt.join(", "));
   if (!(b.akzeptiert?.vertrag && b.akzeptiert?.avv && b.akzeptiert?.unternehmer)) return fail("Bitte Vertrag, AVV und Unternehmereigenschaft bestätigen.");
