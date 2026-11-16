@@ -58,8 +58,11 @@ export default handler(async (req, context) => {
   const zahlart = geschenk ? "geschenk" : paketId === "risikofrei" ? "provision" : paketId === "monatlich" ? "abo" : (b.zahlart === "rechnung" ? "rechnung" : "sofort");
   // Gleiche Prüfung wie in der App (_lib/anmeldung-daten.mjs). Paket „app“ gibt es im Web nicht (kein Alias) → „Paket“ fehlt.
   // Web (Runde 2, 16.11.2026): Studio-Telefon ist optional, leer → Handynummer (in der App bleibt es Pflicht)
+  // Einfache Anmeldung (16.11.2026): Unterzeichner/in = Inhaber/in, wenn nicht eigens angegeben. Paket Monatlich ohne Einladung braucht
+  // keine Adresse (kommt aus dem Stripe-Konto bzw. der Karte „Adresse deiner Zahlseite“). Einladung und Einmalzahlung bleiben mit Adresse.
   const studioTelefonLeer = !clean(b.studioTelefon, 40);
-  const { d, fehlt: fehltAlle } = studioDatenPruefen({ ...b, studioTelefon: studioTelefonLeer ? b.telefon : b.studioTelefon });
+  const ohneAdresse = paketId === "monatlich" && !geschenk;
+  const { d, fehlt: fehltAlle } = studioDatenPruefen({ ...b, studioTelefon: studioTelefonLeer ? b.telefon : b.studioTelefon, unterzeichner: clean(b.unterzeichner, 120) || clean(b.inhaber, 120) }, { ohneAdresse });
   // Leeres Studio-Telefon ist kein Fehler: fehlt die Handynummer, meldet nur „Mobilnummer“ (nicht zusätzlich das optionale Feld)
   const fehltDaten = studioTelefonLeer ? fehltAlle.filter((t) => !t.startsWith("Studio-Telefonnummer")) : fehltAlle;
   const fehlt = [...(modell ? [] : ["Paket"]), ...fehltDaten];
@@ -144,6 +147,8 @@ export default handler(async (req, context) => {
       }],
       subscription_data: { description: "Tattoofin Paket Monatlich", metadata: { studioId: s.id, typ: "abo", paket: "monatlich" } },
       customer_update: { address: "auto", name: "auto" }, tax_id_collection: { enabled: true },
+      // Kein billing_address_collection "required" und kein name_collection: Apple Pay/Google Pay bleiben, die Studio-Adresse kommt später aus Connect
+      custom_text: { submit: { message: "Danach richtest du im Studio-Bereich dein Auszahlungskonto ein." } },
       metadata: { studioId: s.id, typ: "abo", paket: "monatlich" },
       success_url: `${base}/danke.html?id=${s.id}&sid={CHECKOUT_SESSION_ID}&weiter=app`,
       cancel_url: `${resumeUrl(s)}&abbruch=1`,

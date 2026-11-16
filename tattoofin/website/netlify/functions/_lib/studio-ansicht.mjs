@@ -1,6 +1,6 @@
 // Ausgabe von Studio und Zahlungen an das Studio selbst (Dashboard /api/portal und App /api/app). Ohne interne Werte.
 import { CFG, provisionSatz, paketVon, BAUSTEINE_SIMULIERT, istApple, appleCfg, sandboxKasse, testKasse } from "./config.mjs";
-import { hatUmstellungsangebot, connectUrl, darfKassieren, anzahlungsbedingungen, eingebettet, klarnaFuer, klarnaDauerhaft, STATUS, hatGarantie } from "./domain.mjs";
+import { hatUmstellungsangebot, connectUrl, darfKassieren, studioAdresseDa, anzahlungsbedingungen, eingebettet, klarnaFuer, klarnaDauerhaft, STATUS, hatGarantie } from "./domain.mjs";
 import { gutscheinStatus, gutscheinUrl } from "./gutschein.mjs";
 
 export const zahlseite = (s) => `${CFG.siteUrl}/zahlen/${s.slug}`;
@@ -32,7 +32,10 @@ export const abrechnungVon = (s) => (istApple(s) ? "apple" : s.demo || s.zahlart
 const DEMO_STRIPE = { klarnaAktiv: false, verbunden: true, freigegeben: true, auszahlungen: true, express: false, angabenGemacht: true, kontoTyp: "standard" };
 export const oeffentlich = (s) => ({
   id: s.id, firma: s.firma, inhaber: s.inhaber, email: s.email, telefon: s.telefon, studioTelefon: s.studioTelefon,
-  strasse: s.strasse, plz: s.plz, ort: s.ort, modell: s.modell, zahlart: s.zahlart, preisNetto: s.preisNetto, slug: s.slug,
+  strasse: s.strasse, plz: s.plz, ort: s.ort, land: s.land || "DE",
+  // Adresse deiner Zahlseite (seit 16.11.2026): fehlt = noch nicht da (einfache Anmeldung ohne Adresse), vorschlag = aus dem Stripe-Konto, noch nicht bestätigt
+  zahlseiteAdresse: { fehlt: !studioAdresseDa(s), vorschlag: s.adresseQuelle === "connect" && !s.adresseBestaetigt, bestaetigtAm: s.adresseBestaetigtAm || null },
+  modell: s.modell, zahlart: s.zahlart, preisNetto: s.preisNetto, slug: s.slug,
   status: s.status, statusText: STATUS[s.status] || s.status, createdAt: s.createdAt, goLiveAt: s.goLiveAt,
   vertrag: { version: s.vertrag?.version, akzeptiertAm: s.vertrag?.akzeptiertAm, name: s.vertrag?.name },
   kuendigung: s.kuendigung || null, loeschAnfrage: s.loeschAnfrage ? { am: s.loeschAnfrage.am, durch: s.loeschAnfrage.durch } : null, fragebogenAm: s.fragebogen?.updatedAt || null,

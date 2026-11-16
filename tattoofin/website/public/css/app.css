@@ -195,3 +195,9 @@ body.app{background-color:var(--cream);background-image:none;padding-bottom:calc
 .raten-hilfe-link{display:block;text-decoration:none;color:var(--ink);margin-top:14px}
 .raten-hilfe-link small{display:block;color:var(--muted);font-size:13.5px}
 .hilfe-schritte{list-style:none;padding:0}
+
+/* Karte „Adresse deiner Zahlseite“ in der Einrichtung (einfache Anmeldung 16.11.2026) */
+.adr-form{margin-top:10px;max-width:460px}
+.adr-form .lbl{font-size:13.5px;margin-bottom:4px}
+.adr-form input[type=text]{margin-bottom:10px!important}
+.adr-2{display:grid;grid-template-columns:minmax(92px,120px) 1fr;gap:10px}

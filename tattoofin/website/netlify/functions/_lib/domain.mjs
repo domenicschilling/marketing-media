@@ -165,9 +165,22 @@ export async function zaehleAktion() {
 
 // Demo-Studio (App-Review) und Testkauf-Studio (Apple-Sandbox, config.sandboxKasse): darf Zahlungslinks anlegen, auch ohne
 // Stripe-Konto. Bezahlen sperrt pay.mjs (409).
+// Seit 16.11.2026 (einfache Anmeldung ohne Adresse) zusätzlich: Die Zahlseite ist erst bereit, wenn die Studio-Adresse da ist (Straße + Ort),
+// damit Kunde und Klarna-Warenkorb immer sehen, wer der Händler ist. Die Adresse kommt aus dem Stripe-Konto oder der Karte im Studio-Bereich.
+export const studioAdresseDa = (s) => Boolean(String(s?.strasse || "").trim() && String(s?.ort || "").trim());
 export function darfKassieren(s) {
   if (testKasse(s)) return ["einrichtung", "live", "gekuendigt"].includes(s.status);
-  return s.stripe?.accountId && s.stripe?.chargesEnabled && ["einrichtung", "live", "gekuendigt"].includes(s.status);
+  return Boolean(s.stripe?.accountId && s.stripe?.chargesEnabled && studioAdresseDa(s) && ["einrichtung", "live", "gekuendigt"].includes(s.status));
+}
+
+// Adresse aus dem Stripe-Konto (account.updated bzw. „jetzt abgleichen“) als Vorschlag für die Zahlseite übernehmen, nur wenn noch keine da ist.
+// Stripe liefert je nach Kontoart company.address, business_profile.support_address oder individual.address (bei Standard-Konten
+// ggf. gar nichts, dann bleibt die Karte „Adresse deiner Zahlseite“ leer zum Ausfüllen). Manuelle Werte werden nie überschrieben.
+export function connectAdresse(acct) {
+  for (const a of [acct?.company?.address, acct?.business_profile?.support_address, acct?.individual?.address]) {
+    if (a && a.line1 && a.city) return { strasse: [a.line1, a.line2].filter(Boolean).join(", ").slice(0, 120), plz: String(a.postal_code || "").slice(0, 10), ort: String(a.city).slice(0, 80), land: String(a.country || "DE").slice(0, 2).toUpperCase() };
+  }
+  return null;
 }
 
 // Provisions-Studios (Paket Risikofrei): Standard = Tattoofin kassiert als Plattform (Destination Charge), Stripe überweist den Rest
@@ -776,6 +789,8 @@ export async function kontoAbgleichen(s, acct) {
   const r = acct.requirements || {};
   s.stripe.offen = { faellig: (r.currently_due || []).slice(0, 20), ueberfaellig: (r.past_due || []).slice(0, 20), inPruefung: (r.pending_verification || []).slice(0, 20), sperrgrund: r.disabled_reason || null };
   s.stripe.abgeglichenAm = new Date().toISOString();
+  const vorschlag = !studioAdresseDa(s) ? connectAdresse(acct) : null;
+  if (vorschlag) Object.assign(s, vorschlag, { adresseQuelle: "connect", adresseBestaetigt: false });
   await saveStudio(s);
   if (!vorher && s.stripe.chargesEnabled) {
     await notify(s, mails.kontoFreigegeben(s));

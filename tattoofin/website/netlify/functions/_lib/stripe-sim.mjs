@@ -15,6 +15,17 @@ const seite = (titel, inhalt) => `<!doctype html><meta charset=utf-8><meta name=
 <body style="font:16px system-ui;max-width:440px;margin:40px auto;padding:0 16px;color:#1f3d5c">
 <p style="background:#1f3d5c;color:#fbb316;border-radius:10px;padding:8px 12px;font-weight:700">Simulation – keine echte Zahlung, kein echtes Konto</p>${inhalt}</body>`;
 
+// Einfache Anmeldung (16.11.2026): Was Stripe nach dem Checkout bzw. der Konto-Einrichtung mitliefert.
+//   customer_details: wie bei Stripe immer mit E-Mail; „als Unternehmen“ (Knopf #pay-firma oder Schalter /mock/checkout-firma) zusätzlich
+//   Firmenname, Rechnungsadresse und USt-IdNr. Konto: company.address nach der Einrichtung (Schalter /mock/konto-ohne-adresse: ohne Adresse).
+export const SIM_ADRESSE = { line1: "Musterstr. 1", line2: null, postal_code: "96047", city: "Bamberg", country: "DE" };
+export function simKundendaten(db, s, alsFirma) {
+  const c = db.customers?.[s.customer] || {};
+  const firma = alsFirma || db.sim_checkout_firma;
+  return { email: c.email || s.customer_email || null, name: firma ? "Alex Muster" : c.name || null, business_name: firma ? (c.name || "Muster Ink") + " GmbH" : null,
+    address: firma ? { ...SIM_ADRESSE, line1: "Rechnungsweg 7" } : null, tax_ids: firma ? [{ type: "eu_vat", value: "DE123456789" }] : [], tax_exempt: "none", phone: null };
+}
+function simKontoAdresse(db, a) { if (!db.sim_konto_ohne_adresse && !a.company?.address) a.company = { ...(a.company || {}), name: a.business_profile?.name || null, address: { ...SIM_ADRESSE } }; }
 export class SimFehler extends Error { constructor(status, message) { super(message); this.status = status; this.stripe = { message }; } }
 
 // Formular-Parameter (a[b][0][c]=…) in ein Objekt umwandeln
@@ -243,6 +254,7 @@ export function createSim({ load, save, pageBase, webhook }) {
         if (method === "GET") return { html: seite("Stripe (Test)", `
           <h2>Stripe Testkasse</h2><p>Modus: <b>${s.mode}</b>${s.amount_total ? " · Betrag: " + (s.amount_total / 100).toFixed(2) + " €" : ""}</p>
           <form method=post><input type=hidden name=pm value=card><button id=pay style="padding:12px 20px;font-size:16px">${s.mode === "setup" ? "Zahlungsmethode speichern" : "Mit Karte bezahlen"}</button></form>
+          ${s.mode === "subscription" && !s.account ? '<form method=post><input type=hidden name=pm value=card><input type=hidden name=firma value=1><button id=pay-firma style="padding:8px 14px;margin-top:8px">Als Unternehmen bezahlen (mit Rechnungsadresse und USt-IdNr.)</button></form>' : ""}
           ${(s.account || s.payment_intent_data?.transfer_data) && [].concat(s.payment_method_types || ["card", "klarna"]).includes("klarna") ? '<form method=post><input type=hidden name=pm value=klarna><button id=pay-klarna style="padding:12px 20px;font-size:16px;margin-top:8px">Mit Klarna (Raten) bezahlen</button></form><form method=post><input type=hidden name=pm value=klarna-abgelehnt><button id=pay-klarna-abgelehnt style="padding:8px 14px;margin-top:8px">Klarna lehnt ab (Test)</button></form>' : ""}
           ${s.last_error ? `<p id=fehler style="color:#a00">${esc(s.last_error)}</p>` : ""}
           <p><a id=cancel href="${esc(s.cancel_url)}">Abbrechen</a></p>`) };
@@ -254,6 +266,7 @@ export function createSim({ load, save, pageBase, webhook }) {
           return { redirect: `${pageBase}/pay/${s.id}` };
         }
         s.status = "complete";
+        if (!s.account) s.customer_details = simKundendaten(db, s, form.firma === "1");
         const ziel = s.payment_intent_data?.transfer_data?.destination;
         if (s.mode === "payment" && (s.account || ziel)) {
           const pmType = form.pm || "card";
@@ -292,6 +305,7 @@ export function createSim({ load, save, pageBase, webhook }) {
         if (!a) return { status: 404, text: "unbekannt" };
         if (method === "GET") return { html: seite("Stripe Onboarding (Test)", `<h2>Stripe Onboarding (Simulation)</h2><p>Konto ${esc(a.id)} für ${esc(a.email)}</p><form method=post><button id=onboard style="padding:12px 20px">Angaben absenden</button></form>`) };
         Object.assign(a, { charges_enabled: true, payouts_enabled: true, details_submitted: true });
+        simKontoAdresse(db, a);
         emit("account.updated", a, a.id);
         return { redirect: query.get("return") || "/" };
       });
@@ -302,6 +316,7 @@ export function createSim({ load, save, pageBase, webhook }) {
         const a = db.accounts[id];
         if (!a) return { status: 404, text: "unbekannt" };
         Object.assign(a, { charges_enabled: true, payouts_enabled: true, details_submitted: true, sim_angaben: { name: String(form.name || "").slice(0, 80), iban: String(form.iban || "").slice(-4) } });
+        simKontoAdresse(db, a);
         emit("account.updated", a, a.id);
         return { json: { ok: true } };
       });
@@ -378,6 +393,9 @@ export function createSim({ load, save, pageBase, webhook }) {
         if (query.get("ereignis") !== "0") emit("charge.updated", { id: c.id, object: "charge", payment_intent: pi.id, amount: pi.amount, application_fee: c.application_fee, transfer: c.transfer }, pi.account || undefined);
         return { ok: true, transfer: c.transfer, application_fee: c.application_fee };
       }
+      // Einfache Anmeldung: Checkout liefert Firmendaten (Rechnungsadresse + USt-IdNr.) bzw. Konto-Einrichtung ohne Adresse   POST /mock/checkout-firma?an=1|0, /mock/konto-ohne-adresse?an=1|0
+      if (art === "checkout-firma") { db.sim_checkout_firma = query.get("an") !== "0"; return { ok: true, checkoutFirma: db.sim_checkout_firma }; }
+      if (art === "konto-ohne-adresse") { db.sim_konto_ohne_adresse = query.get("an") !== "0"; return { ok: true, kontoOhneAdresse: db.sim_konto_ohne_adresse }; }
       if (art === "ohne-klarna") { db.accounts[id].sim_ohne_klarna = true; return { ok: true }; }
       if (art === "refund") {
         const pi = db.paymentIntents[id];

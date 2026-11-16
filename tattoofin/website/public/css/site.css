@@ -307,3 +307,48 @@ details .raten-fn{margin-top:-6px;margin-bottom:12px}
 .ki-hinweis{position:absolute;left:10px;top:10px;z-index:3;background:rgba(19,40,61,.86);color:#fff;font:600 11.5px/1.2 var(--body);padding:4px 9px;border-radius:99px;pointer-events:none}
 .ki-fuss{margin-top:6px;font-size:13px;opacity:.9;max-width:42em}
 .foot .ki-fuss{color:var(--muted-d)}
+
+/* Anmeldung /start (einfache Anmeldung 16.11.2026): ein Bildschirm, 4 Felder, 1 Häkchen, 1 Knopf. Mobil zuerst. */
+.anm.sec.tight{padding:22px 0 40px}
+.anm .wrap{max-width:620px}
+.anm-h1{font-size:clamp(32px,6vw,46px);margin:0 0 6px}
+.anm-preis{margin:0 0 14px;font-size:16px;color:var(--ink)}
+.anm-z2{font-size:14.5px}
+.anm .alert{margin:0 0 14px}
+.anm-form .field{margin-bottom:14px}
+.anm-form .lab{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:8px;margin-bottom:6px}
+.anm-form .lab label{margin:0}
+.anm-form .lab .hint{margin:0;font-size:13px;color:var(--muted)}
+.anm-form input[aria-invalid=true]{border-color:#a8231a;box-shadow:0 0 0 3px #ffd9d4}
+.anm-adresse{border:0;margin:4px 0 0;padding:12px 0 0;border-top:2px dashed rgba(31,61,92,.3);min-width:0}
+.anm-adresse legend{font-weight:700;font-size:15px;padding:0 6px 0 0}
+.anm-plz{grid-template-columns:minmax(96px,140px) 1fr}
+.anm-check{margin:6px 0 16px;font-size:14.5px;line-height:1.45}
+.anm-check a{font-weight:700}
+.anm-knopf{width:100%;flex-wrap:wrap;column-gap:0;row-gap:2px;padding:15px 16px;font-size:18px;line-height:1.2;text-align:center}
+.anm-knopf .k1{font-weight:800}
+.anm-knopf .k2{font-weight:600}
+.anm-knopf .k-sep{padding:0 .4em}
+.anm-sicher{text-wrap:balance}
+.anm-sicher{margin:10px 0 0;font-size:13.5px;color:var(--muted);text-align:center}
+.anm-als{margin:14px 0 0;font-size:14px;color:var(--ink)}
+.anm-kurz{margin-top:14px}
+.anm-kurz .kurz{margin:8px 0 4px}
+.anm-klein{font-size:13.5px;color:var(--muted);margin:10px 0 0}
+.anm-kurz .vbox{max-height:320px;overflow:auto;font-size:14px;background:#fff;border:2px solid rgba(31,61,92,.25);border-radius:10px;padding:10px 12px}
+@media (max-width:480px){
+  .anm .wrap{padding:0 16px}
+  .anm.sec.tight{padding:14px 0 32px}
+  .anm-form.form{padding:16px 14px 18px;border-radius:20px;box-shadow:5px 5px 0 var(--ink)}
+  .anm-h1{font-size:33px}
+  .anm-preis{font-size:16px;margin-bottom:12px;line-height:1.4}
+  .anm-z2{display:block;font-size:14px}.anm-sep{display:none}
+  .anm-form .field{margin-bottom:12px}
+  .anm-form input[type=text],.anm-form input[type=email],.anm-form input[type=tel]{padding:11px 13px}
+  .anm-knopf{font-size:17px;padding:13px 12px}
+  .anm-knopf .k-sep{display:none}
+  .anm-knopf .k2{display:block;width:100%;font-size:15px}
+}
+/* Handy: Navigation flacher, damit der Knopf im ersten Bildschirm steht */
+@media (max-width:480px){.anm-seite .nav{top:6px;margin-top:8px}.anm-seite .nav .wrap{height:56px}.anm-seite .nav .brand img{height:38px;width:38px}
+  .anm.sec.tight{padding-top:12px}.anm-form .field{margin-bottom:10px}.anm-form input[type=text],.anm-form input[type=email],.anm-form input[type=tel]{padding:10px 13px}.anm-check{font-size:14px;margin:4px 0 14px}}

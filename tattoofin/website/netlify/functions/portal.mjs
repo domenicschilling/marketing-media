@@ -7,6 +7,8 @@
 //   DELETE /api/portal/kuendigung          Kündigung zurücknehmen
 //   POST   /api/portal/rechnungen          Stripe-Kundenportal (Tattoofin-Rechnungen)
 //   PATCH  /api/portal/kontakt             Benachrichtigungs-E-Mail bzw. Anzahlungsbedingungen ändern
+//   POST   /api/portal/adresse             { strasse, plz, ort } Adresse deiner Zahlseite bestätigen bzw. eintragen (Karte im Studio-Bereich,
+//                                          seit der einfachen Anmeldung 16.11.2026; vorbefüllt aus dem Stripe-Konto). PLZ 5 Ziffern nur bei DE.
 //   POST   /api/portal/erstattung/:id      Kundenzahlung (Provision) ganz oder teilweise erstatten { betrag }
 //   POST   /api/portal/stripe-dashboard    Login-Link ins Stripe-Express-Dashboard (Auszahlungen) – nur noch Notlösung
 //   POST   /api/portal/stripe-session      Sitzung für eingebettete Stripe-Bausteine (Einrichtung, Auszahlungen, Konto)
@@ -48,7 +50,7 @@ import { saveStudio, zahlungenVon, getZahlung, saveZahlung, abrechnungenVon, get
 import { currentStudio, clearCookie } from "./_lib/auth.mjs";
 import { geraeteWiderrufen } from "./_lib/app-geraete.mjs";
 import { stripe, dashboardLink, accountSession, ensureConnectedAccount } from "./_lib/stripe.mjs";
-import { hatUmstellungsangebot, umstellungCheckout, notify, notifyAdmin, connectUrl, connectUrlGehostet, darfKassieren, provisionVerdient, kontoAbgleichen, eingebettet, klarnaFuer, provisionZahlung, aufstellerBezahlt, aufstellerLogoLoeschen, istAufstellerPruefStudio, kuendigungEinreichen, kuendigungZuruecknehmen, zahlungAbgleichen } from "./_lib/domain.mjs";
+import { hatUmstellungsangebot, umstellungCheckout, notify, notifyAdmin, connectUrl, connectUrlGehostet, darfKassieren, studioAdresseDa, provisionVerdient, kontoAbgleichen, eingebettet, klarnaFuer, provisionZahlung, aufstellerBezahlt, aufstellerLogoLoeschen, istAufstellerPruefStudio, kuendigungEinreichen, kuendigungZuruecknehmen, zahlungAbgleichen } from "./_lib/domain.mjs";
 import { fuerStudio, oeffentlich, zahlungsLink } from "./_lib/studio-ansicht.mjs";
 import { randomBytes } from "node:crypto";
 import { KLARNA_NAME, PFLICHTSATZ_STUDIO, gutscheinWort, GUTSCHEIN_HINWEIS } from "./_lib/klarna-texte.mjs";
@@ -103,7 +105,7 @@ import { mails } from "./_lib/emails.mjs";
 // Mit App-Token gesperrte Bereiche (nur im Dashboard)
 const NUR_WEB = ["stripe-session", "rechnungen", "umstellung", "erstattung", "extra"];
 // Mit App-Token einer Team-Adresse gesperrt (nur der Inhaber darf das; im Web gilt das Cookie wie bisher)
-const NUR_INHABER = ["kuendigung", "stripe-dashboard", "kontakt", "abmelden", "recht", "fragebogen"];
+const NUR_INHABER = ["kuendigung", "stripe-dashboard", "kontakt", "abmelden", "recht", "fragebogen", "adresse"];
 
 export default handler(async (req, context) => {
   const s = await currentStudio(req);
@@ -146,7 +148,8 @@ export default handler(async (req, context) => {
 
   if (bereich === "zahlung") {
     if (req.method === "POST" && !sub) {
-      if (!darfKassieren(s)) return fail(s.stripe?.chargesEnabled ? "Dein Vertrag ist nicht aktiv." : "Dein Stripe-Konto ist noch nicht freigegeben. Sobald Stripe die Prüfung abgeschlossen hat, kannst du Zahlungslinks erstellen.", 409);
+      if (!darfKassieren(s)) return fail(!s.stripe?.chargesEnabled ? "Dein Stripe-Konto ist noch nicht freigegeben. Sobald Stripe die Prüfung abgeschlossen hat, kannst du Zahlungslinks erstellen."
+        : !studioAdresseDa(s) ? "Adresse fehlt noch: Bitte trag unter „Einrichtung“ die Adresse deiner Zahlseite ein, dann kannst du Zahlungslinks erstellen." : "Dein Vertrag ist nicht aktiv.", 409);
       const b = await body(req);
       const betragCent = parseBetrag(b.betrag);
       if (!(betragCent >= CFG.minBetragCent && betragCent <= CFG.maxBetragCent)) return fail(`Bitte einen Betrag zwischen ${CFG.minBetragCent / 100} € und ${CFG.maxBetragCent / 100} € eingeben.`);
@@ -270,6 +273,21 @@ export default handler(async (req, context) => {
   if (bereich === "rechnungen" && req.method === "POST") {
     const ps = await stripe("POST", "/billing_portal/sessions", { customer: s.stripe.customerId, return_url: `${CFG.siteUrl}/portal.html#konto`, locale: "de" });
     return json({ url: ps.url });
+  }
+
+  // Adresse deiner Zahlseite (steht auf der Zahlseite, im Warenkorb und auf Gutscheinen). Ein Knopf „Stimmt so“ bestätigt den Vorschlag
+  // aus dem Stripe-Konto; geänderte Werte gelten als eigene Angabe des Studios. Die Rechnungsadresse (s.rechnungsadresse) bleibt davon getrennt.
+  if (bereich === "adresse" && req.method === "POST") {
+    const b = await body(req);
+    const neu = { strasse: clean(b.strasse, 120), plz: clean(b.plz, 10), ort: clean(b.ort, 80) };
+    const land = String(s.land || "DE").toUpperCase();
+    const fehlt = [!neu.strasse && "Straße und Hausnummer", !neu.ort && "Ort", land === "DE" && !/^\d{5}$/.test(neu.plz) && "PLZ (5 Ziffern)"].filter(Boolean);
+    if (fehlt.length) return fail("Bitte ausfüllen: " + fehlt.join(", "));
+    const geaendert = ["strasse", "plz", "ort"].some((k) => (s[k] || "") !== neu[k]);
+    Object.assign(s, neu, { land, adresseBestaetigt: true, adresseBestaetigtAm: now(), adresseQuelle: geaendert || !s.adresseQuelle ? "studio" : s.adresseQuelle });
+    await saveStudio(s);
+    await log("adresse-zahlseite", { studioId: s.id, quelle: s.adresseQuelle });
+    return json(oeffentlich(s));
   }
 
   if (bereich === "kontakt" && req.method === "PATCH") {

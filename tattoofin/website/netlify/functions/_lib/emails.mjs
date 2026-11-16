@@ -151,7 +151,8 @@ export const mails = {
   kontoFreigegeben: (s) => mk("Stripe hat dein Konto freigegeben ✅", {
     preheader: "Jetzt richten wir Zahlungsarten und Branding ein.",
     title: "Dein Stripe-Konto ist freigegeben",
-    body: hallo(s) + p("gute Nachrichten: Stripe hat das Konto deines Studios geprüft und freigegeben. Wir richten jetzt Zahlungsarten, Branding und den Ablauf ein und melden uns für Test und Teamschulung."),
+    body: hallo(s) + p("gute Nachrichten: Stripe hat das Konto deines Studios geprüft und freigegeben. Wir richten jetzt Zahlungsarten, Branding und den Ablauf ein und melden uns für Test und Teamschulung.")
+      + (!(String(s.strasse || "").trim() && String(s.ort || "").trim()) ? p("Eins fehlt noch: Trag in deinem Studio-Bereich unter „Einrichtung“ die Adresse deiner Zahlseite ein. Erst dann sehen deine Kunden, bei welchem Studio sie bezahlen, und du kannst Zahlungslinks erstellen.") : ""),
   }),
 
   login: (s, { url, stunden = 24 }) => mk(`Dein Login-Link für das Tattoofin-Portal (${s.firma})`, {

@@ -75,7 +75,8 @@ async function cookiesAblehnen(p) {
 
 // Paket Einmalzahlung ist seit 02.11.2026 nicht mehr auf der Seite wählbar (Notschalter EINMAL_NEU). Bestandsabläufe: Auswahl wie früher nachbilden.
 async function einmalNachbilden(p, zahlart) {
-  await p.evaluate((z) => { const f = document.getElementById("f"); f.insertAdjacentHTML("beforeend", `<input type="radio" name="paket" value="einmal" checked style="display:none"><input type="radio" name="zahlart" value="${z || "sofort"}" checked style="display:none">`); }, zahlart);
+  // Einfache Anmeldung (16.11.2026): Die Seite blendet die Adressfelder bei Einmalzahlung ein, sobald sich das Paket ändert (change)
+  await p.evaluate((z) => { const f = document.getElementById("f"); f.insertAdjacentHTML("beforeend", `<input type="radio" name="paket" value="einmal" checked style="display:none"><input type="radio" name="zahlart" value="${z || "sofort"}" checked style="display:none">`); f.querySelector("input[name=paket][value=einmal]").dispatchEvent(new Event("change", { bubbles: true })); }, zahlart);
 }
 
 // paket: monatlich | einmal; alternativ modell (alter Link: kauf → einmal). Risikofrei ist für Neukunden geschlossen (Bestandsstudios werden per API angelegt).
@@ -84,14 +85,13 @@ async function signup(p, { paket, modell, email, firma, zahlart, geschenk, shot 
   await cookiesAblehnen(p);
   if (shot) await p.screenshot({ path: path.join(shot, "01-einladung.png"), fullPage: true });
   if (paket === "einmal" || modell === "kauf") await einmalNachbilden(p, zahlart);
-  if (await p.isVisible("section[data-step='1'] [data-next]")) await p.click("section[data-step='1'] [data-next]"); // Schritt 1 nur noch bei Einladungen (16.11.2026)
-  for (const [k, v] of Object.entries({ firma, inhaber: "Alex Muster", strasse: "Musterstr. 1", plz: "96047", ort: "Bamberg", email, telefon: "0151 1234567", studioTelefon: "0951 123456" })) await p.fill("#" + k, v);
+  // Einfache Anmeldung (16.11.2026): ein Bildschirm, 4 Felder + 1 Häkchen. Adresse nur bei Einladung bzw. Einmalzahlung (dann sichtbar und Pflicht).
+  const mitAdresse = Boolean(geschenk) || paket === "einmal" || modell === "kauf";
+  check(await p.isVisible("#adresse-block") === mitAdresse, `/start (${geschenk ? "Einladung" : paket || modell}): Adressfelder ${mitAdresse ? "sichtbar" : "ausgeblendet"}`);
+  for (const [k, v] of Object.entries({ firma, inhaber: "Alex Muster", email, telefon: "0151 1234567", ...(mitAdresse ? { strasse: "Musterstr. 1", plz: "96047", ort: "Bamberg" } : {}) })) await p.fill("#" + k, v);
   if (shot) await p.screenshot({ path: path.join(shot, "02-einladung-daten.png"), fullPage: true });
-  await p.click("section[data-step='2'] [data-next]");
   await p.check("input[name=ak_alle]");
-  await p.check("input[name=ak_kmu]");
-  await p.fill("#unterzeichner", "Alex Muster");
-  await p.screenshot({ path: path.join(shot || shots, shot ? "03-einladung-vertrag.png" : `start-${paket || modell || "geschenk"}-schritt3.png`), fullPage: true });
+  await p.screenshot({ path: path.join(shot || shots, shot ? "03-einladung-vertrag.png" : `start-${paket || modell || "geschenk"}.png`), fullPage: true });
   await p.click("#submit");
 }
 
@@ -207,7 +207,7 @@ try {
   const pC = await neueSeite();
   await signup(pC, { paket: "einmal", email: "rechnung@example.com", firma: "Ink Rechnung", zahlart: "rechnung" });
   await pC.waitForURL(/app\.html/, { timeout: 15000 });
-  check((await studioPer("rechnung@example.com"))?.status === "zahlung_offen", "Rechnung offen, trotzdem schon im Dashboard");
+  { const sR = await studioPer("rechnung@example.com"); check(sR?.status === "zahlung_offen", "Rechnung offen, trotzdem schon im Dashboard" + (sR?.status === "zahlung_offen" ? "" : " [" + JSON.stringify(sR) + "]")); }
   check(mailsAn("rechnung@example.com").some((m) => m.subject.includes("Rechnung")), "E-Mail: Rechnung");
   const pC2 = await neueSeite();
   await signup(pC2, { paket: "einmal", email: "abbruch@example.com", firma: "Ink Abbruch" });
@@ -266,6 +266,147 @@ try {
   check(!("aufstellerLink" in aboAdmin) && aboAdmin.studio && !("aufsteller" in (aboAdmin.studio.vertrag || {})), "Admin: kein Gravur-Link mehr, neuer Vertrag ohne Aufsteller-Feld");
   const inklAbo = await api(pD, "/api/portal");
   check(!("aufsteller" in inklAbo.data.studio) && !("aufstellerInklusive" in inklAbo.data.studio) && inklAbo.data.studio.paketName === "Monatlich", "Dashboard-Daten: Paket Monatlich ohne Aufsteller-Felder");
+
+  // ---------------------------------------------------------------- D2: Einfache Anmeldung (16.11.2026)
+  console.log("Einfache Anmeldung: ein Bildschirm, 4 Felder, 1 Häkchen, 1 Knopf; Rechnungsdaten aus dem Checkout, Adresse aus dem Stripe-Konto bzw. der Karte");
+  {
+    const ereignisse = [];
+    const pE = await neueSeite({ viewport: { width: 390, height: 844 }, hasTouch: true });
+    await pE.route(/cloud\.umami\.is/, (r) => r.abort());
+    await pE.exposeFunction("__melde", (x) => { ereignisse.push(x); });
+    // Messung mitschneiden: Umami-Ereignisse und Meta-Ereignisse über TFTrack.track (ohne Einwilligung nur vorgemerkt, gezählt wird der Aufruf)
+    await pE.addInitScript(() => {
+      window.umami = { track: (e) => window.__melde("umami:" + e) };
+      let tf; Object.defineProperty(window, "TFTrack", { configurable: true, get: () => tf, set: (v) => { const o = v.track; v.track = function (n) { window.__melde("meta:" + n); return o.apply(this, arguments); }; tf = v; } });
+    });
+    await pE.goto(`${BASE}/start.html?paket=monatlich&utm_source=meta&utm_campaign=einfach`);
+    await pE.waitForTimeout(300);
+    const form = await pE.evaluate(() => {
+      const sichtbar = (el) => el && el.getClientRects().length > 0 && getComputedStyle(el).visibility !== "hidden";
+      const felder = [...document.querySelectorAll("#f input, #f select, #f textarea")].filter(sichtbar);
+      const a = (id) => { const el = document.getElementById(id); return el ? [el.type, el.getAttribute("autocomplete"), el.getAttribute("inputmode") || ""].join("|") : ""; };
+      const knopf = document.getElementById("submit"), kurz = document.getElementById("kurz-box");
+      return {
+        felder: felder.map((el) => el.name).join(","), h1: document.querySelector("h1").textContent.trim(),
+        alt: document.querySelectorAll(".steps-bar, [data-back], [data-next], #unterzeichner, input[name=ak_kmu], #studioTelefon, #website, section[data-step]").length,
+        firma: a("firma"), inhaber: a("inhaber"), email: a("email"), telefon: a("telefon"),
+        knopf: knopf.textContent.replace(/\s+/g, " ").trim(), knopfUnten: knopf.getBoundingClientRect().bottom, sicher: document.getElementById("anm-sicher").textContent,
+        kurzUnter: kurz.getBoundingClientRect().top > knopf.getBoundingClientRect().bottom && !kurz.open, label: document.querySelector("label[for=firma]").textContent + "|" + document.querySelector("label[for=inhaber]").textContent + "|" + document.querySelector("label[for=telefon]").textContent,
+        minuten: /Minute/.test(document.querySelector("main").innerText.split("Das Wichtigste")[0]), haken: document.querySelector("label.check").textContent.replace(/\s+/g, " "),
+        vertragLink: Boolean(document.querySelector("label.check a[href='/vertrag.html']") && document.querySelector("label.check a[href='/avv.html']")),
+      };
+    });
+    check(form.felder === "firma,inhaber,email,telefon,ak_alle" && form.alt === 0, "/start: genau 4 Felder + 1 Häkchen, kein Fortschrittsbalken, kein Zurück, kein Unterzeichner, kein KMU-Extra, kein Studio-Telefon/Website", form.felder + " alt=" + form.alt);
+    check(form.label === "Name deines Studios|Dein Vor- und Nachname|Handynummer (WhatsApp)" && form.firma === "text|organization|" && form.inhaber === "text|name|" && form.email === "email|email|email" && form.telefon === "tel|tel|tel", "/start: Beschriftungen + Autofill-Tokens (organization, name, email, tel) + Handy-Tastatur", JSON.stringify(form));
+    check(form.h1 === "4 Angaben. Fertig." && !form.minuten, "/start: Überschrift „4 Angaben. Fertig.“, keine Minutenangabe über dem Knopf");
+    check(form.knopf.replace(/\u00a0/g, " ") === "Weiter zur Zahlung · 49,90 € im Monat" && /Sicher über Stripe\. Monatlich kündbar\. Keine Provision\./.test(form.sicher), "/start: Knopf „Weiter zur Zahlung · 49,90 € im Monat“, darunter klein „Sicher über Stripe. Monatlich kündbar. Keine Provision.“", form.knopf);
+    check(form.kurzUnter && /Unternehmer an \(weniger als 250 Mitarbeitende\) und akzeptiere den Vertrag und den AVV/.test(form.haken) && form.vertragLink, "/start: ein Häkchen (Unternehmer < 250 MA + Vertrag + AVV, verlinkt), „Das Wichtigste in Kürze“ zugeklappt unter dem Knopf", form.haken);
+    check(form.knopfUnten <= 844, "/start 390×844: Knopf im ersten Bildschirm (ohne Tastatur)", String(Math.round(form.knopfUnten)));
+    // Leer absenden: Fehlermeldung, keine Anfrage, keine Messung
+    await pE.click("#submit");
+    check(/Felder aus/.test(await pE.textContent("#alert")) && !ereignisse.some((x) => /checkout-weiter|InitiateCheckout/.test(x)), "Leer absenden: Hinweis, keine Messung");
+    for (const [k, v] of Object.entries({ firma: "Ink Einfach", inhaber: "Eva Einfach", email: "einfach@example.com", telefon: "0151 7654321" })) await pE.fill("#" + k, v);
+    await pE.click("#submit");
+    check(/Häkchen/.test(await pE.textContent("#alert")) && !ereignisse.some((x) => /checkout-weiter|InitiateCheckout/.test(x)), "Ohne Häkchen: Hinweis, keine Messung");
+    check(/Du schließt ab als: Eva Einfach, Ink Einfach/.test(await pE.textContent("#anm-als")), "Unter dem Knopf: „Du schließt ab als: <Name>, <Studio>“");
+    await pE.check("#ak_alle");
+    await pE.screenshot({ path: path.join(shots, "start-einfach-390.png"), fullPage: true });
+    await pE.click("#submit");
+    await pE.waitForURL(MOCK_PAY);
+    check(ereignisse.filter((x) => x === "meta:InitiateCheckout").length === 1 && ereignisse.filter((x) => x === "umami:checkout-weiter").length === 1, "Messung: InitiateCheckout (Meta) und Umami „checkout-weiter“ genau 1× beim Absenden", ereignisse.join(","));
+    const sE = await storeMod.studioBy("email", "einfach@example.com");
+    check(sE?.vertrag?.name === "Eva Einfach" && sE.inhaber === "Eva Einfach" && sE.studioTelefon === "0151 7654321" && !sE.strasse && !sE.plz && !sE.ort && sE.vertrag.kmu === true && sE.vertrag.avv === true && sE.quelle?.source === "meta", "Server: Unterzeichner = Inhaber/in, Studio-Telefon = Handy, keine Adresse, alle 4 Bestätigungen, Herkunft gespeichert", JSON.stringify({ n: sE?.vertrag?.name, t: sE?.studioTelefon, s: sE?.strasse }));
+    let st = await mock("state");
+    const csE = st.sessions[sE.stripe.checkoutSessionId];
+    check(String(csE?.tax_id_collection?.enabled) === "true" && csE.customer_update?.address === "auto" && !csE.payment_method_types && !csE.name_collection && csE.billing_address_collection !== "required" && csE.excluded_payment_method_types?.includes("klarna") && !/\d/.test(csE.custom_text?.submit?.message || "x"), "Abo-Checkout: USt-IdNr. optional, Adresse auto (keine Pflicht), keine festen Zahlarten, kein name_collection, Hinweis ohne Zeitangabe", JSON.stringify({ t: csE?.tax_id_collection, c: csE?.customer_update, m: csE?.custom_text }));
+    const cusE = st.customers[sE.stripe.customerId];
+    check(cusE && !("address" in cusE) && cusE.name === "Ink Einfach" && cusE.phone === "0151 7654321", "Stripe-Kunde: ohne leere Adresse angelegt (ensureCustomer schickt nur vorhandene Angaben)", JSON.stringify(cusE?.address));
+    // Abbruch im Checkout → /start?resume…&abbruch=1: 4 Felder vorbelegt, Häkchen erneut, gleicher Stripe-Kunde, nichts überschrieben
+    await fetch(`http://localhost:${MOCK_PORT}/v1/customers/${sE.stripe.customerId}`, { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ "address[line1]": "Rechnungsweg 7", "address[city]": "Bamberg", "address[postal_code]": "96047", "address[country]": "DE" }) });
+    await pE.click("#cancel");
+    await pE.waitForURL(/start\.html\?resume=.*abbruch=1/);
+    await pE.waitForFunction(() => document.getElementById("email").value === "einfach@example.com");
+    const wieder = await pE.evaluate(() => ({ f: ["firma", "inhaber", "email", "telefon"].map((k) => document.getElementById(k).value).join("|"), adr: getComputedStyle(document.getElementById("adresse-block")).display, fokus: document.activeElement?.id, hinweis: document.getElementById("alert").textContent }));
+    check(wieder.f === "Ink Einfach|Eva Einfach|einfach@example.com|0151 7654321" && wieder.adr === "none" && /Häkchen/.test(wieder.hinweis) && ereignisse.includes("umami:checkout-abbruch"), "Wiederaufnahme nach Abbruch: 4 Felder vorbelegt, keine Adressfelder, Hinweis + Umami „checkout-abbruch“", JSON.stringify(wieder));
+    await pE.waitForTimeout(120);
+    check(["ak_alle", "submit"].includes(await pE.evaluate(() => document.activeElement?.id)), "Wiederaufnahme: Fokus direkt beim Häkchen/Knopf");
+    await pE.check("#ak_alle");
+    await pE.click("#submit");
+    await pE.waitForURL(MOCK_PAY);
+    st = await mock("state");
+    const sE2 = await storeMod.studioBy("email", "einfach@example.com");
+    const kundenE = Object.values(st.customers).filter((c) => c.email === "einfach@example.com");
+    check(kundenE.length === 1 && sE2.stripe.customerId === sE.stripe.customerId && kundenE[0].address?.line1 === "Rechnungsweg 7" && kundenE[0].name === "Ink Einfach", "Erneutes Absenden: derselbe Stripe-Kunde, die Rechnungsadresse aus Stripe bleibt (keine leeren Felder geschickt)", JSON.stringify(kundenE.map((c) => c.address)));
+    // Bezahlen „als Unternehmen“ (Rechnungsadresse + USt-IdNr. im Checkout) → Webhook übernimmt beides getrennt, nicht als Studio-Adresse
+    await pE.click("#pay-firma");
+    await pE.waitForURL(/app\.html/, { timeout: 15000 });
+    const sE3 = await storeMod.studioBy("email", "einfach@example.com");
+    check(sE3.status === "einrichtung" && sE3.ustid === "DE123456789" && sE3.rechnungsadresse?.strasse === "Rechnungsweg 7" && sE3.rechnungsadresse?.ort === "Bamberg" && sE3.rechnungsname === "Ink Einfach GmbH" && !sE3.strasse, "Webhook: USt-IdNr. und Rechnungsadresse aus dem Checkout übernommen, Studio-Adresse NICHT aus der Rechnungsadresse", JSON.stringify({ u: sE3.ustid, r: sE3.rechnungsadresse, s: sE3.strasse }));
+    const mE = mailsAn("domenicschilling@gmail.com").find((m) => m.subject.includes("Paket Monatlich") && m.subject.includes("Ink Einfach"));
+    check(Boolean(mE) && /DE123456789/.test(mE.html) && /Rechnungsweg 7/.test(mE.html), "Admin-Mail „Neuer Abschluss (Paket Monatlich)“ mit USt-IdNr. und Rechnungsadresse");
+    // Stripe-Konto ohne Adresse (Standard-Konto liefert keine) → Zahlseite noch nicht bereit, Karte „Adresse deiner Zahlseite“ leer
+    await mock("konto-ohne-adresse?an=1");
+    await pE.goto(BASE + "/app.html#einrichtung");
+    await pE.waitForSelector("#so-weiter");
+    await pE.click("#so-weiter"); await pE.click("#so-weiter"); await pE.click("#so-weiter");
+    await pE.waitForFunction(() => /Adresse fehlt/.test(document.getElementById("top-status").textContent), null, { timeout: 15000 });
+    await mock("konto-ohne-adresse?an=0");
+    await pE.goto(BASE + "/app.html#start"); await pE.waitForSelector("#adr-form");
+    const karte = await pE.evaluate(() => ({ s: document.getElementById("adr-strasse").value + document.getElementById("adr-plz").value + document.getElementById("adr-ort").value,
+      ac: ["adr-strasse", "adr-plz", "adr-ort"].map((id) => document.getElementById(id).getAttribute("autocomplete")).join(","), plz: document.getElementById("adr-plz").getAttribute("inputmode"),
+      undef: /undefined/.test(document.getElementById("app").innerText), knopf: document.getElementById("adr-ok").textContent }));
+    check(karte.s === "" && karte.ac === "address-line1,postal-code,address-level2" && karte.plz === "numeric" && !karte.undef, "Studio-Bereich: Karte „Adresse deiner Zahlseite“ leer zum Ausfüllen, Autofill-Tokens + Zahlentastatur, nirgends „undefined“", JSON.stringify(karte));
+    await appShot(pE, path.join(shots, "app-adresse-fehlt-390.png"));
+    const portalE = await api(pE, "/api/portal");
+    const zahlE = await api(pE, "/api/portal/zahlung", { method: "POST", body: { betrag: "100", art: "gesamt", kunde: "Test", email: "k@example.com", beschreibung: "Rose" } });
+    const payInfo = await (await fetch(`${BASE}/api/pay?s=${sE3.slug}`)).json();
+    check(portalE.data.studio.stripe.freigegeben === true && portalE.data.studio.kannKassieren === false && portalE.data.studio.zahlseiteAdresse.fehlt === true && zahlE.status === 409 && /Adresse fehlt/.test(zahlE.data.error) && payInfo.studio?.aktiv === false, "Ohne Studio-Adresse: Zahlseite nicht bereit (kein Zahlungslink, Zahlseite inaktiv), obwohl Stripe freigegeben ist", `${zahlE.status} ${zahlE.data.error}`);
+    await pE.goto(BASE + "/app.html#konto"); await pE.waitForTimeout(300);
+    check(!/undefined/.test(await pE.evaluate(() => document.getElementById("app").innerText)), "Konto-Ansicht ohne Adresse: kein „undefined“");
+    await pE.goto(BASE + "/app.html#start"); await pE.waitForSelector("#adr-form");
+    await pE.fill("#adr-strasse", "Studiogasse 3"); await pE.fill("#adr-plz", "12"); await pE.fill("#adr-ort", "Bamberg");
+    await pE.click("#adr-ok");
+    await pE.waitForSelector(".toast.err");
+    check(/PLZ \(5 Ziffern\)/.test(await pE.textContent("#toast")), "Karte: PLZ wird geprüft (5 Ziffern bei DE)");
+    await pE.fill("#adr-plz", "96049"); await pE.click("#adr-ok");
+    await pE.waitForFunction(() => /Bereit/.test(document.getElementById("top-status").textContent), null, { timeout: 8000 });
+    const sE4 = await storeMod.studioBy("email", "einfach@example.com");
+    check(sE4.strasse === "Studiogasse 3" && sE4.plz === "96049" && sE4.ort === "Bamberg" && sE4.adresseBestaetigt === true && sE4.adresseQuelle === "studio" && sE4.rechnungsadresse?.strasse === "Rechnungsweg 7" && !(await pE.isVisible("#adr-form")), "Karte gespeichert: Zahlseite bereit, Rechnungsadresse bleibt getrennt", JSON.stringify({ s: sE4.strasse, q: sE4.adresseQuelle }));
+    check((await (await fetch(`${BASE}/api/pay?s=${sE3.slug}`)).json()).studio?.aktiv === true, "Zahlseite nach der Adresse: bereit");
+    await pE.context().close();
+    // Abo-Studio von oben (Konto-Einrichtung mit Adresse): Vorschlag aus dem Stripe-Konto, vorbefüllt, 1 Knopf „Stimmt so“
+    const sAbo = await storeMod.studioBy("email", "abo@example.com");
+    check(sAbo.strasse === "Musterstr. 1" && sAbo.plz === "96047" && sAbo.ort === "Bamberg" && sAbo.adresseQuelle === "connect" && sAbo.adresseBestaetigt === false, "account.updated mit company.address: Studio-Adresse als Vorschlag übernommen (Quelle connect, unbestätigt)", JSON.stringify({ s: sAbo.strasse, q: sAbo.adresseQuelle }));
+    await pD.goto(BASE + "/app.html#start"); await pD.waitForSelector("#adr-form");
+    check(await pD.inputValue("#adr-strasse") === "Musterstr. 1" && (await pD.textContent("#adr-ok")).trim() === "Stimmt so" && /Stripe-Konto übernommen/.test(await pD.textContent("#checkliste")), "Karte vorbefüllt aus dem Stripe-Konto, ein Knopf „Stimmt so“");
+    await appShot(pD, path.join(shots, "app-adresse-vorschlag.png"));
+    await pD.click("#adr-ok");
+    await pD.waitForFunction(() => !document.getElementById("adr-form"), null, { timeout: 8000 });
+    const sAbo2 = await storeMod.studioBy("email", "abo@example.com");
+    check(sAbo2.adresseBestaetigt === true && sAbo2.adresseQuelle === "connect" && sAbo2.strasse === "Musterstr. 1", "„Stimmt so“: Adresse bestätigt, Quelle bleibt Stripe-Konto");
+    // Eigene Angaben werden nie vom Stripe-Konto überschrieben
+    const dom2 = await import("../netlify/functions/_lib/domain.mjs");
+    const eigen = { ...(await storeMod.studioBy("email", "kauf@example.com")) };
+    eigen.strasse = "Eigene Str. 5"; eigen.stripe = { ...eigen.stripe };
+    await dom2.kontoAbgleichen(eigen, { id: eigen.stripe.accountId, charges_enabled: true, payouts_enabled: true, details_submitted: true, company: { address: { line1: "Andere Str. 9", postal_code: "10115", city: "Berlin", country: "DE" } } });
+    check(eigen.strasse === "Eigene Str. 5" && eigen.ort === "Bamberg" && eigen.adresseQuelle !== "connect", "account.updated überschreibt eine vorhandene Studio-Adresse nicht");
+    eigen.strasse = "Musterstr. 1"; await storeMod.saveStudio(eigen);
+    check(dom2.connectAdresse({ business_profile: { support_address: { line1: "Hilfe 1", city: "Köln", postal_code: "50667", country: "DE" } } })?.ort === "Köln" && dom2.connectAdresse({ individual: { address: { line1: "Priv 2", city: "Bonn" } } })?.strasse === "Priv 2" && dom2.connectAdresse({}) === null, "Adresse aus dem Stripe-Konto: company.address, sonst support_address, sonst individual.address, sonst keine");
+  }
+  // Server: Lockerung nur Web + Monatlich + ohne Einladung; Einladung und Einmalzahlung (auch Rechnung) bleiben mit Adresse
+  {
+    const kurzD = { firma: "Ink Kurz", inhaber: "Kim Kurz", telefon: "0151 2223334", akzeptiert: { vertrag: true, avv: true, unternehmer: true, kmu: true } };
+    const r1 = await post("/api/signup", { ...kurzD, paket: "monatlich", email: "kurz@example.com" });
+    const sK = await storeMod.studioBy("email", "kurz@example.com");
+    check(r1.status === 200 && sK?.vertrag?.name === "Kim Kurz" && sK.studioTelefon === "0151 2223334", "POST /api/signup Monatlich nur mit Studio, Name, E-Mail, Handy → 200, Unterzeichner = Name, Studio-Telefon = Handy", String(r1.status));
+    const r2 = await post("/api/signup", { ...kurzD, paket: "einmal", zahlart: "rechnung", email: "kurz-rechnung@example.com" }); const t2 = (await r2.json()).error || "";
+    check(r2.status === 400 && /Straße/.test(t2) && /PLZ/.test(t2) && /Ort/.test(t2), "Einmalzahlung auf Rechnung ohne Adresse → 400 (Straße, PLZ, Ort)", t2);
+    const ein = await altEinladung({ email: "kurz-geschenk@example.com", firma: "Ink Geschenk Kurz" });
+    const r3 = await post("/api/signup", { ...kurzD, geschenk: new URL(ein.link).searchParams.get("geschenk"), email: "kurz-geschenk@example.com" }); const t3 = (await r3.json()).error || "";
+    check(r3.status === 400 && /Straße/.test(t3) && /PLZ/.test(t3) && /Ort/.test(t3), "Einladung (?geschenk) ohne Adresse → 400 (Straße, PLZ, Ort)", t3);
+    const r4 = await post("/api/signup", { ...kurzD, paket: "monatlich", plz: "unsinn", email: "kurz-plz@example.com" }); const t4 = (await r4.json()).error || "";
+    check(r4.status === 400 && /PLZ \(5 Ziffern\)/.test(t4), "Monatlich: mitgeschickte PLZ wird weiter geprüft", t4);
+  }
 
   // ---------------------------------------------------------------- E: Notlösung ohne Einbettung
   console.log("Notlösung: ohne öffentlichen Stripe-Schlüssel wie bisher zu Stripe weiterleiten");
@@ -1339,7 +1480,7 @@ try {
   { const pM = await neueSeite({ viewport: { width: 390, height: 844 } });
     await pM.goto(`${BASE}/start.html?paket=monatlich`); await cookiesAblehnen(pM);
     check(await pM.locator("input[name=paket][value=monatlich]:checked").count() === 1 && !/nicht mehr/.test(await pM.textContent("#alert")), "start.html?paket=monatlich: Monatlich vorgewählt, kein Hinweis");
-    check(!/risikofrei|10 ?%|900 €|Grundgeb|Fixkosten/i.test(await pM.textContent("section[data-step='1']")), "Paketwahl: kein Wort von Risikofrei, 10 %, 900 €, Grundgebühr, Fixkosten");
+    check(!/risikofrei|10 ?%|900 €|Grundgeb|Fixkosten/i.test(await pM.textContent("#f")), "Anmeldeformular: kein Wort von Risikofrei, 10 %, 900 €, Grundgebühr, Fixkosten");
     await pM.context().close(); }
   const sperre = await post("/api/signup", { ...basis, paket: "risikofrei", email: "neu-rf@example.com" });
   const sperreD = await sperre.json();

@@ -29,10 +29,15 @@
     var s = D.studio;
     $("top-firma").textContent = s.firma;
     var st = $("top-status");
-    st.textContent = s.stripe.freigegeben ? "✓ Bereit" : s.stripe.angabenGemacht ? "Stripe prüft" : "Einrichtung offen";
-    st.className = "app-top-r" + (s.stripe.freigegeben ? "" : " warn");
+    var adrFehlt = adresseFehlt(s), bereit = s.stripe.freigegeben && !adrFehlt;
+    st.textContent = bereit ? "✓ Bereit" : s.stripe.freigegeben ? "Adresse fehlt noch" : s.stripe.angabenGemacht ? "Stripe prüft" : "Einrichtung offen";
+    st.className = "app-top-r" + (bereit ? "" : " warn");
     $("sim-hinweis").classList.toggle("hidden", !s.simulation);
   }
+
+  // Adresse deiner Zahlseite (einfache Anmeldung seit 16.11.2026: kommt aus dem Stripe-Konto oder aus der Karte unten). Demo/Testkasse: nie offen.
+  function adresseFehlt(s) { return !s.demo && !s.testmodus && Boolean(s.zahlseiteAdresse && s.zahlseiteAdresse.fehlt); }
+  function adresseOffen(s) { return !s.demo && !s.testmodus && Boolean(s.zahlseiteAdresse && (s.zahlseiteAdresse.fehlt || s.zahlseiteAdresse.vorschlag)); }
 
   // Daten auffrischen, wenn sie älter als maxAlter ms sind (z. B. neue Zahlung eingegangen)
   async function frisch(maxAlter) {
@@ -122,6 +127,10 @@
       { ok: s.stripe.freigegeben, warte: s.stripe.angabenGemacht && !s.stripe.freigegeben, t: "Zahlungskonto einrichten (ca. 10 Min.)",
         s: s.stripe.freigegeben ? "Freigegeben. Stripe zahlt das Geld deiner Kunden auf dein Bankkonto aus. Bei neuen Konten wird es erst 7 Tage nach der Zahlung freigegeben." : s.stripe.angabenGemacht ? "Stripe prüft deine Angaben, meist 1 bis 3 Werktage." : "Ca. 10 Minuten. Ausweis und IBAN bereithalten. Das ist der nächste Schritt, danach geht alles andere.",
         knopf: s.stripe.freigegeben || s.stripe.angabenGemacht ? null : ["#einrichtung", "Jetzt einrichten", "gold"] },
+      // Nach dem Stripe-Konto: Adresse der Zahlseite bestätigen (vorbefüllt aus Stripe) bzw. eintragen. Vorher grau, damit niemand sie doppelt tippt.
+      { ok: !adresseOffen(s), adresse: true, t: "Adresse deiner Zahlseite",
+        s: !adresseOffen(s) ? "So sehen deine Kunden, bei welchem Studio sie bezahlen." : s.stripe.angabenGemacht || s.stripe.freigegeben ? (s.zahlseiteAdresse.vorschlag ? "Aus deinem Stripe-Konto übernommen. Passt das so?" : "Steht auf deiner Zahlseite und im Warenkorb deiner Kunden. Erst damit kannst du kassieren.") : "Kommt direkt nach dem Zahlungskonto, meist schon vorausgefüllt.",
+        grau: !adresseOffen(s) || s.stripe.angabenGemacht || s.stripe.freigegeben ? null : "nach dem Zahlungskonto" },
       { ok: Boolean(s.fragebogenAm), t: "Fragebogen ausfüllen", s: "Hilft uns bei der Einrichtung (10 Minuten).", knopf: ["/onboarding.html", "Ausfüllen", "dark"] },
       { ok: s.recht && s.recht.aktuell, t: "Deine rechtliche Lage lesen", s: "5 Minuten: Wer trägt welches Risiko?", knopf: ["#recht", "Lesen", "dark"] },
       { ok: D.zahlungen.length > 0, t: "Ersten Zahlungslink erstellen", s: frei ? "Zum Ausprobieren gern an dich selbst." : "Geht, sobald dein Zahlungskonto freigegeben ist.", grau: ab, knopf: frei ? ["#link", "Erstellen", "dark"] : null },
@@ -135,8 +144,28 @@
       punkte.map(function (p) {
         return '<li class="' + (p.ok ? "ok" : p.warte ? "wait" : "") + (p.grau ? " grau" : "") + '"' + (p.grau ? ' style="opacity:.55"' : "") + '><span class="ic">' + (p.ok ? "✓" : p.warte ? "…" : "") + "</span><span><b>" + e(p.t) + (p.grau ? " (" + e(p.grau) + ")" : "") + "</b><small>" + e(p.s) + "</small>" +
           (!p.ok && p.knopf ? '<a class="btn ' + p.knopf[2] + ' small" href="' + p.knopf[0] + '">' + e(p.knopf[1]) + "</a> " : "") +
-          (!p.ok && p.manuell ? '<button class="btn ghost small" data-check="' + p.manuell + '">Erledigt</button>' : "") + "</span></li>";
+          (!p.ok && p.manuell ? '<button class="btn ghost small" data-check="' + p.manuell + '">Erledigt</button>' : "") +
+          (!p.ok && p.adresse && !p.grau ? adressKarte(s) : "") + "</span></li>";
       }).join("") + "</ul></div>";
+    var af = $("adr-form"); if (af) af.onsubmit = adresseSpeichern;
+  }
+
+  // Karte „Adresse deiner Zahlseite“: vorbefüllt (Stripe-Konto), Autofill-Tokens + passende Handy-Tastatur, ein Knopf „Stimmt so“
+  function adressKarte(s) {
+    var de = (s.land || "DE") === "DE";
+    return '<form id="adr-form" class="adr-form" novalidate><div class="adr-z"><label class="lbl" for="adr-strasse">Straße und Hausnummer</label><input type="text" id="adr-strasse" name="strasse" required autocomplete="address-line1" autocapitalize="words" value="' + e(s.strasse || "") + '"></div>' +
+      '<div class="adr-2"><div><label class="lbl" for="adr-plz">PLZ</label><input type="text" id="adr-plz" name="plz" ' + (de ? 'required inputmode="numeric" pattern="[0-9]{5}" maxlength="5"' : 'maxlength="10"') + ' autocomplete="postal-code" value="' + e(s.plz || "") + '"></div>' +
+      '<div><label class="lbl" for="adr-ort">Ort</label><input type="text" id="adr-ort" name="ort" required autocomplete="address-level2" autocapitalize="words" value="' + e(s.ort || "") + '"></div></div>' +
+      '<button type="submit" class="btn gold small" id="adr-ok">' + (s.strasse && s.ort ? "Stimmt so" : "Speichern") + "</button></form>";
+  }
+  async function adresseSpeichern(ev) {
+    ev.preventDefault();
+    var f = ev.target, b = $("adr-ok"); b.disabled = true;
+    try {
+      D.studio = await TF.api("/api/portal/adresse", { body: { strasse: f.strasse.value, plz: f.plz.value, ort: f.ort.value } });
+      toast(D.studio.kannKassieren ? "Gespeichert. Deine Zahlseite ist bereit." : "Gespeichert.");
+      kopf(); start();
+    } catch (err) { b.disabled = false; toast(err.message, true); }
   }
 
   function installHinweis() {
@@ -177,7 +206,8 @@
   // ---------- Zahlungslink ----------
   function linkForm() {
     var s = D.studio, g = $("link-gesperrt");
-    g.innerHTML = s.kannKassieren ? "" : '<div class="card-a"><b>Erst noch das Zahlungskonto.</b><p class="klein muted">Sobald Stripe dein Konto freigegeben hat, kannst du Zahlungslinks erstellen.</p>' + (s.stripe.angabenGemacht ? "" : '<a class="btn gold small" href="#einrichtung">Jetzt einrichten</a>') + "</div>";
+    g.innerHTML = s.kannKassieren ? "" : s.stripe.freigegeben && adresseFehlt(s) ? '<div class="card-a"><b>Adresse fehlt noch.</b><p class="klein muted">Trag kurz die Adresse deiner Zahlseite ein, dann kannst du Zahlungslinks erstellen.</p><a class="btn gold small" href="#start">Adresse eintragen</a></div>'
+      : '<div class="card-a"><b>Erst noch das Zahlungskonto.</b><p class="klein muted">Sobald Stripe dein Konto freigegeben hat, kannst du Zahlungslinks erstellen.</p>' + (s.stripe.angabenGemacht ? "" : '<a class="btn gold small" href="#einrichtung">Jetzt einrichten</a>') + "</div>";
     $("l-btn").disabled = !s.kannKassieren;
     feeHinweis();
     setTimeout(function () { if (s.kannKassieren && !$("l-out").innerHTML) $("l-betrag").focus(); }, 50);
@@ -371,7 +401,7 @@
       TFStripe.zeige(box, "account-onboarding", { firma: s.firma, inhaber: s.inhaber, fertig: async function () {
         try { D.studio = await TF.api("/api/portal/konto-status", { body: {} }); } catch (x) {}
         kopf();
-        toast(D.studio.stripe.freigegeben ? "Geschafft! Dein Zahlungskonto ist bereit." : "Danke! Stripe prüft jetzt deine Angaben.");
+        toast(D.studio.stripe.freigegeben ? (adresseFehlt(D.studio) ? "Konto freigegeben. Jetzt noch die Adresse deiner Zahlseite eintragen." : "Geschafft! Dein Zahlungskonto ist bereit.") : "Danke! Stripe prüft jetzt deine Angaben.");
         if (D.studio.stripe.freigegeben) setTimeout(function () { location.hash = "#start"; }, 1200); else einrichtung();
       } });
     }).catch(function (err) {
@@ -503,7 +533,7 @@
     var s = D.studio, box = $("konto-box");
     if (!s.stripe.verbunden || !s.eingebettet) { box.innerHTML = '<div class="card-a"><p class="klein">' + (s.stripe.verbunden ? "Deine Bank- und Firmendaten verwaltet Stripe auf einer eigenen Seite." : "Noch kein Zahlungskonto.") + "</p>" + (s.stripe.verbunden ? '<button class="btn dark" id="dash2">Bei Stripe ansehen</button>' : '<a class="btn gold small" href="#einrichtung">Jetzt einrichten</a>') + "</div>"; var d2 = $("dash2"); if (d2) d2.onclick = dashboard; return; }
     box.innerHTML = "";
-    stripeSitzung().then(function (r) { if (r.modus === "ansicht") { box.innerHTML = '<p class="leer">' + e(r.hinweis) + "</p>"; return; } TFStripe.zeige(box, "account-management", { firma: s.firma, adresse: s.strasse + ", " + s.plz + " " + s.ort }); }).catch(function (err) { box.innerHTML = '<p class="leer">' + e(err.message) + "</p>"; });
+    stripeSitzung().then(function (r) { if (r.modus === "ansicht") { box.innerHTML = '<p class="leer">' + e(r.hinweis) + "</p>"; return; } TFStripe.zeige(box, "account-management", { firma: s.firma, adresse: [s.strasse, [s.plz, s.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ") }); }).catch(function (err) { box.innerHTML = '<p class="leer">' + e(err.message) + "</p>"; });
   }
 
   function einstellungen() {

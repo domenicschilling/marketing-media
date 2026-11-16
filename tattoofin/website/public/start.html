@@ -1,82 +1,63 @@
 <!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Jetzt starten – Tattoofin</title>
-<meta name="description" content="Tattoofin fürs Tattoo-Studio online abschließen: 49,90 € im Monat inkl. MwSt., ohne Provision. In 3 Minuten erledigt, mit Vertrag und AVV.">
+<meta name="description" content="Tattoofin fürs Tattoo-Studio online abschließen: 49,90 € im Monat inkl. MwSt., ohne Provision, monatlich kündbar. 4 Angaben, dann sicher über Stripe bezahlen.">
 <link rel="canonical" href="https://tattoofin.de/start.html"><link rel="icon" href="/favicon.png" type="image/png"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link rel="stylesheet" href="/css/site.css">
+<link rel="stylesheet" href="/css/site.css?v=20261116a">
 <meta name="robots" content="noindex">
-</head><body>
+</head><body class="anm-seite" data-wa="aus">
 <header class="nav"><div class="wrap"><a class="brand" href="/" aria-label="Tattoofin, zur Startseite"><img src="/assets/figur.png" alt=""><img class="wm" src="/assets/wortmarke.png" alt="Tattoofin"></a><nav class="links"><a href="https://wa.me/491624502375?text=Hi%20Tattoofin-Team%2C%20ich%20bin%20gerade%20bei%20der%20Anmeldung%20und%20habe%20eine%20Frage%3A" target="_blank" rel="noopener" data-umami-event="whatsapp-start">Fragen? WhatsApp</a><a href="/login.html">Login</a></nav></div></header>
 
-<main class="sec tight"><div class="wrap narrow">
-  <h1 style="font-size:clamp(30px,5vw,44px);margin-bottom:8px">In 3 Minuten angemeldet.</h1>
-  <p style="margin:0 0 10px;color:#1f3d5c">Danach richtet unser Team alles mit dir ein, per WhatsApp.</p>
-  <p style="margin:0 0 6px;font-weight:700"><b>Tattoofin</b> · <span data-c="monatNetto|brutto2">49,90 €</span> im Monat inkl. MwSt. <span style="font-weight:400">(<span data-c="monatNetto|euro">41,93 €</span> netto)</span> · keine Provision · monatlich kündbar</p>
-  <p style="margin:0 0 22px;font-size:14px;color:#1f3d5c">🔒 Dein Geld geht direkt auf dein eigenes Stripe-Konto. Wir sehen keine Kartendaten.</p>
-  <div class="steps-bar"><span data-s="1"></span><span data-s="2"></span><span data-s="3"></span></div>
-  <div id="alert"></div>
+<!-- Einfache Anmeldung (16.11.2026, Domenic: „super easy und fertig“): EIN Bildschirm, 4 Felder, 1 Häkchen, 1 Knopf.
+     Kein Fortschrittsbalken, kein Zurück, keine Adresse (kommt aus dem Stripe-Konto bzw. der Karte im Studio-Bereich).
+     Adressfelder nur bei Einladung (?geschenk) bzw. Einmalzahlung (Bestandsabläufe). -->
+<main class="sec tight anm"><div class="wrap narrow">
+  <h1 class="anm-h1" id="anm-titel">4 Angaben. Fertig.</h1>
+  <p class="anm-preis" id="anm-preis"><b><span data-c="monatNetto|brutto2">49,90 €</span> im Monat</b> inkl. MwSt.<span class="anm-z2"><span class="anm-sep"> · </span>monatlich kündbar · <span data-c="monatNetto|euro">41,93 €</span> netto</span></p>
+  <div id="alert" aria-live="polite"></div>
 
-  <form id="f" class="form" novalidate>
-    <!-- Schritt 1 -->
-    <section data-step="1">
-      <h2 style="font-size:24px;margin-bottom:6px">1. Dein Preis</h2>
-      <p class="muted" style="margin:0 0 18px">Ein fester Preis, egal welche Zahlart dein Kunde wählt. Digitaler QR-Code für deine Zahlseite ist immer dabei.</p>
-      <div class="choice pakete">
-        <label><input type="radio" name="paket" value="monatlich" checked><b>Tattoofin</b><div class="p"><span data-c="monatNetto|brutto2">49,90 €</span><small class="p-zusatz"> im Monat, inkl. MwSt.</small></div><small>(<span data-c="monatNetto|euro">41,93 €</span> netto). Danach nur die Zahlungsgebühren von Stripe (je nach Zahlart ca. 1,5–3 % plus fester Betrag je Zahlung laut Preisliste von Stripe, direkt an Stripe), 0 % Tattoofin-Provision. Digitaler QR-Code inklusive, zum Ausdrucken für Theke und Flyer. Monatlich kündbar.</small></label>
-      </div>
-      <div style="display:flex;justify-content:flex-end;margin-top:20px"><button type="button" class="btn gold" data-next>Weiter</button></div>
-    </section>
+  <form id="f" class="form anm-form" novalidate aria-labelledby="anm-titel">
+    <input type="radio" name="paket" value="monatlich" checked hidden>
+    <div class="field"><label for="firma">Name deines Studios</label><input type="text" id="firma" name="firma" required autocomplete="organization" autocapitalize="words" enterkeyhint="next"></div>
+    <div class="field"><label for="inhaber">Dein Vor- und Nachname</label><input type="text" id="inhaber" name="inhaber" required autocomplete="name" autocapitalize="words" enterkeyhint="next"></div>
+    <div class="field"><div class="lab"><label for="email">E-Mail</label><span class="hint" id="email-h">Hierhin kommt dein Login.</span></div><input type="email" id="email" name="email" required autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false" enterkeyhint="next" aria-describedby="email-h"></div>
+    <div class="field"><div class="lab"><label for="telefon">Handynummer (WhatsApp)</label><span class="hint" id="telefon-h">Unser Team meldet sich hier zur Einrichtung.</span></div><input type="tel" id="telefon" name="telefon" required autocomplete="tel" inputmode="tel" enterkeyhint="done" aria-describedby="telefon-h"></div>
 
-    <!-- Schritt 2 -->
-    <section data-step="2" class="hidden">
-      <h2 style="font-size:24px;margin-bottom:16px">2. Dein Studio</h2>
-      <div class="field"><label for="firma">Studio / Firma (wie auf der Rechnung)</label><input type="text" id="firma" name="firma" required autocomplete="organization"></div>
-      <div class="grid2">
-        <div class="field"><label for="inhaber">Inhaber/in</label><input type="text" id="inhaber" name="inhaber" required autocomplete="name"></div>
-        <div class="field"><label for="ustid">USt-IdNr. (optional)</label><input type="text" id="ustid" name="ustid" placeholder="DE…" autocomplete="off" autocapitalize="characters" spellcheck="false"></div>
+    <!-- Nur bei Einladung bzw. Einmalzahlung: Adresse fürs Studio (dann Pflicht) -->
+    <fieldset id="adresse-block" class="anm-adresse hidden">
+      <legend>Adresse deines Studios</legend>
+      <div class="field"><label for="strasse">Straße und Hausnummer</label><input type="text" id="strasse" name="strasse" autocomplete="address-line1" autocapitalize="words"></div>
+      <div class="grid2 anm-plz">
+        <div class="field"><label for="plz">PLZ</label><input type="text" id="plz" name="plz" inputmode="numeric" autocomplete="postal-code" maxlength="10"></div>
+        <div class="field"><label for="ort">Ort</label><input type="text" id="ort" name="ort" autocomplete="address-level2" autocapitalize="words"></div>
       </div>
-      <div class="field"><label for="strasse">Straße und Hausnummer</label><input type="text" id="strasse" name="strasse" required autocomplete="street-address"></div>
-      <div class="grid2">
-        <div class="field"><label for="plz">PLZ</label><input type="text" id="plz" name="plz" required inputmode="numeric" autocomplete="postal-code" maxlength="10"></div>
-        <div class="field"><label for="ort">Ort</label><input type="text" id="ort" name="ort" required autocomplete="address-level2"></div>
-      </div>
-      <div class="grid2">
-        <div class="field"><label for="email">E-Mail</label><input type="email" id="email" name="email" required autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false"><div class="hint">Für Login, Anfragen und Rechnungen.</div></div>
-        <div class="field"><label for="telefon">Handynummer (WhatsApp)</label><input type="tel" id="telefon" name="telefon" required autocomplete="tel" inputmode="tel"><div class="hint">Für Rückfragen bei der Einrichtung.</div></div>
-      </div>
-      <div class="grid2">
-        <div class="field"><label for="studioTelefon">Studio-Telefonnummer (optional)</label><input type="tel" id="studioTelefon" name="studioTelefon" autocomplete="work tel" inputmode="tel" aria-describedby="studioTelefon-h"><div class="hint" id="studioTelefon-h">Für deine Kunden auf Flyern und Aufklebern. Leer lassen = wir nehmen deine Handynummer.</div></div>
-        <div class="field"><label for="website">Website oder Instagram (optional)</label><input type="text" id="website" name="website" autocomplete="url" inputmode="url" autocapitalize="none" spellcheck="false"></div>
-      </div>
-      <div style="display:flex;justify-content:space-between;margin-top:20px"><button type="button" class="btn ghost" data-back>Zurück</button><button type="button" class="btn gold" data-next>Weiter – noch 1 Schritt</button></div>
-    </section>
+      <div class="field"><label for="ustid">USt-IdNr. (optional)</label><input type="text" id="ustid" name="ustid" placeholder="DE…" autocomplete="off" autocapitalize="characters" spellcheck="false"></div>
+    </fieldset>
 
-    <!-- Schritt 3 -->
-    <section data-step="3" class="hidden">
-      <h2 style="font-size:24px;margin-bottom:12px">3. Prüfen &amp; starten</h2>
-      <div id="final" class="alert info"></div>
-      <h3 style="font-size:18px;margin:18px 0 8px">Das Wichtigste in Kürze</h3>
+    <label class="check anm-check"><input type="checkbox" name="ak_alle" id="ak_alle" required> <span>Ich melde mein Studio als Unternehmer an (weniger als 250 Mitarbeitende) und akzeptiere den <a href="/vertrag.html" target="_blank">Vertrag</a> und den <a href="/avv.html" target="_blank">AVV</a>.</span></label>
+
+    <button type="submit" class="btn gold anm-knopf" id="submit"><span class="k1">Weiter zur Zahlung</span><span class="k-sep"> · </span><span class="k2"><span data-c="monatNetto|brutto2">49,90 €</span> im Monat</span></button>
+    <p class="anm-sicher" id="anm-sicher">🔒 Sicher über Stripe. Monatlich kündbar. Keine Provision.</p>
+
+    <p class="anm-als hidden" id="anm-als"></p>
+    <details class="vdetails anm-kurz" id="kurz-box">
+      <summary>Das Wichtigste in Kürze</summary>
+      <p class="anm-klein" id="kurz-preis">Tattoofin kostet <span data-c="monatNetto|brutto2">49,90 €</span> im Monat inkl. MwSt. (<span data-c="monatNetto|euro">41,93 €</span> netto), keine Einrichtungsgebühr, 0 % Provision.</p>
       <ul class="kurz" id="kurz"></ul>
       <details class="vdetails" id="kurz-mehr-box"><summary>Alle Punkte im Detail</summary><ul class="kurz" id="kurz-mehr"></ul></details>
       <details class="vdetails">
         <summary>Vertrag und AVV vollständig lesen</summary>
         <div class="vbox" id="vertrag-box">Vertrag wird geladen …</div>
-        <p style="font-size:14px;margin:8px 0 0"><a href="/vertrag.html" target="_blank">Vertrag in neuem Fenster</a> · <a href="/avv.html" target="_blank">AVV</a> · <a href="/datenschutz.html" target="_blank">Datenschutz</a> · Den Link zu Vertrag und AVV bekommst du nach dem Abschluss auch per E-Mail.</p>
+        <p class="anm-klein"><a href="/vertrag.html" target="_blank">Vertrag in neuem Fenster</a> · <a href="/avv.html" target="_blank">AVV</a> · <a href="/datenschutz.html" target="_blank">Datenschutz</a> · Den Link zu Vertrag (Version <span data-c="vertragVersion"></span>) und AVV bekommst du nach dem Abschluss auch per E-Mail.</p>
       </details>
-      <p class="muted" style="font-size:13px;margin:16px 0 0"><b>Nur für Unternehmer:</b> Tattoofin schließt Verträge ausschließlich mit Studios und anderen Unternehmern (§ 14 BGB), nicht mit Verbrauchern. Ein Widerrufsrecht für Verbraucher besteht deshalb nicht.</p>
-      <label class="check" style="margin-top:12px"><input type="checkbox" name="ak_alle"> <span>Ich akzeptiere den <a href="/vertrag.html" target="_blank">Vertrag</a> (Version <span data-c="vertragVersion"></span>) und den <a href="/avv.html" target="_blank">AVV</a> (Vertrag zur Verarbeitung der Kundendaten). Ich bestelle als Unternehmer/in für mein Studio, also für meine gewerbliche oder selbständige berufliche Tätigkeit.</span></label>
-      <label class="check" style="margin-top:10px"><input type="checkbox" name="ak_kmu"> <span>Mein Studio ist ein kleines Unternehmen (unter 250 Mitarbeitende, höchstens 50 Mio. € Umsatz oder 43 Mio. € Bilanzsumme).</span></label>
-      <div class="field" style="margin-top:10px"><label for="unterzeichner">Dein Vor- und Nachname (Unterzeichner/in)</label><input type="text" id="unterzeichner" name="unterzeichner" required autocomplete="name"></div>
-      <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:22px">
-        <button type="button" class="btn ghost" data-back>Zurück</button>
-        <button type="submit" class="btn gold" id="submit">Jetzt starten</button>
-      </div>
-      <p class="muted" style="font-size:13px;margin:16px 0 0">🔒 Zahlungen laufen über Stripe, einen zugelassenen Zahlungsdienstleister. Wir sehen keine Karten- oder Kontodaten. Fragen? <a href="https://wa.me/491624502375" target="_blank" rel="noopener">WhatsApp 0162 4502375</a></p>
-    </section>
+      <p class="anm-klein"><b>Nur für Unternehmer:</b> Tattoofin schließt Verträge ausschließlich mit Studios und anderen Unternehmern (§ 14 BGB), nicht mit Verbrauchern. Ein Widerrufsrecht für Verbraucher besteht deshalb nicht. Mit dem Häkchen bestätigst du auch, dass dein Studio ein kleines oder mittleres Unternehmen ist (unter 250 Mitarbeitende, höchstens 50 Mio. € Umsatz oder 43 Mio. € Bilanzsumme).</p>
+      <p class="anm-klein">Dein Geld geht direkt auf dein eigenes Stripe-Konto. Wir sehen keine Karten- oder Kontodaten. Fragen? <a href="https://wa.me/491624502375" target="_blank" rel="noopener">WhatsApp 0162 4502375</a></p>
+    </details>
   </form>
 </div></main>
 
 <script src="/js/common.js"></script>
-<script src="/js/start.js"></script>
-<script src="/js/tf-track.js"></script>
+<script src="/js/start.js?v=20261116a"></script>
+<script src="/js/tf-track.js?v=20261116a"></script>
+<script defer src="https://cloud.umami.is/script.js" data-website-id="507b740f-264e-4ba1-a7d0-9dbe49db75af" data-domains="tattoofin.de"></script>
 </body></html>

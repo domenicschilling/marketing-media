@@ -120,7 +120,7 @@ async function neueSeite(viewport = { width: 1280, height: 900 }) {
 }
 
 // =====================================================================================================
-await abschnitt("1 Start-Seite: Cookie-Fenster verdeckt keinen Knopf (ohne es wegzuklicken)", async () => {
+await abschnitt("1 Start-Seite: Cookie-Hinweis verdeckt weder Feld noch Knopf (ohne ihn wegzuklicken)", async () => {
   const groessen = [[1280, 720], [1366, 768], [1920, 1080], [390, 844], [375, 667], [360, 640], [320, 568], [844, 390]];
   for (const [w, h] of groessen) {
     const p = await neueSeite({ width: w, height: h });
@@ -128,16 +128,21 @@ await abschnitt("1 Start-Seite: Cookie-Fenster verdeckt keinen Knopf (ohne es we
     // Runde 2 (16.11.2026): unter 1000 px erscheint der Hinweis erst nach Scrollen oder der ersten fertigen Eingabe (nicht über dem ersten Feld)
     await p.waitForTimeout(600);
     const vorher = Boolean(await p.$(".tf-cc"));
-    const klick = async (sel) => { try { await p.click(sel, { timeout: 3000 }); return true; } catch { return false; } };
     const trial = async (sel) => { try { await p.click(sel, { timeout: 3000, trial: true }); return true; } catch { return false; } };
-    const s1 = (await p.isVisible("section[data-step='1'] [data-next]")) ? await klick("section[data-step='1'] [data-next]") : true; // ohne Preisschritt seit 16.11.2026
-    for (const [k, v] of Object.entries({ firma: "Cookie Test", inhaber: "A M", strasse: "Musterstr. 1", plz: "96047", ort: "Bamberg", email: "c@test.de", telefon: "0151 1234567", studioTelefon: "0951 123456" })) await p.fill("#" + k, v).catch(() => {});
-    const banner = Boolean(await p.waitForSelector(".tf-cc", { timeout: 3000 }).catch(() => null)) && vorher === (w >= 1000);
-    const s2 = await klick("section[data-step='2'] [data-next]");
-    await p.check("input[name=ak_alle]").catch(() => {}); await p.check("input[name=ak_kmu]").catch(() => {});
-    await p.fill("#unterzeichner", "Alex Muster").catch(() => {});
+    // Einfache Anmeldung (16.11.2026): ein Bildschirm, 4 Felder + 1 Häkchen. Jedes Feld muss beim Tippen frei sein.
+    const frei = [];
+    for (const [k, v] of Object.entries({ firma: "Cookie Test", inhaber: "A M", email: "c@test.de", telefon: "0151 1234567" })) {
+      try { await p.click("#" + k, { timeout: 3000 }); await p.fill("#" + k, v); frei.push(true); } catch { frei.push(false); }
+      // Feld, in dem getippt wird, nicht vom Hinweis verdeckt
+      frei.push(await p.evaluate((id) => { const cc = document.querySelector(".tf-cc"); if (!cc || getComputedStyle(cc).visibility === "hidden") return true; const a = cc.getBoundingClientRect(), b = document.getElementById(id).getBoundingClientRect(); return a.top >= b.bottom || a.bottom <= b.top; }, k));
+    }
+    await p.locator("#ak_alle").blur().catch(() => {});
+    const banner = Boolean(await p.waitForSelector(".tf-cc", { timeout: 3000, state: "attached" }).catch(() => null)) && vorher === (w >= 1000);
+    await p.check("input[name=ak_alle]").catch(() => {});
     const s3 = await trial("#submit");
-    check(banner && s1 && s2 && s3, `start.html ${w}x${h}: Banner da (am Handy erst nach der ersten Eingabe), „Weiter“ (Schritt 1+2) und „Verbindlich abschließen“ klickbar`, `banner=${banner} sofort=${vorher} s1=${s1} s2=${s2} abschluss=${s3}`);
+    // Knopf sichtbar im Bild: Der Hinweis liegt nie darüber (er weicht aus oder sitzt daneben)
+    const ueber = await p.evaluate(() => { const cc = document.querySelector(".tf-cc"), k = document.getElementById("submit"); k.scrollIntoView({ block: "center" }); return new Promise((ok) => requestAnimationFrame(() => requestAnimationFrame(() => { if (!cc || getComputedStyle(cc).visibility === "hidden") return ok(false); const a = cc.getBoundingClientRect(), b = k.getBoundingClientRect(); ok(!(a.top >= b.bottom || a.bottom <= b.top || a.left >= b.right || a.right <= b.left)); }))); });
+    check(banner && frei.every(Boolean) && s3 && !ueber, `start.html ${w}x${h}: Hinweis da (am Handy erst nach der ersten Eingabe), alle 4 Felder frei beim Tippen, Knopf „Weiter zur Zahlung“ klickbar und nicht verdeckt`, `banner=${banner} sofort=${vorher} felder=${frei.join("")} knopf=${s3} verdeckt=${ueber}`);
     await p.context().close();
   }
 });
@@ -147,13 +152,10 @@ async function browserAnmeldung(paket, email, firma, viewport) {
   const p = await neueSeite(viewport);
   await p.goto(`${BASE}/start.html?paket=${paket}`);
   // Einmalzahlung ist seit 02.11.2026 nicht mehr wählbar (Notschalter EINMAL_NEU): Auswahl für die Bestandsabläufe nachbilden
-  if (paket === "einmal") await p.evaluate(() => document.getElementById("f").insertAdjacentHTML("beforeend", '<input type="radio" name="paket" value="einmal" checked style="display:none"><input type="radio" name="zahlart" value="sofort" checked style="display:none">'));
-  if (await p.isVisible("section[data-step='1'] [data-next]")) await p.click("section[data-step='1'] [data-next]"); // Schritt 1 nur noch bei Einladungen (16.11.2026)
-  for (const [k, v] of Object.entries({ firma, inhaber: "Alex Muster", strasse: "Musterstr. 1", plz: "96047", ort: "Bamberg", email, telefon: "0151 1234567", studioTelefon: "0951 123456" })) await p.fill("#" + k, v);
-  await p.click("section[data-step='2'] [data-next]");
+  if (paket === "einmal") await p.evaluate(() => { const f = document.getElementById("f"); f.insertAdjacentHTML("beforeend", '<input type="radio" name="paket" value="einmal" checked style="display:none"><input type="radio" name="zahlart" value="sofort" checked style="display:none">'); f.querySelector("input[name=paket][value=einmal]").dispatchEvent(new Event("change", { bubbles: true })); });
+  // Einfache Anmeldung (16.11.2026): ein Bildschirm, 4 Felder + 1 Häkchen; Adresse nur bei Einmalzahlung
+  for (const [k, v] of Object.entries({ firma, inhaber: "Alex Muster", email, telefon: "0151 1234567", ...(paket === "einmal" ? { strasse: "Musterstr. 1", plz: "96047", ort: "Bamberg" } : {}) })) await p.fill("#" + k, v);
   await p.check("input[name=ak_alle]");
-  await p.check("input[name=ak_kmu]");
-  await p.fill("#unterzeichner", "Alex Muster");
   await p.screenshot({ path: path.join(shots, `anmeldung-${paket}.png`), fullPage: true });
   await p.click("#submit");
   return p;
@@ -178,6 +180,8 @@ await abschnitt("2 Anmeldung: Monatlich + Einmalzahlung im Browser (Cookie-Fenst
   const sAbo = (await sessions()).find((x) => x.mode === "subscription");
   check(/app\.html/.test(p.url()) && ST.mo?.status === "einrichtung" && ST.mo?.paket === "Monatlich" && ST.mo?.provisionProzent === 0, "Paket Monatlich: nach Zahlung im Dashboard, Status Einrichtung, 0 %", `${ST.mo?.id}`);
   check(sAbo && sAbo.excluded_payment_method_types?.includes("klarna") && Number(sAbo.line_items[0].price_data.unit_amount) === 4193 && sAbo.line_items[0].price_data.recurring.interval === "month", "Abo: 41,93 € netto (49,90 € inkl. MwSt.) monatlich, Klarna ausgeschlossen (B2B)", `${sAbo?.line_items?.[0]?.price_data?.unit_amount}`);
+  // Einfache Anmeldung: keine Pflicht-Adresse im Checkout (Apple Pay/Google Pay bleiben), USt-IdNr. optional, Adresse im Studio zunächst leer
+  check(sAbo && sAbo.billing_address_collection !== "required" && !sAbo.name_collection && !sAbo.payment_method_types && String(sAbo.tax_id_collection?.enabled) === "true", "Abo-Checkout ohne Pflicht-Adresse/name_collection/feste Zahlarten, USt-IdNr. optional", `${sAbo?.billing_address_collection}`);
   ST.mo.cookie = (await p.context().cookies()).map((c) => `${c.name}=${c.value}`).join("; ");
   await p.context().close();
 
@@ -1099,7 +1103,7 @@ await abschnitt("18 Paket Risikofrei geschlossen (26.10.2026): Neukunden gesperr
 // =====================================================================================================
 await abschnitt("19 Optik nach dem Entfernen von Risikofrei: Hero-Knopf, zwei Paket-Karten, kein Querscrollen auf 14 Größen", async () => {
   const GROESSEN = [[320, 568], [375, 667], [390, 844], [414, 896], [430, 932], [844, 390], [768, 1024], [1024, 768], [1280, 720], [1366, 768], [1440, 900], [1536, 864], [1920, 1080], [2560, 1440]];
-  const SEITEN = [["/", ".auftakt-knopf .knopf", "#preis .preis-schild"], ["/?utm_content=tv-a", ".auftakt-knopf .knopf", "#preis .preis-schild"], ["/?utm_content=tv-d", ".auftakt-knopf .knopf", "#preis .preis-schild"], ["/studios.html", ".auftakt-knopf .knopf", "#preis .preis-schild"], ["/start.html?paket=risikofrei", null, "section[data-step='1'] .choice.pakete label"]];
+  const SEITEN = [["/", ".auftakt-knopf .knopf", "#preis .preis-schild"], ["/?utm_content=tv-a", ".auftakt-knopf .knopf", "#preis .preis-schild"], ["/?utm_content=tv-d", ".auftakt-knopf .knopf", "#preis .preis-schild"], ["/studios.html", ".auftakt-knopf .knopf", "#preis .preis-schild"], ["/start.html?paket=risikofrei", null, "#f"]];
   const probleme = [];
   for (const [w, h] of GROESSEN) {
     for (const [pf, cta, karten] of SEITEN) {
@@ -1134,6 +1138,17 @@ await abschnitt("19 Optik nach dem Entfernen von Risikofrei: Hero-Knopf, zwei Pa
     }
   }
   check(probleme.length === 0, "14 Größen × 5 Seiten (Start, Varianten tv-a und tv-d, /studios, /start): kein Querscrollen, Hero-Knopf im ersten Bildschirm und nach Scrollen nicht verdeckt (Cookie-Fenster), genau 1 Preis-Karte, nichts ragt über den Rand, kein Knopf und kein Anfrage-Formular rechts abgeschnitten", probleme.slice(0, 2).join(" ; ") || "70 Seitenaufrufe geprüft");
+  // Einfache Anmeldung (16.11.2026): Knopf „Weiter zur Zahlung“ bei 390×844 im ersten Bildschirm, bei 375×667 höchstens ein kurzer Scroll (≤ 120 px)
+  const knopfLage = [];
+  for (const [w, h, extra] of [[390, 844, 0], [375, 667, 120], [768, 1024, 0], [1440, 900, 0]]) {
+    const p = await neueSeite({ width: w, height: h });
+    await p.goto(BASE + "/start.html", { waitUntil: "load" }); await p.waitForTimeout(300);
+    const unten = await p.evaluate(() => document.getElementById("submit").getBoundingClientRect().bottom);
+    knopfLage.push(`${w}x${h}:${Math.round(unten)}`);
+    if (unten > h + extra) probleme.push(`/start ${w}x${h}: Knopf unten bei ${Math.round(unten)} px`);
+    await p.context().close();
+  }
+  check(!probleme.some((x) => x.startsWith("/start ")), "/start: Knopf bei 390×844, 768×1024, 1440×900 im ersten Bildschirm, bei 375×667 höchstens ein kurzer Scroll", knopfLage.join(" "));
 });
 
 // =====================================================================================================

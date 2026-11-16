@@ -9,7 +9,11 @@ const PFLICHT = [["firma", "Studio/Firma"], ["inhaber", "Inhaber"], ["strasse", 
 const ziffern = (x) => String(x || "").replace(/\D/g, "").length;
 
 // mitEmail: E-Mail kommt aus dem Formular (Web). In der App steht sie im Registrier-Token und wird hier nicht geprüft.
-export function studioDatenPruefen(b = {}, { mitEmail = true } = {}) {
+// ohneAdresse (seit 16.11.2026, nur Web + Paket Monatlich ohne Einladung, signup.mjs): Straße, PLZ und Ort sind dann keine Pflicht.
+//   Die Adresse der Zahlseite kommt später aus dem Stripe-Konto (Connect) bzw. aus der Karte „Adresse deiner Zahlseite“ im Studio-Bereich.
+//   Kommt trotzdem eine PLZ mit, wird sie wie immer geprüft. Die App (app-registrierung.mjs) ruft ohne diese Option auf und bleibt streng.
+const ADRESSE = ["strasse", "plz", "ort"];
+export function studioDatenPruefen(b = {}, { mitEmail = true, ohneAdresse = false } = {}) {
   const d = {
     firma: clean(b.firma, 120), inhaber: clean(b.inhaber, 120), strasse: clean(b.strasse, 120), plz: clean(b.plz, 10),
     ort: clean(b.ort, 80), ...(mitEmail ? { email: clean(b.email, 160).toLowerCase() } : {}), telefon: clean(b.telefon, 40),
@@ -18,7 +22,7 @@ export function studioDatenPruefen(b = {}, { mitEmail = true } = {}) {
   };
   const fehlt = [], felder = [];
   const markiere = (feld, text) => { fehlt.push(text); if (!felder.includes(feld)) felder.push(feld); };
-  for (const [k, n] of PFLICHT) if (!d[k]) markiere(k, n);
+  for (const [k, n] of PFLICHT) if (!d[k] && !(ohneAdresse && ADRESSE.includes(k))) markiere(k, n);
   if (mitEmail && !isEmail(d.email)) markiere("email", "gültige E-Mail");
   // Plausibilität (nicht nur „nicht leer“): PLZ 5 Ziffern, Telefonnummern mit mindestens 6 Ziffern
   if (d.plz && !/^\d{5}$/.test(d.plz)) markiere("plz", "PLZ (5 Ziffern)");

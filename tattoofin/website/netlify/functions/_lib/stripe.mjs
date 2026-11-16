@@ -99,12 +99,13 @@ export async function taxRateId({ inklusive: inclusive = false } = {}) {
   return tr.id;
 }
 
+// Nur Angaben schicken, die es gibt (seit 16.11.2026): Die einfache Anmeldung kommt ohne Adresse aus. Leere Werte würden sonst beim
+// Fortsetzen (signup.mjs) bzw. bei der Umstellung (domain.mjs) Name, Telefon oder Rechnungsadresse überschreiben, die im Checkout eingegeben wurden.
 export async function ensureCustomer(studio) {
-  const address = { line1: studio.strasse, postal_code: studio.plz, city: studio.ort, country: "DE" };
-  const params = {
-    name: studio.firma, email: studio.email, phone: studio.telefon, address,
-    preferred_locales: ["de"], metadata: { studioId: studio.id },
-  };
+  const params = { email: studio.email, preferred_locales: ["de"], metadata: { studioId: studio.id } };
+  if (studio.firma) params.name = studio.firma;
+  if (studio.telefon) params.phone = studio.telefon;
+  if (studio.strasse) params.address = { line1: studio.strasse, ...(studio.plz ? { postal_code: studio.plz } : {}), ...(studio.ort ? { city: studio.ort } : {}), country: studio.land || "DE" };
   if (studio.stripe?.customerId) return stripe("POST", "/customers/" + studio.stripe.customerId, params);
   const c = await stripe("POST", "/customers", params, { idempotencyKey: "cus-" + studio.id });
   if (studio.ustid && /^[A-Z]{2}/.test(studio.ustid)) {

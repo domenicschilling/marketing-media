@@ -80,6 +80,22 @@ async function anmeldungFehlerMerken(s, err) {
   return true;
 }
 
+// Einfache Anmeldung (16.11.2026): /start fragt keine Adresse und keine USt-IdNr. mehr ab. Was das Studio im Stripe-Checkout dazu eingibt
+// („Ich kaufe als Unternehmen“), übernehmen wir für Rechnung und Admin: USt-IdNr. (nur wenn noch keine da ist) und die Rechnungsadresse
+// GETRENNT als s.rechnungsadresse. Die Studio-Adresse der Zahlseite (s.strasse/plz/ort) kommt NIE von hier (Rechnungsadresse kann privat sein),
+// sondern aus dem Stripe-Konto (kontoAbgleichen) bzw. der Karte „Adresse deiner Zahlseite“ im Studio-Bereich.
+export function rechnungsdatenUebernehmen(s, session) {
+  const cd = session?.customer_details || {};
+  const ust = (cd.tax_ids || []).find((x) => x && x.value);
+  if (!s.ustid && ust) s.ustid = String(ust.value).replace(/\s/g, "").toUpperCase().slice(0, 30);
+  const a = cd.address || {};
+  if (a.line1 || a.city) s.rechnungsadresse = { strasse: [a.line1, a.line2].filter(Boolean).join(", ").slice(0, 160), plz: String(a.postal_code || "").slice(0, 10), ort: String(a.city || "").slice(0, 80), land: String(a.country || "").slice(0, 2) };
+  const name = String(cd.business_name || cd.name || "").trim().slice(0, 120);
+  if (name) s.rechnungsname = name;
+  return s;
+}
+const rechnungsadresseText = (r) => (r ? [r.strasse, [r.plz, r.ort].filter(Boolean).join(" "), r.land && r.land !== "DE" ? r.land : ""].filter(Boolean).join(", ") : "");
+
 // Checkout, Erstattungen und Rückbuchungen von Kundenzahlungen (beide Modelle)
 async function kundenEreignis(event) {
   const o = event.data.object, account = event.account;
@@ -272,6 +288,7 @@ export default handler(async (req) => {
           s.status = "einrichtung";
           s.bezahltAm = now();
           s.stripe.subscriptionId = id(o.subscription);
+          rechnungsdatenUebernehmen(s, o);
           let rechnungUrl = "";
           if (o.invoice) {
             try { const inv = await stripe("GET", "/invoices/" + id(o.invoice)); s.stripe.invoiceId = inv.id; rechnungUrl = inv.hosted_invoice_url || ""; } catch { /* Rechnung optional */ }
@@ -279,7 +296,9 @@ export default handler(async (req) => {
           await saveStudio(s);
           await notify(s, mails.anmeldung(s, { loginUrl: loginLink(s.id), connectUrl: einrichtungUrl(s) }));
           await notify(s, mails.aboGestartet(s, { betragCent: o.amount_total ?? brutto(s.monatNetto || CFG.monatNettoAlt), rechnungUrl }));
-          await notifyAdmin("Neuer Abschluss (Paket Monatlich) 🎉", s, { ...paketDetails(s), Erste_Zahlung: euroText(o.amount_total || 0) + " brutto", Abo: s.stripe.subscriptionId });
+          await notifyAdmin("Neuer Abschluss (Paket Monatlich) 🎉", s, { ...paketDetails(s), Erste_Zahlung: euroText(o.amount_total || 0) + " brutto", Abo: s.stripe.subscriptionId,
+            ...(s.ustid ? { USt_IdNr: s.ustid } : {}), ...(s.rechnungsadresse ? { Rechnungsadresse: [s.rechnungsname, rechnungsadresseText(s.rechnungsadresse)].filter(Boolean).join(", ") } : {}),
+            ...(!s.strasse ? { Studio_Adresse: "kommt aus dem Stripe-Konto bzw. der Karte „Adresse deiner Zahlseite“" } : {}) });
           await log("abo.gestartet", { studioId: s.id, subscriptionId: s.stripe.subscriptionId });
           break;
         }
@@ -287,6 +306,7 @@ export default handler(async (req) => {
         s.status = "einrichtung";
         s.bezahltAm = now();
         s.stripe.paymentIntentId = o.payment_intent;
+        rechnungsdatenUebernehmen(s, o);
         let rechnungUrl = "";
         if (o.invoice) {
           const inv = await stripe("GET", "/invoices/" + o.invoice);

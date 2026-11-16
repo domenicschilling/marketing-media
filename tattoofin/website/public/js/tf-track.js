@@ -1,7 +1,7 @@
 // Tattoofin: Cookie-Einwilligung, Meta-Pixel (nur nach Zustimmung) und WhatsApp-Button.
 // Nur auf Seiten für Studios einbinden, NIE auf den Zahlseiten der Endkunden (zahlen, zahlung, bezahlt) oder im Portal.
 // Events: PageView (jede Seite) · Contact (WhatsApp-Klick) · Lead (Muster-Anzahlungsbedingungen, Anmeldeseite geöffnet) ·
-//         InitiateCheckout (start.html, erster Schritt weiter) · CompleteRegistration (Provision abgeschlossen) · Purchase (Kauf bezahlt)
+//         InitiateCheckout (start.html, beim Absenden „Weiter zur Zahlung“, seit 16.11.2026) · CompleteRegistration (Provision abgeschlossen) · Purchase (Kauf bezahlt)
 // Lead, CompleteRegistration und Purchase gehen mit Einwilligung zusätzlich über /api/capi (Conversions API).
 window.TFTrack = (function () {
   var PIXEL_ID = "1628016302128524";
@@ -79,6 +79,11 @@ window.TFTrack = (function () {
     // Tablet (16.11.2026): flache Leiste statt großem Kasten, damit Knopf und Preis im ersten Bildschirm frei bleiben
     "@media (min-width:601px) and (max-width:999px){.tf-cc{max-width:none;margin:0;left:max(10px,env(safe-area-inset-left));right:max(10px,env(safe-area-inset-right));bottom:max(10px,env(safe-area-inset-bottom));display:flex;align-items:center;gap:14px;padding:8px 12px;font-size:13.5px;line-height:1.35;border-width:2px;box-shadow:3px 3px 0 #1f3d5c;border-radius:14px}" +
     ".tf-cc b,.tf-cc .lang{display:none}.tf-cc .kurz{display:inline}.tf-cc .r{margin:0;flex:none;flex-wrap:nowrap}.tf-cc button{flex:none;min-width:0;padding:8px 14px;font-size:14px;border-width:2px}body.tf-cc-offen{padding-bottom:84px}}" +
+    // Anmeldung /start (einfache Anmeldung 16.11.2026): Der Hinweis weicht aus, solange er den Knopf oder das Feld, in dem getippt wird, verdecken würde
+    ".tf-cc.tf-cc-weg{visibility:hidden;transform:translateY(120%)}.tf-cc{transition:transform .18s ease}" +
+    // Auf /start auch am großen Bildschirm eine flache Leiste unten (statt Kasten rechts, der dort über dem Formular läge)
+    "@media (min-width:1000px){body.anm-seite .tf-cc{left:20px;right:20px;bottom:16px;max-width:none;margin:0;display:flex;align-items:center;gap:16px;padding:8px 14px;font-size:14px;line-height:1.35;border-width:2px;box-shadow:3px 3px 0 #1f3d5c;border-radius:14px}" +
+    "body.anm-seite .tf-cc b,body.anm-seite .tf-cc .lang{display:none}body.anm-seite .tf-cc .kurz{display:inline}body.anm-seite .tf-cc .r{margin:0 0 0 auto;flex:none;flex-wrap:nowrap}body.anm-seite .tf-cc button{flex:none;min-width:0;padding:8px 16px;font-size:14px;border-width:2px}body.anm-seite.tf-cc-offen{padding-bottom:84px}}" +
     "@media (max-height:520px) and (min-width:601px){.tf-cc{max-width:none;margin:0;left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right));bottom:max(8px,env(safe-area-inset-bottom));display:flex;align-items:center;gap:14px;padding:8px 12px;font-size:13px;line-height:1.35}" +
     ".tf-cc b,.tf-cc .lang{display:none}.tf-cc .kurz{display:inline}.tf-cc .r{margin:0;flex:none;flex-wrap:nowrap}.tf-cc button{flex:none;min-width:0;padding:8px 14px;font-size:14px;border-width:2px}body.tf-cc-offen{padding-bottom:84px}}";
 
@@ -95,7 +100,34 @@ window.TFTrack = (function () {
     hoehe(); window.addEventListener("resize", hoehe);
     d.querySelector(".ja").onclick = function () { speichere("ja"); schliesse(); ladePixel(); };
     d.querySelector(".nein").onclick = function () { speichere("nein"); queue.length = 0; schliesse(); };
-    function schliesse() { d.remove(); document.body.classList.remove("tf-cc-offen"); document.body.style.removeProperty("--tf-cc-h"); window.removeEventListener("resize", hoehe); }
+    function schliesse() { d.remove(); document.body.classList.remove("tf-cc-offen"); document.body.style.removeProperty("--tf-cc-h"); window.removeEventListener("resize", hoehe); ausweichenAus(); }
+    if (ANMELDUNG) ausweichenAn(d);
+  }
+
+  // Auf /start (alle Größen): Würde der Hinweis den Absende-Knopf oder das gerade benutzte Eingabefeld überdecken, rutscht er kurz weg
+  // (unsichtbar); sobald wieder Platz ist (Scrollen, Tastatur zu), ist er wieder da. Der Seitenabstand unten (tf-cc-offen) bleibt, damit
+  // man den Knopf immer über den Hinweis scrollen kann.
+  var ANMELDUNG = /^\/start(\.html)?$/.test(location.pathname), ausweichTakt = null, ausweichFokus = null;
+  function ausweichenAn(d) {
+    var pruefe = function () {
+      var oben = window.innerHeight - d.offsetHeight - 16;
+      var ziele = [document.getElementById("submit")];
+      var a = document.activeElement; if (a && /^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName) && a.type !== "checkbox") ziele.push(a);
+      var weg = ziele.some(function (el) { if (!el) return false; var r = el.getBoundingClientRect(); return r.height > 0 && r.bottom > oben && r.top < window.innerHeight; });
+      d.classList.toggle("tf-cc-weg", weg);
+    };
+    // Scrollen/Größe: im nächsten Bild; Fokuswechsel: sofort (der Hinweis darf nicht einmal kurz über dem neuen Feld stehen)
+    ausweichTakt = function () { window.requestAnimationFrame(pruefe); };
+    ausweichFokus = function () { pruefe(); window.requestAnimationFrame(pruefe); };
+    ["scroll", "resize"].forEach(function (ev) { window.addEventListener(ev, ausweichTakt, { passive: true }); });
+    ["focusin", "focusout"].forEach(function (ev) { document.addEventListener(ev, ausweichFokus, true); });
+    pruefe();
+  }
+  function ausweichenAus() {
+    if (!ausweichTakt) return;
+    ["scroll", "resize"].forEach(function (ev) { window.removeEventListener(ev, ausweichTakt); });
+    ["focusin", "focusout"].forEach(function (ev) { document.removeEventListener(ev, ausweichFokus, true); });
+    ausweichTakt = ausweichFokus = null;
   }
 
   function waLink() { return "https://wa.me/" + WA_NUMMER + "?text=" + encodeURIComponent(WA_TEXT); }
