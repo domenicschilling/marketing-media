@@ -997,9 +997,11 @@ await abschnitt("17b Erster Bildschirm je Anzeige (Runde 2, 16.11.2026): richtig
       const m = await p.evaluate(() => {
         const sichtbar = (s) => { const e = document.querySelector(s); if (!e) return false; const r = e.getBoundingClientRect(), cs = getComputedStyle(e); return r.width > 0 && cs.display !== "none" && cs.visibility !== "hidden"; };
         return { kicker: document.querySelector(".kicker").textContent, gesehen: [...new Set(window.__rahmen.filter((x) => x[0] === "visible").map((x) => x[1]))],
-          bild: document.querySelector(".auftakt-handy img").getAttribute("src"), herz: sichtbar(".fl-1"), beleg: document.querySelector(".hero-beleg a").textContent };
+          bild: document.querySelector(".auftakt-handy img").getAttribute("src"), herz: sichtbar(".fl-1"), beleg: document.querySelector(".hero-beleg a").textContent,
+          // Runde 2b: Motive warten nur, bis app.js sie als Schablone vorbereitet hat, danach sind sie da
+          motive: !document.documentElement.classList.contains("stech-warten") && [...document.querySelectorAll(".buehne svg.stech")].every((x) => getComputedStyle(x).visibility === "visible") };
       });
-      const gut = m.kicker === "Tattoostudio-Besitzer, aufgepasst!" && m.gesehen.length === 1 && m.gesehen[0] === h1 && m.bild.includes(bild) && m.herz === klarna && /Klarna/.test(m.beleg) === klarna && !/900/.test(m.beleg);
+      const gut = m.kicker === "Tattoostudio-Besitzer, aufgepasst!" && m.gesehen.length === 1 && m.gesehen[0] === h1 && m.bild.includes(bild) && m.herz === klarna && /Klarna/.test(m.beleg) === klarna && !/900/.test(m.beleg) && m.motive;
       check(gut, `Hero ${utm || "ohne utm"} ${w}x${h}: nur „${h1}“ sichtbar, Bild ${bild}, Klarna-Herz/-Stempel ${klarna ? "da" : "weg"}`, JSON.stringify({ ...m, gesehen: m.gesehen }).slice(0, 220));
       await p.context().close();
     }
@@ -1120,13 +1122,18 @@ await abschnitt("19 Optik nach dem Entfernen von Risikofrei: Hero-Knopf, zwei Pa
         // Karten: gleich breit, nichts ragt über den Rand
         const ks = [...document.querySelectorAll(karten)].map((k) => k.getBoundingClientRect());
         out.rand = ks.every((r) => r.left >= -1 && r.right <= innerWidth + 1);
+        // Runde 2b: Knöpfe und das Anfrage-Formular (/studios, aufgeklappt) werden nicht rechts abgeschnitten (.bogen hat overflow:hidden, Querscrollen sieht das nicht)
+        document.querySelectorAll("details.anfrage").forEach((d) => { d.open = true; });
+        out.abgeschnitten = [...document.querySelectorAll("main .knopf, .formular-karte, .anfrage-satz, .auftakt h1")]
+          .filter((e) => { const r = e.getBoundingClientRect(); return r.width > 0 && (r.left < -1 || r.right > innerWidth + 1 || (e.classList.contains("knopf") && e.scrollWidth > e.clientWidth + 1)); })
+          .map((e) => (e.className || e.tagName) + ":" + e.textContent.trim().slice(0, 24));
         return out;
       }, [cta, karten]);
-      if (m.quer || m.karten !== 1 || !m.rand || (cta && (!m.imErsten || !m.frei))) probleme.push(`${pf} ${w}x${h}: ${JSON.stringify(m)}`);
+      if (m.quer || m.karten !== 1 || !m.rand || m.abgeschnitten.length || (cta && (!m.imErsten || !m.frei))) probleme.push(`${pf} ${w}x${h}: ${JSON.stringify(m)}`);
       await p.context().close();
     }
   }
-  check(probleme.length === 0, "14 Größen × 5 Seiten (Start, Varianten tv-a und tv-d, /studios, /start): kein Querscrollen, Hero-Knopf im ersten Bildschirm und nach Scrollen nicht verdeckt (Cookie-Fenster), genau 1 Preis-Karte, nichts ragt über den Rand", probleme.slice(0, 2).join(" ; ") || "70 Seitenaufrufe geprüft");
+  check(probleme.length === 0, "14 Größen × 5 Seiten (Start, Varianten tv-a und tv-d, /studios, /start): kein Querscrollen, Hero-Knopf im ersten Bildschirm und nach Scrollen nicht verdeckt (Cookie-Fenster), genau 1 Preis-Karte, nichts ragt über den Rand, kein Knopf und kein Anfrage-Formular rechts abgeschnitten", probleme.slice(0, 2).join(" ; ") || "70 Seitenaufrufe geprüft");
 });
 
 // =====================================================================================================

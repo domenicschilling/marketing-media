@@ -86,7 +86,7 @@ window.TFTrack = (function () {
     if (document.querySelector(".tf-cc")) return;
     var d = document.createElement("div");
     d.className = "tf-cc"; d.setAttribute("role", "dialog"); d.setAttribute("aria-label", "Cookie-Einstellungen");
-    d.innerHTML = "<b>Cookies für unsere Werbung</b><span class=\"kurz\">Meta-Pixel zur Werbemessung, nur mit deiner Zustimmung. </span><span class=\"lang\">Wir möchten mit dem Meta-Pixel messen, ob unsere Anzeigen auf Facebook und Instagram funktionieren. Dafür setzen wir Cookies, aber nur mit deiner Zustimmung. Du kannst sie jederzeit im Fußbereich widerrufen. </span><a href=\"/datenschutz.html#meta\">Mehr erfahren</a>" +
+    d.innerHTML = "<b>Cookies für unsere Werbung</b><span class=\"kurz\">Meta-Pixel zur Werbemessung, nur mit deiner Zustimmung. </span><span class=\"lang\">Wir möchten mit dem Meta-Pixel messen, ob unsere Anzeigen auf Facebook und Instagram funktionieren. Dafür setzen wir Cookies, aber nur mit deiner Zustimmung. Du kannst sie jederzeit im Fußbereich widerrufen. </span><a href=\"/datenschutz.html#meta\">Mehr&nbsp;erfahren</a>" +
       "<div class=\"r\"><button type=\"button\" class=\"nein\">Nur notwendige</button><button type=\"button\" class=\"ja\">Einverstanden</button></div>";
     document.body.appendChild(d);
     document.body.classList.add("tf-cc-offen");

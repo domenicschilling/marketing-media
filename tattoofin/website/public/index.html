@@ -3,6 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script>(function(){try{var q=new URLSearchParams(location.search),u=(q.get('utm_content')||q.get('hero')||'').toLowerCase(),v='';
+if(/(^|[^a-z])tv-?a([^a-z]|$)|^d$|bild-?d2?|no-?show|anzahlung/.test(u))v='noshow';
+else if(/(^|[^a-z])tv-?c([^a-z]|$)|10-?sek|link/.test(u))v='link';
+else if(/(^|[^a-z])tv-?d([^a-z]|$)|gutschein|weihnacht/.test(u))v=new Date()<new Date('2026-12-25T00:00:00+01:00')?'gutschein':'link';
+var d=document.documentElement,B={"": "handy-kunde-oben.webp?v=20261116", "noshow": "handy-anzahlung-oben.webp?v=20261116b", "gutschein": "handy-gutschein-oben.webp?v=20261116b"},l=document.createElement('link');
+if(!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)){d.classList.add('stech-warten');setTimeout(function(){d.classList.remove('stech-warten')},4000);}
+l.rel='preload';l.as='image';l.type='image/webp';l.href='/assets/start/'+(B[v]||B['']);l.setAttribute('fetchpriority','high');document.head.appendChild(l);
+if(v){d.setAttribute('data-hero',v);setTimeout(function(){d.classList.add('hero-ok')},1500);}}catch(e){}})();</script>
 <title>Tattoofin – Zahlungslinks, Anzahlungen &amp; Raten* für Tattoo-Studios</title>
 <meta name="description" content="Software für Tattoo-Studios: Zahlungslink per WhatsApp, QR-Zahlseite an der Theke, Anzahlung mit Bedingungen, Gutscheine. 49,90 € im Monat inkl. MwSt.">
 <meta name="theme-color" content="#f5ead2">
@@ -17,13 +25,6 @@
 <link rel="preload" href="/assets/start/fonts/DMSans.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/assets/start/style.css?v=20261116b">
 <script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "Organization", "@id": "https://tattoofin.de/#org", "name": "Tattoofin", "legalName": "DSX Media Solutions UG (haftungsbeschränkt)", "url": "https://tattoofin.de/", "logo": "https://tattoofin.de/assets/logo.png", "email": "info@tattoofin.de", "telephone": "+491624502375", "address": {"@type": "PostalAddress", "streetAddress": "Am Weingarten 9", "postalCode": "96117", "addressLocality": "Memmelsdorf", "addressCountry": "DE"}, "sameAs": ["https://www.instagram.com/tattoofin.de/"]}, {"@type": "WebSite", "@id": "https://tattoofin.de/#website", "url": "https://tattoofin.de/", "name": "Tattoofin", "inLanguage": "de-DE", "publisher": {"@id": "https://tattoofin.de/#org"}}, {"@type": "Service", "name": "Zahlungsstruktur für Tattoo-Studios", "serviceType": "Zahlungslinks, QR-Zahlseite, Anzahlungen und Ratenzahlung über externe Anbieter für Tattoo-Studios", "provider": {"@id": "https://tattoofin.de/#org"}, "areaServed": {"@type": "Country", "name": "Deutschland"}, "audience": {"@type": "BusinessAudience", "name": "Tattoo-Studios"}, "offers": [{"@type": "Offer", "name": "Paket Monatlich", "description": "49,90 € im Monat inkl. MwSt. (41,93 € netto), keine Provision, danach nur die Zahlungsgebühren von Stripe. QR-Code zum Ausdrucken im Paket. Monatlich kündbar.", "price": "49.90", "priceCurrency": "EUR", "priceSpecification": {"@type": "UnitPriceSpecification", "price": "49.90", "priceCurrency": "EUR", "valueAddedTaxIncluded": true, "unitText": "Monat", "referenceQuantity": {"@type": "QuantitativeValue", "value": 1, "unitCode": "MON"}}}]}, {"@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Bekommt jeder Kunde Raten*?", "acceptedAnswer": {"@type": "Answer", "text": "Nein. Klarna prüft jeden Kunden selbst. Sagt Klarna nein, zahlt dein Kunde mit Karte, Apple Pay oder Google Pay. *Raten über Klarna, nach deren Bonitätsprüfung. Achtung! Kreditaufnahme kostet Geld."}}, {"@type": "Question", "name": "Und wenn der Kunde nicht zahlt?", "acceptedAnswer": {"@type": "Answer", "text": "Bei Raten* liegt das Ausfallrisiko laut Stripe grundsätzlich bei Klarna. Reklamiert dein Kunde die Leistung, kann er bis zu 180 Tage zurückbuchen lassen. Bei einer Anzahlung hilft dir seine gespeicherte Bestätigung deiner Bedingungen als Nachweis. Unser Team hilft dir dabei. *Raten über Klarna, nach deren Bonitätsprüfung. Achtung! Kreditaufnahme kostet Geld."}}, {"@type": "Question", "name": "Ist Tattoofin der Kreditgeber?", "acceptedAnswer": {"@type": "Answer", "text": "Nein. Den Vertrag über die Raten* schließt dein Kunde mit Klarna. Du berätst nicht zu Krediten und sagst keine Raten* zu. *Raten über Klarna, nach deren Bonitätsprüfung. Achtung! Kreditaufnahme kostet Geld."}}, {"@type": "Question", "name": "Was kostet es genau?", "acceptedAnswer": {"@type": "Answer", "text": "49,90 € im Monat inkl. MwSt. (41,93 € netto), keine Provision. Dazu Stripe-Gebühren je Zahlung: Karte ab 1,5 % + 0,25 €, Klarna ab 2,99 % + 0,35 €. Der erste Monat ist beim Start fällig."}}, {"@type": "Question", "name": "Wie kündige ich? Und wenn Stripe mich ablehnt?", "acceptedAnswer": {"@type": "Answer", "text": "Im Portal, zum Ende des Abrechnungsmonats. Dein Stripe-Konto bleibt bei dir, Zahlungslinks und QR-Code enden. Lehnt Stripe dein Studio endgültig ab, bekommst du die gezahlten Monate zurück, außer bei falschen Angaben oder Pflichtverletzung."}}, {"@type": "Question", "name": "Wann kommt das Geld, und was brauche ich?", "acceptedAnswer": {"@type": "Answer", "text": "Stripe zahlt auf dein Bankkonto aus, nach den Fristen von Stripe. Du brauchst dein Studio als Unternehmen, ein Bankkonto und deinen Ausweis."}}]}]}</script>
-<script>(function(){try{var q=new URLSearchParams(location.search),u=(q.get('utm_content')||q.get('hero')||'').toLowerCase(),v='';
-if(/(^|[^a-z])tv-?a([^a-z]|$)|^d$|bild-?d2?|no-?show|anzahlung/.test(u))v='noshow';
-else if(/(^|[^a-z])tv-?c([^a-z]|$)|10-?sek|link/.test(u))v='link';
-else if(/(^|[^a-z])tv-?d([^a-z]|$)|gutschein|weihnacht/.test(u))v=new Date()<new Date('2026-12-25T00:00:00+01:00')?'gutschein':'link';
-var d=document.documentElement,B={"": "handy-kunde-oben.webp?v=20261116", "noshow": "handy-anzahlung-oben.webp?v=20261116b", "gutschein": "handy-gutschein-oben.webp?v=20261116b"},l=document.createElement('link');
-l.rel='preload';l.as='image';l.type='image/webp';l.href='/assets/start/'+(B[v]||B['']);l.setAttribute('fetchpriority','high');document.head.appendChild(l);
-if(v){d.setAttribute('data-hero',v);setTimeout(function(){d.classList.add('hero-ok')},1500);}}catch(e){}})();</script>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><pattern id="tf-punkte" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><circle cx="2.2" cy="2.2" r="2.1" fill="#1f3d5c"/><circle cx="6.7" cy="6.7" r="2.1" fill="#1f3d5c"/></pattern></defs></svg>
@@ -43,7 +44,7 @@ if(v){d.setAttribute('data-hero',v);setTimeout(function(){d.classList.add('hero-
   <section class="auftakt">
     <div class="auftakt-kopf">
       <p class="kicker">Tattoostudio-Besitzer, aufgepasst!</p>
-      <h1 data-hero="h">Ganzer Rücken? 2.000&nbsp;€ auf einmal.</h1>
+      <h1 data-hero="h">Ganzer&nbsp;Rücken? 2.000&nbsp;€ auf&nbsp;einmal.</h1>
       <p class="unterzeile" data-hero="s">Betrag rein, Link per WhatsApp raus. Dein Kunde zahlt am Handy, auch per Klarna.</p>
       <p class="hero-chips">Anzahlung · Raten* · Gutscheine – alles per Link</p>
     </div>
@@ -60,7 +61,7 @@ if(v){d.setAttribute('data-hero',v);setTimeout(function(){d.classList.add('hero-
       <img class="hausherr" src="/assets/start/figur.webp" alt="Tattoofin-Figur mit tätowierten Armen zeigt den Daumen hoch" width="300" height="310" decoding="async">
       <figure class="auftakt-handy">
         <span class="klebe" aria-hidden="true"></span>
-        <span class="handy-rahmen"><img src="/assets/start/handy-kunde-oben.webp?v=20261116" alt="Echte Tattoofin-Zahlseite am Handy: Hi Lena, deine Zahlung an Ink Studio Bamberg, Schritt 1 von 2, 2.000,00 Euro, Ganzer Rücken. Beispieldaten." width="600" height="545" fetchpriority="high"><button type="button" class="film-knopf" data-film aria-haspopup="dialog"><span aria-hidden="true">▶</span> 10 Sek. ansehen</button></span>
+        <span class="handy-rahmen"><img src="/assets/start/handy-kunde-oben.webp?v=20261116" alt="Echte Tattoofin-Zahlseite am Handy: Hi Lena, deine Zahlung an Ink Studio Bamberg, Schritt 1 von 2, 2.000,00 Euro, Ganzer Rücken. Beispieldaten." width="600" height="545"><button type="button" class="film-knopf" data-film aria-haspopup="dialog"><span aria-hidden="true">▶</span> 10 Sek. ansehen</button></span>
         <figcaption>Echte App · Beispieldaten</figcaption>
       </figure>
     </div>
@@ -72,7 +73,7 @@ if(v){d.setAttribute('data-hero',v);setTimeout(function(){d.classList.add('hero-
       <p class="hero-wa"><a href="https://wa.me/491624502375?text=Hi%20Tattoofin-Team%2C%20ich%20habe%20ein%20Tattoo-Studio%20und%20eine%20Frage%20zu%20Tattoofin%3A" data-umami-event="whatsapp-auftakt">Lieber erst fragen? Schreib unserem Team per WhatsApp&nbsp;→</a></p>
     </div>
   </section>
-<script>(function(){var d=document.documentElement,V=({"noshow": {"h": "No-Show? Erst Anzahlung. Dann Termin.", "s": "Anzahlungs-Link per WhatsApp. Kunde zahlt am Handy, dann blockst du den Termin.", "c": "Anzahlung einrichten", "b": "Kunde zahlt an und bestätigt deine Bedingungen – dann blockst du den Termin.", "bh": "#nr3", "bild": "handy-anzahlung-oben.webp?v=20261116b", "alt": "Echte Tattoofin-Zahlseite am Handy: Hi Kai, deine Zahlung an Ink Studio Bamberg, 150 Euro, Rückenstück, Termin Freitag, Anzahlung. Beispieldaten."}, "link": {"h": "Betrag rein. Link raus. Bezahlt.", "s": "Karte, Apple Pay, Google Pay oder Klarna. Das Geld geht auf dein eigenes Stripe-Konto."}, "gutschein": {"h": "Weihnachten: Gutscheine per Link verkaufen.", "s": "Kunde zahlt am Handy und bekommt Code und PDF zum Verschenken. Das Geld geht direkt auf dein Stripe-Konto.", "c": "Gutscheine einrichten", "b": "Kunde bekommt Code und PDF sofort aufs Handy.", "bh": "#nr5", "bild": "handy-gutschein-oben.webp?v=20261116b", "alt": "Echte Tattoofin-Gutschein-Kaufseite am Handy: Hi Greta, dein Gutschein von Ink Studio Bamberg, 150 Euro, Wertgutschein für Max. Beispieldaten."}})[d.getAttribute('data-hero')];
+<script>(function(){var d=document.documentElement,V=({"noshow": {"h": "No-Show? Erst Anzahlung. Dann Termin.", "s": "Anzahlungs-Link per WhatsApp. Kunde zahlt am Handy, dann blockst du den Termin.", "c": "Anzahlung einrichten", "b": "Kunde zahlt an und bestätigt deine Bedingungen.", "bh": "#nr3", "bild": "handy-anzahlung-oben.webp?v=20261116b", "alt": "Echte Tattoofin-Zahlseite am Handy: Hi Kai, deine Zahlung an Ink Studio Bamberg, 150 Euro, Rückenstück, Termin Freitag, Anzahlung. Beispieldaten."}, "link": {"h": "Betrag rein. Link raus. Bezahlt.", "s": "Karte, Apple Pay, Google Pay oder Klarna. Das Geld geht auf dein eigenes Stripe-Konto."}, "gutschein": {"h": "Weihnachten: Gutscheine per Link verkaufen.", "s": "Kunde zahlt am Handy und bekommt Code und PDF zum Verschenken. Das Geld geht direkt auf dein Stripe-Konto.", "c": "Gutscheine einrichten", "b": "Kunde bekommt Code und PDF direkt per E-⁠Mail.", "bh": "#nr5", "bild": "handy-gutschein-oben.webp?v=20261116b", "alt": "Echte Tattoofin-Gutschein-Kaufseite am Handy: Hi Greta, dein Gutschein von Ink Studio Bamberg, 150 Euro, Wertgutschein für Max. Beispieldaten."}})[d.getAttribute('data-hero')];
 if(V){var t=function(s,x){var e=document.querySelector(s);if(e&&x)e.textContent=x;};
 t('.auftakt [data-hero="h"]',V.h);t('.auftakt [data-hero="s"]',V.s);t('.auftakt-knopf .knopf',V.c);t('.auftakt [data-hero="b"]',V.b);
 var a=document.querySelector('.auftakt [data-hero="b"]');if(a&&V.bh)a.setAttribute('href',V.bh);
@@ -186,7 +187,7 @@ d.classList.add('hero-ok');})();</script>
   <section class="preis" id="preis" aria-labelledby="preis-titel">
     <div class="preis-innen">
       <h2 id="preis-titel">Eine Anzahlung zahlt Tattoofin fast 3&nbsp;Monate.</h2>
-      <p class="preis-rechnung">150&nbsp;€ Anzahlung, minus Stripe-Gebühr ca.&nbsp;2,50&nbsp;€ =&nbsp;147,50&nbsp;€. Tattoofin kostet 49,90&nbsp;€ im Monat.</p>
+      <p class="preis-rechnung">Kunde kommt nicht? 150&nbsp;€ Anzahlung, minus Stripe-Gebühr ca.&nbsp;2,50&nbsp;€ =&nbsp;147,50&nbsp;€. Tattoofin kostet 49,90&nbsp;€ im Monat.</p>
       <div class="preis-schild">
         <svg class="faden" viewBox="0 0 120 90" aria-hidden="true" focusable="false"><path d="M60 8 C42 30 78 52 60 86" fill="none" stroke="#fff7e3" stroke-width="4" stroke-linecap="round"/></svg>
         <span class="reisszwecke" aria-hidden="true"></span>

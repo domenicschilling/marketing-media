@@ -57,7 +57,7 @@
       kurz = ["Keine Einrichtungsgebühr, keine Grundgebühr, keine Provision.", "Du zahlst nur die normalen Gebühren von Stripe bzw. Klarna, direkt an Stripe.", "Die Zahlungen deiner Kunden laufen auf das Konto deines Studios.", "Wir richten alles mit dir ein."];
     } else if (p === "monatlich") {
       html = "<p><b>Paket Monatlich</b> · " + TF.esc(TF.monatPreis(C.monatNetto, C.ustProzent)) + "</p>" +
-        "<p>Im nächsten Schritt startest du das Abo sicher über Stripe (z. B. per Karte). Die Rechnung kommt jeden Monat automatisch per E-Mail. Danach richtest du in deinem Studio-Bereich das Zahlungskonto deines Studios ein.</p>";
+        "<p>Mit „Jetzt starten“ geht es zu Stripe. Dort startest du das Abo sicher, z. B. per Karte. Die Rechnung kommt jeden Monat automatisch per E-Mail. Danach richtest du in deinem Studio-Bereich das Zahlungskonto deines Studios ein.</p>";
       sub.textContent = "Weiter zur Zahlung · " + TF.euro(Math.round(C.monatNetto * (100 + C.ustProzent) / 100), true) + " im Monat";
       kurz = [
         TF.monatPreis(C.monatNetto, C.ustProzent) + ", keine Einrichtungsgebühr.",
@@ -69,7 +69,7 @@
     } else {
       html = "<p><b>Paket Einmalzahlung</b> · " + TF.esc(TF.euro(C.kaufNetto)) + " netto einmalig zzgl. " + C.ustProzent + " % USt.</p>" +
         (z === "rechnung" ? "<p>Du bekommst die Rechnung sofort per E-Mail, zahlbar in 7 Tagen. Sobald die Zahlung eingegangen ist, starten wir mit der Einrichtung. Schneller geht es mit Karte: dann legen wir sofort los.</p>"
-          : "<p>Im nächsten Schritt bezahlst du sicher über Stripe, z. B. per Karte. Die Rechnung kommt automatisch per E-Mail. Danach richtest du in deinem Studio-Bereich das Zahlungskonto deines Studios ein.</p>");
+          : "<p>Mit „Jetzt starten“ geht es zu Stripe. Dort bezahlst du sicher, z. B. per Karte. Die Rechnung kommt automatisch per E-Mail. Danach richtest du in deinem Studio-Bereich das Zahlungskonto deines Studios ein.</p>");
       sub.textContent = z === "rechnung" ? "Zahlungspflichtig bestellen (Rechnung)" : "Zahlungspflichtig bestellen & bezahlen";
       kurz = [
         "Einmalig " + TF.euro(C.kaufNetto) + " netto. Danach keine Tattoofin-Gebühr mehr, nur die Zahlungsgebühren, die du direkt an Stripe zahlst.",

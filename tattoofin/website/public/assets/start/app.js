@@ -47,6 +47,8 @@
   // Erster Bildschirm: einmal nacheinander stechen
   var erste = document.querySelectorAll('.buehne svg.stech');
   Array.prototype.forEach.call(erste, function (s, i) { vorbereiten(s); stechen(s, 180 + i * 170); });
+  // Kopf-Skript hält die Motive bis hierher unsichtbar (html.stech-warten), damit sie nicht erst fertig und dann als Schablone erscheinen
+  document.documentElement.classList.remove('stech-warten');
 
   // Weiter unten: einmal, wenn das Motiv ins Bild kommt
   var rest = document.querySelectorAll('.fall svg.stech, .stueck svg.stech');
