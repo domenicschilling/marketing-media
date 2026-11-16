@@ -159,8 +159,13 @@ try {
   check(await p0.locator("#preis").count() === 1 && await p0.locator("#r-monat").count() === 0, "Ein Preis auf der Startseite, kein Paket-Rechner");
   const preise = await p0.textContent("#preis");
   check(preise.includes("49,90") && preise.includes("41,93") && !preise.includes("58,31") && !preise.includes("999") && !preise.includes("Einmalzahlung") && !/Gründer|Profi\b|Risikofrei|10 %|900 €|Grundge/.test(preise) && !/Raten\*|Klarna\*/.test(preise), "Preisbereich: nur 49,90 € inkl. MwSt. (klein 41,93 € netto), kein 58,31 €, keine Raten-Aussage (deshalb dort kein Warnsatz nötig)");
-  { const raten = await p0.evaluate(() => [...document.querySelectorAll("main h1, main h2, main h3, main p, main li, main span, main div")].filter((e) => !e.closest("#fragen, .fragen, [hidden]") && e.getBoundingClientRect().height > 1 && e.children.length < 6 && /(Raten|Klarna|Ratenzahlung)\*/.test(e.textContent) && !/Achtung! Kreditaufnahme/.test(e.textContent)).every((e) => e.closest(".auftakt")));
-    check(raten, "Raten*-Aussagen außerhalb der Fragen nur im ersten Bildschirm (dort steht die Fußnote)"); }
+  // Seit 16.11.2026 auch im Nutzen-Block direkt unter dem Hero erlaubt, aber nur mit eigener Fußnote im selben Abschnitt ≤ 560 px unter jeder Aussage
+  { const raten = await p0.evaluate(() => { const y = (e) => e.getBoundingClientRect().top + scrollY;
+      const cl = [...document.querySelectorAll("main h1, main h2, main h3, main p, main li, main span, main div")].filter((e) => !e.closest("#fragen, .fragen, [hidden]") && e.getBoundingClientRect().height > 1 && e.children.length < 6 && /(Raten|Klarna|Ratenzahlung)\*/.test(e.textContent) && !/Achtung! Kreditaufnahme/.test(e.textContent));
+      const fnIn = (n) => [...n.querySelectorAll(".raten-fn")].filter((f) => /Achtung! Kreditaufnahme kostet Geld\./.test(f.textContent));
+      const imNutzen = cl.filter((e) => e.closest(".nutzen"));
+      return cl.every((e) => e.closest(".auftakt, .nutzen")) && imNutzen.length >= 1 && imNutzen.every((e) => fnIn(e.closest(".nutzen")).some((f) => y(f) >= y(e) && y(f) - y(e) <= 560)); });
+    check(raten, "Raten*-Aussagen außerhalb der Fragen nur im ersten Bildschirm und im Nutzen-Block, dort mit eigener Fußnote ≤ 560 px darunter"); }
   { const domenic = (await p0.content()).match(/Domenic/g) || []; check(domenic.length === 0, "Startseite: spricht vom Team, nicht von Domenic"); }
   { const sichtbar = await p0.evaluate(() => document.body.innerText); check(!/Ich spar noch|Einmalzahlung|beiden Paketen|999 €/.test(sichtbar), "Startseite: kein „Ich spar noch.“, keine Einmalzahlung, keine zwei Pakete"); }
   const ld = await p0.textContent('script[type="application/ld+json"]');

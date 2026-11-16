@@ -126,6 +126,26 @@ def bauen(seite):
         return '<a class="knopf" href="%s" data-umami-event="start-%s">%s</a>' % (h, ort, text)
 
     stern = motiv("stern")
+    # Nutzen fürs Studio direkt unter dem Hero (Domenic 16.11.2026: „der nutzen fürs studio muss unter dem hero bereich kommen“).
+    # Was das Studio davon hat, nicht wie es geht (das „Wie“ steht in „Alles läuft übers Handy“). Keine Zahlen, keine Versprechen über Ergebnisse.
+    # Raten*-Aussage nur in Karte 1, eigene kleine Fußnote im selben Abschnitt (Prüfung dev/betrieb.mjs Abschnitt 17 g und 17d).
+    def klein_motiv(name, alt_id=None, neu_id=None):
+        m = re.search(r"<svg.*?</svg>", motiv(name), re.S).group(0)
+        m = re.sub(r'class="motiv stech"', 'class="motiv"', m, count=1)
+        m = re.sub(r'role="img" aria-label="[^"]*"', 'aria-hidden="true" focusable="false"', m, count=1)
+        if alt_id:
+            m = m.replace('id="%s"' % alt_id, 'id="%s"' % neu_id).replace('href="#%s"' % alt_id, 'href="#%s"' % neu_id)
+        return m
+    NUTZEN = [
+        (klein_motiv("flash-1", "tf-b1", "tf-n1"), "Große Tattoos, ganzer Betrag.", "Dein Kunde zahlt in Raten* über Klarna, du bekommst den Betrag auf einmal."),
+        (klein_motiv("motiv-3", "tf-b2-z", "tf-n3"), "Weniger <span class=\"nw\">No-Shows.</span>", "Den Termin blockst du erst, wenn die Anzahlung bezahlt ist."),
+        (klein_motiv("motiv-5"), "Extra Umsatz mit Gutscheinen.", "Und den Rest vom Tattoo schickst du per Link, statt hinterherzurennen."),
+        (klein_motiv("motiv-2"), "Geld direkt auf dein Konto.", "Über dein eigenes <span class=\"nw\">Stripe-Konto</span>, Tattoofin nimmt keine Provision."),
+    ]
+    nutzen = ('  <section class="nutzen" id="nutzen" aria-labelledby="nutzen-titel">\n'
+              '    <h2 id="nutzen-titel">Was dein Studio davon&nbsp;hat.</h2>\n    <ul class="nutzen-liste">\n'
+              + "".join('      <li class="nutzen-karte"><span class="nutzen-motiv">%s</span><h3>%s</h3><p>%s</p></li>\n' % (m, h, t) for m, h, t in NUTZEN)
+              + '    </ul>\n    <p class="raten-fn">%s</p>\n  </section>\n\n' % FN_KURZ)
     # Einwände (Vertriebs-Umbau 16.11.2026): je 1 Frage, 1–2 Sätze Antwort
     EINWAENDE = [
         ("Ich hab schon SumUp &amp; Co.", "Behalt es. Dein Kartengerät kassiert an der Theke. Tattoofin kassiert vorher: Anzahlung per WhatsApp, Klarna, Gutscheine."),
@@ -234,7 +254,7 @@ def bauen(seite):
 <link rel="icon" href="/favicon.png" type="image/png"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preload" href="/assets/start/fonts/LuckiestGuy.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/start/fonts/DMSans.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/assets/start/style.css?v=20261116b">
+<link rel="stylesheet" href="/assets/start/style.css?v=20261116c">
 {ld}</head>
 <body{' data-wa="aus"' if studios else ''}>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><pattern id="tf-punkte" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><circle cx="2.2" cy="2.2" r="2.1" fill="#1f3d5c"/><circle cx="6.7" cy="6.7" r="2.1" fill="#1f3d5c"/></pattern></defs></svg>
@@ -284,7 +304,7 @@ def bauen(seite):
     </div>
   </section>
 {HERO_TAUSCH}
-  <section class="fall" id="nr1" data-beleg aria-labelledby="fall-titel">
+{nutzen}  <section class="fall" id="nr1" data-beleg aria-labelledby="fall-titel">
     <div class="fall-kopf">
       <span class="stempel-schild">Echter Fall</span>
       <h2 id="fall-titel">900<span class="eur">€</span> per Klarna.</h2>
@@ -343,8 +363,8 @@ def bauen(seite):
           <button type="button" class="motiv-knopf sticker" data-stechen aria-label="Nr. 3: Termin, Anker neu stechen">{motiv("motiv-3")}<span class="nr" aria-hidden="true">3</span></button>
         </div>
         <div class="stueck-text">
-          <h3>Anzahlung gegen No-Shows.</h3>
-          <p>Erst zahlt der Kunde, dann blockst du den Termin.</p>
+          <h3>Anzahlung per Link.</h3>
+          <p>Kunde zahlt an und bestätigt dabei deine Bedingungen.</p>
           <a class="mehr" href="/muster-anzahlungsbedingungen.pdf" data-umami-event="muster-pdf">Muster-Bedingungen gratis (PDF)</a>
         </div>
       </article>
@@ -362,7 +382,7 @@ def bauen(seite):
           <button type="button" class="motiv-knopf" data-stechen aria-label="Nr. 5: Gutschein, Rose neu stechen">{motiv("motiv-5")}<span class="nr" aria-hidden="true">5</span></button>
         </div>
         <div class="stueck-text">
-          <h3>Gutscheine verkaufen.</h3>
+          <h3>Gutschein per Link.</h3>
           <p>Code und PDF, fertig zum Verschenken.</p>
         </div>
       </article>

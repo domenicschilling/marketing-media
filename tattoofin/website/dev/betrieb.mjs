@@ -962,6 +962,8 @@ await abschnitt("17 Recht (27.10.2026): Klarna-Stichtag 20.11.2026 für Risikofr
   // g) Browser: Warnhinweis „Achtung! Kreditaufnahme kostet Geld.“ vorhanden und lesbar, Handy + Desktop.
   //    Entscheidung Domenic 14.11.2026: klein wie eine Fußnote (mind. 12 px, normal gesetzt), Kontrast AA (≥ 4,5), nah an der Raten-Aussage.
   //    Startseite und /studios: genau EINE Raten-Aussage im Hero, Fußnote im selben Abschnitt höchstens 560 px darunter (vorher 1000 px).
+  //    Seit 16.11.2026 (Nutzen-Block unter dem Hero): Raten*-Aussagen sind außer im Hero nur im Nutzen-Block (.nutzen) erlaubt, und nur, wenn
+  //    JEDE dieser Aussagen ihre eigene Fußnote im selben Abschnitt höchstens 560 px darunter hat. Alle anderen Abschnitte weiter ohne Raten*.
   const lesbar = () => {
     const parse = (c) => { const m = c.match(/rgba?\(([^)]+)\)/); if (!m) return [255, 255, 255, 1]; const p = m[1].split(",").map(Number); return [p[0], p[1], p[2], p[3] === undefined ? 1 : p[3]]; };
     const lum = ([r, g, b]) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
@@ -981,9 +983,13 @@ await abschnitt("17 Recht (27.10.2026): Klarna-Stichtag 20.11.2026 für Risikofr
     const abstand = cl ? [...warn].map((w) => y(w) - y(cl)).sort((a, b) => Math.abs(a) - Math.abs(b))[0] : 0;
     const hero = cl ? cl.closest(".auftakt") : null;
     const fnHero = hero ? warn.some((w) => w.closest(".auftakt") === hero && y(w) >= y(cl) && y(w) - y(cl) <= 560) : null;
-    const claimsAusserhalbHero = claims.filter((e) => !e.closest(".auftakt")).length;
+    const ERLAUBT = ".auftakt, .nutzen";
+    const claimsAusserhalbHero = claims.filter((e) => !e.closest(ERLAUBT)).length;
+    // Jede Aussage im Nutzen-Block braucht eine Fußnote im selben Abschnitt, 0–560 px darunter
+    const nutzenClaims = claims.filter((e) => e.closest(".nutzen"));
+    const fnNutzen = nutzenClaims.every((c) => warn.some((w) => w.closest(".nutzen") === c.closest(".nutzen") && y(w) >= y(c) && y(w) - y(c) <= 560));
     const res = warn.map((w) => { const cs = getComputedStyle(w); const fg = parse(cs.color), bg = hintergrund(w), l1 = lum(fg), l2 = lum(bg); return { px: parseFloat(cs.fontSize), gewicht: Number(cs.fontWeight), kontrast: (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05), elternPx: parseFloat(getComputedStyle(w.parentElement).fontSize) }; });
-    return { n: warn.length, abstand, claim: Boolean(cl), hero: Boolean(hero), fnHero, claimsAusserhalbHero, minPx: Math.min(...res.map((r) => r.px)), minElternPx: Math.min(...res.map((r) => r.elternPx)), minGewicht: Math.min(...res.map((r) => r.gewicht)), minKontrast: Math.min(...res.map((r) => r.kontrast)), breite: document.documentElement.scrollWidth <= innerWidth };
+    return { n: warn.length, abstand, claim: Boolean(cl), hero: Boolean(hero), fnHero, claimsAusserhalbHero, nutzenClaims: nutzenClaims.length, fnNutzen, minPx: Math.min(...res.map((r) => r.px)), minElternPx: Math.min(...res.map((r) => r.elternPx)), minGewicht: Math.min(...res.map((r) => r.gewicht)), minKontrast: Math.min(...res.map((r) => r.kontrast)), breite: document.documentElement.scrollWidth <= innerWidth };
   };
   for (const [name, pfad] of [["raten", "/raten.html"], ["start", "/"], ["start-tv-a", "/?utm_content=tv-a"], ["start-tv-d", "/?utm_content=tv-d"], ["studios", "/studios.html"], ["finanzieren", "/tattoo-finanzieren.html"], ["ratenzahlung", "/ratenzahlung-tattoostudio.html"], ["klarna", "/klarna-tattoostudio.html"], ["ratgeber", "/ratgeber.html"]]) {
     for (const [w, h] of [[390, 844], [1440, 900]]) {
@@ -992,9 +998,9 @@ await abschnitt("17 Recht (27.10.2026): Klarna-Stichtag 20.11.2026 für Risikofr
       await p.waitForTimeout(500);
       const r = await p.evaluate(lesbar);
       const hauptseite = name.startsWith("start") || name === "studios";
-      const nah = hauptseite ? r.claim && r.hero && r.fnHero === true && r.claimsAusserhalbHero === 0 : (!r.claim || Math.abs(r.abstand) <= 1000);
+      const nah = hauptseite ? r.claim && r.hero && r.fnHero === true && r.claimsAusserhalbHero === 0 && r.nutzenClaims >= 1 && r.fnNutzen === true : (!r.claim || Math.abs(r.abstand) <= 1000);
       const fertig = r.n > 0 && r.minPx >= 12 && r.minKontrast >= 4.5 && nah && r.breite;
-      check(fertig, `${pfad} ${w}x${h}: Warnhinweis vorhanden und lesbar (Fußnote ≥ 12 px, Kontrast ≥ 4,5, ${hauptseite ? "eine Raten-Aussage im Hero, Fußnote im selben Abschnitt ≤ 560 px darunter" : "nah an der Raten-Aussage"}, kein Querscrollen)`, `n=${r.n} px=${r.minPx} gew=${r.minGewicht} kontrast=${(r.minKontrast || 0).toFixed(1)} abstand=${Math.round(r.abstand || 0)} hero=${r.hero} fnHero=${r.fnHero} außerhalb=${r.claimsAusserhalbHero} breit=${r.breite}`);
+      check(fertig, `${pfad} ${w}x${h}: Warnhinweis vorhanden und lesbar (Fußnote ≥ 12 px, Kontrast ≥ 4,5, ${hauptseite ? "Raten-Aussagen nur im Hero und im Nutzen-Block, jede mit Fußnote im selben Abschnitt ≤ 560 px darunter" : "nah an der Raten-Aussage"}, kein Querscrollen)`, `n=${r.n} px=${r.minPx} gew=${r.minGewicht} kontrast=${(r.minKontrast || 0).toFixed(1)} abstand=${Math.round(r.abstand || 0)} hero=${r.hero} fnHero=${r.fnHero} nutzen=${r.nutzenClaims}/${r.fnNutzen} außerhalb=${r.claimsAusserhalbHero} breit=${r.breite}`);
       if (["raten", "start", "studios"].includes(name)) await p.screenshot({ path: path.join(shots, `recht-${name}-${w}.png`) });
       await p.context().close();
     }
@@ -1058,6 +1064,63 @@ await abschnitt("17c Zahlen im Hero und im Preisblock passen zusammen (16.11.202
       && Math.abs(tabKl - klGeb) <= 1 && Math.abs(tabRest - (betrag - klGeb)) <= 1 && Math.abs(tabKa - kaGeb) <= 1 && m.zeilen["An Tattoofin"] === "0 €";
     check(gut, `${pfad}: H1 „${m.h1}“ = Handybild (Alt) = Preisblock ${betrag} €; Gebühren aus den Fragen nachgerechnet (Klarna ${klGeb.toFixed(2)} → ca. ${tabKl} €, bei dir ca. ${tabRest} €, Karte ${kaGeb.toFixed(2)} → ca. ${tabKa} €)`, JSON.stringify(m).slice(0, 300));
   }
+});
+
+// =====================================================================================================
+await abschnitt("17d Nutzen fürs Studio direkt unter dem Hero (Domenic 16.11.2026): 4 Karten, eigene Raten-Fußnote, lesbar, kein Querscrollen, Seite kurz", async () => {
+  const pruef = () => {
+    const parse = (c) => { const m = c.match(/rgba?\(([^)]+)\)/); if (!m) return [255, 255, 255, 1]; const p = m[1].split(",").map(Number); return [p[0], p[1], p[2], p[3] === undefined ? 1 : p[3]]; };
+    const lum = ([r, g, b]) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
+    const hg = (el) => { let e = el; while (e) { const c = parse(getComputedStyle(e).backgroundColor); if (c[3] > 0.9) return c; e = e.parentElement; } return [245, 234, 210, 1]; };
+    const kontrast = (el) => { const a = lum(parse(getComputedStyle(el).color)), b = lum(hg(el)); return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05); };
+    const n = document.querySelector("main > section.nutzen");
+    if (!n) return { da: false };
+    // direkt nach dem Hero (Skripte dazwischen zählen nicht)
+    let vor = n.previousElementSibling; while (vor && vor.tagName === "SCRIPT") vor = vor.previousElementSibling;
+    let nach = n.nextElementSibling; while (nach && nach.tagName === "SCRIPT") nach = nach.nextElementSibling;
+    const karten = [...n.querySelectorAll(".nutzen-karte")];
+    const y = (e) => e.getBoundingClientRect().top + scrollY;
+    const fn = n.querySelector(".raten-fn");
+    const ratenKarten = karten.map((k, i) => /Raten\*/.test(k.textContent) ? i : -1).filter((i) => i >= 0);
+    const claim = karten[0]?.querySelector("p");
+    const texte = [n.querySelector("h2"), ...n.querySelectorAll("h3, p")];
+    const tops = karten.map((k) => Math.round(k.getBoundingClientRect().top)), lefts = karten.map((k) => Math.round(k.getBoundingClientRect().left));
+    return {
+      da: true, nachHero: Boolean(vor && vor.classList.contains("auftakt")), vorFall: Boolean(nach && nach.classList.contains("fall")),
+      titel: n.querySelector("h2")?.textContent.replace(/\u00a0/g, " "),
+      karten: karten.length,
+      aufbau: karten.every((k) => k.querySelector(".nutzen-motiv svg") && k.querySelectorAll("h3").length === 1 && k.querySelectorAll("p").length === 1),
+      // höchstens 1 kurzer Satz je Karte, keine Ziffern (keine erfundenen Zahlen)
+      saetze: Math.max(...karten.map((k) => (k.querySelector("p").textContent.match(/[.!?](\s|$)/g) || []).length)),
+      zeichen: Math.max(...karten.map((k) => k.querySelector("p").textContent.length)),
+      ziffern: /\d/.test(karten.map((k) => k.textContent).join(" ")),
+      ratenKarten, fnText: fn ? fn.textContent : "", fnPx: fn ? parseFloat(getComputedStyle(fn).fontSize) : 0,
+      fnAbstand: fn && claim ? Math.round(y(fn) - y(claim)) : null,
+      minKontrast: Math.min(...texte.concat(fn ? [fn] : []).map(kontrast)),
+      spalten: new Set(tops).size === 1 ? karten.length : new Set(lefts).size,
+      quer: document.documentElement.scrollWidth > innerWidth,
+      rand: karten.every((k) => { const r = k.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth; }),
+      hoehe: document.documentElement.scrollHeight,
+      // Motiv überdeckt keine Schrift
+      ueberlappt: karten.some((k) => { const m = k.querySelector(".nutzen-motiv svg").getBoundingClientRect(); return [...k.querySelectorAll("h3, p")].some((t) => { const r = t.getBoundingClientRect(); return m.left < r.right - 1 && m.right > r.left + 1 && m.top < r.bottom - 1 && m.bottom > r.top + 1; }); }),
+    };
+  };
+  const probleme = [];
+  let gesehen = 0;
+  for (const pf of ["/", "/?utm_content=tv-a", "/?utm_content=tv-d", "/studios.html"]) {
+    for (const [w, h, spalten] of [[390, 844, 1], [375, 667, 1], [768, 1024, 2], [1440, 900, 4]]) {
+      const p = await neueSeite({ width: w, height: h });
+      await p.goto(BASE + pf, { waitUntil: "load" }); await p.waitForTimeout(300);
+      const m = await p.evaluate(pruef);
+      await p.context().close();
+      gesehen++;
+      const gut = m.da && m.nachHero && m.vorFall && /Studio/.test(m.titel || "") && m.karten === 4 && m.aufbau && m.saetze <= 1 && m.zeichen <= 90 && !m.ziffern
+        && JSON.stringify(m.ratenKarten) === "[0]" && /^\*Raten über Klarna, nach deren Bonitätsprüfung\..*Achtung! Kreditaufnahme kostet Geld\.$/.test(m.fnText) && m.fnPx >= 12 && m.fnPx <= 13
+        && m.fnAbstand >= 0 && m.fnAbstand <= 560 && m.minKontrast >= 4.5 && m.spalten === spalten && !m.quer && m.rand && !m.ueberlappt && (w !== 390 || m.hoehe <= 8000);
+      if (!gut) probleme.push(`${pf} ${w}x${h}: ${JSON.stringify(m)}`);
+    }
+  }
+  check(probleme.length === 0, "Nutzen-Block: direkt nach dem Hero und vor „Echter Fall“, 4 Karten (Motiv, Überschrift, höchstens 1 Satz, keine Zahlen), Raten* nur in Karte 1 mit eigener Fußnote ≤ 560 px darunter, Kontrast ≥ 4,5, 1/2/4 Spalten (390/768/1440), kein Querscrollen, Motiv verdeckt keine Schrift, Seite bei 390 px ≤ 8.000 px hoch", probleme.slice(0, 2).join(" ; ").slice(0, 600) || `${gesehen} Seitenaufrufe geprüft`);
 });
 
 // =====================================================================================================
