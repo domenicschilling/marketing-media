@@ -189,7 +189,24 @@ try {
       await p.context().close();
       if (anfang || (w < 900 && !danach)) fehler.push(`Leiste ${w}x${h}: beim Laden ${anfang ? "sichtbar" : "weg"}, nach dem Knopf ${danach ? "sichtbar" : "weg"}`);
     }
-    check(fehler.length === 0, "Hero = genau der erste Bildschirm auf 14 Geräten (inkl. 320×460 und Handy quer) (Start, /studios, Varianten No-Show und Gutschein): Unterkante = Fensterhöhe ±8 px, Knopf und Preiszeile sichtbar, nichts verdeckt; untere Leiste beim Laden nie sichtbar, am Handy nach dem Hero-Knopf da", fehler.slice(0, 2).join(" ; ").slice(0, 400)); }
+    // Cookie-Hinweis (erster Besuch): überdeckt nie Knopf oder Preiszeile im Hero (weicht aus wie auf /start), nach dem Hero ist er da
+    for (const [w, h] of GERAETE) {
+      const p = await neueSeite({ viewport: { width: w, height: h } });
+      await p.goto(BASE + "/", { waitUntil: "load" }); await p.waitForTimeout(400);
+      await p.evaluate(() => { scrollTo(0, 300); }); await p.waitForTimeout(300);
+      await p.evaluate(() => { scrollTo(0, 0); }); await p.waitForTimeout(500);
+      const deckt = await p.evaluate(() => {
+        const c = document.querySelector(".tf-cc"); if (!c || c.classList.contains("tf-cc-weg") || getComputedStyle(c).visibility !== "visible") return false;
+        const r = c.getBoundingClientRect();
+        return [...document.querySelectorAll(".auftakt .auftakt-knopf .knopf, .auftakt .preiszeile")].some((e) => { const q = e.getBoundingClientRect(); return q.left < r.right && q.right > r.left && q.top < r.bottom && q.bottom > r.top; });
+      });
+      await p.evaluate(() => { const k = document.querySelector(".auftakt .preiszeile"); scrollTo(0, k.getBoundingClientRect().bottom + scrollY + 60); }); await p.waitForTimeout(500);
+      const spaeter = await p.evaluate(() => { const c = document.querySelector(".tf-cc"); return Boolean(c) && !c.classList.contains("tf-cc-weg") && getComputedStyle(c).visibility === "visible"; });
+      const gleich = await p.evaluate(() => { const b = [...document.querySelectorAll(".tf-cc button")].map((x) => x.getBoundingClientRect()); return b.length === 2 && Math.abs(b[0].width - b[1].width) < 2 && Math.abs(b[0].height - b[1].height) < 2; });
+      await p.context().close();
+      if (deckt || !spaeter || !gleich) fehler.push(`Cookie-Hinweis ${w}x${h}: deckt Knopf/Preis ${deckt}, nach dem Hero da ${spaeter}, Knöpfe gleich ${gleich}`);
+    }
+    check(fehler.length === 0, "Hero = genau der erste Bildschirm auf 14 Geräten (inkl. 320×460 und Handy quer) (Start, /studios, Varianten No-Show und Gutschein): Unterkante = Fensterhöhe ±8 px, Knopf und Preiszeile sichtbar, nichts verdeckt; untere Leiste beim Laden nie sichtbar, am Handy nach dem Hero-Knopf da; Cookie-Hinweis verdeckt nie Knopf/Preiszeile, nach dem Hero da, Knöpfe gleich groß", fehler.slice(0, 2).join(" ; ").slice(0, 400)); }
   check(await p0.locator("#preis").count() === 1 && await p0.locator("#r-monat").count() === 0, "Ein Preis auf der Startseite, kein Paket-Rechner");
   const preise = await p0.textContent("#preis");
   check(preise.includes("49,90") && preise.includes("41,93") && !preise.includes("58,31") && !preise.includes("999") && !preise.includes("Einmalzahlung") && !/Gründer|Profi\b|Risikofrei|10 %|900 €|Grundge/.test(preise) && !/Raten\*|Klarna\*/.test(preise), "Preisbereich: nur 49,90 € inkl. MwSt. (klein 41,93 € netto), kein 58,31 €, keine Raten-Aussage (deshalb dort kein Warnsatz nötig)");

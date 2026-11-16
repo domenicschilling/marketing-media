@@ -85,7 +85,9 @@ window.TFTrack = (function () {
     "@media (min-width:1000px){body.anm-seite .tf-cc{left:20px;right:20px;bottom:16px;max-width:none;margin:0;display:flex;align-items:center;gap:16px;padding:8px 14px;font-size:14px;line-height:1.35;border-width:2px;box-shadow:3px 3px 0 #1f3d5c;border-radius:14px}" +
     "body.anm-seite .tf-cc b,body.anm-seite .tf-cc .lang{display:none}body.anm-seite .tf-cc .kurz{display:inline}body.anm-seite .tf-cc .r{margin:0 0 0 auto;flex:none;flex-wrap:nowrap}body.anm-seite .tf-cc button{flex:none;min-width:0;padding:8px 16px;font-size:14px;border-width:2px}body.anm-seite.tf-cc-offen{padding-bottom:84px}}" +
     "@media (max-height:520px) and (min-width:601px){.tf-cc{max-width:none;margin:0;left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right));bottom:max(8px,env(safe-area-inset-bottom));display:flex;align-items:center;gap:14px;padding:8px 12px;font-size:13px;line-height:1.35}" +
-    ".tf-cc b,.tf-cc .lang{display:none}.tf-cc .kurz{display:inline}.tf-cc .r{margin:0;flex:none;flex-wrap:nowrap}.tf-cc button{flex:none;min-width:0;padding:8px 14px;font-size:14px;border-width:2px}body.tf-cc-offen{padding-bottom:84px}}";
+    ".tf-cc b,.tf-cc .lang{display:none}.tf-cc .kurz{display:inline}.tf-cc .r{margin:0;flex:none;flex-wrap:nowrap}.tf-cc button{flex:none;min-width:0;padding:8px 14px;font-size:14px;border-width:2px}body.tf-cc-offen{padding-bottom:84px}}" +
+    // Beide Knöpfe immer exakt gleich groß (auch in der flachen Leiste, wo die Texte unterschiedlich lang sind)
+    ".tf-cc .r{display:grid;grid-template-columns:1fr 1fr}.tf-cc .r button{width:100%;min-width:0}";
 
   function banner() {
     if (document.querySelector(".tf-cc")) return;
@@ -101,7 +103,7 @@ window.TFTrack = (function () {
     d.querySelector(".ja").onclick = function () { speichere("ja"); schliesse(); ladePixel(); };
     d.querySelector(".nein").onclick = function () { speichere("nein"); queue.length = 0; schliesse(); };
     function schliesse() { d.remove(); document.body.classList.remove("tf-cc-offen"); document.body.style.removeProperty("--tf-cc-h"); window.removeEventListener("resize", hoehe); ausweichenAus(); }
-    if (ANMELDUNG) ausweichenAn(d);
+    if (ANMELDUNG || HERO) ausweichenAn(d);
   }
 
   // Auf /start (alle Größen): Würde der Hinweis irgendeinen Teil des Formulars überdecken (erstes Feld bis Absende-Knopf, samt Häkchen)
@@ -109,6 +111,9 @@ window.TFTrack = (function () {
   // Gerechnet wird mit dem sichtbaren Bereich (visualViewport, bei offener Handy-Tastatur kleiner als innerHeight) und der echten Lage
   // des Hinweises (ohne die Ausweich-Verschiebung). Der Seitenabstand unten (tf-cc-offen) bleibt, damit man unter das Formular scrollen kann.
   var ANMELDUNG = /^\/start(\.html)?$/.test(location.pathname), ausweichTakt = null, ausweichFokus = null;
+  // Startseite und /studios (16.11.2026): Der Hinweis überdeckt nie Knopf oder Preiszeile im Hero (alle Größen). Liegt er darüber, rutscht er
+  // weg wie auf /start und kommt zurück, sobald beides aus dem Bild ist. Beide Knöpfe bleiben gleich (keine Bevorzugung von „Einverstanden“).
+  var HERO = !!document.querySelector(".auftakt");
   function ausweichenAn(d) {
     var vv = window.visualViewport;
     var pruefe = function () {
@@ -119,6 +124,11 @@ window.TFTrack = (function () {
       var f = document.getElementById("f"), k = document.getElementById("submit"), erstes = f && f.querySelector(".field");
       var ziele = [];
       if (erstes && k) { var a1 = erstes.getBoundingClientRect(), a2 = k.getBoundingClientRect(); ziele.push({ top: a1.top, bottom: a2.bottom, height: a2.bottom - a1.top }); }
+      // Hero: Knopf und Preiszeile; hier zählt auch die Waagerechte (die Karte unten rechts am großen Bildschirm liegt neben dem Knopf)
+      var links = r.left, rechts = r.right;
+      if (HERO) document.querySelectorAll(".auftakt .auftakt-knopf .knopf, .auftakt .preiszeile").forEach(function (el) {
+        var q = el.getBoundingClientRect(); if (q.width > 0 && q.right > links && q.left < rechts) ziele.push(q);
+      });
       var a = document.activeElement; if (a && /^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName)) ziele.push(a.getBoundingClientRect());
       var weg = ziele.some(function (z) { return z.height > 0 && z.bottom > zoneOben && z.top < zoneUnten; });
       d.classList.toggle("tf-cc-weg", weg);

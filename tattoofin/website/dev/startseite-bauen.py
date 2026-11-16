@@ -286,7 +286,7 @@ def bauen(seite):
 
     skripte = """<script src="/assets/start/app.js?v=20261116b" defer></script>
 <script defer src="https://cloud.umami.is/script.js" data-website-id="507b740f-264e-4ba1-a7d0-9dbe49db75af" data-domains="tattoofin.de"></script>
-<script src="/js/tf-track.js"></script>"""
+<script src="/js/tf-track.js?v=20261117b"></script>"""
     if studios:
         skripte += '\n<script src="/js/studios.js"></script>'
 
