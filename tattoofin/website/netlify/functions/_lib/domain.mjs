@@ -68,6 +68,24 @@ export function paketDetails(s) {
   return { Paket: paketVon(s).name };
 }
 
+// ---- QR-Aufsteller nur noch für die App-Prüfung bei Apple ----
+// nur bis Apple 1.0 freigegeben hat, dann entfernen (Entscheidung Domenic 16.11.2026)
+// App 1.0 (1) liegt mit der Aufsteller-Ansicht bei Apple in Prüfung. Der Prüfer darf dort keine Fehlermeldung sehen: Für „Prüf-Studios“
+// läuft der alte Ablauf (Vorschau, Holzton, Logo, Bestellen) weiter, aber ohne echte Bestellung, ohne Stripe, ohne Mail, ohne Hersteller-Link.
+// Prüf-Studio = (a) Demo-/Review-Studio (s.demo oder APP_REVIEW_STUDIO_ID), (b) Apple-Abo aus der Sandbox (TestFlight, App Review, Xcode;
+// unabhängig von APPLE_SANDBOX_STRIPE), (c) Review-Registrierung oder E-Mail = APP_REVIEW_EMAIL / APP_REVIEW_REG_EMAIL.
+// Alle anderen Studios bekommen weiter 410 aufsteller_entfallen. Werte bei jedem Aufruf aus process.env (leere Variablen passen nie).
+export function istAufstellerPruefStudio(s) {
+  if (!s || typeof s !== "object") return false;
+  const env = process.env;
+  if (s.demo === true || (env.APP_REVIEW_STUDIO_ID && s.id === env.APP_REVIEW_STUDIO_ID)) return true;
+  if (istApple(s) && (s.sandbox === true || (s.apple?.umgebung && s.apple.umgebung !== "Production"))) return true;
+  if (s.reviewRegistrierung === true) return true;
+  const adressen = [env.APP_REVIEW_EMAIL, env.APP_REVIEW_REG_EMAIL].map((e) => normEmail(e || "")).filter(Boolean);
+  const email = normEmail(s.email || "");
+  return Boolean(email) && adressen.includes(email);
+}
+
 // Rechnungsfuß für Rechnungen vom DSX-Konto (Stripe)
 export const RECHNUNG_FUSS = `${CFG.firma} · ${CFG.adresse} · USt-IdNr. ${CFG.ustid}`;
 const lieferadresse = (s) => [s.firma, s.strasse, [s.plz, s.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ");

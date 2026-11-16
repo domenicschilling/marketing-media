@@ -7,6 +7,8 @@
 // Apple 3.1.1/3.1.3: keine Paket-, Website- oder Abo-Preise in den Antworten für die App.
 // Den QR-Aufsteller aus Holz gibt es seit 15.11.2026 nicht mehr (Entscheidung Domenic). Die App 1.0 (1) ruft GET /api/app/aufsteller noch auf
 // und bekommt dann AUFSTELLER_ENTFALLEN (410): Die App zeigt genau diesen Text (AufstellerView → FehlerAnsicht), ohne Absturz und ohne Abmelden.
+// Ausnahme bis Apple 1.0 freigegeben hat (Entscheidung Domenic 16.11.2026): Prüf-Studios (domain.mjs istAufstellerPruefStudio) bekommen
+// aufstellerFuerPruefApp, damit der Apple-Prüfer keinen Fehlerbildschirm sieht.
 import "../../../public/js/werbung-texte.js";
 import { CFG } from "./config.mjs";
 import { klarnaDauerhaft } from "./domain.mjs";
@@ -104,3 +106,32 @@ export const AUFSTELLER_ENTFALLEN = {
   error: "Den QR-Aufsteller aus Holz gibt es nicht mehr. Deinen QR-Code findest du unter Werbung: in Fotos speichern und ausdrucken, zum Beispiel als Aufkleber für die Theke.",
   code: "aufsteller_entfallen",
 };
+
+// ---- QR-Aufsteller nur für Prüf-Studios (App-Prüfung bei Apple) ----
+// nur bis Apple 1.0 freigegeben hat, dann entfernen (Entscheidung Domenic 16.11.2026)
+// Gleiche Form wie die frühere Antwort für App 1.0 (1) (AufstellerAppAntwort.aufsteller), aber fest „im Paket enthalten“:
+// kostenlos, bestellbar, Knopf „Kostenlos bestellen“, kein Preis, kein Stripe. Bestellen speichert nur angefordertAm (keine echte Bestellung,
+// keine Mail). Nie für echte Studios (die bekommen AUFSTELLER_ENTFALLEN), nie auf Website, in Mails, Vertrag oder Druck.
+export async function aufstellerFuerPruefApp(s, { mitLogo = false, store } = {}) {
+  const a = s.aufsteller || {};
+  const bezahltAm = a.kauf?.bezahltAm || null, angefordertAm = a.angefordertAm || null;
+  const status = bezahltAm ? "bezahlt" : angefordertAm ? "bestellt" : "offen";
+  const logo = mitLogo && a.hatLogo && store ? await store.get("aufsteller-logo/" + s.id) : null;
+  const klarna = werbungMitKlarna(s);
+  return {
+    artikel: "QR-Aufsteller aus Holz",
+    beschreibung: "Aus Holz, graviert mit dem QR-Code deiner Zahlseite und deinem Studionamen oder Logo. Wir schicken ihn an deine Studio-Adresse.",
+    kostenlos: true, bestellbar: true,
+    preis: null, preisText: "Für dich kostenlos", knopf: "Kostenlos bestellen", bezahlenHinweis: null, testmodusHinweis: null,
+    holz: a.holz === "dunkel" ? "dunkel" : "hell", variante: a.hatLogo && a.variante === "logo" ? "logo" : "name", hatLogo: Boolean(a.hatLogo),
+    holzHinweis: {
+      hell: "Helles Holz (Birke, Buche, Ahorn) hat den besten Kontrast. Der QR-Code lässt sich auch aus über 1 m scannen.",
+      dunkel: "Dunkles Holz (Walnuss) sieht edel aus. Der QR-Code hat aber weniger Kontrast (sicher bis etwa 80 cm).",
+    },
+    status, bestelltAm: angefordertAm, bezahltAm,
+    statusText: bezahltAm ? "Bestellt und bezahlt. Wir lassen ihn fertigen und melden uns." : angefordertAm ? "Bestellt. Wir lassen ihn fertigen und melden uns." : null,
+    lieferadresse: [s.firma, s.strasse, [s.plz, s.ort].filter(Boolean).join(" ")].filter(Boolean).join(", "),
+    firma: s.firma, zahlseite: zahlseite(s), klarna, fussnote: klarna ? PFLICHTSATZ : null,
+    ...(mitLogo ? { logo: logo ? { src: logo.src, w: logo.w, h: logo.h } : null } : {}),
+  };
+}

@@ -18,6 +18,9 @@
 //   POST   /api/portal/aufsteller          entfallen (QR-Aufsteller aus Holz eingestellt 15.11.2026) → 410 { error, code: "aufsteller_entfallen" }.
 //                                          Einzige Ausnahme: { logo: null } löscht ein früher gespeichertes Logo (Datenschutz) → { ok, logoGeloescht }
 //   POST   /api/portal/aufsteller-pruefen  { cs } nur noch für einen Aufsteller-Checkout, der vor dem 15.11.2026 begonnen wurde (sonst 410)
+//                                          Ausnahme bis Apple 1.0 freigegeben hat (Entscheidung Domenic 16.11.2026): App-Token eines Prüf-Studios
+//                                          (domain.mjs istAufstellerPruefStudio) → beide wie früher mit { aufsteller }, aber ohne Bestellung,
+//                                          Stripe, Mail oder Hersteller-Link (Bestellen = nur „angefordert“ vermerkt, pruefung: true).
 //   POST   /api/portal/checkliste          { punkt, erledigt } Einrichtungs-Checkliste (manuelle Punkte)
 //   POST   /api/portal/abmelden            Auf allen Geräten abmelden (Sitzungsversion hochzählen)
 //   POST   /api/portal/zahlung { art: "gutschein", betrag, kunde (Käufer), email (Pflicht), empfaenger?, nachricht? }  Gutschein-Zahlungslink
@@ -35,7 +38,8 @@
 // Löschen bleiben in der App, Apple 5.1.1(v)).
 // Mit App-Token einer Team-Adresse zusätzlich gesperrt (403 nur_inhaber): kuendigung, stripe-dashboard, kontakt, abmelden,
 // recht (Bestätigung mit Namen), fragebogen (lesen und senden). Checkliste, Nachweis, Zahlungen, Gutscheine: auch Team.
-// aufsteller und aufsteller-pruefen antworten für die App immer 410 (_lib/werbung.mjs AUFSTELLER_ENTFALLEN), auch für das Team.
+// aufsteller und aufsteller-pruefen antworten für die App 410 (_lib/werbung.mjs AUFSTELLER_ENTFALLEN), auch für das Team. Ausnahme bis Apple 1.0
+// freigegeben hat: Prüf-Studios (Team dort 403 nur_inhaber wie früher).
 // Mandantentrennung: Jede Abfrage nutzt ausschließlich das Studio aus dem Session-Cookie bzw. App-Token; Zahlungen werden
 // über zahlung/<studioId>/<id> gelesen, fremde IDs ergeben immer 404.
 import { CFG, plattformgebuehr, provisionSatz, paketVon, BAUSTEINE_SIMULIERT, testKasse } from "./_lib/config.mjs";
@@ -44,11 +48,11 @@ import { saveStudio, zahlungenVon, getZahlung, saveZahlung, abrechnungenVon, get
 import { currentStudio, clearCookie } from "./_lib/auth.mjs";
 import { geraeteWiderrufen } from "./_lib/app-geraete.mjs";
 import { stripe, dashboardLink, accountSession, ensureConnectedAccount } from "./_lib/stripe.mjs";
-import { hatUmstellungsangebot, umstellungCheckout, notify, notifyAdmin, connectUrl, connectUrlGehostet, darfKassieren, provisionVerdient, kontoAbgleichen, eingebettet, klarnaFuer, provisionZahlung, aufstellerBezahlt, aufstellerLogoLoeschen, kuendigungEinreichen, kuendigungZuruecknehmen, zahlungAbgleichen } from "./_lib/domain.mjs";
+import { hatUmstellungsangebot, umstellungCheckout, notify, notifyAdmin, connectUrl, connectUrlGehostet, darfKassieren, provisionVerdient, kontoAbgleichen, eingebettet, klarnaFuer, provisionZahlung, aufstellerBezahlt, aufstellerLogoLoeschen, istAufstellerPruefStudio, kuendigungEinreichen, kuendigungZuruecknehmen, zahlungAbgleichen } from "./_lib/domain.mjs";
 import { fuerStudio, oeffentlich, zahlungsLink } from "./_lib/studio-ansicht.mjs";
 import { randomBytes } from "node:crypto";
 import { KLARNA_NAME, PFLICHTSATZ_STUDIO, gutscheinWort, GUTSCHEIN_HINWEIS } from "./_lib/klarna-texte.mjs";
-import { materialLinks, werbungMitKlarna, AUFSTELLER_ENTFALLEN } from "./_lib/werbung.mjs";
+import { materialLinks, werbungMitKlarna, AUFSTELLER_ENTFALLEN, aufstellerFuerPruefApp } from "./_lib/werbung.mjs";
 import { nachweisPdf } from "./_lib/nachweis-pdf.mjs";
 import { gutscheinStatus, gutscheinPdf, gutscheinSenden, normCode, gutscheinPerToken } from "./_lib/gutschein.mjs";
 
@@ -371,6 +375,33 @@ export default handler(async (req, context) => {
   // ---- QR-Aufsteller aus Holz: eingestellt (15.11.2026, Entscheidung Domenic). Keine neuen Bestellungen, kein Checkout, keine Admin-Mail.
   // Bestandsdaten (s.aufsteller) bleiben für den Admin lesbar. App (auch App 1.0 (1)): immer 410 mit freundlichem Text.
   const aufstellerEntfallen = () => json(AUFSTELLER_ENTFALLEN, 410);
+  // Prüf-Studios in der App (App-Prüfung bei Apple): alter Ablauf ohne echte Bestellung. Nur bis Apple 1.0 freigegeben hat, dann entfernen
+  // (Entscheidung Domenic 16.11.2026). Kein notifyAdmin, kein Stripe-Checkout, kein Hersteller-Link; Antwort ohne url/cs (App: „angefordert“).
+  const aufstellerPruefung = ["aufsteller", "aufsteller-pruefen"].includes(bereich) && req.method === "POST" && s._app && istAufstellerPruefStudio(s);
+  if (aufstellerPruefung && s._app.rolle !== "inhaber") return json({ error: "Das kann nur der Inhaber.", code: "nur_inhaber" }, 403);
+  if (aufstellerPruefung && bereich === "aufsteller-pruefen") {
+    return json({ aufsteller: await aufstellerFuerPruefApp(s), bezahlt: Boolean(s.aufsteller?.angefordertAm) });
+  }
+  if (aufstellerPruefung) {
+    const b = await body(req);
+    const holz = ["hell", "dunkel"].includes(b.holz) ? b.holz : "hell";
+    const variante = ["name", "logo"].includes(b.variante) ? b.variante : "name";
+    const a = { ...(s.aufsteller || {}), holz, variante, am: now(), pruefung: true };
+    let aktion = "auswahl";
+    if (b.logo === null) { await store.del("aufsteller-logo/" + s.id); a.hatLogo = false; aktion = "logo-geloescht"; }
+    else if (typeof b.logo === "string") {
+      if (!/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(b.logo) || b.logo.length > 700000) return fail("Logo bitte als Bild unter 500 KB hochladen.");
+      await store.set("aufsteller-logo/" + s.id, { src: b.logo, w: Math.round(Number(b.logoW) || 0), h: Math.round(Number(b.logoH) || 0), am: now() });
+      a.hatLogo = true; aktion = "logo";
+    }
+    if (variante === "logo" && !a.hatLogo) return fail("Bitte wähle zuerst dein Logo aus oder nimm „Mit Studioname“.");
+    // bestellen / anfordern / kaufen: nur vermerken (ein zweites Mal ist dieselbe Erfolgsantwort, kein 409)
+    if (b.bestellen === true || b.anfordern === true || b.kaufen === true) { a.angefordertAm = a.angefordertAm || now(); aktion = "bestellt"; }
+    s.aufsteller = a;
+    await saveStudio(s);
+    await log("aufsteller-pruefstudio", { studioId: s.id, aktion });
+    return json({ aufsteller: await aufstellerFuerPruefApp(s) });
+  }
   if (bereich === "aufsteller" && req.method === "POST") {
     const b = await body(req);
     // Datenschutz: ein früher hochgeladenes Logo lässt sich weiter löschen (nur im Dashboard bzw. vom Inhaber)

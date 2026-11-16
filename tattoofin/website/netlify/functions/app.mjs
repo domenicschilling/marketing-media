@@ -18,6 +18,8 @@
 //                                     (seit 14.11.2026, Inhaber + Team; Klarna-/Raten-Material nur mit klarna: true, _lib/werbung.mjs)
 //   GET    /api/app/aufsteller       entfallen (QR-Aufsteller aus Holz eingestellt 15.11.2026): immer 410 { error, code: "aufsteller_entfallen" }.
 //                                     Die App 1.0 (1) zeigt den Text aus „error“ statt der Holz-Vorschau (_lib/werbung.mjs AUFSTELLER_ENTFALLEN).
+//                                     Ausnahme bis Apple 1.0 freigegeben hat (Entscheidung Domenic 16.11.2026): Prüf-Studios (Demo/Review,
+//                                     Apple-Sandbox, Review-Adressen; domain.mjs istAufstellerPruefStudio) → 200 { aufsteller } wie früher (nur Inhaber).
 //   GET    /api/app/start            Einrichtungs-Checkliste für die App (ohne Paket/Preis; manuelle Punkte per POST /api/portal/checkliste)
 //   Code-Prüfung, Grenzen und Geräte-Anlage gemeinsam in _lib/app-code.mjs
 // Grenzen (atomar, store.zaehleAtomar/belegePlatz: jeder Versuch belegt einen eigenen Platz, parallele Anfragen zählen richtig):
@@ -29,7 +31,7 @@
 import { body, clean, handler, now, clientIp, isEmail } from "./_lib/util.mjs";
 import { store, getStudio, saveStudio, AKTIV, zaehleVersuch, zaehleAtomar, normEmail, log, getZahlung, saveZahlung } from "./_lib/store.mjs";
 import { currentStudio, verify } from "./_lib/auth.mjs";
-import { notify, notifyAdmin, kuendigungEinreichen } from "./_lib/domain.mjs";
+import { notify, notifyAdmin, kuendigungEinreichen, istAufstellerPruefStudio } from "./_lib/domain.mjs";
 import { mails } from "./_lib/emails.mjs";
 import { warteschlangeStatus } from "./_lib/mail.mjs";
 import { stripe } from "./_lib/stripe.mjs";
@@ -41,7 +43,7 @@ import { gutscheinAusstellen } from "./_lib/gutschein.mjs";
 import { istApple, testKasse } from "./_lib/config.mjs";
 import { aj, fehler, hash, T, reviewFuer, codeIpErlaubt, codeAdresseErlaubt, aktiveStudios, anmeldeCodeSenden, reviewPruefen, codePruefen, nachAnmeldeCode, geraetFertig } from "./_lib/app-code.mjs";
 import { appRegistrierungRoute } from "./_lib/app-registrierung.mjs";
-import { werbungFuer, werbungMitKlarna, AUFSTELLER_ENTFALLEN } from "./_lib/werbung.mjs";
+import { werbungFuer, werbungMitKlarna, AUFSTELLER_ENTFALLEN, aufstellerFuerPruefApp } from "./_lib/werbung.mjs";
 import { zahlungenVon } from "./_lib/store.mjs";
 
 const berlinTag = (ms) => new Date(ms).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" });
@@ -329,7 +331,13 @@ async function route(req, context) {
   // Werbung + Hilfe (Inhaber und Team: beide posten für das Studio)
   if (bereich === "werbung" && !sub && m === "GET") return aj(werbungFuer(s));
   if (bereich === "start" && !sub && m === "GET") return aj(await startDaten(s, ich));
-  // QR-Aufsteller aus Holz: eingestellt (15.11.2026). Für alle Studios und Rollen 410 mit freundlichem Text (App 1.0 (1) zeigt ihn an).
+  // Prüf-Studios (App-Prüfung bei Apple): Aufsteller-Vorschau wie früher, ohne Preis. Nur bis Apple 1.0 freigegeben hat, dann entfernen
+  // (Entscheidung Domenic 16.11.2026).
+  if (bereich === "aufsteller" && !sub && m === "GET" && istAufstellerPruefStudio(s)) {
+    if (ich.rolle !== "inhaber") return fehler("Das kann nur der Inhaber.", 403, "nur_inhaber");
+    return aj({ aufsteller: await aufstellerFuerPruefApp(s, { mitLogo: true, store }) });
+  }
+  // QR-Aufsteller aus Holz: eingestellt (15.11.2026). Für alle anderen Studios und Rollen 410 mit freundlichem Text (App 1.0 (1) zeigt ihn an).
   if (bereich === "aufsteller") return fehler(AUFSTELLER_ENTFALLEN.error, 410, AUFSTELLER_ENTFALLEN.code);
 
   // Nur Demo-Studio (App-Prüfung bei Apple) und Testkauf-Studio (Apple-Sandbox): Testzahlung, damit der Prüfer den Ablauf

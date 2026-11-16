@@ -25,7 +25,8 @@ export async function demoStudioAnlegen({ email = "app-review@tattoofin.de" } = 
     modell: "kauf", paket: "monatlich", zahlart: "abo", monatNetto: CFG.monatNetto, teamEmails: [],
     vertrag: s.vertrag || { version: CFG.vertragVersion, akzeptiertAm: tageZurueck(60), name: "Demo Studio" },
     stripe: {}, kuendigung: null,
-    // QR-Aufsteller (eingestellt 15.11.2026): alte Testdaten des Demo-Studios bei jedem Anlegen entfernen
+    // QR-Aufsteller (eingestellt 15.11.2026): alte Testdaten des Demo-Studios bei jedem Anlegen entfernen. Bis Apple 1.0 freigegeben hat
+    // (Entscheidung Domenic 16.11.2026) sieht der Prüfer danach wieder „Kostenlos bestellen“ (domain.mjs istAufstellerPruefStudio).
     aufsteller: null,
   });
   delete s.loeschAnfrage;
