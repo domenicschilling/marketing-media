@@ -1534,6 +1534,56 @@ try {
   }
 
   // ==================================================================================================
+  teil("Apple-Abo: Prüfkonto mit ABGELAUFENEM Abo (Apple 2.1, 16.11.2026)");
+  {
+    rlReset();
+    const AB = "review-abgelaufen@tattoofin.test";
+    const demoH = await admin("app-demo", { email: "review@tattoofin.test" });
+    Object.assign(process.env, { APP_REVIEW_EMAIL: "review@tattoofin.test", APP_REVIEW_CODE: "246810", APP_REVIEW_STUDIO_ID: demoH.studioId, APP_REVIEW_ABGELAUFEN_EMAIL: AB });
+    const anm = (email = AB, code = "246810") => call("POST", "/api/app/anmelden", { body: { email, code, geraet: GERAET("Review-iPhone") } });
+    const ohne = await anm();
+    check(ohne.status === 410, "Abgelaufen-Prüfkonto ohne angelegtes Studio → kein Zugang", ohne.text);
+    const da = await admin("app-demo-abgelaufen", {});
+    const dS = () => blob("studio/" + da.studioId);
+    check(da.studioId && da.email === AB && da.aboStatus === "abgelaufen" && dS().demo === true && dS().status === "beendet" && dS().abrechnung === "apple" && dS().sandbox === true,
+      "Admin legt Prüfkonto an: Demo, Apple-Abo abgelaufen (Sandbox), Studio beendet", JSON.stringify(da));
+    const cA = await call("POST", "/api/app/code", { body: { email: AB } });
+    const l1 = await anm();
+    const falsch = await anm(AB, "135791");
+    check(cA.data.ok === true && mailsAn(AB).length === 0 && l1.status === 200 && l1.data.studio.id === da.studioId && l1.data.geraet.rolle === "inhaber" && falsch.data.code === "code_falsch",
+      "Abgelaufen-Prüfkonto: keine Mail, fester Code → Inhaber-Token; falscher Code zählt", l1.text.slice(0, 160));
+    const tA = l1.data.token;
+    const p1 = await call("GET", "/api/portal", { token: tA });
+    check(p1.status === 200 && p1.data.studio?.apple?.status === "abgelaufen" && p1.data.studio?.abrechnung === "apple" && p1.data.studio?.kannKassieren === false,
+      "Portal: Abo abgelaufen, Kasse gesperrt (App zeigt „Abo wieder abschließen“)", JSON.stringify(p1.data.studio?.apple));
+    // Prüfer nutzt denselben Sandbox-Account wie beim Test „Konto anlegen“: Kette gehört einem anderen Prüf-Studio, andere appAccountToken
+    const kSb = apple.kauf({ environment: "Sandbox" });
+    setBlob("idx/appleotx/" + kSb.tx.originalTransactionId, "st_anderes_pruefstudio");
+    const vorher = adminMails(/Apple-Abo wieder aktiv/).length;
+    const e1 = await call("POST", "/api/app/abo/bestaetigen", { token: tA, body: { signedTransaction: kSb.jws } });
+    check(e1.status === 200 && e1.data.abo?.status === "aktiv" && e1.data.studio?.kannKassieren === true && dS().status === "live" && blob("idx/appleotx/" + kSb.tx.originalTransactionId) === da.studioId && adminMails(/Apple-Abo wieder aktiv/).length === vorher,
+      "Sandbox-Kauf im Prüfkonto → Abo aktiv, Kasse offen, Kette umgehängt, keine Admin-Mail", e1.text.slice(0, 200));
+    rlReset();
+    const l2 = await anm();
+    check(l2.status === 200 && dS().apple.status === "aktiv", "Erneute Anmeldung kurz nach dem Kauf: Abo bleibt aktiv");
+    const st = dS();
+    setBlob("studio/" + da.studioId, { ...st, apple: { ...st.apple, ereignisse: st.apple.ereignisse.map((e) => ({ ...e, am: new Date(Date.now() - 3 * 3600e3).toISOString() })) } });
+    rlReset();
+    const l3 = await anm();
+    check(l3.status === 200 && dS().status === "beendet" && dS().apple.status === "abgelaufen" && dS().apple.gesperrt?.grund === "abgelaufen", "Anmeldung Stunden später: wieder abgelaufen (jeder Prüfer sieht den Kauf)");
+    const kProd = apple.kauf({ environment: "Production" });
+    const eProd = await call("POST", "/api/app/abo/bestaetigen", { token: l3.data.token, body: { signedTransaction: kProd.jws } });
+    check(eProd.status === 409 && eProd.data.code === "token_passt_nicht", "Echter Kauf (Production) mit fremder appAccountToken → weiter 409 (Ausnahme nur Sandbox)", eProd.text);
+    // Normales Apple-Studio: fremde Kette bleibt gesperrt (Ausnahme nur fürs Prüfkonto) – abgedeckt oben (abo_vergeben/token_passt_nicht)
+    process.env.APP_REVIEW_ABGELAUFEN_EMAIL = "review@tattoofin.test";
+    rlReset();
+    const gleich = await anm("review@tattoofin.test");
+    check(gleich.status === 200 && gleich.data.studio.id === demoH.studioId, "APP_REVIEW_ABGELAUFEN_EMAIL gleich APP_REVIEW_EMAIL → Haupt-Prüfzugang gewinnt");
+    for (const k of ["APP_REVIEW_EMAIL", "APP_REVIEW_CODE", "APP_REVIEW_STUDIO_ID", "APP_REVIEW_ABGELAUFEN_EMAIL"]) delete process.env[k];
+    rlReset();
+  }
+
+  // ==================================================================================================
   teil("Apple-Abo: Käufe wiederherstellen und Abgleich");
   rlReset();
   const wN = await call("POST", "/api/app/abo/wiederherstellen", { body: { signedTransactions: [apple.jws(spaeter)] } });
