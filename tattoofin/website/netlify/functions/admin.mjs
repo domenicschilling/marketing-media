@@ -29,6 +29,8 @@
 //   POST  /api/admin/studio/:id/team          { emails: ["a@b.de", …] } ersetzt die Liste (höchstens 5; leer = keine)
 //   POST  /api/admin/app-demo                { email? } Demo-Studio für die App-Prüfung (Apple) anlegen bzw. Beispieldaten erneuern → { studioId, env }
 //                                             (danach APP_REVIEW_EMAIL/APP_REVIEW_CODE/APP_REVIEW_STUDIO_ID setzen; nur mit Domenics OK nach Deploy)
+//   POST  /api/admin/app-demo-abgelaufen     { email? } zweites Demo-Studio mit ABGELAUFENEM Apple-Abo (Apple 2.1, 16.11.2026) → danach
+//                                             APP_REVIEW_ABGELAUFEN_EMAIL setzen (Code = APP_REVIEW_CODE)
 //   GET   /api/admin/uebersicht?monat=YYYY-MM   Handy-Übersicht: Kennzahlen (ohne Demo- und Sandbox-Studios), abgebrochene Anmeldungen (14 Tage),
 //                                             Studio-Karten, Mail-Status, Demo-Studios getrennt (siehe _lib/admin-uebersicht.mjs)
 //   POST  /api/admin/studio/:id/aufsteller-logo  Logo eines früheren QR-Aufstellers (eingestellt) löschen, z. B. nach Lieferung oder Erstattung eines Altfalls
@@ -43,7 +45,7 @@ import { mails } from "./_lib/emails.mjs";
 import { sendMail, warteschlangeStatus, warteschlangeAbarbeiten } from "./_lib/mail.mjs";
 import { randomBytes } from "node:crypto";
 import { brandingSetzen, brandingOeffentlich } from "./_lib/branding.mjs";
-import { demoStudioAnlegen } from "./_lib/app-demo.mjs";
+import { demoStudioAnlegen, demoAbgelaufenAnlegen } from "./_lib/app-demo.mjs";
 import { geraeteWiderrufen } from "./_lib/app-geraete.mjs";
 import { adminUebersicht } from "./_lib/admin-uebersicht.mjs";
 
@@ -247,6 +249,15 @@ export default handler(async (req) => {
     await log("admin-app-demo", { admin: adminName(req), studioId: r.studio.id });
     return json({ studioId: r.studio.id, email: r.studio.email, zahlungen: r.zahlungen, neu: r.neu,
       env: { APP_REVIEW_EMAIL: r.studio.email, APP_REVIEW_STUDIO_ID: r.studio.id, APP_REVIEW_CODE: "<6 Ziffern selbst wählen>" } });
+  }
+  if (bereich === "app-demo-abgelaufen" && req.method === "POST") {
+    const b = await body(req);
+    const email = clean(b.email, 160).toLowerCase() || process.env.APP_REVIEW_ABGELAUFEN_EMAIL || "app-review-abgelaufen@tattoofin.de";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return fail("Bitte eine gültige E-Mail angeben.");
+    const r = await demoAbgelaufenAnlegen({ email });
+    await log("admin-app-demo-abgelaufen", { admin: adminName(req), studioId: r.studio.id });
+    return json({ studioId: r.studio.id, email: r.studio.email, zahlungen: r.zahlungen, neu: r.neu, aboStatus: r.studio.apple.status,
+      env: { APP_REVIEW_ABGELAUFEN_EMAIL: r.studio.email, hinweis: "Code = APP_REVIEW_CODE (derselbe wie beim Haupt-Prüfzugang)" } });
   }
   if (bereich === "checkout-test" && req.method === "POST") {
     const b = await body(req);

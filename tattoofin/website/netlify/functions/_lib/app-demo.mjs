@@ -7,10 +7,10 @@
 // Anlegen: lokal `node dev/app-demo.mjs`, live POST /api/admin/app-demo (Bearer Admin; erst nach Deploy mit Domenics OK).
 // Alle Beträge, Namen und Codes hier sind Beispieldaten.
 import crypto from "node:crypto";
-import { CFG } from "./config.mjs";
+import { CFG, appleCfg } from "./config.mjs";
 import { store, getStudio, saveStudio, saveZahlung, normEmail, log } from "./store.mjs";
 import { neuerCode, gueltigBis } from "./gutschein.mjs";
-import { id } from "./util.mjs";
+import { id, now } from "./util.mjs";
 
 const tageZurueck = (t, stunde = 11) => { const d = new Date(Date.now() - t * 864e5); d.setUTCHours(stunde, 12, 0, 0); return d.toISOString(); };
 
@@ -55,6 +55,71 @@ export async function demoStudioAnlegen({ email = "app-review@tattoofin.de" } = 
   for (const x of liste) await saveZahlung(x);
   await log("app-demo-angelegt", { studioId: s.id, neu });
   return { studio: s, zahlungen: liste.length, neu };
+}
+
+// ---------------------------------------------------------------- Zweites Demo-Studio: Apple-Abo ABGELAUFEN
+// Apple App Review (16.11.2026, Guideline 2.1): „demo account with an expired subscription to review the entire purchase flow“.
+// Apple-Studio (abrechnung apple, Sandbox) mit beendetem Abo: Login geht, Kasse ist gesperrt, im Konto „Abo wieder abschließen“
+// (App → POST /api/app/abo/bestaetigen mit Bearer → aboErneuern). Anmeldung: APP_REVIEW_ABGELAUFEN_EMAIL + APP_REVIEW_CODE (app-code.mjs).
+// Bei jeder Review-Anmeldung wieder auf „abgelaufen“ (abgelaufenZuruecksetzen), außer das Abo wurde in den letzten 2 Stunden neu abgeschlossen.
+// Anlegen: lokal `node dev/app-demo.mjs --abgelaufen`, live POST /api/admin/app-demo-abgelaufen (Bearer Admin).
+const ABGELAUFEN_META = "meta/app-demo-abgelaufen";
+export const ABGELAUFEN_FRISCH_MS = 2 * 3600e3;
+
+function abgelaufenSetzen(s) {
+  const bis = tageZurueck(3, 10), alt = s.apple || {};
+  s.status = "beendet";
+  s.vertragsende = bis;
+  s.sandbox = true;
+  s.kuendigung = null;
+  s.apple = {
+    appAccountToken: alt.appAccountToken || crypto.randomUUID(), originalTransactionId: "review-abgelaufen", otxKey: "review-abgelaufen-" + s.id,
+    letzteTransactionId: "", produktId: appleCfg().produktId, umgebung: "Sandbox", status: "abgelaufen", laeuftBis: bis, autoVerlaengerung: false,
+    gekauftAm: tageZurueck(33), storefront: "DEU", preisMilli: 49900, waehrung: "EUR", probe: false,
+    fruehere: alt.fruehere || [], aktualisiertAm: now(),
+    ereignisse: [{ am: now(), typ: "review-abgelaufen", subtyp: null, uuid: null }, ...(alt.ereignisse || [])].slice(0, 20),
+    gesperrt: { am: bis, grund: "abgelaufen", vorherStatus: "live" },
+  };
+}
+
+export async function demoAbgelaufenAnlegen({ email = "app-review-abgelaufen@tattoofin.de" } = {}) {
+  const meta = await store.get(ABGELAUFEN_META);
+  let s = meta?.studioId ? await getStudio(meta.studioId) : null;
+  const neu = !s;
+  if (!s) s = { id: id("st_"), createdAt: tageZurueck(60) };
+  Object.assign(s, {
+    demo: true, reviewAbgelaufen: true, firma: "Tattoofin Demo-Studio", inhaber: "Demo Studio", email: normEmail(email), telefon: "", studioTelefon: "",
+    strasse: "Musterstraße 1", plz: "96047", ort: "Bamberg", slug: "tattoofin-demo-abgelaufen", goLiveAt: s.goLiveAt || tageZurueck(55),
+    modell: "kauf", paket: "app", zahlart: "apple", abrechnung: "apple", preisNetto: null, monatNetto: null, teamEmails: [],
+    vertrag: s.vertrag || { version: CFG.vertragVersion, akzeptiertAm: tageZurueck(60), name: "Demo Studio", modell: "kauf", paket: "app", quelle: "app" },
+    stripe: {}, aufsteller: null,
+  });
+  delete s.loeschAnfrage;
+  abgelaufenSetzen(s);
+  await saveStudio(s);
+  await store.set(ABGELAUFEN_META, { studioId: s.id, am: now() });
+  // Zwei bezahlte Beispiel-Zahlungen aus der Zeit vor dem Ablauf (Daten bleiben nach Abo-Ende sichtbar)
+  for (const k of await store.list(`zahlung/${s.id}/`)) await store.del(k);
+  const z = (x) => ({ studioId: s.id, id: id("zl_"), gebuehrNettoCent: 0, gebuehrBruttoCent: 0, sitzungen: "", email: "", ...x });
+  const liste = [
+    z({ createdAt: tageZurueck(5, 9), art: "anzahlung", status: "bezahlt", bezahltAm: tageZurueck(5, 10), betragCent: 15000, kunde: "Lisa Beispiel", beschreibung: "Rose Unterarm", zahlart: "card", zahlartText: "Karte" }),
+    z({ createdAt: tageZurueck(9, 9), art: "gesamt", status: "bezahlt", bezahltAm: tageZurueck(9, 12), betragCent: 48000, kunde: "Mara Beispiel", beschreibung: "Mandala Schulter", zahlart: "apple_pay", zahlartText: "Apple Pay" }),
+  ];
+  for (const x of liste) await saveZahlung(x);
+  await log("app-demo-abgelaufen-angelegt", { studioId: s.id, neu });
+  return { studio: s, zahlungen: liste.length, neu };
+}
+
+// Bei der Review-Anmeldung: wieder „abgelaufen“, damit jeder Prüfer den Kauf sieht. Gerade neu abgeschlossen (< 2 Std.) → so lassen.
+export async function abgelaufenZuruecksetzen(s, { jetzt = Date.now() } = {}) {
+  if (!s?.demo || !s.reviewAbgelaufen) return s;
+  const erneuert = (s.apple?.ereignisse || []).find((e) => e.typ === "app-erneuert");
+  if (s.status !== "beendet" && erneuert && jetzt - Date.parse(erneuert.am) < ABGELAUFEN_FRISCH_MS) return s;
+  if (s.status === "beendet" && s.apple?.status === "abgelaufen") return s;
+  abgelaufenSetzen(s);
+  await saveStudio(s);
+  await log("app-demo-abgelaufen-zurueckgesetzt", { studioId: s.id });
+  return s;
 }
 
 // Feste Beispiel-Auszahlungen (Format wie GET /api/app/auszahlungen)

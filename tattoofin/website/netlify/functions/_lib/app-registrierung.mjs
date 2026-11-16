@@ -257,13 +257,20 @@ async function aboErneuern(req, b) {
   if (s._app.rolle !== "inhaber") return fehler("Nur der Inhaber kann das Abo abschließen.", 403, "nur_inhaber");
   if (!istApple(s) || !s.apple) return fehler(AT.nichtApple, 403, "nicht_apple");
   const tx = signiertPruefen(b.signedTransaction);
-  if (uuidNorm(tx.appAccountToken) !== String(s.apple.appAccountToken || "").toLowerCase()) return fehler(AT.tokenPasstNicht, 409, "token_passt_nicht");
+  // Prüfkonto „Abo abgelaufen“ (Apple App Review, nur Sandbox): Der Prüfer nutzt oft denselben Sandbox-Account wie beim Test „Konto anlegen“.
+  // Dann liefert StoreKit dessen laufendes Abo (andere appAccountToken, Kette gehört dem Prüf-Studio) → hier trotzdem annehmen und umhängen.
+  const pruefAbgelaufen = s.demo === true && s.reviewAbgelaufen === true && tx.environment !== "Production";
+  if (!pruefAbgelaufen && uuidNorm(tx.appAccountToken) !== String(s.apple.appAccountToken || "").toLowerCase()) return fehler(AT.tokenPasstNicht, 409, "token_passt_nicht");
   // Ein Studio mit echtem Abo (Production) lässt sich nie durch einen kostenlosen Testkauf (Sandbox/TestFlight) ersetzen
   if (s.apple.umgebung === "Production" && tx.environment !== "Production") return fehler(AT.umgebung, 400, "umgebung");
   const otxKey = otxSchluessel(tx);
   if (otxKey !== s.apple.otxKey) {
     // Neue Abo-Kette (z. B. anderer Apple-Account): zuordnen, alte merken
-    await otxBeanspruchen(tx, s.id);
+    try { await otxBeanspruchen(tx, s.id); } catch (e) {
+      if (!pruefAbgelaufen || e.fehlerCode !== "abo_vergeben") throw e;
+      await store.set("idx/appleotx/" + otxKey, s.id);
+      await log("apple-pruefkonto-kette-umgehaengt", { studioId: s.id });
+    }
     s.apple.fruehere = [...(s.apple.fruehere || []), { originalTransactionId: s.apple.originalTransactionId, otxKey: s.apple.otxKey, bis: now() }].slice(-10);
     s.apple.originalTransactionId = String(tx.originalTransactionId);
     s.apple.otxKey = otxKey;

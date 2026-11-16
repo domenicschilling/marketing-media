@@ -37,9 +37,18 @@ function reviewKonfig() {
 }
 export async function reviewFuer(email) {
   const k = reviewKonfig();
-  if (!k || k.email !== email) return null;
-  const s = await getStudio(k.studioId);
-  return s?.demo ? { ...k, s } : null;
+  if (!k) return null;
+  if (k.email === email) {
+    const s = await getStudio(k.studioId);
+    return s?.demo ? { ...k, s } : null;
+  }
+  // Dritter Review-Zugang: Studio mit ABGELAUFENEM Apple-Abo (Apple 2.1 vom 16.11.2026: „demo account with an expired subscription“).
+  // APP_REVIEW_ABGELAUFEN_EMAIL + derselbe APP_REVIEW_CODE; das Studio legt POST /api/admin/app-demo-abgelaufen an (meta/app-demo-abgelaufen).
+  const ea = normEmail(process.env.APP_REVIEW_ABGELAUFEN_EMAIL || "");
+  if (!ea || ea !== email || ea === k.email || ea === normEmail(process.env.APP_REVIEW_REG_EMAIL || "")) return null;
+  const sid = (await store.get("meta/app-demo-abgelaufen"))?.studioId;
+  const s = sid ? await getStudio(sid) : null;
+  return s?.demo && s.reviewAbgelaufen ? { email: ea, code: k.code, studioId: s.id, s } : null;
 }
 // Zweiter Review-Zugang nur für die Registrierung (App-Prüfung: Konto anlegen, Sandbox-Kauf, Löschen): APP_REVIEW_REG_EMAIL + APP_REVIEW_CODE.
 // Muss sich von APP_REVIEW_EMAIL unterscheiden. Ohne beide Variablen aus.

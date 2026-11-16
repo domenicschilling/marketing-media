@@ -278,7 +278,7 @@ export async function appleZugangSperren(s, grund) {
   await saveStudio(s);
   await log("apple-zugang-gesperrt", { studioId: s.id, grund });
   await notify(s, mails.appleAboAbgelaufen(s, { grund }));
-  await notifyAdmin(`Apple-Abo beendet (${grund}) – Zugang gesperrt, Daten bleiben`, s, { Grund: grund, Laeuft_bis: s.apple.laeuftBis || "–" });
+  if (!s.demo) await notifyAdmin(`Apple-Abo beendet (${grund}) – Zugang gesperrt, Daten bleiben`, s, { Grund: grund, Laeuft_bis: s.apple.laeuftBis || "–" });
   return true;
 }
 
@@ -292,7 +292,7 @@ export async function appleZugangOeffnen(s, { auchNachKuendigung = false } = {})
   delete s.apple.gesperrt;
   await saveStudio(s);
   await log("apple-zugang-geoeffnet", { studioId: s.id });
-  await notifyAdmin("Apple-Abo wieder aktiv – Zugang geöffnet", s, { Laeuft_bis: s.apple.laeuftBis || "–", Loeschanfrage: s.loeschAnfrage ? "offen – bitte entscheiden" : "–" });
+  if (!s.demo) await notifyAdmin("Apple-Abo wieder aktiv – Zugang geöffnet", s, { Laeuft_bis: s.apple.laeuftBis || "–", Loeschanfrage: s.loeschAnfrage ? "offen – bitte entscheiden" : "–" });
   return true;
 }
 

@@ -37,7 +37,7 @@ import { warteschlangeStatus } from "./_lib/mail.mjs";
 import { stripe } from "./_lib/stripe.mjs";
 import { PLATTFORMEN, geraetLaden, geraetAktualisieren, geraetWiderrufen, geraeteWiderrufen, geraetOeffentlich, geraeteVon, rolleFuer, pushIndex } from "./_lib/app-geraete.mjs";
 import { apnsAktiv, pushTest, pushAnStudio, mitZeitlimit, nachrichtZahlung } from "./_lib/push.mjs";
-import { demoAuszahlungen } from "./_lib/app-demo.mjs";
+import { demoAuszahlungen, abgelaufenZuruecksetzen } from "./_lib/app-demo.mjs";
 import { oeffentlich, fuerStudio } from "./_lib/studio-ansicht.mjs";
 import { gutscheinAusstellen } from "./_lib/gutschein.mjs";
 import { istApple, testKasse } from "./_lib/config.mjs";
@@ -90,7 +90,10 @@ async function anmelden(req, context) {
   const review = await reviewFuer(email);
   if (review) {
     const r = await reviewPruefen(review, email, code);
-    return r.antwort || fertig(r.s, email, gd);
+    if (r.antwort) return r.antwort;
+    // Prüfkonto „Abo abgelaufen“: bei jeder Anmeldung wieder abgelaufen (außer gerade neu abgeschlossen), siehe _lib/app-demo.mjs
+    if (r.s.reviewAbgelaufen) await abgelaufenZuruecksetzen(r.s);
+    return fertig(r.s, email, gd);
   }
   const c = await codePruefen(`appcode/${hash(email)}`, email, code);
   if (c.antwort) return c.antwort;
