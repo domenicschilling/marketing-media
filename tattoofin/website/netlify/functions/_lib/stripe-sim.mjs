@@ -17,7 +17,7 @@ const seite = (titel, inhalt) => `<!doctype html><meta charset=utf-8><meta name=
 
 // Einfache Anmeldung (16.11.2026): Was Stripe nach dem Checkout bzw. der Konto-Einrichtung mitliefert.
 //   customer_details: wie bei Stripe immer mit E-Mail; „als Unternehmen“ (Knopf #pay-firma oder Schalter /mock/checkout-firma) zusätzlich
-//   Firmenname, Rechnungsadresse und USt-IdNr. Konto: company.address nach der Einrichtung (Schalter /mock/konto-ohne-adresse: ohne Adresse).
+//   Firmenname, Rechnungsadresse und USt-IdNr. Konto: Adresse nach der Einrichtung, siehe simKontoAdresse.
 export const SIM_ADRESSE = { line1: "Musterstr. 1", line2: null, postal_code: "96047", city: "Bamberg", country: "DE" };
 export function simKundendaten(db, s, alsFirma) {
   const c = db.customers?.[s.customer] || {};
@@ -25,7 +25,15 @@ export function simKundendaten(db, s, alsFirma) {
   return { email: c.email || s.customer_email || null, name: firma ? "Alex Muster" : c.name || null, business_name: firma ? (c.name || "Muster Ink") + " GmbH" : null,
     address: firma ? { ...SIM_ADRESSE, line1: "Rechnungsweg 7" } : null, tax_ids: firma ? [{ type: "eu_vat", value: "DE123456789" }] : [], tax_exempt: "none", phone: null };
 }
-function simKontoAdresse(db, a) { if (!db.sim_konto_ohne_adresse && !a.company?.address) a.company = { ...(a.company || {}), name: a.business_profile?.name || null, address: { ...SIM_ADRESSE } }; }
+// Konto-Adresse nach der Einrichtung, möglichst wie bei Stripe: Standard-Konten (Paket Monatlich, ensureConnectedAccount type standard) geben
+// der Plattform company/individual in der Regel nicht heraus, sichtbar ist business_profile (support_address, falls das Studio sie angibt).
+// Express/Custom: company.address. Schalter: /mock/konto-ohne-adresse (nichts), /mock/konto-privat-adresse (nur individual.address, Wohnadresse).
+function simKontoAdresse(db, a) {
+  if (db.sim_konto_ohne_adresse) return;
+  if (db.sim_konto_privat_adresse) { a.individual = { ...(a.individual || {}), address: { ...SIM_ADRESSE, line1: "Wohnweg 9" } }; return; }
+  if (a.type === "standard") { if (!a.business_profile?.support_address) a.business_profile = { ...(a.business_profile || {}), support_address: { ...SIM_ADRESSE } }; return; }
+  if (!a.company?.address) a.company = { ...(a.company || {}), name: a.business_profile?.name || null, address: { ...SIM_ADRESSE } };
+}
 export class SimFehler extends Error { constructor(status, message) { super(message); this.status = status; this.stripe = { message }; } }
 
 // Formular-Parameter (a[b][0][c]=…) in ein Objekt umwandeln
@@ -396,6 +404,7 @@ export function createSim({ load, save, pageBase, webhook }) {
       // Einfache Anmeldung: Checkout liefert Firmendaten (Rechnungsadresse + USt-IdNr.) bzw. Konto-Einrichtung ohne Adresse   POST /mock/checkout-firma?an=1|0, /mock/konto-ohne-adresse?an=1|0
       if (art === "checkout-firma") { db.sim_checkout_firma = query.get("an") !== "0"; return { ok: true, checkoutFirma: db.sim_checkout_firma }; }
       if (art === "konto-ohne-adresse") { db.sim_konto_ohne_adresse = query.get("an") !== "0"; return { ok: true, kontoOhneAdresse: db.sim_konto_ohne_adresse }; }
+      if (art === "konto-privat-adresse") { db.sim_konto_privat_adresse = query.get("an") !== "0"; return { ok: true, kontoPrivatAdresse: db.sim_konto_privat_adresse }; }
       if (art === "ohne-klarna") { db.accounts[id].sim_ohne_klarna = true; return { ok: true }; }
       if (art === "refund") {
         const pi = db.paymentIntents[id];

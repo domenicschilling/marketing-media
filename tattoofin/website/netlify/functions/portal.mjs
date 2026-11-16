@@ -149,7 +149,7 @@ export default handler(async (req, context) => {
   if (bereich === "zahlung") {
     if (req.method === "POST" && !sub) {
       if (!darfKassieren(s)) return fail(!s.stripe?.chargesEnabled ? "Dein Stripe-Konto ist noch nicht freigegeben. Sobald Stripe die Prüfung abgeschlossen hat, kannst du Zahlungslinks erstellen."
-        : !studioAdresseDa(s) ? "Adresse fehlt noch: Bitte trag unter „Einrichtung“ die Adresse deiner Zahlseite ein, dann kannst du Zahlungslinks erstellen." : "Dein Vertrag ist nicht aktiv.", 409);
+        : !studioAdresseDa(s) ? "Adresse fehlt noch: Bitte trag die Adresse deiner Zahlseite im Studio-Bereich auf tattoofin.de unter „Einrichtung“ ein, dann kannst du Zahlungslinks erstellen." : "Dein Vertrag ist nicht aktiv.", 409);
       const b = await body(req);
       const betragCent = parseBetrag(b.betrag);
       if (!(betragCent >= CFG.minBetragCent && betragCent <= CFG.maxBetragCent)) return fail(`Bitte einen Betrag zwischen ${CFG.minBetragCent / 100} € und ${CFG.maxBetragCent / 100} € eingeben.`);

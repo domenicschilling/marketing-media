@@ -24,18 +24,47 @@
   function mitAdresse() { return Boolean(geschenk) || paket() === "einmal"; }
   var PFLICHT = ["firma", "inhaber", "email", "telefon"], ADRESSE = ["strasse", "plz", "ort"];
 
+  // Fehler direkt am Feld (Prüfung 16.11.2026): Die Meldung steht unter dem Feld (mit aria-describedby verknüpft), beim Häkchen direkt
+  // darüber, das Häkchen bekommt einen roten Rahmen. So ist sie auch am kleinen Handy und bei gescrollter Seite zu sehen. Der Kasten oben
+  // (#alert) bleibt nur für „alle Felder“ und Server-Meldungen.
+  function feldFehler(k, msg) {
+    var el = f.elements[k]; if (!el || el instanceof RadioNodeList) return;
+    var id = k + "-err", p = document.getElementById(id), lab = k === "ak_alle" ? el.closest("label") : null;
+    if (!p && msg) {
+      p = document.createElement("p"); p.id = id; p.className = "anm-err";
+      if (lab) lab.parentNode.insertBefore(p, lab); else el.insertAdjacentElement("afterend", p);
+    }
+    if (p) { p.textContent = msg || ""; p.hidden = !msg; }
+    var db = (el.getAttribute("aria-describedby") || "").split(/\s+/).filter(function (x) { return x && x !== id; });
+    if (msg) db.push(id);
+    if (db.length) el.setAttribute("aria-describedby", db.join(" ")); else el.removeAttribute("aria-describedby");
+    el.setAttribute("aria-invalid", msg ? "true" : "false");
+    if (lab) lab.classList.toggle("anm-check-fehler", Boolean(msg));
+  }
+  function fehlerWeg() { PFLICHT.concat(ADRESSE, ["ak_alle"]).forEach(function (k) { feldFehler(k, ""); }); }
+  // Fokus aufs erste falsche Feld und Feld samt Meldung mittig ins Bild (nicht unter die feste Navigation)
+  function zeige(k) {
+    var el = f.elements[k], box = k === "ak_alle" ? el.closest("label") : el.closest(".field") || el;
+    try { el.focus({ preventScroll: true }); } catch (e) { el.focus(); }
+    try { box.scrollIntoView({ block: "center" }); } catch (e) {}
+  }
+  // Ergebnis: { feld, oben } – feld = erstes falsches Feld (leer = alles gut), oben = Text für den Kasten oben (nur bei mehreren leeren Feldern)
   function pruefe() {
+    fehlerWeg();
     var pflicht = PFLICHT.concat(mitAdresse() ? ADRESSE : []);
     var fehlt = pflicht.filter(function (k) { return !val(k); });
-    pflicht.forEach(function (k) { f.elements[k].setAttribute("aria-invalid", fehlt.indexOf(k) >= 0 ? "true" : "false"); });
-    if (fehlt.length) { f.elements[fehlt[0]].focus(); return fehlt.length === 1 ? "Bitte fülle noch „" + label(fehlt[0]) + "“ aus." : "Bitte fülle alle " + pflicht.length + " Felder aus."; }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(val("email"))) { f.elements.email.setAttribute("aria-invalid", "true"); f.elements.email.focus(); return "Bitte gib eine gültige E-Mail-Adresse ein."; }
-    if (val("telefon").replace(/\D/g, "").length < 6) { f.elements.telefon.setAttribute("aria-invalid", "true"); f.elements.telefon.focus(); return "Bitte gib deine Handynummer mit Vorwahl ein."; }
-    if (mitAdresse() && !/^\d{5}$/.test(val("plz"))) { f.elements.plz.setAttribute("aria-invalid", "true"); f.elements.plz.focus(); return "Bitte gib die PLZ mit 5 Ziffern ein."; }
-    if (!val("ak_alle")) { f.elements.ak_alle.focus(); return "Bitte setze das Häkchen bei Vertrag und AVV."; }
-    return "";
+    if (fehlt.length) {
+      fehlt.forEach(function (k) { feldFehler(k, "Bitte ausfüllen."); });
+      zeige(fehlt[0]);
+      return { feld: fehlt[0], oben: fehlt.length > 1 ? "Bitte fülle alle " + pflicht.length + " Felder aus." : "" };
+    }
+    var falsch = !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(val("email")) ? ["email", "Bitte gib eine gültige E-Mail-Adresse ein."]
+      : val("telefon").replace(/\D/g, "").length < 6 ? ["telefon", "Bitte gib deine Handynummer mit Vorwahl ein."]
+      : mitAdresse() && !/^\d{5}$/.test(val("plz")) ? ["plz", "Bitte gib die PLZ mit 5 Ziffern ein."]
+      : !val("ak_alle") ? ["ak_alle", "Bitte noch das Häkchen setzen."] : null;
+    if (falsch) { feldFehler(falsch[0], falsch[1]); zeige(falsch[0]); return { feld: falsch[0], oben: "" }; }
+    return { feld: "", oben: "" };
   }
-  function label(k) { var l = f.querySelector('label[for="' + k + '"]'); return l ? l.textContent.trim() : k; }
 
   // Ansicht je Fall: Monatlich (Standard), Einladung, Einmalzahlung
   function ansicht() {
@@ -72,7 +101,7 @@
         (C.monatNetto ? TF.monatPreis(C.monatNetto, C.ustProzent) : "49,90 € im Monat inkl. MwSt.") + ", keine Einrichtungsgebühr.",
         "Danach nur die Zahlungsgebühren von Stripe (je nach Zahlart ca. 1,5–3 % plus fester Betrag je Zahlung, laut Preisliste von Stripe), die du direkt an Stripe zahlst. 0 % Tattoofin-Provision.",
         "Mit dem Knopf geht es zu Stripe. Dort startest du das Abo sicher, z. B. per Karte, Apple Pay oder Google Pay. Die Rechnung kommt jeden Monat automatisch per E-Mail.",
-        "Danach richtest du in deinem Studio-Bereich das Zahlungskonto deines Studios bei Stripe ein (Ausweis und IBAN bereithalten). Die Adresse deines Studios übernehmen wir von dort.",
+        "Danach richtest du in deinem Studio-Bereich das Zahlungskonto deines Studios bei Stripe ein (Ausweis und IBAN bereithalten). Die Adresse deiner Zahlseite trägst du danach einmal kurz ein (wenn Stripe sie mitliefert, ist sie schon vorausgefüllt).",
         "Alles läuft über dein eigenes Zahlungskonto bei Stripe. Rückbuchungen und ihre Gebühren laufen direkt über dieses Konto.",
         "Inklusive digitalem QR-Code deiner Zahlseite, zum Ausdrucken für Theke und Flyer.",
         "Monatlich kündbar zum Ende des laufenden Abrechnungsmonats, keine Mindestlaufzeit. Bereits bezahlte Monate werden nicht anteilig erstattet.",
@@ -126,14 +155,23 @@
     else if (GESCHLOSSEN[k] && !geschenk) show(HINWEIS_RISIKOFREI, "info");
   }
 
-  f.addEventListener("change", function (e) { if (e.target.name === "paket" || e.target.name === "zahlart") ansicht(); merken(); });
-  f.addEventListener("input", function (e) { if (e.target.name === "firma" || e.target.name === "inhaber") alsZeile(); if (e.target.getAttribute("aria-invalid") === "true" && e.target.value.trim()) e.target.setAttribute("aria-invalid", "false"); });
+  f.addEventListener("change", function (e) {
+    if (e.target.name === "paket" || e.target.name === "zahlart") ansicht();
+    if (e.target.name === "ak_alle" && e.target.checked) { feldFehler("ak_alle", ""); hervor(false); }
+    merken();
+  });
+  f.addEventListener("input", function (e) { if (e.target.name === "firma" || e.target.name === "inhaber") alsZeile(); if (e.target.getAttribute("aria-invalid") === "true" && e.target.value.trim()) feldFehler(e.target.name, ""); });
+  // Nach Abbruch im Checkout: kurzer Satz direkt über dem Häkchen, Häkchen sichtbar hervorgehoben (auch ohne Fokusrahmen des Browsers)
+  function hervor(an) {
+    var h = document.getElementById("ak-hinweis"), lab = f.elements.ak_alle.closest("label");
+    h.hidden = !an; lab.classList.toggle("anm-check-hervor", an);
+  }
 
   f.addEventListener("submit", async function (e) {
     e.preventDefault();
     if (sendet) return;
-    var err = pruefe(); show(err);
-    if (err) return;
+    var pr = pruefe(); show(pr.oben);
+    if (pr.feld) return;
     var btn = document.getElementById("submit");
     sendet = true; btn.disabled = true; var html = btn.innerHTML; btn.textContent = "Einen Moment …";
     // Messung genau 1× beim Absenden (vorher beim Schrittwechsel): Meta InitiateCheckout + Umami „checkout-weiter“
@@ -141,8 +179,8 @@
     try { if (window.umami) window.umami.track("checkout-weiter", { paket: geschenk ? "geschenk" : paket() }); } catch (x) {}
     try {
       var d = daten();
-      // Ein Häkchen deckt Vertrag, AVV, Unternehmer und KMU ab (Satz am Häkchen, Server speichert Version, Zeit, IP, Browser und Name)
-      d.akzeptiert = { vertrag: true, avv: true, unternehmer: true, kmu: true };
+      // Ein Häkchen deckt Vertrag, AVV, Unternehmer und KMU ab (Server speichert Version, Zeit, IP, Browser, Name und den Wortlaut des Häkchens)
+      d.akzeptiert = { vertrag: true, avv: true, unternehmer: true, kmu: true, art: "ein-haekchen" };
       if (resumeId) d.resumeId = resumeId;
       // Herkunft (Werbung/Instagram) aus der Adresse mitschicken, ohne etwas im Browser zu speichern
       var qu = {}; ["utm_source", "utm_medium", "utm_campaign", "utm_content"].forEach(function (k) { var v = q.get(k); if (v) qu[k.slice(4)] = v; });
@@ -197,11 +235,12 @@
       ansicht();
       if (q.get("abbruch")) {
         try { if (window.umami) window.umami.track("checkout-abbruch"); } catch (x) {}
-        // Angaben sind vorbelegt: Häkchen erneut setzen, dann direkt wieder zur Zahlung (Fokus auf dem Häkchen bzw. Knopf)
-        show("Die Zahlung hat nicht geklappt. Kein Problem: Deine Angaben sind gespeichert. Setz unten das Häkchen, dann geht es nochmal zur Zahlung.", "info");
+        // Angaben sind vorbelegt: nur noch das Häkchen setzen (eine Zustimmung darf nicht vorausgewählt sein), dann direkt wieder zur Zahlung
+        show("Die Zahlung hat nicht geklappt. Kein Problem, deine Angaben sind gespeichert.", "info");
         alertBox.insertAdjacentHTML("beforeend", '<p style="margin:8px 0 0"><a href="https://wa.me/491624502375?text=Hi%20Tattoofin-Team%2C%20bei%20meiner%20Anmeldung%20hat%20die%20Zahlung%20nicht%20geklappt.%20K%C3%B6nnt%20ihr%20mir%20helfen%3F" target="_blank" rel="noopener" data-umami-event="whatsapp-abbruch"><b>Hängt es? Schreib unserem Team per WhatsApp, wir helfen dir sofort →</b></a></p>');
+        if (!val("ak_alle")) hervor(true);
         var ziel = val("ak_alle") ? document.getElementById("submit") : f.elements.ak_alle;
-        setTimeout(function () { try { ziel.focus({ preventScroll: true }); ziel.scrollIntoView({ block: "center" }); } catch (x) {} }, 50);
+        setTimeout(function () { try { ziel.focus({ preventScroll: true }); (ziel.closest("label") || ziel).scrollIntoView({ block: "center" }); } catch (x) {} }, 50);
       }
     }).catch(function () { resumeId = null; });
   }

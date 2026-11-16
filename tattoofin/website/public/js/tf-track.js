@@ -79,7 +79,7 @@ window.TFTrack = (function () {
     // Tablet (16.11.2026): flache Leiste statt großem Kasten, damit Knopf und Preis im ersten Bildschirm frei bleiben
     "@media (min-width:601px) and (max-width:999px){.tf-cc{max-width:none;margin:0;left:max(10px,env(safe-area-inset-left));right:max(10px,env(safe-area-inset-right));bottom:max(10px,env(safe-area-inset-bottom));display:flex;align-items:center;gap:14px;padding:8px 12px;font-size:13.5px;line-height:1.35;border-width:2px;box-shadow:3px 3px 0 #1f3d5c;border-radius:14px}" +
     ".tf-cc b,.tf-cc .lang{display:none}.tf-cc .kurz{display:inline}.tf-cc .r{margin:0;flex:none;flex-wrap:nowrap}.tf-cc button{flex:none;min-width:0;padding:8px 14px;font-size:14px;border-width:2px}body.tf-cc-offen{padding-bottom:84px}}" +
-    // Anmeldung /start (einfache Anmeldung 16.11.2026): Der Hinweis weicht aus, solange er den Knopf oder das Feld, in dem getippt wird, verdecken würde
+    // Anmeldung /start (einfache Anmeldung 16.11.2026): Der Hinweis weicht aus, solange er irgendeinen Teil des Formulars (Felder, Häkchen, Knopf) verdecken würde
     ".tf-cc.tf-cc-weg{visibility:hidden;transform:translateY(120%)}.tf-cc{transition:transform .18s ease}" +
     // Auf /start auch am großen Bildschirm eine flache Leiste unten (statt Kasten rechts, der dort über dem Formular läge)
     "@media (min-width:1000px){body.anm-seite .tf-cc{left:20px;right:20px;bottom:16px;max-width:none;margin:0;display:flex;align-items:center;gap:16px;padding:8px 14px;font-size:14px;line-height:1.35;border-width:2px;box-shadow:3px 3px 0 #1f3d5c;border-radius:14px}" +
@@ -104,28 +104,35 @@ window.TFTrack = (function () {
     if (ANMELDUNG) ausweichenAn(d);
   }
 
-  // Auf /start (alle Größen): Würde der Hinweis den Absende-Knopf oder das gerade benutzte Eingabefeld überdecken, rutscht er kurz weg
-  // (unsichtbar); sobald wieder Platz ist (Scrollen, Tastatur zu), ist er wieder da. Der Seitenabstand unten (tf-cc-offen) bleibt, damit
-  // man den Knopf immer über den Hinweis scrollen kann.
+  // Auf /start (alle Größen): Würde der Hinweis irgendeinen Teil des Formulars überdecken (erstes Feld bis Absende-Knopf, samt Häkchen)
+  // oder das gerade benutzte Eingabefeld, rutscht er weg (unsichtbar); sobald wieder Platz ist (Scrollen, Tastatur zu), ist er wieder da.
+  // Gerechnet wird mit dem sichtbaren Bereich (visualViewport, bei offener Handy-Tastatur kleiner als innerHeight) und der echten Lage
+  // des Hinweises (ohne die Ausweich-Verschiebung). Der Seitenabstand unten (tf-cc-offen) bleibt, damit man unter das Formular scrollen kann.
   var ANMELDUNG = /^\/start(\.html)?$/.test(location.pathname), ausweichTakt = null, ausweichFokus = null;
   function ausweichenAn(d) {
+    var vv = window.visualViewport;
     var pruefe = function () {
-      var oben = window.innerHeight - d.offsetHeight - 16;
-      var ziele = [document.getElementById("submit")];
-      var a = document.activeElement; if (a && /^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName) && a.type !== "checkbox") ziele.push(a);
-      var weg = ziele.some(function (el) { if (!el) return false; var r = el.getBoundingClientRect(); return r.height > 0 && r.bottom > oben && r.top < window.innerHeight; });
+      var h = d.offsetHeight, r = d.getBoundingClientRect(), dy = 0;
+      try { dy = new DOMMatrixReadOnly(getComputedStyle(d).transform).m42 || 0; } catch (e) {}
+      var sichtUnten = vv ? vv.offsetTop + vv.height : window.innerHeight;
+      var zoneOben = Math.min(r.top - dy, sichtUnten - h) - 12, zoneUnten = Math.max(r.top - dy + h, sichtUnten);
+      var f = document.getElementById("f"), k = document.getElementById("submit"), erstes = f && f.querySelector(".field");
+      var ziele = [];
+      if (erstes && k) { var a1 = erstes.getBoundingClientRect(), a2 = k.getBoundingClientRect(); ziele.push({ top: a1.top, bottom: a2.bottom, height: a2.bottom - a1.top }); }
+      var a = document.activeElement; if (a && /^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName)) ziele.push(a.getBoundingClientRect());
+      var weg = ziele.some(function (z) { return z.height > 0 && z.bottom > zoneOben && z.top < zoneUnten; });
       d.classList.toggle("tf-cc-weg", weg);
     };
-    // Scrollen/Größe: im nächsten Bild; Fokuswechsel: sofort (der Hinweis darf nicht einmal kurz über dem neuen Feld stehen)
+    // Scrollen/Größe/Tastatur: im nächsten Bild; Fokuswechsel: sofort (der Hinweis darf nicht einmal kurz über dem neuen Feld stehen)
     ausweichTakt = function () { window.requestAnimationFrame(pruefe); };
     ausweichFokus = function () { pruefe(); window.requestAnimationFrame(pruefe); };
-    ["scroll", "resize"].forEach(function (ev) { window.addEventListener(ev, ausweichTakt, { passive: true }); });
+    ["scroll", "resize"].forEach(function (ev) { window.addEventListener(ev, ausweichTakt, { passive: true }); if (vv) vv.addEventListener(ev, ausweichTakt); });
     ["focusin", "focusout"].forEach(function (ev) { document.addEventListener(ev, ausweichFokus, true); });
     pruefe();
   }
   function ausweichenAus() {
     if (!ausweichTakt) return;
-    ["scroll", "resize"].forEach(function (ev) { window.removeEventListener(ev, ausweichTakt); });
+    ["scroll", "resize"].forEach(function (ev) { window.removeEventListener(ev, ausweichTakt); if (window.visualViewport) window.visualViewport.removeEventListener(ev, ausweichTakt); });
     ["focusin", "focusout"].forEach(function (ev) { document.removeEventListener(ev, ausweichFokus, true); });
     ausweichTakt = ausweichFokus = null;
   }

@@ -226,7 +226,8 @@
     if (detailId !== id) return;
     var s = d.studio, v = s.vertrag || {}, sk = s.stripe || {}, k = (daten.studios.concat(daten.demo)).find(function (x) { return x.id === id; }) || {};
     var a = s.aufsteller || {};
-    var zeilen = [["Inhaber", s.inhaber], ["E-Mail", s.email], ["Handy", s.telefon], ["Studio-Tel.", s.studioTelefon], ["Adresse", [s.strasse, [s.plz, s.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ")],
+    var zeilen = [["Inhaber", s.inhaber], ["E-Mail", s.email], ["Handy", s.telefon], ["Studio-Tel.", s.studioTelefon], ["Adresse", ([s.strasse, [s.plz, s.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ") || "fehlt noch (Karte im Studio-Bereich)") + (s.strasse && /^connect/.test(s.adresseQuelle || "") ? " · aus Stripe" + (s.adresseQuelle === "connect-privat" ? " (privat)" : "") + (s.adresseBestaetigt ? ", bestätigt" : ", noch nicht bestätigt") : "")],
+      ["USt-IdNr.", s.ustid || "–"], ["Rechnung an", s.rechnungsadresse ? [s.rechnungsname, s.rechnungsadresse.strasse, [s.rechnungsadresse.plz, s.rechnungsadresse.ort].filter(Boolean).join(" "), s.rechnungsadresse.land && s.rechnungsadresse.land !== "DE" ? s.rechnungsadresse.land : ""].filter(Boolean).join(", ") : (s.rechnungsname || "–")],
       ["Paket", k.paket ? k.paket.name + (k.paket.preis ? " · " + k.paket.preis : "") + (k.paket.netto ? " (" + k.paket.netto + ")" : "") + (PREISART[k.paket.art] ? " · " + PREISART[k.paket.art][1] : "") : (s.paket || s.modell)],
       ["Zahlart", k.zahlartText || s.zahlart],
       ["Vertrag", v.akzeptiertAm ? "angenommen am " + TF.datum(v.akzeptiertAm) + (v.name ? " von " + v.name : "") + (v.version ? " (Fassung " + v.version + ")" : "") + (v.ip ? " · IP " + v.ip : "") : "–"],

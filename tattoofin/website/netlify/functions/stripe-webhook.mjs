@@ -303,10 +303,12 @@ export default handler(async (req) => {
           break;
         }
         if (!s || o.mode !== "payment") break;
+        // Rechnungsdaten nur aus dem Abschluss-Checkout (Studio noch im Entwurf bzw. Zahlung offen), nicht aus späteren Zahlungen desselben Studios
+        const abschluss = ["entwurf", "zahlung_offen"].includes(s.status);
         s.status = "einrichtung";
         s.bezahltAm = now();
         s.stripe.paymentIntentId = o.payment_intent;
-        rechnungsdatenUebernehmen(s, o);
+        if (abschluss) rechnungsdatenUebernehmen(s, o);
         let rechnungUrl = "";
         if (o.invoice) {
           const inv = await stripe("GET", "/invoices/" + o.invoice);

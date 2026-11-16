@@ -121,8 +121,8 @@ def bauen(seite):
         h = "/start.html"
         if studios:
             h += "?utm_source=studios&amp;utm_medium=seite&amp;utm_content=" + ort
-        # Knopftext konkret (Vertriebs-Umbau 16.11.2026); in der schmalen Leiste nur „Studio anmelden“
-        text = "Studio anmelden" if ort == "leiste" else "Studio anmelden – 3&nbsp;Min."
+        # Knopftext (Prüfung 16.11.2026): nur „Studio anmelden“, keine Minutenangabe (nicht gemessen)
+        text = "Studio anmelden"
         return '<a class="knopf" href="%s" data-umami-event="start-%s">%s</a>' % (h, ort, text)
 
     stern = motiv("stern")

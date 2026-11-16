@@ -34,7 +34,7 @@ export const oeffentlich = (s) => ({
   id: s.id, firma: s.firma, inhaber: s.inhaber, email: s.email, telefon: s.telefon, studioTelefon: s.studioTelefon,
   strasse: s.strasse, plz: s.plz, ort: s.ort, land: s.land || "DE",
   // Adresse deiner Zahlseite (seit 16.11.2026): fehlt = noch nicht da (einfache Anmeldung ohne Adresse), vorschlag = aus dem Stripe-Konto, noch nicht bestätigt
-  zahlseiteAdresse: { fehlt: !studioAdresseDa(s), vorschlag: s.adresseQuelle === "connect" && !s.adresseBestaetigt, bestaetigtAm: s.adresseBestaetigtAm || null },
+  zahlseiteAdresse: { fehlt: !studioAdresseDa(s), vorschlag: /^connect/.test(s.adresseQuelle || "") && !s.adresseBestaetigt, privat: s.adresseQuelle === "connect-privat", bestaetigtAm: s.adresseBestaetigtAm || null },
   modell: s.modell, zahlart: s.zahlart, preisNetto: s.preisNetto, slug: s.slug,
   status: s.status, statusText: STATUS[s.status] || s.status, createdAt: s.createdAt, goLiveAt: s.goLiveAt,
   vertrag: { version: s.vertrag?.version, akzeptiertAm: s.vertrag?.akzeptiertAm, name: s.vertrag?.name },

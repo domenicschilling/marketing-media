@@ -71,7 +71,9 @@ export const CFG = {
   // 2026-12d (Entscheidung Domenic 15.11.2026, gilt ab dem Deploy): ohne QR-Aufsteller aus Holz; der digitale QR-Code und die Druckvorlagen
   // (Fensteraufkleber, Flyer) bleiben. Archiv /vertrag-2026-12c.html (dort § 2 Abs. 3 Aufsteller, gilt für Abschlüsse bis zur Veröffentlichung
   // von 2026-12d; wer bis dahin mit 12c abschließt, steht über vertrag.aufsteller in der Admin-Box „QR-Aufsteller (alt)“)
-  vertragVersion: "2026-12d",
+  // 2026-12e (Prüfung 16.11.2026, gilt ab dem Deploy): Kundenangaben „Firma, Name, E-Mail“ in der Online-Bestellung, Anschrift aus Studio-Bereich
+  // bzw. Stripe-Konto; Vertragsschluss mit Knopf „Weiter zur Zahlung“, Korrektur direkt im Formular (kein Zurück-Knopf mehr). Archiv /vertrag-2026-12d.html
+  vertragVersion: "2026-12e",
   // Blatt „Deine rechtliche Lage“ und Leistungsbestätigung: Version bei inhaltlichen Änderungen hochzählen (wird mit der Zustimmung gespeichert)
   // rechtVersion bleibt bewusst 2026-12: Mit dem Aufsteller wurde nur ein Beispiel aus der Aufzählung „Das gilt auch für …“ gestrichen
   // (jetzt „alles, was du ausdruckst“), die Klarna-Pflicht selbst ist unverändert. Keine inhaltliche Änderung, keine neue Bestätigung nötig.
@@ -80,6 +82,10 @@ export const CFG = {
   // Zahlarten im Checkout. Bewusst ohne SEPA-Lastschrift: Die kann der Kunde 8 Wochen lang ohne Grund zurückbuchen.
   zahlarten: env("ZAHLARTEN", "card,klarna").split(",").map((x) => x.trim()).filter(Boolean),
 };
+
+// Wortlaut des einen Häkchens auf /start (seit 16.11.2026), wird beim Abschluss in s.vertrag.bestaetigung mitgespeichert (Nachweis, welcher Satz
+// bestätigt wurde). Muss mit dem Text von label.anm-check in public/start.html übereinstimmen (Prüfung in dev/e2e.mjs). Bei Änderung Version hochzählen.
+export const HAEKCHEN = { version: "v1", text: "Ich melde mein Studio als Unternehmer an (weniger als 250 Mitarbeitende) und akzeptiere den Vertrag und den AVV." };
 
 export const SECRETS = {
   stripeKey: STRIPE_KEY,

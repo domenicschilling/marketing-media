@@ -204,16 +204,20 @@ async function startDaten(s, ich) {
   const zahlungen = (await zahlungenVon(s.id)).filter((z) => z.art !== "zahlseite" || z.status === "bezahlt").length;
   const klarna = werbungMitKlarna(s);
   const stripePunkt = test
-    ? { id: "stripe", ok: true, wartet: false, titel: "Zahlungskonto einrichten (ca. 10 Min.)", ziel: null, nurInhaber: true, text: "Testmodus: Für Testzahlungen brauchst du kein Zahlungskonto." }
-    : { id: "stripe", ok: frei, wartet: Boolean(o.stripe.angabenGemacht && !frei), titel: "Zahlungskonto einrichten (ca. 10 Min.)", ziel: frei || o.stripe.angabenGemacht ? null : "stripe", nurInhaber: true,
+    ? { id: "stripe", ok: true, wartet: false, titel: "Zahlungskonto einrichten", ziel: null, nurInhaber: true, text: "Testmodus: Für Testzahlungen brauchst du kein Zahlungskonto." }
+    : { id: "stripe", ok: frei, wartet: Boolean(o.stripe.angabenGemacht && !frei), titel: "Zahlungskonto einrichten", ziel: frei || o.stripe.angabenGemacht ? null : "stripe", nurInhaber: true,
       text: frei ? "Freigegeben. Stripe zahlt das Geld deiner Kunden auf dein Bankkonto aus. Bei neuen Konten erst 7 Tage nach der Zahlung." : o.stripe.angabenGemacht ? "Stripe prüft deine Angaben, meist 1 bis 3 Werktage." : "Ausweis und IBAN bereithalten. Danach geht alles andere." };
   const punkte = [
     { id: "konto", ok: true, titel: "Studio bei Tattoofin angelegt", text: "Dein Studio ist startklar eingerichtet." },
     stripePunkt,
-    { id: "fragebogen", ok: Boolean(o.fragebogenAm), titel: "Fragebogen ausfüllen", text: "Hilft uns bei der Einrichtung (10 Minuten).", ziel: "fragebogen", nurInhaber: true },
-    { id: "recht", ok: Boolean(o.recht?.aktuell), titel: "Deine rechtliche Lage lesen", text: "5 Minuten: Wer trägt welches Risiko?", ziel: "recht", nurInhaber: true },
+    { id: "fragebogen", ok: Boolean(o.fragebogenAm), titel: "Fragebogen ausfüllen", text: "Hilft uns bei der Einrichtung.", ziel: "fragebogen", nurInhaber: true },
+    { id: "recht", ok: Boolean(o.recht?.aktuell), titel: "Deine rechtliche Lage lesen", text: "Wer trägt welches Risiko?", ziel: "recht", nurInhaber: true },
+    // Adresse der Zahlseite (seit 16.11.2026, einfache Anmeldung ohne Adresse): Die App hat dafür keine eigene Maske, der Punkt führt
+    // deshalb in den Studio-Bereich im Browser. Nur sichtbar, solange sie fehlt (Testkassen brauchen keine).
+    ...(o.zahlseiteAdresse?.fehlt && !test ? [{ id: "adresse", ok: false, titel: "Adresse deiner Zahlseite", ziel: null, nurInhaber: true,
+      text: "Kurz im Studio-Bereich auf tattoofin.de eintragen (unter Einrichtung). Sie steht auf deiner Zahlseite und auf Gutscheinen." }] : []),
     { id: "link", ok: zahlungen > 0, titel: "Ersten Zahlungslink erstellen", ziel: kassieren ? "link" : null, gesperrt: !kassieren,
-      text: kassieren ? "Zum Ausprobieren gern an dich selbst." : frei || test ? "Geht, sobald dein Zugang aktiv ist." : "Geht, sobald dein Zahlungskonto freigegeben ist." },
+      text: kassieren ? "Zum Ausprobieren gern an dich selbst." : frei && !test && o.zahlseiteAdresse?.fehlt ? "Geht, sobald die Adresse deiner Zahlseite eingetragen ist." : frei || test ? "Geht, sobald dein Zugang aktiv ist." : "Geht, sobald dein Zahlungskonto freigegeben ist." },
     { id: "app", ok: true, titel: "Tattoofin-App auf dem Handy", text: "Erledigt: Du nutzt sie gerade." },
     { id: "theke", ok: Boolean(c.theke), titel: "QR-Code an die Theke", text: "QR-Code deiner Zahlseite unter Werbung.", ziel: "werbung", manuell: "theke" },
     { id: "werbung", ok: Boolean(c.werbung), titel: "Ersten Instagram-Beitrag posten", text: klarna ? "Fertige Bilder und ein Video unter Werbung." : "Zum Beispiel mit dem QR-Code deiner Zahlseite unter Werbung.", ziel: "werbung", manuell: "werbung" },

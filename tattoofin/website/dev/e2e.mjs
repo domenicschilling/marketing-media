@@ -148,7 +148,7 @@ try {
     const ds = fs.readFileSync(path.join(root, "public/datenschutz.html"), "utf8");
     check(/entfallen seit November 2026/.test(ds) && /löschen sie von uns aus/.test(ds) && !/auf deinen Wunsch sofort/.test(ds) && /Bestellung des QR-Aufstellers aus Holz der Betrieb/.test(ds), "Datenschutz: Aufsteller entfallen, Logos werden von uns gelöscht, Hersteller nur für Altfälle genannt");
     const cfgOeff = await (await fetch(BASE + "/api/config")).json();
-    check(!/aufsteller/i.test(JSON.stringify(cfgOeff)) && cfgOeff.vertragVersion === "2026-12d", "GET /api/config ohne Aufsteller-Preis/-Pakete, Vertrag 2026-12d");
+    check(!/aufsteller/i.test(JSON.stringify(cfgOeff)) && cfgOeff.vertragVersion === "2026-12e", "GET /api/config ohne Aufsteller-Preis/-Pakete, Vertrag 2026-12e");
   }
   const p0 = await neueSeite();
   await p0.goto(BASE + "/");
@@ -298,16 +298,21 @@ try {
     });
     check(form.felder === "firma,inhaber,email,telefon,ak_alle" && form.alt === 0, "/start: genau 4 Felder + 1 Häkchen, kein Fortschrittsbalken, kein Zurück, kein Unterzeichner, kein KMU-Extra, kein Studio-Telefon/Website", form.felder + " alt=" + form.alt);
     check(form.label === "Name deines Studios|Dein Vor- und Nachname|Handynummer (WhatsApp)" && form.firma === "text|organization|" && form.inhaber === "text|name|" && form.email === "email|email|email" && form.telefon === "tel|tel|tel", "/start: Beschriftungen + Autofill-Tokens (organization, name, email, tel) + Handy-Tastatur", JSON.stringify(form));
-    check(form.h1 === "4 Angaben. Fertig." && !form.minuten, "/start: Überschrift „4 Angaben. Fertig.“, keine Minutenangabe über dem Knopf");
+    check(form.h1 === "4 Angaben + Zahlung." && !form.minuten, "/start: Überschrift „4 Angaben + Zahlung.“ (ehrlich: danach kommt die Zahlung), keine Minutenangabe über dem Knopf");
     check(form.knopf.replace(/\u00a0/g, " ") === "Weiter zur Zahlung · 49,90 € im Monat" && /Sicher über Stripe\. Monatlich kündbar\. Keine Provision\./.test(form.sicher), "/start: Knopf „Weiter zur Zahlung · 49,90 € im Monat“, darunter klein „Sicher über Stripe. Monatlich kündbar. Keine Provision.“", form.knopf);
     check(form.kurzUnter && /Unternehmer an \(weniger als 250 Mitarbeitende\) und akzeptiere den Vertrag und den AVV/.test(form.haken) && form.vertragLink, "/start: ein Häkchen (Unternehmer < 250 MA + Vertrag + AVV, verlinkt), „Das Wichtigste in Kürze“ zugeklappt unter dem Knopf", form.haken);
     check(form.knopfUnten <= 844, "/start 390×844: Knopf im ersten Bildschirm (ohne Tastatur)", String(Math.round(form.knopfUnten)));
     // Leer absenden: Fehlermeldung, keine Anfrage, keine Messung
     await pE.click("#submit");
-    check(/Felder aus/.test(await pE.textContent("#alert")) && !ereignisse.some((x) => /checkout-weiter|InitiateCheckout/.test(x)), "Leer absenden: Hinweis, keine Messung");
+    const leer = await pE.evaluate(() => ({ oben: document.getElementById("alert").textContent, am: ["firma", "inhaber", "email", "telefon"].map((k) => { const p = document.getElementById(k + "-err"); return p && !p.hidden && /Bitte ausfüllen/.test(p.textContent) && (document.getElementById(k).getAttribute("aria-describedby") || "").includes(k + "-err"); }).every(Boolean), fokus: document.activeElement?.id }));
+    check(/Felder aus/.test(leer.oben) && leer.am && leer.fokus === "firma" && !ereignisse.some((x) => /checkout-weiter|InitiateCheckout/.test(x)), "Leer absenden: Hinweis oben + direkt an jedem Feld (aria-describedby), Fokus aufs erste Feld, keine Messung", JSON.stringify(leer));
     for (const [k, v] of Object.entries({ firma: "Ink Einfach", inhaber: "Eva Einfach", email: "einfach@example.com", telefon: "0151 7654321" })) await pE.fill("#" + k, v);
+    await pE.evaluate(() => document.querySelectorAll("[id$=-err]").forEach((p) => { if (!p.hidden) throw new Error("Fehler bleibt stehen: " + p.id); }));
     await pE.click("#submit");
-    check(/Häkchen/.test(await pE.textContent("#alert")) && !ereignisse.some((x) => /checkout-weiter|InitiateCheckout/.test(x)), "Ohne Häkchen: Hinweis, keine Messung");
+    await pE.waitForTimeout(400);
+    const ohneH = await pE.evaluate(() => { const p = document.getElementById("ak_alle-err"), lab = document.querySelector("label.anm-check"), r = p && p.getBoundingClientRect();
+      return { text: p && !p.hidden ? p.textContent : "", rot: lab.classList.contains("anm-check-fehler"), imBild: Boolean(r) && r.top >= 0 && r.bottom <= innerHeight, oben: document.getElementById("alert").textContent, vorHaken: p && p.nextElementSibling === lab }; });
+    check(/Häkchen/.test(ohneH.text) && ohneH.rot && ohneH.imBild && ohneH.vorHaken && !ohneH.oben && !ereignisse.some((x) => /checkout-weiter|InitiateCheckout/.test(x)), "Ohne Häkchen: Satz direkt über dem Häkchen (im Bild), Häkchen rot umrandet, keine Messung", JSON.stringify(ohneH));
     check(/Du schließt ab als: Eva Einfach, Ink Einfach/.test(await pE.textContent("#anm-als")), "Unter dem Knopf: „Du schließt ab als: <Name>, <Studio>“");
     await pE.check("#ak_alle");
     await pE.screenshot({ path: path.join(shots, "start-einfach-390.png"), fullPage: true });
@@ -316,6 +321,9 @@ try {
     check(ereignisse.filter((x) => x === "meta:InitiateCheckout").length === 1 && ereignisse.filter((x) => x === "umami:checkout-weiter").length === 1, "Messung: InitiateCheckout (Meta) und Umami „checkout-weiter“ genau 1× beim Absenden", ereignisse.join(","));
     const sE = await storeMod.studioBy("email", "einfach@example.com");
     check(sE?.vertrag?.name === "Eva Einfach" && sE.inhaber === "Eva Einfach" && sE.studioTelefon === "0151 7654321" && !sE.strasse && !sE.plz && !sE.ort && sE.vertrag.kmu === true && sE.vertrag.avv === true && sE.quelle?.source === "meta", "Server: Unterzeichner = Inhaber/in, Studio-Telefon = Handy, keine Adresse, alle 4 Bestätigungen, Herkunft gespeichert", JSON.stringify({ n: sE?.vertrag?.name, t: sE?.studioTelefon, s: sE?.strasse }));
+    { const startHtml = await (await fetch(BASE + "/start.html")).text();
+      const satz = (startHtml.match(/<label class="check anm-check">([\s\S]*?)<\/label>/) || [])[1]?.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
+      check(sE.vertrag?.bestaetigung?.art === "ein-haekchen" && sE.vertrag.bestaetigung.version === "v1" && Boolean(satz) && sE.vertrag.bestaetigung.text === satz, "Vertragsannahme: Art „ein Häkchen“ und Wortlaut mitgespeichert, gleichlautend mit dem Häkchen auf /start", JSON.stringify({ gespeichert: sE.vertrag?.bestaetigung?.text, seite: satz })); }
     let st = await mock("state");
     const csE = st.sessions[sE.stripe.checkoutSessionId];
     check(String(csE?.tax_id_collection?.enabled) === "true" && csE.customer_update?.address === "auto" && !csE.payment_method_types && !csE.name_collection && csE.billing_address_collection !== "required" && csE.excluded_payment_method_types?.includes("klarna") && !/\d/.test(csE.custom_text?.submit?.message || "x"), "Abo-Checkout: USt-IdNr. optional, Adresse auto (keine Pflicht), keine festen Zahlarten, kein name_collection, Hinweis ohne Zeitangabe", JSON.stringify({ t: csE?.tax_id_collection, c: csE?.customer_update, m: csE?.custom_text }));
@@ -326,8 +334,9 @@ try {
     await pE.click("#cancel");
     await pE.waitForURL(/start\.html\?resume=.*abbruch=1/);
     await pE.waitForFunction(() => document.getElementById("email").value === "einfach@example.com");
-    const wieder = await pE.evaluate(() => ({ f: ["firma", "inhaber", "email", "telefon"].map((k) => document.getElementById(k).value).join("|"), adr: getComputedStyle(document.getElementById("adresse-block")).display, fokus: document.activeElement?.id, hinweis: document.getElementById("alert").textContent }));
-    check(wieder.f === "Ink Einfach|Eva Einfach|einfach@example.com|0151 7654321" && wieder.adr === "none" && /Häkchen/.test(wieder.hinweis) && ereignisse.includes("umami:checkout-abbruch"), "Wiederaufnahme nach Abbruch: 4 Felder vorbelegt, keine Adressfelder, Hinweis + Umami „checkout-abbruch“", JSON.stringify(wieder));
+    await pE.waitForTimeout(150);
+    const wieder = await pE.evaluate(() => { const h = document.getElementById("ak-hinweis"), r = h.getBoundingClientRect(); return { f: ["firma", "inhaber", "email", "telefon"].map((k) => document.getElementById(k).value).join("|"), adr: getComputedStyle(document.getElementById("adresse-block")).display, fokus: document.activeElement?.id, hinweis: h.hidden ? "" : h.textContent, imBild: r.top >= 60 && r.bottom <= innerHeight, hervor: document.querySelector("label.anm-check").classList.contains("anm-check-hervor"), oben: document.getElementById("alert").textContent }; });
+    check(wieder.f === "Ink Einfach|Eva Einfach|einfach@example.com|0151 7654321" && wieder.adr === "none" && /Häkchen setzen/.test(wieder.hinweis) && wieder.imBild && wieder.hervor && /gespeichert/.test(wieder.oben) && ereignisse.includes("umami:checkout-abbruch"), "Wiederaufnahme nach Abbruch: 4 Felder vorbelegt, keine Adressfelder, Satz direkt über dem Häkchen (im Bild, nicht unter der Navigation), Häkchen hervorgehoben, Umami „checkout-abbruch“", JSON.stringify(wieder));
     await pE.waitForTimeout(120);
     check(["ak_alle", "submit"].includes(await pE.evaluate(() => document.activeElement?.id)), "Wiederaufnahme: Fokus direkt beim Häkchen/Knopf");
     await pE.check("#ak_alle");
@@ -376,7 +385,7 @@ try {
     await pE.context().close();
     // Abo-Studio von oben (Konto-Einrichtung mit Adresse): Vorschlag aus dem Stripe-Konto, vorbefüllt, 1 Knopf „Stimmt so“
     const sAbo = await storeMod.studioBy("email", "abo@example.com");
-    check(sAbo.strasse === "Musterstr. 1" && sAbo.plz === "96047" && sAbo.ort === "Bamberg" && sAbo.adresseQuelle === "connect" && sAbo.adresseBestaetigt === false, "account.updated mit company.address: Studio-Adresse als Vorschlag übernommen (Quelle connect, unbestätigt)", JSON.stringify({ s: sAbo.strasse, q: sAbo.adresseQuelle }));
+    check(sAbo.strasse === "Musterstr. 1" && sAbo.plz === "96047" && sAbo.ort === "Bamberg" && sAbo.adresseQuelle === "connect" && sAbo.adresseBestaetigt === false, "account.updated (Standard-Konto mit business_profile.support_address): Studio-Adresse als Vorschlag übernommen (Quelle connect, unbestätigt)", JSON.stringify({ s: sAbo.strasse, q: sAbo.adresseQuelle }));
     await pD.goto(BASE + "/app.html#start"); await pD.waitForSelector("#adr-form");
     check(await pD.inputValue("#adr-strasse") === "Musterstr. 1" && (await pD.textContent("#adr-ok")).trim() === "Stimmt so" && /Stripe-Konto übernommen/.test(await pD.textContent("#checkliste")), "Karte vorbefüllt aus dem Stripe-Konto, ein Knopf „Stimmt so“");
     await appShot(pD, path.join(shots, "app-adresse-vorschlag.png"));
@@ -392,6 +401,22 @@ try {
     check(eigen.strasse === "Eigene Str. 5" && eigen.ort === "Bamberg" && eigen.adresseQuelle !== "connect", "account.updated überschreibt eine vorhandene Studio-Adresse nicht");
     eigen.strasse = "Musterstr. 1"; await storeMod.saveStudio(eigen);
     check(dom2.connectAdresse({ business_profile: { support_address: { line1: "Hilfe 1", city: "Köln", postal_code: "50667", country: "DE" } } })?.ort === "Köln" && dom2.connectAdresse({ individual: { address: { line1: "Priv 2", city: "Bonn" } } })?.strasse === "Priv 2" && dom2.connectAdresse({}) === null, "Adresse aus dem Stripe-Konto: company.address, sonst support_address, sonst individual.address, sonst keine");
+    // Private Wohnadresse (nur individual.address, z. B. Einzelunternehmer): nur zum Vorbefüllen, zählt und erscheint erst nach „Stimmt so“
+    {
+      const orig = await storeMod.studioBy("email", "kauf@example.com");
+      const vorher = dom2.darfKassieren(orig);
+      const pr = { ...orig, stripe: { ...orig.stripe } }; delete pr.strasse; delete pr.plz; delete pr.ort; delete pr.adresseQuelle; delete pr.adresseBestaetigt;
+      await dom2.kontoAbgleichen(pr, { id: pr.stripe.accountId, charges_enabled: true, payouts_enabled: true, details_submitted: true, individual: { address: { line1: "Wohnweg 9", postal_code: "96050", city: "Bamberg", country: "DE" } } });
+      const ansicht = (await import("../netlify/functions/_lib/studio-ansicht.mjs")).oeffentlich(pr);
+      const payP = await (await fetch(`${BASE}/api/pay?s=${pr.slug}`)).json();
+      const ok1 = vorher && pr.strasse === "Wohnweg 9" && pr.adresseQuelle === "connect-privat" && pr.adresseBestaetigt === false && !dom2.studioAdresseDa(pr) && !dom2.darfKassieren(pr)
+        && dom2.oeffentlicheAdresse(pr).strasse === "" && ansicht.zahlseiteAdresse.fehlt === true && ansicht.zahlseiteAdresse.vorschlag === true && ansicht.zahlseiteAdresse.privat === true
+        && payP.studio?.aktiv === false && !payP.studio?.strasse && !JSON.stringify(payP).includes("Wohnweg");
+      pr.adresseBestaetigt = true;
+      const ok2 = dom2.studioAdresseDa(pr) && dom2.darfKassieren(pr) && dom2.oeffentlicheAdresse(pr).strasse === "Wohnweg 9";
+      await storeMod.saveStudio(orig);
+      check(ok1 && ok2 && (await (await fetch(`${BASE}/api/pay?s=${orig.slug}`)).json()).studio?.aktiv === true, "Private Adresse aus dem Stripe-Konto: Vorschlag (connect-privat), Zahlseite nicht bereit und Adresse nirgends öffentlich, bis „Stimmt so“", JSON.stringify({ vorher, q: pr.adresseQuelle, ok1, ok2, pay: payP.studio }));
+    }
   }
   // Server: Lockerung nur Web + Monatlich + ohne Einladung; Einladung und Einmalzahlung (auch Rechnung) bleiben mit Adresse
   {

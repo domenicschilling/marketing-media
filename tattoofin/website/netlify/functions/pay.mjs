@@ -10,14 +10,14 @@
 import { CFG, BAUSTEINE_SIMULIERT, testKasse } from "./_lib/config.mjs";
 import { json, fail, body, clean, id, now, handler, isEmail, parseBetrag, euro, clientIp } from "./_lib/util.mjs";
 import { getStudio, studioBy, zahlungBy, saveZahlung } from "./_lib/store.mjs";
-import { checkoutFuer, bezahlfeldFuer, darfKassieren, anzahlungsbedingungen, istAnzahlung, bezahlfeld, zahlungBezahlt, plattformKassiert, klarnaVersuch, zahlartenFuer, klarnaFuer, notify, zahlungAbgleichen } from "./_lib/domain.mjs";
+import { checkoutFuer, bezahlfeldFuer, darfKassieren, anzahlungsbedingungen, istAnzahlung, bezahlfeld, zahlungBezahlt, plattformKassiert, klarnaVersuch, zahlartenFuer, klarnaFuer, notify, zahlungAbgleichen, oeffentlicheAdresse } from "./_lib/domain.mjs";
 import { mails } from "./_lib/emails.mjs";
 import { log } from "./_lib/store.mjs";
 import { stripe } from "./_lib/stripe.mjs";
 import { brandingOeffentlich } from "./_lib/branding.mjs";
 import { gutscheinWort, GUTSCHEIN_HINWEIS } from "./_lib/klarna-texte.mjs";
 
-const studioInfo = (s) => ({ klarna: klarnaFuer(s), zahlartenHinweis: Boolean(s.zahlartenHinweis), firma: s.firma, ort: s.ort, strasse: s.strasse || "", plz: s.plz || "", slug: s.slug, aktiv: Boolean(darfKassieren(s)), anzahlungsbedingungen: anzahlungsbedingungen(s), branding: brandingOeffentlich(s) });
+const studioInfo = (s) => ({ klarna: klarnaFuer(s), zahlartenHinweis: Boolean(s.zahlartenHinweis), firma: s.firma, ...oeffentlicheAdresse(s), slug: s.slug, aktiv: Boolean(darfKassieren(s)), anzahlungsbedingungen: anzahlungsbedingungen(s), branding: brandingOeffentlich(s) });
 // Doppelzahlung sperren: Hat die Kundin nach einem Klarna-Nein die Anzahlung (Ausweg) schon bezahlt, darf der ursprüngliche Link nicht mehr
 // zahlbar sein (sonst zahlt sie versehentlich den Gesamtbetrag zusätzlich). Umgekehrt: Ist das Original bezahlt, ist die Anzahlung gesperrt.
 export const schonBezahltDurchAusweich = (z) => Boolean(z.ausweich?.bezahltAm);

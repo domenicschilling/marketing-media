@@ -53,7 +53,7 @@ function head({ title, description, url, type = "website", jsonld }) {
 
 const ctas = {
   studio: `<div class="cta-box"><h3>Du bist Tätowierer oder Studioinhaber?</h3><p>Mit Tattoofin bietest du Zahlungslinks, eine QR-Zahlseite, Anzahlungen und Ratenzahlung über Klarna an. Keine Provision auf deine Zahlungen: 49,90 € im Monat inkl. MwSt..</p><a class="btn gold" href="/start.html?utm_source=ratgeber">Tattoofin fürs Studio holen →</a></div>`,
-  start: `<div class="cta-box"><h3>In 3 Minuten startklar</h3><p>Zahlungslinks, QR-Zahlseite, Anzahlungen und Ratenzahlung über Klarna für dein Studio. Eingerichtet, getestet, betreut. Keine Provision auf deine Zahlungen: 49,90 € im Monat inkl. MwSt..</p><a class="btn gold" href="/start.html?utm_source=ratgeber">Jetzt starten →</a></div>`,
+  start: `<div class="cta-box"><h3>Online abschließen: 4 Angaben + Zahlung</h3><p>Zahlungslinks, QR-Zahlseite, Anzahlungen und Ratenzahlung über Klarna für dein Studio. Eingerichtet, getestet, betreut. Keine Provision auf deine Zahlungen: 49,90 € im Monat inkl. MwSt..</p><a class="btn gold" href="/start.html?utm_source=ratgeber">Jetzt starten →</a></div>`,
 };
 
 for (const a of artikel) {

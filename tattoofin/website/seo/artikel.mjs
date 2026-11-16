@@ -110,7 +110,7 @@ export const artikel = [
 
 <h2 id="start">In 3 Schritten startklar</h2>
 <ol>
-<li><b>Online abschließen</b> (3 Minuten) und das Stripe-Konto anlegen (ca. 10 Minuten).</li>
+<li><b>Online abschließen</b> (4 Angaben + Zahlung) und danach das Stripe-Konto anlegen (Ausweis und IBAN bereithalten).</li>
 <li><b>Wir richten alles ein:</b> Zahlungsarten, Branding, QR-Code, Testzahlung, kurze Teamschulung.</li>
 <li><b>Link raus, Geld rein.</b></li>
 </ol>

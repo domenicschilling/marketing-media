@@ -167,7 +167,11 @@ export async function zaehleAktion() {
 // Stripe-Konto. Bezahlen sperrt pay.mjs (409).
 // Seit 16.11.2026 (einfache Anmeldung ohne Adresse) zusätzlich: Die Zahlseite ist erst bereit, wenn die Studio-Adresse da ist (Straße + Ort),
 // damit Kunde und Klarna-Warenkorb immer sehen, wer der Händler ist. Die Adresse kommt aus dem Stripe-Konto oder der Karte im Studio-Bereich.
-export const studioAdresseDa = (s) => Boolean(String(s?.strasse || "").trim() && String(s?.ort || "").trim());
+// Eine private Wohnadresse aus dem Stripe-Konto (individual.address, Quelle „connect-privat“) zählt erst, wenn das Studio sie mit „Stimmt so“
+// bestätigt hat (DSGVO: nicht ungefragt auf Zahlseite, Klarna-Warenkorb und Gutscheinen veröffentlichen).
+export const studioAdresseDa = (s) => Boolean(String(s?.strasse || "").trim() && String(s?.ort || "").trim() && !(s.adresseQuelle === "connect-privat" && !s.adresseBestaetigt));
+// Öffentlich gezeigte Adresse (Zahlseite, Gutschein): nur, wenn sie zählt (sonst leer)
+export const oeffentlicheAdresse = (s) => studioAdresseDa(s) ? { strasse: s.strasse || "", plz: s.plz || "", ort: s.ort || "" } : { strasse: "", plz: "", ort: "" };
 export function darfKassieren(s) {
   if (testKasse(s)) return ["einrichtung", "live", "gekuendigt"].includes(s.status);
   return Boolean(s.stripe?.accountId && s.stripe?.chargesEnabled && studioAdresseDa(s) && ["einrichtung", "live", "gekuendigt"].includes(s.status));
@@ -176,9 +180,11 @@ export function darfKassieren(s) {
 // Adresse aus dem Stripe-Konto (account.updated bzw. „jetzt abgleichen“) als Vorschlag für die Zahlseite übernehmen, nur wenn noch keine da ist.
 // Stripe liefert je nach Kontoart company.address, business_profile.support_address oder individual.address (bei Standard-Konten
 // ggf. gar nichts, dann bleibt die Karte „Adresse deiner Zahlseite“ leer zum Ausfüllen). Manuelle Werte werden nie überschrieben.
+// privat: true, wenn die Adresse nur aus individual.address stammt (Wohnadresse eines Einzelunternehmers) → nur zum Vorbefüllen.
 export function connectAdresse(acct) {
-  for (const a of [acct?.company?.address, acct?.business_profile?.support_address, acct?.individual?.address]) {
-    if (a && a.line1 && a.city) return { strasse: [a.line1, a.line2].filter(Boolean).join(", ").slice(0, 120), plz: String(a.postal_code || "").slice(0, 10), ort: String(a.city).slice(0, 80), land: String(a.country || "DE").slice(0, 2).toUpperCase() };
+  const quellen = [[acct?.company?.address, false], [acct?.business_profile?.support_address, false], [acct?.individual?.address, true]];
+  for (const [a, privat] of quellen) {
+    if (a && a.line1 && a.city) return { strasse: [a.line1, a.line2].filter(Boolean).join(", ").slice(0, 120), plz: String(a.postal_code || "").slice(0, 10), ort: String(a.city).slice(0, 80), land: String(a.country || "DE").slice(0, 2).toUpperCase(), privat };
   }
   return null;
 }
@@ -789,8 +795,9 @@ export async function kontoAbgleichen(s, acct) {
   const r = acct.requirements || {};
   s.stripe.offen = { faellig: (r.currently_due || []).slice(0, 20), ueberfaellig: (r.past_due || []).slice(0, 20), inPruefung: (r.pending_verification || []).slice(0, 20), sperrgrund: r.disabled_reason || null };
   s.stripe.abgeglichenAm = new Date().toISOString();
-  const vorschlag = !studioAdresseDa(s) ? connectAdresse(acct) : null;
-  if (vorschlag) Object.assign(s, vorschlag, { adresseQuelle: "connect", adresseBestaetigt: false });
+  // Nur wenn noch gar keine Adresse da ist (auch keine unbestätigte private), damit nichts Eigenes überschrieben wird
+  const vorschlag = !String(s.strasse || "").trim() ? connectAdresse(acct) : null;
+  if (vorschlag) { const { privat, ...adr } = vorschlag; Object.assign(s, adr, { adresseQuelle: privat ? "connect-privat" : "connect", adresseBestaetigt: false }); }
   await saveStudio(s);
   if (!vorher && s.stripe.chargesEnabled) {
     await notify(s, mails.kontoFreigegeben(s));

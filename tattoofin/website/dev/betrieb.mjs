@@ -138,11 +138,31 @@ await abschnitt("1 Start-Seite: Cookie-Hinweis verdeckt weder Feld noch Knopf (o
     }
     await p.locator("#ak_alle").blur().catch(() => {});
     const banner = Boolean(await p.waitForSelector(".tf-cc", { timeout: 3000, state: "attached" }).catch(() => null)) && vorher === (w >= 1000);
-    await p.check("input[name=ak_alle]").catch(() => {});
+    // Häkchen echt anklicken (kein force): Der Hinweis darf nicht darüber liegen (Prüfung 16.11.2026, 320×568)
+    const haken = await p.check("input[name=ak_alle]", { timeout: 3000 }).then(() => p.isChecked("input[name=ak_alle]")).catch(() => false);
     const s3 = await trial("#submit");
     // Knopf sichtbar im Bild: Der Hinweis liegt nie darüber (er weicht aus oder sitzt daneben)
     const ueber = await p.evaluate(() => { const cc = document.querySelector(".tf-cc"), k = document.getElementById("submit"); k.scrollIntoView({ block: "center" }); return new Promise((ok) => requestAnimationFrame(() => requestAnimationFrame(() => { if (!cc || getComputedStyle(cc).visibility === "hidden") return ok(false); const a = cc.getBoundingClientRect(), b = k.getBoundingClientRect(); ok(!(a.top >= b.bottom || a.bottom <= b.top || a.left >= b.right || a.right <= b.left)); }))); });
-    check(banner && frei.every(Boolean) && s3 && !ueber, `start.html ${w}x${h}: Hinweis da (am Handy erst nach der ersten Eingabe), alle 4 Felder frei beim Tippen, Knopf „Weiter zur Zahlung“ klickbar und nicht verdeckt`, `banner=${banner} sofort=${vorher} felder=${frei.join("")} knopf=${s3} verdeckt=${ueber}`);
+    check(banner && frei.every(Boolean) && haken && s3 && !ueber, `start.html ${w}x${h}: Hinweis da (am Handy erst nach der ersten Eingabe), alle 4 Felder frei beim Tippen, Häkchen klickbar, Knopf „Weiter zur Zahlung“ klickbar und nicht verdeckt`, `banner=${banner} sofort=${vorher} felder=${frei.join("")} haken=${haken} knopf=${s3} verdeckt=${ueber}`);
+    await p.context().close();
+  }
+  // Ankunft von der Landingpage (Hinweis dort schon offen, nicht weggeklickt) auf kleinen Handys: Felder, Häkchen und Knopf frei
+  for (const [w, h] of [[320, 568], [360, 640], [375, 667]]) {
+    const p = await neueSeite({ width: w, height: h });
+    await p.goto(`${BASE}/`);
+    await p.mouse.wheel(0, 400); await p.waitForTimeout(400);
+    await p.evaluate(() => { location.href = document.querySelector('a.knopf[href^="/start"]').getAttribute("href"); });
+    await p.waitForURL(/start\.html/); await p.waitForTimeout(500);
+    const frei = [];
+    for (const [k, v] of Object.entries({ firma: "LP Test", inhaber: "L P", email: "lp@test.de", telefon: "0151 7654321" })) {
+      try { await p.click("#" + k, { timeout: 3000 }); await p.fill("#" + k, v); frei.push(true); } catch { frei.push(false); }
+    }
+    await p.locator("#telefon").blur().catch(() => {});
+    await p.waitForTimeout(300);
+    const haken = await p.check("input[name=ak_alle]", { timeout: 3000 }).then(() => p.isChecked("input[name=ak_alle]")).catch(() => false);
+    const knopf = await p.click("#submit", { timeout: 3000, trial: true }).then(() => true).catch(() => false);
+    const cc = await p.evaluate(() => { const c = document.querySelector(".tf-cc"); return c ? (c.classList.contains("tf-cc-weg") ? "weg" : "da") : "keiner"; });
+    check(frei.every(Boolean) && haken && knopf, `start.html ${w}x${h} von der Landingpage: alle 4 Felder, Häkchen und Knopf frei (Cookie-Hinweis weicht aus)`, `felder=${frei.join("")} haken=${haken} knopf=${knopf} hinweis=${cc}`);
     await p.context().close();
   }
 });
@@ -934,7 +954,7 @@ await abschnitt("17 Recht (27.10.2026): Klarna-Stichtag 20.11.2026 für Risikofr
   const altVertrag = await holen("/vertrag-2026-10d.html");
   check(/kein Kreditvermittler/.test(altVertrag) && /archiviert/.test(altVertrag), "Alte Vertragsfassung 2026-10d bleibt unverändert als Archiv (nicht rückwirkend ändern)", "");
   const cfgV = (await json("/api/config")).data;
-  check(cfgV.vertragVersion === "2026-12d" && cfgV.rechtVersion === "2026-12", "Versionen hochgezählt: Vertrag 2026-12d (seit 15.11.2026 ohne QR-Aufsteller, Web-Preis 49,90 € inkl. MwSt.) und Rechtsblatt 2026-12", `${cfgV.vertragVersion}/${cfgV.rechtVersion}`);
+  check(cfgV.vertragVersion === "2026-12e" && cfgV.rechtVersion === "2026-12", "Versionen hochgezählt: Vertrag 2026-12e (seit 15.11.2026 ohne QR-Aufsteller, seit 16.11. Vertragsschluss wie die einfache Anmeldung, Web-Preis 49,90 € inkl. MwSt.) und Rechtsblatt 2026-12", `${cfgV.vertragVersion}/${cfgV.rechtVersion}`);
   const ratenText = raten.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g, " ").replace(/<[^>]+>/g, " ");
   const kopfDaten = (raten.match(/<title>[\s\S]*?<\/title>/) || [""])[0] + (raten.match(/<meta name="description"[^>]*>/) || [""])[0] + (raten.match(/<script type="application\/ld\+json">[\s\S]*?<\/script>/) || [""])[0];
   check(!/zinsfrei|ohne Schufa|ohne Gebühr|0\s?%|monatlich ab|pro Monat/i.test(ratenText) && !/Raten|Klarna/.test(kopfDaten), "/raten: kein zinsfrei/ohne Schufa/Ratenbeträge; Titel, Meta und Schema ohne Raten/Klarna", "");
@@ -1061,7 +1081,7 @@ await abschnitt("18 Paket Risikofrei geschlossen (26.10.2026): Neukunden gesperr
       check(auf.every((x) => x === "monatlich") && !/href="\/start[^"]*einmal/.test(t), `${pf}: kein Start-Knopf zeigt auf Einmalzahlung`, [...new Set(auf)].join(","));
     }
     const lp = await (await fetch(BASE + "/")).text();
-    check(/class="knopf" href="\/start\.html"[^>]*>Studio anmelden – 3&nbsp;Min\./.test(lp), "Hero-Knopf: „Studio anmelden – 3 Min.“ → /start.html", "");
+    check(/class="knopf" href="\/start\.html"[^>]*>Studio anmelden<\/a>/.test(lp) && !/Min\.<\/a>|\d&nbsp;Min/.test(lp), "Hero-Knopf: „Studio anmelden“ → /start.html (keine ungemessene Minutenangabe)", "");
     const wann = await (await fetch(BASE + "/")).text();
     check(/49,90&nbsp;€ im Monat inkl\. MwSt\./.test(wann) && !/999 €/.test(wann) && /class="betrag">49,90<span class="eur">€/.test(wann) && /41,93&nbsp;€ netto/.test(wann) && !/58,31|49&nbsp;€ netto/.test(wann) && /nur für Unternehmer/i.test(wann), "Preise auf der Startseite: 49,90 € im Monat inkl. MwSt. (auch in der Preis-Überschrift), klein 41,93 € netto, kein 58,31 €, nur für Unternehmer, keine 999 €", "");
     check(/Achtung! Kreditaufnahme kostet Geld\./.test(wann), "Pflicht-Warnhinweis steht weiter auf der Startseite", "");
@@ -1192,7 +1212,7 @@ await abschnitt("19 Altstudio stellt um: Zustimmung, 29 €, neues eigenes Konto
   const nach = await detail(a.id);
   const sn = nach.studio;
   check(sn.modell === "kauf" && sn.paket === "monatlich" && sn.monatNetto === 2900 && sn.status === "einrichtung" && sn.stripe.accountId === null && sn.stripe.altKonto?.accountId === altKonto && sn.stripe.subscriptionId, "Nach Zahlung: Monatlich 29 €, altes Konto vermerkt, neues Konto fehlt noch", JSON.stringify(sn.stripe.altKonto));
-  check(sn.vertrag.version === "2026-12d" && sn.vertrag.monatNetto === 2900 && sn.vertrag.kmu === true && sn.vertragAlt?.length === 1, "Neuer Vertrag gespeichert (Sonderpreis 29 € bleibt), alter bleibt nachvollziehbar", sn.vertrag.version);
+  check(sn.vertrag.version === "2026-12e" && sn.vertrag.monatNetto === 2900 && sn.vertrag.kmu === true && sn.vertragAlt?.length === 1, "Neuer Vertrag gespeichert (Sonderpreis 29 € bleibt), alter bleibt nachvollziehbar", sn.vertrag.version);
   check(mailsAn("umstellung@betrieb.test").some((m) => /Wechsel ist bestätigt/.test(m.subject)), "Bestätigung per Mail", "");
 
   // Altes Konto meldet sich: darf den Status nicht verfälschen
@@ -1254,7 +1274,7 @@ await abschnitt("20 Preis seit 15.11.2026: 49,90 € inkl. MwSt. (41,93 € nett
   const sd = cs?.subscription_data || {};
   check(sd.trial_period_days === undefined && sd.trial_end === undefined && cs?.trial_period_days === undefined && cs?.trial_end === undefined && !/trial/.test(JSON.stringify(cs || {})), "Keine Gratiszeit auf der Website (kein trial_period_days/trial_end)", JSON.stringify(sd).slice(0, 90));
   const st = (await detail(cs?.client_reference_id)).studio || {};
-  check(st.monatNetto === 4193 && st.vertrag?.monatNetto === 4193 && st.vertrag?.version === "2026-12d", "Studio speichert seinen Preis (4193) und die Vertragsfassung 2026-12d", `${st.monatNetto}/${st.vertrag?.monatNetto}/${st.vertrag?.version}`);
+  check(st.monatNetto === 4193 && st.vertrag?.monatNetto === 4193 && st.vertrag?.version === "2026-12e", "Studio speichert seinen Preis (4193) und die Vertragsfassung 2026-12e", `${st.monatNetto}/${st.vertrag?.monatNetto}/${st.vertrag?.version}`);
   const mo = mailAnMit("monatlich@betrieb.test", /Willkommen/) || {};
   check(/49,90 € im Monat inkl\. MwSt\. \(41,93 € netto\)/.test((mo.html || "") + (mo.text || "")) && !/58,31|49,00 € netto/.test((mo.html || "") + (mo.text || "")), "Willkommens-Mail (neues Studio): 49,90 € im Monat inkl. MwSt. (41,93 € netto)", (mo.subject || "").slice(0, 60));
 
@@ -1284,7 +1304,9 @@ await abschnitt("20 Preis seit 15.11.2026: 49,90 € inkl. MwSt. (41,93 € nett
   const pg = await ctx.newPage();
   const text = async (u) => { await pg.goto(BASE + u, { waitUntil: "networkidle" }); await wait(300); return pg.evaluate(() => document.body.innerText); };
   const v = await text("/vertrag.html");
-  check(/41,93 € netto zzgl\. Umsatzsteuer \(bei 19 % Umsatzsteuer 49,90 €\)/.test(v) && /41,93 € netto zzgl\. USt\. \(49,90 € inkl\. USt\.\)/.test(v) && /Fassung 2026-12d/.test(v) && !/Aufsteller/i.test(v), "vertrag.html: 41,93 € netto (49,90 € inkl. USt.), Fassung 2026-12d, ohne QR-Aufsteller", "");
+  check(/41,93 € netto zzgl\. Umsatzsteuer \(bei 19 % Umsatzsteuer 49,90 €\)/.test(v) && /41,93 € netto zzgl\. USt\. \(49,90 € inkl\. USt\.\)/.test(v) && /Fassung 2026-12e/.test(v) && !/Aufsteller/i.test(v) && /Knopf „Weiter zur Zahlung“/.test(v) && /direkt im Formular prüfen und korrigieren/.test(v) && /\(Firma, Name, E-Mail\)/.test(v) && !/Bestellknopf im letzten Schritt|Schaltfläche „Zurück“|Anschrift, Vertreter/.test(v), "vertrag.html: 41,93 € netto (49,90 € inkl. USt.), Fassung 2026-12e, ohne QR-Aufsteller, Vertragsschluss passend zur einfachen Anmeldung", "");
+  { const t12d = await text("/vertrag-2026-12d.html"), h12d = await (await fetch(BASE + "/vertrag-2026-12d.html")).text();
+    check(/41,93 € netto zzgl\. Umsatzsteuer \(bei 19 % Umsatzsteuer 49,90 €\)/.test(t12d) && /Archivfassung 2026-12d/.test(t12d) && /noindex/.test(h12d) && /Bestellknopf im letzten Schritt/.test(t12d) && !/data-cfg="monatPreis/.test(h12d), "Archiv 2026-12d: abrufbar (noindex), Preis fest, alter Wortlaut zum Vertragsschluss", ""); }
   { const t12c = await text("/vertrag-2026-12c.html");
     check(/41,93 € netto zzgl\. Umsatzsteuer \(bei 19 % Umsatzsteuer 49,90 €\)/.test(t12c) && /Archivfassung 2026-12c/.test(t12c) && /QR-Aufsteller/.test(t12c), "Archiv 2026-12c: Preis fest 41,93 € netto (49,90 € inkl. USt.), Aufsteller wie damals vereinbart", ""); }
   for (const [u, n] of [["/vertrag-2026-12b.html", "2026-12b"], ["/vertrag-2026-12.html", "2026-12"], ["/vertrag-2026-11.html", "2026-11"], ["/vertrag-2026-10d.html", "2026-10d"]]) {

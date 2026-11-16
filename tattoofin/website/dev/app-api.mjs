@@ -850,6 +850,24 @@ try {
   const hak = await call("POST", "/api/portal/checkliste", { token: tDteam, body: { punkt: "theke", erledigt: true } });
   const st2 = await call("GET", "/api/app/start", { token: tD });
   check(hak.status === 200 && st2.data.checkliste.punkte.find((p) => p.id === "theke").ok && st2.data.checkliste.fertig === st.data.checkliste.fertig + 1, "Manueller Punkt per POST /api/portal/checkliste (auch Team) → in der Checkliste erledigt");
+  // Web-Studio ohne Adresse (einfache Anmeldung, Stripe-Konto ohne Adresse): eigener Punkt „Adresse deiner Zahlseite“ vor dem Link-Punkt,
+  // Link-Punkt und 409 nennen den richtigen Grund; nach dem Eintragen (auch mit App-Token) kann das Studio wieder kassieren
+  {
+    const dAlt = blob("studio/" + D.id);
+    setBlob("studio/" + D.id, { ...dAlt, strasse: "", plz: "", ort: "", adresseQuelle: null, adresseBestaetigt: false });
+    const sa = await call("GET", "/api/app/start", { token: tD }), pa = sa.data.checkliste?.punkte || [];
+    const iA = pa.findIndex((p) => p.id === "adresse"), iL = pa.findIndex((p) => p.id === "link"), pA = pa[iA] || {}, pL = pa[iL] || {};
+    const z409 = await call("POST", "/api/portal/zahlung", { token: tD, body: { betrag: "100", art: "gesamt", kunde: "Test", email: "k@example.com", beschreibung: "Rose" } });
+    const adr = await call("POST", "/api/portal/adresse", { token: tD, body: { strasse: "Appweg 1", plz: "96047", ort: "Bamberg" } });
+    const sb = await call("GET", "/api/app/start", { token: tD });
+    const nachher = blob("studio/" + D.id);
+    setBlob("studio/" + D.id, dAlt);
+    check(iA >= 0 && iA === iL - 1 && pA.ok === false && pA.ziel === null && /Studio-Bereich auf tattoofin\.de/.test(pA.text) && pL.gesperrt === true && /Adresse deiner Zahlseite/.test(pL.text)
+      && z409.status === 409 && /Adresse fehlt noch/.test(z409.data.error) && /tattoofin\.de/.test(z409.data.error)
+      && adr.status === 200 && nachher.strasse === "Appweg 1" && !sb.data.checkliste.punkte.some((p) => p.id === "adresse") && sb.data.checkliste.punkte.find((p) => p.id === "link").gesperrt === false,
+      "App: Web-Studio ohne Adresse → Punkt „Adresse deiner Zahlseite“ vor „Ersten Zahlungslink“, richtiger Grund (Checkliste + 409); nach dem Eintragen wieder bereit, Punkt weg",
+      JSON.stringify({ ids: pa.map((p) => p.id), pA, pL, z: z409.status + " " + z409.data.error, adr: adr.status + " " + (adr.data.error || "") }));
+  }
   check((await call("POST", "/api/portal/checkliste", { token: tD, body: { punkt: "stripe", erledigt: true } })).status === 400, "Nur manuelle Punkte lassen sich abhaken");
 
   // ==================================================================================================
@@ -1083,7 +1101,7 @@ try {
   const e1 = await reg(REG(rt));
   const s1 = blob("studio/" + e1.data.entwurfId);
   check(e1.status === 200 && /^st_/.test(e1.data.entwurfId) && e1.data.produktId === "de.tattoofin.app.abo.monatlich" && e1.data.email === "mia@neu-app.test" && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(e1.data.appAccountToken) && e1.data.entwurfToken, "Gültig → { entwurfId, entwurfToken, appAccountToken (UUID v4), produktId, email }", e1.text);
-  check(s1?.status === "entwurf" && s1.paket === "app" && s1.abrechnung === "apple" && s1.zahlart === "apple" && s1.modell === "kauf" && s1.appEntwurf?.appAccountToken === e1.data.appAccountToken && s1.vertrag?.kmu && s1.vertrag.version === "2026-12d" && s1.vertrag.quelle === "app" && !("aufsteller" in s1.vertrag) && blob("idx/appentwurf/" + e1.data.appAccountToken) === s1.id, "Entwurf: status entwurf, paket app, abrechnung apple, Vertrag 2026-12d mit KMU (ohne Aufsteller-Feld), idx/appentwurf", JSON.stringify(s1)?.slice(0, 200));
+  check(s1?.status === "entwurf" && s1.paket === "app" && s1.abrechnung === "apple" && s1.zahlart === "apple" && s1.modell === "kauf" && s1.appEntwurf?.appAccountToken === e1.data.appAccountToken && s1.vertrag?.kmu && s1.vertrag.version === "2026-12e" && s1.vertrag.quelle === "app" && !("aufsteller" in s1.vertrag) && blob("idx/appentwurf/" + e1.data.appAccountToken) === s1.id, "Entwurf: status entwurf, paket app, abrechnung apple, Vertrag 2026-12e mit KMU (ohne Aufsteller-Feld), idx/appentwurf", JSON.stringify(s1)?.slice(0, 200));
   check(Object.keys((await mock("state")).customers || {}).length === kundenVorher && !s1.stripe?.customerId && mailsAn("admin@app.test").length === adminVorher && mailsAn("mia@neu-app.test").filter((m) => !/Tattoofin-Code$/.test(m.subject)).length === 0, "Kein Stripe-Kunde, keine Admin-Mail, keine Mail an das Studio");
   const e1b = await reg(REG(rt, { firma: "Ink App Studio Neu" }));
   check(e1b.data.entwurfId === e1.data.entwurfId && e1b.data.appAccountToken === e1.data.appAccountToken && blob("studio/" + e1.data.entwurfId).firma === "Ink App Studio Neu", "Zweiter Aufruf (Korrektur): gleicher Entwurf, gleiche UUID", e1b.text);
@@ -1542,7 +1560,7 @@ try {
   check(sApp.status === 400 && /Bitte ausfüllen: Paket/.test(sApp.data.error), "/api/signup mit paket „app“ → 400 „Paket“", sApp.text);
   const pakete = await call("GET", "/api/signup?pakete=1");
   const cfg = await call("GET", "/api/config");
-  check(!pakete.data.pakete.some((x) => x.id === "app") && !cfg.data.pakete.some((x) => x.id === "app") && cfg.data.vertragVersion === "2026-12d", "GET /api/signup?pakete=1 und /api/config ohne „app“, Vertrag 2026-12d", JSON.stringify(pakete.data.pakete.map((x) => x.id)));
+  check(!pakete.data.pakete.some((x) => x.id === "app") && !cfg.data.pakete.some((x) => x.id === "app") && cfg.data.vertragVersion === "2026-12e", "GET /api/signup?pakete=1 und /api/config ohne „app“, Vertrag 2026-12e", JSON.stringify(pakete.data.pakete.map((x) => x.id)));
   const W = await entwurf("wanda@neu-app.test", "Wechsel Studio");
   const sWeb = await call("POST", "/api/signup", { body: { ...DATEN("wanda@neu-app.test", "Fremd Studio"), paket: "monatlich" } });
   const sW = blob("studio/" + W.entwurfId);
@@ -1606,8 +1624,8 @@ try {
   const dsHtmlVorab = await (await fetch(`${BASE}/datenschutz.html`)).text();
   const appText = ohneNurWeb(vertragHtml);
   check((vertragHtml.match(/data-nur-web/g) || []).length >= 5 && /data-cfg="monatPreis"/.test(vertragHtml) && !/data-cfg="monatPreis(Brutto)?"/.test(appText) && !/41,93|49,90/.test(appText) && !/per Stripe eingezogen/.test(appText) && !/graviertem QR-Code/.test(appText) && !/die Zahlung läuft über Stripe/.test(appText), "vertrag.html in der App-Fassung: ohne Web-Preis, ohne „per Stripe eingezogen“");
-  check(!/Aufsteller/i.test(vertragHtml.replace(/<!--[\s\S]*?-->/g, "")) && !/Aufsteller|Logo-Gravur|fertigt und verschickt/i.test(dsHtmlVorab.replace(/<li><b>QR-Aufsteller aus Holz \(entfallen seit November 2026\):<\/b>[^<]*<\/li>/, "").replace(/; nur zur Abwicklung einer früheren, bezahlten oder vertraglich zugesagten Bestellung des QR-Aufstellers aus Holz der Betrieb, der ihn fertigt und verschickt \(Abschnitt 7\)/, "")) && /QR-Aufsteller aus Holz \(entfallen seit November 2026\):<\/b>[^<]*löschen sie von uns aus[^<]*Nur um eine solche frühere, bezahlte oder vertraglich zugesagte Bestellung abzuwickeln/.test(dsHtmlVorab), "vertrag.html (Fassung 2026-12d) ganz ohne Aufsteller; Datenschutz: Aufsteller „entfallen“, Logos löschen wir von uns aus, Hersteller nur noch für Altfälle (Abschnitt 7 und Empfänger)");
-  check(/Preis wie beim Kauf im App Store angezeigt \(inkl\. USt\.\), Abrechnung über Apple/.test(appText) && /§ 13 Abschluss über die Tattoofin-App \(Apple\)/.test(vertragHtml) && /24 Stunden vor Ablauf/.test(vertragHtml) && /\[\?&\]app=1/.test(vertragHtml) && /Fassung 2026-12d/.test(vertragHtml), "vertrag.html: § 13 (Apple-Abo, 24 Stunden, Erstattung über Apple), App-Text data-nur-app, Fassung 2026-12d");
+  check(!/Aufsteller/i.test(vertragHtml.replace(/<!--[\s\S]*?-->/g, "")) && !/Aufsteller|Logo-Gravur|fertigt und verschickt/i.test(dsHtmlVorab.replace(/<li><b>QR-Aufsteller aus Holz \(entfallen seit November 2026\):<\/b>[^<]*<\/li>/, "").replace(/; nur zur Abwicklung einer früheren, bezahlten oder vertraglich zugesagten Bestellung des QR-Aufstellers aus Holz der Betrieb, der ihn fertigt und verschickt \(Abschnitt 7\)/, "")) && /QR-Aufsteller aus Holz \(entfallen seit November 2026\):<\/b>[^<]*löschen sie von uns aus[^<]*Nur um eine solche frühere, bezahlte oder vertraglich zugesagte Bestellung abzuwickeln/.test(dsHtmlVorab), "vertrag.html (Fassung 2026-12e) ganz ohne Aufsteller; Datenschutz: Aufsteller „entfallen“, Logos löschen wir von uns aus, Hersteller nur noch für Altfälle (Abschnitt 7 und Empfänger)");
+  check(/Preis wie beim Kauf im App Store angezeigt \(inkl\. USt\.\), Abrechnung über Apple/.test(appText) && /§ 13 Abschluss über die Tattoofin-App \(Apple\)/.test(vertragHtml) && /24 Stunden vor Ablauf/.test(vertragHtml) && /\[\?&\]app=1/.test(vertragHtml) && /Fassung 2026-12e/.test(vertragHtml), "vertrag.html: § 13 (Apple-Abo, 24 Stunden, Erstattung über Apple), App-Text data-nur-app, Fassung 2026-12e");
   const p6 = (vertragHtml.split("<h2>§ 6")[1] || "").split("<h2>")[0];
   check((p6.match(/Achtung! Kreditaufnahme kostet Geld\./g) || []).length === 2 && /Verkäufer des In-App-Abos ist Apple \(Apple Distribution International Ltd\./.test(vertragHtml) && /keine eigene Rechnung/.test(vertragHtml), "vertrag.html: § 6 mit „Achtung! Kreditaufnahme kostet Geld.“ bei Raten/Kredit, § 13 nennt Apple als Verkäufer, keine eigene Rechnung");
   const archiv = await fetch(`${BASE}/vertrag-2026-12.html`);

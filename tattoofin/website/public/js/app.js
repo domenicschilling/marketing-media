@@ -124,15 +124,15 @@
     var frei = s.stripe.freigegeben, ab = frei ? null : "ab Freigabe";
     var punkte = [
       { ok: true, t: "Vertrag abgeschlossen", s: "Paket " + s.paketName + (s.provisionProzent ? " · " + s.provisionProzent + " % pro Zahlung, alles inklusive" : s.paket === "monatlich" ? " · " + TF.monatPreis(s.monatNetto || 4900) + ", keine Provision" : " · keine Provision") },
-      { ok: s.stripe.freigegeben, warte: s.stripe.angabenGemacht && !s.stripe.freigegeben, t: "Zahlungskonto einrichten (ca. 10 Min.)",
+      { ok: s.stripe.freigegeben, warte: s.stripe.angabenGemacht && !s.stripe.freigegeben, t: "Zahlungskonto einrichten",
         s: s.stripe.freigegeben ? "Freigegeben. Stripe zahlt das Geld deiner Kunden auf dein Bankkonto aus. Bei neuen Konten wird es erst 7 Tage nach der Zahlung freigegeben." : s.stripe.angabenGemacht ? "Stripe prüft deine Angaben, meist 1 bis 3 Werktage." : "Ca. 10 Minuten. Ausweis und IBAN bereithalten. Das ist der nächste Schritt, danach geht alles andere.",
         knopf: s.stripe.freigegeben || s.stripe.angabenGemacht ? null : ["#einrichtung", "Jetzt einrichten", "gold"] },
       // Nach dem Stripe-Konto: Adresse der Zahlseite bestätigen (vorbefüllt aus Stripe) bzw. eintragen. Vorher grau, damit niemand sie doppelt tippt.
       { ok: !adresseOffen(s), adresse: true, t: "Adresse deiner Zahlseite",
-        s: !adresseOffen(s) ? "So sehen deine Kunden, bei welchem Studio sie bezahlen." : s.stripe.angabenGemacht || s.stripe.freigegeben ? (s.zahlseiteAdresse.vorschlag ? "Aus deinem Stripe-Konto übernommen. Passt das so?" : "Steht auf deiner Zahlseite und im Warenkorb deiner Kunden. Erst damit kannst du kassieren.") : "Kommt direkt nach dem Zahlungskonto, meist schon vorausgefüllt.",
+        s: !adresseOffen(s) ? "So sehen deine Kunden, bei welchem Studio sie bezahlen." : s.stripe.angabenGemacht || s.stripe.freigegeben ? (s.zahlseiteAdresse.vorschlag ? (s.zahlseiteAdresse.privat ? "Aus deinem Stripe-Konto (deine private Adresse). Sie erscheint erst nach „Stimmt so“ auf deiner Zahlseite. Für die Studio-Adresse einfach überschreiben." : "Aus deinem Stripe-Konto übernommen. Passt das so?") : "Steht auf deiner Zahlseite und im Warenkorb deiner Kunden. Erst damit kannst du kassieren.") : "Kommt direkt nach dem Zahlungskonto.",
         grau: !adresseOffen(s) || s.stripe.angabenGemacht || s.stripe.freigegeben ? null : "nach dem Zahlungskonto" },
-      { ok: Boolean(s.fragebogenAm), t: "Fragebogen ausfüllen", s: "Hilft uns bei der Einrichtung (10 Minuten).", knopf: ["/onboarding.html", "Ausfüllen", "dark"] },
-      { ok: s.recht && s.recht.aktuell, t: "Deine rechtliche Lage lesen", s: "5 Minuten: Wer trägt welches Risiko?", knopf: ["#recht", "Lesen", "dark"] },
+      { ok: Boolean(s.fragebogenAm), t: "Fragebogen ausfüllen", s: "Hilft uns bei der Einrichtung.", knopf: ["/onboarding.html", "Ausfüllen", "dark"] },
+      { ok: s.recht && s.recht.aktuell, t: "Deine rechtliche Lage lesen", s: "Wer trägt welches Risiko?", knopf: ["#recht", "Lesen", "dark"] },
       { ok: D.zahlungen.length > 0, t: "Ersten Zahlungslink erstellen", s: frei ? "Zum Ausprobieren gern an dich selbst." : "Geht, sobald dein Zahlungskonto freigegeben ist.", grau: ab, knopf: frei ? ["#link", "Erstellen", "dark"] : null },
       { ok: c.app || standalone, t: "Tattoofin auf den Startbildschirm", s: "Dann hast du die App immer griffbereit.", manuell: "app" },
       { ok: c.theke, t: "QR-Code an die Theke", s: "Zum Ausdrucken unter Werbung.", knopf: ["#werbung", "Ansehen", "ghost"], manuell: "theke" },
@@ -491,7 +491,7 @@
   function mehr() {
     var s = D.studio;
     $("mehr-recht").textContent = s.recht && s.recht.aktuell ? "Gelesen am " + dat(s.recht.am) + " ✓" : "Wer trägt welches Risiko? Einfach erklärt.";
-    $("mehr-fb").textContent = s.fragebogenAm ? "Ausgefüllt am " + dat(s.fragebogenAm) : "Hilft uns bei der Einrichtung (10 Minuten)";
+    $("mehr-fb").textContent = s.fragebogenAm ? "Ausgefüllt am " + dat(s.fragebogenAm) : "Hilft uns bei der Einrichtung";
     $("mehr-paket").textContent = "Dein Paket: " + s.paketName + (s.provisionProzent ? " · " + s.provisionProzent + " % pro Zahlung, alles inklusive" : s.paket === "monatlich" ? " · " + TF.monatPreis(s.monatNetto || 4900) + ", keine Provision" : " · keine Provision") + " · Angemeldet als " + s.email;
   }
 
