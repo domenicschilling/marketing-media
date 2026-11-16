@@ -1236,6 +1236,25 @@ try {
   const nwBlob = JSON.parse(fs.readFileSync(nwBlobPfad, "utf8"));
   fs.writeFileSync(nwBlobPfad, JSON.stringify({ ...nwBlob, aufsteller: { holz: "dunkel", variante: "name", angefordertAm: "2026-11-10T10:00:00.000Z" } }));
   check(Boolean((await admin(`studio/${nwId}`)).studio.aufsteller?.angefordertAm), "Altdaten bleiben erhalten (Admin liest s.aufsteller weiter)");
+  {
+    // Admin-Kasten: echter Altfall mit Hinweis „erstatten oder liefern“; Test aus der App-Prüfung (pruefung: true) klar als Test
+    // (nur bis Apple 1.0 freigegeben hat, dann entfernen – Entscheidung Domenic 16.11.2026)
+    const pAuf = await neueSeite();
+    await pAuf.goto(BASE + "/admin.html");
+    await pAuf.evaluate(() => sessionStorage.setItem("tf-admin", "admin"));
+    const kasten = async () => {
+      await pAuf.goto(BASE + "/admin.html#" + nwId);
+      await pAuf.reload();
+      await pAuf.waitForSelector("#d-ansehen");
+      return pAuf.evaluate(() => [...document.querySelectorAll("#detail .block")].map((b) => b.textContent).find((t) => t.includes("QR-Aufsteller (alt)")) || "");
+    };
+    const kAlt = await kasten();
+    check(/angefordert/.test(kAlt) && kAlt.includes("erstatten oder ausnahmsweise liefern") && !kAlt.includes("App-Prüfung"), "Admin: Altfall-Kasten „QR-Aufsteller (alt)“ mit „angefordert“ und Hinweis erstatten/liefern");
+    fs.writeFileSync(nwBlobPfad, JSON.stringify({ ...nwBlob, aufsteller: { holz: "hell", variante: "logo", hatLogo: true, angefordertAm: "2026-11-16T10:00:00.000Z", pruefung: true } }));
+    const kTest = await kasten();
+    check(kTest.includes("Test (App-Prüfung bei Apple), nichts liefern, nichts erstatten") && !kTest.includes("erstatten oder ausnahmsweise liefern") && !/angefordert \d/.test(kTest) && Boolean(await pAuf.$("#d-auflogo")), "Admin: Test aus der App-Prüfung (pruefung: true) steht als Test da, ohne „angefordert“ und ohne erstatten/liefern; Logo löschbar");
+    await pAuf.close();
+  }
   fs.writeFileSync(nwBlobPfad, JSON.stringify(nwBlob));
 
   console.log("Mailversand: Resend zuerst, IONOS/SMTP als Rückfall, Warteschlange, Gesundheits-Check");
