@@ -159,7 +159,7 @@ try {
     check(w.heroFn === 0 && !w.heroRaten && w.ersteFn === "nutzen", "Hero ohne Raten*-Aussage und ohne Fußnote, erste Fußnote im Nutzen-Abschnitt", JSON.stringify(w)); }
   // PFLICHT Domenic 16.11.2026: Kopf + Hero = genau der erste Bildschirm, auf jedem Gerät (Maß wie hero_check.py von Ultron, Höhen = sichtbare Fläche
   // in Safari bzw. Browser). Unterkante Hero = Fensterhöhe ±8 px, Knopf und Preiszeile ganz sichtbar, Handybild überdeckt weder Satz noch Knopf.
-  { const GERAETE = [[375, 548], [390, 664], [430, 739], [412, 839], [768, 954], [1024, 1292], [1280, 720], [1366, 768], [1440, 900], [1920, 1080], [320, 568]];
+  { const GERAETE = [[375, 548], [390, 664], [430, 739], [412, 839], [768, 954], [1024, 1292], [1280, 720], [1366, 768], [1440, 900], [1920, 1080], [320, 568], [320, 460], [568, 320], [844, 390]];
     const fehler = [];
     for (const pf of ["/", "/studios.html", "/?utm_content=tv-a", "/?utm_content=tv-d"]) {
       for (const [w, h] of GERAETE) {
@@ -176,7 +176,20 @@ try {
         if (!(Math.abs(m.unten - m.vh) <= 8 && m.knopf <= m.vh && m.preis <= m.vh && !m.quer && !m.deckt)) fehler.push(`${pf} ${w}x${h} ${JSON.stringify(m)}`);
       }
     }
-    check(fehler.length === 0, "Hero = genau der erste Bildschirm auf 11 Geräten (Start, /studios, Varianten No-Show und Gutschein): Unterkante = Fensterhöhe ±8 px, Knopf und Preiszeile sichtbar, nichts verdeckt", fehler.slice(0, 2).join(" ; ").slice(0, 400)); }
+    // Untere Leiste („49,90 € … | Studio anmelden | WhatsApp“): beim Laden nie sichtbar (sie läge sonst über dem Hero-Knopf), erst nach dem
+    // Scrollen am Hero-Knopf vorbei. Ab 900 px Breite gibt es sie nicht (display:none).
+    for (const [w, h] of GERAETE) {
+      const p = await neueSeite({ viewport: { width: w, height: h } });
+      await p.goto(BASE + "/", { waitUntil: "load" }); await p.waitForTimeout(500);
+      const sicht = () => p.evaluate(() => { const l = document.getElementById("leiste"), cs = getComputedStyle(l), r = l.getBoundingClientRect(); return cs.display !== "none" && cs.visibility === "visible" && r.top < innerHeight - 4; });
+      const anfang = await sicht();
+      await p.evaluate(() => { const k = document.querySelector(".auftakt-knopf .knopf"); scrollTo(0, k.getBoundingClientRect().bottom + scrollY + 40); });
+      await p.waitForTimeout(600);
+      const danach = await sicht();
+      await p.context().close();
+      if (anfang || (w < 900 && !danach)) fehler.push(`Leiste ${w}x${h}: beim Laden ${anfang ? "sichtbar" : "weg"}, nach dem Knopf ${danach ? "sichtbar" : "weg"}`);
+    }
+    check(fehler.length === 0, "Hero = genau der erste Bildschirm auf 14 Geräten (inkl. 320×460 und Handy quer) (Start, /studios, Varianten No-Show und Gutschein): Unterkante = Fensterhöhe ±8 px, Knopf und Preiszeile sichtbar, nichts verdeckt; untere Leiste beim Laden nie sichtbar, am Handy nach dem Hero-Knopf da", fehler.slice(0, 2).join(" ; ").slice(0, 400)); }
   check(await p0.locator("#preis").count() === 1 && await p0.locator("#r-monat").count() === 0, "Ein Preis auf der Startseite, kein Paket-Rechner");
   const preise = await p0.textContent("#preis");
   check(preise.includes("49,90") && preise.includes("41,93") && !preise.includes("58,31") && !preise.includes("999") && !preise.includes("Einmalzahlung") && !/Gründer|Profi\b|Risikofrei|10 %|900 €|Grundge/.test(preise) && !/Raten\*|Klarna\*/.test(preise), "Preisbereich: nur 49,90 € inkl. MwSt. (klein 41,93 € netto), kein 58,31 €, keine Raten-Aussage (deshalb dort kein Warnsatz nötig)");
