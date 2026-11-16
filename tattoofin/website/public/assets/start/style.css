@@ -699,3 +699,17 @@ html[data-hero=noshow] .auftakt .raten-fn,html[data-hero=gutschein] .auftakt .ra
   .auftakt .dk-blitz{left:4%;top:46%;width:3%}
   .auftakt .dk-diamant{left:89%;top:84%;width:5%}
 }
+/* iOS-Safari (schwebende Leiste unten) und Android: Hero reicht bis zur echten Bildschirmunterkante (100lvh), damit der nächste Abschnitt nicht
+   hinter bzw. unter der Leiste hervorschaut. Knopf und Preiszeile bleiben über der Leiste: der Unterschied lvh − svh kommt zum Abstand unten dazu.
+   Im Desktop-Browser ist lvh = svh, dort ändert sich nichts. */
+@media (orientation:portrait),(max-width:599px){
+  .auftakt{height:calc(100lvh - var(--kopf));padding-bottom:calc(clamp(12px,2.4svh,34px) + 100lvh - 100svh)}
+}
+@media (orientation:landscape) and (min-width:900px){
+  .auftakt{height:calc(100lvh - var(--kopf));padding-bottom:calc(clamp(14px,4svh,64px) + 100lvh - 100svh)}
+}
+/* iOS 26 Safari: unter der schwebenden Leiste bleibt ein Streifen sichtbar (gemessen iPhone 18 Pro: lvh − svh = 40 px, Streifen 60 px).
+   Der nächste Abschnitt beginnt deshalb mit so viel freiem Papier, dass dort keine Schrift hervorschaut. Desktop: lvh = svh → normaler Abstand. */
+@media (orientation:portrait),(max-width:599px){
+  main>.auftakt+script+.nutzen,main>.auftakt+.nutzen{padding-top:max(18px,calc((100lvh - 100svh) * 1.7))}
+}
