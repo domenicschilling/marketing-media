@@ -139,7 +139,7 @@ def bauen(seite):
     NUTZEN = [
         (klein_motiv("flash-1", "tf-b1", "tf-n1"), "Große Tattoos, ganzer Betrag.", "Dein Kunde zahlt in Raten* über Klarna, du bekommst den Betrag auf einmal."),
         (klein_motiv("motiv-3", "tf-b2-z", "tf-n3"), "Weniger <span class=\"nw\">No-Shows.</span>", "Den Termin blockst du erst, wenn die Anzahlung bezahlt ist."),
-        (klein_motiv("motiv-5"), "Extra Umsatz mit Gutscheinen.", "Und den Rest vom Tattoo schickst du per Link, statt hinterherzurennen."),
+        (klein_motiv("motiv-5"), "Extra Umsatz mit Gutscheinen.", "Gutscheine verkaufst du per Link, dein Kunde bekommt Code und&nbsp;PDF."),
         (klein_motiv("motiv-2"), "Geld direkt auf dein Konto.", "Über dein eigenes <span class=\"nw\">Stripe-Konto</span>, Tattoofin nimmt keine Provision."),
     ]
     nutzen = ('  <section class="nutzen" id="nutzen" aria-labelledby="nutzen-titel">\n'
@@ -254,7 +254,7 @@ def bauen(seite):
 <link rel="icon" href="/favicon.png" type="image/png"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preload" href="/assets/start/fonts/LuckiestGuy.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/start/fonts/DMSans.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/assets/start/style.css?v=20261116c">
+<link rel="stylesheet" href="/assets/start/style.css?v=20261116d">
 {ld}</head>
 <body{' data-wa="aus"' if studios else ''}>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><pattern id="tf-punkte" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><circle cx="2.2" cy="2.2" r="2.1" fill="#1f3d5c"/><circle cx="6.7" cy="6.7" r="2.1" fill="#1f3d5c"/></pattern></defs></svg>

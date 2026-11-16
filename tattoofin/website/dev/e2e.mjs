@@ -163,8 +163,9 @@ try {
   { const raten = await p0.evaluate(() => { const y = (e) => e.getBoundingClientRect().top + scrollY;
       const cl = [...document.querySelectorAll("main h1, main h2, main h3, main p, main li, main span, main div")].filter((e) => !e.closest("#fragen, .fragen, [hidden]") && e.getBoundingClientRect().height > 1 && e.children.length < 6 && /(Raten|Klarna|Ratenzahlung)\*/.test(e.textContent) && !/Achtung! Kreditaufnahme/.test(e.textContent));
       const fnIn = (n) => [...n.querySelectorAll(".raten-fn")].filter((f) => /Achtung! Kreditaufnahme kostet Geld\./.test(f.textContent));
-      const imNutzen = cl.filter((e) => e.closest(".nutzen"));
-      return cl.every((e) => e.closest(".auftakt, .nutzen")) && imNutzen.length >= 1 && imNutzen.every((e) => fnIn(e.closest(".nutzen")).some((f) => y(f) >= y(e) && y(f) - y(e) <= 560)); });
+      const NUTZEN = "main > section.nutzen#nutzen";
+      const imNutzen = cl.filter((e) => e.closest(NUTZEN));
+      return document.querySelectorAll(".nutzen").length === 1 && cl.every((e) => e.closest(".auftakt, " + NUTZEN)) && imNutzen.length >= 1 && imNutzen.every((e) => fnIn(e.closest(NUTZEN)).some((f) => y(f) >= y(e) && y(f) - y(e) <= 560)); });
     check(raten, "Raten*-Aussagen außerhalb der Fragen nur im ersten Bildschirm und im Nutzen-Block, dort mit eigener Fußnote ≤ 560 px darunter"); }
   { const domenic = (await p0.content()).match(/Domenic/g) || []; check(domenic.length === 0, "Startseite: spricht vom Team, nicht von Domenic"); }
   { const sichtbar = await p0.evaluate(() => document.body.innerText); check(!/Ich spar noch|Einmalzahlung|beiden Paketen|999 €/.test(sichtbar), "Startseite: kein „Ich spar noch.“, keine Einmalzahlung, keine zwei Pakete"); }
@@ -212,7 +213,9 @@ try {
   const pC = await neueSeite();
   await signup(pC, { paket: "einmal", email: "rechnung@example.com", firma: "Ink Rechnung", zahlart: "rechnung" });
   await pC.waitForURL(/app\.html/, { timeout: 15000 });
-  { const sR = await studioPer("rechnung@example.com"); check(sR?.status === "zahlung_offen", "Rechnung offen, trotzdem schon im Dashboard" + (sR?.status === "zahlung_offen" ? "" : " [" + JSON.stringify(sR) + "]")); }
+  { let sR; // Studio wird evtl. erst kurz nach dem Wechsel ins Dashboard gespeichert: bis 5 s nachfragen
+    for (let i = 0; i < 20 && sR?.status !== "zahlung_offen"; i++) { sR = await studioPer("rechnung@example.com"); if (sR?.status !== "zahlung_offen") await new Promise((r) => setTimeout(r, 250)); }
+    check(sR?.status === "zahlung_offen", "Rechnung offen, trotzdem schon im Dashboard" + (sR?.status === "zahlung_offen" ? "" : " [" + JSON.stringify(sR) + "]")); }
   check(mailsAn("rechnung@example.com").some((m) => m.subject.includes("Rechnung")), "E-Mail: Rechnung");
   const pC2 = await neueSeite();
   await signup(pC2, { paket: "einmal", email: "abbruch@example.com", firma: "Ink Abbruch" });

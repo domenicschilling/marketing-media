@@ -541,6 +541,8 @@ html.stech-warten .buehne svg.stech{visibility:hidden}
 .nutzen-karte h3{font-size:clamp(19px,5.1vw,22px);line-height:1.05;align-self:end}
 .nutzen-karte p{font-size:15px;line-height:1.38}
 .nutzen>.raten-fn{margin-top:12px}
+/* sehr schmale Handys (320–379 px): Karten etwas enger, damit die Nutzen-Fußnote sicher ≤ 560 px unter der Raten-Aussage bleibt */
+@media (max-width:379px){.nutzen-liste{gap:10px}.nutzen-karte{padding:10px 12px 10px 10px}}
 @media (min-width:600px) and (max-width:1099px){.nutzen-liste{grid-template-columns:1fr 1fr;gap:16px}}
 @media (min-width:900px){.nutzen{padding-top:6px;padding-bottom:30px}}
 .nw{white-space:nowrap}
