@@ -29,7 +29,7 @@ function layout({ preheader = "", title, body, cta, ctaUrl, footerNote = "" }) {
 <p style="margin:14px 0 0">Fragen? Antworte einfach auf diese E-Mail oder schreib uns per WhatsApp: ${esc(CFG.telefon)}.<br>
 ${esc(CFG.firma)} · ${esc(CFG.adresse)}<br>Tattoofin ist kein Kreditgeber. Zahlungen werden über externe Zahlungsanbieter abgewickelt.</p></td></tr></table></td></tr></table></body></html>`;
   const text = (title + "\n\n" + body + (cta ? `\n\n${cta}: ${ctaUrl}` : ""))
-    .replace(/<br\s*\/?>/g, "\n").replace(/<\/(p|li|tr|h\d)>/g, "\n").replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ")
+    .replace(/<br\s*\/?>/g, "\n").replace(/<\/(p|li|tr|h\d|div)>/g, "\n").replace(/<\/td>\s*<td/g, ": </td><td").replace(/<\/(p|li|tr|h\d|div)>\s*</g, "\n<").replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ")
     .replace(/&amp;/g, "&").replace(/\n{3,}/g, "\n\n").trim();
   return { html, text };
 }
@@ -110,7 +110,7 @@ export const mails = {
       `<ol style="margin:0 0 14px;padding-left:20px">
       <li><b>Stripe-Konto verbinden</b> (ca. 10 Minuten): ${s.modell === "provision" ? "Über dieses Konto zahlt Stripe dir automatisch " + (100 - provisionSatz(s)) + " % jeder Kundenzahlung auf das Bankkonto deines Studios aus." : "Das Konto gehört deinem Studio."} Stripe prüft Identität und Bankverbindung, das dauert meist 1 bis 3 Werktage.</li>
       <li><b>Fragebogen ausfüllen</b>, damit wir Branding und Zahlungsarten passend einrichten.</li>
-      <li>Wir richten alles ein, testen den Ablauf und schulen dein Team. Dann bekommst du dein Studio Kit mit QR-Code, Aufklebern und Vorlagen.</li></ol>` +
+      <li>Wir richten alles ein, testen den Ablauf und schulen dein Team. Dein Studio Kit (QR-Code, Fensteraufkleber, Flyer und Social-Vorlagen) findest du digital im Portal, zum Selbstdrucken.</li></ol>` +
       p(`Über dein Studio-Portal kommst du jederzeit an alles ran: <a href="${esc(loginUrl)}">zum Portal</a>.`),
     cta: "Stripe-Konto jetzt verbinden", ctaUrl: connectUrl,
   }),
@@ -396,6 +396,29 @@ ${g.nachricht ? `<div style="font-style:italic;color:#5b6370;margin-top:10px">�
       p("<b>Noch ein Hinweis zu deiner Werbung:</b> Wenn du nach dem Wechsel mit Raten wirbst, muss ab dem 20.11. direkt daneben stehen: <b>Achtung! Kreditaufnahme kostet Geld.</b> Das gilt auch für Instagram, Flyer und alles, was du ausdruckst. Wenn du nicht wechselst, nimm die Raten-Werbung bitte bis dahin heraus.") +
       p("Wenn du Fragen hast, antworte einfach auf diese Mail, wir helfen dir gern.<br><br>Viele Grüße<br>Dein Tattoofin-Team"),
     cta: "Angebot ansehen", ctaUrl: loginUrl,
+  }),
+
+  // Zweite Mail an die Altstudios (Domenic 17.11.2026): kurz, ehrlich, mit Knopf direkt zum Upgrade (Login-Link → Portal-Start mit Angebot).
+  // Grund wie in der Rechtsprüfung belegt (Gesetz zur Umsetzung der Richtlinie (EU) 2023/2225, BGBl. 2026 I Nr. 139, ab 20.11.2026).
+  umstellungUpgrade: (s, { monatNetto, loginUrl }) => mk("Ab 20.11. ohne Provision: dein Bestandskunden-Preis zum Upgraden", {
+    preheader: `Dein Preis als Bestandskunde: ${euro(monatNetto)} netto im Monat, keine Provision. Upgrade mit einem Klick.`,
+    title: "Dein Upgrade für den 20.11.",
+    body: hallo(s) + p("wir haben dir am 2. November geschrieben, heute noch einmal kurz und mit einem direkten Knopf.") +
+      p("<b>Warum sich etwas ändert:</b> Am 20.11.2026 tritt ein neues Gesetz zu Verbraucherkrediten in Kraft. Ratenzahlung und späteres Bezahlen über Klarna gelten dann als Kredit. In deinem jetzigen Paket läuft das Geld deiner Kunden über unser Konto bei Stripe, und wir bekommen 10 % von jeder Zahlung. Damit könnten wir ab dann als Vermittler von Krediten gelten, und dafür bräuchten wir eine eigene Erlaubnis. Deshalb führen wir das Modell mit Provision nicht weiter.") +
+      rows([
+        ["Dein Bestandskunden-Preis", `<b>${euro(monatNetto)} netto im Monat</b> (${euro(brutto(monatNetto))} inkl. 19 % USt.)`],
+        ["Zum Vergleich: neue Studios", `${euro(CFG.monatNetto)} netto (${euro(brutto(CFG.monatNetto))} inkl. USt.)`],
+        ["Provision", "keine mehr"],
+        ["Dazu", "nur die Gebühren von Stripe je Zahlung, direkt an Stripe"],
+        ["Laufzeit", "monatlich kündbar"],
+      ]) +
+      `<p style="margin:4px 0 22px"><a href="${esc(loginUrl)}" style="background:${gelb};color:${navy};text-decoration:none;font-weight:700;padding:13px 22px;border-radius:99px;display:inline-block">Jetzt upgraden</a></p>` +
+      p("<b>Was das Upgrade bringt:</b> Das Geld deiner Kunden läuft direkt auf dein eigenes Stripe-Konto, und Klarna bleibt möglich, soweit Klarna es für dein Studio freigibt.") +
+      p("<b>So geht's:</b> Knopf drücken, im Studio-Bereich zustimmen, den ersten Monat bezahlen und dein eigenes Stripe-Konto einrichten. Bis Stripe dein neues Konto freigegeben hat, kannst du keine neuen Zahlungslinks verschicken. Mach es am besten an einem ruhigen Tag.") +
+      box("<b>Ohne Upgrade ab dem 20.11.:</b> Zahlungslinks und Zahlseite laufen erst einmal weiter, aber nur noch mit Karte, Apple Pay und Google Pay, ohne Klarna. Das alte Modell beenden wir später mit der vertraglichen Frist. Dazu bekommst du vorher eine eigene Nachricht.") +
+      p("<b>Wichtig für deine Werbung:</b> Wenn du nach dem Upgrade mit Raten wirbst, muss ab dem 20.11. direkt daneben stehen: <b>Achtung! Kreditaufnahme kostet Geld.</b> Ohne Upgrade nimm die Raten-Werbung bitte bis dahin heraus.") +
+      p("Viele Grüße<br>Dein Tattoofin-Team"),
+    cta: "Jetzt upgraden", ctaUrl: loginUrl,
   }),
 
   umstellungBestaetigt: (s, { loginUrl }) => mk("Dein Wechsel ist bestätigt: jetzt noch das Stripe-Konto", {

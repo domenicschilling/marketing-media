@@ -40,7 +40,7 @@ import { json, fail, body, clean, now, handler } from "./_lib/util.mjs";
 import { allStudios, getStudio, saveStudio, zahlungenVon, abrechnungenVon, store, log, normEmail } from "./_lib/store.mjs";
 import { isAdmin, loginLink, sign, adminName } from "./_lib/auth.mjs";
 import { stripe, TATTOOFIN_BRANDING } from "./_lib/stripe.mjs";
-import { anbieterKuendigungZum, notify, monatsabrechnung, taeglicheJobs, kontoAbgleichen, provisionVerdient, aufstellerLogoLoeschen, STATUS, connectUrl, connectUrlGehostet } from "./_lib/domain.mjs";
+import { anbieterKuendigungZum, hatUmstellungsangebot, notify, monatsabrechnung, taeglicheJobs, kontoAbgleichen, provisionVerdient, aufstellerLogoLoeschen, STATUS, connectUrl, connectUrlGehostet } from "./_lib/domain.mjs";
 import { mails } from "./_lib/emails.mjs";
 import { sendMail, warteschlangeStatus, warteschlangeAbarbeiten } from "./_lib/mail.mjs";
 import { randomBytes } from "node:crypto";
@@ -177,6 +177,17 @@ export default handler(async (req) => {
       if (b.senden === true) { await notify(s, m); s.umstellung.gesendetAm = now(); await saveStudio(s); }
       await log("admin-umstellung", { admin: adminName(req), studioId: s.id, monatNetto, gesendet: b.senden === true });
       return json({ ok: true, gesendet: b.senden === true, betreff: m.subject, html: m.html, text: m.text });
+    }
+    // Zweite Mail an Altstudios mit Knopf „Jetzt upgraden“ (Domenic 17.11.2026). Nur mit bestehendem Angebot und solange nicht umgestellt.
+    // Der Knopf ist ein Login-Link (einmal verwendbar, 7 Tage gültig) direkt in den Studio-Bereich, wo das Angebot oben steht. Ohne senden:true nur Vorschau.
+    if (aktion === "umstellung-upgrade" && req.method === "POST") {
+      if (!hatUmstellungsangebot(s) || s.umstellung?.erledigtAm) return fail("Für dieses Studio gibt es kein offenes Angebot.", 409);
+      const b = await body(req);
+      const loginUrl = loginLink(s.id, 7 * 24 * 60) + "&next=" + encodeURIComponent("/app.html");
+      const m = mails.umstellungUpgrade(s, { monatNetto: s.umstellung.monatNetto, loginUrl });
+      if (b.senden === true) { await notify(s, m); s.umstellung.upgradeMailAm = now(); await saveStudio(s); }
+      await log("admin-umstellung-upgrade", { admin: adminName(req), studioId: s.id, gesendet: b.senden === true });
+      return json({ ok: true, gesendet: b.senden === true, an: s.email, betreff: m.subject, html: m.html, text: m.text });
     }
     // Kündigung durch den Anbieter (Altvertrag: ein Monat zum Monatsende). Ohne senden:true passiert nichts, nur Vorschau.
     if (aktion === "kuendigen" && req.method === "POST") {

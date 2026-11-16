@@ -32,7 +32,7 @@ const storeMod = await import("../netlify/functions/_lib/store.mjs");
 const { mails: mailVorlagen } = await import("../netlify/functions/_lib/emails.mjs");
 
 let ok = 0, fail = 0;
-const check = (cond, name) => { if (cond) { ok++; console.log("  ✓", name); } else { fail++; console.log("  ✗", name); } };
+const check = (cond, name, info) => { if (cond) { ok++; console.log("  ✓", name); } else { fail++; console.log("  ✗", name, info ? "→ " + String(info).slice(0, 600) : ""); } };
 const admin = (p, opts = {}) => fetch(`${BASE}/api/admin/${p}`, { method: opts.body ? "POST" : "GET", ...opts, headers: { Authorization: "Bearer admin", "content-type": "application/json" }, body: opts.body ? JSON.stringify(opts.body) : undefined }).then((r) => r.json());
 const mailsAn = (to) => fs.readdirSync(dataDir).filter((f) => f.startsWith("mail%2F")).map((f) => JSON.parse(fs.readFileSync(path.join(dataDir, f)))).filter((m) => [].concat(m.to).includes(to));
 const linkAus = (m, re) => (m.html.match(re) || [])[1]?.replace(/&amp;/g, "&");
@@ -143,10 +143,9 @@ try {
     const lauf2 = (d) => { for (const f of fs.readdirSync(d, { withFileTypes: true })) { const x = path.join(d, f.name); if (f.isDirectory()) lauf2(x); else if (/aufsteller/i.test(f.name)) reste.push(path.relative(root, x)); } };
     lauf2(path.join(root, "public"));
     check(bildStatus.every((st) => st === 404) && reste.length === 0, "Aufsteller-Bilder (lp/aufsteller-*.webp, start/aufsteller-scannen-800.webp) liefern 404, keine Datei mit „aufsteller“ im Namen unter public/", bildStatus.join(",") + " " + reste.join(", "));
-    // Datenschutz: Aufsteller „entfallen seit November 2026“ (kein Datum vor dem Deploy), Logos ohne Bestellung löschen wir von uns aus,
-    // Hersteller nur bei Altfällen (Abschnitt 7 und Empfänger)
+    // Datenschutz: Aufsteller-Absatz ganz gestrichen (Entscheidung Domenic 16.11.2026), auch kein Hersteller mehr bei den Empfängern
     const ds = fs.readFileSync(path.join(root, "public/datenschutz.html"), "utf8");
-    check(/entfallen seit November 2026/.test(ds) && /löschen sie von uns aus/.test(ds) && !/auf deinen Wunsch sofort/.test(ds) && /Bestellung des QR-Aufstellers aus Holz der Betrieb/.test(ds), "Datenschutz: Aufsteller entfallen, Logos werden von uns gelöscht, Hersteller nur für Altfälle genannt");
+    check(!/aufsteller/i.test(ds), "Datenschutz: kein Absatz und kein Empfänger zum QR-Aufsteller mehr (Entscheidung Domenic 16.11.2026)");
     const cfgOeff = await (await fetch(BASE + "/api/config")).json();
     check(!/aufsteller/i.test(JSON.stringify(cfgOeff)) && cfgOeff.vertragVersion === "2026-12e", "GET /api/config ohne Aufsteller-Preis/-Pakete, Vertrag 2026-12e");
   }
@@ -522,6 +521,7 @@ try {
   await pA.click("form#f button");
   await pA.waitForSelector(".alert.ok");
   check(true, "Fragebogen gespeichert");
+  { const fb = await pA.content(); check(!/Flyer A6 \(Stück\)|name="flyer"|name="aufkleber"|w_paypal/.test(fb) && /name="vorlage_flyer"/.test(fb) && /zum Selbstdrucken/.test(fb), "Fragebogen: Studio Kit nur digital (Vorlagen zum Selbstdrucken, keine Stückzahlen), kein PayPal-Wunsch (Entscheidung Domenic 16.11.2026)"); }
 
   // ---------------------------------------------------------------- G: Zahlungslink + Bezahlfeld
   console.log("Live schalten + Zahlungslink im Dashboard + eingebettetes Bezahlfeld (Klarna)");

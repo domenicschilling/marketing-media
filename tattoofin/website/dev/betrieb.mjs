@@ -1305,6 +1305,23 @@ await abschnitt("19 Altstudio stellt um: Zustimmung, 29 €, neues eigenes Konto
   check(gleich._status === 400 && mailsAn("umstellung@betrieb.test").length === mailsVor, "Angebot zum normalen Preis (4193) wird abgelehnt, „günstiger“ stimmt immer", `HTTP ${gleich._status}`);
   const ang = await admin(`studio/${a.id}/umstellung`, { body: { monatNetto: 2900 } });
   check(ang.ok && ang.gesendet === false && /29,00 €|29 €/.test(ang.html) && /Achtung! Kreditaufnahme kostet Geld/.test(ang.html) && mailsAn("umstellung@betrieb.test").length === mailsVor, "Angebot: nur Vorschau, keine Mail ohne senden:true, Preis + Pflichtsatz im Text", ang.betreff);
+  // Zweite Mail „Jetzt upgraden“ (Domenic 17.11.2026): Vorschau ohne Versand, Inhalt, Knopf = Login-Link direkt in den Studio-Bereich
+  const up = await admin(`studio/${a.id}/umstellung-upgrade`, { body: {} });
+  check(up.ok && up.gesendet === false && mailsAn("umstellung@betrieb.test").length === mailsVor && (up.html.match(/>Jetzt upgraden</g) || []).length === 2
+    && /29,00 € netto im Monat<\/b> \(34,51 € inkl\. 19 % USt\.\)/.test(up.html) && /41,93 € netto \(49,90 € inkl\. USt\.\)/.test(up.html)
+    && /nur noch mit Karte, Apple Pay und Google Pay, ohne Klarna/.test(up.html) && /Achtung! Kreditaufnahme kostet Geld/.test(up.html) && /Verbraucherkrediten/.test(up.html) && !/paypal|sofort/i.test(up.html)
+    && /Dein Bestandskunden-Preis: 29,00 € netto im Monat/.test(up.text) && /Jetzt upgraden: http/.test(up.text),
+    "Upgrade-Mail: nur Vorschau ohne senden:true, Preis netto + brutto, Vergleich neue Studios, ohne Upgrade nur Karte, Pflichtsatz, Knopf 2×, Klartext-Fassung", up.betreff);
+  const upLink = ((up.html.match(/href="([^"]*\/api\/auth\?token=[^"]+)"/) || [])[1] || "").replace(/&amp;/g, "&");
+  const upU = new URL(upLink);
+  const upLogin = await fetch(BASE + "/api/auth", { method: "POST", redirect: "manual", headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ token: upU.searchParams.get("token"), next: upU.searchParams.get("next") }) });
+  const upCookie = (upLogin.headers.get("set-cookie") || "").split(";")[0];
+  check(upU.searchParams.get("next") === "/app.html" && [302, 303].includes(upLogin.status) && /\/app\.html$/.test(upLogin.headers.get("location") || "") && Boolean(upCookie),
+    "Knopf „Jetzt upgraden“: Login-Link meldet das Studio an und führt in den Studio-Bereich", `HTTP ${upLogin.status} ${upLogin.headers.get("location")}`);
+  const upDash = (await json("/api/portal", {}, upCookie)).data;
+  check(upDash.studio?.id === a.id && upDash.studio?.umstellungAngebot?.monatNetto === 2900, "Nach dem Klick: Studio-Bereich zeigt das Angebot 29 € (Karte „Neu ab 20.11.“)", "");
+  const upSend = await admin(`studio/${a.id}/umstellung-upgrade`, { body: { senden: true } });
+  check(upSend.gesendet === true && mailsAn("umstellung@betrieb.test").filter((m) => /Bestandskunden-Preis zum Upgraden/.test(m.subject)).length === 1, "Upgrade-Mail mit senden:true geht genau einmal raus", upSend.betreff);
   const dash = (await json("/api/portal", {}, a.cookie)).data;
   check(dash.studio.umstellungAngebot?.monatNetto === 2900, "Dashboard zeigt das Angebot", "");
   const ohneHaken = await post("/api/portal/umstellung", { unterzeichner: "Alex Muster", akzeptiert: { vertrag: true, avv: true, unternehmer: true } }, a.cookie);
@@ -1323,6 +1340,8 @@ await abschnitt("19 Altstudio stellt um: Zustimmung, 29 €, neues eigenes Konto
   check(sn.modell === "kauf" && sn.paket === "monatlich" && sn.monatNetto === 2900 && sn.status === "einrichtung" && sn.stripe.accountId === null && sn.stripe.altKonto?.accountId === altKonto && sn.stripe.subscriptionId, "Nach Zahlung: Monatlich 29 €, altes Konto vermerkt, neues Konto fehlt noch", JSON.stringify(sn.stripe.altKonto));
   check(sn.vertrag.version === "2026-12e" && sn.vertrag.monatNetto === 2900 && sn.vertrag.kmu === true && sn.vertragAlt?.length === 1, "Neuer Vertrag gespeichert (Sonderpreis 29 € bleibt), alter bleibt nachvollziehbar", sn.vertrag.version);
   check(mailsAn("umstellung@betrieb.test").some((m) => /Wechsel ist bestätigt/.test(m.subject)), "Bestätigung per Mail", "");
+  const upNach = await admin(`studio/${a.id}/umstellung-upgrade`, { body: {} });
+  check(upNach._status === 409, "Nach dem Upgrade: keine Upgrade-Mail mehr möglich", `HTTP ${upNach._status}`);
 
   // Altes Konto meldet sich: darf den Status nicht verfälschen
   const { sendeWebhook } = await import("../netlify/functions/_lib/stripe-sim.mjs");
