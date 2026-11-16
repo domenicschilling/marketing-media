@@ -70,7 +70,7 @@ HERO_VARIANTEN = {
     "noshow": {"h": "No-Show? Erst Anzahlung. Dann Termin.", "s": "Anzahlungs-Link per WhatsApp schicken – erst wenn dein Kunde gezahlt hat, blockst du den\u00a0Termin.", "c": "Anzahlung einrichten",
                "b": "Kunde zahlt an und bestätigt deine\u00a0Bedingungen.", "bh": "#nr3",
                "bild": HERO_BILDER["noshow"], "alt": "Echte Tattoofin-Zahlseite am Handy: Hi Kai, deine Zahlung an Ink Studio Bamberg, 150 Euro, Rückenstück, Termin Freitag, Anzahlung. Beispieldaten."},
-    "link": {"h": "Betrag rein. Link raus. Bezahlt.", "s": "Dein Kunde zahlt mit Karte, Apple Pay, Google Pay oder in Raten* über\u00a0Klarna."},
+    "link": {"h": "Betrag rein. Link raus. Bezahlt.", "s": "Dein Kunde zahlt mit Karte, Apple Pay, Google Pay oder\u00a0Klarna."},
     "gutschein": {"h": "Weihnachten: Gutscheine per Link\u00a0verkaufen.", "s": "Dein Kunde zahlt am Handy und bekommt Code und PDF zum\u00a0Verschenken.", "c": "Gutscheine einrichten",
                   "b": "Kunde bekommt Code und PDF direkt per\u00a0E-\u2060Mail.", "bh": "#nr5",
                   "bild": HERO_BILDER["gutschein"], "alt": "Echte Tattoofin-Gutschein-Kaufseite am Handy: Hi Greta, dein Gutschein von Ink Studio Bamberg, 150 Euro, Wertgutschein für Max. Beispieldaten."},
@@ -170,12 +170,12 @@ def bauen(seite):
     # „Was es dir bringt“ (Domenic 16.11. abends: „Was bringt es dir? Vorteile.“). Nur Belegbares: Mail bei Zahlungseingang
     # (emails.mjs zahlungEingegangen), Push in der App, Zahlseite mit Studionamen (pay.mjs), Gutscheine per Link. Keine Zahlen, keine Versprechen.
     VORTEILE = [
-        ("Termine, die halten.", "Du blockst erst, wenn die Anzahlung da ist. Sagt der Kunde kurzfristig ab, gelten deine Bedingungen."),
+        ("Weniger No-Shows.", "Du blockst erst, wenn die Anzahlung da ist. Sagt der Kunde kurzfristig ab, gelten deine Bedingungen."),
         ("Kein Hinterherlaufen.", "Link schicken statt Kontonummer diktieren. Du siehst sofort, wer bezahlt hat."),
         ("Nachricht bei jeder Zahlung.", "Per E-Mail oder in der iPhone-App. Die App bekommst du nach der Anmeldung von uns."),
         ("Umsatz, auch wenn zu ist.", "Gutscheine verkaufst du per Link, abends, am Wochenende, vor Weihnachten."),
         ("Dein Studio, dein Name.", "Dein Kunde zahlt auf einer Seite mit deinem Studionamen, nicht mit unserem."),
-        ("Keine Provision.", "Fester Monatspreis. Dazu nur die Gebühr von Stripe je Zahlung, die siehst du vorher."),
+        ("Alles an einem Ort.", "Zahlungslinks, Anzahlungen, Gutscheine und Auszahlungen in einer App und im Browser."),
     ]
     vorteile = ('  <section class="vorteile" id="vorteile" aria-labelledby="vorteile-titel">\n'
                 '    <h2 id="vorteile-titel">Was es dir&nbsp;bringt.</h2>\n    <ul class="vorteil-liste">\n'
@@ -321,7 +321,7 @@ def bauen(seite):
   <section class="auftakt">
     <div class="auftakt-kopf">
       <h1 data-hero="h">Ganzer&nbsp;Rücken? 4.000&nbsp;€ auf&nbsp;einmal.</h1>
-      <p class="unterzeile" data-hero="s">Link per WhatsApp schicken – dein Kunde zahlt am Handy<span class="hero-raten">, auch in Raten* über&nbsp;Klarna</span>.</p>
+      <p class="unterzeile" data-hero="s">Link per WhatsApp schicken – dein Kunde zahlt am Handy, auch per&nbsp;Klarna.</p>
     </div>
     <div class="buehne">
       {motiv("deko-stern")}
@@ -342,7 +342,6 @@ def bauen(seite):
     <div class="auftakt-fuss">
       <div class="auftakt-knopf">{start("auftakt")}</div>
       <p class="preiszeile">49,90&nbsp;€ im Monat · monatlich kündbar</p>
-      <p class="raten-fn">{FN_KURZ}</p>
     </div>
   </section>
 {HERO_TAUSCH}

@@ -153,9 +153,10 @@ try {
   const p0 = await neueSeite();
   await p0.goto(BASE + "/");
   check((await p0.textContent("h1")).replace(/\u00a0/g, " ").includes("auf einmal"), "Hero lädt (Überschrift für Studio-Inhaber, 16.11.2026)");
-  // Warnsatz klein als Fußnote bei der einen Raten-Aussage im Hero (Entscheidung Domenic 14.11.2026): im ersten Abschnitt, nah unter der h1
-  { const w = await p0.evaluate(() => { const h1 = document.querySelector("h1"), fn = [...document.querySelectorAll(".auftakt .raten-fn")].find((e) => /Achtung! Kreditaufnahme kostet Geld\./.test(e.textContent) && /Raten über Klarna, nach deren Bonitätsprüfung/.test(e.textContent)); if (!h1 || !fn) return null; return { abstand: fn.getBoundingClientRect().top - h1.getBoundingClientRect().top, inHero: h1.closest(".auftakt") === fn.closest(".auftakt") }; });
-    check(Boolean(w && w.inHero && w.abstand > 0 && w.abstand <= 560), "Warnsatz als Fußnote im Hero, höchstens 560 px unter der Raten-Überschrift" + (w ? ` (${Math.round(w.abstand)} px)` : "")); }
+  // Seit 16.11.2026 nachts: Hero ohne Raten*-Aussage und ohne Fußnote; die erste Fußnote steht im Abschnitt „Was du damit machen kannst“
+  { const w = await p0.evaluate(() => ({ heroFn: document.querySelectorAll(".auftakt .raten-fn").length, heroRaten: /(Raten|Klarna)\*/.test(document.querySelector(".auftakt").innerText),
+      ersteFn: document.querySelector("main .raten-fn")?.closest("section")?.id }));
+    check(w.heroFn === 0 && !w.heroRaten && w.ersteFn === "nutzen", "Hero ohne Raten*-Aussage und ohne Fußnote, erste Fußnote im Nutzen-Abschnitt", JSON.stringify(w)); }
   check(await p0.locator("#preis").count() === 1 && await p0.locator("#r-monat").count() === 0, "Ein Preis auf der Startseite, kein Paket-Rechner");
   const preise = await p0.textContent("#preis");
   check(preise.includes("49,90") && preise.includes("41,93") && !preise.includes("58,31") && !preise.includes("999") && !preise.includes("Einmalzahlung") && !/Gründer|Profi\b|Risikofrei|10 %|900 €|Grundge/.test(preise) && !/Raten\*|Klarna\*/.test(preise), "Preisbereich: nur 49,90 € inkl. MwSt. (klein 41,93 € netto), kein 58,31 €, keine Raten-Aussage (deshalb dort kein Warnsatz nötig)");
