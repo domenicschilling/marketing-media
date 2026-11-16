@@ -41,6 +41,14 @@ FRAGEN = [
      "Im Portal, zum Ende des Abrechnungsmonats. Dein Stripe-Konto bleibt bei dir, Zahlungslinks und QR-Code enden. Lehnt Stripe dein Studio endgültig ab, bekommst du die gezahlten Monate zurück, außer bei falschen Angaben oder Pflichtverletzung.", False),
     ("Wann kommt das Geld, und was brauche ich?",
      "Stripe zahlt auf dein Bankkonto aus, nach den Fristen von Stripe. Du brauchst dein Studio als Unternehmen, ein Bankkonto und deinen Ausweis.", False),
+    ("Wie fange ich an?",
+     "Online anmelden, dann legst du dein Stripe-Konto an und Stripe prüft dein Studio. Danach richtet unser Team alles mit dir ein, mit einer Testzahlung.", False),
+    ("Ich hab schon SumUp & Co.",
+     "Behalt es. Dein Kartengerät kassiert an der Theke. Tattoofin kassiert, wenn der Kunde nicht da ist: Anzahlung vorab, Rest per Link, Gutscheine.", False),
+    ("Meine Kunden zahlen bar.",
+     "Bar bleibt. Für eine Anzahlung muss dein Kunde dann aber extra vorbeikommen. Mit dem Link zahlt er sofort von zu Hause.", False),
+    ("Technik ist nicht meins.",
+     "Musst du nicht können. Unser Team richtet alles mit dir ein, per WhatsApp.", False),
 ]
 
 
@@ -136,27 +144,28 @@ def bauen(seite):
         if alt_id:
             m = m.replace('id="%s"' % alt_id, 'id="%s"' % neu_id).replace('href="#%s"' % alt_id, 'href="#%s"' % neu_id)
         return m
+    # „Das kann Tattoofin“ (Umbau 16.11.2026 abends, Domenic: „Man muss da wirklich erklären, was geht denn alles mit der App?“):
+    # die vier Zahlungsarten fürs Studio, darunter, womit der Kunde zahlt. Ratenzahlung* bewusst als letzte Karte: so steht die Fußnote
+    # am Handy (auch 320 px) dicht darunter (≤ 560 px, dev/betrieb.mjs 17d/17g). Nur, was wirklich geht (config ZAHLARTEN = card,klarna; Karte
+    # inkl. Apple Pay/Google Pay; Gutscheine nur Karte). KEIN PayPal (über Stripe Connect mit Direct Charges nicht möglich).
+    # ids nr1–nr5: Sprungziele der Flash-Motive im Hero (nr1 Klarna, nr2 Zahlungslink, nr3 Anzahlung, nr5 Gutschein; nr4 QR in „So geht's“).
     NUTZEN = [
-        (klein_motiv("flash-1", "tf-b1", "tf-n1"), "Große Tattoos, ganzer Betrag.", "Dein Kunde zahlt in Raten* über Klarna, du bekommst den Betrag auf einmal."),
-        (klein_motiv("motiv-3", "tf-b2-z", "tf-n3"), "Weniger <span class=\"nw\">No-Shows.</span>", "Den Termin blockst du erst, wenn die Anzahlung bezahlt ist."),
-        (klein_motiv("motiv-5"), "Extra Umsatz mit Gutscheinen.", "Gutscheine verkaufst du per Link, dein Kunde bekommt Code und&nbsp;PDF."),
-        (klein_motiv("motiv-2"), "Geld direkt auf dein Konto.", "Über dein eigenes <span class=\"nw\">Stripe-Konto</span>, Tattoofin nimmt keine Provision."),
+        ("nr3", klein_motiv("motiv-3", "tf-b2-z", "tf-n3"), "Anzahlung", "Vor dem Termin.", "Dein Kunde zahlt an und bestätigt deine Bedingungen. Erst dann blockst du den Termin."),
+        ("nr2", klein_motiv("motiv-2"), "Gesamtzahlung", "Nach der Sitzung.", "Den ganzen Betrag oder den Rest nach der Anzahlung, per Link oder QR-Code."),
+        ("nr5", klein_motiv("motiv-5"), "Gutschein", "Zum Verschenken.", "Dein Kunde kauft per Link und bekommt Code und PDF per E-Mail."),
+        ("nr1", klein_motiv("flash-1", "tf-b1", "tf-n1"), "Ratenzahlung*", "Für große Tattoos.", "Dein Kunde zahlt in Raten* über Klarna. Du bekommst den ganzen Betrag auf einmal."),
     ]
     nutzen = ('  <section class="nutzen" id="nutzen" aria-labelledby="nutzen-titel">\n'
-              '    <h2 id="nutzen-titel">Was dein Studio davon&nbsp;hat.</h2>\n    <ul class="nutzen-liste">\n'
-              + "".join('      <li class="nutzen-karte"><span class="nutzen-motiv">%s</span><h3>%s</h3><p>%s</p></li>\n' % (m, h, t) for m, h, t in NUTZEN)
-              + '    </ul>\n    <p class="raten-fn">%s</p>\n  </section>\n\n' % FN_KURZ)
-    # Einwände (Vertriebs-Umbau 16.11.2026): je 1 Frage, 1–2 Sätze Antwort
-    EINWAENDE = [
-        ("Ich hab schon SumUp &amp; Co.", "Behalt es. Dein Kartengerät kassiert an der Theke. Tattoofin kassiert vorher: Anzahlung per WhatsApp, Klarna, Gutscheine."),
-        ("Meine Kunden zahlen bar.", "Bar bleibt. Für eine Anzahlung muss dein Kunde dann aber extra vorbeikommen. Mit dem Link zahlt er sofort vom Sofa."),
-        ("Technik ist nicht meins.", "Musst du nicht können. Unser Team richtet alles mit dir ein, per WhatsApp."),
-        ("Anzahlung? Mach ich per PayPal.", "Und schreibst hinterher, bis sie da ist. Mit dem Link zahlt dein Kunde sofort und bestätigt dabei deine Bedingungen. Du siehst: bezahlt."),
-    ]
-    einwaende = ('  <section class="einwaende" aria-labelledby="einwaende-titel">\n'
-                 '    <h2 id="einwaende-titel">Klingt gut, aber …</h2>\n    <ul class="einwand-liste">\n'
-                 + "".join('      <li class="einwand"><p class="einwand-frage">„%s“</p><p>%s</p></li>\n' % (f, a) for f, a in EINWAENDE)
-                 + '    </ul>\n  </section>\n\n')
+              '    <h2 id="nutzen-titel">Das kann Tattoofin.</h2>\n'
+              '    <p class="abschnitt-satz">Für jede Zahlung in deinem Studio ein Link. Dein Kunde zahlt am Handy.</p>\n    <ul class="nutzen-liste">\n'
+              + "".join('      <li class="nutzen-karte" id="%s"><span class="nutzen-motiv">%s</span><h3>%s</h3><p><b>%s</b> %s</p></li>\n' % (i, m, h, w, s) for i, m, h, w, s in NUTZEN)
+              + '    </ul>\n'
+              '    <div class="zahlarten">\n'
+              '      <p class="zahlarten-titel">Dein Kunde zahlt mit</p>\n'
+              '      <ul class="chips" aria-label="Zahlarten"><li>Karte</li><li>Apple&nbsp;Pay</li><li>Google&nbsp;Pay</li><li>Klarna*</li></ul>\n'
+              '      <p class="zahlarten-satz">Das Geld geht direkt auf dein eigenes <span class="nw">Stripe-Konto</span>. Tattoofin nimmt keine Provision. Gutscheine ohne&nbsp;Klarna.</p>\n'
+              '    </div>\n'
+              '    <p class="raten-fn">%s</p>\n  </section>\n\n' % FN_KURZ)
     fragen = []
     for q, a, fn in FRAGEN:
         antwort = "<p>%s</p>" % nbsp_zahlen(html.escape(a, quote=False))
@@ -254,7 +263,7 @@ def bauen(seite):
 <link rel="icon" href="/favicon.png" type="image/png"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preload" href="/assets/start/fonts/LuckiestGuy.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/start/fonts/DMSans.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/assets/start/style.css?v=20261116d">
+<link rel="stylesheet" href="/assets/start/style.css?v=20261116e">
 {ld}</head>
 <body{' data-wa="aus"' if studios else ''}>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><pattern id="tf-punkte" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><circle cx="2.2" cy="2.2" r="2.1" fill="#1f3d5c"/><circle cx="6.7" cy="6.7" r="2.1" fill="#1f3d5c"/></pattern></defs></svg>
@@ -296,7 +305,7 @@ def bauen(seite):
       </figure>
     </div>
     <div class="auftakt-fuss">
-      <p class="hero-beleg"><a href="#nr1" data-hero="b">Echter&nbsp;Fall 07.11.: Rücken-Tattoo per&nbsp;Klarna&nbsp;bezahlt</a></p>
+      <p class="hero-beleg"><a href="#fall" data-hero="b">Echter&nbsp;Fall 07.11.: Rücken-Tattoo per&nbsp;Klarna&nbsp;bezahlt</a></p>
       <div class="auftakt-knopf">{start("auftakt")}</div>
       <p class="preiszeile">49,90&nbsp;€ im Monat inkl. MwSt. · keine Provision · monatlich kündbar <span class="b2b">· nur für Unternehmer</span></p>
       <p class="raten-fn">{FN_LANG}</p>
@@ -304,16 +313,15 @@ def bauen(seite):
     </div>
   </section>
 {HERO_TAUSCH}
-{nutzen}  <section class="fall" id="nr1" data-beleg aria-labelledby="fall-titel">
-    <div class="fall-kopf">
-      <span class="stempel-schild">Echter Fall</span>
-      <h2 id="fall-titel">900<span class="eur">€</span> per Klarna.</h2>
-    </div>
-    <div class="fall-bild">
-      <button type="button" class="motiv-knopf" data-stechen aria-label="Bezahlt 1: Herz neu stechen">
-        {motiv("herz-bezahlt").replace('role="img" aria-label="Flash-Herz mit Banderole: Bezahlt"', 'aria-hidden="true" focusable="false"')}
-        <span class="nr" aria-hidden="true">1</span>
-      </button>
+{nutzen}  <section class="ablauf" id="ablauf" data-beleg aria-labelledby="ablauf-titel">
+    <h2 id="ablauf-titel">So läuft&rsquo;s.</h2>
+    <p class="abschnitt-satz">In der iPhone-App oder im Browser. Ohne Kartengerät.</p>
+    <ol>
+      <li><div class="stufe-bild">{motiv("stufe-1")}<span class="nr" aria-hidden="true">1</span></div><p><b>Betrag eintippen.</b> Zum Beispiel 900&nbsp;€ für einen Drachen auf dem Rücken.</p></li>
+      <li id="nr4"><div class="stufe-bild">{motiv("stufe-2")}<span class="nr" aria-hidden="true">2</span></div><p><b>Link schicken.</b> Per WhatsApp. Oder dein Kunde scannt deinen QR-Code an der Theke.</p></li>
+      <li><div class="stufe-bild">{motiv("stufe-3")}<span class="nr" aria-hidden="true">3</span></div><p><b>Bezahlt.</b> Du siehst es sofort in der App. Stripe zahlt auf dein Bankkonto aus.</p></li>
+    </ol>
+    <div class="fall" id="fall">
       <figure class="bon">
         <span class="klebe" aria-hidden="true"></span>
         <span class="bon-kopf">Studio anonym</span>
@@ -323,79 +331,13 @@ def bauen(seite):
         <span class="bon-stempel">Bezahlt 07.11.2026</span>
         <figcaption>Nachgezeichnet nach dem echten Zahlungseingang.</figcaption>
       </figure>
+      <div class="fall-text">
+        <span class="stempel-schild">Echter Fall</span>
+        <h3 id="fall-titel">900<span class="eur">€</span> per Klarna.</h3>
+        <p>So lief es am 7. November in einem Studio: Link geschickt, Kunde zahlt per Klarna, das Geld kommt aufs eigene <span class="nw">Stripe-Konto</span>.</p>
+        <p class="klein">Studio anonym. Klarna entscheidet bei jedem Kunden selbst.</p>
+      </div>
     </div>
-    <div class="fall-text">
-      <p>Drache auf dem Rücken, eine Sitzung. Bezahlt am 7. November, aufs eigene Stripe-Konto des Studios.</p>
-      <p class="klein">Studio anonym. Klarna entscheidet bei jedem Kunden selbst.</p>
-    </div>
-  </section>
-
-  <section class="werkzeuge" aria-labelledby="werkzeuge-titel">
-    <h2 id="werkzeuge-titel">Alles läuft übers Handy.</h2>
-    <p class="app-schild"><span class="app-neu">Neu</span> Tattoofin gibt’s auch als iPhone-App. Nach der Anmeldung bekommst du sie von uns.</p>
-    <div class="stuecke">
-      <article class="stueck" id="nr2">
-        <div class="stueck-bild">
-          <figure class="abzug">
-            <button type="button" class="abzug-knopf" data-abzug aria-expanded="false" aria-label="Bild größer zeigen">
-              <span class="klebe" aria-hidden="true"></span>
-              <img src="/assets/start/zahlungslink-whatsapp.webp" alt="Ausschnitt aus der Tattoofin-App: Zahlungslink für Lena über 2.000 Euro, mit den Knöpfen Per WhatsApp senden und Link kopieren. Beispieldaten." width="592" height="460" loading="lazy" decoding="async">
-            </button>
-            <figcaption>Beispieldaten</figcaption>
-          </figure>
-          <button type="button" class="motiv-knopf sticker" data-stechen aria-label="Nr. 2: Schwalbe neu stechen">{motiv("motiv-2")}<span class="nr" aria-hidden="true">2</span></button>
-        </div>
-        <div class="stueck-text">
-          <h3>Link per WhatsApp.</h3>
-          <p>Betrag rein, Link raus. Dein Kunde zahlt am Handy.</p>
-          <ul class="chips" aria-label="Zahlarten"><li>Karte</li><li>Apple&nbsp;Pay</li><li>Google&nbsp;Pay</li><li>Klarna</li></ul>
-        </div>
-      </article>
-      <article class="stueck" id="nr3">
-        <div class="stueck-bild">
-          <figure class="abzug">
-            <button type="button" class="abzug-knopf" data-abzug aria-expanded="false" aria-label="Bild größer zeigen">
-              <span class="klebe" aria-hidden="true"></span>
-              <img src="/assets/start/handy-anzahlung-oben.webp?v=20261116b" alt="Ausschnitt der Tattoofin-Zahlseite am Handy: Hi Kai, deine Zahlung an Ink Studio Bamberg, 150 Euro, Rückenstück, Termin Freitag, Anzahlung. Beispieldaten." width="600" height="545" loading="lazy" decoding="async">
-            </button>
-            <figcaption>Beispieldaten</figcaption>
-          </figure>
-          <button type="button" class="motiv-knopf sticker" data-stechen aria-label="Nr. 3: Termin, Anker neu stechen">{motiv("motiv-3")}<span class="nr" aria-hidden="true">3</span></button>
-        </div>
-        <div class="stueck-text">
-          <h3>Anzahlung per Link.</h3>
-          <p>Kunde zahlt an und bestätigt dabei deine Bedingungen.</p>
-          <a class="mehr" href="/muster-anzahlungsbedingungen.pdf" data-umami-event="muster-pdf">Muster-Bedingungen gratis (PDF)</a>
-        </div>
-      </article>
-      <article class="stueck nur-motiv" id="nr4">
-        <div class="stueck-bild">
-          <button type="button" class="motiv-knopf" data-stechen aria-label="Nr. 4: Theke, Spielkarte mit QR-Code neu stechen">{motiv("motiv-4")}<span class="nr" aria-hidden="true">4</span></button>
-        </div>
-        <div class="stueck-text">
-          <h3>QR an der Theke.</h3>
-          <p>Dein QR-Code zum Ausdrucken, als Aufkleber oder Flyer. Ist dabei.</p>
-        </div>
-      </article>
-      <article class="stueck nur-motiv" id="nr5">
-        <div class="stueck-bild">
-          <button type="button" class="motiv-knopf" data-stechen aria-label="Nr. 5: Gutschein, Rose neu stechen">{motiv("motiv-5")}<span class="nr" aria-hidden="true">5</span></button>
-        </div>
-        <div class="stueck-text">
-          <h3>Gutschein per Link.</h3>
-          <p>Code und PDF, fertig zum Verschenken.</p>
-        </div>
-      </article>
-    </div>
-  </section>
-
-{einwaende}  <section class="ablauf" id="ablauf" aria-labelledby="ablauf-titel">
-    <h2 id="ablauf-titel">In 3 Schritten startklar.</h2>
-    <ol>
-      <li><div class="stufe-bild">{motiv("stufe-1")}<span class="nr" aria-hidden="true">1</span></div><p><b>Online anmelden.</b> Dauert ein paar Minuten.</p></li>
-      <li><div class="stufe-bild">{motiv("stufe-2")}<span class="nr" aria-hidden="true">2</span></div><p><b>Stripe-Konto anlegen.</b> Stripe prüft dein Studio.</p></li>
-      <li><div class="stufe-bild">{motiv("stufe-3")}<span class="nr" aria-hidden="true">3</span></div><p><b>Unser Team richtet alles mit dir ein,</b> mit Testzahlung.</p></li>
-    </ol>
   </section>
 
   <section class="preis" id="preis" aria-labelledby="preis-titel">
@@ -429,8 +371,6 @@ def bauen(seite):
           <li>Keine Einrichtungsgebühr</li>
           <li>Monatlich kündbar</li>
           <li>Unser Team richtet’s mit dir ein</li>
-          <li>iPhone-App inklusive</li>
-          <li>Stripe sagt nein? Geld zurück.</li>
         </ul>
         <div class="wege">{start("preis")}<a class="wa" href="/vertrag.html">Vertrag vorab lesen</a></div>
       </div>

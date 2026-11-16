@@ -1090,15 +1090,18 @@ await abschnitt("17d Nutzen fürs Studio direkt unter dem Hero (Domenic 16.11.20
     const y = (e) => e.getBoundingClientRect().top + scrollY;
     const fn = n.querySelector(".raten-fn");
     const ratenKarten = karten.map((k, i) => /Raten\*/.test(k.textContent) ? i : -1).filter((i) => i >= 0);
-    const claim = karten[0]?.querySelector("p");
+    // Umbau 16.11.2026 abends: Ratenzahlung* ist die letzte Karte (Fußnote dicht darunter, auch bei 320 px)
+    const claim = karten[karten.length - 1]?.querySelector("p");
     const texte = [n.querySelector("h2"), ...n.querySelectorAll("h3, p")];
     const tops = karten.map((k) => Math.round(k.getBoundingClientRect().top)), lefts = karten.map((k) => Math.round(k.getBoundingClientRect().left));
     return {
-      da: true, anzahl, nachHero: Boolean(vor && vor.classList.contains("auftakt")), vorFall: Boolean(nach && nach.classList.contains("fall")),
+      da: true, anzahl, nachHero: Boolean(vor && vor.classList.contains("auftakt")), vorFall: Boolean(nach && nach.classList.contains("ablauf") && nach.querySelector(".fall")),
+      abschnitte: document.querySelectorAll("main > section").length, paypal: /paypal/i.test(document.body.innerText),
+      zahlarten: [...n.querySelectorAll(".zahlarten .chips li")].map((l) => l.textContent.replace(/\u00a0/g, " ")).join("|"),
       titel: n.querySelector("h2")?.textContent.replace(/\u00a0/g, " "),
       karten: karten.length,
       aufbau: karten.every((k) => k.querySelector(".nutzen-motiv svg") && k.querySelectorAll("h3").length === 1 && k.querySelectorAll("p").length === 1),
-      // höchstens 1 kurzer Satz je Karte, keine Ziffern (keine erfundenen Zahlen)
+      // kurze Erklärung je Karte (Wann? + höchstens 2 Sätze), keine Ziffern (keine erfundenen Zahlen)
       saetze: Math.max(...karten.map((k) => (k.querySelector("p").textContent.match(/[.!?](\s|$)/g) || []).length)),
       zeichen: Math.max(...karten.map((k) => k.querySelector("p").textContent.length)),
       ziffern: /\d/.test(karten.map((k) => k.textContent).join(" ")),
@@ -1122,13 +1125,13 @@ await abschnitt("17d Nutzen fürs Studio direkt unter dem Hero (Domenic 16.11.20
       const m = await p.evaluate(pruef);
       await p.context().close();
       gesehen++;
-      const gut = m.da && m.anzahl === 1 && m.nachHero && m.vorFall && /Studio/.test(m.titel || "") && m.karten === 4 && m.aufbau && m.saetze <= 1 && m.zeichen <= 90 && !m.ziffern
-        && JSON.stringify(m.ratenKarten) === "[0]" && /^\*Raten über Klarna, nach deren Bonitätsprüfung\..*Achtung! Kreditaufnahme kostet Geld\.$/.test(m.fnText) && m.fnPx >= 12 && m.fnPx <= 13
+      const gut = m.da && m.anzahl === 1 && m.nachHero && m.vorFall && /Tattoofin/.test(m.titel || "") && m.karten === 4 && m.aufbau && m.saetze <= 3 && m.zeichen <= 110 && !m.ziffern
+        && JSON.stringify(m.ratenKarten) === "[3]" && m.zahlarten === "Karte|Apple Pay|Google Pay|Klarna*" && m.abschnitte <= 6 && !m.paypal && /^\*Raten über Klarna, nach deren Bonitätsprüfung\..*Achtung! Kreditaufnahme kostet Geld\.$/.test(m.fnText) && m.fnPx >= 12 && m.fnPx <= 13
         && m.fnAbstand >= 0 && m.fnAbstand <= 560 && m.minKontrast >= 4.5 && m.spalten === spalten && !m.quer && m.rand && !m.ueberlappt && (w !== 390 || m.hoehe <= 8000);
       if (!gut) probleme.push(`${pf} ${w}x${h}: ${JSON.stringify(m)}`);
     }
   }
-  check(probleme.length === 0, "Nutzen-Block: direkt nach dem Hero und vor „Echter Fall“, 4 Karten (Motiv, Überschrift, höchstens 1 Satz, keine Zahlen), Raten* nur in Karte 1 mit eigener Fußnote ≤ 560 px darunter, Kontrast ≥ 4,5, genau ein Nutzen-Block, 1/2/4 Spalten (320–390/768/1440), kein Querscrollen, Motiv verdeckt keine Schrift, Seite bei 390 px ≤ 8.000 px hoch", probleme.slice(0, 2).join(" ; ").slice(0, 600) || `${gesehen} Seitenaufrufe geprüft`);
+  check(probleme.length === 0, "„Das kann Tattoofin“: direkt nach dem Hero und vor „So läuft's“ mit echtem Fall, 4 Karten (Motiv, Überschrift, kurze Erklärung, keine Zahlen), Zahlarten nur Karte/Apple Pay/Google Pay/Klarna* (kein PayPal auf der Seite), höchstens 6 Abschnitte, Raten* nur in der letzten Karte mit eigener Fußnote ≤ 560 px darunter, Kontrast ≥ 4,5, genau ein Nutzen-Block, 1/2/4 Spalten (320–390/768/1440), kein Querscrollen, Motiv verdeckt keine Schrift, Seite bei 390 px ≤ 8.000 px hoch", probleme.slice(0, 2).join(" ; ").slice(0, 600) || `${gesehen} Seitenaufrufe geprüft`);
 });
 
 // =====================================================================================================

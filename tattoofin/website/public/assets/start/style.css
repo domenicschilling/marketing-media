@@ -556,3 +556,34 @@ html.stech-warten .buehne svg.stech{visibility:hidden}
   .nutzen-karte p{font-size:16px}
 }
 @media (min-width:1600px){.nutzen{max-width:1480px}}
+
+/* ---------- Umbau 16.11.2026 abends (Domenic: „erklären, was die App kann“, „aufgeräumt, keine Reizüberflutung“) ----------
+   6 Abschnitte: Hero, Das kann Tattoofin (4 Zahlungsarten + Zahlarten), So läuft's (3 Schritte + echter Fall), Preis, Fragen, Schluss */
+.abschnitt-satz{margin-top:8px;font-size:clamp(16px,4.3vw,20px);font-weight:600;line-height:1.35;max-width:36em}
+.nutzen-karte p b{font-weight:800}
+.nutzen-karte{scroll-margin-top:14px}
+.zahlarten{margin-top:16px;display:grid;gap:8px;justify-items:start}
+.zahlarten-titel{font-family:var(--anzeige);text-transform:uppercase;font-size:clamp(19px,5vw,23px);line-height:1;padding-top:.08em}
+.zahlarten .chips{margin-top:0;gap:8px}
+.zahlarten .chips li{font-size:15px;padding:4px 12px 3px}
+.zahlarten-satz{font-size:15px;line-height:1.4;max-width:40em}
+.nutzen>.raten-fn{margin-top:10px}
+@media (min-width:1100px){
+  .zahlarten{grid-template-columns:auto auto minmax(0,1fr);align-items:center;column-gap:18px;margin-top:22px}
+  .zahlarten-satz{font-size:16px}
+}
+/* So läuft's: 3 Schritte, darunter der echte Fall (Bon + Text) */
+.ablauf{max-width:1280px;margin-inline:auto}
+.ablauf .fall{max-width:none;margin:22px 0 0;padding:0;display:grid;grid-template-columns:minmax(0,1fr);gap:18px;align-items:center}
+.ablauf .fall .bon{max-width:300px;width:100%;justify-self:center}
+.ablauf .fall-text{gap:8px;justify-items:start}
+.ablauf .fall-text h3{font-size:clamp(28px,7.6vw,40px);line-height:1;text-shadow:2px 2px 0 var(--gelb)}
+.ablauf .fall-text p:first-of-type{font-weight:600}
+@media (min-width:720px){
+  .ablauf .fall{grid-template-columns:300px minmax(0,1fr);gap:clamp(28px,5vw,64px);margin-top:36px;max-width:900px}
+  .ablauf .fall .bon{justify-self:start}
+}
+@media (min-width:900px){.ablauf{padding-top:40px;padding-bottom:48px}}
+@media (min-width:1600px){.ablauf{max-width:1480px}}
+@media (max-width:719px){.ablauf .fall-text{order:-1}}
+@media (min-width:720px) and (max-width:1099px){.ablauf ol{grid-template-columns:minmax(0,1fr);gap:14px;max-width:640px}.ablauf li{grid-template-columns:96px minmax(0,1fr)}}
