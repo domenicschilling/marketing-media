@@ -98,7 +98,14 @@
     $("klarna-eigen").classList.toggle("hidden", !(s.modell === "kauf" && s.stripe.freigegeben && s.stripe.klarnaAktiv === false));
     var ua = s.umstellungAngebot;
     $("umst-karte").classList.toggle("hidden", !ua);
-    if (ua) { $("umst-preis").textContent = TF.euro(ua.monatNetto); $("umst-brutto").textContent = TF.euro(Math.round(ua.monatNetto * 1.19)); }
+    if (ua) {
+      $("umst-preis").textContent = TF.euro(ua.monatNetto); $("umst-brutto").textContent = TF.euro(Math.round(ua.monatNetto * 1.19));
+      // Schon zugestimmt (z. B. Sonderpreis), nur noch nicht bezahlt: keine zweite Zustimmung, direkt zur ersten Monatszahlung
+      var zu = Boolean(ua.zugestimmtAm);
+      $("umst-zustimmen").classList.toggle("hidden", zu); $("umst-zugestimmt").classList.toggle("hidden", !zu);
+      if (zu) $("umst-zugestimmt-am").textContent = new Date(ua.zugestimmtAm).toLocaleDateString("de-DE", { timeZone: "Europe/Berlin" });
+      $("umst-los").textContent = zu ? "Erste Monatszahlung bezahlen" : "Zahlungspflichtig umstellen";
+    }
     checkliste();
     // Vor der Stripe-Freigabe: Einrichtung nach oben, Zahlungslink/Gutschein/Werbung grau („ab Freigabe“), statt auf eine gesperrte Seite zu führen
     var wc = $("werbung-cta"); if (wc && !s.kannKassieren) wc.classList.add("hidden"); // Werbung mit Klarna erst ab Freigabe
@@ -543,6 +550,12 @@
   }
   $("k-aw-save").onclick = async function () { try { D.studio = await TF.api("/api/portal/kontakt", { method: "PATCH", body: { ausweichAnzahlung: { an: $("k-aw-an").checked, prozent: $("k-aw-pr").value } } }); einstellungen(); toast("Gespeichert."); } catch (err) { toast(err.message, true); } };
   $("umst-los").onclick = async function () {
+    var ua = D && D.studio && D.studio.umstellungAngebot;
+    if (ua && ua.zugestimmtAm) {
+      var b0 = this; b0.disabled = true;
+      try { var r0 = await TF.api("/api/portal/umstellung", { body: { nurZahlen: true } }); location.href = r0.url; } catch (err) { b0.disabled = false; toast(err.message, true); }
+      return;
+    }
     if (!$("umst-vertrag").checked || !$("umst-kmu").checked) return toast("Bitte bestätige beide Häkchen.", true);
     var btn = this; btn.disabled = true;
     try {

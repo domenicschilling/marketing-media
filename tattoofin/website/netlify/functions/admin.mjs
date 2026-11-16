@@ -184,7 +184,9 @@ export default handler(async (req) => {
       if (!hatUmstellungsangebot(s) || s.umstellung?.erledigtAm) return fail("Für dieses Studio gibt es kein offenes Angebot.", 409);
       const b = await body(req);
       const loginUrl = loginLink(s.id, 7 * 24 * 60) + "&next=" + encodeURIComponent("/app.html");
-      const m = mails.umstellungUpgrade(s, { monatNetto: s.umstellung.monatNetto, loginUrl });
+      const z = s.umstellung.zustimmung;
+      const zugestimmtAm = z && z.monatNetto === s.umstellung.monatNetto ? z.am : null;
+      const m = mails.umstellungUpgrade(s, { monatNetto: s.umstellung.monatNetto, loginUrl, zugestimmtAm });
       if (b.senden === true) { await notify(s, m); s.umstellung.upgradeMailAm = now(); await saveStudio(s); }
       await log("admin-umstellung-upgrade", { admin: adminName(req), studioId: s.id, gesendet: b.senden === true });
       return json({ ok: true, gesendet: b.senden === true, an: s.email, betreff: m.subject, html: m.html, text: m.text });

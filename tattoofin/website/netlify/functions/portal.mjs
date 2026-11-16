@@ -220,6 +220,13 @@ export default handler(async (req, context) => {
     if (s._ansicht) return fail("In der Admin-Ansicht nicht möglich.", 403);
     if (!hatUmstellungsangebot(s)) return fail("Für dein Studio liegt kein Angebot vor.", 409);
     const b = await body(req);
+    // Schon zugestimmt (zum selben Preis), nur noch nicht bezahlt: direkt zur ersten Monatszahlung, ohne zweite Zustimmung
+    if (b.nurZahlen === true) {
+      const z = s.umstellung.zustimmung;
+      if (!z || z.monatNetto !== s.umstellung.monatNetto) return fail("Bitte stimme dem Angebot zuerst zu.", 409);
+      await log("umstellung.zahlung-gestartet", { studioId: s.id, monatNetto: s.umstellung.monatNetto });
+      return json({ url: await umstellungCheckout(s) });
+    }
     const a = b.akzeptiert || {};
     const name = clean(b.unterzeichner, 120);
     if (!(a.vertrag && a.avv && a.unternehmer && a.kmu)) return fail("Bitte bestätige Vertrag, AVV, Unternehmereigenschaft und Unternehmensgröße.");

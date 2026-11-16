@@ -1388,6 +1388,42 @@ await abschnitt("19 Altstudio stellt um: Zustimmung, 29 €, neues eigenes Konto
 });
 
 // =====================================================================================================
+await abschnitt("19b Sonderpreis 19 € brutto (Antisocial, Domenic 17.11.2026): schon zugestimmt, Upgrade-Mail-Fassung, Knopf → Zahlung 15,97 € netto", async () => {
+  process.env.RISIKOFREI_NEU = "1";
+  const a = await anmelden("risikofrei", "sonderpreis@betrieb.test", "Sonder Studio");
+  await einrichten(a.id, a.cookie);
+  await admin(`studio/${a.id}/live`, { body: {} });
+  delete process.env.RISIKOFREI_NEU;
+  const ang = await admin(`studio/${a.id}/umstellung`, { body: { monatNetto: 1597 } });
+  // Zustimmung im Studio-Bereich, Kasse danach abgebrochen (wie bei Antisocial am 14.11.)
+  const zu = await post("/api/portal/umstellung", { unterzeichner: "Sam Sonder", akzeptiert: { vertrag: true, avv: true, unternehmer: true, kmu: true } }, a.cookie);
+  check(ang.ok && zu.status === 200 && (await detail(a.id)).studio.modell === "provision", "Zustimmung zu 15,97 € netto, noch nicht bezahlt: Paket bleibt Risikofrei", "");
+  const up = await admin(`studio/${a.id}/umstellung-upgrade`, { body: {} });
+  check(/nur noch die erste Zahlung zu deinem Sonderpreis/.test(up.betreff) && /schon zugestimmt/.test(up.html) && /Dein Sonderpreis/.test(up.html)
+    && /15,97 € netto im Monat<\/b> \(19,00 € inkl\. 19 % USt\.\)/.test(up.html) && /ersten Monatszahlung über 19,00 €|erste Monatszahlung über 19,00 €/.test(up.html)
+    && !/neue Studios|im Studio-Bereich zustimmen/.test(up.html) && (up.html.match(/>Jetzt upgraden</g) || []).length === 2 && /Achtung! Kreditaufnahme kostet Geld/.test(up.html),
+    "Upgrade-Mail für schon zugestimmte Studios: Sonderpreis 15,97 € netto = 19,00 € brutto, kein Vergleich mit neuen Studios, keine zweite Zustimmung, Knopf 2×", up.betreff);
+  const u = new URL(((up.html.match(/href="([^"]*\/api\/auth\?token=[^"]+)"/) || [])[1] || "").replace(/&amp;/g, "&"));
+  const login = await fetch(BASE + "/api/auth", { method: "POST", redirect: "manual", headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ token: u.searchParams.get("token"), next: u.searchParams.get("next") }) });
+  const cookie = (login.headers.get("set-cookie") || "").split(";")[0];
+  const dash = (await json("/api/portal", {}, cookie)).data;
+  check(Boolean(cookie) && dash.studio?.umstellungAngebot?.monatNetto === 1597 && Boolean(dash.studio?.umstellungAngebot?.zugestimmtAm), "Knopf → angemeldet im Studio-Bereich, Angebot zeigt „schon zugestimmt“ (Knopf „Erste Monatszahlung bezahlen“)", "");
+  const zahl = await post("/api/portal/umstellung", { nurZahlen: true }, cookie);
+  const cs = (await sessions()).find((x) => zahl.data?.url && (x.url === zahl.data.url || zahl.data.url.includes(x.id)));
+  check(zahl.status === 200 && Number(cs?.line_items?.[0]?.price_data?.unit_amount) === 1597 && (cs?.line_items?.[0]?.tax_rates || []).length === 1 && cs?.mode === "subscription" && cs?.excluded_payment_method_types?.includes("klarna"),
+    "Ohne zweite Zustimmung direkt zur Kasse: Abo 15,97 € netto + 19 % USt. (= 19,00 €), ohne Klarna", JSON.stringify(cs?.line_items?.[0]?.price_data || {}));
+  await stripeBezahlen(zahl.data.url, "card");
+  await wait(300);
+  const s = (await detail(a.id)).studio;
+  check(s.modell === "kauf" && s.paket === "monatlich" && s.monatNetto === 1597 && s.vertrag?.monatNetto === 1597, "Nach der Test-Zahlung: Paket Monatlich zum Sonderpreis 15,97 € netto, Vertrag mit diesem Preis", `${s.modell} ${s.monatNetto}`);
+  // Ohne Zustimmung geht „nur zahlen“ nicht
+  process.env.RISIKOFREI_NEU = "1";
+  const b = await anmelden("risikofrei", "ohnezustimmung@betrieb.test", "Ohne Zustimmung");
+  delete process.env.RISIKOFREI_NEU;
+  { await admin(`studio/${b.id}/umstellung`, { body: { monatNetto: 2900 } }); const nz = await post("/api/portal/umstellung", { nurZahlen: true }, b.cookie); check(nz.status === 409, "„Nur zahlen“ ohne vorherige Zustimmung → 409", `HTTP ${nz.status}`); }
+});
+
+// =====================================================================================================
 await abschnitt("20 Preis seit 15.11.2026: 49,90 € inkl. MwSt. (41,93 € netto), ohne Gratiszeit; Bestandskunden behalten ihren Preis", async () => {
   const cfg = (await json("/api/config")).data;
   check(cfg.monatNetto === 4193 && cfg.ustProzent === 19, "Konfiguration: 4193 Cent netto, 19 % USt.", `${cfg.monatNetto}/${cfg.ustProzent}`);

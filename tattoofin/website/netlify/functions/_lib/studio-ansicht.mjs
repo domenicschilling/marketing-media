@@ -53,7 +53,8 @@ export const oeffentlich = (s) => ({
   anzahlungsbedingungen: anzahlungsbedingungen(s),
   ausweichAnzahlung: { an: Boolean(s.ausweichAnzahlung?.an), prozent: s.ausweichAnzahlung?.prozent || 30 },
   zahlartenHinweis: Boolean(s.zahlartenHinweis),
-  umstellungAngebot: hatUmstellungsangebot(s) ? { monatNetto: s.umstellung.monatNetto } : null,
+  umstellungAngebot: hatUmstellungsangebot(s) ? { monatNetto: s.umstellung.monatNetto,
+    zugestimmtAm: s.umstellung.zustimmung?.monatNetto === s.umstellung.monatNetto ? s.umstellung.zustimmung.am || null : null } : null,
   altKonto: s.stripe?.altKonto ? { bis: s.stripe.altKonto.bis } : null,
   kannKassieren: Boolean(darfKassieren(s)), zahlseite: zahlseite(s), connectUrl: testKasse(s) ? null : connectUrl(s),
 });
