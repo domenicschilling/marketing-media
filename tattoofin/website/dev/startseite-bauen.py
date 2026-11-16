@@ -40,7 +40,7 @@ FRAGEN = [
     ("Wie kündige ich? Und wenn Stripe mich ablehnt?",
      "Im Portal, zum Ende des Abrechnungsmonats. Dein Stripe-Konto bleibt bei dir, Zahlungslinks und QR-Code enden. Lehnt Stripe dein Studio endgültig ab, bekommst du die gezahlten Monate zurück, außer bei falschen Angaben oder Pflichtverletzung.", False),
     ("Wann kommt das Geld, und was brauche ich?",
-     "Stripe zahlt auf dein Bankkonto aus, nach den Fristen von Stripe. Du brauchst dein Studio als Unternehmen, ein Bankkonto und deinen Ausweis.", False),
+     "Stripe zahlt auf dein Bankkonto aus, laut Stripe in Deutschland in der Regel 3 Werktage nach der Zahlung, die allererste Auszahlung nach 7 Tagen. Du brauchst dein Studio als Unternehmen, ein Bankkonto und deinen Ausweis.", False),
     ("Wie fange ich an?",
      "Online anmelden, dann legst du dein Stripe-Konto an und Stripe prüft dein Studio. Danach richtet unser Team alles mit dir ein, mit einer Testzahlung.", False),
     ("Ich hab schon SumUp & Co.",
@@ -67,11 +67,11 @@ l.rel='preload';l.as='image';l.type='image/webp';l.href='/assets/start/'+(B[v]||
 if(v){d.setAttribute('data-hero',v);setTimeout(function(){d.classList.add('hero-ok')},1500);}}catch(e){}})();</script>
 """ % json.dumps(HERO_BILDER)
 HERO_VARIANTEN = {
-    "noshow": {"h": "No-Show? Erst Anzahlung. Dann Termin.", "s": "Anzahlungs-Link per WhatsApp. Kunde zahlt am Handy, dann blockst du den\u00a0Termin.", "c": "Anzahlung einrichten",
+    "noshow": {"h": "No-Show? Erst Anzahlung. Dann Termin.", "s": "Anzahlungs-Link per WhatsApp schicken – erst wenn dein Kunde gezahlt hat, blockst du den\u00a0Termin.", "c": "Anzahlung einrichten",
                "b": "Kunde zahlt an und bestätigt deine\u00a0Bedingungen.", "bh": "#nr3",
                "bild": HERO_BILDER["noshow"], "alt": "Echte Tattoofin-Zahlseite am Handy: Hi Kai, deine Zahlung an Ink Studio Bamberg, 150 Euro, Rückenstück, Termin Freitag, Anzahlung. Beispieldaten."},
-    "link": {"h": "Betrag rein. Link raus. Bezahlt.", "s": "Karte, Apple Pay, Google Pay oder Klarna. Das Geld geht auf dein eigenes Stripe-Konto."},
-    "gutschein": {"h": "Weihnachten: Gutscheine per Link\u00a0verkaufen.", "s": "Kunde zahlt am Handy und bekommt Code und PDF zum Verschenken. Das Geld geht direkt auf dein Stripe-Konto.", "c": "Gutscheine einrichten",
+    "link": {"h": "Betrag rein. Link raus. Bezahlt.", "s": "Dein Kunde zahlt mit Karte, Apple Pay, Google Pay oder in Raten* über\u00a0Klarna."},
+    "gutschein": {"h": "Weihnachten: Gutscheine per Link\u00a0verkaufen.", "s": "Dein Kunde zahlt am Handy und bekommt Code und PDF zum\u00a0Verschenken.", "c": "Gutscheine einrichten",
                   "b": "Kunde bekommt Code und PDF direkt per\u00a0E-\u2060Mail.", "bh": "#nr5",
                   "bild": HERO_BILDER["gutschein"], "alt": "Echte Tattoofin-Gutschein-Kaufseite am Handy: Hi Greta, dein Gutschein von Ink Studio Bamberg, 150 Euro, Wertgutschein für Max. Beispieldaten."},
 }
@@ -156,7 +156,7 @@ def bauen(seite):
         ("nr1", klein_motiv("flash-1", "tf-b1", "tf-n1"), "Ratenzahlung*", "Für große Tattoos.", "Dein Kunde zahlt in Raten* über Klarna. Du bekommst den ganzen Betrag auf einmal."),
     ]
     nutzen = ('  <section class="nutzen" id="nutzen" aria-labelledby="nutzen-titel">\n'
-              '    <h2 id="nutzen-titel">Das kann Tattoofin.</h2>\n'
+              '    <h2 id="nutzen-titel">Was du damit machen&nbsp;kannst.</h2>\n'
               '    <p class="abschnitt-satz">Für jede Zahlung in deinem Studio ein Link. Dein Kunde zahlt am Handy.</p>\n    <ul class="nutzen-liste">\n'
               + "".join('      <li class="nutzen-karte" id="%s"><span class="nutzen-motiv">%s</span><h3>%s</h3><p><b>%s</b> %s</p></li>\n' % (i, m, h, w, s) for i, m, h, w, s in NUTZEN)
               + '    </ul>\n'
@@ -166,6 +166,44 @@ def bauen(seite):
               '      <p class="zahlarten-satz">Das Geld geht direkt auf dein eigenes <span class="nw">Stripe-Konto</span>. Tattoofin nimmt keine Provision. Gutscheine ohne&nbsp;Klarna.</p>\n'
               '    </div>\n'
               '    <p class="raten-fn">%s</p>\n  </section>\n\n' % FN_KURZ)
+
+    # „Was es dir bringt“ (Domenic 16.11. abends: „Was bringt es dir? Vorteile.“). Nur Belegbares: Mail bei Zahlungseingang
+    # (emails.mjs zahlungEingegangen), Push in der App, Zahlseite mit Studionamen (pay.mjs), Gutscheine per Link. Keine Zahlen, keine Versprechen.
+    VORTEILE = [
+        ("Termine, die halten.", "Du blockst erst, wenn die Anzahlung da ist. Sagt der Kunde kurzfristig ab, gelten deine Bedingungen."),
+        ("Kein Hinterherlaufen.", "Link schicken statt Kontonummer diktieren. Du siehst sofort, wer bezahlt hat."),
+        ("Nachricht bei jeder Zahlung.", "Per E-Mail oder in der iPhone-App. Die App bekommst du nach der Anmeldung von uns."),
+        ("Umsatz, auch wenn zu ist.", "Gutscheine verkaufst du per Link, abends, am Wochenende, vor Weihnachten."),
+        ("Dein Studio, dein Name.", "Dein Kunde zahlt auf einer Seite mit deinem Studionamen, nicht mit unserem."),
+        ("Keine Provision.", "Fester Monatspreis. Dazu nur die Gebühr von Stripe je Zahlung, die siehst du vorher."),
+    ]
+    vorteile = ('  <section class="vorteile" id="vorteile" aria-labelledby="vorteile-titel">\n'
+                '    <h2 id="vorteile-titel">Was es dir&nbsp;bringt.</h2>\n    <ul class="vorteil-liste">\n'
+                + "".join('      <li class="vorteil"><h3>%s</h3><p>%s</p></li>\n' % (h, s) for h, s in VORTEILE)
+                + '    </ul>\n  </section>\n\n')
+    # Eigener Abschnitt „Du bekommst dein Geld“ (Domenic: „nicht so, dass du selber finanzierst, sondern du kriegst dein Geld und die Kunden
+    # finanzieren über Klarna“). Auszahlung laut Stripe-Doku (docs.stripe.com/payments/balances, Settlement timing, Germany: erste Auszahlung
+    # 7 Kalendertage, danach 3 Werktage; Stand 16.11.2026). Kein „sofort“ (nicht belegt). Raten*-Aussage mit eigener Fußnote ≤ 560 px darunter.
+    geld = f'''  <section class="geld" id="geld" aria-labelledby="geld-titel">
+    <div class="geld-innen">
+      <h2 id="geld-titel">Dein Geld kommt auf&nbsp;einmal.</h2>
+      <p class="abschnitt-satz">Dein Kunde finanziert über Klarna, nicht du. Du finanzierst nichts vor und wartest auf keine&nbsp;Rate.</p>
+      <div class="geldfluss">
+        <div class="geld-station"><span class="geld-wer">Dein Kunde</span><strong>zahlt in Raten*</strong><span>Den Ratenvertrag schließt er mit Klarna, nicht mit dir.</span></div>
+        <span class="geld-pfeil" aria-hidden="true">→</span>
+        <div class="geld-station geld-du"><span class="geld-wer">Du</span><strong>bekommst den ganzen Betrag auf&nbsp;einmal</strong><span>Abzüglich Stripe-Gebühr, auf dein eigenes <span class="nw">Stripe-Konto</span>.</span></div>
+      </div>
+      <p class="raten-fn">{FN_LANG}</p>
+      <ul class="geld-punkte">
+        <li><b>Wann ist das Geld auf deinem Konto?</b> Stripe zahlt auf dein Bankkonto aus. Laut Stripe in Deutschland in der Regel 3&nbsp;Werktage nach der Zahlung, die allererste Auszahlung nach 7&nbsp;Tagen.</li>
+        <li><b>Und wenn der Kunde nicht zahlt?</b> Dann trägt laut Stripe Klarna das Risiko, nicht&nbsp;du.</li>
+        <li><b>Sagt Klarna nein?</b> Dann zahlt dein Kunde mit Karte, Apple Pay oder Google&nbsp;Pay.</li>
+      </ul>
+      <a class="mehr" href="/ratenzahlung-tattoostudio.html">Mehr zur Ratenzahlung im Tattoostudio&nbsp;→</a>
+    </div>
+  </section>
+
+'''
     fragen = []
     for q, a, fn in FRAGEN:
         antwort = "<p>%s</p>" % nbsp_zahlen(html.escape(a, quote=False))
@@ -263,7 +301,7 @@ def bauen(seite):
 <link rel="icon" href="/favicon.png" type="image/png"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preload" href="/assets/start/fonts/LuckiestGuy.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/start/fonts/DMSans.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/assets/start/style.css?v=20261116e">
+<link rel="stylesheet" href="/assets/start/style.css?v=20261116f">
 {ld}</head>
 <body{' data-wa="aus"' if studios else ''}>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><pattern id="tf-punkte" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><circle cx="2.2" cy="2.2" r="2.1" fill="#1f3d5c"/><circle cx="6.7" cy="6.7" r="2.1" fill="#1f3d5c"/></pattern></defs></svg>
@@ -282,10 +320,8 @@ def bauen(seite):
   <main id="inhalt">
   <section class="auftakt">
     <div class="auftakt-kopf">
-      <p class="kicker">Tattoostudio-Besitzer, aufgepasst!</p>
       <h1 data-hero="h">Ganzer&nbsp;Rücken? 4.000&nbsp;€ auf&nbsp;einmal.</h1>
-      <p class="unterzeile" data-hero="s">Betrag rein, Link per WhatsApp raus. Dein Kunde zahlt am Handy, auch per Klarna.</p>
-      <p class="hero-chips">Anzahlung · Raten* · Gutscheine – alles per Link</p>
+      <p class="unterzeile" data-hero="s">Link per WhatsApp schicken – dein Kunde zahlt am Handy<span class="hero-raten">, auch in Raten* über&nbsp;Klarna</span>.</p>
     </div>
     <div class="buehne">
       {motiv("deko-stern")}
@@ -300,20 +336,17 @@ def bauen(seite):
       <img class="hausherr" src="/assets/start/figur.webp" alt="Tattoofin-Figur mit tätowierten Armen zeigt den Daumen hoch" width="300" height="310" decoding="async">
       <figure class="auftakt-handy">
         <span class="klebe" aria-hidden="true"></span>
-        <span class="handy-rahmen"><img src="/assets/start/{HERO_BILDER['']}" alt="Echte Tattoofin-Zahlseite am Handy: Hi Lena, deine Zahlung an Ink Studio Bamberg, Schritt 1 von 2, 4.000,00 Euro, Ganzer Rücken. Beispieldaten." width="600" height="545"><button type="button" class="film-knopf" data-film aria-haspopup="dialog"><span aria-hidden="true">▶</span> 10 Sek. ansehen</button></span>
-        <figcaption>Echte App · Beispieldaten</figcaption>
+        <span class="handy-rahmen"><img src="/assets/start/{HERO_BILDER['']}" alt="Echte Tattoofin-Zahlseite am Handy: Hi Lena, deine Zahlung an Ink Studio Bamberg, Schritt 1 von 2, 4.000,00 Euro, Ganzer Rücken. Beispieldaten." width="600" height="545"><span class="handy-hinweis" aria-hidden="true">Beispieldaten</span><button type="button" class="film-knopf" data-film aria-haspopup="dialog"><span aria-hidden="true">▶</span> 10 Sek. ansehen</button></span>
       </figure>
     </div>
     <div class="auftakt-fuss">
-      <p class="hero-beleg"><a href="#fall" data-hero="b">Echter&nbsp;Fall 07.11.: Rücken-Tattoo per&nbsp;Klarna&nbsp;bezahlt</a></p>
       <div class="auftakt-knopf">{start("auftakt")}</div>
-      <p class="preiszeile">49,90&nbsp;€ im Monat inkl. MwSt. · keine Provision · monatlich kündbar <span class="b2b">· nur für Unternehmer</span></p>
-      <p class="raten-fn">{FN_LANG}</p>
-      <p class="hero-wa"><a href="{wa}" data-umami-event="whatsapp-auftakt">Lieber erst fragen? Schreib unserem Team per WhatsApp&nbsp;→</a></p>{kunde}
+      <p class="preiszeile">49,90&nbsp;€ im Monat · monatlich kündbar</p>
+      <p class="raten-fn">{FN_KURZ}</p>
     </div>
   </section>
 {HERO_TAUSCH}
-{nutzen}  <section class="ablauf" id="ablauf" data-beleg aria-labelledby="ablauf-titel">
+{nutzen}{vorteile}{geld}  <section class="ablauf" id="ablauf" data-beleg aria-labelledby="ablauf-titel">
     <h2 id="ablauf-titel">So läuft&rsquo;s.</h2>
     <p class="abschnitt-satz">In der iPhone-App oder im Browser. Ohne Kartengerät.</p>
     <ol>

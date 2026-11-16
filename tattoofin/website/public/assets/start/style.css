@@ -587,3 +587,50 @@ html.stech-warten .buehne svg.stech{visibility:hidden}
 @media (min-width:1600px){.ablauf{max-width:1480px}}
 @media (max-width:719px){.ablauf .fall-text{order:-1}}
 @media (min-width:720px) and (max-width:1099px){.ablauf ol{grid-template-columns:minmax(0,1fr);gap:14px;max-width:640px}.ablauf li{grid-template-columns:96px minmax(0,1fr)}}
+
+/* ---------- Website-Fassung 16.11.2026 nachts (Domenic: „richtige Website“, „im Hero ein halber Roman“) ----------
+   Hero höchstens 5 Elemente: Überschrift, 1 Satz, Handy, Knopf, Preiszeile (+ Fußnote klein, weil „Raten*“ im Satz steht) */
+.auftakt-handy{margin-bottom:30px}
+.handy-hinweis{position:absolute;z-index:3;right:12px;top:8px;font:600 11px/1 var(--text);color:#4a5d70;background:var(--hell);padding:2px 5px;border-radius:4px}
+.auftakt .raten-fn{margin-top:2px}
+html[data-hero=noshow] .auftakt .raten-fn,html[data-hero=gutschein] .auftakt .raten-fn{display:none}
+
+/* Was es dir bringt: ruhige Liste mit Sternen statt weiterer Karten */
+.vorteile{position:relative;max-width:1280px;margin-inline:auto;padding:26px var(--rand) 30px}
+.vorteil-liste{list-style:none;display:grid;gap:18px;margin-top:20px}
+.vorteil{position:relative;padding-left:34px}
+.vorteil::before{content:"";position:absolute;left:0;top:2px;width:22px;height:22px;background:var(--gelb);clip-path:polygon(50% 0,62% 36%,100% 38%,69% 60%,80% 96%,50% 75%,20% 96%,31% 60%,0 38%,38% 36%);filter:drop-shadow(1px 1px 0 var(--blau))}
+.vorteil h3{font-size:clamp(20px,5.3vw,24px);line-height:1.05;padding-top:.06em}
+.vorteil p{margin-top:4px;line-height:1.42;max-width:34em}
+@media (min-width:720px){.vorteil-liste{grid-template-columns:1fr 1fr;gap:26px 36px}}
+@media (min-width:1100px){.vorteile{padding-top:44px;padding-bottom:48px}.vorteil-liste{grid-template-columns:repeat(3,minmax(0,1fr));gap:34px clamp(28px,3vw,48px);margin-top:28px}}
+@media (min-width:1600px){.vorteile{max-width:1480px}}
+
+/* Du bekommst dein Geld: dunkles Brett, Geldfluss Kunde → Du */
+.geld{position:relative;background:var(--blau);color:var(--hell);z-index:2}
+.geld-innen{max-width:1280px;margin:0 auto;padding:32px var(--rand) 40px;display:grid;gap:16px;justify-items:start}
+.geld h2{color:var(--hell);text-shadow:2px 2px 0 rgba(251,179,22,.55)}
+.geld .abschnitt-satz{color:var(--hell)}
+.geldfluss{display:grid;gap:10px;width:100%;max-width:880px;margin-top:6px}
+.geld-station{display:grid;gap:4px;background:var(--hell);color:var(--blau);border-radius:14px;padding:14px 16px 15px;box-shadow:4px 5px 0 rgba(0,0,0,.25)}
+.geld-station.geld-du{background:var(--gelb)}
+.geld-wer{font:800 12px/1 var(--text);text-transform:uppercase;letter-spacing:.08em}
+.geld-station strong{font:400 clamp(22px,6vw,28px)/1.02 var(--anzeige);text-transform:uppercase;padding-top:.06em}
+.geld-station>span:last-child{font-size:15px;line-height:1.4}
+.geld-pfeil{justify-self:center;font:800 28px/1 var(--text);color:var(--gelb);transform:rotate(90deg)}
+.geld .raten-fn{color:var(--hell)}
+.geld-punkte{list-style:none;display:grid;gap:12px;max-width:52em;margin-top:6px}
+.geld-punkte li{line-height:1.45;padding-left:16px;border-left:3px solid var(--gelb)}
+.geld-punkte b{display:block;font-weight:800}
+.geld .mehr{color:var(--hell);font-weight:700;text-underline-offset:3px}
+@media (min-width:720px){
+  .geldfluss{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:stretch;gap:16px}
+  .geld-pfeil{align-self:center;transform:none;font-size:34px}
+  .geld-punkte{grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;max-width:none}
+}
+@media (min-width:900px){.geld-innen{padding-top:52px;padding-bottom:56px;gap:18px}}
+@media (min-width:1600px){.geld-innen{max-width:1480px}}
+.auftakt .handy-rahmen{padding-top:20px}
+.handy-hinweis{top:4px;right:12px;background:none;padding:0}
+/* Sehr niedrige Handys (≤ 600 px hoch): Fußnote im Hero aus (Platz für den Knopf), dann auch keine Raten-Aussage im Hero */
+@media (max-width:599px) and (max-height:600px){.hero-raten{display:none}}

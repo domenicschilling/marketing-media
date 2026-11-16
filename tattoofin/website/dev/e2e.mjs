@@ -154,7 +154,7 @@ try {
   await p0.goto(BASE + "/");
   check((await p0.textContent("h1")).replace(/\u00a0/g, " ").includes("auf einmal"), "Hero lädt (Überschrift für Studio-Inhaber, 16.11.2026)");
   // Warnsatz klein als Fußnote bei der einen Raten-Aussage im Hero (Entscheidung Domenic 14.11.2026): im ersten Abschnitt, nah unter der h1
-  { const w = await p0.evaluate(() => { const h1 = document.querySelector("h1"), fn = [...document.querySelectorAll(".auftakt .raten-fn")].find((e) => /Achtung! Kreditaufnahme kostet Geld\./.test(e.textContent) && /Vertragspartner der Raten ist Klarna/.test(e.textContent)); if (!h1 || !fn) return null; return { abstand: fn.getBoundingClientRect().top - h1.getBoundingClientRect().top, inHero: h1.closest(".auftakt") === fn.closest(".auftakt") }; });
+  { const w = await p0.evaluate(() => { const h1 = document.querySelector("h1"), fn = [...document.querySelectorAll(".auftakt .raten-fn")].find((e) => /Achtung! Kreditaufnahme kostet Geld\./.test(e.textContent) && /Raten über Klarna, nach deren Bonitätsprüfung/.test(e.textContent)); if (!h1 || !fn) return null; return { abstand: fn.getBoundingClientRect().top - h1.getBoundingClientRect().top, inHero: h1.closest(".auftakt") === fn.closest(".auftakt") }; });
     check(Boolean(w && w.inHero && w.abstand > 0 && w.abstand <= 560), "Warnsatz als Fußnote im Hero, höchstens 560 px unter der Raten-Überschrift" + (w ? ` (${Math.round(w.abstand)} px)` : "")); }
   check(await p0.locator("#preis").count() === 1 && await p0.locator("#r-monat").count() === 0, "Ein Preis auf der Startseite, kein Paket-Rechner");
   const preise = await p0.textContent("#preis");
@@ -163,7 +163,7 @@ try {
   { const raten = await p0.evaluate(() => { const y = (e) => e.getBoundingClientRect().top + scrollY;
       const cl = [...document.querySelectorAll("main h1, main h2, main h3, main p, main li, main span, main div")].filter((e) => !e.closest("#fragen, .fragen, [hidden]") && e.getBoundingClientRect().height > 1 && e.children.length < 6 && /(Raten|Klarna|Ratenzahlung)\*/.test(e.textContent) && !/Achtung! Kreditaufnahme/.test(e.textContent));
       const fnIn = (n) => [...n.querySelectorAll(".raten-fn")].filter((f) => /Achtung! Kreditaufnahme kostet Geld\./.test(f.textContent));
-      const NUTZEN = "main > section.nutzen#nutzen";
+      const NUTZEN = "main > section.nutzen#nutzen, main > section.geld#geld";
       const imNutzen = cl.filter((e) => e.closest(NUTZEN));
       return document.querySelectorAll(".nutzen").length === 1 && cl.every((e) => e.closest(".auftakt, " + NUTZEN)) && imNutzen.length >= 1 && imNutzen.every((e) => fnIn(e.closest(NUTZEN)).some((f) => y(f) >= y(e) && y(f) - y(e) <= 560)); });
     check(raten, "Raten*-Aussagen außerhalb der Fragen nur im ersten Bildschirm und im Nutzen-Block, dort mit eigener Fußnote ≤ 560 px darunter"); }

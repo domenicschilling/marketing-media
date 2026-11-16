@@ -984,7 +984,8 @@ await abschnitt("17 Recht (27.10.2026): Klarna-Stichtag 20.11.2026 für Risikofr
     const abstand = cl ? [...warn].map((w) => y(w) - y(cl)).sort((a, b) => Math.abs(a) - Math.abs(b))[0] : 0;
     const hero = cl ? cl.closest(".auftakt") : null;
     const fnHero = hero ? warn.some((w) => w.closest(".auftakt") === hero && y(w) >= y(cl) && y(w) - y(cl) <= 560) : null;
-    const NUTZEN = "main > section.nutzen#nutzen", ERLAUBT = ".auftakt, " + NUTZEN;
+    // Seit 16.11.2026 nachts auch im Abschnitt „Dein Geld kommt auf einmal“ (#geld), dort mit der langen Fußnote
+    const NUTZEN = "main > section.nutzen#nutzen, main > section.geld#geld", ERLAUBT = ".auftakt, " + NUTZEN;
     // Jede sichtbare Aussage im Hero braucht die Hero-Fußnote im selben Abschnitt, 0–560 px darunter
     const heroClaims = claims.filter((e) => e.closest(".auftakt"));
     const fnHeroAlle = heroClaims.every((c) => warn.some((w) => w.closest(".auftakt") === c.closest(".auftakt") && y(w) >= y(c) && y(w) - y(c) <= 560));
@@ -1004,7 +1005,8 @@ await abschnitt("17 Recht (27.10.2026): Klarna-Stichtag 20.11.2026 für Risikofr
       const hauptseite = name.startsWith("start") || name === "studios";
       // Sehr niedrige Handys (≤ 600 px hoch, z. B. 320x568): Chips mit Raten* und Hero-Fußnote sind dort gemeinsam ausgeblendet (style.css, Runde 2),
       // dann darf der Hero ohne Raten-Aussage sein; sonst muss die erste Aussage der Seite im Hero stehen.
-      const heroPflicht = h > 600;
+      // Varianten No-Show (tv-a) und Gutschein (tv-d) zeigen im Hero keine Raten (Klarna-Herz und Fußnote dort aus)
+      const heroPflicht = h > 600 && !/tv-a|tv-d/.test(pfad);
       const nah = hauptseite ? (heroPflicht ? r.claim && r.hero && r.fnHero === true : true) && r.fnHeroAlle === true && r.claimsAusserhalbHero === 0 && r.nutzenClaims >= 1 && r.fnNutzen === true : (!r.claim || Math.abs(r.abstand) <= 1000);
       const fertig = r.n > 0 && r.minPx >= 12 && r.minKontrast >= 4.5 && nah && r.breite;
       check(fertig, `${pfad} ${w}x${h}: Warnhinweis vorhanden und lesbar (Fußnote ≥ 12 px, Kontrast ≥ 4,5, ${hauptseite ? "Raten-Aussagen nur im Hero und im Nutzen-Block, jede mit Fußnote im selben Abschnitt ≤ 560 px darunter" : "nah an der Raten-Aussage"}, kein Querscrollen)`, `n=${r.n} px=${r.minPx} gew=${r.minGewicht} kontrast=${(r.minKontrast || 0).toFixed(1)} abstand=${Math.round(r.abstand || 0)} hero=${r.hero} fnHero=${r.fnHero} heroAussagen=${r.heroClaims}/${r.fnHeroAlle} nutzen=${r.nutzenClaims}/${r.fnNutzen} außerhalb=${r.claimsAusserhalbHero} breit=${r.breite}`);
@@ -1034,13 +1036,15 @@ await abschnitt("17b Erster Bildschirm je Anzeige (Runde 2, 16.11.2026): richtig
       await p.waitForTimeout(300);
       const m = await p.evaluate(() => {
         const sichtbar = (s) => { const e = document.querySelector(s); if (!e) return false; const r = e.getBoundingClientRect(), cs = getComputedStyle(e); return r.width > 0 && cs.display !== "none" && cs.visibility !== "hidden"; };
-        return { kicker: document.querySelector(".kicker").textContent, gesehen: [...new Set(window.__rahmen.filter((x) => x[0] === "visible").map((x) => x[1]))],
-          bild: document.querySelector(".auftakt-handy img").getAttribute("src"), herz: sichtbar(".fl-1"), beleg: document.querySelector(".hero-beleg a").textContent,
+        const sicht = (e) => { const r = e.getBoundingClientRect(), cs = getComputedStyle(e); return r.width > 0 && r.height > 0 && cs.display !== "none" && cs.visibility !== "hidden"; };
+        return { kicker: document.querySelector(".kicker"), elemente: [...document.querySelectorAll(".auftakt h1, .auftakt p:not(.raten-fn), .auftakt .knopf, .auftakt figcaption")].filter(sicht).length + document.querySelectorAll(".auftakt-handy").length,
+          fnHero: [...document.querySelectorAll(".auftakt .raten-fn")].some(sicht), gesehen: [...new Set(window.__rahmen.filter((x) => x[0] === "visible").map((x) => x[1]))],
+          bild: document.querySelector(".auftakt-handy img").getAttribute("src"), herz: sichtbar(".fl-1"), beleg: document.querySelector(".auftakt .hero-beleg, .auftakt .hero-wa, .auftakt .hero-chips") === null,
           // Runde 2b: Motive warten nur, bis app.js sie als Schablone vorbereitet hat, danach sind sie da
           motive: !document.documentElement.classList.contains("stech-warten") && [...document.querySelectorAll(".buehne svg.stech")].every((x) => getComputedStyle(x).visibility === "visible") };
       });
-      const gut = m.kicker === "Tattoostudio-Besitzer, aufgepasst!" && m.gesehen.length === 1 && m.gesehen[0] === h1 && m.bild.includes(bild) && m.herz === klarna && /Klarna/.test(m.beleg) === klarna && !/900/.test(m.beleg) && m.motive;
-      check(gut, `Hero ${utm || "ohne utm"} ${w}x${h}: nur „${h1}“ sichtbar, Bild ${bild}, Klarna-Herz/-Stempel ${klarna ? "da" : "weg"}`, JSON.stringify({ ...m, gesehen: m.gesehen }).slice(0, 220));
+      const gut = m.kicker === null && m.elemente <= 5 && m.fnHero === klarna && m.beleg && m.gesehen.length === 1 && m.gesehen[0] === h1 && m.bild.includes(bild) && m.herz === klarna && m.motive;
+      check(gut, `Hero ${utm || "ohne utm"} ${w}x${h}: nur „${h1}“ sichtbar, Bild ${bild}, Klarna-Herz und Fußnote ${klarna ? "da" : "weg"}, höchstens 5 Elemente (Überschrift, Satz, Handy, Knopf, Preiszeile)`, JSON.stringify({ ...m, gesehen: m.gesehen }).slice(0, 220));
       await p.context().close();
     }
   }
@@ -1095,7 +1099,7 @@ await abschnitt("17d Nutzen fürs Studio direkt unter dem Hero (Domenic 16.11.20
     const texte = [n.querySelector("h2"), ...n.querySelectorAll("h3, p")];
     const tops = karten.map((k) => Math.round(k.getBoundingClientRect().top)), lefts = karten.map((k) => Math.round(k.getBoundingClientRect().left));
     return {
-      da: true, anzahl, nachHero: Boolean(vor && vor.classList.contains("auftakt")), vorFall: Boolean(nach && nach.classList.contains("ablauf") && nach.querySelector(".fall")),
+      da: true, anzahl, nachHero: Boolean(vor && vor.classList.contains("auftakt")), vorFall: Boolean(nach && nach.classList.contains("vorteile")) && Boolean(document.querySelector("main > section.geld#geld + section.ablauf .fall")),
       abschnitte: document.querySelectorAll("main > section").length, paypal: /paypal/i.test(document.body.innerText),
       zahlarten: [...n.querySelectorAll(".zahlarten .chips li")].map((l) => l.textContent.replace(/\u00a0/g, " ")).join("|"),
       titel: n.querySelector("h2")?.textContent.replace(/\u00a0/g, " "),
@@ -1125,13 +1129,13 @@ await abschnitt("17d Nutzen fürs Studio direkt unter dem Hero (Domenic 16.11.20
       const m = await p.evaluate(pruef);
       await p.context().close();
       gesehen++;
-      const gut = m.da && m.anzahl === 1 && m.nachHero && m.vorFall && /Tattoofin/.test(m.titel || "") && m.karten === 4 && m.aufbau && m.saetze <= 3 && m.zeichen <= 110 && !m.ziffern
-        && JSON.stringify(m.ratenKarten) === "[3]" && m.zahlarten === "Karte|Apple Pay|Google Pay|Klarna*" && m.abschnitte <= 6 && !m.paypal && /^\*Raten über Klarna, nach deren Bonitätsprüfung\..*Achtung! Kreditaufnahme kostet Geld\.$/.test(m.fnText) && m.fnPx >= 12 && m.fnPx <= 13
+      const gut = m.da && m.anzahl === 1 && m.nachHero && m.vorFall && /machen/.test(m.titel || "") && m.karten === 4 && m.aufbau && m.saetze <= 3 && m.zeichen <= 110 && !m.ziffern
+        && JSON.stringify(m.ratenKarten) === "[3]" && m.zahlarten === "Karte|Apple Pay|Google Pay|Klarna*" && m.abschnitte <= 9 && !m.paypal && /^\*Raten über Klarna, nach deren Bonitätsprüfung\..*Achtung! Kreditaufnahme kostet Geld\.$/.test(m.fnText) && m.fnPx >= 12 && m.fnPx <= 13
         && m.fnAbstand >= 0 && m.fnAbstand <= 560 && m.minKontrast >= 4.5 && m.spalten === spalten && !m.quer && m.rand && !m.ueberlappt && (w !== 390 || m.hoehe <= 8000);
       if (!gut) probleme.push(`${pf} ${w}x${h}: ${JSON.stringify(m)}`);
     }
   }
-  check(probleme.length === 0, "„Das kann Tattoofin“: direkt nach dem Hero und vor „So läuft's“ mit echtem Fall, 4 Karten (Motiv, Überschrift, kurze Erklärung, keine Zahlen), Zahlarten nur Karte/Apple Pay/Google Pay/Klarna* (kein PayPal auf der Seite), höchstens 6 Abschnitte, Raten* nur in der letzten Karte mit eigener Fußnote ≤ 560 px darunter, Kontrast ≥ 4,5, genau ein Nutzen-Block, 1/2/4 Spalten (320–390/768/1440), kein Querscrollen, Motiv verdeckt keine Schrift, Seite bei 390 px ≤ 8.000 px hoch", probleme.slice(0, 2).join(" ; ").slice(0, 600) || `${gesehen} Seitenaufrufe geprüft`);
+  check(probleme.length === 0, "„Was du damit machen kannst“: direkt nach dem Hero, danach „Was es dir bringt“, „Dein Geld kommt auf einmal“, „So läuft's“ mit echtem Fall, 4 Karten (Motiv, Überschrift, kurze Erklärung, keine Zahlen), Zahlarten nur Karte/Apple Pay/Google Pay/Klarna* (kein PayPal auf der Seite), höchstens 9 Abschnitte, Raten* nur in der letzten Karte mit eigener Fußnote ≤ 560 px darunter, Kontrast ≥ 4,5, genau ein Nutzen-Block, 1/2/4 Spalten (320–390/768/1440), kein Querscrollen, Motiv verdeckt keine Schrift, Seite bei 390 px ≤ 8.000 px hoch", probleme.slice(0, 2).join(" ; ").slice(0, 600) || `${gesehen} Seitenaufrufe geprüft`);
 });
 
 // =====================================================================================================
