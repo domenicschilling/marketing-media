@@ -121,13 +121,15 @@ export async function aufstellerLogoLoeschen(s, quelle) {
 // keinen Zweck mehr. Der Tagesjob löscht jedes Logo, dessen Studio den Aufsteller weder angefordert noch bezahlt hat (Datenschutzerklärung
 // Abschnitt 7). Logos zu einer früheren Bestellung bleiben bis zur Abwicklung; der Admin löscht sie danach im Studio-Detail.
 export async function aufstellerLogosAufraeumen() {
-  // Endgültiges Löschen von Kundendaten erst nach Domenics OK (16.11.2026): Netlify-Variable AUFSTELLER_LOGOS_AUFRAEUMEN=1 setzen
+  // Endgültiges Löschen: Domenic hat am 16.11.2026 zugestimmt („wenn wir die Logos nicht mehr brauchen dann weg“);
+  // aktiv erst mit Netlify-Variable AUFSTELLER_LOGOS_AUFRAEUMEN=1. Prüf-Studios (App 1.0 bei Apple) bleiben verschont.
   if (process.env.AUFSTELLER_LOGOS_AUFRAEUMEN !== "1") return [];
   const out = [];
   for (const k of await store.list("aufsteller-logo/")) {
     const s = await getStudio(k.slice("aufsteller-logo/".length));
     const a = s?.aufsteller || {};
     if (s && (a.angefordertAm || a.kauf?.bezahltAm)) continue;
+    if (s && istAufstellerPruefStudio(s)) continue; // nur bis Apple 1.0 freigegeben hat, dann entfernen (Entscheidung Domenic 16.11.2026)
     if (s) await aufstellerLogoLoeschen(s, "tagesjob");
     else { await store.del(k); await log("aufsteller-logo-geloescht", { key: k, quelle: "tagesjob", grund: "ohne Studio" }); }
     out.push(["aufsteller-logo-geloescht", s?.id || k]);

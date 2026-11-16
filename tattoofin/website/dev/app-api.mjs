@@ -944,7 +944,9 @@ try {
   await admin("jobs", {});
   check(blob("aufsteller-logo/" + D.id) && logs("aufsteller-logo-geloescht").length === logVorJob, "Tagesjob löscht ohne AUFSTELLER_LOGOS_AUFRAEUMEN=1 keine Logos (wartet auf Domenics OK)");
   process.env.AUFSTELLER_LOGOS_AUFRAEUMEN = "1";
+  setBlob("aufsteller-logo/" + demo.studioId, { src: LOGO, w: 400, h: 200 });
   const jobLogo = await admin("jobs", {});
+  check(Boolean(blob("aufsteller-logo/" + demo.studioId)) && blob("studio/" + demo.studioId)?.demo === true, "Tagesjob verschont das Logo des Prüf-/Demo-Studios (App 1.0 bei Apple)");
   const geloeschtJob = (jobLogo || []).filter((x) => x[0] === "aufsteller-logo-geloescht").map((x) => x[1]);
   check(!blob("aufsteller-logo/" + D.id) && blob("studio/" + D.id).aufsteller?.hatLogo === false && blob("studio/" + D.id).aufsteller?.logoGeloeschtAm && !blob("aufsteller-logo/st_gibtesnicht") &&
     blob("aufsteller-logo/" + E.id) && blob("studio/" + E.id).aufsteller?.hatLogo === true && geloeschtJob.includes(D.id) && !geloeschtJob.includes(E.id) && logs("aufsteller-logo-geloescht").length === logVorJob + 2,
