@@ -539,6 +539,18 @@ ${g.nachricht ? `<div style="font-style:italic;color:#5b6370;margin-top:10px">�
     cta: "Anmeldung fortsetzen", ctaUrl: resumeUrl,
   }),
 
+  // Einmalige Info an abgebrochene Anmeldungen: es gibt jetzt die Testwoche (Domenic 18.11.2026: „die studios … anschreiben automatisch“)
+  testwocheInfo: (s, { resumeUrl }) => mk(`Neu bei Tattoofin: ${testDauer(CFG.testTage || 7)} testen`, {
+    title: `Jetzt ${testDauer(CFG.testTage || 7)} testen`, preheader: "Heute zahlst du nichts. Kündigst du in der Testwoche, kostet es nichts.",
+    body: hallo(s) + p(`kurze Info: Du kannst Tattoofin jetzt ${testDauer(CFG.testTage || 7)} testen.`) +
+      p(`Du hinterlegst nur deine Karte. Abgebucht wird erst nach ${CFG.testTage || 7} Tagen. Kündigst du vorher im Studio-Bereich, zahlst du nichts.`) +
+      box(`<b>Danach:</b><br>${monatPreisText(CFG.monatNetto)}.<br>Ohne Provision, monatlich kündbar.`) +
+      p("Deine Angaben von der Anmeldung sind noch gespeichert. Mit dem Knopf geht es direkt weiter.") +
+      p(`Fragen? WhatsApp an <a href="https://wa.me/${CFG.whatsapp}" style="color:${navy};font-weight:700">0162 4502375</a> oder einfach auf diese Mail antworten.`) +
+      p("Viele Grüße<br>Dein Tattoofin-Team"),
+    cta: `${testDauer(CFG.testTage || 7)} testen`, ctaUrl: resumeUrl,
+  }),
+
   // ---- intern ----
   intern: (titel, s, details = {}) => mk(`[Tattoofin] ${titel}: ${s?.firma || ""}`, {
     title: esc(titel),

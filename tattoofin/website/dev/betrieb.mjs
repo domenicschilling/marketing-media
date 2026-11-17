@@ -1626,6 +1626,27 @@ await abschnitt("21 Testwoche (Domenic 17.11.2026): 7 Tage testen, Karte hinterl
     const liste = (await studios()).find((x) => x.id === c.id) || {};
     check(liste.quelle?.content === "d2-sieger", "Admin-Studioliste enthält die Herkunft (quelle)", JSON.stringify(liste.quelle));
 
+    // Geplante Einmal-Info „jetzt mit Testwoche“ (Domenic 18.11.2026): Vorschau, Planung, Versand genau einmal zur geplanten Zeit, nur offene Anmeldungen
+    { const EI = "testwoche-info@studio-beispiel.de";
+      const i1 = await anmelden("monatlich", EI, "Info Studio");
+      const vor = await admin(`studio/${i1.id}/testwoche-info`, { body: {} });
+      const plan = await admin(`studio/${i1.id}/testwoche-info`, { body: { am: "2026-11-18T12:00:00+01:00" } });
+      const frueh = await domain.geplanteInfoMails(new Date("2026-11-18T10:30:00Z"));
+      const punkt = await domain.geplanteInfoMails(new Date("2026-11-18T11:00:00Z"));
+      const nochmal = await domain.geplanteInfoMails(new Date("2026-11-18T12:00:00Z"));
+      const mi = mailsAn(EI).filter((m) => /Neu bei Tattoofin: 1 Woche testen/.test(m.subject));
+      const again = await admin(`studio/${i1.id}/testwoche-info`, { body: { senden: true } });
+      check(vor.gesendet === false && !vor.geplant && /Du kannst Tattoofin jetzt 1 Woche testen/.test(vor.text) && /Abgebucht wird erst nach 7 Tagen/.test(vor.text) && /start\.html\?resume=/.test(vor.html)
+        && plan.geplant === "2026-11-18T11:00:00.000Z" && !frueh.some((x) => x[1] === "Info Studio") && punkt.some((x) => x[0] === "testwoche-info" && x[1] === "Info Studio")
+        && !nochmal.some((x) => x[1] === "Info Studio") && mi.length === 1 && again._status === 409,
+        "Testwochen-Info: Vorschau, geplant für 12:00 Uhr, vorher nichts, um 12 Uhr genau eine Mail (Fortsetzen-Link), danach gesperrt", `${plan.geplant} · ${mi.length} Mail(s)`);
+      const i2 = await anmelden("monatlich", "testwoche-info-fertig@studio-beispiel.de", "Info Fertig Studio");
+      await admin(`studio/${i2.id}/testwoche-info`, { body: { am: "2026-11-18T12:00:00+01:00" } });
+      { const s = await storeMod.getStudio(i2.id); s.status = "einrichtung"; await storeMod.saveStudio(s); }
+      const r2 = await domain.geplanteInfoMails(new Date("2026-11-18T11:05:00Z"));
+      check(r2.some((x) => x[0] === "testwoche-info-uebersprungen" && x[1] === "Info Fertig Studio") && mailsAn("testwoche-info-fertig@studio-beispiel.de").filter((m) => /Neu bei Tattoofin/.test(m.subject)).length === 0,
+        "Testwochen-Info: Wer sich bis dahin fertig angemeldet hat, bekommt keine Mail", ""); }
+
     // Anmeldeseite + Startseite + Vertrag mit Testwoche
     const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
     const pg = await ctx.newPage();

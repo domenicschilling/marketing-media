@@ -202,6 +202,23 @@ export default handler(async (req) => {
       await log("admin-nachfassen", { admin: adminName(req), studioId: s.id, gesendet: b.senden === true });
       return json({ ok: true, gesendet: b.senden === true, betreff: m.subject, html: m.html, text: m.text });
     }
+    // Einmal-Info „jetzt mit Testwoche“ an eine offene Anmeldung (Domenic 18.11.2026). Ohne senden/am nur Vorschau.
+    // { am: ISO } plant den Versand (stündlicher Job), { senden: true } schickt sofort, { abbrechen: true } nimmt die Planung zurück. Je Studio einmal.
+    if (aktion === "testwoche-info" && req.method === "POST") {
+      if (!["entwurf", "abgebrochen"].includes(s.status)) return fail("Nur für nicht abgeschlossene Anmeldungen.", 409);
+      const b = await body(req);
+      if ((b.senden === true || b.am) && s.testwocheInfoAm) return fail("Diesem Studio wurde die Testwochen-Info schon geschickt.", 409);
+      const m = mails.testwocheInfo(s, { resumeUrl: resumeUrl(s) });
+      if (b.abbrechen === true) { s.testwocheInfoGeplant = null; await saveStudio(s); }
+      else if (b.senden === true) { await notify(s, m); s.testwocheInfoAm = now(); s.testwocheInfoGeplant = null; await saveStudio(s); }
+      else if (b.am) {
+        const am = new Date(b.am);
+        if (isNaN(am)) return fail("Zeitpunkt ungültig (ISO, z. B. 2026-11-18T12:00:00+01:00).");
+        s.testwocheInfoGeplant = am.toISOString(); await saveStudio(s);
+      }
+      await log("admin-testwoche-info", { admin: adminName(req), studioId: s.id, gesendet: b.senden === true, geplant: s.testwocheInfoGeplant || null });
+      return json({ ok: true, gesendet: b.senden === true, geplant: s.testwocheInfoGeplant || null, betreff: m.subject, html: m.html, text: m.text });
+    }
     // Kündigung durch den Anbieter (Altvertrag: ein Monat zum Monatsende). Ohne senden:true passiert nichts, nur Vorschau.
     if (aktion === "kuendigen" && req.method === "POST") {
       if (["gekuendigt", "beendet", "erstattet"].includes(s.status)) return fail("Der Vertrag ist bereits gekündigt.", 409);

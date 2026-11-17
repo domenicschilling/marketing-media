@@ -714,6 +714,26 @@ export async function anmeldungenNachfassen(jetztD = new Date(), { abStunden = 2
   return out;
 }
 
+// Geplante Einmal-Info „jetzt mit Testwoche“ (Admin: POST /api/admin/studio/:id/testwoche-info { am }): wird vom stündlichen Job
+// verschickt, sobald der Zeitpunkt erreicht ist. Nur, solange die Anmeldung noch offen ist, nie an Tests, je Studio einmal (s.testwocheInfoAm).
+export async function geplanteInfoMails(jetztD = new Date()) {
+  const out = [];
+  for (const s of await allStudios()) {
+    if (!s.testwocheInfoGeplant || s.testwocheInfoAm) continue;
+    if (Date.parse(s.testwocheInfoGeplant) > jetztD.getTime()) continue;
+    if (!["entwurf", "abgebrochen"].includes(s.status) || istTestAnmeldung(s) || istApple(s) || !s.email) {
+      s.testwocheInfoGeplant = null; s.testwocheInfoUebersprungen = { am: now(), status: s.status }; await saveStudio(s);
+      out.push(["testwoche-info-uebersprungen", s.firma, s.status]); continue;
+    }
+    s.testwocheInfoAm = now();
+    await saveStudio(s);
+    await notify(s, mails.testwocheInfo(s, { resumeUrl: resumeUrl(s) }));
+    await log("testwoche-info-gesendet", { studioId: s.id, geplant: s.testwocheInfoGeplant });
+    out.push(["testwoche-info", s.firma]);
+  }
+  return out;
+}
+
 export async function taeglicheJobs(heute = new Date()) {
   const out = [];
   // Zahlungen, die bezahlt wurden, deren Webhook aber fehlte, nachtragen
