@@ -29,7 +29,7 @@ function layout({ preheader = "", title, body, cta, ctaUrl, footerNote = "" }) {
 <p style="margin:14px 0 0">Fragen? Antworte einfach auf diese E-Mail oder schreib uns per WhatsApp: ${esc(CFG.telefon)}.<br>
 ${esc(CFG.firma)} · ${esc(CFG.adresse)}<br>Tattoofin ist kein Kreditgeber. Zahlungen werden über externe Zahlungsanbieter abgewickelt.</p></td></tr></table></td></tr></table></body></html>`;
   const text = (title + "\n\n" + body + (cta ? `\n\n${cta}: ${ctaUrl}` : ""))
-    .replace(/<br\s*\/?>/g, "\n").replace(/<\/(p|li|tr|h\d|div)>/g, "\n").replace(/<\/td>\s*<td/g, ": </td><td").replace(/<\/(p|li|tr|h\d|div)>\s*</g, "\n<").replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ")
+    .replace(/<br\s*\/?>/g, "\n").replace(/<\/(p|div)>/g, "\n\n").replace(/<\/(li|tr|h\d)>/g, "\n").replace(/<\/td>\s*<td/g, ": </td><td").replace(/<\/(p|li|tr|h\d|div)>\s*</g, "\n<").replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ")
     .replace(/&amp;/g, "&").replace(/\n{3,}/g, "\n\n").trim();
   return { html, text };
 }
@@ -499,10 +499,11 @@ ${g.nachricht ? `<div style="font-style:italic;color:#5b6370;margin-top:10px">�
   // Ton wie Erstkontakt: danke + Fragen?, kein Verkaufsdruck. Preis-Hinweis, weil an der Kasse bis 14.11. noch 58,31 € stand.
   anmeldungNachfassen: (s, { resumeUrl }) => mk("Kurze Frage zu deiner Tattoofin-Anmeldung", {
     title: "Hast du noch Fragen?", preheader: "Schreib uns einfach per WhatsApp an 0162 4502375.",
-    body: hallo(s) + p(`danke, dass du dich am ${datum(s.createdAt)} bei Tattoofin angemeldet hast. Wir haben gesehen, dass die Anmeldung noch nicht ganz fertig ist.`) +
-      p("Falls etwas unklar war oder nicht geklappt hat, sag uns einfach Bescheid. Wir helfen dir gern, auch beim Einrichten.") +
-      box(`<b>Fragen?</b> Schreib uns per WhatsApp an <a href="https://wa.me/${CFG.whatsapp}" style="color:${navy};font-weight:700">0162 4502375</a> oder antworte einfach auf diese Mail.`) +
-      p(`Gut zu wissen: Seit dem 15.11. kostet Tattoofin ${monatPreisText(CFG.monatNetto)}, ohne Provision und monatlich kündbar.`) +
+    body: hallo(s) + p(`danke für deine Anmeldung am ${datum(s.createdAt)}.`) +
+      p("Uns ist aufgefallen: Sie ist noch nicht ganz fertig.") +
+      p("War etwas unklar oder hat nicht geklappt? Sag einfach Bescheid. Wir helfen dir gern, auch beim Einrichten.") +
+      box(`<b>Fragen?</b><br>WhatsApp an <a href="https://wa.me/${CFG.whatsapp}" style="color:${navy};font-weight:700">0162 4502375</a><br>oder einfach auf diese Mail antworten.`) +
+      p(`<b>Gut zu wissen:</b><br>Seit dem 15.11. kostet Tattoofin ${monatPreisText(CFG.monatNetto)}.<br>Ohne Provision, monatlich kündbar.`) +
       p("Viele Grüße<br>Dein Tattoofin-Team"),
     cta: "Anmeldung fortsetzen", ctaUrl: resumeUrl,
   }),
