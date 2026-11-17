@@ -495,6 +495,18 @@ ${g.nachricht ? `<div style="font-style:italic;color:#5b6370;margin-top:10px">�
     cta: "Abschluss fortsetzen", ctaUrl: resumeUrl,
   }),
 
+  // Persönliches Nachfassen bei abgebrochener Anmeldung (Domenic 17.11.2026: „schreib denen eine nette mail“, „meine nummer für fragen“).
+  // Ton wie Erstkontakt: danke + Fragen?, kein Verkaufsdruck. Preis-Hinweis, weil an der Kasse bis 14.11. noch 58,31 € stand.
+  anmeldungNachfassen: (s, { resumeUrl }) => mk("Kurze Frage zu deiner Tattoofin-Anmeldung", {
+    title: "Hast du noch Fragen?", preheader: "Schreib uns einfach per WhatsApp an 0162 4502375.",
+    body: hallo(s) + p(`danke, dass du dich am ${datum(s.createdAt)} bei Tattoofin angemeldet hast. Wir haben gesehen, dass die Anmeldung noch nicht ganz fertig ist.`) +
+      p("Falls etwas unklar war oder nicht geklappt hat, sag uns einfach Bescheid. Wir helfen dir gern, auch beim Einrichten.") +
+      box(`<b>Fragen?</b> Schreib uns per WhatsApp an <a href="https://wa.me/${CFG.whatsapp}" style="color:${navy};font-weight:700">0162 4502375</a> oder antworte einfach auf diese Mail.`) +
+      p(`Gut zu wissen: Seit dem 15.11. kostet Tattoofin ${monatPreisText(CFG.monatNetto)}, ohne Provision und monatlich kündbar.`) +
+      p("Viele Grüße<br>Dein Tattoofin-Team"),
+    cta: "Anmeldung fortsetzen", ctaUrl: resumeUrl,
+  }),
+
   // ---- intern ----
   intern: (titel, s, details = {}) => mk(`[Tattoofin] ${titel}: ${s?.firma || ""}`, {
     title: esc(titel),

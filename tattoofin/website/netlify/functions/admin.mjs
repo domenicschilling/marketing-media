@@ -40,7 +40,7 @@ import { json, fail, body, clean, now, handler } from "./_lib/util.mjs";
 import { allStudios, getStudio, saveStudio, zahlungenVon, abrechnungenVon, store, log, normEmail } from "./_lib/store.mjs";
 import { isAdmin, loginLink, sign, adminName } from "./_lib/auth.mjs";
 import { stripe, TATTOOFIN_BRANDING } from "./_lib/stripe.mjs";
-import { anbieterKuendigungZum, hatUmstellungsangebot, notify, monatsabrechnung, taeglicheJobs, kontoAbgleichen, provisionVerdient, aufstellerLogoLoeschen, STATUS, connectUrl, connectUrlGehostet } from "./_lib/domain.mjs";
+import { anbieterKuendigungZum, hatUmstellungsangebot, resumeUrl, notify, monatsabrechnung, taeglicheJobs, kontoAbgleichen, provisionVerdient, aufstellerLogoLoeschen, STATUS, connectUrl, connectUrlGehostet } from "./_lib/domain.mjs";
 import { mails } from "./_lib/emails.mjs";
 import { sendMail, warteschlangeStatus, warteschlangeAbarbeiten } from "./_lib/mail.mjs";
 import { randomBytes } from "node:crypto";
@@ -190,6 +190,16 @@ export default handler(async (req) => {
       if (b.senden === true) { await notify(s, m); s.umstellung.upgradeMailAm = now(); await saveStudio(s); }
       await log("admin-umstellung-upgrade", { admin: adminName(req), studioId: s.id, gesendet: b.senden === true });
       return json({ ok: true, gesendet: b.senden === true, an: s.email, betreff: m.subject, html: m.html, text: m.text });
+    }
+    // Persönliches Nachfassen bei abgebrochener Anmeldung (Domenic 17.11.2026). Ohne senden:true nur Vorschau. Je Studio höchstens einmal.
+    if (aktion === "nachfassen" && req.method === "POST") {
+      if (!["entwurf", "abgebrochen"].includes(s.status)) return fail("Nur für nicht abgeschlossene Anmeldungen.", 409);
+      const b = await body(req);
+      if (b.senden === true && s.nachgefasstAm) return fail("Diesem Studio wurde schon nachgefasst.", 409);
+      const m = mails.anmeldungNachfassen(s, { resumeUrl: resumeUrl(s) });
+      if (b.senden === true) { await notify(s, m); s.nachgefasstAm = now(); await saveStudio(s); }
+      await log("admin-nachfassen", { admin: adminName(req), studioId: s.id, gesendet: b.senden === true });
+      return json({ ok: true, gesendet: b.senden === true, betreff: m.subject, html: m.html, text: m.text });
     }
     // Kündigung durch den Anbieter (Altvertrag: ein Monat zum Monatsende). Ohne senden:true passiert nichts, nur Vorschau.
     if (aktion === "kuendigen" && req.method === "POST") {

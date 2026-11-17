@@ -301,7 +301,7 @@ def bauen(seite):
 <link rel="icon" href="/favicon.png" type="image/png"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preload" href="/assets/start/fonts/LuckiestGuy.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/start/fonts/DMSans.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/assets/start/style.css?v=20261117h">
+<link rel="stylesheet" href="/assets/start/style.css?v=20261117i">
 {ld}</head>
 <body{' data-wa="aus"' if studios else ''}>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><pattern id="tf-punkte" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><circle cx="2.2" cy="2.2" r="2.1" fill="#1f3d5c"/><circle cx="6.7" cy="6.7" r="2.1" fill="#1f3d5c"/></pattern></defs></svg>
@@ -342,6 +342,7 @@ def bauen(seite):
     <div class="auftakt-fuss">
       <div class="auftakt-knopf">{start("auftakt")}</div>
       <p class="preiszeile">49,90&nbsp;€ im Monat · monatlich kündbar</p>
+      <p class="hero-wa"><a href="{wa}" data-umami-event="whatsapp-auftakt">Fragen? WhatsApp an 0162&nbsp;4502375</a></p>
     </div>
   </section>
 {HERO_TAUSCH}
@@ -414,13 +415,14 @@ def bauen(seite):
     <div class="fragen-liste">
 {chr(10).join(fragen)}
     </div>
+    <p class="fragen-wa">Deine Frage ist nicht dabei? <a href="{wa}" data-umami-event="whatsapp-fragen">Schreib uns per WhatsApp an 0162&nbsp;4502375</a></p>
   </section>
 
   <section class="schluss">
     <div class="schluss-kopf">
       <h2>Nächster Termin? Schick den Link.</h2>
       <p class="zeile">49,90&nbsp;€ im Monat inkl. MwSt. · monatlich kündbar <span class="b2b">· nur für Unternehmer</span></p>
-      <div class="wege">{start("schluss")}<a class="wa" href="{wa}" data-umami-event="whatsapp-schluss">Fragen? Schreib unserem Team per WhatsApp.</a></div>
+      <div class="wege">{start("schluss")}<a class="wa" href="{wa}" data-umami-event="whatsapp-schluss">Fragen? WhatsApp an 0162&nbsp;4502375</a></div>
     </div>
     <div class="hausherr-rahmen">
       <img class="hausherr-klein" src="/assets/start/figur.webp" alt="" width="300" height="310" loading="lazy" decoding="async">

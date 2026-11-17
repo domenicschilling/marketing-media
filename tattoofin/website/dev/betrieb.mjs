@@ -1040,12 +1040,14 @@ await abschnitt("17b Erster Bildschirm je Anzeige (Runde 2, 16.11.2026): richtig
         const sicht = (e) => { const r = e.getBoundingClientRect(), cs = getComputedStyle(e); return r.width > 0 && r.height > 0 && cs.display !== "none" && cs.visibility !== "hidden"; };
         return { kicker: document.querySelector(".kicker"), elemente: [...document.querySelectorAll(".auftakt h1, .auftakt p:not(.raten-fn), .auftakt .knopf, .auftakt figcaption")].filter(sicht).length + document.querySelectorAll(".auftakt-handy").length,
           fnHero: [...document.querySelectorAll(".auftakt .raten-fn")].some(sicht), gesehen: [...new Set(window.__rahmen.filter((x) => x[0] === "visible").map((x) => x[1]))],
-          bild: document.querySelector(".auftakt-handy img").getAttribute("src"), herz: sichtbar(".fl-1"), beleg: document.querySelector(".auftakt .hero-beleg, .auftakt .hero-wa, .auftakt .hero-chips") === null,
+          bild: document.querySelector(".auftakt-handy img").getAttribute("src"), herz: sichtbar(".fl-1"), beleg: document.querySelector(".auftakt .hero-beleg, .auftakt .hero-chips") === null,
+          // WhatsApp-Nummer im Hero (Domenic 17.11.2026)
+          wa: /0162\s4502375/.test((document.querySelector(".auftakt .hero-wa a") || {}).textContent || "") && /wa\.me\/491624502375/.test((document.querySelector(".auftakt .hero-wa a") || {}).href || ""),
           // Runde 2b: Motive warten nur, bis app.js sie als Schablone vorbereitet hat, danach sind sie da
           motive: !document.documentElement.classList.contains("stech-warten") && [...document.querySelectorAll(".buehne svg.stech")].every((x) => getComputedStyle(x).visibility === "visible") };
       });
-      const gut = m.kicker === null && m.elemente <= 5 && m.fnHero === false && m.beleg && m.gesehen.length === 1 && m.gesehen[0] === h1 && m.bild.includes(bild) && m.herz === klarna && m.motive;
-      check(gut, `Hero ${utm || "ohne utm"} ${w}x${h}: nur „${h1}“ sichtbar, Bild ${bild}, Klarna-Herz ${klarna ? "da" : "weg"}, keine Fußnote im Hero, höchstens 5 Elemente (Überschrift, Satz, Handy, Knopf, Preiszeile)`, JSON.stringify({ ...m, gesehen: m.gesehen }).slice(0, 220));
+      const gut = m.kicker === null && m.elemente <= 6 && m.wa && m.fnHero === false && m.beleg && m.gesehen.length === 1 && m.gesehen[0] === h1 && m.bild.includes(bild) && m.herz === klarna && m.motive;
+      check(gut, `Hero ${utm || "ohne utm"} ${w}x${h}: nur „${h1}“ sichtbar, Bild ${bild}, Klarna-Herz ${klarna ? "da" : "weg"}, keine Fußnote im Hero, höchstens 6 Elemente (Überschrift, Satz, Handy, Knopf, Preiszeile, WhatsApp-Nummer)`, JSON.stringify({ ...m, gesehen: m.gesehen }).slice(0, 220));
       await p.context().close();
     }
   }
@@ -1419,6 +1421,14 @@ await abschnitt("19b Sonderpreis 19 € brutto (Antisocial, Domenic 17.11.2026):
   await wait(300);
   const s = (await detail(a.id)).studio;
   check(s.modell === "kauf" && s.paket === "monatlich" && s.monatNetto === 1597 && s.vertrag?.monatNetto === 1597, "Nach der Test-Zahlung: Paket Monatlich zum Sonderpreis 15,97 € netto, Vertrag mit diesem Preis", `${s.modell} ${s.monatNetto}`);
+  // Persönliches Nachfassen bei abgebrochener Anmeldung (Domenic 17.11.2026): Vorschau, Versand genau einmal, Nummer + Fortsetzen-Link
+  { const e = await anmelden("monatlich", "nachfassen@betrieb.test", "Nachfass Studio");
+    const vor = await admin(`studio/${e.id}/nachfassen`, { body: {} });
+    const ein = await admin(`studio/${e.id}/nachfassen`, { body: { senden: true } });
+    const zwei = await admin(`studio/${e.id}/nachfassen`, { body: { senden: true } });
+    const nf = mailsAn("nachfassen@betrieb.test").filter((m) => /Kurze Frage zu deiner Tattoofin-Anmeldung/.test(m.subject));
+    check(vor.gesendet === false && /0162 4502375/.test(vor.html) && /wa\.me\/491624502375/.test(vor.html) && /49,90 € im Monat inkl\. MwSt\./.test(vor.html) && /start\.html\?resume=/.test(vor.html) && !/sofort|nur noch|letzte Chance/i.test(vor.html)
+      && ein.gesendet === true && zwei._status === 409 && nf.length === 1, "Nachfass-Mail: Vorschau, Nummer für Fragen, Preis 49,90 €, Fortsetzen-Link, kein Druck, Versand genau einmal", vor.betreff); }
   // Ohne Zustimmung geht „nur zahlen“ nicht
   process.env.RISIKOFREI_NEU = "1";
   const b = await anmelden("risikofrei", "ohnezustimmung@betrieb.test", "Ohne Zustimmung");

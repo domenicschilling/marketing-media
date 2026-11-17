@@ -734,3 +734,7 @@ html[data-hero=noshow] .auftakt .raten-fn,html[data-hero=gutschein] .auftakt .ra
 /* Tablet hochkant ab 900 px (iPad Pro): Knopf und Preiszeile mittig wie bei 768 (die Desktop-Regel align-self:start schob sie nach links).
    Der Cookie-Hinweis weicht dem Knopf aus (tf-track.js), nicht umgekehrt. */
 @media (orientation:portrait) and (min-width:600px){.auftakt>.auftakt-fuss{align-self:stretch;justify-items:center;text-align:center}}
+/* WhatsApp-Nummer sichtbar (Domenic 17.11.2026: „pack auf die seite wieder meine nummer für fragen whatsapp“) */
+.auftakt .hero-wa{margin-top:2px}
+.fragen-wa{margin-top:18px;font-weight:600}
+.fragen-wa a{font-weight:800;text-underline-offset:3px;white-space:nowrap}
