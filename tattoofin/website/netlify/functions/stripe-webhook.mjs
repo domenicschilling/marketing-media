@@ -289,16 +289,31 @@ export default handler(async (req) => {
           s.bezahltAm = now();
           s.stripe.subscriptionId = id(o.subscription);
           rechnungsdatenUebernehmen(s, o);
+          // Testwoche (17.11.2026): Abo startet im Status „trialing“, heute 0 €. Ende der Testwoche aus dem Abo (trial_end).
+          let testBis = null;
+          if (s.testTage) {
+            try { const sub = await stripe("GET", "/subscriptions/" + s.stripe.subscriptionId); if (sub.status === "trialing" && sub.trial_end) testBis = new Date(sub.trial_end * 1000).toISOString(); }
+            catch (e) { await log("abo-testwoche-lesen-fehler", { studioId: s.id, fehler: e.message }); }
+            if (!testBis && !(o.amount_total > 0)) testBis = new Date(Date.now() + s.testTage * 864e5).toISOString();
+          }
+          if (testBis) { s.testBis = testBis; delete s.bezahltAm; }
           let rechnungUrl = "";
           if (o.invoice) {
             try { const inv = await stripe("GET", "/invoices/" + id(o.invoice)); s.stripe.invoiceId = inv.id; rechnungUrl = inv.hosted_invoice_url || ""; } catch { /* Rechnung optional */ }
           }
           await saveStudio(s);
           await notify(s, mails.anmeldung(s, { loginUrl: loginLink(s.id), connectUrl: einrichtungUrl(s) }));
+          const rechnungsDetails = { ...(s.ustid ? { USt_IdNr: s.ustid } : {}), ...(s.rechnungsadresse ? { Rechnungsadresse: [s.rechnungsname, rechnungsadresseText(s.rechnungsadresse)].filter(Boolean).join(", ") } : {}),
+            ...(!s.strasse ? { Studio_Adresse: "kommt aus dem Stripe-Konto bzw. der Karte „Adresse deiner Zahlseite“" } : {}) };
+          if (testBis) {
+            await notify(s, mails.testwocheGestartet(s, { testBis }));
+            await notifyAdmin("Neue Testwoche gestartet (Paket Monatlich) 🧪", s, { ...paketDetails(s), Testwoche_bis: testBis.slice(0, 10), Erste_Abbuchung: "am Ende der Testwoche, außer das Studio kündigt vorher", Abo: s.stripe.subscriptionId,
+              ...(s.quelle ? { Herkunft: Object.values(s.quelle).join(" · ") } : {}), ...rechnungsDetails });
+            await log("abo.testwoche-gestartet", { studioId: s.id, subscriptionId: s.stripe.subscriptionId, testBis });
+            break;
+          }
           await notify(s, mails.aboGestartet(s, { betragCent: o.amount_total ?? brutto(s.monatNetto || CFG.monatNettoAlt), rechnungUrl }));
-          await notifyAdmin("Neuer Abschluss (Paket Monatlich) 🎉", s, { ...paketDetails(s), Erste_Zahlung: euroText(o.amount_total || 0) + " brutto", Abo: s.stripe.subscriptionId,
-            ...(s.ustid ? { USt_IdNr: s.ustid } : {}), ...(s.rechnungsadresse ? { Rechnungsadresse: [s.rechnungsname, rechnungsadresseText(s.rechnungsadresse)].filter(Boolean).join(", ") } : {}),
-            ...(!s.strasse ? { Studio_Adresse: "kommt aus dem Stripe-Konto bzw. der Karte „Adresse deiner Zahlseite“" } : {}) });
+          await notifyAdmin("Neuer Abschluss (Paket Monatlich) 🎉", s, { ...paketDetails(s), Erste_Zahlung: euroText(o.amount_total || 0) + " brutto", Abo: s.stripe.subscriptionId, ...rechnungsDetails });
           await log("abo.gestartet", { studioId: s.id, subscriptionId: s.stripe.subscriptionId });
           break;
         }
@@ -331,6 +346,16 @@ export default handler(async (req) => {
       case "invoice.paid": {
         const s = await studioFuer(o);
         if (await appleWaechter(s, event)) break;
+        // Testwoche vorbei: erste echte Monatszahlung des Abos (Paket Monatlich) → jetzt zählt das Studio als zahlend
+        if (s && s.testBis && !s.bezahltAm && o.amount_paid > 0 && s.stripe?.subscriptionId && id(o.subscription) === s.stripe.subscriptionId) {
+          s.bezahltAm = now();
+          s.stripe.invoiceId = o.id;
+          await saveStudio(s);
+          await notify(s, mails.aboGestartet(s, { betragCent: o.amount_paid, rechnungUrl: o.hosted_invoice_url || "" }));
+          await notifyAdmin("Testwoche vorbei: erste Monatszahlung bezahlt 🎉", s, { ...paketDetails(s), Betrag: euroText(o.amount_paid) + " brutto", Rechnung: o.number || o.id });
+          await log("abo.erste-zahlung-nach-testwoche", { studioId: s.id, invoiceId: o.id });
+          break;
+        }
         if (s && ["kauf", "setup"].includes(o.metadata?.typ) && s.status === "zahlung_offen") {
           s.status = "einrichtung";
           s.bezahltAm = now();

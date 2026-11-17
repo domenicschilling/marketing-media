@@ -21,7 +21,8 @@ export const LAUFEND = ["einrichtung", "live", "gekuendigt"];
 const GRUPPE = { live: "aktiv", einrichtung: "einrichtung", zahlung_offen: "einrichtung", entwurf: "entwurf", abgebrochen: "entwurf", gekuendigt: "gekuendigt", beendet: "gekuendigt", erstattet: "gekuendigt" };
 export const istTest = (s) => Boolean(s?.demo || s?.sandbox);
 // Apple-Studio in der kostenlosen Probezeit: läuft, hat aber noch nie gezahlt
-const inProbe = (s) => istApple(s) && Boolean(s.apple?.probe);
+// Probezeit: Apple-Probezeit oder Testwoche im Web (17.11.2026: Karte hinterlegt, erste Abbuchung nach der Testwoche, s.testBis ohne s.bezahltAm)
+const inProbe = (s) => (istApple(s) && Boolean(s.apple?.probe)) || (!istApple(s) && Boolean(s.testBis) && !s.bezahltAm);
 // Zahlendes Studio: echt (kein Demo/Test), läuft (auch gekündigt bis Vertragsende), keine Einladung, nicht in der Probezeit
 export const istZahlend = (s) => !istTest(s) && LAUFEND.includes(s.status) && s.zahlart !== "geschenk" && !inProbe(s);
 // Fester Zeitpunkt der Anmeldung (nicht updatedAt: das ändern auch Erinnerungs-Mail und Ablauf der Kasse)
@@ -88,8 +89,12 @@ function karte(s, zahlungen, g) {
     zahlungen: bezahlt.length, offen: zahlungen.filter((z) => z.status === "offen").length,
     umsatzMonatCent: monat.reduce((a, z) => a + z.betragCent - (z.erstattetCent || 0), 0),
     createdAt: s.createdAt || null, goLiveAt: s.goLiveAt || null, kuendigungZum: s.kuendigung?.zum || null,
+    testBis: s.testBis || null, herkunft: herkunftText(s),
   };
 }
+
+// Herkunft der Anmeldung (UTM aus Anzeige/Seite, gespeichert in s.quelle), z. B. „meta · paid · tf-studios-2026-11-kombi · d2-sieger“
+const herkunftText = (s) => (s.quelle && typeof s.quelle === "object" ? ["source", "medium", "campaign", "content"].map((k) => s.quelle[k]).filter(Boolean).join(" · ") : "");
 
 // Warum hängt die Anmeldung? Nur, was gespeichert ist.
 function entwurfInfo(s, aktiveEmails) {
@@ -101,6 +106,7 @@ function entwurfInfo(s, aktiveEmails) {
     paket: paketInfo(s), wo, wann: anmeldungAm(s), angelegt: s.createdAt || null, schritt,
     fehler: f ? { am: f.am || null, text: f.text || "", code: f.code || "", dreiDS: Boolean(f.dreiDS) } : null,
     spaeterAbgeschlossen: aktiveEmails.has(normEmail(s.email)),
+    herkunft: herkunftText(s), nachgefasstAm: s.nachgefasstAm || null, nachgefasstAuto: Boolean(s.nachgefasstAuto),
   };
 }
 

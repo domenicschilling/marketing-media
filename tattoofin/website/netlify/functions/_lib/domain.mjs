@@ -689,6 +689,31 @@ export async function monatsabrechnung(monat, { dryRun = false } = {}) {
 }
 
 // Läuft täglich: Erinnerungen, Vertragsende
+// ---------------------------------------------------------------------------------------------------------------------
+// Automatisches Nachfassen bei abgebrochener Anmeldung (Domenic 17.11.2026, „#2 umsetzen“): Wer an der Kasse aufhört, bekommt nach
+// ca. 2 Stunden die persönliche Nachfass-Mail (WhatsApp-Nummer, Testwoche, Knopf „Anmeldung fortsetzen“). Je Studio höchstens einmal
+// (gleiches Feld wie der Admin-Knopf: s.nachgefasstAm). Nur tagsüber (8–21 Uhr deutscher Zeit), nur bis 7 Tage nach dem Abbruch.
+// Nie an Test-/Demo-Anmeldungen, App-Entwürfe (Apple 3.1.3: kein Link zur Web-Anmeldung) und das geschlossene Paket Risikofrei.
+export const istTestAnmeldung = (s) => Boolean(s?.demo || s?.sandbox || /\btest\b/i.test(s?.firma || "") || /\btest\b/i.test(s?.quelle?.source || "") ||
+  /@(tattoofin\.de|[a-z0-9-]+\.test|example\.(com|org|net))$/i.test(String(s?.email || "").trim()));
+export async function anmeldungenNachfassen(jetztD = new Date(), { abStunden = 2, bisTage = 7 } = {}) {
+  const out = [];
+  // Stunde in deutscher Zeit (formatToParts: „de-DE“ liefert sonst „23 Uhr“ → keine Zahl)
+  const stunde = Number(new Intl.DateTimeFormat("en-US", { timeZone: "Europe/Berlin", hour: "numeric", hourCycle: "h23" }).formatToParts(jetztD).find((x) => x.type === "hour")?.value);
+  if (!Number.isFinite(stunde) || stunde < 8 || stunde >= 21) return out;
+  for (const s of await allStudios()) {
+    if (!["entwurf", "abgebrochen"].includes(s.status) || s.nachgefasstAm || istApple(s) || s.paket === "risikofrei" || istTestAnmeldung(s) || !s.email) continue;
+    const seitStd = (jetztD.getTime() - Date.parse(s.vertrag?.akzeptiertAm || s.createdAt)) / 3600e3;
+    if (!(seitStd >= abStunden && seitStd <= bisTage * 24)) continue;
+    s.nachgefasstAm = now(); s.nachgefasstAuto = true;
+    await saveStudio(s);
+    await notify(s, mails.anmeldungNachfassen(s, { resumeUrl: resumeUrl(s), jetzt: jetztD }));
+    await log("anmeldung-nachgefasst", { studioId: s.id, automatisch: true });
+    out.push(["nachgefasst", s.firma]);
+  }
+  return out;
+}
+
 export async function taeglicheJobs(heute = new Date()) {
   const out = [];
   // Zahlungen, die bezahlt wurden, deren Webhook aber fehlte, nachtragen
@@ -741,6 +766,15 @@ export async function taeglicheJobs(heute = new Date()) {
         await notify(s, mails.connectErinnerung(s, { connectUrl: connectUrlGehostet(s) }));
         if (stufe === 2) await notifyAdmin("Stripe-Konto seit 7 Tagen nicht fertig: bitte anrufen", s, {});
         out.push(["connect-erinnerung", s.firma, stufe]);
+      }
+    }
+    // Testwoche (17.11.2026): ca. 2 Tage vor dem Ende einmal erinnern (Preis, Kündigen-Weg). Nicht nach Kündigung, nicht nach erster Zahlung.
+    if (s.testBis && !s.bezahltAm && !s.testErinnert && ["einrichtung", "live"].includes(s.status)) {
+      const tageBis = (Date.parse(s.testBis) - heute.getTime()) / 864e5;
+      if (tageBis > 0 && tageBis <= 2.5) {
+        s.testErinnert = now(); await saveStudio(s);
+        await notify(s, mails.testwocheEndetBald(s, { testBis: s.testBis }));
+        out.push(["testwoche-endet-bald", s.firma]);
       }
     }
     if (s.status === "gekuendigt" && s.kuendigung?.zum) {

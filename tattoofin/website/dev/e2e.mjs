@@ -147,7 +147,7 @@ try {
     const ds = fs.readFileSync(path.join(root, "public/datenschutz.html"), "utf8");
     check(!/aufsteller/i.test(ds), "Datenschutz: kein Absatz und kein Empfänger zum QR-Aufsteller mehr (Entscheidung Domenic 16.11.2026)");
     const cfgOeff = await (await fetch(BASE + "/api/config")).json();
-    check(!/aufsteller/i.test(JSON.stringify(cfgOeff)) && cfgOeff.vertragVersion === "2026-12e", "GET /api/config ohne Aufsteller-Preis/-Pakete, Vertrag 2026-12e");
+    check(!/aufsteller/i.test(JSON.stringify(cfgOeff)) && cfgOeff.vertragVersion === "2026-12f", "GET /api/config ohne Aufsteller-Preis/-Pakete, Vertrag 2026-12f");
   }
   const p0 = await neueSeite();
   await p0.goto(BASE + "/");
@@ -300,18 +300,18 @@ try {
   await signup(pD, { paket: "monatlich", email: "abo@example.com", firma: "Ink Abo" });
   await pD.waitForURL(MOCK_PAY);
   const kasse = await pD.textContent("body");
-  check(kasse.includes("subscription") && kasse.includes("49.90"), "Stripe-Abo: 41,93 € netto + 19 % = 49,90 €");
+  check(kasse.includes("subscription"), "Stripe-Kasse im Abo-Modus (Testwoche: heute 0 €)");
   state = await mock("state");
   const sessAbo = Object.values(state.sessions).find((x) => x.mode === "subscription");
   check(sessAbo?.line_items?.[0]?.price_data?.recurring?.interval === "month" && sessAbo?.metadata?.paket === "monatlich" && !sessAbo.account, "Abo monatlich auf dem DSX-Konto, Metadaten Paket");
   { const li = sessAbo?.line_items?.[0] || {}, n = Number(li.price_data?.unit_amount);
-    check(n === 4193 && li.tax_rates?.length === 1 && n + Math.round(n * 19 / 100) === 4990 && Number(sessAbo.amount_total) === 4990 && !/trial/.test(JSON.stringify(sessAbo)), "Abo: 4193 netto + 797 USt. = 4990 brutto, ohne Gratiszeit"); }
+    check(n === 4193 && li.tax_rates?.length === 1 && n + Math.round(n * 19 / 100) === 4990 && Number(sessAbo.subscription_data?.trial_period_days) === 7 && sessAbo.payment_method_collection === "always" && Number(sessAbo.amount_total) === 0, "Abo: 4193 netto + 797 USt. = 4990 brutto nach der Testwoche, 7 Tage Testwoche mit hinterlegter Karte (heute 0 €)"); }
   check(/USt-IdNr\. DE456133925/.test(Object.values(state.customers).find((c) => c.email === "abo@example.com")?.invoice_settings?.footer || ""), "Rechnungsfuß mit DSX + USt-IdNr.");
   await pD.click("#pay");
   await einrichtungEingebettet(pD);
   const aboStudio = await studioPer("abo@example.com");
   check(aboStudio?.status === "einrichtung" && aboStudio?.paket === "Monatlich" && aboStudio?.provisionProzent === 0, "Abo-Studio in Einrichtung, Paket Monatlich, 0 % Provision");
-  check(mailsAn("abo@example.com").some((m) => m.subject.includes("Monatlich")), "E-Mail: Paket Monatlich gestartet");
+  check(mailsAn("abo@example.com").some((m) => /Deine Testwoche läuft bis/.test(m.subject)), "E-Mail: Testwoche gestartet (läuft bis …)");
   check(mailsAn("domenicschilling@gmail.com").some((m) => m.subject.includes("Paket Monatlich") && m.subject.includes("Ink Abo")) && !mailsAn("domenicschilling@gmail.com").some((m) => /Aufsteller|aufsteller\.html|Gravurdatei/.test(m.subject + m.html) && m.subject.includes("Ink Abo")), "Admin-Mail Monatlich: ohne QR-Aufsteller (eingestellt)");
   check(!mailsAn("abo@example.com").some((m) => /Aufsteller/i.test(m.subject + m.html)), "Mails an das Abo-Studio: kein Aufsteller");
   check(Object.values((await mock("state")).accounts).find((a) => a.email === "abo@example.com")?.type === "standard", "Monatlich: eigenes Standard-Konto");
@@ -358,8 +358,8 @@ try {
     });
     check(form.felder === "firma,inhaber,email,telefon,ak_alle" && form.alt === 0, "/start: genau 4 Felder + 1 Häkchen, kein Fortschrittsbalken, kein Zurück, kein Unterzeichner, kein KMU-Extra, kein Studio-Telefon/Website", form.felder + " alt=" + form.alt);
     check(form.label === "Name deines Studios|Dein Vor- und Nachname|Handynummer (WhatsApp)" && form.firma === "text|organization|" && form.inhaber === "text|name|" && form.email === "email|email|email" && form.telefon === "tel|tel|tel", "/start: Beschriftungen + Autofill-Tokens (organization, name, email, tel) + Handy-Tastatur", JSON.stringify(form));
-    check(form.h1 === "4 Angaben + Zahlung." && !form.minuten, "/start: Überschrift „4 Angaben + Zahlung.“ (ehrlich: danach kommt die Zahlung), keine Minutenangabe über dem Knopf");
-    check(form.knopf.replace(/\u00a0/g, " ") === "Weiter zur Zahlung · 49,90 € im Monat" && /Sicher über Stripe\. Monatlich kündbar\. Keine Provision\./.test(form.sicher), "/start: Knopf „Weiter zur Zahlung · 49,90 € im Monat“, darunter klein „Sicher über Stripe. Monatlich kündbar. Keine Provision.“", form.knopf);
+    check(form.h1 === "1 Woche testen." && !form.minuten, "/start: Überschrift „1 Woche testen.“ (Testwoche seit 17.11.2026), keine Minutenangabe über dem Knopf");
+    check(form.knopf.replace(/\u00a0/g, " ") === "1 Woche testen · heute 0 €" && /Karte sicher bei Stripe hinterlegen\. Kündigst du in der Testwoche, zahlst du nichts\./.test(form.sicher), "/start: Knopf „1 Woche testen · heute 0 €“, darunter klein „Karte sicher bei Stripe hinterlegen. Kündigst du in der Testwoche, zahlst du nichts.“", form.knopf);
     check(form.kurzUnter && /Unternehmer an \(weniger als 250 Mitarbeitende\) und akzeptiere den Vertrag und den AVV/.test(form.haken) && form.vertragLink, "/start: ein Häkchen (Unternehmer < 250 MA + Vertrag + AVV, verlinkt), „Das Wichtigste in Kürze“ zugeklappt unter dem Knopf", form.haken);
     check(form.knopfUnten <= 844, "/start 390×844: Knopf im ersten Bildschirm (ohne Tastatur)", String(Math.round(form.knopfUnten)));
     // Leer absenden: Fehlermeldung, keine Anfrage, keine Messung
@@ -386,7 +386,7 @@ try {
       check(sE.vertrag?.bestaetigung?.art === "ein-haekchen" && sE.vertrag.bestaetigung.version === "v1" && Boolean(satz) && sE.vertrag.bestaetigung.text === satz, "Vertragsannahme: Art „ein Häkchen“ und Wortlaut mitgespeichert, gleichlautend mit dem Häkchen auf /start", JSON.stringify({ gespeichert: sE.vertrag?.bestaetigung?.text, seite: satz })); }
     let st = await mock("state");
     const csE = st.sessions[sE.stripe.checkoutSessionId];
-    check(String(csE?.tax_id_collection?.enabled) === "true" && csE.customer_update?.address === "auto" && !csE.payment_method_types && !csE.name_collection && csE.billing_address_collection !== "required" && csE.excluded_payment_method_types?.includes("klarna") && !/\d/.test(csE.custom_text?.submit?.message || "x"), "Abo-Checkout: USt-IdNr. optional, Adresse auto (keine Pflicht), keine festen Zahlarten, kein name_collection, Hinweis ohne Zeitangabe", JSON.stringify({ t: csE?.tax_id_collection, c: csE?.customer_update, m: csE?.custom_text }));
+    check(String(csE?.tax_id_collection?.enabled) === "true" && csE.customer_update?.address === "auto" && !csE.payment_method_types && !csE.name_collection && csE.billing_address_collection !== "required" && csE.excluded_payment_method_types?.includes("klarna") && /^Heute zahlst du nichts: 7 Tage testen\. Danach 49,90 € im Monat inkl\. MwSt\., außer du kündigst vorher im Studio-Bereich\./.test(csE.custom_text?.submit?.message || ""), "Abo-Checkout: USt-IdNr. optional, Adresse auto (keine Pflicht), keine festen Zahlarten, kein name_collection, Hinweis „Heute zahlst du nichts: 7 Tage testen …“", JSON.stringify({ t: csE?.tax_id_collection, c: csE?.customer_update, m: csE?.custom_text }));
     const cusE = st.customers[sE.stripe.customerId];
     check(cusE && !("address" in cusE) && cusE.name === "Ink Einfach" && cusE.phone === "0151 7654321", "Stripe-Kunde: ohne leere Adresse angelegt (ensureCustomer schickt nur vorhandene Angaben)", JSON.stringify(cusE?.address));
     // Abbruch im Checkout → /start?resume…&abbruch=1: 4 Felder vorbelegt, Häkchen erneut, gleicher Stripe-Kunde, nichts überschrieben

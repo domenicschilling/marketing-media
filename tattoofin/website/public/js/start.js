@@ -80,9 +80,24 @@
       sicher.textContent = "🔒 Jetzt wird nichts bezahlt. Danach richtest du das Zahlungskonto deines Studios bei Stripe ein.";
     } else if (p === "einmal") {
       h1.textContent = "Fast fertig."; k1.textContent = z === "rechnung" ? "Zahlungspflichtig bestellen (Rechnung)" : "Zahlungspflichtig bestellen & bezahlen"; k2.textContent = ""; sep.textContent = "";
+    } else if (C.monatNetto && !testTage()) {
+      // Testwoche abgeschaltet (TESTWOCHE_TAGE=0) bzw. schon einmal getestet: Ansicht wie vor dem 17.11.2026
+      var b2 = TF.euro(Math.round(C.monatNetto * (100 + (C.ustProzent || 19)) / 100), true);
+      h1.textContent = "4 Angaben + Zahlung.";
+      preis.innerHTML = "<b>" + b2 + " im Monat</b> inkl. MwSt.<span class=\"anm-z2\"><span class=\"anm-sep\"> · </span>monatlich kündbar · " + TF.euro(C.monatNetto, true) + " netto</span>";
+      k1.textContent = "Weiter zur Zahlung"; k2.textContent = b2 + " im Monat";
+      sicher.textContent = "🔒 Sicher über Stripe. Monatlich kündbar. Keine Provision.";
+    } else if (testTage() && testTage() !== 7) {
+      h1.textContent = testTage() + " Tage testen."; k1.textContent = testTage() + " Tage testen";
     }
+    var kt = document.getElementById("kurz-test"), ko = document.getElementById("kurz-ohne-test");
+    if (kt && ko) { var mitTest = p === "monatlich" && !geschenk && testTage() > 0; kt.hidden = !mitTest; ko.hidden = mitTest; if (mitTest && testTage() !== 7) kt.textContent = testTage() + " Tage testen, heute 0 €. Danach kostet "; }
     kurzListe();
   }
+
+  // Testwoche (17.11.2026): Tage aus /api/config (0 = aus). Beim Fortsetzen eines Entwurfs ohne Testwoche (schon getestet) gilt dessen Wert.
+  function testTage() { return Number(C.testTage === undefined ? 7 : C.testTage) || 0; }
+  function testText() { return testTage() === 7 ? "1 Woche" : testTage() + " Tage"; }
 
   function kurzListe() {
     var p = paket(), z = zahlart(), kurz;
@@ -98,9 +113,11 @@
       ];
     } else {
       kurz = [
-        (C.monatNetto ? TF.monatPreis(C.monatNetto, C.ustProzent) : "49,90 € im Monat inkl. MwSt.") + ", keine Einrichtungsgebühr.",
+        (testTage() ? testText() + " testen: heute 0 €. Danach " : "") + (C.monatNetto ? TF.monatPreis(C.monatNetto, C.ustProzent) : "49,90 € im Monat inkl. MwSt.") + ", keine Einrichtungsgebühr." +
+          (testTage() ? " Kündigst du in der Testwoche im Studio-Bereich, zahlst du nichts." : ""),
         "Danach nur die Zahlungsgebühren von Stripe (je nach Zahlart ca. 1,5–3 % plus fester Betrag je Zahlung, laut Preisliste von Stripe), die du direkt an Stripe zahlst. 0 % Tattoofin-Provision.",
-        "Mit dem Knopf geht es zu Stripe. Dort startest du das Abo sicher, z. B. per Karte, Apple Pay oder Google Pay. Die Rechnung kommt jeden Monat automatisch per E-Mail.",
+        testTage() ? "Mit dem Knopf geht es zu Stripe. Dort hinterlegst du sicher deine Karte (oder Apple Pay bzw. Google Pay) und startest die Testwoche. Die erste Abbuchung kommt nach " + testText() + ", danach jeden Monat mit Rechnung per E-Mail. 2 Tage vor dem Ende erinnern wir dich per E-Mail."
+          : "Mit dem Knopf geht es zu Stripe. Dort startest du das Abo sicher, z. B. per Karte, Apple Pay oder Google Pay. Die Rechnung kommt jeden Monat automatisch per E-Mail.",
         "Danach richtest du in deinem Studio-Bereich das Zahlungskonto deines Studios bei Stripe ein (Ausweis und IBAN bereithalten). Die Adresse deiner Zahlseite trägst du danach einmal kurz ein (wenn Stripe sie mitliefert, ist sie schon vorausgefüllt).",
         "Alles läuft über dein eigenes Zahlungskonto bei Stripe. Rückbuchungen und ihre Gebühren laufen direkt über dieses Konto.",
         "Inklusive digitalem QR-Code deiner Zahlseite, zum Ausdrucken für Theke und Flyer.",
@@ -111,7 +128,7 @@
     kurz.push("Für die Daten deiner Kunden schließen wir mit dir einen Auftragsverarbeitungsvertrag (AVV) nach Art. 28 DSGVO.");
     kurz.push("Nur für Unternehmer (§ 14 BGB), deshalb kein Widerrufsrecht wie für Verbraucher.");
     var oben = p === "monatlich" && !geschenk ? [
-      "Monatlich kündbar, keine Mindestlaufzeit.",
+      testTage() ? testText() + " testen, heute 0 €. Danach monatlich kündbar." : "Monatlich kündbar, keine Mindestlaufzeit.",
       "0 % Provision, nur die Zahlungsgebühren von Stripe.",
       "Unser Team richtet alles mit dir ein, per WhatsApp.",
     ] : kurz.slice(0, 3);
@@ -218,8 +235,8 @@
   document.querySelectorAll(".anm-kurz details, #kurz-box").forEach(function (d) { d.addEventListener("toggle", function () { if (d.open && d.querySelector("#vertrag-box")) vertragLaden(); }); });
 
   TF.config().then(function (c) {
-    C = c; TF.fill(c); kurzListe();
-    if (geschenk) ansicht();
+    C = c; TF.fill(c);
+    ansicht();
     if (!c.stripeAktiv) show("Hinweis: Die Zahlung ist auf dieser Umgebung noch nicht eingerichtet (STRIPE_SECRET_KEY fehlt).", "info");
   });
 

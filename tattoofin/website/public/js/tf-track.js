@@ -1,7 +1,7 @@
 // Tattoofin: Cookie-Einwilligung, Meta-Pixel (nur nach Zustimmung) und WhatsApp-Button.
 // Nur auf Seiten für Studios einbinden, NIE auf den Zahlseiten der Endkunden (zahlen, zahlung, bezahlt) oder im Portal.
 // Events: PageView (jede Seite) · Contact (WhatsApp-Klick) · Lead (Muster-Anzahlungsbedingungen, Anmeldeseite geöffnet) ·
-//         InitiateCheckout (start.html, beim Absenden „Weiter zur Zahlung“, seit 16.11.2026) · CompleteRegistration (Provision abgeschlossen) · Purchase (Kauf bezahlt)
+//         InitiateCheckout (start.html, beim Absenden „Weiter zur Zahlung“, seit 16.11.2026) · CompleteRegistration (Provision abgeschlossen) · StartTrial (Testwoche gestartet, seit 17.11.2026) · Purchase (Kauf bezahlt)
 // Lead, CompleteRegistration und Purchase gehen mit Einwilligung zusätzlich über /api/capi (Conversions API).
 window.TFTrack = (function () {
   var PIXEL_ID = "1628016302128524";
@@ -15,7 +15,7 @@ window.TFTrack = (function () {
   function lies() { try { return localStorage.getItem(KEY); } catch (e) { return null; } }
   function speichere(v) { try { localStorage.setItem(KEY, v); } catch (e) {} }
   // Diese Ereignisse gehen mit Einwilligung zusätzlich über unseren Server an Meta (gleiche event_id → keine Doppelzählung)
-  var CAPI = { Lead: 1, CompleteRegistration: 1, Purchase: 1 };
+  var CAPI = { Lead: 1, CompleteRegistration: 1, Purchase: 1, StartTrial: 1 };
   function cookie(n) { var m = document.cookie.match("(?:^|; )" + n + "=([^;]*)"); return m ? decodeURIComponent(m[1]) : ""; }
   function capi(name, params, id, nurPixel) {
     if (!CAPI[name] || nurPixel || !ECHT) return;

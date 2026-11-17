@@ -88,7 +88,7 @@
     ];
     $("kacheln").innerHTML = h.join("");
     // Weitere Zahlen aufklappbar (wenig Text in den Kacheln)
-    var mehr = [["davon live", z.live], ["Kostenlos (Einladung)", z.kostenlos], ["In Probezeit (Apple, noch nicht bezahlt)", z.probe],
+    var mehr = [["davon live", z.live], ["Kostenlos (Einladung)", z.kostenlos], ["In Probezeit (Testwoche bzw. Apple, noch nicht bezahlt)", z.probe],
       ["Test-Studios (zählen nicht)", k.tests]];
     if (!st.fehler) {
       mehr.push(["Einnahmen netto im " + monat, mind + euro(st.nettoCent)]);
@@ -110,6 +110,8 @@
       '<div class="zeile">' + paketText(d.paket) + "</div>" +
       '<div class="zeile"><b>' + e(zeit(d.wann)) + "</b> · " + e(d.schritt) + "</div>" +
       (f && f.text ? '<div class="zeile">' + e(f.text) + "</div>" : "") +
+      (d.herkunft ? '<div class="zeile">Herkunft: ' + e(d.herkunft) + "</div>" : "") +
+      (d.nachgefasstAm ? '<div class="zeile">Nachgefasst ' + e(zeit(d.nachgefasstAm)) + (d.nachgefasstAuto ? " (automatisch)" : "") + "</div>" : "") +
       '<div class="fuss">' + fehler + (d.ort ? '<span class="pille">' + e(d.ort) + "</span>" : "") + "</div>" +
       '<div class="aktionen">' + (d.telefon ? '<a class="k" href="tel:' + e(d.telefon.replace(/[^\d+]/g, "")) + '">Anrufen</a>' : '<span></span>') +
       (d.email ? '<a class="k" href="mailto:' + e(d.email) + '">Mail</a>' : "<span></span>") + '<a class="k dunkel" href="#' + e(d.id) + '">Details</a></div></div>';
@@ -237,7 +239,8 @@
     if (k.provision) zeilen.push(["Provision", k.provision.prozent + " % · gesamt " + euro(k.provision.nettoCent) + " netto"], ["Nach Stripe-Gebühren", euro(k.provision.nachGebuehrenCent)]);
     if (k.recht) zeilen.push(["Rechtstexte", "Fassung " + k.recht.version + (k.recht.am ? " vom " + TF.datum(k.recht.am) : "") + (k.recht.aktuell ? " (aktuell)" : " (alt)")]);
     if (k.extras && k.extras.length) zeilen.push(["Extras", k.extras.join(", ")]);
-    if (k.probe) zeilen.push(["Probezeit", "Apple-Abo in der kostenlosen Probezeit, noch nicht bezahlt"]);
+    if (k.probe) zeilen.push(["Probezeit", k.testBis ? "Testwoche bis " + TF.datum(k.testBis) + ", erste Abbuchung danach" : "Apple-Abo in der kostenlosen Probezeit, noch nicht bezahlt"]);
+    if (k.herkunft) zeilen.push(["Herkunft", k.herkunft]);
     if (s.apple) zeilen.push(["Apple-Abo", (s.apple.status || "–") + " · bis " + TF.datum(s.apple.laeuftBis) + (s.sandbox ? " · Sandbox/Test" : "")]);
     if (s.anmeldungFehler && ["entwurf", "abgebrochen", "zahlung_offen"].indexOf(s.status) >= 0) zeilen.push(["Letzter Fehler", (s.anmeldungFehler.dreiDS ? "3-D-Secure nicht bestätigt · " : "") + (s.anmeldungFehler.text || s.anmeldungFehler.code || "") + " · " + zeit(s.anmeldungFehler.am)]);
     var zahl = d.zahlungen;

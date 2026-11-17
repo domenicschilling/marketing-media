@@ -32,6 +32,9 @@ process.env.TF_JETZT = BASIS_ZEIT;
 // und belegt: Neukunden kommen nicht mehr hinein, Bestandsstudios laufen unverändert weiter.
 process.env.RISIKOFREI_NEU = "1"; process.env.EINMAL_NEU = "1";
 process.env.ADMIN_EMAIL = "admin@betrieb.test";
+// Testwoche (17.11.2026): Abschnitte 1–20 prüfen den Abschluss ohne Testwoche (Schalter TESTWOCHE_TAGE=0, gleicher Weg wie vor dem 17.11.);
+// Abschnitt 21 schaltet die Testwoche (7 Tage, Standard live) ein und prüft sie vollständig.
+process.env.TESTWOCHE_TAGE = "0";
 process.env.MAIL_TEST_TOKEN = "mailtest";
 await startDev({ port: PORT, mock: true, dataDir, quiet: true });
 const storeMod0 = await import("../netlify/functions/_lib/store.mjs");
@@ -954,7 +957,7 @@ await abschnitt("17 Recht (27.10.2026): Klarna-Stichtag 20.11.2026 für Risikofr
   const altVertrag = await holen("/vertrag-2026-10d.html");
   check(/kein Kreditvermittler/.test(altVertrag) && /archiviert/.test(altVertrag), "Alte Vertragsfassung 2026-10d bleibt unverändert als Archiv (nicht rückwirkend ändern)", "");
   const cfgV = (await json("/api/config")).data;
-  check(cfgV.vertragVersion === "2026-12e" && cfgV.rechtVersion === "2026-12", "Versionen hochgezählt: Vertrag 2026-12e (seit 15.11.2026 ohne QR-Aufsteller, seit 16.11. Vertragsschluss wie die einfache Anmeldung, Web-Preis 49,90 € inkl. MwSt.) und Rechtsblatt 2026-12", `${cfgV.vertragVersion}/${cfgV.rechtVersion}`);
+  check(cfgV.vertragVersion === "2026-12f" && cfgV.rechtVersion === "2026-12", "Versionen hochgezählt: Vertrag 2026-12f (seit 15.11.2026 ohne QR-Aufsteller, seit 16.11. Vertragsschluss wie die einfache Anmeldung, Web-Preis 49,90 € inkl. MwSt.) und Rechtsblatt 2026-12", `${cfgV.vertragVersion}/${cfgV.rechtVersion}`);
   const ratenText = raten.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g, " ").replace(/<[^>]+>/g, " ");
   const kopfDaten = (raten.match(/<title>[\s\S]*?<\/title>/) || [""])[0] + (raten.match(/<meta name="description"[^>]*>/) || [""])[0] + (raten.match(/<script type="application\/ld\+json">[\s\S]*?<\/script>/) || [""])[0];
   check(!/zinsfrei|ohne Schufa|ohne Gebühr|0\s?%|monatlich ab|pro Monat/i.test(ratenText) && !/Raten|Klarna/.test(kopfDaten), "/raten: kein zinsfrei/ohne Schufa/Ratenbeträge; Titel, Meta und Schema ohne Raten/Klarna", "");
@@ -1192,7 +1195,7 @@ await abschnitt("18 Paket Risikofrei geschlossen (26.10.2026): Neukunden gesperr
       check(auf.every((x) => x === "monatlich") && !/href="\/start[^"]*einmal/.test(t), `${pf}: kein Start-Knopf zeigt auf Einmalzahlung`, [...new Set(auf)].join(","));
     }
     const lp = await (await fetch(BASE + "/")).text();
-    check(/class="knopf" href="\/start\.html"[^>]*>Studio anmelden<\/a>/.test(lp) && !/Min\.<\/a>|\d&nbsp;Min/.test(lp), "Hero-Knopf: „Studio anmelden“ → /start.html (keine ungemessene Minutenangabe)", "");
+    check(/class="knopf" href="\/start\.html"[^>]*>1 Woche testen<\/a>/.test(lp) && !/Min\.<\/a>|\d&nbsp;Min/.test(lp), "Hero-Knopf: „1 Woche testen“ (seit 17.11.2026) → /start.html (keine ungemessene Minutenangabe)", "");
     const wann = await (await fetch(BASE + "/")).text();
     check(/49,90&nbsp;€ im Monat inkl\. MwSt\./.test(wann) && !/999 €/.test(wann) && /class="betrag">49,90<span class="eur">€/.test(wann) && /41,93&nbsp;€ netto/.test(wann) && !/58,31|49&nbsp;€ netto/.test(wann) && /nur für Unternehmer/i.test(wann), "Preise auf der Startseite: 49,90 € im Monat inkl. MwSt. (auch in der Preis-Überschrift), klein 41,93 € netto, kein 58,31 €, nur für Unternehmer, keine 999 €", "");
     check(/Achtung! Kreditaufnahme kostet Geld\./.test(wann), "Pflicht-Warnhinweis steht weiter auf der Startseite", "");
@@ -1343,7 +1346,7 @@ await abschnitt("19 Altstudio stellt um: Zustimmung, 29 €, neues eigenes Konto
   const nach = await detail(a.id);
   const sn = nach.studio;
   check(sn.modell === "kauf" && sn.paket === "monatlich" && sn.monatNetto === 2900 && sn.status === "einrichtung" && sn.stripe.accountId === null && sn.stripe.altKonto?.accountId === altKonto && sn.stripe.subscriptionId, "Nach Zahlung: Monatlich 29 €, altes Konto vermerkt, neues Konto fehlt noch", JSON.stringify(sn.stripe.altKonto));
-  check(sn.vertrag.version === "2026-12e" && sn.vertrag.monatNetto === 2900 && sn.vertrag.kmu === true && sn.vertragAlt?.length === 1, "Neuer Vertrag gespeichert (Sonderpreis 29 € bleibt), alter bleibt nachvollziehbar", sn.vertrag.version);
+  check(sn.vertrag.version === "2026-12f" && sn.vertrag.monatNetto === 2900 && sn.vertrag.kmu === true && sn.vertragAlt?.length === 1, "Neuer Vertrag gespeichert (Sonderpreis 29 € bleibt), alter bleibt nachvollziehbar", sn.vertrag.version);
   check(mailsAn("umstellung@betrieb.test").some((m) => /Wechsel ist bestätigt/.test(m.subject)), "Bestätigung per Mail", "");
   const upNach = await admin(`studio/${a.id}/umstellung-upgrade`, { body: {} });
   check(upNach._status === 409, "Nach dem Upgrade: keine Upgrade-Mail mehr möglich", `HTTP ${upNach._status}`);
@@ -1453,7 +1456,7 @@ await abschnitt("20 Preis seit 15.11.2026: 49,90 € inkl. MwSt. (41,93 € nett
   const sd = cs?.subscription_data || {};
   check(sd.trial_period_days === undefined && sd.trial_end === undefined && cs?.trial_period_days === undefined && cs?.trial_end === undefined && !/trial/.test(JSON.stringify(cs || {})), "Keine Gratiszeit auf der Website (kein trial_period_days/trial_end)", JSON.stringify(sd).slice(0, 90));
   const st = (await detail(cs?.client_reference_id)).studio || {};
-  check(st.monatNetto === 4193 && st.vertrag?.monatNetto === 4193 && st.vertrag?.version === "2026-12e", "Studio speichert seinen Preis (4193) und die Vertragsfassung 2026-12e", `${st.monatNetto}/${st.vertrag?.monatNetto}/${st.vertrag?.version}`);
+  check(st.monatNetto === 4193 && st.vertrag?.monatNetto === 4193 && st.vertrag?.version === "2026-12f", "Studio speichert seinen Preis (4193) und die Vertragsfassung 2026-12f", `${st.monatNetto}/${st.vertrag?.monatNetto}/${st.vertrag?.version}`);
   const mo = mailAnMit("monatlich@betrieb.test", /Willkommen/) || {};
   check(/49,90 € im Monat inkl\. MwSt\. \(41,93 € netto\)/.test((mo.html || "") + (mo.text || "")) && !/58,31|49,00 € netto/.test((mo.html || "") + (mo.text || "")), "Willkommens-Mail (neues Studio): 49,90 € im Monat inkl. MwSt. (41,93 € netto)", (mo.subject || "").slice(0, 60));
 
@@ -1483,7 +1486,7 @@ await abschnitt("20 Preis seit 15.11.2026: 49,90 € inkl. MwSt. (41,93 € nett
   const pg = await ctx.newPage();
   const text = async (u) => { await pg.goto(BASE + u, { waitUntil: "networkidle" }); await wait(300); return pg.evaluate(() => document.body.innerText); };
   const v = await text("/vertrag.html");
-  check(/41,93 € netto zzgl\. Umsatzsteuer \(bei 19 % Umsatzsteuer 49,90 €\)/.test(v) && /41,93 € netto zzgl\. USt\. \(49,90 € inkl\. USt\.\)/.test(v) && /Fassung 2026-12e/.test(v) && !/Aufsteller/i.test(v) && /Knopf „Weiter zur Zahlung“/.test(v) && /direkt im Formular prüfen und korrigieren/.test(v) && /\(Firma, Name, E-Mail\)/.test(v) && !/Bestellknopf im letzten Schritt|Schaltfläche „Zurück“|Anschrift, Vertreter/.test(v), "vertrag.html: 41,93 € netto (49,90 € inkl. USt.), Fassung 2026-12e, ohne QR-Aufsteller, Vertragsschluss passend zur einfachen Anmeldung", "");
+  check(/41,93 € netto zzgl\. Umsatzsteuer \(bei 19 % Umsatzsteuer 49,90 €\)/.test(v) && /41,93 € netto zzgl\. USt\. \(49,90 € inkl\. USt\.\)/.test(v) && /Fassung 2026-12f/.test(v) && !/Aufsteller/i.test(v) && /Knopf „1 Woche testen“ bzw. „Weiter zur Zahlung“/.test(v) && /direkt im Formular prüfen und korrigieren/.test(v) && /\(Firma, Name, E-Mail\)/.test(v) && !/Bestellknopf im letzten Schritt|Schaltfläche „Zurück“|Anschrift, Vertreter/.test(v), "vertrag.html: 41,93 € netto (49,90 € inkl. USt.), Fassung 2026-12f, ohne QR-Aufsteller, Vertragsschluss passend zur einfachen Anmeldung", "");
   { const t12d = await text("/vertrag-2026-12d.html"), h12d = await (await fetch(BASE + "/vertrag-2026-12d.html")).text();
     check(/41,93 € netto zzgl\. Umsatzsteuer \(bei 19 % Umsatzsteuer 49,90 €\)/.test(t12d) && /Archivfassung 2026-12d/.test(t12d) && /noindex/.test(h12d) && /Bestellknopf im letzten Schritt/.test(t12d) && !/data-cfg="monatPreis/.test(h12d), "Archiv 2026-12d: abrufbar (noindex), Preis fest, alter Wortlaut zum Vertragsschluss", ""); }
   { const t12c = await text("/vertrag-2026-12c.html");
@@ -1498,6 +1501,160 @@ await abschnitt("20 Preis seit 15.11.2026: 49,90 € inkl. MwSt. (41,93 € nett
   const sv = await text("/start.html");
   check(/49,90 €/.test(sv) && /41,93 € netto/.test(sv) && !/\b42 €|\b50 €|58,31/.test(sv), "start.html: 49,90 € im Monat inkl. MwSt., klein 41,93 € netto (keine Rundung)", "");
   await ctx.close();
+});
+
+// =====================================================================================================
+await abschnitt("21 Testwoche (Domenic 17.11.2026): 7 Tage testen, Karte hinterlegen, Erinnerung, erste Abbuchung danach, Kündigen in der Testwoche kostenlos; automatisches Nachfassen; Herkunft im Admin", async () => {
+  const { CFG } = await import("../netlify/functions/_lib/config.mjs");
+  const { mails: M } = await import("../netlify/functions/_lib/emails.mjs");
+  const { sendeWebhook } = await import("../netlify/functions/_lib/stripe-sim.mjs");
+  const storeMod = await import("../netlify/functions/_lib/store.mjs");
+  const vorher = CFG.testTage;
+  // Gespeicherte Test-Mails haben nur HTML → lesbarer Text für die Prüfungen
+  const tx = (m) => String(m?.html || "").replace(/<br\s*\/?>/g, "\n").replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/[ \t]+/g, " ");
+  CFG.testTage = 7;
+  delete process.env.TF_JETZT;
+  try {
+    const cfg = (await json("/api/config")).data;
+    check(cfg.testTage === 7 && cfg.vertragVersion === "2026-12f", "Konfiguration: Testwoche 7 Tage, Vertrag 2026-12f", `${cfg.testTage}/${cfg.vertragVersion}`);
+
+    // Abschluss mit Testwoche
+    const EM = "testwoche@betrieb.test";
+    const a = await anmelden("monatlich", EM, "Testwoche Studio", { quelle: { source: "meta", medium: "paid", campaign: "tf-studios-2026-11-kombi", content: "d2-sieger" } });
+    const cs = (await sessions()).find((x) => x.client_reference_id === a.id) || {};
+    const sd = cs.subscription_data || {};
+    check(a.r.status === 200 && cs.mode === "subscription" && Number(sd.trial_period_days) === 7 && sd.trial_settings?.end_behavior?.missing_payment_method === "cancel"
+      && cs.payment_method_collection === "always" && Number(cs.amount_total) === 0 && Number(cs.line_items?.[0]?.price_data?.unit_amount) === 4193 && sd.metadata?.testTage === "7",
+      "Kasse: Abo 41,93 € netto mit 7 Tagen Testwoche, Karte ist Pflicht (payment_method_collection always), heute 0 €, ohne Zahlungsmittel am Ende → Abo endet", JSON.stringify(sd).slice(0, 120));
+    check(/^Heute zahlst du nichts: 7 Tage testen\. Danach 49,90 € im Monat inkl\. MwSt\., außer du kündigst vorher im Studio-Bereich\./.test(cs.custom_text?.submit?.message || ""),
+      "Kasse: Hinweis über dem Knopf „Heute zahlst du nichts … Danach 49,90 € im Monat … außer du kündigst vorher“", cs.custom_text?.submit?.message);
+    const s0 = (await detail(a.id)).studio || {};
+    check(s0.testTage === 7 && s0.vertrag?.testTage === 7 && s0.vertrag?.version === "2026-12f" && s0.quelle?.content === "d2-sieger", "Studio speichert Testwoche (7) im Vertrag 2026-12f und die Herkunft (UTM)", `${s0.testTage}/${s0.vertrag?.version}/${JSON.stringify(s0.quelle)}`);
+
+    await stripeBezahlen(a.r.data.url, "card");
+    await wait(400);
+    const s1 = (await detail(a.id)).studio || {};
+    const dauer = Date.parse(s1.testBis || "") - Date.now();
+    check(s1.status === "einrichtung" && Boolean(s1.testBis) && !s1.bezahltAm && dauer > 6.9 * 864e5 && dauer <= 7 * 864e5, "Nach Karte hinterlegen: Studio in Einrichtung, Testwoche bis in 7 Tagen, noch nicht als bezahlt markiert", `${s1.status} ${s1.testBis} bezahlt=${s1.bezahltAm || "-"}`);
+    const mStart = mailAnMit(EM, /Deine Testwoche läuft bis/);
+    check(Boolean(mStart) && /Bis dahin zahlst du nichts/.test(tx(mStart)) && /49,90 € im Monat inkl\. MwSt\. \(41,93 € netto\)/.test(tx(mStart)) && /Kündige vor dem .* Dann zahlst du nichts/.test(tx(mStart))
+      && !mailAnMit(EM, /Paket Monatlich läuft/) && Boolean(mailAnMit(EM, /Willkommen/)), "Mails: Willkommen + „Deine Testwoche läuft bis …“ (0 € heute, Preis danach, Kündigen-Weg), KEINE „erste Monatszahlung ist da“-Mail", mStart?.subject);
+    check(mailsAn("admin@betrieb.test").some((m) => /Neue Testwoche gestartet/.test(m.subject) && /d2-sieger/.test(m.html)), "Admin-Mail „Neue Testwoche gestartet“ mit Herkunft der Anmeldung", "");
+    const dk = (await json(`/api/signup?id=${a.id}`, {}, a.cookie)).data || {};
+    check(dk.testBis === s1.testBis && dk.status === "einrichtung", "Danke-Seite bekommt das Ende der Testwoche (für Text und Messung StartTrial statt Purchase)", dk.testBis);
+    const danke = fs.readFileSync(path.join(root, "public/danke.html"), "utf8"), track = fs.readFileSync(path.join(root, "public/js/tf-track.js"), "utf8"), capi = fs.readFileSync(path.join(root, "netlify/functions/capi.mjs"), "utf8");
+    check(/track\("StartTrial"/.test(danke) && /StartTrial: 1/.test(track) && /"StartTrial"/.test(capi), "Messung: Start der Testwoche = Meta-Ereignis StartTrial (Pixel + Conversions API), nicht Purchase", "");
+    const ue = await admin("uebersicht");
+    const k = (ue.studios || []).find((x) => x.id === a.id) || {};
+    check(k.probe === true && k.zahlend === false && k.testBis === s1.testBis && /d2-sieger/.test(k.herkunft || "") && ue.kennzahlen.zahlend.probe >= 1, "Admin-Übersicht: Studio „in Probezeit“ (zählt noch nicht als zahlend), Testwoche-Ende und Herkunft sichtbar", JSON.stringify({ probe: k.probe, zahlend: k.zahlend, herkunft: k.herkunft }));
+
+    // Erinnerung ca. 2 Tage vor Ende, genau einmal
+    const vorEnde = new Date(Date.parse(s1.testBis) - 2 * 864e5);
+    const r0 = await domain.taeglicheJobs(new Date(Date.parse(s1.testBis) - 4 * 864e5));
+    const r1 = await domain.taeglicheJobs(vorEnde);
+    const r2 = await domain.taeglicheJobs(vorEnde);
+    const mEnde = mailsAn(EM).filter((m) => /Deine Testwoche endet am/.test(m.subject));
+    check(!r0.some((x) => x[0] === "testwoche-endet-bald" && x[1] === "Testwoche Studio") && r1.some((x) => x[0] === "testwoche-endet-bald" && x[1] === "Testwoche Studio") && !r2.some((x) => x[1] === "Testwoche Studio" && x[0] === "testwoche-endet-bald") && mEnde.length === 1
+      && /Wenn du nichts tust, läuft Tattoofin einfach weiter/.test(tx(mEnde[0])) && /49,90 €/.test(tx(mEnde[0])) && /Kündige vor dem/.test(tx(mEnde[0])), "Erinnerung 2 Tage vor Ende der Testwoche (nicht 4 Tage vorher), genau einmal, mit Preis und Kündigen-Weg", mEnde[0]?.subject);
+
+    // Erste Abbuchung nach der Testwoche (Stripe: invoice.paid mit Betrag > 0)
+    const w = await sendeWebhook(`${BASE}/api/stripe-webhook`, "whsec_mock", "invoice.paid", { id: "in_testwoche_1", customer: s1.stripe.customerId, subscription: s1.stripe.subscriptionId, amount_paid: 4990, number: "TEST-TW1", hosted_invoice_url: "https://example.test/rechnung", billing_reason: "subscription_cycle", metadata: {} });
+    await wait(300);
+    const s2 = (await detail(a.id)).studio || {};
+    const mBez = mailAnMit(EM, /Paket Monatlich läuft/);
+    check(w === 200 && Boolean(s2.bezahltAm) && Boolean(mBez) && /49,90 €/.test(tx(mBez)) && mailsAn("admin@betrieb.test").some((m) => /Testwoche vorbei: erste Monatszahlung bezahlt/.test(m.subject)),
+      "Nach der Testwoche: erste Abbuchung 49,90 € → Studio zählt als zahlend, Mail „Paket Monatlich läuft“ + Admin-Mail", `${s2.bezahltAm}`);
+    const ue2 = await admin("uebersicht");
+    const k2 = (ue2.studios || []).find((x) => x.id === a.id) || {};
+    check(k2.zahlend === true && k2.probe === false, "Admin-Übersicht: nach der ersten Abbuchung zahlend, nicht mehr in Probezeit", JSON.stringify({ zahlend: k2.zahlend, probe: k2.probe }));
+    const r3 = await domain.taeglicheJobs(vorEnde);
+    check(!r3.some((x) => x[1] === "Testwoche Studio" && x[0] === "testwoche-endet-bald"), "Nach der ersten Zahlung keine Testwochen-Erinnerung mehr", "");
+
+    // Kündigung in der Testwoche: Abo endet mit der Testwoche, nichts wird abgebucht
+    const EK = "testwoche-kuendigt@betrieb.test";
+    const b = await anmelden("monatlich", EK, "Testwoche Kuendigt");
+    await stripeBezahlen(b.r.data.url, "card");
+    await wait(400);
+    const b1 = (await detail(b.id)).studio || {};
+    const kd = await post("/api/portal/kuendigung", { grund: "Test: passt nicht" }, b.cookie);
+    await wait(200);
+    const b2 = (await detail(b.id)).studio || {};
+    const sub = ((await mockState()).subscriptions || {})[b1.stripe?.subscriptionId] || {};
+    const mK = mailAnMit(EK, /Deine Kündigung ist eingegangen/);
+    check(kd.status === 200 && b2.status === "gekuendigt" && sub.cancel_at_period_end === true && Math.abs(Date.parse(b2.kuendigung?.zum) - Date.parse(b1.testBis)) < 60e3
+      && Boolean(mK) && /Du hast in der Testwoche gekündigt\. Es wird nichts abgebucht\./.test(tx(mK)), "Kündigung in der Testwoche: Abo endet zum Ende der Testwoche (Stripe cancel_at_period_end), Mail „Es wird nichts abgebucht“", `${b2.kuendigung?.zum} vs ${b1.testBis}`);
+    const r4 = await domain.taeglicheJobs(new Date(Date.parse(b1.testBis) - 2 * 864e5));
+    check(!r4.some((x) => x[1] === "Testwoche Kuendigt" && x[0] === "testwoche-endet-bald"), "Gekündigt in der Testwoche: keine „Testwoche endet“-Erinnerung", "");
+
+    // Mails in einfacher Sprache: Nachfass-Mail nennt die Testwoche, „heute“ bei gleicher Anmeldung am selben Tag
+    const nf = M.anmeldungNachfassen({ inhaber: "eva", firma: "x", createdAt: "2026-11-17T09:00:00Z" }, { resumeUrl: "https://x", jetzt: new Date("2026-11-17T11:00:00Z") });
+    const nf2 = M.anmeldungNachfassen({ inhaber: "eva", firma: "x", createdAt: "2026-11-14T09:00:00Z" }, { resumeUrl: "https://x", jetzt: new Date("2026-11-17T11:00:00Z") });
+    check(/danke für deine Anmeldung heute\./.test(nf.text) && /danke für deine Anmeldung am 14\.11\.2026\./.test(nf2.text) && /Du kannst Tattoofin 1 Woche testen\. Erst danach kostet es 49,90 € im Monat inkl\. MwSt\./.test(nf.text) && /Kündigst du in der Testwoche, zahlst du nichts/.test(nf.text),
+      "Nachfass-Mail: „heute“ bzw. Datum, Hinweis „1 Woche testen, erst danach 49,90 €“", nf.text.split("\n").slice(2, 4).join(" "));
+
+    // Automatisches Nachfassen (stündlich): ca. 2 Stunden nach dem Abbruch, nur tagsüber, nie an Tests, höchstens einmal
+    const NF = "nachfass-auto@studio-beispiel.de";
+    const c = await anmelden("monatlich", NF, "Auto Nachfass Studio", { quelle: { source: "meta", medium: "paid", campaign: "tf-studios-2026-11-kombi", content: "d2-sieger" } });
+    const t = await anmelden("monatlich", "auto-test@tattoofin.de", "TEST Claude – bitte löschen");
+    for (const [id, am] of [[c.id, "2026-11-17T09:00:00.000Z"], [t.id, "2026-11-17T09:00:00.000Z"]]) {
+      const s = await storeMod.getStudio(id); s.vertrag.akzeptiertAm = am; s.createdAt = am; await storeMod.saveStudio(s);
+    }
+    const zuFrueh = await domain.anmeldungenNachfassen(new Date("2026-11-17T10:00:00Z"));
+    const jetztOk = await domain.anmeldungenNachfassen(new Date("2026-11-17T11:30:00Z"));
+    const nochmal = await domain.anmeldungenNachfassen(new Date("2026-11-17T12:30:00Z"));
+    const mNf = mailsAn(NF).filter((m) => /Kurze Frage zu deiner Tattoofin-Anmeldung/.test(m.subject));
+    const c1 = (await detail(c.id)).studio || {};
+    check(!zuFrueh.some((x) => x[1] === "Auto Nachfass Studio") && jetztOk.some((x) => x[1] === "Auto Nachfass Studio") && !nochmal.some((x) => x[1] === "Auto Nachfass Studio") && mNf.length === 1
+      && Boolean(c1.nachgefasstAm) && c1.nachgefasstAuto === true && /start\.html\?resume=/.test(mNf[0].html) && /1 Woche testen/.test(tx(mNf[0])) && /0162 4502375/.test(tx(mNf[0])),
+      "Automatisch: nicht nach 1 Stunde, nach 2,5 Stunden genau eine Nachfass-Mail (Fortsetzen-Link, Testwoche, WhatsApp), danach nicht nochmal", `${mNf.length} Mail(s)`);
+    check(!jetztOk.some((x) => /TEST Claude/.test(x[1])) && mailsAn("auto-test@tattoofin.de").filter((m) => /Kurze Frage/.test(m.subject)).length === 0, "Test-Anmeldungen (Firma „TEST …“, Adresse @tattoofin.de, .test, example.com, Quelle „…test“) bekommen nie eine Nachfass-Mail", "");
+    const manuell = await admin(`studio/${c.id}/nachfassen`, { body: { senden: true } });
+    check(manuell._status === 409, "Admin-Knopf „Nachfassen“ danach gesperrt (gleiche Sperre, keine zweite Mail)", `HTTP ${manuell._status}`);
+    // Nachts: Abbruch 20:30 Uhr → um 23 Uhr nichts, am nächsten Morgen ab 8 Uhr
+    const n = await anmelden("monatlich", "nachfass-nacht@studio-beispiel.de", "Nacht Studio");
+    { const s = await storeMod.getStudio(n.id); s.vertrag.akzeptiertAm = "2026-11-17T19:30:00.000Z"; s.createdAt = s.vertrag.akzeptiertAm; await storeMod.saveStudio(s); }
+    const nachts = await domain.anmeldungenNachfassen(new Date("2026-11-17T22:00:00Z"));
+    const morgens = await domain.anmeldungenNachfassen(new Date("2026-11-18T07:15:00Z"));
+    check(!nachts.some((x) => x[1] === "Nacht Studio") && morgens.some((x) => x[1] === "Nacht Studio"), "Abbruch um 20:30 Uhr: um 23 Uhr keine Mail, am nächsten Morgen um 8:15 Uhr", "");
+    const alt = await anmelden("monatlich", "nachfass-alt@studio-beispiel.de", "Alt Studio");
+    { const s = await storeMod.getStudio(alt.id); s.vertrag.akzeptiertAm = "2026-11-01T09:00:00.000Z"; s.createdAt = s.vertrag.akzeptiertAm; await storeMod.saveStudio(s); }
+    const spaet = await domain.anmeldungenNachfassen(new Date("2026-11-17T11:30:00Z"));
+    check(!spaet.some((x) => x[1] === "Alt Studio"), "Abbrüche älter als 7 Tage bekommen keine automatische Nachfass-Mail mehr", "");
+    const ue3 = await admin("uebersicht");
+    const e3 = (ue3.entwuerfe || []).find((x) => x.id === c.id) || {};
+    check(/meta · paid · tf-studios-2026-11-kombi · d2-sieger/.test(e3.herkunft || "") && e3.nachgefasstAuto === true, "Admin-Übersicht „Abgebrochen“: Herkunft der Anmeldung (Anzeige) und „automatisch nachgefasst“ sichtbar", e3.herkunft);
+    const liste = (await studios()).find((x) => x.id === c.id) || {};
+    check(liste.quelle?.content === "d2-sieger", "Admin-Studioliste enthält die Herkunft (quelle)", JSON.stringify(liste.quelle));
+
+    // Anmeldeseite + Startseite + Vertrag mit Testwoche
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    const pg = await ctx.newPage();
+    await pg.goto(BASE + "/start.html", { waitUntil: "networkidle" }); await wait(300);
+    const st = await pg.evaluate(() => ({ h1: document.querySelector("h1").textContent.trim(), preis: document.getElementById("anm-preis").textContent.replace(/\s+/g, " ").trim(), knopf: document.getElementById("submit").textContent.replace(/\s+/g, " ").trim(), sicher: document.getElementById("anm-sicher").textContent, unten: document.getElementById("submit").getBoundingClientRect().bottom, quer: document.documentElement.scrollWidth > innerWidth }));
+    check(st.h1 === "1 Woche testen." && /^Heute 0 €\. Danach 49,90 € im Monat · inkl\. MwSt\. · monatlich kündbar/.test(st.preis.replace(/ /g, " ")) && st.knopf.replace(/ /g, " ") === "1 Woche testen · heute 0 €"
+      && /Karte sicher bei Stripe hinterlegen\. Kündigst du in der Testwoche, zahlst du nichts\./.test(st.sicher) && st.unten <= 844 && !st.quer,
+      "/start (390×844): „1 Woche testen.“, „Heute 0 €. Danach 49,90 € im Monat“, Knopf „1 Woche testen · heute 0 €“ im ersten Bildschirm, Karte-Hinweis, kein Querscrollen", JSON.stringify(st).slice(0, 160));
+    await pg.goto(BASE + "/", { waitUntil: "networkidle" }); await wait(300);
+    const lp = await pg.evaluate(() => ({ knopf: document.querySelector(".auftakt-knopf .knopf")?.textContent.trim(), zeile: document.querySelector(".auftakt-fuss .preiszeile")?.textContent.replace(/ /g, " "), unten: document.querySelector(".auftakt-knopf .knopf")?.getBoundingClientRect().bottom }));
+    check(lp.knopf === "1 Woche testen" && /Danach 49,90 € im Monat · monatlich kündbar/.test(lp.zeile || "") && lp.unten <= 844, "Startseite: Hero-Knopf „1 Woche testen“, darunter „Danach 49,90 € im Monat · monatlich kündbar“, im ersten Bildschirm", JSON.stringify(lp));
+    await pg.goto(BASE + "/vertrag.html", { waitUntil: "networkidle" }); await wait(300);
+    const v = await pg.evaluate(() => document.body.innerText);
+    check(/Fassung 2026-12f/.test(v) && /Testzeitraum: Wird in der Online-Bestellung ein Testzeitraum angezeigt/.test(v) && /ohne dass eine Vergütung anfällt/.test(v) && /nur einmal gewährt/.test(v) && /Knopf „1 Woche testen“/.test(v) && /Für Kündigungen im Testzeitraum gilt § 5 Abs\. 5/.test(v),
+      "Vertrag 2026-12f: § 5 Abs. 5 Testzeitraum (unentgeltlich, Zahlungsmittel hinterlegt, erste Abbuchung danach, Kündigung kostenlos, einmal je Kunde), § 7 verweist darauf", "");
+    await pg.goto(BASE + "/vertrag-2026-12e.html", { waitUntil: "networkidle" }); await wait(300);
+    const v12e = await pg.evaluate(() => document.body.innerText), h12e = await (await fetch(BASE + "/vertrag-2026-12e.html")).text();
+    check(/Archivfassung 2026-12e/.test(v12e) && /41,93 € netto zzgl\. Umsatzsteuer \(bei 19 % Umsatzsteuer 49,90 €\)/.test(v12e) && !/Testzeitraum/.test(v12e) && /noindex/.test(h12e), "Archiv 2026-12e: ohne Testzeitraum, Preis fest, noindex", "");
+    await ctx.close();
+
+    // Schalter aus: TESTWOCHE_TAGE=0 → Kasse ohne Testwoche (wie vor dem 17.11.)
+    CFG.testTage = 0;
+    const o = await anmelden("monatlich", "ohne-testwoche@betrieb.test", "Ohne Testwoche");
+    const cso = (await sessions()).find((x) => x.client_reference_id === o.id) || {};
+    check(cso.subscription_data?.trial_period_days === undefined && Number(cso.amount_total) === 4990 && !(o.s || {}).testTage, "Schalter TESTWOCHE_TAGE=0: Kasse ohne Testwoche, 49,90 € sofort", String(cso.amount_total));
+  } finally {
+    CFG.testTage = vorher;
+    process.env.TF_JETZT = BASIS_ZEIT;
+  }
 });
 
 await browser.close();

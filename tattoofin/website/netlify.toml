@@ -63,6 +63,10 @@
   [headers.values]
     X-Robots-Tag = "noindex"
 [[headers]]
+  for = "/vertrag-2026-12e.html"
+  [headers.values]
+    X-Robots-Tag = "noindex"
+[[headers]]
   for = "/druck/*"
   [headers.values]
     X-Robots-Tag = "noindex"

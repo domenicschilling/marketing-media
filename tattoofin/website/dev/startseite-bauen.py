@@ -36,7 +36,7 @@ FRAGEN = [
     ("Ist Tattoofin der Kreditgeber?",
      "Nein. Den Vertrag über die Raten* schließt dein Kunde mit Klarna. Du berätst nicht zu Krediten und sagst keine Raten* zu.", True),
     ("Was kostet es genau?",
-     "49,90 € im Monat inkl. MwSt. (41,93 € netto), keine Provision. Dazu Stripe-Gebühren je Zahlung: Karte ab 1,5 % + 0,25 €, Klarna ab 2,99 % + 0,35 €. Der erste Monat ist beim Start fällig.", False),
+     "49,90 € im Monat inkl. MwSt. (41,93 € netto), keine Provision. Dazu Stripe-Gebühren je Zahlung: Karte ab 1,5 % + 0,25 €, Klarna ab 2,99 % + 0,35 €. Die erste Woche testest du ohne Kosten (Karte wird bei Stripe hinterlegt), der erste Monat wird erst danach abgebucht. Kündigst du in der Testwoche, zahlst du nichts.", False),
     ("Wie kündige ich? Und wenn Stripe mich ablehnt?",
      "Im Portal, zum Ende des Abrechnungsmonats. Dein Stripe-Konto bleibt bei dir, Zahlungslinks und QR-Code enden. Lehnt Stripe dein Studio endgültig ab, bekommst du die gezahlten Monate zurück, außer bei falschen Angaben oder Pflichtverletzung.", False),
     ("Wann kommt das Geld, und was brauche ich?",
@@ -106,7 +106,7 @@ def jsonld(seite):
          "provider": {"@id": "https://tattoofin.de/#org"}, "areaServed": {"@type": "Country", "name": "Deutschland"},
          "audience": {"@type": "BusinessAudience", "name": "Tattoo-Studios"},
          "offers": [{"@type": "Offer", "name": "Paket Monatlich",
-                     "description": "49,90 € im Monat inkl. MwSt. (41,93 € netto), keine Provision, danach nur die Zahlungsgebühren von Stripe. QR-Code zum Ausdrucken im Paket. Monatlich kündbar.",
+                     "description": "1 Woche testen, danach 49,90 € im Monat inkl. MwSt. (41,93 € netto), keine Provision, danach nur die Zahlungsgebühren von Stripe. QR-Code zum Ausdrucken im Paket. Monatlich kündbar.",
                      "price": "49.90", "priceCurrency": "EUR",
                      "priceSpecification": {"@type": "UnitPriceSpecification", "price": "49.90", "priceCurrency": "EUR", "valueAddedTaxIncluded": True, "unitText": "Monat",
                                             "referenceQuantity": {"@type": "QuantitativeValue", "value": 1, "unitCode": "MON"}}}]},
@@ -129,8 +129,8 @@ def bauen(seite):
         h = "/start.html"
         if studios:
             h += "?utm_source=studios&amp;utm_medium=seite&amp;utm_content=" + ort
-        # Knopftext (Prüfung 16.11.2026): nur „Studio anmelden“, keine Minutenangabe (nicht gemessen)
-        text = "Studio anmelden"
+        # Knopftext: seit 17.11.2026 „1 Woche testen“ (Testwoche, Entscheidung Domenic). Keine Minutenangabe (nicht gemessen)
+        text = "1 Woche testen"
         return '<a class="knopf" href="%s" data-umami-event="start-%s">%s</a>' % (h, ort, text)
 
     stern = motiv("stern")
@@ -341,7 +341,7 @@ def bauen(seite):
     </div>
     <div class="auftakt-fuss">
       <div class="auftakt-knopf">{start("auftakt")}</div>
-      <p class="preiszeile">49,90&nbsp;€ im Monat · monatlich kündbar</p>
+      <p class="preiszeile">Danach 49,90&nbsp;€ im Monat · monatlich kündbar</p>
       <p class="hero-wa"><a href="{wa}" data-umami-event="whatsapp-auftakt">Fragen? WhatsApp an 0162&nbsp;4502375</a></p>
     </div>
   </section>
@@ -421,7 +421,7 @@ def bauen(seite):
   <section class="schluss">
     <div class="schluss-kopf">
       <h2>Nächster Termin? Schick den Link.</h2>
-      <p class="zeile">49,90&nbsp;€ im Monat inkl. MwSt. · monatlich kündbar <span class="b2b">· nur für Unternehmer</span></p>
+      <p class="zeile">1 Woche testen, danach 49,90&nbsp;€ im Monat inkl. MwSt. · monatlich kündbar <span class="b2b">· nur für Unternehmer</span></p>
       <div class="wege">{start("schluss")}<a class="wa" href="{wa}" data-umami-event="whatsapp-schluss">Fragen? WhatsApp an 0162&nbsp;4502375</a></div>
     </div>
     <div class="hausherr-rahmen">

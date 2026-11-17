@@ -156,6 +156,8 @@ export function createSim({ load, save, pageBase, webhook }) {
           const li = p.line_items[0];
           const net = Number(li.price_data.unit_amount);
           s.amount_total = li.tax_rates ? Math.round(net * 1.19) : net;
+          // Testwoche (wie Stripe): Abo mit trial_period_days → heute 0 €
+          if (s.mode === "subscription" && Number(s.subscription_data?.trial_period_days) > 0) s.amount_total = 0;
           if (s.payment_intent_data?.application_fee_amount) s.payment_intent_data.application_fee_amount = Number(s.payment_intent_data.application_fee_amount);
         }
         db.sessions[s.id] = s;
@@ -287,7 +289,10 @@ export function createSim({ load, save, pageBase, webhook }) {
         }
         if (s.mode === "subscription") {
           // Paket Monatlich: Abo + erste Monatsrechnung (bezahlt)
-          const sub = { id: rid("sub"), object: "subscription", customer: s.customer, status: "active", cancel_at_period_end: false, metadata: s.subscription_data?.metadata || {}, current_period_end: Math.floor(Date.now() / 1000) + 30 * 86400 };
+          const testTage = Number(s.subscription_data?.trial_period_days) || 0;
+          const jetztS = Math.floor(Date.now() / 1000);
+          const sub = { id: rid("sub"), object: "subscription", customer: s.customer, status: testTage ? "trialing" : "active", cancel_at_period_end: false, metadata: s.subscription_data?.metadata || {},
+            ...(testTage ? { trial_start: jetztS, trial_end: jetztS + testTage * 86400 } : {}), current_period_end: jetztS + (testTage ? testTage : 30) * 86400 };
           db.subscriptions = db.subscriptions || {}; db.subscriptions[sub.id] = sub;
           const inv = { id: rid("in"), object: "invoice", created: Math.floor(Date.now() / 1000), customer: s.customer, subscription: sub.id, number: "TEST-" + db.invoiceNr++, status: "paid", amount_due: s.amount_total, amount_paid: s.amount_total, hosted_invoice_url: `${pageBase}/invoice`, metadata: {} };
           db.invoices[inv.id] = inv; s.invoice = inv.id; s.subscription = sub.id; s.payment_status = "paid";

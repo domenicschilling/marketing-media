@@ -1,7 +1,8 @@
 // Online-Abschluss: Paket wählen, Vertrag + AVV akzeptieren, Stripe-Kunde anlegen, dann je nach Paket:
 //   Risikofrei   (modell provision): NUR NOCH FÜR BESTANDSSTUDIOS. Seit 26.10.2026 für Neuanmeldungen gesperrt (siehe paketNeuWaehlbar in config.mjs),
 //                der Zweig unten bleibt für den Notschalter RISIKOFREI_NEU=1 und die Tests der Bestandsabläufe erhalten.
-//   Monatlich    (modell kauf, zahlart abo): Stripe-Checkout im Abo-Modus auf dem DSX-Konto (seit 15.11.2026: 41,93 € netto + 19 % USt. = 49,90 € im Monat, ohne Gratiszeit)
+//   Monatlich    (modell kauf, zahlart abo): Stripe-Checkout im Abo-Modus auf dem DSX-Konto (seit 15.11.2026: 41,93 € netto + 19 % USt. = 49,90 € im Monat;
+//                seit 17.11.2026 mit Testwoche: 7 Tage, Karte wird hinterlegt, erste Abbuchung nach der Testwoche, CFG.testTage)
 //                → danach eigenes Stripe-Konto (Standard) verbinden wie bei der Einmalzahlung
 //   Einmalzahlung (modell kauf, zahlart sofort|rechnung): einmalig 999 € netto per Checkout oder Rechnung
 // Danach ist das Studio direkt eingeloggt (Session-Cookie) und landet im Dashboard (/app.html), wo es sein
@@ -36,7 +37,7 @@ export default handler(async (req, context) => {
     const sitzung = await currentStudio(req);
     const berechtigt = (sitzung && sitzung.id === s.id) || zweckOk(u.searchParams.get("t"), "resume", s.id);
     if (!berechtigt) return json({ id: s.id, status: s.status });
-    const kurz = { id: s.id, status: s.status, modell: s.modell, paket: s.paket || (s.modell === "kauf" ? "einmal" : "risikofrei"), zahlart: s.zahlart, firma: s.firma, preisNetto: s.preisNetto || null, monatNetto: s.monatNetto || null, kontoVerbunden: Boolean(s.stripe?.chargesEnabled), kontoBegonnen: Boolean(s.stripe?.detailsSubmitted) };
+    const kurz = { id: s.id, status: s.status, testBis: s.testBis || null, testTage: s.testTage || null, modell: s.modell, paket: s.paket || (s.modell === "kauf" ? "einmal" : "risikofrei"), zahlart: s.zahlart, firma: s.firma, preisNetto: s.preisNetto || null, monatNetto: s.monatNetto || null, kontoVerbunden: Boolean(s.stripe?.chargesEnabled), kontoBegonnen: Boolean(s.stripe?.detailsSubmitted) };
     // Vollständige Angaben nur zum Fortsetzen eines nicht abgeschlossenen Entwurfs
     if (!["entwurf", "abgebrochen"].includes(s.status)) return json(kurz);
     return json({ ...kurz, email: s.email, inhaber: s.inhaber, strasse: s.strasse, plz: s.plz, ort: s.ort, telefon: s.telefon, studioTelefon: s.studioTelefon, ustid: s.ustid });
@@ -89,10 +90,13 @@ export default handler(async (req, context) => {
   // preisNetto = einmaliger Betrag (Einmalzahlung), monatNetto = Monatsbetrag (Monatlich)
   const preisNetto = geschenk ? 0 : paketId === "einmal" ? CFG.kaufNetto : null;
   const monatNetto = paketId === "monatlich" ? CFG.monatNetto : null;
+  // Testwoche (Entscheidung Domenic 17.11.2026): nur Paket Monatlich im Web, je E-Mail-Adresse nur einmal (wer schon ein Abo bei uns hatte, testet nicht erneut)
+  const testTage = paketId === "monatlich" && CFG.testTage > 0 &&
+    !(await studiosPerEmail(d.email)).some((x) => x.testBis || x.stripe?.subscriptionId || x.bezahltAm) ? CFG.testTage : 0;
 
   s = {
     ...(s || { id: id("st_"), createdAt: now() }),
-    ...d, modell, paket: paketId, zahlart, preisNetto, monatNetto, aktion: false, status: "entwurf",
+    ...d, modell, paket: paketId, zahlart, preisNetto, monatNetto, testTage: testTage || null, aktion: false, status: "entwurf",
     // Sonderkondition aus der Admin-Einladung (z. B. „Partner – nur Zahlungsgebühren“), nur Anzeige – Abwicklung = Geschenk
     sonderkondition: geschenk ? (geschenk.bezeichnung || null) : null,
     // Herkunft der Anmeldung (UTM aus Anzeige/Instagram), für die Auswertung der Werbung
@@ -100,7 +104,7 @@ export default handler(async (req, context) => {
     vertrag: {
       version: CFG.vertragVersion, akzeptiertAm: now(), name: d.unterzeichner, ip: clientIp(req, context),
       ua: (req.headers.get("user-agent") || "").slice(0, 200), vertrag: true, avv: true, unternehmer: true, kmu: true,
-      modell, paket: paketId, preisNetto, monatNetto, provisionProzent: modell === "provision" ? CFG.provisionProzent : null,
+      modell, paket: paketId, preisNetto, monatNetto, testTage: testTage || null, provisionProzent: modell === "provision" ? CFG.provisionProzent : null,
       // Einfache Anmeldung: ein gemeinsames Häkchen für Vertrag, AVV, Unternehmer und KMU, mit Wortlaut (Nachweis)
       bestaetigung: b.akzeptiert?.art === "ein-haekchen" ? { art: "ein-haekchen", version: HAEKCHEN.version, text: HAEKCHEN.text } : null,
     },
@@ -147,14 +151,21 @@ export default handler(async (req, context) => {
           product_data: { name: "Tattoofin Paket Monatlich", description: "Zahlungsstruktur, Studio-Portal, Studio Kit und Betreuung. Keine Provision, monatlich kündbar." },
         },
       }],
-      subscription_data: { description: "Tattoofin Paket Monatlich", metadata: { studioId: s.id, typ: "abo", paket: "monatlich" } },
+      subscription_data: {
+        description: "Tattoofin Paket Monatlich", metadata: { studioId: s.id, typ: "abo", paket: "monatlich", ...(testTage ? { testTage: String(testTage) } : {}) },
+        // Testwoche: Karte wird hinterlegt, erste Abbuchung nach Ablauf. Fehlt am Ende ein Zahlungsmittel, endet das Abo (keine offene Rechnung).
+        ...(testTage ? { trial_period_days: testTage, trial_settings: { end_behavior: { missing_payment_method: "cancel" } } } : {}),
+      },
+      ...(testTage ? { payment_method_collection: "always" } : {}),
       customer_update: { address: "auto", name: "auto" }, tax_id_collection: { enabled: true },
       // Kein billing_address_collection "required" und kein name_collection: Apple Pay/Google Pay bleiben, die Studio-Adresse kommt später aus Connect
-      custom_text: { submit: { message: "Danach richtest du im Studio-Bereich dein Auszahlungskonto ein." } },
+      custom_text: { submit: { message: testTage
+        ? `Heute zahlst du nichts: ${testTage} Tage testen. Danach ${(brutto(monatNetto) / 100).toFixed(2).replace(".", ",")} € im Monat inkl. MwSt., außer du kündigst vorher im Studio-Bereich. Dort richtest du auch dein Auszahlungskonto ein.`
+        : "Danach richtest du im Studio-Bereich dein Auszahlungskonto ein." } },
       metadata: { studioId: s.id, typ: "abo", paket: "monatlich" },
       success_url: `${base}/danke.html?id=${s.id}&sid={CHECKOUT_SESSION_ID}&weiter=app`,
       cancel_url: `${resumeUrl(s)}&abbruch=1`,
-    }, { idempotencyKey: `cs-abo-${s.id}-${s.vertrag.akzeptiertAm}` });
+    }, { idempotencyKey: `cs-abo-${s.id}-${s.vertrag.akzeptiertAm}${testTage ? "-t" + testTage : ""}` });
     s.stripe.checkoutSessionId = session.id;
     await saveStudio(s);
     return eingeloggt(s, { url: session.url });

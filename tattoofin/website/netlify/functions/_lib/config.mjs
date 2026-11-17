@@ -47,6 +47,9 @@ export const CFG = {
   // Seit 15.11.2026 (Entscheidung Domenic): gleicher Preis wie in der App, 49,90 € inkl. MwSt. = 4193 netto (+797 USt. = 4990), ohne Gratiszeit.
   // Vorher 4900 (49 € netto). Bestandskunden behalten ihren Preis: er steht je Studio in s.monatNetto und im Stripe-Abo.
   monatNetto: Number(env("MONAT_NETTO_CENT", 4193)),
+  // Testwoche (Entscheidung Domenic 17.11.2026): Paket Monatlich im Web mit 7 Tagen zum Testen. Karte wird beim Abschluss hinterlegt,
+  // die erste Monatszahlung bucht Stripe erst nach der Testwoche ab, außer das Studio kündigt vorher im Studio-Bereich. 0 = keine Testwoche.
+  testTage: Math.max(0, Math.min(30, Number(env("TESTWOCHE_TAGE", 7)) || 0)),
   // Ersatzwert für Monatlich-Altdatensätze ohne gespeichertes s.monatNetto (alter Preis 49 € netto); gleicher Wert wie in public/js/app.js und portal.js
   monatNettoAlt: 4900,
   // Einmalzahlung: Nutzungszusage (Anbieter kündigt ordentlich frühestens nach so vielen Jahren ab Inbetriebnahme)
@@ -73,7 +76,9 @@ export const CFG = {
   // von 2026-12d; wer bis dahin mit 12c abschließt, steht über vertrag.aufsteller in der Admin-Box „QR-Aufsteller (alt)“)
   // 2026-12e (Prüfung 16.11.2026, gilt ab dem Deploy): Kundenangaben „Firma, Name, E-Mail“ in der Online-Bestellung, Anschrift aus Studio-Bereich
   // bzw. Stripe-Konto; Vertragsschluss mit Knopf „Weiter zur Zahlung“, Korrektur direkt im Formular (kein Zurück-Knopf mehr). Archiv /vertrag-2026-12d.html
-  vertragVersion: "2026-12e",
+  // 2026-12f (Entscheidung Domenic 17.11.2026, gilt ab dem Deploy): Testwoche im Paket Monatlich (7 Tage ohne Vergütung, Zahlungsmittel wird
+  // hinterlegt, erste Monatszahlung nach der Testwoche; Kündigung in der Testwoche → keine Kosten). Archiv /vertrag-2026-12e.html
+  vertragVersion: "2026-12f",
   // Blatt „Deine rechtliche Lage“ und Leistungsbestätigung: Version bei inhaltlichen Änderungen hochzählen (wird mit der Zustimmung gespeichert)
   // rechtVersion bleibt bewusst 2026-12: Mit dem Aufsteller wurde nur ein Beispiel aus der Aufzählung „Das gilt auch für …“ gestrichen
   // (jetzt „alles, was du ausdruckst“), die Klarna-Pflicht selbst ist unverändert. Keine inhaltliche Änderung, keine neue Bestätigung nötig.
@@ -232,7 +237,7 @@ export function publicConfig() {
     produkt: c.produkt, marke: c.marke, firma: c.firma, adresse: c.adresse, registergericht: c.registergericht,
     ustid: c.ustid, geschaeftsfuehrer: c.geschaeftsfuehrer, telefon: c.telefon, email: c.email,
     gerichtsstand: c.gerichtsstand, whatsapp: c.whatsapp, videoUrl: c.videoUrl,
-    kaufNetto: c.kaufNetto, monatNetto: c.monatNetto, nutzungJahre: c.nutzungJahre,
+    kaufNetto: c.kaufNetto, monatNetto: c.monatNetto, testTage: c.testTage, nutzungJahre: c.nutzungJahre,
     pakete: Object.values(PAKETE).filter((x) => paketNeuWaehlbar(x.id)).map(({ id, name, modell, einmalNetto, monatNetto, provisionProzent, empfohlen }) => ({ id, name, modell, einmalNetto, monatNetto, provisionProzent, empfohlen: Boolean(empfohlen) })),
     provisionProzent: c.provisionProzent, ustProzent: c.ustProzent, garantieTage: c.garantieTage,
     setupSupportTage: c.setupSupportTage, vertragVersion: c.vertragVersion,

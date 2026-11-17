@@ -6,7 +6,7 @@
 import { createHash } from "node:crypto";
 
 const PIXEL_ID = "1628016302128524";
-const ALLOWED = new Set(["Lead", "CompleteRegistration", "Purchase"]);
+const ALLOWED = new Set(["Lead", "CompleteRegistration", "Purchase", "StartTrial"]);
 const sha = (v) => createHash("sha256").update(v).digest("hex");
 
 export default async (req, context) => {
@@ -34,7 +34,7 @@ export default async (req, context) => {
     },
     custom_data: {
       content_name: String(b.content_name || "Kampagnen-Seite").slice(0, 100), content_category: "Tattoo-Studio",
-      ...(b.event_name === "Purchase" && Number(b.value) > 0 && Number(b.value) <= 5000 ? { value: Number(b.value), currency: "EUR" } : {}),
+      ...(["Purchase", "StartTrial"].includes(b.event_name) && Number(b.value) > 0 && Number(b.value) <= 5000 ? { value: Number(b.value), currency: "EUR" } : {}),
     },
   };
   const body = { data: [event], ...(process.env.META_TEST_CODE ? { test_event_code: process.env.META_TEST_CODE } : {}) };

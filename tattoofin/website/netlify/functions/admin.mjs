@@ -92,6 +92,7 @@ export default handler(async (req) => {
         fragebogen: Boolean(s.fragebogen), slug: s.slug,
         paket: paketVon(s).name, provisionProzent: provisionSatz(s),
         recht: s.recht ? `${s.recht.version} (${s.recht.am.slice(0, 10)})` : "", extras: Object.keys(s.extras || {}).join(", "),
+        quelle: s.quelle || null, testBis: s.testBis || null, nachgefasstAm: s.nachgefasstAm || null,
       });
     }
     return json(out.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || "")));

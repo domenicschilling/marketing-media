@@ -10,6 +10,8 @@ const verfuegbarSatz = (z) => (z.verfuegbarAb ? " Voraussichtlich verfügbar ab 
 
 // Monatspreis: Hauptzahl inkl. MwSt., netto klein dahinter (Entscheidung 15.11.2026: 49,90 € inkl. MwSt. = 41,93 € netto).
 // Immer mit dem Preis des Studios (s.monatNetto), Bestandskunden behalten so ihren vereinbarten Preis.
+// Testwoche (17.11.2026): „1 Woche“ bei 7 Tagen, sonst „N Tage“
+const testDauer = (tage) => (Number(tage) === 7 ? "1 Woche" : `${tage} Tage`);
 const monatPreisText = (nettoCent) => `${euro(brutto(nettoCent))} im Monat inkl. MwSt. (${euro(nettoCent)} netto)`;
 
 const gelb = "#ffbd16", navy = "#13243d";
@@ -131,6 +133,30 @@ export const mails = {
       (rechnungUrl ? p(`Deine Rechnung: <a href="${esc(rechnungUrl)}">ansehen / herunterladen</a>. Jeden Monat bekommst du automatisch eine neue Rechnung per E-Mail.`) : "") +
       box("<b>Dein QR-Code</b> ist dabei: im Portal unter Werbung als Bild speichern und ausdrucken, zum Beispiel als Aufkleber für die Theke.") +
       p("Kündigen kannst du jederzeit zum Ende des laufenden Monats, mit einem Klick im Studio-Portal."),
+  }),
+
+  // Testwoche gestartet (Paket Monatlich, 17.11.2026): Karte hinterlegt, heute 0 €, erste Abbuchung am Ende der Testwoche
+  testwocheGestartet: (s, { testBis }) => mk(`Deine Testwoche läuft bis ${datum(testBis)}`, {
+    preheader: "Heute zahlst du nichts. Richte jetzt dein Auszahlungskonto ein.",
+    title: "Deine Testwoche läuft ✅",
+    body: hallo(s) + p(`schön, dass du Tattoofin testest! Deine Testwoche läuft bis <b>${datum(testBis)}</b>. Bis dahin zahlst du nichts.`) +
+      p("Am besten richtest du jetzt gleich dein Auszahlungskonto bei Stripe ein. Dann kannst du in der Testwoche schon echte Anzahlungen per Link annehmen.") +
+      box(`<b>Nach der Testwoche:</b><br>${monatPreisText(s.monatNetto || CFG.monatNetto)}, abgebucht von deiner hinterlegten Karte. Ohne Provision, monatlich kündbar.<br>Wenn es nicht passt: Kündige vor dem ${datum(testBis)} mit einem Klick im Studio-Bereich. Dann zahlst du nichts.`) +
+      p("Zwei Tage vor dem Ende erinnern wir dich noch einmal per E-Mail.") +
+      p("Viele Grüße<br>Dein Tattoofin-Team"),
+    cta: "Zum Studio-Bereich", ctaUrl: `${CFG.siteUrl}/app.html`,
+  }),
+
+  // Erinnerung kurz vor dem Ende der Testwoche (täglicher Job, einmal je Studio)
+  testwocheEndetBald: (s, { testBis }) => mk(`Deine Testwoche endet am ${datum(testBis)}`, {
+    preheader: `Danach kostet Tattoofin ${euro(brutto(s.monatNetto || CFG.monatNetto))} im Monat inkl. MwSt.`,
+    title: "Deine Testwoche endet bald",
+    body: hallo(s) + p(`deine Testwoche endet am <b>${datum(testBis)}</b>.`) +
+      p(`Wenn du nichts tust, läuft Tattoofin einfach weiter. Dann buchen wir am ${datum(testBis)} den ersten Monat ab: ${monatPreisText(s.monatNetto || CFG.monatNetto)}. Danach jeden Monat, monatlich kündbar.`) +
+      box(`<b>Passt es nicht?</b><br>Kündige vor dem ${datum(testBis)} im Studio-Bereich unter „Vertrag“. Dann zahlst du nichts.`) +
+      p(`Fragen oder hakt etwas beim Einrichten? Schreib uns per WhatsApp an <a href="https://wa.me/${CFG.whatsapp}" style="color:${navy};font-weight:700">0162 4502375</a>. Wir helfen dir gern.`) +
+      p("Viele Grüße<br>Dein Tattoofin-Team"),
+    cta: "Zum Studio-Bereich", ctaUrl: `${CFG.siteUrl}/portal.html#vertrag`,
   }),
 
   rechnungVersendet: (s, { betragCent, rechnungUrl, faellig }) => mk("Deine Rechnung für das Tattoofin Setup", {
@@ -459,7 +485,9 @@ ${g.nachricht ? `<div style="font-style:italic;color:#5b6370;margin-top:10px">�
     preheader: `Tattoofin läuft noch bis ${datum(zum)}.`,
     title: "Schade, aber verstanden. Kündigung bestätigt.",
     body: hallo(s) + p(`wir bestätigen deine Kündigung zum <b>${datum(zum)}</b>. Bis dahin funktionieren Zahlungslinks und Zahlseite ganz normal.`) +
-      (istAppAbo(s) ? box(`<b>${APPLE_KUENDIGEN}</b>`) : s.paket === "monatlich" ? p("Dein Monatsbetrag wird ab dann nicht mehr abgebucht. Bereits gezahlte Monate werden nicht anteilig erstattet.") : "") +
+      (istAppAbo(s) ? box(`<b>${APPLE_KUENDIGEN}</b>`)
+        : s.paket === "monatlich" && s.testBis && !s.bezahltAm && Date.parse(zum) <= Date.parse(s.testBis) + 3600e3 ? box("<b>Du hast in der Testwoche gekündigt.</b> Es wird nichts abgebucht.")
+        : s.paket === "monatlich" ? p("Dein Monatsbetrag wird ab dann nicht mehr abgebucht. Bereits gezahlte Monate werden nicht anteilig erstattet.") : "") +
       box(s.modell === "provision" ? "Offene Auszahlungen bekommst du auch nach dem Ende, abzüglich späterer Rückbuchungen. Bitte entferne nach dem Vertragsende Aufkleber und QR-Codes, die auf die Tattoofin-Zahlseite zeigen." : "Dein Stripe-Konto gehört deinem Studio und bleibt bestehen. Nach Vertragsende trennen wir nur die Verbindung zu Tattoofin. Bitte entferne dann Aufkleber und QR-Codes, die auf die Tattoofin-Zahlseite zeigen.") +
       p("Falls du es dir anders überlegst: Im Portal kannst du die Kündigung bis zum Stichtag mit einem Klick zurücknehmen."),
     cta: "Kündigung zurücknehmen", ctaUrl: `${CFG.siteUrl}/portal.html#vertrag`,
@@ -492,19 +520,21 @@ ${g.nachricht ? `<div style="font-style:italic;color:#5b6370;margin-top:10px">�
   anmeldungAbgebrochen: (s, { resumeUrl }) => mk("Fast geschafft: dein Abschluss ist noch offen", {
     title: "Du warst fast fertig 🙂", preheader: "Mit einem Klick weitermachen.",
     body: hallo(s) + p("du hast gestern angefangen, Tattoofin für dein Studio abzuschließen, aber die Zahlung ist noch offen.") +
-      p(`Falls etwas unklar war: Antworte einfach auf diese E-Mail, wir helfen dir gern weiter. Tattoofin kostet ${monatPreisText(CFG.monatNetto)}.`),
+      p(`Falls etwas unklar war: Antworte einfach auf diese E-Mail, wir helfen dir gern weiter. ${CFG.testTage > 0 ? `Du kannst Tattoofin ${testDauer(CFG.testTage)} testen, danach kostet es` : "Tattoofin kostet"} ${monatPreisText(CFG.monatNetto)}.`),
     cta: "Abschluss fortsetzen", ctaUrl: resumeUrl,
   }),
 
   // Persönliches Nachfassen bei abgebrochener Anmeldung (Domenic 17.11.2026: „schreib denen eine nette mail“, „meine nummer für fragen“).
   // Ton wie Erstkontakt: danke + Fragen?, kein Verkaufsdruck. Preis-Hinweis, weil an der Kasse bis 14.11. noch 58,31 € stand.
-  anmeldungNachfassen: (s, { resumeUrl }) => mk("Kurze Frage zu deiner Tattoofin-Anmeldung", {
+  anmeldungNachfassen: (s, { resumeUrl, jetzt = new Date() }) => mk("Kurze Frage zu deiner Tattoofin-Anmeldung", {
     title: "Hast du noch Fragen?", preheader: "Schreib uns einfach per WhatsApp an 0162 4502375.",
-    body: hallo(s) + p(`danke für deine Anmeldung am ${datum(s.createdAt)}.`) +
+    body: hallo(s) + p(`danke für deine Anmeldung ${datum(s.createdAt) === datum(new Date(jetzt).toISOString()) ? "heute" : "am " + datum(s.createdAt)}.`) +
       p("Uns ist aufgefallen: Sie ist noch nicht ganz fertig.") +
       p("War etwas unklar oder hat nicht geklappt? Sag einfach Bescheid. Wir helfen dir gern, auch beim Einrichten.") +
       box(`<b>Fragen?</b><br>WhatsApp an <a href="https://wa.me/${CFG.whatsapp}" style="color:${navy};font-weight:700">0162 4502375</a><br>oder einfach auf diese Mail antworten.`) +
-      p(`<b>Gut zu wissen:</b><br>Seit dem 15.11. kostet Tattoofin ${monatPreisText(CFG.monatNetto)}.<br>Ohne Provision, monatlich kündbar.`) +
+      p(CFG.testTage > 0
+        ? `<b>Gut zu wissen:</b><br>Du kannst Tattoofin ${testDauer(CFG.testTage)} testen. Erst danach kostet es ${monatPreisText(CFG.monatNetto)}.<br>Kündigst du in der Testwoche, zahlst du nichts. Ohne Provision, monatlich kündbar.`
+        : `<b>Gut zu wissen:</b><br>Seit dem 15.11. kostet Tattoofin ${monatPreisText(CFG.monatNetto)}.<br>Ohne Provision, monatlich kündbar.`) +
       p("Viele Grüße<br>Dein Tattoofin-Team"),
     cta: "Anmeldung fortsetzen", ctaUrl: resumeUrl,
   }),
