@@ -1429,6 +1429,8 @@ await abschnitt("19b Sonderpreis 19 € brutto (Antisocial, Domenic 17.11.2026):
     const nf = mailsAn("nachfassen@betrieb.test").filter((m) => /Kurze Frage zu deiner Tattoofin-Anmeldung/.test(m.subject));
     check(vor.gesendet === false && /0162 4502375/.test(vor.html) && /wa\.me\/491624502375/.test(vor.html) && /49,90 € im Monat inkl\. MwSt\./.test(vor.html) && /start\.html\?resume=/.test(vor.html) && !/sofort|nur noch|letzte Chance/i.test(vor.html)
       && ein.gesendet === true && zwei._status === 409 && nf.length === 1, "Nachfass-Mail: Vorschau, Nummer für Fragen, Preis 49,90 €, Fortsetzen-Link, kein Druck, Versand genau einmal", vor.betreff); }
+  { const m = (await import("../netlify/functions/_lib/emails.mjs")).mails.anmeldungNachfassen({ inhaber: "karl", firma: "x", createdAt: new Date().toISOString() }, { resumeUrl: "x" });
+    check(/Hey Karl,/.test(m.text), "Anrede: Vorname immer mit großem Anfangsbuchstaben (karl → Karl)", m.text.split("\n")[2]); }
   // Ohne Zustimmung geht „nur zahlen“ nicht
   process.env.RISIKOFREI_NEU = "1";
   const b = await anmelden("risikofrei", "ohnezustimmung@betrieb.test", "Ohne Zustimmung");

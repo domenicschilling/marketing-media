@@ -39,7 +39,8 @@ const box = (s) => `<div style="background:#fff5d6;border:1px solid #f5d77a;bord
 const rows = (pairs) => `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;font-size:14px;margin:0 0 14px">${pairs
   .filter(([, v]) => v !== undefined && v !== null && v !== "")
   .map(([k, v]) => `<tr><td style="padding:5px 0;color:#5b6370;width:44%;vertical-align:top">${esc(k)}</td><td style="padding:5px 0;font-weight:600">${v}</td></tr>`).join("")}</table>`;
-const hallo = (s) => p(`Hey ${esc(s.inhaber?.split(" ")[0] || s.firma)},`);
+const gross = (t) => (t ? t.charAt(0).toLocaleUpperCase("de-DE") + t.slice(1) : t);
+const hallo = (s) => p(`Hey ${esc(gross(s.inhaber?.trim().split(/\s+/)[0] || s.firma))},`);
 // Abo über Apple (Anmeldung in der App): nie Web-Preis, nie Link zur Web-Anmeldung, nie „Paket wechseln“ (Apple 3.1.3)
 const istAppAbo = (s) => s?.abrechnung === "apple" || s?.paket === "app";
 // Vertragstext: App-Studios bekommen die App-Fassung (?app=1: ohne Web-Preis und Stripe-Einzug), die sie akzeptiert haben
