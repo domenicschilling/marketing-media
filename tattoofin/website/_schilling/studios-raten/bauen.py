@@ -325,6 +325,8 @@ CSS = """
 }
 /* Zweiter Bildschirm: stärkster Beleg */
 .beleg-oben{padding-top:22px}
+/* iOS-26/27-Safari zeigt unter der schwebenden Leiste einen Streifen der nächsten Sektion: dort nur Papier (Lösung wie tattoofin.de, Memory hero-viewport-perfekt) */
+.held + .beleg-oben{padding-top:max(22px, calc((100lvh - 100svh) * 2.6 + 6px))}
 .testwoche{max-width:1280px;margin-inline:auto;padding:28px var(--rand) 34px}
 /* 7 Tage als Abriss-Kalender im Flash-Stil (Gegenstück zu den Raten-Streifen im Hero): ein Streifen, Perforation zwischen den Blättern,
    „Tag 7“ ist schon halb abgerissen */
