@@ -30,7 +30,6 @@ if(!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches))
 .held .raten-fn{margin-top:5px}
 .held .held-buehne{position:relative;flex:1 1 0;height:auto;aspect-ratio:auto;width:auto;max-width:none;min-height:70px;margin:8px 0 6px;cursor:pointer}
 .held-buehne .szene-svg{position:absolute;inset:0;width:100%;height:100%}
-.held-a .held-figur{left:38%;height:min(34%,130px)}
 .held-c .held-figur{left:auto;right:-4px;height:min(40%,160px)}
 .held-figur{position:absolute;z-index:3;left:-4px;bottom:-6px;height:min(52%,190px);width:auto;pointer-events:none}
 .held-fuss{display:grid;gap:6px;justify-items:start}
@@ -45,7 +44,7 @@ if(!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches))
 /* Stempel und Abrisse drehen um die eigene Mitte */
 .stempel,.abriss{transform-box:fill-box;transform-origin:50% 50%}.abriss{transform-origin:50% 0}
 .szene-hoch{display:none}
-@media (max-width:599px) and (min-height:720px){.held-a .szene-breit{display:none}.held-a .szene-hoch{display:block}.held-a .held-figur{left:-4px;height:min(36%,190px)}}
+@media (max-width:599px) and (min-height:720px){.held-a .szene-breit{display:none}.held-a .szene-hoch{display:block}}
 @keyframes stempel{0%{transform:scale(1.9) rotate(-14deg);opacity:0}70%{opacity:1}100%{transform:scale(1) rotate(0);opacity:1}}
 @keyframes abriss{0%,100%{transform:rotate(0)}35%{transform:rotate(5deg)}70%{transform:rotate(-3deg)}}
 /* Entwurf B: Herz oben links, echter Zahlseiten-Ausschnitt rechts */
@@ -57,30 +56,72 @@ if(!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches))
 .held-b .held-figur{height:min(34%,150px);left:-6px}
 .b-handy figcaption{position:relative;z-index:4;text-align:center;font-size:12px;font-weight:700;margin-top:6px;transform:rotate(3deg)}
 .zeigen{max-width:1280px;margin-inline:auto;padding:30px 0 34px}
-.zeigen>h2,.zeigen>.abschnitt-satz,.zeigen>.raten-fn{padding-inline:var(--rand)}
-/* Handy: wischbare Reihe ohne Selbstlauf; ab Desktop alle fünf nebeneinander */
-.zeigen-reihe{list-style:none;display:flex;gap:18px;overflow-x:auto;scroll-snap-type:x mandatory;padding:26px var(--rand) 18px;margin:0 0 6px;scrollbar-width:thin;align-items:flex-start}
+.zeigen>h2,.zeigen>.abschnitt-satz{padding-inline:var(--rand)}
+/* Handy: ein Bildschirm je Wisch (ganze Bildunterschrift, nichts angeschnitten), darunter 1/5 und Punkte; ohne Selbstlauf */
+.zeigen-reihe{list-style:none;display:flex;gap:calc(var(--rand) * 2);overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-inline:var(--rand);padding:26px var(--rand) 12px;margin:0;scrollbar-width:none;align-items:flex-start}
+.zeigen-reihe::-webkit-scrollbar{display:none}
 .zeigen-reihe:focus-visible{outline-offset:-3px}
-.zeigen-bild{flex:0 0 min(64vw,260px);scroll-snap-align:start;transform:rotate(-1.2deg)}
-.zeigen-bild:nth-child(even){transform:rotate(1.2deg)}
-.zeigen-bild .handy-rahmen{padding-bottom:6px}
+.zeigen-bild{flex:0 0 100%;display:grid;justify-items:center;scroll-snap-align:start}
+.zeigen-bild>*{width:min(68vw,270px)}
+.zeigen-bild .handy-rahmen{padding-bottom:6px;transform:rotate(-1.2deg)}
+.zeigen-bild:nth-child(even) .handy-rahmen{transform:rotate(1.2deg)}
 .zeigen-bild .handy-rahmen img{aspect-ratio:auto;width:100%;height:auto;object-fit:initial}
 .zeigen-zahlseite .handy-rahmen img{aspect-ratio:600/1160;object-fit:cover;object-position:top}
-.zeigen-bild p{margin-top:12px;font-size:15px;line-height:1.4}
+.zeigen-bild p{margin-top:14px;font-size:15px;line-height:1.4}
 .zeigen-bild b{font-weight:800}
-@media (min-width:1100px){.zeigen-reihe{display:grid;grid-template-columns:repeat(5,1fr);overflow:visible;gap:22px}.zeigen-bild{flex:none}}
+.zeigen-stand{display:flex;align-items:center;justify-content:center;gap:6px;padding:0 var(--rand)}
+.zeigen-stand[hidden]{display:none}
+.zeigen-zahl{font-weight:800;font-size:15px;min-width:3ch;text-align:right}
+.zeigen-punkte{display:flex}
+.zeigen-punkte button{width:44px;height:44px;border:0;padding:0;background:none;display:grid;place-items:center;cursor:pointer;border-radius:50%}
+.zeigen-punkte i{width:12px;height:12px;border-radius:50%;border:2px solid var(--blau);background:transparent}
+.zeigen-punkte [aria-current="true"] i{background:var(--blau);transform:scale(1.25)}
+/* Ab Tablet: alle fünf als Raster, jede Abbildung mindestens 330 px breit, damit die Schrift im Bild lesbar bleibt (ab ca. 11 px) */
+@media (min-width:720px){
+  .zeigen-reihe{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));overflow:visible;gap:40px 32px;padding-top:30px}
+  .zeigen-bild{justify-items:start}
+  .zeigen-bild>*{width:100%;max-width:350px}
+  .zeigen-stand,.zeigen-stand[hidden]{display:none}
+}
 /* Zweiter Bildschirm: stärkster Beleg */
 .beleg-oben{padding-top:22px}
 .testwoche{max-width:1280px;margin-inline:auto;padding:28px var(--rand) 34px}
-.testwoche ol{list-style:none;display:grid;gap:14px;margin-top:18px;counter-reset:t}
-.testwoche li{position:relative;padding:14px 16px 14px 58px;background:var(--hell);border:4px solid var(--blau);border-radius:14px;box-shadow:4px 5px 0 var(--blau);counter-increment:t;line-height:1.4}
-.testwoche li::before{content:counter(t);position:absolute;left:12px;top:12px;display:grid;place-items:center;width:32px;height:32px;padding-top:.18em;border-radius:50%;background:var(--blau);color:var(--gelb);font:400 19px/1 var(--anzeige)}
-.testwoche li b{font-weight:800}
-.testwoche .zusage{margin-top:16px;font-weight:800}
-@media (min-width:720px){.testwoche ol{grid-template-columns:repeat(3,1fr)}}
+/* 7 Tage als Abriss-Kalender im Flash-Stil (Gegenstück zu den Raten-Streifen im Hero): ein Streifen, Perforation zwischen den Blättern,
+   „Tag 7“ ist schon halb abgerissen */
+.streifen{list-style:none;display:grid;margin-top:22px;max-width:1120px;padding:0 6px 14px 0}
+.blatt{position:relative;background:var(--hell);border:4px solid var(--blau);box-shadow:4px 5px 0 var(--blau);line-height:1.4}
+.blatt-tag{position:relative;display:block;background:var(--blau);color:var(--gelb);font:400 clamp(24px,6.4vw,30px)/1 var(--anzeige);text-transform:uppercase;padding:20px 14px 8px;letter-spacing:.01em}
+.blatt-tag::before{content:"";position:absolute;left:50%;top:7px;width:46px;height:8px;margin-left:-23px;
+  background:radial-gradient(circle at 4px 4px,var(--papier) 3.4px,transparent 4px) 0 0/19px 8px repeat-x}
+.blatt p{padding:12px 14px 14px}
+.blatt b{font-weight:800}
+.blatt:not(:first-child){border-top:4px dashed var(--blau)}
+.blatt:not(.blatt-ab){border-bottom:0}
+.blatt:nth-child(2){border-bottom:4px dashed var(--blau)}
+.blatt-ab{margin-top:14px;border-top-style:solid;transform:rotate(-1.6deg) translateX(4px);transform-origin:0 0}
+@media (min-width:720px){
+  .streifen{grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch}
+  .blatt:not(:first-child){border-top:4px solid var(--blau);border-left:4px dashed var(--blau)}
+  .blatt:not(.blatt-ab){border-bottom:4px solid var(--blau);border-right:0}
+  .blatt:nth-child(2){border-right:4px dashed var(--blau);border-bottom-style:solid}
+  .blatt-ab{margin:0 0 0 14px;border-left-style:solid;transform:rotate(3deg) translateY(10px);transform-origin:0 0}
+  .blatt-ab::before{content:"";position:absolute;left:-18px;top:-4px;bottom:-4px;width:10px;
+    background:linear-gradient(-45deg,var(--blau) 5px,transparent 0) 0 0/10px 12px repeat-y,linear-gradient(-135deg,var(--blau) 5px,transparent 0) 0 0/10px 12px repeat-y}
+}
 .schluss-raten{max-width:1280px;margin-inline:auto;padding:34px var(--rand) 40px;display:grid;gap:12px;justify-items:start}
-.schluss-raten .wege{margin-top:6px}
-@media (max-width:599px){.schluss-raten .knopf{width:100%}}
+.schluss-raten .knopf{margin-top:6px}
+.schluss-raten .preiszeile{margin-top:-4px}
+@media (max-width:599px){.schluss-raten .knopf{width:100%;text-align:center}}
+/* Preis-Bon: Rechnung oben, darunter was dazugehört (ersetzt die Sticker-Liste) */
+.beleg .bon-dazu th{font-weight:700;border-top-style:dotted}
+.beleg .bon-dazu tr:first-child th,.beleg .bon-dazu tr:first-child td{border-top:3px solid var(--blau)}
+.beleg .bon-dazu th[colspan]{padding-left:22px;position:relative}
+.beleg .bon-dazu th[colspan]::before{content:"";position:absolute;left:0;top:50%;width:14px;height:14px;margin-top:-7px;background:var(--blau);
+  clip-path:polygon(50% 0,62% 36%,100% 38%,69% 60%,80% 96%,50% 75%,20% 96%,31% 60%,0 38%,38% 36%)}
+.preis-rest{gap:10px}
+.preis-rest .knopf{width:100%;text-align:center}
+.preis-rest .preiszeile{color:var(--hell)}
+.preis-rest .wa{margin-top:8px}
 /* Tablet hochkant */
 @media (min-width:600px) and (max-width:899px){
   .held-satz{text-align:center;justify-self:center;margin-inline:auto}
@@ -99,8 +140,11 @@ if(!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches))
   .held .unterzeile{font-size:clamp(14px,min(1.7vw,2.7svh),23px)}
   .held .raten-fn{font-size:13px}
   .held-figur{height:min(40%,220px)}
-  .held-a .szene-breit{display:none}.held-a .szene-hoch{display:block}
-  .held-a .held-figur{left:-2%;height:min(30%,200px)}
+}
+/* Desktop: breite Szene (Bon links, Figur in der Mitte, Studio-Karte rechts); die Bühne endet über der Consent-Karte,
+   damit Studio-Karte und Stempel nie darunter liegen (Banner unten rechts, tf-track.js bleibt unverändert) */
+@media (min-width:900px) and (min-height:501px){
+  .held .held-buehne{margin-bottom:calc(clamp(6px,2svh,24px) + var(--banner-h,0px))}
 }
 @media (orientation:landscape) and (max-height:500px){
   .held{padding-bottom:calc(8px + var(--banner-h,0px));grid-template-columns:minmax(0,6fr) minmax(0,4fr)}
@@ -129,7 +173,9 @@ html.fn-offen body{position:fixed;left:0;right:0;top:var(--sperre-top,0);overflo
 .fn-kopf button{grid-row:1;width:48px;height:44px;border:0;padding:0;background:none;color:var(--blau);border-radius:12px;cursor:pointer;display:grid;place-items:center}
 .fn-kopf svg{width:26px;height:26px}
 .fn-kopf [data-funnel-zurueck]{grid-column:1}.fn-kopf [data-funnel-zu]{grid-column:3}
-.fn-stand{grid-column:2;grid-row:1;text-align:center;font-weight:800;font-size:15px;margin:0}
+.fn-mitte{grid-column:2;grid-row:1;min-width:0;text-align:center;line-height:1.2}
+.fn-stand{font-weight:800;font-size:15px;margin:0}
+.fn-kopf-titel{margin:1px 0 0;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fn-balken{grid-column:1/-1;grid-row:2;height:9px;margin:2px 6px 9px;background:var(--papier);border:2px solid var(--blau);border-radius:99px;overflow:hidden}
 .fn-balken i{display:block;height:100%;background:var(--gelb);transform-origin:left;transform:scaleX(0)}
 @media (prefers-reduced-motion:no-preference){.fn-balken i{transition:transform .25s ease-out}}
@@ -160,8 +206,10 @@ html.fn-offen body{position:fixed;left:0;right:0;top:var(--sperre-top,0);overflo
 .fn-pflicht a{font-weight:700}
 .fn .knopf.fn-aktion{width:100%;min-height:54px;margin-top:4px;font-size:clamp(20px,5.6vw,24px);white-space:normal;text-align:center}
 .fn .knopf.fn-aktion:disabled{opacity:.7;cursor:wait}
-.fn-danach{font-size:15px;line-height:1.4;margin:0 0 12px}
-.fn-danach b{font-weight:800}
+.fn-danach{font-size:14px;font-weight:700;line-height:1.35;margin:0 0 10px}
+.fn-bedingung{font-size:14px;line-height:1.4;margin:10px 0 0}
+/* Offene Tastatur am Touch-Gerät: Merkzettel einklappen, damit Feld und Weiter-Knopf Platz haben (E22) */
+@media (pointer:coarse),(hover:none){html.fn-tastatur .fn-merk{display:none}}
 .fn-fuss{margin:18px 0 0;font-size:14px;font-weight:700;line-height:1.4}
 </style>
 </head>
@@ -181,16 +229,16 @@ html.fn-offen body{position:fixed;left:0;right:0;top:var(--sperre-top,0);overflo
   <section class="held" data-hero aria-label="Ratenzahlung für deine Kunden">
     <div class="held-satz held-a">
       <h1 data-hero-pflicht="immer">Raten* für deine Kunden. Dein Geld auf&nbsp;einmal.</h1>
-      <p class="unterzeile" data-hero-pflicht>Link schicken, dein Kunde kann per Klarna zahlen. Tattoofin nimmt keine&nbsp;Provision.</p>
+      <p class="unterzeile" data-hero-pflicht>Für Tattoo-Studios: Link schicken, Kunde zahlt per&nbsp;Klarna.</p>
       <p class="raten-fn" data-zaehlt-nicht>*Raten über Klarna, nach deren Bonitätsprüfung. <b>Achtung! Kreditaufnahme kostet Geld.</b></p>
     </div>
     <div class="held-buehne buehne held-a" data-stechen>
-      <svg class="motiv stech szene-svg szene-breit" viewBox="20 10 640 380" role="img" aria-label="Flash-Motiv: Die Rechnung des Kunden mit Abriss-Streifen „Rate“, daneben die Karte des Studios mit dem Stempel „Bezahlt“."><path class="f" fill="#fff7e3" d="M44 52 L250 40 L262 300 L56 312 Z"/><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" d="M44 52 L250 40 L262 300 L56 312 Z"/><text class="t" x="152" y="92" text-anchor="middle" fill="#1f3d5c" transform="rotate(-3 152 92)" style="font-family:var(--anzeige);font-weight:400;font-size:26px">DEIN KUNDE</text><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" d="M78 128 L226 120"/><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" d="M80 155 L212 147"/><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" d="M82 182 L198 174"/><text class="t" x="150" y="232" text-anchor="middle" fill="#1f3d5c" transform="rotate(-3 150 232)" style="font-family:var(--text);font-weight:800;font-size:21px">zahlt in Raten*</text><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M62 268 L72 262 L82 268 L92 262 L102 268 L112 262 L122 267 L132 261 L142 266 L152 260 L162 265 L172 259 L182 264 L192 258 L202 263 L212 257 L222 262 L232 256 L242 261 L258 256"/><g><g class="abriss abriss-0"><path class="f" fill="#fbb316" d="M76 278.0 L84 273.0 L92 278.0 L100 273.0 L108 278.0 L116 274.0 L120 354.0 L80 356.0 Z"/><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" d="M76 278.0 L84 273.0 L92 278.0 L100 273.0 L108 278.0 L116 274.0 L120 354.0 L80 356.0 Z"/><text class="t" x="99" y="324.0" text-anchor="middle" fill="#1f3d5c" transform="rotate(-88 99 324.0)" style="font-family:var(--anzeige);font-weight:400;font-size:14px">RATE*</text></g></g><g transform="rotate(4 154 275)"><g class="abriss abriss-1"><path class="f" fill="#fbb316" d="M134 275.5 L142 270.5 L150 275.5 L158 270.5 L166 275.5 L174 271.5 L178 351.5 L138 353.5 Z"/><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" d="M134 275.5 L142 270.5 L150 275.5 L158 270.5 L166 275.5 L174 271.5 L178 351.5 L138 353.5 Z"/><text class="t" x="157" y="321.5" text-anchor="middle" fill="#1f3d5c" transform="rotate(-88 157 321.5)" style="font-family:var(--anzeige);font-weight:400;font-size:14px">RATE*</text></g></g><g transform="translate(26 60) rotate(24 212 273)"><g class="abriss abriss-2"><path class="f" fill="#fbb316" d="M192 273.0 L200 268.0 L208 273.0 L216 268.0 L224 273.0 L232 269.0 L236 349.0 L196 351.0 Z"/><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" d="M192 273.0 L200 268.0 L208 273.0 L216 268.0 L224 273.0 L232 269.0 L236 349.0 L196 351.0 Z"/><text class="t" x="215" y="319.0" text-anchor="middle" fill="#1f3d5c" transform="rotate(-88 215 319.0)" style="font-family:var(--anzeige);font-weight:400;font-size:14px">RATE*</text></g></g><path class="f" fill="#fbb316" d="M282 176 C318 150 350 150 380 168 L374 146 L420 178 L372 206 L378 186 C350 172 320 174 292 196 Z"/><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" d="M282 176 C318 150 350 150 380 168 L374 146 L420 178 L372 206 L378 186 C350 172 320 174 292 196 Z"/><g transform="translate(0 0)"><path class="f" fill="#fff7e3" d="M418 62 L634 74 L624 354 L408 344 Z"/><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" d="M418 62 L634 74 L624 354 L408 344 Z"/><text class="t" x="521" y="114" text-anchor="middle" fill="#1f3d5c" transform="rotate(3 521 114)" style="font-family:var(--anzeige);font-weight:400;font-size:26px">DEIN STUDIO</text><text class="t" x="519" y="148" text-anchor="middle" fill="#1f3d5c" transform="rotate(3 519 148)" style="font-family:var(--text);font-weight:800;font-size:16px">bekommt den Betrag</text><text class="t" x="518" y="170" text-anchor="middle" fill="#1f3d5c" transform="rotate(3 518 170)" style="font-family:var(--text);font-weight:800;font-size:16px">auf einmal</text><g transform="rotate(-11 517 262)"><g class="stempel"><path class="l" pathLength="1" fill="none" stroke="#c4421b" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" d="M404 206 L630 218 L622 318 L396 306 Z"/><path class="l" pathLength="1" fill="none" stroke="#c4421b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M418 220 L616 230 L610 304 L410 294 Z"/><text class="t" x="513" y="284" text-anchor="middle" fill="#c4421b" transform="rotate(3 513 284)" style="font-family:var(--anzeige);font-weight:400;font-size:46px">BEZAHLT</text></g></g><path class="f" fill="#fbb316" d="M626 22 L633 40 L652 41 L637 53 L642 72 L626 61 L610 72 L615 53 L600 41 L619 40 Z"/><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M626 22 L633 40 L652 41 L637 53 L642 72 L626 61 L610 72 L615 53 L600 41 L619 40 Z"/></g></svg><svg class="motiv stech szene-svg szene-hoch" viewBox="20 10 600 650" role="img" aria-label="Flash-Motiv: Die Rechnung des Kunden mit Abriss-Streifen „Rate“, daneben die Karte des Studios mit dem Stempel „Bezahlt“."><path class="f" fill="#fff7e3" d="M44 52 L250 40 L262 300 L56 312 Z"/><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" d="M44 52 L250 40 L262 300 L56 312 Z"/><text class="t" x="152" y="92" text-anchor="middle" fill="#1f3d5c" transform="rotate(-3 152 92)" style="font-family:var(--anzeige);font-weight:400;font-size:26px">DEIN KUNDE</text><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" d="M78 128 L226 120"/><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" d="M80 155 L212 147"/><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" d="M82 182 L198 174"/><text class="t" x="150" y="232" text-anchor="middle" fill="#1f3d5c" transform="rotate(-3 150 232)" style="font-family:var(--text);font-weight:800;font-size:21px">zahlt in Raten*</text><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M62 268 L72 262 L82 268 L92 262 L102 268 L112 262 L122 267 L132 261 L142 266 L152 260 L162 265 L172 259 L182 264 L192 258 L202 263 L212 257 L222 262 L232 256 L242 261 L258 256"/><g><g class="abriss abriss-0"><path class="f" fill="#fbb316" d="M76 278.0 L84 273.0 L92 278.0 L100 273.0 L108 278.0 L116 274.0 L120 354.0 L80 356.0 Z"/><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" d="M76 278.0 L84 273.0 L92 278.0 L100 273.0 L108 278.0 L116 274.0 L120 354.0 L80 356.0 Z"/><text class="t" x="99" y="324.0" text-anchor="middle" fill="#1f3d5c" transform="rotate(-88 99 324.0)" style="font-family:var(--anzeige);font-weight:400;font-size:14px">RATE*</text></g></g><g transform="rotate(4 154 275)"><g class="abriss abriss-1"><path class="f" fill="#fbb316" d="M134 275.5 L142 270.5 L150 275.5 L158 270.5 L166 275.5 L174 271.5 L178 351.5 L138 353.5 Z"/><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" d="M134 275.5 L142 270.5 L150 275.5 L158 270.5 L166 275.5 L174 271.5 L178 351.5 L138 353.5 Z"/><text class="t" x="157" y="321.5" text-anchor="middle" fill="#1f3d5c" transform="rotate(-88 157 321.5)" style="font-family:var(--anzeige);font-weight:400;font-size:14px">RATE*</text></g></g><g transform="translate(26 60) rotate(24 212 273)"><g class="abriss abriss-2"><path class="f" fill="#fbb316" d="M192 273.0 L200 268.0 L208 273.0 L216 268.0 L224 273.0 L232 269.0 L236 349.0 L196 351.0 Z"/><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" d="M192 273.0 L200 268.0 L208 273.0 L216 268.0 L224 273.0 L232 269.0 L236 349.0 L196 351.0 Z"/><text class="t" x="215" y="319.0" text-anchor="middle" fill="#1f3d5c" transform="rotate(-88 215 319.0)" style="font-family:var(--anzeige);font-weight:400;font-size:14px">RATE*</text></g></g><g transform="translate(-34 136) rotate(48 350 176)"><path class="f" fill="#fbb316" d="M282 176 C318 150 350 150 380 168 L374 146 L420 178 L372 206 L378 186 C350 172 320 174 292 196 Z"/><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" d="M282 176 C318 150 350 150 380 168 L374 146 L420 178 L372 206 L378 186 C350 172 320 174 292 196 Z"/></g><g transform="translate(-70 290)"><path class="f" fill="#fff7e3" d="M418 62 L634 74 L624 354 L408 344 Z"/><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" d="M418 62 L634 74 L624 354 L408 344 Z"/><text class="t" x="521" y="114" text-anchor="middle" fill="#1f3d5c" transform="rotate(3 521 114)" style="font-family:var(--anzeige);font-weight:400;font-size:26px">DEIN STUDIO</text><text class="t" x="519" y="148" text-anchor="middle" fill="#1f3d5c" transform="rotate(3 519 148)" style="font-family:var(--text);font-weight:800;font-size:16px">bekommt den Betrag</text><text class="t" x="518" y="170" text-anchor="middle" fill="#1f3d5c" transform="rotate(3 518 170)" style="font-family:var(--text);font-weight:800;font-size:16px">auf einmal</text><g transform="rotate(-11 517 262)"><g class="stempel"><path class="l" pathLength="1" fill="none" stroke="#c4421b" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" d="M404 206 L630 218 L622 318 L396 306 Z"/><path class="l" pathLength="1" fill="none" stroke="#c4421b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M418 220 L616 230 L610 304 L410 294 Z"/><text class="t" x="513" y="284" text-anchor="middle" fill="#c4421b" transform="rotate(3 513 284)" style="font-family:var(--anzeige);font-weight:400;font-size:46px">BEZAHLT</text></g></g><path class="f" fill="#fbb316" d="M626 22 L633 40 L652 41 L637 53 L642 72 L626 61 L610 72 L615 53 L600 41 L619 40 Z"/><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M626 22 L633 40 L652 41 L637 53 L642 72 L626 61 L610 72 L615 53 L600 41 L619 40 Z"/></g></svg>
-      <img class="held-figur" src="/assets/start/figur.webp" alt="" width="300" height="310" decoding="async">
+      <svg class="motiv stech szene-svg szene-breit" viewBox="20 10 640 380" role="img" aria-label="Flash-Motiv: Die Rechnung des Kunden mit Abriss-Streifen „Rate“, ein Pfeil zur Karte des Studios mit dem Stempel „Bezahlt“, dazwischen die Tattoofin-Figur mit Daumen hoch."><path class="f" fill="#fff7e3" d="M44 52 L250 40 L262 300 L56 312 Z"/><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" d="M44 52 L250 40 L262 300 L56 312 Z"/><text class="t" x="152" y="92" text-anchor="middle" fill="#1f3d5c" transform="rotate(-3 152 92)" style="font-family:var(--anzeige);font-weight:400;font-size:26px">DEIN KUNDE</text><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" d="M78 128 L226 120"/><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" d="M80 155 L212 147"/><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" d="M82 182 L198 174"/><text class="t" x="150" y="232" text-anchor="middle" fill="#1f3d5c" transform="rotate(-3 150 232)" style="font-family:var(--text);font-weight:800;font-size:21px">zahlt in Raten*</text><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M62 268 L72 262 L82 268 L92 262 L102 268 L112 262 L122 267 L132 261 L142 266 L152 260 L162 265 L172 259 L182 264 L192 258 L202 263 L212 257 L222 262 L232 256 L242 261 L258 256"/><g><g class="abriss abriss-0"><path class="f" fill="#fbb316" d="M76 278.0 L84 273.0 L92 278.0 L100 273.0 L108 278.0 L116 274.0 L120 354.0 L80 356.0 Z"/><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" d="M76 278.0 L84 273.0 L92 278.0 L100 273.0 L108 278.0 L116 274.0 L120 354.0 L80 356.0 Z"/><text class="t" x="99" y="324.0" text-anchor="middle" fill="#1f3d5c" transform="rotate(-88 99 324.0)" style="font-family:var(--anzeige);font-weight:400;font-size:14px">RATE*</text></g></g><g transform="rotate(4 154 275)"><g class="abriss abriss-1"><path class="f" fill="#fbb316" d="M134 275.5 L142 270.5 L150 275.5 L158 270.5 L166 275.5 L174 271.5 L178 351.5 L138 353.5 Z"/><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" d="M134 275.5 L142 270.5 L150 275.5 L158 270.5 L166 275.5 L174 271.5 L178 351.5 L138 353.5 Z"/><text class="t" x="157" y="321.5" text-anchor="middle" fill="#1f3d5c" transform="rotate(-88 157 321.5)" style="font-family:var(--anzeige);font-weight:400;font-size:14px">RATE*</text></g></g><g transform="translate(26 60) rotate(24 212 273)"><g class="abriss abriss-2"><path class="f" fill="#fbb316" d="M192 273.0 L200 268.0 L208 273.0 L216 268.0 L224 273.0 L232 269.0 L236 349.0 L196 351.0 Z"/><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" d="M192 273.0 L200 268.0 L208 273.0 L216 268.0 L224 273.0 L232 269.0 L236 349.0 L196 351.0 Z"/><text class="t" x="215" y="319.0" text-anchor="middle" fill="#1f3d5c" transform="rotate(-88 215 319.0)" style="font-family:var(--anzeige);font-weight:400;font-size:14px">RATE*</text></g></g><path class="f" fill="#fbb316" d="M282 176 C318 150 350 150 380 168 L374 146 L420 178 L372 206 L378 186 C350 172 320 174 292 196 Z"/><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" d="M282 176 C318 150 350 150 380 168 L374 146 L420 178 L372 206 L378 186 C350 172 320 174 292 196 Z"/><g transform="translate(0 0)"><path class="f" fill="#fff7e3" d="M418 62 L634 74 L624 354 L408 344 Z"/><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" d="M418 62 L634 74 L624 354 L408 344 Z"/><text class="t" x="521" y="114" text-anchor="middle" fill="#1f3d5c" transform="rotate(3 521 114)" style="font-family:var(--anzeige);font-weight:400;font-size:26px">DEIN STUDIO</text><text class="t" x="519" y="148" text-anchor="middle" fill="#1f3d5c" transform="rotate(3 519 148)" style="font-family:var(--text);font-weight:800;font-size:16px">bekommt den Betrag</text><text class="t" x="518" y="170" text-anchor="middle" fill="#1f3d5c" transform="rotate(3 518 170)" style="font-family:var(--text);font-weight:800;font-size:16px">auf einmal</text><g transform="rotate(-11 517 262)"><g class="stempel"><path class="l" pathLength="1" fill="none" stroke="#c4421b" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" d="M404 206 L630 218 L622 318 L396 306 Z"/><path class="l" pathLength="1" fill="none" stroke="#c4421b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M418 220 L616 230 L610 304 L410 294 Z"/><text class="t" x="513" y="284" text-anchor="middle" fill="#c4421b" transform="rotate(3 513 284)" style="font-family:var(--anzeige);font-weight:400;font-size:46px">BEZAHLT</text></g></g><path class="f" fill="#fbb316" d="M626 22 L633 40 L652 41 L637 53 L642 72 L626 61 L610 72 L615 53 L600 41 L619 40 Z"/><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M626 22 L633 40 L652 41 L637 53 L642 72 L626 61 L610 72 L615 53 L600 41 L619 40 Z"/></g><image class="szene-figur" href="/assets/start/figur.webp" x="276" y="234" width="100" height="103" preserveAspectRatio="xMidYMid meet"/></svg><svg class="motiv stech szene-svg szene-hoch" viewBox="20 10 600 650" role="img" aria-label="Flash-Motiv: Die Rechnung des Kunden mit Abriss-Streifen „Rate“, ein Pfeil zur Karte des Studios mit dem Stempel „Bezahlt“, dazwischen die Tattoofin-Figur mit Daumen hoch."><path class="f" fill="#fff7e3" d="M44 52 L250 40 L262 300 L56 312 Z"/><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" d="M44 52 L250 40 L262 300 L56 312 Z"/><text class="t" x="152" y="92" text-anchor="middle" fill="#1f3d5c" transform="rotate(-3 152 92)" style="font-family:var(--anzeige);font-weight:400;font-size:26px">DEIN KUNDE</text><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" d="M78 128 L226 120"/><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" d="M80 155 L212 147"/><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" d="M82 182 L198 174"/><text class="t" x="150" y="232" text-anchor="middle" fill="#1f3d5c" transform="rotate(-3 150 232)" style="font-family:var(--text);font-weight:800;font-size:21px">zahlt in Raten*</text><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M62 268 L72 262 L82 268 L92 262 L102 268 L112 262 L122 267 L132 261 L142 266 L152 260 L162 265 L172 259 L182 264 L192 258 L202 263 L212 257 L222 262 L232 256 L242 261 L258 256"/><g><g class="abriss abriss-0"><path class="f" fill="#fbb316" d="M76 278.0 L84 273.0 L92 278.0 L100 273.0 L108 278.0 L116 274.0 L120 354.0 L80 356.0 Z"/><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" d="M76 278.0 L84 273.0 L92 278.0 L100 273.0 L108 278.0 L116 274.0 L120 354.0 L80 356.0 Z"/><text class="t" x="99" y="324.0" text-anchor="middle" fill="#1f3d5c" transform="rotate(-88 99 324.0)" style="font-family:var(--anzeige);font-weight:400;font-size:14px">RATE*</text></g></g><g transform="rotate(4 154 275)"><g class="abriss abriss-1"><path class="f" fill="#fbb316" d="M134 275.5 L142 270.5 L150 275.5 L158 270.5 L166 275.5 L174 271.5 L178 351.5 L138 353.5 Z"/><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" d="M134 275.5 L142 270.5 L150 275.5 L158 270.5 L166 275.5 L174 271.5 L178 351.5 L138 353.5 Z"/><text class="t" x="157" y="321.5" text-anchor="middle" fill="#1f3d5c" transform="rotate(-88 157 321.5)" style="font-family:var(--anzeige);font-weight:400;font-size:14px">RATE*</text></g></g><g transform="translate(26 60) rotate(24 212 273)"><g class="abriss abriss-2"><path class="f" fill="#fbb316" d="M192 273.0 L200 268.0 L208 273.0 L216 268.0 L224 273.0 L232 269.0 L236 349.0 L196 351.0 Z"/><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" d="M192 273.0 L200 268.0 L208 273.0 L216 268.0 L224 273.0 L232 269.0 L236 349.0 L196 351.0 Z"/><text class="t" x="215" y="319.0" text-anchor="middle" fill="#1f3d5c" transform="rotate(-88 215 319.0)" style="font-family:var(--anzeige);font-weight:400;font-size:14px">RATE*</text></g></g><g transform="translate(-34 136) rotate(48 350 176)"><path class="f" fill="#fbb316" d="M282 176 C318 150 350 150 380 168 L374 146 L420 178 L372 206 L378 186 C350 172 320 174 292 196 Z"/><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" d="M282 176 C318 150 350 150 380 168 L374 146 L420 178 L372 206 L378 186 C350 172 320 174 292 196 Z"/></g><g transform="translate(-70 290)"><path class="f" fill="#fff7e3" d="M418 62 L634 74 L624 354 L408 344 Z"/><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" d="M418 62 L634 74 L624 354 L408 344 Z"/><text class="t" x="521" y="114" text-anchor="middle" fill="#1f3d5c" transform="rotate(3 521 114)" style="font-family:var(--anzeige);font-weight:400;font-size:26px">DEIN STUDIO</text><text class="t" x="519" y="148" text-anchor="middle" fill="#1f3d5c" transform="rotate(3 519 148)" style="font-family:var(--text);font-weight:800;font-size:16px">bekommt den Betrag</text><text class="t" x="518" y="170" text-anchor="middle" fill="#1f3d5c" transform="rotate(3 518 170)" style="font-family:var(--text);font-weight:800;font-size:16px">auf einmal</text><g transform="rotate(-11 517 262)"><g class="stempel"><path class="l" pathLength="1" fill="none" stroke="#c4421b" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" d="M404 206 L630 218 L622 318 L396 306 Z"/><path class="l" pathLength="1" fill="none" stroke="#c4421b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M418 220 L616 230 L610 304 L410 294 Z"/><text class="t" x="513" y="284" text-anchor="middle" fill="#c4421b" transform="rotate(3 513 284)" style="font-family:var(--anzeige);font-weight:400;font-size:46px">BEZAHLT</text></g></g><path class="f" fill="#fbb316" d="M626 22 L633 40 L652 41 L637 53 L642 72 L626 61 L610 72 L615 53 L600 41 L619 40 Z"/><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M626 22 L633 40 L652 41 L637 53 L642 72 L626 61 L610 72 L615 53 L600 41 L619 40 Z"/></g><image class="szene-figur" href="/assets/start/figur.webp" x="332" y="58" width="128" height="132" preserveAspectRatio="xMidYMid meet"/></svg>
+      
     </div>
     <div class="held-fuss">
       <a class="knopf" data-hero-pflicht="immer" href="/start.html?utm_source=studios-raten&amp;utm_medium=seite&amp;utm_content=held" data-funnel-oeffnen data-ort="held" aria-haspopup="dialog">7 Tage kostenlos testen</a>
-      <p class="preiszeile" data-hero-pflicht="immer">Danach 49,90&nbsp;€ im Monat · monatlich&nbsp;kündbar</p>
+      <p class="preiszeile" data-hero-pflicht="immer">Heute 0&nbsp;€, 4&nbsp;Angaben. Danach 49,90&nbsp;€ im Monat, monatlich&nbsp;kündbar.</p>
     </div>
   </section>
 
@@ -206,10 +254,9 @@ html.fn-offen body{position:fixed;left:0;right:0;top:var(--sperre-top,0);overflo
         <figcaption>Nachgezeichnet nach dem echten Zahlungseingang.</figcaption>
       </figure>
       <div class="fall-text">
-        <span class="stempel-schild">Echter Fall</span>
         <h2 id="fall-titel">900<span class="eur">€</span> per Klarna.</h2>
-        <p>So lief es am 7. November in einem Studio: Link geschickt, Kunde zahlt per Klarna, das Geld kommt aufs eigene <span class="nw">Stripe-Konto</span>.</p>
-        <p class="klein">Studio anonym. Ob der Kunde in Raten oder später bezahlt hat, sehen wir nicht; Klarna entscheidet bei jedem Kunden selbst.</p>
+        <p>7.&nbsp;November, ein Studio: Link geschickt, Kunde zahlt per Klarna, der Betrag kommt aufs eigene <span class="nw">Stripe-Konto</span>.</p>
+        <p class="klein">Studio anonym · Klarna-Zahlart unbekannt.</p>
       </div>
     </div>
   </section>
@@ -228,7 +275,7 @@ html.fn-offen body{position:fixed;left:0;right:0;top:var(--sperre-top,0);overflo
       </li>
       <li class="zeigen-bild zeigen-zahlseite">
         <span class="handy-rahmen"><img src="/assets/start/handy-kunde.webp?v=20261116d" width="600" height="1300" loading="lazy" decoding="async" alt="Echte Tattoofin-Zahlseite am Handy: Hi Lena, deine Zahlung an Ink Studio Bamberg, Schritt 1 von 2, 2.000,00 Euro, Sleeve linker Arm. Darunter: Im nächsten Schritt siehst du die Zahlarten, zum Beispiel Karte, Apple Pay oder Klarna. Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, nicht Tattoofin. Achtung! Kreditaufnahme kostet Geld. Beispieldaten."></span>
-        <p><b>3. Dein Kunde zahlt am Handy.</b> Karte, Apple&nbsp;Pay, Google&nbsp;Pay oder Klarna*, auf einer Seite mit deinem Studionamen.</p>
+        <p><b>3. Dein Kunde zahlt am Handy.</b> Karte, Apple&nbsp;Pay, Google&nbsp;Pay oder Klarna, auf einer Seite mit deinem Studionamen.</p>
       </li>
       <li class="zeigen-bild">
         <span class="handy-rahmen"><img src="/assets/start/kampagne/app-mitteilung.webp" width="600" height="547" loading="lazy" decoding="async" alt="Echte Mitteilung der Tattoofin-App auf dem iPhone: Zahlung eingegangen, 480,00 Euro, Unterarm Blackwork. Beispieldaten."></span>
@@ -239,7 +286,10 @@ html.fn-offen body{position:fixed;left:0;right:0;top:var(--sperre-top,0);overflo
         <p><b>5. Du siehst alles auf einen Blick.</b> Offen, bezahlt und dein Umsatz im Monat.</p>
       </li>
     </ol>
-    <p class="raten-fn" data-zaehlt-nicht>*Raten über Klarna, nach deren Bonitätsprüfung. <b>Achtung! Kreditaufnahme kostet Geld.</b></p>
+    <div class="zeigen-stand" data-zeigen-stand hidden>
+      <span class="zeigen-zahl" aria-hidden="true">1/5</span>
+      <span class="zeigen-punkte"><button type="button" data-zeigen-punkt="0" aria-label="Bild 1 von 5 zeigen" aria-current="true"><i></i></button><button type="button" data-zeigen-punkt="1" aria-label="Bild 2 von 5 zeigen"><i></i></button><button type="button" data-zeigen-punkt="2" aria-label="Bild 3 von 5 zeigen"><i></i></button><button type="button" data-zeigen-punkt="3" aria-label="Bild 4 von 5 zeigen"><i></i></button><button type="button" data-zeigen-punkt="4" aria-label="Bild 5 von 5 zeigen"><i></i></button></span>
+    </div>
   </section>
 
   <section class="geld" id="geld" aria-labelledby="geld-titel">
@@ -263,12 +313,11 @@ html.fn-offen body{position:fixed;left:0;right:0;top:var(--sperre-top,0);overflo
 
   <section class="testwoche" id="testwoche" aria-labelledby="testwoche-titel">
     <h2 id="testwoche-titel">So laufen deine 7&nbsp;Tage.</h2>
-    <ol>
-      <li><b>Anmelden, heute 0&nbsp;€.</b> Vier Angaben, dann hinterlegst du deine Karte sicher bei Stripe.</li>
-      <li><b>Einrichten mit unserem Team.</b> Du legst dein Stripe-Konto an, wir machen mit dir eine Testzahlung.</li>
-      <li><b>Ersten Link schicken.</b> Dein Kunde wählt am Handy Karte, Apple&nbsp;Pay, Google&nbsp;Pay oder&nbsp;Klarna.</li>
+    <ol class="streifen">
+      <li class="blatt"><span class="blatt-tag">Tag 1</span><p><b>Anmelden, heute 0&nbsp;€.</b> Vier Angaben, dann hinterlegst du deine Karte sicher bei Stripe.</p></li>
+      <li class="blatt"><span class="blatt-tag">Einrichtung</span><p><b>Mit unserem Team.</b> Du legst dein Stripe-Konto an, wir machen mit dir eine Testzahlung. Dann schickst du deinen ersten Link.</p></li>
+      <li class="blatt blatt-ab"><span class="blatt-tag">Tag 7</span><p><b>Kündigst du in den 7&nbsp;Tagen, zahlst du nichts.</b> Danach 49,90&nbsp;€ im Monat inkl. MwSt., monatlich kündbar.</p></li>
     </ol>
-    <p class="zusage">Kündigst du in den 7&nbsp;Tagen, zahlst du nichts. Danach 49,90&nbsp;€ im Monat inkl. MwSt., monatlich kündbar.</p>
   </section>
 
   <section class="preis" id="preis" aria-labelledby="preis-titel">
@@ -286,23 +335,24 @@ html.fn-offen body{position:fixed;left:0;right:0;top:var(--sperre-top,0);overflo
       </div>
       <div class="beleg">
         <table>
-          <caption>Dein Kunde zahlt 4.000<span class="eur">€</span> per Klarna</caption>
+          <caption>Beispiel: Sleeve für 2.000<span class="eur">€</span> per Klarna</caption>
           <tbody>
-            <tr><th scope="row">Stripe-Gebühr Klarna</th><td>ab ca. 120&nbsp;€</td></tr>
-            <tr><th scope="row">An Tattoofin</th><td>0&nbsp;€</td></tr>
-            <tr class="summe"><th scope="row">Bei dir</th><td>bis ca. 3.880&nbsp;€</td></tr>
+            <tr><th scope="row">Stripe-Gebühr Klarna</th><td>ab ca. 60&nbsp;€</td></tr>
+            <tr><th scope="row">Provision</th><td>0&nbsp;€</td></tr>
+            <tr class="summe"><th scope="row">Bei dir</th><td>bis ca. 1.940&nbsp;€</td></tr>
+          </tbody>
+          <tbody class="bon-dazu">
+            <tr><th scope="row">Einrichtung</th><td>0&nbsp;€</td></tr>
+            <tr><th scope="row" colspan="2">Monatlich kündbar</th></tr>
+            <tr><th scope="row" colspan="2">Unser Team richtet’s mit dir ein</th></tr>
           </tbody>
         </table>
-        <p class="beleg-hinweis">Mit Karte ab ca. 60&nbsp;€ Gebühr. Keine Garantie.</p>
+        <p class="beleg-hinweis">Mit Karte ab ca. 30&nbsp;€ Stripe-Gebühr. Keine Garantie.</p>
       </div>
       <div class="preis-rest">
-        <ul class="sticker-reihe" aria-label="Das gehört dazu">
-          <li>Keine Provision</li>
-          <li>Keine Einrichtungsgebühr</li>
-          <li>Monatlich kündbar</li>
-          <li>Unser Team richtet’s mit dir ein</li>
-        </ul>
-        <div class="wege"><a class="knopf" href="/start.html?utm_source=studios-raten&amp;utm_medium=seite&amp;utm_content=preis" data-funnel-oeffnen data-ort="preis" aria-haspopup="dialog">7 Tage kostenlos testen</a><a class="wa" href="/vertrag.html">Vertrag vorab lesen</a></div>
+        <a class="knopf" href="/start.html?utm_source=studios-raten&amp;utm_medium=seite&amp;utm_content=preis" data-funnel-oeffnen data-ort="preis" aria-haspopup="dialog">7 Tage kostenlos testen</a>
+        <p class="preiszeile">Heute 0&nbsp;€, 4&nbsp;Angaben. Danach 49,90&nbsp;€ im Monat, monatlich&nbsp;kündbar.</p>
+        <a class="wa" href="/vertrag.html">Vertrag vorab lesen</a>
       </div>
     </div>
   </section>
@@ -310,7 +360,7 @@ html.fn-offen body{position:fixed;left:0;right:0;top:var(--sperre-top,0);overflo
   <section class="fragen" id="fragen" aria-labelledby="fragen-titel">
     <h2 id="fragen-titel">Noch Fragen?</h2>
     <div class="fragen-liste">
-      <details class="frage"><summary><span>Bekommt jeder Kunde Raten*?</span><span class="zu" aria-hidden="true"><svg class="motiv " viewBox="-4 -4 108 108" aria-hidden="true" focusable="false" ><path class="f" fill="#fbb316" d="M50.0 6.0 L61.4 36.4 L93.7 37.8 L68.4 58.0 L77.0 89.2 L50.0 71.3 L23.0 89.2 L31.6 58.0 L6.3 37.8 L38.6 36.4 Z" /><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" d="M50.0 6.0 L61.4 36.4 L93.7 37.8 L68.4 58.0 L77.0 89.2 L50.0 71.3 L23.0 89.2 L31.6 58.0 L6.3 37.8 L38.6 36.4 Z" /><path class="f" fill="#1f3d5c" d="M50 52 L50.0 6.0 L61.4 36.4 Z M50 52 L93.7 37.8 L68.4 58.0 Z M50 52 L77.0 89.2 L50.0 71.3 Z M50 52 L23.0 89.2 L31.6 58.0 Z M50 52 L6.3 37.8 L38.6 36.4 Z " /></svg></span></summary><div class="antwort"><p>Nein. Klarna prüft jeden Kunden selbst. Sagt Klarna nein, zahlt dein Kunde mit Karte, Apple Pay oder Google Pay.</p><p class="raten-fn">*Raten über Klarna, nach deren Bonitätsprüfung. <b>Achtung! Kreditaufnahme kostet Geld.</b></p></div></details>
+      <details class="frage"><summary><span>Bekommt jeder Kunde Klarna?</span><span class="zu" aria-hidden="true"><svg class="motiv " viewBox="-4 -4 108 108" aria-hidden="true" focusable="false" ><path class="f" fill="#fbb316" d="M50.0 6.0 L61.4 36.4 L93.7 37.8 L68.4 58.0 L77.0 89.2 L50.0 71.3 L23.0 89.2 L31.6 58.0 L6.3 37.8 L38.6 36.4 Z" /><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" d="M50.0 6.0 L61.4 36.4 L93.7 37.8 L68.4 58.0 L77.0 89.2 L50.0 71.3 L23.0 89.2 L31.6 58.0 L6.3 37.8 L38.6 36.4 Z" /><path class="f" fill="#1f3d5c" d="M50 52 L50.0 6.0 L61.4 36.4 Z M50 52 L93.7 37.8 L68.4 58.0 Z M50 52 L77.0 89.2 L50.0 71.3 Z M50 52 L23.0 89.2 L31.6 58.0 Z M50 52 L6.3 37.8 L38.6 36.4 Z " /></svg></span></summary><div class="antwort"><p>Nein. Klarna prüft jeden Kunden selbst. Sagt Klarna nein, zahlt dein Kunde mit Karte, Apple Pay oder Google Pay.</p></div></details>
 <details class="frage"><summary><span>Ich hab schon SumUp &amp; Co.</span><span class="zu" aria-hidden="true"><svg class="motiv " viewBox="-4 -4 108 108" aria-hidden="true" focusable="false" ><path class="f" fill="#fbb316" d="M50.0 6.0 L61.4 36.4 L93.7 37.8 L68.4 58.0 L77.0 89.2 L50.0 71.3 L23.0 89.2 L31.6 58.0 L6.3 37.8 L38.6 36.4 Z" /><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" d="M50.0 6.0 L61.4 36.4 L93.7 37.8 L68.4 58.0 L77.0 89.2 L50.0 71.3 L23.0 89.2 L31.6 58.0 L6.3 37.8 L38.6 36.4 Z" /><path class="f" fill="#1f3d5c" d="M50 52 L50.0 6.0 L61.4 36.4 Z M50 52 L93.7 37.8 L68.4 58.0 Z M50 52 L77.0 89.2 L50.0 71.3 Z M50 52 L23.0 89.2 L31.6 58.0 Z M50 52 L6.3 37.8 L38.6 36.4 Z " /></svg></span></summary><div class="antwort"><p>Behalt es. Dein Kartengerät kassiert an der Theke. Tattoofin kassiert, wenn der Kunde nicht da ist: Anzahlung vorab, Rest per Link, Gutscheine.</p></div></details>
 <details class="frage"><summary><span>Und wenn der Kunde nicht zahlt?</span><span class="zu" aria-hidden="true"><svg class="motiv " viewBox="-4 -4 108 108" aria-hidden="true" focusable="false" ><path class="f" fill="#fbb316" d="M50.0 6.0 L61.4 36.4 L93.7 37.8 L68.4 58.0 L77.0 89.2 L50.0 71.3 L23.0 89.2 L31.6 58.0 L6.3 37.8 L38.6 36.4 Z" /><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" d="M50.0 6.0 L61.4 36.4 L93.7 37.8 L68.4 58.0 L77.0 89.2 L50.0 71.3 L23.0 89.2 L31.6 58.0 L6.3 37.8 L38.6 36.4 Z" /><path class="f" fill="#1f3d5c" d="M50 52 L50.0 6.0 L61.4 36.4 Z M50 52 L93.7 37.8 L68.4 58.0 Z M50 52 L77.0 89.2 L50.0 71.3 Z M50 52 L23.0 89.2 L31.6 58.0 Z M50 52 L6.3 37.8 L38.6 36.4 Z " /></svg></span></summary><div class="antwort"><p>Zahlt dein Kunde seine Raten* nicht, trägt laut Stripe Klarna das Risiko. Reklamiert er das Tattoo bei Klarna oder seiner Bank, kann ein Streitfall entstehen. Dann reichst du deine Nachweise ein, zum Beispiel seine gespeicherte Bestätigung deiner Anzahlungsbedingungen. Unser Team hilft dir dabei.</p><p class="raten-fn">*Raten über Klarna, nach deren Bonitätsprüfung. <b>Achtung! Kreditaufnahme kostet Geld.</b></p></div></details>
 <details class="frage"><summary><span>Ist Tattoofin der Kreditgeber?</span><span class="zu" aria-hidden="true"><svg class="motiv " viewBox="-4 -4 108 108" aria-hidden="true" focusable="false" ><path class="f" fill="#fbb316" d="M50.0 6.0 L61.4 36.4 L93.7 37.8 L68.4 58.0 L77.0 89.2 L50.0 71.3 L23.0 89.2 L31.6 58.0 L6.3 37.8 L38.6 36.4 Z" /><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" d="M50.0 6.0 L61.4 36.4 L93.7 37.8 L68.4 58.0 L77.0 89.2 L50.0 71.3 L23.0 89.2 L31.6 58.0 L6.3 37.8 L38.6 36.4 Z" /><path class="f" fill="#1f3d5c" d="M50 52 L50.0 6.0 L61.4 36.4 Z M50 52 L93.7 37.8 L68.4 58.0 Z M50 52 L77.0 89.2 L50.0 71.3 Z M50 52 L23.0 89.2 L31.6 58.0 Z M50 52 L6.3 37.8 L38.6 36.4 Z " /></svg></span></summary><div class="antwort"><p>Nein. Den Vertrag über die Raten* schließt dein Kunde mit Klarna. Du berätst nicht zu Krediten und sagst keine Raten* zu.</p><p class="raten-fn">*Raten über Klarna, nach deren Bonitätsprüfung. <b>Achtung! Kreditaufnahme kostet Geld.</b></p></div></details>
@@ -324,8 +374,9 @@ html.fn-offen body{position:fixed;left:0;right:0;top:var(--sperre-top,0);overflo
 
   <section class="schluss-raten" aria-labelledby="schluss-titel">
     <h2 id="schluss-titel">Nächstes großes Motiv? Schick den&nbsp;Link.</h2>
-    <p class="preiszeile">7 Tage kostenlos, danach 49,90&nbsp;€ im Monat inkl. MwSt. · monatlich kündbar · nur für Unternehmer</p>
-    <div class="wege"><a class="knopf" href="/start.html?utm_source=studios-raten&amp;utm_medium=seite&amp;utm_content=schluss" data-funnel-oeffnen data-ort="schluss" aria-haspopup="dialog">7 Tage kostenlos testen</a><a class="wa" href="https://wa.me/491624502375?text=Hi%20Tattoofin-Team%2C%20ich%20habe%20eure%20Anzeige%20zur%20Ratenzahlung%20gesehen%2C%20habe%20ein%20Tattoo-Studio%20und%20eine%20Frage%3A" data-umami-event="whatsapp-schluss">Erst fragen? WhatsApp</a></div>
+    <a class="knopf" href="/start.html?utm_source=studios-raten&amp;utm_medium=seite&amp;utm_content=schluss" data-funnel-oeffnen data-ort="schluss" aria-haspopup="dialog">7 Tage kostenlos testen</a>
+    <p class="preiszeile">Heute 0&nbsp;€, 4&nbsp;Angaben. Danach 49,90&nbsp;€ im Monat, monatlich&nbsp;kündbar.</p>
+    <a class="wa" href="https://wa.me/491624502375?text=Hi%20Tattoofin-Team%2C%20ich%20habe%20eure%20Anzeige%20zur%20Ratenzahlung%20gesehen%2C%20habe%20ein%20Tattoo-Studio%20und%20eine%20Frage%3A" data-umami-event="whatsapp-schluss">Erst fragen? WhatsApp</a>
   </section>
   </main>
 
@@ -348,7 +399,7 @@ html.fn-offen body{position:fixed;left:0;right:0;top:var(--sperre-top,0);overflo
 <dialog class="fn" data-funnel aria-labelledby="fn-stand">
   <div class="fn-kopf">
     <button type="button" data-funnel-zurueck aria-label="Zurück" hidden><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-    <p class="fn-stand" id="fn-stand" aria-live="polite">Schritt 1 von 4</p>
+    <div class="fn-mitte"><p class="fn-stand" id="fn-stand" aria-live="polite">Schritt 1 von 5</p><p class="fn-kopf-titel" data-funnel-kopf-titel aria-hidden="true"></p></div>
     <button type="button" data-funnel-zu aria-label="Schließen"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></button>
     <div class="fn-balken" aria-hidden="true"><i></i></div>
   </div>
@@ -376,11 +427,12 @@ html.fn-offen body{position:fixed;left:0;right:0;top:var(--sperre-top,0);overflo
       </section>
       <section data-funnel-schritt="4" aria-labelledby="fn-t4" hidden>
         <h2 id="fn-t4" tabindex="-1">Wohin kommt dein&nbsp;Login?</h2>
-        <p class="fn-danach">Danach noch ein Schritt: Vertrag bestätigen und deine Karte sicher bei Stripe hinterlegen. <b>Heute 0&nbsp;€.</b> Nach den 7&nbsp;Tagen 49,90&nbsp;€ im Monat inkl. MwSt., monatlich kündbar. Kündigst du vorher, zahlst du nichts.</p>
+        <p class="fn-danach">Schritt 5: Vertrag &amp; Karte bei Stripe, heute 0&nbsp;€.</p>
         <div class="fn-feld"><div class="fn-lab"><label for="fn-email">E-Mail</label><span class="fn-tipp" id="fn-email-t">Hierhin kommt dein Login.</span></div><input id="fn-email" name="email" type="email" autocomplete="email" required aria-describedby="fn-email-f fn-email-t" inputmode="email" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next"><p class="fn-fehler" id="fn-email-f" hidden></p></div>
         <div class="fn-feld"><div class="fn-lab"><label for="fn-telefon">Handynummer (WhatsApp)</label><span class="fn-tipp" id="fn-telefon-t">Für die Einrichtung.</span></div><input id="fn-telefon" name="telefon" type="tel" autocomplete="tel" required aria-describedby="fn-telefon-f fn-telefon-t" inputmode="tel" enterkeyhint="go"><p class="fn-fehler" id="fn-telefon-f" hidden></p></div>
         <p class="fn-pflicht" data-funnel-pflicht>Deine Angaben nutzen wir für dein Konto und die Einrichtung. <a href="/datenschutz.html" target="_blank" rel="noopener">Datenschutz</a></p>
-        <button type="submit" class="knopf fn-aktion" data-funnel-aktion>Weiter · heute 0&nbsp;€</button>
+        <button type="submit" class="knopf fn-aktion" data-funnel-aktion>Weiter zu Schritt 5</button>
+        <p class="fn-bedingung">Heute 0&nbsp;€. Nach den 7&nbsp;Tagen 49,90&nbsp;€ im Monat inkl. MwSt., monatlich kündbar. Kündigst du vorher, zahlst du nichts.</p>
       </section>
     </div>
   </form>
@@ -392,6 +444,14 @@ html.fn-offen body{position:fixed;left:0;right:0;top:var(--sperre-top,0);overflo
 <script>/* Consent-Leiste offen: erster Bildschirm schrumpft um ihre Höhe, damit Überschrift, Knopf und Preiszeile sichtbar bleiben (E14) */
 (function(){var d=document.documentElement;function m(){var c=document.querySelector('.tf-cc'),h=0;if(c){c.setAttribute('data-consent','');var r=c.getBoundingClientRect();if(document.body.classList.contains('tf-cc-offen')&&r.height>0&&getComputedStyle(c).display!=='none'){h=Math.max(0,Math.round(innerHeight-r.top))}}d.style.setProperty('--banner-h',h+'px')}
 new MutationObserver(m).observe(document.body,{attributes:true,attributeFilter:['class'],childList:true});addEventListener('resize',m);m();})();</script>
+<script>/* So läuft eine Zahlung: Positionsanzeige 1/5 und Punkte unter dem Wischband (nur solange es wischt) */
+(function(){var r=document.querySelector('.zeigen-reihe'),st=document.querySelector('[data-zeigen-stand]');if(!r||!st)return;
+var bs=[].slice.call(r.children),pk=[].slice.call(st.querySelectorAll('[data-zeigen-punkt]')),z=st.querySelector('.zeigen-zahl'),akt=-1;
+function idx(){var w=bs.length>1?bs[1].offsetLeft-bs[0].offsetLeft:1;return Math.max(0,Math.min(bs.length-1,Math.round(r.scrollLeft/(w||1))))}
+function setz(){var i=idx();if(i===akt)return;akt=i;z.textContent=(i+1)+'/'+bs.length;pk.forEach(function(b,j){if(j===i)b.setAttribute('aria-current','true');else b.removeAttribute('aria-current')})}
+var t=0;r.addEventListener('scroll',function(){cancelAnimationFrame(t);t=requestAnimationFrame(setz)},{passive:true});
+pk.forEach(function(b,j){b.addEventListener('click',function(){var ruhig=matchMedia('(prefers-reduced-motion: reduce)').matches;r.scrollTo({left:bs[j].offsetLeft-bs[0].offsetLeft,behavior:ruhig?'auto':'smooth'})})});
+st.hidden=false;setz();})();</script>
 <script>/* Funnel nach dem Schilling-Konzept, Kapitel 13 (Muster scripts/funnel-muster.html, angepasst an Tattoofin) */
 (() => {
   const dlg = document.querySelector('[data-funnel]');
@@ -399,6 +459,8 @@ new MutationObserver(m).observe(document.body,{attributes:true,attributeFilter:[
   const root = document.documentElement, vv = window.visualViewport;
   const form = dlg.querySelector('form'), inhalt = dlg.querySelector('.fn-inhalt');
   const schritte = [...dlg.querySelectorAll('[data-funnel-schritt]')], gesamt = schritte.length;
+  const ANZEIGE = gesamt + 1;                                          // Schritt 5 = Vertrag & Karte bei Stripe (/start), zählt ehrlich mit
+  const kopfTitel = dlg.querySelector('[data-funnel-kopf-titel]');
   const stand = dlg.querySelector('.fn-stand'), balken = dlg.querySelector('.fn-balken i'), zurueck = dlg.querySelector('[data-funnel-zurueck]');
   const ruhig = matchMedia('(prefers-reduced-motion: reduce)');
   const antworten = {};                                               // nur im Arbeitsspeicher (13 §11)
@@ -466,8 +528,9 @@ new MutationObserver(m).observe(document.body,{attributes:true,attributeFilter:[
     aktuell = String(n);
     schritte.forEach(s => { s.hidden = s.dataset.funnelSchritt !== aktuell; });
     const nr = Number(aktuell);
-    stand.textContent = 'Schritt ' + nr + ' von ' + gesamt;
-    balken.style.transform = 'scaleX(' + nr / gesamt + ')';
+    stand.textContent = 'Schritt ' + nr + ' von ' + ANZEIGE;
+    balken.style.transform = 'scaleX(' + nr / ANZEIGE + ')';
+    const h = aktiv().querySelector('h2'); if (kopfTitel && h) kopfTitel.textContent = h.textContent.replace(/\s+/g, ' ').trim();
     zurueck.hidden = nr === 1;
     if (nr === 3) merkzettel();
     if (push) { history.pushState({ fn: aktuell, i: ++tiefe }, ''); if (nr > 1) track('funnel-schritt-' + nr); }

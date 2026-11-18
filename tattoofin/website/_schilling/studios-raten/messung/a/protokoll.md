@@ -1,6 +1,6 @@
 # Hero-Messung http://localhost:4791/studios-raten.html
 
-Datum 2026-11-18 03:29 · Commit - · Toleranz ±8 px
+Datum 2026-11-18 12:49 · Commit - · Toleranz ±8 px
 
 Wörter im Hero: 30 (Budget 20–30)
 
@@ -28,22 +28,15 @@ Wörter im Hero: 30 (Budget 20–30)
 | 9 | Desktop | 1440×900 | mit-banner | 847 | +0 | ja | - | 9-1440x900-mit-banner.png |
 | 10 | Desktop | 1920×1080 | ohne-banner | 1027 | +0 | ja | - | 10-1920x1080-ohne-banner.png |
 | 10 | Desktop | 1920×1080 | mit-banner | 1027 | +0 | ja | - | 10-1920x1080-mit-banner.png |
-| x1 | Zusatzgröße | 667×375 | ohne-banner | 322 | +0 | ja | - | x1-667x375-ohne-banner.png |
-| x1 | Zusatzgröße | 667×375 | mit-banner | 322 | +0 | ja | - | x1-667x375-mit-banner.png |
-| x2 | Zusatzgröße | 844×390 | ohne-banner | 337 | +0 | ja | - | x2-844x390-ohne-banner.png |
-| x2 | Zusatzgröße | 844×390 | mit-banner | 337 | +0 | ja | - | x2-844x390-mit-banner.png |
 | 2b | iPhone 13/14 (Safari sichtbar) | 390×664 | ohne-banner-reduced-motion | 611 | +0 | ja | - | 2b-390x664-ohne-banner-reduced-motion.png |
 | 2b | iPhone 13/14 (Safari sichtbar) | 390×664 | ohne-banner-dunkel | 611 | +0 | ja | - | 2b-390x664-ohne-banner-dunkel.png |
 
 Schrift unter 16 px (prüfen, ob Stützsatz betroffen):
-- p 11.5px: "*Raten über Klarna, nach deren"
 - p 12px: "*Raten über Klarna, nach deren"
 - p 13px: "*Raten über Klarna, nach deren"
-- p 13px: "Danach 49,90 € im Monat · mona"
-- p 13px: "Link schicken, dein Kunde kann"
-- p 15.84px: "Danach 49,90 € im Monat · mona"
-- p 15px: "Danach 49,90 € im Monat · mona"
+- p 15.84px: "Heute 0 €, 4 Angaben. Danach 4"
+- p 15px: "Heute 0 €, 4 Angaben. Danach 4"
 
 Gezählter Text:
 
-> Raten* für deine Kunden. Dein Geld auf einmal. Link schicken, dein Kunde kann per Klarna zahlen. Tattoofin nimmt keine Provision. 7 Tage kostenlos testen Danach 49,90 € im Monat · monatlich kündbar
+> Raten* für deine Kunden. Dein Geld auf einmal. Für Tattoo-Studios: Link schicken, Kunde zahlt per Klarna. 7 Tage kostenlos testen Heute 0 €, 4 Angaben. Danach 49,90 € im Monat, monatlich kündbar.

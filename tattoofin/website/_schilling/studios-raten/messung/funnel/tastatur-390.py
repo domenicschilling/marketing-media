@@ -64,14 +64,15 @@ def main():
         pg.wait_for_timeout(250)
         y0 = pg.evaluate("window.__yKlick")
         ok("Funnel offen (dialog, modal)", pg.evaluate("document.querySelector('[data-funnel]').open && document.querySelector('[data-funnel]').matches(':modal')"))
-        ok("Fortschritt als Text", pg.inner_text(".fn-stand").strip() == "Schritt 1 von 4", pg.inner_text(".fn-stand"))
+        ok("Fortschritt als Text", pg.inner_text(".fn-stand").strip() == "Schritt 1 von 5", pg.inner_text(".fn-stand"))
+        ok("Schritt-Überschrift klein im Kopf", " ".join(pg.inner_text("[data-funnel-kopf-titel]").split()).lower() == " ".join(pg.text_content("[data-funnel-schritt='1'] h2").split()).lower(), pg.inner_text("[data-funnel-kopf-titel]"))
         ok("Zurück im Schritt 1 verborgen", pg.locator("[data-funnel-zurueck]").is_hidden())
         ok("Kein Textfeld in Schritt 1", pg.locator("[data-funnel-schritt]:not([hidden]) input").count() == 0)
         ok("Fokus im Funnel", pg.evaluate("document.querySelector('[data-funnel]').contains(document.activeElement)"))
         axe(pg, "Schritt 1")
         pg.screenshot(path=str(HIER / f"{a.motor}-390-schritt-1.png"))
         pg.locator("[data-funnel-schritt]:not([hidden]) [data-funnel-antwort]").first.click(); pg.wait_for_timeout(350)
-        ok("Schritt 2 nach Antippen", pg.inner_text(".fn-stand").strip() == "Schritt 2 von 4")
+        ok("Schritt 2 nach Antippen", pg.inner_text(".fn-stand").strip() == "Schritt 2 von 5")
         axe(pg, "Schritt 2")
         pg.screenshot(path=str(HIER / f"{a.motor}-390-schritt-2.png"))
         pg.locator("[data-funnel-schritt]:not([hidden]) [data-funnel-antwort]").first.click(); pg.wait_for_timeout(350)
@@ -79,6 +80,8 @@ def main():
            str(pg.evaluate("document.activeElement && document.activeElement.id")))
         ok("Merkzettel passt zur Antwort", "Bargeld" in pg.inner_text("[data-funnel-merk-text]") and "Raten*" in pg.inner_text("[data-funnel-merk-text]"),
            pg.inner_text("[data-funnel-merk-text]"))
+        ok("Tastatur offen: Merkzettel eingeklappt", pg.evaluate("(() => { __kb(420, 0); return new Promise(r => setTimeout(() => r(getComputedStyle(document.querySelector('[data-funnel-merk]')).display === 'none'), 120)); })()"))
+        pg.evaluate(f"__kb({H}, 0)"); pg.wait_for_timeout(100)
         axe(pg, "Schritt 3")
 
         def tastatur(schritt):
@@ -123,17 +126,21 @@ def main():
         tastatur(3)
         # Leeres Feld: Fehler am Feld, kein Weiter
         pg.fill("#fn-inhaber", ""); pg.click("[data-funnel-schritt='3'] [data-funnel-weiter]"); pg.wait_for_timeout(150)
-        ok("Leeres Feld: Fehler am Feld, Schritt bleibt", pg.inner_text(".fn-stand").strip() == "Schritt 3 von 4" and pg.is_visible("#fn-inhaber-f")
+        ok("Leeres Feld: Fehler am Feld, Schritt bleibt", pg.inner_text(".fn-stand").strip() == "Schritt 3 von 5" and pg.is_visible("#fn-inhaber-f")
            and pg.get_attribute("#fn-inhaber", "aria-invalid") == "true" and pg.evaluate("document.activeElement.id") == "fn-inhaber")
         pg.fill("#fn-inhaber", TEST["inhaber"])
         pg.click("[data-funnel-schritt='3'] [data-funnel-weiter]"); pg.wait_for_timeout(250)
-        ok("Schritt 4, E-Mail fokussiert", pg.inner_text(".fn-stand").strip() == "Schritt 4 von 4" and pg.evaluate("document.activeElement.id") == "fn-email")
+        ok("Schritt 4, E-Mail fokussiert", pg.inner_text(".fn-stand").strip() == "Schritt 4 von 5" and pg.evaluate("document.activeElement.id") == "fn-email")
+        ok("Schritt 4: Balken nicht voll (4/5)", abs(pg.evaluate("document.querySelector('.fn-balken i').getBoundingClientRect().width / document.querySelector('.fn-balken').clientWidth") - 0.8) < 0.03)
+        ok("Schritt 4: Ausblick auf Schritt 5 in einer Zeile", "Schritt 5" in pg.inner_text("[data-funnel-schritt='4'] .fn-danach") and pg.evaluate(
+            "(() => { const e = document.querySelector('[data-funnel-schritt=\"4\"] .fn-danach'); return e.getClientRects().length === 1 && e.getBoundingClientRect().height < parseFloat(getComputedStyle(e).lineHeight) * 1.5; })()"))
+        ok("Schritt 4: Knopf führt zu Schritt 5", "schritt 5" in pg.text_content("[data-funnel-schritt='4'] [type=submit]").lower())
         axe(pg, "Schritt 4")
         pg.screenshot(path=str(HIER / f"{a.motor}-390-schritt-4.png"))
         tastatur(4)
         # Zurück (Browser/Handy) = ein Schritt, Antworten bleiben
         pg.go_back(); pg.wait_for_timeout(300)
-        ok("Handy-Zurück: ein Schritt zurück, Funnel offen, Angaben bleiben", pg.inner_text(".fn-stand").strip() == "Schritt 3 von 4"
+        ok("Handy-Zurück: ein Schritt zurück, Funnel offen, Angaben bleiben", pg.inner_text(".fn-stand").strip() == "Schritt 3 von 5"
            and pg.evaluate("document.querySelector('[data-funnel]').open") and pg.input_value("#fn-firma") == TEST["firma"])
         # Fokusfalle
         raus = 0
@@ -148,7 +155,7 @@ def main():
         ok("Scrollposition wie vor dem Öffnen, Sperre weg", pg.evaluate("scrollY") == y0 and pg.evaluate("getComputedStyle(document.body).position") != "fixed")
         # Wieder öffnen: setzt beim letzten Schritt fort
         pg.locator("[data-funnel-oeffnen]").first.click(); pg.wait_for_timeout(250)
-        ok("Wieder öffnen: letzter Schritt, Angaben noch da", pg.inner_text(".fn-stand").strip() == "Schritt 3 von 4" and pg.input_value("#fn-inhaber") == TEST["inhaber"])
+        ok("Wieder öffnen: letzter Schritt, Angaben noch da", pg.inner_text(".fn-stand").strip() == "Schritt 3 von 5" and pg.input_value("#fn-inhaber") == TEST["inhaber"])
         pg.click("[data-funnel-schritt='3'] [data-funnel-weiter]"); pg.wait_for_timeout(250)
         # Übergabe an /start
         with pg.expect_navigation():

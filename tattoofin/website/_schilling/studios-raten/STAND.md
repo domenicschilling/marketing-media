@@ -5,6 +5,7 @@
 **Erledigt**
 - Seite `public/studios-raten.html` (Entwurf A „Stempel“, von Domenic gewählt), gebaut mit `python3 -I _schilling/studios-raten/bauen.py` (übernimmt Fall, Preis, Fragen aus `public/studios.html`).
 - Abnahme `npm run abnahme -- <url> --soll "49,90 €;"` BESTANDEN (12 Geräte, axe, Beträge). Hero-Messung 28/28, Gutachter- und Werberecht-Befunde eingearbeitet (`bericht.md`).
+- 18.11. nachmittags: Gutachter-Befunde Runde 2 umgesetzt (Funnel 1–5 mit Stripe als Schritt 5, Mikrozeile an allen Knöpfen, Bon 2.000 €, Kalenderstreifen, Figur in der Szene, Desktop frei von der Consent-Karte); Details `bericht.md`. Vorschau-Deploy dafür NICHT erneuert.
 - Vorschau (Entwurf, kein Produktiv-Deploy): https://raten-schilling--tattoofin-vorschau.netlify.app/studios-raten
 - Branch `claude/tattoofin-lp-raten-schilling` (Repo marketing-media), Arbeitskopie `~/marketing-media-tf-raten-schilling` (sparse, nur `tattoofin/website`).
 

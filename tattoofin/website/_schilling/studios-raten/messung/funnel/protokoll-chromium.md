@@ -2,6 +2,7 @@
 
 OK   Funnel offen (dialog, modal)
 OK   Fortschritt als Text
+OK   Schritt-Überschrift klein im Kopf
 OK   Zurück im Schritt 1 verborgen
 OK   Kein Textfeld in Schritt 1
 OK   Fokus im Funnel
@@ -10,6 +11,7 @@ OK   Schritt 2 nach Antippen
 OK   axe Schritt 2: 0 Verstöße
 OK   Schritt 3 nach Antippen, erstes Feld fokussiert
 OK   Merkzettel passt zur Antwort
+OK   Tastatur offen: Merkzettel eingeklappt
 OK   axe Schritt 3: 0 Verstöße
 OK   fn-firma: Schrift >= 16 px
 OK   fn-firma: autocomplete
@@ -42,6 +44,9 @@ OK   fn-inhaber Fall D Fenster 390x420: Feld und Knopf sichtbar
 OK   Schritt 3 Fall C: Tastatur zu, Funnel wieder voll
 OK   Leeres Feld: Fehler am Feld, Schritt bleibt
 OK   Schritt 4, E-Mail fokussiert
+OK   Schritt 4: Balken nicht voll (4/5)
+OK   Schritt 4: Ausblick auf Schritt 5 in einer Zeile
+OK   Schritt 4: Knopf führt zu Schritt 5
 OK   axe Schritt 4: 0 Verstöße
 OK   fn-email: Schrift >= 16 px
 OK   fn-email: autocomplete

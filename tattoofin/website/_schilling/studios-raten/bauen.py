@@ -31,8 +31,11 @@ HERZ = svg_nach('class="flash fl-1"')            # Flash-Herz mit Banderole „K
 STERN = svg_nach('<span class="zu" aria-hidden="true">')  # Stern-Knopf der Fragen
 FALL = block(r'<div class="fall" id="fall">.*?</div>\s*</div>')
 FALL = re.sub(r'<h3 id="fall-titel">(.*?)</h3>', r'<h2 id="fall-titel">\1</h2>', FALL, flags=re.S)
-FALL = FALL.replace('Studio anonym. Klarna entscheidet bei jedem Kunden selbst.', 'Studio anonym. Ob der Kunde in Raten oder später bezahlt hat, sehen wir nicht; Klarna entscheidet bei jedem Kunden selbst.')
-assert 'sehen wir nicht' in FALL
+FALL = re.sub(r'\s*<span class="stempel-schild">Echter Fall</span>', '', FALL)  # Vorlagen-Chip weg, der Bon trägt allein
+FALL = re.sub(r'(<h2 id="fall-titel">.*?</h2>).*?(\s*</div>\s*</div>)$',
+              r'\1\n        <p>7.&nbsp;November, ein Studio: Link geschickt, Kunde zahlt per Klarna, der Betrag kommt aufs eigene <span class="nw">Stripe-Konto</span>.</p>'
+              r'\n        <p class="klein">Studio anonym · Klarna-Zahlart unbekannt.</p>\2', FALL, flags=re.S)
+assert 'Klarna-Zahlart unbekannt' in FALL and 'stempel-schild' not in FALL
 def fakten(t):
     t = t.replace('die allererste Auszahlung nach 7&nbsp;Tagen', 'die allererste laut Stripe in der Regel innerhalb von 7 bis 14&nbsp;Tagen').replace('die allererste Auszahlung nach 7 Tagen', 'die allererste laut Stripe in der Regel innerhalb von 7 bis 14 Tagen')
     t = t.replace('bekommst den ganzen Betrag auf&nbsp;einmal', 'bekommst den Betrag in einer&nbsp;Summe')
@@ -40,7 +43,6 @@ def fakten(t):
     t = t.replace('Achtung! Kreditaufnahme kostet Geld.</p>', '<b>Achtung! Kreditaufnahme kostet Geld.</b></p>')
     return t
 
-PREIS = re.sub(r'\s*<p class="preis-rechnung">.*?</p>', '', block(r'<section class="preis".*?</section>'), flags=re.S)  # No-Show-Rechnung gehört nicht zum Raten-Winkel
 FUSS = block(r'<footer class="fuss">.*?</footer>')
 
 # Fragen: nur die, die zum Raten-Winkel und zur Testwoche gehören (Wortlaut wie live)
@@ -52,7 +54,13 @@ for frage in FRAGEN_WAHL:
     m = re.search(r'<details class="frage"><summary><span>' + re.escape(frage) + r'</span>.*?</details>', LIVE, re.S)
     if not m:
         raise SystemExit("Frage fehlt live: " + frage)
-    FRAGEN.append(fakten(m.group(0)))
+    f = fakten(m.group(0))
+    if frage == "Bekommt jeder Kunde Raten*?":
+        # Zugeklappt stünde „Raten*“ ohne Pflichtsatz im Blick; die Antwort handelt von Klarnas Prüfung, also ohne Sternchen
+        f = f.replace("Bekommt jeder Kunde Raten*?", "Bekommt jeder Kunde Klarna?")
+        f, n = re.subn(r'\s*<p class="raten-fn">.*?</p>', '', f, count=1, flags=re.S)
+        assert n == 1 and "*" not in re.sub(r"<svg.*?</svg>", "", f, flags=re.S), f
+    FRAGEN.append(f)
 
 WA = ("https://wa.me/491624502375?text=Hi%20Tattoofin-Team%2C%20ich%20habe%20eure%20Anzeige%20zur%20Ratenzahlung%20gesehen%2C"
       "%20habe%20ein%20Tattoo-Studio%20und%20eine%20Frage%3A")
@@ -62,9 +70,44 @@ WA_ICON = ('<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path 
            'fill="currentColor"/></svg>')
 START = "/start.html?utm_source=studios-raten&amp;utm_medium=seite&amp;utm_content="
 KNOPF = "7 Tage kostenlos testen"
-ZEILE = "Danach 49,90&nbsp;€ im Monat · monatlich&nbsp;kündbar"
+ZEILE = "Heute 0&nbsp;€, 4&nbsp;Angaben. Danach 49,90&nbsp;€ im Monat, monatlich&nbsp;kündbar."
 FN = '<p class="raten-fn" data-zaehlt-nicht>*Raten über Klarna, nach deren Bonitätsprüfung. <b>Achtung! Kreditaufnahme kostet Geld.</b></p>'
 B, G, H = "#1f3d5c", "#fbb316", "#fff7e3"
+
+_i = LIVE.index('<div class="preis-schild">')
+SCHILD = LIVE[_i:LIVE.index('<div class="beleg">', _i)].rstrip()  # Preisschild 49,90 € wie live
+assert '49,90' in SCHILD and '41,93' in SCHILD
+# Beispiel 2.000 € (wie Lena, Sleeve, in der App-Demo). Stripe-Preise DE (stripe.com/de/pricing, bestätigt 18.11.2026):
+# Klarna ab 2,99 % + 0,35 € = 60,15 € → „ab ca. 60 €“, bei dir 1.939,85 € → „bis ca. 1.940 €“; Karte ab 1,5 % + 0,25 € = 30,25 € → „ab ca. 30 €“.
+_k = round(2000 * 0.0299 + 0.35, 2); _c = round(2000 * 0.015 + 0.25, 2)
+assert (round(_k), round(2000 - _k), round(_c)) == (60, 1940, 30), (_k, _c)
+PREIS = f"""<section class="preis" id="preis" aria-labelledby="preis-titel">
+    <div class="preis-innen">
+      <h2 id="preis-titel">Keine Provision. Nur die Stripe-Gebühr.</h2>
+      {SCHILD}
+      <div class="beleg">
+        <table>
+          <caption>Beispiel: Sleeve für 2.000<span class="eur">€</span> per Klarna</caption>
+          <tbody>
+            <tr><th scope="row">Stripe-Gebühr Klarna</th><td>ab ca. 60&nbsp;€</td></tr>
+            <tr><th scope="row">Provision</th><td>0&nbsp;€</td></tr>
+            <tr class="summe"><th scope="row">Bei dir</th><td>bis ca. 1.940&nbsp;€</td></tr>
+          </tbody>
+          <tbody class="bon-dazu">
+            <tr><th scope="row">Einrichtung</th><td>0&nbsp;€</td></tr>
+            <tr><th scope="row" colspan="2">Monatlich kündbar</th></tr>
+            <tr><th scope="row" colspan="2">Unser Team richtet’s mit dir ein</th></tr>
+          </tbody>
+        </table>
+        <p class="beleg-hinweis">Mit Karte ab ca. 30&nbsp;€ Stripe-Gebühr. Keine Garantie.</p>
+      </div>
+      <div class="preis-rest">
+        <a class="knopf" href="{START}preis" data-umami-event="start-preis">{KNOPF}</a>
+        <p class="preiszeile">{ZEILE}</p>
+        <a class="wa" href="/vertrag.html">Vertrag vorab lesen</a>
+      </div>
+    </div>
+  </section>"""
 
 
 ROT = "#c4421b"  # Stempelfarbe: kräftiges Rot-Orange aus der Flamme der Live-Motive, abgedunkelt für Kontrast auf Creme (≥ 4,5:1)
@@ -121,10 +164,13 @@ def szene_a(hoch=False):
          + linie("M418 220 L616 230 L610 304 L410 294 Z", 3, ROT) + text(513, 284, "BEZAHLT", 46, farbe=ROT, drehen=3) + "</g></g>",
          form("M626 22 L633 40 L652 41 L637 53 L642 72 L626 61 L610 72 L615 53 L600 41 L619 40 Z", G, 4)]
     teile.append(f'<g transform="translate({dx} {dy})">' + "".join(g) + "</g>")
+    # Tattoofin-Figur trägt die Handlung: breit unter dem Pfeil zwischen Bon und Studio-Karte, hoch rechts neben dem Bon
+    fx, fy, fb = (332, 58, 128) if hoch else (276, 234, 100)
+    teile.append(f'<image class="szene-figur" href="/assets/start/figur.webp" x="{fx}" y="{fy}" width="{fb}" height="{round(fb * 310 / 300)}" preserveAspectRatio="xMidYMid meet"/>')
     box = "20 10 600 650" if hoch else "20 10 640 380"
     klasse = "szene-hoch" if hoch else "szene-breit"
     return (f'<svg class="motiv stech szene-svg {klasse}" viewBox="{box}" role="img" '
-            f'aria-label="Flash-Motiv: Die Rechnung des Kunden mit Abriss-Streifen „Rate“, daneben die Karte des Studios mit dem Stempel „Bezahlt“.">'
+            f'aria-label="Flash-Motiv: Die Rechnung des Kunden mit Abriss-Streifen „Rate“, ein Pfeil zur Karte des Studios mit dem Stempel „Bezahlt“, dazwischen die Tattoofin-Figur mit Daumen hoch.">'
             + "".join(teile) + "</svg>")
 
 
@@ -150,6 +196,7 @@ def szene_c():
             + "".join(teile) + "</svg>")
 
 
+PUNKTE = "".join(f'<button type="button" data-zeigen-punkt="{i}" aria-label="Bild {i + 1} von 5 zeigen"' + (' aria-current="true"' if i == 0 else '') + '><i></i></button>' for i in range(5))
 ZEIGEN = f"""<section class="zeigen" id="zeigen" aria-labelledby="zeigen-titel">
     <h2 id="zeigen-titel">So läuft eine&nbsp;Zahlung.</h2>
     <p class="abschnitt-satz">Echte Bildschirme aus der Tattoofin-App und der Zahlseite, mit Beispieldaten.</p>
@@ -164,7 +211,7 @@ ZEIGEN = f"""<section class="zeigen" id="zeigen" aria-labelledby="zeigen-titel">
       </li>
       <li class="zeigen-bild zeigen-zahlseite">
         <span class="handy-rahmen"><img src="/assets/start/handy-kunde.webp?v=20261116d" width="600" height="1300" loading="lazy" decoding="async" alt="Echte Tattoofin-Zahlseite am Handy: Hi Lena, deine Zahlung an Ink Studio Bamberg, Schritt 1 von 2, 2.000,00 Euro, Sleeve linker Arm. Darunter: Im nächsten Schritt siehst du die Zahlarten, zum Beispiel Karte, Apple Pay oder Klarna. Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, nicht Tattoofin. Achtung! Kreditaufnahme kostet Geld. Beispieldaten."></span>
-        <p><b>3. Dein Kunde zahlt am Handy.</b> Karte, Apple&nbsp;Pay, Google&nbsp;Pay oder Klarna*, auf einer Seite mit deinem Studionamen.</p>
+        <p><b>3. Dein Kunde zahlt am Handy.</b> Karte, Apple&nbsp;Pay, Google&nbsp;Pay oder Klarna, auf einer Seite mit deinem Studionamen.</p>
       </li>
       <li class="zeigen-bild">
         <span class="handy-rahmen"><img src="/assets/start/kampagne/app-mitteilung.webp" width="600" height="547" loading="lazy" decoding="async" alt="Echte Mitteilung der Tattoofin-App auf dem iPhone: Zahlung eingegangen, 480,00 Euro, Unterarm Blackwork. Beispieldaten."></span>
@@ -175,16 +222,19 @@ ZEIGEN = f"""<section class="zeigen" id="zeigen" aria-labelledby="zeigen-titel">
         <p><b>5. Du siehst alles auf einen Blick.</b> Offen, bezahlt und dein Umsatz im Monat.</p>
       </li>
     </ol>
-    {FN}
+    <div class="zeigen-stand" data-zeigen-stand hidden>
+      <span class="zeigen-zahl" aria-hidden="true">1/5</span>
+      <span class="zeigen-punkte">{PUNKTE}</span>
+    </div>
   </section>"""
 
 
 HELD = {
     "a": {"h1": "Raten* für deine Kunden. Dein Geld auf&nbsp;einmal.",
-          "s": "Link schicken, dein Kunde kann per Klarna zahlen. Tattoofin nimmt keine&nbsp;Provision.",
+          "s": "Für Tattoo-Studios: Link schicken, Kunde zahlt per&nbsp;Klarna.",
           "szene": szene_a() + szene_a(hoch=True)},
     "b": {"h1": "Großes Motiv? Dein Kunde zahlt in&nbsp;Raten*.",
-          "s": "Link schicken, Klarna prüft, du bekommst dein Geld auf&nbsp;einmal.",
+          "s": "Für Tattoo-Studios: Link schicken, Klarna prüft, dein Geld kommt auf&nbsp;einmal.",
           "szene": ('<div class="szene-b">' + HERZ.replace('class="motiv stech"', 'class="motiv stech b-herz"', 1)
                     + '<figure class="b-handy"><span class="klebe" aria-hidden="true"></span><span class="handy-rahmen">'
                     '<img src="/assets/start/handy-kunde.webp?v=20261116d" width="600" height="1300" decoding="async" '
@@ -192,7 +242,7 @@ HELD = {
                     'Darunter der Hinweis: Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, nicht Tattoofin. Achtung! Kreditaufnahme kostet Geld.">'
                     '</span><figcaption>Echte Zahlseite · Ausschnitt</figcaption></figure></div>')},
     "c": {"h1": "7 Tage Raten* anbieten. Kostenlos.",
-          "s": "Link schicken, dein Kunde zahlt per Klarna, du bekommst dein Geld auf&nbsp;einmal.",
+          "s": "Für Tattoo-Studios: Link schicken, Kunde zahlt per Klarna, dein Geld kommt auf&nbsp;einmal.",
           "szene": szene_c()},
 }
 
@@ -205,7 +255,7 @@ def held(k, v):
     </div>
     <div class="held-buehne buehne held-{k}" data-stechen>
       {v["szene"]}
-      <img class="held-figur" src="/assets/start/figur.webp" alt="" width="300" height="310" decoding="async">
+      {"" if k == "a" else '<img class="held-figur" src="/assets/start/figur.webp" alt="" width="300" height="310" decoding="async">'}
     </div>'''
 
 
@@ -220,7 +270,6 @@ CSS = """
 .held .raten-fn{margin-top:5px}
 .held .held-buehne{position:relative;flex:1 1 0;height:auto;aspect-ratio:auto;width:auto;max-width:none;min-height:70px;margin:8px 0 6px;cursor:pointer}
 .held-buehne .szene-svg{position:absolute;inset:0;width:100%;height:100%}
-.held-a .held-figur{left:38%;height:min(34%,130px)}
 .held-c .held-figur{left:auto;right:-4px;height:min(40%,160px)}
 .held-figur{position:absolute;z-index:3;left:-4px;bottom:-6px;height:min(52%,190px);width:auto;pointer-events:none}
 .held-fuss{display:grid;gap:6px;justify-items:start}
@@ -235,7 +284,7 @@ CSS = """
 /* Stempel und Abrisse drehen um die eigene Mitte */
 .stempel,.abriss{transform-box:fill-box;transform-origin:50% 50%}.abriss{transform-origin:50% 0}
 .szene-hoch{display:none}
-@media (max-width:599px) and (min-height:720px){.held-a .szene-breit{display:none}.held-a .szene-hoch{display:block}.held-a .held-figur{left:-4px;height:min(36%,190px)}}
+@media (max-width:599px) and (min-height:720px){.held-a .szene-breit{display:none}.held-a .szene-hoch{display:block}}
 @keyframes stempel{0%{transform:scale(1.9) rotate(-14deg);opacity:0}70%{opacity:1}100%{transform:scale(1) rotate(0);opacity:1}}
 @keyframes abriss{0%,100%{transform:rotate(0)}35%{transform:rotate(5deg)}70%{transform:rotate(-3deg)}}
 /* Entwurf B: Herz oben links, echter Zahlseiten-Ausschnitt rechts */
@@ -247,30 +296,72 @@ CSS = """
 .held-b .held-figur{height:min(34%,150px);left:-6px}
 .b-handy figcaption{position:relative;z-index:4;text-align:center;font-size:12px;font-weight:700;margin-top:6px;transform:rotate(3deg)}
 .zeigen{max-width:1280px;margin-inline:auto;padding:30px 0 34px}
-.zeigen>h2,.zeigen>.abschnitt-satz,.zeigen>.raten-fn{padding-inline:var(--rand)}
-/* Handy: wischbare Reihe ohne Selbstlauf; ab Desktop alle fünf nebeneinander */
-.zeigen-reihe{list-style:none;display:flex;gap:18px;overflow-x:auto;scroll-snap-type:x mandatory;padding:26px var(--rand) 18px;margin:0 0 6px;scrollbar-width:thin;align-items:flex-start}
+.zeigen>h2,.zeigen>.abschnitt-satz{padding-inline:var(--rand)}
+/* Handy: ein Bildschirm je Wisch (ganze Bildunterschrift, nichts angeschnitten), darunter 1/5 und Punkte; ohne Selbstlauf */
+.zeigen-reihe{list-style:none;display:flex;gap:calc(var(--rand) * 2);overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-inline:var(--rand);padding:26px var(--rand) 12px;margin:0;scrollbar-width:none;align-items:flex-start}
+.zeigen-reihe::-webkit-scrollbar{display:none}
 .zeigen-reihe:focus-visible{outline-offset:-3px}
-.zeigen-bild{flex:0 0 min(64vw,260px);scroll-snap-align:start;transform:rotate(-1.2deg)}
-.zeigen-bild:nth-child(even){transform:rotate(1.2deg)}
-.zeigen-bild .handy-rahmen{padding-bottom:6px}
+.zeigen-bild{flex:0 0 100%;display:grid;justify-items:center;scroll-snap-align:start}
+.zeigen-bild>*{width:min(68vw,270px)}
+.zeigen-bild .handy-rahmen{padding-bottom:6px;transform:rotate(-1.2deg)}
+.zeigen-bild:nth-child(even) .handy-rahmen{transform:rotate(1.2deg)}
 .zeigen-bild .handy-rahmen img{aspect-ratio:auto;width:100%;height:auto;object-fit:initial}
 .zeigen-zahlseite .handy-rahmen img{aspect-ratio:600/1160;object-fit:cover;object-position:top}
-.zeigen-bild p{margin-top:12px;font-size:15px;line-height:1.4}
+.zeigen-bild p{margin-top:14px;font-size:15px;line-height:1.4}
 .zeigen-bild b{font-weight:800}
-@media (min-width:1100px){.zeigen-reihe{display:grid;grid-template-columns:repeat(5,1fr);overflow:visible;gap:22px}.zeigen-bild{flex:none}}
+.zeigen-stand{display:flex;align-items:center;justify-content:center;gap:6px;padding:0 var(--rand)}
+.zeigen-stand[hidden]{display:none}
+.zeigen-zahl{font-weight:800;font-size:15px;min-width:3ch;text-align:right}
+.zeigen-punkte{display:flex}
+.zeigen-punkte button{width:44px;height:44px;border:0;padding:0;background:none;display:grid;place-items:center;cursor:pointer;border-radius:50%}
+.zeigen-punkte i{width:12px;height:12px;border-radius:50%;border:2px solid var(--blau);background:transparent}
+.zeigen-punkte [aria-current="true"] i{background:var(--blau);transform:scale(1.25)}
+/* Ab Tablet: alle fünf als Raster, jede Abbildung mindestens 330 px breit, damit die Schrift im Bild lesbar bleibt (ab ca. 11 px) */
+@media (min-width:720px){
+  .zeigen-reihe{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));overflow:visible;gap:40px 32px;padding-top:30px}
+  .zeigen-bild{justify-items:start}
+  .zeigen-bild>*{width:100%;max-width:350px}
+  .zeigen-stand,.zeigen-stand[hidden]{display:none}
+}
 /* Zweiter Bildschirm: stärkster Beleg */
 .beleg-oben{padding-top:22px}
 .testwoche{max-width:1280px;margin-inline:auto;padding:28px var(--rand) 34px}
-.testwoche ol{list-style:none;display:grid;gap:14px;margin-top:18px;counter-reset:t}
-.testwoche li{position:relative;padding:14px 16px 14px 58px;background:var(--hell);border:4px solid var(--blau);border-radius:14px;box-shadow:4px 5px 0 var(--blau);counter-increment:t;line-height:1.4}
-.testwoche li::before{content:counter(t);position:absolute;left:12px;top:12px;display:grid;place-items:center;width:32px;height:32px;padding-top:.18em;border-radius:50%;background:var(--blau);color:var(--gelb);font:400 19px/1 var(--anzeige)}
-.testwoche li b{font-weight:800}
-.testwoche .zusage{margin-top:16px;font-weight:800}
-@media (min-width:720px){.testwoche ol{grid-template-columns:repeat(3,1fr)}}
+/* 7 Tage als Abriss-Kalender im Flash-Stil (Gegenstück zu den Raten-Streifen im Hero): ein Streifen, Perforation zwischen den Blättern,
+   „Tag 7“ ist schon halb abgerissen */
+.streifen{list-style:none;display:grid;margin-top:22px;max-width:1120px;padding:0 6px 14px 0}
+.blatt{position:relative;background:var(--hell);border:4px solid var(--blau);box-shadow:4px 5px 0 var(--blau);line-height:1.4}
+.blatt-tag{position:relative;display:block;background:var(--blau);color:var(--gelb);font:400 clamp(24px,6.4vw,30px)/1 var(--anzeige);text-transform:uppercase;padding:20px 14px 8px;letter-spacing:.01em}
+.blatt-tag::before{content:"";position:absolute;left:50%;top:7px;width:46px;height:8px;margin-left:-23px;
+  background:radial-gradient(circle at 4px 4px,var(--papier) 3.4px,transparent 4px) 0 0/19px 8px repeat-x}
+.blatt p{padding:12px 14px 14px}
+.blatt b{font-weight:800}
+.blatt:not(:first-child){border-top:4px dashed var(--blau)}
+.blatt:not(.blatt-ab){border-bottom:0}
+.blatt:nth-child(2){border-bottom:4px dashed var(--blau)}
+.blatt-ab{margin-top:14px;border-top-style:solid;transform:rotate(-1.6deg) translateX(4px);transform-origin:0 0}
+@media (min-width:720px){
+  .streifen{grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch}
+  .blatt:not(:first-child){border-top:4px solid var(--blau);border-left:4px dashed var(--blau)}
+  .blatt:not(.blatt-ab){border-bottom:4px solid var(--blau);border-right:0}
+  .blatt:nth-child(2){border-right:4px dashed var(--blau);border-bottom-style:solid}
+  .blatt-ab{margin:0 0 0 14px;border-left-style:solid;transform:rotate(3deg) translateY(10px);transform-origin:0 0}
+  .blatt-ab::before{content:"";position:absolute;left:-18px;top:-4px;bottom:-4px;width:10px;
+    background:linear-gradient(-45deg,var(--blau) 5px,transparent 0) 0 0/10px 12px repeat-y,linear-gradient(-135deg,var(--blau) 5px,transparent 0) 0 0/10px 12px repeat-y}
+}
 .schluss-raten{max-width:1280px;margin-inline:auto;padding:34px var(--rand) 40px;display:grid;gap:12px;justify-items:start}
-.schluss-raten .wege{margin-top:6px}
-@media (max-width:599px){.schluss-raten .knopf{width:100%}}
+.schluss-raten .knopf{margin-top:6px}
+.schluss-raten .preiszeile{margin-top:-4px}
+@media (max-width:599px){.schluss-raten .knopf{width:100%;text-align:center}}
+/* Preis-Bon: Rechnung oben, darunter was dazugehört (ersetzt die Sticker-Liste) */
+.beleg .bon-dazu th{font-weight:700;border-top-style:dotted}
+.beleg .bon-dazu tr:first-child th,.beleg .bon-dazu tr:first-child td{border-top:3px solid var(--blau)}
+.beleg .bon-dazu th[colspan]{padding-left:22px;position:relative}
+.beleg .bon-dazu th[colspan]::before{content:"";position:absolute;left:0;top:50%;width:14px;height:14px;margin-top:-7px;background:var(--blau);
+  clip-path:polygon(50% 0,62% 36%,100% 38%,69% 60%,80% 96%,50% 75%,20% 96%,31% 60%,0 38%,38% 36%)}
+.preis-rest{gap:10px}
+.preis-rest .knopf{width:100%;text-align:center}
+.preis-rest .preiszeile{color:var(--hell)}
+.preis-rest .wa{margin-top:8px}
 /* Tablet hochkant */
 @media (min-width:600px) and (max-width:899px){
   .held-satz{text-align:center;justify-self:center;margin-inline:auto}
@@ -289,8 +380,11 @@ CSS = """
   .held .unterzeile{font-size:clamp(14px,min(1.7vw,2.7svh),23px)}
   .held .raten-fn{font-size:13px}
   .held-figur{height:min(40%,220px)}
-  .held-a .szene-breit{display:none}.held-a .szene-hoch{display:block}
-  .held-a .held-figur{left:-2%;height:min(30%,200px)}
+}
+/* Desktop: breite Szene (Bon links, Figur in der Mitte, Studio-Karte rechts); die Bühne endet über der Consent-Karte,
+   damit Studio-Karte und Stempel nie darunter liegen (Banner unten rechts, tf-track.js bleibt unverändert) */
+@media (min-width:900px) and (min-height:501px){
+  .held .held-buehne{margin-bottom:calc(clamp(6px,2svh,24px) + var(--banner-h,0px))}
 }
 @media (orientation:landscape) and (max-height:500px){
   .held{padding-bottom:calc(8px + var(--banner-h,0px));grid-template-columns:minmax(0,6fr) minmax(0,4fr)}
@@ -327,7 +421,9 @@ html.fn-offen body{position:fixed;left:0;right:0;top:var(--sperre-top,0);overflo
 .fn-kopf button{grid-row:1;width:48px;height:44px;border:0;padding:0;background:none;color:var(--blau);border-radius:12px;cursor:pointer;display:grid;place-items:center}
 .fn-kopf svg{width:26px;height:26px}
 .fn-kopf [data-funnel-zurueck]{grid-column:1}.fn-kopf [data-funnel-zu]{grid-column:3}
-.fn-stand{grid-column:2;grid-row:1;text-align:center;font-weight:800;font-size:15px;margin:0}
+.fn-mitte{grid-column:2;grid-row:1;min-width:0;text-align:center;line-height:1.2}
+.fn-stand{font-weight:800;font-size:15px;margin:0}
+.fn-kopf-titel{margin:1px 0 0;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fn-balken{grid-column:1/-1;grid-row:2;height:9px;margin:2px 6px 9px;background:var(--papier);border:2px solid var(--blau);border-radius:99px;overflow:hidden}
 .fn-balken i{display:block;height:100%;background:var(--gelb);transform-origin:left;transform:scaleX(0)}
 @media (prefers-reduced-motion:no-preference){.fn-balken i{transition:transform .25s ease-out}}
@@ -358,8 +454,10 @@ html.fn-offen body{position:fixed;left:0;right:0;top:var(--sperre-top,0);overflo
 .fn-pflicht a{font-weight:700}
 .fn .knopf.fn-aktion{width:100%;min-height:54px;margin-top:4px;font-size:clamp(20px,5.6vw,24px);white-space:normal;text-align:center}
 .fn .knopf.fn-aktion:disabled{opacity:.7;cursor:wait}
-.fn-danach{font-size:15px;line-height:1.4;margin:0 0 12px}
-.fn-danach b{font-weight:800}
+.fn-danach{font-size:14px;font-weight:700;line-height:1.35;margin:0 0 10px}
+.fn-bedingung{font-size:14px;line-height:1.4;margin:10px 0 0}
+/* Offene Tastatur am Touch-Gerät: Merkzettel einklappen, damit Feld und Weiter-Knopf Platz haben (E22) */
+@media (pointer:coarse),(hover:none){html.fn-tastatur .fn-merk{display:none}}
 .fn-fuss{margin:18px 0 0;font-size:14px;font-weight:700;line-height:1.4}
 """
 
@@ -384,7 +482,7 @@ def feld(fid, name, label, typ, ac, extra="", tipp=""):
 FN_HTML = f"""<dialog class="fn" data-funnel aria-labelledby="fn-stand">
   <div class="fn-kopf">
     <button type="button" data-funnel-zurueck aria-label="Zurück" hidden>{PFEIL}</button>
-    <p class="fn-stand" id="fn-stand" aria-live="polite">Schritt 1 von 4</p>
+    <div class="fn-mitte"><p class="fn-stand" id="fn-stand" aria-live="polite">Schritt 1 von 5</p><p class="fn-kopf-titel" data-funnel-kopf-titel aria-hidden="true"></p></div>
     <button type="button" data-funnel-zu aria-label="Schließen">{KREUZ}</button>
     <div class="fn-balken" aria-hidden="true"><i></i></div>
   </div>
@@ -412,11 +510,12 @@ FN_HTML = f"""<dialog class="fn" data-funnel aria-labelledby="fn-stand">
       </section>
       <section data-funnel-schritt="4" aria-labelledby="fn-t4" hidden>
         <h2 id="fn-t4" tabindex="-1">Wohin kommt dein&nbsp;Login?</h2>
-        <p class="fn-danach">Danach noch ein Schritt: Vertrag bestätigen und deine Karte sicher bei Stripe hinterlegen. <b>Heute 0&nbsp;€.</b> Nach den 7&nbsp;Tagen 49,90&nbsp;€ im Monat inkl. MwSt., monatlich kündbar. Kündigst du vorher, zahlst du nichts.</p>
+        <p class="fn-danach">Schritt 5: Vertrag &amp; Karte bei Stripe, heute 0&nbsp;€.</p>
         {feld("email", "email", "E-Mail", "email", "email", 'inputmode="email" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next"', "Hierhin kommt dein Login.")}
         {feld("telefon", "telefon", "Handynummer (WhatsApp)", "tel", "tel", 'inputmode="tel" enterkeyhint="go"', "Für die Einrichtung.")}
         <p class="fn-pflicht" data-funnel-pflicht>Deine Angaben nutzen wir für dein Konto und die Einrichtung. <a href="/datenschutz.html" target="_blank" rel="noopener">Datenschutz</a></p>
-        <button type="submit" class="knopf fn-aktion" data-funnel-aktion>Weiter · heute 0&nbsp;€</button>
+        <button type="submit" class="knopf fn-aktion" data-funnel-aktion>Weiter zu Schritt 5</button>
+        <p class="fn-bedingung">Heute 0&nbsp;€. Nach den 7&nbsp;Tagen 49,90&nbsp;€ im Monat inkl. MwSt., monatlich kündbar. Kündigst du vorher, zahlst du nichts.</p>
       </section>
     </div>
   </form>
@@ -429,6 +528,8 @@ FN_JS = r"""<script>/* Funnel nach dem Schilling-Konzept, Kapitel 13 (Muster scr
   const root = document.documentElement, vv = window.visualViewport;
   const form = dlg.querySelector('form'), inhalt = dlg.querySelector('.fn-inhalt');
   const schritte = [...dlg.querySelectorAll('[data-funnel-schritt]')], gesamt = schritte.length;
+  const ANZEIGE = gesamt + 1;                                          // Schritt 5 = Vertrag & Karte bei Stripe (/start), zählt ehrlich mit
+  const kopfTitel = dlg.querySelector('[data-funnel-kopf-titel]');
   const stand = dlg.querySelector('.fn-stand'), balken = dlg.querySelector('.fn-balken i'), zurueck = dlg.querySelector('[data-funnel-zurueck]');
   const ruhig = matchMedia('(prefers-reduced-motion: reduce)');
   const antworten = {};                                               // nur im Arbeitsspeicher (13 §11)
@@ -496,8 +597,9 @@ FN_JS = r"""<script>/* Funnel nach dem Schilling-Konzept, Kapitel 13 (Muster scr
     aktuell = String(n);
     schritte.forEach(s => { s.hidden = s.dataset.funnelSchritt !== aktuell; });
     const nr = Number(aktuell);
-    stand.textContent = 'Schritt ' + nr + ' von ' + gesamt;
-    balken.style.transform = 'scaleX(' + nr / gesamt + ')';
+    stand.textContent = 'Schritt ' + nr + ' von ' + ANZEIGE;
+    balken.style.transform = 'scaleX(' + nr / ANZEIGE + ')';
+    const h = aktiv().querySelector('h2'); if (kopfTitel && h) kopfTitel.textContent = h.textContent.replace(/\s+/g, ' ').trim();
     zurueck.hidden = nr === 1;
     if (nr === 3) merkzettel();
     if (push) { history.pushState({ fn: aktuell, i: ++tiefe }, ''); if (nr > 1) track('funnel-schritt-' + nr); }
@@ -637,6 +739,15 @@ def funnel_knoepfe(seite):
 KOPF_SKRIPT = """<script>(function(){try{
 if(!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)){var d=document.documentElement;d.classList.add('stech-warten');setTimeout(function(){d.classList.remove('stech-warten')},4000);}}catch(x){}})();</script>"""
 
+ZEIGEN_JS = """<script>/* So läuft eine Zahlung: Positionsanzeige 1/5 und Punkte unter dem Wischband (nur solange es wischt) */
+(function(){var r=document.querySelector('.zeigen-reihe'),st=document.querySelector('[data-zeigen-stand]');if(!r||!st)return;
+var bs=[].slice.call(r.children),pk=[].slice.call(st.querySelectorAll('[data-zeigen-punkt]')),z=st.querySelector('.zeigen-zahl'),akt=-1;
+function idx(){var w=bs.length>1?bs[1].offsetLeft-bs[0].offsetLeft:1;return Math.max(0,Math.min(bs.length-1,Math.round(r.scrollLeft/(w||1))))}
+function setz(){var i=idx();if(i===akt)return;akt=i;z.textContent=(i+1)+'/'+bs.length;pk.forEach(function(b,j){if(j===i)b.setAttribute('aria-current','true');else b.removeAttribute('aria-current')})}
+var t=0;r.addEventListener('scroll',function(){cancelAnimationFrame(t);t=requestAnimationFrame(setz)},{passive:true});
+pk.forEach(function(b,j){b.addEventListener('click',function(){var ruhig=matchMedia('(prefers-reduced-motion: reduce)').matches;r.scrollTo({left:bs[j].offsetLeft-bs[0].offsetLeft,behavior:ruhig?'auto':'smooth'})})});
+st.hidden=false;setz();})();</script>"""
+
 BANNER_JS = """<script>/* Consent-Leiste offen: erster Bildschirm schrumpft um ihre Höhe, damit Überschrift, Knopf und Preiszeile sichtbar bleiben (E14) */
 (function(){var d=document.documentElement;function m(){var c=document.querySelector('.tf-cc'),h=0;if(c){c.setAttribute('data-consent','');var r=c.getBoundingClientRect();if(document.body.classList.contains('tf-cc-offen')&&r.height>0&&getComputedStyle(c).display!=='none'){h=Math.max(0,Math.round(innerHeight-r.top))}}d.style.setProperty('--banner-h',h+'px')}
 new MutationObserver(m).observe(document.body,{attributes:true,attributeFilter:['class'],childList:true});addEventListener('resize',m);m();})();</script>"""
@@ -696,15 +807,14 @@ for ENTWURF, DATEI in (("a", "studios-raten.html"), ("b", "../_schilling/studios
 
   <section class="testwoche" id="testwoche" aria-labelledby="testwoche-titel">
     <h2 id="testwoche-titel">So laufen deine 7&nbsp;Tage.</h2>
-    <ol>
-      <li><b>Anmelden, heute 0&nbsp;€.</b> Vier Angaben, dann hinterlegst du deine Karte sicher bei Stripe.</li>
-      <li><b>Einrichten mit unserem Team.</b> Du legst dein Stripe-Konto an, wir machen mit dir eine Testzahlung.</li>
-      <li><b>Ersten Link schicken.</b> Dein Kunde wählt am Handy Karte, Apple&nbsp;Pay, Google&nbsp;Pay oder&nbsp;Klarna.</li>
+    <ol class="streifen">
+      <li class="blatt"><span class="blatt-tag">Tag 1</span><p><b>Anmelden, heute 0&nbsp;€.</b> Vier Angaben, dann hinterlegst du deine Karte sicher bei Stripe.</p></li>
+      <li class="blatt"><span class="blatt-tag">Einrichtung</span><p><b>Mit unserem Team.</b> Du legst dein Stripe-Konto an, wir machen mit dir eine Testzahlung. Dann schickst du deinen ersten Link.</p></li>
+      <li class="blatt blatt-ab"><span class="blatt-tag">Tag 7</span><p><b>Kündigst du in den 7&nbsp;Tagen, zahlst du nichts.</b> Danach 49,90&nbsp;€ im Monat inkl. MwSt., monatlich kündbar.</p></li>
     </ol>
-    <p class="zusage">Kündigst du in den 7&nbsp;Tagen, zahlst du nichts. Danach 49,90&nbsp;€ im Monat inkl. MwSt., monatlich kündbar.</p>
   </section>
 
-  {PREIS.replace('Eine Anzahlung zahlt Tattoofin fast 3&nbsp;Monate.', 'Keine Provision. Nur die Stripe-Gebühr.').replace(START.replace('studios-raten', 'studios'), START).replace('utm_content=preis" data-umami-event="start-preis">1 Woche testen', 'utm_content=preis" data-umami-event="start-preis">' + KNOPF).replace('/start.html?utm_source=studios&amp;utm_medium=seite&amp;utm_content=preis', START + 'preis')}
+  {PREIS}
 
   <section class="fragen" id="fragen" aria-labelledby="fragen-titel">
     <h2 id="fragen-titel">Noch Fragen?</h2>
@@ -716,8 +826,9 @@ for ENTWURF, DATEI in (("a", "studios-raten.html"), ("b", "../_schilling/studios
 
   <section class="schluss-raten" aria-labelledby="schluss-titel">
     <h2 id="schluss-titel">Nächstes großes Motiv? Schick den&nbsp;Link.</h2>
-    <p class="preiszeile">7 Tage kostenlos, danach 49,90&nbsp;€ im Monat inkl. MwSt. · monatlich kündbar · nur für Unternehmer</p>
-    <div class="wege"><a class="knopf" href="{START}schluss" data-umami-event="start-schluss">{KNOPF}</a><a class="wa" href="{WA}" data-umami-event="whatsapp-schluss">Erst fragen? WhatsApp</a></div>
+    <a class="knopf" href="{START}schluss" data-umami-event="start-schluss">{KNOPF}</a>
+    <p class="preiszeile">{ZEILE}</p>
+    <a class="wa" href="{WA}" data-umami-event="whatsapp-schluss">Erst fragen? WhatsApp</a>
   </section>
   </main>
 
@@ -729,6 +840,7 @@ for ENTWURF, DATEI in (("a", "studios-raten.html"), ("b", "../_schilling/studios
 <script src="/js/tf-track.js?v=20261117b"></script>
 <script src="/js/studios.js"></script>
 {BANNER_JS}
+{ZEIGEN_JS}
 {FN_JS}
 </body>
 </html>
