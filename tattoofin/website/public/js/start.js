@@ -242,6 +242,15 @@
 
   // Vorbelegung: ?modell=…, gespeicherter Entwurf (nur diese Sitzung), ?resume=<id> nach Abbruch im Checkout
   try { var alt = JSON.parse(sessionStorage.getItem("tf-start") || "{}"); if (GESCHLOSSEN[String(alt.paket || "").toLowerCase()]) alt.paket = ""; if (alt.paket && !f.querySelector('input[name=paket][value="' + alt.paket + '"]')) alt.paket = ""; setze(alt); if (!alt.paket && alt.modell) setzePaket(alt.modell); } catch (e) {}
+  // Ankunft aus dem Funnel einer Kampagnenseite (Schilling-Konzept, 18.11.2026): Die 4 Angaben stehen schon über „tf-start“ im Formular.
+  // Der Merker „schilling-funnel“ (nur Antipp-Antworten, keine Personendaten) wird sofort gelöscht; nur noch das Häkchen ist offen.
+  try {
+    var fn = JSON.parse(sessionStorage.getItem("schilling-funnel") || "null"); sessionStorage.removeItem("schilling-funnel");
+    if (fn && Date.now() - (fn.t || 0) < 36e5 && !q.get("resume") && PFLICHT.every(function (k) { return val(k); })) {
+      document.getElementById("ak-hinweis").textContent = "Deine Angaben sind eingetragen. Nur noch das Häkchen setzen, dann geht es zu Stripe.";
+      hervor(true);
+    }
+  } catch (e) {}
   if (q.get("modell")) setzePaket(q.get("modell"));
   if (q.get("paket")) setzePaket(q.get("paket"));
   if (geschenk) show("Du bist eingeladen: keine Einrichtung, keine Provision – du zahlst nur die Zahlungsgebühren.", "info");

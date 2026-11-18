@@ -305,6 +305,335 @@ CSS = """
 }
 """
 
+# ---------- Funnel (Schilling-Konzept E21, E22, Kapitel 13; 18.11.2026) ----------
+# Jeder Hauptknopf „7 Tage kostenlos testen“ öffnet denselben Funnel auf der Seite: 2 Antipp-Fragen, dann die 4 Angaben,
+# die /start braucht (in 2 Schritten, damit Feld und Weiter-Knopf auch mit offener Tastatur in die sichtbare Fläche passen),
+# dann Übergabe an /start (Häkchen + Karte bei Stripe). Personendaten nur per sessionStorage „tf-start“ (Format von start.js),
+# nie in der Adresse. Antipp-Antworten nur im Arbeitsspeicher, „schilling-funnel“ (ohne Personendaten) liest /start und löscht ihn.
+# Ohne JavaScript bzw. ohne <dialog> bleibt der Knopf ein normaler Link auf /start.
+FN_CSS = """
+/* ---------- Funnel: natives <dialog>, am Touch-Gerät Vollbild, an der Maus zentriert (13 §2, §13) ---------- */
+html.fn-offen{overflow:hidden;scroll-behavior:auto}
+html.fn-offen body{position:fixed;left:0;right:0;top:var(--sperre-top,0);overflow:hidden}
+.fn{position:fixed;inset:0;width:100%;height:100%;max-width:none;max-height:none;margin:0;padding:0;border:0;
+    background:var(--papier) url(/assets/start/papier.webp);background-size:640px 640px;color:var(--blau);overscroll-behavior:contain;font:400 16px/1.45 var(--text)}
+.fn[open]{display:flex;flex-direction:column}
+.fn::backdrop{background:rgba(31,61,92,.62)}
+.fn [hidden]{display:none!important}
+/* Touch: Fläche hinter der Tastatur ist Papier statt der Seite (iOS zeigt sie durch die Glas-Tastatur) */
+@media (pointer:coarse),(hover:none){.fn::backdrop{background:var(--papier)}html.fn-tastatur .fn{bottom:auto;height:var(--vvh);transform:translateY(var(--vvt))}}
+@media (hover:hover) and (pointer:fine){.fn{margin:auto;width:min(560px,calc(100% - 32px));height:min(620px,calc(100% - 48px));border:4px solid var(--blau);border-radius:20px;box-shadow:6px 7px 0 var(--blau)}}
+.fn-kopf{flex:none;display:grid;grid-template-columns:48px 1fr 48px;align-items:center;padding:max(4px,env(safe-area-inset-top)) 6px 0;background:var(--hell);border-bottom:3px solid var(--blau)}
+.fn-kopf button{grid-row:1;width:48px;height:44px;border:0;padding:0;background:none;color:var(--blau);border-radius:12px;cursor:pointer;display:grid;place-items:center}
+.fn-kopf svg{width:26px;height:26px}
+.fn-kopf [data-funnel-zurueck]{grid-column:1}.fn-kopf [data-funnel-zu]{grid-column:3}
+.fn-stand{grid-column:2;grid-row:1;text-align:center;font-weight:800;font-size:15px;margin:0}
+.fn-balken{grid-column:1/-1;grid-row:2;height:9px;margin:2px 6px 9px;background:var(--papier);border:2px solid var(--blau);border-radius:99px;overflow:hidden}
+.fn-balken i{display:block;height:100%;background:var(--gelb);transform-origin:left;transform:scaleX(0)}
+@media (prefers-reduced-motion:no-preference){.fn-balken i{transition:transform .25s ease-out}}
+.fn-inhalt{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:12px 16px calc(24px + env(safe-area-inset-bottom));scroll-padding-block:12px}
+.fn-spalte{max-width:520px;margin:0 auto}
+.fn h2{font-size:clamp(24px,6.6vw,31px);line-height:1.02;margin:0 0 6px;text-shadow:2px 2px 0 var(--gelb)}
+.fn h2:focus{outline:none}
+.fn-grund{font-size:15px;line-height:1.4;margin:0 0 14px}
+.fn-kacheln{display:grid;gap:10px}
+.fn-kachel{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:12px 14px;border:3px solid var(--blau);border-radius:14px;background:var(--hell);
+  color:var(--blau);box-shadow:3px 4px 0 var(--blau);font:700 17px/1.25 var(--text);text-align:left;cursor:pointer;touch-action:manipulation}
+.fn-kachel::before{content:"";flex:none;width:22px;height:22px;border:3px solid var(--blau);border-radius:50%;background:#fff}
+.fn-kachel[aria-pressed="true"]{background:var(--gelb)}
+.fn-kachel[aria-pressed="true"]::before{background:var(--blau);box-shadow:inset 0 0 0 4px #fff}
+.fn-kachel:active{transform:translate(2px,2px);box-shadow:1px 2px 0 var(--blau)}
+.fn-merk{margin:0 0 12px;padding:10px 12px;background:var(--hell);border:3px dashed var(--blau);border-radius:12px;font-weight:700;font-size:15px;line-height:1.35}
+.fn-merk .raten-fn{margin-top:4px}
+.fn-feld{margin-bottom:10px}
+.fn-lab{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:0 10px;margin:0 0 3px}
+.fn label{font-weight:800;font-size:16px;line-height:1.25}
+.fn-tipp{font-size:13px;line-height:1.3}
+.fn input{display:block;width:100%;min-height:50px;padding:0 14px;border:3px solid var(--blau);border-radius:12px;background:#fff;color:var(--blau);
+  font:500 max(17px,1rem)/1.2 var(--text);scroll-margin-block:12px}
+.fn input:focus-visible{outline:3px solid var(--blau);outline-offset:2px;box-shadow:0 0 0 6px var(--gelb)}
+.fn input[aria-invalid="true"]{border-color:#a3241b;background:#fff7f5}
+.fn-fehler{color:#a3241b;font-weight:700;font-size:14px;line-height:1.3;margin:4px 0 0}
+.fn-pflicht{font-size:14px;line-height:1.35;margin:2px 0 8px}
+.fn-pflicht a{font-weight:700}
+.fn .knopf.fn-aktion{width:100%;min-height:54px;margin-top:4px;font-size:clamp(20px,5.6vw,24px);white-space:normal;text-align:center}
+.fn .knopf.fn-aktion:disabled{opacity:.7;cursor:wait}
+.fn-danach{font-size:15px;line-height:1.4;margin:0 0 12px}
+.fn-danach b{font-weight:800}
+.fn-fuss{margin:18px 0 0;font-size:14px;font-weight:700;line-height:1.4}
+"""
+
+PFEIL = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+KREUZ = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>'
+
+
+def kacheln(feld, titel_id, antworten):
+    return (f'<div class="fn-kacheln" role="group" aria-labelledby="{titel_id}">' + "".join(
+        f'<button type="button" class="fn-kachel" data-funnel-antwort data-feld="{feld}" data-wert="{w}" aria-pressed="false">{t}</button>'
+        for w, t in antworten) + "</div>")
+
+
+def feld(fid, name, label, typ, ac, extra="", tipp=""):
+    db = f"fn-{fid}-f" + (f" fn-{fid}-t" if tipp else "")
+    lab = f'<label for="fn-{fid}">{label}</label>' + (f'<span class="fn-tipp" id="fn-{fid}-t">{tipp}</span>' if tipp else "")
+    return (f'<div class="fn-feld"><div class="fn-lab">{lab}</div>'
+            f'<input id="fn-{fid}" name="{name}" type="{typ}" autocomplete="{ac}" required aria-describedby="{db}" {extra}>'
+            f'<p class="fn-fehler" id="fn-{fid}-f" hidden></p></div>')
+
+
+FN_HTML = f"""<dialog class="fn" data-funnel aria-labelledby="fn-stand">
+  <div class="fn-kopf">
+    <button type="button" data-funnel-zurueck aria-label="Zurück" hidden>{PFEIL}</button>
+    <p class="fn-stand" id="fn-stand" aria-live="polite">Schritt 1 von 4</p>
+    <button type="button" data-funnel-zu aria-label="Schließen">{KREUZ}</button>
+    <div class="fn-balken" aria-hidden="true"><i></i></div>
+  </div>
+  <form class="fn-inhalt" novalidate autocomplete="on">
+    <div class="fn-spalte">
+      <section data-funnel-schritt="1" aria-labelledby="fn-t1">
+        <h2 id="fn-t1" tabindex="-1">Fragen deine Kunden nach&nbsp;Raten?</h2>
+        <p class="fn-grund">Zwei kurze Fragen, damit wir dir zeigen, was Tattoofin in deinem Studio ändert.</p>
+        {kacheln("raten", "fn-t1", [("oft", "Ja, bei großen Motiven"), ("manchmal", "Ab und zu"), ("selten", "Eher selten"), ("offen", "Weiß ich nicht")])}
+        <p class="fn-fuss">7 Tage kostenlos · danach 49,90&nbsp;€ im Monat inkl. MwSt. · monatlich kündbar</p>
+      </section>
+      <section data-funnel-schritt="2" aria-labelledby="fn-t2" hidden>
+        <h2 id="fn-t2" tabindex="-1">Wie zahlen deine Kunden heute&nbsp;meistens?</h2>
+        <p class="fn-grund">Danach siehst du, was sich für dich ändert.</p>
+        {kacheln("zahlung", "fn-t2", [("bar", "Bar"), ("karte", "Mit Karte im Studio"), ("ueberweisung", "Per Überweisung"), ("gemischt", "Ganz unterschiedlich")])}
+        <p class="fn-fuss">7 Tage kostenlos · danach 49,90&nbsp;€ im Monat inkl. MwSt. · monatlich kündbar</p>
+      </section>
+      <section data-funnel-schritt="3" aria-labelledby="fn-t3" hidden>
+        <h2 id="fn-t3" tabindex="-1">Passt. Jetzt dein&nbsp;Studio.</h2>
+        <div class="fn-merk" data-funnel-merk><span data-funnel-merk-text>Du schickst einen Link, dein Kunde zahlt am Handy, auch per Klarna*.</span>
+          <p class="raten-fn">*Raten über Klarna, nach deren Bonitätsprüfung. <b>Achtung! Kreditaufnahme kostet Geld.</b></p></div>
+        {feld("firma", "firma", "Name deines Studios", "text", "organization", 'autocapitalize="words" autocorrect="off" spellcheck="false" enterkeyhint="next"')}
+        {feld("inhaber", "inhaber", "Dein Vor- und Nachname", "text", "name", 'autocapitalize="words" autocorrect="off" spellcheck="false" enterkeyhint="next"')}
+        <button type="button" class="knopf fn-aktion" data-funnel-aktion data-funnel-weiter>Weiter</button>
+      </section>
+      <section data-funnel-schritt="4" aria-labelledby="fn-t4" hidden>
+        <h2 id="fn-t4" tabindex="-1">Wohin kommt dein&nbsp;Login?</h2>
+        <p class="fn-danach">Danach noch ein Schritt: Vertrag bestätigen und deine Karte sicher bei Stripe hinterlegen. <b>Heute 0&nbsp;€.</b> Nach den 7&nbsp;Tagen 49,90&nbsp;€ im Monat inkl. MwSt., monatlich kündbar. Kündigst du vorher, zahlst du nichts.</p>
+        {feld("email", "email", "E-Mail", "email", "email", 'inputmode="email" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next"', "Hierhin kommt dein Login.")}
+        {feld("telefon", "telefon", "Handynummer (WhatsApp)", "tel", "tel", 'inputmode="tel" enterkeyhint="go"', "Für die Einrichtung.")}
+        <p class="fn-pflicht" data-funnel-pflicht>Deine Angaben nutzen wir für dein Konto und die Einrichtung. <a href="/datenschutz.html" target="_blank" rel="noopener">Datenschutz</a></p>
+        <button type="submit" class="knopf fn-aktion" data-funnel-aktion>Weiter · heute 0&nbsp;€</button>
+      </section>
+    </div>
+  </form>
+</dialog>"""
+
+FN_JS = r"""<script>/* Funnel nach dem Schilling-Konzept, Kapitel 13 (Muster scripts/funnel-muster.html, angepasst an Tattoofin) */
+(() => {
+  const dlg = document.querySelector('[data-funnel]');
+  if (!dlg || typeof dlg.showModal !== 'function') return;          // ohne <dialog>: Knopf bleibt Link auf /start
+  const root = document.documentElement, vv = window.visualViewport;
+  const form = dlg.querySelector('form'), inhalt = dlg.querySelector('.fn-inhalt');
+  const schritte = [...dlg.querySelectorAll('[data-funnel-schritt]')], gesamt = schritte.length;
+  const stand = dlg.querySelector('.fn-stand'), balken = dlg.querySelector('.fn-balken i'), zurueck = dlg.querySelector('[data-funnel-zurueck]');
+  const ruhig = matchMedia('(prefers-reduced-motion: reduce)');
+  const antworten = {};                                               // nur im Arbeitsspeicher (13 §11)
+  const herkunft = Object.fromEntries([...new URLSearchParams(location.search)].filter(([k]) => /^(utm_[a-z]+|ad_id)$/.test(k)));
+  const TEXTFELD = 'input:not([type=hidden]):not([type=checkbox]):not([type=radio])';
+  let aktuell = '1', tiefe = 0, ausloeser = null, sperreY = 0, popIgnorieren = 0, eigenesClose = false, weg = false, vorbelegt = false;
+  const track = (n, d) => { try { return window.umami && window.umami.track(n, d); } catch (e) {} };
+  const aktiv = () => schritte.find(s => s.dataset.funnelSchritt === aktuell);
+
+  /* A Tastatur: nur solange ein Textfeld im Funnel Fokus hat, endet der Funnel an der sichtbaren Fläche (13 §13) */
+  const tippt = () => { const el = document.activeElement; return !!(vv && el && dlg.contains(el) && el.matches(TEXTFELD + ', textarea')); };
+  function sync() {
+    if (dlg.open && tippt()) {
+      root.style.setProperty('--vvh', vv.height + 'px');
+      root.style.setProperty('--vvt', vv.offsetTop + 'px');
+      root.classList.add('fn-tastatur');
+      sichtbarHalten();
+    } else {
+      root.classList.remove('fn-tastatur');
+      root.style.removeProperty('--vvh'); root.style.removeProperty('--vvt');
+    }
+  }
+  let raf = 0;
+  const plane = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(sync); };
+  function sichtbarHalten() {                                         // nur im Funnel scrollen, nie das Fenster
+    const el = document.activeElement, s = aktiv();
+    if (!el || !s) return;
+    el.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'instant' });
+    const knopf = s.querySelector('[data-funnel-aktion]');
+    if (!knopf) return;
+    const b = inhalt.getBoundingClientRect(), k = knopf.getBoundingClientRect(), f = el.getBoundingClientRect();
+    const fehlt = k.bottom + 8 - b.bottom, luft = f.top - b.top - 8;
+    if (fehlt > 0 && luft > 0) inhalt.scrollTop += Math.min(fehlt, luft);
+  }
+  if (vv) { vv.addEventListener('resize', plane); vv.addEventListener('scroll', plane); }
+  dlg.addEventListener('focusin', plane);
+  dlg.addEventListener('focusout', () => { plane(); setTimeout(plane, 350); });
+
+  /* B Hintergrund sperren ohne Sprung */
+  function sperren() {
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    sperreY = window.scrollY;
+    root.style.setProperty('--sperre-top', -sperreY + 'px');
+    root.classList.add('fn-offen');
+  }
+  function freigeben() {
+    root.classList.remove('fn-offen', 'fn-tastatur');
+    ['--sperre-top', '--vvh', '--vvt'].forEach(v => root.style.removeProperty(v));
+    window.scrollTo({ top: sperreY, left: 0, behavior: 'instant' });
+  }
+
+  /* C Schritte, Fortschritt, Fokus */
+  const MERK = {
+    bar: 'Statt Bargeld schickst du einen Link per WhatsApp, dein Kunde zahlt am Handy.',
+    karte: 'Ohne Kartengerät: Du schickst einen Link per WhatsApp, dein Kunde zahlt am Handy.',
+    ueberweisung: 'Statt auf eine Überweisung zu warten: Du schickst einen Link, dein Kunde zahlt am Handy.',
+    gemischt: 'Ein Weg für alle: Du schickst einen Link per WhatsApp, dein Kunde zahlt am Handy.',
+  };
+  function merkzettel() {
+    const t = dlg.querySelector('[data-funnel-merk-text]');
+    const raten = antworten.raten === 'oft' || antworten.raten === 'manchmal';
+    t.textContent = (MERK[antworten.zahlung] || MERK.gemischt) + (raten ? ' Bei großen Motiven auch in Raten* über Klarna.' : ' Mit Karte, Apple Pay, Google Pay oder Klarna*.');
+  }
+  function zeige(n, push) {
+    aktuell = String(n);
+    schritte.forEach(s => { s.hidden = s.dataset.funnelSchritt !== aktuell; });
+    const nr = Number(aktuell);
+    stand.textContent = 'Schritt ' + nr + ' von ' + gesamt;
+    balken.style.transform = 'scaleX(' + nr / gesamt + ')';
+    zurueck.hidden = nr === 1;
+    if (nr === 3) merkzettel();
+    if (push) { history.pushState({ fn: aktuell, i: ++tiefe }, ''); if (nr > 1) track('funnel-schritt-' + nr); }
+    inhalt.scrollTop = 0;
+    const s = aktiv(), felder = [...s.querySelectorAll(TEXTFELD)];
+    const feld = felder.find(f => !f.value.trim()) || felder[0];
+    (feld || s.querySelector('h2')).focus({ preventScroll: true });   // Feld synchron im Tipp fokussieren, sonst keine Tastatur auf iOS
+  }
+  const naechster = () => String(Math.min(gesamt, Number(aktuell) + 1));
+
+  /* D Prüfen (gleiche Regeln wie /start) */
+  const REGELN = {
+    firma: v => v.length >= 2 || 'Bitte gib den Namen deines Studios ein.',
+    inhaber: v => v.length >= 2 || 'Bitte gib deinen Vor- und Nachnamen ein.',
+    email: v => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v) || 'Bitte gib eine gültige E-Mail-Adresse ein.',
+    telefon: v => v.replace(/\D/g, '').length >= 6 || 'Bitte gib deine Handynummer mit Vorwahl ein.',
+  };
+  function pruefe(input) {
+    const r = REGELN[input.name]; if (!r) return true;
+    const ok = r(input.value.trim()), meldung = document.getElementById(input.id + '-f');
+    input.setAttribute('aria-invalid', ok === true ? 'false' : 'true');
+    if (meldung) { meldung.hidden = ok === true; meldung.textContent = ok === true ? '' : ok; }
+    return ok === true;
+  }
+  function schrittOk() {
+    const falsch = [...aktiv().querySelectorAll(TEXTFELD)].filter(f => !pruefe(f));
+    if (falsch.length) { falsch[0].focus({ preventScroll: true }); plane(); return false; }
+    return true;
+  }
+  function weiter() { if (schrittOk()) zeige(naechster(), true); }
+  form.addEventListener('focusout', e => { if (e.target.matches('input') && e.target.value) pruefe(e.target); });
+  form.addEventListener('input', e => { if (e.target.getAttribute('aria-invalid') === 'true') pruefe(e.target); });
+  form.addEventListener('keydown', e => {                             // Enter: nächstes Feld, im letzten Feld Weiter bzw. Übergabe
+    if (e.key !== 'Enter' || !e.target.matches('input')) return;
+    e.preventDefault();
+    const felder = [...aktiv().querySelectorAll(TEXTFELD)], i = felder.indexOf(e.target);
+    if (i > -1 && i < felder.length - 1) felder[i + 1].focus({ preventScroll: true });
+    else if (aktuell === String(gesamt)) uebergeben(); else weiter();
+  });
+  form.addEventListener('submit', e => { e.preventDefault(); uebergeben(); });
+
+  /* E Übergabe an /start: Angaben per sessionStorage im Format von start.js, nie in der Adresse (13 §9) */
+  const endKnopf = dlg.querySelector('[data-funnel-schritt="' + gesamt + '"] [data-funnel-aktion]'), endText = endKnopf.innerHTML;
+  const wert = n => (form.elements.namedItem(n).value || '').trim();
+  function uebergeben() {
+    if (weg || !schrittOk()) return;
+    const neu = { paket: 'monatlich', firma: wert('firma'), inhaber: wert('inhaber'), email: wert('email'), telefon: wert('telefon') };
+    try {
+      let alt = {}; try { alt = JSON.parse(sessionStorage.getItem('tf-start') || '{}') || {}; } catch (x) {}
+      sessionStorage.setItem('tf-start', JSON.stringify(Object.assign(alt, neu)));
+      sessionStorage.setItem('schilling-funnel', JSON.stringify({ antworten, herkunft, t: Date.now() }));
+    } catch (x) {}
+    weg = true; endKnopf.disabled = true; endKnopf.textContent = 'Einen Moment …';
+    const ziel = (ausloeser && ausloeser.getAttribute('href')) || '/start.html';
+    let los = false; const geh = () => { if (!los) { los = true; location.assign(ziel); } };
+    Promise.resolve(track('funnel-weiter-start')).then(geh, geh); setTimeout(geh, 400);
+  }
+  addEventListener('pageshow', e => { if (e.persisted) { weg = false; endKnopf.disabled = false; endKnopf.innerHTML = endText; } });
+
+  /* F Öffnen, Schließen, Zurück (Handy-Zurück = ein Schritt zurück, Adresse bleibt gleich) */
+  function vorbelegen() {                                             // zurück von /start: Angaben dieser Sitzung wieder eintragen
+    if (vorbelegt) return; vorbelegt = true;
+    try { const d = JSON.parse(sessionStorage.getItem('tf-start') || '{}') || {};
+      ['firma', 'inhaber', 'email', 'telefon'].forEach(k => { const el = form.elements.namedItem(k); if (el && !el.value && typeof d[k] === 'string') el.value = d[k]; });
+    } catch (x) {}
+  }
+  function oeffnen(e) {
+    e.preventDefault();
+    ausloeser = e.currentTarget;
+    vorbelegen();
+    sperren();
+    dlg.showModal();
+    tiefe = 0;
+    zeige(aktuell, true);
+    track('funnel-start', { ort: ausloeser.dataset.ort || '', schritt: aktuell });
+  }
+  function schliessen() {
+    if (tiefe > 0) { const d = tiefe; tiefe = 0; popIgnorieren = 0; history.go(-d); }
+    else abschluss();
+  }
+  function abschluss() {
+    if (!dlg.open) return;
+    eigenesClose = true; dlg.close();
+    freigeben();
+    track('funnel-zu', { schritt: aktuell });
+    if (ausloeser) ausloeser.focus({ preventScroll: true });
+  }
+  addEventListener('popstate', e => {
+    if (!dlg.open) return;
+    if (popIgnorieren) { popIgnorieren--; return; }
+    const st = e.state;
+    if (st && st.fn) { tiefe = st.i; zeige(st.fn, false); }
+    else { tiefe = 0; abschluss(); }
+  });
+  dlg.addEventListener('cancel', e => { e.preventDefault(); schliessen(); });
+  dlg.addEventListener('close', () => {
+    if (eigenesClose) { eigenesClose = false; return; }
+    const d = tiefe; tiefe = 0; freigeben();
+    if (d > 0) { popIgnorieren = 1; history.go(-d); }
+    if (ausloeser) ausloeser.focus({ preventScroll: true });
+  });
+  document.querySelectorAll('[data-funnel-oeffnen]').forEach(b => {
+    if (b.tagName === 'A') b.setAttribute('role', 'button');
+    b.addEventListener('click', oeffnen);
+  });
+  dlg.querySelector('[data-funnel-zu]').addEventListener('click', schliessen);
+  zurueck.addEventListener('click', () => { if (tiefe > 1) history.back(); else zeige(String(Math.max(1, Number(aktuell) - 1)), false); });
+
+  /* G Antworten: Tipp springt weiter; folgt ein Textfeld, sofort (iOS öffnet die Tastatur nur im Tipp) */
+  dlg.addEventListener('click', e => {
+    const b = e.target.closest('[data-funnel-antwort]');
+    if (b) {
+      const s = b.closest('[data-funnel-schritt]');
+      s.querySelectorAll('[data-funnel-antwort]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+      antworten[b.dataset.feld] = b.dataset.wert;
+      const ziel = schritte.find(x => x.dataset.funnelSchritt === naechster());
+      if ((ziel && ziel.querySelector(TEXTFELD)) || ruhig.matches) weiter(); else setTimeout(weiter, 160);
+      return;
+    }
+    if (e.target.closest('[data-funnel-weiter]')) weiter();
+  });
+
+  /* H Wischen auf der Kopfzeile schiebt nie die Seite dahinter */
+  dlg.addEventListener('touchmove', e => { if (!e.target.closest('.fn-inhalt')) e.preventDefault(); }, { passive: false });
+})();
+</script>"""
+
+
+def funnel_knoepfe(seite):
+    """Alle Hauptknöpfe auf /start werden Funnel-Öffner (E21). Ohne JS bleibt der Link; Umami zählt das Skript (funnel-start)."""
+    seite, n = re.subn(r'<a class="knopf"([^>]*?) href="(/start\.html\?[^"]*?utm_content=(\w+))" data-umami-event="start-\w+">',
+                       r'<a class="knopf"\1 href="\2" data-funnel-oeffnen data-ort="\3" aria-haspopup="dialog">', seite)
+    assert n == 3, f"erwartet 3 Hauptknöpfe, gefunden {n}"
+    return seite
+
+
 KOPF_SKRIPT = """<script>(function(){try{
 if(!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)){var d=document.documentElement;d.classList.add('stech-warten');setTimeout(function(){d.classList.remove('stech-warten')},4000);}}catch(x){}})();</script>"""
 
@@ -318,7 +647,7 @@ for ENTWURF, DATEI in (("a", "studios-raten.html"), ("b", "../_schilling/studios
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-visual">
 {KOPF_SKRIPT}
 <title>Ratenzahlung für deine Tattoo-Kunden – 7 Tage kostenlos testen | Tattoofin</title>
 <meta name="description" content="Dein Kunde kann per Klarna zahlen, du bekommst das Geld in einer Summe aufs eigene Stripe-Konto. Keine Provision. 7 Tage kostenlos testen, danach 49,90 € im Monat inkl. MwSt.">
@@ -334,7 +663,7 @@ for ENTWURF, DATEI in (("a", "studios-raten.html"), ("b", "../_schilling/studios
 <link rel="preload" href="/assets/start/fonts/DMSans.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/start/figur.webp" as="image" type="image/webp">
 <link rel="stylesheet" href="/assets/start/style.css?v=20261117i">
-<style>{CSS}</style>
+<style>{CSS}{FN_CSS}</style>
 </head>
 <body data-wa="aus">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><pattern id="tf-punkte" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><circle cx="2.2" cy="2.2" r="2.1" fill="#1f3d5c"/><circle cx="6.7" cy="6.7" r="2.1" fill="#1f3d5c"/></pattern></defs></svg>
@@ -394,13 +723,16 @@ for ENTWURF, DATEI in (("a", "studios-raten.html"), ("b", "../_schilling/studios
 
   {FUSS}
 </div>
+{FN_HTML}
 <script src="/assets/start/app.js?v=20261116b" defer></script>
 <script defer src="https://cloud.umami.is/script.js" data-website-id="507b740f-264e-4ba1-a7d0-9dbe49db75af" data-domains="tattoofin.de"></script>
 <script src="/js/tf-track.js?v=20261117b"></script>
 <script src="/js/studios.js"></script>
 {BANNER_JS}
+{FN_JS}
 </body>
 </html>
 """
+  seite = funnel_knoepfe(seite)
   (PUB / DATEI).write_text(seite, encoding="utf-8")
   print("geschrieben:", DATEI, len(seite), "Zeichen")

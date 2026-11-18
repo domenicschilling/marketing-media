@@ -1,6 +1,6 @@
 # Hero-Messung http://localhost:4791/studios-raten.html
 
-Datum 2026-11-18 02:52 · Commit - · Toleranz ±8 px
+Datum 2026-11-18 03:29 · Commit - · Toleranz ±8 px
 
 Wörter im Hero: 30 (Budget 20–30)
 
