@@ -40,7 +40,7 @@ FRAGEN = [
     ("Wie kündige ich? Und wenn Stripe mich ablehnt?",
      "Im Portal, zum Ende des Abrechnungsmonats. Dein Stripe-Konto bleibt bei dir, Zahlungslinks und QR-Code enden. Lehnt Stripe dein Studio endgültig ab, bekommst du die gezahlten Monate zurück, außer bei falschen Angaben oder Pflichtverletzung.", False),
     ("Wann kommt das Geld, und was brauche ich?",
-     "Stripe zahlt auf dein Bankkonto aus, laut Stripe in Deutschland in der Regel 3 Werktage nach der Zahlung, die allererste Auszahlung nach 7 Tagen. Du brauchst dein Studio als Unternehmen, ein Bankkonto und deinen Ausweis.", False),
+     "Stripe zahlt auf dein Bankkonto aus, laut Stripe in Deutschland in der Regel 3 Werktage nach der Zahlung, die allererste in der Regel innerhalb von 7 bis 14 Tagen. Du brauchst dein Studio als Unternehmen, ein Bankkonto und deinen Ausweis.", False),
     ("Wie fange ich an?",
      "Online anmelden, dann legst du dein Stripe-Konto an und Stripe prüft dein Studio. Danach richtet unser Team alles mit dir ein, mit einer Testzahlung.", False),
     ("Ich hab schon SumUp & Co.",
@@ -153,7 +153,7 @@ def bauen(seite):
         ("nr3", klein_motiv("motiv-3", "tf-b2-z", "tf-n3"), "Anzahlung", "Vor dem Termin.", "Dein Kunde zahlt an und bestätigt deine Bedingungen. Erst dann blockst du den Termin."),
         ("nr2", klein_motiv("motiv-2"), "Gesamtzahlung", "Nach der Sitzung.", "Den ganzen Betrag oder den Rest nach der Anzahlung, per Link oder QR-Code."),
         ("nr5", klein_motiv("motiv-5"), "Gutschein", "Zum Verschenken.", "Dein Kunde kauft per Link und bekommt Code und PDF per E-Mail."),
-        ("nr1", klein_motiv("flash-1", "tf-b1", "tf-n1"), "Ratenzahlung*", "Für große Tattoos.", "Dein Kunde zahlt in Raten* über Klarna. Du bekommst den ganzen Betrag auf einmal."),
+        ("nr1", klein_motiv("flash-1", "tf-b1", "tf-n1"), "Ratenzahlung*", "Für große Tattoos.", "Dein Kunde zahlt in Raten* über Klarna. Du bekommst den Betrag in einer Summe."),
     ]
     nutzen = ('  <section class="nutzen" id="nutzen" aria-labelledby="nutzen-titel">\n'
               '    <h2 id="nutzen-titel">Was du damit machen&nbsp;kannst.</h2>\n'
@@ -183,7 +183,8 @@ def bauen(seite):
                 + '    </ul>\n  </section>\n\n')
     # Eigener Abschnitt „Du bekommst dein Geld“ (Domenic: „nicht so, dass du selber finanzierst, sondern du kriegst dein Geld und die Kunden
     # finanzieren über Klarna“). Auszahlung laut Stripe-Doku (docs.stripe.com/payments/balances, Settlement timing, Germany: erste Auszahlung
-    # 7 Kalendertage, danach 3 Werktage; Stand 16.11.2026). Kein „sofort“ (nicht belegt). Raten*-Aussage mit eigener Fußnote ≤ 560 px darunter.
+    # 7 Kalendertage, danach 3 Werktage; docs.stripe.com/payouts: erste Auszahlung „in der Regel innerhalb von 7 bis 14 Tagen“,
+    # Stand 18.11.2026 – darum 7 bis 14 Tage). „Den ganzen Betrag“ → „in einer Summe“, weil die Stripe-Gebühr abgeht (Domenic 18.11.). Kein „sofort“ (nicht belegt). Raten*-Aussage mit eigener Fußnote ≤ 560 px darunter.
     geld = f'''  <section class="geld" id="geld" aria-labelledby="geld-titel">
     <div class="geld-innen">
       <h2 id="geld-titel">Dein Geld kommt auf&nbsp;einmal.</h2>
@@ -191,11 +192,11 @@ def bauen(seite):
       <div class="geldfluss">
         <div class="geld-station"><span class="geld-wer">Dein Kunde</span><strong>zahlt in Raten*</strong><span>Den Ratenvertrag schließt er mit Klarna, nicht mit dir.</span></div>
         <span class="geld-pfeil" aria-hidden="true">→</span>
-        <div class="geld-station geld-du"><span class="geld-wer">Du</span><strong>bekommst den ganzen Betrag auf&nbsp;einmal</strong><span>Abzüglich Stripe-Gebühr, auf dein eigenes <span class="nw">Stripe-Konto</span>.</span></div>
+        <div class="geld-station geld-du"><span class="geld-wer">Du</span><strong>bekommst den Betrag in einer&nbsp;Summe</strong><span>Abzüglich Stripe-Gebühr, auf dein eigenes <span class="nw">Stripe-Konto</span>.</span></div>
       </div>
       <p class="raten-fn">{FN_LANG}</p>
       <ul class="geld-punkte">
-        <li><b>Wann ist das Geld auf deinem Konto?</b> Stripe zahlt auf dein Bankkonto aus. Laut Stripe in Deutschland in der Regel 3&nbsp;Werktage nach der Zahlung, die allererste Auszahlung nach 7&nbsp;Tagen.</li>
+        <li><b>Wann ist das Geld auf deinem Konto?</b> Stripe zahlt auf dein Bankkonto aus. Laut Stripe in Deutschland in der Regel 3&nbsp;Werktage nach der Zahlung, die allererste in der Regel innerhalb von 7 bis 14&nbsp;Tagen.</li>
         <li><b>Und wenn der Kunde nicht zahlt?</b> Dann trägt laut Stripe Klarna das Risiko, nicht&nbsp;du.</li>
         <li><b>Sagt Klarna nein?</b> Dann zahlt dein Kunde mit Karte, Apple Pay oder Google&nbsp;Pay.</li>
       </ul>

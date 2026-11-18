@@ -12,7 +12,7 @@
 **Offen**
 1. Anzeigenbild 4:5 (1080×1350) aus der Bon-Szene, ohne Beträge, mit kleinem Pflichtsatz „*Raten über Klarna. Achtung! Kreditaufnahme kostet Geld.“ im Bild; Text steht in `anzeige.md`.
 2. Nach Domenics „live“: Seite deployen (Weg wie bei Tattoofin üblich, Abnahme vorher frisch), Anzeige in der Kombi-Kampagne anlegen (pausiert, Freigabe durch Domenic), Ziel-URL in `anzeige.md`.
-3. Frage an Domenic: dieselben zwei Fakten-Fehler auf live /studios mitkorrigieren (erste Auszahlung laut Stripe 7–14 Tage statt „nach 7 Tagen“; „den ganzen Betrag“ → „in einer Summe“)?
+3. ERLEDIGT 18.11. (Domenic über Ultron: ja): beide Fakten-Fehler auf / und /studios korrigiert (Quelle dev/startseite-bauen.py) – (erste Auszahlung laut Stripe 7–14 Tage statt „nach 7 Tagen“; „den ganzen Betrag“ → „in einer Summe“)?
 4. Memory/Playbook 09-04 sagen „Raten auf eigenem Konto belegt“; die Beleg-Datei zum 900-€-Fall zeigt nur „Klarna“. Angleichen.
 5. Nach Abschluss: Arbeitskopie löschen (`git worktree remove`), Branch bleibt.
 
