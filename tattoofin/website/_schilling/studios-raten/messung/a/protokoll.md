@@ -1,8 +1,8 @@
 # Hero-Messung http://localhost:4791/studios-raten.html
 
-Datum 2026-11-18 02:43 · Commit - · Toleranz ±8 px
+Datum 2026-11-18 02:52 · Commit - · Toleranz ±8 px
 
-Wörter im Hero: 29 (Budget 20–30)
+Wörter im Hero: 30 (Budget 20–30)
 
 | Nr | Gerät | Viewport | Zustand | Hero-Höhe | Abweichung | bestanden | Probleme | Screenshot |
 |---|---|---|---|---|---|---|---|---|
@@ -40,10 +40,10 @@ Schrift unter 16 px (prüfen, ob Stützsatz betroffen):
 - p 12px: "*Raten über Klarna, nach deren"
 - p 13px: "*Raten über Klarna, nach deren"
 - p 13px: "Danach 49,90 € im Monat · mona"
-- p 13px: "Link schicken, dein Kunde zahl"
+- p 13px: "Link schicken, dein Kunde kann"
 - p 15.84px: "Danach 49,90 € im Monat · mona"
 - p 15px: "Danach 49,90 € im Monat · mona"
 
 Gezählter Text:
 
-> Raten* für deine Kunden. Dein Geld auf einmal. Link schicken, dein Kunde zahlt per Klarna. Tattoofin nimmt keine Provision. 7 Tage kostenlos testen Danach 49,90 € im Monat · monatlich kündbar
+> Raten* für deine Kunden. Dein Geld auf einmal. Link schicken, dein Kunde kann per Klarna zahlen. Tattoofin nimmt keine Provision. 7 Tage kostenlos testen Danach 49,90 € im Monat · monatlich kündbar

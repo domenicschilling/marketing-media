@@ -31,19 +31,28 @@ HERZ = svg_nach('class="flash fl-1"')            # Flash-Herz mit Banderole „K
 STERN = svg_nach('<span class="zu" aria-hidden="true">')  # Stern-Knopf der Fragen
 FALL = block(r'<div class="fall" id="fall">.*?</div>\s*</div>')
 FALL = re.sub(r'<h3 id="fall-titel">(.*?)</h3>', r'<h2 id="fall-titel">\1</h2>', FALL, flags=re.S)
+FALL = FALL.replace('Studio anonym. Klarna entscheidet bei jedem Kunden selbst.', 'Studio anonym. Ob der Kunde in Raten oder später bezahlt hat, sehen wir nicht; Klarna entscheidet bei jedem Kunden selbst.')
+assert 'sehen wir nicht' in FALL
+def fakten(t):
+    t = t.replace('die allererste Auszahlung nach 7&nbsp;Tagen', 'die allererste laut Stripe in der Regel innerhalb von 7 bis 14&nbsp;Tagen').replace('die allererste Auszahlung nach 7 Tagen', 'die allererste laut Stripe in der Regel innerhalb von 7 bis 14 Tagen')
+    t = t.replace('bekommst den ganzen Betrag auf&nbsp;einmal', 'bekommst den Betrag in einer&nbsp;Summe')
+    t = t.replace('Dann trägt laut Stripe Klarna das Risiko, nicht&nbsp;du.', 'Dann trägt laut Stripe Klarna das Risiko, nicht&nbsp;du. Reklamiert er das Tattoo, kann ein Streitfall entstehen (siehe Fragen).')
+    t = t.replace('Achtung! Kreditaufnahme kostet Geld.</p>', '<b>Achtung! Kreditaufnahme kostet Geld.</b></p>')
+    return t
+
 PREIS = re.sub(r'\s*<p class="preis-rechnung">.*?</p>', '', block(r'<section class="preis".*?</section>'), flags=re.S)  # No-Show-Rechnung gehört nicht zum Raten-Winkel
 FUSS = block(r'<footer class="fuss">.*?</footer>')
 
 # Fragen: nur die, die zum Raten-Winkel und zur Testwoche gehören (Wortlaut wie live)
-FRAGEN_WAHL = ["Bekommt jeder Kunde Raten*?", "Und wenn der Kunde nicht zahlt?", "Ist Tattoofin der Kreditgeber?",
+FRAGEN_WAHL = ["Bekommt jeder Kunde Raten*?", "Ich hab schon SumUp &amp; Co.", "Und wenn der Kunde nicht zahlt?", "Ist Tattoofin der Kreditgeber?",
                "Was kostet es genau?", "Wie kündige ich? Und wenn Stripe mich ablehnt?", "Wann kommt das Geld, und was brauche ich?",
-               "Technik ist nicht meins.", "Ich hab schon SumUp &amp; Co."]
+               "Technik ist nicht meins."]
 FRAGEN = []
 for frage in FRAGEN_WAHL:
     m = re.search(r'<details class="frage"><summary><span>' + re.escape(frage) + r'</span>.*?</details>', LIVE, re.S)
     if not m:
         raise SystemExit("Frage fehlt live: " + frage)
-    FRAGEN.append(m.group(0))
+    FRAGEN.append(fakten(m.group(0)))
 
 WA = ("https://wa.me/491624502375?text=Hi%20Tattoofin-Team%2C%20ich%20habe%20eure%20Anzeige%20zur%20Ratenzahlung%20gesehen%2C"
       "%20habe%20ein%20Tattoo-Studio%20und%20eine%20Frage%3A")
@@ -53,9 +62,12 @@ WA_ICON = ('<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path 
            'fill="currentColor"/></svg>')
 START = "/start.html?utm_source=studios-raten&amp;utm_medium=seite&amp;utm_content="
 KNOPF = "7 Tage kostenlos testen"
-ZEILE = "Danach 49,90&nbsp;€ im Monat · monatlich kündbar"
-FN = '<p class="raten-fn" data-zaehlt-nicht>*Raten über Klarna, nach deren Bonitätsprüfung. Achtung! Kreditaufnahme kostet Geld.</p>'
+ZEILE = "Danach 49,90&nbsp;€ im Monat · monatlich&nbsp;kündbar"
+FN = '<p class="raten-fn" data-zaehlt-nicht>*Raten über Klarna, nach deren Bonitätsprüfung. <b>Achtung! Kreditaufnahme kostet Geld.</b></p>'
 B, G, H = "#1f3d5c", "#fbb316", "#fff7e3"
+
+
+ROT = "#c4421b"  # Stempelfarbe: kräftiges Rot-Orange aus der Flamme der Live-Motive, abgedunkelt für Kontrast auf Creme (≥ 4,5:1)
 
 
 def linie(d, w=6, farbe=B):
@@ -89,12 +101,13 @@ def szene_a(hoch=False):
     for i, y in enumerate([128, 156, 184]):
         teile.append(linie(f"M{78 + i * 2} {y - i * 1} L{226 - i * 14} {y - 8 - i * 1}", 5))
     teile.append(text(150, 232, "zahlt in Raten*", 21, schrift="text", drehen=-3))
-    teile.append(linie("M62 268 L258 258", 3, B))  # Abrisskante
-    for k in range(4):  # Abriss-Streifen, ohne Beträge
-        x = 66 + k * 48
+    teile.append(linie("M62 268 L72 262 L82 268 L92 262 L102 268 L112 262 L122 267 L132 261 L142 266 L152 260 L162 265 L172 259 L182 264 L192 258 L202 263 L212 257 L222 262 L232 256 L242 261 L258 256", 3, B))  # gezackte Abrisskante
+    for k in range(3):  # Abriss-Streifen, ohne Beträge und ohne Zählbezug; der letzte ist schon abgerissen und fällt
+        x = 76 + k * 58
         y = 278 - k * 2.5
-        d = f"M{x} {y} L{x + 40} {y - 2} L{x + 44} {y + 76} L{x + 4} {y + 78} Z"
-        teile.append(f'<g class="abriss abriss-{k}">' + form(d, G, 5) + text(x + 23, y + 46, "RATE*", 14, drehen=-88) + "</g>")
+        d = f"M{x} {y} L{x + 8} {y - 5} L{x + 16} {y} L{x + 24} {y - 5} L{x + 32} {y} L{x + 40} {y - 4} L{x + 44} {y + 76} L{x + 4} {y + 78} Z"
+        lage = {1: ' transform="rotate(4 %d %d)"' % (x + 20, y), 2: ' transform="translate(26 60) rotate(24 %d %d)"' % (x + 20, y)}.get(k, "")
+        teile.append(f'<g{lage}><g class="abriss abriss-{k}">' + form(d, G, 5) + text(x + 23, y + 46, "RATE*", 14, drehen=-88) + "</g></g>")
     pfeil = "M282 176 C318 150 350 150 380 168 L374 146 L420 178 L372 206 L378 186 C350 172 320 174 292 196 Z"
     dx, dy = (-70, 290) if hoch else (0, 0)
     if hoch:
@@ -104,16 +117,14 @@ def szene_a(hoch=False):
     karte = ["M418 62 L634 74 L624 354 L408 344 Z"]
     g = [form(karte[0], H, 6), text(521, 114, "DEIN STUDIO", 26, drehen=3),
          text(519, 148, "bekommt den Betrag", 16, schrift="text", drehen=3), text(518, 170, "auf einmal", 16, schrift="text", drehen=3),
-         '<g class="stempel">' + form("M436 220 L604 232 L598 308 L430 296 Z", "none", 8)
-         + linie("M446 232 L592 242 L588 296 L442 286 Z", 3) + text(517, 278, "BEZAHLT", 31, drehen=4) + "</g>",
+         '<g transform="rotate(-11 517 262)"><g class="stempel">' + linie("M404 206 L630 218 L622 318 L396 306 Z", 10, ROT)
+         + linie("M418 220 L616 230 L610 304 L410 294 Z", 3, ROT) + text(513, 284, "BEZAHLT", 46, farbe=ROT, drehen=3) + "</g></g>",
          form("M626 22 L633 40 L652 41 L637 53 L642 72 L626 61 L610 72 L615 53 L600 41 L619 40 Z", G, 4)]
     teile.append(f'<g transform="translate({dx} {dy})">' + "".join(g) + "</g>")
-    teile.append(form("M300 300 C290 270 312 252 330 262 C318 270 316 290 330 302 C320 308 306 306 300 300 Z", G, 4) if not hoch
-                 else form("M86 470 C76 440 98 422 116 432 C104 440 102 460 116 472 C106 478 92 476 86 470 Z", G, 4))
     box = "20 10 600 650" if hoch else "20 10 640 380"
     klasse = "szene-hoch" if hoch else "szene-breit"
     return (f'<svg class="motiv stech szene-svg {klasse}" viewBox="{box}" role="img" '
-            f'aria-label="Flash-Motiv: Die Rechnung des Kunden mit vier Abriss-Streifen „Rate“, daneben die Karte des Studios mit dem Stempel „Bezahlt“.">'
+            f'aria-label="Flash-Motiv: Die Rechnung des Kunden mit Abriss-Streifen „Rate“, daneben die Karte des Studios mit dem Stempel „Bezahlt“.">'
             + "".join(teile) + "</svg>")
 
 
@@ -139,9 +150,28 @@ def szene_c():
             + "".join(teile) + "</svg>")
 
 
+ZEIGEN = f"""<section class="zeigen" id="zeigen" aria-labelledby="zeigen-titel">
+    <h2 id="zeigen-titel">So sieht&rsquo;s dein&nbsp;Kunde.</h2>
+    <p class="abschnitt-satz">Echte Tattoofin-Bildschirme mit Beispieldaten.</p>
+    <div class="zeigen-reihe">
+      <figure class="zeigen-bild">
+        <span class="klebe" aria-hidden="true"></span>
+        <span class="handy-rahmen"><img src="/assets/start/zahlungslink-whatsapp.webp" width="592" height="460" loading="lazy" decoding="async" alt="Echter Tattoofin-Bildschirm: Zahlungslink für Lena über 2.000,00 Euro, Knöpfe Per WhatsApp senden und Link kopieren. Beispieldaten."></span>
+        <figcaption><b>1. Du schickst den Link.</b> Per WhatsApp, mit Betrag und Motiv.</figcaption>
+      </figure>
+      <figure class="zeigen-bild zeigen-bild-2">
+        <span class="klebe" aria-hidden="true"></span>
+        <span class="handy-rahmen"><img src="/assets/start/handy-kunde.webp?v=20261116d" width="600" height="1300" loading="lazy" decoding="async" alt="Echte Tattoofin-Zahlseite am Handy: Hi Lena, deine Zahlung an Ink Studio Bamberg, Schritt 1 von 2, 2.000,00 Euro, Sleeve linker Arm. Darunter: Im nächsten Schritt siehst du die Zahlarten, zum Beispiel Karte, Apple Pay oder Klarna. Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, nicht Tattoofin. Achtung! Kreditaufnahme kostet Geld. Beispieldaten."></span>
+        <figcaption><b>2. Dein Kunde zahlt am Handy.</b> Mit Karte, Apple&nbsp;Pay, Google&nbsp;Pay oder Klarna*. Auf einer Seite mit deinem Studionamen.</figcaption>
+      </figure>
+    </div>
+    {FN}
+  </section>"""
+
+
 HELD = {
     "a": {"h1": "Raten* für deine Kunden. Dein Geld auf&nbsp;einmal.",
-          "s": "Link schicken, dein Kunde zahlt per Klarna. Tattoofin nimmt keine&nbsp;Provision.",
+          "s": "Link schicken, dein Kunde kann per Klarna zahlen. Tattoofin nimmt keine&nbsp;Provision.",
           "szene": szene_a() + szene_a(hoch=True)},
     "b": {"h1": "Großes Motiv? Dein Kunde zahlt in&nbsp;Raten*.",
           "s": "Link schicken, Klarna prüft, du bekommst dein Geld auf&nbsp;einmal.",
@@ -178,9 +208,9 @@ CSS = """
 .held h1{font-size:clamp(28px,min(11vw,6.9svh),92px);margin-top:2px;text-wrap:balance}
 .held .unterzeile{font-size:clamp(14px,min(4.3vw,2.6svh),22px);margin-top:6px;max-width:30em}
 .held .raten-fn{margin-top:5px}
-.held .held-buehne{position:relative;flex:1 1 0;height:auto;min-height:70px;margin:8px 0 6px;cursor:pointer}
+.held .held-buehne{position:relative;flex:1 1 0;height:auto;aspect-ratio:auto;width:auto;max-width:none;min-height:70px;margin:8px 0 6px;cursor:pointer}
 .held-buehne .szene-svg{position:absolute;inset:0;width:100%;height:100%}
-.held-a .held-figur{left:41%;height:min(42%,165px)}
+.held-a .held-figur{left:38%;height:min(34%,130px)}
 .held-c .held-figur{left:auto;right:-4px;height:min(40%,160px)}
 .held-figur{position:absolute;z-index:3;left:-4px;bottom:-6px;height:min(52%,190px);width:auto;pointer-events:none}
 .held-fuss{display:grid;gap:6px;justify-items:start}
@@ -205,7 +235,17 @@ CSS = """
 .b-handy .handy-rahmen{height:calc(100% - 22px)}
 .b-handy .handy-rahmen img{height:100%;aspect-ratio:auto;object-fit:cover;object-position:50% 79%}
 .held-b .held-figur{height:min(34%,150px);left:-6px}
-.b-handy figcaption{text-align:center;font-size:12px;font-weight:700;margin-top:4px;transform:rotate(3deg)}
+.b-handy figcaption{position:relative;z-index:4;text-align:center;font-size:12px;font-weight:700;margin-top:6px;transform:rotate(3deg)}
+.zeigen{max-width:1280px;margin-inline:auto;padding:30px var(--rand) 34px}
+.zeigen-reihe{display:grid;gap:30px;margin:24px 0 14px}
+.zeigen-bild{position:relative;transform:rotate(-1.5deg)}
+.zeigen-bild-2{transform:rotate(1.5deg)}
+.zeigen-bild .handy-rahmen img{aspect-ratio:592/460;object-fit:cover;object-position:top}
+.zeigen-bild-2 .handy-rahmen img{aspect-ratio:600/1160}
+@media (min-width:720px){.zeigen-bild-2{max-width:340px}}
+.zeigen-bild figcaption{margin-top:14px;line-height:1.4}
+.zeigen-bild figcaption b{font-weight:800}
+@media (min-width:720px){.zeigen-reihe{grid-template-columns:1fr 1fr;align-items:start;gap:44px;max-width:900px}}
 /* Zweiter Bildschirm: stärkster Beleg */
 .beleg-oben{padding-top:22px}
 .testwoche{max-width:1280px;margin-inline:auto;padding:28px var(--rand) 34px}
@@ -236,6 +276,8 @@ CSS = """
   .held .unterzeile{font-size:clamp(14px,min(1.7vw,2.7svh),23px)}
   .held .raten-fn{font-size:13px}
   .held-figur{height:min(40%,220px)}
+  .held-a .szene-breit{display:none}.held-a .szene-hoch{display:block}
+  .held-a .held-figur{left:-2%;height:min(30%,200px)}
 }
 @media (orientation:landscape) and (max-height:500px){
   .held{padding-bottom:calc(8px + var(--banner-h,0px));grid-template-columns:minmax(0,6fr) minmax(0,4fr)}
@@ -265,7 +307,7 @@ for ENTWURF, DATEI in (("a", "studios-raten.html"), ("b", "studios-raten-entwurf
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 {KOPF_SKRIPT}
 <title>Ratenzahlung für deine Tattoo-Kunden – 7 Tage kostenlos testen | Tattoofin</title>
-<meta name="description" content="Dein Kunde zahlt per Klarna in Raten, du bekommst dein Geld auf einmal aufs eigene Stripe-Konto. Keine Provision. 7 Tage kostenlos testen, danach 49,90 € im Monat inkl. MwSt.">
+<meta name="description" content="Dein Kunde kann per Klarna zahlen, du bekommst das Geld in einer Summe aufs eigene Stripe-Konto. Keine Provision. 7 Tage kostenlos testen, danach 49,90 € im Monat inkl. MwSt.">
 <meta name="robots" content="noindex,follow">
 <meta name="theme-color" content="#f5ead2">
 <link rel="canonical" href="https://tattoofin.de/studios">
@@ -305,7 +347,9 @@ for ENTWURF, DATEI in (("a", "studios-raten.html"), ("b", "studios-raten-entwurf
     {FALL}
   </section>
 
-  {block(r'<section class="geld".*?</section>').replace('<a class="mehr" href="/ratenzahlung-tattoostudio.html">Mehr zur Ratenzahlung im Tattoostudio&nbsp;→</a>', '')}
+  {ZEIGEN}
+
+  {fakten(block(r'<section class="geld".*?</section>')).replace('Dein Geld kommt auf&nbsp;einmal.', 'Du finanzierst nichts&nbsp;vor.').replace('<a class="mehr" href="/ratenzahlung-tattoostudio.html">Mehr zur Ratenzahlung im Tattoostudio&nbsp;→</a>', '')}
 
   <section class="testwoche" id="testwoche" aria-labelledby="testwoche-titel">
     <h2 id="testwoche-titel">So laufen deine 7&nbsp;Tage.</h2>

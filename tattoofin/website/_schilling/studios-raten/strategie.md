@@ -28,7 +28,7 @@ Bewusstseinsstand: problembewusst, lösungsunbewusst. Traffic: kalt, Meta, Sonde
 Kein Anzeigentext für diesen Winkel vorhanden → mitgeschrieben in `anzeige.md`. Gleiches Versprechen, gleiche Wörter: „Raten*“, „am Stück“, „7 Tage kostenlos“, Knopf-Verb „testen“, Anrede Du.
 
 ## E. Kernversprechen
-„Dein Kunde zahlt per Klarna in Raten*, du bekommst den ganzen Betrag.“ Prüfung: Raten auf eigenem Standard-Konto belegt (07.11.2026, 900 €, nicht älter als 30 Tage) [belegt]. Auszahlung laut Stripe in der Regel 3 Werktage, die erste nach 7 Tagen [belegt: live /studios, Stripe]. „Klarna trägt das Risiko“ nur als „laut Stripe“ [plausibel, so live]. Kein „sofort“, kein „garantiert“.
+„Dein Kunde zahlt per Klarna in Raten*, du bekommst den ganzen Betrag.“ Prüfung: Klarna-Zahlung über 900 € auf eigenem Stripe-Konto eines Studios am 07.11.2026 [belegt: content/tattoofin/spots-2026-11/belege/fall-900-klarna-2026-11-07.md]; ob der Kunde Raten oder „später bezahlen“ gewählt hat, ist laut Beleg-Datei nicht festgestellt → Raten auf eigenem Konto [plausibel], auf der Seite so offen gesagt. Erste Auszahlung laut Stripe-Doku in der Regel 7 bis 14 Tage (Werberecht-Check 18.11.). Auszahlung laut Stripe in der Regel 3 Werktage, die erste nach 7 Tagen [belegt: live /studios, Stripe]. „Klarna trägt das Risiko“ nur als „laut Stripe“ [plausibel, so live]. Kein „sofort“, kein „garantiert“.
 „7 Tage kostenlos“: live /start „1 Woche testen. Heute 0 €“, Karte bei Stripe hinterlegt, „Kündigst du in der Testwoche, zahlst du nichts“ [belegt: start.html 18.11.2026]. Eine Erinnerung vor Ablauf steht nicht auf /start → wird nicht versprochen.
 
 ## F. Belegbestand
