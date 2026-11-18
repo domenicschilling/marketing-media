@@ -11,7 +11,8 @@ struct TattoofinApp: App {
                 .environment(AppState.shared.portal)
                 .environment(AppState.shared.sperre)
                 .tint(Color.tfAkzent)
-                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                // Kein globaler Schrift-Deckel mehr (DS APPKonzept, 18.11.2026): Alle Größen bis AX5 sind erlaubt,
+                // nur der Ziffernblock der Kasse ist einzeln begrenzt (Ziffernblock in KasseView.swift).
         }
     }
 }
@@ -79,18 +80,28 @@ struct HauptView: View {
         TabView(selection: $app.tab) {
             Tab(Texte.Tabs.kasse, systemImage: "eurosign.circle", value: HauptTab.kasse) {
                 KasseView()
+                    .accessibilityElement(children: .contain)
+                    .accessibilityIdentifier("bildschirm.kasse")
             }
             Tab(Texte.Tabs.zahlungen, systemImage: "list.bullet.rectangle", value: HauptTab.zahlungen) {
                 ZahlungenView()
+                    .accessibilityElement(children: .contain)
+                    .accessibilityIdentifier("bildschirm.zahlungen")
             }
             Tab(Texte.Tabs.gutscheine, systemImage: "gift", value: HauptTab.gutscheine) {
                 GutscheineView()
+                    .accessibilityElement(children: .contain)
+                    .accessibilityIdentifier("bildschirm.gutscheine")
             }
             Tab(Texte.Tabs.werbung, systemImage: "megaphone", value: HauptTab.werbung) {
                 WerbungView()
+                    .accessibilityElement(children: .contain)
+                    .accessibilityIdentifier("bildschirm.werbung")
             }
             Tab(Texte.Tabs.konto, systemImage: "person.crop.circle", value: HauptTab.konto) {
                 KontoView()
+                    .accessibilityElement(children: .contain)
+                    .accessibilityIdentifier("bildschirm.konto")
             }
         }
         .environment(WerbungStore.shared)

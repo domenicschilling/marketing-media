@@ -15,6 +15,9 @@ struct GutscheinDetailView: View {
     @State private var linkSheet: ZahlungErstellt?
     @State private var eingeloestZaehler = 0
     @State private var link: String?
+    /// Neuladen fehlgeschlagen: der gezeigte Stand ist evtl. alt (DS „ohne Netz“: Stand mit Uhrzeit statt still)
+    @State private var aktualisierenFehler: String?
+    @State private var stand: Date?
 
     init(zahlung: Zahlung) {
         _zahlung = State(initialValue: zahlung)
@@ -43,6 +46,9 @@ struct GutscheinDetailView: View {
                     }
                     if status == "eingeloest", let d = Datum.tagUhrzeit(g.eingeloestAm) {
                         Text(Texte.Gutscheine.eingeloestAm(d)).font(.dm(.body, weight: .semibold)).foregroundStyle(Color.tfLeise)
+                    }
+                    if let aktualisierenFehler {
+                        TeilFehlerZeile(text: aktualisierenFehler) { Task { await neuLaden() } }
                     }
                 }
                 .padding(.vertical, 4)
@@ -129,7 +135,7 @@ struct GutscheinDetailView: View {
         .navigationTitle(Texte.Gutscheine.detailTitel)
         .navigationBarTitleDisplayMode(.inline)
         .sensoryFeedback(.success, trigger: eingeloestZaehler)
-        .sheet(item: $linkSheet) { ZahlungslinkSheet(erstellt: $0).tfSchriftGrenze() }
+        .sheet(item: $linkSheet) { ZahlungslinkSheet(erstellt: $0) }
         .sheet(isPresented: $pdfTeilen) {
             if let pdf { TeilenSheet(dinge: [pdf]).presentationDetents([.medium, .large]).ignoresSafeArea() }
         }
@@ -150,9 +156,14 @@ struct GutscheinDetailView: View {
     }
 
     private func neuLaden() async {
-        if let a = try? await APIClient.shared.zahlung(zahlung.id) {
+        do {
+            let a = try await APIClient.shared.zahlung(zahlung.id)
             uebernehmen(a.zahlung)
             link = a.link
+            stand = .now
+            aktualisierenFehler = nil
+        } catch {
+            aktualisierenFehler = Texte.Fehler.aktualisierenFehlgeschlagen(stand?.formatted(date: .omitted, time: .shortened))
         }
     }
 

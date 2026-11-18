@@ -14,6 +14,7 @@ struct KasseView: View {
     @State private var heute = false
     /// Sichtbare Höhe der Kasse: auf kleinen iPhones (SE) wird alles enger, damit der ganze Ziffernblock über dem Knopf steht
     @State private var hoehe: CGFloat = 800
+    @Environment(\.dynamicTypeSize) private var schrift
     private var kompakt: Bool { hoehe < 560 }
 
     var body: some View {
@@ -44,9 +45,9 @@ struct KasseView: View {
                     }
                 }
             }
-            .fullScreenCover(isPresented: $thekeOffen) { TheckenQRView().tfSchriftGrenze() }
+            .fullScreenCover(isPresented: $thekeOffen) { TheckenQRView() }
             .sheet(item: $erstellt) { e in
-                ZahlungslinkSheet(erstellt: e).tfSchriftGrenze()
+                ZahlungslinkSheet(erstellt: e)
             }
             .sensoryFeedback(.success, trigger: erfolgZaehler)
         }
@@ -74,8 +75,11 @@ struct KasseView: View {
         Text(betragFehler ?? Texte.Kasse.grenzen(min: portal.config.min, max: portal.config.max))
             .font(.dm(.footnote, weight: betragFehler == nil ? .regular : .semibold))
             .foregroundStyle(betragFehler == nil ? Color.tfLeise : Color.tfRot)
-            .lineLimit(1)
-            .minimumScaleFactor(0.8)
+            // Normale Schrift: eine Zeile (fester Platz über dem Ziffernblock). Ab AX-Größen umbrechen statt abschneiden (DS 18.11.2026).
+            .lineLimit(schrift.isAccessibilitySize ? nil : 1)
+            .minimumScaleFactor(schrift.isAccessibilitySize ? 1 : 0.8)
+            .fixedSize(horizontal: false, vertical: schrift.isAccessibilitySize)
+            .multilineTextAlignment(.center)
     }
 
     private var bereit: Bool {
@@ -289,6 +293,9 @@ struct Ziffernblock: View {
             }
         }
         .sensoryFeedback(.selection, trigger: tipp)
+        // Einzige Schrift-Grenze der App: 12 Tasten in 3 Spalten passen bei AX-Größen nicht mehr nebeneinander, und
+        // Ziffern auf einer Taste brauchen keine größere Schrift, um lesbar zu sein (Brief ds-brief-kern.md).
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)  // ds-ok: Ziffernblock, 3 Spalten, Ziffern bleiben lesbar
     }
 }
 
@@ -335,7 +342,7 @@ struct GesperrtKarte: View {
             .padding(16)
         }
         .refreshable { await portal.laden() }
-        .sheet(isPresented: $aboOffen) { AboErneuernSheet().tfSchriftGrenze() }
+        .sheet(isPresented: $aboOffen) { AboErneuernSheet() }
         .onChange(of: szene) { _, neu in
             // Zurück aus Safari (Stripe-Einrichtung) oder den Einstellungen: Stand neu holen
             if neu == .active { Task { await portal.laden() } }
@@ -344,7 +351,7 @@ struct GesperrtKarte: View {
 
     private func symbol(_ name: String) -> some View {
         Image(systemName: name)
-            .font(.system(size: 44))
+            .font(.system(size: 44))  // ds-ok: Zier-Symbol im Sperr-Hinweis (44 pt), Text wächst mit
             .foregroundStyle(Color.tfAkzent)
             .accessibilityHidden(true)
     }

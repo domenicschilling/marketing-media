@@ -6,21 +6,25 @@ struct HeuteSchalter: View {
     @Binding var an: Bool
     /// Kleine iPhones: Erklärung in einer Zeile
     var kompakt = false
+    @Environment(\.dynamicTypeSize) private var schrift
 
     var body: some View {
-        // Flach (ohne Karte), damit Ziffernblock und „Zahlungslink erstellen“ in den ersten Bildschirm passen
-        Toggle(isOn: $an) {
-            VStack(alignment: .leading, spacing: 1) {
+        // Flach (ohne Karte), damit Ziffernblock und „Zahlungslink erstellen“ in den ersten Bildschirm passen.
+        // Der Hinweis steht unter dem Schalter statt in seinem Label: Im Label wurde er bei großer Schrift abgeschnitten
+        // (DS-Audit 18.11.2026). Kleine iPhones: weiter eine Zeile, aber umbrechen statt verkleinern ab AX-Größen.
+        VStack(alignment: .leading, spacing: 1) {
+            Toggle(isOn: $an) {
                 Text(Texte.Kasse2.heute).font(.dm(.subheadline, weight: .semibold)).foregroundStyle(Color.tfTinte)
-                Text(Texte.Kasse2.heuteHinweis).font(.dm(.caption)).foregroundStyle(Color.tfLeise)
-                    .lineLimit(kompakt ? 1 : nil)
-                    .minimumScaleFactor(kompakt ? 0.8 : 1)
-                    .fixedSize(horizontal: false, vertical: !kompakt)
             }
+            .tint(Color.tfGruen)
+            .accessibilityHint(Texte.Kasse2.heuteHinweis)
+            .accessibilityIdentifier("heute-im-studio")
+            Text(Texte.Kasse2.heuteHinweis).font(.dm(.caption)).foregroundStyle(Color.tfLeise)
+                .lineLimit(kompakt && !schrift.isAccessibilitySize ? 1 : nil)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityHidden(true)
         }
-        .tint(Color.tfGruen)
         .padding(.horizontal, 4)
-        .accessibilityIdentifier("heute-im-studio")
     }
 }
 

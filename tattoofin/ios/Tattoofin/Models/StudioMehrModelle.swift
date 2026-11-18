@@ -167,9 +167,9 @@ enum FragebogenWert: Codable, Sendable, Hashable {
 
     init(from decoder: any Decoder) throws {
         let c = try decoder.singleValueContainer()
-        if let b = try? c.decode(Bool.self) { self = .jaNein(b); return }
-        if let s = try? c.decode(String.self) { self = .text(s); return }
-        if let d = try? c.decode(Double.self) { self = .text(d.rounded() == d ? String(Int(d)) : String(d)); return }
+        if let b = try? c.decode(Bool.self) { self = .jaNein(b); return }  // ds-ok: tolerantes Dekodieren, Typen nacheinander probieren
+        if let s = try? c.decode(String.self) { self = .text(s); return }  // ds-ok: tolerantes Dekodieren
+        if let d = try? c.decode(Double.self) { self = .text(d.rounded() == d ? String(Int(d)) : String(d)); return }  // ds-ok: tolerantes Dekodieren
         self = .text("")
     }
 
@@ -193,7 +193,7 @@ struct FragebogenDaten: Codable, Sendable {
 
     init(from decoder: any Decoder) throws {
         let c = try decoder.singleValueContainer()
-        werte = (try? c.decode([String: FragebogenWert].self)) ?? [:]
+        werte = (try? c.decode([String: FragebogenWert].self)) ?? [:]  // ds-ok: tolerantes Dekodieren, fehlender Fragebogen = leer
     }
 
     func encode(to encoder: any Encoder) throws {

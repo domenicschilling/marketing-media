@@ -70,7 +70,7 @@ struct AboView: View {
             if abo.produkt == nil { await abo.produktLaden() }
             if let p = abo.produkt { gratis = await Self.gratisDauer(p) }
         }
-        .sheet(item: $seite) { RechtsAnsicht(seite: $0).tfSchriftGrenze() }
+        .sheet(item: $seite) { RechtsAnsicht(seite: $0) }
         .onChange(of: portal.studio?.apple?.istBeendet) { _, beendet in
             // Kauf kam über Transaction.updates (z. B. nach „wartet auf Bestätigung“)
             if erneuern && beendet == false { aktionen.fertig() }

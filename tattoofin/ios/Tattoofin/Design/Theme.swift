@@ -76,12 +76,27 @@ extension Font {
 
 // MARK: - Knöpfe
 
+/// Symbol + Text im Knopf; bei Bedienungshilfe-Größen das Symbol über dem Text, damit lange Wörter („Gutschein“) die volle
+/// Breite haben und nicht abgeschnitten werden (DS-Audit 18.11.2026). Das Symbol bleibt in beiden Fällen da.
+struct KnopfLabelStil: LabelStyle {
+    @Environment(\.dynamicTypeSize) private var schrift
+
+    func makeBody(configuration: Configuration) -> some View {
+        let layout = schrift.isAccessibilitySize ? AnyLayout(VStackLayout(spacing: 4)) : AnyLayout(HStackLayout(spacing: 8))
+        layout {
+            configuration.icon
+            configuration.title
+        }
+    }
+}
+
 /// Hauptknopf: Gelb mit blauer Schrift
 struct HauptKnopfStil: ButtonStyle {
     @Environment(\.isEnabled) private var aktiv
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
+            .labelStyle(KnopfLabelStil())
             .font(.dm(.headline, weight: .bold))
             .multilineTextAlignment(.center)
             .foregroundStyle(aktiv ? Color.tfBlau : Color.tfKnopfAusSchrift)
@@ -102,6 +117,7 @@ struct ZweitKnopfStil: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
+            .labelStyle(KnopfLabelStil())
             .font(.dm(.body, weight: .semibold))
             .multilineTextAlignment(.center)
             // Deaktiviert: nur der Rahmen wird schwächer, die Schrift bleibt lesbar (tfLeise, ≥ 4,5:1; vorher 2,4:1 durch 0,45 Deckkraft)
@@ -138,12 +154,6 @@ struct KarteModifier: ViewModifier {
 
 extension View {
     func karte() -> some View { modifier(KarteModifier()) }
-
-    /// Obergrenze für die Schriftgröße. Sitzt an der Wurzel, muss aber an jedes Blatt (.sheet/.fullScreenCover) einzeln,
-    /// weil Blätter sie nicht erben. Nicht nötig bei reinen UIKit-Blättern (Teilen, Safari): Dort wirkt sie nicht.
-    func tfSchriftGrenze() -> some View {
-        dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-    }
 
     /// Hintergrund der Bildschirme
     func tfHintergrund() -> some View {

@@ -49,6 +49,8 @@ enum WerbungTexte {
     static let videoLabel = "Werbevideo: Bei uns ganz bequem übers Handy bezahlen"
     static let fotosKeinZugriff = "Tattoofin darf nichts in Fotos speichern. Du kannst es in den iPhone-Einstellungen unter Tattoofin › Fotos erlauben."
     static let fotosFehler = "Speichern hat nicht geklappt. Bitte versuch es nochmal."
+    /// DS-Kern (18.11.2026): Bilder für „Teilen“ ließen sich nicht ablegen → nicht still nichts tun
+    static let teilenFehler = "Teilen hat nicht geklappt. Bitte versuch es nochmal."
     static let ladeFehler = "Laden hat nicht geklappt. Bitte prüf dein Internet und versuch es nochmal."
 
     // Beiträge

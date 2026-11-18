@@ -108,7 +108,7 @@ struct LeerAnsicht: View {
     var body: some View {
         VStack(spacing: 10) {
             Image(systemName: symbol)
-                .font(.system(size: 40, weight: .regular))
+                .font(.system(size: 40, weight: .regular))  // ds-ok: Zier-Symbol im Leerzustand (40 pt), Titel und Text darunter wachsen mit
                 .foregroundStyle(Color.tfLeise)
                 .accessibilityHidden(true)
             Text(titel)
@@ -173,6 +173,22 @@ struct FehlerZeile: View {
             .foregroundStyle(Color.tfRot)
             .fixedSize(horizontal: false, vertical: true)
             .accessibilityLabel("Fehler: \(text)")
+    }
+}
+
+/// Fehlerzeile für einen Teil eines Bildschirms (DS „Teilweise“): Der Rest bleibt nutzbar, hier steht, was fehlt, mit „Nochmal versuchen“.
+struct TeilFehlerZeile: View {
+    let text: String
+    let nochmal: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            FehlerZeile(text: text)
+            Button(Texte.Allgemein.nochmal, action: nochmal)
+                .font(.dm(.subheadline, weight: .semibold))
+                .foregroundStyle(Color.tfAkzent)
+        }
+        .padding(.vertical, 4)
     }
 }
 

@@ -75,7 +75,7 @@ struct BestaetigungenView: View {
         .tfHintergrund()
         .navigationTitle(Texte.Registrieren.navTitel)
         .navigationBarTitleDisplayMode(.inline)
-        .sheet(item: $seite) { RechtsAnsicht(seite: $0).tfSchriftGrenze() }
+        .sheet(item: $seite) { RechtsAnsicht(seite: $0) }
     }
 
     /// Schalter mit langem Text, darunter ggf. „… lesen“ und der Fehler „Bitte bestätigen.“

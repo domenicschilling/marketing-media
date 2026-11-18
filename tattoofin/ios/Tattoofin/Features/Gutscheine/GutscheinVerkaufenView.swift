@@ -116,7 +116,7 @@ struct GutscheinVerkaufenView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button(Texte.Allgemein.abbrechen) { dismiss() } }
             }
-            .sheet(item: $erstellt, onDismiss: { dismiss() }) { ZahlungslinkSheet(erstellt: $0).tfSchriftGrenze() }
+            .sheet(item: $erstellt, onDismiss: { dismiss() }) { ZahlungslinkSheet(erstellt: $0) }
         }
     }
 

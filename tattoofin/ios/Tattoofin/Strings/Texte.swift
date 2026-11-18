@@ -395,6 +395,8 @@ enum Texte {
         static let eintippenHinweis = "Tipp den Code einfach ein."
         static let keineKamera = "Hier gibt es keine Kamera. Tipp den Code einfach ein."
         static let keineErlaubnis = "Die App darf die Kamera nicht nutzen. Du kannst das in den iPhone-Einstellungen ändern oder den Code eintippen."
+        /// DS-Kern (18.11.2026): Kamera ließ sich nicht starten → nicht schwarz stehen lassen
+        static let kameraFehler = "Die Kamera ließ sich gerade nicht starten. Tipp den Code einfach ein."
     }
 
     enum Konto {
@@ -421,6 +423,8 @@ enum Texte {
         static let pushAuszahlung = "Mitteilung bei Auszahlung"
         static let pushVorname = "Vorname des Kunden in der Mitteilung"
         static let mitteilungenHinweis = "Gilt nur für dieses Gerät. Den Vornamen zeigt das iPhone auch auf dem Sperrbildschirm."
+        /// DS-Kern (18.11.2026): Geräteliste nicht geladen → nicht still die Standardwerte zeigen
+        static let mitteilungenNichtGeladen = "Deine Mitteilungs-Einstellungen konnten nicht geladen werden."
         static let pushAus = "Mitteilungen sind in den iPhone-Einstellungen ausgeschaltet."
         static let einstellungenOeffnen = "iPhone-Einstellungen öffnen"
         static let sicherheit = "Sicherheit und Team"

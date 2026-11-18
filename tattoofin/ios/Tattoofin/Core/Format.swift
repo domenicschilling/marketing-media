@@ -132,9 +132,9 @@ enum GutscheinCode {
 enum Datum {
     static func parse(_ s: String?) -> Date? {
         guard let s, !s.isEmpty else { return nil }
-        if let d = try? Date(s, strategy: .iso8601) { return d }
-        if let d = try? Date(s, strategy: Date.ISO8601FormatStyle(includingFractionalSeconds: true)) { return d }
-        if s.count == 10, let d = try? Date(s, strategy: Date.ISO8601FormatStyle().year().month().day()) { return d }
+        if let d = try? Date(s, strategy: .iso8601) { return d }  // ds-ok: Datumsformate nacheinander probieren
+        if let d = try? Date(s, strategy: Date.ISO8601FormatStyle(includingFractionalSeconds: true)) { return d }  // ds-ok: Datumsformate nacheinander probieren
+        if s.count == 10, let d = try? Date(s, strategy: Date.ISO8601FormatStyle().year().month().day()) { return d }  // ds-ok: Datumsformate nacheinander probieren
         return nil
     }
 

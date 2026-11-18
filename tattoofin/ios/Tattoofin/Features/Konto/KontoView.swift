@@ -10,6 +10,8 @@ struct KontoView: View {
     @Environment(\.openURL) private var openURL
 
     @State private var geraet: Geraet?
+    /// Laden der Geräte-Einstellungen fehlgeschlagen (sonst sähe man still die Standardwerte und könnte sie überschreiben)
+    @State private var geraetFehler: String?
     @State private var mitteilungenZahlungen = true
     @State private var mitteilungenAuszahlungen = true
     @State private var kundenname = false
@@ -56,8 +58,8 @@ struct KontoView: View {
             .navigationBarTitleDisplayMode(.inline)
             .refreshable { await allesLaden() }
             .task { await allesLaden() }
-            .sheet(item: $rechtsseite) { RechtsAnsicht(seite: $0).tfSchriftGrenze() }
-            .sheet(isPresented: $aboErneuern) { AboErneuernSheet().tfSchriftGrenze() }
+            .sheet(item: $rechtsseite) { RechtsAnsicht(seite: $0) }
+            .sheet(isPresented: $aboErneuern) { AboErneuernSheet() }
             .manageSubscriptionsSheet(isPresented: $aboVerwalten)
             .onChange(of: aboVerwalten) { _, offen in if !offen { Task { await portal.laden() } } }
             .alert(Texte.Konto.abmeldenFrage, isPresented: $abmeldenFrage) {
@@ -213,12 +215,20 @@ struct KontoView: View {
                     }
                 }
             }
-            Toggle(Texte.Konto.pushZahlung, isOn: $mitteilungenZahlungen)
-                .onChange(of: mitteilungenZahlungen) { alt, neu in if alt != neu { mitteilungenSpeichern() } }
-            Toggle(Texte.Konto.pushAuszahlung, isOn: $mitteilungenAuszahlungen)
-                .onChange(of: mitteilungenAuszahlungen) { alt, neu in if alt != neu { mitteilungenSpeichern() } }
-            Toggle(Texte.Konto.pushVorname, isOn: $kundenname)
-                .onChange(of: kundenname) { alt, neu in if alt != neu { kundennameSpeichern() } }
+            if let geraetFehler {
+                TeilFehlerZeile(text: "\(Texte.Konto.mitteilungenNichtGeladen) \(geraetFehler)") {
+                    Task { await geraetLaden() }
+                }
+            }
+            Group {
+                Toggle(Texte.Konto.pushZahlung, isOn: $mitteilungenZahlungen)
+                    .onChange(of: mitteilungenZahlungen) { alt, neu in if alt != neu { mitteilungenSpeichern() } }
+                Toggle(Texte.Konto.pushAuszahlung, isOn: $mitteilungenAuszahlungen)
+                    .onChange(of: mitteilungenAuszahlungen) { alt, neu in if alt != neu { mitteilungenSpeichern() } }
+                Toggle(Texte.Konto.pushVorname, isOn: $kundenname)
+                    .onChange(of: kundenname) { alt, neu in if alt != neu { kundennameSpeichern() } }
+            }
+            .disabled(geraetFehler != nil)
         } header: {
             ListenKopf(Texte.Konto.mitteilungen)
         } footer: {
@@ -318,8 +328,15 @@ struct KontoView: View {
     }
 
     private func geraetLaden() async {
-        guard let liste = try? await APIClient.shared.geraete(),
-              let ich = liste.first(where: { $0.diesesGeraet == true }) else { return }
+        let liste: [Geraet]
+        do {
+            liste = try await APIClient.shared.geraete()
+            geraetFehler = nil
+        } catch {
+            geraetFehler = fehlerText(error)
+            return
+        }
+        guard let ich = liste.first(where: { $0.diesesGeraet == true }) else { return }
         geraet = ich
         if let m = ich.mitteilungen {
             mitteilungenZahlungen = m.zahlungen

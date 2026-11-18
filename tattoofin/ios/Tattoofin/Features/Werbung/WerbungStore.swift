@@ -39,12 +39,12 @@ final class WerbungStore {
         laedt = true
         defer { laedt = false }
         async let w = werbungLaden()
-        async let st = try? APIClient.shared.start()
+        async let st = try? APIClient.shared.start()  // ds-ok: Rückfall-Kette, scheitert alles, zeigt fehler = ladeFehler
         let (wa, sa) = await (w, st)
         if let wa { werbung = wa }
         if let sa {
             startServer = sa
-        } else if let ps = try? await APIClient.shared.portalStart() {
+        } else if let ps = try? await APIClient.shared.portalStart() {  // ds-ok: Rückfall-Kette, scheitert alles, zeigt fehler = ladeFehler
             start = ps
         }
         if wa != nil || startServer != nil || start != nil {
@@ -131,7 +131,7 @@ final class WerbungStore {
                 s.studio.checkliste = c
                 start = s
             }
-            if startServer != nil, let sa = try? await APIClient.shared.start() { startServer = sa }
+            if startServer != nil, let sa = try? await APIClient.shared.start() { startServer = sa }  // ds-ok: Nachladen nach dem Abhaken, das Häkchen ist lokal schon gesetzt
         } catch {
             log.error("Checkliste \(punkt, privacy: .public): \(fehlerText(error), privacy: .public)")
         }
@@ -157,7 +157,7 @@ final class WerbungStore {
     /// Beiträge zeichnen (einmal je Name/Ort/Zahlseite). Erste Bilder erscheinen, sobald sie fertig sind.
     func beitraegeZeichnen(firma: String, ort: String?, zahlseite: String) async {
         let gespeichert = UserDefaults.standard.string(forKey: nameSchluessel(zahlseite))
-        let standard = (try? await zeichner.anzeigeName(firma)) ?? firma
+        let standard = (try? await zeichner.anzeigeName(firma)) ?? firma  // ds-ok: Anzeigename optional, sonst Firmenname
         if bildName.isEmpty { bildName = gespeichert ?? standard }
         let k = KitDaten(firma: bildName.leerAlsNil ?? standard, ort: ort?.leerAlsNil, zahlseite: zahlseite)
         if k == gezeichnetFuer, !beitraege.isEmpty { return }
@@ -187,7 +187,7 @@ final class WerbungStore {
 
     /// Neuer Name auf den Bildern: merken (leer = Standard) und neu zeichnen
     func nameAendern(_ name: String, firma: String, ort: String?, zahlseite: String) async {
-        let standard = (try? await zeichner.anzeigeName(firma)) ?? firma
+        let standard = (try? await zeichner.anzeigeName(firma)) ?? firma  // ds-ok: Anzeigename optional, sonst Firmenname
         let n = name.leerAlsNil ?? standard
         bildName = n
         if n == standard {

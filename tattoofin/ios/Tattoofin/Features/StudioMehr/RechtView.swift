@@ -29,7 +29,7 @@ struct RechtView: View {
         .tfHintergrund()
         .navigationTitle(Texte.Recht.titel)
         .navigationBarTitleDisplayMode(.inline)
-        .sheet(isPresented: $lesen) { RechtsAnsicht(seite: .recht).tfSchriftGrenze() }
+        .sheet(isPresented: $lesen) { RechtsAnsicht(seite: .recht) }
         .task {
             await mehr.laden()
             if name.isEmpty { name = mehr.studio?.inhaber ?? "" }

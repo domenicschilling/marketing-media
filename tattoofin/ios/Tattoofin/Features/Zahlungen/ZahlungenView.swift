@@ -119,9 +119,12 @@ struct ZahlungenView: View {
 /// Kennzahlen: Umsatz diesen Monat, Zahlungen, offene Links
 struct KPIKopf: View {
     let kpis: KPIs?
+    @Environment(\.dynamicTypeSize) private var schrift
 
     var body: some View {
-        HStack(spacing: 8) {
+        // Bedienungshilfe-Größen: Kacheln untereinander statt nebeneinander (DS: umbrechen statt verkleinern)
+        let layout = schrift.isAccessibilitySize ? AnyLayout(VStackLayout(spacing: 8)) : AnyLayout(HStackLayout(spacing: 8))
+        layout {
             kachel(Texte.Zahlungen.kpiUmsatz, kpis.map { Euro.text($0.umsatzMonatCent ?? 0) } ?? "–")
             kachel(Texte.Zahlungen.kpiAnzahl, kpis.map { "\($0.zahlungenMonat ?? 0)" } ?? "–")
             kachel(Texte.Zahlungen.kpiOffen, kpis.map { "\($0.offen ?? 0)" } ?? "–")
@@ -134,8 +137,7 @@ struct KPIKopf: View {
             Text(wert)
                 .font(.dm(.title3, weight: .bold))
                 .foregroundStyle(Color.tfTinte)
-                .lineLimit(1)
-                .minimumScaleFactor(0.6)
+                .fixedSize(horizontal: false, vertical: true)
             Text(titel)
                 .font(.dm(.caption, weight: .medium))
                 .foregroundStyle(Color.tfLeise)
@@ -151,9 +153,12 @@ struct KPIKopf: View {
 
 struct ZahlungZeile: View {
     let zahlung: Zahlung
+    @Environment(\.dynamicTypeSize) private var schrift
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
+        // Bedienungshilfe-Größen: Betrag und Status unter den Namen statt daneben
+        let layout = schrift.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 6)) : AnyLayout(HStackLayout(alignment: .top, spacing: 12))
+        layout {
             VStack(alignment: .leading, spacing: 3) {
                 Text(zahlung.kunde?.leerAlsNil ?? Texte.Zahlungen.ohneName)
                     .font(.dm(.body, weight: .semibold))
@@ -166,13 +171,12 @@ struct ZahlungZeile: View {
                     Text(d).font(.dm(.caption)).foregroundStyle(Color.tfLeise)
                 }
             }
-            Spacer(minLength: 8)
-            VStack(alignment: .trailing, spacing: 6) {
+            if !schrift.isAccessibilitySize { Spacer(minLength: 8) }
+            VStack(alignment: schrift.isAccessibilitySize ? .leading : .trailing, spacing: 6) {
                 Text(Euro.text(zahlung.betragCent))
                     .font(.dm(.body, weight: .bold))
                     .foregroundStyle(Color.tfTinte)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
+                    .fixedSize(horizontal: false, vertical: true)
                 StatusChip(zahlung: zahlung.status)
             }
         }

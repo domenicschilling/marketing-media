@@ -146,7 +146,7 @@ struct RechtsWebAnsicht: UIViewRepresentable {
         context.coordinator.versuch = versuch
         Task { @MainActor in
             // Erst die Regeln, dann laden (sonst könnte das Skript schon laufen)
-            if let liste = try? await WKContentRuleListStore.default().compileContentRuleList(
+            if let liste = try? await WKContentRuleListStore.default().compileContentRuleList(  // ds-ok: Inhaltsfilter optional, die Seite lädt auch ohne
                 forIdentifier: "tattoofin-rechtstexte", encodedContentRuleList: Self.regeln) {
                 web.configuration.userContentController.add(liste)
             }
@@ -224,6 +224,6 @@ struct RechtsFuss: View {
         .buttonStyle(.plain)
         .frame(maxWidth: .infinity)
         .padding(.top, 8)
-        .sheet(item: $seite) { RechtsAnsicht(seite: $0).tfSchriftGrenze() }
+        .sheet(item: $seite) { RechtsAnsicht(seite: $0) }
     }
 }

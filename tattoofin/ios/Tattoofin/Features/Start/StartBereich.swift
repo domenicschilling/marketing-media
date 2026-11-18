@@ -64,7 +64,6 @@ struct StartBereich: View {
             .environment(werbung)
             .environment(app)
             .environment(portal)
-            .tfSchriftGrenze()
         }
         .onChange(of: app.tab) { _, neu in
             // Zurück in der Kasse (z. B. nach Recht/Fragebogen im Konto): Häkchen neu holen
@@ -155,6 +154,7 @@ struct StartBereich: View {
                 .font(.dm(.footnote))
                 .padding(.horizontal, 4)
                 .accessibilityElement(children: .ignore)
+                .accessibilityAddTraits(.isStaticText)
                 .accessibilityLabel("\(WerbungTexte.Start.diesenMonat): \(WerbungTexte.Start.gezahlt) \(Euro.gesprochen(k.umsatzMonatCent ?? 0)). "
                                     + (anDich.map { "\(WerbungTexte.Start.anDich) \(Euro.gesprochen($0))" } ?? "\(k.zahlungenMonat ?? 0) \(WerbungTexte.Start.zahlungen)"))
         }

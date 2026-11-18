@@ -215,7 +215,7 @@ struct BeitragKachel: View {
         .karte()
         .task(id: beitrag.stand) { bilder = beitrag.bilder.compactMap { UIImage(data: $0) } }
         .fullScreenCover(item: Binding(get: { gross.map { GrossIndex(nr: $0) } }, set: { gross = $0?.nr })) { g in
-            BeitragGrossansicht(beitrag: beitrag, bilder: bilder, start: g.nr).tfSchriftGrenze()
+            BeitragGrossansicht(beitrag: beitrag, bilder: bilder, start: g.nr)
         }
         .sheet(item: $teilen) { TeilenSheet(dinge: $0.dinge).presentationDetents([.medium, .large]) }
     }
@@ -240,9 +240,15 @@ struct BeitragKachel: View {
     }
 
     private func teilenOeffnen() {
-        let dateien = TeilenDateien.bilder(beitrag.bilder, name: dateiName)
-        guard !dateien.isEmpty else { return }
-        teilen = TeilenInhalt(dinge: dateien)
+        do {
+            let dateien = try TeilenDateien.bilder(beitrag.bilder, name: dateiName)
+            guard !dateien.isEmpty else { return }
+            fehler = nil
+            teilen = TeilenInhalt(dinge: dateien)
+        } catch {
+            log.error("Teilen-Dateien: \(error.localizedDescription, privacy: .public)")
+            fehler = WerbungTexte.teilenFehler
+        }
     }
 }
 
@@ -288,8 +294,14 @@ struct BeitragGrossansicht: View {
                         .buttonStyle(.haupt)
                     Button {
                         guard beitrag.bilder.indices.contains(seite) else { return }
-                        let d = TeilenDateien.bilder([beitrag.bilder[seite]], name: "\(TeilenDateien.slug(werbung.bildName))-\(beitrag.id)-\(seite + 1)")
-                        if !d.isEmpty { teilen = TeilenInhalt(dinge: d) }
+                        do {
+                            let d = try TeilenDateien.bilder([beitrag.bilder[seite]], name: "\(TeilenDateien.slug(werbung.bildName))-\(beitrag.id)-\(seite + 1)")
+                            fehler = nil
+                            if !d.isEmpty { teilen = TeilenInhalt(dinge: d) }
+                        } catch {
+                            log.error("Teilen-Datei: \(error.localizedDescription, privacy: .public)")
+                            fehler = WerbungTexte.teilenFehler
+                        }
                     } label: { Label(WerbungTexte.teilen, systemImage: "square.and.arrow.up") }
                         .buttonStyle(.zweit)
                 }

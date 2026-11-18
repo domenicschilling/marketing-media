@@ -38,7 +38,7 @@ struct EinrichtungView: View {
     private var seiteFaceID: some View {
         Group {
             Image(systemName: sperre.artName == "Touch ID" ? "touchid" : "faceid")
-                .font(.system(size: 64))
+                .font(.system(size: 64))  // ds-ok: Zier-Symbol Face ID (64 pt), Text daneben wächst mit
                 .foregroundStyle(Color.tfAkzent)
                 .frame(maxWidth: .infinity)
                 .padding(.top, 30)
@@ -85,7 +85,7 @@ struct EinrichtungView: View {
     private var seiteMitteilungen: some View {
         Group {
             Image(systemName: "bell.badge.fill")
-                .font(.system(size: 60))
+                .font(.system(size: 60))  // ds-ok: Zier-Symbol Mitteilungen (60 pt), Text wächst mit
                 .foregroundStyle(Color.tfAkzent)
                 .frame(maxWidth: .infinity)
                 .padding(.top, 30)

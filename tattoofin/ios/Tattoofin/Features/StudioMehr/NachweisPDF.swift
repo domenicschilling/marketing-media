@@ -193,7 +193,7 @@ enum NachweisPDF {
 
     /// Fertiges PDF vom Server (gleich wie im Web). Ältere Server ohne ?pdf=1 liefern JSON: dann zeichnet die App das PDF selbst.
     static func holen(_ zahlungId: String) async throws -> URL {
-        if let pdf = try? await APIClient.shared.nachweisPDF(zahlungId), pdf.starts(with: Data("%PDF".utf8)) {
+        if let pdf = try? await APIClient.shared.nachweisPDF(zahlungId), pdf.starts(with: Data("%PDF".utf8)) {  // ds-ok: fertiges PDF optional, Rückfall zeichnet selbst und meldet Fehler
             return try datei(pdf, id: zahlungId)
         }
         let d = try await APIClient.shared.nachweis(zahlungId)
@@ -261,7 +261,7 @@ struct NachweisKnopf: View {
 
     /// Personenbezogene Daten nicht liegen lassen
     private func aufraeumen() {
-        if let u = letzte { try? FileManager.default.removeItem(at: u) }
+        if let u = letzte { try? FileManager.default.removeItem(at: u) }  // ds-ok: Aufräumen
         letzte = nil
     }
 }

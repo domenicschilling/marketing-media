@@ -58,7 +58,7 @@ struct KontoLoeschenView: View {
             Ueberschrift(Texte.Loeschen.ueberschrift, groesse: 26)
             ForEach(istApple ? Texte.Loeschen.punkteApple : Texte.Loeschen.punkte, id: \.self) { p in
                 HStack(alignment: .top, spacing: 10) {
-                    Image(systemName: "circle.fill").font(.system(size: 6)).padding(.top, 8).accessibilityHidden(true)
+                    Image(systemName: "circle.fill").font(.system(size: 6)).padding(.top, 8).accessibilityHidden(true)  // ds-ok: Aufzählungspunkt, für VoiceOver ausgeblendet
                     Text(p).font(.dm(.body)).fixedSize(horizontal: false, vertical: true)
                 }
                 .foregroundStyle(Color.tfTinte)
@@ -106,7 +106,7 @@ struct KontoLoeschenView: View {
 
     private func erledigt(_ e: KontoLoeschenAntwort) -> some View {
         Group {
-            Image(systemName: "checkmark.circle.fill").font(.system(size: 56)).foregroundStyle(Color.tfGruen).accessibilityHidden(true)
+            Image(systemName: "checkmark.circle.fill").font(.system(size: 56)).foregroundStyle(Color.tfGruen).accessibilityHidden(true)  // ds-ok: Zier-Symbol Erfolg (56 pt), Text wächst mit
             Ueberschrift(Texte.Loeschen.erledigtTitel, groesse: 26)
             VStack(alignment: .leading, spacing: 8) {
                 if let d = Datum.tag(e.kuendigungZum) { WertZeile(titel: Texte.Loeschen.vertragEndet, wert: d) }

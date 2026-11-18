@@ -44,7 +44,9 @@ struct GutscheineView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Text(Texte.Gutscheine.codeEingeben).font(.dm(.subheadline, weight: .semibold)).foregroundStyle(Color.tfTinte)
                         HStack(spacing: 8) {
-                            TextField(Texte.Gutscheine.codeEingeben, text: $code, prompt: tfPlatzhalter(Texte.Gutscheine.codePlatzhalter))
+                            // Mehrzeilig erlaubt, damit der Code bei großer Schrift umbricht statt abgeschnitten zu werden (DS-Audit „Text clipped“)
+                            TextField(Texte.Gutscheine.codeEingeben, text: $code, prompt: tfPlatzhalter(Texte.Gutscheine.codePlatzhalter), axis: .vertical)
+                                .lineLimit(1...3)
                                 .font(.system(.title3, design: .monospaced).weight(.semibold))
                                 .textInputAutocapitalization(.characters)
                                 .autocorrectionDisabled()
@@ -53,8 +55,11 @@ struct GutscheineView: View {
                                 .focused($codeFokus)
                                 .onSubmit { suchen() }
                                 .onChange(of: code) { _, neu in
-                                    let f = GutscheinCode.formatieren(neu)
+                                    // Mehrzeiliges Feld: Return fügt einen Zeilenumbruch ein → als „Suchen“ werten
+                                    let mitReturn = neu.contains("\n")
+                                    let f = GutscheinCode.formatieren(neu.replacingOccurrences(of: "\n", with: ""))
                                     if f != neu { code = f }
+                                    if mitReturn, GutscheinCode.vollstaendig(f) { suchen() }
                                     // Alte Meldung („nicht gefunden“) passt nicht mehr zum neuen Code
                                     if !sucht { fehler = nil }
                                 }
@@ -83,7 +88,7 @@ struct GutscheineView: View {
                         }
                     }
                 } header: {
-                    Text(Texte.Gutscheine.verkauft).font(.dm(.subheadline, weight: .semibold))
+                    ListenKopf(Texte.Gutscheine.verkauft).font(.dm(.subheadline, weight: .semibold))
                 }
             }
             .font(.dm(.body))
@@ -109,13 +114,13 @@ struct GutscheineView: View {
                 }
             }
             .navigationDestination(for: Zahlung.self) { GutscheinDetailView(zahlung: $0) }
-            .sheet(isPresented: $verkaufenOffen) { GutscheinVerkaufenView().tfSchriftGrenze() }
+            .sheet(isPresented: $verkaufenOffen) { GutscheinVerkaufenView() }
             .fullScreenCover(isPresented: $scannerOffen) {
                 ScannerView { treffer in
                     scannerOffen = false
                     Task { await nachScan(treffer) }
                 }
-                .tfSchriftGrenze()
+                
             }
             .sensoryFeedback(.success, trigger: trefferZaehler)
         }
@@ -153,24 +158,25 @@ struct GutscheineView: View {
 
 struct GutscheinZeile: View {
     let zahlung: Zahlung
+    @Environment(\.dynamicTypeSize) private var schrift
 
     var body: some View {
-        HStack(alignment: .top) {
+        // Bedienungshilfe-Größen: Betrag und Status unter den Code statt daneben (DS: umbrechen statt verkleinern)
+        let layout = schrift.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 6)) : AnyLayout(HStackLayout(alignment: .top))
+        layout {
             VStack(alignment: .leading, spacing: 3) {
                 Text(zahlung.gutschein?.code ?? Texte.Gutscheine.ohneCode)
                     .font(.system(.body, design: .monospaced).weight(.semibold))
                     .foregroundStyle(Color.tfTinte)
-                    .lineLimit(zahlung.gutschein?.code == nil ? 2 : 1)
-                    .minimumScaleFactor(0.7)
+                    .fixedSize(horizontal: false, vertical: true)
                 Text([zahlung.kunde, zahlung.gutschein?.empfaenger?.leerAlsNil.map { "für \($0)" }].verbunden(" "))
                     .font(.dm(.subheadline))
                     .foregroundStyle(Color.tfLeise)
             }
-            Spacer()
-            VStack(alignment: .trailing, spacing: 6) {
+            if !schrift.isAccessibilitySize { Spacer() }
+            VStack(alignment: schrift.isAccessibilitySize ? .leading : .trailing, spacing: 6) {
                 Text(Euro.text(zahlung.betragCent)).font(.dm(.body, weight: .bold)).foregroundStyle(Color.tfTinte)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
+                    .fixedSize(horizontal: false, vertical: true)
                 StatusChip(gutschein: zahlung.gutschein?.status)
             }
         }
