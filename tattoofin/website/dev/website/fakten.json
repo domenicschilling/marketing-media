@@ -1,0 +1,107 @@
+{
+  "_hinweis": "EINZIGE Faktenquelle der Website tattoofin.de (Schilling Websitekonzept, 18.11.2026). Jede Zahl, jeder Preis, jede Nummer auf Startseite und Unterseiten kommt von hier. In Texten als {gruppe.feld} einsetzen. Änderung hier → python3 dev/website/website-bauen.py (baut auch die Startseite). Quelle und Stand je Gruppe.",
+  "firma": {
+    "marke": "Tattoofin",
+    "name": "DSX Media Solutions UG (haftungsbeschränkt)",
+    "kurz": "DSX Media Solutions UG",
+    "strasse": "Am Weingarten 9",
+    "plz": "96117",
+    "ort": "Memmelsdorf",
+    "ortLang": "Memmelsdorf bei Bamberg",
+    "hinweis": "Tattoofin ist kein Kreditinstitut.",
+    "instagram": "https://www.instagram.com/tattoofin.de/",
+    "quelle": "Impressum und Fuß der Live-Seite, Stand 18.11.2026"
+  },
+  "kontakt": {
+    "whatsapp": "0162 4502375",
+    "whatsappNr": "491624502375",
+    "telefonIntl": "+491624502375",
+    "mail": "info@tattoofin.de",
+    "antwortzeit": "",
+    "quelle": "Memory geschaeftsnummer-0162 (17.11.2026 live). Antwortzeit bewusst leer: keine Zusage ohne Domenics OK."
+  },
+  "preis": {
+    "monat": "49,90 €",
+    "monatZahl": "49.90",
+    "netto": "41,93 €",
+    "zusatz": "im Monat inkl. MwSt.",
+    "testTage": "7",
+    "testwoche": "1 Woche",
+    "testBedingung": "Karte wird bei Stripe hinterlegt, heute 0 €. Kündigst du in der Testwoche, zahlst du nichts. Danach wird der erste Monat abgebucht.",
+    "kuendigung": "monatlich kündbar, im Portal zum Ende des Abrechnungsmonats",
+    "zielgruppe": "Nur für Unternehmer",
+    "quelle": "Live /api/config testTage 7 (18.11.2026), Vertrag 2026-12f § 5 Abs. 5, Preis live seit 15.11.2026",
+    "betrag": "49,90"
+  },
+  "gebuehr": {
+    "karte": "ab 1,5 % + 0,25 €",
+    "klarna": "ab 2,99 % + 0,35 €",
+    "quelle": "stripe.com/de/pricing, gelesen 01.11.2026; zahlt das Studio direkt an Stripe"
+  },
+  "auszahlung": {
+    "text": "Stripe zahlt auf dein Bankkonto aus, laut Stripe in Deutschland in der Regel 3 Werktage nach der Zahlung, die allererste Auszahlung nach 7 Tagen.",
+    "quelle": "docs.stripe.com/payments/balances (Settlement timing, Germany), Stand 16.11.2026. Nie „sofort“.",
+    "werktage": "3 Werktage",
+    "erste": "7 Tagen"
+  },
+  "zahlarten": {
+    "satz": "Karte, Apple Pay, Google Pay oder Klarna",
+    "gutschein": "Karte, Apple Pay oder Google Pay",
+    "quelle": "domain.mjs zahlartenFuer (card + klarna; Gutschein nur Karte), 18.11.2026. Kein PayPal."
+  },
+  "klarna": {
+    "fnKurz": "*Raten über Klarna, nach deren Bonitätsprüfung. Achtung! Kreditaufnahme kostet Geld.",
+    "fnLang": "*Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, nicht Tattoofin. Achtung! Kreditaufnahme kostet Geld.",
+    "grenzen": "Laut Stripe (Stand Oktober 2026) bietet Klarna in Deutschland Finanzierungen von 25 bis 10.000 € an.",
+    "quelle": "Entscheidung Domenic 14.11.2026 (Raten* + Fußnote + Warnsatz klein darunter); Grenzen laut Stripe, Stand 10/2026 (alter Ratgeber klarna-tattoostudio.html)"
+  },
+  "fall": {
+    "betrag": "900 €",
+    "betragGenau": "900,00 €",
+    "zahlart": "Klarna",
+    "datum": "07.11.2026",
+    "datumLang": "7. November",
+    "motiv": "Drache, Rücken",
+    "quelle": "Stripe-Zahlungseingang 07.11.2026, Studio anonym, Freigabe Domenic 13.11.2026 (content/tattoofin/spots-2026-11/belege/fall-900-klarna-2026-11-07.md)",
+    "betragZahl": "900"
+  },
+  "stripe": {
+    "zulaessig": "Stripe hat uns am 3. November 2026 schriftlich bestätigt: Tattoo-Zahlungen über Stripe und Klarna sind in Deutschland zulässig.",
+    "quelle": "Stripe-Support schriftlich 03.11.2026 (Memory tattoofin-setup)"
+  },
+  "beispielAnzahlung": {
+    "betrag": "150 €",
+    "gebuehr": "ca. 2,50 €",
+    "rest": "147,50 €",
+    "satz": "Eine Anzahlung zahlt Tattoofin fast 3 Monate.",
+    "quelle": "Rechnung Karte 1,5 % + 0,25 € auf 150 € = 2,50 €; 147,50 € ÷ 49,90 € = 2,96 Monate"
+  },
+  "beispielRaten": {
+    "betrag": "4.000 €",
+    "motiv": "Ganzer Rücken",
+    "gebuehrKlarna": "ab ca. 120 €",
+    "rest": "bis ca. 3.880 €",
+    "gebuehrKarte": "ab ca. 60 €",
+    "quelle": "4.000 € × 2,99 % + 0,35 € = 119,95 €; Karte 4.000 € × 1,5 % + 0,25 € = 60,25 €; Hero-Beispiel Entscheidung Domenic 16.11.2026",
+    "betragZahl": "4.000"
+  },
+  "gutschein": {
+    "gueltig": "bis zum Ende des dritten Jahres nach dem Kauf",
+    "quelle": "domain.mjs artikelText (Gutschein), § 195/199 BGB; Code GS-XXXX-XXXX + PDF per Mail (Memory 23.10.2026)"
+  },
+  "app": {
+    "satz": "Die iPhone-App bekommst du nach der Anmeldung von uns.",
+    "status": "App 1.0 bei Apple in Prüfung, kein öffentlicher Store-Link (Domenic 16.11.2026). Nicht „im App Store“ schreiben.",
+    "browser": "Alles geht auch im Browser, am Handy und am Rechner."
+  },
+  "anmeldung": {
+    "braucht": "dein Studio als Unternehmen, ein Bankkonto und deinen Ausweis",
+    "quelle": "Live-Fragen „Wann kommt das Geld, und was brauche ich?“, Anmeldung 4 Felder + Karte (Memory 16.11.2026)"
+  },
+  "beispielLink": {
+    "betrag": "900 €",
+    "gebuehr": "ca. 13,75 €",
+    "rest": "ca. 886,25 €",
+    "quelle": "900 € × 1,5 % + 0,25 € = 13,75 €"
+  }
+}

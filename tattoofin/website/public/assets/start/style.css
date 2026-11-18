@@ -1,18 +1,6 @@
 /* Flash-Bogen: die Seite ist ein Motiv-Blatt von der Studiowand.
    Kurzfassung 14.11.2026: Problem, Antwort, echtes Bild, Knopf. Danach nur Belege, Bedingungen zugeklappt in den Fragen. */
-@font-face{font-family:'Luckiest Guy';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/LuckiestGuy.woff2) format('woff2')}
-@font-face{font-family:'DM Sans';font-style:normal;font-weight:400 800;font-display:swap;src:url(fonts/DMSans.woff2) format('woff2')}
-
-:root{
-  --blau:#1f3d5c; --gelb:#fbb316; --papier:#f5ead2; --hell:#fff7e3;
-  --rand:clamp(16px,4.6vw,64px);
-  --t:16px;
-  --anzeige:'Luckiest Guy','Arial Black',sans-serif;
-  --text:'DM Sans',system-ui,sans-serif;
-  --h1:clamp(42px,11.6vw,88px);
-  --h2:clamp(31px,8.2vw,56px);
-}
-@media (min-width:900px){:root{--t:18px}}
+/* Werte, Schriften und --kopf: /assets/site/werte.css (Designsystem dev/website/designsystem.md) */
 
 *,*::before,*::after{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;background:var(--papier)}
@@ -23,24 +11,24 @@ img,video,svg{display:block;max-width:100%}
 img,video{height:auto}
 h1,h2,h3,p,ul,ol,figure{margin:0;padding:0}
 a{color:inherit}
-:focus-visible{outline:3px solid var(--blau);outline-offset:3px;border-radius:4px}
+:focus-visible{outline:3px solid var(--blau);outline-offset:3px;border-radius:var(--r-klein)}
 .fuss :focus-visible,.preis :focus-visible,.leiste :focus-visible{outline-color:var(--gelb)}
 .unsichtbar{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
-.sprung{position:absolute;left:12px;top:-60px;z-index:50;background:var(--gelb);color:var(--blau);font-weight:700;padding:10px 16px;border-radius:8px}
+.sprung{position:absolute;left:12px;top:-60px;z-index:50;background:var(--gelb);color:var(--blau);font-weight:700;padding:10px 16px;border-radius:var(--r-klein)}
 .sprung:focus{top:10px}
 
 h1,h2,h3,.knopf,.nr{font-family:var(--anzeige);font-weight:400;text-transform:uppercase}
 h1{font-size:var(--h1);line-height:.98;letter-spacing:.005em;text-shadow:3px 3px 0 var(--gelb)}
 h2{font-size:var(--h2);line-height:1;letter-spacing:.005em;text-shadow:2px 2px 0 var(--gelb)}
-h3{font-size:clamp(21px,5.6vw,26px);line-height:1.05}
+h3{font-size:var(--f-h3);line-height:1.05}
 /* Luckiest Guy sitzt optisch zu hoch: etwas Luft oben ausgleichen */
 h1,h2,h3{padding-top:.08em}
-.eur{font-family:var(--text);font-weight:800;font-size:.72em;margin-left:.16em;letter-spacing:0}
-.klein{font-size:14px;line-height:1.4}
+.eur{font-family:var(--text);font-weight:800;font-size:var(--f-ui);margin-left:.16em;letter-spacing:0}
+.klein{font-size:var(--f-klein);line-height:1.4}
 
 /* Pflicht-Fußnote zu Raten* (Entscheidung Domenic 14.11.2026): klein wie eine Fußnote, normal gesetzt, Kontrast AA.
    Gleiche Klasse auf allen Verkaufsseiten (css/site.css, raten.html). */
-.raten-fn{font-size:12px;font-weight:400;line-height:1.4;color:var(--blau);max-width:60ch}
+.raten-fn{font-size:var(--f-fn);font-weight:400;line-height:1.4;color:var(--blau);max-width:60ch}
 
 /* ---------- Der Bogen ---------- */
 .bogen{position:relative;background:var(--papier) url(papier.webp);background-size:640px 640px;overflow:hidden}
@@ -61,7 +49,7 @@ h1,h2,h3{padding-top:.08em}
 @media (min-width:600px){.kopf nav .kopf-fragen{display:inline}.kopf nav a{font-size:18px}.kopf-marke img{width:150px}}
 
 /* ---------- Knöpfe ---------- */
-.knopf{display:inline-flex;align-items:center;justify-content:center;min-height:58px;padding:.34em 1.25em .16em;background:var(--gelb);color:var(--blau);border:4px solid var(--blau);border-radius:999px;font-size:clamp(22px,6vw,28px);line-height:1;text-decoration:none;box-shadow:4px 5px 0 var(--blau);transition:transform .12s,box-shadow .12s;white-space:nowrap;cursor:pointer}
+.knopf{display:inline-flex;align-items:center;justify-content:center;min-height:58px;padding:.34em 1.25em .16em;background:var(--gelb);color:var(--blau);border:4px solid var(--blau);border-radius:999px;font-size:var(--f-h3);line-height:1;text-decoration:none;box-shadow:var(--sch-hart);transition:transform var(--schnell),box-shadow var(--schnell);white-space:nowrap;cursor:pointer}
 .knopf:hover{transform:translate(-1px,-1px);box-shadow:5px 6px 0 var(--blau)}
 .knopf:active{transform:translate(3px,4px);box-shadow:1px 1px 0 var(--blau)}
 .wege{display:flex;flex-wrap:wrap;align-items:center;gap:12px 22px}
@@ -69,8 +57,8 @@ h1,h2,h3{padding-top:.08em}
 
 /* ---------- Flash-Stücke: Nummer und Schild ---------- */
 .motiv{width:100%;height:auto;overflow:visible}
-.nr{position:absolute;display:grid;place-items:center;width:30px;height:30px;padding-top:.18em;border-radius:50%;background:var(--blau);color:var(--gelb);font-size:18px;line-height:1;z-index:3}
-.schild{position:absolute;z-index:3;display:inline-block;background:var(--hell);color:var(--blau);border:3px solid var(--blau);border-radius:15px 5px 5px 15px;padding:2px 10px 2px 21px;font:700 14px/1.3 var(--text);white-space:nowrap;transform:rotate(-3deg)}
+.nr{position:absolute;display:grid;place-items:center;width:30px;height:30px;padding-top:.18em;border-radius:50%;background:var(--blau);color:var(--gelb);font-size:var(--f-text);line-height:1;z-index:3}
+.schild{position:absolute;z-index:3;display:inline-block;background:var(--hell);color:var(--blau);border:3px solid var(--blau);border-radius:var(--r-karte) var(--r-klein) var(--r-klein) var(--r-karte);padding:2px 10px 2px 21px;font:700 var(--f-klein)/1.3 var(--text);white-space:nowrap;transform:rotate(-3deg)}
 .schild::before{content:"";position:absolute;left:7px;top:50%;width:8px;height:8px;margin-top:-4px;border-radius:50%;background:var(--blau)}
 .deko{position:absolute;display:block;z-index:0;pointer-events:none}
 .motiv-knopf{position:relative;display:block;width:100%;padding:0;margin:0;background:none;border:0;color:inherit;cursor:pointer;font:inherit;-webkit-tap-highlight-color:transparent}
@@ -78,28 +66,28 @@ h1,h2,h3{padding-top:.08em}
 
 /* ---------- Erster Bildschirm ---------- */
 .auftakt{position:relative;padding:8px var(--rand) 22px;display:grid}
-.kicker{font-weight:800;font-size:17px;line-height:1.3;max-width:22em}
+.kicker{font-weight:800;font-size:var(--f-ui);line-height:1.3;max-width:22em}
 .auftakt h1{margin-top:8px}
 /* Eine Zeile, wie es geht (für Leser, die nur die Überschrift sehen) */
 .unterzeile{margin-top:6px;font-weight:800;font-size:16px;line-height:1.3}
 .b2b{font-weight:400;white-space:nowrap}
 .buehne{position:relative;height:clamp(262px,72vw,330px);margin-top:14px}
-.flash{position:absolute;display:block;z-index:4;text-decoration:none;color:inherit;transition:transform .16s}
+.flash{position:absolute;display:block;z-index:4;text-decoration:none;color:inherit;transition:transform var(--schnell)}
 .flash:hover{transform:rotate(-2deg) scale(1.03)}
 .flash:active{transform:scale(.97)}
-.flash .nr{left:0;top:0;width:24px;height:24px;font-size:15px}
-.flash .schild{left:50%;bottom:-16px;translate:-50% 0;font-size:13px;padding:0 6px;border-width:2.5px;border-radius:9px 4px 4px 9px}
+.flash .nr{left:0;top:0;width:24px;height:24px;font-size:var(--f-ui)}
+.flash .schild{left:50%;bottom:-16px;translate:-50% 0;font-size:var(--f-fn);padding:0 6px;border-width:2.5px;border-radius:var(--r-karte) var(--r-klein) var(--r-klein) var(--r-karte)}
 .flash .schild::before{display:none}
 .nur-gross{display:none}
 /* Am Handy: echte Zahlseite in der Mitte, Herz oben rechts, Figur schaut links unten herein */
 .auftakt-handy{position:absolute;z-index:2;left:31%;top:10px;width:65%;transform:rotate(-3deg)}
-.handy-rahmen{position:relative;display:block;background:var(--hell);border-radius:20px;padding:6px 6px 24px;box-shadow:0 0 0 3px var(--blau),5px 6px 0 3px var(--blau)}
-.handy-rahmen img{width:100%;border-radius:15px;aspect-ratio:600/545;object-fit:cover;object-position:top}
+.handy-rahmen{position:relative;display:block;background:var(--hell);border:3px solid var(--blau);border-radius:var(--r-gross);padding:3px 3px 21px;box-shadow:var(--sch-hart)}
+.handy-rahmen img{width:100%;border-radius:var(--r-karte);aspect-ratio:600/545;object-fit:cover;object-position:top}
 .auftakt-handy .klebe{top:-13px}
 .film-knopf{position:absolute;z-index:4;left:50%;bottom:-22px;translate:-50% 0;display:inline-flex;align-items:center;gap:7px;min-height:42px;padding:0 15px;border:3px solid var(--hell);border-radius:999px;background:var(--blau);color:var(--hell);font:800 14px/1 var(--text);white-space:nowrap;cursor:pointer;box-shadow:3px 3px 0 rgba(31,61,92,.35)}
 .film-knopf:hover{background:#163049}
-.film-knopf span{color:var(--gelb);font-size:13px}
-.auftakt-handy figcaption{margin-top:30px;text-align:center;font-size:13px;font-weight:600;line-height:1.3;transform:rotate(3deg)}
+.film-knopf span{color:var(--gelb);font-size:var(--f-fn)}
+.auftakt-handy figcaption{margin-top:30px;text-align:center;font-size:var(--f-fn);font-weight:600;line-height:1.3;transform:rotate(3deg)}
 .hausherr{position:absolute;z-index:3;left:-8px;bottom:0;width:33%;max-width:150px}
 .fl-1{left:-6px;top:-6px;width:36%;max-width:170px}
 .fl-1 .nr{left:2%;top:4%}
@@ -142,17 +130,16 @@ h1,h2,h3{padding-top:.08em}
   .auftakt-kopf{grid-column:1;grid-row:1;align-self:end}
   .auftakt-fuss{grid-column:1;grid-row:2;align-self:start;margin-top:22px;gap:12px}
   .buehne{grid-column:2;grid-row:1/3;height:auto;aspect-ratio:1/.84;margin:0}
-  .kicker{font-size:22px;line-height:1.3}
-  .unterzeile{font-size:21px;margin-top:12px}
+  .kicker{font-size:var(--f-lead);line-height:1.3}
+  .unterzeile{font-size:var(--f-lead);margin-top:12px}
   .auftakt h1{margin-top:12px}
   .auftakt-knopf{width:auto}
-  .preiszeile{font-size:17px}
-  .raten-fn{font-size:13px}
+  .preiszeile{font-size:var(--f-text)}
+  .raten-fn{font-size:var(--f-klein)}
   .nur-gross{display:block}
   .auftakt-handy{left:29%;top:3%;width:46%}
-  .handy-rahmen{border-radius:26px;padding:9px 9px 30px}
-  .handy-rahmen img{border-radius:19px}
-  .film-knopf{font-size:15px;min-height:46px;bottom:-23px}
+  .handy-rahmen{padding:6px 6px 27px}
+  .film-knopf{font-size:var(--f-ui);min-height:46px;bottom:-23px}
   .hausherr{left:0;bottom:3%;top:auto;width:27%;max-width:none}
   .fl-1{left:71%;right:auto;top:-1%;width:29%;max-width:none}
   .fl-2{left:0;top:6%;width:26%}
@@ -203,7 +190,7 @@ h1,h2,h3{padding-top:.08em}
   .nur-gross,.dk-mond,.dk-diamant,.dk-blitz{display:none}
   .fl-1 .nr{display:none}
   .auftakt-handy{left:30%;top:4%;width:60%}
-  .handy-rahmen{border-radius:18px;padding:5px 5px 20px}
+  .handy-rahmen{border-radius:var(--r-karte);padding:2px 2px 17px}
   .film-knopf{min-height:34px;font-size:12px;bottom:-17px}
   .auftakt-handy figcaption{margin-top:20px;font-size:12px}
   .hausherr{left:0;bottom:0;top:auto;width:30%;max-width:none}
@@ -216,8 +203,8 @@ h1,h2,h3{padding-top:.08em}
 @media (min-width:1600px){
   .kopf,.auftakt,.fall,.werkzeuge,.ablauf,.fragen,.schluss,.anfrage,.preis-innen,.fuss-innen{max-width:1480px}
   .auftakt h1{font-size:clamp(88px,5.6vw,116px)}
-  .kicker{font-size:24px}
-  .unterzeile{font-size:23px}
+  .kicker{font-size:var(--f-lead)}
+  .unterzeile{font-size:var(--f-lead)}
   .preiszeile{font-size:18px}
 }
 @media (min-width:1600px) and (min-height:1000px){
@@ -226,11 +213,11 @@ h1,h2,h3{padding-top:.08em}
 
 /* ---------- Nr. 1: echter Fall ---------- */
 .fall{position:relative;padding:26px var(--rand) 30px;display:grid;gap:14px}
-.stempel-schild{display:inline-block;background:var(--blau);color:var(--gelb);font:400 17px/1 var(--anzeige);text-transform:uppercase;padding:8px 14px 5px;border-radius:6px;transform:rotate(-3deg);box-shadow:3px 3px 0 var(--gelb)}
+.stempel-schild{display:inline-block;background:var(--blau);color:var(--gelb);font:400 var(--f-ui)/1 var(--anzeige);text-transform:uppercase;padding:8px 14px 5px;border-radius:var(--r-klein);transform:rotate(-3deg);box-shadow:3px 3px 0 var(--gelb)}
 .fall h2{margin-top:10px}
 .fall-bild{display:grid;grid-template-columns:minmax(0,40fr) minmax(0,60fr);gap:14px;align-items:center}
 .fall-bild .motiv-knopf .nr{left:2%;top:4%}
-.bon{position:relative;display:grid;gap:2px;background:var(--hell);padding:20px 14px 16px;font-size:14px;line-height:1.35;transform:rotate(2deg);box-shadow:4px 5px 0 rgba(31,61,92,.85)}
+.bon{position:relative;display:grid;gap:2px;background:var(--hell);padding:20px 14px 16px;font-size:var(--f-klein);line-height:1.35;transform:rotate(2deg);box-shadow:var(--sch-hart)}
 .bon::after{content:"";position:absolute;left:0;right:0;bottom:-9px;height:10px;background:radial-gradient(circle at 8px 0,var(--hell) 7.5px,transparent 8px) 0 0/16px 10px repeat-x}
 .bon-kopf{font-weight:800;text-transform:uppercase;letter-spacing:.06em;font-size:12px;border-bottom:2px dotted var(--blau);padding-bottom:6px;margin-bottom:4px}
 .bon-zeile{display:flex;justify-content:space-between;gap:10px}
@@ -244,7 +231,7 @@ h1,h2,h3{padding-top:.08em}
   .fall-bild{grid-column:1;grid-row:1/3}
   .fall-kopf{align-self:end}
   .fall-text{align-self:start}
-  .bon{font-size:15px;padding:22px 18px 18px}
+  .bon{font-size:var(--f-ui);padding:22px 18px 18px}
 }
 
 /* ---------- Werkzeuge ---------- */
@@ -253,18 +240,18 @@ h1,h2,h3{padding-top:.08em}
 .stueck{position:relative;display:grid;grid-template-columns:136px minmax(0,1fr);gap:16px;align-items:start;align-content:start;scroll-margin-top:12px}
 .stueck-bild{position:relative}
 .stueck-text{display:grid;gap:6px;justify-items:start;align-content:start;padding-top:2px}
-.stueck-text h3{font-size:clamp(20px,5.4vw,25px)}
+.stueck-text h3{font-size:var(--f-lead)}
 .stueck-text p{line-height:1.4}
 .sticker{position:absolute;right:-8px;bottom:-36px;width:54px;z-index:3}
-.sticker .nr{left:-6px;top:-8px;width:24px;height:24px;font-size:15px}
+.sticker .nr{left:-6px;top:-8px;width:24px;height:24px;font-size:var(--f-ui)}
 .nur-motiv .motiv-knopf .nr{left:-2px;top:-4px}
 .chips{list-style:none;display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
-.chips li{background:var(--hell);border:2px solid var(--blau);border-radius:999px;padding:2px 10px 1px;font-weight:700;font-size:13.5px;line-height:1.4;white-space:nowrap}
+.chips li{background:var(--hell);border:2px solid var(--blau);border-radius:999px;padding:2px 10px 1px;font-weight:700;font-size:var(--f-klein);line-height:1.4;white-space:nowrap}
 .mehr{font-weight:700;text-underline-offset:3px;padding:6px 0;line-height:1.35}
 
 /* Abzüge: echte Bilder, mit Klebeband aufgeklebt, antippen = größer */
 .abzug{position:relative;z-index:2}
-.abzug-knopf{position:relative;display:block;width:100%;padding:0;margin:0;background:var(--hell);border:0;box-shadow:0 0 0 3px var(--blau),4px 5px 0 3px var(--blau);transform:rotate(-2deg);transition:transform .2s;cursor:zoom-in}
+.abzug-knopf{position:relative;display:block;width:100%;padding:0;margin:0;background:var(--hell);border:0;border:3px solid var(--blau);box-shadow:var(--sch-hart);transform:rotate(-2deg);transition:transform var(--ruhig);cursor:zoom-in}
 .abzug-knopf img{width:100%}
 /* Klebeband schräg in die freie Ecke oben rechts, damit es keinen Text der App-Ansicht verdeckt */
 .abzug .klebe{left:auto;right:-8px;top:0;margin-left:0;width:44px;height:18px;transform:rotate(40deg)}
@@ -290,7 +277,7 @@ h1,h2,h3{padding-top:.08em}
 .ablauf ol{list-style:none;display:grid;gap:12px;margin-top:20px}
 .ablauf li{display:grid;grid-template-columns:72px minmax(0,1fr);gap:14px;align-items:center}
 .stufe-bild{position:relative;padding:2px 0}
-.stufe-bild .nr{left:-6px;top:-6px;width:24px;height:24px;font-size:15px}
+.stufe-bild .nr{left:-6px;top:-6px;width:24px;height:24px;font-size:var(--f-ui)}
 .ablauf li p{line-height:1.35}
 .ablauf li b{font-weight:800}
 .stufe1 .f,.stufe1 .t,.stufe2 .f,.stufe2 .t{display:none}
@@ -311,22 +298,22 @@ h1,h2,h3{padding-top:.08em}
 .preis-schild{position:relative;display:grid;justify-items:center}
 .faden{width:60px;height:44px;margin-bottom:-12px;position:relative;z-index:3}
 .preis-schild .reisszwecke{left:50%;top:-4px;margin-left:-10px}
-.anhaenger{position:relative;background:var(--gelb);color:var(--blau);border:5px solid var(--hell);border-radius:44px 44px 18px 18px;padding:38px 18px 12px;text-align:center;transform:rotate(-2deg);transform-origin:50% 0;display:grid;min-width:min(290px,84%)}
+.anhaenger{position:relative;background:var(--gelb);color:var(--blau);border:5px solid var(--hell);border-radius:var(--r-gross) var(--r-gross) var(--r-karte) var(--r-karte);padding:38px 18px 12px;text-align:center;transform:rotate(-2deg);transform-origin:50% 0;display:grid;min-width:min(290px,84%)}
 .loch{position:absolute;left:50%;top:10px;width:22px;height:22px;margin-left:-11px;border-radius:50%;background:var(--blau);border:4px solid var(--hell)}
 .betrag{font-family:var(--anzeige);font-weight:400;font-size:clamp(74px,21vw,110px);line-height:.9;padding-top:.08em;white-space:nowrap}
 .einheit{font-family:var(--anzeige);text-transform:uppercase;font-size:clamp(23px,6.2vw,28px);line-height:1;margin-top:2px}
 .brutto{font-weight:700;font-size:14px;margin-top:6px;line-height:1.3}
 .beleg{position:relative;background:var(--hell);color:var(--blau);padding:16px 16px 14px;transform:rotate(1deg)}
 .beleg::after{content:"";position:absolute;left:0;right:0;bottom:-9px;height:10px;background:radial-gradient(circle at 8px 0,var(--hell) 7.5px,transparent 8px) 0 0/16px 10px repeat-x}
-.beleg table{width:100%;border-collapse:collapse;font-size:15px;line-height:1.3}
-.beleg caption{font-family:var(--anzeige);text-transform:uppercase;text-align:left;font-size:clamp(21px,5.8vw,25px);line-height:1.05;padding:.08em 0 8px}
+.beleg table{width:100%;border-collapse:collapse;font-size:var(--f-ui);line-height:1.3}
+.beleg caption{font-family:var(--anzeige);text-transform:uppercase;text-align:left;font-size:var(--f-lead);line-height:1.05;padding:.08em 0 8px}
 .beleg th{font-weight:500;text-align:left;padding:7px 10px 7px 0;border-top:3px dotted var(--blau)}
 .beleg td{text-align:right;font-weight:700;padding:7px 0;border-top:3px dotted var(--blau);white-space:nowrap;vertical-align:top}
 .beleg .summe th,.beleg .summe td{font-weight:800;border-top-style:solid}
-.beleg-hinweis{font-size:13px;margin-top:6px}
+.beleg-hinweis{font-size:var(--f-klein);margin-top:6px}
 .preis-rest{display:grid;gap:22px;justify-items:start}
 .sticker-reihe{list-style:none;display:flex;flex-wrap:wrap;gap:10px 8px}
-.sticker-reihe li{position:relative;background:var(--hell);color:var(--blau);border-radius:8px;padding:6px 12px 5px 30px;font-weight:800;font-size:15px;line-height:1.25;transform:rotate(-1.5deg)}
+.sticker-reihe li{position:relative;background:var(--hell);color:var(--blau);border-radius:var(--r-klein);padding:6px 12px 5px 30px;font-weight:800;font-size:var(--f-ui);line-height:1.25;transform:rotate(-1.5deg)}
 .sticker-reihe li:nth-child(even){transform:rotate(1.5deg)}
 .sticker-reihe li::before{content:"";position:absolute;left:9px;top:50%;width:15px;height:15px;margin-top:-8px;background:var(--gelb);clip-path:polygon(50% 0,62% 36%,100% 38%,69% 60%,80% 96%,50% 75%,20% 96%,31% 60%,0 38%,38% 36%);outline:0}
 .preis .wa{color:var(--hell)}
@@ -339,9 +326,9 @@ h1,h2,h3{padding-top:.08em}
   .preis h2{grid-column:1/-1}
   .anhaenger{min-width:0;width:100%;max-width:340px;padding-left:14px;padding-right:14px}
   /* 15.11.2026: Preis mit Cent („49,90 €“) braucht mehr Breite, darum kleinere Schrift als beim „49 €“ */
-  .betrag{font-size:clamp(54px,5.6vw,86px)}
-  .einheit{font-size:clamp(17px,1.6vw,23px)}
-  .beleg table{font-size:17px}
+  .betrag{font-size:clamp(54px,5.6vw,80px)}
+  .einheit{font-size:clamp(16px,1.6vw,22px)}
+  .beleg table{font-size:var(--f-text)}
   .preis-rest{padding-top:8px}
 }
 
@@ -351,7 +338,7 @@ h1,h2,h3{padding-top:.08em}
 .frage{border-bottom:3px dotted var(--blau)}
 .frage summary{display:flex;align-items:center;justify-content:space-between;gap:14px;list-style:none;cursor:pointer;padding:12px 0;font-weight:700;font-size:var(--t);line-height:1.3;min-height:52px}
 .frage summary::-webkit-details-marker{display:none}
-.zu{flex:0 0 26px;width:26px;transition:transform .25s}
+.zu{flex:0 0 26px;width:26px;transition:transform var(--ruhig)}
 .frage[open] .zu,.anfrage[open] .zu{transform:rotate(144deg)}
 .antwort{padding:0 0 16px;display:grid;gap:8px;max-width:68ch}
 @media (min-width:900px){
@@ -375,25 +362,25 @@ h1,h2,h3{padding-top:.08em}
 
 /* ---------- Anfrage (nur /studios, zugeklappt) ---------- */
 .anfrage{position:relative;z-index:2;margin-bottom:28px;padding:0 var(--rand)}
-.anfrage summary{display:flex;align-items:center;justify-content:space-between;gap:14px;list-style:none;cursor:pointer;min-height:56px;padding:12px 16px;background:var(--hell);border:3px solid var(--blau);border-radius:14px;box-shadow:4px 5px 0 var(--blau);font-weight:800;font-size:17px;line-height:1.3}
+.anfrage summary{display:flex;align-items:center;justify-content:space-between;gap:14px;list-style:none;cursor:pointer;min-height:56px;padding:12px 16px;background:var(--hell);border:3px solid var(--blau);border-radius:14px;box-shadow:4px 5px 0 var(--blau);font-weight:800;font-size:var(--f-ui);line-height:1.3}
 .anfrage summary::-webkit-details-marker{display:none}
 .anfrage-innen{display:grid;gap:14px;padding-top:18px;max-width:560px}
 .anfrage-satz{font-weight:600}
-.formular-karte{background:var(--hell);border:3px solid var(--blau);border-radius:18px;padding:20px 18px}
+.formular-karte{background:var(--hell);border:3px solid var(--blau);border-radius:var(--r-karte);padding:20px 18px}
 .feld{margin-bottom:18px}
 .feld label{display:block;font-weight:700;font-size:16px;margin-bottom:6px}
-.feld input{width:100%;font:500 18px/1.3 var(--text);color:var(--blau);background:#fff;border:2px solid var(--blau);border-radius:12px;padding:13px 14px;min-height:54px;appearance:none}
+.feld input{width:100%;font:500 18px/1.3 var(--text);color:var(--blau);background:#fff;border:2px solid var(--blau);border-radius:var(--r-karte);padding:13px 14px;min-height:54px;appearance:none}
 .feld input::placeholder{color:#5f7184}
-.feld input:focus{outline:0;box-shadow:0 0 0 4px rgba(31,61,92,.25)}
-.feld input[aria-invalid=true]{border-color:#a8231a;box-shadow:0 0 0 3px rgba(168,35,26,.15)}
+.feld input:focus{outline:3px solid var(--blau);outline-offset:2px}
+.feld input[aria-invalid=true]{border-color:#a8231a;border-width:3px}
 .hinweis{font-size:14px;margin-top:5px}
-.fehler{font-size:15px;font-weight:600;color:#a8231a;margin-top:6px}
+.fehler{font-size:var(--f-ui);font-weight:600;color:#a8231a;margin-top:6px}
 .honig{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
 .feld-haken{display:grid;grid-template-columns:28px minmax(0,1fr);column-gap:12px;align-items:start}
-.feld-haken input{width:28px;height:28px;min-height:0;margin:0;padding:0;border-radius:4px;appearance:auto;-webkit-appearance:checkbox;box-shadow:none;accent-color:var(--blau);cursor:pointer}
+.feld-haken input{width:28px;height:28px;min-height:0;margin:0;padding:0;border-radius:var(--r-klein);appearance:auto;-webkit-appearance:checkbox;box-shadow:none;accent-color:var(--blau);cursor:pointer}
 .feld-haken label{margin:0;font-size:16px;line-height:1.4;padding-top:2px;cursor:pointer}
 .feld-haken .fehler{grid-column:2}
-.kunde-weiter{margin:-4px 0 18px;border:2px dashed var(--blau);border-radius:12px;padding:10px 12px;font-size:15px;line-height:1.4}
+.kunde-weiter{margin:-4px 0 18px;border:2px dashed var(--blau);border-radius:var(--r-karte);padding:10px 12px;font-size:var(--f-ui);line-height:1.4}
 .kunde-weiter a{text-decoration:none;display:block}
 .kunde-weiter b{text-decoration:underline;text-underline-offset:3px;white-space:nowrap}
 .knopf-voll{width:100%;font-size:22px}
@@ -402,13 +389,13 @@ h1,h2,h3{padding-top:.08em}
 .formular-karte .klein{margin-top:12px}
 .danke{text-align:center;padding:10px 0}
 .danke img{width:88px;margin:0 auto 12px}
-.danke h3{font-size:26px}
+.danke h3{font-size:var(--f-h3)}
 .danke p{margin-top:10px}
 .danke:focus{outline:0}
 .wer{font-size:14px}
 
 /* ---------- Fuß: die Theke ---------- */
-.fuss{position:relative;z-index:2;background:var(--blau);color:var(--hell);font-size:15px}
+.fuss{position:relative;z-index:2;background:var(--blau);color:var(--hell);font-size:var(--f-ui)}
 .fuss-innen{max-width:1280px;margin:0 auto;padding:26px var(--rand) 28px;display:grid;gap:12px}
 .fuss-marke{width:170px}
 .fuss nav{display:flex;flex-wrap:wrap;gap:6px 22px;font-weight:700}
@@ -416,7 +403,7 @@ h1,h2,h3{padding-top:.08em}
 .fuss p{max-width:70ch}
 
 /* ---------- Leiste am Handy ---------- */
-.leiste{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;align-items:center;gap:10px;background:var(--blau);color:var(--hell);padding:8px 12px calc(8px + env(safe-area-inset-bottom));transform:translateY(110%);visibility:hidden;transition:transform .22s,visibility .22s}
+.leiste{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;align-items:center;gap:10px;background:var(--blau);color:var(--hell);padding:8px 12px calc(8px + env(safe-area-inset-bottom));transform:translateY(110%);visibility:hidden;transition:transform var(--ruhig),visibility var(--ruhig)}
 .leiste.da{transform:none;visibility:visible}
 .leiste-preis{font-weight:800;font-size:14px;line-height:1.2;white-space:nowrap}
 .leiste .knopf{flex:1;min-height:48px;font-size:20px;padding-inline:.5em;border-color:var(--hell);box-shadow:none}
@@ -430,7 +417,7 @@ h1,h2,h3{padding-top:.08em}
 .film{border:0;padding:0;background:transparent;max-width:none;max-height:none;overflow:visible;color:var(--hell)}
 .film::backdrop{background:rgba(19,40,61,.88)}
 .film[open]{display:grid;justify-items:center;gap:10px}
-.film-box{width:min(78vw,calc(76vh * 540 / 1168),340px);aspect-ratio:540/1168;border:4px solid var(--hell);border-radius:26px;overflow:hidden;background:var(--blau);box-shadow:6px 6px 0 var(--gelb)}
+.film-box{width:min(78vw,calc(76vh * 540 / 1168),340px);aspect-ratio:540/1168;border:4px solid var(--hell);border-radius:var(--r-gross);overflow:hidden;background:var(--blau);box-shadow:4px 5px 0 var(--gelb)}
 .film-box video{width:100%;height:100%;object-fit:cover}
 .film-text{font-size:14px;font-weight:600;color:var(--hell)}
 .film form{margin:0}
@@ -459,7 +446,7 @@ svg.stech.los .f,svg.stech.los .t{opacity:1;transition:opacity .4s .55s}
 @media (max-width:899px){.auftakt{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:599px){.auftakt-knopf .knopf{white-space:normal;text-align:center;font-size:clamp(20px,5.6vw,26px);line-height:1.05}}
 .hero-beleg{margin-top:4px}
-@media (min-width:900px){.hero-beleg a{font-size:15px}.hero-wa{font-size:16px}}
+@media (min-width:900px){.hero-beleg a{font-size:var(--f-ui)}.hero-wa{font-size:16px}}
 @media (max-width:599px) and (max-height:700px){.auftakt h1{font-size:31px}}
 /* Runde 2: Chips mit „Raten*“ bleiben sichtbar, solange der Knopf in den ersten Bildschirm passt; wo sie fehlen (sehr niedrige Handys),
    fehlt auch die Fußnote im Hero – ein Sternchen ohne Bezug gibt es nicht */
@@ -468,12 +455,12 @@ svg.stech.los .f,svg.stech.los .t{opacity:1;transition:opacity .4s .55s}
 .app-neu{display:inline-block;background:var(--gelb);border:2.5px solid var(--blau);border-radius:6px;padding:2px 8px 0;font:400 15px/1.2 var(--anzeige);text-transform:uppercase;transform:rotate(-4deg)}
 .einwaende{position:relative;padding:20px var(--rand) 28px}
 .einwand-liste{list-style:none;display:grid;gap:14px;margin-top:18px}
-.einwand{background:var(--hell);border:3px solid var(--blau);border-radius:14px;box-shadow:4px 4px 0 var(--blau);padding:14px 16px 13px;line-height:1.4}
-.einwand-frage{font-family:var(--anzeige);text-transform:uppercase;font-size:clamp(19px,5vw,23px);line-height:1.1;padding-top:.08em;margin-bottom:6px}
+.einwand{background:var(--hell);border:3px solid var(--blau);border-radius:var(--r-karte);box-shadow:var(--sch-hart);padding:14px 16px 13px;line-height:1.4}
+.einwand-frage{font-family:var(--anzeige);text-transform:uppercase;font-size:var(--f-lead);line-height:1.1;padding-top:.08em;margin-bottom:6px}
 @media (min-width:720px){.einwand-liste{grid-template-columns:1fr 1fr;gap:18px}}
 @media (min-width:1100px){.einwand-liste{grid-template-columns:repeat(4,minmax(0,1fr))}.einwaende{padding-top:36px;padding-bottom:40px}}
-.preis-rechnung{font-weight:700;font-size:17px;line-height:1.4;max-width:40em}
-@media (min-width:900px){.preis-rechnung{grid-column:1/-1;margin-top:-8px;font-size:19px}}
+.preis-rechnung{font-weight:700;font-size:var(--f-ui);line-height:1.4;max-width:40em}
+@media (min-width:900px){.preis-rechnung{grid-column:1/-1;margin-top:-8px;font-size:var(--f-text)}}
 @media (min-width:900px){.auftakt h1{font-size:clamp(40px,4.3vw,66px)}}
 @media (max-width:899px){.preis-innen{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:374px){.preis h2{font-size:27px}}
@@ -525,21 +512,21 @@ html.stech-warten .buehne svg.stech{visibility:hidden}
 /* Preis-Spalte am Desktop ist schmaler als der Knopf (900–1440 px): Knopf passt sich an, statt über den Rand zu ragen */
 .preis-rest>*{max-width:100%}
 .preis .wege .knopf{max-width:100%}
-@media (min-width:900px){.preis .wege .knopf{white-space:normal;text-align:center;line-height:1.05;font-size:clamp(20px,1.9vw,25px);padding-inline:.9em}}
+@media (min-width:900px){.preis .wege .knopf{white-space:normal;text-align:center;line-height:1.05;font-size:clamp(20px,1.9vw,22px);padding-inline:.9em}}
 /* /studios: „Einrichtung anfragen“ bleibt im Knopf (320 px) */
 .knopf-voll{white-space:normal;text-align:center;line-height:1.05;padding-inline:.5em}
 @media (max-width:374px){.knopf-voll{font-size:19px}}
 /* Desktop-Überschrift: drei Zeilen ohne Überstand („Ganzer Rücken?“ und „Link verkaufen.“ bleiben zusammen) */
-@media (min-width:900px) and (max-width:1599px){.auftakt h1{font-size:clamp(38px,4.05vw,58px)}}
+@media (min-width:900px) and (max-width:1599px){.auftakt h1{font-size:clamp(38px,4.05vw,56px)}}
 
 /* ---------- Nutzen fürs Studio (16.11.2026): direkt unter dem Hero, 4 Karten, eigene Raten-Fußnote ---------- */
 .nutzen{position:relative;max-width:1280px;margin-inline:auto;padding:18px var(--rand) 22px}
 .nutzen-liste{list-style:none;display:grid;gap:12px;margin-top:16px}
-.nutzen-karte{position:relative;display:grid;grid-template-columns:62px minmax(0,1fr);column-gap:14px;row-gap:3px;align-items:start;background:var(--hell);border:3px solid var(--blau);border-radius:14px;box-shadow:4px 4px 0 var(--blau);padding:12px 14px 12px 12px}
+.nutzen-karte{position:relative;display:grid;grid-template-columns:62px minmax(0,1fr);column-gap:14px;row-gap:3px;align-items:start;background:var(--hell);border:3px solid var(--blau);border-radius:var(--r-karte);box-shadow:var(--sch-hart);padding:12px 14px 12px 12px}
 .nutzen-motiv{grid-row:1/3;display:block;width:62px;padding-top:2px}
 .nutzen-motiv svg{width:100%;height:auto;overflow:visible}
-.nutzen-karte h3{font-size:clamp(19px,5.1vw,22px);line-height:1.05;align-self:end}
-.nutzen-karte p{font-size:15px;line-height:1.38}
+.nutzen-karte h3{font-size:var(--f-lead);line-height:1.05;align-self:end}
+.nutzen-karte p{font-size:var(--f-ui);line-height:1.38}
 .nutzen>.raten-fn{margin-top:12px}
 /* sehr schmale Handys (320–379 px): Karten etwas enger, damit die Nutzen-Fußnote sicher ≤ 560 px unter der Raten-Aussage bleibt */
 @media (max-width:379px){.nutzen-liste{gap:10px}.nutzen-karte{padding:10px 12px 10px 10px}}
@@ -552,21 +539,21 @@ html.stech-warten .buehne svg.stech{visibility:hidden}
   .nutzen-motiv{grid-row:auto;width:84px;height:78px;display:grid;align-items:center;justify-items:start}
   .nutzen-motiv{margin-bottom:6px}
   .nutzen-motiv svg{width:84px;height:76px}
-  .nutzen-karte h3{font-size:clamp(21px,1.75vw,25px);align-self:start}
+  .nutzen-karte h3{font-size:var(--f-lead);align-self:start}
   .nutzen-karte p{font-size:16px}
 }
 @media (min-width:1600px){.nutzen{max-width:1480px}}
 
 /* ---------- Umbau 16.11.2026 abends (Domenic: „erklären, was die App kann“, „aufgeräumt, keine Reizüberflutung“) ----------
    6 Abschnitte: Hero, Das kann Tattoofin (4 Zahlungsarten + Zahlarten), So läuft's (3 Schritte + echter Fall), Preis, Fragen, Schluss */
-.abschnitt-satz{margin-top:8px;font-size:clamp(16px,4.3vw,20px);font-weight:600;line-height:1.35;max-width:36em}
+.abschnitt-satz{margin-top:8px;font-size:clamp(16px,4.3vw,18px);font-weight:600;line-height:1.35;max-width:36em}
 .nutzen-karte p b{font-weight:800}
 .nutzen-karte{scroll-margin-top:14px}
 .zahlarten{margin-top:16px;display:grid;gap:8px;justify-items:start}
-.zahlarten-titel{font-family:var(--anzeige);text-transform:uppercase;font-size:clamp(19px,5vw,23px);line-height:1;padding-top:.08em}
+.zahlarten-titel{font-family:var(--anzeige);text-transform:uppercase;font-size:var(--f-lead);line-height:1;padding-top:.08em}
 .zahlarten .chips{margin-top:0;gap:8px}
-.zahlarten .chips li{font-size:15px;padding:4px 12px 3px}
-.zahlarten-satz{font-size:15px;line-height:1.4;max-width:40em}
+.zahlarten .chips li{font-size:var(--f-ui);padding:4px 12px 3px}
+.zahlarten-satz{font-size:var(--f-ui);line-height:1.4;max-width:40em}
 .nutzen>.raten-fn{margin-top:10px}
 @media (min-width:1100px){
   .zahlarten{grid-template-columns:auto auto minmax(0,1fr);align-items:center;column-gap:18px;margin-top:22px}
@@ -577,7 +564,7 @@ html.stech-warten .buehne svg.stech{visibility:hidden}
 .ablauf .fall{max-width:none;margin:22px 0 0;padding:0;display:grid;grid-template-columns:minmax(0,1fr);gap:18px;align-items:center}
 .ablauf .fall .bon{max-width:300px;width:100%;justify-self:center}
 .ablauf .fall-text{gap:8px;justify-items:start}
-.ablauf .fall-text h3{font-size:clamp(28px,7.6vw,40px);line-height:1;text-shadow:2px 2px 0 var(--gelb)}
+.ablauf .fall-text h3{font-size:var(--f-h2);line-height:1;text-shadow:2px 2px 0 var(--gelb)}
 .ablauf .fall-text p:first-of-type{font-weight:600}
 @media (min-width:720px){
   .ablauf .fall{grid-template-columns:300px minmax(0,1fr);gap:clamp(28px,5vw,64px);margin-top:36px;max-width:900px}
@@ -591,7 +578,7 @@ html.stech-warten .buehne svg.stech{visibility:hidden}
 /* ---------- Website-Fassung 16.11.2026 nachts (Domenic: „richtige Website“, „im Hero ein halber Roman“) ----------
    Hero höchstens 5 Elemente: Überschrift, 1 Satz, Handy, Knopf, Preiszeile (+ Fußnote klein, weil „Raten*“ im Satz steht) */
 .auftakt-handy{margin-bottom:30px}
-.handy-hinweis{position:absolute;z-index:3;right:12px;top:8px;font:600 11px/1 var(--text);color:#4a5d70;background:var(--hell);padding:2px 5px;border-radius:4px}
+.handy-hinweis{position:absolute;z-index:3;right:12px;top:8px;font:600 var(--f-fn)/1 var(--text);color:#4a5d70;background:var(--hell);padding:2px 5px;border-radius:var(--r-klein)}
 .auftakt .raten-fn{margin-top:2px}
 html[data-hero=noshow] .auftakt .raten-fn,html[data-hero=gutschein] .auftakt .raten-fn{display:none}
 
@@ -600,7 +587,7 @@ html[data-hero=noshow] .auftakt .raten-fn,html[data-hero=gutschein] .auftakt .ra
 .vorteil-liste{list-style:none;display:grid;gap:18px;margin-top:20px}
 .vorteil{position:relative;padding-left:34px}
 .vorteil::before{content:"";position:absolute;left:0;top:2px;width:22px;height:22px;background:var(--gelb);clip-path:polygon(50% 0,62% 36%,100% 38%,69% 60%,80% 96%,50% 75%,20% 96%,31% 60%,0 38%,38% 36%);filter:drop-shadow(1px 1px 0 var(--blau))}
-.vorteil h3{font-size:clamp(20px,5.3vw,24px);line-height:1.05;padding-top:.06em}
+.vorteil h3{font-size:var(--f-lead);line-height:1.05;padding-top:.06em}
 .vorteil p{margin-top:4px;line-height:1.42;max-width:34em}
 @media (min-width:720px){.vorteil-liste{grid-template-columns:1fr 1fr;gap:26px 36px}}
 @media (min-width:1100px){.vorteile{padding-top:44px;padding-bottom:48px}.vorteil-liste{grid-template-columns:repeat(3,minmax(0,1fr));gap:34px clamp(28px,3vw,48px);margin-top:28px}}
@@ -612,11 +599,11 @@ html[data-hero=noshow] .auftakt .raten-fn,html[data-hero=gutschein] .auftakt .ra
 .geld h2{color:var(--hell);text-shadow:2px 2px 0 rgba(251,179,22,.55)}
 .geld .abschnitt-satz{color:var(--hell)}
 .geldfluss{display:grid;gap:10px;width:100%;max-width:880px;margin-top:6px}
-.geld-station{display:grid;gap:4px;background:var(--hell);color:var(--blau);border-radius:14px;padding:14px 16px 15px;box-shadow:4px 5px 0 rgba(0,0,0,.25)}
+.geld-station{display:grid;gap:4px;background:var(--hell);color:var(--blau);border-radius:var(--r-karte);padding:14px 16px 15px;box-shadow:4px 5px 0 rgba(0,0,0,.25)}
 .geld-station.geld-du{background:var(--gelb)}
 .geld-wer{font:800 12px/1 var(--text);text-transform:uppercase;letter-spacing:.08em}
 .geld-station strong{font:400 clamp(22px,6vw,28px)/1.02 var(--anzeige);text-transform:uppercase;padding-top:.06em}
-.geld-station>span:last-child{font-size:15px;line-height:1.4}
+.geld-station>span:last-child{font-size:var(--f-ui);line-height:1.4}
 .geld-pfeil{justify-self:center;font:800 28px/1 var(--text);color:var(--gelb);transform:rotate(90deg)}
 .geld .raten-fn{color:var(--hell)}
 .geld-punkte{list-style:none;display:grid;gap:12px;max-width:52em;margin-top:6px}
@@ -625,7 +612,7 @@ html[data-hero=noshow] .auftakt .raten-fn,html[data-hero=gutschein] .auftakt .ra
 .geld .mehr{color:var(--hell);font-weight:700;text-underline-offset:3px}
 @media (min-width:720px){
   .geldfluss{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:stretch;gap:16px}
-  .geld-pfeil{align-self:center;transform:none;font-size:34px}
+  .geld-pfeil{align-self:center;transform:none;font-size:28px}
   .geld-punkte{grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;max-width:none}
 }
 @media (min-width:900px){.geld-innen{padding-top:52px;padding-bottom:56px;gap:18px}}
@@ -641,8 +628,6 @@ html[data-hero=noshow] .auftakt .raten-fn,html[data-hero=gutschein] .auftakt .ra
    Kopf + Hero = 100svh (iOS-Safari mit Leisten). Kopf hat eine feste Höhe (--kopf), der Hero den Rest.
    Hochkant (Handy, Tablet): Spalte; die Bühne mit Handybild nimmt den freien Platz, Bild/Figur/Herz skalieren mit der Bühne (Container-Einheiten).
    Quer ab 900 px: zwei Spalten, Bühne so groß, wie die Höhe erlaubt; Text vertikal mittig. Abnahme: hero_check.py (10 Geräte) + Test in e2e. */
-:root{--kopf:56px}
-@media (min-width:600px){:root{--kopf:66px}}
 .kopf{height:var(--kopf);min-height:0;padding-top:0;padding-bottom:0}
 @media (orientation:portrait){
   .auftakt{display:flex;flex-direction:column;height:calc(100svh - var(--kopf));min-height:0;padding-top:clamp(2px,1svh,16px);padding-bottom:clamp(12px,2.4svh,34px)}
@@ -716,7 +701,6 @@ html[data-hero=noshow] .auftakt .raten-fn,html[data-hero=gutschein] .auftakt .ra
 
 /* Handy quer (flach, < 900 px breit): ebenfalls Hero = erster Bildschirm. Zwei Spalten wie bisher, Text oben/unten mittig, Bühne nach Höhe. */
 @media (orientation:landscape) and (max-height:500px) and (min-width:480px) and (max-width:899px){
-  :root{--kopf:46px}
   .auftakt{height:calc(100lvh - var(--kopf));min-height:0;grid-template-rows:minmax(0,1fr) minmax(0,1fr);padding-top:4px;padding-bottom:calc(10px + 100lvh - 100svh)}
   .auftakt>.auftakt-kopf{align-self:end}
   .auftakt>.auftakt-fuss{align-self:start}
@@ -738,3 +722,11 @@ html[data-hero=noshow] .auftakt .raten-fn,html[data-hero=gutschein] .auftakt .ra
 .auftakt .hero-wa{margin-top:2px}
 .fragen-wa{margin-top:18px;font-weight:600}
 .fragen-wa a{font-weight:800;text-underline-offset:3px;white-space:nowrap}
+
+/* Designsystem 18.11.2026: € in großen Zahlen auf feste Stufen */
+.betrag .eur{font-size:var(--f-h3)}.fall-text h3 .eur{font-size:var(--f-h3)}.beleg caption .eur{font-size:var(--f-ui)}
+/* Website 18.11.2026: Wege von der Startseite zu den Unterseiten (Inhalt unverändert, nur Links) */
+.nutzen-karte h3 a{color:inherit;text-decoration-thickness:2px;text-underline-offset:4px}
+.mehr-weg{margin-top:var(--s5)}
+/* Mini-Handy 320×460 (Abnahme 18.11.2026): „10 Sek. ansehen“ passt nicht ganz in den ersten Bildschirm → dort ausblenden */
+@media (max-width:340px) and (max-height:480px){.film-knopf{display:none}}

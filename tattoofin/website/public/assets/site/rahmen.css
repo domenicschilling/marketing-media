@@ -1,0 +1,59 @@
+/* Tattoofin – Kopf, Menü und Fuß, auf JEDER Seite gleich (Schilling Websitekonzept 18.11.2026).
+   Braucht nur /assets/site/werte.css. Lädt nach style.css bzw. site.css, damit es auf alten Seiten genauso aussieht.
+   Nur Werte aus werte.css (Schrift, Radius, Schatten, Abstand, Dauer). */
+html{scroll-padding-top:calc(var(--kopf) + var(--s3))}
+@view-transition{navigation:auto}
+@media (prefers-reduced-motion:reduce){@view-transition{navigation:none}}
+.sprung{position:absolute;left:var(--s3);top:-60px;z-index:80;background:var(--gelb);color:var(--blau);font:700 var(--f-ui)/1.2 var(--text);padding:10px var(--s4);border-radius:var(--r-klein)}
+.sprung:focus{top:10px}
+
+/* ---------- Kopfzeile ---------- */
+.kopf-web{position:relative;z-index:50;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:var(--s3);height:var(--kopf);min-height:0;max-width:1280px;margin-inline:auto;padding:0 var(--rand);font-family:var(--text);color:var(--blau)}
+.kopf-web .kopf-marke{display:block;padding:var(--s1) 0;flex:0 0 auto}
+.kopf-web .kopf-marke img{display:block;width:118px;height:auto}
+.kopf-web .haupt{display:none}
+.kopf-rechts{display:flex;align-items:center;gap:var(--s3)}
+.kopf-web a{color:var(--blau)}
+.kopf-web .knopf,.kopf-web .menue-tafel .knopf{display:inline-flex;align-items:center;justify-content:center;background:var(--gelb);color:var(--blau);border:3px solid var(--blau);border-radius:var(--r-pille);font-family:var(--anzeige);font-weight:400;text-transform:uppercase;line-height:1;text-decoration:none;white-space:nowrap;cursor:pointer;box-shadow:var(--sch-klein);transition:transform var(--schnell),box-shadow var(--schnell)}
+.kopf-web .knopf:hover{transform:translate(-1px,-1px)}
+.kopf-web .knopf.knopf-klein{height:36px;padding:.32em .8em .14em;font-size:var(--f-ui)}
+.kopf-login{display:none;font-weight:700;font-size:var(--f-ui);text-underline-offset:3px;padding:var(--s2) 0}
+.menue{position:static}
+.menue>summary{list-style:none;cursor:pointer;display:grid;place-items:center;height:36px;padding:0 var(--s3);border:3px solid var(--blau);border-radius:var(--r-pille);background:var(--hell);font:800 var(--f-ui)/1 var(--text);color:var(--blau)}
+.menue>summary::-webkit-details-marker{display:none}
+.menue[open]>summary{background:var(--blau);color:var(--hell)}
+.kopf-web .menue-tafel{position:fixed;z-index:60;left:0;right:0;top:var(--kopf);bottom:0;overflow:auto;padding:var(--s5) var(--rand) var(--s7);background:var(--papier) url(/assets/start/papier.webp);background-size:640px 640px;border-top:3px solid var(--blau);display:flex;flex-direction:column;align-items:stretch;gap:var(--s5)}
+.kopf-web .menue-tafel ul{list-style:none;margin:0;padding:0;display:grid;gap:var(--s1)}
+.kopf-web .menue-tafel li a{display:block;padding:var(--s2) 0;font-family:var(--anzeige);font-size:var(--f-h3);line-height:1.15;text-decoration:none;text-transform:uppercase;color:var(--blau)}
+.kopf-web .menue-tafel li a[aria-current]{text-decoration:underline;text-decoration-thickness:3px;text-underline-offset:6px}
+.kopf-web .menue-tafel .knopf{width:100%;min-height:58px;padding:.34em 1.25em .16em;border-width:4px;font-size:var(--f-h3);box-shadow:var(--sch-hart)}
+.kopf-web .menue-tafel .menue-leise{margin:0;display:flex;flex-wrap:wrap;gap:var(--s2) var(--s5);font-weight:700;font-size:var(--f-text)}
+.kopf-web .menue-tafel .menue-leise a{color:var(--blau)}
+html.menue-offen{overflow:hidden}
+@media (min-width:600px){.kopf-web .kopf-marke img{width:150px}}
+@media (min-width:1100px){
+  .kopf-web .haupt{display:flex;align-items:center;gap:clamp(16px,2vw,28px);margin-inline:auto}
+  .kopf-web .haupt a{font-weight:700;font-size:var(--f-text);padding:var(--s2) 0;text-underline-offset:5px;text-decoration-thickness:2px}
+  .kopf-web .haupt a:not([aria-current]){text-decoration:none}
+  .kopf-web .haupt a:hover{text-decoration:underline}
+  .kopf-login{display:inline}
+  .menue{display:none}
+  .kopf-web .knopf.knopf-klein{height:42px;font-size:var(--f-text)}
+}
+@media (min-width:1600px){.kopf-web{max-width:1480px}}
+
+/* ---------- Fuß ---------- */
+.fuss-web{position:relative;z-index:2;background:var(--blau);color:var(--hell);font:400 var(--f-ui)/1.5 var(--text)}
+.fuss-web a{color:var(--hell)}
+.fuss-web :focus-visible{outline:3px solid var(--gelb);outline-offset:3px}
+.fuss-web .fuss-innen{box-sizing:border-box;max-width:1280px;margin:0 auto;padding:var(--s6) var(--rand) var(--s6);display:grid;gap:var(--s3)}
+.fuss-web .fuss-marke{display:block;width:170px;height:auto}
+.fuss-web .fuss-spalten{display:grid;gap:var(--s5);margin-block:var(--s4);text-align:left}
+.fuss-web h2{margin:0 0 var(--s2);padding:0;font:800 var(--f-klein)/1.3 var(--text);letter-spacing:.08em;text-transform:uppercase;text-shadow:none;color:var(--hell)}
+.fuss-web ul{list-style:none;margin:0;padding:0;display:grid;gap:var(--s1)}
+.fuss-web .fuss-seiten{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:var(--s4)}
+.fuss-web li a{display:inline-block;padding:var(--s1) 0;font-weight:600;font-size:var(--f-ui);text-underline-offset:3px}
+.fuss-web p{margin:0;max-width:70ch;font-size:var(--f-klein);line-height:1.5}
+.fuss-web .fuss-hinweis{opacity:1}
+@media (min-width:720px){.fuss-web .fuss-spalten{grid-template-columns:2fr 1fr 1fr}}
+@media (min-width:1600px){.fuss-web .fuss-innen{max-width:1480px}}

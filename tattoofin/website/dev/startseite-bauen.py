@@ -3,14 +3,20 @@
 
 Die Flash-Motive (SVG) werden aus der Vorlage dev/vorlage/motive.html gelesen, damit die
 Zeichnungen nicht doppelt gepflegt werden. Aufruf: python3 dev/startseite-bauen.py
-Texte, Zahlen und Pflichtangaben stehen nur hier. Belege: content/tattoofin/spots-2026-11/belege/
+Texte stehen hier; ZAHLEN, Preise, Nummern und Fragen kommen seit 18.11.2026 aus dev/website/fakten.json bzw.
+fragen.json als [[gruppe.feld]] (Schilling Websitekonzept). Kopf und Fuß der Startseite: dev/website/rahmen.py (gleich auf allen Seiten).
+Normal baut man alles mit: python3 dev/website/website-bauen.py (ruft dieses Skript auf). Belege: content/tattoofin/spots-2026-11/belege/
 fall-900-klarna-2026-11-07.md (900 € per Klarna, 07.11.2026, Studio anonym, Freigabe Domenic 13.11.2026).
 """
 import html
 import json
 import re
+import sys
 import urllib.parse
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent / "website"))
+import rahmen  # noqa: E402  Kopf, Fuß, Faktenquelle (dev/website/fakten.json), Fragen (dev/website/fragen.json)
 
 ROOT = Path(__file__).resolve().parent.parent
 PUB = ROOT / "public"
@@ -24,32 +30,12 @@ def motiv(name):
     return m.group(1).strip()
 
 
-WA_NUMMER = "491624502375"
-FN_LANG = "*Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, nicht Tattoofin. Achtung! Kreditaufnahme kostet Geld."
-FN_KURZ = "*Raten über Klarna, nach deren Bonitätsprüfung. Achtung! Kreditaufnahme kostet Geld."
+WA_NUMMER = rahmen.fakt("kontakt.whatsappNr")
+FN_LANG = rahmen.fakt("klarna.fnLang")
+FN_KURZ = rahmen.fakt("klarna.fnKurz")
 
-FRAGEN = [
-    ("Bekommt jeder Kunde Raten*?",
-     "Nein. Klarna prüft jeden Kunden selbst. Sagt Klarna nein, zahlt dein Kunde mit Karte, Apple Pay oder Google Pay.", True),
-    ("Und wenn der Kunde nicht zahlt?",
-     "Zahlt dein Kunde seine Raten* nicht, trägt laut Stripe Klarna das Risiko. Reklamiert er das Tattoo bei Klarna oder seiner Bank, kann ein Streitfall entstehen. Dann reichst du deine Nachweise ein, zum Beispiel seine gespeicherte Bestätigung deiner Anzahlungsbedingungen. Unser Team hilft dir dabei.", True),
-    ("Ist Tattoofin der Kreditgeber?",
-     "Nein. Den Vertrag über die Raten* schließt dein Kunde mit Klarna. Du berätst nicht zu Krediten und sagst keine Raten* zu.", True),
-    ("Was kostet es genau?",
-     "49,90 € im Monat inkl. MwSt. (41,93 € netto), keine Provision. Dazu Stripe-Gebühren je Zahlung: Karte ab 1,5 % + 0,25 €, Klarna ab 2,99 % + 0,35 €. Die erste Woche testest du ohne Kosten (Karte wird bei Stripe hinterlegt), der erste Monat wird erst danach abgebucht. Kündigst du in der Testwoche, zahlst du nichts.", False),
-    ("Wie kündige ich? Und wenn Stripe mich ablehnt?",
-     "Im Portal, zum Ende des Abrechnungsmonats. Dein Stripe-Konto bleibt bei dir, Zahlungslinks und QR-Code enden. Lehnt Stripe dein Studio endgültig ab, bekommst du die gezahlten Monate zurück, außer bei falschen Angaben oder Pflichtverletzung.", False),
-    ("Wann kommt das Geld, und was brauche ich?",
-     "Stripe zahlt auf dein Bankkonto aus, laut Stripe in Deutschland in der Regel 3 Werktage nach der Zahlung, die allererste Auszahlung nach 7 Tagen. Du brauchst dein Studio als Unternehmen, ein Bankkonto und deinen Ausweis.", False),
-    ("Wie fange ich an?",
-     "Online anmelden, dann legst du dein Stripe-Konto an und Stripe prüft dein Studio. Danach richtet unser Team alles mit dir ein, mit einer Testzahlung.", False),
-    ("Ich hab schon SumUp & Co.",
-     "Behalt es. Dein Kartengerät kassiert an der Theke. Tattoofin kassiert, wenn der Kunde nicht da ist: Anzahlung vorab, Rest per Link, Gutscheine.", False),
-    ("Meine Kunden zahlen bar.",
-     "Bar bleibt. Für eine Anzahlung muss dein Kunde dann aber extra vorbeikommen. Mit dem Link zahlt er sofort von zu Hause.", False),
-    ("Technik ist nicht meins.",
-     "Musst du nicht können. Unser Team richtet alles mit dir ein, per WhatsApp.", False),
-]
+_FR = json.loads((Path(__file__).resolve().parent / "website" / "fragen.json").read_text(encoding="utf-8"))
+FRAGEN = [(f["q"], " ".join(f["a"]), f["fn"]) for f in _FR["fragen"] if f.get("start")]
 
 
 # Erster Bildschirm passend zur Anzeige (16.11.2026, Runde 2): Die Variante steht fest, bevor etwas gezeichnet wird.
@@ -96,9 +82,9 @@ def jsonld(seite):
     for q, a, fn in FRAGEN:
         faq.append({"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a + (" " + FN_KURZ if fn else "")}})
     graph = [
-        {"@type": "Organization", "@id": "https://tattoofin.de/#org", "name": "Tattoofin", "legalName": "DSX Media Solutions UG (haftungsbeschränkt)",
-         "url": "https://tattoofin.de/", "logo": "https://tattoofin.de/assets/logo.png", "email": "info@tattoofin.de", "telephone": "+491624502375",
-         "address": {"@type": "PostalAddress", "streetAddress": "Am Weingarten 9", "postalCode": "96117", "addressLocality": "Memmelsdorf", "addressCountry": "DE"},
+        {"@type": "Organization", "@id": "https://tattoofin.de/#org", "name": "Tattoofin", "legalName": "[[firma.name]]",
+         "url": "https://tattoofin.de/", "logo": "https://tattoofin.de/assets/logo.png", "email": "[[kontakt.mail]]", "telephone": "[[kontakt.telefonIntl]]",
+         "address": {"@type": "PostalAddress", "streetAddress": "[[firma.strasse]]", "postalCode": "[[firma.plz]]", "addressLocality": "[[firma.ort]]", "addressCountry": "DE"},
          "sameAs": ["https://www.instagram.com/tattoofin.de/"]},
         {"@type": "WebSite", "@id": "https://tattoofin.de/#website", "url": "https://tattoofin.de/", "name": "Tattoofin", "inLanguage": "de-DE", "publisher": {"@id": "https://tattoofin.de/#org"}},
         {"@type": "Service", "name": "Zahlungsstruktur für Tattoo-Studios",
@@ -106,9 +92,9 @@ def jsonld(seite):
          "provider": {"@id": "https://tattoofin.de/#org"}, "areaServed": {"@type": "Country", "name": "Deutschland"},
          "audience": {"@type": "BusinessAudience", "name": "Tattoo-Studios"},
          "offers": [{"@type": "Offer", "name": "Paket Monatlich",
-                     "description": "1 Woche testen, danach 49,90 € im Monat inkl. MwSt. (41,93 € netto), keine Provision, danach nur die Zahlungsgebühren von Stripe. QR-Code zum Ausdrucken im Paket. Monatlich kündbar.",
-                     "price": "49.90", "priceCurrency": "EUR",
-                     "priceSpecification": {"@type": "UnitPriceSpecification", "price": "49.90", "priceCurrency": "EUR", "valueAddedTaxIncluded": True, "unitText": "Monat",
+                     "description": "1 Woche testen, danach [[preis.monat]] im Monat inkl. MwSt. ([[preis.netto]] netto), keine Provision, danach nur die Zahlungsgebühren von Stripe. QR-Code zum Ausdrucken im Paket. Monatlich kündbar.",
+                     "price": "[[preis.monatZahl]]", "priceCurrency": "EUR",
+                     "priceSpecification": {"@type": "UnitPriceSpecification", "price": "[[preis.monatZahl]]", "priceCurrency": "EUR", "valueAddedTaxIncluded": True, "unitText": "Monat",
                                             "referenceQuantity": {"@type": "QuantitativeValue", "value": 1, "unitCode": "MON"}}}]},
         {"@type": "FAQPage", "mainEntity": faq},
     ]
@@ -155,10 +141,13 @@ def bauen(seite):
         ("nr5", klein_motiv("motiv-5"), "Gutschein", "Zum Verschenken.", "Dein Kunde kauft per Link und bekommt Code und PDF per E-Mail."),
         ("nr1", klein_motiv("flash-1", "tf-b1", "tf-n1"), "Ratenzahlung*", "Für große Tattoos.", "Dein Kunde zahlt in Raten* über Klarna. Du bekommst den ganzen Betrag auf einmal."),
     ]
+    SEITE_ZU = {"nr3": "/funktionen/anzahlung/", "nr2": "/funktionen/zahlungslink/", "nr5": "/funktionen/gutschein/", "nr1": "/funktionen/ratenzahlung/"}
+    def karten_titel(i, h):
+        return h if studios else '<a class="karte-weiter" href="%s">%s</a>' % (SEITE_ZU[i], h)
     nutzen = ('  <section class="nutzen" id="nutzen" aria-labelledby="nutzen-titel">\n'
               '    <h2 id="nutzen-titel">Was du damit machen&nbsp;kannst.</h2>\n'
               '    <p class="abschnitt-satz">Für jede Zahlung in deinem Studio ein Link. Dein Kunde zahlt am Handy.</p>\n    <ul class="nutzen-liste">\n'
-              + "".join('      <li class="nutzen-karte" id="%s"><span class="nutzen-motiv">%s</span><h3>%s</h3><p><b>%s</b> %s</p></li>\n' % (i, m, h, w, s) for i, m, h, w, s in NUTZEN)
+              + "".join('      <li class="nutzen-karte" id="%s"><span class="nutzen-motiv">%s</span><h3>%s</h3><p><b>%s</b> %s</p></li>\n' % (i, m, karten_titel(i, h), w, s) for i, m, h, w, s in NUTZEN)
               + '    </ul>\n'
               '    <div class="zahlarten">\n'
               '      <p class="zahlarten-titel">Dein Kunde zahlt mit</p>\n'
@@ -184,6 +173,11 @@ def bauen(seite):
     # Eigener Abschnitt „Du bekommst dein Geld“ (Domenic: „nicht so, dass du selber finanzierst, sondern du kriegst dein Geld und die Kunden
     # finanzieren über Klarna“). Auszahlung laut Stripe-Doku (docs.stripe.com/payments/balances, Settlement timing, Germany: erste Auszahlung
     # 7 Kalendertage, danach 3 Werktage; Stand 16.11.2026). Kein „sofort“ (nicht belegt). Raten*-Aussage mit eigener Fußnote ≤ 560 px darunter.
+    mehr_raten = ('<a class="mehr" href="/ratenzahlung-tattoostudio.html">Mehr zur Ratenzahlung im Tattoostudio&nbsp;→</a>' if studios
+                  else '<a class="mehr" href="/funktionen/ratenzahlung/">Mehr zu Klarna im Studio&nbsp;→</a>')
+    mehr_ablauf = "" if studios else '\n    <p class="mehr-weg"><a class="mehr" href="/so-gehts/">So fängst du an&nbsp;→</a></p>'
+    mehr_preis = "" if studios else '<a class="wa" href="/preis/">Alles zum Preis</a>'
+    mehr_fragen = "" if studios else '<a href="/fragen/">Alle Fragen ansehen</a> · '
     geld = f'''  <section class="geld" id="geld" aria-labelledby="geld-titel">
     <div class="geld-innen">
       <h2 id="geld-titel">Dein Geld kommt auf&nbsp;einmal.</h2>
@@ -195,11 +189,11 @@ def bauen(seite):
       </div>
       <p class="raten-fn">{FN_LANG}</p>
       <ul class="geld-punkte">
-        <li><b>Wann ist das Geld auf deinem Konto?</b> Stripe zahlt auf dein Bankkonto aus. Laut Stripe in Deutschland in der Regel 3&nbsp;Werktage nach der Zahlung, die allererste Auszahlung nach 7&nbsp;Tagen.</li>
+        <li><b>Wann ist das Geld auf deinem Konto?</b> Stripe zahlt auf dein Bankkonto aus. Laut Stripe in Deutschland in der Regel [[auszahlung.werktage]] nach der Zahlung, die allererste Auszahlung nach [[auszahlung.erste]].</li>
         <li><b>Und wenn der Kunde nicht zahlt?</b> Dann trägt laut Stripe Klarna das Risiko, nicht&nbsp;du.</li>
         <li><b>Sagt Klarna nein?</b> Dann zahlt dein Kunde mit Karte, Apple Pay oder Google&nbsp;Pay.</li>
       </ul>
-      <a class="mehr" href="/ratenzahlung-tattoostudio.html">Mehr zur Ratenzahlung im Tattoostudio&nbsp;→</a>
+      {mehr_raten}
     </div>
   </section>
 
@@ -214,22 +208,22 @@ def bauen(seite):
 
     if studios:
         kopf_meta = """<title>Tattoofin für Tattoo-Studios – Zahlungslinks, Anzahlungen und mehr Zahlarten für deine Kunden</title>
-<meta name="description" content="Zahlungslink per WhatsApp, Anzahlung vorab per Link gegen No-Shows und mehrere Zahlarten für dein Tattoo-Studio. Keine Provision: 49,90 € im Monat inkl. MwSt., keine Einrichtungsgebühr.">
+<meta name="description" content="Zahlungslink per WhatsApp, Anzahlung vorab per Link gegen No-Shows und mehrere Zahlarten für dein Tattoo-Studio. Keine Provision: [[preis.monat]] im Monat inkl. MwSt., keine Einrichtungsgebühr.">
 <meta name="robots" content="noindex,follow">
 <meta name="theme-color" content="#f5ead2">
 <link rel="canonical" href="https://tattoofin.de/">
 <meta property="og:type" content="website"><meta property="og:locale" content="de_DE"><meta property="og:site_name" content="Tattoofin">
 <meta property="og:title" content="Tattoofin – Zahlungslinks, Anzahlungen und mehr Zahlarten für deine Kunden">
-<meta property="og:description" content="Zahlungslink per WhatsApp, Anzahlung vorab per Link gegen No-Shows und mehrere Zahlarten für Tattoo-Studios. Keine Provision: 49,90 € im Monat inkl. MwSt.">
+<meta property="og:description" content="Zahlungslink per WhatsApp, Anzahlung vorab per Link gegen No-Shows und mehrere Zahlarten für Tattoo-Studios. Keine Provision: [[preis.monat]] im Monat inkl. MwSt.">
 <meta property="og:url" content="https://tattoofin.de/studios"><meta property="og:image" content="https://tattoofin.de/assets/og.jpg">"""
     else:
         kopf_meta = """<title>Tattoofin – Zahlungslinks, Anzahlungen &amp; Raten* für Tattoo-Studios</title>
-<meta name="description" content="Software für Tattoo-Studios: Zahlungslink per WhatsApp, QR-Zahlseite an der Theke, Anzahlung mit Bedingungen, Gutscheine. 49,90 € im Monat inkl. MwSt.">
+<meta name="description" content="Software für Tattoo-Studios: Zahlungslink per WhatsApp, QR-Zahlseite an der Theke, Anzahlung mit Bedingungen, Gutscheine. [[preis.monat]] im Monat inkl. MwSt.">
 <meta name="theme-color" content="#f5ead2">
 <link rel="canonical" href="https://tattoofin.de/">
 <meta property="og:type" content="website"><meta property="og:locale" content="de_DE"><meta property="og:site_name" content="Tattoofin">
 <meta property="og:title" content="Tattoofin für Tattoo-Studios: Zahlungslink, Anzahlung, Raten*">
-<meta property="og:description" content="Zahlungslink per WhatsApp, QR-Zahlseite, Anzahlung vorab und Raten* über Klarna. 49,90 € im Monat inkl. MwSt., ohne Provision.">
+<meta property="og:description" content="Zahlungslink per WhatsApp, QR-Zahlseite, Anzahlung vorab und Raten* über Klarna. [[preis.monat]] im Monat inkl. MwSt., ohne Provision.">
 <meta property="og:url" content="https://tattoofin.de/"><meta property="og:image" content="https://tattoofin.de/assets/og.jpg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">"""
 
@@ -279,19 +273,23 @@ def bauen(seite):
           <p>Unser Team meldet sich per WhatsApp bei dir. Bis dahin musst du nichts vorbereiten.</p>
         </div>
       </div>
-      <p class="wer">Tattoofin ist ein Angebot der DSX Media Solutions UG aus Memmelsdorf bei Bamberg.</p>
+      <p class="wer">Tattoofin ist ein Angebot der [[firma.kurz]] aus [[firma.ortLang]].</p>
     </div>
   </details>
 """ % {"stern": stern}
 
     skripte = """<script src="/assets/start/app.js?v=20261116b" defer></script>
 <script defer src="https://cloud.umami.is/script.js" data-website-id="507b740f-264e-4ba1-a7d0-9dbe49db75af" data-domains="tattoofin.de"></script>
-<script src="/js/tf-track.js?v=20261117b"></script>"""
+<script src="/js/tf-track.js?v=20261118a"></script>"""
     if studios:
         skripte += '\n<script src="/js/studios.js"></script>'
 
     # /studios ist noindex: keine strukturierten Daten (sonst doppelt zur Startseite)
     ld = "" if studios else '<script type="application/ld+json">%s</script>\n' % jsonld(seite)
+    css = (f'<link rel="stylesheet" href="/assets/site/werte.css?v={rahmen.CSS_V}">\n<link rel="stylesheet" href="/assets/start/style.css?v={rahmen.CSS_V}">'
+           if studios else rahmen.CSS_SEITE)
+    if not studios:
+        skripte = rahmen.MENUE_JS + "\n" + skripte
     seite_html = f"""<!doctype html>
 <html lang="de">
 <head>
@@ -301,7 +299,7 @@ def bauen(seite):
 <link rel="icon" href="/favicon.png" type="image/png"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preload" href="/assets/start/fonts/LuckiestGuy.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/start/fonts/DMSans.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/assets/start/style.css?v=20261117i">
+{css}
 {ld}</head>
 <body{' data-wa="aus"' if studios else ''}>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><pattern id="tf-punkte" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><circle cx="2.2" cy="2.2" r="2.1" fill="#1f3d5c"/><circle cx="6.7" cy="6.7" r="2.1" fill="#1f3d5c"/></pattern></defs></svg>
@@ -320,7 +318,7 @@ def bauen(seite):
   <main id="inhalt">
   <section class="auftakt">
     <div class="auftakt-kopf">
-      <h1 data-hero="h">Ganzer&nbsp;Rücken? 4.000&nbsp;€ auf&nbsp;einmal.</h1>
+      <h1 data-hero="h">Ganzer&nbsp;Rücken? [[beispielRaten.betragZahl]]&nbsp;€ auf&nbsp;einmal.</h1>
       <p class="unterzeile" data-hero="s">Link per WhatsApp schicken – dein Kunde zahlt am Handy, auch per&nbsp;Klarna.</p>
     </div>
     <div class="buehne">
@@ -341,8 +339,8 @@ def bauen(seite):
     </div>
     <div class="auftakt-fuss">
       <div class="auftakt-knopf">{start("auftakt")}</div>
-      <p class="preiszeile">Danach 49,90&nbsp;€ im Monat · monatlich kündbar</p>
-      <p class="hero-wa"><a href="{wa}" data-umami-event="whatsapp-auftakt">Fragen? WhatsApp an 0162&nbsp;4502375</a></p>
+      <p class="preiszeile">Danach [[preis.monat]] im Monat · monatlich kündbar</p>
+      <p class="hero-wa"><a href="{wa}" data-umami-event="whatsapp-auftakt">Fragen? WhatsApp an [[kontakt.whatsapp]]</a></p>
     </div>
   </section>
 {HERO_TAUSCH}
@@ -350,7 +348,7 @@ def bauen(seite):
     <h2 id="ablauf-titel">So läuft&rsquo;s.</h2>
     <p class="abschnitt-satz">In der iPhone-App oder im Browser. Ohne Kartengerät.</p>
     <ol>
-      <li><div class="stufe-bild">{motiv("stufe-1")}<span class="nr" aria-hidden="true">1</span></div><p><b>Betrag eintippen.</b> Zum Beispiel 900&nbsp;€ für einen Drachen auf dem Rücken.</p></li>
+      <li><div class="stufe-bild">{motiv("stufe-1")}<span class="nr" aria-hidden="true">1</span></div><p><b>Betrag eintippen.</b> Zum Beispiel [[fall.betrag]] für einen Drachen auf dem Rücken.</p></li>
       <li id="nr4"><div class="stufe-bild">{motiv("stufe-2")}<span class="nr" aria-hidden="true">2</span></div><p><b>Link schicken.</b> Per WhatsApp. Oder dein Kunde scannt deinen QR-Code an der Theke.</p></li>
       <li><div class="stufe-bild">{motiv("stufe-3")}<span class="nr" aria-hidden="true">3</span></div><p><b>Bezahlt.</b> Du siehst es sofort in der App. Stripe zahlt auf dein Bankkonto aus.</p></li>
     </ol>
@@ -358,45 +356,45 @@ def bauen(seite):
       <figure class="bon">
         <span class="klebe" aria-hidden="true"></span>
         <span class="bon-kopf">Studio anonym</span>
-        <span class="bon-zeile"><span>Drache, Rücken</span><span>1 Sitzung</span></span>
-        <span class="bon-zeile bon-summe"><span>Summe</span><span>900,00&nbsp;€</span></span>
+        <span class="bon-zeile"><span>[[fall.motiv]]</span><span>1 Sitzung</span></span>
+        <span class="bon-zeile bon-summe"><span>Summe</span><span>[[fall.betragGenau]]</span></span>
         <span class="bon-zeile"><span>Zahlart</span><span>Klarna</span></span>
-        <span class="bon-stempel">Bezahlt 07.11.2026</span>
+        <span class="bon-stempel">Bezahlt [[fall.datum]]</span>
         <figcaption>Nachgezeichnet nach dem echten Zahlungseingang.</figcaption>
       </figure>
       <div class="fall-text">
         <span class="stempel-schild">Echter Fall</span>
-        <h3 id="fall-titel">900<span class="eur">€</span> per Klarna.</h3>
-        <p>So lief es am 7. November in einem Studio: Link geschickt, Kunde zahlt per Klarna, das Geld kommt aufs eigene <span class="nw">Stripe-Konto</span>.</p>
+        <h3 id="fall-titel">[[fall.betragZahl]]<span class="eur">€</span> per Klarna.</h3>
+        <p>So lief es am [[fall.datumLang]] in einem Studio: Link geschickt, Kunde zahlt per Klarna, das Geld kommt aufs eigene <span class="nw">Stripe-Konto</span>.</p>
         <p class="klein">Studio anonym. Klarna entscheidet bei jedem Kunden selbst.</p>
       </div>
-    </div>
+    </div>{mehr_ablauf}
   </section>
 
   <section class="preis" id="preis" aria-labelledby="preis-titel">
     <div class="preis-innen">
       <h2 id="preis-titel">Eine Anzahlung zahlt Tattoofin fast 3&nbsp;Monate.</h2>
-      <p class="preis-rechnung">Kunde kommt nicht? 150&nbsp;€ Anzahlung, minus Stripe-Gebühr ca.&nbsp;2,50&nbsp;€ =&nbsp;147,50&nbsp;€. Tattoofin kostet 49,90&nbsp;€ im Monat.</p>
+      <p class="preis-rechnung">Kunde kommt nicht? [[beispielAnzahlung.betrag]] Anzahlung, minus Stripe-Gebühr [[beispielAnzahlung.gebuehr]] =&nbsp;[[beispielAnzahlung.rest]]. Tattoofin kostet [[preis.monat]] im Monat.</p>
       <div class="preis-schild">
         <svg class="faden" viewBox="0 0 120 90" aria-hidden="true" focusable="false"><path d="M60 8 C42 30 78 52 60 86" fill="none" stroke="#fff7e3" stroke-width="4" stroke-linecap="round"/></svg>
         <span class="reisszwecke" aria-hidden="true"></span>
         <div class="anhaenger">
           <span class="loch" aria-hidden="true"></span>
-          <strong class="betrag">49,90<span class="eur">€</span></strong>
+          <strong class="betrag">[[preis.betrag]]<span class="eur">€</span></strong>
           <span class="einheit">im Monat, inkl. MwSt.</span>
-          <span class="brutto">(41,93&nbsp;€ netto) · Nur für Unternehmer.</span>
+          <span class="brutto">([[preis.netto]] netto) · Nur für Unternehmer.</span>
         </div>
       </div>
       <div class="beleg">
         <table>
-          <caption>Dein Kunde zahlt 4.000<span class="eur">€</span> per Klarna</caption>
+          <caption>Dein Kunde zahlt [[beispielRaten.betragZahl]]<span class="eur">€</span> per Klarna</caption>
           <tbody>
-            <tr><th scope="row">Stripe-Gebühr Klarna</th><td>ab ca. 120&nbsp;€</td></tr>
+            <tr><th scope="row">Stripe-Gebühr Klarna</th><td>[[beispielRaten.gebuehrKlarna]]</td></tr>
             <tr><th scope="row">An Tattoofin</th><td>0&nbsp;€</td></tr>
-            <tr class="summe"><th scope="row">Bei dir</th><td>bis ca. 3.880&nbsp;€</td></tr>
+            <tr class="summe"><th scope="row">Bei dir</th><td>[[beispielRaten.rest]]</td></tr>
           </tbody>
         </table>
-        <p class="beleg-hinweis">Mit Karte ab ca. 60&nbsp;€ Gebühr. Keine Garantie.</p>
+        <p class="beleg-hinweis">Mit Karte [[beispielRaten.gebuehrKarte]] Gebühr. Keine Garantie.</p>
       </div>
       <div class="preis-rest">
         <ul class="sticker-reihe" aria-label="Das gehört dazu">
@@ -405,7 +403,7 @@ def bauen(seite):
           <li>Monatlich kündbar</li>
           <li>Unser Team richtet’s mit dir ein</li>
         </ul>
-        <div class="wege">{start("preis")}<a class="wa" href="/vertrag.html">Vertrag vorab lesen</a></div>
+        <div class="wege">{start("preis")}{mehr_preis}<a class="wa" href="/vertrag.html" data-umami-event="vertrag-lesen">Vertrag vorab lesen</a></div>
       </div>
     </div>
   </section>
@@ -415,14 +413,14 @@ def bauen(seite):
     <div class="fragen-liste">
 {chr(10).join(fragen)}
     </div>
-    <p class="fragen-wa">Deine Frage ist nicht dabei? <a href="{wa}" data-umami-event="whatsapp-fragen">Schreib uns per WhatsApp an 0162&nbsp;4502375</a></p>
+    <p class="fragen-wa">{mehr_fragen}Deine Frage ist nicht dabei? <a href="{wa}" data-umami-event="whatsapp-fragen">Schreib uns per WhatsApp an [[kontakt.whatsapp]]</a></p>
   </section>
 
   <section class="schluss">
     <div class="schluss-kopf">
       <h2>Nächster Termin? Schick den Link.</h2>
-      <p class="zeile">1 Woche testen, danach 49,90&nbsp;€ im Monat inkl. MwSt. · monatlich kündbar <span class="b2b">· nur für Unternehmer</span></p>
-      <div class="wege">{start("schluss")}<a class="wa" href="{wa}" data-umami-event="whatsapp-schluss">Fragen? WhatsApp an 0162&nbsp;4502375</a></div>
+      <p class="zeile">1 Woche testen, danach [[preis.monat]] im Monat inkl. MwSt. · monatlich kündbar <span class="b2b">· nur für Unternehmer</span></p>
+      <div class="wege">{start("schluss")}<a class="wa" href="{wa}" data-umami-event="whatsapp-schluss">Fragen? WhatsApp an [[kontakt.whatsapp]]</a></div>
     </div>
     <div class="hausherr-rahmen">
       <img class="hausherr-klein" src="/assets/start/figur.webp" alt="" width="300" height="310" loading="lazy" decoding="async">
@@ -442,12 +440,12 @@ def bauen(seite):
         <a href="#" data-cookies>Cookie-Einstellungen</a>{'''
         <a href="/raten?utm_source=studios&amp;utm_medium=seite&amp;utm_content=fuss" data-lp="raten">Du bist Kunde?</a>''' if studios else ''}
       </nav>
-      <p>DSX Media Solutions UG (haftungsbeschränkt), Am Weingarten 9, 96117 Memmelsdorf. Tattoofin ist kein Kreditinstitut.</p>
+      <p>[[firma.name]], [[firma.strasse]], [[firma.plz]] [[firma.ort]]. [[firma.hinweis]]</p>
     </div>
   </footer>
 
   <aside class="leiste" id="leiste" aria-label="Schnellzugriff">
-    <span class="leiste-preis">49,90&nbsp;€ im Monat<br>inkl. MwSt.</span>
+    <span class="leiste-preis">[[preis.monat]] im Monat<br>inkl. MwSt.</span>
     {start("leiste").replace('class="knopf"', 'class="knopf"')}
     <a class="leiste-wa" href="{wa}" aria-label="WhatsApp an das Tattoofin-Team" data-umami-event="whatsapp-leiste">{wa_icon}</a>
   </aside>
@@ -464,7 +462,12 @@ def bauen(seite):
 """
     # Leere Platzhalter-Zeilen (Motive, die es nicht gibt) entfernen
     seite_html = re.sub(r"\n[ \t]*\n(?=[ \t]*\n)", "\n", seite_html)
-    return seite_html
+    if not studios:
+        # Startseite: Kopf und Fuß wie auf allen Seiten (dev/website/rahmen.py). /studios behält den Anzeigen-Kopf ohne Menü (W18).
+        seite_html = re.sub(r'<header class="kopf">.*?</header>', lambda m: rahmen.kopf(), seite_html, count=1, flags=re.S)
+        seite_html = re.sub(r'<footer class="fuss">.*?</footer>', lambda m: rahmen.fuss(), seite_html, count=1, flags=re.S)
+        assert seite_html.count("kopf-web") == 1 and seite_html.count("fuss-web") == 1, "Kopf/Fuß nicht ersetzt"
+    return rahmen.fuellen(seite_html)
 
 
 if __name__ == "__main__":

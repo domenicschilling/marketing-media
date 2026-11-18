@@ -1,0 +1,25 @@
+/* Tattoofin – Designsystem-Werte (EINE Quelle für alle Seiten), Schilling Websitekonzept 18.11.2026.
+   Blatt mit Begründung: tattoofin/website/dev/website/designsystem.md
+   Schrift 8 Stufen · Radius 3 Stufen (+ Pille, Kreis) · Schatten 2 · Bewegung 2 Dauern · Abstand 9 Stufen */
+@font-face{font-family:'Luckiest Guy';font-style:normal;font-weight:400;font-display:swap;src:url(/assets/start/fonts/LuckiestGuy.woff2) format('woff2')}
+@font-face{font-family:'DM Sans';font-style:normal;font-weight:400 800;font-display:swap;src:url(/assets/start/fonts/DMSans.woff2) format('woff2')}
+
+:root{
+  --blau:#1f3d5c; --gelb:#fbb316; --papier:#f5ead2; --hell:#fff7e3;
+  --rand:clamp(16px,4.6vw,64px);
+  --t:16px;
+  --anzeige:'Luckiest Guy','Arial Black',sans-serif;
+  --text:'DM Sans',system-ui,sans-serif;
+  /* Designsystem (dev/website/designsystem.md): 8 Schriftstufen, 3 Radien, 2 Schatten, 2 Dauern */
+  --f-fn:12px; --f-klein:14px; --f-ui:16px; --f-text:var(--t); --f-lead:clamp(19px,5vw,22px);
+  --f-h3:clamp(21px,5.6vw,28px); --f-h2:clamp(31px,8.2vw,56px); --f-h1:clamp(42px,11.6vw,80px);
+  --h1:var(--f-h1); --h2:var(--f-h2);
+  --r-klein:6px; --r-karte:14px; --r-gross:26px; --r-pille:999px;
+  --sch-hart:4px 5px 0 var(--blau); --sch-klein:3px 3px 0 var(--blau);
+  --schnell:150ms; --ruhig:300ms;
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px; --s8:64px; --s9:96px;
+}
+@media (min-width:900px){:root{--t:18px}}
+:root{--kopf:56px}
+@media (min-width:600px){:root{--kopf:66px}}
+@media (orientation:landscape) and (max-height:500px) and (min-width:480px) and (max-width:899px){:root{--kopf:46px}}

@@ -58,33 +58,33 @@ window.TFTrack = (function () {
     else if (lies() !== "nein") queue.push([name, params, id, opt.nurPixel]);
   }
 
-  var CSS = ".tf-cc{position:fixed;left:12px;right:12px;bottom:12px;z-index:9999;max-width:560px;margin:0 auto;background:#fff;color:#1f3d5c;border:3px solid #1f3d5c;border-radius:18px;box-shadow:6px 6px 0 #1f3d5c;padding:16px 18px;font:15px/1.45 'DM Sans',system-ui,sans-serif}" +
+  var CSS = ".tf-cc{position:fixed;left:12px;right:12px;bottom:12px;z-index:9999;max-width:560px;margin:0 auto;background:#fff;color:#1f3d5c;border:3px solid #1f3d5c;border-radius:14px;box-shadow:4px 5px 0 #1f3d5c;padding:16px 18px;font:16px/1.45 'DM Sans',system-ui,sans-serif}" +
     ".tf-cc b{display:block;font-size:16px;margin-bottom:4px}.tf-cc a{color:#1f3d5c}" +
     ".tf-cc .r{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}" +
-    ".tf-cc button{flex:1;min-width:140px;border:3px solid #1f3d5c;border-radius:99px;padding:10px 14px;font:700 15px 'DM Sans',system-ui,sans-serif;cursor:pointer;background:#fff;color:#1f3d5c}" +
+    ".tf-cc button{flex:1;min-width:140px;border:3px solid #1f3d5c;border-radius:999px;padding:10px 14px;font:700 16px 'DM Sans',system-ui,sans-serif;cursor:pointer;background:#fff;color:#1f3d5c}" +
     ".tf-cc button.ja{background:#fff;color:#1f3d5c}" +
-    ".tf-wa{position:fixed;right:16px;bottom:16px;z-index:9998;display:flex;align-items:center;gap:8px;background:#25d366;color:#0f2236;text-decoration:none;border:3px solid #1f3d5c;border-radius:99px;box-shadow:4px 4px 0 #1f3d5c;padding:10px 16px 10px 12px;font:700 15px 'DM Sans',system-ui,sans-serif}" +
-    ".tf-wa svg{width:24px;height:24px;flex:none}.tf-wa small{display:block;font-weight:500;font-size:11px}" +
+    ".tf-wa{position:fixed;right:16px;bottom:16px;z-index:9998;display:flex;align-items:center;gap:8px;background:#25d366;color:#0f2236;text-decoration:none;border:3px solid #1f3d5c;border-radius:999px;box-shadow:4px 5px 0 #1f3d5c;padding:10px 16px 10px 12px;font:700 16px 'DM Sans',system-ui,sans-serif}" +
+    ".tf-wa svg{width:24px;height:24px;flex:none}.tf-wa small{display:block;font-weight:500;font-size:12px}" +
     "@media (max-width:600px){.tf-wa span{display:none}.tf-wa{padding:12px}}" +
     "body.tf-cc-offen .tf-wa{display:none}.tf-cc .kurz{display:none}" +
     // Platz unter dem Seitenende, damit das Fenster keine Knöpfe (z. B. „Weiter“ auf /start) verdeckt
     "body.tf-cc-offen{padding-bottom:190px}@media (max-width:600px){body.tf-cc-offen{padding-bottom:150px}}" +
     // Am großen Bildschirm unten rechts statt mittig, damit der Hauptknopf links frei bleibt
     "@media (min-width:1000px){.tf-cc{left:auto;right:20px;bottom:20px;max-width:430px;margin:0}}" +
-    "@media (max-width:600px){.tf-cc{left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right));bottom:max(8px,env(safe-area-inset-bottom));padding:8px 10px;font-size:13px;line-height:1.35;box-shadow:3px 3px 0 #1f3d5c;border-width:2px;border-radius:14px}" +
+    "@media (max-width:600px){.tf-cc{left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right));bottom:max(8px,env(safe-area-inset-bottom));padding:8px 10px;font-size:14px;line-height:1.35;box-shadow:3px 3px 0 #1f3d5c;border-width:2px;border-radius:14px}" +
     ".tf-cc b{display:none}.tf-cc .lang{display:none}.tf-cc .kurz{display:inline}" +
     // beide Knöpfe gleich groß und gleich gestaltet (kein Dark Pattern)
-    ".tf-cc .r{margin-top:6px;gap:8px;flex-wrap:nowrap}.tf-cc button,.tf-cc button.ja{min-width:0;padding:7px 6px;font-size:13.5px;border-width:2px;background:#fff;color:#1f3d5c}}" +
+    ".tf-cc .r{margin-top:6px;gap:8px;flex-wrap:nowrap}.tf-cc button,.tf-cc button.ja{min-width:0;padding:7px 6px;font-size:14px;border-width:2px;background:#fff;color:#1f3d5c}}" +
     // Handy quer / sehr niedrige Fenster: Text links, Knöpfe rechts in einer Zeile (statt halber Bildschirm); Platz für die Sicherheitsränder (Notch)
     // Tablet (16.11.2026): flache Leiste statt großem Kasten, damit Knopf und Preis im ersten Bildschirm frei bleiben
-    "@media (min-width:601px) and (max-width:999px){.tf-cc{max-width:none;margin:0;left:max(10px,env(safe-area-inset-left));right:max(10px,env(safe-area-inset-right));bottom:max(10px,env(safe-area-inset-bottom));display:flex;align-items:center;gap:14px;padding:8px 12px;font-size:13.5px;line-height:1.35;border-width:2px;box-shadow:3px 3px 0 #1f3d5c;border-radius:14px}" +
+    "@media (min-width:601px) and (max-width:999px){.tf-cc{max-width:none;margin:0;left:max(10px,env(safe-area-inset-left));right:max(10px,env(safe-area-inset-right));bottom:max(10px,env(safe-area-inset-bottom));display:flex;align-items:center;gap:14px;padding:8px 12px;font-size:14px;line-height:1.35;border-width:2px;box-shadow:3px 3px 0 #1f3d5c;border-radius:14px}" +
     ".tf-cc b,.tf-cc .lang{display:none}.tf-cc .kurz{display:inline}.tf-cc .r{margin:0;flex:none;flex-wrap:nowrap}.tf-cc button{flex:none;min-width:0;padding:8px 14px;font-size:14px;border-width:2px}body.tf-cc-offen{padding-bottom:84px}}" +
     // Anmeldung /start (einfache Anmeldung 16.11.2026): Der Hinweis weicht aus, solange er irgendeinen Teil des Formulars (Felder, Häkchen, Knopf) verdecken würde
     ".tf-cc.tf-cc-weg{visibility:hidden;transform:translateY(120%)}.tf-cc{transition:transform .18s ease}" +
     // Auf /start auch am großen Bildschirm eine flache Leiste unten (statt Kasten rechts, der dort über dem Formular läge)
     "@media (min-width:1000px){body.anm-seite .tf-cc{left:20px;right:20px;bottom:16px;max-width:none;margin:0;display:flex;align-items:center;gap:16px;padding:8px 14px;font-size:14px;line-height:1.35;border-width:2px;box-shadow:3px 3px 0 #1f3d5c;border-radius:14px}" +
     "body.anm-seite .tf-cc b,body.anm-seite .tf-cc .lang{display:none}body.anm-seite .tf-cc .kurz{display:inline}body.anm-seite .tf-cc .r{margin:0 0 0 auto;flex:none;flex-wrap:nowrap}body.anm-seite .tf-cc button{flex:none;min-width:0;padding:8px 16px;font-size:14px;border-width:2px}body.anm-seite.tf-cc-offen{padding-bottom:84px}}" +
-    "@media (max-height:520px) and (min-width:601px){.tf-cc{max-width:none;margin:0;left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right));bottom:max(8px,env(safe-area-inset-bottom));display:flex;align-items:center;gap:14px;padding:8px 12px;font-size:13px;line-height:1.35}" +
+    "@media (max-height:520px) and (min-width:601px){.tf-cc{max-width:none;margin:0;left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right));bottom:max(8px,env(safe-area-inset-bottom));display:flex;align-items:center;gap:14px;padding:8px 12px;font-size:14px;line-height:1.35}" +
     ".tf-cc b,.tf-cc .lang{display:none}.tf-cc .kurz{display:inline}.tf-cc .r{margin:0;flex:none;flex-wrap:nowrap}.tf-cc button{flex:none;min-width:0;padding:8px 14px;font-size:14px;border-width:2px}body.tf-cc-offen{padding-bottom:84px}}" +
     // Beide Knöpfe immer exakt gleich groß (auch in der flachen Leiste, wo die Texte unterschiedlich lang sind)
     ".tf-cc .r{display:grid;grid-template-columns:1fr 1fr}.tf-cc .r button{width:100%;min-width:0}";
