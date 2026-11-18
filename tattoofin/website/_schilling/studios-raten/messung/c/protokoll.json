@@ -1,0 +1,1210 @@
+[
+  {
+    "heroOben": 53,
+    "heroHoehe": 614,
+    "bildschirm": 667,
+    "breite": 375,
+    "abweichung": 0,
+    "bannerSichtbar": false,
+    "bannerOben": 667,
+    "woerter": 28,
+    "text": "7 Tage Raten* anbieten. Kostenlos. Link schicken, dein Kunde zahlt per Klarna, du bekommst dein Geld auf einmal. 7 Tage kostenlos testen Danach 49,90 € im Monat · monatlich kündbar",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 57,
+        "unten": 182,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 188,
+        "unten": 229,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "a.knopf",
+        "oben": 579,
+        "unten": 630,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 636,
+        "unten": 655,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 12px: \"*Raten über Klarna, nach deren\"",
+      "p 15px: \"Danach 49,90 € im Monat · mona\""
+    ],
+    "probleme": [],
+    "nr": "1",
+    "geraet": "iPhone SE",
+    "zustand": "ohne-banner",
+    "screenshot": "messung/c/1-375x667-ohne-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 614,
+    "bildschirm": 667,
+    "breite": 375,
+    "abweichung": 0,
+    "bannerSichtbar": true,
+    "bannerOben": 563,
+    "woerter": 28,
+    "text": "7 Tage Raten* anbieten. Kostenlos. Link schicken, dein Kunde zahlt per Klarna, du bekommst dein Geld auf einmal. 7 Tage kostenlos testen Danach 49,90 € im Monat · monatlich kündbar",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 57,
+        "unten": 182,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 188,
+        "unten": 229,
+        "sichtbar": true,
+        "mussSichtbar": false
+      },
+      {
+        "name": "a.knopf",
+        "oben": 475,
+        "unten": 526,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 532,
+        "unten": 551,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 12px: \"*Raten über Klarna, nach deren\"",
+      "p 15px: \"Danach 49,90 € im Monat · mona\""
+    ],
+    "probleme": [],
+    "nr": "1",
+    "geraet": "iPhone SE",
+    "zustand": "mit-banner",
+    "screenshot": "messung/c/1-375x667-mit-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 791,
+    "bildschirm": 844,
+    "breite": 390,
+    "abweichung": 0,
+    "bannerSichtbar": false,
+    "bannerOben": 844,
+    "woerter": 28,
+    "text": "7 Tage Raten* anbieten. Kostenlos. Link schicken, dein Kunde zahlt per Klarna, du bekommst dein Geld auf einmal. 7 Tage kostenlos testen Danach 49,90 € im Monat · monatlich kündbar",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 57,
+        "unten": 187,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 193,
+        "unten": 236,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "a.knopf",
+        "oben": 724,
+        "unten": 782,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 788,
+        "unten": 832,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 12px: \"*Raten über Klarna, nach deren\""
+    ],
+    "probleme": [],
+    "nr": "2a",
+    "geraet": "iPhone 13/14 (Layout-Höhe)",
+    "zustand": "ohne-banner",
+    "screenshot": "messung/c/2a-390x844-ohne-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 791,
+    "bildschirm": 844,
+    "breite": 390,
+    "abweichung": 0,
+    "bannerSichtbar": true,
+    "bannerOben": 740,
+    "woerter": 28,
+    "text": "7 Tage Raten* anbieten. Kostenlos. Link schicken, dein Kunde zahlt per Klarna, du bekommst dein Geld auf einmal. 7 Tage kostenlos testen Danach 49,90 € im Monat · monatlich kündbar",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 57,
+        "unten": 187,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 193,
+        "unten": 236,
+        "sichtbar": true,
+        "mussSichtbar": false
+      },
+      {
+        "name": "a.knopf",
+        "oben": 620,
+        "unten": 678,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 684,
+        "unten": 728,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 12px: \"*Raten über Klarna, nach deren\""
+    ],
+    "probleme": [],
+    "nr": "2a",
+    "geraet": "iPhone 13/14 (Layout-Höhe)",
+    "zustand": "mit-banner",
+    "screenshot": "messung/c/2a-390x844-mit-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 611,
+    "bildschirm": 664,
+    "breite": 390,
+    "abweichung": 0,
+    "bannerSichtbar": false,
+    "bannerOben": 664,
+    "woerter": 28,
+    "text": "7 Tage Raten* anbieten. Kostenlos. Link schicken, dein Kunde zahlt per Klarna, du bekommst dein Geld auf einmal. 7 Tage kostenlos testen Danach 49,90 € im Monat · monatlich kündbar",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 57,
+        "unten": 187,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 193,
+        "unten": 236,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "a.knopf",
+        "oben": 576,
+        "unten": 627,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 633,
+        "unten": 652,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 12px: \"*Raten über Klarna, nach deren\"",
+      "p 15px: \"Danach 49,90 € im Monat · mona\""
+    ],
+    "probleme": [],
+    "nr": "2b",
+    "geraet": "iPhone 13/14 (Safari sichtbar)",
+    "zustand": "ohne-banner",
+    "screenshot": "messung/c/2b-390x664-ohne-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 611,
+    "bildschirm": 664,
+    "breite": 390,
+    "abweichung": 0,
+    "bannerSichtbar": true,
+    "bannerOben": 560,
+    "woerter": 28,
+    "text": "7 Tage Raten* anbieten. Kostenlos. Link schicken, dein Kunde zahlt per Klarna, du bekommst dein Geld auf einmal. 7 Tage kostenlos testen Danach 49,90 € im Monat · monatlich kündbar",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 57,
+        "unten": 187,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 193,
+        "unten": 236,
+        "sichtbar": true,
+        "mussSichtbar": false
+      },
+      {
+        "name": "a.knopf",
+        "oben": 472,
+        "unten": 523,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 529,
+        "unten": 548,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 12px: \"*Raten über Klarna, nach deren\"",
+      "p 15px: \"Danach 49,90 € im Monat · mona\""
+    ],
+    "probleme": [],
+    "nr": "2b",
+    "geraet": "iPhone 13/14 (Safari sichtbar)",
+    "zustand": "mit-banner",
+    "screenshot": "messung/c/2b-390x664-mit-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 879,
+    "bildschirm": 932,
+    "breite": 430,
+    "abweichung": 0,
+    "bannerSichtbar": false,
+    "bannerOben": 932,
+    "woerter": 28,
+    "text": "7 Tage Raten* anbieten. Kostenlos. Link schicken, dein Kunde zahlt per Klarna, du bekommst dein Geld auf einmal. 7 Tage kostenlos testen Danach 49,90 € im Monat · monatlich kündbar",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 57,
+        "unten": 200,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 206,
+        "unten": 254,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "a.knopf",
+        "oben": 834,
+        "unten": 892,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 898,
+        "unten": 920,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 12px: \"*Raten über Klarna, nach deren\""
+    ],
+    "probleme": [],
+    "nr": "3",
+    "geraet": "iPhone Pro Max",
+    "zustand": "ohne-banner",
+    "screenshot": "messung/c/3-430x932-ohne-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 879,
+    "bildschirm": 932,
+    "breite": 430,
+    "abweichung": 0,
+    "bannerSichtbar": true,
+    "bannerOben": 828,
+    "woerter": 28,
+    "text": "7 Tage Raten* anbieten. Kostenlos. Link schicken, dein Kunde zahlt per Klarna, du bekommst dein Geld auf einmal. 7 Tage kostenlos testen Danach 49,90 € im Monat · monatlich kündbar",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 57,
+        "unten": 200,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 206,
+        "unten": 254,
+        "sichtbar": true,
+        "mussSichtbar": false
+      },
+      {
+        "name": "a.knopf",
+        "oben": 730,
+        "unten": 788,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 794,
+        "unten": 816,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 12px: \"*Raten über Klarna, nach deren\""
+    ],
+    "probleme": [],
+    "nr": "3",
+    "geraet": "iPhone Pro Max",
+    "zustand": "mit-banner",
+    "screenshot": "messung/c/3-430x932-mit-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 862,
+    "bildschirm": 915,
+    "breite": 412,
+    "abweichung": 0,
+    "bannerSichtbar": false,
+    "bannerOben": 915,
+    "woerter": 28,
+    "text": "7 Tage Raten* anbieten. Kostenlos. Link schicken, dein Kunde zahlt per Klarna, du bekommst dein Geld auf einmal. 7 Tage kostenlos testen Danach 49,90 € im Monat · monatlich kündbar",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 57,
+        "unten": 194,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 200,
+        "unten": 246,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "a.knopf",
+        "oben": 795,
+        "unten": 853,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 859,
+        "unten": 903,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 12px: \"*Raten über Klarna, nach deren\""
+    ],
+    "probleme": [],
+    "nr": "4",
+    "geraet": "Android",
+    "zustand": "ohne-banner",
+    "screenshot": "messung/c/4-412x915-ohne-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 862,
+    "bildschirm": 915,
+    "breite": 412,
+    "abweichung": 0,
+    "bannerSichtbar": true,
+    "bannerOben": 811,
+    "woerter": 28,
+    "text": "7 Tage Raten* anbieten. Kostenlos. Link schicken, dein Kunde zahlt per Klarna, du bekommst dein Geld auf einmal. 7 Tage kostenlos testen Danach 49,90 € im Monat · monatlich kündbar",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 57,
+        "unten": 194,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 200,
+        "unten": 246,
+        "sichtbar": true,
+        "mussSichtbar": false
+      },
+      {
+        "name": "a.knopf",
+        "oben": 691,
+        "unten": 749,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 755,
+        "unten": 799,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 12px: \"*Raten über Klarna, nach deren\""
+    ],
+    "probleme": [],
+    "nr": "4",
+    "geraet": "Android",
+    "zustand": "mit-banner",
+    "screenshot": "messung/c/4-412x915-mit-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 971,
+    "bildschirm": 1024,
+    "breite": 768,
+    "abweichung": 0,
+    "bannerSichtbar": false,
+    "bannerOben": 1024,
+    "woerter": 28,
+    "text": "7 Tage Raten* anbieten. Kostenlos. Link schicken, dein Kunde zahlt per Klarna, du bekommst dein Geld auf einmal. 7 Tage kostenlos testen Danach 49,90 € im Monat · monatlich kündbar",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 57,
+        "unten": 270,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 276,
+        "unten": 334,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "a.knopf",
+        "oben": 926,
+        "unten": 984,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 990,
+        "unten": 1012,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 12px: \"*Raten über Klarna, nach deren\""
+    ],
+    "probleme": [],
+    "nr": "5",
+    "geraet": "iPad hoch",
+    "zustand": "ohne-banner",
+    "screenshot": "messung/c/5-768x1024-ohne-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 971,
+    "bildschirm": 1024,
+    "breite": 768,
+    "abweichung": 0,
+    "bannerSichtbar": true,
+    "bannerOben": 956,
+    "woerter": 28,
+    "text": "7 Tage Raten* anbieten. Kostenlos. Link schicken, dein Kunde zahlt per Klarna, du bekommst dein Geld auf einmal. 7 Tage kostenlos testen Danach 49,90 € im Monat · monatlich kündbar",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 57,
+        "unten": 270,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 276,
+        "unten": 334,
+        "sichtbar": true,
+        "mussSichtbar": false
+      },
+      {
+        "name": "a.knopf",
+        "oben": 858,
+        "unten": 916,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 922,
+        "unten": 944,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 12px: \"*Raten über Klarna, nach deren\""
+    ],
+    "probleme": [],
+    "nr": "5",
+    "geraet": "iPad hoch",
+    "zustand": "mit-banner",
+    "screenshot": "messung/c/5-768x1024-mit-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 1313,
+    "bildschirm": 1366,
+    "breite": 1024,
+    "abweichung": 0,
+    "bannerSichtbar": false,
+    "bannerOben": 1366,
+    "woerter": 28,
+    "text": "7 Tage Raten* anbieten. Kostenlos. Link schicken, dein Kunde zahlt per Klarna, du bekommst dein Geld auf einmal. 7 Tage kostenlos testen Danach 49,90 € im Monat · monatlich kündbar",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 520,
+        "unten": 656,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 662,
+        "unten": 707,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "a.knopf",
+        "oben": 775,
+        "unten": 833,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 839,
+        "unten": 861,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 13px: \"*Raten über Klarna, nach deren\""
+    ],
+    "probleme": [],
+    "nr": "6",
+    "geraet": "iPad Pro hoch",
+    "zustand": "ohne-banner",
+    "screenshot": "messung/c/6-1024x1366-ohne-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 1313,
+    "bildschirm": 1366,
+    "breite": 1024,
+    "abweichung": 0,
+    "bannerSichtbar": true,
+    "bannerOben": 1114,
+    "woerter": 28,
+    "text": "7 Tage Raten* anbieten. Kostenlos. Link schicken, dein Kunde zahlt per Klarna, du bekommst dein Geld auf einmal. 7 Tage kostenlos testen Danach 49,90 € im Monat · monatlich kündbar",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 520,
+        "unten": 656,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 662,
+        "unten": 707,
+        "sichtbar": true,
+        "mussSichtbar": false
+      },
+      {
+        "name": "a.knopf",
+        "oben": 775,
+        "unten": 833,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 839,
+        "unten": 861,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 13px: \"*Raten über Klarna, nach deren\""
+    ],
+    "probleme": [],
+    "nr": "6",
+    "geraet": "iPad Pro hoch",
+    "zustand": "mit-banner",
+    "screenshot": "messung/c/6-1024x1366-mit-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 667,
+    "bildschirm": 720,
+    "breite": 1280,
+    "abweichung": 0,
+    "bannerSichtbar": false,
+    "bannerOben": 720,
+    "woerter": 28,
+    "text": "7 Tage Raten* anbieten. Kostenlos. Link schicken, dein Kunde zahlt per Klarna, du bekommst dein Geld auf einmal. 7 Tage kostenlos testen Danach 49,90 € im Monat · monatlich kündbar",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 196,
+        "unten": 361,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 367,
+        "unten": 418,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "a.knopf",
+        "oben": 476,
+        "unten": 531,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 537,
+        "unten": 558,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 13px: \"*Raten über Klarna, nach deren\"",
+      "p 15.84px: \"Danach 49,90 € im Monat · mona\""
+    ],
+    "probleme": [],
+    "nr": "7",
+    "geraet": "Laptop",
+    "zustand": "ohne-banner",
+    "screenshot": "messung/c/7-1280x720-ohne-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 667,
+    "bildschirm": 720,
+    "breite": 1280,
+    "abweichung": 0,
+    "bannerSichtbar": true,
+    "bannerOben": 468,
+    "woerter": 28,
+    "text": "7 Tage Raten* anbieten. Kostenlos. Link schicken, dein Kunde zahlt per Klarna, du bekommst dein Geld auf einmal. 7 Tage kostenlos testen Danach 49,90 € im Monat · monatlich kündbar",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 196,
+        "unten": 361,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 367,
+        "unten": 418,
+        "sichtbar": true,
+        "mussSichtbar": false
+      },
+      {
+        "name": "a.knopf",
+        "oben": 476,
+        "unten": 531,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 537,
+        "unten": 558,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 13px: \"*Raten über Klarna, nach deren\"",
+      "p 15.84px: \"Danach 49,90 € im Monat · mona\""
+    ],
+    "probleme": [],
+    "nr": "7",
+    "geraet": "Laptop",
+    "zustand": "mit-banner",
+    "screenshot": "messung/c/7-1280x720-mit-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 715,
+    "bildschirm": 768,
+    "breite": 1366,
+    "abweichung": 0,
+    "bannerSichtbar": false,
+    "bannerOben": 768,
+    "woerter": 28,
+    "text": "7 Tage Raten* anbieten. Kostenlos. Link schicken, dein Kunde zahlt per Klarna, du bekommst dein Geld auf einmal. 7 Tage kostenlos testen Danach 49,90 € im Monat · monatlich kündbar",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 209,
+        "unten": 385,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 391,
+        "unten": 445,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "a.knopf",
+        "oben": 505,
+        "unten": 563,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 569,
+        "unten": 591,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 13px: \"*Raten über Klarna, nach deren\""
+    ],
+    "probleme": [],
+    "nr": "8",
+    "geraet": "Laptop",
+    "zustand": "ohne-banner",
+    "screenshot": "messung/c/8-1366x768-ohne-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 715,
+    "bildschirm": 768,
+    "breite": 1366,
+    "abweichung": 0,
+    "bannerSichtbar": true,
+    "bannerOben": 516,
+    "woerter": 28,
+    "text": "7 Tage Raten* anbieten. Kostenlos. Link schicken, dein Kunde zahlt per Klarna, du bekommst dein Geld auf einmal. 7 Tage kostenlos testen Danach 49,90 € im Monat · monatlich kündbar",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 209,
+        "unten": 385,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 391,
+        "unten": 445,
+        "sichtbar": true,
+        "mussSichtbar": false
+      },
+      {
+        "name": "a.knopf",
+        "oben": 505,
+        "unten": 563,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 569,
+        "unten": 591,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 13px: \"*Raten über Klarna, nach deren\""
+    ],
+    "probleme": [],
+    "nr": "8",
+    "geraet": "Laptop",
+    "zustand": "mit-banner",
+    "screenshot": "messung/c/8-1366x768-mit-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 847,
+    "bildschirm": 900,
+    "breite": 1440,
+    "abweichung": 0,
+    "bannerSichtbar": false,
+    "bannerOben": 900,
+    "woerter": 28,
+    "text": "7 Tage Raten* anbieten. Kostenlos. Link schicken, dein Kunde zahlt per Klarna, du bekommst dein Geld auf einmal. 7 Tage kostenlos testen Danach 49,90 € im Monat · monatlich kündbar",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 261,
+        "unten": 452,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 458,
+        "unten": 518,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "a.knopf",
+        "oben": 581,
+        "unten": 639,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 645,
+        "unten": 667,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 13px: \"*Raten über Klarna, nach deren\""
+    ],
+    "probleme": [],
+    "nr": "9",
+    "geraet": "Desktop",
+    "zustand": "ohne-banner",
+    "screenshot": "messung/c/9-1440x900-ohne-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 847,
+    "bildschirm": 900,
+    "breite": 1440,
+    "abweichung": 0,
+    "bannerSichtbar": true,
+    "bannerOben": 648,
+    "woerter": 28,
+    "text": "7 Tage Raten* anbieten. Kostenlos. Link schicken, dein Kunde zahlt per Klarna, du bekommst dein Geld auf einmal. 7 Tage kostenlos testen Danach 49,90 € im Monat · monatlich kündbar",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 261,
+        "unten": 452,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 458,
+        "unten": 518,
+        "sichtbar": true,
+        "mussSichtbar": false
+      },
+      {
+        "name": "a.knopf",
+        "oben": 581,
+        "unten": 639,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 645,
+        "unten": 667,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 13px: \"*Raten über Klarna, nach deren\""
+    ],
+    "probleme": [],
+    "nr": "9",
+    "geraet": "Desktop",
+    "zustand": "mit-banner",
+    "screenshot": "messung/c/9-1440x900-mit-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 1027,
+    "bildschirm": 1080,
+    "breite": 1920,
+    "abweichung": 0,
+    "bannerSichtbar": false,
+    "bannerOben": 1080,
+    "woerter": 28,
+    "text": "7 Tage Raten* anbieten. Kostenlos. Link schicken, dein Kunde zahlt per Klarna, du bekommst dein Geld auf einmal. 7 Tage kostenlos testen Danach 49,90 € im Monat · monatlich kündbar",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 278,
+        "unten": 606,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 612,
+        "unten": 672,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "a.knopf",
+        "oben": 739,
+        "unten": 797,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 803,
+        "unten": 825,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 13px: \"*Raten über Klarna, nach deren\""
+    ],
+    "probleme": [],
+    "nr": "10",
+    "geraet": "Desktop",
+    "zustand": "ohne-banner",
+    "screenshot": "messung/c/10-1920x1080-ohne-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 1027,
+    "bildschirm": 1080,
+    "breite": 1920,
+    "abweichung": 0,
+    "bannerSichtbar": true,
+    "bannerOben": 828,
+    "woerter": 28,
+    "text": "7 Tage Raten* anbieten. Kostenlos. Link schicken, dein Kunde zahlt per Klarna, du bekommst dein Geld auf einmal. 7 Tage kostenlos testen Danach 49,90 € im Monat · monatlich kündbar",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 278,
+        "unten": 606,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 612,
+        "unten": 672,
+        "sichtbar": true,
+        "mussSichtbar": false
+      },
+      {
+        "name": "a.knopf",
+        "oben": 739,
+        "unten": 797,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 803,
+        "unten": 825,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 13px: \"*Raten über Klarna, nach deren\""
+    ],
+    "probleme": [],
+    "nr": "10",
+    "geraet": "Desktop",
+    "zustand": "mit-banner",
+    "screenshot": "messung/c/10-1920x1080-mit-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 611,
+    "bildschirm": 664,
+    "breite": 390,
+    "abweichung": 0,
+    "bannerSichtbar": false,
+    "bannerOben": 664,
+    "woerter": 28,
+    "text": "7 Tage Raten* anbieten. Kostenlos. Link schicken, dein Kunde zahlt per Klarna, du bekommst dein Geld auf einmal. 7 Tage kostenlos testen Danach 49,90 € im Monat · monatlich kündbar",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 57,
+        "unten": 187,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 193,
+        "unten": 236,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "a.knopf",
+        "oben": 576,
+        "unten": 627,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 633,
+        "unten": 652,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 12px: \"*Raten über Klarna, nach deren\"",
+      "p 15px: \"Danach 49,90 € im Monat · mona\""
+    ],
+    "probleme": [],
+    "nr": "2b",
+    "geraet": "iPhone 13/14 (Safari sichtbar)",
+    "zustand": "ohne-banner-reduced-motion",
+    "screenshot": "messung/c/2b-390x664-ohne-banner-reduced-motion.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 611,
+    "bildschirm": 664,
+    "breite": 390,
+    "abweichung": 0,
+    "bannerSichtbar": false,
+    "bannerOben": 664,
+    "woerter": 28,
+    "text": "7 Tage Raten* anbieten. Kostenlos. Link schicken, dein Kunde zahlt per Klarna, du bekommst dein Geld auf einmal. 7 Tage kostenlos testen Danach 49,90 € im Monat · monatlich kündbar",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 57,
+        "unten": 187,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 193,
+        "unten": 236,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "a.knopf",
+        "oben": 576,
+        "unten": 627,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 633,
+        "unten": 652,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 12px: \"*Raten über Klarna, nach deren\"",
+      "p 15px: \"Danach 49,90 € im Monat · mona\""
+    ],
+    "probleme": [],
+    "nr": "2b",
+    "geraet": "iPhone 13/14 (Safari sichtbar)",
+    "zustand": "ohne-banner-dunkel",
+    "screenshot": "messung/c/2b-390x664-ohne-banner-dunkel.png",
+    "bestanden": true
+  }
+]
