@@ -204,7 +204,7 @@ CSS = """
 :root{--kopf-h:53px}
 .kopf{height:var(--kopf-h);min-height:0;padding-top:0;padding-bottom:0}
 /* Erster Bildschirm = genau der sichtbare Bildschirm (svh), alles darin sichtbar */
-.held{max-width:1280px;margin-inline:auto;height:calc(100svh - var(--kopf-h));min-height:300px;padding:2px var(--rand) calc(12px + var(--banner-h,0px));display:flex;flex-direction:column}
+.held{max-width:1280px;margin-inline:auto;height:calc(100svh - var(--kopf-h));min-height:0;padding:2px var(--rand) calc(12px + var(--banner-h,0px));display:flex;flex-direction:column}
 .held h1{font-size:clamp(28px,min(11vw,6.9svh),92px);margin-top:2px;text-wrap:balance}
 .held .unterzeile{font-size:clamp(14px,min(4.3vw,2.6svh),22px);margin-top:6px;max-width:30em}
 .held .raten-fn{margin-top:5px}
@@ -299,7 +299,8 @@ BANNER_JS = """<script>/* Consent-Leiste offen: erster Bildschirm schrumpft um i
 (function(){var d=document.documentElement;function m(){var c=document.querySelector('.tf-cc'),h=0;if(c){c.setAttribute('data-consent','');var r=c.getBoundingClientRect();if(document.body.classList.contains('tf-cc-offen')&&r.height>0&&getComputedStyle(c).display!=='none'){h=Math.max(0,Math.round(innerHeight-r.top))}}d.style.setProperty('--banner-h',h+'px')}
 new MutationObserver(m).observe(document.body,{attributes:true,attributeFilter:['class'],childList:true});addEventListener('resize',m);m();})();</script>"""
 
-for ENTWURF, DATEI in (("a", "studios-raten.html"), ("b", "studios-raten-entwurf-b.html"), ("c", "studios-raten-entwurf-c.html")):
+# Gewählt: A (Domenic 18.11.2026). B und C bleiben als Entwürfe in der Projektakte, nicht im Veröffentlichungs-Ordner.
+for ENTWURF, DATEI in (("a", "studios-raten.html"), ("b", "../_schilling/studios-raten/entwuerfe/studios-raten-entwurf-b.html"), ("c", "../_schilling/studios-raten/entwuerfe/studios-raten-entwurf-c.html")):
   seite = f"""<!doctype html>
 <html lang="de">
 <head>

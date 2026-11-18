@@ -18,4 +18,4 @@
 
 **Bildherkunft:** eigene SVG-Zeichnung im Stil der Live-Motive; Figur `assets/start/figur.webp` (Live-Bestand); Entwurf B: echter Screenshot `assets/start/handy-kunde.webp` (Beispieldaten). Keine KI-Bilder.
 
-**Wahl Domenic:** offen.
+**Wahl Domenic (18.11.2026, wörtlich):** „A aber das soll nicht die website ersetzen sondern für eine kampange sein“. → /studios-raten bleibt reine Kampagnenseite (noindex, canonical auf /studios), die Website tattoofin.de und /studios bleiben unverändert.

@@ -24,7 +24,7 @@ if(!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches))
 :root{--kopf-h:53px}
 .kopf{height:var(--kopf-h);min-height:0;padding-top:0;padding-bottom:0}
 /* Erster Bildschirm = genau der sichtbare Bildschirm (svh), alles darin sichtbar */
-.held{max-width:1280px;margin-inline:auto;height:calc(100svh - var(--kopf-h));min-height:300px;padding:2px var(--rand) calc(12px + var(--banner-h,0px));display:flex;flex-direction:column}
+.held{max-width:1280px;margin-inline:auto;height:calc(100svh - var(--kopf-h));min-height:0;padding:2px var(--rand) calc(12px + var(--banner-h,0px));display:flex;flex-direction:column}
 .held h1{font-size:clamp(28px,min(11vw,6.9svh),92px);margin-top:2px;text-wrap:balance}
 .held .unterzeile{font-size:clamp(14px,min(4.3vw,2.6svh),22px);margin-top:6px;max-width:30em}
 .held .raten-fn{margin-top:5px}
