@@ -104,7 +104,7 @@ def weiter(ort, titel, verwandt):
       <h2 id="weiter-titel">{titel}</h2>
       <div class="weiter">
         {R.knopf(ort + "-schluss")}
-        <p class="zeile">{"[[preis.testwoche]]"} testen, danach [[preis.monat]] [[preis.zusatz]] · monatlich kündbar · <a href="{wa}" data-umami-event="whatsapp-{ort}">Fragen? WhatsApp an [[kontakt.whatsapp]]</a></p>
+        <p class="zeile">{"[[preis.testwoche]]"} testen, danach [[preis.monat]] [[preis.zusatz]] · monatlich kündbar · <a href="{wa}" data-umami-event="whatsapp-{ort}">Fragen? WhatsApp an [[kontakt.whatsapp]]</a>, wir antworten [[kontakt.antwortzeit]].</p>
       </div>
       <ul class="verwandt" aria-label="Weitere Seiten">{v}</ul>
     </section>'''
@@ -221,7 +221,7 @@ seite("/funktionen/ratenzahlung/",
       "Klarna im Tattoo-Studio, ohne Onlineshop | Tattoofin",
       "Raten* über Klarna für deine Kunden, der ganze Betrag für dich. *Raten über Klarna nach deren Bonitätsprüfung. Achtung! Kreditaufnahme kostet Geld.",
       "funktionen",
-      seitenkopf("Raten* für deinen Kunden. Das Geld auf einmal für&nbsp;dich.", "Dein Kunde wählt beim Bezahlen Klarna. Du finanzierst nichts vor und wartest auf keine Rate*.",
+      seitenkopf("Raten* für deinen Kunden. Der ganze Betrag für&nbsp;dich.", "Dein Kunde wählt beim Bezahlen Klarna. Du finanzierst nichts vor und wartest auf keine Rate*.",
                  "ratenzahlung", HERZ, KR_F, unter="\n      " + fn()),
       abschnitt("geldfluss", "So läuft das Geld.", '''<div class="fluss">
         <div class="fluss-station"><span class="wer">Dein Kunde</span><strong>wählt Klarna</strong><p>Beim Bezahlen per Link oder QR-Code.</p></div>
@@ -234,7 +234,7 @@ seite("/funktionen/ratenzahlung/",
       <ul class="text" style="margin-top:var(--s5);padding-left:1.2em">
         <li><b>Wann ist das Geld auf deinem Konto?</b> [[auszahlung.text]]</li>
         <li><b>Sagt Klarna nein?</b> Dann zahlt dein Kunde mit Karte, Apple Pay oder Google&nbsp;Pay.</li>
-        <li><b>Welche Beträge?</b> [[klarna.grenzen]] Was dein Kunde angeboten bekommt, entscheidet Klarna.</li>
+        <li><b>Was bekommt mein Kunde angeboten?</b> Das entscheidet Klarna nach Betrag und Prüfung.</li>
       </ul>''')
       + abschnitt("fall", "Ein echter Fall.", fall)
       + abschnitt("kosten", "Was es kostet.", '<div class="rechnung">' + zettel("Dein Kunde zahlt [[beispielRaten.betrag]] per Klarna", [
@@ -442,7 +442,7 @@ seite("/fragen/",
       "Fragen zu Tattoofin: Geld, Klarna, Kosten, Anfangen | Tattoofin",
       "Antworten zu Geld und Auszahlung, Kosten, Kündigung, Anfangen und Raten*. *Raten über Klarna nach deren Prüfung. Achtung! Kreditaufnahme kostet Geld.",
       "fragen",
-      seitenkopf("Fragen und&nbsp;Antworten.", f'Deine Frage ist nicht dabei? <a href="{WA}" data-umami-event="whatsapp-fragen-kopf">Schreib uns per WhatsApp an [[kontakt.whatsapp]]</a>.', "fragen",
+      seitenkopf("Fragen und&nbsp;Antworten.", f'Deine Frage ist nicht dabei? <a href="{WA}" data-umami-event="whatsapp-fragen-kopf">Schreib uns per WhatsApp an [[kontakt.whatsapp]]</a>. Wir antworten [[kontakt.antwortzeit]].', "fragen",
                  motiv("stern", "Stern")),
       abschnitt("alle", "Alle Fragen.", f'<ul class="sprungliste" aria-label="Themen">{sprung}</ul>{gruppen_html}')
       + weiter("fragen", "Alles klar? Teste eine Woche.", [("Funktionen", "/funktionen/"), ("So geht’s", "/so-gehts/"), ("Preis", "/preis/")]),
@@ -454,19 +454,23 @@ seite("/ueber-uns/",
       "Über uns: Wer hinter Tattoofin steckt | Tattoofin",
       "Tattoofin ist ein Angebot der DSX Media Solutions UG aus Memmelsdorf bei Bamberg. Zahlungspartner ist Stripe, das Geld geht direkt aufs Konto des Studios.",
       None,
-      seitenkopf("Wer hinter Tattoofin&nbsp;steckt.", "Tattoofin ist ein Angebot der [[firma.kurz]] aus [[firma.ortLang]]. Unser Team richtet alles mit dir ein, per&nbsp;WhatsApp.", "ueber-uns"),
+      seitenkopf("Wer hinter Tattoofin&nbsp;steckt.", "Tattoofin ist ein Angebot der [[firma.kurz]] aus [[firma.ortLang]]. Wir antworten per WhatsApp [[kontakt.antwortzeit]].", "ueber-uns"),
       abschnitt("firma", "Die Firma.", f'''<div class="firma"><dl>
         <dt>Firma</dt><dd>[[firma.name]]</dd>
         <dt>Adresse</dt><dd>[[firma.strasse]], [[firma.plz]] [[firma.ort]]</dd>
-        <dt>WhatsApp</dt><dd><a href="{WA}" data-umami-event="whatsapp-ueber-uns">[[kontakt.whatsapp]]</a></dd>
+        <dt>WhatsApp</dt><dd><a href="{WA}" data-umami-event="whatsapp-ueber-uns">[[kontakt.whatsapp]]</a>, wir antworten [[kontakt.antwortzeit]]</dd>
         <dt>E-Mail</dt><dd><a href="mailto:[[kontakt.mail]]">[[kontakt.mail]]</a></dd>
         <dt>Alles Weitere</dt><dd><a href="/impressum.html">Impressum</a></dd>
       </dl><img class="figur" src="/assets/start/figur.webp" alt="Tattoofin-Figur mit tätowierten Armen zeigt den Daumen hoch" width="300" height="310" loading="lazy" decoding="async"></div>''')
+      + abschnitt("wofuer", "Wofür es Tattoofin gibt.", '''<div class="text">
+        <p>Viele Studios nehmen Anzahlungen per Überweisung oder bar, laufen offenen Beträgen hinterher und verlieren Termine, weil Kunden nicht kommen. Große Motive scheitern oft am Geld des Kunden.</p>
+        <p>Tattoofin macht daraus einen Link: Dein Kunde zahlt am Handy, das Geld geht auf dein eigenes Stripe-Konto. Unser Team richtet alles mit dir ein.</p>
+      </div>''')
       + abschnitt("geld", "Wie das Geld läuft.", '''<div class="text">
         <p>Zahlungspartner ist <b>Stripe</b>. Jedes Studio hat sein eigenes Stripe-Konto, das Geld deiner Kunden geht direkt dorthin und von dort auf dein Bankkonto. Über unser Konto läuft es nicht.</p>
         <p>Tattoofin nimmt keine Provision. Du zahlst [[preis.monat]] [[preis.zusatz]], die Gebühr je Zahlung zahlst du direkt an Stripe.</p>
-        <p>Zahlt dein Kunde mit Klarna, ist Klarna sein Vertragspartner, nicht Tattoofin und nicht du. [[firma.hinweis]]</p>
-      </div>''')
+        <p>Zahlt dein Kunde mit Klarna in Raten*, ist Klarna sein Vertragspartner, nicht Tattoofin und nicht du. [[firma.hinweis]]</p>
+      </div>''' + fn())
       + abschnitt("schriftlich", "Was du vorab lesen kannst.", '''<ul class="karten karten-3">
         <li class="karte"><h3>Stripe sagt ja</h3><p>[[stripe.zulaessig]]</p></li>
         <li class="karte"><h3>Der Vertrag</h3><p>Lies ihn, bevor du dich anmeldest. <a href="/vertrag.html" data-umami-event="vertrag-lesen">Vertrag ansehen</a></p></li>

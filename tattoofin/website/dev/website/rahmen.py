@@ -115,7 +115,7 @@ def kopf(aktiv=None):
         <nav class="menue-tafel" aria-label="Menü">
           <ul>{liste}</ul>
           {knopf("menue")}
-          <p class="menue-leise"><a href="/login.html">Studio-Login</a><a href="{html.escape(wa_link())}" data-umami-event="whatsapp-menue">WhatsApp {WA_NR}</a></p>
+          <p class="menue-leise"><a href="/login.html">Studio-Login</a><a href="{html.escape(wa_link())}" data-umami-event="whatsapp-menue">WhatsApp {WA_NR}</a><span>Wir antworten [[kontakt.antwortzeit]].</span></p>
         </nav>
       </details>
     </div>
@@ -132,6 +132,7 @@ def fuss(zusatz=""):
         <nav aria-label="Seitenübersicht"><h2>Tattoofin</h2><ul class="fuss-seiten">{seiten}</ul></nav>
         <div><h2>Kontakt</h2><ul>
           <li><a href="{html.escape(wa_link())}" data-umami-event="whatsapp-fuss">WhatsApp {WA_NR}</a></li>
+          <li>Wir antworten [[kontakt.antwortzeit]].</li>
           <li><a href="mailto:{fakt("kontakt.mail")}" data-umami-event="mail-fuss">{fakt("kontakt.mail")}</a></li>
           <li><a href="/login.html">Studio-Login</a></li>
           <li><a href="/raten">Für Tattoo-Kunden</a></li>

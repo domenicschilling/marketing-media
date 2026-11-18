@@ -17,8 +17,8 @@
     "whatsappNr": "491624502375",
     "telefonIntl": "+491624502375",
     "mail": "info@tattoofin.de",
-    "antwortzeit": "",
-    "quelle": "Memory geschaeftsnummer-0162 (17.11.2026 live). Antwortzeit bewusst leer: keine Zusage ohne Domenics OK."
+    "antwortzeit": "innerhalb von 24 Stunden",
+    "quelle": "Memory geschaeftsnummer-0162 (17.11.2026 live). Antwortzeit: Vorgabe Domenic 18.11.2026 („wir antworten innerhalb von 24h“). Nie „sofort“ oder „rund um die Uhr“."
   },
   "preis": {
     "monat": "49,90 €",
@@ -52,7 +52,6 @@
   "klarna": {
     "fnKurz": "*Raten über Klarna, nach deren Bonitätsprüfung. Achtung! Kreditaufnahme kostet Geld.",
     "fnLang": "*Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, nicht Tattoofin. Achtung! Kreditaufnahme kostet Geld.",
-    "grenzen": "Laut Stripe (Stand Oktober 2026) bietet Klarna in Deutschland Finanzierungen von 25 bis 10.000 € an.",
     "quelle": "Entscheidung Domenic 14.11.2026 (Raten* + Fußnote + Warnsatz klein darunter); Grenzen laut Stripe, Stand 10/2026 (alter Ratgeber klarna-tattoostudio.html)"
   },
   "fall": {

@@ -413,7 +413,7 @@ def bauen(seite):
     <div class="fragen-liste">
 {chr(10).join(fragen)}
     </div>
-    <p class="fragen-wa">{mehr_fragen}Deine Frage ist nicht dabei? <a href="{wa}" data-umami-event="whatsapp-fragen">Schreib uns per WhatsApp an [[kontakt.whatsapp]]</a></p>
+    <p class="fragen-wa">{mehr_fragen}Deine Frage ist nicht dabei? <a href="{wa}" data-umami-event="whatsapp-fragen">Schreib uns per WhatsApp an [[kontakt.whatsapp]]</a>. Wir antworten [[kontakt.antwortzeit]].</p>
   </section>
 
   <section class="schluss">
