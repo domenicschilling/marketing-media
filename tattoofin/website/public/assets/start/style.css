@@ -738,3 +738,6 @@ html[data-hero=noshow] .auftakt .raten-fn,html[data-hero=gutschein] .auftakt .ra
 .auftakt .hero-wa{margin-top:2px}
 .fragen-wa{margin-top:18px;font-weight:600}
 .fragen-wa a{font-weight:800;text-underline-offset:3px;white-space:nowrap}
+
+/* Sehr schmale Handys (320 px): Film-Knopf rechtsbündig am Handybild, sonst ragt er aus dem Bild (Abnahme 18.11.2026) */
+@media (max-width:359px){.film-knopf{left:auto;right:-2px;translate:0 0;padding:0 10px;font-size:12px}}
