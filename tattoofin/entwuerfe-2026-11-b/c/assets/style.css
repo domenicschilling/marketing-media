@@ -1,0 +1,244 @@
+@font-face{font-family:"Luckiest Guy";src:url(fonts/LuckiestGuy.woff2) format("woff2");font-display:swap}
+@font-face{font-family:"DM Sans";src:url(fonts/DMSans.woff2) format("woff2");font-weight:100 1000;font-display:swap}
+:root{
+  --papier:#fbf7ee;--navy:#1f3d5c;--gelb:#fbb316;
+  --rail:66px;--rand:16px;--gap:10px;
+  --fig:min(212px,27vh);--figr:2px;
+  --schritt:52px;
+  --fs:17px;
+}
+@media (min-width:700px){:root{--rail:124px;--rand:32px;--gap:28px;--fig:min(260px,27vh);--figr:16px;--schritt:84px;--fs:18px}}
+@media (min-width:1100px){:root{--rail:300px;--rand:max(56px,calc((100vw - 300px - 1240px)/2));--gap:44px;--fig:min(360px,41vh);--figr:58px;--schritt:120px;--fs:19px}}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--papier);color:var(--navy);font:400 var(--fs)/1.45 "DM Sans",system-ui,sans-serif;overflow-x:hidden}
+img,svg{display:block}
+a{color:inherit}
+h1,h2,h3{font-family:"Luckiest Guy","DM Sans",sans-serif;font-weight:400;margin:0;letter-spacing:.005em;text-transform:uppercase}
+p{margin:0}
+:focus-visible{outline:3px solid var(--navy);outline-offset:3px;border-radius:4px}
+.feld-navy :focus-visible{outline-color:var(--gelb)}
+.skip{position:absolute;left:8px;top:-60px;background:var(--navy);color:var(--papier);padding:10px 14px;z-index:20;border-radius:6px}
+.skip:focus{top:8px}
+
+/* Tattoo-Motive */
+.li,.fl{stroke:var(--navy);stroke-width:4.4;stroke-linejoin:round;stroke-linecap:round}
+.li{fill:none}
+.fl{fill:var(--f,var(--gelb));transition:fill .7s ease}
+.pa{fill:var(--papier)}
+.so,.sh,.dot,.dots circle,.spk{fill:var(--navy)}
+.sh{stroke:none}
+.ve{fill:none;stroke:var(--papier);stroke-width:2.2;stroke-linecap:round}
+.dbl .o{fill:none;stroke:var(--navy);stroke-width:15;stroke-linecap:round}
+.dbl .i{fill:none;stroke:var(--f,var(--gelb));stroke-width:6.2;stroke-linecap:round;transition:stroke .7s ease}
+.txt{fill:var(--navy)}
+.gross{--f:var(--gelb)}
+html.js .gross{--f:var(--papier)}
+html.js .gross.fertig{--f:var(--gelb)}
+
+/* Der Sleeve */
+.sleeve{position:fixed;top:0;bottom:0;right:0;width:var(--rail);z-index:5;pointer-events:none}
+.sleeve svg.arm{position:fixed;left:0;top:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.armfl{fill:var(--papier)}
+.armli{fill:none;stroke:var(--navy);stroke-linejoin:round;stroke-linecap:round}
+.armgelb{fill:var(--gelb)}
+.fueller{fill:var(--navy);transition:opacity .2s}
+.stelle{position:absolute;left:0;top:0;display:flex;flex-direction:column;align-items:center;gap:1px;text-decoration:none;pointer-events:auto;width:var(--mw);min-height:48px;will-change:transform;--f:var(--papier);--mw:56px;--ms:44px}
+.stelle svg{width:var(--ms);height:var(--ms);transition:transform .35s cubic-bezier(.3,1.6,.5,1)}
+.stelle .li,.stelle .fl{stroke-width:7}
+.stelle .dbl .o{stroke-width:17}
+.stelle .dbl .i{stroke-width:6}
+.stelle .fine{display:none}
+.stelle span{font:700 12px/1.1 "DM Sans",sans-serif;background:var(--papier);padding:0 1px;color:var(--navy);white-space:nowrap}
+.stelle.fertig{--f:var(--gelb)}
+.stelle[aria-current=true] span{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:2px}
+.stelle:hover svg{transform:scale(1.08) rotate(-3deg)}
+.stelle.stempel svg{transform:scale(1.22) rotate(-5deg)}
+@media (min-width:700px){.stelle{--mw:92px;--ms:72px}.stelle span{font-size:14px}.stelle .li,.stelle .fl{stroke-width:5.6}}
+@media (min-width:1100px){.stelle{--mw:112px;--ms:92px}.stelle span{font-size:15px}.stelle .li,.stelle .fl{stroke-width:4.8}.stelle .fine{display:inline}.stelle .dbl .o{stroke-width:15}.stelle .dbl .i{stroke-width:6.2}}
+html:not(.js){--rail:0px}
+html:not(.js) .sleeve svg.arm{display:none}
+html:not(.js) .sleeve{position:static;width:auto;padding:16px;display:flex;flex-wrap:wrap;gap:12px}
+html:not(.js) .stelle{position:static}
+
+/* Kopf */
+main{display:block}
+.kopf{position:relative;padding:0 calc(var(--rail) + var(--gap)) 44px var(--rand)}
+.kopfzeile{display:flex;flex-direction:column;align-items:flex-start;padding-top:16px;min-height:calc(var(--figtop,44px) + var(--fig)*1.033)}
+.wortmarke{width:158px;height:auto}
+.kopfzeile p{margin-top:10px;max-width:154px;font-weight:700;font-size:15px;line-height:1.25}
+.figur{position:absolute;right:var(--figr);top:var(--figtop,44px);width:var(--fig);height:auto;z-index:6}
+.thekenlinie{position:absolute;left:0;right:var(--linier,40px);top:calc(var(--figtop,44px) + var(--fig)*1.033 - 3px);height:5px;background:var(--navy);z-index:6;border-radius:3px 0 0 3px}
+.kopftext{padding-top:20px}
+h1{font-size:clamp(36px,11.9vw,48px);line-height:.98}
+h1 .z{display:block}
+.lead{margin-top:10px;font-size:var(--fs);line-height:1.4}
+.pflicht{font-size:16px;line-height:1.38;color:inherit}
+.pflicht strong{font-weight:800}
+.kopftext .pflicht{margin-top:12px}
+.knopfreihe{display:flex;flex-wrap:wrap;align-items:center;gap:6px 18px;margin-top:16px}
+.knopf{display:inline-block;text-transform:uppercase;font:400 22px/1 "Luckiest Guy",sans-serif;text-decoration:none;background:var(--gelb);color:var(--navy);border:3.5px solid var(--navy);border-radius:999px;padding:17px 28px 13px;box-shadow:0 5px 0 var(--navy);transition:transform .12s,box-shadow .12s}
+.knopf:hover{transform:translateY(2px);box-shadow:0 3px 0 var(--navy)}
+.knopf:active{transform:translateY(5px);box-shadow:0 0 0 var(--navy)}
+.neben{font-weight:700;text-underline-offset:3px;padding:8px 0}
+.kurz{margin-top:10px;font-weight:700;font-size:15px;line-height:1.3}
+.tipp{margin-top:4px;font-size:15px;line-height:1.3}
+
+/* Bereiche */
+.bereich{padding:var(--schritt) calc(var(--rail) + var(--gap)) var(--schritt) var(--rand);scroll-margin-top:28px}
+.feld-navy,.feld-gelb,#anker{scroll-margin-top:0}
+.kopfmotiv{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.kopfmotiv .gross{flex:none;width:86px;height:86px;margin:0}
+.kopfmotiv h2{min-width:0}
+h2{font-size:clamp(33px,9.6vw,40px);line-height:1}
+.gross{width:96px;height:96px;margin-bottom:14px}
+.bereich p+p{margin-top:12px}
+.bereich .pflicht{margin-top:12px}
+.bild{width:100%;height:auto;border:3.5px solid var(--navy);background:var(--gelb)}
+.unter{font-size:15px;line-height:1.3;margin-top:8px}
+
+/* Rose */
+#rose .bildrahmen{margin-top:20px}
+#rose .bild{aspect-ratio:600/530;object-fit:cover;object-position:top}
+
+/* Herz: Schritte */
+.schritte{margin-top:18px}
+.tasten{display:none}
+html.js .tasten{display:flex;gap:10px;margin-bottom:12px}
+.taste{appearance:none;font:400 26px/1 "Luckiest Guy",sans-serif;width:56px;height:56px;padding:6px 0 0;border:3.5px solid var(--navy);border-radius:50%;background:var(--papier);color:var(--navy);cursor:pointer;transition:background .25s}
+.taste[aria-pressed=true]{background:var(--gelb)}
+.schritt+.schritt{margin-top:28px}
+html.js .schritt+.schritt{margin-top:0}
+html.js .schritt[hidden]{display:none}
+.schritt h3{font-size:25px;line-height:1.02}
+.schritt p{margin-top:6px}
+.stufe{margin-top:12px;width:100%;height:auto;aspect-ratio:592/460;object-fit:cover;object-position:top;border:3.5px solid var(--navy);background:#fff}
+.stufe.frei{object-fit:contain;object-position:center;background:#fff}
+
+/* Dolch */
+.feld-navy{background:var(--navy);color:var(--papier)}
+.feld-navy .gross{--f:var(--navy)}
+.feld-navy .li,.feld-navy .fl{stroke:var(--papier)}
+.feld-navy .so{fill:var(--papier)}
+html.js .feld-navy .gross{--f:var(--navy)}
+html.js .feld-navy .gross.fertig{--f:var(--gelb)}
+.feld-navy h2{color:var(--gelb)}
+#dolch .bild{margin-top:0;aspect-ratio:600/925;object-fit:cover;object-position:top;border-color:var(--gelb)}
+#dolch .unter{color:var(--papier);margin-bottom:26px}
+
+/* Anker */
+#anker{padding-left:0;padding-top:0}
+#anker .text{padding-left:var(--rand)}
+#anker .foto{width:100%;height:auto;aspect-ratio:800/850;object-fit:cover;object-position:bottom}
+#anker .text{padding-top:18px}
+
+/* Preis */
+.feld-gelb{background:var(--gelb)}
+.feld-gelb .fl{--f:var(--papier)}
+html.js .feld-gelb .gross,html.js .feld-gelb .gross.fertig,.feld-gelb .gross{--f:var(--papier)}
+.preiszahl{font:400 clamp(84px,26vw,120px)/.78 "Luckiest Guy",sans-serif;margin-top:4px}
+.preiszahl{white-space:nowrap}
+.preiszusatz{font-weight:800;font-size:20px;margin-top:-6px}
+.preiszahl{padding-top:10px}
+.feld-gelb ul{list-style:none;padding:0;margin:18px 0 0;font-weight:800;font-size:clamp(18px,5vw,21px);line-height:1.2}
+.feld-gelb li+li{margin-top:7px}
+.feld-gelb .knopf{background:var(--navy);color:var(--gelb);border-color:var(--navy);box-shadow:0 5px 0 #122739}
+.stripe{margin-top:16px}
+
+/* Fragen */
+details{border-top:3.5px solid var(--navy)}
+details:last-of-type{border-bottom:3.5px solid var(--navy)}
+.fragen{margin-top:18px}
+summary{list-style:none;cursor:pointer;font-weight:800;padding:14px 34px 14px 0;position:relative;line-height:1.25}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";position:absolute;right:2px;top:9px;font:400 28px/1.2 "Luckiest Guy",sans-serif}
+details[open] summary::after{content:"\2212"}
+details p{padding-bottom:14px}
+details p+p{margin-top:0}
+
+/* Start */
+#daumen .gross{width:120px;height:120px}
+.fuss{padding:0 calc(var(--rail) + var(--gap)) 28px var(--rand);font-size:15px;line-height:1.45;position:relative}
+.fuss::before{content:"";display:block;height:5px;background:var(--navy);margin:0 calc(var(--gap)*-1) 18px calc(var(--rand)*-1);border-radius:0 3px 3px 0}
+.fuss img{width:128px;height:auto;margin-bottom:6px}
+.fuss nav{display:flex;flex-wrap:wrap;gap:4px 18px;margin-bottom:8px}
+.fuss a{text-underline-offset:3px;padding:6px 0;display:inline-block;font-weight:700}
+
+@media (min-width:700px){
+  :root{--figtop:30px}
+  .wortmarke{width:210px}
+  .kopfzeile{padding-top:24px}
+  .kopfzeile p{max-width:240px;font-size:18px;margin-top:14px}
+  h1{font-size:clamp(56px,9.6vw,76px)}
+  .kopf{padding-bottom:56px;display:flex;flex-direction:column;min-height:100vh;min-height:100svh}
+  .kopftext{margin-top:auto;margin-bottom:auto}
+  .kopfmotiv .gross{width:120px;height:120px}
+  h2{font-size:clamp(44px,6.2vw,64px)}
+  .gross{width:128px;height:128px}
+  .pflicht{font-size:17px}
+  .kopftext .pflicht,.lead{max-width:60ch}
+  .bereich>.satz,.bereich p{max-width:62ch}
+  .knopf{font-size:26px;padding:20px 36px 15px}
+  .schritt h3{font-size:30px}
+  .stufe{max-width:520px}
+  #dolch .bild{max-width:360px}
+  #rose .bild{max-width:380px}
+  .preiszahl{font-size:150px;padding-top:16px}
+  .preiszusatz{font-size:24px;margin-top:-12px}
+  .feld-gelb ul{font-size:24px}
+  #anker .foto{max-height:640px}
+}
+@media (min-width:1100px){
+  :root{--figtop:24px}
+  .kopf{padding-bottom:40px}
+  .kopfzeile{min-height:0;padding-top:28px}
+  .kopfzeile p{max-width:none;font-size:20px;margin-top:16px}
+  .wortmarke{width:236px}
+  .kopftext{padding-top:32px;max-width:calc(100vw - 440px)}
+  h1{font-size:min(9.1vw,16.5vh,150px)}
+  h1 .z{display:inline}
+  .lead{font-size:24px;margin-top:20px;max-width:32em;line-height:1.35}
+  .kopftext .pflicht{max-width:44em}
+  .pflicht{font-size:18px}
+  .thekenlinie{left:auto;right:calc(var(--figr) + 30px);width:calc(var(--fig) - 40px)}
+  .zwei{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 64px;align-items:start;max-width:1040px}
+  .gross{width:150px;height:150px}
+  .kopfmotiv .gross{width:150px;height:150px}
+  h2{font-size:clamp(60px,5.2vw,78px)}
+  #rose .bildrahmen{margin-top:0}
+  #rose .bild{max-width:420px;margin-left:auto}
+  #dolch .zwei{grid-template-columns:minmax(0,420px) minmax(0,1fr)}
+  #dolch .bild{margin-top:0;max-width:none}
+  .schritte{max-width:1040px}
+  .schritt{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,460px);gap:0 64px;align-items:start}
+  .schritt .stufe{grid-column:2;grid-row:1 / span 3;margin-top:0}
+  .schritt h3{font-size:44px}
+  .schritt p{max-width:30em;margin-top:12px}
+  #herz .kopfmotiv{max-width:1040px}
+    #mond .kopfmotiv{flex-direction:column-reverse}
+  .fuss{display:flex;gap:32px;align-items:center}
+  .fuss::before{position:absolute;left:0;right:calc(var(--rail) + var(--gap));top:0;margin:0}
+  .fuss{padding-top:26px}
+  .fuss img{width:150px;margin:0}
+  #anker{padding:0;display:block}
+  #anker .zwei{max-width:none;grid-template-columns:minmax(0,520px) minmax(0,1fr);gap:0 64px;padding-right:calc(var(--rail) + var(--gap));align-items:center}
+  #anker .foto{max-height:none;height:auto;aspect-ratio:800/994}
+  #anker .text{padding:var(--schritt) 0}
+  #diamant .zwei{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}
+  .preiszahl{font-size:176px;padding-top:26px}
+  .preiszusatz{font-size:26px;margin-top:-20px}
+  #diamant .kopfmotiv{flex-direction:column-reverse}
+  #diamant .zwei{align-items:center;gap:0 88px}
+  #diamant .kopfmotiv .gross{width:112px;height:112px}
+  .taste{width:72px;height:72px;font-size:32px}
+  html.js .tasten{margin-bottom:20px}
+  #mond .zwei{grid-template-columns:minmax(0,1fr) minmax(0,1.4fr)}
+  .fragen{margin-top:0}
+  #daumen{padding-top:var(--schritt)}
+  #daumen .gross{width:170px;height:170px}
+}
+@media (max-height:600px) and (max-width:699px){:root{--fig:min(212px,21vh)}}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{transition:none!important;animation:none!important}
+}

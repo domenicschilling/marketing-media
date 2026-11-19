@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#ffffff">
+<title>angebot.new: Angebot per Sprachnachricht</title>
+<meta name="description" content="Sprechen Sie Ihr Angebot in den Browser. Die KI macht daraus Kunde, Positionen, Mengen und Preise. 14 Tage testen.">
+<link rel="preload" href="schrift/inter-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="stil.css">
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body>
+<header class="kopf">
+  <a class="marke" href="#oben">angebot.new</a>
+  <a class="kopf-link" href="#preise">Preise</a>
+</header>
+
+<main id="oben">
+  <section class="hero">
+    <div class="hero-links">
+      <h1><span class="z"><span>Angebot per</span></span><span class="z"><span>Sprachnachricht.</span></span></h1>
+      <p class="unter">Sie sprechen in den Browser, die KI schreibt das Angebot. Ohne App.</p>
+      <div class="sprechseite" data-ui>
+        <div class="reiter" role="group" aria-label="Beispiele aus fünf Branchen" id="reiter"></div>
+        <div class="streifen" id="streifen" tabindex="0" aria-label="Sprachnachrichten aus fünf Branchen, zum Wechseln wischen">
+          <article class="stimme">
+            <div class="kopfzeile"><span class="spiel" aria-hidden="true"></span><span class="zeit">0:06</span></div>
+            <p class="mitschrift">Für Frau Berger: Wohnzimmer streichen, 35 Quadratmeter zu 14 Euro. Dazu Abkleben pauschal 90 Euro.</p>
+            <p class="stumm">Malerbetrieb. Läuft stumm, Sie lesen mit.</p>
+          </article>
+        </div>
+        <article class="stimme eigene" id="eigene" hidden>
+          <div class="kopfzeile"><span class="spiel an" id="eigene-bild" aria-hidden="true"></span><div class="welle" id="eigene-welle" aria-hidden="true"></div><span class="zeit" id="eigene-zeit">0:00</span></div>
+          <p class="mitschrift" id="eigene-text"></p>
+          <form id="tippen" hidden>
+            <label for="tippen-feld">Tippen Sie Ihre Nachricht</label>
+            <textarea id="tippen-feld" rows="3" autocomplete="off" enterkeyhint="done" placeholder="Für Frau Meier: Bad fliesen, 12 Quadratmeter zu 60 Euro."></textarea>
+            <button type="submit" class="knopf-hell">Angebot machen</button>
+          </form>
+          <p class="stumm" id="eigene-hinweis">Die Spracherkennung läuft über Ihren Browser.</p>
+          <button type="button" class="zurueck" id="zurueck">Zurück zu den Beispielen</button>
+        </article>
+      </div>
+    </div>
+
+    <article class="dok" id="dok" data-ui>
+      <header class="dok-kopf"><div><span class="art">Angebot für</span><strong class="kunde">Frau Berger</strong></div><span class="bsp">Beispiel</span></header>
+      <table>
+        <tbody>
+          <tr><td>Wohnzimmer streichen<small>35 m² × 14,00 €</small></td><td>490,00 €</td></tr>
+          <tr><td>Abkleben<small>pauschal</small></td><td>90,00 €</td></tr>
+        </tbody>
+      </table>
+      <dl class="summen"><div><dt>Netto</dt><dd>580,00 €</dd></div><div><dt>USt 19 %</dt><dd>110,20 €</dd></div><div class="gesamt"><dt>Gesamt</dt><dd>690,20 €</dd></div></dl>
+    </article>
+    <p class="ansage" id="ansage" role="status" aria-live="polite"></p>
+  </section>
+
+  <section class="split" id="zahlen">
+    <div class="split-rein dunkel">
+      <h2 class="kommt">Stimmen die Zahlen?</h2>
+      <p class="text kommt">Die App rechnet Menge mal Preis, Zeile für Zeile. Ändern geht per Sprache oder von Hand, und Sie sehen alles, bevor etwas rausgeht.</p>
+      <article class="stimme kommt" id="aendern-stimme" data-ui>
+        <div class="kopfzeile"><button type="button" class="spiel" id="aendern-spiel" aria-label="Änderung noch einmal abspielen"></button><div class="welle" id="aendern-welle" aria-hidden="true"></div><span class="zeit" id="aendern-zeit">0:03</span></div>
+        <p class="mitschrift" id="aendern-text">Mach die 35 zu 40 Quadratmeter.</p>
+      </article>
+    </div>
+    <div class="split-raus">
+      <article class="dok kommt" id="aendern-dok" data-ui>
+        <header class="dok-kopf"><div><span class="art">Angebot für</span><strong class="kunde">Frau Berger</strong></div><span class="bsp">Beispiel</span></header>
+        <table>
+          <tbody>
+            <tr id="aendern-zeile"><td>Wohnzimmer streichen<small><span id="aendern-menge">40</span> m² × 14,00 €</small></td><td id="aendern-pos">560,00 €</td></tr>
+            <tr><td>Abkleben<small>pauschal</small></td><td>90,00 €</td></tr>
+          </tbody>
+        </table>
+        <dl class="summen"><div><dt>Netto</dt><dd id="aendern-netto">650,00 €</dd></div><div><dt>USt 19 %</dt><dd id="aendern-ust">123,50 €</dd></div><div class="gesamt"><dt>Gesamt</dt><dd id="aendern-brutto">773,50 €</dd></div></dl>
+        <p class="vorher" id="aendern-vorher">Vor der Änderung: 690,20 €</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="reihe" id="pdf">
+    <div class="reihe-text">
+      <h2 class="kommt">Sieht das professionell aus?</h2>
+      <p class="text kommt">Ein PDF nach DIN 5008, mit Ihrem Logo und Ihrer Farbe. Logo und Farbe gehören zum Tarif Profi.</p>
+    </div>
+    <div class="brief kommt" data-ui>
+      <div class="brief-kopf"><span class="logo">Ihr Logo</span><span class="absender">Ihr Betrieb, Musterstraße 1, 12345 Musterstadt</span></div>
+      <p class="anschrift">Frau Berger<br>Beispielweg 2<br>12345 Musterstadt</p>
+      <p class="brief-titel">Angebot</p>
+      <p class="brief-anrede">Sehr geehrte Frau Berger, gerne biete ich Ihnen an:</p>
+      <table>
+        <tbody>
+          <tr><td>Wohnzimmer streichen<small>40 m² × 14,00 €</small></td><td id="brief-pos">560,00 €</td></tr>
+          <tr><td>Abkleben<small>pauschal</small></td><td>90,00 €</td></tr>
+          <tr class="brief-summe"><td>Gesamt inkl. 19 % USt</td><td id="brief-brutto">773,50 €</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="reihe stufe" id="zusage">
+    <div class="reihe-text">
+      <h2 class="kommt">Und wenn die Kundin zusagt?</h2>
+      <p class="text kommt">Das Angebot geht per WhatsApp oder <span class="ganz">E-Mail</span> raus, als PDF und mit Link zum Unterschreiben. Bleibt die Antwort aus, erinnert Sie die App ans Nachfassen.</p>
+      <p class="notiz kommt">Beispiel. Online-Annahme und Nachfassen gehören zum Tarif Profi.</p>
+    </div>
+    <div class="ablauf">
+      <div class="kundin kommt" data-ui id="unterschrift">
+        <p class="wer">Frau Berger hat angenommen</p>
+        <svg viewBox="0 0 320 90" role="img" aria-label="Unterschrift Frau Berger"><path d="M8 62c14-30 28-48 36-46 9 3-8 52-13 58-4 4 22-32 37-31 9 1-5 22 2 22 8 0 16-14 22-14 5 0-1 12 4 12 7 0 11-12 18-12 6 0 1 11 7 11 9 0 16-22 24-22 5 0 2 7 6 7 6 0 8-5 13-5 4 0 2 6 6 6 12 0 34-10 62-8 22 1 38 2 62-4"/></svg>
+      </div>
+      <article class="dok kommt" id="rechnung" data-ui>
+        <header class="dok-kopf"><div><span class="art" id="rechnung-art">Rechnung an</span><strong class="kunde">Frau Berger</strong></div><span class="bsp">Beispiel</span></header>
+        <table>
+          <tbody>
+            <tr><td>Wohnzimmer streichen<small>40 m² × 14,00 €</small></td><td id="rechnung-pos">560,00 €</td></tr>
+            <tr><td>Abkleben<small>pauschal</small></td><td>90,00 €</td></tr>
+          </tbody>
+        </table>
+        <dl class="summen"><div class="gesamt"><dt>Gesamt inkl. USt</dt><dd id="rechnung-brutto">773,50 €</dd></div></dl>
+        <button type="button" class="knopf" id="rechnung-knopf">Zurück zum Angebot</button>
+      </article>
+    </div>
+  </section>
+
+  <section class="reihe" id="fragen">
+    <h2 class="kommt fragen-titel">Noch Fragen?</h2>
+    <div class="fragen" id="fragenliste">
+      <button type="button" class="frage" aria-expanded="true">Versteht die KI mich?</button>
+      <div class="antwort">
+        <p>Sagen Sie es wie einem Kollegen: für wen, was, wie viel, zu welchem Preis. Die KI macht daraus Kunde, Positionen, Mengen und Preise. Was sie anders verstanden hat, ändern Sie danach.</p>
+        <button type="button" class="knopf" data-sprechen>Selbst ausprobieren</button>
+      </div>
+      <button type="button" class="frage" aria-expanded="false">Passt das zu meiner Branche?</button>
+      <div class="antwort">
+        <p>Wenn Sie eine Sprachnachricht schicken können, passt die Bedienung. Ihr Leistungskatalog startet mit Vorlagen für 20 Branchen, dazu „Andere Branche“.</p>
+        <ul class="wand" aria-label="Branchen mit Startvorlage"><li>Maler &amp; Lackierer</li><li>Elektriker</li><li>Sanitär, Heizung, Klima</li><li>Schreiner &amp; Tischler</li><li>Dachdecker &amp; Zimmerer</li><li>Garten- &amp; Landschaftsbau</li><li>Fliesenleger</li><li>Gebäudereinigung</li><li>Umzug &amp; Transport</li><li>Kfz-Werkstatt</li><li>IT-Service &amp; Software</li><li>Werbe- &amp; Marketingagentur</li><li>Fotografie &amp; Video</li><li>Freelancer (Text, Design, Übersetzung)</li><li>Beratung &amp; Coaching</li><li>Physio, Kosmetik &amp; Wellness</li><li>Catering &amp; Gastronomie</li><li>Event, DJ &amp; Fotobox</li><li>Immobilienmakler</li><li>Tattoo &amp; Piercing</li><li>Andere Branche</li></ul>
+      </div>
+      <button type="button" class="frage" aria-expanded="false">Muss ich etwas installieren?</button>
+      <div class="antwort"><p>Nein. Sie sprechen direkt im Browser, am Handy und am Rechner.</p></div>
+      <button type="button" class="frage" aria-expanded="false">Woher kommen meine Preise?</button>
+      <div class="antwort"><p>Sie nennen sie beim Sprechen oder hinterlegen sie im Leistungskatalog. Der startet mit Vorlagen für Ihre Branche.</p></div>
+      <button type="button" class="frage" aria-expanded="false">Geht das auch ohne Sprechen?</button>
+      <div class="antwort"><p>Ja. Sie können den Text auch tippen und jede Zeile von Hand ändern.</p></div>
+      <button type="button" class="frage" aria-expanded="false">Gilt das auch für Privatleute?</button>
+      <div class="antwort"><p>Nein. angebot.new ist nur für Unternehmer.</p></div>
+      <button type="button" class="frage" aria-expanded="false">Wie läuft der Test?</button>
+      <div class="antwort"><p>14 Tage. Beim Start hinterlegen Sie eine Zahlungsart. Die erste Abbuchung kommt nach dem Test, vorher können Sie kündigen.</p></div>
+    </div>
+  </section>
+
+  <section class="reihe stufe" id="preise">
+    <div class="reihe-text">
+      <h2 class="kommt">Was kostet es?</h2>
+      <p class="text kommt">Die letzte Nachricht ist unser eigenes Angebot an Sie.</p>
+    </div>
+    <article class="dok preisblatt kommt" data-ui>
+      <header class="dok-kopf"><div><span class="art">Angebot für</span><strong class="kunde">Ihren Betrieb</strong></div><span class="bsp">pro Monat, netto zzgl. USt</span></header>
+      <div class="tarif">
+        <div><h3>Start</h3><p>30 Angebote und Rechnungen im Monat. PDF, WhatsApp, <span class="ganz">E-Mail</span>, Leistungskatalog.</p></div>
+        <p class="preis">19 €</p>
+      </div>
+      <div class="tarif empfohlen">
+        <div><h3>Profi</h3><p>Unbegrenzt Angebote und Rechnungen, Online-Annahme mit Unterschrift, Nachfassen, Rechnung mit einem Tipp, eigenes Logo und Farbe. Empfohlen, wenn Sie jede Woche anbieten.</p></div>
+        <p class="preis">39 €</p>
+      </div>
+      <div class="tarif">
+        <div><h3>Team</h3><p>Alles aus Profi, dazu Auswertung der Zusagequote und persönliche Einrichtung. Mehrere Nutzer sind in Vorbereitung.</p></div>
+        <p class="preis">79 €</p>
+      </div>
+      <a class="knopf gross" href="https://6ae5e0f0124c91011f938fb5--angebot-new.netlify.app/start">14 Tage testen</a>
+      <p class="preis-notiz">14 Tage Test. Die Zahlungsart wird beim Start hinterlegt, die erste Abbuchung kommt nach dem Test, vorher kündbar.</p>
+    </article>
+  </section>
+</main>
+
+<footer class="fuss">
+  <p class="fuss-marke" aria-hidden="true">angebot.new</p>
+  <div class="fuss-zeile">
+    <nav aria-label="Rechtliches"><a href="https://angebot-new.netlify.app/impressum/">Impressum</a><a href="https://angebot-new.netlify.app/datenschutz/">Datenschutz</a></nav>
+    <p>Alle Namen und Beträge auf dieser Seite sind Beispiele. Nur für Unternehmer.</p>
+  </div>
+</footer>
+
+<aside class="dock" id="dock" aria-label="Selbst sprechen oder testen">
+  <div class="dock-reihe">
+    <span class="mic-text" id="mic-text">Selbst sprechen</span>
+    <button type="button" class="mic" id="mic" aria-label="Selbst sprechen"><span class="ring" aria-hidden="true"></span><span class="mic-bild" id="mic-bild" aria-hidden="true"></span></button>
+    <a class="knopf cta" href="https://6ae5e0f0124c91011f938fb5--angebot-new.netlify.app/start">14 Tage testen</a>
+  </div>
+  <p class="klein-druck">Mit Zahlungsart. Abbuchung nach dem Test, vorher kündbar.</p>
+</aside>
+
+<script type="module" src="seite.js"></script>
+</body>
+</html>

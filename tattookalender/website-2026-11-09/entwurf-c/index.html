@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tattookalender – Software für Tattoostudios</title>
+<meta name="description" content="Der Kalender für Tattoostudios, mit Anzahlung über dein eigenes Stripe-Konto und Einwilligung mit Unterschrift am Termin. Echte Demo ohne Anmeldung.">
+<meta name="theme-color" content="#0b0b0d">
+<meta name="robots" content="noindex">
+<!-- Entwurf C "Tinte", Fassung 2 vom 11.11.2026. Nicht veröffentlicht. -->
+<script>document.documentElement.classList.add("js")</script>
+<link rel="preload" href="assets/archivo.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" as="image" type="image/webp" href="assets/img/m-kal.webp" imagesrcset="assets/img/m-kal-520.webp 520w, assets/img/m-kal.webp 780w" imagesizes="(min-width: 900px) 340px, 64vw" fetchpriority="high">
+<link rel="stylesheet" href="assets/site.css">
+<link rel="icon" href="assets/mark.svg" type="image/svg+xml">
+</head>
+<body>
+<a class="skip" href="#inhalt">Zum Inhalt springen</a>
+
+<header class="bar"><!-- kein id="top" an der festen Kopfleiste: so springt #top nativ an den Seitenanfang -->
+  <a class="bar-logo" href="#top" aria-label="Tattookalender, zum Seitenanfang"><img src="assets/logo-dunkel.svg" alt="Tattookalender" width="188" height="32"></a>
+  <nav class="bar-nav" aria-label="Seitenbereiche">
+    <a href="#ablauf">Ablauf</a>
+    <a href="#funktionen">Funktionen</a>
+    <a href="#preise">Preise</a>
+    <a href="#fragen">Fragen</a>
+  </nav>
+  <a class="btn btn-gold btn-small" href="https://tattookalender-demo.netlify.app/demo" data-ev="demo-kopf"><span class="btn-label">Demo öffnen</span></a>
+</header>
+
+<main id="inhalt">
+
+<!-- 1 · Kopfbereich: goldene Tinte zieht den Haken aus dem Logo, das Handy steigt aus der Tinte auf -->
+<section class="hero" data-ink aria-labelledby="h-hero">
+  <canvas class="ink" aria-hidden="true"></canvas>
+  <div class="hero-grid">
+    <div class="hero-copy">
+      <h1 id="h-hero" class="display"><span class="nb">Jeder Termin</span> <span class="nb">mit Haken.</span></h1>
+      <p class="lead">Der Kalender für Tattoostudios, mit Anzahlung und Einwilligung am Termin.</p>
+      <div class="hero-actions">
+        <a class="btn btn-gold" href="https://tattookalender-demo.netlify.app/demo" data-ev="demo-hero"><span class="btn-label">Echte Demo öffnen</span> <span class="btn-arrow" aria-hidden="true">→</span></a>
+        <span class="hero-note">ohne Anmeldung · ab 69&nbsp;€ netto im Monat</span>
+      </div>
+    </div>
+    <div class="hero-stage">
+      <!-- der Haken aus dem Logo (Kalenderblatt mit Haken), groß; ohne WebGL zeichnet er sich als Linie, mit WebGL übernimmt die Tinte -->
+      <svg class="hero-check" viewBox="0 0 600 420" aria-hidden="true" focusable="false"><path d="M40 210 L200 370 L550 20" pathLength="1"/></svg>
+      <figure class="hero-phone" data-ink-origin>
+        <div class="tilt">
+          <div class="device device-hero">
+            <img src="assets/img/m-kal.webp" srcset="assets/img/m-kal-520.webp 520w, assets/img/m-kal.webp 780w" sizes="(min-width: 900px) 340px, 64vw" width="780" height="1688" alt="Tageskalender im Tattookalender am Handy: Spalten für die Artists Ben Albrecht, Kaja Lindner und Mia Roth mit den Terminen von Max Schwarz, Tom Meier, Lina Krüger und Leon Richter (Demo-Daten)" fetchpriority="high">
+          </div>
+        </div>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- 2 · Problem -->
+<section class="pain" aria-labelledby="h-pain">
+  <div class="seam" aria-hidden="true"></div>
+  <div class="wrap">
+    <h2 id="h-pain" class="h2">Heute steht dein Studio in fünf Apps.</h2>
+    <ul class="pain-list">
+      <li>Der Termin wurde per DM zugesagt. Im Kalender steht er nicht.</li>
+      <li>Die Anzahlung kam vielleicht per PayPal.</li>
+      <li>Die Einwilligung liegt auf Papier, irgendwo im Ordner.</li>
+      <li>Der Stuhl ist frei. Die Kundin kommt nicht.</li>
+    </ul>
+    <p class="pain-turn">Im Tattookalender hängt alles am Termin. Fehlt etwas, siehst du es genau dort.</p>
+  </div>
+</section>
+
+<!-- 3 · Ablauf als Scroll-Geschichte: sechs echte Bildschirme, ein Termin.
+     Ohne Skript (oder mit reduzierter Bewegung) ist das hier eine normale Liste mit Bild, Text und Status je Station.
+     site.js baut daraus die Bühne: am Handy ein eigener Scrollbereich, der je Wisch genau eine Station einrastet (scroll-snap-stop: always),
+     am Desktop eine gepinnte Bühne (position: sticky). Bildschirmwechsel per Tintenwelle, Status-Chips werden grün. -->
+<section class="story edge-top edge-bottom" id="ablauf" aria-labelledby="h-story">
+  <div class="wrap story-head">
+    <h2 id="h-story" class="h2">Von der Anfrage bis zum Stuhl.</h2>
+    <p>Sechs Stationen, echte Bildschirme aus der Demo.</p>
+  </div>
+  <div class="story-scroller" data-lenis-prevent>
+    <ol class="stations">
+      <li class="station">
+        <div class="station-text"><h3>Anfrage kommt rein.</h3><p>Motiv, Budget und Wartezeit auf einer Karte.</p></div>
+        <ul class="chips" data-ui aria-label="Status"><li class="chip warn">Anfrage neu</li><li class="chip warn">Anzahlung offen</li><li class="chip bad">Einwilligung fehlt</li></ul>
+        <figure class="station-shot"><div class="device"><img src="assets/img/m-anfragen.webp" srcset="assets/img/m-anfragen-520.webp 520w, assets/img/m-anfragen.webp 780w" sizes="(min-width: 900px) 360px, 80vw" width="780" height="1688" loading="lazy" decoding="async" alt="Anfragen als Karten in der Spalte Neu: Luca Lange, Jonas Wolf, Marie Krause, Clara Klein und Tom Meier, mit Motiv, Budget und Wartezeit (Demo-Daten)"></div></figure>
+      </li>
+      <li class="station">
+        <div class="station-text"><h3>Termin reserviert.</h3><p>Mit Frist. Am Termin steht, was noch fehlt.</p></div>
+        <ul class="chips" data-ui aria-label="Status"><li class="chip warn">Reserviert</li><li class="chip warn">Anzahlung offen</li><li class="chip bad">Einwilligung fehlt</li></ul>
+        <figure class="station-shot"><div class="device"><img src="assets/img/m-tom.webp" srcset="assets/img/m-tom-520.webp 520w, assets/img/m-tom.webp 780w" sizes="(min-width: 900px) 360px, 80vw" width="780" height="1688" loading="lazy" decoding="async" alt="Termin von Tom Meier mit den Markierungen Reserviert, Anzahlung offen und Einwilligung fehlt, reserviert mit Frist (Demo-Daten)"></div></figure>
+      </li>
+      <li class="station" data-focus="51" data-ring="47,48.6,88,53.9">
+        <div class="station-text"><h3>Anzahlung anfordern.</h3><p>Bezahllink mit einem Tipp, über dein eigenes Stripe-Konto.</p></div>
+        <ul class="chips" data-ui aria-label="Status"><li class="chip warn">Reserviert</li><li class="chip warn">Anzahlung offen</li><li class="chip bad">Einwilligung fehlt</li></ul>
+        <figure class="station-shot"><div class="device"><img src="assets/img/m-tom.webp" srcset="assets/img/m-tom-520.webp 520w, assets/img/m-tom.webp 780w" sizes="(min-width: 900px) 360px, 80vw" width="780" height="1688" loading="lazy" decoding="async" alt="Derselbe Termin, Bereich Zahlungen: Anzahlung 100 Euro offen mit Fälligkeit und der Knopf Anzahlung anfordern (Demo-Daten)"></div></figure>
+      </li>
+      <li class="station">
+        <div class="station-text"><h3>Anzahlung bezahlt.</h3><p>Das Geld geht direkt an dich, 0&nbsp;% Provision.</p></div>
+        <ul class="chips" data-ui aria-label="Status"><li class="chip ok">Bestätigt</li><li class="chip ok">Anzahlung bezahlt</li><li class="chip bad">Einwilligung fehlt</li></ul>
+        <figure class="station-shot"><div class="device"><img src="assets/img/m-max.webp" srcset="assets/img/m-max-520.webp 520w, assets/img/m-max.webp 780w" sizes="(min-width: 900px) 360px, 80vw" width="780" height="1688" loading="lazy" decoding="async" alt="Termin von Lara Zimmermann mit den Markierungen Bestätigt, Anzahlung bezahlt und Einwilligung fehlt, Anzahlung 100 Euro bezahlt (Demo-Daten)"></div></figure>
+      </li>
+      <li class="station" data-focus="74">
+        <div class="station-text"><h3>Einwilligung unterschrieben.</h3><p>Am Handy des Kunden, mit dem Finger.</p></div>
+        <ul class="chips" data-ui aria-label="Status"><li class="chip ok">Bestätigt</li><li class="chip ok">Anzahlung bezahlt</li><li class="chip ok">Einwilligung vollständig</li></ul>
+        <figure class="station-shot"><div class="device"><img src="assets/img/m-einw-9.webp" srcset="assets/img/m-einw-9-520.webp 520w, assets/img/m-einw-9.webp 780w" sizes="(min-width: 900px) 360px, 80vw" width="780" height="1688" loading="lazy" decoding="async" alt="Einwilligung auf dem Handy des Kunden, Schritt 9 von 9: Name Tom Meier und Unterschrift mit dem Finger, Sprachen Deutsch, Dänisch und Englisch (Demo-Daten)"></div></figure>
+      </li>
+      <li class="station" data-focus="91.5" data-ring="11.8,89,39,94.1">
+        <div class="station-text"><h3>Check-in.</h3><p>Alles grün: einchecken, ab auf den Stuhl.</p></div>
+        <ul class="chips" data-ui aria-label="Status"><li class="chip ok">Kommt</li><li class="chip ok">Anzahlung bezahlt</li><li class="chip ok">Einwilligung vollständig</li></ul>
+        <figure class="station-shot"><div class="device"><img src="assets/img/m-lina.webp" srcset="assets/img/m-lina-520.webp 520w, assets/img/m-lina.webp 780w" sizes="(min-width: 900px) 360px, 80vw" width="780" height="1688" loading="lazy" decoding="async" alt="Termin von Lina Krüger mit den Markierungen Bestätigt, Anzahlung bezahlt, Einwilligung vollständig und Kommt, unten der Knopf Einchecken (Demo-Daten)"></div></figure>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<!-- 4 · Funktionen: großer Bildschirm am Tresen -->
+<section class="desk" id="funktionen" aria-labelledby="h-desk">
+  <div class="seam" aria-hidden="true"></div>
+  <div class="wrap desk-head" data-rise>
+    <h2 id="h-desk" class="h2">Am Tresen groß, in der Kabine am Handy.</h2>
+    <p>Dieselbe App im Browser, ohne Installation.</p>
+  </div>
+  <div class="laptop">
+    <div class="laptop-lid">
+      <div class="laptop-screen"><img src="assets/img/d-kal.webp" srcset="assets/img/d-kal-900.webp 900w, assets/img/d-kal.webp 1600w" sizes="(min-width: 1240px) 1180px, 94vw" width="1600" height="1000" loading="lazy" decoding="async" alt="Tagesansicht am Desktop für Mittwoch, 11.11.2026: Spalten für Ben Albrecht, Kaja Lindner und Mia Roth, oben die Zeile 4 Termine, 1 Anzahlung offen, 3 Einwilligungen fehlen, links die Navigation (Demo-Daten)"></div>
+    </div>
+    <div class="laptop-base" aria-hidden="true"></div>
+  </div>
+  <div class="wrap">
+    <dl class="feat" data-rise>
+      <div><dt>Kalender je Artist und Platz</dt><dd>Tag, Woche, Monat oder Liste. Nichts wird doppelt belegt.</dd></div>
+      <div><dt>Online-Buchung für Beratungen</dt><dd>Deine Buchungsseite zeigt freie Beratungszeiten.</dd></div>
+      <div><dt>Kundenkartei</dt><dd>Fotos, Verlauf, Notizen und Umsatz je Kunde.</dd></div>
+      <div><dt>Check-in mit Sperre</dt><dd>Ohne Einwilligung kein Check-in, außer die Studioleitung übersteuert mit Begründung.</dd></div>
+      <div><dt>Gesundheitsangaben geschützt</dt><dd>Sehen nur Inhaber, Studioleitung und der Artist des Termins.</dd></div>
+      <div><dt>WhatsApp-Chat fürs Team</dt><dd>Eine Studionummer für alle, in den Paketen mit WhatsApp.</dd></div>
+    </dl>
+  </div>
+</section>
+
+<!-- 5 · Preise: dunkel, kompakt, je Stufe ein Knopf -->
+<!-- Preise Stand Entwurf 11.11.2026: Kalender 69 € (mit Anzahlung), Kalender + WhatsApp 149 € + 249 € Einrichtung, Studio komplett 199 € + 249 € Einrichtung, Werbung nur im Beratungsgespräch. Alle netto zzgl. USt. -->
+<section class="prices edge-top" id="preise" aria-labelledby="h-prices">
+  <div class="wrap">
+    <div class="prices-head" data-rise>
+      <h2 id="h-prices" class="h2">Was es kostet.</h2>
+      <p class="offer"><strong>Bis 31.12.2026:</strong> erster Monat gratis (Karte nötig). Alle Preise netto zzgl. USt., für Tattoostudios.</p>
+    </div>
+    <ul class="tiers">
+      <li class="tier">
+        <div class="tier-top"><h3>Kalender</h3><p class="price"><span class="amount">69&nbsp;€</span><span class="per">netto im Monat</span></p></div>
+        <p class="tier-what">Mit Anzahlung. Kalender je Artist, Online-Buchung, Kundenkartei und Einwilligung.</p>
+        <a class="btn btn-gold btn-tier" href="https://tattookalender.de/#preise" data-ev="gratis-kalender"><span class="btn-label">Gratismonat starten</span> <span class="btn-arrow" aria-hidden="true">→</span></a>
+      </li>
+      <li class="tier">
+        <div class="tier-top"><h3>Kalender + WhatsApp</h3><p class="price"><span class="amount">149&nbsp;€</span><span class="per">netto im Monat</span></p></div>
+        <p class="tier-what"><span class="setup">+ 249&nbsp;€ Einrichtung einmalig.</span> Alles aus Kalender, dazu der WhatsApp-Chat fürs Team.</p>
+        <a class="btn btn-gold btn-tier" href="https://tattookalender.de/#preise" data-ev="gratis-whatsapp"><span class="btn-label">Gratismonat starten</span> <span class="btn-arrow" aria-hidden="true">→</span></a>
+      </li>
+      <li class="tier">
+        <div class="tier-top"><h3>Studio komplett</h3><p class="price"><span class="amount">199&nbsp;€</span><span class="per">netto im Monat</span></p></div>
+        <p class="tier-what"><span class="setup">+ 249&nbsp;€ Einrichtung einmalig.</span> Dazu Kasse, Gutscheine und Provisionsabrechnung je Artist.</p>
+        <a class="btn btn-gold btn-tier" href="https://tattookalender.de/#preise" data-ev="gratis-komplett"><span class="btn-label">Gratismonat starten</span> <span class="btn-arrow" aria-hidden="true">→</span></a>
+      </li>
+      <li class="tier tier-ads">
+        <div class="tier-top"><h3>Mit Werbung für neue Kunden</h3><p class="price"><span class="amount amount-talk">Preis im Beratungsgespräch</span></p></div>
+        <p class="tier-what">Wir schalten Werbung für dein Studio, die Anfragen landen im Tattookalender. Das Werbebudget zahlst du direkt an Meta.</p>
+        <a class="btn btn-line btn-tier" href="https://wa.me/491624502375?text=Hallo%2C%20ich%20m%C3%B6chte%20ein%20Beratungsgespr%C3%A4ch%20zu%20Werbung%20f%C3%BCr%20neue%20Kunden." data-ev="wa-werbung"><span class="btn-label">Beratung per WhatsApp</span> <span class="btn-arrow" aria-hidden="true">→</span></a>
+      </li>
+    </ul>
+    <!-- 0 % steht nach den Preisen: wer über „Preise“ kommt, sieht zuerst die Beträge, die Null beantwortet danach den Einwand „verdient ihr an meinen Anzahlungen mit?“ -->
+    <div class="zero" data-rise>
+      <p class="zero-num" aria-hidden="true">0&#8239;%</p>
+      <p class="zero-text"><strong>0 % Provision auf deine Anzahlungen.</strong> Sie laufen über dein eigenes Stripe-Konto, das Geld geht direkt an dich. Stripe berechnet seine übliche Gebühr selbst.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 6 · Fragen -->
+<section class="faq edge-bottom" id="fragen" aria-labelledby="h-faq">
+  <div class="wrap faq-grid">
+    <h2 id="h-faq" class="h2">Was Inhaber vorher fragen.</h2>
+    <div class="faq-list">
+      <details>
+        <summary>Ihr seid neu. Warum sollte ich euch vertrauen?</summary>
+        <p>Berechtigte Frage. Kundenstimmen, die wir zeigen könnten, haben wir noch nicht. Deshalb kannst du die echte App vorher ohne Anmeldung ausprobieren, und bis 31.12.2026 ist der erste Monat gratis. Die Vertragsbedingungen stehen in den <a href="https://tattookalender.de/agb">AGB</a>.</p>
+      </details>
+      <details>
+        <summary>Verdient ihr an meinen Anzahlungen mit?</summary>
+        <p>Nein, 0 % Provision. Die Anzahlung läuft über dein eigenes Stripe-Konto und geht direkt an dich. Stripe berechnet seine übliche Gebühr selbst.</p>
+      </details>
+      <details>
+        <summary>Muss ich meine Kunden neu eintippen?</summary>
+        <p>Nein. Bestehende Kunden und künftige Termine übernehmen wir aus deinem bisherigen Tool, per Export-Datei oder von Hand. Dabei gehen keine Nachrichten an deine Kunden raus. Vergangene Termine und Rechnungen ziehen nicht mit um.</p>
+      </details>
+      <details>
+        <summary>Ab wann läuft der WhatsApp-Chat?</summary>
+        <p>Sobald Meta deine Nummer geprüft und freigegeben hat. Einen Termin dafür können wir nicht zusagen; bis dahin arbeitest du mit Kalender und Online-Buchung. Nachrichten aus Instagram oder Facebook kommen nicht in den Chat. Für bestimmte WhatsApp-Nachrichten, etwa Erinnerungen, berechnet Meta eine kleine Gebühr.</p>
+      </details>
+      <details>
+        <summary>Wer sieht die Gesundheitsangaben meiner Kunden?</summary>
+        <p>Nur Inhaber, Studioleitung und der Artist des jeweiligen Termins. Jeder Abruf wird protokolliert, die Rezeption sieht nur, ob die Einwilligung vorliegt. Die Datenbank liegt in Frankfurt am Main.</p>
+      </details>
+      <details>
+        <summary>Was passiert in der Demo?</summary>
+        <p>Ein Klick meldet dich in unserem Demo-Studio „Nadelwerk“ an, gefüllt mit erfundenen Daten. Es werden keine Nachrichten, E-Mails oder Zahlungen verschickt, und jede Nacht wird alles zurückgesetzt. Trag dort bitte keine echten Kundendaten ein.</p>
+      </details>
+      <details>
+        <summary>Lohnt sich das für mich allein?</summary>
+        <p>Gebaut ist der Tattookalender für Studios mit einem bis fünf Artists, die Anzahlung und Einwilligung ohnehin brauchen. Brauchst du nur einen Kalender zum Eintragen, reicht dir vielleicht ein einfacher, günstiger Kalender.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- 7 · Abschluss: der Haken zeichnet sich = Termin bestätigt -->
+<section class="finale" aria-labelledby="h-finale">
+  <div class="seam" aria-hidden="true"></div>
+  <div class="wrap finale-grid">
+    <svg class="mark" viewBox="0 0 120 120" aria-hidden="true">
+      <rect x="12" y="20" width="96" height="90" rx="22" fill="#141210" stroke="#c9a24f" stroke-width="5"/>
+      <rect x="33" y="8" width="9" height="24" rx="4.5" fill="#c9a24f"/>
+      <rect x="78" y="8" width="9" height="24" rx="4.5" fill="#c9a24f"/>
+      <path class="check" d="M35 72 L51 88 L86 53" fill="none" stroke="#e6c46f" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <div class="finale-copy">
+      <h2 id="h-finale" class="display display-2">Klick dich selbst durch.</h2>
+      <p class="lead">Zwei Minuten im Demo-Studio sagen mehr als diese Seite. Ohne Anmeldung, mit erfundenen Daten.</p>
+      <div class="hero-actions">
+        <a class="btn btn-gold" href="https://tattookalender-demo.netlify.app/demo" data-ev="demo-ende"><span class="btn-label">Echte Demo öffnen</span> <span class="btn-arrow" aria-hidden="true">→</span></a>
+        <a class="link-arrow" href="https://wa.me/491624502375?text=Hallo%2C%20ich%20interessiere%20mich%20f%C3%BCr%20den%20Tattookalender." data-ev="wa-ende">Lieber erst per WhatsApp reden</a>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="foot">
+  <img class="foot-logo" src="assets/logo-dunkel.svg" alt="Tattookalender" width="1200" height="204" loading="lazy">
+  <nav class="foot-nav" aria-label="Rechtliches">
+    <a href="https://tattookalender.de/impressum">Impressum</a>
+    <a href="https://tattookalender.de/datenschutz">Datenschutz</a>
+    <a href="https://tattookalender.de/agb">AGB</a>
+  </nav>
+</footer>
+
+<script src="assets/ink.js" defer></script>
+<script src="lib/gsap-3.13.0/gsap.min.js" defer></script>
+<script src="lib/gsap-3.13.0/ScrollTrigger.min.js" defer></script>
+<script src="assets/site.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Tattookalender – Flyer</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  @page { size: A4; margin: 0; }
+  :root { --ink:#0a0a0b; --ink-2:#131312; --line:rgba(230,194,122,.16); --line2:rgba(255,255,255,.08); --text:#f4f1ea; --muted:#a7a196; --gold:#e6c27a; --gold-2:#c9a24f; --gold-3:#8a6418; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { background:var(--ink); }
+  body { font-family:Inter,system-ui,sans-serif; color:var(--text); -webkit-font-smoothing:antialiased; }
+  .page { width:210mm; height:297mm; position:relative; overflow:hidden; page-break-after:always; background:var(--ink); }
+  .page:last-child { page-break-after:auto; }
+  .page::before { content:""; position:absolute; inset:0; pointer-events:none;
+    background: radial-gradient(55% 40% at 90% 0%, rgba(230,194,122,.20), transparent 70%),
+                radial-gradient(45% 35% at 0% 100%, rgba(230,194,122,.10), transparent 70%),
+                repeating-linear-gradient(115deg, rgba(255,255,255,.022) 0 1px, transparent 1px 14px); }
+  .pad { position:relative; padding:14mm 15mm 0; }
+  h1,h2,h3,.disp { font-family:"Bricolage Grotesque",Inter,sans-serif; letter-spacing:-.025em; }
+  .gold { background:linear-gradient(180deg,#f3d891,#c9a24f); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .eyebrow { font-size:10.5px; font-weight:600; letter-spacing:.22em; text-transform:uppercase; color:var(--gold); }
+
+  .brand { display:flex; align-items:center; gap:12px; }
+  .brand svg { width:40px; height:40px; }
+  .brand .w { font-family:"Bricolage Grotesque"; font-weight:800; font-size:24px; letter-spacing:-.035em; line-height:1; }
+  .brand .s { font-size:8.5px; letter-spacing:.3em; text-transform:uppercase; color:var(--muted); margin-top:4px; }
+  .tag { margin-left:auto; font-size:9.5px; letter-spacing:.18em; text-transform:uppercase; color:var(--muted); border:1px solid var(--line); padding:6px 11px; border-radius:99px; }
+
+  .hero h1 { font-size:40px; line-height:1.0; font-weight:800; margin-top:9px; }
+  .hero p { margin-top:10px; font-size:12.2px; line-height:1.55; color:#d6d1c6; max-width:120mm; }
+
+  .stage { position:relative; height:118mm; margin-top:8mm; }
+  .browser { position:absolute; left:0; top:0; width:158mm; border-radius:12px; overflow:hidden; background:#000;
+    box-shadow:0 30px 60px rgba(0,0,0,.65), 0 0 0 1px rgba(230,194,122,.25); }
+  .bar { height:22px; background:#161614; display:flex; align-items:center; gap:5px; padding:0 9px; border-bottom:1px solid rgba(255,255,255,.06); }
+  .bar i { width:7px; height:7px; border-radius:50%; background:#3a3833; }
+  .bar span { margin-left:10px; font-size:8.5px; color:#8f897d; background:#0d0d0c; padding:3px 10px; border-radius:6px; }
+  .browser img { display:block; width:100%; }
+  .phone { position:absolute; right:0; top:10mm; width:47mm; border-radius:26px; padding:7px; background:#000;
+    box-shadow:0 30px 60px rgba(0,0,0,.7), 0 0 0 1px rgba(230,194,122,.35), 0 0 50px rgba(230,194,122,.15); }
+  .phone img { display:block; width:100%; border-radius:20px; }
+
+  .pillars { display:grid; grid-template-columns:repeat(3,1fr); gap:4.5mm; margin-top:7mm; }
+  .pl { background:var(--ink-2); border:1px solid var(--line2); border-radius:16px; padding:12px 13px 13px; }
+  .pl .ic { width:30px; height:30px; border-radius:9px; display:grid; place-items:center; background:rgba(230,194,122,.1); border:1px solid rgba(230,194,122,.35); }
+  .pl .ic svg { width:16px; height:16px; stroke:var(--gold); fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .pl h3 { font-size:14.5px; font-weight:700; margin-top:9px; }
+  .pl ul { list-style:none; margin-top:6px; display:grid; gap:4px; }
+  .pl li { font-size:9.8px; line-height:1.4; color:#cdc8bd; padding-left:12px; position:relative; }
+  .pl li::before { content:""; position:absolute; left:0; top:5px; width:5px; height:5px; border-radius:50%; background:var(--gold-2); }
+
+  .foot { position:absolute; left:15mm; right:15mm; bottom:9mm; display:flex; align-items:center; font-size:10.5px; color:var(--muted); }
+  .foot b { color:var(--text); }
+  .foot .r { margin-left:auto; font-family:"Bricolage Grotesque"; font-weight:700; color:var(--text); font-size:12.5px; }
+  .foot .r span { color:var(--gold); }
+
+  .p2 h2 { font-size:30px; line-height:1.03; font-weight:800; margin-top:8px; }
+  .flow { margin-top:6mm; display:grid; grid-template-columns:repeat(7,1fr); position:relative; }
+  .flow::before { content:""; position:absolute; top:13px; left:7%; right:7%; height:2px; background:linear-gradient(90deg,var(--gold-3),var(--gold)); }
+  .st { text-align:center; position:relative; padding:0 2px; }
+  .dot { width:28px; height:28px; margin:0 auto; border-radius:50%; background:var(--ink); border:2px solid var(--gold-2); display:grid; place-items:center; font-family:"Bricolage Grotesque"; font-weight:800; font-size:12px; color:var(--gold); }
+  .st b { display:block; font-size:9.8px; margin-top:6px; }
+  .st span { display:block; font-size:8.2px; line-height:1.3; color:var(--muted); margin-top:2px; }
+
+  .shots { margin-top:7mm; display:grid; grid-template-columns:repeat(3,1fr); gap:4mm; }
+  .shot { background:var(--ink-2); border:1px solid var(--line2); border-radius:14px; overflow:hidden; }
+  .shot .img { height:32mm; overflow:hidden; border-bottom:1px solid var(--line2); background:#0d0d0c; }
+  .shot .img img { width:122%; margin-left:-17%; display:block; }
+  .shot .tx { padding:8px 10px 10px; }
+  .shot h3 { font-size:11.8px; font-weight:700; }
+  .shot p { font-size:8.9px; line-height:1.4; color:#c3beb2; margin-top:3px; }
+
+  .phones { margin-top:6mm; display:grid; grid-template-columns:auto 1fr; gap:7mm; align-items:center; }
+  .mini { display:flex; gap:4mm; }
+  .mini figure { width:30mm; }
+  .mini .ph { border-radius:16px; padding:4px; background:#000; box-shadow:0 0 0 1px rgba(230,194,122,.3); }
+  .mini .ph img { width:100%; display:block; border-radius:12px; height:52mm; object-fit:cover; object-position:top; }
+  .mini figcaption { font-size:8.5px; text-align:center; color:var(--muted); margin-top:4px; }
+  .phones h3 { font-size:17px; font-weight:800; line-height:1.1; }
+  .phones p { font-size:10.4px; line-height:1.5; color:#cdc8bd; margin-top:6px; }
+  .phones ul { list-style:none; margin-top:7px; display:grid; gap:4px; }
+  .phones li { font-size:10px; color:#d9d4c8; padding-left:14px; position:relative; }
+  .phones li::before { content:"✓"; position:absolute; left:0; color:var(--gold); font-weight:700; }
+
+  .cta { position:absolute; left:15mm; right:15mm; bottom:13mm; border-radius:20px; padding:15px 20px; overflow:hidden;
+    background:linear-gradient(120deg,#f3d891 0%,#c9a24f 55%,#8a6418 100%); color:#0a0a0b; display:grid; grid-template-columns:1fr auto; gap:8mm; align-items:center; }
+  .cta::after { content:""; position:absolute; right:-40px; top:-70px; width:220px; height:220px; border-radius:50%; border:28px solid rgba(255,255,255,.12); }
+  .cta h3 { font-size:20px; font-weight:800; line-height:1.05; }
+  .cta p { font-size:10.6px; margin-top:5px; line-height:1.45; color:#2a2418; }
+  .cta .url { position:relative; z-index:1; background:#0a0a0b; color:var(--gold); font-family:"Bricolage Grotesque"; font-weight:800; font-size:16px; padding:11px 16px; border-radius:12px; white-space:nowrap; }
+  .cta .url small { display:block; font-family:Inter; font-size:8.5px; font-weight:600; color:#a7a196; letter-spacing:.14em; text-transform:uppercase; margin-bottom:2px; }
+  .trust { position:absolute; left:15mm; right:15mm; bottom:5mm; display:flex; justify-content:center; gap:12px; font-size:8.5px; color:#7d776c; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <linearGradient id="lg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3d891"/><stop offset="1" stop-color="#c9a24f"/></linearGradient>
+    <linearGradient id="lbg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1c1a16"/><stop offset="1" stop-color="#0b0b0d"/></linearGradient>
+    <symbol id="mark" viewBox="0 0 120 120">
+      <rect x="10" y="18" width="100" height="92" rx="22" fill="url(#lbg)" stroke="url(#lg)" stroke-width="5"/>
+      <rect x="32" y="6" width="9" height="24" rx="4.5" fill="url(#lg)"/><rect x="79" y="6" width="9" height="24" rx="4.5" fill="url(#lg)"/>
+      <path d="M34 77 L51 93 L88 56" fill="none" stroke="url(#lg)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M88 56 L99 45" stroke="url(#lg)" stroke-width="3.5" stroke-linecap="round"/><circle cx="101.5" cy="42.5" r="3.2" fill="url(#lg)"/>
+    </symbol>
+  </defs>
+</svg>
+
+<section class="page">
+  <div class="pad">
+    <div class="brand">
+      <svg><use href="#mark"/></svg>
+      <div><div class="w">tattoo<span class="gold">kalender</span></div><div class="s">Das Studio-System</div></div>
+      <div class="tag">Für Tattoo Fashion · alle Studios</div>
+    </div>
+
+    <div class="hero" style="margin-top:9mm">
+      <div class="eyebrow">Kalender · WhatsApp · Anzahlung · Einwilligung · Kasse</div>
+      <h1>Weniger No&#8209;Shows. Mehr <span class="gold">Tattoos.</span><br>Ein System für alle Studios.</h1>
+      <p>Termine planen, Anzahlungen kassieren, Kunden automatisch per WhatsApp erinnern, Einwilligungen digital einholen und am Monatsende sauber abrechnen – für Eckernförde, Husum, Flensburg und Sønderborg in einem Login.</p>
+    </div>
+
+    <div class="stage">
+      <div class="browser">
+        <div class="bar"><i></i><i></i><i></i><span>tattookalender.de/inhaber</span></div>
+        <img src="../screens/d-inhaber.jpg" alt="Inhaber-Dashboard">
+      </div>
+      <div class="phone"><img src="../screens/m-pay-rest.png" alt="Bezahlseite"></div>
+    </div>
+
+    <div class="pillars">
+      <div class="pl">
+        <div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="16" rx="3"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg></div>
+        <h3>Kalender, der mitdenkt</h3>
+        <ul><li>Tag/Woche pro Artist und Platz</li><li>Keine Doppelbuchungen</li><li>Online-Buchung &amp; Anfrageformular</li><li>Freie Lücken als Story-Post</li></ul>
+      </div>
+      <div class="pl">
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.5 8.5 0 0 1-12.6 7.4L3 20.5l1.6-5.2A8.5 8.5 0 1 1 21 11.5z"/></svg></div>
+        <h3>WhatsApp auf Autopilot</h3>
+        <ul><li>Erinnerung mit „Ich komme“-Button</li><li>Anzahlung &amp; Einwilligung per Link</li><li>Alle Chats direkt im Tool</li><li>Google-Bewertung &amp; Geburtstagsgruß</li></ul>
+      </div>
+      <div class="pl">
+        <div class="ic"><svg viewBox="0 0 24 24"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19M6.5 15h4"/></svg></div>
+        <h3>Geld sicher im Studio</h3>
+        <ul><li>Anzahlung vorab mit Absageregeln</li><li>Karte, SEPA, Raten &amp; Trinkgeld</li><li>Kasse, Gutscheine, Kassenbuch</li><li>DATEV-Export &amp; Provision als PDF</li></ul>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span><b>tattookalender.de</b> · läuft im Browser, am Tablet und am Handy</span><span class="r">Alle Funktionen auf der Rückseite <span>→</span></span></div>
+</section>
+
+<section class="page p2">
+  <div class="pad">
+    <div class="brand">
+      <svg><use href="#mark"/></svg>
+      <div><div class="w">tattoo<span class="gold">kalender</span></div><div class="s">Das Studio-System</div></div>
+      <div class="tag">So läuft ein Termin</div>
+    </div>
+
+    <div class="eyebrow" style="margin-top:8mm">Von der Anfrage bis zur Bewertung</div>
+    <h2>Das Team tätowiert.<br><span class="gold">Den Rest erledigt das System.</span></h2>
+
+    <div class="flow">
+      <div class="st"><div class="dot">1</div><b>Anfrage</b><span>Website, Instagram, Kampagne</span></div>
+      <div class="st"><div class="dot">2</div><b>Termin</b><span>ohne Doppelbuchung</span></div>
+      <div class="st"><div class="dot">3</div><b>Anzahlung</b><span>bezahlt = bestätigt</span></div>
+      <div class="st"><div class="dot">4</div><b>Einwilligung</b><span>digital am Handy</span></div>
+      <div class="st"><div class="dot">5</div><b>Erinnerung</b><span>„Ich komme“ per Tipp</span></div>
+      <div class="st"><div class="dot">6</div><b>Kasse</b><span>Rest, Beleg, Provision</span></div>
+      <div class="st"><div class="dot">★</div><b>Bewertung</b><span>automatisch danach</span></div>
+    </div>
+
+    <div class="shots">
+      <div class="shot"><div class="img"><img src="../screens/d-kalender-tag.jpg"></div><div class="tx"><h3>Kalender</h3><p>Pro Studio, Artist und Platz – mit Anzahlungs- und Einwilligungsstatus direkt am Termin.</p></div></div>
+      <div class="shot"><div class="img"><img src="../screens/d-chat.jpg"></div><div class="tx"><h3>Chat im Tool</h3><p>Alle WhatsApp-Chats neben Kundenkarte und Terminen – inkl. Bildern und Sprachnachrichten.</p></div></div>
+      <div class="shot"><div class="img"><img src="../screens/d-zahlungen.jpg"></div><div class="tx"><h3>Zahlungen</h3><p>Offene Anzahlungen, Überfälliges und Eingänge pro Studio – auf einen Blick.</p></div></div>
+      <div class="shot"><div class="img"><img src="../screens/d-kasse.jpg"></div><div class="tx"><h3>Kasse am Tresen</h3><p>Abrechnen bar, Karte oder Gutschein – Kassenbuch mit Tagesabschluss.</p></div></div>
+      <div class="shot"><div class="img"><img src="../screens/d-auslastung.jpg"></div><div class="tx"><h3>Auslastung</h3><p>Gebuchte Stunden pro Studio und Artist, Umsatz pro Arbeitsstunde.</p></div></div>
+      <div class="shot"><div class="img"><img src="../screens/d-provision.jpg"></div><div class="tx"><h3>Provision</h3><p>Abrechnung pro Artist automatisch zum Monatsende – als PDF zum Weitergeben.</p></div></div>
+    </div>
+
+    <div class="phones">
+      <div class="mini">
+        <figure><div class="ph"><img src="../screens/m-pay-anzahlung.png"></div><figcaption>Anzahlung</figcaption></figure>
+        <figure><div class="ph"><img src="../screens/m-einwilligung.png"></div><figcaption>Einwilligung</figcaption></figure>
+        <figure><div class="ph"><img src="../screens/m-anfrage.png"></div><figcaption>Anfrage</figcaption></figure>
+      </div>
+      <div>
+        <h3>Für Kunden: <span class="gold">alles am Handy.</span></h3>
+        <p>Im Look von Tattoo Fashion – auf Deutsch und Dänisch.</p>
+        <ul><li>Anzahlung, Restzahlung &amp; Raten per Link</li><li>Einwilligung in 3 Minuten statt Papierbogen</li><li>Anfrage mit Motiv, Stelle und Budget</li><li>Guthaben &amp; Geburtstagsgeschenk automatisch verrechnet</li></ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="cta">
+    <div><h3>Bereit für alle vier Studios.</h3><p>Kalender, WhatsApp-Automatik, Zahlungen und Abrechnung sind eingerichtet – Live-Demo jederzeit direkt im Tool.</p></div>
+    <div class="url"><small>Live ansehen</small>tattookalender.de</div>
+  </div>
+  <div class="trust"><span>Daten in der EU (Frankfurt)</span><span>·</span><span>Rollen &amp; Rechte pro Mitarbeiter</span><span>·</span><span>Gesundheitsdaten geschützt &amp; protokolliert</span><span>·</span><span>DE / DK</span></div>
+</section>
+</body>
+</html>

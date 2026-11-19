@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8">
+<title>Inhaber-App Übersicht</title>
+<style>
+@font-face{font-family:'Inter';font-weight:100 900;src:url(assets/Inter-latin-1.woff2) format('woff2')}
+@font-face{font-family:'Anton';src:url(assets/Anton-latin.woff2) format('woff2')}
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:1600px;background:#e8e4de;font:400 16px/1.4 Inter,sans-serif;color:#17141a;-webkit-font-smoothing:antialiased}
+.wrap{padding:64px 72px 72px}
+.kopf{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:44px}
+.kopf .k{font:600 15px/1 Inter;color:#5d5860;margin-bottom:12px}
+.kopf h1{font:400 52px/1 Anton,sans-serif;text-transform:uppercase;letter-spacing:.01em}
+.kopf p{font:500 16px/1.45 Inter;color:#4a454d;max-width:440px;text-align:right}
+.reihe{display:grid;grid-template-columns:repeat(3,1fr);gap:56px}
+.sp{display:flex;flex-direction:column;align-items:center}
+.cap{width:100%;max-width:420px;margin-bottom:26px;min-height:150px}
+.cap .nr{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#17141a;color:#f1ebe0;font:700 14px/1 Inter;margin-bottom:12px}
+.cap h2{font:700 22px/1.2 Inter;letter-spacing:-.02em;margin-bottom:6px}
+.cap p{font:500 15.5px/1.45 Inter;color:#4a454d}
+.geraet{width:413px;padding:10px;border-radius:66px;background:linear-gradient(145deg,#3a3740,#121014 40%,#2a272e);box-shadow:0 40px 80px -30px rgba(20,10,15,.55),0 18px 30px -18px rgba(20,10,15,.4),inset 0 0 0 1.5px rgba(255,255,255,.12)}
+.geraet img{display:block;width:393px;height:852px;border-radius:56px}
+.fuss{margin-top:44px;font:500 14px/1.4 Inter;color:#5d5860;text-align:center}
+.fuss b{color:#17141a}
+</style></head>
+<body><div class="wrap">
+  <div class="kopf">
+    <div><div class="k">TattooLeadz · Entwurf für Studio-Inhaber</div><h1>Die Inhaber-App fürs iPhone</h1></div>
+    <p>Jeden Tag: wer auf dich wartet. Jeden Monat: was TattooLeadz gebracht hat, gegen alle Kosten gerechnet. Alle Zahlen sind Beispieldaten.</p>
+  </div>
+  <div class="reihe">
+    <div class="sp">
+      <div class="cap"><span class="nr">1</span><h2>Heute: Wer wartet auf dich?</h2><p>Ted antwortet sofort. Hier stehen nur die Anfragen, bei denen du ran musst. Der Chatcheck zeigt, wo Kunden verloren gehen.</p></div>
+      <div class="geraet"><img src="../01-heute.png" alt=""></div>
+    </div>
+    <div class="sp">
+      <div class="cap"><span class="nr">2</span><h2>Anfrage: Status kommt aus dem Chat</h2><p>Die KI erkennt im Chat, wie weit die Anfrage ist. Von Hand nur nach dem Termin: „gestochen“ und Betrag.</p></div>
+      <div class="geraet"><img src="../02-anfrage.png" alt=""></div>
+    </div>
+    <div class="sp">
+      <div class="cap"><span class="nr">3</span><h2>Monat: Was hat es gebracht?</h2><p>Abgeschlossener Monat: von der Anfrage bis zum Tattoo, Umsatz gegen Werbung und Gebühr. Als PDF zum Teilen.</p></div>
+      <div class="geraet"><img src="../03-monat.png" alt=""></div>
+    </div>
+  </div>
+  <p class="fuss"><b>Beispieldaten</b> · fiktives „Musterstudio“, Kundennamen erfunden · keine echten Kunden oder Ergebnisse · Mockup, Stand 14.11.2026</p>
+</div></body></html>

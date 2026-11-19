@@ -1,0 +1,4 @@
+GSAP 3.13.0 (gsap.min.js, ScrollTrigger.min.js), kopiert aus dem npm-Paket gsap@3.13.0.
+Lizenz: GSAP Standard "No Charge" License, https://gsap.com/standard-license
+Seit 2025 (Übernahme durch Webflow) ist GSAP inklusive aller Plugins kostenlos, auch für kommerzielle Websites.
+Nicht erlaubt ist u. a., GSAP in ein Werkzeug einzubauen, das mit Webflows visuellen Animations-Buildern konkurriert; trifft hier nicht zu.

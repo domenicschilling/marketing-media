@@ -1,0 +1,51 @@
+/* Aggressiv-Baukasten (16.11.2026, Feedback Domenic: „viel aggressiver“)
+   Plakat-Logik: eine riesige rote Rabattzahl, harte Imperative, Rot/Schwarz/Weiß, Störer, CTA-Balken.
+   Nur echte Fristen (Sa 21.11. / 30.11.), keine Scheinknappheit, keine Streichpreise. */
+:root{--sig:#E3121B;--sig-d:#B10E16}
+
+/* Riesige Rabattzahl: Minus als gezeichneter Balken (sicher in jeder Schrift), % halb so groß oben */
+.pct{display:inline-flex;align-items:flex-start;font-weight:900;font-stretch:62%;line-height:.74;letter-spacing:-.035em;white-space:nowrap;color:var(--sig);font-variant-numeric:tabular-nums}
+.pct .mi{display:inline-block;width:.30em;height:.105em;background:currentColor;margin:.31em .045em 0 0;flex:none}
+.pct .pc{font-size:.5em;line-height:.74;margin-left:.05em;letter-spacing:0}
+.pct.w{color:#fff}
+
+/* Störer: Zackenstern, leicht gedreht */
+.burst{position:absolute;z-index:8;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+  clip-path:polygon(50.0% 0.0%,56.4% 9.5%,65.5% 2.4%,68.6% 13.5%,79.4% 9.5%,79.0% 21.0%,90.5% 20.6%,86.5% 31.4%,97.6% 34.5%,90.5% 43.6%,100.0% 50.0%,90.5% 56.4%,97.6% 65.5%,86.5% 68.6%,90.5% 79.4%,79.0% 79.0%,79.4% 90.5%,68.6% 86.5%,65.5% 97.6%,56.4% 90.5%,50.0% 100.0%,43.6% 90.5%,34.5% 97.6%,31.4% 86.5%,20.6% 90.5%,21.0% 79.0%,9.5% 79.4%,13.5% 68.6%,2.4% 65.5%,9.5% 56.4%,0.0% 50.0%,9.5% 43.6%,2.4% 34.5%,13.5% 31.4%,9.5% 20.6%,21.0% 21.0%,20.6% 9.5%,31.4% 13.5%,34.5% 2.4%,43.6% 9.5%);
+  font-weight:900;font-stretch:66%;text-transform:uppercase;line-height:.86;letter-spacing:-.005em}
+.burst.r{background:var(--sig);color:#fff}
+.burst.wt{background:#fff;color:var(--ink)}
+.burst-sh{position:absolute;z-index:7;filter:drop-shadow(0 14px 22px rgba(0,0,0,.55))}
+
+/* Harte Etiketten */
+.box{display:inline-block;font-weight:900;font-stretch:66%;text-transform:uppercase;line-height:1;padding:.12em .22em .06em;white-space:nowrap}
+.box.wt{background:#fff;color:var(--ink)}
+.box.bk{background:var(--ink);color:#fff}
+.box.r{background:var(--sig);color:#fff}
+
+/* CTA-Balken: weiß, schwarzer Imperativ, roter Pfeilblock rechts */
+.cta{position:absolute;left:0;right:0;z-index:9;display:flex;align-items:stretch;background:#fff;color:var(--ink)}
+.cta b{flex:1;display:flex;align-items:center;padding:6px 0 0 var(--g);font-weight:900;font-stretch:66%;text-transform:uppercase;letter-spacing:-.003em;line-height:1;white-space:nowrap}
+.cta i{flex:none;display:flex;align-items:center;justify-content:center;background:var(--sig)}
+.cta i svg{fill:none;stroke:#fff;stroke-width:9;stroke-linecap:square}
+.cta.r{background:var(--sig);color:#fff}
+.cta.r i{background:var(--ink)}
+
+/* Bedingungen: klein, aber lesbar (≥ 22 px bei 1080 px Breite) */
+/* 16.11. Prüf-Fund: 28 px, normale Breite (am Handy ≈ 9–10 pt), zweizeilig */
+.bed{position:absolute;z-index:9;font-weight:700;font-stretch:100%;font-size:28px;line-height:1.2;color:#E9E5DE;white-space:nowrap}
+.bed b{color:#fff;font-weight:900}
+.bed i{font-style:normal;color:var(--sig);padding:0 .28em;font-weight:900}
+
+/* Absperrband diagonal */
+.tape{position:absolute;z-index:6;background:var(--sig);color:#fff;white-space:nowrap;overflow:hidden;font-weight:900;font-stretch:66%;text-transform:uppercase;line-height:1;display:flex;align-items:center}
+.tape span{padding:0 .35em}
+.tape.bk{background:var(--ink)}
+.cta.bk{background:var(--ink);color:#fff}
+.cta.bk i{background:#fff}
+.cta.bk i svg{stroke:var(--sig)}
+/* Sterne */
+.stars{display:flex;gap:8px}
+.stars svg{fill:var(--sig)}
+/* Bedingung direkt an der Rabattzahl (Blickfang-Regel) */
+.ab{font-size:40px}

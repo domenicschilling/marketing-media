@@ -1,0 +1,11 @@
+NICHT VERWENDEN für fremde Studios (Stand 27.10.2026).
+
+Dieser Flyer (flyer.html / Tattookalender-Flyer.pdf, 15.10.2026) ist ein Tattoo-Fashion-Flyer: Er nennt Tattoo Fashion und die
+Standorte Eckernförde, Husum, Flensburg und Sønderborg. Der Tattookalender wird aber ohne jeden Bezug zu Tattoo Fashion verkauft
+(Geheimhaltung, Entscheidung 15.10.2026). Außerdem stehen alte Preise und Aussagen darin.
+
+Für Interessenten gilt stattdessen:
+- Verkaufsseite https://tattookalender.de
+- Preisblatt ../vertrieb/Preisblatt-AKTUELL.pdf (Stand 27.10.2026)
+- Demo https://tattookalender-demo.netlify.app/demo (erfundenes Studio „Nadelwerk“)
+Kein Vor-Ort-Vertrieb mit Flyern (Entscheidung Domenic, nur digital).

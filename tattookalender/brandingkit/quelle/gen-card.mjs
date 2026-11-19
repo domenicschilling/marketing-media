@@ -1,0 +1,12 @@
+import { createRequire } from "node:module";
+const require = createRequire("/Users/domi/Marketing-Maschine/package.json");
+const { chromium } = require("playwright");
+const D = process.env.HOME + "/Downloads/Tattookalender-Brandingkit/Vorlagen/Visitenkarte";
+const b = await chromium.launch({ args: ["--allow-file-access-from-files"] }); const p = await b.newPage({ deviceScaleFactor: 3 });
+await p.goto(`file://${D}/visitenkarte.html`); await p.evaluate(() => document.fonts.ready); await p.waitForTimeout(400);
+console.log(await p.evaluate(() => [...document.fonts].map((f) => f.family + f.weight + ":" + f.status).join(" ")));
+await p.pdf({ path: `${D}/visitenkarte-druck.pdf`, width: "91mm", height: "61mm", printBackground: true, preferCSSPageSize: true });
+await p.setViewportSize({ width: 420, height: 1400 });
+const els = await p.$$(".seite");
+await els[0].screenshot({ path: `${D}/vorschau-vorderseite.png` }); await els[1].screenshot({ path: `${D}/vorschau-rueckseite.png` });
+await b.close();

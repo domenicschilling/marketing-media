@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Tattookalender Preise TF-Kette</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* INTERN: Sonderpreise Tattoo-Fashion-Kette, 20.10.2026. Nie veröffentlichen. Stil = Preisplan Tattookalender. Kein Text-Verlauf (Apple Vorschau). */
+  @page { size: A4; margin: 0; }
+  :root {
+    --paper: #fbfbf9;
+    --ink: #1b1d2a;        /* Tattoo-Tinte, blauschwarz */
+    --stencil: #5a3e9e;    /* Thermo-Stencil-Violett: nur für Empfehlung & Hervorhebung */
+    --stencil-tint: #efebf8;
+    --muted: #62656f;
+    --line: #dcdce3;
+    --soft: #f1f1ee;
+    --warn: #9a5b12;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--paper); }
+  body {
+    font-family: Inter, system-ui, sans-serif; color: var(--ink); font-size: 8.6pt; line-height: 1.45;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    
+  }
+  .page {
+    width: 210mm; height: 297mm; overflow: hidden; position: relative;
+    padding: 13mm 15mm 12mm; display: flex; flex-direction: column;
+    page-break-after: always; break-after: page; background: var(--paper);
+  }
+  .page:last-child { page-break-after: auto; break-after: auto; }
+  .display { font-family: "Bricolage Grotesque", sans-serif; letter-spacing: -0.02em; }
+
+  /* Kopf & Fuß */
+  .run { display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 3mm; border-bottom: 0.25mm solid var(--line); margin-bottom: 7mm; }
+  .run .mark { font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: 11pt; letter-spacing: -0.03em; }
+  .run .meta { font-size: 7.4pt; color: var(--muted); }
+  .foot { margin-top: auto; padding-top: 3mm; display: flex; justify-content: space-between; font-size: 7pt; color: var(--muted); }
+
+  h1 { font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: 22pt; line-height: 1.05; letter-spacing: -0.03em; }
+  h2 { font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; font-size: 12pt; line-height: 1.15; letter-spacing: -0.015em; margin-bottom: 2.5mm; }
+  h3 { font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; font-size: 9.6pt; letter-spacing: -0.01em; margin-bottom: 1.4mm; }
+  p + p { margin-top: 1.6mm; }
+  .lead { font-size: 9.6pt; line-height: 1.45; color: #34374a; max-width: 150mm; margin-top: 3mm; }
+  .small { font-size: 7.4pt; color: var(--muted); line-height: 1.4; }
+  .unsicher { color: var(--warn); font-weight: 600; }
+  b, strong { font-weight: 600; }
+
+  /* Deckblatt */
+  .cover-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .wordmark { font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: 15pt; letter-spacing: -0.035em; }
+  .stamp { font-size: 7.6pt; color: var(--muted); text-align: right; line-height: 1.5; }
+  .cover-title { margin-top: 20mm; font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: 44pt; line-height: 0.95; letter-spacing: -0.045em; }
+  .cover-sub { margin-top: 5mm; font-size: 11pt; line-height: 1.45; color: #34374a; max-width: 140mm; }
+
+  .tiers { margin-top: 13mm; display: grid; grid-template-columns: 1fr 1fr 1.08fr; gap: 4mm; align-items: stretch; }
+  .tier { border: 0.3mm solid var(--line); border-radius: 2.5mm; padding: 5mm 5mm 4.5mm; background: #fff; position: relative; }
+  .tier .name { font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; font-size: 11pt; letter-spacing: -0.01em; line-height: 1.15; min-height: 10.5mm; }
+  .tier .price { margin-top: 3mm; font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: 30pt; letter-spacing: -0.04em; line-height: 1; }
+  .tier .price small { font-size: 9pt; font-weight: 500; letter-spacing: 0; color: var(--muted); font-family: Inter, sans-serif; }
+  .tier .year { margin-top: 1.8mm; font-size: 7.8pt; color: var(--muted); }
+  .tier .what { margin-top: 3.5mm; font-size: 8pt; line-height: 1.42; }
+  /* Das eine auffällige Element: Stencil-Linie um die Empfehlung */
+  .tier.rec { border: 0.55mm dashed var(--stencil); background: var(--stencil-tint); }
+  .tier.rec .price { color: var(--stencil); }
+  .flag { position: absolute; top: -3.2mm; left: 4mm; background: var(--stencil); color: #fff; font-size: 7pt; font-weight: 600; padding: 0.9mm 2.4mm; border-radius: 1.2mm; }
+
+  .keypoints { margin-top: 11mm; display: grid; grid-template-columns: 1fr 1fr; gap: 4mm 9mm; }
+  .kp h3 { font-size: 9.6pt; }
+  .kp p { font-size: 8.4pt; color: #34374a; }
+
+  /* Tabellen */
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-weight: 600; font-size: 7.4pt; color: var(--muted); padding: 1.6mm 2mm; border-bottom: 0.3mm solid var(--ink); vertical-align: bottom; }
+  td { padding: 2mm 2mm; border-bottom: 0.2mm solid var(--line); vertical-align: top; font-size: 7.8pt; line-height: 1.38; }
+  td.who { font-weight: 600; white-space: nowrap; }
+  td.who span { display: block; font-weight: 400; color: var(--muted); font-size: 7pt; white-space: normal; }
+  tr.us td { background: var(--stencil-tint); }
+  tr.us td.who { color: var(--stencil); }
+  .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .src { font-size: 6.8pt; color: var(--muted); }
+
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 8mm; }
+  .box { background: var(--soft); border-radius: 2mm; padding: 4mm 4.5mm; }
+  .box.rec { background: var(--stencil-tint); border: 0.45mm dashed var(--stencil); }
+  ul.list { list-style: none; }
+  ul.list li { position: relative; padding-left: 3.6mm; margin-bottom: 1.3mm; }
+  ul.list li::before { content: "–"; position: absolute; left: 0; top: 0; color: var(--muted); }
+  ol.list { padding-left: 5mm; }
+  ol.list li { margin-bottom: 1.6mm; padding-left: 0.8mm; }
+
+  /* Paket-Matrix */
+  .matrix th.pk { font-family: "Bricolage Grotesque", sans-serif; font-size: 9.6pt; color: var(--ink); font-weight: 700; letter-spacing: -0.01em; width: 18.5%; line-height: 1.15; }
+  .matrix th.pk .p { display: block; font-size: 16pt; font-weight: 800; letter-spacing: -0.035em; margin-top: 1mm; }
+  .matrix th.pk .y { display: block; font-family: Inter, sans-serif; font-size: 7pt; color: var(--muted); font-weight: 500; letter-spacing: 0; margin-top: 0.6mm; }
+  .matrix th.pk.rec, .matrix td.rec { background: var(--stencil-tint); }
+  .matrix th.pk.rec { color: var(--stencil); border-top: 0.55mm dashed var(--stencil); }
+  .matrix td { font-size: 7.6pt; padding: 1.05mm 2mm; }
+  .matrix td.c { text-align: center; }
+  .matrix tr.grp td { font-weight: 600; font-size: 7.6pt; padding-top: 2.4mm; border-bottom: 0.3mm solid var(--ink); background: none; }
+  .yes { display: inline-block; width: 2.2mm; height: 2.2mm; vertical-align: -0.2mm; border-radius: 50%; background: var(--ink); }
+  .rec .yes { background: var(--stencil); }
+  .no { color: #b5b7c0; }
+
+  .calc td.num, .calc th.num { text-align: right; }
+  .calc td { padding: 1.5mm 2mm; }
+  .calc tr.sum td { font-weight: 700; border-top: 0.3mm solid var(--ink); border-bottom: none; }
+  .calc tr.res td { font-weight: 700; color: var(--stencil); border-bottom: none; }
+
+  .figure { font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: 20pt; letter-spacing: -0.035em; line-height: 1; }
+  .figure.v { color: var(--stencil); }
+  .scen { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; margin-top: 3mm; }
+  .scen .box h3 { margin-bottom: 0.8mm; }
+  .scen .box .figure { margin: 1.5mm 0 1mm; }
+  .scen .box { padding: 3mm 4mm; }
+
+  .decisions { counter-reset: d; }
+  .decisions li { list-style: none; position: relative; padding: 1.4mm 0 1.4mm 9mm; border-bottom: 0.2mm solid var(--line); font-size: 8.2pt; }
+  .decisions li::before { counter-increment: d; content: counter(d); position: absolute; left: 0; top: 1.1mm; width: 5.2mm; height: 5.2mm; border: 0.35mm solid var(--stencil); border-radius: 50%; color: var(--stencil); font-weight: 700; font-size: 7.4pt; display: grid; place-items: center; }
+  .decisions li em { font-style: normal; color: var(--stencil); font-weight: 600; }
+</style>
+<style>
+  .rules { margin-top: 8mm; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4mm; }
+  .rule { border: 0.3mm solid var(--line); border-radius: 2.5mm; padding: 4mm 4.5mm; background: #fff; position: relative; }
+  .rule.rec { border: 0.55mm dashed var(--stencil); background: var(--stencil-tint); }
+  .rule h3 { font-size: 9.6pt; }
+  .rule .price { font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: 24pt; letter-spacing: -0.04em; line-height: 1; margin: 2mm 0 1.5mm; }
+  .rule.rec .price { color: var(--stencil); }
+  .rule .price small { font-family: Inter, sans-serif; font-size: 8pt; font-weight: 500; color: var(--muted); letter-spacing: 0; }
+  .rule p { font-size: 7.8pt; line-height: 1.4; }
+  .studios td { font-size: 7.6pt; }
+  .studios td.p { font-weight: 700; white-space: nowrap; }
+  .tag { display: inline-block; font-size: 6.8pt; font-weight: 600; padding: 0.3mm 1.6mm; border-radius: 1mm; }
+  .tag.ja { background: #e4efe6; color: #2f6b3a; }
+  .tag.nein { background: #f6e9dc; color: var(--warn); }
+  .tag.offen { background: #f6e9dc; color: var(--warn); }
+  .confirm { color: var(--warn); font-weight: 600; }
+  .intern { color: #fff; background: var(--ink); font-size: 7pt; font-weight: 600; padding: 0.8mm 2.2mm; border-radius: 1.2mm; display: inline-block; margin-bottom: 1.5mm; }
+</style>
+</head>
+<body>
+
+<section class="page">
+  <div class="cover-top">
+    <div class="wordmark">Tattookalender</div>
+    <div class="stamp"><span class="intern">Intern</span><br>Nur für Domenic, Andy und Mads<br>Stand 20.10.2026, Preise netto zzgl. USt.</div>
+  </div>
+  <h1 style="margin-top:9mm; font-size:26pt">Sonderpreise für die Tattoo-Fashion-Kette</h1>
+  <p class="small" style="margin-top:2mm"><b>Zuordnung (Domenic, 20.10.):</b> Mads Kristensen = Eckernförde, Husum, Flensburg, Sønderborg (4 Studios). Osnabrück = anderer Inhaber. München + Landshut = Andy.</p>
+  <p class="lead">Grundlage sind die freigegebenen Listenpreise 99 / 169 / 299&nbsp;€. Die Kette bekommt ab 4 Studios 10&nbsp;% Nachlass je Studio. Wer schon einen TattooLeadz-Vertrag hat, bezahlt den Chat dort und nicht noch einmal im Kalender.</p>
+
+  <div class="rules">
+    <div class="rule rec">
+      <h3>Mit TattooLeadz-Vertrag</h3>
+      <div class="price">149&nbsp;€<small> / Monat</small></div>
+      <p>Voller Umfang wie Komplett, aber zum Preis von Kalender + Zahlungen (169&nbsp;€ minus 10&nbsp;%, abgerundet). Chat und Meta-Gebühren laufen weiter über TattooLeadz. Jährlich 129&nbsp;€.</p>
+    </div>
+    <div class="rule">
+      <h3>Ohne TattooLeadz-Vertrag</h3>
+      <div class="price">269&nbsp;€<small> / Monat</small></div>
+      <p>Komplett mit eigenem Chat (299&nbsp;€ minus 10&nbsp;%), inklusive Kasse mit TSE und 15&nbsp;€ Meta-Guthaben. Jährlich 239&nbsp;€. Mit TattooLeadz-Vertrag sofort 149&nbsp;€.</p>
+    </div>
+    <div class="rule">
+      <h3>Für die ganze Kette</h3>
+      <p style="margin-top:2mm"><b>0&nbsp;% Provision</b> auf Zahlungen, wie in München seit heute.<br><b>Ketten-Übersicht gratis</b> statt 149&nbsp;€: Inhaber sehen alle Studios.<br><b>Kasse mit TSE</b> 15&nbsp;€ statt 19&nbsp;€ je Studio*.<br><b>Keine Einrichtung</b> für die Studios, die schon im Kalender sind.</p>
+    </div>
+  </div>
+
+  <h2 style="margin-top:8mm">Die Studios</h2>
+  <table class="studios">
+    <thead><tr><th style="width:14%">Studio</th><th style="width:25%">TattooLeadz-Vertrag (laut Drive)</th><th style="width:19%">Paket</th><th class="num" style="width:12%">Monat</th><th style="width:30%">Hinweis</th></tr></thead>
+    <tbody>
+      <tr><td class="who">Eckernförde</td><td><span class="tag ja">ja</span> 750&nbsp;€, ab 01.06.2026, M&amp;J GmbH</td><td>Komplett-Umfang, Chat über TattooLeadz</td><td class="num p">149&nbsp;€</td><td>Im Kalender seit 13.10., Superchat verbunden. Kasse +15&nbsp;€</td></tr>
+      <tr><td class="who">Husum</td><td><span class="tag ja">ja</span> 750&nbsp;€, ab 13.12.2025</td><td>Komplett-Umfang, Chat über TattooLeadz</td><td class="num p">149&nbsp;€</td><td>Im Kalender, Superchat verbunden. Kasse +15&nbsp;€</td></tr>
+      <tr><td class="who">Flensburg</td><td><span class="tag ja">ja</span> zahlt wie Husum (Domenic, 20.10.); Flensburg-Fassung im Drive noch ablegen</td><td>Komplett-Umfang, Chat über TattooLeadz</td><td class="num p">149&nbsp;€</td><td>Im Kalender, Wunschaktion und Superchat laufen über uns. Kasse +15&nbsp;€</td></tr>
+      <tr><td class="who">Sønderborg (DK)</td><td><span class="tag ja">ja</span> 750&nbsp;€, ab 13.12.2025, Tcb Danmark ApS</td><td>Kalender + Zahlungen, ohne WhatsApp (nur E-Mail)</td><td class="num p">149&nbsp;€<br><span class="small">oder 1.099 kr.</span></td><td>Im Kalender, dänisch, DKK. Deutsche TSE gilt in Dänemark nicht, also keine Kasse</td></tr>
+      <tr><td class="who">Osnabrück<span>anderer Inhaber, nicht Mads</span></td><td><span class="tag ja">ja</span> 750&nbsp;€, ab 01.02.2026, 299&nbsp;€ Einrichtung</td><td>Komplett-Umfang, Chat über TattooLeadz</td><td class="num p">149&nbsp;€</td><td><span class="confirm">Noch nicht im Kalender.</span> Aufnehmen? Einrichtung 249&nbsp;€ oder gratis</td></tr>
+      <tr><td class="who">München</td><td><span class="tag nein">nein</span> kein Vertrag im Drive, Aktion 500 → 750 läuft über uns</td><td>Komplett mit eigenem Chat</td><td class="num p">269&nbsp;€<br><span class="small">mit Vertrag 149&nbsp;€</span></td><td>Plattformgebühr 0&nbsp;% seit 20.10., Superchat und Meta verbunden. Kasse inklusive</td></tr>
+      <tr><td class="who">Landshut</td><td><span class="tag nein">nein</span> kein Vertrag im Drive, Kampagne pausiert seit 16.10.</td><td>Komplett mit eigenem Chat</td><td class="num p">269&nbsp;€<br><span class="small">mit Vertrag 149&nbsp;€</span></td><td>Online-Buchung aus, bis Arbeitszeiten da sind. Kasse inklusive</td></tr>
+    </tbody>
+  </table>
+  <p class="small" style="margin-top:2mm">Vertragsstand aus dem TattooLeadz-Drive (Durchsicht 18.10.2026, Unterschriftsfelder teils leer), alles <span class="confirm">bitte bestätigen</span>. Preise gerundet: 169&nbsp;€ × 0,9 = 152,10&nbsp;€ → 149&nbsp;€; 299&nbsp;€ × 0,9 = 269,10&nbsp;€ → 269&nbsp;€. Kronen: 149&nbsp;€ ≈ 1.110 kr. → 1.099 kr. *Kasse verfügbar nach Abschluss der fiskaly-Einrichtung.</p>
+
+  <div class="foot"><span>Tattookalender, DSX Media Solutions UG. Intern, nicht weitergeben.</span><span>1 / 2</span></div>
+</section>
+
+<section class="page">
+  <div class="run"><span class="mark">Tattookalender</span><span class="meta">Sonderpreise Tattoo-Fashion-Kette, intern, 20.10.2026</span></div>
+  <h1>Was die Kette im Monat zahlt</h1>
+
+  <div class="scen" style="margin-top:5mm">
+    <div class="box"><h3>Heute im Kalender (6 Studios)</h3><div class="figure">1.134&nbsp;€</div><p class="small">EF, HU, FL, SB je 149&nbsp;€, MU und LA je 269&nbsp;€</p></div>
+    <div class="box"><h3>Alle 7 Studios mit Osnabrück</h3><div class="figure">1.283&nbsp;€</div><p class="small">5 × 149&nbsp;€ + 2 × 269&nbsp;€. Jährlich bezahlt: 1.123&nbsp;€ im Monat</p></div>
+    <div class="box rec"><h3>Alle 7 mit TattooLeadz-Vertrag</h3><div class="figure v">1.043&nbsp;€</div><p class="small">7 × 149&nbsp;€. Dafür kämen bei TattooLeadz die fehlenden Verträge MU und LA dazu</p></div>
+  </div>
+  <p class="small" style="margin-top:2mm">Plus Kasse mit TSE, falls gewünscht: 15&nbsp;€ je Studio mit TattooLeadz-Vertrag (EF, HU, FL, OS = 60&nbsp;€), bei MU und LA schon inklusive, Sønderborg ohne. Zum Vergleich ohne Ketten-Absprache: Listenpreis für dieselben 7 Studios 1.443&nbsp;€ plus 149&nbsp;€ Ketten-Modul = 1.592&nbsp;€. Die Kette spart also rund 309&nbsp;€ im Monat.</p>
+
+  <div class="two" style="margin-top:6mm">
+    <div class="box rec">
+      <h3>Warum 149&nbsp;€ und kein Preis dazwischen</h3>
+      <ul class="list">
+        <li><b>Nicht doppelt kassieren.</b> Die 750&nbsp;€ TattooLeadz decken Chat, Bots und Meta-Gebühren schon ab. Würden wir im Kalender noch einmal dafür abrechnen, sehen Andy und Mads das sofort.</li>
+        <li><b>Leicht zu erklären.</b> „Chat zahlt ihr bei TattooLeadz, im Kalender nur Kalender und Zahlungen.“</li>
+        <li><b>Hebel für die Verträge.</b> München und Landshut sparen mit TattooLeadz-Vertrag je 120&nbsp;€ im Monat. Das hilft, die fehlenden Verträge nachzuziehen.</li>
+        <li><b>Zwischenpreis lohnt nicht.</b> Ein Preis von 179&nbsp;€ (199&nbsp;€ minus 10&nbsp;%) würde nur die WhatsApp-Erinnerungen aus dem Kalender abdecken: ca. 300 im Monat × 0,0456&nbsp;€ = rund 14&nbsp;€ je Studio. Die laufen besser wie heute über TattooLeadz.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Ketten-Übersicht gratis</h3>
+      <p>Empfehlung: ja, solange mindestens 4 Studios gebucht sind. Die Übersicht läuft schon, kostet uns praktisch nichts, und Mads und Andy brauchen sie, um alle Studios zu sehen. 149&nbsp;€ obendrauf würden den Kettenpreis teurer wirken lassen als die Einzelstudios.</p>
+      <h3 style="margin-top:4mm">Zahlungen und Kasse</h3>
+      <p>0&nbsp;% Plattformgebühr für alle TF-Studios, wie München seit heute. Die Stripe-Gebühr zahlt jedes Studio direkt an Stripe. Die Zahlungen sind laut Stand 14.10. noch im Stripe-Testmodus, bis der Vertrag steht. Diese Liste kann die Grundlage dafür sein.</p>
+      <p>Kasse mit TSE: 15&nbsp;€ je Studio statt 19&nbsp;€. Unsere Kosten liegen geschätzt bei 6–15&nbsp;€, das Angebot von fiskaly fehlt noch.</p>
+    </div>
+  </div>
+
+  <h2 style="margin-top:6mm">Was du klären musst</h2>
+  <ol class="decisions">
+    <li><b>149&nbsp;€ für Studios mit TattooLeadz-Vertrag</b> (jährlich 129&nbsp;€) so freigeben <em>(Empfehlung)</em> oder Zwischenpreis 179&nbsp;€?</li>
+    <li><b>Flensburg:</b> <em>geklärt 20.10.</em> zahlt wie Husum (TattooLeadz-Vertrag), also 149&nbsp;€. Nur noch die Flensburg-Fassung des Vertrags im Drive ablegen.</li>
+    <li><b>München und Landshut:</b> TattooLeadz-Vertrag nachziehen (dann 149&nbsp;€) oder Komplett 269&nbsp;€? Beide nutzen heute schon unser Superchat. Wer zahlt das gerade?</li>
+    <li><b>Osnabrück:</b> In den Kalender aufnehmen? Einrichtung 249&nbsp;€ oder gratis?</li>
+    <li><b>Sønderborg:</b> Bleibt es ohne WhatsApp und ohne Kasse? Rechnung in Euro (149&nbsp;€) oder Kronen (1.099 kr.)?</li>
+    <li><b>Kasse mit TSE:</b> Haben die Studios schon eine Kasse mit TSE (sie nehmen am Tresen bar)? Sonst 15&nbsp;€ je Studio.</li>
+    <li><b>Inhaber-Rolle und Rechnung:</b> Wer bekommt die Ketten-Übersicht (Mads?) und geht die Rechnung an jede Studio-Firma einzeln oder zentral?</li>
+    <li><b>Start:</b> Ab wann wird abgerechnet (Vorschlag 01.12.2026), und bis dahin Pilot gratis?</li>
+  </ol>
+
+  <div class="foot"><span>Tattookalender, DSX Media Solutions UG. Intern, nicht weitergeben.</span><span>2 / 2</span></div>
+</section>
+
+</body>
+</html>

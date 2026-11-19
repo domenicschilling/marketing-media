@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>prüfklar: Woran scheitern Kunden auf Ihrer Website? (Entwurf)</title>
+<meta name="description" content="prüfklar zeigt, wo Kunden auf Ihrer Website oder in Ihrem Shop hängen bleiben, mit Bildschirmfoto und Lösung. Der Schnelltest ist kostenlos.">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#000000">
+<link rel="preload" href="assets/archivo.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/style.css">
+<script>document.documentElement.className='js m1 m2 m3 m4 m5'</script>
+<script src="assets/app.js" defer onerror="document.documentElement.className=''"></script>
+</head>
+<body>
+<a class="sprung" href="#inhalt">Zum Inhalt springen</a>
+
+<header class="kopf">
+  <a class="marke" href="#inhalt" aria-label="prüfklar, zum Seitenanfang">prüfklar</a>
+  <nav aria-label="Hauptmenü">
+    <ul>
+      <li class="nur-gross"><a href="#bericht">Der Bericht</a></li>
+      <li><a href="#preise">Preise</a></li>
+      <li class="nur-gross"><a href="#fragen">Fragen</a></li>
+      <li><a href="#pruefcode"><span>Prüfcode<span class="nur-gross"> aus dem Brief</span></span></a></li>
+    </ul>
+  </nav>
+</header>
+
+<main id="inhalt" tabindex="-1">
+
+<section class="held" aria-labelledby="h1">
+  <div class="flut" id="flut"></div>
+
+  <h1 class="h1" id="h1">
+    <span class="sr">prüfklar zeigt, woran Kunden auf Ihrer Website scheitern und was zu tun ist.</span>
+    <span class="h1-bild" aria-hidden="true">
+      <span class="h1-offen">Diese Seite hat <strong><span id="zahl">5</span>&nbsp;<span id="wort">Mängel</span>.</strong></span>
+      <span class="h1-heil">Alle 5 behoben. <strong>Wie viele hat Ihre Seite?</strong></span>
+    </span>
+  </h1>
+
+  <p class="unter unter-offen">Absichtlich. Ein Zug am Regler zeigt, was der prüfklar-Bericht für Ihre Website liefert.</p>
+  <p class="unter unter-heil">prüfklar zeigt, wo Kunden auf Ihrer Website hängen bleiben, mit Bildschirmfoto und Lösung.</p>
+
+  <div class="vorfuehrung">
+    <p class="sr">Vorführung: unten folgt ein absichtlich fehlerhaft gebauter Ausschnitt aus dem erfundenen Beispiel-Shop Röstwerk Regnitz. Er hat fünf Mängel: einen kaum lesbaren Knopf, ein Bild ohne Beschreibung, ein Feld ohne Beschriftung, zu kleine Tippflächen und zu kleine, blasse Schrift. Der Regler behebt sie der Reihe nach, jeder Schritt wird angesagt. Das Feld für Ihren Test darunter funktioniert immer.</p>
+
+    <!-- Absichtlich schlechte Elemente: nur Bild für Sehende, für Hilfsmittel ausgeblendet und oben als Text beschrieben. Nichts davon ist fokussierbar. Die Beschriftung kommt als CSS-Inhalt (data-t), sie ist Teil des Bildes. -->
+    <div class="buehne" id="buehne" aria-hidden="true">
+      <div class="schild"><span class="schild-offen">Absichtlich fehlerhaft</span><span class="schild-heil">Repariert</span><span class="schild-rest"> · erfundener Shop</span></div>
+      <div class="shop">
+        <div class="shop-kopf">
+          <span class="shop-name" data-t="Röstwerk Regnitz"></span>
+          <span class="suche">
+            <span class="suche-text">Suche</span>
+            <span class="suche-feld"></span>
+            <span class="pin pin3"><i>3</i><svg viewBox="0 0 16 16"><path d="M2.5 8.5l3.5 3.5 7.5-8" fill="none" stroke="currentColor" stroke-width="2.6"/></svg></span>
+          </span>
+        </div>
+        <div class="shop-haupt">
+          <div class="bild">
+            <img src="assets/hausmischung.jpg" alt="" width="380" height="480" decoding="async">
+            <span class="bild-kaputt"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M3 4h18v16H3zM3 16l5-5 4 4 3-3 6 6M4 20L20 4" fill="none" stroke="#8c8c84" stroke-width="1.4"/></svg><span data-t="Bild"></span></span>
+            <span class="bild-text">„Hausmischung,<br>250-g-Beutel“</span>
+            <span class="pin pin2"><i>2</i><svg viewBox="0 0 16 16"><path d="M2.5 8.5l3.5 3.5 7.5-8" fill="none" stroke="currentColor" stroke-width="2.6"/></svg></span>
+          </div>
+          <div class="info">
+            <span class="name" data-t="Hausmischung"><span class="pin pin5"><i>5</i><svg viewBox="0 0 16 16"><path d="M2.5 8.5l3.5 3.5 7.5-8" fill="none" stroke="currentColor" stroke-width="2.6"/></svg></span></span>
+            <span class="art" data-t="Schokolade, Haselnuss, für Vollautomat. Frisch geröstet in Bamberg."></span>
+            <span class="preis" data-t="9,90 € / 250 g"></span>
+            <span class="menge">
+              <b data-t="−"></b><b data-t="1"></b><b data-t="+"></b>
+              <span class="pin pin4"><i>4</i><svg viewBox="0 0 16 16"><path d="M2.5 8.5l3.5 3.5 7.5-8" fill="none" stroke="currentColor" stroke-width="2.6"/></svg></span>
+            </span>
+          </div>
+        </div>
+        <div class="korb"><span data-t="In den Warenkorb"></span><span class="pin pin1"><i>1</i><svg viewBox="0 0 16 16"><path d="M2.5 8.5l3.5 3.5 7.5-8" fill="none" stroke="currentColor" stroke-width="2.6"/></svg></span></div>
+      </div>
+    </div>
+
+    <p class="befund" id="befund" aria-live="polite"><strong>Schritt für Schritt.</strong> Der reparierte Beispiel-Shop oben zeigt alle fünf Stellen.</p>
+
+    <div class="regler" id="regler">
+      <input id="r" type="range" min="0" max="5" step="1" value="0" aria-label="Mängel im Beispiel beheben" aria-valuetext="0 von 5 Mängeln behoben">
+      <div class="spur" aria-hidden="true">
+        <div class="fuell"></div>
+        <div class="kerben"><i></i><i></i><i></i><i></i></div>
+        <div class="spur-text"><span class="st-a" id="st-a">Ziehen oder tippen: reparieren</span><span class="st-b">Alle 5 behoben</span></div>
+        <div class="griff"><svg viewBox="0 0 24 24" width="26" height="26"><path d="M7 5l7 7-7 7M13 5l7 7-7 7" fill="none" stroke="#000" stroke-width="2.8"/></svg></div>
+      </div>
+    </div>
+  </div>
+
+  <form class="test" id="test" action="#entwurf-hinweis" method="get" novalidate data-art="domain">
+    <label for="test-domain">Adresse Ihrer Website oder Ihres Shops</label>
+    <div class="test-zeile">
+      <input id="test-domain" type="text" inputmode="url" autocomplete="url" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="go" placeholder="mein-shop.de" aria-describedby="test-info test-fehler">
+      <button type="submit">Kostenlos testen</button>
+    </div>
+    <p class="fehler" id="test-fehler"></p>
+    <p class="test-info" id="test-info">Ohne Anmeldung. Wir sehen uns nur die Startseite an. <span class="entwurf-tag">Entwurf: es wird noch nichts gesendet.</span></p>
+    <p class="demo-antwort" role="status"></p>
+  </form>
+</section>
+
+<section class="zettelwand" id="bericht" aria-labelledby="h-bericht">
+  <div class="rand">
+    <h2 id="h-bericht">So steht es im Bericht.</h2>
+    <p class="vor">Jede Stelle Ihrer Website: was Ihr Kunde erlebt, was zu tun ist, dazu ein Bildschirmfoto. Zum Selbermachen oder für Ihre Agentur.</p>
+  </div>
+  <div class="reihe-rahmen">
+    <div class="reihe" id="reihe" role="region" aria-label="Fünf Beispiel-Befunde und eine Seite aus dem Musterbericht, seitlich scrollbar" tabindex="0">
+      <ol>
+        <li class="zettel">
+          <span class="z-nr" aria-hidden="true">1</span>
+          <h3>Knopf kaum lesbar</h3>
+          <div class="z-demo d-knopf" aria-hidden="true"><span class="k-alt" data-t="In den Warenkorb"></span><span class="k-neu" data-t="In den Warenkorb"></span></div>
+          <p><strong>Ihr Kunde erlebt:</strong> Mit Sehschwäche oder am Handy in der Sonne ist der wichtigste Knopf kaum zu erkennen.</p>
+          <p><strong>Lösung:</strong> eine dunklere Farbe für den Knopf. Meist eine kleine Änderung.</p>
+        </li>
+        <li class="zettel">
+          <span class="z-nr" aria-hidden="true">2</span>
+          <h3>Bild ohne Beschreibung</h3>
+          <div class="z-demo d-vor" aria-hidden="true"><span class="v-alt">„Link. Bild.“</span><span class="v-neu">„Hausmischung, 250-g-Beutel“</span></div>
+          <p><strong>Ihr Kunde erlebt:</strong> Ein blinder Kunde lässt sich die Seite vorlesen und erfährt nicht, welcher Kaffee das ist.</p>
+          <p><strong>Lösung:</strong> ein kurzer Text zu jedem Bild.</p>
+        </li>
+        <li class="zettel">
+          <span class="z-nr" aria-hidden="true">3</span>
+          <h3>Feld ohne Beschriftung</h3>
+          <div class="z-demo d-vor" aria-hidden="true"><span class="v-alt">„Eingabefeld“</span><span class="v-neu">„Suche, Eingabefeld“</span></div>
+          <p><strong>Ihr Kunde erlebt:</strong> Wer sich die Seite vorlesen lässt, weiß nicht, wofür das Feld da ist.</p>
+          <p><strong>Lösung:</strong> eine Beschriftung wie „Suche“. Für Ihre Agentur eine Sache von Minuten.</p>
+        </li>
+        <li class="zettel">
+          <span class="z-nr" aria-hidden="true">4</span>
+          <h3>Tippfläche zu klein</h3>
+          <div class="z-demo d-tipp" aria-hidden="true"><span class="t-alt"><b></b><b></b></span><span class="t-neu"><b></b><b></b></span></div>
+          <p><strong>Ihr Kunde erlebt:</strong> Knöpfe und Links sind am Handy so klein, dass man leicht danebentippt.</p>
+          <p><strong>Lösung:</strong> Tippflächen auf mindestens 24&nbsp;×&nbsp;24 Pixel vergrößern, besser 44&nbsp;×&nbsp;44.</p>
+        </li>
+        <li class="zettel">
+          <span class="z-nr" aria-hidden="true">5</span>
+          <h3>Schrift zu klein und zu blass</h3>
+          <div class="z-demo d-schrift" aria-hidden="true"><span class="s-alt" data-t="9,90 € / 250 g"></span><span class="s-neu" data-t="9,90 € / 250 g"></span></div>
+          <p><strong>Ihr Kunde erlebt:</strong> Mit schwächeren Augen oder draußen in der Sonne lässt sich der Text kaum lesen.</p>
+          <p><strong>Lösung:</strong> Schriftfarbe dunkler oder Hintergrund heller, bis der Kontrast mindestens 4,5 : 1 beträgt.</p>
+        </li>
+        <li class="zettel zettel-blatt">
+          <h3>So sieht das im Bericht aus</h3>
+          <img src="assets/bericht-seite.webp" width="636" height="900" loading="lazy" decoding="async" alt="Seite aus dem Musterbericht: drei Befunde mit Wichtigkeit Hoch, jeweils Erklärung, Was tun und Bildschirmfoto mit rot markierter Stelle.">
+          <p><a href="https://pruefklar.de/musterbericht/">Ganzen Musterbericht ansehen</a></p>
+        </li>
+      </ol>
+    </div>
+    <div class="blaettern" hidden>
+      <button type="button" id="zurueck" aria-label="Vorherige Karte"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M15 4l-8 8 8 8" fill="none" stroke="currentColor" stroke-width="3"/></svg></button>
+      <button type="button" id="weiter" aria-label="Nächste Karte"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M9 4l8 8-8 8" fill="none" stroke="currentColor" stroke-width="3"/></svg></button>
+    </div>
+  </div>
+  <p class="rand beispiel-hinweis">Alle Befunde sind Beispiele aus dem erfundenen Shop „Röstwerk Regnitz“.</p>
+</section>
+
+<section class="kasse" aria-labelledby="h-kasse">
+  <div class="rand kasse-raster">
+    <h2 id="h-kasse">Kunden, die nicht weiterkommen, kaufen woanders.</h2>
+    <p class="vor">Die wenigsten sagen Bescheid. Sie merken es nur an der Kasse. Mehr Kunden kommen bis dorthin, wenn der Weg für alle funktioniert: auch für Ältere, für Menschen mit Sehschwäche und für alle, die am Handy in der Sonne einkaufen.</p>
+    <dl class="zahlen">
+      <div><dt>7,9 Mio.</dt><dd>Menschen in Deutschland haben eine anerkannte Schwerbehinderung.</dd></div>
+      <div><dt>Jeder 4.</dt><dd>Mensch in Deutschland ist 60 oder älter.</dd></div>
+    </dl>
+    <p class="quelle">Quellen: Statistisches Bundesamt, schwerbehinderte Menschen Ende 2023; Bevölkerung nach Altersgruppen 2023.</p>
+  </div>
+</section>
+
+<section class="preise" id="preise" aria-labelledby="h-preise">
+  <div class="rand">
+    <h2 id="h-preise">Erst sehen.<br>Dann entscheiden.</h2>
+    <p class="vor">Sie müssen nichts kaufen. Die Berichte sind Einmalzahlungen, kein Abo.</p>
+
+    <div class="stufe stufe-null">
+      <p class="betrag"><span>0 €</span></p>
+      <div>
+        <h3>Schnelltest</h3>
+        <p>Startseite. Ergebnis sofort, mit einem Tipp zu jeder Stelle. Ohne Anmeldung und ohne E-Mail-Adresse.</p>
+        <p><a class="pfeil" href="#test">Jetzt testen</a></p>
+      </div>
+    </div>
+
+    <details class="stufe">
+      <summary>
+        <span class="betrag"><span>49 €</span><small>netto · 58,31 € mit 19 % USt</small></span>
+        <span class="s-text"><span class="s-name">Prüfbericht</span><span class="s-kurz">Startseite bis Warenkorb. Innerhalb von 2 Werktagen.</span></span>
+      </summary>
+      <div class="s-mehr">
+        <ul>
+          <li>Startseite, eine Produktseite und Warenkorb</li>
+          <li>Alle 7 Prüfbereiche, von der Lesbarkeit bis zum Cookie-Banner</li>
+          <li>Jede Stelle mit Bildschirmfoto, Wichtigkeit und Lösung</li>
+          <li>Innerhalb von 60 Tagen voll angerechnet, wenn Sie „Vollständig + Nach-Prüfung“ oder den Monatscheck buchen oder uns mit der Umsetzung beauftragen</li>
+        </ul>
+        <p><a class="pfeil" href="https://pruefklar.de/preise/">Prüfbericht bestellen</a></p>
+      </div>
+    </details>
+
+    <details class="stufe">
+      <summary>
+        <span class="betrag"><span>199 €</span><small>netto · 236,81 € mit 19 % USt</small></span>
+        <span class="s-text"><span class="s-name">Vollständiger Bericht</span><span class="s-kurz">Bis zu 25 Seiten, mit Plan. Innerhalb von 3 Werktagen.</span></span>
+      </summary>
+      <div class="s-mehr">
+        <ul>
+          <li>Bis zu 25 Seiten: Kategorien, Produkte, Kontakt, Warenkorb</li>
+          <li>Zusätzlich geprüft: Kommt man ohne Maus, nur mit der Tastatur, bis in den Warenkorb?</li>
+          <li>Plan: was zuerst zu tun ist und wie viel Arbeit es ungefähr macht</li>
+          <li>Von einem Menschen gegengelesen</li>
+        </ul>
+        <p><a class="pfeil" href="https://pruefklar.de/preise/">Vollständigen Bericht bestellen</a></p>
+      </div>
+    </details>
+
+    <details class="stufe stufe-empf">
+      <summary>
+        <span class="betrag"><span>249 €</span><small>netto · 296,31 € mit 19 % USt</small></span>
+        <span class="s-text"><span class="s-name">Vollständig + Nach-Prüfung <em>Empfehlung</em></span><span class="s-kurz">Alles aus dem Vollständigen Bericht, dazu für 50 € mehr die Nach-Prüfung.</span></span>
+      </summary>
+      <div class="s-mehr">
+        <ul>
+          <li>Nach-Prüfung innerhalb von 60 Tagen: was ist erledigt, was ist noch offen</li>
+          <li>Technischer Check von Impressum, Datenschutzerklärung und Cookie-Banner inklusive</li>
+          <li>3 Monate Monatscheck inklusive: drei Prüfungen, kein Abo, endet von selbst</li>
+        </ul>
+        <p><a class="pfeil" href="https://pruefklar.de/preise/">Vollständig + Nach-Prüfung bestellen</a></p>
+      </div>
+    </details>
+
+    <details class="stufe">
+      <summary>
+        <span class="betrag betrag-klein"><span>29 €</span><small>netto im Monat · 34,51 € mit USt</small></span>
+        <span class="s-text"><span class="s-name">Danach, freiwillig: Monatscheck</span><span class="s-kurz">Jeden Monat neu geprüft. Monatlich kündbar.</span></span>
+      </summary>
+      <div class="s-mehr">
+        <ul>
+          <li>Kurze Monats-Mail: was ist neu, was ist behoben, was ist unverändert</li>
+          <li>Aktueller Textvorschlag für Ihre Barrierefreiheitserklärung</li>
+          <li>Oder Sie beheben die Stellen selbst, mit Ihrer Agentur oder durch uns zum Festpreis nach Angebot</li>
+        </ul>
+        <p><a class="pfeil" href="https://pruefklar.de/waechter/">So funktioniert der Monatscheck</a></p>
+      </div>
+    </details>
+
+    <p class="kleingedruckt">Alle Preise netto zzgl. 19 % Umsatzsteuer. Angebot nur für Unternehmen. Sofort online bezahlen oder als Firma auf Rechnung bis 500 € netto (den Monatscheck nur über die Online-Kasse).</p>
+  </div>
+</section>
+
+<section class="ohne" aria-labelledby="h-ohne">
+  <div class="rand ohne-raster">
+    <div>
+      <h2 id="h-ohne">Geld zurück. Ohne Druck.</h2>
+      <p class="vor"><strong>Prüfbericht:</strong> innerhalb von 14 Tagen nach der Zahlung ohne Begründung, oder wenn er nichts zeigt, was nicht schon in Ihrem kostenlosen Ergebnis stand (einmal je Firma).</p>
+      <p class="vor"><strong>Größere Berichte:</strong> Findet der Bericht keine einzige echte Hürde, bekommen Sie den vollen Preis zurück.</p>
+      <p><a href="https://pruefklar.de/erstattung/">So fragen Sie die Erstattung an</a></p>
+    </div>
+    <div>
+      <ul class="nicht">
+        <li><strong>Keine Anwälte, keine Behörde.</strong> Wir prüfen technisch und zeigen, was wir finden, mit Beleg. Der Bericht ist keine Rechtsberatung.</li>
+        <li><strong>Kein Overlay-Werkzeug.</strong> Wir zeigen, was in der Website selbst zu ändern ist.</li>
+        <li><strong>Keine künstlichen Fristen.</strong> Wir drohen nicht und setzen keine Countdowns.</li>
+        <li><strong>Kein Versprechen, das niemand halten kann.</strong> Automatische Tests finden nur einen Teil aller Hürden. Ein gutes Ergebnis heißt nicht, dass Ihre Website barrierefrei ist.</li>
+      </ul>
+      <p class="firma">prüfklar ist eine Marke der DSX Media Solutions UG (haftungsbeschränkt), Am Weingarten 9, 96117 Memmelsdorf, Amtsgericht Bamberg, HRB 12150. Geprüft wird in einem echten Browser nach WCAG 2.1, Stufe AA, mit den Regeln von axe-core.</p>
+      <p class="selbst" id="selbst">Diese Seite: axe-core 4.13, 0 Verstöße in jedem Reglerzustand, Stand 01.11.2026. Die absichtlich fehlerhaften Beispiele sind für Hilfsmittel ausgeblendet und als Text beschrieben.</p>
+    </div>
+  </div>
+</section>
+
+<section class="fragen" id="fragen" aria-labelledby="h-fragen">
+  <div class="rand fragen-raster">
+    <h2 id="h-fragen">Was Sie sich jetzt fragen.</h2>
+    <div class="fragen-liste">
+      <details>
+        <summary><h3>Ist das seriös oder Abzocke?</h3></summary>
+        <p>Die Frage ist berechtigt. Hinter prüfklar steht die DSX Media Solutions UG (haftungsbeschränkt) aus Memmelsdorf bei Bamberg, eingetragen beim Amtsgericht Bamberg unter HRB 12150. Ihr Ergebnis ist kostenlos, ohne Anmeldung und ohne Abo. <a href="https://pruefklar.de/impressum.html">Zum Impressum</a></p>
+      </details>
+      <details>
+        <summary><h3>Warum habe ich einen Brief bekommen?</h3></summary>
+        <p>Unser Prüfprogramm hat die Startseite Ihres Shops angesehen, so wie ein Kunde, nur lesend. Dabei hat es Stellen gefunden, an denen Kunden hängen bleiben können. Eine davon zeigt der Brief, alle anderen stehen unter Ihrem Prüfcode.</p>
+        <p>Firmenname und Anschrift stammen aus dem öffentlichen Impressum Ihrer Website, die Website-Adresse aus OpenStreetMap (© OpenStreetMap-Mitwirkende) oder einer öffentlichen Websuche. <a href="https://pruefklar.de/w/">Keine Post mehr von prüfklar</a></p>
+      </details>
+      <details>
+        <summary><h3>Betrifft mich das Gesetz überhaupt?</h3></summary>
+        <p>Seit dem 28. Juni 2025 gilt das Barrierefreiheitsstärkungsgesetz (BFSG) für viele Onlineshops, die an Verbraucher verkaufen. Ausgenommen sind Kleinstunternehmen: weniger als 10 Beschäftigte und höchstens 2 Mio. € Jahresumsatz oder Jahresbilanzsumme. Ob das Gesetz für Sie gilt, beurteilen wir nicht. Wir prüfen die Technik.</p>
+      </details>
+      <details>
+        <summary><h3>Erfüllt meine Website danach das Gesetz?</h3></summary>
+        <p>Das können wir nicht versprechen. Automatische Tests finden nur einen Teil aller Hürden, und wir prüfen technisch, nicht rechtlich. Der Bericht zeigt Ihnen die wichtigsten Hürden und was zu tun ist.</p>
+      </details>
+      <details>
+        <summary><h3>Kann ich das nicht selbst machen oder meine Agentur?</h3></summary>
+        <p>Gern. Schon Ihr kostenloses Ergebnis enthält Tipps zum Selbermachen. Der Bericht ist die Arbeitsliste für Sie oder Ihre Agentur. Wenn Sie möchten, beheben wir die Stellen auch selbst, zum Festpreis nach Angebot.</p>
+      </details>
+      <details>
+        <summary><h3>Wie viel Arbeit habe ich damit?</h3></summary>
+        <p>Sie müssen nichts installieren und uns keinen Zugang geben. Wir sehen uns Ihre Seite an wie ein Kunde, bestellen nichts und schicken nichts ab. Der Bericht kommt als PDF per E-Mail.</p>
+      </details>
+    </div>
+  </div>
+  <p class="rand mehr-fragen"><a href="https://pruefklar.de/fragen/">Alle Fragen und Antworten</a></p>
+</section>
+
+<section class="schluss" aria-labelledby="h-schluss">
+  <div class="rand schluss-raster">
+    <h2 id="h-schluss">Wie viele hat Ihre Seite?</h2>
+    <form class="test test-schluss" action="#entwurf-hinweis" method="get" novalidate data-art="domain">
+      <label for="schluss-domain">Adresse Ihrer Website oder Ihres Shops</label>
+      <div class="test-zeile">
+        <input id="schluss-domain" type="text" inputmode="url" autocomplete="url" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="go" placeholder="mein-shop.de" aria-describedby="schluss-info schluss-fehler">
+        <button type="submit">Kostenlos testen</button>
+      </div>
+      <p class="fehler" id="schluss-fehler"></p>
+      <p class="test-info" id="schluss-info">Dauert wenige Sekunden. Sie müssen sich nicht anmelden und nichts kaufen.</p>
+      <p class="demo-antwort" role="status"></p>
+    </form>
+    <form class="code" id="pruefcode" action="#entwurf-hinweis" method="get" novalidate data-art="code">
+      <label for="code-feld">Brief von uns bekommen? Prüfcode (8 Zeichen, oben rechts im Brief)</label>
+      <div class="test-zeile">
+        <input id="code-feld" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="8" aria-describedby="code-fehler">
+        <button type="submit">Ergebnis ansehen</button>
+      </div>
+      <p class="fehler" id="code-fehler"></p>
+      <p class="demo-antwort" role="status"></p>
+    </form>
+  </div>
+</section>
+</main>
+
+<footer class="fuss">
+  <div class="rand">
+    <p class="marke marke-fuss">prüfklar</p>
+    <p>Technische Prüfung, keine Rechtsberatung.</p>
+    <p id="entwurf-hinweis" class="entwurf-fuss"><strong>Entwurf, nicht veröffentlicht.</strong> Die Testfelder auf dieser Seite sind eine Vorführung: Es wird nichts gesendet und nichts geprüft. Der echte Test läuft auf <a href="https://pruefklar.de/">pruefklar.de</a>.</p>
+    <ul>
+      <li><a href="https://pruefklar.de/impressum.html">Impressum</a></li>
+      <li><a href="https://pruefklar.de/datenschutz.html">Datenschutz</a></li>
+      <li><a href="https://pruefklar.de/agb.html">AGB</a></li>
+      <li><a href="https://pruefklar.de/barrierefreiheit.html">Erklärung zur Barrierefreiheit</a></li>
+      <li><a href="mailto:info@dsxmediasolutions.de">info@dsxmediasolutions.de</a></li>
+    </ul>
+  </div>
+</footer>
+
+<div class="leiste" id="leiste" hidden>
+  <a href="#test">Website kostenlos testen</a>
+</div>
+<noscript><style>.vorfuehrung .befund,.regler{display:none}</style></noscript>
+</body>
+</html>

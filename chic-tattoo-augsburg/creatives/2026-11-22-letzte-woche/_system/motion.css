@@ -1,0 +1,13 @@
+/* Bewegung für die Video-Fassung (16.11.2026). Wird NUR von _system/video.cjs eingeblendet –
+   die Standbilder (render.cjs) bleiben unverändert. Hier nur Drehpunkte, keine Layout-Änderung. */
+.pct.big{transform-origin:28% 62%}
+.st{transform-origin:50% 50%}
+.st .pct{transform-origin:50% 55%}
+.logo{transform-origin:50% 50%}
+.kick,.real,.addr,.dl{transform-origin:0% 50%}
+.side .box,.row .ab{transform-origin:0% 50%}
+.score{transform-origin:20% 60%}
+.stars svg{transform-origin:50% 55%}
+.rule{transform-origin:0% 50%}
+.hl,.hl span{transform-origin:0% 60%}
+.cta i svg{transform-origin:50% 50%}

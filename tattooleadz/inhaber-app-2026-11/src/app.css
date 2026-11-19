@@ -1,0 +1,70 @@
+/* TattooLeadz Inhaber-App – Mockup-Stil (Runde 2, 14.11.2026). Nur für Entwurfs-Screenshots, nicht live.
+   Farbregel: Rot = wartet / braucht dich. Bone = Auswahl/neutraler Akzent. Grün = positive Veränderung + WhatsApp. Gelb nur Chatcheck-Symbol. */
+@font-face{font-family:'Inter';font-weight:100 900;src:url(assets/Inter-latin-1.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215}
+@font-face{font-family:'Inter';font-weight:100 900;src:url(assets/Inter-latin-ext-0.woff2) format('woff2');unicode-range:U+0100-02BA,U+1E00-1E9F,U+2C60-2C7F}
+@font-face{font-family:'Anton';src:url(assets/Anton-latin.woff2) format('woff2')}
+
+:root{
+  --ink:#07060a;--ink2:#100d14;--flaeche:#131017;--flaeche2:#1c1920;--bone:#f1ebe0;--mut:#bdb5aa;--mut2:#9a9389;
+  --rot:#ff4255;--rot-hell:#ff7a88;--line:rgba(241,235,224,.1);--wa:#25d366;--gruen:#3ddc84;--gelb:#ffc24a;
+  --disp:"Anton","Impact",sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:393px;height:852px;overflow:hidden;background:var(--ink)}
+body{font:400 15px/1.35 Inter,system-ui,sans-serif;color:var(--bone);-webkit-font-smoothing:antialiased;font-feature-settings:"cv11","tnum"}
+.phone{position:relative;width:393px;height:852px;overflow:hidden;background:var(--ink)}
+
+/* Statusleiste + Dynamic Island */
+.sb{position:absolute;top:0;left:0;right:0;height:54px;display:flex;align-items:center;justify-content:space-between;padding:4px 30px 0 46px;z-index:40}
+.sb .zeit{font:600 17px/1 Inter;letter-spacing:-.01em}
+.sb .ic{display:flex;gap:6px;align-items:center}
+.island{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:125px;height:37px;border-radius:20px;background:#000;z-index:41}
+.home{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:139px;height:5px;border-radius:3px;background:var(--bone);opacity:.9;z-index:45}
+
+.inhalt{position:absolute;top:54px;left:0;right:0;bottom:0;padding:0 16px}
+
+/* Navigationsleiste + großer Titel (iOS) */
+.navbar{height:44px;display:flex;align-items:center;justify-content:space-between}
+.navbar .r{display:flex;align-items:center;gap:10px}
+.rund{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--flaeche2);border:1px solid var(--line);color:var(--bone)}
+.rund svg{width:20px;height:20px}
+.gross{font:400 38px/1.05 var(--disp);letter-spacing:.005em;margin:2px 0 0}
+.unter{font:500 15px/1.3 Inter;color:var(--mut);margin-top:3px}
+
+/* Beispieldaten – klein, kontrastarm, nicht wie ein Status */
+.bsp{font:500 11.5px/1 Inter;color:var(--mut2);letter-spacing:.01em;display:inline-flex;align-items:center;gap:5px}
+.bsp:before{content:"";width:5px;height:5px;border-radius:50%;background:var(--mut2)}
+
+/* Abschnitts-Köpfe (Satzschreibung, außerhalb der Karten, bündig mit Karteninhalt) */
+.sek{display:flex;align-items:baseline;justify-content:space-between;padding:0 14px;margin:0 0 8px}
+.sek h2{font:700 20px/1.2 Inter;letter-spacing:-.02em}
+.sek .klein{font:600 13px/1.2 Inter;color:var(--mut)}
+.sek a{font:600 15px/1.2 Inter;color:var(--bone);text-decoration:none;display:inline-flex;align-items:baseline;gap:3px}
+.sek a svg{width:11px;height:11px;align-self:center;color:var(--mut)}
+.sek-fuss{font:500 12.5px/1.35 Inter;color:var(--mut2);padding:7px 14px 0}
+
+/* Karten: flach, Haarlinie */
+.karte{background:var(--flaeche);border:1px solid var(--line);border-radius:20px}
+
+/* Motiv-Kachel */
+.motiv{flex:none;position:relative;width:48px;height:48px;border-radius:13px;display:grid;place-items:center;background:#1f1a22;border:1px solid var(--line)}
+.motiv>svg{width:30px;height:30px;color:#eadfd6}
+.motiv .kanal{position:absolute;right:-4px;bottom:-4px;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;border:2px solid var(--flaeche)}
+.kanal.wa{background:var(--wa)} .kanal.ig{background:linear-gradient(45deg,#f9a33b,#e1306c 55%,#833ab4)}
+.kanal svg{width:11px;height:11px;color:#fff}
+
+/* Knöpfe */
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;height:50px;border-radius:14px;font:650 16px/1 Inter;letter-spacing:-.01em;border:0;white-space:nowrap}
+.btn-p{background:var(--bone);color:var(--ink)}
+.btn-s{background:var(--flaeche2);color:var(--bone);border:1px solid var(--line)}
+.btn svg{width:19px;height:19px}
+
+/* Tab-Leiste (iOS 26 – schwebende Kapsel) */
+.tabs{position:absolute;left:16px;right:16px;bottom:22px;height:64px;border-radius:32px;z-index:30;display:flex;align-items:center;padding:0 5px;
+  background:rgba(30,27,34,.82);backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%);
+  border:1px solid rgba(255,255,255,.1);box-shadow:0 16px 40px rgba(0,0,0,.55)}
+.tab{flex:1;height:54px;border-radius:27px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--mut);font:600 10.5px/1 Inter;position:relative}
+.tab svg{width:24px;height:24px}
+.tab.an{background:rgba(241,235,224,.13);color:var(--bone)}
+.tab .badge{position:absolute;top:5px;left:calc(50% + 6px);min-width:18px;height:18px;border-radius:9px;background:#d70f27;color:#fff;font:700 11px/18px Inter;text-align:center;padding:0 5px}
+.fade-unten{position:absolute;left:0;right:0;bottom:0;height:130px;background:linear-gradient(rgba(7,6,10,0),rgba(7,6,10,.94) 55%);z-index:25;pointer-events:none}

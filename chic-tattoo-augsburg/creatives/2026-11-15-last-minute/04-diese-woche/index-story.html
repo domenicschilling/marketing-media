@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><title>04 Diese Woche – Story</title>
+<link rel="stylesheet" href="../_system/base.css">
+<link rel="stylesheet" href="../_system/aggro.css">
+<style>
+/* Reines Frist-Plakat in Signalrot (kein Foto, damit kein Tattoo doppelt läuft):
+   „Nur bis Samstag“ → riesige weiße −25 % → schwarzes Band mit dem Datum → zweite Stufe 20 % → schwarzer CTA-Balken. */
+.c{background:var(--sig)}
+.logo{position:absolute;left:56px;top:284px;width:110px;height:110px;z-index:8;box-shadow:0 0 0 4px var(--ink)}
+.kick{position:absolute;left:188px;top:312px;z-index:8;font-size:44px}
+
+.hl{position:absolute;left:var(--g);top:430px;font-size:140px;color:var(--ink)}
+.big{position:absolute;left:66px;top:580px;font-size:610px}
+.row{position:absolute;left:var(--g);top:1050px;display:flex;align-items:center;gap:26px}
+.hl2{font-size:118px;color:var(--ink)}
+.row .ab{font-size:42px;line-height:1.02;white-space:nowrap;margin-top:-6px}
+.hl2 span{color:#fff}
+
+.band{position:absolute;left:0;right:0;top:1166px;height:128px;background:var(--ink);display:flex;align-items:center;padding:8px var(--g) 0;z-index:5}
+.band b{font-size:104px;color:#fff;letter-spacing:-.005em}
+.band b em{font-style:normal;color:var(--sig)}
+.next{position:absolute;left:var(--g);top:1314px;font-size:60px;color:#fff}
+.next em{font-style:normal;color:var(--ink)}
+
+.cta{top:1392px;height:104px}
+.cta b{font-size:66px}
+.cta i{width:124px}
+.cta i svg{width:54px;height:54px}
+.bed{left:var(--g);top:1510px;color:#fff}
+.bed i{color:var(--ink)}
+</style></head>
+<body>
+<div class="c story">
+  <div class="logo"><img src="../_system/img/logo-480.webp" alt=""></div>
+  <span class="box bk kick">Last Minute November</span>
+
+  <p class="d hl">Nur bis Samstag:</p>
+  <p class="pct w big"><span class="mi"></span>25<span class="pc">%</span></p>
+  <div class="row"><p class="d hl2">Auf dein Tattoo<span>.</span></p><span class="box bk ab">Ab 150 €<br>mit Code</span></div>
+
+  <div class="band"><b class="d">Termin bis <em>Sa 21.11.</em></b></div>
+  <p class="d next">Danach: <em>20 %</em> bei Termin 23.–30.11.</p>
+
+  <div class="cta bk"><b>Jetzt Code sichern</b><i><svg viewBox="0 0 56 56"><path d="M6 28h40M30 10l18 18-18 18"/></svg></i></div>
+  <p class="bed"><b>Termin bis Sa 21.11.</b><i>·</i>danach 20 % bei Termin 23.–30.11.<br>ab 150 € Tattoo-Wert<i>·</i>Code auf der Aktionsseite</p>
+  <div class="grain"></div>
+</div>
+<script src="../_system/crop.js"></script>
+</body></html>

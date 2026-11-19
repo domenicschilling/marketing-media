@@ -1,0 +1,48 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><style>
+@font-face{font-family:'Bricolage Grotesque';font-weight:800;src:url('../assets/fonts/BricolageGrotesque-ExtraBold.ttf');}
+@font-face{font-family:'Bricolage Grotesque';font-weight:600;src:url('../assets/fonts/BricolageGrotesque-SemiBold.ttf');}
+@font-face{font-family:Inter;font-weight:400;src:url('../assets/fonts/Inter-Regular.ttf');}
+@font-face{font-family:Inter;font-weight:500;src:url('../assets/fonts/Inter-Medium.ttf');}
+@font-face{font-family:Inter;font-weight:600;src:url('../assets/fonts/Inter-SemiBold.ttf');}
+:root{--nacht:#0B0B0D;--tinte:#141311;--blatt:#1C1A16;--linie:#2C2822;--elfen:#F4F1EA;--stein:#A7A39A;--schiefer:#6B675F;
+--champ:#F3D891;--gold:#C9A24F;--altgold:#B88A2C;--bronze:#8A6418;--gruen:#6FCF8E;--rot:#EF6F6F;}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1080px;height:1350px;overflow:hidden}
+body{position:relative;background:var(--nacht);color:var(--elfen);font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.glow{position:absolute;inset:0;background:radial-gradient(900px 700px at 22% -4%,rgba(217,180,104,.24),rgba(217,180,104,.05) 55%,rgba(217,180,104,0) 80%)}
+.glow2{position:absolute;inset:0;background:radial-gradient(800px 600px at 90% 105%,rgba(217,180,104,.16),rgba(217,180,104,0) 70%)}
+.light{background:var(--elfen);color:var(--nacht)}
+.light .glow{background:radial-gradient(900px 700px at 22% -4%,rgba(184,138,44,.16),rgba(184,138,44,0) 70%)}
+.logo{position:absolute;left:84px;top:78px;height:46px}
+.pg{position:absolute;right:84px;top:88px;font-weight:500;font-size:22px;letter-spacing:.06em;color:var(--stein)}
+.light .pg{color:var(--schiefer)}
+.foot{position:absolute;left:84px;right:84px;bottom:70px;display:flex;justify-content:space-between;align-items:center;font-size:22px;font-weight:500;color:var(--stein);letter-spacing:.02em}
+.light .foot{color:var(--schiefer)}
+.foot .sw{color:var(--gold);font-weight:600}
+.light .foot .sw{color:var(--bronze)}
+.kick{font-weight:600;font-size:22px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold)}
+.light .kick{color:var(--bronze)}
+h1,h2,h3{font-family:'Bricolage Grotesque',Inter,sans-serif;font-weight:800;letter-spacing:-.02em;line-height:1.03}
+h1{font-size:112px}
+h2{font-size:84px}
+h3{font-size:52px;letter-spacing:-.015em;line-height:1.08}
+.g{color:var(--gold)}
+.light .g{color:var(--bronze)}
+p.t{font-size:36px;line-height:1.38;color:var(--stein);font-weight:400}
+.light p.t{color:#4A463F}
+p.s{font-size:32px;line-height:1.42;color:var(--stein)}
+.light p.s{color:#4A463F}
+.abs{position:absolute}
+.card{background:var(--tinte);border:1.5px solid var(--linie);border-radius:30px}
+.light .card{background:#fff;border-color:#DDD7C8}
+.hair{height:2px;background:linear-gradient(90deg,var(--gold),rgba(201,162,79,0))}
+.shot{position:relative;overflow:hidden;border:1.5px solid #3A342B;background:var(--tinte);box-shadow:0 40px 90px rgba(0,0,0,.55),0 0 0 1px rgba(201,162,79,.10)}
+.shot img{position:absolute;display:block;max-width:none}
+.cap{font-size:22px;color:var(--stein);letter-spacing:.03em;font-weight:500}
+.num{font-family:'Bricolage Grotesque',Inter,sans-serif;font-weight:800;color:var(--gold);letter-spacing:-.04em}
+.light .num{color:var(--bronze)}
+.chip{display:inline-block;padding:10px 22px;border-radius:999px;border:1.5px solid var(--linie);font-size:22px;font-weight:500;color:var(--stein)}
+.chk{display:flex;gap:22px;align-items:flex-start;font-size:32px;line-height:1.3;font-weight:500}
+.chk i{flex:none;width:38px;height:38px;border-radius:50%;background:linear-gradient(180deg,var(--champ),var(--gold));display:flex;align-items:center;justify-content:center;margin-top:2px}
+.chk i:after{content:'';width:10px;height:18px;border:solid #0B0B0D;border-width:0 4px 4px 0;transform:rotate(45deg) translate(-1px,-2px)}
+</style></head><body class=""><div class="glow"></div><img class="logo" src="../assets/logo/tattookalender-logo-quer-kompakt-dunkel.png"><div class="pg">1 / 5</div><img class="abs" src="../assets/logo/tattookalender-symbol-gold.png" style="width:640px;right:-200px;bottom:-170px;opacity:0.08"><div class="abs" style="left:84px;top:190px;width:912px;bottom:150px;display:flex;flex-direction:column;justify-content:center;"><div class="kick" style="margin-bottom:34px">Fragen und Antworten</div><h1 style="font-size:118px">Häufige <span class="g">Fragen.</span></h1><div class="hair" style="width:200px;margin:60px 0 40px"></div><p class="t" style="width:760px">Was Studios vor dem Start wissen wollen.</p></div><div class="foot"><span>tattookalender.de</span><span class="sw">Wischen &rarr;</span></div></body></html>

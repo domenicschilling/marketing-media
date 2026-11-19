@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><title>Website-Prüfung & Plan – Shootingbooth</title>
+<style>
+@page { size: A4; margin: 14mm 14mm 16mm; }
+* { box-sizing: border-box; }
+body { font: 10.2pt/1.5 Helvetica, Arial, sans-serif; color: #1b2027; margin: 0; }
+.kopf { background: #0b0f14; color: #fff; padding: 20px 22px; border-radius: 12px; }
+.kopf h1 { margin: 0; font-size: 19pt; }
+.kopf p { margin: 4px 0 0; color: #9fd8d5; }
+.geschenk { margin: 12px 0; padding: 10px 14px; border-radius: 10px; background: #e9f8f0; border: 1px solid #b9e7cd; }
+h2 { font-size: 13pt; color: #1f6f6c; margin: 20px 0 8px; page-break-after: avoid; }
+h3 { font-size: 11pt; margin: 12px 0 4px; page-break-after: avoid; }
+p { margin: 4px 0 7px; }
+ul, ol { margin: 4px 0 8px 18px; padding: 0; } li { margin: 2px 0; }
+table { width: 100%; border-collapse: collapse; font-size: 9.3pt; margin: 6px 0 10px; }
+th { text-align: left; color: #5b6470; font-weight: 600; border-bottom: 1.5px solid #1b2027; padding: 6px 5px; }
+td { padding: 6px 5px; border-bottom: 1px solid #e3e6ea; vertical-align: top; }
+.z { text-align: center; font-weight: 700; }
+.gut { color: #1e8e57; } .mittel { color: #c77700; } .schlecht { color: #c62828; }
+.befund { border: 1px solid #e3e6ea; border-radius: 12px; padding: 12px 14px; margin: 10px 0; page-break-inside: avoid; }
+.befund .kopfzeile { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.befund h3 { margin: 0; }
+.tag { font-size: 8pt; border-radius: 99px; padding: 2px 8px; white-space: nowrap; }
+.t-hoch { background: #fde8e7; color: #b3110f; } .t-mittel { background: #fff3dc; color: #a35f00; } .t-klein { background: #eef1f4; color: #5b6470; } .t-jimdo { background: #e8eefc; color: #2852b8; }
+.raster { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+img { width: 100%; border-radius: 8px; border: 1px solid #e3e6ea; display: block; }
+.film { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.film span { display: block; text-align: center; font-size: 8pt; color: #5b6470; margin-top: 2px; }
+.anleitung { background: #f5f6f8; border-radius: 10px; padding: 9px 12px; margin-top: 8px; font-size: 9.6pt; }
+.anleitung .h { display: block; font-weight: 700; margin-bottom: 2px; }
+.befund img { max-height: 78mm; object-fit: cover; object-position: top; }
+.vn img { max-height: 30mm; }
+.block { page-break-inside: avoid; }
+td.nw, th.nw { white-space: nowrap; }
+.klein { font-size: 8.6pt; color: #5b6470; }
+.umbruch { page-break-before: always; }
+.fuss { margin-top: 16px; font-size: 8.3pt; color: #7b8896; border-top: 1px solid #e3e6ea; padding-top: 8px; }
+</style></head><body>
+
+<div class="kopf"><h1>Website-Prüfung &amp; Plan</h1><p>Shootingbooth · shootingbooth.de · erstellt von DSX Media Solutions am 16. Oktober 2026</p></div>
+
+<div class="geschenk"><b>🎁 Geschenk für Shootingbooth:</b> Diese Prüfung inklusive Plan (Wert 390 €) ist für euch kostenlos. Alles darin könnt ihr selbst im Jimdo-Editor umsetzen – oder wir übernehmen es.</div>
+
+<h2>Das Wichtigste in Kürze</h2>
+<ul>
+  <li><b>Gute Basis:</b> Google findet die Seite gut (92 von 100), die Inhalte sind klar, Preise transparent.</li>
+  <li><b>Größte Bremse: zu große Bilder.</b> Die Startseite lädt 2,7 MB – davon sind rund <b>1,8 MB unnötig</b> (sechs Beispielbilder als PNG). Das ist der wichtigste und leichteste Hebel.</li>
+  <li><b>Cookie-Fenster:</b> erscheint über mobiles Netz erst nach etwa 15 Sekunden, verdeckt dann die Seite und zeigt fehlerhaften Text.</li>
+  <li><b>Lesbarkeit:</b> Das Türkis ist auf Weiß zu hell (Kontrast 2,6 : 1, empfohlen 4,5 : 1).</li>
+  <li><b>Aufwand:</b> Die Punkte 1–4 im Plan schafft ihr an <b>einem Nachmittag (ca. 1–2 Stunden)</b>.</li>
+</ul>
+
+<h2>Die Werte aller wichtigen Seiten</h2>
+<p class="klein">Google Lighthouse, Handy-Ansicht, 16.10.2026. 90–100 = gut, 50–89 = ausbaufähig, unter 50 = schlecht.</p>
+<table>
+<tr><th>Seite</th><th class="z">Ladezeit</th><th class="z">Bedienbarkeit</th><th class="z">Google</th><th class="z">Technik</th><th>Seite vollständig nach</th><th>Datenmenge</th></tr>
+<tr><td>Startseite</td><td class="z mittel">64</td><td class="z mittel">88</td><td class="z gut">92</td><td class="z mittel">61</td><td class="schlecht">15,3 s</td><td class="schlecht">2,7 MB</td></tr>
+<tr><td>Fotobox</td><td class="z mittel">69</td><td class="z mittel">86</td><td class="z gut">92</td><td class="z mittel">61</td><td class="mittel">6,8 s</td><td>0,7 MB</td></tr>
+<tr><td>Preise</td><td class="z mittel">61</td><td class="z mittel">85</td><td class="z gut">92</td><td class="z mittel">61</td><td class="mittel">6,6 s</td><td>0,6 MB</td></tr>
+<tr><td>Buchungsanfrage</td><td class="z mittel">69</td><td class="z mittel">88</td><td class="z gut">92</td><td class="z mittel">61</td><td class="mittel">7,5 s</td><td>0,8 MB</td></tr>
+</table>
+<p class="klein">„Seite vollständig nach“ = wann das größte sichtbare Element fertig ist (Google: höchstens 2,5 s). Auf den Unterseiten ist das meist das Cookie-Fenster, das spät nachlädt.</p>
+
+<div class="block"><h2>So erlebt ein Kunde die Startseite über mobiles Netz</h2>
+<div class="film">
+  <div><img src="bilder/lade-1s.jpg"><span>1 Sekunde</span></div>
+  <div><img src="bilder/lade-3s.jpg"><span>3 Sekunden</span></div>
+  <div><img src="bilder/lade-6s.jpg"><span>6 Sekunden</span></div>
+  <div><img src="bilder/lade-10s.jpg"><span>10 Sekunden</span></div>
+  <div><img src="bilder/lade-15s.jpg"><span>15 Sekunden</span></div>
+</div>
+<p class="klein">Simuliert: mittelmäßiges Handy-Netz (1,6 Mbit/s), durchschnittliches Smartphone. Nach ca. 3 Sekunden ist der Text lesbar, nach ca. 15 Sekunden legt sich das Cookie-Fenster über die Seite.</p></div>
+
+<h2>Befunde im Detail</h2>
+
+<div class="befund"><div class="kopfzeile"><h3>1 · Sechs Beispielbilder sind riesige PNG-Dateien</h3><span class="tag t-hoch">größter Hebel</span></div>
+<div class="raster"><div>
+<p>Die Beispielbilder (Drucklayouts, Feiern) werden in Originalgröße als PNG geladen – auch am Handy, wo sie nur 360 Pixel breit angezeigt werden.</p>
+<table>
+<tr><th>Datei</th><th class="nw">Größe</th><th class="nw">sparbar</th></tr>
+<tr><td>beispiel-foto-mit-drucklayout-hochzeit…</td><td class="nw">628 KB</td><td class="nw">613 KB</td></tr>
+<tr><td>template-für-eine-hochzeit-in-bamberg</td><td class="nw">471 KB</td><td class="nw">468 KB</td></tr>
+<tr><td>geburtstagsfeier-in-erlangen…</td><td class="nw">311 KB</td><td class="nw">310 KB</td></tr>
+<tr><td>beispieltemplate-für-eine-hochzeitsfeier…</td><td class="nw">170 KB</td><td class="nw">169 KB</td></tr>
+<tr><td>firmenfeier-in-nürnberg…</td><td class="nw">160 KB</td><td class="nw">158 KB</td></tr>
+<tr><td>drucklayout-beispiel</td><td class="nw">101 KB</td><td class="nw">99 KB</td></tr>
+</table></div>
+<div><img src="bilder/bild-gross.jpg"></div></div>
+<div class="anleitung"><span class="h">So behebt ihr es in Jimdo (ca. 30–45 Min.)</span>
+<ol><li>Die sechs Bilder am Computer als <b>JPG</b> speichern, höchstens <b>1.600 Pixel</b> breit, Qualität ca. 80 % – z. B. kostenlos mit squoosh.app (Bild reinziehen, „MozJPEG“ wählen, Breite anpassen).</li>
+<li>Ziel: jedes Bild <b>unter 150 KB</b>.</li>
+<li>In Jimdo auf das jeweilige Bild klicken → Bild austauschen → neue Datei hochladen. Bildbeschreibung (Alt-Text) bleibt bzw. neu eintragen.</li></ol></div>
+</div>
+
+<div class="befund"><div class="kopfzeile"><h3>2 · Cookie-Fenster: kaputter Text und sehr spät</h3><span class="tag t-hoch">sofort sichtbar</span></div>
+<div class="raster"><div>
+<p>Im Text steht <b>„&amp;amp;amp;quot;Ja, ich stimme zu&amp;amp;amp;quot;“</b> statt „Ja, ich stimme zu“ – die Anführungszeichen wurden beim Speichern mehrfach umgewandelt. Das sieht jeder neue Besucher.</p>
+<p>Außerdem lädt das Fenster über mobiles Netz erst nach ca. 15 Sekunden und verdeckt dann die Seite. Das Nachladen selbst steuert Jimdo – kürzere Seiten (Punkt 1) helfen aber, weil das Fenster dann früher kommt.</p>
+<p>Die Knöpfe im Cookie-Fenster haben für Vorlese-Programme keine Namen. Das liegt bei Jimdo und lässt sich von euch nicht ändern.</p>
+</div><div><img src="bilder/cookie.jpg"></div></div>
+<div class="anleitung"><span class="h">So behebt ihr es (ca. 5 Min.)</span>
+In Jimdo in den Einstellungen den <b>Cookie-Banner-Text</b> öffnen (Bereich Datenschutz/Cookies) und den Satz neu eintippen – <b>ohne Anführungszeichen</b> oder mit „…“ aus der Tastatur. Speichern und in einem privaten Browserfenster prüfen. <span class="klein">(Die Menünamen können je nach Jimdo-Version leicht abweichen.)</span></div>
+</div>
+
+<div class="befund"><div class="kopfzeile"><h3>3 · Das Türkis ist zu hell zum Lesen</h3><span class="tag t-mittel">wichtig</span></div>
+<div class="raster"><div>
+<p>Überschriften und Links in Türkis (<b>#35b3af</b>) haben auf Weiß nur einen Kontrast von <b>2,6 : 1</b>. Empfohlen sind <b>4,5 : 1</b> (bei großer Schrift 3 : 1). Draußen bei Sonne und für Menschen mit Seh-Einschränkung ist das schwer lesbar – betroffen sind auf jeder Seite 9–10 Stellen.</p>
+<p><b>Vorschlag: #26827f</b> – derselbe Türkiston, etwas dunkler, Kontrast 4,6 : 1.</p>
+</div><div class="vn"><img src="bilder/vorher.jpg" style="margin-bottom:6px"><span class="klein">heute</span><img src="bilder/nachher.jpg" style="margin-top:6px"><span class="klein">mit #26827f</span></div></div>
+<div class="anleitung"><span class="h">So behebt ihr es in Jimdo (ca. 10 Min.)</span>
+Im Editor unter <b>Design → Stil</b> bei Überschriften und Links die Farbe <b>#26827f</b> eintragen. Einmal auf Handy und Computer ansehen.</div>
+</div>
+
+<div class="befund"><div class="kopfzeile"><h3>4 · „K o n t a k t“ wird Buchstabe für Buchstabe vorgelesen</h3><span class="tag t-klein">klein</span></div>
+<div class="raster"><div>
+<p>Die Überschrift im unteren Bereich ist mit Leerzeichen zwischen den Buchstaben geschrieben. Vorlese-Programme sagen dann „K – o – n – t – a – k – t“, und Google versteht das Wort nicht. Außerdem springt die Gliederung hier von Überschrift 1 direkt auf Überschrift 3.</p>
+</div><div><img src="bilder/kontakt-sperrschrift.jpg"></div></div>
+<div class="anleitung"><span class="h">So behebt ihr es (ca. 2 Min.)</span> Überschrift anklicken, „Kontakt“ normal schreiben. Wenn möglich als Überschrift 2 statt 3 einstellen.</div>
+</div>
+
+<div class="befund"><div class="kopfzeile"><h3>5 · Buchungsformular</h3><span class="tag t-klein">gut, kleine Verbesserungen</span></div>
+<div class="raster"><div>
+<p>Das Formular ist übersichtlich und klar beschriftet – das ist gut. Kleinigkeiten:</p>
+<ul>
+<li>Am Handy öffnet das Telefon-Feld keine Zahlentastatur.</li>
+<li>Name, E-Mail und Telefon werden nicht automatisch vom Handy vorgeschlagen (Ausfüllhilfe fehlt).</li>
+<li>Pflichtfelder sind nur mit * markiert; erst beim Absenden kommt der Hinweis.</li>
+</ul>
+<p>Das Jimdo-Formular lässt hier nur wenig Einstellungen zu – das lohnt sich erst bei einem späteren Umbau.</p>
+</div><div><img src="bilder/formular.jpg"></div></div>
+</div>
+
+<div class="befund"><div class="kopfzeile"><h3>6 · Technik (Wert 61)</h3><span class="tag t-jimdo">überwiegend Jimdo</span></div>
+<p>Der Technik-Wert kommt fast nur von Jimdo selbst: Cookies von Drittanbietern, eine veraltete Browser-Funktion, blockierende Jimdo-Skripte (ca. 1,2 s) und der „Nach oben“-Knopf, den Google nicht lesen kann. <b>Das könnt ihr in Jimdo nicht ändern</b> – es schadet aber auch nicht spürbar.</p>
+</div>
+
+<div class="block"><h2>Der Plan – in dieser Reihenfolge</h2>
+<table>
+<tr><th>#</th><th>Was</th><th>Aufwand</th><th>Wirkung</th><th>Wer</th></tr>
+<tr><td>1</td><td><b>Sechs Beispielbilder als kleine JPGs neu hochladen</b></td><td>30–45 Min.</td><td class="gut"><b>groß</b> – Startseite ca. 2/3 leichter</td><td>ihr oder wir</td></tr>
+<tr><td>2</td><td><b>Cookie-Text korrigieren</b> (kaputte Anführungszeichen)</td><td>5 Min.</td><td class="gut">sofort sichtbar, wirkt professioneller</td><td>ihr</td></tr>
+<tr><td>3</td><td><b>Türkis auf #26827f</b> (Überschriften, Links)</td><td>10 Min.</td><td class="gut">besser lesbar, Bedienbarkeit steigt</td><td>ihr</td></tr>
+<tr><td>4</td><td><b>„Kontakt“ normal schreiben</b>, Überschrift 2</td><td>2 Min.</td><td>Vorlese-Programme, Google</td><td>ihr</td></tr>
+<tr><td>5</td><td>Alle Bilder: kurze Beschreibung (Alt-Text) prüfen</td><td>15 Min.</td><td>Google-Bildersuche, Barrierefreiheit</td><td>ihr</td></tr>
+<tr><td>6</td><td>Nach 1–5 neu testen, Werte vergleichen</td><td>–</td><td>Kontrolle</td><td>wir (kostenlos)</td></tr>
+<tr><td>7</td><td><i>Später, optional:</i> Umzug auf ein schnelleres System, wenn die Seite wachsen soll</td><td>größer</td><td>Ladezeit unter 2 s, volle Kontrolle über Formular und Technik</td><td>wir</td></tr>
+</table>
+<p><b>Erwartung nach Punkt 1–5 (Schätzung):</b> Ladezeit-Wert deutlich über 80, Bedienbarkeit über 95, Startseite unter 1 MB.</p></div>
+
+<h2>Und das Barrierefreiheits-Gesetz?</h2>
+<p>Seit Juni 2025 müssen Online-Shops, über die Verbraucher direkt einen Vertrag abschließen, barrierefrei sein. Shootingbooth nimmt über die Website nur <b>Anfragen</b> entgegen, und kleine Unternehmen (unter 10 Mitarbeiter) sind ohnehin ausgenommen. <b>Eine Pflicht besteht nach unserer Einschätzung also wahrscheinlich nicht</b> – die Punkte oben lohnen sich trotzdem, weil sie Anfragen und Google-Platzierung verbessern. <span class="klein">(Keine Rechtsberatung.)</span></p>
+
+<div class="fuss">DSX Media Solutions UG (haftungsbeschränkt) · Am Weingarten 9 · 96117 Memmelsdorf · info@dsxmediasolutions.de · WhatsApp 0174 1682157<br>Grundlage: Google Lighthouse (Handy-Ansicht) für Startseite, Fotobox, Preise und Buchungsanfrage am 16.10.2026, eigene Messung mit gedrosseltem Handy-Netz, Prüfung von Hand. Werte schwanken je nach Messung leicht.</div>
+</body></html>

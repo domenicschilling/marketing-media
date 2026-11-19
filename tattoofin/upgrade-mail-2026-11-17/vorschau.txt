@@ -1,0 +1,22 @@
+Betreff: Ab 20.11. ohne Provision: dein Bestandskunden-Preis zum Upgraden
+
+Dein Upgrade für den 20.11.
+
+Hey Max,
+wir haben dir am 2. November geschrieben, heute noch einmal kurz und mit einem direkten Knopf.
+Warum sich etwas ändert: Am 20.11.2026 tritt ein neues Gesetz zu Verbraucherkrediten in Kraft. Ratenzahlung und späteres Bezahlen über Klarna gelten dann als Kredit. In deinem jetzigen Paket läuft das Geld deiner Kunden über unser Konto bei Stripe, und wir bekommen 10 % von jeder Zahlung. Damit könnten wir ab dann als Vermittler von Krediten gelten, und dafür bräuchten wir eine eigene Erlaubnis. Deshalb führen wir das Modell mit Provision nicht weiter.
+Dein Bestandskunden-Preis: 29,00 € im Monat inkl. 19 % USt. (24,37 € netto)
+Neue Studios zahlen: 49,90 € im Monat inkl. USt.
+Provision: keine mehr
+Dazu: nur die Gebühren von Stripe je Zahlung, direkt an Stripe
+Laufzeit: monatlich kündbar
+Jetzt upgraden
+Was das Upgrade bringt: Das Geld deiner Kunden läuft direkt auf dein eigenes Stripe-Konto, und Klarna bleibt möglich, soweit Klarna es für dein Studio freigibt.
+So geht's: Knopf drücken, im Studio-Bereich zustimmen, den ersten Monat bezahlen und dein eigenes Stripe-Konto einrichten. Bis Stripe dein neues Konto freigegeben hat, kannst du keine neuen Zahlungslinks verschicken. Mach es am besten an einem ruhigen Tag.
+Ohne Upgrade ab dem 20.11.: Zahlungslinks und Zahlseite laufen erst einmal weiter, aber nur noch mit Karte, Apple Pay und Google Pay, ohne Klarna. Das alte Modell beenden wir später mit der vertraglichen Frist. Dazu bekommst du vorher eine eigene Nachricht.
+Wichtig für deine Werbung: Wenn du nach dem Upgrade mit Raten wirbst, muss ab dem 20.11. direkt daneben stehen: Achtung! Kreditaufnahme kostet Geld. Ohne Upgrade nimm die Raten-Werbung bitte bis dahin heraus.
+Übrigens: Wir arbeiten gerade an einer iPhone-App für Tattoofin, damit du Zahlungslinks noch schneller vom Handy aus verschickst. Sie ist in deinem Preis enthalten, du meldest dich dort mit deinem bisherigen Zugang an.
+Viele Grüße
+Dein Tattoofin-Team
+
+Jetzt upgraden: https://tattoofin.de/api/auth?token=BEISPIEL&next=%2Fapp.html

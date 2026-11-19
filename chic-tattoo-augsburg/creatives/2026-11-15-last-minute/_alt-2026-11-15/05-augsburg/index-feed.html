@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><title>05 Augsburg – Feed</title>
+<link rel="stylesheet" href="../_system/base.css">
+<style>
+/* Idee: Schrift als Winkelrahmen. „Black & Grey“ läuft senkrecht links hoch, „aus Augsburg-Oberhausen“ schließt unten ab – ein Satz, der das Foto einrahmt wie ein Straßeneck.
+   Foto in Schwarzweiß: macht „Black & Grey“ wörtlich, nimmt das Khaki-Shirt und das zweite Rot (Graffiti) aus dem Bild.
+   Rotes Preisschild (System aus Motiv 01) deckt den unscharfen Aufsteller im Hintergrund ab. */
+.photo{left:224px;top:0;width:856px;height:1050px}
+.edge{position:absolute;left:224px;top:0;width:4px;height:1050px;background:var(--red);z-index:3}
+.vert{position:absolute;left:0;top:0;width:224px;height:1050px;display:flex;align-items:flex-end;justify-content:center;z-index:2}
+.vert h1{writing-mode:vertical-rl;transform:rotate(180deg);font-size:196px;line-height:.82;padding-bottom:30px;margin-left:-6px}
+.vert h1 em{font-style:normal;color:var(--red2)}
+
+.tag{position:absolute;right:0;top:298px;z-index:6;background:var(--red);color:#fff;padding:28px 22px 30px 20px}
+.tag .kick{display:block;font-weight:800;font-stretch:80%;text-transform:uppercase;letter-spacing:.07em;font-size:21px;line-height:1.12;margin-bottom:24px}
+.tag .num{display:flex;align-items:flex-end;gap:12px}
+.tag .bis{font-weight:900;font-stretch:72%;font-size:28px;line-height:1;text-transform:uppercase;writing-mode:vertical-rl;transform:rotate(180deg);letter-spacing:.08em;align-self:stretch;text-align:center;border-left:3px solid rgba(255,255,255,.9);padding-left:10px}
+.tag .pct{font-weight:900;font-stretch:62%;font-size:138px;line-height:.74;letter-spacing:-.02em}
+.tag .pct small{font-size:.5em;margin-left:5px;vertical-align:top;position:relative;top:.06em}
+
+.l1{position:absolute;left:var(--g);top:1090px;font-size:88px;color:var(--bone);word-spacing:.06em}
+.row{position:absolute;left:var(--g);right:var(--g);top:1186px;display:flex;align-items:center;justify-content:space-between}
+.addr{font-size:60px;color:var(--red2);line-height:1;word-spacing:.04em}
+.row .sender{margin-top:16px;font-size:23px}
+.logo{width:124px;height:124px;flex:none}
+</style></head>
+<body>
+<div class="c feed">
+  <div class="ph photo" data-src="../_system/img/01-sleeve-krone-treppe.png" data-crop="186,24,881,876" data-filter="grayscale(1) contrast(1.14) brightness(.97)"></div>
+  <div class="edge"></div>
+  <div class="vert"><h1 class="d">Black <em>&amp;</em> Grey</h1></div>
+  <div class="tag"><span class="kick">Last Minute<br>November</span><span class="num"><span class="bis">Bis</span><span class="pct tnum">25<small>%</small></span></span></div>
+
+  <p class="d l1">aus Augsburg-Oberhausen</p>
+  <div class="row">
+    <div>
+      <p class="d72 addr">Ulmer Str. 14</p>
+      <p class="sender"><b>Chic Tattoo &amp; Piercing</b> · ab 150 € · Code auf der Seite</p>
+    </div>
+    <div class="logo"><img src="../_system/img/logo-480.webp" alt=""></div>
+  </div>
+  <div class="grain"></div>
+</div>
+<script src="../_system/crop.js"></script>
+</body></html>

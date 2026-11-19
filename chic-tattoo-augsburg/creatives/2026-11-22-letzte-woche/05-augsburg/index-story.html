@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><title>05 Augsburg – Story</title>
+<link rel="stylesheet" href="../_system/base.css">
+<link rel="stylesheet" href="../_system/aggro.css">
+<style>
+/* Lokal + laut: echter Sleeve aus dem Studio (Krone/Treppe, Schwarzweiß), oben der Ruf an die Stadt,
+   unten ein roter Zackenstern mit −20 % als Störer, Frist daneben, weißer CTA-Balken. */
+.photo{left:0;top:200px;width:1080px;height:1720px}
+.shade{position:absolute;inset:0;z-index:2;background:
+  linear-gradient(180deg,#0B0B0B 0,#0B0B0B 10.4%,rgba(11,11,11,.86) 16%,rgba(11,11,11,.6) 24%,rgba(11,11,11,0) 30.5%,rgba(11,11,11,0) 56%,rgba(11,11,11,.9) 66%,#0B0B0B 73%)}
+.hl{position:absolute;left:var(--g);top:288px;font-size:120px;z-index:5;color:#fff}
+.hl span{display:block}
+.hl em{font-style:normal;color:var(--sig)}
+.logo{position:absolute;right:var(--g);top:292px;width:118px;height:118px;z-index:8;box-shadow:0 0 0 3px var(--ink)}
+.addr{position:absolute;left:var(--g);top:504px;z-index:6;font-size:36px}
+
+.st{left:-6px;top:930px;width:470px;height:470px;transform:rotate(-8deg)}
+.st .pct{font-size:256px;margin-top:22px}
+.st b{font-size:45px;margin-top:8px;letter-spacing:.01em}
+
+.side{position:absolute;left:520px;top:1150px;z-index:6}
+.side .h{font-size:70px;line-height:.9;color:#fff}
+.side .box{display:table;margin-top:12px;font-size:80px}
+.side .box.ab{font-size:40px}
+
+.cta{top:1392px;height:104px}
+.cta b{font-size:66px}
+.cta i{width:124px}
+.cta i svg{width:54px;height:54px}
+.bed{left:var(--g);top:1510px}
+</style></head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="sh" color-interpolation-filters="sRGB"><feConvolveMatrix order="3" kernelMatrix="0 -.26 0 -.26 2.04 -.26 0 -.26 0" preserveAlpha="true"/></filter></svg>
+<div class="c story">
+  <div class="ph photo" data-src="../_system/img/01-sleeve-krone-treppe.png" data-crop="80,0,902,1271" data-filter="url(#sh) grayscale(1) contrast(1.3) brightness(.9)"></div>
+  <div class="shade"></div>
+  <h1 class="d hl"><span>Augsburg,</span><span><em>zugreifen!</em></span></h1>
+  <div class="logo"><img src="../_system/img/logo-480.webp" alt=""></div>
+  <span class="box wt addr">Ulmer Str. 14 · Oberhausen</span>
+
+  <div class="burst-sh st"><div class="burst r" style="position:absolute;inset:0"><p class="pct w"><span class="mi"></span>20<span class="pc">%</span></p><b>Auf dein Tattoo</b></div></div>
+
+  <div class="side">
+    <p class="d h">Tattoo-Termin bis</p>
+    <span class="box wt">Mo 30.11.</span>
+    <span class="box wt ab">Ab 150 € · mit Code</span>
+  </div>
+
+  <div class="cta"><b>Jetzt Code sichern</b><i><svg viewBox="0 0 56 56"><path d="M6 28h40M30 10l18 18-18 18"/></svg></i></div>
+  <p class="bed"><b>Tattoo-Termin bis Mo 30.11.</b><i>·</i>danach endet die Aktion<br>ab 150 € Tattoo-Wert<i>·</i>Code auf der Aktionsseite</p>
+  <div class="grain"></div>
+</div>
+<script src="../_system/crop.js"></script>
+</body></html>

@@ -1,0 +1,453 @@
+diff -ru -x .netlify /Users/domi/Marketing-Maschine/landingpages/chic-rubbellos/app.js chic-vorschau/app.js
+--- /Users/domi/Marketing-Maschine/landingpages/chic-rubbellos/app.js	2026-11-17 21:07:40
++++ chic-vorschau/app.js	2026-11-17 21:20:21
+@@ -9,7 +9,7 @@
+ // Daten an Make (JSON, POST an MAKE_WEBHOOK), Feldnamen:
+ //   vorname       Vorname, wie eingegeben
+ //   telefon       Handynummer in E.164, z. B. "+4915112345678"
+-//   motiv         Motiv-Beschreibung (Freitext, max. 200 Zeichen)
++//   motiv         Stil + freiwillige Idee, z. B. "Realistic · Löwe mit Helm", "Fineline" oder "Weiß ich noch nicht" (max. 200 Zeichen)
+ //   koerperstelle Körperstelle, z. B. "Unterarm"
+ //   budget        Budget-Kachel, z. B. "300 – 600 €"
+ //   rabatt        15 | 20 | 25 (Zahl)
+@@ -49,6 +49,15 @@
+     { rabatt: 15, abPunkte: 0 },
+   ],
+ };
++// Stil-Kacheln im Fragebogen (Schritt 3). Haben KEINEN Einfluss auf den Rabatt.
++const STILE = [
++  { id: "realistic", label: "Realistic" },
++  { id: "bg", label: "Black & Grey" },
++  { id: "fineline", label: "Fineline" },
++  { id: "farbe", label: "Farbe" },
++  { id: "coverup", label: "Cover-up" },
++  { id: "offen", label: "Weiß ich noch nicht" },
++];
+ const AKTION_BIS = "2026-12-31";        // letzter Tag, an dem es Lose gibt
+ const GUELTIG_BIS = "2026-12-31";       // Gutschein gültig bis
+ // Make-Webhook „Chic Rubbellos“ (17.11.2026) – Szenario dahinter (→ Google Sheet + Superchat) baut Domenics Assistent
+@@ -155,7 +164,7 @@
+ // ---------- Funnel als Vollbild ----------
+ const fx = $("#funnel"), form = $("#form"), steps = $$(".fx-step", form), next = $("#next"), nextWa = $("#nextWa"), back = $("#back"), nav = $("#fxNav");
+ const S_LOS = 4, S_WIN = 5, EINGABEN = 4;
+-const state = { motiv: "", stelle: "", budget: "" };
++const state = { stelle: "", budget: "", stil: "" };
+ let step = 0, opener = null, scrollY0 = 0, depth = 0, closing = false, revealed = false, phoneWarned = "";
+ const outside = () => $$("body > *:not(#funnel):not(script)");
+ 
+@@ -163,7 +172,7 @@
+ function kacheln(el, list) {
+   el.innerHTML = list.map((x) => { const [a, b] = teil(x.label); return `<button type="button" aria-pressed="false" data-id="${x.id}">${a}${b ? `<small>${b}</small>` : ""}</button>`; }).join("");
+ }
+-kacheln($("#tStelle"), REGELN.koerperstellen); kacheln($("#tBudget"), REGELN.budgets);
++kacheln($("#tStelle"), REGELN.koerperstellen); kacheln($("#tBudget"), REGELN.budgets); kacheln($("#tStil"), STILE);
+ $$(".tiles", form).forEach((g) => g.addEventListener("click", (e) => {
+   const b = e.target.closest("button"); if (!b) return;
+   $$("button", g).forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+@@ -249,14 +258,13 @@
+   next.classList.toggle("skip", step === S_LOS && !revealed);
+   next.hidden = step === S_WIN; nextWa.hidden = step !== S_WIN;
+   nav.classList.toggle("solo", back.hidden);
+-  $("#navLegal").hidden = step !== EINGABEN - 1; // Kontakt-Hinweis immer direkt über „Los freirubbeln“
++  $("#navLegal").hidden = $("#navInfo").hidden = step !== EINGABEN - 1; // Kontakt-Hinweis immer direkt über „Los freirubbeln“
+   form.scrollTop = 0;
+   if (focus) {
+     const h = steps[step].querySelector(".fx-h");
+     // Am Handy kein automatischer Feld-Fokus (iOS: Feld wirkt aktiv, Tastatur kommt aber nicht → nächster Tipp hakt)
+     const touch = matchMedia("(pointer: coarse)").matches;
+     if (!touch && step === EINGABEN - 1) setTimeout(() => $("#vorname").focus(), 60);
+-    else if (!touch && step === 0 && !$("#idee").value) $("#idee").focus({ preventScroll: true });
+     else if (h) h.focus({ preventScroll: true });
+   }
+ }
+@@ -283,9 +291,9 @@
+   $$(".err", form).forEach((x) => (x.hidden = true));
+   ["#vorname", "#phone"].forEach((s) => { $(s).removeAttribute("aria-invalid"); $(s).removeAttribute("aria-describedby"); });
+   const bad = (id) => { $("#" + id).hidden = false; return false; };
+-  if (step === 0) { state.motiv = $("#idee").value.trim(); if (state.motiv.length < 2) { $("#idee").focus(); return bad("e0"); } }
+-  if (step === 1 && !state.stelle) return bad("e1");
+-  if (step === 2 && !state.budget) return bad("e2");
++  if (step === 0 && !state.stelle) return bad("e0");
++  if (step === 1 && !state.budget) return bad("e1");
++  if (step === 2 && !state.stil) return bad("e2");
+   if (step === 3) {
+     const name = $("#vorname"), phone = $("#phone"), digits = phone.value.replace(/\D/g, "");
+     if (name.value.trim().length < 2) return feldFehler(name, "e3n", "Bitte gib deinen Vornamen an.");
+@@ -313,19 +321,26 @@
+ [["#vorname", "#e3n"], ["#phone", "#e3p"]].forEach(([f, e]) => $(f).addEventListener("input", () => { $(e).hidden = true; $(f).removeAttribute("aria-invalid"); $(f).removeAttribute("aria-describedby"); }));
+ $("#vorname").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); $("#phone").focus(); } });
+ $("#idee").addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); go(); } });
+-$("#idee").addEventListener("input", () => { $("#e0").hidden = true; });
+ // Kleines Los über den Feldern trägt schon den Vornamen
+ const miniName = () => { const el = $("#miniName"); if (el) el.textContent = $("#vorname").value.trim().split(/\s+/)[0] || "dich"; };
+ $("#vorname").addEventListener("input", miniName); $("#vorname").addEventListener("change", miniName);
+ 
++// Stil + freiwillige Idee → ein Feld „motiv“ (Feldname für Make bleibt gleich)
++function motivText(stilId, idee) {
++  const stil = byId(STILE, stilId), offen = !stil || stil.id === "offen";
++  if (!idee) return offen ? "Weiß ich noch nicht" : stil.label;
++  return ((offen ? "Stil offen" : stil.label) + " · " + idee).slice(0, 200);
++}
+ function submit() {
+   const st = stufeFuer(punkteFuer(state.stelle, state.budget));
+   const s = byId(REGELN.koerperstellen, state.stelle), b = byId(REGELN.budgets, state.budget);
++  const stil = byId(STILE, state.stil), idee = $("#idee").value.trim().replace(/\s+/g, " ");
+   los = {
+     zeit: new Date().toISOString(),
+     vorname: $("#vorname").value.trim(),
+     telefon: e164($("#phone").value),
+-    motiv: state.motiv,
++    motiv: motivText(state.stil, idee),
++    stil: stil && stil.id !== "offen" ? stil.label : "", idee, // nur für WhatsApp-Text und Gutscheinbild, nicht an Make
+     koerperstelle: kurz(s.label), budget: b.label,
+     rabatt: st.rabatt,
+     kontaktOk: true, // Freirubbeln = Einverständnis zur Kontaktaufnahme wegen des Gutscheins (Hinweis direkt über dem Knopf)
+@@ -551,9 +566,22 @@
+ // ---------- Ergebnis / Gutschein ----------
+ function waLink(t) {
+   const text = `Hi Chic Tattoo, ich habe beim Rubbellos ${t.rabatt} % auf mein Tattoo freigerubbelt (Code ${t.code}). Ich hätte gern einen Termin für das kostenlose Beratungsgespräch.\n\n` +
+-    `Motiv: ${t.motiv}\nKörperstelle: ${t.koerperstelle}\nBudget: ${t.budget}\nName: ${t.vorname}`;
++    projektZeilen(t).join("\n") + `\nName: ${t.vorname}`;
+   return `https://wa.me/${WA_NUMMER}?text=${encodeURIComponent(text)}`;
+ }
++// Projekt-Angaben für WhatsApp-Text (ohne leere Zeilen, wenn keine Idee angegeben ist)
++function projektZeilen(t) {
++  const z = [];
++  if ("stil" in t) { z.push(`Stil: ${t.stil || "noch offen"}`); if (t.idee) z.push(`Idee: ${t.idee}`); }
++  else if (t.motiv) z.push(`Motiv: ${t.motiv}`); // ältere gespeicherte Lose
++  z.push(`Körperstelle: ${t.koerperstelle}`, `Budget: ${t.budget}`);
++  return z;
++}
++// Zeile auf dem Gutscheinbild: nur, was angegeben ist (z. B. „Realistic · Löwe mit Helm · Unterarm“ oder nur „Unterarm“)
++function gutscheinZeile(t) {
++  const idee = t.idee && t.idee.length > 38 ? t.idee.slice(0, 36).trim() + "…" : t.idee;
++  return ("stil" in t ? [t.stil, idee, t.koerperstelle] : [t.motiv && t.motiv.length > 38 ? t.motiv.slice(0, 36).trim() + "…" : t.motiv, t.koerperstelle]).filter(Boolean).join(" · ");
++}
+ // Genau die 4 Bedingungen (kurz)
+ function bedingungen(t) {
+   return [`Gültig bis ${datum(t.gueltigBis || GUELTIG_BIS)}`, "1 pro Person", "nicht mit anderen Aktionen kombinierbar", "nicht für Piercings"];
+@@ -613,7 +641,7 @@
+   x.fillStyle = "#FFFFFF";
+   passend(x, `für ${los.vorname}`, W / 2, 846, W - 220, (px) => `800 ${px}px Archivo`, 44, 28);
+   x.fillStyle = "#CFCAC2";
+-  passend(x, `${los.motiv.length > 38 ? los.motiv.slice(0, 36).trim() + "…" : los.motiv} · ${los.koerperstelle}`, W / 2, 890, W - 220, (px) => `500 ${px}px Archivo`, 28, 20);
++  passend(x, gutscheinZeile(los), W / 2, 890, W - 220, (px) => `500 ${px}px Archivo`, 28, 20);
+   // Code
+   x.setLineDash([14, 10]); x.strokeStyle = "#FF5A4E"; x.lineWidth = 4; x.strokeRect(170, 920, W - 340, 124); x.setLineDash([]);
+   x.fillStyle = "#CFCAC2"; x.font = "700 22px Archivo"; gesperrt(x, "DEIN CODE", W / 2, 960, 5);
+diff -ru -x .netlify /Users/domi/Marketing-Maschine/landingpages/chic-rubbellos/datenschutz/index.html chic-vorschau/datenschutz/index.html
+--- /Users/domi/Marketing-Maschine/landingpages/chic-rubbellos/datenschutz/index.html	2026-11-17 00:58:43
++++ chic-vorschau/datenschutz/index.html	2026-11-17 20:50:23
+@@ -19,9 +19,9 @@
+ <h2>Anonyme Reichweitenmessung</h2>
+ <p>Um die Seite zu verbessern, zählen wir außerdem mit Umami (Umami Software, Inc., USA) anonym, wie oft sie aufgerufen wird und wie oft das Rubbellos geöffnet, freigerubbelt oder WhatsApp angetippt wird. Dabei werden keine Cookies gesetzt, keine IP-Adressen gespeichert und keine Profile gebildet; deine Angaben aus dem Rubbellos gehen nicht an Umami (Art. 6 Abs. 1 lit. f DSGVO).</p>
+ <h2>Aktion „Rubbellos“</h2>
+-<p>Wenn du dein Rubbellos holst, verarbeiten wir deine Angaben: dein Motiv, die Körperstelle, dein ungefähres Budget, deinen Vornamen und deine Handynummer, sowie deinen Rabatt, deinen Gutschein-Code, Datum und Uhrzeit, die aufgerufene Seite und die Quelle des Aufrufs (z.&nbsp;B. Name der Werbeanzeige oder Kampagne).</p>
++<p>Wenn du dein Rubbellos holst, verarbeiten wir deine Angaben: die Körperstelle, dein ungefähres Budget, deinen Wunsch-Stil, deine Idee zum Motiv (falls angegeben), deinen Vornamen und deine Handynummer, sowie deinen Rabatt, deinen Gutschein-Code, Datum und Uhrzeit, die aufgerufene Seite und die Quelle des Aufrufs (z.&nbsp;B. Name der Werbeanzeige oder Kampagne).</p>
+ <p>Wir nutzen diese Daten, um dir dein Rubbellos und deinen Gutschein bereitzustellen, mit dir ein Beratungsgespräch und einen Termin zu finden, deinen Gutschein beim Termin zu prüfen und darauf zu achten, dass es nur einen Gutschein pro Person gibt (Art. 6 Abs. 1 lit. b DSGVO). Ohne Vorname, Handynummer und die Angaben zu deinem Tattoo können wir dir kein Los geben. Wie viel Rabatt auf deinem Los steht, ergibt sich aus Körperstelle und Budget.</p>
+-<p>Wenn du auf „Los freirubbeln“ tippst, melden wir uns per WhatsApp oder Anruf bei dir, um deinen Gutschein und deinen Termin zu besprechen (Art. 6 Abs. 1 lit. b DSGVO). Darauf weisen wir direkt über dem Knopf hin. Möchtest du das nicht mehr, sag uns kurz Bescheid, z.&nbsp;B. per WhatsApp. Dann melden wir uns nicht mehr von uns aus.</p>
++<p>Wenn du auf „Los freirubbeln“ tippst, schicken wir dir deinen Gutschein per WhatsApp und melden uns per WhatsApp oder Anruf bei dir, um mit dir einen Beratungstermin zu vereinbaren (Art. 6 Abs. 1 lit. b DSGVO). Darauf weisen wir direkt über dem Knopf hin. Möchtest du das nicht mehr, sag uns kurz Bescheid, z.&nbsp;B. mit „Stopp“ per WhatsApp. Dann melden wir uns nicht mehr von uns aus.</p>
+ <p>Die Angaben werden über Make an eine Liste in Google Sheets übertragen und dort gespeichert. Nach dem Freirubbeln kannst du uns über den WhatsApp-Knopf eine vorbereitete Nachricht schicken; wir schreiben dir von unserer WhatsApp-Nummer 0152 04485125. Dort antwortet dir zuerst unser digitaler Assistent (eine KI), der Fragen beantwortet und deinen Beratungstermin einträgt; das Team liest mit und übernimmt jederzeit. Für die KI-Antworten setzt Superchat eigene Dienstleister ein, teils in den USA.</p>
+ <p>Damit du deinen Gutschein nicht verlierst, speichern wir ihn zusätzlich nur in deinem eigenen Browser (localStorage: Vorname, Angaben zum Tattoo, Rabatt und Code, ohne Handynummer). Das ist für den von dir gewünschten Dienst unbedingt erforderlich (§ 25 Abs. 2 Nr. 2 TDDDG). Dabei werden keine Cookies gesetzt und nichts an Dritte übertragen; du kannst die Daten jederzeit über die Einstellungen deines Browsers löschen. Den Gutschein als Bild erzeugt dein Gerät selbst.</p>
+ <h2>Dienstleister</h2>
+diff -ru -x .netlify /Users/domi/Marketing-Maschine/landingpages/chic-rubbellos/index.html chic-vorschau/index.html
+--- /Users/domi/Marketing-Maschine/landingpages/chic-rubbellos/index.html	2026-11-17 20:54:38
++++ chic-vorschau/index.html	2026-11-17 21:24:54
+@@ -59,7 +59,7 @@
+ .btn.ghost{background:transparent;color:var(--bone);box-shadow:inset 0 0 0 2px var(--bone)}
+ .btn.ghost:hover{background:rgba(244,241,236,.1)}
+ :focus-visible{outline:3px solid var(--red2);outline-offset:3px}
+-.how :focus-visible,.stile :focus-visible,.fx:not(.dark) .fx-body :focus-visible,.fx:not(.dark) .fx-nav :focus-visible{outline-color:var(--ink)}
++.how :focus-visible,.fx:not(.dark) .fx-body :focus-visible,.fx:not(.dark) .fx-nav :focus-visible{outline-color:var(--ink)}
+ .wa-ico{width:22px;height:22px;flex:none}
+ .sr{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+ .stars{color:#FFC93C;letter-spacing:.06em}
+@@ -177,18 +177,6 @@
+ .pot-cta{margin-top:22px;min-width:min(100%,320px)}
+ .pot .note{margin:18px auto 0;font-size:14px;line-height:1.5;color:var(--bone2);max-width:52ch}
+ 
+-/* ---------- STILE ---------- */
+-.stile{background:var(--bone);color:var(--ink);padding:56px 0 52px}
+-.stile h2{font-size:clamp(46px,13vw,118px)}
+-.stile h2 span{color:var(--red-d)}
+-.st-sub{margin-top:8px;font-size:17px;color:#3A362F}
+-.style-list{margin-top:26px;list-style:none}
+-.style-list li{padding:14px 0 16px;border-top:1px solid #D2CBC0}
+-.style-list li:last-child{border-bottom:1px solid #D2CBC0}
+-.style-list b{display:block;font-weight:900;font-stretch:62%;text-transform:uppercase;font-size:clamp(54px,16vw,150px);line-height:.86;letter-spacing:-.01em;color:var(--ink)}
+-.style-list li:nth-child(even) b{color:var(--red-d)}
+-.style-list span{display:block;margin-top:8px;font-size:16px;line-height:1.4;color:#3A362F;max-width:44ch}
+-
+ /* ---------- PORTFOLIO ---------- */
+ .portfolio{background:var(--ink2);padding:56px 0 52px}
+ .portfolio h2{font-size:clamp(46px,13vw,118px)}
+@@ -202,6 +190,7 @@
+ .pf-sub .desk,.pf-nav{display:none}
+ .pf-nav button{width:52px;height:52px;border:2px solid var(--bone);background:transparent;color:var(--bone);font-size:22px;font-weight:800;cursor:pointer}
+ .pf-nav button:hover{background:rgba(244,241,236,.1)}
++.pf-alle{margin-top:18px;font-size:17px;font-weight:700;color:var(--bone)}
+ 
+ /* ---------- BEWERTUNGEN ---------- */
+ .proof{background:var(--ink);padding:52px 0 44px}
+@@ -221,6 +210,10 @@
+ .ask .lead{margin-top:12px;font-size:18px;max-width:40ch;color:var(--bone2)}
+ .ask .btn.big{min-height:64px;font-size:22px;width:100%;margin-top:20px}
+ .ask .alt{margin-top:16px;font-size:16px}
++.ask-stars{margin-top:14px;font-size:15px;font-weight:700}
++.ask-stars a{display:inline-block;padding:8px 0;margin:-8px 0;text-decoration:none}
++.ask-stars a:hover{text-decoration:underline}
++.ask-stars .stand{font-weight:400;color:var(--bone2);white-space:nowrap}
+ .ask .alt a{font-weight:700;display:inline-block;padding:8px 0;margin:-8px 0}
+ .card{background:var(--ink);padding:20px;box-shadow:inset 0 0 0 1px var(--line)}
+ .card h3{font-weight:900;font-stretch:72%;text-transform:uppercase;font-size:24px;line-height:1}
+@@ -326,6 +319,26 @@
+ .fx-nav.solo{grid-template-columns:1fr}
+ .nav-legal{grid-column:1/-1;margin:0 0 2px;font-size:13px;line-height:1.35;color:#3A362F}
+ .nav-legal a{color:inherit;display:inline-block;padding:4px 0;margin:-4px 0}
++.nav-info{grid-column:1/-1;margin:0;font-size:15px;line-height:1.35;font-weight:700;color:var(--ink)}
++.fx.kb .nav-info{display:none}
++/* sehr niedrige Handys (iPhone SE mit Safari-Leisten, 320er): Nummer-Schritt kompakter, damit beide Felder und die Gültigkeitszeile über der Leiste bleiben */
++@media (max-width:759px) and (max-height:620px){
++  .fx-h{font-size:clamp(30px,9.4vw,38px)}
++  .fx-hint{margin-top:4px;font-size:15px}
++  .tiles{margin-top:10px;gap:5px}
++  .tiles button{min-height:46px;padding-top:4px;padding-bottom:4px;font-size:17px}
++  .fx-nav .btn{min-height:50px}
++  .fx[data-s="3"] .fx-body{padding-top:10px;padding-bottom:10px}
++  .fx[data-s="3"] .fx-h{font-size:clamp(28px,8.6vw,34px);line-height:.92}
++  .fx[data-s="3"] .field{margin-top:6px}
++  .fx[data-s="3"] .field label{margin-bottom:3px;font-size:15px}
++  .fx[data-s="3"] input[type=text],.fx[data-s="3"] input[type=tel]{min-height:46px;padding:8px 12px;font-size:19px}
++  .fx[data-s="3"] .bed{margin-top:8px;font-size:12.5px;line-height:1.35}
++  .fx[data-s="3"] .fx-nav{gap:6px 10px;padding-top:8px;padding-bottom:calc(8px + env(safe-area-inset-bottom))}
++  .fx[data-s="3"] .nav-info{font-size:13.5px;line-height:1.3}
++  .fx[data-s="3"] .nav-legal{font-size:12px;line-height:1.3;margin:0}
++  .fx[data-s="3"] .fx-nav .btn{min-height:50px}
++}
+ .fx.dark #next.skip{background:transparent;color:var(--bone2);box-shadow:inset 0 0 0 2px var(--line);min-height:52px;font-size:16px}
+ .fx.dark #next.skip:hover{color:var(--bone);box-shadow:inset 0 0 0 2px var(--bone2)}
+ #nextWa{position:relative;overflow:hidden}
+@@ -379,7 +392,11 @@
+ .win .bed1{margin-top:14px;font-size:14px;line-height:1.45;color:var(--bone2)}
+ .win .acts{margin-top:18px;display:grid;gap:10px}
+ .win .acts .btn{width:100%;min-height:54px;font-size:17px}
+-.win .zeig{margin-top:12px;font-size:16px;font-weight:700;color:var(--bone)}
++.win .weiter{margin-top:16px}
++.win .weiter b{display:block;font-weight:800;font-stretch:85%;font-size:15px;letter-spacing:.04em;text-transform:uppercase;color:var(--red2)}
++.win .weiter ol{margin-top:6px;list-style:none;counter-reset:w;display:grid;gap:5px}
++.win .weiter li{counter-increment:w;display:grid;grid-template-columns:24px 1fr;gap:8px;font-size:16px;line-height:1.35;color:var(--bone)}
++.win .weiter li::before{content:counter(w);display:grid;place-items:center;width:22px;height:22px;margin-top:-1px;background:var(--red);color:#fff;font-weight:900;font-size:13px}
+ .win .prev{margin-top:24px}
+ .win .prev img{width:100%;max-width:240px;margin:0 auto;transform:rotate(-1.5deg);box-shadow:0 20px 40px -16px rgba(0,0,0,.9)}
+ .js .fx.open .win .prev:not([hidden]){animation:rise .6s .2s cubic-bezier(.16,1,.3,1) both}
+@@ -424,10 +441,6 @@
+   .how li .n{height:64px}
+   .pot-list{margin-top:56px}
+   .pf{grid-auto-columns:30%}
+-  .stile{padding:72px 0 64px}
+-  .style-list li{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,30%);align-items:end;gap:40px;padding:18px 0 20px}
+-  .style-list b{font-size:clamp(60px,7.6vw,116px);white-space:nowrap}
+-  .style-list span{margin:0 0 10px;font-size:17px}
+   .pf-sub .mob{display:none}.pf-sub .desk{display:inline}
+   .pf-head{display:flex;justify-content:space-between;align-items:flex-end;gap:20px}
+   .pf-nav{display:flex;gap:8px}
+@@ -464,6 +477,37 @@
+   .win .prev{grid-column:2;grid-row:1/span 7;margin-top:0}
+   .win .prev img{max-width:100%;transform:rotate(1.5deg)}
+ }
++/* Handy quer (niedrige Bildschirme): Text links, Los rechts, damit alles in den ersten Bildschirm passt */
++@media (orientation:landscape) and (max-height:500px){
++  .top{padding-top:calc(6px + env(safe-area-inset-top))}
++  .top .logo{width:min(56px,14svh)}
++  .top .ort{font-size:12px}
++  .hero-in{justify-content:center;padding-top:4px;padding-bottom:calc(10px + env(safe-area-inset-bottom));padding-right:calc(var(--g) + min(38vw,300px,66svh) + 20px)}
++  .eyebrow{font-size:12px;padding:4px 8px 3px}
++  .hero h1{margin-top:6px;font-size:min(8vw,12svh)}
++  .hero .sub{margin-top:6px;font-size:14px;max-width:none}
++  .hero .ctas{margin-top:8px;display:flex}
++  .hero .ctas .btn{min-height:min(48px,15svh);font-size:16px}
++  .hero .ctas .btn.red{flex:1;max-width:320px}
++  .hero .ticket{position:absolute;right:var(--g);top:calc(50% + 20px);bottom:auto;margin:0;width:min(38vw,300px,66svh);--rot:-3deg;transform:translateY(-50%) rotate(var(--rot));padding:10px 12px 9px}
++  .js .hero .ticket{animation:none}
++  .hero .t-head{padding-bottom:6px}
++  .hero .t-head img{width:26px;height:26px}
++  .hero .t-head b{font-size:20px}
++  .hero .t-head small{display:none}
++  .hero .t-foil{height:min(90px,19svh)}
++  .hero .coin{display:none}
++  .hero .t-foot{flex-direction:column;align-items:flex-start;gap:2px;padding-top:6px}
++  .hero .t-foot b{font-size:15px}
++  .hero .t-foot>span{font-size:12px}
++  .hero-copy::before{top:-48px;bottom:-16px;right:-48px;-webkit-mask:linear-gradient(180deg,transparent 0,#000 48px);mask:linear-gradient(180deg,transparent 0,#000 48px);background:linear-gradient(90deg,rgba(11,11,11,.9) 0,rgba(11,11,11,.9) 70%,rgba(11,11,11,0) 100%)}
++}
++@supports (-webkit-touch-callout:none){
++  @media (max-width:759px) and (orientation:landscape) and (max-height:500px){
++    .hero .ticket{top:calc(50% - 34px)}
++    .hero-in{padding-bottom:calc(112px + 10px + env(safe-area-inset-bottom))}
++  }
++}
+ </style>
+ </head>
+ <body>
+@@ -481,7 +525,7 @@
+     <div class="hero-copy">
+       <p class="eyebrow">Rubbellos · nur bis <span data-k="bis">31.12.2026</span></p>
+     <h1 class="d"><span class="ln"><span>Rubbel dir</span></span><span class="ln big"><span>bis zu <span data-k="max">25</span>&nbsp;%</span></span><span class="ln sm"><span>auf dein Tattoo frei</span></span></h1>
+-    <p class="sub"><span data-k="stufenText">15, 20 oder 25</span>&nbsp;%. Auf jedem Los mindestens <span data-k="min">15</span>&nbsp;%.</p>
++    <p class="sub"><span data-k="stufenText">15, 20 oder 25</span>&nbsp;%. 4 kurze Fragen, kostenlos.</p>
+     <div class="ctas">
+       <a class="btn red" href="#los" data-go data-cta>Los holen</a>
+       <a class="btn ghost" data-wa href="https://wa.me/4915204485125" target="_blank" rel="noopener" aria-label="Per WhatsApp schreiben"><svg class="wa-ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2c-1.6 0-3.1-.4-4.4-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.4.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.4.1-.7.3-.2.3-.9.9-.9 2.2s.9 2.5 1 2.7c.1.2 1.8 2.8 4.4 3.9 1.6.7 2.3.8 3.1.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3Z"/></svg><span>WhatsApp</span></a>
+@@ -502,41 +546,13 @@
+   <div class="wrap">
+     <h2 class="d" id="howH">So geht's</h2>
+     <ol>
+-      <li class="rv"><span class="n" aria-hidden="true"><span class="o-tile">Motiv?</span></span><div><h3>Projekt beschreiben</h3><p>Motiv, Körperstelle, Budget. Meist reicht Antippen. Dazu Vorname und Handynummer.</p></div></li>
++      <li class="rv"><span class="n" aria-hidden="true"><span class="o-tile">Wohin?</span></span><div><h3>4 kurze Fragen</h3><p>Körperstelle, Budget und Stil antippen. Dazu Vorname und Handynummer.</p></div></li>
+       <li class="rv d1"><span class="n" aria-hidden="true"><span class="o-foil"></span></span><div><h3>Los freirubbeln</h3><p>Mit dem Finger übers Silber rubbeln. Darunter steht dein Rabatt: <span data-k="stufenText">15, 20 oder 25</span>&nbsp;%.</p></div></li>
+       <li class="rv d2"><span class="n" aria-hidden="true"><span class="o-code">CHIC-R••-••••</span></span><div><h3>Gutschein sichern</h3><p>Gutschein aufs Handy speichern und per WhatsApp dein kostenloses Beratungsgespräch ausmachen.</p></div></li>
+     </ol>
+   </div>
+ </section>
+ 
+-<section class="pot" aria-labelledby="potH">
+-  <div class="wrap">
+-    <h2 class="d rv" id="potH">Welcher ist <span>deiner?</span></h2>
+-    <div class="pot-list rv d1" aria-label="Mögliche Rabatte: 15, 20 oder 25 Prozent">
+-      <div class="pot-t"><b>15<small>%</small></b><span>Sicher drin</span></div>
+-      <div class="pot-t"><b>20<small>%</small></b><span>Stark</span></div>
+-      <div class="pot-t top"><b>25<small>%</small></b><span>Top-Rabatt</span></div>
+-    </div>
+-    <p class="lead rv">Auf jedem Los mindestens 15&nbsp;%. Wie viel draufsteht, siehst du beim Rubbeln.</p>
+-    <a class="btn red pot-cta rv" href="#los" data-go data-cta>Los holen</a>
+-    <p class="note rv">Gutschein gültig bis <span data-k="gueltig">31.12.2026</span> · 1 pro Person · nicht mit anderen Aktionen kombinierbar · nicht für Piercings.</p>
+-  </div>
+-</section>
+-
+-<section class="stile" aria-labelledby="stilH">
+-  <div class="wrap">
+-    <h2 class="d rv" id="stilH">Das stechen <span>wir</span></h2>
+-    <p class="st-sub rv d1">Dein Gutschein gilt für jeden Stil.</p>
+-    <ul class="style-list">
+-      <li class="rv"><b>Black &amp; Grey</b><span>Weich schattiert, nur in Schwarz und Grau.</span></li>
+-      <li class="rv"><b>Realistic</b><span>Tiere und Motive, so nah am Foto wie möglich.</span></li>
+-      <li class="rv"><b>Fineline</b><span>Feine Linien, filigrane Motive, Schrift.</span></li>
+-      <li class="rv"><b>Farbe</b><span>Kräftig oder zart, wie dein Motiv es braucht.</span></li>
+-      <li class="rv"><b>Cover-up</b><span>Altes Tattoo stört dich? In der Beratung schauen wir, was daraus wird.</span></li>
+-    </ul>
+-  </div>
+-</section>
+-
+ <section class="portfolio" aria-labelledby="pfH">
+   <div class="wrap">
+     <div class="pf-head"><div>
+@@ -552,10 +568,25 @@
+     <figure><img src="img/arbeit-4-640.webp" srcset="img/arbeit-4-400.webp 400w, img/arbeit-4-640.webp 640w" sizes="(min-width:1200px) 22vw, (min-width:760px) 30vw, 64vw" alt="Farbiges Unterwasser-Motiv mit Schildkröte und Qualle an der Wade" loading="lazy" width="558" height="698"><figcaption aria-hidden="true">Schildkröte, Farbe · Wade</figcaption></figure>
+     <figure><img src="img/arbeit-6-640.webp" srcset="img/arbeit-6-400.webp 400w, img/arbeit-6-640.webp 640w" sizes="(min-width:1200px) 22vw, (min-width:760px) 30vw, 64vw" alt="Rosen mit Herz auf der Brust" loading="lazy" width="614" height="768"><figcaption aria-hidden="true">Rosen mit Herz · Brust</figcaption></figure>
+   </div>
++  <p class="wrap pf-alle rv">Dein Gutschein gilt für jeden Stil.</p>
+ </section>
+ 
+-<section class="proof" aria-labelledby="proofH">
++<section class="pot" aria-labelledby="potH">
+   <div class="wrap">
++    <h2 class="d rv" id="potH">Welcher ist <span>deiner?</span></h2>
++    <div class="pot-list rv d1" aria-label="Mögliche Rabatte: 15, 20 oder 25 Prozent">
++      <div class="pot-t"><b>15<small>%</small></b><span>Sicher drin</span></div>
++      <div class="pot-t"><b>20<small>%</small></b><span>Stark</span></div>
++      <div class="pot-t top"><b>25<small>%</small></b><span>Top-Rabatt</span></div>
++    </div>
++    <p class="lead rv">Auf jedem Los mindestens 15&nbsp;%. Wie viel draufsteht, siehst du beim Rubbeln.</p>
++    <a class="btn red pot-cta rv" href="#los" data-go data-cta>Los holen</a>
++    <p class="note rv">Gutschein gültig bis <span data-k="gueltig">31.12.2026</span> · 1 pro Person · nicht mit anderen Aktionen kombinierbar · nicht für Piercings.</p>
++  </div>
++</section>
++
++<section class="proof" id="bewertungen" aria-labelledby="proofH">
++  <div class="wrap">
+     <div class="score rv"><b>5,0</b><span class="stars" aria-hidden="true">★★★★★</span></div>
+     <h2 class="d rv" id="proofH">aus 372 Google-Bewertungen</h2>
+     <p class="stand rv">Stand 15.11.2026</p>
+@@ -570,6 +601,7 @@
+       <h2 class="d rv" id="askH">Dein Los <span>wartet</span></h2>
+       <p class="lead rv d1">Vier kurze Fragen, dann rubbelst du. Kostenlos und unverbindlich.</p>
+       <a class="btn red big rv d2" href="#los" data-go data-cta>Los holen</a>
++      <p class="ask-stars rv"><a href="#bewertungen"><span class="stars" aria-hidden="true">★★★★★</span> 5,0 · 372 Google-Bewertungen <span class="stand">(Stand 15.11.2026)</span></a></p>
+       <p class="alt rv">Lieber erst fragen? <a data-wa href="https://wa.me/4915204485125" target="_blank" rel="noopener">WhatsApp an <span data-wa-nr style="white-space:nowrap">0152 04485125</span></a></p>
+     </div>
+     <div class="card rv d1">
+@@ -625,30 +657,32 @@
+     <p class="hp" aria-hidden="true"><label>Website <input type="text" name="website" tabindex="-1" autocomplete="off"></label></p>
+ 
+     <section class="fx-step" data-step="0" aria-labelledby="fxH0">
+-      <h2 class="fx-h" id="fxH0" tabindex="-1">Was soll's werden?</h2>
+-      <div class="field">
+-        <label for="idee">Dein Motiv</label>
+-        <textarea id="idee" name="idee" maxlength="200" rows="2" required autocomplete="off" autocapitalize="sentences" enterkeyhint="next" placeholder="z. B. Löwe mit Helm"></textarea>
+-      </div>
+-      <p class="err" id="e0" role="alert" hidden>Schreib kurz, was es werden soll.</p>
++      <h2 class="fx-h" id="fxH0" tabindex="-1">Wohin soll dein Tattoo?</h2>
++      <p class="fx-hint">Danach noch 3 Fragen bis zu deinem Los.</p>
++      <div class="tiles" data-name="stelle" data-auto role="group" aria-labelledby="fxH0" id="tStelle"></div>
++      <p class="err" id="e0" role="alert" hidden>Bitte tipp eine Körperstelle an.</p>
+     </section>
+ 
+     <section class="fx-step" data-step="1" aria-labelledby="fxH1" hidden>
+-      <h2 class="fx-h" id="fxH1" tabindex="-1">Wohin soll es?</h2>
+-      <p class="fx-hint">Danach noch 2 Fragen bis zu deinem Los.</p>
+-      <div class="tiles" data-name="stelle" data-auto role="group" aria-labelledby="fxH1" id="tStelle"></div>
+-      <p class="err" id="e1" role="alert" hidden>Bitte tipp eine Körperstelle an.</p>
++      <h2 class="fx-h" id="fxH1" tabindex="-1">Dein Budget?</h2>
++      <p class="fx-hint">Grob reicht. Danach noch 2 Fragen bis zu deinem Los.</p>
++      <div class="tiles wide" data-name="budget" data-auto role="group" aria-labelledby="fxH1" id="tBudget"></div>
++      <p class="err" id="e1" role="alert" hidden>Bitte tipp dein ungefähres Budget an.</p>
+     </section>
+ 
+     <section class="fx-step" data-step="2" aria-labelledby="fxH2" hidden>
+-      <h2 class="fx-h" id="fxH2" tabindex="-1">Dein Budget?</h2>
+-      <p class="fx-hint">Grob reicht. Danach noch 1 Frage bis zu deinem Los.</p>
+-      <div class="tiles wide" data-name="budget" data-auto role="group" aria-labelledby="fxH2" id="tBudget"></div>
+-      <p class="err" id="e2" role="alert" hidden>Bitte tipp dein ungefähres Budget an.</p>
++      <h2 class="fx-h" id="fxH2" tabindex="-1">Welcher Stil?</h2>
++      <p class="fx-hint">Danach nur noch deine Nummer.</p>
++      <div class="tiles" data-name="stil" role="group" aria-labelledby="fxH2" id="tStil"></div>
++      <p class="err" id="e2" role="alert" hidden>Bitte tipp einen Stil an.</p>
++      <div class="field">
++        <label for="idee">Deine Idee (freiwillig)</label>
++        <textarea id="idee" name="idee" maxlength="160" rows="2" autocomplete="off" autocapitalize="sentences" enterkeyhint="next" placeholder="z. B. Löwe mit Helm"></textarea>
++      </div>
+     </section>
+ 
+     <section class="fx-step" data-step="3" aria-labelledby="fxH3" hidden>
+-      <h2 class="fx-h" id="fxH3" tabindex="-1">Für wen ist das Los?</h2>
++      <h2 class="fx-h" id="fxH3" tabindex="-1">Wohin schicken wir deinen Code?</h2>
+       <div class="ticket mini" aria-hidden="true">
+         <div class="t-head"><img src="img/logo-240.webp" alt="" width="240" height="240"><div><b>Rubbellos</b></div></div>
+         <div class="t-foil"><span>Für <i id="miniName">dich</i></span></div>
+@@ -685,16 +719,23 @@
+       <p class="kick">Freigerubbelt<span id="winName"></span></p>
+       <h2 class="fx-h" id="fxH5" tabindex="-1"><b id="winPct"></b> auf dein Tattoo</h2>
+       <div class="codebox"><div><small>Dein Code</small><b id="winCode"></b></div><button type="button" id="copyCode">Kopieren</button></div>
+-      <div class="prev" id="winPrev" hidden><img id="winImg" alt="" width="1080" height="1350"></div>
++      <div class="weiter"><b id="weiterH">So geht's weiter</b>
++        <ol aria-labelledby="weiterH">
++          <li>Wir schreiben dir gleich auf WhatsApp.</li>
++          <li>Du suchst dir eine Zeit für die kostenlose Beratung aus.</li>
++          <li>Dort bekommst du deinen Preis, dein Rabatt ist schon abgezogen.</li>
++        </ol>
++      </div>
+       <div class="acts">
+         <button type="button" class="btn ghost" id="saveVoucher">Gutschein speichern</button>
+       </div>
+-      <p class="zeig">Termin per WhatsApp ausmachen, Gutschein beim Beratungsgespräch zeigen.</p>
+       <p class="bed1" id="winBed"></p>
++      <div class="prev" id="winPrev" hidden><img id="winImg" alt="" width="1080" height="1350"></div>
+     </section>
+   </form>
+   <div class="fx-nav" id="fxNav">
+-    <p class="nav-legal" id="navLegal" hidden>Mit „Los freirubbeln“ bist du einverstanden, dass Chic Tattoo dich zu deinem Gutschein per WhatsApp oder Anruf kontaktiert. <a href="datenschutz/" target="_blank" rel="noopener">Datenschutz</a> · <a href="impressum/" target="_blank" rel="noopener">Impressum</a></p>
++    <p class="nav-info" id="navInfo" hidden>Per WhatsApp kommen dein Code und ein Vorschlag für die kostenlose Beratung.</p>
++    <p class="nav-legal" id="navLegal" hidden>Mit „Los freirubbeln“ bist du einverstanden, dass Chic Tattoo dir deinen Gutschein per WhatsApp schickt und dich per WhatsApp oder Anruf zu einem Beratungstermin kontaktiert. Abbestellen jederzeit mit „Stopp“. <a href="datenschutz/" target="_blank" rel="noopener">Datenschutz</a> · <a href="impressum/" target="_blank" rel="noopener">Impressum</a></p>
+     <button type="button" class="btn back" id="back">Zurück</button>
+     <button type="submit" form="form" class="btn red" id="next">Weiter</button>
+     <a class="btn red" id="nextWa" href="https://wa.me/4915204485125" target="_blank" rel="noopener" hidden><svg class="wa-ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2c-1.6 0-3.1-.4-4.4-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.4.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.4.1-.7.3-.2.3-.9.9-.9 2.2s.9 2.5 1 2.7c.1.2 1.8 2.8 4.4 3.9 1.6.7 2.3.8 3.1.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3Z"/></svg><span>Beratungstermin per WhatsApp</span></a>

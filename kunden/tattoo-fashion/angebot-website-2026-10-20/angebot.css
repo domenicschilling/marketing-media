@@ -1,0 +1,124 @@
+/* Angebot Tattoo-Fashion-Website – A4, Druck über Chromium (Playwright).
+   Gleiche Bausteine wie die neue Website: Archivo schmal/fett, Schwarz, Knochen, Gold aus dem Original-Logo.
+   Regel: keine Verlaufsschrift, kein background-clip:text, keine transparente Schriftfüllung (Apple Vorschau). */
+@font-face { font-family: "Archivo"; src: url("assets/fonts/archivo.woff2") format("woff2"); font-weight: 400 900; font-stretch: 62% 100%; }
+
+:root {
+  --schwarz: #000;
+  --stufe: #14120f;
+  --stufe-2: #1d1a16;
+  --linie: #2e2a24;
+  --knochen: #f1ebdf;
+  --asche: #b5ad9e;
+  --gold: #d4a94c;
+  --gold-hell: #f0d48a;
+}
+@page { size: A4; margin: 0; }
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body { background: var(--schwarz); color: var(--knochen); font: 400 9.4pt/1.45 "Archivo", sans-serif; font-stretch: 100%; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+img { display: block; }
+p { margin: 0; }
+h1, h2, h3 { margin: 0; font-weight: 850; }
+
+.seite { position: relative; width: 210mm; height: 297mm; overflow: hidden; background: var(--schwarz); page-break-after: always; break-after: page; }
+.seite:last-child { page-break-after: auto; break-after: auto; }
+.rand { padding: 0 14mm; }
+
+.schmal { font-stretch: 62%; font-weight: 850; text-transform: uppercase; line-height: .86; letter-spacing: -.004em; }
+
+/* ---------- Seite 1 ---------- */
+.seite.eins { display: flex; flex-direction: column; }
+.kopf { display: flex; justify-content: space-between; align-items: flex-start; padding-top: 11mm; }
+.kopf .logo { width: 50mm; height: auto; }
+.eckdaten { display: grid; grid-template-columns: auto auto; column-gap: 5mm; row-gap: .6mm; font-size: 8.4pt; margin: 1.5mm 0 0; }
+.eckdaten dt { color: var(--asche); }
+.eckdaten dd { margin: 0; text-align: right; font-weight: 600; }
+
+.an { margin-top: 6.5mm; font-size: 8.8pt; line-height: 1.4; color: var(--asche); }
+.an strong { color: var(--knochen); font-weight: 700; font-size: 10.5pt; display: block; margin-bottom: .3mm; }
+.titel { margin-top: 3.5mm; font-size: 47pt; color: var(--knochen); }
+.fuer { margin-top: 5mm; display: flex; justify-content: space-between; align-items: center; gap: 8mm; }
+.einleitung { font-size: 9.6pt; line-height: 1.45; max-width: 72mm; }
+.vorschau { display: flex; gap: 4mm; align-items: center; text-decoration: none; color: var(--knochen); border: .35mm solid var(--gold); padding: 2.6mm 4mm 2.6mm 2.6mm; width: 102mm; flex: none; }
+.vorschau .qr { width: 22mm; height: 22mm; background: var(--knochen); padding: 1.6mm; flex: none; }
+.vorschau .vt { display: block; }
+.vorschau strong { display: block; font-stretch: 62%; font-weight: 850; text-transform: uppercase; font-size: 17pt; line-height: .95; color: var(--gold); }
+.vorschau .url { display: block; margin-top: 1.2mm; font-size: 9.6pt; font-weight: 650; text-decoration: underline; text-decoration-thickness: .25mm; text-underline-offset: .6mm; }
+.vorschau .hinweis { display: block; margin-top: 1.3mm; font-size: 7.6pt; line-height: 1.35; color: var(--asche); }
+
+.buehne { position: relative; flex: 1; margin: 5mm 0 4mm; }
+.desktop { position: absolute; left: 14mm; top: 0; width: 138mm; margin: 0; }
+.desktop img { width: 100%; height: auto; border: .35mm solid var(--linie); }
+.desktop .unter { margin-top: 1.6mm; font-size: 7.4pt; color: var(--asche); }
+.handy { position: absolute; width: 34mm; margin: 0; }
+.handy.a { left: 121mm; bottom: 0; }
+.handy.b { left: 162mm; bottom: 23mm; }
+.handy .rahmen { background: #000; border: .5mm solid #4a443a; border-radius: 5.6mm; padding: 1.4mm; outline: 1.4mm solid #000; }
+.handy img { width: 100%; height: auto; border-radius: 4.3mm; }
+.handy .unter { margin-top: 1.4mm; font-size: 7.2pt; color: var(--asche); text-align: center; }
+
+.preisband { background: var(--gold); color: #000; padding: 6mm 14mm 6mm; }
+.preise { display: grid; grid-template-columns: 1fr 1fr; }
+.preis + .preis { border-left: .35mm solid rgba(0,0,0,.55); padding-left: 9mm; }
+.preis .betrag { font-size: 56pt; }
+.preis .was { margin-top: 2mm; font-size: 11pt; font-weight: 700; line-height: 1.25; }
+.preis .was span { display: block; font-weight: 400; font-size: 9pt; }
+.steuer { margin-top: 4.5mm; padding-top: 2.6mm; border-top: .35mm solid rgba(0,0,0,.55); font-size: 8pt; line-height: 1.4; display: flex; justify-content: space-between; gap: 8mm; }
+
+/* ---------- Seite 2 ---------- */
+.kopf-klein { display: flex; justify-content: space-between; align-items: center; padding-top: 8mm; padding-bottom: 3.5mm; border-bottom: .35mm solid var(--linie); }
+.kopf-klein .logo { width: 25mm; height: auto; }
+.kopf-klein .nr { font-size: 7.8pt; color: var(--asche); text-align: right; }
+
+h2.abschnitt { font-size: 24pt; margin: 5mm 0 2.6mm; }
+.leistungen { display: grid; grid-template-columns: 1fr 1fr; column-gap: 8mm; }
+.leistung { padding: 1.8mm 0 2mm; border-top: .35mm solid var(--linie); }
+.leistung h3 { font-size: 9.2pt; font-weight: 750; line-height: 1.25; margin-bottom: .5mm; }
+.leistung p { color: var(--asche); font-size: 8pt; line-height: 1.38; }
+.leistung p b { color: var(--knochen); font-weight: 600; }
+
+.support { margin-top: 4mm; background: var(--stufe-2); display: grid; grid-template-columns: 44mm 1fr 1fr; }
+.support .gross { background: var(--knochen); color: #000; padding: 4.5mm 5mm; }
+.support .gross .betrag { font-size: 46pt; }
+.support .gross p { margin-top: 1.6mm; font-size: 9.2pt; font-weight: 700; line-height: 1.3; }
+.support .gross p span { display: block; font-weight: 400; font-size: 8pt; margin-top: .8mm; }
+.support .spalte { padding: 4.5mm 5mm; }
+.support .spalte + .spalte { border-left: .35mm solid var(--linie); }
+.support h3 { font-size: 9.4pt; font-weight: 750; margin-bottom: 1.6mm; }
+.support h3.gold { color: var(--gold); }
+.support ul { margin: 0; padding: 0; list-style: none; }
+.support li { font-size: 8pt; line-height: 1.36; padding-left: 3.4mm; position: relative; margin-bottom: 1mm; color: var(--knochen); }
+.support li::before { content: ""; position: absolute; left: 0; top: 1.35mm; width: 1.4mm; height: 1.4mm; background: var(--gold); }
+.support .spalte.nein li { color: var(--asche); }
+.support .spalte.nein li::before { background: var(--asche); }
+.support .zusatz { margin-top: 2mm; font-size: 7.6pt; line-height: 1.38; color: var(--asche); }
+
+.unten { margin-top: 5mm; display: grid; grid-template-columns: 1fr 72mm; column-gap: 8mm; }
+.unten h3 { font-size: 14pt; margin-bottom: 2mm; }
+.braucht { margin: 0 0 4.2mm; padding: 0; list-style: none; }
+.braucht li { font-size: 8pt; line-height: 1.36; padding: 1.1mm 0; border-top: .35mm solid var(--linie); display: grid; grid-template-columns: 27mm 1fr; column-gap: 3mm; }
+.braucht li b { font-weight: 650; color: var(--knochen); }
+.braucht li span { color: var(--asche); }
+.schritte { margin: 0; padding: 0; list-style: none; counter-reset: s; display: grid; grid-template-columns: 1fr 1fr 1fr; column-gap: 4mm; }
+.schritte li { counter-increment: s; font-size: 8pt; line-height: 1.36; }
+.schritte li::before { content: counter(s); display: block; font-stretch: 62%; font-weight: 850; font-size: 20pt; line-height: .9; color: var(--gold); margin-bottom: 1mm; }
+.schritte li b { display: block; font-weight: 700; margin-bottom: .4mm; }
+.schritte li span { color: var(--asche); }
+.schritte li span b { color: var(--knochen); }
+
+.annahme { background: var(--knochen); color: #000; padding: 5mm 5.5mm 4.5mm; align-self: start; }
+.annahme h3 { font-size: 17pt; }
+.annahme .klein { font-size: 8pt; line-height: 1.4; margin-top: 1.6mm; }
+.feld { margin-top: 7mm; border-bottom: .35mm solid #000; height: 0; }
+.feld + .etikett { font-size: 7.2pt; margin-top: 1mm; color: #4b463d; }
+.annahme .oder { margin-top: 3.6mm; padding-top: 2.6mm; border-top: .35mm solid #c9c0ae; font-size: 8pt; line-height: 1.42; }
+.annahme .oder b { font-weight: 700; }
+
+.fuss { position: absolute; left: 14mm; right: 14mm; bottom: 8mm; border-top: .35mm solid var(--linie); padding-top: 3mm; display: grid; grid-template-columns: 1.3fr 1fr 1fr; column-gap: 6mm; font-size: 7.2pt; line-height: 1.42; color: var(--asche); }
+.fuss b { color: var(--knochen); font-weight: 650; }
+.fuss .person { color: var(--knochen); }
+
+.annahme a, .fuss a { color: inherit; text-decoration: none; }
+
+:lang(da) .titel { font-size: 41pt; }

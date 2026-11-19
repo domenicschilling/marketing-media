@@ -1,0 +1,21 @@
+SCHRIFTEN FÜR TATTOOKALENDER
+
+1) Bricolage Grotesque – für Überschriften und große Aussagen (auch im Logo)
+   Schnitte: ExtraBold (800) für Überschriften, SemiBold (600) für Zwischenzeilen.
+   Herkunft: Google Fonts – https://fonts.google.com/specimen/Bricolage+Grotesque
+   Lizenz: SIL Open Font License 1.1 (OFL.txt im Ordner). Frei nutzbar, auch für Werbung und Druck.
+
+2) Inter – für Fließtext, Buttons, Hinweise und die Unterzeile „DAS STUDIO-SYSTEM“
+   Schnitte: Regular (400), Medium (500), SemiBold (600).
+   Herkunft: Google Fonts – https://fonts.google.com/specimen/Inter
+   Lizenz: SIL Open Font License 1.1 (OFL.txt im Ordner).
+
+INSTALLIEREN (Mac)
+   Doppelklick auf die Datei im Ordner „einzeln“ → „Installieren“.
+   Die Dateien mit [eckigen Klammern] sind die vollständigen variablen Schriften (alle Stärken in einer Datei)
+   – für Designer und Programme, die das können. Für Word, Keynote, Canva usw. die Dateien aus „einzeln“ nehmen.
+   Canva: Beide Schriften gibt es dort schon eingebaut – einfach den Namen suchen.
+
+ERSATZ, WENN DIE SCHRIFT FEHLT
+   E-Mails und Programme ohne eigene Schriften: Arial bzw. Helvetica.
+   Das Logo nie mit einer Schrift nachtippen – immer die Logo-Dateien verwenden.

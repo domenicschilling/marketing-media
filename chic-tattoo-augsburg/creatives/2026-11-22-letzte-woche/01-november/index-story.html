@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><title>01 November – Story</title>
+<link rel="stylesheet" href="../_system/base.css">
+<link rel="stylesheet" href="../_system/aggro.css">
+<style>
+/* Story: Spartaner/Löwe groß, quer darüber ein weißes Absperrband mit der echten Frist,
+   darunter die rote −20 % und der CTA-Balken. Text nur zwischen y270 und y1580. */
+.photo{left:0;top:0;width:1080px;height:1920px}
+.shade{position:absolute;inset:0;z-index:2;background:
+  linear-gradient(180deg,rgba(11,11,11,.35) 0,rgba(11,11,11,0) 20%,rgba(11,11,11,0) 46%,rgba(11,11,11,.94) 56%,#0B0B0B 62%)}
+.logo{position:absolute;left:56px;top:282px;width:116px;height:116px;z-index:8;box-shadow:0 0 0 3px var(--ink)}
+.kick{position:absolute;left:192px;top:314px;z-index:8;font-size:48px}
+
+.band{position:absolute;left:-40px;right:-40px;top:910px;height:118px;z-index:7;background:#fff;color:var(--ink);transform:rotate(-3.5deg);
+  display:flex;align-items:center;justify-content:center;box-shadow:0 16px 30px rgba(0,0,0,.5)}
+.band b{font-size:84px;padding-top:8px;letter-spacing:-.005em}
+.band b em{font-style:normal;color:var(--sig)}
+
+.real{position:absolute;left:56px;top:420px;z-index:8;font-size:32px}
+.big{position:absolute;left:40px;top:1064px;z-index:5;font-size:440px}
+.side{position:absolute;left:748px;top:1088px;z-index:5;width:300px}
+.side .h{font-size:98px;line-height:.86;color:#fff;letter-spacing:-.01em}
+.side .h em{font-style:normal;color:var(--sig)}
+.side .box{margin-top:18px;font-size:38px}
+
+.cta{top:1392px;height:104px}
+.cta b{font-size:66px}
+.cta i{width:124px}
+.cta i svg{width:58px;height:58px}
+.bed{left:var(--g);top:1510px}
+</style></head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="sh" color-interpolation-filters="sRGB"><feConvolveMatrix order="3" kernelMatrix="0 -.3 0 -.3 2.2 -.3 0 -.3 0" preserveAlpha="true"/></filter></svg>
+<div class="c story">
+  <div class="ph photo" data-src="../_system/img/05-loewe-spartaner-warm.png" data-crop="190,230,1070,1795" data-filter="url(#sh) saturate(.82) contrast(1.24) brightness(.96)"></div>
+  <div class="shade"></div>
+  <div class="logo"><img src="../_system/img/logo-480.webp" alt=""></div>
+  <span class="box r kick">Last Minute November</span>
+  <span class="box wt real">Echtes Tattoo · aus dem Studio</span>
+
+  <div class="band"><b class="d">Tattoo-Termin bis <em>Mo 30.11.</em></b></div>
+
+  <p class="pct big"><span class="mi"></span>20<span class="pc">%</span></p>
+  <div class="side">
+    <p class="d h">Auf dein<br>Tattoo<em>.</em></p>
+    <span class="box wt">Ab 150 € · mit Code</span>
+  </div>
+
+  <div class="cta"><b>Jetzt Code sichern</b><i><svg viewBox="0 0 56 56"><path d="M6 28h40M30 10l18 18-18 18"/></svg></i></div>
+  <p class="bed"><b>Tattoo-Termin bis Mo 30.11.</b><i>·</i>danach endet die Aktion<br>ab 150 € Tattoo-Wert<i>·</i>Code auf der Aktionsseite</p>
+  <div class="grain"></div>
+</div>
+<script src="../_system/crop.js"></script>
+</body></html>

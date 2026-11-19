@@ -1,0 +1,34 @@
+TATTOOKALENDER – FARBEN (Stand 20.10.2026)
+
+CMYK-Werte sind ungefähre Umrechnungen. Vor einem großen Druckauftrag einen Probedruck machen
+und die Druckerei bitten, das Gold an diese Werte anzupassen.
+Große schwarze Flächen im Druck (z. B. Visitenkarte, Flyer) als Tiefschwarz anlegen: C 60 / M 40 / Y 40 / K 100.
+
+GRUNDFARBEN (dunkle Welt)
+  Nachtschwarz   HEX #0B0B0D   RGB 11, 11, 13      CMYK 15 / 15 / 0 / 95  Haupt-Hintergrund (App, Website, Social, Druck)
+  Tinte          HEX #141311   RGB 20, 19, 17      CMYK 0 / 5 / 15 / 92   Flächen: Karten, Kästen, Eingabefelder
+  Kalenderblatt  HEX #1C1A16   RGB 28, 26, 22      CMYK 0 / 7 / 21 / 89   Erhöhte Flächen, Innenfläche der Bildmarke
+  Linie          HEX #2C2822   RGB 44, 40, 34      CMYK 0 / 9 / 23 / 83   Trennlinien und Rahmen auf Dunkel
+
+TEXTFARBEN
+  Elfenbein      HEX #F4F1EA   RGB 244, 241, 234   CMYK 0 / 1 / 4 / 4     Text auf Dunkel – und heller Hintergrund
+  Stein          HEX #A7A39A   RGB 167, 163, 154   CMYK 0 / 2 / 8 / 35    Nebentext auf Dunkel, Unterzeile im Logo
+  Schiefer       HEX #6B675F   RGB 107, 103, 95    CMYK 0 / 4 / 11 / 58   Nebentext auf Hell
+
+GOLD
+  Champagner     HEX #F3D891   RGB 243, 216, 145   CMYK 0 / 11 / 40 / 5   Gold hell – oberer Verlaufston
+  Gold           HEX #C9A24F   RGB 201, 162, 79    CMYK 0 / 19 / 61 / 21  Akzentfarbe: Buttons, Hervorhebungen, Bildmarke
+  Altgold        HEX #B88A2C   RGB 184, 138, 44    CMYK 0 / 25 / 76 / 28  Gold auf hellem Hintergrund (oben)
+  Bronze         HEX #8A6418   RGB 138, 100, 24    CMYK 0 / 28 / 83 / 46  Gold auf hellem Hintergrund (unten), Gold-Text auf Hell
+
+GOLD-VERLAUF
+  Auf Dunkel: Champagner #F3D891 (oben) -> Gold #C9A24F (unten), senkrecht.
+  Auf Hell:   Altgold #B88A2C (oben) -> Bronze #8A6418 (unten), senkrecht.
+  Verlauf nur im Logo und auf Flächen (z. B. Buttons). Text in Vorlagen immer einfarbig.
+
+VERTEILUNG
+  ca. 70 % Nachtschwarz/Tinte, 20 % Elfenbein/Stein (Text), höchstens 10 % Gold.
+
+IN DER APP (technische Farben, nur zur Info)
+  Hintergrund #0B0B0B, Fläche #141311, Fläche 2 #1D1B18, Linie #2C2822, Text #F4EFE6, gedämpft #A39B8C, Akzent #C8A35A / #E8CD92.
+  Statusfarben nur in der App: OK #6FCF8E, Warnung #E8B34A, Fehler #EF6F6F, Info #7FB2F0.

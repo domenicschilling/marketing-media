@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><title>Marken</title>
+<style>
+@font-face{font-family:Inter;src:url(inter.woff2) format("woff2");font-weight:100 900}
+body{margin:0;font-family:Inter,sans-serif;background:#fff}
+.reihe{display:flex;align-items:center;gap:36px;padding:26px 36px}
+.d{background:#111827;color:#fff;--a:#2dd4bf;--b:#fff;--f:#111827}
+.h{background:#fff;color:#111827;--a:#0f766e;--b:#111827;--f:#fff}
+.t{background:#0f766e;color:#fff;--a:#fff;--b:#fff;--f:#0f766e}
+.w{font-weight:600;font-size:44px;letter-spacing:-.035em;display:flex;align-items:baseline}
+svg{display:block}
+</style></head><body>
+<svg width="0" height="0" style="position:absolute">
+<defs>
+<!-- A Sprech-Blatt: das Blatt ist die Sprechblase -->
+<symbol id="a" viewBox="0 0 64 64"><path fill="var(--a)" d="M18 5H39L53 19V44a6 6 0 0 1-6 6H30L17 60V50A6 6 0 0 1 11 44V11A6 6 0 0 1 18 5Z"/><path fill="var(--f)" d="M39 5V15a4 4 0 0 0 4 4H53Z" opacity=".35"/><rect x="20" y="25" width="24" height="4.5" rx="2.25" fill="var(--f)"/><rect x="20" y="35" width="15" height="4.5" rx="2.25" fill="var(--f)"/></symbol>
+<!-- B der Punkt ist das Mikrofon -->
+<symbol id="b" viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="var(--a)" opacity=".18"/><circle cx="32" cy="32" r="23" fill="var(--a)"/><rect x="26.5" y="17" width="11" height="20" rx="5.5" fill="var(--f)"/><path d="M20.5 30a11.5 11.5 0 0 0 23 0" fill="none" stroke="var(--f)" stroke-width="3.6" stroke-linecap="round"/><path d="M32 41.5V47" stroke="var(--f)" stroke-width="3.6" stroke-linecap="round"/></symbol>
+<!-- C Stimme wird Zeilen -->
+<symbol id="c" viewBox="0 0 64 64"><rect x="4" y="25" width="6" height="14" rx="3" fill="var(--a)"/><rect x="13.5" y="13" width="6" height="38" rx="3" fill="var(--a)"/><rect x="23" y="20" width="6" height="24" rx="3" fill="var(--a)"/><rect x="35" y="13" width="25" height="6" rx="3" fill="var(--b)"/><rect x="35" y="29" width="25" height="6" rx="3" fill="var(--b)"/><rect x="35" y="45" width="15" height="6" rx="3" fill="var(--b)"/></symbol>
+<!-- D Welle läuft in den Haken -->
+<symbol id="d" viewBox="0 0 64 64"><rect x="3" y="27" width="6" height="12" rx="3" fill="var(--a)"/><rect x="12" y="18" width="6" height="30" rx="3" fill="var(--a)"/><rect x="21" y="24" width="6" height="18" rx="3" fill="var(--a)"/><path d="M32 35.5 41 45 60.5 17" fill="none" stroke="var(--a)" stroke-width="6.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<!-- E das a trägt die Stimme -->
+<symbol id="e" viewBox="0 0 64 64"><circle cx="29" cy="35" r="20" fill="none" stroke="var(--b)" stroke-width="8"/><rect x="45" y="11" width="8" height="44" rx="4" fill="var(--b)"/><rect x="20.5" y="31" width="4" height="8" rx="2" fill="var(--a)"/><rect x="27" y="26" width="4" height="18" rx="2" fill="var(--a)"/><rect x="33.5" y="29.5" width="4" height="11" rx="2" fill="var(--a)"/></symbol>
+<!-- E2 kleines Symbol ohne Innenleben -->
+<symbol id="f" viewBox="0 0 64 64"><text x="4" y="52" font-family="Inter" font-weight="600" font-size="62" letter-spacing="-3" fill="var(--b)">a</text><circle cx="52" cy="47" r="7" fill="var(--a)"/></symbol>
+</defs></svg>
+<div id="w"></div>
+<script>
+const w=document.getElementById('w');
+for(const id of ['a','b','c','d','e','f'])for(const k of ['h','d','t']){
+ const r=document.createElement('div');r.className='reihe '+k;
+ r.innerHTML=[200,96,48,32,16].map(s=>`<svg width="${s}" height="${s}"><use href="#${id}"/></svg>`).join('')+`<div class="w"><svg width="44" height="44" style="margin-right:12px;align-self:center"><use href="#${id}"/></svg>angebot.new</div><b style="font-size:13px;opacity:.6">${id}</b>`;
+ w.append(r);
+}
+</script>
+</body></html>

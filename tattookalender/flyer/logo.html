@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=Inter:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  body { margin: 0; background: #0b0b0d; font-family: Inter, sans-serif; color: #f4f1ea; }
+  .sheet { display: grid; grid-template-columns: 1fr 1fr; gap: 0; width: 1200px; }
+  .cell { height: 420px; display: grid; place-items: center; }
+  .dark { background: #0b0b0d; } .light { background: #f4f1ea; }
+  .lockup { display: flex; align-items: center; gap: 22px; }
+  .word { font-family: "Bricolage Grotesque"; font-weight: 800; font-size: 64px; letter-spacing: -0.035em; line-height: 1; }
+  .word .k { background: linear-gradient(180deg, #f3d891, #c9a24f); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .light .word { color: #0b0b0d; }
+  .light .word .k { background: linear-gradient(180deg, #b88a2c, #8a6418); -webkit-background-clip: text; background-clip: text; }
+  .sub { font-size: 13px; letter-spacing: .32em; text-transform: uppercase; color: #a7a39a; margin-top: 10px; }
+  .light .sub { color: #6b675f; }
+</style></head>
+<body>
+<div class="sheet">
+  <div class="cell dark" id="logo-dark">
+    <div class="lockup">
+      <svg id="mark" width="112" height="112" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3d891"/><stop offset="1" stop-color="#c9a24f"/></linearGradient>
+          <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1c1a16"/><stop offset="1" stop-color="#0b0b0d"/></linearGradient>
+        </defs>
+        <!-- Kalenderblatt -->
+        <rect x="10" y="18" width="100" height="92" rx="22" fill="url(#bg)" stroke="url(#g)" stroke-width="5"/>
+        <path d="M10 44h100" stroke="url(#g)" stroke-width="5"/>
+        <rect x="32" y="6" width="9" height="24" rx="4.5" fill="url(#g)"/>
+        <rect x="79" y="6" width="9" height="24" rx="4.5" fill="url(#g)"/>
+        <!-- Tattoo-Nadel als Haken: Strich wie Tinte mit Tropfen -->
+        <path d="M34 77 L51 93 L88 56" fill="none" stroke="url(#g)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M88 56 L99 45" stroke="url(#g)" stroke-width="3.5" stroke-linecap="round"/>
+        <circle cx="101.5" cy="42.5" r="3.2" fill="url(#g)"/>
+      </svg>
+      <div>
+        <div class="word">tattoo<span class="k">kalender</span></div>
+        <div class="sub">Das Studio-System</div>
+      </div>
+    </div>
+  </div>
+  <div class="cell light" id="logo-light">
+    <div class="lockup">
+      <svg width="112" height="112" viewBox="0 0 120 120"><use href="#mark"/></svg>
+      <div>
+        <div class="word">tattoo<span class="k">kalender</span></div>
+        <div class="sub">Das Studio-System</div>
+      </div>
+    </div>
+  </div>
+  <div class="cell dark" id="icon-only"><svg width="240" height="240" viewBox="0 0 120 120"><use href="#mark"/></svg></div>
+  <div class="cell light"><svg width="240" height="240" viewBox="0 0 120 120"><use href="#mark"/></svg></div>
+</div>
+</body></html>

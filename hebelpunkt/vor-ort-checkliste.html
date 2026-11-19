@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hebelpunkt – Vor-Ort-Checkliste</title>
+<style>
+  @font-face{font-family:'Inter';font-weight:400 700;src:url(../../landingpages/hebelpunkt/fonts/inter-latin.woff2) format('woff2')}
+  @font-face{font-family:'Space Grotesk';font-weight:500 700;src:url(../../landingpages/hebelpunkt/fonts/space-grotesk-latin.woff2) format('woff2')}
+  @font-face{font-family:'JetBrains Mono';font-weight:400 700;src:url(../../landingpages/hebelpunkt/fonts/jetbrains-mono-latin.woff2) format('woff2')}
+  @page { size: A4; margin: 0; }
+  :root { --ink:#0F1720; --paper:#F5F3EE; --white:#fff; --amber:#F5A524; --line:#DDD8CE; --grey:#5B6470; --green:#1E9E5A; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { background:var(--paper); }
+  body { font-family:'Inter',system-ui,sans-serif; color:var(--ink); font-size:8.1pt; line-height:1.36; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  .page { width:210mm; height:297mm; padding:9mm 11mm 8mm; margin:0 auto; background:var(--paper); display:flex; flex-direction:column; overflow:hidden; position:relative; page-break-after:always; }
+  .page:last-child { page-break-after:auto; }
+  h1,h2,.wm { font-family:'Space Grotesk',sans-serif; }
+  header { display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--line); padding-bottom:2.6mm; }
+  .logo { display:flex; align-items:center; gap:2.4mm; }
+  .logo svg { width:9mm; height:9mm; }
+  .wm { font-weight:700; font-size:14pt; letter-spacing:-.02em; line-height:1; }
+  .sub { font-size:6.8pt; color:var(--grey); margin-top:.6mm; }
+  .meta { text-align:right; font-size:6.8pt; color:var(--grey); line-height:1.45; }
+  .meta b { color:var(--ink); }
+  h1 { font-size:17pt; letter-spacing:-.02em; line-height:1.1; margin-top:3.4mm; }
+  .rule { margin-top:1.8mm; background:var(--ink); color:var(--paper); border-radius:2mm; padding:2.2mm 3.2mm; font-size:7.8pt; }
+  .rule b { color:var(--amber); }
+  .cols { display:grid; grid-template-columns:1fr 1fr; gap:3.4mm; margin-top:3mm; }
+  .card { background:var(--white); border:1px solid var(--line); border-radius:2mm; padding:2.4mm 3mm 2.6mm; break-inside:avoid; }
+  .card + .card { margin-top:3mm; }
+  h2 { font-size:8.6pt; text-transform:uppercase; letter-spacing:.07em; display:flex; align-items:center; gap:1.8mm; margin-bottom:1.6mm; }
+  h2 .l { display:inline-grid; place-items:center; width:5mm; height:5mm; border-radius:1mm; background:var(--ink); color:var(--amber); font:700 7.6pt 'JetBrains Mono',monospace; }
+  ul { list-style:none; display:grid; gap:1.05mm; }
+  li { position:relative; padding-left:4.4mm; }
+  li::before { content:''; position:absolute; left:0; top:.55mm; width:2.7mm; height:2.7mm; border:1.2px solid var(--ink); border-radius:.5mm; background:#fff; }
+  ul.no li::before { border:0; background:none; content:'×'; color:#B3261E; font-weight:700; top:-.2mm; font-size:9pt; line-height:1; }
+  ul.dot li::before { border:0; border-radius:50%; background:var(--amber); width:1.6mm; height:1.6mm; top:1.2mm; left:.6mm; }
+  .q { font-style:normal; color:#2B3540; }
+  .say { background:#FFF6E2; border:1px solid rgba(245,165,36,.6); border-radius:1.6mm; padding:1.8mm 2.4mm; margin:1.2mm 0 1.6mm; font-size:7.5pt; }
+  .small { font-size:6.8pt; color:var(--grey); margin-top:1.2mm; }
+  .fill { display:inline-block; border-bottom:1px solid var(--grey); width:24mm; height:3mm; vertical-align:bottom; }
+  footer { margin-top:auto; padding-top:2.4mm; border-top:1px solid var(--line); display:flex; justify-content:space-between; font-size:6.6pt; color:var(--grey); }
+  @media screen { body { padding:8mm 0; background:#E7E3DA; } .page { box-shadow:0 1px 12px rgba(15,23,32,.15); margin-bottom:8mm; } }
+  @media print { body { padding:0; } .page { box-shadow:none; margin:0 auto; } }
+</style>
+</head>
+<body>
+
+<!-- SEITE 1 -->
+<div class="page">
+  <header>
+    <div class="logo">
+      <svg viewBox="0 0 44 44" aria-hidden="true"><rect width="44" height="44" rx="9" fill="#0F1720"/><line x1="7" y1="28.5" x2="37" y2="17.5" stroke="#F5F3EE" stroke-width="3" stroke-linecap="round"/><circle cx="35.2" cy="13.6" r="3.4" fill="#F5A524"/><path d="M16.5 25.2 L22 35 H11 Z" fill="#F5A524"/></svg>
+      <div><div class="wm">Hebelpunkt</div><div class="sub">Intern – Berater-Checkliste</div></div>
+    </div>
+    <div class="meta"><b>Vor-Ort-Checkliste</b> · Stand 27.10.2026<br>Betrieb: <span class="fill"></span> Datum: <span class="fill" style="width:18mm"></span></div>
+  </header>
+
+  <h1>Der Tag im Betrieb</h1>
+  <div class="rule"><b>Ich bin zu Gast.</b> Ich schaue auf Abläufe, nicht auf Personen. Ich höre zu, ich verspreche nichts, und was ich sehe, bleibt vertraulich.</div>
+
+  <div class="cols">
+    <div>
+      <div class="card">
+        <h2><span class="l">A</span>Vorher (2 Werktage davor)</h2>
+        <ul>
+          <li>Auftrag unterschrieben, erste Rate bezahlt</li>
+          <li><b>AV-Vertrag</b> unterschrieben, Datenschutz-Ansprechpartner eingetragen</li>
+          <li><b>Belegschaft informiert</b> durch die Geschäftsführung (Datum ____)</li>
+          <li>Betriebsrat (falls vorhanden) informiert</li>
+          <li>Tagesplan mit „Pate“ abgestimmt (Bereiche, Rollen, Zeiten, Pausen)</li>
+          <li>Unterlagen eingegangen (anonymisiert), Lücken bekannt</li>
+          <li>Sicherheit: Produktion/Lager/Werkstatt? Schutzausrüstung und Einweisung geklärt</li>
+          <li>Anfahrt, Parkplatz, Ansprechpartner mit Handynummer; Reisekosten laut Angebot</li>
+          <li>Laptop (verschlüsselt, gesperrt), Ladegerät, Notizbuch, Mitlauf-Bögen, Stoppuhr, Visitenkarten</li>
+          <li>Wer darf im Betrieb Fotos erlauben? ____________</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h2><span class="l">B</span>Ankunft und Start</h2>
+        <ul>
+          <li>Begrüßung Geschäftsführung, kurzer Rundgang</li>
+          <li>Sicherheitseinweisung des Kunden entgegennehmen</li>
+          <li>Tagesplan bestätigen, Ziel des Tages in einem Satz wiederholen</li>
+          <li><b>Regeln sagen:</b> Abläufe statt Personen · keine Bewertung · keine Namen in den Notizen · freiwillig · nichts geht mit Namen an die Geschäftsleitung</li>
+          <li>Foto-Frage klären (siehe F)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <h2><span class="l">C</span>In jedem Gespräch</h2>
+        <div class="say"><b>Einstieg:</b> „Ich schaue mir an, welche Arbeiten bei Ihnen viel Zeit kosten und wo KI etwas abnehmen könnte. Ich notiere Tätigkeiten und ungefähre Zeiten, keine Namen, keine Bewertung. Sie müssen nichts sagen, was Sie nicht sagen möchten. Was Sie erzählen, geht nicht mit Ihrem Namen an die Geschäftsleitung.“</div>
+        <ul class="dot">
+          <li class="q">Was machen Sie an einem normalen Tag? Was wiederholt sich?</li>
+          <li class="q">Welche Aufgabe kostet am meisten Zeit? Welche nervt am meisten?</li>
+          <li class="q">Wie oft, wie lange je Fall, wer ist beteiligt?</li>
+          <li class="q">Womit arbeiten Sie dabei (Programme, Papier, Excel, Telefon)?</li>
+          <li class="q">Wo wird abgetippt, kopiert, doppelt erfasst, hinterhertelefoniert?</li>
+          <li class="q">Wo passieren Fehler, Nacharbeit? Was passiert am Monatsende?</li>
+          <li class="q">Welche Sonderfälle machen es kompliziert?</li>
+          <li class="q">Was würden Sie abgeben? Was auf keinen Fall?</li>
+          <li class="q">Was habe ich nicht gefragt, das ich wissen sollte?</li>
+        </ul>
+        <p class="small">Fragen je Abteilung: interview-leitfaden.md</p>
+      </div>
+      <div class="card">
+        <h2><span class="l">D</span>Mitlaufen (30–60 Min je Kernrolle)</h2>
+        <ul>
+          <li>Mit Einverständnis daneben setzen, sagen was ich notiere</li>
+          <li><b>Zeit je Fall stoppen</b> (mind. 5 Fälle), Menge pro Woche erfragen</li>
+          <li>Wo Programmwechsel, Copy/Paste, Papier ↔ digital?</li>
+          <li>Wo wird gesucht, nachgefragt, gewartet?</li>
+          <li>Handgepflegte Excel-Listen: Struktur ansehen, Inhalte nicht abschreiben</li>
+          <li>Welche Fälle laufen nicht nach Schema? Wie oft? Spitzen?</li>
+          <li>Anonymisierte Muster-Belege einsammeln, keine Originale</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <footer><span>Hebelpunkt · DSX Media Solutions UG · intern, nicht an Kunden geben</span><span>Seite 1 von 2</span></footer>
+</div>
+
+<!-- SEITE 2 -->
+<div class="page">
+  <header>
+    <div class="logo">
+      <svg viewBox="0 0 44 44" aria-hidden="true"><rect width="44" height="44" rx="9" fill="#0F1720"/><line x1="7" y1="28.5" x2="37" y2="17.5" stroke="#F5F3EE" stroke-width="3" stroke-linecap="round"/><circle cx="35.2" cy="13.6" r="3.4" fill="#F5A524"/><path d="M16.5 25.2 L22 35 H11 Z" fill="#F5A524"/></svg>
+      <div><div class="wm">Hebelpunkt</div><div class="sub">Datenschutz, Fotos, Abschluss</div></div>
+    </div>
+    <div class="meta"><b>Vor-Ort-Checkliste</b> · Stand 27.10.2026</div>
+  </header>
+
+  <div class="cols">
+    <div>
+      <div class="card">
+        <h2><span class="l">E</span>Datenschutz und Verschwiegenheit</h2>
+        <ul>
+          <li><b>Rollen statt Personen.</b> „Sachbearbeitung Auftragsannahme“, nie ein Name</li>
+          <li><b>Bildschirme</b> nur mit Einverständnis; Kunden-/Beschäftigtendaten nicht abschreiben</li>
+          <li>Keine Personalakten, Gehälter Einzelner, Gesundheitsdaten – wegsehen, nicht notieren, Kunden hinweisen</li>
+          <li>Keine Originale mitnehmen, keine USB-Sticks, Kundendaten nicht über Fremd-WLAN</li>
+          <li>Aussagen einzelner Mitarbeiter <b>nicht</b> mit Namen an die Geschäftsleitung, nicht an Kollegen</li>
+          <li>Betriebsgeheimnisse (Preise, Konditionen, Kunden) bleiben beim Kunden</li>
+          <li>Berufsgeheimnisträger (Steuerberater, Anwalt, Arzt): keine Mandanten-/Patienteninhalte, nur Muster</li>
+          <li>Fragen „Werde ich ersetzt?“ / „Wird meine Leistung gemessen?“ → Antworten aus recht-und-mitarbeiter.md, nichts versprechen</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h2><span class="l">F</span>Fotos, Video, Ton</h2>
+        <ul class="no">
+          <li><b>Grundsatz: nein</b>, außer mit ausdrücklicher Erlaubnis im Einzelfall (Geschäftsführung, bei sichtbaren Personen auch diese)</li>
+          <li>Nie: Menschen, Bildschirme mit Daten, Kunden-/Preislisten, Zugangsdaten, Maschinen mit Betriebsgeheimnis</li>
+          <li>Nie Ton ohne Einwilligung aller (§ 201 StGB)</li>
+        </ul>
+        <ul style="margin-top:1.4mm">
+          <li>Mit Erlaubnis möglich: Whiteboard, Prozess-Aushang, Raumaufteilung ohne Personen und Daten</li>
+          <li>Aufnahmen nur auf dem Arbeitsgerät, nach dem Projekt gelöscht</li>
+        </ul>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <h2><span class="l">G</span>Was ich vor Ort nicht tue</h2>
+        <ul class="no">
+          <li>Werkzeuge oder Anbieter empfehlen („Nehmen Sie X“)</li>
+          <li>Ergebnisse versprechen („Das macht dann die KI“)</li>
+          <li>Personen bewerten oder vergleichen, über Gehälter reden</li>
+          <li>Rechtsrat geben (Arbeitsrecht, Datenschutz, Kündigung)</li>
+          <li>Eine Ergebnis-Garantie nennen</li>
+          <li>Stellenabbau für konkrete Personen oder Rollen prognostizieren</li>
+          <li>Sicherheitsregeln missachten, Bereiche ohne Begleitung betreten</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h2><span class="l">H</span>Ende des Tages und danach</h2>
+        <ul>
+          <li>15–30 Min Geschäftsführung: erste Eindrücke <b>ohne Zahlen</b>, offene Unterlagen, Termin Besprechung</li>
+          <li>Am Abend: Notizen sichten, Rückfragenliste für den Paten</li>
+          <li>Erste Abläufe im Terminal erfassen (/aufnahme), Rollen statt Namen, <code style="font-family:'JetBrains Mono',monospace;font-size:7pt">hebelpunkt check</code> ohne Namenswarnung</li>
+          <li>Notizen und Belege sicher ablegen (Kundenordner, nicht im Repo)</li>
+          <li>Löschfrist notieren: 3 Monate nach der Besprechung (____)</li>
+          <li>Bericht in ca. 5 Werktagen mit den 3–5 größten Hebeln, Zeitersparnis als Schätzung</li>
+          <li>Reisekosten und Rechnung 1/2 prüfen</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h2><span class="l">I</span>Eigene Sicherheit</h2>
+        <ul>
+          <li>Unfall- und Haftpflichtschutz für Betriebsbesuche geklärt (Police dabei)</li>
+          <li>Nicht allein in Gefahrenbereiche; Maschinen und Fahrzeuge nur nach Einweisung</li>
+          <li>Pausen einhalten – Anreise plus Tag ist lang</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:3mm">
+    <h2>Notizen</h2>
+    <div style="height:36mm;background:repeating-linear-gradient(transparent,transparent 5.6mm,#ECE8E0 5.6mm,#ECE8E0 6mm)"></div>
+  </div>
+
+  <footer><span>Zusammenspiel: Ziffer 4 der Leistungsbeschreibung (Regeln vor Ort) · av-vertrag-muster.md · recht-und-mitarbeiter.md</span><span>Seite 2 von 2</span></footer>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Preisplan Quellen</title>
+<style>
+  :root { --paper:#fbfbf9; --ink:#1b1d2a; --muted:#62656f; --line:#dcdce3; --stencil:#5a3e9e; --warn:#9a5b12; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 15px/1.5 Inter, system-ui, -apple-system, sans-serif; }
+  main { max-width: 860px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 28px; letter-spacing: -0.02em; margin: 0 0 6px; }
+  h2 { font-size: 18px; margin: 32px 0 8px; }
+  p.sub { color: var(--muted); margin: 0 0 20px; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; vertical-align: top; padding: 9px 8px; border-bottom: 1px solid var(--line); font-size: 14px; }
+  th { color: var(--muted); font-weight: 600; border-bottom: 2px solid var(--ink); }
+  a { color: var(--stencil); word-break: break-all; }
+  .ok { color: #2f6b3a; font-weight: 600; }
+  .unsicher { color: var(--warn); font-weight: 600; }
+  @media (max-width: 640px) { th:nth-child(3), td:nth-child(3) { display: none; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Quellen zum Preisplan Tattookalender</h1>
+  <p class="sub">Abgerufen am 20.10.2026. Preise netto. „Offiziell“ = Preisseite des Anbieters selbst. „Unsicher“ = Vergleichsseite, oft von einem Konkurrenten. PDF: ~/Downloads/Tattookalender Angebote neu/Tattookalender-Preisplan.pdf, Quelle preisplan.html, neu bauen mit _baue-pdf.sh.</p>
+
+  <h2>Wettbewerber</h2>
+  <table>
+    <thead><tr><th>Anbieter</th><th>Was übernommen wurde</th><th>Quelle</th><th>Sicherheit</th></tr></thead>
+    <tbody>
+      <tr><td>Shore</td><td>Booking 59,90 € (jährl. 49,90 €), Booking + Marketing 79,90 € (69,90 €), All-in-One 129,90 € (119,90 €), Kasse 59,90/79,90 €, Cloud-TSE 9 €, Website 65 €, Web-App 40 €, Laufzeit monatlich (14 Tage) oder 12 Monate. Zahlungsgebühren und Einrichtung: nicht genannt.</td><td><a href="https://www.shore.com/de/preise">shore.com/de/preise</a></td><td class="ok">offiziell</td></tr>
+      <tr><td>Planity</td><td>Keine Preise öffentlich (Tarife Kalender, Kalender + Kasse, + Terminal). Planity Pay 0,79 % + 0,19 €, Tap to Pay 0,99 %, SMS-Kampagne 0,09 €, 0 % Provision, monatlich kündbar.</td><td><a href="https://www.appoynt.de/vergleich/planity-alternative">appoynt.de/vergleich/planity-alternative</a> (Stand 09/2026)</td><td class="unsicher">unsicher</td></tr>
+      <tr><td>Planity</td><td>Kalender + Kasse 99 € inkl. TSE und 100 SMS, keine Einrichtung, alle Mitarbeiter, Terminal 0,99 % + 0,19 €.</td><td><a href="https://www.studiolution.com/vergleich/planity/">studiolution.com/vergleich/planity</a> (Stand 03/2026)</td><td class="unsicher">unsicher</td></tr>
+      <tr><td>Planity</td><td>Kalender-Abo ab ca. 69 € (Angabe aus Vergleichsseiten), 100 SMS gratis, keine Provision.</td><td><a href="https://pabau.com/de/blog/planity-kosten/">pabau.com/de/blog/planity-kosten</a> (13.10.2026), Websuche</td><td class="unsicher">unsicher</td></tr>
+      <tr><td>Treatwell</td><td>Starter 39 €, Advanced 49 € + 7,50 € TSE, 35 % auf erste Marktplatz-Buchung je Neukunde, 2 % auf Online-Vorauszahlung.</td><td><a href="https://pabau.com/de/blog/treatwell-kosten/">pabau.com/de/blog/treatwell-kosten</a> (02.10.2026)</td><td class="unsicher">unsicher</td></tr>
+      <tr><td>Fresha</td><td>Selbstständig 12,95 €, Team 8,95 € je Mitarbeiter, Zahlungen 1,29 % + 0,20 €, Klarna 3,49 % + 0,50 €, Neukunden-Gebühr Marktplatz „kostenlos“, SMS 0,14 €, WhatsApp 0,14–0,25 €.</td><td><a href="https://www.fresha.com/de/pricing">fresha.com/de/pricing</a></td><td class="ok">offiziell</td></tr>
+      <tr><td>TattooGenda</td><td>Stufen 0 / 16 / 30 / 45 € (an anderer Stelle „ab 24 € je Nutzer“), Anzahlung per Zahlungsknopf, SMS, Gastartists.</td><td><a href="https://www.capterra.com/p/181176/TattooGenda/">capterra.com/p/181176/TattooGenda</a></td><td class="unsicher">unsicher</td></tr>
+      <tr><td>Ink Studio Manager</td><td>29 € im Monat, Probemonat 3,95 €.</td><td><a href="https://omr.com/en/reviews/product/ink-studio-manager/alternatives">omr.com/…/ink-studio-manager</a></td><td class="unsicher">unsicher</td></tr>
+      <tr><td>Superchat</td><td>Free 0 €, Basic 89 €, Professional 149 €, Advanced 299 € (Logins 1/3/6/12, Nummern 1/1/2/4), 12 Monate Mindestlaufzeit, Login +19 €, Nummer +49 €, KI-Copilot 29 €, KI-Agent 49 €, Automation +10 €.</td><td><a href="https://superchat.com/preise">superchat.com/preise</a></td><td class="ok">offiziell</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Kosten, die wir weiterreichen oder selbst tragen</h2>
+  <table>
+    <thead><tr><th>Thema</th><th>Was übernommen wurde</th><th>Quelle</th><th>Sicherheit</th></tr></thead>
+    <tbody>
+      <tr><td>WhatsApp (Meta)</td><td>Ab 1.10.2026: Deutschland Marketing 0,1131 €, Utility/Authentifizierung/bezahlte Service-Nachricht 0,0456 €, 1.000 Service-Nachrichten je Nummer und Monat gratis, 72 h gratis nach Klick auf WhatsApp-Anzeige.</td><td><a href="https://help.meetergo.com/en/integrations/automation/whatsapp-pricing">help.meetergo.com/…/whatsapp-pricing</a>; offiziell gegenprüfen: <a href="https://developers.facebook.com/docs/whatsapp/pricing">developers.facebook.com/docs/whatsapp/pricing</a></td><td class="unsicher">unsicher, vor Start prüfen</td></tr>
+      <tr><td>Stripe</td><td>EU-Standardkarten 1,5 % + 0,25 €, Premium 2,8 % + 0,25 €, SEPA 0,35 €, Klarna ab 2,99 % + 0,35 €.</td><td><a href="https://stripe.com/de/pricing">stripe.com/de/pricing</a></td><td class="ok">offiziell</td></tr>
+      <tr><td>Stripe Connect</td><td>„Stripe übernimmt Preise“ (Standard-Konten): keine Gebühren für die Plattform. Nur bei „Sie übernehmen Preise“: 2 € je aktivem Konto + 0,25 % + 0,10 € je Auszahlung.</td><td><a href="https://stripe.com/de/connect/pricing">stripe.com/de/connect/pricing</a></td><td class="ok">offiziell</td></tr>
+      <tr><td>Eigenes Programm</td><td>Plattformgebühr Standard 500 Basispunkte = 5 % (Entscheidung 14.10.2026), Satz je Studio änderbar; Studios haben Standard-Konten, Zahlungen laufen direkt über das Studio-Konto.</td><td>apps/tf-studio/src/lib/payments/calc.ts (PLATFORM_FEE_BP_DEFAULT), apps/tf-studio/src/lib/payments/connect.ts</td><td class="ok">Code</td></tr>
+      <tr><td>Kasse mit TSE</td><td>Tattookalender nutzt Cloud-TSE fiskaly SIGN DE (API-Preise nur auf Anfrage). Vergleichspreise je Kasse/Monat laut Recherche des Koordinators 20.10.2026: Partner über efsta ab ca. 6 € (Jahresbindung), Quill 9 €, Tillhub ca. 119 €/Jahr, ready2order 15,90 € (jährl.) / 20 € (monatl.), Deutsche Fiskal ab 14,99 € + 14,99 € Aktivierung; Hardware-TSE ca. 180–250 € einmalig für 5 Jahre. Annahme eigene Kosten 6–15 € je Studio, ggf. DSFinV-K-Export extra → Angebot bei fiskaly anfragen. Verkaufspreis 19 € (Komplett inklusive).</td><td>Recherche Koordinator (ohne Einzel-Links übergeben)</td><td class="unsicher">Schätzung</td></tr>
+      <tr><td>Eigene Kosten je Studio</td><td>Supabase, Netlify, E-Mail, KI, Inbox-Betrieb: grobe Schätzung, keine Rechnungen ausgewertet.</td><td>Schätzung</td><td class="unsicher">Schätzung</td></tr>
+    </tbody>
+  </table>
+</main>
+</body>
+</html>

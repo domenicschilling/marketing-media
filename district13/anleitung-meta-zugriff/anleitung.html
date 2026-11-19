@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Anleitung: Vollzugriff im Meta-Unternehmenskonto „Bandoleros“</title>
+<style>
+  @page { size: A4; margin: 16mm 15mm 16mm; }
+  * { box-sizing: border-box; }
+  body { font: 11.2pt/1.5 -apple-system, "Helvetica Neue", Arial, sans-serif; color: #1c1e21; margin: 0; }
+  h1 { font-size: 22pt; line-height: 1.15; margin: 0 0 6px; }
+  h2 { font-size: 14.5pt; margin: 0 0 6px; display: flex; align-items: center; gap: 10px; }
+  .nr { display: inline-flex; width: 30px; height: 30px; border-radius: 50%; background: #0866ff; color: #fff; font-size: 13pt; align-items: center; justify-content: center; flex: none; }
+  .sub { color: #555; font-size: 11.5pt; margin: 0 0 14px; }
+  .box { border: 1px solid #d8dde3; border-radius: 10px; padding: 12px 14px; margin: 10px 0 14px; background: #f7f9fb; }
+  .box.blau { background: #eef4ff; border-color: #c6d9ff; }
+  .box.gelb { background: #fff8e5; border-color: #f2d78a; }
+  .box.gruen { background: #ecf8ef; border-color: #b6e2c0; }
+  .step { margin: 0 0 18px; page-break-inside: avoid; }
+  .link { display: block; font: 600 10.5pt/1.4 ui-monospace, Menlo, monospace; color: #0866ff; word-break: break-all; background: #fff; border: 1px dashed #9fbfff; border-radius: 8px; padding: 8px 10px; margin: 6px 0; text-decoration: none; }
+  .shot { position: relative; border: 1px solid #ccd0d5; border-radius: 8px; overflow: hidden; margin: 8px auto 4px; width: 84%; }
+  .shot img { display: block; width: 100%; }
+  .mark { position: absolute; border: 3px solid #e4002b; border-radius: 8px; box-shadow: 0 0 0 4px rgba(228,0,43,.18); }
+  .pfeil { position: absolute; background: #e4002b; color: #fff; font-weight: 700; font-size: 10pt; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+  .cap { font-size: 9.5pt; color: #666; margin: 0 0 4px; }
+  ul, ol { margin: 4px 0 4px 20px; padding: 0; }
+  li { margin: 2px 0; }
+  b.k { background: #fff; border: 1px solid #ccd0d5; border-radius: 6px; padding: 0 6px; font-weight: 600; white-space: nowrap; }
+  .kopf { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #0866ff; padding-bottom: 10px; margin-bottom: 14px; }
+  .tag { font-size: 9pt; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #0866ff; }
+  .neu { page-break-before: always; }
+  /* Beispiel-Dialog Schritt 5 */
+  .dlg { width: 78%; margin: 8px auto 4px; border: 1px solid #ccd0d5; border-radius: 12px; box-shadow: 0 6px 24px rgba(0,0,0,.12); padding: 16px 18px; background: #fff; font-size: 10.5pt; }
+  .dlg h3 { margin: 0 0 4px; font-size: 12.5pt; }
+  .opt { display: flex; gap: 10px; align-items: flex-start; border: 1px solid #dfe3e8; border-radius: 10px; padding: 10px 12px; margin: 8px 0; }
+  .opt.an { border: 3px solid #e4002b; background: #fff5f6; }
+  .radio { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #8a8d91; margin-top: 3px; flex: none; }
+  .an .radio { border-color: #0866ff; background: radial-gradient(#0866ff 45%, #fff 50%); }
+  .btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
+  .btn { padding: 6px 14px; border-radius: 6px; background: #e4e6eb; font-weight: 600; }
+  .btn.p { background: #0866ff; color: #fff; outline: 3px solid #e4002b; outline-offset: 2px; }
+  .klein { font-size: 9.5pt; color: #666; }
+</style>
+</head>
+<body>
+
+<div class="kopf">
+  <div>
+    <div class="tag">Anleitung · ca. 2 Minuten</div>
+    <h1>Domenic vollen Zugriff auf euer Meta-Unternehmenskonto geben</h1>
+    <p class="sub">Für: District13 Memmingen · Das Konto heißt bei Meta noch <b>„Bandoleros“</b></p>
+  </div>
+</div>
+
+<div class="box blau">
+  <b>Worum geht es?</b><br>
+  Eure Kunden aus der Wunschtattoo-Aktion sollen in WhatsApp <b>„District13 Memmingen“</b> als Absender sehen. Dafür richten wir in eurem eigenen Meta-Unternehmenskonto „Bandoleros“ eine WhatsApp-Business-Nummer für euch ein. Meta erlaubt das nur Personen mit <b>vollem Zugriff</b> („Uneingeschränkter Zugriff“). Den kann nur ihr als Inhaber vergeben, Domenic kann ihn nicht selbst anfragen.
+</div>
+
+<div class="box gelb">
+  <b>Das braucht ihr:</b>
+  <ul>
+    <li>Einen Computer oder Laptop mit Chrome, Safari oder Edge. Am Handy geht es auch, ist aber umständlicher.</li>
+    <li>Den Login, mit dem euer Meta-Konto verwaltet wird. Laut Meta ist das das Instagram-Konto <b>@district13.mm</b> (angezeigt als „Bandoleros Memmingen“).</li>
+  </ul>
+</div>
+
+<div class="step">
+  <h2><span class="nr">1</span> Bei Meta Business anmelden</h2>
+  <p>Diesen Link öffnen:</p>
+  <a class="link" href="https://business.facebook.com/">https://business.facebook.com/</a>
+  <ul>
+    <li>Auf <b class="k">Mit Instagram anmelden</b> klicken und mit dem Instagram-Konto <b>@district13.mm</b> einloggen.</li>
+    <li>Wenn ihr eure Seite sonst über Facebook verwaltet, geht auch <b class="k">Mit Facebook anmelden</b> mit dem Facebook-Profil, das Admin von District13 ist.</li>
+    <li>Fragt Meta nach einem Code (SMS, E-Mail oder App), gebt ihn ein. Das ist normal.</li>
+  </ul>
+</div>
+
+<div class="step">
+  <h2><span class="nr">2</span> Direkt die Personen-Liste von „Bandoleros“ öffnen</h2>
+  <p>Wenn ihr angemeldet seid, diesen Link öffnen. Er führt direkt an die richtige Stelle:</p>
+  <a class="link" href="https://business.facebook.com/latest/settings/business_users/?business_id=3352266378262871">https://business.facebook.com/latest/settings/business_users/?business_id=3352266378262871</a>
+  <p>Oben links muss <b>„Bandoleros · Business-Portfolio“</b> mit eurem District13-Logo stehen. Steht dort etwas anderes, oben links auf den Namen klicken und <b>„Bandoleros“</b> auswählen.</p>
+  <p>Ohne Link: <b class="k">Einstellungen</b> (Zahnrad unten links) → <b class="k">Nutzer</b> → <b class="k">Personen</b>.</p>
+</div>
+
+<div class="step neu">
+  <h2><span class="nr">3</span> Bei „Domenic Schilling“ auf die drei Punkte klicken</h2>
+  <p>In der Liste steht <b>Domenic Schilling</b> mit „Eingeschränkter Zugriff · Basic“. Ganz rechts in dieser Zeile auf <b class="k">···</b> klicken.</p>
+  <div class="shot">
+    <img src="img/1-personen.jpg" alt="Personen-Liste im Unternehmenskonto Bandoleros">
+    <div class="mark" style="left:21.6%;top:19.4%;width:77.3%;height:7.2%"></div>
+    <div class="mark" style="left:93.2%;top:20.6%;width:3%;height:4.6%;border-width:4px"></div>
+    <div class="pfeil" style="left:79%;top:28.6%">③ hier klicken</div>
+  </div>
+  <p class="cap">So sieht die Seite aus. Ihr seht zusätzlich euren eigenen Eintrag „Bandoleros Memmingen“.</p>
+</div>
+
+<div class="step">
+  <h2><span class="nr">4</span> „Berechtigungen für das Business-Portfolio bearbeiten“ wählen</h2>
+  <p>Im kleinen Menü auf <b class="k">Berechtigungen für das Business-Portfolio bearbeiten</b> klicken.</p>
+  <div class="shot">
+    <img src="img/2-menue.jpg" alt="Menü mit Berechtigungen bearbeiten">
+    <div class="mark" style="left:77.8%;top:33.3%;width:21.8%;height:4.5%"></div>
+    <div class="pfeil" style="left:70.5%;top:40.2%">④ diesen Punkt wählen</div>
+  </div>
+  <p class="cap">Auf unserem Bild ist der Punkt grau, weil Domenic sich nicht selbst freischalten kann. Bei euch als Inhaber ist er schwarz und anklickbar.</p>
+</div>
+
+<div class="step neu">
+  <h2><span class="nr">5</span> „Uneingeschränkter Zugriff“ auswählen und speichern</h2>
+  <p>Es öffnet sich ein Fenster. Dort <b class="k">Uneingeschränkter Zugriff</b> (Vollzugriff) auswählen und unten auf <b class="k">Speichern</b> bzw. <b class="k">Bestätigen</b> klicken.</p>
+  <div class="dlg">
+    <h3>Berechtigungen für das Business-Portfolio bearbeiten</h3>
+    <div class="klein">Domenic Schilling</div>
+    <div class="opt"><div class="radio"></div><div><b>Eingeschränkter Zugriff</b><br><span class="klein">Kann nur mit zugewiesenen Konten arbeiten</span></div></div>
+    <div class="opt an"><div class="radio"></div><div><b>Uneingeschränkter Zugriff</b><br><span class="klein">Volle Kontrolle über das Business-Portfolio</span></div></div>
+    <div class="btns"><span class="btn">Abbrechen</span><span class="btn p">Speichern</span></div>
+  </div>
+  <p class="cap">Beispielhafte Darstellung. Der Wortlaut bei Meta kann leicht abweichen. Wichtig ist nur: <b>„Uneingeschränkter Zugriff“</b>.</p>
+  <p>Meta fragt eventuell noch einmal nach Passwort oder Code. Das bestätigen.</p>
+</div>
+
+<div class="step">
+  <h2><span class="nr">6</span> Kontrolle und kurze Rückmeldung</h2>
+  <p>In der Liste steht bei Domenic Schilling jetzt <b>„Uneingeschränkter Zugriff · Alles“</b>. Fertig! Schickt Domenic kurz ein <b>„Erledigt“</b>. Danach richtet er die WhatsApp-Nummer ein, ihr müsst nichts weiter tun.</p>
+</div>
+
+<div class="box">
+  <b>Falls etwas nicht klappt</b>
+  <ul>
+    <li><b>„Berechtigungen bearbeiten“ ist grau:</b> Ihr seid mit dem falschen Konto angemeldet. Abmelden und mit <b>@district13.mm</b> neu anmelden (Schritt 1).</li>
+    <li><b>„Bandoleros“ taucht nicht auf:</b> Ebenfalls falsches Konto. Bitte mit dem Login anmelden, mit dem ihr eure Facebook-Seite bzw. Werbung verwaltet.</li>
+    <li><b>Domenic steht nicht in der Liste:</b> Kurz Bescheid geben, dann schickt er eine neue Einladung.</li>
+  </ul>
+</div>
+
+<div class="box gruen">
+  <b>Gut zu wissen:</b> Ihr bleibt Inhaber eures Kontos und könnt den Zugriff jederzeit an derselben Stelle wieder einschränken oder entfernen. Eure bisherige WhatsApp-Nummer und alle Chats bleiben unverändert.
+</div>
+
+</body>
+</html>

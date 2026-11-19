@@ -1,0 +1,11 @@
+import { createRequire } from "module";
+const require = createRequire("/Users/domi/Marketing-Maschine/");
+const { chromium } = require("playwright");
+const D = "/Users/domi/Marketing-Maschine/content/tattookalender/werbung-2026-11-02";
+const b = await chromium.launch();
+const p = await b.newPage();
+await p.goto("file://" + D + "/quellen/blatt.html"); await p.evaluate(() => document.fonts.ready);
+const ueber = await p.evaluate(() => { const s = document.querySelector("#s"), f = document.querySelector(".fuss"), a = document.querySelector(".aktion"); return { scrollH: s.scrollHeight, clientH: s.clientHeight, aktionUnten: a.getBoundingClientRect().bottom, fussOben: f.getBoundingClientRect().top }; });
+console.log(ueber);
+await p.pdf({ path: D + "/blatt/tattookalender-auf-einem-blatt.pdf", format: "A4", printBackground: true, preferCSSPageSize: true });
+await b.close();

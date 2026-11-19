@@ -1,0 +1,470 @@
+/* Tattookalender · Entwurf B „Der Kalender füllt sich“ (09.11.2026)
+   Grundsatz: Alles ist ohne JavaScript und vor jeder Animation lesbar. Die 3D-Geschichte im Kopfbereich
+   läuft nur mit der Klasse html.story (gesetzt im <head>, nur ohne prefers-reduced-motion, und von main.js
+   wieder entfernt, falls GSAP fehlt). Bewegt werden nur transform und opacity. */
+
+@font-face {
+  font-family: Archivo;
+  src: url(font/archivo-tk.woff2) format("woff2");
+  font-weight: 400 800;
+  font-stretch: 72% 100%;
+  font-display: swap;
+}
+
+:root {
+  --tinte: #121214;
+  --tinte-2: #1d1d21;
+  --creme: #f2ede2;
+  --creme-2: #e8e1d2;
+  --papier: #fbfaf6;
+  --weiss: #ffffff;
+  --gold: #c9a24f;
+  --gold-hell: #f3d891;
+  --gold-text: #6f5012;      /* Gold als Schrift auf Creme, 6,3:1 */
+  --grau: #4a4a50;           /* Nebentext auf Creme, 7,4:1 */
+  --grau-dunkel: #bdb6a7;    /* Nebentext auf Tinte, 9:1 */
+  --app-linie: #e4e2db;
+  --app-grau: #5b5e66;
+  /* Status wie in der App */
+  --orange-bg: #fdebd3; --orange: #8a4200;
+  --gruen-bg: #dcf3e2;  --gruen: #14532d;
+  --rot-bg: #fde4e4;    --rot: #9f1d1d;
+  --chip-grau-bg: #e6e5e1; --chip-grau: #2f3036;
+  /* Terminkarten wie im Kalender der App */
+  --k-blau-bg: #dfe7fb; --k-blau: #2f6be0;
+  --k-orange-bg: #f8ead8; --k-orange: #e08a1e;
+
+  --rand: 16px;
+  --breite: 1240px;
+  --std: 52px; /* Höhe einer Kalenderstunde */
+  --strecke: 860px; /* Scroll-Strecke der gepinnten Kopf-Bühne */
+  --t-anzeige: clamp(2.55rem, 10.4vw, 6.9rem);
+  --t-h2: clamp(2rem, 8.2vw, 4.6rem);
+  --t-h3: clamp(1.4rem, 5.6vw, 1.9rem);
+  --t-text: 1.0625rem;
+  --t-klein: .875rem;
+}
+@media (min-width: 760px) {
+  :root { --rand: 32px; --std: 60px; --strecke: 1500px; }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+* { margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; background: var(--creme); }
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+body {
+  background: var(--creme);
+  color: var(--tinte);
+  font-family: Archivo, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: var(--t-text);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip; /* kein seitliches Scrollen, ohne Sticky zu brechen */
+}
+img { display: block; max-width: 100%; height: auto; }
+a { color: inherit; }
+ul, ol { list-style: none; }
+:focus-visible { outline: 3px solid var(--gold-text); outline-offset: 3px; border-radius: 4px; }
+.dunkel :focus-visible { outline-color: var(--gold-hell); }
+::selection { background: var(--gold-hell); color: var(--tinte); }
+.nur-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.anzeige, h1, h2, h3 {
+  font-stretch: 72%;
+  font-weight: 800;
+  letter-spacing: -.02em;
+  line-height: .95;
+  text-wrap: balance;
+}
+h1 { font-size: var(--t-anzeige); }
+h2 { font-size: var(--t-h2); }
+h3 { font-size: var(--t-h3); line-height: 1.05; letter-spacing: -.01em; }
+p { max-width: 62ch; text-wrap: pretty; }
+
+.huelle { width: min(100% - 2 * var(--rand), var(--breite)); margin-inline: auto; }
+
+/* Knöpfe: flach, eine Farbe, eckig mit kleinem Radius wie die App */
+.knopf {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  min-height: 52px; padding: 0 22px;
+  background: var(--tinte); color: var(--creme);
+  font-weight: 700; font-size: 1.0625rem; text-decoration: none;
+  border-radius: 10px;
+  transition: transform .18s ease, background-color .18s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.knopf:hover { background: #000; transform: translateY(-2px); }
+.knopf:active { transform: translateY(1px) scale(.98); }
+.knopf svg { width: 18px; height: 18px; transition: transform .18s ease; }
+.knopf:hover svg { transform: translateX(3px); }
+.knopf.gold { background: var(--gold); color: var(--tinte); }
+.knopf.gold:hover { background: var(--gold-hell); }
+.knopf.hell { background: var(--creme); color: var(--tinte); }
+.knopf.hell:hover { background: var(--weiss); }
+.link-pfeil {
+  display: inline-flex; align-items: center; min-height: 52px; gap: 8px;
+  font-weight: 700; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 5px;
+}
+.link-pfeil:hover { text-decoration-color: var(--gold-text); }
+
+/* ---------- Kopfzeile ---------- */
+.kopf { position: relative; z-index: 5; }
+.kopf .huelle { display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 64px; }
+.kopf-logo img { height: 26px; width: auto; }
+.kopf nav { display: none; }
+.kopf nav a { text-decoration: none; font-weight: 600; padding: 10px 2px; }
+.kopf nav a:hover { text-decoration: underline; text-underline-offset: 5px; }
+.kopf .knopf { min-height: 42px; padding: 0 16px; font-size: 1rem; }
+@media (min-width: 900px) {
+  .kopf .huelle { height: 76px; }
+  .kopf-logo img { height: 30px; }
+  .kopf nav { display: flex; gap: 28px; margin-left: auto; margin-right: 12px; }
+}
+
+/* ---------- Kopfbereich: die Bühne ---------- */
+.buehne { position: relative; }
+.buehne-fix { padding-top: 4px; padding-bottom: 40px; }
+.held-text { padding-bottom: 22px; }
+.held-text h1 { max-width: 15ch; }
+.held-satz { margin-top: 14px; font-size: 1.0625rem; line-height: 1.5; max-width: 40ch; }
+.held-aktion { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 20px; margin-top: 18px; }
+.held-hinweis { margin-top: 8px; font-size: var(--t-klein); color: var(--grau); }
+@media (min-width: 900px) {
+  .held-text { padding-bottom: 34px; }
+  .held-text h1 { max-width: none; }
+  .held-text > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 48px; align-items: center; margin-top: 22px; }
+  .held-satz { margin-top: 0; font-size: 1.1875rem; max-width: 52ch; }
+  .held-aktion { margin-top: 0; }
+  .held-hinweis { grid-column: 2; }
+}
+
+.szene { position: relative; perspective: 1300px; perspective-origin: 50% 0%; }
+
+/* Kalender (nachgebaut aus der Tagesansicht der App, Demo-Daten) */
+.kal {
+  position: relative;
+  background: var(--papier);
+  border-radius: 18px;
+  padding: 10px 10px 12px;
+  color: #17181b;
+  transform-origin: 50% 0%;
+  max-width: 1120px; margin-inline: auto;
+  font-stretch: 100%;
+}
+.kal-kopf { display: flex; align-items: center; gap: 10px; padding: 4px 4px 8px; }
+.kal-kopf .pfeil { font-size: 1.25rem; line-height: 1; color: var(--app-grau); }
+.kal-datum { font-size: 1.3rem; font-weight: 800; letter-spacing: -.01em; }
+.kal-demo { margin-left: auto; font-size: .75rem; color: var(--app-grau); font-weight: 600; }
+.kal-ansicht { display: none; }
+.kal-tage { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 8px; }
+.kal-tage li { display: grid; justify-items: center; padding: 5px 0 6px; border-radius: 10px; font-size: .6875rem; font-weight: 600; color: var(--app-grau); text-transform: uppercase; line-height: 1.15; }
+.kal-tage b { font-size: 1.05rem; color: #17181b; font-weight: 700; }
+.kal-tage .an { background: var(--tinte); color: #d9d7d0; }
+.kal-tage .an b { color: #fff; }
+.kal-tage i { display: block; height: 4px; margin-top: 3px; font-style: normal; }
+.kal-tage i::before { content: ""; display: block; width: calc(var(--n, 0) * 5px); max-width: 40px; height: 4px; border-radius: 2px; background: var(--gold); transition: width .3s ease; }
+.kal-zeile { font-size: .75rem; color: var(--app-grau); padding: 0 4px 8px; max-width: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kal-zeile .z-anz { color: var(--orange); font-weight: 600; transition: color .3s; }
+.kal-zeile .z-einw { color: var(--rot); font-weight: 600; transition: color .3s; }
+.kal-zeile .gut { color: var(--gruen); }
+
+.kal-raster { display: grid; grid-template-columns: 38px 1fr; background: var(--weiss); border-radius: 12px; overflow: hidden; box-shadow: inset 0 0 0 1px var(--app-linie); } /* taste-skill-ignore: Linien/Kanten wie in der App (Nachbau, data-ui) bzw. Termin-Leiste der Pakete */
+.kal-zeiten { padding-top: 30px; }
+.kal-zeiten span { display: block; height: var(--std); font-size: .6875rem; color: var(--app-grau); text-align: right; padding-right: 6px; transform: translateY(-.55em); }
+.kal-zeiten span:first-child { transform: none; }
+.kal-spalten { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.kal-spalte { box-shadow: inset 1px 0 0 var(--app-linie); min-width: 0; } /* taste-skill-ignore: Linien/Kanten wie in der App (Nachbau, data-ui) bzw. Termin-Leiste der Pakete */
+.kal-artist { height: 30px; display: flex; align-items: center; justify-content: center; gap: 5px; font-size: .75rem; font-weight: 600; white-space: nowrap; overflow: hidden; box-shadow: inset 0 -1px 0 var(--app-linie); padding: 0 4px; } /* taste-skill-ignore: Linien/Kanten wie in der App (Nachbau, data-ui) bzw. Termin-Leiste der Pakete */
+.kal-artist i { width: 8px; height: 8px; border-radius: 50%; background: var(--c); flex: none; }
+.kal-flaeche {
+  position: relative; height: calc(7 * var(--std));
+  background-image: repeating-linear-gradient(to bottom, transparent 0 calc(var(--std) - 1px), var(--app-linie) calc(var(--std) - 1px) var(--std)); /* taste-skill-ignore: Linien/Kanten wie in der App (Nachbau, data-ui) bzw. Termin-Leiste der Pakete */
+}
+
+.karte {
+  position: absolute; left: 3px; right: 3px;
+  top: calc(var(--von) * var(--std) + 2px);
+  height: calc(var(--dauer) * var(--std) - 4px);
+  background: var(--k-blau-bg);
+  border-radius: 8px;
+  box-shadow: inset 3px 0 0 var(--k-blau); /* taste-skill-ignore: Linien/Kanten wie in der App (Nachbau, data-ui) bzw. Termin-Leiste der Pakete */
+  padding: 5px 6px 5px 9px;
+  overflow: hidden;
+  font-size: .6875rem; line-height: 1.25;
+  transition: background-color .35s ease, box-shadow .35s ease; /* taste-skill-ignore: Linien/Kanten wie in der App (Nachbau, data-ui) bzw. Termin-Leiste der Pakete */
+}
+.karte.orange { background: var(--k-orange-bg); box-shadow: inset 3px 0 0 var(--k-orange); } /* taste-skill-ignore: Linien/Kanten wie in der App (Nachbau, data-ui) bzw. Termin-Leiste der Pakete */
+.karte.orange.bestaetigt { background: var(--k-blau-bg); box-shadow: inset 3px 0 0 var(--k-blau); } /* taste-skill-ignore: Linien/Kanten wie in der App (Nachbau, data-ui) bzw. Termin-Leiste der Pakete */
+.karte time { color: var(--app-grau); }
+.karte strong { display: block; font-size: .8125rem; line-height: 1.15; font-weight: 700; color: #111; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.karte .motiv { display: block; color: #3f4148; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.karte .marken { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 4px; }
+.karte.kurz { padding-top: 3px; }
+.karte.kurz .motiv, .karte.kurz time { display: none; }
+.marke { display: inline-flex; align-items: center; gap: 3px; padding: 2px 5px 2px 3px; border-radius: 6px; font-size: .625rem; font-weight: 600; line-height: 1.2; transition: background-color .3s, color .3s; }
+.marke svg { width: 12px; height: 12px; flex: none; }
+.marke .ja { display: none; }
+.marke[data-art="anz"] { background: var(--orange-bg); color: var(--orange); }
+.marke[data-art="einw"] { background: var(--rot-bg); color: var(--rot); }
+.marke.ok { background: var(--gruen-bg); color: var(--gruen); }
+.marke.ok .nein { display: none; }
+.marke.ok .ja { display: block; }
+.marke em { font-style: normal; }
+.marke .wort-ok { display: none; }
+.marke.ok .wort-offen { display: none; }
+.marke.ok .wort-ok { display: inline; }
+
+@media (min-width: 760px) {
+  .kal { padding: 16px 18px 18px; border-radius: 22px; }
+  .kal-datum { font-size: 1.6rem; }
+  .kal-ansicht { display: flex; margin-left: 18px; background: #eceae4; border-radius: 10px; padding: 3px; font-size: .875rem; font-weight: 600; }
+  .kal-ansicht span { padding: 5px 12px; border-radius: 8px; color: var(--app-grau); }
+  .kal-ansicht .an { background: var(--tinte); color: #fff; }
+  .kal-demo { font-size: .8125rem; }
+  .kal-tage { gap: 8px; margin-bottom: 10px; }
+  .kal-tage li { font-size: .75rem; padding: 7px 0 8px; }
+  .kal-tage b { font-size: 1.35rem; }
+  .kal-zeile { font-size: .875rem; }
+  .kal-raster { grid-template-columns: 56px 1fr; }
+  .kal-zeiten { padding-top: 38px; }
+  .kal-zeiten span { font-size: .8125rem; padding-right: 10px; }
+  .kal-artist { height: 38px; font-size: .9375rem; gap: 7px; }
+  .karte { left: 5px; right: 5px; padding: 7px 10px 7px 13px; font-size: .8125rem; border-radius: 10px; }
+  .karte strong { font-size: 1rem; }
+  .karte.kurz { padding-top: 5px; }
+  .marke { font-size: .75rem; padding: 3px 7px 3px 5px; gap: 4px; }
+  .marke svg { width: 14px; height: 14px; }
+  .karte .marken { gap: 5px; margin-top: 6px; }
+}
+
+/* Termin-Ansicht „Tom Meier“, die aus dem Kalender hochkommt */
+.detail {
+  background: var(--weiss);
+  border-radius: 18px;
+  padding: 18px 18px 20px;
+  margin: 18px auto 0;
+  width: min(100% - 2 * var(--rand), 420px);
+  color: #17181b;
+  box-shadow: inset 0 0 0 1px var(--app-linie); /* taste-skill-ignore: Linien/Kanten wie in der App (Nachbau, data-ui) bzw. Termin-Leiste der Pakete */
+  font-stretch: 100%;
+}
+.detail-kopf strong { display: block; font-size: 1.375rem; font-weight: 800; letter-spacing: -.01em; }
+.detail-kopf span { display: block; color: var(--app-grau); font-size: .9375rem; }
+.detail-liste { margin-top: 14px; display: grid; gap: 10px; }
+.detail-liste > div { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; padding-top: 10px; box-shadow: inset 0 1px 0 var(--app-linie); } /* taste-skill-ignore: Linien/Kanten wie in der App (Nachbau, data-ui) bzw. Termin-Leiste der Pakete */
+.detail-liste dt { font-size: .9375rem; color: var(--app-grau); }
+.detail-liste dd { justify-self: end; }
+.chip { display: inline-block; padding: 4px 10px; border-radius: 8px; font-size: .9375rem; font-weight: 600; white-space: nowrap; }
+.chip.orange { background: var(--orange-bg); color: var(--orange); }
+.chip.rot { background: var(--rot-bg); color: var(--rot); }
+.chip.gruen { background: var(--gruen-bg); color: var(--gruen); }
+.chip.grau { background: var(--chip-grau-bg); color: var(--chip-grau); }
+/* Wechsel ohne Animation: vorher → nachher nebeneinander */
+.wechsel { display: inline-block; }
+.wechsel .dreh { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.pfeil-zw { font-weight: 700; }
+.detail-fuss { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
+.stempel { width: 52px; height: 52px; flex: none; }
+.detail-fuss p { font-weight: 700; font-size: 1rem; line-height: 1.3; }
+
+.szene-fazit { margin-top: 16px; font-size: 1rem; font-weight: 600; }
+@media (min-width: 760px) { .szene-fazit { text-align: center; font-size: 1.125rem; } .szene-fazit, .story .szene-fazit { max-width: 46ch; margin-inline: auto; } }
+
+/* ----- Mit Geschichte (JS da, keine reduzierte Bewegung) ----- */
+.story .buehne { height: calc(100svh + var(--strecke)); }
+.story .buehne-fix { position: sticky; top: 0; height: 100svh; overflow: hidden; padding-bottom: 0; }
+.story .szene { transform-style: flat; position: static; }
+.story .kal { will-change: transform; }
+.story .detail {
+  position: absolute; left: var(--rand); right: var(--rand); top: 0; margin: 0 auto;
+  width: auto; max-width: 400px;
+  box-shadow: 0 30px 60px -20px rgba(18, 18, 20, .45), inset 0 0 0 1px var(--app-linie); /* schwebt wirklich */ /* taste-skill-ignore: Linien/Kanten wie in der App (Nachbau, data-ui) bzw. Termin-Leiste der Pakete */
+  will-change: transform, opacity;
+}
+.story .wechsel { display: inline-grid; perspective: 500px; }
+.story .pfeil-zw { display: none; }
+.story .wechsel .dreh { display: inline-grid; transform-style: preserve-3d; -webkit-transform-style: preserve-3d; }
+.story .wechsel .dreh > span { grid-area: 1 / 1; justify-self: end; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.story .wechsel .dreh .vorher { transform: rotateX(0deg); }
+.story .wechsel .dreh .nachher { transform: rotateX(180deg); opacity: 0; }
+.story .szene-fazit { position: absolute; left: 0; right: 0; bottom: 18px; }
+@media (min-width: 760px) { .story .detail { max-width: 440px; } }
+
+/* ---------- Abschnitte ---------- */
+.abschnitt { padding: 64px 0; }
+@media (min-width: 900px) { .abschnitt { padding: 150px 0; } }
+@media (min-width: 760px) { .schritt-bild { width: auto; } .schritt:nth-child(even) .schritt-bild { justify-self: start; } }
+.dunkel { background: var(--tinte); color: var(--creme); }
+.dunkel .grau, .dunkel .neben { color: var(--grau-dunkel); }
+.neben { color: var(--grau); }
+
+/* Problem */
+.problem h2 { max-width: 14ch; }
+.problem-satz { margin-top: 16px; font-size: 1.1875rem; color: var(--grau-dunkel); }
+.problem-liste { margin-top: 30px; display: grid; gap: 18px; }
+.problem-liste li { display: grid; gap: 8px; }
+.problem-liste p { font-size: clamp(1.3rem, 5.2vw, 2.25rem); font-weight: 700; font-stretch: 85%; line-height: 1.15; letter-spacing: -.01em; max-width: 26ch; }
+.problem-liste .wechsel .dreh { justify-content: flex-start; }
+.problem-schluss { margin-top: 32px; font-size: 1.1875rem; max-width: 44ch; }
+.problem-schluss strong { color: var(--gold-hell); }
+@media (min-width: 900px) {
+  .problem .huelle { display: grid; grid-template-columns: 1fr 1.25fr; gap: 64px; align-items: start; }
+  .problem-liste { margin-top: 0; gap: 40px; }
+  .problem-liste li { grid-template-columns: 1fr auto; align-items: center; gap: 24px; }
+  .problem-liste .wechsel { justify-self: end; }
+}
+/* Chips im Problem-Abschnitt: ohne JS beide Zustände, mit JS dreht der Chip */
+.story .problem-liste .wechsel .dreh { transition: transform .7s cubic-bezier(.2,.8,.2,1); }
+.story .problem-liste li.ok .dreh { transform: rotateX(180deg); }
+.story .problem-liste .dreh > span { transition: opacity 0s linear .3s; }
+.story .problem-liste li.ok .vorher { opacity: 0; }
+.story .problem-liste li.ok .nachher { opacity: 1; }
+
+/* Ablauf */
+.ablauf-kopf { display: grid; gap: 14px; }
+.ablauf-kopf h2 { max-width: 16ch; }
+.schritte { margin-top: 36px; display: grid; gap: 40px; }
+.schritt { display: grid; gap: 14px; }
+.schritt:nth-child(even) .schritt-bild { justify-self: end; }
+.schritt-bild { width: 76%; }
+.schritt-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.schritt-text h3 { margin-top: 0; }
+.schritt-text p { margin-top: 10px; }
+.app-bild { border-radius: 14px; overflow: hidden; background: var(--weiss); width: 100%; max-width: 380px; box-shadow: inset 0 0 0 1px var(--app-linie); } /* taste-skill-ignore: Linien/Kanten wie in der App (Nachbau, data-ui) bzw. Termin-Leiste der Pakete */
+.app-bild img { width: 100%; }
+.app-bild-klein { max-width: 380px; margin-top: 10px; }
+.bild-hinweis { font-size: .8125rem; color: var(--grau); margin-top: 8px; }
+@media (min-width: 900px) {
+  .schritt-bild, .schritt:nth-child(even) .schritt-bild { width: auto; justify-self: start; }
+  .ablauf-kopf { grid-template-columns: 1fr 1fr; align-items: end; gap: 64px; }
+  .schritte { margin-top: 88px; gap: 110px; }
+  .schritt { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 64px; align-items: center; }
+  .schritt-bild { justify-self: start; perspective: 1100px; }
+  .schritt-text { max-width: 480px; justify-self: end; }
+  .app-bild, .app-bild-klein { max-width: 420px; }
+}
+
+/* Funktionen */
+.funktionen { background: var(--creme-2); }
+.funktionen h2 { max-width: 15ch; }
+.funktionen-bild { margin-top: 28px; perspective: 1400px; }
+.funktionen-bild .app-bild { max-width: none; border-radius: 16px; }
+.funktionen-bild .desk { display: none; }
+.funktionen-liste { margin-top: 30px; display: grid; gap: 14px; }
+.funktionen-liste dt { font-weight: 800; font-stretch: 85%; font-size: 1.1875rem; line-height: 1.2; }
+.funktionen-liste dd { margin-top: 2px; max-width: 46ch; }
+@media (min-width: 760px) {
+  .funktionen-bild .mobil { display: none; }
+  .funktionen-bild .desk { display: block; }
+  .funktionen-liste { grid-template-columns: repeat(2, 1fr); gap: 40px 48px; }
+}
+@media (min-width: 1100px) { .funktionen-liste { grid-template-columns: repeat(3, 1fr); } }
+
+/* Preise: jedes Paket ein Termin-Platz */
+.preise h2 { max-width: 14ch; }
+.aktion { margin-top: 18px; display: block; width: fit-content; background: var(--tinte); color: var(--creme); padding: 10px 14px; border-radius: 10px; font-weight: 600; font-size: .9375rem; }
+.aktion b { color: var(--gold-hell); }
+.pakete { margin-top: 26px; display: grid; gap: 12px; }
+.paket {
+  background: var(--weiss); border-radius: 16px; padding: 16px 18px 18px 22px;
+  box-shadow: inset 5px 0 0 var(--k-blau); /* taste-skill-ignore: Linien/Kanten wie in der App (Nachbau, data-ui) bzw. Termin-Leiste der Pakete */
+  display: grid; align-content: start; gap: 8px; min-width: 0;
+}
+.paket.p2 { box-shadow: inset 5px 0 0 var(--k-orange); } /* taste-skill-ignore: Linien/Kanten wie in der App (Nachbau, data-ui) bzw. Termin-Leiste der Pakete */
+.paket.p3 { box-shadow: inset 5px 0 0 var(--tinte); } /* taste-skill-ignore: Linien/Kanten wie in der App (Nachbau, data-ui) bzw. Termin-Leiste der Pakete */
+.paket.p4 { background: transparent; box-shadow: inset 0 0 0 2px var(--tinte); } /* taste-skill-ignore: Linien/Kanten wie in der App (Nachbau, data-ui) bzw. Termin-Leiste der Pakete */
+.paket.p4 p { font-size: .96875rem; }
+.paket-kopf { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.paket h3 { font-size: 1.4rem; }
+.paket-preis { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.paket-preis b { font-size: 2.4rem; font-weight: 800; font-stretch: 72%; letter-spacing: -.02em; line-height: 1; }
+.paket-preis span { font-size: .9375rem; color: var(--grau); }
+.paket-einr { font-size: .9375rem; font-weight: 600; }
+.paket ul { display: grid; gap: 3px; margin-top: 2px; }
+.paket li { position: relative; padding-left: 24px; font-size: .96875rem; line-height: 1.4; }
+.paket li::before { content: ""; position: absolute; left: 2px; top: .35em; width: 12px; height: 7px; border-left: 2.5px solid var(--gold-text); border-bottom: 2.5px solid var(--gold-text); transform: rotate(-45deg); }
+.paket-notiz { font-size: .875rem; color: var(--grau); }
+.paket .knopf { margin-top: 6px; width: 100%; min-height: 48px; }
+.paket .knopf.rahmen { background: transparent; color: var(--tinte); box-shadow: inset 0 0 0 2px var(--tinte); } /* taste-skill-ignore: Linien/Kanten wie in der App (Nachbau, data-ui) bzw. Termin-Leiste der Pakete */
+.paket .knopf.rahmen:hover { background: var(--tinte); color: var(--creme); }
+.preise-fuss { margin-top: 22px; font-size: .9375rem; color: var(--grau); max-width: 70ch; }
+@media (min-width: 760px) { .pakete { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 760px) { .paket { display: flex; flex-direction: column; } .paket .knopf { margin-top: auto; } .paket ul { margin-bottom: 8px; } }
+@media (min-width: 1180px) { .pakete { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+/* Fragen */
+.fragen .huelle { display: grid; gap: 24px; }
+.fragen h2 { max-width: 12ch; }
+.fragen-liste { display: grid; gap: 6px; }
+.fragen details { background: var(--papier); border-radius: 12px; }
+.fragen summary {
+  list-style: none; cursor: pointer; padding: 14px 46px 14px 16px; position: relative;
+  font-weight: 700; font-size: 1.0625rem; line-height: 1.3; min-height: 54px; display: flex; align-items: center;
+}
+.fragen summary::-webkit-details-marker { display: none; }
+.fragen summary::after { content: ""; position: absolute; right: 20px; top: 50%; width: 10px; height: 10px; border-right: 2.5px solid currentColor; border-bottom: 2.5px solid currentColor; transform: translateY(-70%) rotate(45deg); transition: transform .25s ease; }
+.fragen details[open] summary::after { transform: translateY(-30%) rotate(-135deg); }
+.fragen summary:hover { color: var(--gold-text); }
+.fragen details > div { padding: 0 18px 18px; }
+.fragen details p + p { margin-top: 10px; }
+@media (min-width: 900px) { .fragen .huelle { grid-template-columns: 1fr 1.6fr; gap: 64px; align-items: start; } }
+
+/* Schluss */
+.schluss { text-align: left; }
+.schluss .huelle { display: grid; gap: 18px; }
+.schluss-zeichen { width: 76px; height: 76px; }
+.schluss h2 { max-width: 13ch; }
+.schluss p { font-size: 1.1875rem; color: var(--grau-dunkel); }
+.schluss-aktion { display: flex; flex-wrap: wrap; gap: 6px 22px; align-items: center; }
+.schluss .link-pfeil { color: var(--creme); }
+@media (min-width: 900px) {
+  .schluss .huelle { grid-template-columns: auto 1fr; column-gap: 48px; align-items: start; }
+  .schluss-zeichen { width: 150px; height: 150px; grid-row: span 3; }
+}
+.check-zug { stroke-dasharray: 80; stroke-dashoffset: 0; }
+
+/* Fuß */
+.fuss { background: var(--tinte); color: var(--grau-dunkel); padding: 0 0 40px; font-size: .9375rem; }
+.fuss-marke { display: block; width: 100%; max-width: 1100px; height: auto; opacity: .95; }
+.fuss-links { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 6px 22px; }
+.fuss-links a { text-decoration: none; padding: 6px 0; display: inline-block; }
+.fuss-links a:hover { color: var(--creme); text-decoration: underline; }
+.fuss p { margin-top: 14px; }
+@media (min-width: 900px) { .fuss { padding-bottom: 56px; } }
+
+/* Leiste unten am Handy (erscheint nach dem Kopfbereich) */
+.leiste { display: none; }
+.story .leiste {
+  display: flex; position: fixed; z-index: 20; left: 0; right: 0; bottom: 0;
+  padding: 10px var(--rand) calc(10px + env(safe-area-inset-bottom));
+  background: var(--tinte); align-items: center; justify-content: space-between; gap: 12px;
+  transform: translateY(110%); transition: transform .35s cubic-bezier(.2,.8,.2,1);
+}
+.story .leiste.zeigen { transform: none; }
+.leiste p { color: var(--creme); font-size: .875rem; line-height: 1.3; font-weight: 600; }
+.leiste .knopf { min-height: 46px; flex: none; }
+@media (min-width: 900px) { .story .leiste { display: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}
+
+/* Startzustand der Geschichte schon im CSS, damit beim Laden nichts springt (Rückfall: ohne .story alles sichtbar) */
+.story .kal { transform: rotateX(26deg) rotateZ(-2deg) scale(.94); }
+.story .karte[data-neu], .story .detail, .story .szene-fazit { opacity: 0; visibility: hidden; }
+.story .problem-liste .wechsel .dreh > span { justify-self: start; }
+@media (min-width: 760px) { .story .kal { transform: rotateX(46deg) rotateZ(-5deg) scale(.9); } }
+@media (min-width: 900px) { .story .problem-liste .wechsel .dreh > span { justify-self: end; } }
+
+/* Prüfung 10.11.: 1,5-h-Karten am Handy ohne Motivzeile, sonst wird der Status unten abgeschnitten */
+@media (max-width: 759px) {
+  .karte.mittel .motiv { display: none; }
+  .karte.mittel .marke em { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; } /* nur Symbol, Wort bleibt für Screenreader */
+  .karte.mittel .marke { padding: 2px 4px; }
+}
+.leiste p { font-size: .8125rem; }
+.leiste-klein { display: block; font-weight: 500; color: var(--grau-dunkel); }
+
+/* Schleier über dem Kalender, während der Termin Tom Meier vorne steht (nur mit Geschichte sichtbar) */
+.kal-schleier { position: absolute; inset: 0; z-index: 3; border-radius: inherit; background: var(--creme); opacity: 0; pointer-events: none; }

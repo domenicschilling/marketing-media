@@ -1,0 +1,10 @@
+/* Gemeinsame Vorlagen-Basis. Größe pro Vorlage über --w/--h. Schriften in ../assets/kit.css */
+html,body{margin:0;background:#000}
+.c{position:relative;width:var(--w);height:var(--h);overflow:hidden;background:var(--ink-950);color:var(--cream-100)}
+.glow{position:absolute!important;inset:0;background:radial-gradient(90% 60% at 80% 0%,rgba(245,158,11,.16),transparent 60%);pointer-events:none}
+.photo{position:absolute!important;inset:0;width:100%;height:100%;object-fit:cover}
+.scrim{position:absolute!important;inset:0}
+.logo{display:block}
+.pill-cta{display:inline-flex;align-items:center;gap:20px;background:var(--grad-btn);color:var(--ink-950);font:700 40px/1 var(--hf);padding:30px 52px;border-radius:9999px;box-shadow:0 20px 60px -20px rgba(245,158,11,.6)}
+.url{font:600 32px/1 var(--bf);color:var(--muted)}
+.hint{font:600 26px/1.3 var(--bf);color:var(--muted)}

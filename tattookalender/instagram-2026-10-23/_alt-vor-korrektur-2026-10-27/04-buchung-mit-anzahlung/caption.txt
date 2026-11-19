@@ -1,0 +1,11 @@
+Gebucht ist, wenn die Anzahlung da ist.
+
+So läuft es in vier Schritten: Die Kundin bucht online, zum Beispiel auf deiner Buchungsseite mit freien Zeiten. Du kannst den Termin auch selbst anlegen. Sie bekommt einen Bezahllink mit Termin, Artist und Betrag. Deine Absage- und Anzahlungsregeln stehen schon drin, sie bestätigt sie per Häkchen. Danach ist der Termin fest.
+
+Das Geld geht direkt auf dein Stripe-Konto. Wir nehmen 0 % Provision.
+
+Anzahlung ab dem Paket „Kalender + Zahlungen“. Die Bilder zeigen unser Demo-Studio „Nadelwerk“, alle Daten sind erfunden.
+
+Mehr: Link in der Bio · tattookalender.de
+
+#tattookalender #tattoostudio #tattoostudioleben #tattooartist #terminbuchung #studiomanagement #tattoodeutschland

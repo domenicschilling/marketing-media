@@ -1,0 +1,1 @@
+Lenis 1.3.11 (lenis.min.js), kopiert aus dem npm-Paket lenis@1.3.11. Lizenz: MIT (siehe LICENSE).

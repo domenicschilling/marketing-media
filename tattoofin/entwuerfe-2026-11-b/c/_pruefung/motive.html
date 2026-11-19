@@ -1,0 +1,79 @@
+<!doctype html><meta charset=utf8><style>
+:root{--papier:#fbf7ee;--navy:#1f3d5c;--gelb:#fbb316}
+body{background:var(--papier);margin:20px;font:14px sans-serif}
+.li,.fl{stroke:var(--navy);stroke-width:4.4;stroke-linejoin:round;stroke-linecap:round}
+.li{fill:none}.fl{fill:var(--f,var(--gelb))}
+.pa{fill:var(--papier)}.ha{}
+.so{fill:var(--navy)}.ve{fill:none;stroke:var(--papier);stroke-width:2.2;stroke-linecap:round}
+.sh{fill:var(--navy);stroke:none}.dots circle,.dot{fill:var(--navy)}
+.spk{fill:var(--navy)}
+.dbl .o{fill:none;stroke:var(--navy);stroke-width:15;stroke-linecap:round}
+.dbl .i{fill:none;stroke:var(--f,var(--gelb));stroke-width:6.2;stroke-linecap:round}
+svg.m{width:200px;height:200px;margin:8px}svg.k{width:46px;height:46px;margin:8px;--f:var(--papier)}
+svg.k .fine{display:none}svg.k .li,svg.k .fl{stroke-width:7}
+svg.u{--f:var(--papier)}
+</style>
+<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true" focusable="false">
+<symbol id="m-rose" viewBox="0 0 120 120">
+  <path class="so" d="M30 88C18 92 8 102 4 116C20 118 36 112 46 98Z"/><path class="ve" d="M12 110C20 104 28 100 36 96"/>
+  <path class="so" d="M90 88C102 90 112 98 116 112C100 116 84 110 74 98Z"/><path class="ve" d="M108 106C100 102 92 98 84 96"/>
+  <path class="fl li" d="M60 8C70 3 84 6 90 16C102 18 110 30 107 42C115 52 112 68 100 74C98 86 84 94 72 90C62 98 46 97 38 88C24 90 12 78 14 64C4 54 6 38 18 32C18 18 32 8 46 12C50 9 55 8 60 8Z"/>
+  <path class="li" d="M27 38C22 58 36 80 60 81C84 82 100 62 94 40"/>
+  <path class="li" d="M36 36C33 52 44 67 60 68C76 69 88 54 84 36"/>
+  <path class="li" d="M27 38C33 24 47 18 57 23"/><path class="li" d="M94 40C88 24 74 17 64 23"/>
+  <path class="li" d="M60 23C72 21 81 31 77 42C74 51 60 55 53 47C47 41 50 32 58 32C64 32 67 38 63 42"/>
+  <path class="sh fine" d="M41 36C38 47 43 57 53 61C47 53 45 45 47 36Z"/><path class="sh fine" d="M22 62C26 72 34 80 44 84C36 76 30 70 27 58Z"/><path class="sh fine" d="M98 56C96 68 88 76 78 81C88 80 100 72 104 58Z"/>
+</symbol>
+<symbol id="m-herz" viewBox="0 0 120 120">
+  <path class="fl li" d="M60 112C42 96 10 72 10 42C10 22 26 10 42 10C50 10 56 15 60 24C64 15 70 10 78 10C94 10 110 22 110 42C110 72 78 96 60 112Z"/>
+  <path class="li fine" d="M24 44C23 33 31 25 41 24"/>
+  <path class="sh fine" d="M96 62C88 76 76 88 62 98C78 92 94 78 102 58Z"/>
+  <g class="fine dots"><circle cx="80" cy="62" r="2"/><circle cx="72" cy="72" r="2"/><circle cx="84" cy="52" r="2"/><circle cx="62" cy="82" r="2"/><circle cx="72" cy="58" r="1.6"/><circle cx="64" cy="68" r="1.6"/></g>
+  <path class="ha li" d="M41 57L33 65C27 71 36 80 42 74L50 66"/><path class="ha li" d="M79 45L87 37C93 31 84 22 78 28L70 36"/><path class="ha li" d="M48 60L72 42"/>
+</symbol>
+<symbol id="m-dolch" viewBox="0 0 120 120">
+  <g transform="rotate(24 60 60)">
+    <path class="fl li" d="M49 46L49 92L60 118L71 92L71 46Z"/><path class="so" d="M60 46L60 118L71 92L71 46Z"/>
+    <rect class="pa li" x="51" y="16" width="18" height="24" rx="3"/><path class="li fine" d="M51 24L69 21M51 32L69 29"/>
+    <path class="fl li" d="M28 38C36 34 48 40 60 40C72 40 84 34 92 38C95 42 95 46 92 50C84 46 72 48 60 48C48 48 36 46 28 50C25 46 25 42 28 38Z"/>
+    <circle class="fl li" cx="60" cy="9" r="7"/>
+  </g>
+</symbol>
+<symbol id="m-anker" viewBox="0 0 120 120">
+  <g class="dbl">
+    <path class="o" d="M60 26L60 106"/><path class="o" d="M36 40L84 40"/><path class="o" d="M16 74C20 96 44 108 60 108C76 108 100 96 104 74"/>
+    <circle class="o" cx="60" cy="17" r="9"/>
+    <path class="fl li" d="M6 80L16 58L30 78Z"/><path class="fl li" d="M114 80L104 58L90 78Z"/>
+    <path class="i" d="M60 26L60 106"/><path class="i" d="M36 40L84 40"/><path class="i" d="M16 74C20 96 44 108 60 108C76 108 100 96 104 74"/>
+    <circle class="i" cx="60" cy="17" r="9"/>
+  </g>
+</symbol>
+<symbol id="m-diamant" viewBox="0 0 120 120">
+  <path class="fl li" d="M18 46L38 18L82 18L102 46L60 110Z"/>
+  <path class="so" d="M46 46L60 18L74 46Z"/><path class="so" d="M74 46L102 46L60 110Z"/>
+  <path class="li" d="M18 46L102 46M38 18L46 46L60 110M82 18L74 46L60 110M46 46L60 18L74 46"/>
+  <path class="spk fine" d="M104 8L107 16L115 19L107 22L104 30L101 22L93 19L101 16Z"/><path class="spk fine" d="M14 72L16 78L22 80L16 82L14 88L12 82L6 80L12 78Z"/>
+</symbol>
+<symbol id="m-mond" viewBox="0 0 120 120">
+  <path class="fl li" d="M72 6C38 6 10 30 10 62C10 94 38 116 70 114C82 113 92 109 99 102C84 103 70 96 64 84C62 80 66 77 63 74C61 72 63 70 61 68L68 62L58 50C56 32 60 16 72 6Z"/>
+  <path class="li fine" d="M36 46C40 42 46 42 50 46"/><path class="li fine" d="M30 26C22 34 18 44 17 54"/>
+  <path class="sh fine" d="M18 76C24 90 38 102 56 106C42 98 30 88 24 72Z"/>
+  <path class="fl li" d="M92 22L96 33L107 34L99 42L102 53L92 47L82 53L85 42L77 34L88 33Z"/>
+  <circle class="dot" cx="84" cy="72" r="3.4"/><circle class="dot" cx="104" cy="66" r="2.4"/>
+</symbol>
+<symbol id="m-daumen" viewBox="0 0 120 120">
+  <rect class="so" x="10" y="56" width="22" height="54" rx="3"/>
+  <path class="fl li" d="M32 62C42 56 50 46 52 32C53 20 58 12 66 14C75 16 77 26 75 38L73 50L98 50C108 50 112 58 108 66C112 72 110 80 104 82C106 90 102 96 96 97C97 104 92 108 86 108L54 108C46 108 40 105 32 104Z"/>
+  <path class="li" d="M84 66L108 66M84 82L104 82M82 97L96 97"/><path class="li fine" d="M73 50C68 53 64 60 66 66"/>
+  <path class="spk" d="M21 72L23 78L29 80L23 82L21 88L19 82L13 80L19 78Z" style="fill:var(--papier);stroke:none"/>
+</symbol>
+<symbol id="m-stern" viewBox="0 0 40 40"><path d="M20 3L24 15L37 15L27 23L31 36L20 28L9 36L13 23L3 15L16 15Z"/></symbol>
+<symbol id="m-funkel" viewBox="0 0 40 40"><path d="M20 2L24 16L38 20L24 24L20 38L16 24L2 20L16 16Z"/></symbol>
+</svg>
+<div id=a></div><div id=b></div><div id=c></div>
+<script>
+fetch;const names=['rose','herz','dolch','anker','diamant','mond','daumen'];
+</script>
+<script>
+for(const [id,cl] of [['a','m'],['b','m u'],['c','k']]){document.getElementById(id).innerHTML=names.map(n=>`<svg class="${cl}" viewBox="0 0 120 120"><use href="#m-${n}"/></svg>`).join('')}
+</script>

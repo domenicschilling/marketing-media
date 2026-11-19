@@ -1,0 +1,5 @@
+Quelle der 15 Instagram-Beiträge (HTML -> Headless-Chrome-Screenshot).
+Texte ändern: posts_a.py / posts_b.py (Beiträge 1-6 / 7-15), Captions in captions.py.
+Neu bauen: python3 build.py && python3 render.py   (PNG landen in ./out), dann export.py (braucht Pillow).
+Es werden nur Nadelwerk-Demo-Screens von tattookalender.de und aus dem Brandingkit benutzt (assets/site, assets/demo).
+Nicht benutzen: content/tattookalender/screens/ (zeigt Tattoo-Fashion-Logo, Studio- und Kundendaten).

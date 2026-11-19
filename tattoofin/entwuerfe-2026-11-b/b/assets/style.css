@@ -1,0 +1,468 @@
+/* Tattoofin Entwurf B: Studio bei Nacht
+   Gelb ist das einzige Licht. Es sitzt immer an einer Quelle: Schild, Handy, Neonröhre, Knopf, Bon. */
+
+@font-face{font-family:"Luckiest Guy";src:url(fonts/LuckiestGuy.woff2) format("woff2");font-display:swap}
+@font-face{font-family:"DM Sans";src:url(fonts/DMSans.woff2) format("woff2");font-weight:100 1000;font-display:swap}
+
+:root{
+  --nacht0:#07121d;
+  --nacht1:#0c1b2b;
+  --nacht2:#12273b;
+  --nacht3:#183149;
+  --blau:#1f3d5c;
+  --blau-hell:#35608a;
+  --gelb:#fbb316;
+  --gelb-kern:#ffe7ae;
+  --kreide:#f5f1e6;
+  --kreide2:#c6d2dd;
+  --papier:#fff8e6;
+  --tinte:#14283d;
+  --rand:clamp(16px,4.2vw,72px);
+  --anzeige:"Luckiest Guy","Arial Black",sans-serif;
+  --text:"DM Sans",system-ui,sans-serif;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;scroll-padding-top:12px}
+body{margin:0;background:var(--nacht1);color:var(--kreide);font:400 17px/1.5 var(--text);overflow-x:clip;-webkit-font-smoothing:antialiased}
+img,svg{display:block;max-width:100%}
+img{height:auto}
+p{margin:0 0 .85em}
+p:last-child{margin-bottom:0}
+a{color:inherit}
+h1,h2{font-family:var(--anzeige);font-weight:400;margin:0;line-height:1.02;letter-spacing:.012em;text-transform:uppercase;text-wrap:balance}
+h2{font-size:clamp(35px,5.4vw,76px);color:var(--kreide)}
+:focus-visible{outline:3px solid var(--gelb);outline-offset:3px;border-radius:4px}
+.sprite{position:absolute}
+.sprung{position:absolute;left:12px;top:-60px;z-index:50;background:var(--gelb);color:var(--tinte);padding:10px 14px;font-weight:700;border-radius:6px}
+.sprung:focus{top:12px}
+
+/* Wand: dasselbe Punktraster wie die gelben Zahlseiten, nur bei Nacht */
+.tattoos,.ablauf,.preis,.schluss{
+  background-color:var(--nacht1);
+  background-image:radial-gradient(circle,var(--nacht3) 1.1px,transparent 1.6px);
+  background-size:15px 15px;
+}
+
+/* ---------- Licht ---------- */
+.licht,.schein{position:absolute;pointer-events:none;background:url(licht.webp) center/contain no-repeat}
+.schein{inset:-34% -30%;z-index:0}
+.schein::after,.licht::after{content:"";position:absolute;inset:24%;border-radius:50%;background:var(--gelb);opacity:.34;filter:blur(38px)}
+
+/* ---------- Neonröhren ---------- */
+.neon{width:44px;height:44px;flex:none;overflow:visible;filter:drop-shadow(0 0 3px rgba(251,179,22,.9)) drop-shadow(0 0 12px rgba(251,179,22,.55))}
+.neon use{fill:none;stroke-linecap:round;stroke-linejoin:round}
+.neon .r{stroke:var(--gelb);stroke-width:7}
+.neon .k{stroke:var(--gelb-kern);stroke-width:2.6}
+.neon--klein{width:64px;height:64px}
+.neon--mittel{width:92px;height:92px}
+.neon--gross{width:130px;height:130px}
+.js .neon[data-roehre].aus{filter:none}
+.js .neon[data-roehre].aus .r{stroke:var(--blau)}
+.js .neon[data-roehre].aus .k{stroke:var(--nacht3)}
+.neon.zuendet{animation:zuenden .9s steps(1) both}
+@keyframes zuenden{0%{opacity:.25}14%{opacity:1}24%{opacity:.35}38%{opacity:1}100%{opacity:1}}
+
+/* ---------- Knöpfe ---------- */
+.knoepfe{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.knopf{
+  display:inline-block;font:400 22px/1 var(--anzeige);letter-spacing:.02em;text-decoration:none;text-transform:uppercase;
+  background:var(--gelb);color:var(--tinte);padding:19px 26px 14px;border-radius:14px;
+  border:3px solid var(--tinte);box-shadow:0 0 0 2px var(--gelb),0 0 34px rgba(251,179,22,.55);
+  transition:transform .12s ease,box-shadow .12s ease;
+}
+.knopf:hover{box-shadow:0 0 0 2px var(--gelb),0 0 52px rgba(251,179,22,.8)}
+.knopf:active{transform:translateY(2px) scale(.985)}
+.zweitweg{font-weight:700;font-size:16px;line-height:1.25;color:var(--kreide);text-decoration:underline;text-decoration-color:var(--gelb);text-decoration-thickness:2px;text-underline-offset:3px;padding:6px 0}
+.zweitweg:hover{color:var(--gelb)}
+
+/* ---------- Pflichtsatz ---------- */
+.pflicht{font-size:17px;line-height:1.42;color:var(--kreide)}
+.pflicht strong{font-weight:800;color:var(--kreide)}
+.pflicht .ast{color:var(--gelb);font-weight:800}
+.bildnote{font-size:13px;line-height:1.35;color:var(--kreide2);margin:0}
+
+/* ---------- Handy ---------- */
+.handy{margin:0;position:relative;background:var(--nacht0);padding:5px;border-radius:24px;border:2px solid var(--blau-hell);box-shadow:0 0 44px rgba(251,179,22,.42),0 0 2px rgba(251,179,22,.6);overflow:hidden}
+.handy img{width:100%;border-radius:18px}
+
+/* ---------- Theke ---------- */
+.theke{position:relative;z-index:3}
+.kante{background:var(--nacht3);border-top:5px solid var(--blau-hell);min-height:30px;padding:6px var(--rand) 7px}
+.front{background:var(--nacht0);padding:16px var(--rand) 20px}
+
+/* ---------- Erster Bildschirm ---------- */
+.hero{min-height:100svh;display:flex;flex-direction:column;background:var(--nacht1)}
+.scheibe{position:relative;flex:1;display:flex;flex-direction:column;background:var(--nacht2);border-top:7px solid var(--blau);overflow:hidden}
+.glanz{position:absolute;inset:0;pointer-events:none;background:
+  linear-gradient(112deg,transparent 0 58%,rgba(198,210,221,.045) 58% 66%,transparent 66% 70%,rgba(198,210,221,.03) 70% 73%,transparent 73%)}
+.schaufenster{position:relative;z-index:2;padding:0 var(--rand)}
+.kopf{display:flex;justify-content:space-between;align-items:flex-start;gap:14px}
+
+.schild{--b:min(49vw,23svh,330px);position:relative;display:block;width:var(--b);height:calc(var(--b)*.84);margin-top:16px;flex:none;transform-origin:50% -16px;animation:pendel 7s ease-in-out infinite alternate}
+.schild img{position:absolute;left:0;top:0;width:100%;height:auto;z-index:2}
+.kette{position:absolute;top:-16px;width:4px;height:calc(16px + 15%);z-index:1;background:repeating-linear-gradient(180deg,var(--blau-hell) 0 5px,transparent 5px 8px);border-radius:2px}
+.kette--l{left:36%}
+.kette--r{left:62%}
+@keyframes pendel{from{transform:rotate(-.7deg)}to{transform:rotate(.7deg)}}
+.js .schein{animation:schein-an 1.15s steps(1) both}
+@keyframes schein-an{0%{opacity:0}18%{opacity:.85}28%{opacity:.12}44%{opacity:1}100%{opacity:1}}
+
+.lichter{display:flex;flex-direction:column;gap:2px;padding-top:14px;flex:none}
+.lichter a{display:flex;align-items:center;gap:10px;min-height:44px;text-decoration:none;font-weight:700;font-size:16px;color:var(--kreide)}
+.lichter .neon{width:26px;height:26px}
+.lichter .neon .r{stroke-width:9}
+.lichter .neon .k{stroke-width:3.4}
+.lichter a:hover span{color:var(--gelb)}
+
+.hero-text{position:relative;padding-top:10px}
+h1{font-size:clamp(42px,11.6vw,104px);color:var(--kreide);text-shadow:0 0 26px rgba(251,179,22,.28)}
+h1 .ast{color:var(--gelb);text-shadow:0 0 14px var(--gelb),0 0 34px rgba(251,179,22,.7)}
+.nb{white-space:nowrap}
+.lead{font-size:16.5px;line-height:1.36;margin:6px 0 0;color:var(--kreide);max-width:53%}
+
+.buehne{position:relative;z-index:1;flex:1;min-height:150px;margin-top:6px}
+.buehne .licht--handy{right:-34%;bottom:-34%;width:88%;aspect-ratio:1}
+.buehne .steher{position:absolute;left:var(--rand);bottom:0;height:min(100%,236px);width:auto;max-width:none;filter:brightness(.94)}
+/* Das Handy steht hinter der Theke: unten verdeckt, der gelbe Leerraum des Screens verschwindet dahinter */
+.handy--hero{position:absolute;right:calc(var(--rand) + 6px);top:calc(-1 * var(--hoch,76px));bottom:auto;width:min(42vw,170px);transform:rotate(2.5deg);transform-origin:50% 100%}
+
+.hero .kante{padding-block:5px 5px}
+.hero .bildnote{font-size:12.5px;color:var(--kreide);position:relative}
+.hero .kante{position:relative;overflow:hidden}
+.hero .kante::before{content:"";position:absolute;right:2%;top:-14px;width:46%;height:34px;border-radius:50%;background:var(--gelb);opacity:.5;filter:blur(14px)}
+.front--hero{padding-top:14px}
+.handlung{margin-bottom:12px}
+.kurzpreis{font-size:16px;font-weight:600;line-height:1.3;margin:12px 0 0}
+
+/* ---------- Figur und Tattoo-Wege ---------- */
+.tattoos{position:relative;overflow:hidden;padding-top:clamp(44px,7vw,88px)}
+.tattoos-kopf{padding:0 var(--rand);text-align:center;margin-bottom:18px}
+.tattoos-kopf p{margin:12px auto 0;max-width:30em}
+.kabelraum{position:relative}
+.figur{position:relative;width:min(70vw,300px);margin:0 auto -2px;z-index:1}
+.figur img{position:relative;z-index:1;width:100%}
+.schein--figur{inset:-14% -24% -6%;animation:none!important}
+.ring{position:absolute;z-index:4;left:var(--x);top:var(--y);width:38px;height:38px;margin:-19px 0 0 -19px;border-radius:50%;border:2.5px solid var(--gelb-kern);box-shadow:0 0 12px var(--gelb),inset 0 0 8px rgba(251,179,22,.7);animation:pochen 2.6s ease-in-out infinite;transition:transform .15s ease}
+.ring:nth-of-type(2){animation-delay:.5s}
+.ring:nth-of-type(3){animation-delay:1s}
+.ring:nth-of-type(4){animation-delay:1.5s}
+.ring--klein{width:30px;height:30px;margin:-15px 0 0 -15px}
+.ring:hover{transform:scale(1.15)}
+@keyframes pochen{0%,100%{opacity:1}50%{opacity:.55}}
+.kabel{position:absolute;inset:0;width:100%;height:100%;z-index:5;pointer-events:none;overflow:visible;filter:drop-shadow(0 0 4px rgba(251,179,22,.75))}
+.kabel path{fill:none;stroke:var(--gelb);stroke-width:2.5;stroke-linecap:round}
+.theke--figur .kante{min-height:22px}
+.tattoo-wege{list-style:none;margin:0 0 16px;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:0}
+.tattoo-wege a{display:flex;flex-direction:column;align-items:center;gap:8px;padding:8px 0 6px;text-decoration:none;font-weight:700;font-size:14.5px;line-height:1.15;text-align:center;min-height:44px}
+.tattoo-wege .neon{width:46px;height:46px;transition:transform .15s ease}
+.tattoo-wege a:hover .neon,.tattoo-wege a:active .neon{transform:scale(1.12)}
+.tattoo-wege a:hover span{color:var(--gelb)}
+.theke--figur .pflicht{max-width:46em;margin-inline:auto}
+
+/* ---------- Raten ---------- */
+.raten{position:relative;background:var(--nacht0)}
+.raten-foto{position:relative;margin:0;background:var(--nacht0);overflow:hidden}
+.raten-foto img{width:100%;filter:saturate(.82) brightness(.82);transform:scale(1.07);transform-origin:45% 0}
+.raten-foto::after{content:"";position:absolute;inset:0;background:var(--blau);mix-blend-mode:color;opacity:.28;pointer-events:none}
+.raten-foto::before{content:"";position:absolute;left:0;right:0;bottom:0;height:38%;z-index:1;background:linear-gradient(180deg,transparent,var(--nacht0));pointer-events:none}
+.raten-foto figcaption{position:absolute;z-index:2;right:var(--rand);top:12px;font-size:13px;background:rgba(7,18,29,.86);padding:3px 9px;border-radius:5px}
+.raten-text{position:relative;z-index:2;margin-top:-92px;padding:0 var(--rand) clamp(46px,7vw,90px)}
+.raten-text .neon--gross{position:absolute;right:var(--rand);top:-132px;width:108px;height:108px}
+.raten-text h2{max-width:11.5em}
+.gross{font-size:clamp(20px,2.1vw,27px);line-height:1.32;font-weight:600;margin-top:16px}
+.pflicht--kasten{border-left:5px solid var(--gelb);padding:2px 0 2px 14px;margin:20px 0 24px}
+
+/* ---------- Ablauf ---------- */
+.ablauf{padding:clamp(48px,7vw,96px) var(--rand);overflow:hidden}
+.ablauf-kopf{max-width:34em}
+.ablauf-kopf .neon{margin-bottom:14px}
+.ablauf-kopf h2{font-size:clamp(46px,7.4vw,104px)}
+.ablauf-kopf p{margin-top:12px}
+.ablauf-buehne{margin-top:26px;display:grid;grid-template-columns:minmax(0,142px) minmax(0,1fr);gap:18px;align-items:start}
+.ablauf-handy{position:relative}
+.ablauf-handy .licht{left:-34%;top:6%;width:168%;aspect-ratio:1;z-index:0}
+.handy--wechsel{aspect-ratio:600/1298;background:var(--gelb);z-index:1}
+.handy--wechsel img{position:absolute;inset:5px;width:calc(100% - 10px);height:calc(100% - 10px);object-fit:cover;object-position:top;opacity:0;transition:opacity .28s ease}
+.handy--wechsel img.an{opacity:1}
+.handy--wechsel img.portal{object-fit:contain;object-position:center;background:var(--gelb);border-radius:18px;padding:4px}
+.ablauf-handy .bildnote{position:relative;z-index:1;margin-top:10px}
+.schritte{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px}
+.schritte li p{margin:4px 0 0 0;font-size:16px;line-height:1.38;color:var(--kreide2)}
+.schritte li.an p{color:var(--kreide)}
+.schritte button{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:9px;min-height:44px;width:100%}
+.schritte button:focus-visible{outline:3px solid var(--gelb);outline-offset:3px;border-radius:6px}
+.zahl{font:400 21px/1 var(--anzeige);width:36px;height:36px;flex:none;display:grid;place-items:center;padding-top:5px;border-radius:50%;background:var(--nacht3);color:var(--kreide);border:2px solid var(--blau-hell);transition:background .18s,color .18s,box-shadow .18s}
+.titel{font-weight:800;font-size:17.5px;line-height:1.16}
+.schritte li.an .zahl{background:var(--gelb);color:var(--tinte);border-color:var(--gelb);box-shadow:0 0 18px rgba(251,179,22,.7)}
+.schritte li.an .titel,.schritte button:hover .titel{color:var(--gelb)}
+.ablauf-fuss{margin-top:24px}
+.ablauf-fuss .pflicht{margin-bottom:16px;border-left:5px solid var(--gelb);padding:2px 0 2px 14px}
+
+/* ---------- Anzahlung ---------- */
+.anzahlung{position:relative;background:var(--nacht2);padding-top:clamp(48px,7vw,96px);overflow:hidden}
+.anzahlung-text{position:relative;z-index:2;padding:0 var(--rand)}
+.anzahlung-text .neon{margin-bottom:14px}
+.anzahlung-text .bildnote{margin-top:12px}
+.anzahlung-buehne{position:relative;height:396px;margin-top:22px}
+.anzahlung-buehne .licht{left:50%;top:4px;width:700px;aspect-ratio:1;margin-left:-350px}
+.handy--anzahlung{position:absolute;left:50%;top:10px;width:236px;margin-left:-118px;transform:rotate(-4deg)}
+.theke--flach{position:absolute;left:0;right:0;bottom:0}
+.theke--flach .kante{min-height:40px}
+
+/* ---------- Gutscheine ---------- */
+.gutscheine{position:relative;background:var(--nacht0);padding:clamp(44px,6vw,80px) var(--rand);display:grid;gap:26px}
+.gutscheine-text .neon{margin-bottom:10px}
+.gutscheine-text h2{font-size:clamp(33px,4.4vw,60px)}
+.gutscheine-text p{margin-top:10px}
+.ticket{position:relative;display:grid;gap:3px;background:var(--papier);color:var(--tinte);padding:16px 22px 14px 26px;transform:rotate(-2deg);box-shadow:0 0 42px rgba(251,179,22,.3);
+  --k:11px;
+  -webkit-mask:radial-gradient(circle var(--k) at 0 50%,transparent 98%,#000) left/51% 100% no-repeat,radial-gradient(circle var(--k) at 100% 50%,transparent 98%,#000) right/51% 100% no-repeat;
+          mask:radial-gradient(circle var(--k) at 0 50%,transparent 98%,#000) left/51% 100% no-repeat,radial-gradient(circle var(--k) at 100% 50%,transparent 98%,#000) right/51% 100% no-repeat}
+.ticket-kopf{font:400 34px/1 var(--anzeige);text-transform:uppercase;letter-spacing:.01em}
+.ticket-studio{font-weight:700;font-size:17px}
+.ticket-code{font-weight:800;font-size:20px;font-variant-numeric:tabular-nums;margin-top:6px;letter-spacing:.03em}
+.ticket-hinweis{font-size:15px;line-height:1.3}
+.ticket-bsp{position:absolute;right:20px;top:14px;font-size:14px;font-weight:700;background:var(--tinte);color:var(--papier);padding:2px 9px;border-radius:5px}
+
+/* ---------- Preis ---------- */
+.preis{position:relative;padding:clamp(48px,7vw,96px) var(--rand);overflow:hidden}
+.preis-kopf{max-width:32em}
+.preis-kopf .neon{margin-bottom:14px}
+.preis-kopf p{margin-top:12px}
+.preis-buehne{position:relative;margin-top:26px}
+.preis-buehne>.licht{left:50%;top:-40px;width:min(190vw,720px);aspect-ratio:1;margin-left:calc(min(190vw,720px)/-2)}
+.bon{position:relative;z-index:1;background:var(--papier);color:var(--tinte);padding:24px 20px 34px;transform:rotate(-.8deg);max-width:440px;margin:0 auto;
+  box-shadow:0 0 60px rgba(251,179,22,.3);
+  --z:10px;
+  -webkit-mask:conic-gradient(from -45deg at 50% 100%,#000 90deg,transparent 0) 50% 100%/calc(2*var(--z)) var(--z) repeat-x,linear-gradient(#000 0 0) 0 0/100% calc(100% - var(--z)) no-repeat;
+          mask:conic-gradient(from -45deg at 50% 100%,#000 90deg,transparent 0) 50% 100%/calc(2*var(--z)) var(--z) repeat-x,linear-gradient(#000 0 0) 0 0/100% calc(100% - var(--z)) no-repeat}
+.bon-marke{width:150px;margin-bottom:18px}
+.bon-betrag{display:flex;align-items:baseline;flex-wrap:wrap;gap:0 12px;margin:0 0 14px}
+.betrag{font:400 clamp(84px,24vw,116px)/.92 var(--anzeige);color:var(--tinte);word-spacing:-.18em}
+.einheit{font-weight:800;font-size:20px;line-height:1.1}
+.bon-zeilen{margin:0;padding:0}
+.bon-zeilen div{display:flex;justify-content:space-between;gap:16px;align-items:baseline;padding:9px 0;border-top:2px dotted #9fb0bf}
+.bon-zeilen dt{font-weight:500;line-height:1.28}
+.bon-zeilen dd{margin:0;font-weight:800;white-space:nowrap}
+.bon-stripe{border-top:3px solid var(--tinte);margin-top:6px;padding-top:12px;font-size:16px;line-height:1.38}
+.bon-stripe p{margin-bottom:4px}
+.knopf--bon{display:block;text-align:center;margin-top:16px;box-shadow:0 0 0 2px var(--gelb);border-color:var(--tinte)}
+.bon-vertrag{text-align:center;margin:10px 0 0;font-size:16px;font-weight:700}
+.bon-vertrag a{display:inline-block;padding:6px 8px;color:var(--tinte);text-decoration:underline;text-underline-offset:3px}
+.knopf--bon:hover{box-shadow:0 0 0 2px var(--gelb),0 0 26px rgba(251,179,22,.9)}
+.aufsteller-zeile{position:relative;z-index:2;display:flex;gap:16px;align-items:flex-end;margin-top:18px}
+.steher--preis{flex:none;width:112px;filter:brightness(.95)}
+.aufsteller-zeile p{font-size:16px;line-height:1.36;margin:0 0 8px}
+.aufsteller-zeile .bildnote{font-size:13px;margin:0}
+.preis-pflicht{position:relative;z-index:2;margin-top:16px}
+
+/* ---------- Fragen ---------- */
+.fragen{background:var(--nacht2);padding:clamp(48px,7vw,96px) var(--rand)}
+.fragen-kopf{display:flex;align-items:center;gap:16px;margin-bottom:20px}
+.fragen-kopf .neon{width:68px;height:68px}
+.fragen-kopf h2{font-size:clamp(38px,5.4vw,76px)}
+.fragen-liste{display:grid;gap:8px}
+.fragen-liste{gap:0}
+details{border-top:3px dotted var(--blau-hell)}
+details:last-child{border-bottom:3px dotted var(--blau-hell)}
+summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:16px;padding:16px 2px 12px;font:400 clamp(21px,2.1vw,29px)/1.12 var(--anzeige);letter-spacing:.015em;text-transform:uppercase;min-height:56px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";flex:none;margin-top:-4px;font:400 34px/1 var(--anzeige);color:var(--gelb);text-shadow:0 0 12px rgba(251,179,22,.8);transition:transform .18s ease}
+details[open] summary::after{transform:rotate(45deg)}
+details[open] summary,summary:hover{color:var(--gelb)}
+details>p{padding:0 2px;margin-bottom:12px;max-width:40em}
+details>p:last-child{padding-bottom:18px;margin-bottom:0}
+
+/* ---------- Schluss ---------- */
+.schluss{position:relative;padding:clamp(52px,7vw,100px) var(--rand) clamp(48px,7vw,84px);text-align:center;overflow:hidden}
+.schluss-schild{position:relative;width:min(58vw,300px);aspect-ratio:520/432;margin:0 auto 44px}
+.schluss-schild img{position:relative;z-index:2;width:100%}
+.schluss-schild .schein{animation:none;inset:-26% -30% -24%}
+.schluss h2{max-width:13em;margin:0 auto}
+.schluss>p{max-width:32em;margin:14px auto 0}
+.schluss .knoepfe{justify-content:center;margin-top:24px;text-align:left}
+.schluss .wer{color:var(--kreide2);font-size:16px;margin-top:26px}
+
+/* ---------- Fuß ---------- */
+.fuss{background:var(--nacht0);padding:34px var(--rand) 40px;font-size:16px}
+.fuss>img{width:150px;margin-bottom:16px}
+.fuss nav{display:flex;flex-wrap:wrap;gap:4px 20px;margin-bottom:12px}
+.fuss nav a{display:inline-flex;align-items:center;min-height:44px;font-weight:700;text-decoration:underline;text-decoration-color:var(--gelb);text-underline-offset:3px}
+.fuss nav a:hover{color:var(--gelb)}
+.fuss .pflicht{font-size:16px;margin:12px 0}
+
+/* ---------- Ablauf am Handy: Handy oben, Schritte darunter. Für das Portal dreht sich das Handy quer. ---------- */
+@media (max-width:699px){
+  .ablauf-buehne{display:block}
+  .ablauf-handy{--w:min(37vw,144px);display:grid;justify-items:center}
+  .ablauf-handy .licht{left:50%;top:-22px;width:340px;margin-left:-170px}
+  .handy--wechsel{width:var(--w);container-type:size;transition:transform .45s cubic-bezier(.3,.9,.3,1.1)}
+  .handy--wechsel.quer{transform:rotate(90deg)}
+  .handy--wechsel img.portal{inset:auto;left:50%;top:50%;width:100cqh;max-width:none;height:100cqw;transform:translate(-50%,-50%) rotate(-90deg);padding:0}
+  .ablauf-handy .bildnote{text-align:center}
+  .schritte{margin-top:20px;gap:12px}
+  .schritte li p{margin-left:45px}
+}
+
+@media (max-width:699px){
+  .neon--mittel{width:68px;height:68px}
+  .ablauf,.preis,.fragen{padding-block:40px}
+  .anzahlung{padding-top:40px}
+  .gutscheine{padding-block:36px;gap:20px}
+  .gutscheine-text .neon{width:52px;height:52px}
+  .schluss{padding-block:40px}
+  .tattoos{padding-top:40px}
+  .anzahlung-buehne{height:340px;margin-top:16px}
+  .raten-foto img{height:430px;object-fit:cover;object-position:50% 0}
+  .raten-text{margin-top:-70px;padding-bottom:40px}
+  .raten-text .neon--gross{top:-112px;width:96px;height:96px}
+  .figur{width:min(66vw,262px)}
+  summary{padding-block:13px 9px}
+}
+
+/* ---------- Niedriges Handy mit Browserleisten ---------- */
+@media (max-width:699px) and (max-height:760px){
+  .schild{--b:min(30vw,17svh);margin-top:12px}
+  .lichter{gap:0;padding-top:8px}
+  .lichter a{min-height:34px;font-size:15px}
+  .lichter .neon{width:22px;height:22px}
+  .hero-text{padding-top:6px}
+  h1{font-size:10.2vw}
+  .lead{font-size:15.5px;line-height:1.3;margin-top:4px}
+  .handy--hero{--hoch:96px;width:min(38vw,150px)}
+  .buehne{min-height:90px;margin-top:4px}
+  .hero .kante{min-height:22px;padding-block:3px}
+  .hero .bildnote{font-size:12px}
+  .front--hero{padding-block:10px 12px}
+  .handlung{margin-bottom:8px}
+  .knoepfe{gap:14px}
+  .knopf{font-size:20px;padding:15px 22px 11px}
+  .zweitweg{font-size:15px;padding:0}
+  .kurzpreis{font-size:14.5px;margin-top:8px}
+  .front--hero .pflicht{font-size:16px;line-height:1.32}
+}
+
+/* ---------- Tablet ---------- */
+@media (min-width:700px){
+  body{font-size:18px}
+  .pflicht{font-size:18px}
+  .schild{--b:min(36vw,25svh,330px)}
+  .lichter{flex-direction:row;gap:26px}
+  .lichter a{font-size:17px}
+  h1{font-size:clamp(70px,10.4vw,104px)}
+  .lead{font-size:20px;max-width:58%}
+  .handy--hero{width:min(30vw,300px);--hoch:66px}
+  .buehne .steher{height:min(100%,420px)}
+  .buehne .steher{left:calc(var(--rand) + 4%)}
+  .handy--hero{right:calc(var(--rand) + 6%)}
+  .buehne .licht--handy{right:-10%;width:76%;bottom:-40%}
+  .handlung{display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+  .kurzpreis{margin:0}
+  .ablauf-buehne{grid-template-columns:minmax(0,250px) minmax(0,1fr);gap:40px}
+  .schritte{gap:20px}
+  .schritte li p{font-size:18px;margin-left:45px}
+  .titel{font-size:22px}
+  .raten-foto{max-width:none}
+  .raten-foto img{max-height:760px;object-fit:cover;object-position:50% 30%}
+  .raten-text{margin-top:-140px}
+  .gutscheine{grid-template-columns:minmax(0,380px) minmax(0,1fr);align-items:center;gap:48px}
+  .tattoo-wege .neon{width:64px;height:64px}
+  .tattoo-wege a{font-size:18px}
+  .figur{width:330px}
+  .bon{margin:0 auto}
+  .steher--preis{width:150px}
+  .aufsteller-zeile{max-width:520px;margin-inline:auto}
+  .preis-pflicht{max-width:560px;margin-inline:auto}
+  .fragen-liste{max-width:820px}
+}
+
+/* ---------- Desktop ---------- */
+@media (min-width:1024px){
+  body{font-size:19px}
+  .scheibe{border-top-width:10px}
+  .schaufenster{position:absolute;inset:0 0 0 0;padding:0 var(--rand)}
+  .kopf{display:block}
+  .schild{--b:min(25vw,37svh,350px);margin-top:18px}
+  .lichter{position:absolute;right:var(--rand);top:20px;gap:34px}
+  .hero-text{padding-top:20px;max-width:760px}
+  h1{font-size:clamp(58px,6.5vw,118px)}
+  .lead{font-size:22px;margin-top:12px;max-width:min(27em,calc(54vw - var(--rand) - 20px))}
+  .buehne{position:absolute;right:var(--rand);bottom:0;left:54%;top:92px;margin:0;min-height:0}
+  .buehne .steher{left:auto;right:calc(2% + min(20vw,290px) + 12px);height:auto;width:min(20vw,282px)}
+  .handy--hero{right:2%;top:0;width:min(20vw,290px)}
+  .buehne .licht--handy{right:-22%;bottom:-30%;width:120%}
+  .hero .kante{padding-block:6px}
+  .hero .bildnote{font-size:13px;text-align:right}
+  .front--hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:48px;align-items:center;padding-block:20px 24px}
+  .handlung{display:block;margin:0}
+  .kurzpreis{margin-top:12px;font-size:18px}
+  .knoepfe{gap:24px}
+  .knopf{font-size:26px;padding:22px 34px 16px}
+
+  .tattoos{padding-top:80px}
+  .figur{width:400px}
+  .tattoo-wege{max-width:1040px;margin:4px auto 16px}
+  .tattoo-wege .neon{width:76px;height:76px}
+  .tattoo-wege a{font-size:20px}
+  .theke--figur .pflicht{text-align:center}
+
+  .raten{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);align-items:center;background:var(--nacht0)}
+  .raten-foto{order:2;height:100%}
+  .raten-foto img{width:100%;height:100%;max-height:none;min-height:760px;object-fit:cover;object-position:50% 30%}
+  .raten-foto::before{left:0;top:0;bottom:0;right:auto;width:30%;height:auto;background:linear-gradient(90deg,var(--nacht0),transparent)}
+  .raten-text{margin:0;padding:64px 0 64px var(--rand)}
+  .raten-text h2{font-size:clamp(52px,4.3vw,66px);max-width:none}
+  .raten-text .neon--gross{position:static;margin-bottom:18px;width:120px;height:120px}
+  .raten-text{padding-right:24px}
+
+  .ablauf{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,.75fr);column-gap:72px;align-items:start}
+  .ablauf-buehne{display:contents}
+  .ablauf-kopf{grid-column:1;max-width:none}
+  .ablauf-kopf h2{white-space:nowrap}
+  .ablauf-kopf p{max-width:32em}
+  .schritte{grid-column:1;gap:22px;margin-top:30px}
+  .titel{font-size:26px}
+  .zahl{width:44px;height:44px;font-size:25px}
+  .schritte li p{margin-left:53px;max-width:32em}
+  .ablauf-handy{grid-column:2;grid-row:1/4;justify-self:center;align-self:center;width:min(100%,340px)}
+  .ablauf-handy .licht{left:-60%;top:-14%;width:220%}
+  .ablauf-fuss{grid-column:1;margin-top:30px;max-width:44em}
+  .ablauf-fuss .pflicht{margin-bottom:16px}
+
+  .anzahlung{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);padding-top:0;align-items:center;min-height:700px}
+  .anzahlung-text{order:2;padding:80px var(--rand) 80px 24px}
+  .anzahlung-buehne{height:100%;min-height:700px;margin:0;overflow:visible;position:static}
+  .anzahlung{position:relative}
+  .anzahlung-buehne>*{}
+  .handy--anzahlung{width:330px;left:25%;margin-left:-165px;top:60px}
+  .anzahlung-buehne .licht{width:1000px;left:25%;margin-left:-500px;top:-160px}
+  .theke--flach .kante{min-height:60px}
+  .anzahlung-text{padding-bottom:110px}
+
+  .gutscheine{grid-template-columns:minmax(0,440px) minmax(0,640px);justify-content:center;gap:90px}
+
+  .preis{display:grid;grid-template-columns:minmax(0,520px) minmax(0,1fr);column-gap:90px;align-items:start;justify-content:center}
+  .preis-buehne{display:contents}
+  .bon{grid-column:1;grid-row:1/4;max-width:none;padding:32px 34px 40px;margin:0}
+  .betrag{font-size:140px}
+  .preis-kopf{grid-column:2;grid-row:1}
+  .preis-pflicht{grid-column:2;grid-row:2;margin:18px 0 0;max-width:32em}
+  .aufsteller-zeile{grid-column:2;grid-row:3;margin:22px 0 0;max-width:600px;align-self:end}
+  .steher--preis{width:210px}
+  .aufsteller-zeile p{font-size:18px}
+  .preis-buehne>.licht{left:calc(var(--rand) + 260px);margin-left:-450px;width:860px;top:-40px}
+
+  .fragen{display:grid;grid-template-columns:minmax(0,4fr) minmax(0,7fr);gap:40px;align-items:start}
+  .fragen-kopf{flex-direction:column;align-items:flex-start;position:sticky;top:30px}
+  .fragen-kopf .neon{width:120px;height:120px}
+
+  .fuss{display:grid;grid-template-columns:auto 1fr;column-gap:64px;align-items:start}
+  .fuss>*{grid-column:2}
+  .fuss>img{grid-column:1;grid-row:1/5}
+}
+
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}

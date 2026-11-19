@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<title>Angebotsrechner · Umzüge Neumann</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--blau:#0054a6;--blau2:#2988de;--dunkel:#0b2545;--grau:#5b6573;--linie:#e3e8ef;--flaeche:#f4f7fb;--gruen:#14804a;--gelb:#fff4cc}
+*{box-sizing:border-box}
+body{margin:0;width:1600px;height:1000px;font:14px/1.45 Inter,system-ui,sans-serif;color:var(--dunkel);background:#e9eef5;overflow:hidden}
+.app{display:grid;grid-template-columns:220px 1fr;height:1000px}
+aside{background:var(--dunkel);color:#c9d6e8;padding:22px 16px;display:flex;flex-direction:column;gap:4px}
+.logo{font-family:"Archivo Black";color:#fff;font-size:20px;line-height:1.02;letter-spacing:.5px;margin:0 6px 26px}
+.logo small{display:block;font:600 11px Inter;color:#8fb3dd;letter-spacing:0;margin-top:6px}
+.nav{padding:9px 12px;border-radius:8px;font-weight:500}
+.nav.on{background:rgba(41,136,222,.22);color:#fff}
+.nav b{float:right;background:var(--blau2);color:#fff;border-radius:10px;padding:0 7px;font-size:11px}
+.user{margin-top:auto;font-size:12px;color:#8fa4bf;border-top:1px solid rgba(255,255,255,.1);padding-top:14px}
+main{padding:20px 26px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.kopf{display:flex;align-items:center;gap:14px}
+.kopf h1{margin:0;font-size:22px}
+.pill{background:#dbeafe;color:var(--blau);font-weight:700;font-size:12px;padding:4px 10px;border-radius:20px}
+.pill.gelb{background:var(--gelb);color:#7a5b00}
+.kopf .rechts{margin-left:auto;display:flex;gap:8px}
+.btn{border:1px solid var(--linie);background:#fff;border-radius:9px;padding:9px 14px;font-weight:600;font-size:13px}
+.btn.prim{background:var(--blau);border-color:var(--blau);color:#fff}
+.btn.wa{background:#1fa855;border-color:#1fa855;color:#fff}
+.raster{display:grid;grid-template-columns:1.05fr 1.25fr .95fr;gap:14px;min-height:0;flex:1}
+.karte{background:#fff;border:1px solid var(--linie);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;min-height:0}
+.karte h2{margin:0;font-size:13px;color:var(--grau);font-weight:700;display:flex;align-items:center;gap:8px}
+.karte h2 .n{background:var(--blau);color:#fff;border-radius:6px;width:20px;height:20px;display:inline-grid;place-items:center;font-size:11px}
+.adr{border:1px solid var(--linie);border-radius:10px;padding:10px 12px}
+.adr .t{font-size:11px;font-weight:700;color:var(--blau);text-transform:none}
+.adr .a{font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{background:var(--flaeche);border:1px solid var(--linie);border-radius:7px;padding:3px 8px;font-size:12px;color:#33404f}
+.chip.warn{background:#fff1f0;border-color:#ffd2cc;color:#b42318}
+.karte-map{position:relative;height:178px;border-radius:10px;overflow:hidden;background:#eaf1f9;border:1px solid var(--linie)}
+.karte-map svg{position:absolute;inset:0}
+.kz{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.kz div{background:var(--flaeche);border-radius:9px;padding:8px 10px}
+.kz b{display:block;font-size:17px}
+.kz span{font-size:11px;color:var(--grau)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-size:11px;color:var(--grau);font-weight:600;padding:6px 6px;border-bottom:1px solid var(--linie)}
+td{padding:6px 6px;border-bottom:1px solid #f0f3f7}
+td.r,th.r{text-align:right}
+.raum td{background:#f7f9fc;font-weight:700;font-size:12px;color:var(--blau)}
+.anz{display:inline-grid;grid-template-columns:20px 26px 20px;align-items:center;text-align:center;border:1px solid var(--linie);border-radius:7px;font-weight:700}
+.anz i{font-style:normal;color:var(--grau)}
+.vol{display:flex;align-items:center;gap:12px;background:var(--dunkel);color:#fff;border-radius:11px;padding:12px 14px;margin-top:auto}
+.vol b{font-family:"Archivo Black";font-size:28px}
+.vol .bar{flex:1;height:8px;background:rgba(255,255,255,.18);border-radius:6px;overflow:hidden}
+.vol .bar i{display:block;height:100%;width:78%;background:linear-gradient(90deg,var(--blau2),#7cc4ff)}
+.vol small{color:#a9c0dc;font-size:11px}
+.zeile{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px dashed #e7ecf2;font-size:13px}
+.zeile span:first-child{color:#33404f}
+.zeile.sum{border:0;font-weight:800;font-size:15px;padding-top:8px}
+.gesamt{background:linear-gradient(135deg,var(--blau),#0a3f7d);color:#fff;border-radius:12px;padding:14px 16px;margin-top:auto}
+.gesamt .p{font-family:"Archivo Black";font-size:34px;line-height:1.1}
+.gesamt small{color:#cfe0f5}
+.opt{display:flex;align-items:center;gap:8px;font-size:13px;padding:3px 0}
+.box{width:16px;height:16px;border-radius:4px;border:1.5px solid #b8c3d1;display:inline-grid;place-items:center;font-size:11px;color:#fff}
+.box.an{background:var(--blau);border-color:var(--blau)}
+.hinweis{font-size:11px;color:var(--grau)}
+.ki{background:#f1f7ff;border:1px solid #cfe3fb;border-radius:10px;padding:9px 11px;font-size:12px;color:#244a73}
+.ki b{color:var(--blau)}
+</style></head>
+<body><div class="app">
+<aside>
+  <div class="logo">UMZÜGE<br>NEUMANN<small>Angebotsrechner</small></div>
+  <div class="nav">Übersicht</div>
+  <div class="nav on">Neues Angebot</div>
+  <div class="nav">Anfragen <b>4</b></div>
+  <div class="nav">Besichtigungen</div>
+  <div class="nav">Kalender &amp; Teams</div>
+  <div class="nav">Fahrzeuge</div>
+  <div class="nav">Preise &amp; Sätze</div>
+  <div class="user">Angemeldet: Büro Heiliggrabstraße<br>Entwurf · Beispielwerte</div>
+</aside>
+<main>
+  <div class="kopf">
+    <h1>Angebot A-2026-118 · Familie Berger</h1>
+    <span class="pill">Privatumzug</span><span class="pill gelb">Wunschtermin Sa 14.11.2026</span>
+    <div class="rechts"><span class="btn">Entwurf speichern</span><span class="btn wa">Per WhatsApp senden</span><span class="btn prim">Angebot als PDF</span></div>
+  </div>
+
+  <div class="raster">
+    <!-- Spalte 1: Adressen + Strecke -->
+    <section class="karte">
+      <h2><span class="n">1</span> Adressen, Laufwege &amp; Fahrstrecke</h2>
+      <div class="adr"><div class="t">Auszug</div><div class="a">Hainstraße 12, 96047 Bamberg</div>
+        <div class="chips"><span class="chip">3. OG</span><span class="chip warn">kein Aufzug</span><span class="chip">Trageweg 25 m</span><span class="chip warn">Halteverbot nötig</span></div></div>
+      <div class="adr"><div class="t">Einzug</div><div class="a">Am Gründleinsbach 4, 96103 Hallstadt</div>
+        <div class="chips"><span class="chip">EG</span><span class="chip">Trageweg 10 m</span><span class="chip">Parken vor dem Haus</span></div></div>
+      <div class="karte-map">
+        <svg viewBox="0 0 400 178" width="100%" height="100%">
+          <path d="M0 120 C60 110 90 140 150 128 S260 90 400 104" stroke="#cfe0f2" stroke-width="14" fill="none"/>
+          <path d="M40 0 C70 60 120 70 140 178" stroke="#dde8f4" stroke-width="9" fill="none"/>
+          <path d="M260 0 C250 60 300 110 330 178" stroke="#dde8f4" stroke-width="7" fill="none"/>
+          <path d="M70 150 C110 120 150 118 190 96 S280 52 330 40" stroke="#0054a6" stroke-width="4.5" fill="none" stroke-dasharray="1 0"/>
+          <path d="M40 132 L70 150" stroke="#2988de" stroke-width="3" stroke-dasharray="5 5" fill="none"/>
+          <circle cx="40" cy="132" r="6" fill="#0b2545"/><text x="22" y="122" font-size="11" font-family="Inter" font-weight="700" fill="#0b2545">Lager</text>
+          <circle cx="70" cy="150" r="8" fill="#0054a6"/><text x="84" y="165" font-size="11" font-family="Inter" font-weight="700" fill="#0054a6">Auszug</text>
+          <circle cx="330" cy="40" r="8" fill="#14804a"/><text x="292" y="26" font-size="11" font-family="Inter" font-weight="700" fill="#14804a">Einzug</text>
+        </svg>
+      </div>
+      <div class="kz">
+        <div><b>14,3 km</b><span>Fahrstrecke gesamt</span></div>
+        <div><b>32 min</b><span>Fahrzeit</span></div>
+        <div><b>35 m</b><span>Laufwege gesamt</span></div>
+      </div>
+      <table>
+        <tr><th>Abschnitt</th><th class="r">km</th><th class="r">Zeit</th></tr>
+        <tr><td>Lager → Auszug</td><td class="r">2,1</td><td class="r">6 min</td></tr>
+        <tr><td>Auszug → Einzug</td><td class="r">6,8</td><td class="r">15 min</td></tr>
+        <tr><td>Einzug → Lager</td><td class="r">5,4</td><td class="r">11 min</td></tr>
+      </table>
+      <div class="ki"><b>Hinweis:</b> 3. OG ohne Aufzug + 25 m Trageweg → Außenaufzug spart ca. 2,5 Std. Personal.</div>
+    </section>
+
+    <!-- Spalte 2: Möbel -->
+    <section class="karte">
+      <h2><span class="n">2</span> Möbel &amp; Volumen <span class="hinweis" style="margin-left:auto">aus Besichtigung per Video · 18.10.</span></h2>
+      <table>
+        <tr><th>Gegenstand</th><th class="r">Anzahl</th><th class="r">m³ / Stk</th><th class="r">m³</th><th>Montage</th></tr>
+        <tr class="raum"><td colspan="5">Wohnzimmer</td></tr>
+        <tr><td>Sofa 3-Sitzer</td><td class="r"><span class="anz"><i>–</i>1<i>+</i></span></td><td class="r">1,8</td><td class="r">1,8</td><td>–</td></tr>
+        <tr><td>Wohnwand / Regal</td><td class="r"><span class="anz"><i>–</i>2<i>+</i></span></td><td class="r">1,5</td><td class="r">3,0</td><td>Ab- &amp; Aufbau</td></tr>
+        <tr><td>Esstisch + 6 Stühle</td><td class="r"><span class="anz"><i>–</i>1<i>+</i></span></td><td class="r">2,2</td><td class="r">2,2</td><td>–</td></tr>
+        <tr class="raum"><td colspan="5">Schlafzimmer</td></tr>
+        <tr><td>Doppelbett 180</td><td class="r"><span class="anz"><i>–</i>1<i>+</i></span></td><td class="r">2,0</td><td class="r">2,0</td><td>Ab- &amp; Aufbau</td></tr>
+        <tr><td>Kleiderschrank 4-türig</td><td class="r"><span class="anz"><i>–</i>1<i>+</i></span></td><td class="r">3,2</td><td class="r">3,2</td><td>Ab- &amp; Aufbau</td></tr>
+        <tr class="raum"><td colspan="5">Kinderzimmer &amp; Küche</td></tr>
+        <tr><td>Kinderbett + Schrank</td><td class="r"><span class="anz"><i>–</i>1<i>+</i></span></td><td class="r">2,4</td><td class="r">2,4</td><td>Ab- &amp; Aufbau</td></tr>
+        <tr><td>Kühlschrank, Waschmaschine</td><td class="r"><span class="anz"><i>–</i>2<i>+</i></span></td><td class="r">0,9</td><td class="r">1,8</td><td>Anschluss</td></tr>
+        <tr><td>Küchenzeile 3,2 m</td><td class="r"><span class="anz"><i>–</i>1<i>+</i></span></td><td class="r">4,5</td><td class="r">4,5</td><td>Demontage + Montage</td></tr>
+        <tr class="raum"><td colspan="5">Kartons &amp; Sonstiges</td></tr>
+        <tr><td>Umzugskartons</td><td class="r"><span class="anz"><i>–</i>60<i>+</i></span></td><td class="r">0,1</td><td class="r">6,0</td><td>–</td></tr>
+        <tr><td>Fahrräder, Kellerinhalt</td><td class="r"><span class="anz"><i>–</i>1<i>+</i></span></td><td class="r">4,1</td><td class="r">4,1</td><td>–</td></tr>
+      </table>
+      <div class="vol"><div><small>Volumen gesamt</small><br><b>31,0 m³</b></div><div class="bar"><i></i></div><div style="text-align:right"><small>Fahrzeug</small><br><strong>7,5-t-LKW · 40 m³</strong></div></div>
+    </section>
+
+    <!-- Spalte 3: Kalkulation -->
+    <section class="karte">
+      <h2><span class="n">3</span> Kalkulation</h2>
+      <div class="zeile"><span>Personal 4 Mann × 5 Std. × 45 €</span><span>900,00 €</span></div>
+      <div class="zeile"><span>7,5-t-LKW (Tagessatz)</span><span>180,00 €</span></div>
+      <div class="zeile"><span>Fahrtkosten 14,3 km × 1,60 €</span><span>22,88 €</span></div>
+      <div class="zeile"><span>Zuschlag 3. OG ohne Aufzug</span><span>90,00 €</span></div>
+      <div class="zeile"><span>Küche De- &amp; Montage (4 Std.)</span><span>220,00 €</span></div>
+      <div class="zeile"><span>60 Kartons (Leihgebühr)</span><span>90,00 €</span></div>
+      <div class="zeile"><span>Halteverbotszone Bamberg</span><span>95,00 €</span></div>
+      <div style="margin-top:4px;font-size:12px;font-weight:700;color:var(--grau)">Zusatzleistungen</div>
+      <div class="opt"><span class="box an">✓</span> Außenaufzug (−2,5 Std. Personal) <span style="margin-left:auto">+ 260,00 €</span></div>
+      <div class="opt"><span class="box"></span> Einpackservice</div>
+      <div class="opt"><span class="box"></span> Möbellagerung</div>
+      <div class="zeile sum"><span>Netto</span><span>1.857,88 €</span></div>
+      <div class="zeile"><span>MwSt. 19 %</span><span>353,00 €</span></div>
+      <div class="gesamt"><small>Festpreis inkl. MwSt.</small><div class="p">2.210,88 €</div><small>Angebot gültig 14 Tage · Anzahlung 20 % per Link</small></div>
+    </section>
+  </div>
+</main>
+</div></body></html>
