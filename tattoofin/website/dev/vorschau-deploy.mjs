@@ -16,7 +16,8 @@ if (ECHTE_SITES.includes(VORSCHAU_SITE)) throw new Error("Abbruch: das ist die e
 
 fs.rmSync(dist, { recursive: true, force: true });
 fs.cpSync(path.join(root, "public"), dist, { recursive: true });
-const BANNER = '<div style="background:#f2682a;color:#fff;font:700 13px/1.4 system-ui,sans-serif;text-align:center;padding:6px 10px;position:relative;z-index:100">Vorschau – keine echten Zahlungen · nichts hier ist live · <a href="/vorschau.html" style="color:#fff">Steuerung</a></div>';
+// Kleines Schild oben in der Mitte, liegt über der Seite (verschiebt nichts: erster Bildschirm misst wie live), Kontrast > 7 (19.11.2026)
+const BANNER = '<div style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:1000;background:#1f3d5c;color:#fff;font:700 11px/1.3 system-ui,sans-serif;padding:2px 10px 3px;border-radius:0 0 8px 8px;white-space:nowrap">Vorschau · keine echten Zahlungen · <a href="/vorschau.html" style="color:#fff">Steuerung</a></div>';
 for (const f of fs.readdirSync(dist).filter((n) => n.endsWith(".html"))) {
   let s = fs.readFileSync(path.join(dist, f), "utf8");
   s = s.replace(/<meta name="robots"[^>]*>/g, "").replace(/<head>/, '<head><meta name="robots" content="noindex,nofollow">');

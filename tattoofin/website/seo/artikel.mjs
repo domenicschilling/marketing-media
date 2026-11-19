@@ -167,6 +167,7 @@ export const artikel = [
 `,
     cta: "start",
   },
+  // Seit 19.11.2026 Weiterleitung auf /funktionen/ratenzahlung/ (netlify.toml). Bei einem neuen build.mjs-Lauf diesen Eintrag entfernen.
   {
     slug: "klarna-tattoostudio",
     titel: "Klarna im Tattoostudio: So geht's ohne Onlineshop",

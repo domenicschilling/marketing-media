@@ -15,7 +15,7 @@ PUB = ROOT / "public"
 F = json.loads((HIER / "fakten.json").read_text(encoding="utf-8"))
 MOTIVE = (ROOT / "dev" / "vorlage" / "motive.html").read_text(encoding="utf-8")
 LIVE = "https://tattoofin.de"
-CSS_V = "20261118a"
+CSS_V = "20261119a"
 
 
 def fakt(pfad):

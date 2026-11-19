@@ -730,3 +730,9 @@ html[data-hero=noshow] .auftakt .raten-fn,html[data-hero=gutschein] .auftakt .ra
 .mehr-weg{margin-top:var(--s5)}
 /* Mini-Handy 320×460 (Abnahme 18.11.2026): „10 Sek. ansehen“ passt nicht ganz in den ersten Bildschirm → dort ausblenden */
 @media (max-width:340px) and (max-height:480px){.film-knopf{display:none}}
+
+/* Startseite gekürzt (19.11.2026): Vorteile nur als Überschriften, eine Spalte, Stern-Liste */
+.vorteile-kurz .vorteil-liste{grid-template-columns:1fr;gap:14px}
+.vorteile-kurz .vorteil h3{font-size:var(--f-h3,var(--f-lead))}
+@media (min-width:720px){.vorteile-kurz{padding-top:64px;padding-bottom:64px}.vorteile-kurz .vorteil-liste{grid-template-columns:1fr;gap:22px}}
+@media (min-width:1100px){.vorteile-kurz{padding-top:64px;padding-bottom:64px}}

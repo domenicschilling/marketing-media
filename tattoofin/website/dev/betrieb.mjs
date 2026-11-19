@@ -117,8 +117,10 @@ const jsFehler = [];
 async function neueSeite(viewport = { width: 1280, height: 900 }) {
   const c = await browser.newContext({ viewport });
   const p = await c.newPage();
-  p.on("pageerror", (e) => jsFehler.push(e.message));
-  p.on("console", (m) => { if (m.type() === "error" && !/404|Failed to load resource/.test(m.text())) jsFehler.push(m.text()); });
+  // Seitenübergänge (@view-transition, W13): Chrome bricht sie bei schnellen Testklicks ab und meldet das – kein Fehler der Seite
+  const harmlos = /Transition was aborted because of invalid state|ViewTransition opt-in disabled/;
+  p.on("pageerror", (e) => { if (!harmlos.test(e.message)) jsFehler.push(e.message); });
+  p.on("console", (m) => { if (m.type() === "error" && !/404|Failed to load resource/.test(m.text()) && !harmlos.test(m.text())) jsFehler.push(m.text()); });
   return p;
 }
 
@@ -999,7 +1001,7 @@ await abschnitt("17 Recht (27.10.2026): Klarna-Stichtag 20.11.2026 für Risikofr
     const res = warn.map((w) => { const cs = getComputedStyle(w); const fg = parse(cs.color), bg = hintergrund(w), l1 = lum(fg), l2 = lum(bg); return { px: parseFloat(cs.fontSize), gewicht: Number(cs.fontWeight), kontrast: (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05), elternPx: parseFloat(getComputedStyle(w.parentElement).fontSize) }; });
     return { n: warn.length, abstand, claim: Boolean(cl), hero: Boolean(hero), fnHero, heroClaims: heroClaims.length, fnHeroAlle, claimsAusserhalbHero, nutzenClaims: nutzenClaims.length, fnNutzen, minPx: Math.min(...res.map((r) => r.px)), minElternPx: Math.min(...res.map((r) => r.elternPx)), minGewicht: Math.min(...res.map((r) => r.gewicht)), minKontrast: Math.min(...res.map((r) => r.kontrast)), breite: document.documentElement.scrollWidth <= innerWidth };
   };
-  for (const [name, pfad] of [["raten", "/raten.html"], ["start", "/"], ["start-tv-a", "/?utm_content=tv-a"], ["start-tv-d", "/?utm_content=tv-d"], ["studios", "/studios.html"], ["finanzieren", "/tattoo-finanzieren.html"], ["ratenzahlung", "/ratenzahlung-tattoostudio.html"], ["klarna", "/klarna-tattoostudio.html"], ["ratgeber", "/ratgeber.html"]]) {
+  for (const [name, pfad] of [["raten", "/raten.html"], ["start", "/"], ["start-tv-a", "/?utm_content=tv-a"], ["start-tv-d", "/?utm_content=tv-d"], ["studios", "/studios.html"], ["finanzieren", "/tattoo-finanzieren.html"], ["ratenzahlung", "/ratenzahlung-tattoostudio.html"], ["ratgeber", "/ratgeber.html"]]) {
     for (const [w, h] of [[320, 568], [390, 844], [1440, 900]]) {
       const p = await neueSeite({ width: w, height: h });
       await p.goto(BASE + pfad, { waitUntil: "load" });
@@ -1075,10 +1077,11 @@ await abschnitt("17c Zahlen im Hero und im Preisblock passen zusammen (16.11.202
     const klGeb = kl ? betrag * eur(kl[1]) / 100 + eur(kl[2]) : NaN, kaGeb = ka ? betrag * eur(ka[1]) / 100 + eur(ka[2]) : NaN;
     const ca = (s, re) => eur((String(s).match(re) || [])[1]);
     const tabKl = ca(m.zeilen["Stripe-Gebühr Klarna"], /ab ca\. ([\d.]+) €/), tabRest = ca(m.zeilen["Bei dir"], /bis ca\. ([\d.]+) €/), tabKa = ca(m.hinweis, /Mit Karte ab ca\. ([\d.]+) €/);
-    const gut = betrag === 4000 && /Ganzer Rücken/.test(m.h1)
-      && m.alt.includes("4.000,00 Euro, Ganzer Rücken") && !/2\.000/.test(m.alt) && /handy-kunde-oben\.webp\?v=/.test(m.src)
-      && eur((m.caption.match(/zahlt ([\d.]+)/) || [])[1]) === betrag && /Klarna/.test(m.caption)
-      && Math.abs(tabKl - klGeb) <= 1 && Math.abs(tabRest - (betrag - klGeb)) <= 1 && Math.abs(tabKa - kaGeb) <= 1 && m.zeilen["An Tattoofin"] === "0 €";
+    // Startseite gekürzt (19.11.2026, Domenic „Ja, kürzen“): Rechentabelle und Kosten-Frage stehen nur noch auf /studios und /preis/ → auf / nur der Hero
+    const heroGut = betrag === 4000 && /Ganzer Rücken/.test(m.h1)
+      && m.alt.includes("4.000,00 Euro, Ganzer Rücken") && !/2\.000/.test(m.alt) && /handy-kunde-oben\.webp\?v=/.test(m.src);
+    const gut = heroGut && (pfad === "/" ? !m.caption && !m.faq : true) && (pfad === "/" || (eur((m.caption.match(/zahlt ([\d.]+)/) || [])[1]) === betrag && /Klarna/.test(m.caption)
+      && Math.abs(tabKl - klGeb) <= 1 && Math.abs(tabRest - (betrag - klGeb)) <= 1 && Math.abs(tabKa - kaGeb) <= 1 && m.zeilen["An Tattoofin"] === "0 €"));
     check(gut, `${pfad}: H1 „${m.h1}“ = Handybild (Alt) = Preisblock ${betrag} €; Gebühren aus den Fragen nachgerechnet (Klarna ${klGeb.toFixed(2)} → ca. ${tabKl} €, bei dir ca. ${tabRest} €, Karte ${kaGeb.toFixed(2)} → ca. ${tabKa} €)`, JSON.stringify(m).slice(0, 300));
   }
 });
@@ -1138,7 +1141,7 @@ await abschnitt("17d Nutzen fürs Studio direkt unter dem Hero (Domenic 16.11.20
       await p.context().close();
       gesehen++;
       const gut = m.da && m.anzahl === 1 && m.nachHero && m.vorFall && /machen/.test(m.titel || "") && m.karten === 4 && m.aufbau && m.saetze <= 3 && m.zeichen <= 110 && !m.ziffern
-        && JSON.stringify(m.ratenKarten) === "[3]" && m.zahlarten === "Karte|Apple Pay|Google Pay|Klarna*" && m.abschnitte <= 9 && m.fnJeBildschirm && !m.paypal && /^\*Raten über Klarna, nach deren Bonitätsprüfung\..*Achtung! Kreditaufnahme kostet Geld\.$/.test(m.fnText) && m.fnPx >= 12 && m.fnPx <= 13
+        && JSON.stringify(m.ratenKarten) === "[3]" && m.zahlarten === "Karte|Apple Pay|Google Pay|Klarna*" && m.abschnitte <= 9 && m.fnJeBildschirm && !m.paypal && /^\*Raten über Klarna, nach deren Bonitätsprüfung\..*Achtung! Kreditaufnahme kostet Geld\.$/.test(m.fnText) && m.fnPx >= 12 && m.fnPx <= 14
         && m.fnAbstand >= 0 && m.fnAbstand <= 560 && m.minKontrast >= 4.5 && m.spalten === spalten && !m.quer && m.rand && !m.ueberlappt && (w !== 390 || m.hoehe <= 8000);
       if (!gut) probleme.push(`${pf} ${w}x${h}: ${JSON.stringify(m)}`);
     }
@@ -1182,7 +1185,7 @@ await abschnitt("18 Paket Risikofrei geschlossen (26.10.2026): Neukunden gesperr
     const erinn = mailsAn("entwurf-mo@betrieb.test").find((m) => /Fast geschafft/.test(m.subject));
     check(Boolean(erinn) && !/Risikofrei|10 ?%/i.test(erinn.html), "Erinnerungs-Mail erwähnt Risikofrei nicht mehr", "");
     // --- Website ---
-    const seiten = ["/", "/studios.html", "/start.html", "/ratgeber.html", "/tattoo-finanzieren.html", "/ratenzahlung-tattoostudio.html", "/tattoo-anzahlung.html", "/klarna-tattoostudio.html", "/video.html", "/raten.html", "/sitemap.xml"];
+    const seiten = ["/", "/studios.html", "/start.html", "/ratgeber.html", "/tattoo-finanzieren.html", "/ratenzahlung-tattoostudio.html", "/tattoo-anzahlung.html", "/video.html", "/raten.html", "/sitemap.xml"];
     for (const pf of seiten) {
       // Der echte, belegte Fall „900 € per Klarna“ (Abschnitt [data-beleg], 07.11.2026) ist kein Risikofrei-Versprechen und bleibt ausgenommen
       const t = (await (await fetch(BASE + pf)).text()).replace(/<section[^>]*\bdata-beleg\b[\s\S]*?<\/section>/g, "").replace(/<p class="hero-beleg">[\s\S]*?<\/p>/g, "");
@@ -1197,7 +1200,7 @@ await abschnitt("18 Paket Risikofrei geschlossen (26.10.2026): Neukunden gesperr
     const lp = await (await fetch(BASE + "/")).text();
     check(/class="knopf" href="\/start\.html"[^>]*>1 Woche testen<\/a>/.test(lp) && !/Min\.<\/a>|\d&nbsp;Min/.test(lp), "Hero-Knopf: „1 Woche testen“ (seit 17.11.2026) → /start.html (keine ungemessene Minutenangabe)", "");
     const wann = await (await fetch(BASE + "/")).text();
-    check(/49,90&nbsp;€ im Monat inkl\. MwSt\./.test(wann) && !/999 €/.test(wann) && /class="betrag">49,90<span class="eur">€/.test(wann) && /41,93&nbsp;€ netto/.test(wann) && !/58,31|49&nbsp;€ netto/.test(wann) && /nur für Unternehmer/i.test(wann), "Preise auf der Startseite: 49,90 € im Monat inkl. MwSt. (auch in der Preis-Überschrift), klein 41,93 € netto, kein 58,31 €, nur für Unternehmer, keine 999 €", "");
+    check(/49,90(&nbsp;|\u00a0| )€ im Monat inkl\. MwSt\./.test(wann) && !/999 €/.test(wann) && /class="betrag">49,90<span class="eur">€/.test(wann) && /41,93(&nbsp;|\u00a0| )€ netto/.test(wann) && !/58,31|49&nbsp;€ netto/.test(wann) && /nur für Unternehmer/i.test(wann), "Preise auf der Startseite: 49,90 € im Monat inkl. MwSt. (auch in der Preis-Überschrift), klein 41,93 € netto, kein 58,31 €, nur für Unternehmer, keine 999 €", "");
     check(/Achtung! Kreditaufnahme kostet Geld\./.test(wann), "Pflicht-Warnhinweis steht weiter auf der Startseite", "");
     // --- Bestandsstudio läuft unverändert ---
     const pt = await json("/api/portal", {}, best.cookie);

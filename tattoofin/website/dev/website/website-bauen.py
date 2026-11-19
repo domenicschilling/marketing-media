@@ -213,7 +213,7 @@ fall = '''<div class="rechnung">
           <span class="bon-stempel">Bezahlt [[fall.datum]]</span>
           <figcaption>Nachgezeichnet nach dem echten Zahlungseingang.</figcaption>
         </figure>
-        <div class="text"><p class="gross">[[fall.betrag]] per Klarna.</p>
+        <div class="text"><p class="gross">[[fall.betragZahl]]&nbsp;<span class="eur-z">€</span> per Klarna.</p>
           <p>So lief es am [[fall.datumLang]] in einem Studio: Link geschickt, Kunde zahlt per Klarna, das Geld kommt aufs eigene Stripe-Konto.</p>
           <p class="klein">Studio anonym. Klarna entscheidet bei jedem Kunden selbst.</p></div>
       </div>'''
@@ -308,6 +308,15 @@ KARTEN = [
     ("app", motiv("motiv-4", "", "tf-b6", "tf-u6"), "iPhone-App", "Immer dabei.", "Links, QR-Code, Gutscheine und Auszahlungen am Handy. Alles geht auch im Browser.", False),
     ("ratenzahlung", motiv("flash-1", "", "tf-b1", "tf-u1"), "Klarna im Studio", "Für große Tattoos.", "Dein Kunde zahlt in Raten* über Klarna. Du bekommst den ganzen Betrag auf einmal.", True),
 ]
+# „Was es dir bringt“: auf der Startseite seit 19.11. nur die Überschriften (Domenic „Ja, kürzen“), die Sätze stehen hier (gleicher Wortlaut wie dev/startseite-bauen.py VORTEILE)
+VORTEILE = [
+    ("Weniger No-Shows.", "Du blockst erst, wenn die Anzahlung da ist. Sagt der Kunde kurzfristig ab, gelten deine Bedingungen."),
+    ("Kein Hinterherlaufen.", "Link schicken statt Kontonummer diktieren. Du siehst sofort, wer bezahlt hat."),
+    ("Nachricht bei jeder Zahlung.", "Per E-Mail oder in der iPhone-App. Die App bekommst du nach der Anmeldung von uns."),
+    ("Umsatz, auch wenn zu ist.", "Gutscheine verkaufst du per Link, abends, am Wochenende, vor Weihnachten."),
+    ("Dein Studio, dein Name.", "Dein Kunde zahlt auf einer Seite mit deinem Studionamen, nicht mit unserem."),
+    ("Alles an einem Ort.", "Zahlungslinks, Anzahlungen, Gutscheine und Auszahlungen in einer App und im Browser."),
+]
 for i, k in enumerate(KARTEN):
     KARTEN[i] = (k[0], k[1].replace('role="img" aria-label=""', 'aria-hidden="true" focusable="false"'), *k[2:])
 karten = "".join(
@@ -319,6 +328,7 @@ seite("/funktionen/",
       "funktionen",
       seitenkopf("Für jede Zahlung ein&nbsp;Link.", "Anzahlung, Rest, Gutschein: Du schickst einen Link, dein Kunde zahlt am&nbsp;Handy.", "funktionen"),
       abschnitt("liste", "Was du damit machen kannst.", f'<ul class="karten karten-3">{karten}</ul>')
+      + abschnitt("bringt", "Was es dir bringt.", '<ul class="karten karten-3">' + "".join(f'<li class="karte"><h3>{t}</h3><p>{x}</p></li>' for t, x in VORTEILE) + '</ul>')
       + abschnitt("zahlarten", "Womit dein Kunde zahlt.", '''<ul class="chips" aria-label="Zahlarten"><li>Karte</li><li>Apple&nbsp;Pay</li><li>Google&nbsp;Pay</li><li>Klarna</li></ul>
       <div class="text" style="margin-top:var(--s4)"><p>Das Geld geht direkt auf dein eigenes Stripe-Konto. Tattoofin nimmt keine Provision. Gutscheine ohne&nbsp;Klarna.</p></div>''')
       + abschnitt("nicht", "Was Tattoofin nicht macht.", '''<ul class="nicht">
@@ -422,7 +432,7 @@ seite("/preis/",
         <p><a class="mehr-link" href="/vertrag.html" data-umami-event="vertrag-lesen">Vertrag vorab lesen</a></p>
       </div>''')
       + fragen_fuer("preis", "Fragen zum Preis.")
-      + weiter("preis", "Eine Woche testen. Heute 0&nbsp;€.", [("Funktionen", "/funktionen/"), ("So geht’s", "/so-gehts/"), ("Fragen", "/fragen/")]),
+      + weiter("preis", "Eine Woche testen. Heute 0&nbsp;<span class=\"eur-z\">€</span>.", [("Funktionen", "/funktionen/"), ("So geht’s", "/so-gehts/"), ("Fragen", "/fragen/")]),
       ld=[{"@type": "Product", "name": "Tattoofin Paket Monatlich", "brand": {"@id": LIVE + "/#org"},
            "description": "Zahlungslinks, Anzahlungen, Gutscheine und Klarna für Tattoo-Studios. [[preis.testwoche]] testen, danach [[preis.monat]] im Monat inkl. MwSt., keine Provision, monatlich kündbar.",
            "offers": {"@type": "Offer", "price": "[[preis.monatZahl]]", "priceCurrency": "EUR", "url": LIVE + "/preis/",
@@ -533,15 +543,20 @@ def rahmen_um(datei, aktiv=None, kopf_ersetzen=True, nur_web=False):
     else:
         t = t.replace("</main>", "</main>\n" + fu, 1) if "</main>" in t else t.replace("</body>", fu + "\n</body>", 1)
     t = t.replace("</head>", R.CSS_ALT + "\n</head>", 1)
-    # impressum/datenschutz haben kein eigenes App-Skript: kleines Skript entfernt [data-nur-web] bei ?app=1 (vertrag/avv haben eins)
-    skr = (R.MENUE_JS + "\n" if kopf_ersetzen else "") + (NUR_WEB_SKRIPT + "\n" if nur_web and datei in ("impressum.html", "datenschutz.html") else "")
+    # impressum/datenschutz/avv: kleines Skript entfernt [data-nur-web] bei ?app=1 (vertrag hat ein eigenes; das AVV-Skript entfernte Kopf/Fuß nicht, Fund 19.11.)
+    skr = (R.MENUE_JS + "\n" if kopf_ersetzen else "") + (NUR_WEB_SKRIPT + "\n" if nur_web and datei in ("impressum.html", "datenschutz.html", "avv.html") else "")
     t = t.replace("</body>", skr + "</body>", 1)
     t = R.fuellen(t)
     p.write_text(t, encoding="utf-8")
     GEBAUT.append("/" + datei)
 
 
-for d in ("ratgeber.html", "tattoo-anzahlung.html", "tattoo-finanzieren.html", "ratenzahlung-tattoostudio.html", "klarna-tattoostudio.html"):
+# klarna-tattoostudio.html ist seit 19.11.2026 eine Weiterleitung auf /funktionen/ratenzahlung/ (netlify.toml): Links im Ratgeber dorthin
+for d in ("ratgeber.html", "tattoo-anzahlung.html", "tattoo-finanzieren.html", "ratenzahlung-tattoostudio.html"):
+    _p = PUB / d
+    _t = _p.read_text(encoding="utf-8").replace('href="/klarna-tattoostudio.html"', 'href="/funktionen/ratenzahlung/"')
+    _t = re.sub(r',?\{"@type":"Article","headline":"[^"]*","url":"https://tattoofin\.de/klarna-tattoostudio\.html"\}', "", _t)
+    _p.write_text(_t, encoding="utf-8")
     rahmen_um(d, "ratgeber")
 for d in ("impressum.html", "datenschutz.html", "vertrag.html", "avv.html"):
     rahmen_um(d, None, nur_web=True)
@@ -584,7 +599,7 @@ subprocess.run([sys.executable, str(ROOT / "dev" / "startseite-bauen.py")], chec
 SITEMAP = [("/", "1.0"), ("/funktionen/", "0.9"), ("/funktionen/anzahlung/", "0.9"), ("/funktionen/zahlungslink/", "0.8"),
            ("/funktionen/ratenzahlung/", "0.8"), ("/funktionen/gutschein/", "0.8"), ("/funktionen/app/", "0.7"), ("/so-gehts/", "0.8"),
            ("/preis/", "0.9"), ("/fragen/", "0.7"), ("/ueber-uns/", "0.5"), ("/ratgeber.html", "0.6"), ("/tattoo-anzahlung.html", "0.6"),
-           ("/tattoo-finanzieren.html", "0.6"), ("/ratenzahlung-tattoostudio.html", "0.5"), ("/klarna-tattoostudio.html", "0.5"),
+           ("/tattoo-finanzieren.html", "0.6"), ("/ratenzahlung-tattoostudio.html", "0.5"),
            ("/raten", "0.5"), ("/vertrag.html", "0.3"), ("/avv.html", "0.2"), ("/impressum.html", "0.2"), ("/datenschutz.html", "0.2")]
 (PUB / "sitemap.xml").write_text('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
                                   + "".join(f"  <url><loc>{LIVE}{u}</loc><lastmod>{HEUTE}</lastmod><priority>{pr}</priority></url>\n" for u, pr in SITEMAP)

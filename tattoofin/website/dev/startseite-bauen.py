@@ -36,6 +36,8 @@ FN_KURZ = rahmen.fakt("klarna.fnKurz")
 
 _FR = json.loads((Path(__file__).resolve().parent / "website" / "fragen.json").read_text(encoding="utf-8"))
 FRAGEN = [(f["q"], " ".join(f["a"]), f["fn"]) for f in _FR["fragen"] if f.get("start")]
+# Startseite gekürzt (Domenic 18.11. „Ja, kürzen“): diese Fragen nur noch auf /fragen/ (Preis, Ablauf und Start stehen schon in eigenen Abschnitten)
+NUR_FRAGENSEITE = {"Was kostet es genau?", "Wie kündige ich? Und wenn Stripe mich ablehnt?", "Wann kommt das Geld, und was brauche ich?", "Wie fange ich an?"}
 
 
 # Erster Bildschirm passend zur Anzeige (16.11.2026, Runde 2): Die Variante steht fest, bevor etwas gezeichnet wird.
@@ -80,6 +82,8 @@ def nbsp_zahlen(t):
 def jsonld(seite):
     faq = []
     for q, a, fn in FRAGEN:
+        if seite != "studios" and q in NUR_FRAGENSEITE:
+            continue
         faq.append({"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a + (" " + FN_KURZ if fn else "")}})
     graph = [
         {"@type": "Organization", "@id": "https://tattoofin.de/#org", "name": "Tattoofin", "legalName": "[[firma.name]]",
@@ -166,18 +170,26 @@ def bauen(seite):
         ("Dein Studio, dein Name.", "Dein Kunde zahlt auf einer Seite mit deinem Studionamen, nicht mit unserem."),
         ("Alles an einem Ort.", "Zahlungslinks, Anzahlungen, Gutscheine und Auszahlungen in einer App und im Browser."),
     ]
-    vorteile = ('  <section class="vorteile" id="vorteile" aria-labelledby="vorteile-titel">\n'
+    # Gekürzt (nur Überschriften) als eine Spalte: so stehen die zwei Klarna-Warnhinweise (Nutzen, Geld) auch am Tablet/Computer
+    # mehr als eine Bildschirmhöhe auseinander (dev/betrieb.mjs 17d „höchstens einmal je Bildschirm“)
+    vorteile = ('  <section class="vorteile' + ("" if studios else " vorteile-kurz") + '" id="vorteile" aria-labelledby="vorteile-titel">\n'
                 '    <h2 id="vorteile-titel">Was es dir&nbsp;bringt.</h2>\n    <ul class="vorteil-liste">\n'
-                + "".join('      <li class="vorteil"><h3>%s</h3><p>%s</p></li>\n' % (h, s) for h, s in VORTEILE)
-                + '    </ul>\n  </section>\n\n')
+                + "".join(('      <li class="vorteil"><h3>%s</h3><p>%s</p></li>\n' % (h, s)) if studios else ('      <li class="vorteil vorteil-kurz"><h3>%s</h3></li>\n' % h) for h, s in VORTEILE)
+                + '    </ul>\n'
+                + ('' if studios else '    <p class="mehr-weg"><a class="mehr" href="/funktionen/#bringt">Was das genau heißt&nbsp;→</a></p>\n')
+                + '  </section>\n\n')
     # Eigener Abschnitt „Du bekommst dein Geld“ (Domenic: „nicht so, dass du selber finanzierst, sondern du kriegst dein Geld und die Kunden
     # finanzieren über Klarna“). Auszahlung laut Stripe-Doku (docs.stripe.com/payments/balances, Settlement timing, Germany: erste Auszahlung
     # 7 Kalendertage, danach 3 Werktage; Stand 16.11.2026). Kein „sofort“ (nicht belegt). Raten*-Aussage mit eigener Fußnote ≤ 560 px darunter.
     mehr_raten = ('<a class="mehr" href="/ratenzahlung-tattoostudio.html">Mehr zur Ratenzahlung im Tattoostudio&nbsp;→</a>' if studios
                   else '<a class="mehr" href="/funktionen/ratenzahlung/">Mehr zu Klarna im Studio&nbsp;→</a>')
+    beleg_an, beleg_aus = ("", "") if studios else ("<!--kurz ", "-->")
+    fall_satz = ('<p>So lief es am [[fall.datumLang]] in einem Studio: Link geschickt, Kunde zahlt per Klarna, das Geld kommt aufs eigene <span class="nw">Stripe-Konto</span>.</p>' if studios
+                 else '<p>Am [[fall.datumLang]] in einem Studio, das Geld kam aufs eigene <span class="nw">Stripe-Konto</span>.</p>')
     mehr_ablauf = "" if studios else '\n    <p class="mehr-weg"><a class="mehr" href="/so-gehts/">So fängst du an&nbsp;→</a></p>'
     mehr_preis = "" if studios else '<a class="wa" href="/preis/">Alles zum Preis</a>'
     mehr_fragen = "" if studios else '<a href="/fragen/">Alle Fragen ansehen</a> · '
+    geld_punkte_an, geld_punkte_aus = ("", "") if studios else ("<!--kurz ", "-->")
     geld = f'''  <section class="geld" id="geld" aria-labelledby="geld-titel">
     <div class="geld-innen">
       <h2 id="geld-titel">Dein Geld kommt auf&nbsp;einmal.</h2>
@@ -188,11 +200,11 @@ def bauen(seite):
         <div class="geld-station geld-du"><span class="geld-wer">Du</span><strong>bekommst den ganzen Betrag auf&nbsp;einmal</strong><span>Abzüglich Stripe-Gebühr, auf dein eigenes <span class="nw">Stripe-Konto</span>.</span></div>
       </div>
       <p class="raten-fn">{FN_LANG}</p>
-      <ul class="geld-punkte">
+      {geld_punkte_an}<ul class="geld-punkte">
         <li><b>Wann ist das Geld auf deinem Konto?</b> Stripe zahlt auf dein Bankkonto aus. Laut Stripe in Deutschland in der Regel [[auszahlung.werktage]] nach der Zahlung, die allererste Auszahlung nach [[auszahlung.erste]].</li>
         <li><b>Und wenn der Kunde nicht zahlt?</b> Dann trägt laut Stripe Klarna das Risiko, nicht&nbsp;du.</li>
         <li><b>Sagt Klarna nein?</b> Dann zahlt dein Kunde mit Karte, Apple Pay oder Google&nbsp;Pay.</li>
-      </ul>
+      </ul>{geld_punkte_aus}
       {mehr_raten}
     </div>
   </section>
@@ -200,6 +212,8 @@ def bauen(seite):
 '''
     fragen = []
     for q, a, fn in FRAGEN:
+        if not studios and q in NUR_FRAGENSEITE:
+            continue
         antwort = "<p>%s</p>" % nbsp_zahlen(html.escape(a, quote=False))
         if fn:
             antwort += '<p class="raten-fn">%s</p>' % FN_KURZ
@@ -365,7 +379,7 @@ def bauen(seite):
       <div class="fall-text">
         <span class="stempel-schild">Echter Fall</span>
         <h3 id="fall-titel">[[fall.betragZahl]]<span class="eur">€</span> per Klarna.</h3>
-        <p>So lief es am [[fall.datumLang]] in einem Studio: Link geschickt, Kunde zahlt per Klarna, das Geld kommt aufs eigene <span class="nw">Stripe-Konto</span>.</p>
+        {fall_satz}
         <p class="klein">Studio anonym. Klarna entscheidet bei jedem Kunden selbst.</p>
       </div>
     </div>{mehr_ablauf}
@@ -385,7 +399,7 @@ def bauen(seite):
           <span class="brutto">([[preis.netto]] netto) · Nur für Unternehmer.</span>
         </div>
       </div>
-      <div class="beleg">
+      {beleg_an}<div class="beleg">
         <table>
           <caption>Dein Kunde zahlt [[beispielRaten.betragZahl]]<span class="eur">€</span> per Klarna</caption>
           <tbody>
@@ -395,7 +409,7 @@ def bauen(seite):
           </tbody>
         </table>
         <p class="beleg-hinweis">Mit Karte [[beispielRaten.gebuehrKarte]] Gebühr. Keine Garantie.</p>
-      </div>
+      </div>{beleg_aus}
       <div class="preis-rest">
         <ul class="sticker-reihe" aria-label="Das gehört dazu">
           <li>Keine Provision</li>
@@ -462,6 +476,7 @@ def bauen(seite):
 """
     # Leere Platzhalter-Zeilen (Motive, die es nicht gibt) entfernen
     seite_html = re.sub(r"\n[ \t]*\n(?=[ \t]*\n)", "\n", seite_html)
+    seite_html = re.sub(r"<!--kurz .*?-->", "", seite_html, flags=re.S)  # Startseite gekürzt (Domenic 18.11.): Teile stehen auf den Unterseiten
     if not studios:
         # Startseite: Kopf und Fuß wie auf allen Seiten (dev/website/rahmen.py). /studios behält den Anzeigen-Kopf ohne Menü (W18).
         seite_html = re.sub(r'<header class="kopf">.*?</header>', lambda m: rahmen.kopf(), seite_html, count=1, flags=re.S)

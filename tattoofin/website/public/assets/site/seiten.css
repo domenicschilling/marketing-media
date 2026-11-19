@@ -162,3 +162,6 @@
   .leer img{display:none}
   .leer h1{font-size:var(--f-h3)}
 }
+
+/* €-Zeichen in der Plakatschrift sieht wie „<“ aus (Gutachter 19.11.2026): in Überschriften aus der Textschrift */
+.eur-z{font-family:var(--text);font-weight:800}
