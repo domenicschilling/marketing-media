@@ -1,0 +1,663 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-visual">
+<script>(function(){try{
+if(!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)){var d=document.documentElement;d.classList.add('stech-warten');setTimeout(function(){d.classList.remove('stech-warten')},4000);}}catch(x){}})();</script>
+<title>Ratenzahlung für deine Tattoo-Kunden – 7 Tage kostenlos testen | Tattoofin</title>
+<meta name="description" content="Dein Kunde kann per Klarna zahlen, du bekommst das Geld in einer Summe aufs eigene Stripe-Konto. Keine Provision. 7 Tage kostenlos testen, danach 49,90 € im Monat inkl. MwSt.">
+<meta name="robots" content="noindex,follow">
+<meta name="theme-color" content="#f5ead2">
+<link rel="canonical" href="https://tattoofin.de/studios">
+<meta property="og:type" content="website"><meta property="og:locale" content="de_DE"><meta property="og:site_name" content="Tattoofin">
+<meta property="og:title" content="Raten* für deine Kunden. Dein Geld auf einmal.">
+<meta property="og:description" content="7 Tage kostenlos testen. *Raten über Klarna, nach deren Bonitätsprüfung. Achtung! Kreditaufnahme kostet Geld.">
+<meta property="og:url" content="https://tattoofin.de/studios-raten"><meta property="og:image" content="https://tattoofin.de/assets/og.jpg">
+<link rel="icon" href="/favicon.png" type="image/png"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preload" href="/assets/start/fonts/LuckiestGuy.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/start/fonts/DMSans.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/start/figur.webp" as="image" type="image/webp">
+<link rel="stylesheet" href="/assets/start/style.css?v=20261118a">
+<style>
+/* Anzeigenseite Raten* + 7 Tage (Schilling-Konzept 18.11.2026). Erbt Farben, Schriften, Knopf, Bogen, Fall, Geld, Preis, Fragen aus style.css. */
+:root{--kopf-h:53px}
+.kopf{height:var(--kopf-h);min-height:0;padding-top:0;padding-bottom:0}
+/* Erster Bildschirm = genau der sichtbare Bildschirm (svh), alles darin sichtbar */
+.held{max-width:1280px;margin-inline:auto;height:calc(100svh - var(--kopf-h));min-height:0;padding:2px var(--rand) calc(12px + var(--banner-h,0px));display:flex;flex-direction:column}
+.held h1{font-size:clamp(28px,min(11vw,6.9svh),92px);margin-top:2px;text-wrap:balance}
+.held .unterzeile{font-size:clamp(14px,min(4.3vw,2.6svh),22px);margin-top:6px;max-width:30em}
+.held .raten-fn{margin-top:5px}
+.held .held-buehne{position:relative;flex:1 1 0;height:auto;aspect-ratio:auto;width:auto;max-width:none;min-height:70px;margin:8px 0 6px;cursor:pointer}
+.held-buehne .szene-svg{position:absolute;inset:0;width:100%;height:100%}
+.held-c .held-figur{left:auto;right:-4px;height:min(40%,160px)}
+.held-figur{position:absolute;z-index:3;left:-4px;bottom:-6px;height:min(52%,190px);width:auto;pointer-events:none}
+.held-fuss{display:grid;gap:6px;justify-items:start}
+.held-fuss .knopf{width:100%;min-height:clamp(48px,7.6svh,58px);font-size:clamp(20px,min(6vw,3.6svh),28px)}
+.preiszeile{font-weight:700;font-size:clamp(15px,2.2svh,17px);line-height:1.3}
+/* Stempel und Abrisse: einmal nach dem Stechen, antippen spielt es noch einmal */
+@media (prefers-reduced-motion:no-preference){
+  .szene-svg .stempel{animation:stempel .42s cubic-bezier(.2,1.6,.5,1) 1.45s both}
+  .szene-svg .abriss{animation:abriss 1.4s ease-in-out 1.6s both}
+  .szene-svg .abriss-1{animation-delay:1.75s}.szene-svg .abriss-2{animation-delay:1.9s}.szene-svg .abriss-3{animation-delay:2.05s}
+}
+/* Stempel und Abrisse drehen um die eigene Mitte */
+.stempel,.abriss{transform-box:fill-box;transform-origin:50% 50%}.abriss{transform-origin:50% 0}
+.szene-hoch{display:none}
+@media (max-width:599px) and (min-height:720px){.held-a .szene-breit{display:none}.held-a .szene-hoch{display:block}}
+@keyframes stempel{0%{transform:scale(1.9) rotate(-14deg);opacity:0}70%{opacity:1}100%{transform:scale(1) rotate(0);opacity:1}}
+@keyframes abriss{0%,100%{transform:rotate(0)}35%{transform:rotate(5deg)}70%{transform:rotate(-3deg)}}
+/* Entwurf B: Herz oben links, echter Zahlseiten-Ausschnitt rechts */
+.szene-b{position:absolute;inset:0}
+.b-herz{position:absolute;left:0;top:0;width:auto;height:52%;max-width:40%;z-index:1}
+.b-handy{position:absolute;right:1%;top:5%;height:90%;max-width:58%;aspect-ratio:600/700;transform:rotate(-3deg);z-index:2}
+.b-handy .handy-rahmen{height:calc(100% - 22px)}
+.b-handy .handy-rahmen img{height:100%;aspect-ratio:auto;object-fit:cover;object-position:50% 79%}
+.held-b .held-figur{height:min(34%,150px);left:-6px}
+.b-handy figcaption{position:relative;z-index:4;text-align:center;font-size:12px;font-weight:700;margin-top:6px;transform:rotate(3deg)}
+.zeigen{max-width:1280px;margin-inline:auto;padding:30px 0 34px}
+.zeigen>h2,.zeigen>.abschnitt-satz{padding-inline:var(--rand)}
+/* Handy: ein Bildschirm je Wisch (ganze Bildunterschrift, nichts angeschnitten), darunter 1/5 und Punkte; ohne Selbstlauf */
+.zeigen-reihe{list-style:none;display:flex;gap:calc(var(--rand) * 2);overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-inline:var(--rand);padding:26px var(--rand) 12px;margin:0;scrollbar-width:none;align-items:flex-start}
+.zeigen-reihe::-webkit-scrollbar{display:none}
+.zeigen-reihe:focus-visible{outline-offset:-3px}
+.zeigen-bild{flex:0 0 100%;display:grid;justify-items:center;scroll-snap-align:start}
+.zeigen-bild>*{width:min(68vw,270px)}
+.zeigen-bild .handy-rahmen{padding-bottom:6px;transform:rotate(-1.2deg)}
+.zeigen-bild:nth-child(even) .handy-rahmen{transform:rotate(1.2deg)}
+.zeigen-bild .handy-rahmen img{aspect-ratio:auto;width:100%;height:auto;object-fit:initial}
+.zeigen-zahlseite .handy-rahmen img{aspect-ratio:600/1160;object-fit:cover;object-position:top}
+.zeigen-bild p{margin-top:14px;font-size:15px;line-height:1.4}
+.zeigen-bild b{font-weight:800}
+.zeigen-stand{display:flex;align-items:center;justify-content:center;gap:6px;padding:0 var(--rand)}
+.zeigen-stand[hidden]{display:none}
+.zeigen-zahl{font-weight:800;font-size:15px;min-width:3ch;text-align:right}
+.zeigen-punkte{display:flex}
+.zeigen-punkte button{width:44px;height:44px;border:0;padding:0;background:none;display:grid;place-items:center;cursor:pointer;border-radius:50%}
+.zeigen-punkte i{width:12px;height:12px;border-radius:50%;border:2px solid var(--blau);background:transparent}
+.zeigen-punkte [aria-current="true"] i{background:var(--blau);transform:scale(1.25)}
+/* Ab Tablet: alle fünf als Raster, jede Abbildung mindestens 330 px breit, damit die Schrift im Bild lesbar bleibt (ab ca. 11 px) */
+@media (min-width:720px){
+  .zeigen-reihe{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));overflow:visible;gap:40px 32px;padding-top:30px}
+  .zeigen-bild{justify-items:start}
+  .zeigen-bild>*{width:100%;max-width:350px}
+  .zeigen-stand,.zeigen-stand[hidden]{display:none}
+}
+/* Zweiter Bildschirm: stärkster Beleg */
+.beleg-oben{padding-top:22px}
+/* iOS-26/27-Safari zeigt unter der schwebenden Leiste einen Streifen der nächsten Sektion: dort nur Papier (Lösung wie tattoofin.de, Memory hero-viewport-perfekt) */
+.held + .beleg-oben{padding-top:max(22px, calc((100lvh - 100svh) * 2.6 + 6px))}
+.testwoche{max-width:1280px;margin-inline:auto;padding:28px var(--rand) 34px}
+/* 7 Tage als Abriss-Kalender im Flash-Stil (Gegenstück zu den Raten-Streifen im Hero): ein Streifen, Perforation zwischen den Blättern,
+   „Tag 7“ ist schon halb abgerissen */
+.streifen{list-style:none;display:grid;margin-top:22px;max-width:1120px;padding:0 6px 14px 0}
+.blatt{position:relative;background:var(--hell);border:4px solid var(--blau);box-shadow:4px 5px 0 var(--blau);line-height:1.4}
+.blatt-tag{position:relative;display:block;background:var(--blau);color:var(--gelb);font:400 clamp(24px,6.4vw,30px)/1 var(--anzeige);text-transform:uppercase;padding:20px 14px 8px;letter-spacing:.01em}
+.blatt-tag::before{content:"";position:absolute;left:50%;top:7px;width:46px;height:8px;margin-left:-23px;
+  background:radial-gradient(circle at 4px 4px,var(--papier) 3.4px,transparent 4px) 0 0/19px 8px repeat-x}
+.blatt p{padding:12px 14px 14px}
+.blatt b{font-weight:800}
+.blatt:not(:first-child){border-top:4px dashed var(--blau)}
+.blatt:not(.blatt-ab){border-bottom:0}
+.blatt:nth-child(2){border-bottom:4px dashed var(--blau)}
+.blatt-ab{margin-top:14px;border-top-style:solid;transform:rotate(-1.6deg) translateX(4px);transform-origin:0 0}
+@media (min-width:720px){
+  .streifen{grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch}
+  .blatt:not(:first-child){border-top:4px solid var(--blau);border-left:4px dashed var(--blau)}
+  .blatt:not(.blatt-ab){border-bottom:4px solid var(--blau);border-right:0}
+  .blatt:nth-child(2){border-right:4px dashed var(--blau);border-bottom-style:solid}
+  .blatt-ab{margin:0 0 0 14px;border-left-style:solid;transform:rotate(3deg) translateY(10px);transform-origin:0 0}
+  .blatt-ab::before{content:"";position:absolute;left:-18px;top:-4px;bottom:-4px;width:10px;
+    background:linear-gradient(-45deg,var(--blau) 5px,transparent 0) 0 0/10px 12px repeat-y,linear-gradient(-135deg,var(--blau) 5px,transparent 0) 0 0/10px 12px repeat-y}
+}
+.schluss-raten{max-width:1280px;margin-inline:auto;padding:34px var(--rand) 40px;display:grid;gap:12px;justify-items:start}
+.schluss-raten .knopf{margin-top:6px}
+.schluss-raten .preiszeile{margin-top:-4px}
+@media (max-width:599px){.schluss-raten .knopf{width:100%;text-align:center}}
+/* Preis-Bon: Rechnung oben, darunter was dazugehört (ersetzt die Sticker-Liste) */
+.beleg .bon-dazu th{font-weight:700;border-top-style:dotted}
+.beleg .bon-dazu tr:first-child th,.beleg .bon-dazu tr:first-child td{border-top:3px solid var(--blau)}
+.beleg .bon-dazu th[colspan]{padding-left:22px;position:relative}
+.beleg .bon-dazu th[colspan]::before{content:"";position:absolute;left:0;top:50%;width:14px;height:14px;margin-top:-7px;background:var(--blau);
+  clip-path:polygon(50% 0,62% 36%,100% 38%,69% 60%,80% 96%,50% 75%,20% 96%,31% 60%,0 38%,38% 36%)}
+.preis-rest{gap:10px}
+.preis-rest .knopf{width:100%;text-align:center}
+.preis-rest .preiszeile{color:var(--hell)}
+.preis-rest .wa{margin-top:8px}
+/* Tablet hochkant */
+@media (min-width:600px) and (max-width:899px){
+  .held-satz{text-align:center;justify-self:center;margin-inline:auto}
+  .held .unterzeile,.held .raten-fn{margin-inline:auto}
+  .held-fuss{justify-items:center}
+  .held-fuss .knopf{width:auto}
+}
+/* Desktop und Handy quer: Text links, Bild rechts, beides genau im ersten Bildschirm */
+@media (min-width:900px),(orientation:landscape) and (max-height:500px) and (min-width:560px){
+  .held{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);grid-template-rows:1fr auto auto 1fr;column-gap:clamp(18px,3vw,48px);padding-top:0;padding-bottom:clamp(12px,3svh,40px)}
+  .held-satz{grid-column:1;grid-row:2;align-self:end}
+  .held-fuss{grid-column:1;grid-row:3;margin-top:clamp(10px,2.4svh,26px)}
+  .held .held-buehne{grid-column:2;grid-row:1/5;margin:clamp(6px,2svh,24px) 0}
+  .held-fuss .knopf{width:auto}
+  .held h1{font-size:clamp(28px,min(4.4vw,7.6svh),96px);text-wrap:balance}
+  .held .unterzeile{font-size:clamp(14px,min(1.7vw,2.7svh),23px)}
+  .held .raten-fn{font-size:13px}
+  .held-figur{height:min(40%,220px)}
+}
+/* Desktop: breite Szene (Bon links, Figur in der Mitte, Studio-Karte rechts); die Bühne endet über der Consent-Karte,
+   damit Studio-Karte und Stempel nie darunter liegen (Banner unten rechts, tf-track.js bleibt unverändert) */
+@media (min-width:900px) and (min-height:501px){
+  .held .held-buehne{margin-bottom:calc(clamp(6px,2svh,24px) + var(--banner-h,0px))}
+}
+@media (orientation:landscape) and (max-height:500px){
+  .held{padding-bottom:calc(8px + var(--banner-h,0px));grid-template-columns:minmax(0,6fr) minmax(0,4fr)}
+  .held-satz{text-align:left;margin-inline:0}
+  .held .unterzeile,.held .raten-fn{margin-inline:0}
+  .held .unterzeile{font-size:13px;margin-top:3px}
+  .held .raten-fn{font-size:11.5px;margin-top:3px}
+  .held h1{font-size:clamp(22px,min(4vw,7.6svh),40px)}
+  .held-fuss{justify-items:start;margin-top:6px;gap:3px}
+  .held-fuss .knopf{min-height:44px;font-size:18px}
+  .preiszeile{font-size:13px}
+}
+
+/* ---------- Funnel: natives <dialog>, am Touch-Gerät Vollbild, an der Maus zentriert (13 §2, §13) ---------- */
+html.fn-offen{overflow:hidden;scroll-behavior:auto}
+html.fn-offen body{position:fixed;left:0;right:0;top:var(--sperre-top,0);overflow:hidden}
+.fn{position:fixed;inset:0;width:100%;height:100%;max-width:none;max-height:none;margin:0;padding:0;border:0;
+    background:var(--papier) url(/assets/start/papier.webp);background-size:640px 640px;color:var(--blau);overscroll-behavior:contain;font:400 16px/1.45 var(--text)}
+.fn[open]{display:flex;flex-direction:column}
+.fn::backdrop{background:rgba(31,61,92,.62)}
+.fn [hidden]{display:none!important}
+/* Touch: Fläche hinter der Tastatur ist Papier statt der Seite (iOS zeigt sie durch die Glas-Tastatur) */
+@media (pointer:coarse),(hover:none){.fn::backdrop{background:var(--papier)}html.fn-tastatur .fn{bottom:auto;height:var(--vvh);transform:translateY(var(--vvt))}}
+@media (hover:hover) and (pointer:fine){.fn{margin:auto;width:min(560px,calc(100% - 32px));height:min(620px,calc(100% - 48px));border:4px solid var(--blau);border-radius:20px;box-shadow:6px 7px 0 var(--blau)}}
+.fn-kopf{flex:none;display:grid;grid-template-columns:48px 1fr 48px;align-items:center;padding:max(4px,env(safe-area-inset-top)) 6px 0;background:var(--hell);border-bottom:3px solid var(--blau)}
+.fn-kopf button{grid-row:1;width:48px;height:44px;border:0;padding:0;background:none;color:var(--blau);border-radius:12px;cursor:pointer;display:grid;place-items:center}
+.fn-kopf svg{width:26px;height:26px}
+.fn-kopf [data-funnel-zurueck]{grid-column:1}.fn-kopf [data-funnel-zu]{grid-column:3}
+.fn-mitte{grid-column:2;grid-row:1;min-width:0;text-align:center;line-height:1.2}
+.fn-stand{font-weight:800;font-size:15px;margin:0}
+.fn-kopf-titel{margin:1px 0 0;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fn-balken{grid-column:1/-1;grid-row:2;height:9px;margin:2px 6px 9px;background:var(--papier);border:2px solid var(--blau);border-radius:99px;overflow:hidden}
+.fn-balken i{display:block;height:100%;background:var(--gelb);transform-origin:left;transform:scaleX(0)}
+@media (prefers-reduced-motion:no-preference){.fn-balken i{transition:transform .25s ease-out}}
+.fn-inhalt{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:12px 16px calc(24px + env(safe-area-inset-bottom));scroll-padding-block:12px}
+.fn-spalte{max-width:520px;margin:0 auto}
+.fn h2{font-size:clamp(24px,6.6vw,31px);line-height:1.02;margin:0 0 6px;text-shadow:2px 2px 0 var(--gelb)}
+.fn h2:focus{outline:none}
+.fn-grund{font-size:15px;line-height:1.4;margin:0 0 14px}
+.fn-kacheln{display:grid;gap:10px}
+.fn-kachel{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:12px 14px;border:3px solid var(--blau);border-radius:14px;background:var(--hell);
+  color:var(--blau);box-shadow:3px 4px 0 var(--blau);font:700 17px/1.25 var(--text);text-align:left;cursor:pointer;touch-action:manipulation}
+.fn-kachel::before{content:"";flex:none;width:22px;height:22px;border:3px solid var(--blau);border-radius:50%;background:#fff}
+.fn-kachel[aria-pressed="true"]{background:var(--gelb)}
+.fn-kachel[aria-pressed="true"]::before{background:var(--blau);box-shadow:inset 0 0 0 4px #fff}
+.fn-kachel:active{transform:translate(2px,2px);box-shadow:1px 2px 0 var(--blau)}
+.fn-merk{margin:0 0 12px;padding:10px 12px;background:var(--hell);border:3px dashed var(--blau);border-radius:12px;font-weight:700;font-size:15px;line-height:1.35}
+.fn-merk .raten-fn{margin-top:4px}
+.fn-feld{margin-bottom:10px}
+.fn-lab{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:0 10px;margin:0 0 3px}
+.fn label{font-weight:800;font-size:16px;line-height:1.25}
+.fn-tipp{font-size:13px;line-height:1.3}
+.fn input{display:block;width:100%;min-height:50px;padding:0 14px;border:3px solid var(--blau);border-radius:12px;background:#fff;color:var(--blau);
+  font:500 max(17px,1rem)/1.2 var(--text);scroll-margin-block:12px}
+.fn input:focus-visible{outline:3px solid var(--blau);outline-offset:2px;box-shadow:0 0 0 6px var(--gelb)}
+.fn input[aria-invalid="true"]{border-color:#a3241b;background:#fff7f5}
+.fn-fehler{color:#a3241b;font-weight:700;font-size:14px;line-height:1.3;margin:4px 0 0}
+.fn-pflicht{font-size:14px;line-height:1.35;margin:2px 0 8px}
+.fn-pflicht a{font-weight:700}
+.fn .knopf.fn-aktion{width:100%;min-height:54px;margin-top:4px;font-size:clamp(20px,5.6vw,24px);white-space:normal;text-align:center}
+.fn .knopf.fn-aktion:disabled{opacity:.7;cursor:wait}
+.fn-danach{font-size:14px;font-weight:700;line-height:1.35;margin:0 0 10px}
+.fn-bedingung{font-size:14px;line-height:1.4;margin:10px 0 0}
+/* Offene Tastatur am Touch-Gerät: Merkzettel einklappen, damit Feld und Weiter-Knopf Platz haben (E22) */
+@media (pointer:coarse),(hover:none){html.fn-tastatur .fn-merk{display:none}}
+.fn-fuss{margin:18px 0 0;font-size:14px;font-weight:700;line-height:1.4}
+</style>
+</head>
+<body data-wa="aus">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><pattern id="tf-punkte" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><circle cx="2.2" cy="2.2" r="2.1" fill="#1f3d5c"/><circle cx="6.7" cy="6.7" r="2.1" fill="#1f3d5c"/></pattern></defs></svg>
+<a class="sprung" href="#inhalt">Zum Inhalt springen</a>
+<div class="bogen">
+
+  <header class="kopf">
+    <a class="kopf-marke" href="/studios" aria-label="Tattoofin für Studios"><img src="/assets/start/wortmarke.png" alt="Tattoofin" width="519" height="116"></a>
+    <nav aria-label="Kontakt">
+      <a class="kopf-wa" href="https://wa.me/491624502375?text=Hi%20Tattoofin-Team%2C%20ich%20habe%20eure%20Anzeige%20zur%20Ratenzahlung%20gesehen%2C%20habe%20ein%20Tattoo-Studio%20und%20eine%20Frage%3A" aria-label="WhatsApp an das Tattoofin-Team" data-umami-event="whatsapp-kopf"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2.8a9.2 9.2 0 0 0-7.9 13.9L2.9 21.2l4.6-1.2A9.2 9.2 0 1 0 12 2.8Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M8.8 7.6c-.5 0-1 .6-1 1.7 0 2.9 3.7 6.9 7 6.9 1.1 0 1.7-.7 1.7-1.2 0-.4-.1-.7-.4-.9l-1.6-.8c-.3-.1-.5 0-.7.2l-.5.6c-.2.2-.4.2-.7.1-1-.4-2.1-1.5-2.5-2.5-.1-.3-.1-.5.1-.7l.5-.5c.2-.2.3-.4.2-.7l-.7-1.6c-.2-.4-.5-.5-.9-.5Z" fill="currentColor"/></svg></a>
+    </nav>
+  </header>
+
+  <main id="inhalt">
+  <section class="held" data-hero aria-label="Ratenzahlung für deine Kunden">
+    <div class="held-satz held-b">
+      <h1 data-hero-pflicht="immer">Großes Motiv? Dein Kunde zahlt in&nbsp;Raten*.</h1>
+      <p class="unterzeile" data-hero-pflicht>Für Tattoo-Studios: Link schicken, Klarna prüft, dein Geld kommt auf&nbsp;einmal.</p>
+      <p class="raten-fn" data-zaehlt-nicht>*Raten über Klarna, nach deren Bonitätsprüfung. <b>Achtung! Kreditaufnahme kostet Geld.</b></p>
+    </div>
+    <div class="held-buehne buehne held-b" data-stechen>
+      <div class="szene-b"><svg class="motiv stech b-herz" viewBox="-44 -44 508 440" role="img" aria-label="Flash-Herz mit Banderole: Klarna" ><path class="f" fill="#1f3d5c" d="M66 60 C38 52 4 62 -18 88 C12 104 48 100 72 84 Z" /><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" d="M66 60 C38 52 4 62 -18 88 C12 104 48 100 72 84 Z" /><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M-6 86 C20 84 42 80 62 72" style="stroke:#fff7e3"/><path class="f" fill="#1f3d5c" d="M354 60 C382 52 416 62 438 88 C408 104 372 100 348 84 Z" /><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" d="M354 60 C382 52 416 62 438 88 C408 104 372 100 348 84 Z" /><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M426 86 C400 84 378 80 358 72" style="stroke:#fff7e3"/><path class="f" fill="#ef6f2b" d="M210 92 C176 74 160 44 176 12 C180 24 188 28 192 26 C186 4 200 -22 222 -36 C218 -14 234 -6 238 14 C244 8 246 2 246 -6 C266 22 256 70 210 92 Z" /><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" d="M210 92 C176 74 160 44 176 12 C180 24 188 28 192 26 C186 4 200 -22 222 -36 C218 -14 234 -6 238 14 C244 8 246 2 246 -6 C266 22 256 70 210 92 Z" /><path class="f" fill="#fbb316" d="M210 76 C194 66 186 50 194 34 C198 40 204 40 206 36 C204 22 212 10 220 4 C220 18 234 30 228 50 C226 62 220 70 210 76 Z" /><path class="f" fill="#fbb316" d="M210 372 C150 318 40 240 40 140 C40 78 88 40 138 40 C172 40 198 58 210 88 C222 58 248 40 282 40 C332 40 380 78 380 140 C380 240 270 318 210 372 Z" /><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" d="M210 372 C150 318 40 240 40 140 C40 78 88 40 138 40 C172 40 198 58 210 88 C222 58 248 40 282 40 C332 40 380 78 380 140 C380 240 270 318 210 372 Z" /><path class="f" fill="#1f3d5c" d="M380 140 C380 240 270 318 210 372 C246 318 338 244 346 146 C350 112 340 86 318 66 C356 76 380 104 380 140 Z" /><path class="f" fill="url(#tf-punkte)" d="M60 150 C70 220 140 280 210 340 C180 290 120 240 100 150 Z"/><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" d="M86 122 C90 98 108 82 130 78" style="stroke:#fff7e3"/><path class="f" fill="#fbb316" d="M20.700000000000003 185.29999999999998 L-32 185.6 L-16.700000000000003 225.44 L-32 267.6 L20.700000000000003 277.3 Z" /><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" d="M20.700000000000003 185.29999999999998 L-32 185.6 L-16.700000000000003 225.44 L-32 267.6 L20.700000000000003 277.3 Z" /><path class="f" fill="#fbb316" d="M399.3 185.29999999999998 L452 185.6 L436.7 225.44 L452 267.6 L399.3 277.3 Z" /><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" d="M399.3 185.29999999999998 L452 185.6 L436.7 225.44 L452 267.6 L399.3 277.3 Z" /><path class="f" fill="#1f3d5c" d="M2 242 L20.700000000000003 277.3 L20.700000000000003 253 Z" /><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" d="M2 242 L20.700000000000003 277.3 L20.700000000000003 253 Z" /><path class="f" fill="#1f3d5c" d="M418 242 L399.3 277.3 L399.3 253 Z" /><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" d="M418 242 L399.3 277.3 L399.3 253 Z" /><path class="f" fill="#fff7e3" d="M2 150 Q210 194 418 150 L418 242 Q210 286 2 242 Z" /><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" d="M2 150 Q210 194 418 150 L418 242 Q210 286 2 242 Z" /><path id="tf-b1" d="M2 223.6 Q210 267.6 418 223.6" fill="none"/><text class="t" fill="#1f3d5c" font-family="'Luckiest Guy',sans-serif" font-size="82" text-anchor="middle"><textPath href="#tf-b1" startOffset="50%">KLARNA</textPath></text><path class="f" fill="#1f3d5c" d="M436 -3 Q438.08 7.92 449 10 Q438.08 12.08 436 23 Q433.92 12.08 423 10 Q433.92 7.92 436 -3 Z" /><circle class="f" fill="#1f3d5c" cx="46" cy="8" r="5"/><circle class="f" fill="#1f3d5c" cx="374" cy="6" r="5"/><circle class="f" fill="#1f3d5c" cx="-26" cy="200" r="5"/><circle class="f" fill="#1f3d5c" cx="448" cy="190" r="5"/><path class="f" fill="#1f3d5c" d="M92 323 Q94.08 333.92 105 336 Q94.08 338.08 92 349 Q89.92 338.08 79 336 Q89.92 333.92 92 323 Z" /><path class="f" fill="#1f3d5c" d="M330 325 Q332.4 337.6 345 340 Q332.4 342.4 330 355 Q327.6 342.4 315 340 Q327.6 337.6 330 325 Z" /><circle class="f" fill="#1f3d5c" cx="126" cy="374" r="5"/><circle class="f" fill="#1f3d5c" cx="298" cy="378" r="5"/></svg><figure class="b-handy"><span class="klebe" aria-hidden="true"></span><span class="handy-rahmen"><img src="/assets/start/handy-kunde.webp?v=20261116d" width="600" height="1300" decoding="async" alt="Echte Tattoofin-Zahlseite am Handy, Ausschnitt: Im nächsten Schritt siehst du die Zahlarten, zum Beispiel Karte, Apple Pay oder Klarna. Darunter der Hinweis: Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, nicht Tattoofin. Achtung! Kreditaufnahme kostet Geld."></span><figcaption>Echte Zahlseite · Ausschnitt</figcaption></figure></div>
+      <img class="held-figur" src="/assets/start/figur.webp" alt="" width="300" height="310" decoding="async">
+    </div>
+    <div class="held-fuss">
+      <a class="knopf" data-hero-pflicht="immer" href="/start.html?utm_source=studios-raten&amp;utm_medium=seite&amp;utm_content=held" data-funnel-oeffnen data-ort="held" aria-haspopup="dialog">7 Tage kostenlos testen</a>
+      <p class="preiszeile" data-hero-pflicht="immer">Heute 0&nbsp;€, 4&nbsp;Angaben. Danach 49,90&nbsp;€ im Monat, monatlich&nbsp;kündbar.</p>
+    </div>
+  </section>
+
+  <section class="ablauf beleg-oben" aria-label="Echter Fall">
+    <div class="fall" id="fall">
+      <figure class="bon">
+        <span class="klebe" aria-hidden="true"></span>
+        <span class="bon-kopf">Studio anonym</span>
+        <span class="bon-zeile"><span>Drache, Rücken</span><span>1 Sitzung</span></span>
+        <span class="bon-zeile bon-summe"><span>Summe</span><span>900,00&nbsp;€</span></span>
+        <span class="bon-zeile"><span>Zahlart</span><span>Klarna</span></span>
+        <span class="bon-stempel">Bezahlt 07.11.2026</span>
+        <figcaption>Nachgezeichnet nach dem echten Zahlungseingang.</figcaption>
+      </figure>
+      <div class="fall-text">
+        <h2 id="fall-titel">900<span class="eur">€</span> per Klarna.</h2>
+        <p>7.&nbsp;November, ein Studio: Link geschickt, Kunde zahlt per Klarna, der Betrag kommt aufs eigene <span class="nw">Stripe-Konto</span>.</p>
+        <p class="klein">Studio anonym · Klarna-Zahlart unbekannt.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="zeigen" id="zeigen" aria-labelledby="zeigen-titel">
+    <h2 id="zeigen-titel">So läuft eine&nbsp;Zahlung.</h2>
+    <p class="abschnitt-satz">Echte Bildschirme aus der Tattoofin-App und der Zahlseite, mit Beispieldaten.</p>
+    <ol class="zeigen-reihe" tabindex="0" aria-label="Fünf Schritte einer Zahlung, zum Wischen">
+      <li class="zeigen-bild">
+        <span class="handy-rahmen"><img src="/assets/start/kampagne/app-lena-offen.webp" width="600" height="1144" loading="lazy" decoding="async" alt="Echter Bildschirm der Tattoofin-App: Zahlung über 2.000,00 Euro, Sleeve linker Arm, offen, Kunde Lena Beispiel, Knöpfe QR-Code zeigen, Teilen, Stornieren. Beispieldaten."></span>
+        <p><b>1. Du legst die Zahlung an.</b> Betrag und Motiv in der App, dann teilen.</p>
+      </li>
+      <li class="zeigen-bild">
+        <span class="handy-rahmen"><img src="/assets/start/zahlungslink-whatsapp.webp" width="592" height="460" loading="lazy" decoding="async" alt="Echter Tattoofin-Bildschirm: Zahlungslink für Lena über 2.000,00 Euro, Knöpfe Per WhatsApp senden und Link kopieren. Beispieldaten."></span>
+        <p><b>2. Der Link geht per WhatsApp raus.</b> Kein Kartengerät, keine Kontonummer.</p>
+      </li>
+      <li class="zeigen-bild zeigen-zahlseite">
+        <span class="handy-rahmen"><img src="/assets/start/handy-kunde.webp?v=20261116d" width="600" height="1300" loading="lazy" decoding="async" alt="Echte Tattoofin-Zahlseite am Handy: Hi Lena, deine Zahlung an Ink Studio Bamberg, Schritt 1 von 2, 2.000,00 Euro, Sleeve linker Arm. Darunter: Im nächsten Schritt siehst du die Zahlarten, zum Beispiel Karte, Apple Pay oder Klarna. Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, nicht Tattoofin. Achtung! Kreditaufnahme kostet Geld. Beispieldaten."></span>
+        <p><b>3. Dein Kunde zahlt am Handy.</b> Karte, Apple&nbsp;Pay, Google&nbsp;Pay oder Klarna, auf einer Seite mit deinem Studionamen.</p>
+      </li>
+      <li class="zeigen-bild">
+        <span class="handy-rahmen"><img src="/assets/start/kampagne/app-mitteilung.webp" width="600" height="547" loading="lazy" decoding="async" alt="Echte Mitteilung der Tattoofin-App auf dem iPhone: Zahlung eingegangen, 480,00 Euro, Unterarm Blackwork. Beispieldaten."></span>
+        <p><b>4. Du bekommst eine Mitteilung.</b> Sobald bezahlt ist, aufs iPhone.</p>
+      </li>
+      <li class="zeigen-bild">
+        <span class="handy-rahmen"><img src="/assets/start/kampagne/app-zahlungen.webp" width="600" height="1144" loading="lazy" decoding="async" alt="Echter Bildschirm der Tattoofin-App: Zahlungen mit Umsatz diesen Monat, Anzahl der Zahlungen und offenen Links, darunter eine Liste mit offen und bezahlt. Beispieldaten."></span>
+        <p><b>5. Du siehst alles auf einen Blick.</b> Offen, bezahlt und dein Umsatz im Monat.</p>
+      </li>
+    </ol>
+    <div class="zeigen-stand" data-zeigen-stand hidden>
+      <span class="zeigen-zahl" aria-hidden="true">1/5</span>
+      <span class="zeigen-punkte"><button type="button" data-zeigen-punkt="0" aria-label="Bild 1 von 5 zeigen" aria-current="true"><i></i></button><button type="button" data-zeigen-punkt="1" aria-label="Bild 2 von 5 zeigen"><i></i></button><button type="button" data-zeigen-punkt="2" aria-label="Bild 3 von 5 zeigen"><i></i></button><button type="button" data-zeigen-punkt="3" aria-label="Bild 4 von 5 zeigen"><i></i></button><button type="button" data-zeigen-punkt="4" aria-label="Bild 5 von 5 zeigen"><i></i></button></span>
+    </div>
+  </section>
+
+  <section class="geld" id="geld" aria-labelledby="geld-titel">
+    <div class="geld-innen">
+      <h2 id="geld-titel">Du finanzierst nichts&nbsp;vor.</h2>
+      <p class="abschnitt-satz">Dein Kunde finanziert über Klarna, nicht du. Du finanzierst nichts vor und wartest auf keine&nbsp;Rate.</p>
+      <div class="geldfluss">
+        <div class="geld-station"><span class="geld-wer">Dein Kunde</span><strong>zahlt in Raten*</strong><span>Den Ratenvertrag schließt er mit Klarna, nicht mit dir.</span></div>
+        <span class="geld-pfeil" aria-hidden="true">→</span>
+        <div class="geld-station geld-du"><span class="geld-wer">Du</span><strong>bekommst den Betrag in einer&nbsp;Summe</strong><span>Abzüglich Stripe-Gebühr, auf dein eigenes <span class="nw">Stripe-Konto</span>.</span></div>
+      </div>
+      <p class="raten-fn">*Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, nicht Tattoofin. <b>Achtung! Kreditaufnahme kostet Geld.</b></p>
+      <ul class="geld-punkte">
+        <li><b>Wann ist das Geld auf deinem Konto?</b> Stripe zahlt auf dein Bankkonto aus. Laut Stripe in Deutschland in der Regel 3&nbsp;Werktage nach der Zahlung, die allererste in der Regel innerhalb von 7 bis 14&nbsp;Tagen.</li>
+        <li><b>Und wenn der Kunde nicht zahlt?</b> Dann trägt laut Stripe Klarna das Risiko, nicht&nbsp;du. Reklamiert er das Tattoo, kann ein Streitfall entstehen (siehe Fragen).</li>
+        <li><b>Sagt Klarna nein?</b> Dann zahlt dein Kunde mit Karte, Apple Pay oder Google&nbsp;Pay.</li>
+      </ul>
+      
+    </div>
+  </section>
+
+  <section class="testwoche" id="testwoche" aria-labelledby="testwoche-titel">
+    <h2 id="testwoche-titel">So laufen deine 7&nbsp;Tage.</h2>
+    <ol class="streifen">
+      <li class="blatt"><span class="blatt-tag">Tag 1</span><p><b>Anmelden, heute 0&nbsp;€.</b> Vier Angaben, dann hinterlegst du deine Karte sicher bei Stripe.</p></li>
+      <li class="blatt"><span class="blatt-tag">Einrichtung</span><p><b>Mit unserem Team.</b> Du legst dein Stripe-Konto an, wir machen mit dir eine Testzahlung. Dann schickst du deinen ersten Link.</p></li>
+      <li class="blatt blatt-ab"><span class="blatt-tag">Tag 7</span><p><b>Kündigst du in den 7&nbsp;Tagen, zahlst du nichts.</b> Danach 49,90&nbsp;€ im Monat inkl. MwSt., monatlich kündbar.</p></li>
+    </ol>
+  </section>
+
+  <section class="preis" id="preis" aria-labelledby="preis-titel">
+    <div class="preis-innen">
+      <h2 id="preis-titel">Keine Provision. Nur die Stripe-Gebühr.</h2>
+      <div class="preis-schild">
+        <svg class="faden" viewBox="0 0 120 90" aria-hidden="true" focusable="false"><path d="M60 8 C42 30 78 52 60 86" fill="none" stroke="#fff7e3" stroke-width="4" stroke-linecap="round"/></svg>
+        <span class="reisszwecke" aria-hidden="true"></span>
+        <div class="anhaenger">
+          <span class="loch" aria-hidden="true"></span>
+          <strong class="betrag">49,90<span class="eur">€</span></strong>
+          <span class="einheit">im Monat, inkl. MwSt.</span>
+          <span class="brutto">(41,93&nbsp;€ netto) · Nur für Unternehmer.</span>
+        </div>
+      </div>
+      <div class="beleg">
+        <table>
+          <caption>Beispiel: Sleeve für 2.000<span class="eur">€</span> per Klarna</caption>
+          <tbody>
+            <tr><th scope="row">Stripe-Gebühr Klarna</th><td>ab ca. 60&nbsp;€</td></tr>
+            <tr><th scope="row">Provision</th><td>0&nbsp;€</td></tr>
+            <tr class="summe"><th scope="row">Bei dir</th><td>bis ca. 1.940&nbsp;€</td></tr>
+          </tbody>
+          <tbody class="bon-dazu">
+            <tr><th scope="row">Einrichtung</th><td>0&nbsp;€</td></tr>
+            <tr><th scope="row" colspan="2">Monatlich kündbar</th></tr>
+            <tr><th scope="row" colspan="2">Unser Team richtet’s mit dir ein</th></tr>
+          </tbody>
+        </table>
+        <p class="beleg-hinweis">Mit Karte ab ca. 30&nbsp;€ Stripe-Gebühr. Keine Garantie.</p>
+      </div>
+      <div class="preis-rest">
+        <a class="knopf" href="/start.html?utm_source=studios-raten&amp;utm_medium=seite&amp;utm_content=preis" data-funnel-oeffnen data-ort="preis" aria-haspopup="dialog">7 Tage kostenlos testen</a>
+        <p class="preiszeile">Heute 0&nbsp;€, 4&nbsp;Angaben. Danach 49,90&nbsp;€ im Monat, monatlich&nbsp;kündbar.</p>
+        <a class="wa" href="/vertrag.html">Vertrag vorab lesen</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="fragen" id="fragen" aria-labelledby="fragen-titel">
+    <h2 id="fragen-titel">Noch Fragen?</h2>
+    <div class="fragen-liste">
+      <details class="frage"><summary><span>Bekommt jeder Kunde Klarna?</span><span class="zu" aria-hidden="true"><svg class="motiv " viewBox="-4 -4 108 108" aria-hidden="true" focusable="false" ><path class="f" fill="#fbb316" d="M50.0 6.0 L61.4 36.4 L93.7 37.8 L68.4 58.0 L77.0 89.2 L50.0 71.3 L23.0 89.2 L31.6 58.0 L6.3 37.8 L38.6 36.4 Z" /><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" d="M50.0 6.0 L61.4 36.4 L93.7 37.8 L68.4 58.0 L77.0 89.2 L50.0 71.3 L23.0 89.2 L31.6 58.0 L6.3 37.8 L38.6 36.4 Z" /><path class="f" fill="#1f3d5c" d="M50 52 L50.0 6.0 L61.4 36.4 Z M50 52 L93.7 37.8 L68.4 58.0 Z M50 52 L77.0 89.2 L50.0 71.3 Z M50 52 L23.0 89.2 L31.6 58.0 Z M50 52 L6.3 37.8 L38.6 36.4 Z " /></svg></span></summary><div class="antwort"><p>Nein. Klarna prüft jeden Kunden selbst. Sagt Klarna nein, zahlt dein Kunde mit Karte, Apple Pay oder Google Pay.</p></div></details>
+<details class="frage"><summary><span>Ich hab schon SumUp &amp; Co.</span><span class="zu" aria-hidden="true"><svg class="motiv " viewBox="-4 -4 108 108" aria-hidden="true" focusable="false" ><path class="f" fill="#fbb316" d="M50.0 6.0 L61.4 36.4 L93.7 37.8 L68.4 58.0 L77.0 89.2 L50.0 71.3 L23.0 89.2 L31.6 58.0 L6.3 37.8 L38.6 36.4 Z" /><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" d="M50.0 6.0 L61.4 36.4 L93.7 37.8 L68.4 58.0 L77.0 89.2 L50.0 71.3 L23.0 89.2 L31.6 58.0 L6.3 37.8 L38.6 36.4 Z" /><path class="f" fill="#1f3d5c" d="M50 52 L50.0 6.0 L61.4 36.4 Z M50 52 L93.7 37.8 L68.4 58.0 Z M50 52 L77.0 89.2 L50.0 71.3 Z M50 52 L23.0 89.2 L31.6 58.0 Z M50 52 L6.3 37.8 L38.6 36.4 Z " /></svg></span></summary><div class="antwort"><p>Behalt es. Dein Kartengerät kassiert an der Theke. Tattoofin kassiert, wenn der Kunde nicht da ist: Anzahlung vorab, Rest per Link, Gutscheine.</p></div></details>
+<details class="frage"><summary><span>Und wenn der Kunde nicht zahlt?</span><span class="zu" aria-hidden="true"><svg class="motiv " viewBox="-4 -4 108 108" aria-hidden="true" focusable="false" ><path class="f" fill="#fbb316" d="M50.0 6.0 L61.4 36.4 L93.7 37.8 L68.4 58.0 L77.0 89.2 L50.0 71.3 L23.0 89.2 L31.6 58.0 L6.3 37.8 L38.6 36.4 Z" /><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" d="M50.0 6.0 L61.4 36.4 L93.7 37.8 L68.4 58.0 L77.0 89.2 L50.0 71.3 L23.0 89.2 L31.6 58.0 L6.3 37.8 L38.6 36.4 Z" /><path class="f" fill="#1f3d5c" d="M50 52 L50.0 6.0 L61.4 36.4 Z M50 52 L93.7 37.8 L68.4 58.0 Z M50 52 L77.0 89.2 L50.0 71.3 Z M50 52 L23.0 89.2 L31.6 58.0 Z M50 52 L6.3 37.8 L38.6 36.4 Z " /></svg></span></summary><div class="antwort"><p>Zahlt dein Kunde seine Raten* nicht, trägt laut Stripe Klarna das Risiko. Reklamiert er das Tattoo bei Klarna oder seiner Bank, kann ein Streitfall entstehen. Dann reichst du deine Nachweise ein, zum Beispiel seine gespeicherte Bestätigung deiner Anzahlungsbedingungen. Unser Team hilft dir dabei.</p><p class="raten-fn">*Raten über Klarna, nach deren Bonitätsprüfung. <b>Achtung! Kreditaufnahme kostet Geld.</b></p></div></details>
+<details class="frage"><summary><span>Ist Tattoofin der Kreditgeber?</span><span class="zu" aria-hidden="true"><svg class="motiv " viewBox="-4 -4 108 108" aria-hidden="true" focusable="false" ><path class="f" fill="#fbb316" d="M50.0 6.0 L61.4 36.4 L93.7 37.8 L68.4 58.0 L77.0 89.2 L50.0 71.3 L23.0 89.2 L31.6 58.0 L6.3 37.8 L38.6 36.4 Z" /><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" d="M50.0 6.0 L61.4 36.4 L93.7 37.8 L68.4 58.0 L77.0 89.2 L50.0 71.3 L23.0 89.2 L31.6 58.0 L6.3 37.8 L38.6 36.4 Z" /><path class="f" fill="#1f3d5c" d="M50 52 L50.0 6.0 L61.4 36.4 Z M50 52 L93.7 37.8 L68.4 58.0 Z M50 52 L77.0 89.2 L50.0 71.3 Z M50 52 L23.0 89.2 L31.6 58.0 Z M50 52 L6.3 37.8 L38.6 36.4 Z " /></svg></span></summary><div class="antwort"><p>Nein. Den Vertrag über die Raten* schließt dein Kunde mit Klarna. Du berätst nicht zu Krediten und sagst keine Raten* zu.</p><p class="raten-fn">*Raten über Klarna, nach deren Bonitätsprüfung. <b>Achtung! Kreditaufnahme kostet Geld.</b></p></div></details>
+<details class="frage"><summary><span>Was kostet es genau?</span><span class="zu" aria-hidden="true"><svg class="motiv " viewBox="-4 -4 108 108" aria-hidden="true" focusable="false" ><path class="f" fill="#fbb316" d="M50.0 6.0 L61.4 36.4 L93.7 37.8 L68.4 58.0 L77.0 89.2 L50.0 71.3 L23.0 89.2 L31.6 58.0 L6.3 37.8 L38.6 36.4 Z" /><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" d="M50.0 6.0 L61.4 36.4 L93.7 37.8 L68.4 58.0 L77.0 89.2 L50.0 71.3 L23.0 89.2 L31.6 58.0 L6.3 37.8 L38.6 36.4 Z" /><path class="f" fill="#1f3d5c" d="M50 52 L50.0 6.0 L61.4 36.4 Z M50 52 L93.7 37.8 L68.4 58.0 Z M50 52 L77.0 89.2 L50.0 71.3 Z M50 52 L23.0 89.2 L31.6 58.0 Z M50 52 L6.3 37.8 L38.6 36.4 Z " /></svg></span></summary><div class="antwort"><p>49,90&nbsp;€ im Monat inkl. MwSt. (41,93&nbsp;€ netto), keine Provision. Dazu Stripe-Gebühren je Zahlung: Karte ab 1,5&nbsp;%&nbsp;+&nbsp;0,25&nbsp;€, Klarna ab 2,99&nbsp;%&nbsp;+&nbsp;0,35&nbsp;€. Die erste Woche testest du ohne Kosten (Karte wird bei Stripe hinterlegt), der erste Monat wird erst danach abgebucht. Kündigst du in der Testwoche, zahlst du nichts.</p></div></details>
+<details class="frage"><summary><span>Wie kündige ich? Und wenn Stripe mich ablehnt?</span><span class="zu" aria-hidden="true"><svg class="motiv " viewBox="-4 -4 108 108" aria-hidden="true" focusable="false" ><path class="f" fill="#fbb316" d="M50.0 6.0 L61.4 36.4 L93.7 37.8 L68.4 58.0 L77.0 89.2 L50.0 71.3 L23.0 89.2 L31.6 58.0 L6.3 37.8 L38.6 36.4 Z" /><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" d="M50.0 6.0 L61.4 36.4 L93.7 37.8 L68.4 58.0 L77.0 89.2 L50.0 71.3 L23.0 89.2 L31.6 58.0 L6.3 37.8 L38.6 36.4 Z" /><path class="f" fill="#1f3d5c" d="M50 52 L50.0 6.0 L61.4 36.4 Z M50 52 L93.7 37.8 L68.4 58.0 Z M50 52 L77.0 89.2 L50.0 71.3 Z M50 52 L23.0 89.2 L31.6 58.0 Z M50 52 L6.3 37.8 L38.6 36.4 Z " /></svg></span></summary><div class="antwort"><p>Im Portal, zum Ende des Abrechnungsmonats. Dein Stripe-Konto bleibt bei dir, Zahlungslinks und QR-Code enden. Lehnt Stripe dein Studio endgültig ab, bekommst du die gezahlten Monate zurück, außer bei falschen Angaben oder Pflichtverletzung.</p></div></details>
+<details class="frage"><summary><span>Wann kommt das Geld, und was brauche ich?</span><span class="zu" aria-hidden="true"><svg class="motiv " viewBox="-4 -4 108 108" aria-hidden="true" focusable="false" ><path class="f" fill="#fbb316" d="M50.0 6.0 L61.4 36.4 L93.7 37.8 L68.4 58.0 L77.0 89.2 L50.0 71.3 L23.0 89.2 L31.6 58.0 L6.3 37.8 L38.6 36.4 Z" /><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" d="M50.0 6.0 L61.4 36.4 L93.7 37.8 L68.4 58.0 L77.0 89.2 L50.0 71.3 L23.0 89.2 L31.6 58.0 L6.3 37.8 L38.6 36.4 Z" /><path class="f" fill="#1f3d5c" d="M50 52 L50.0 6.0 L61.4 36.4 Z M50 52 L93.7 37.8 L68.4 58.0 Z M50 52 L77.0 89.2 L50.0 71.3 Z M50 52 L23.0 89.2 L31.6 58.0 Z M50 52 L6.3 37.8 L38.6 36.4 Z " /></svg></span></summary><div class="antwort"><p>Stripe zahlt auf dein Bankkonto aus, laut Stripe in Deutschland in der Regel 3 Werktage nach der Zahlung, die allererste in der Regel innerhalb von 7 bis 14 Tagen. Du brauchst dein Studio als Unternehmen, ein Bankkonto und deinen Ausweis.</p></div></details>
+<details class="frage"><summary><span>Technik ist nicht meins.</span><span class="zu" aria-hidden="true"><svg class="motiv " viewBox="-4 -4 108 108" aria-hidden="true" focusable="false" ><path class="f" fill="#fbb316" d="M50.0 6.0 L61.4 36.4 L93.7 37.8 L68.4 58.0 L77.0 89.2 L50.0 71.3 L23.0 89.2 L31.6 58.0 L6.3 37.8 L38.6 36.4 Z" /><path class="l" pathLength="1" fill="none" stroke="#1f3d5c" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" d="M50.0 6.0 L61.4 36.4 L93.7 37.8 L68.4 58.0 L77.0 89.2 L50.0 71.3 L23.0 89.2 L31.6 58.0 L6.3 37.8 L38.6 36.4 Z" /><path class="f" fill="#1f3d5c" d="M50 52 L50.0 6.0 L61.4 36.4 Z M50 52 L93.7 37.8 L68.4 58.0 Z M50 52 L77.0 89.2 L50.0 71.3 Z M50 52 L23.0 89.2 L31.6 58.0 Z M50 52 L6.3 37.8 L38.6 36.4 Z " /></svg></span></summary><div class="antwort"><p>Musst du nicht können. Unser Team richtet alles mit dir ein, per WhatsApp.</p></div></details>
+    </div>
+    <p class="fragen-wa">Deine Frage ist nicht dabei? <a href="https://wa.me/491624502375?text=Hi%20Tattoofin-Team%2C%20ich%20habe%20eure%20Anzeige%20zur%20Ratenzahlung%20gesehen%2C%20habe%20ein%20Tattoo-Studio%20und%20eine%20Frage%3A" data-umami-event="whatsapp-fragen">Schreib uns per WhatsApp an 0162&nbsp;4502375</a></p>
+  </section>
+
+  <section class="schluss-raten" aria-labelledby="schluss-titel">
+    <h2 id="schluss-titel">Nächstes großes Motiv? Schick den&nbsp;Link.</h2>
+    <a class="knopf" href="/start.html?utm_source=studios-raten&amp;utm_medium=seite&amp;utm_content=schluss" data-funnel-oeffnen data-ort="schluss" aria-haspopup="dialog">7 Tage kostenlos testen</a>
+    <p class="preiszeile">Heute 0&nbsp;€, 4&nbsp;Angaben. Danach 49,90&nbsp;€ im Monat, monatlich&nbsp;kündbar.</p>
+    <a class="wa" href="https://wa.me/491624502375?text=Hi%20Tattoofin-Team%2C%20ich%20habe%20eure%20Anzeige%20zur%20Ratenzahlung%20gesehen%2C%20habe%20ein%20Tattoo-Studio%20und%20eine%20Frage%3A" data-umami-event="whatsapp-schluss">Erst fragen? WhatsApp</a>
+  </section>
+  </main>
+
+  <footer class="fuss">
+    <div class="fuss-innen">
+      <img class="fuss-marke" src="/assets/start/wortmarke.png" alt="Tattoofin" width="519" height="116" loading="lazy" decoding="async">
+      <nav aria-label="Rechtliches">
+        <a href="/impressum.html">Impressum</a>
+        <a href="/datenschutz.html">Datenschutz</a>
+        <a href="/vertrag.html">Vertrag</a>
+        <a href="/ratgeber.html">Ratgeber</a>
+        <a href="/login.html">Studio-Login</a>
+        <a href="#" data-cookies>Cookie-Einstellungen</a>
+        <a href="/raten?utm_source=studios&amp;utm_medium=seite&amp;utm_content=fuss" data-lp="raten">Du bist Kunde?</a>
+      </nav>
+      <p>DSX Media Solutions UG (haftungsbeschränkt), Am Weingarten 9, 96117 Memmelsdorf. Tattoofin ist kein Kreditinstitut.</p>
+    </div>
+  </footer>
+</div>
+<dialog class="fn" data-funnel aria-labelledby="fn-stand">
+  <div class="fn-kopf">
+    <button type="button" data-funnel-zurueck aria-label="Zurück" hidden><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <div class="fn-mitte"><p class="fn-stand" id="fn-stand" aria-live="polite">Schritt 1 von 5</p><p class="fn-kopf-titel" data-funnel-kopf-titel aria-hidden="true"></p></div>
+    <button type="button" data-funnel-zu aria-label="Schließen"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></button>
+    <div class="fn-balken" aria-hidden="true"><i></i></div>
+  </div>
+  <form class="fn-inhalt" novalidate autocomplete="on">
+    <div class="fn-spalte">
+      <section data-funnel-schritt="1" aria-labelledby="fn-t1">
+        <h2 id="fn-t1" tabindex="-1">Fragen deine Kunden nach&nbsp;Raten?</h2>
+        <p class="fn-grund">Zwei kurze Fragen, damit wir dir zeigen, was Tattoofin in deinem Studio ändert.</p>
+        <div class="fn-kacheln" role="group" aria-labelledby="fn-t1"><button type="button" class="fn-kachel" data-funnel-antwort data-feld="raten" data-wert="oft" aria-pressed="false">Ja, bei großen Motiven</button><button type="button" class="fn-kachel" data-funnel-antwort data-feld="raten" data-wert="manchmal" aria-pressed="false">Ab und zu</button><button type="button" class="fn-kachel" data-funnel-antwort data-feld="raten" data-wert="selten" aria-pressed="false">Eher selten</button><button type="button" class="fn-kachel" data-funnel-antwort data-feld="raten" data-wert="offen" aria-pressed="false">Weiß ich nicht</button></div>
+        <p class="fn-fuss">7 Tage kostenlos · danach 49,90&nbsp;€ im Monat inkl. MwSt. · monatlich kündbar</p>
+      </section>
+      <section data-funnel-schritt="2" aria-labelledby="fn-t2" hidden>
+        <h2 id="fn-t2" tabindex="-1">Wie zahlen deine Kunden heute&nbsp;meistens?</h2>
+        <p class="fn-grund">Danach siehst du, was sich für dich ändert.</p>
+        <div class="fn-kacheln" role="group" aria-labelledby="fn-t2"><button type="button" class="fn-kachel" data-funnel-antwort data-feld="zahlung" data-wert="bar" aria-pressed="false">Bar</button><button type="button" class="fn-kachel" data-funnel-antwort data-feld="zahlung" data-wert="karte" aria-pressed="false">Mit Karte im Studio</button><button type="button" class="fn-kachel" data-funnel-antwort data-feld="zahlung" data-wert="ueberweisung" aria-pressed="false">Per Überweisung</button><button type="button" class="fn-kachel" data-funnel-antwort data-feld="zahlung" data-wert="gemischt" aria-pressed="false">Ganz unterschiedlich</button></div>
+        <p class="fn-fuss">7 Tage kostenlos · danach 49,90&nbsp;€ im Monat inkl. MwSt. · monatlich kündbar</p>
+      </section>
+      <section data-funnel-schritt="3" aria-labelledby="fn-t3" hidden>
+        <h2 id="fn-t3" tabindex="-1">Passt. Jetzt dein&nbsp;Studio.</h2>
+        <div class="fn-merk" data-funnel-merk><span data-funnel-merk-text>Du schickst einen Link, dein Kunde zahlt am Handy, auch per Klarna*.</span>
+          <p class="raten-fn">*Raten über Klarna, nach deren Bonitätsprüfung. <b>Achtung! Kreditaufnahme kostet Geld.</b></p></div>
+        <div class="fn-feld"><div class="fn-lab"><label for="fn-firma">Name deines Studios</label></div><input id="fn-firma" name="firma" type="text" autocomplete="organization" required aria-describedby="fn-firma-f" autocapitalize="words" autocorrect="off" spellcheck="false" enterkeyhint="next"><p class="fn-fehler" id="fn-firma-f" hidden></p></div>
+        <div class="fn-feld"><div class="fn-lab"><label for="fn-inhaber">Dein Vor- und Nachname</label></div><input id="fn-inhaber" name="inhaber" type="text" autocomplete="name" required aria-describedby="fn-inhaber-f" autocapitalize="words" autocorrect="off" spellcheck="false" enterkeyhint="next"><p class="fn-fehler" id="fn-inhaber-f" hidden></p></div>
+        <button type="button" class="knopf fn-aktion" data-funnel-aktion data-funnel-weiter>Weiter</button>
+      </section>
+      <section data-funnel-schritt="4" aria-labelledby="fn-t4" hidden>
+        <h2 id="fn-t4" tabindex="-1">Wohin kommt dein&nbsp;Login?</h2>
+        <p class="fn-danach">Schritt 5: Vertrag &amp; Karte bei Stripe, heute 0&nbsp;€.</p>
+        <div class="fn-feld"><div class="fn-lab"><label for="fn-email">E-Mail</label><span class="fn-tipp" id="fn-email-t">Hierhin kommt dein Login.</span></div><input id="fn-email" name="email" type="email" autocomplete="email" required aria-describedby="fn-email-f fn-email-t" inputmode="email" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next"><p class="fn-fehler" id="fn-email-f" hidden></p></div>
+        <div class="fn-feld"><div class="fn-lab"><label for="fn-telefon">Handynummer (WhatsApp)</label><span class="fn-tipp" id="fn-telefon-t">Für die Einrichtung.</span></div><input id="fn-telefon" name="telefon" type="tel" autocomplete="tel" required aria-describedby="fn-telefon-f fn-telefon-t" inputmode="tel" enterkeyhint="go"><p class="fn-fehler" id="fn-telefon-f" hidden></p></div>
+        <p class="fn-pflicht" data-funnel-pflicht>Deine Angaben nutzen wir für dein Konto und die Einrichtung. <a href="/datenschutz.html" target="_blank" rel="noopener">Datenschutz</a></p>
+        <button type="submit" class="knopf fn-aktion" data-funnel-aktion>Weiter zu Schritt 5</button>
+        <p class="fn-bedingung">Heute 0&nbsp;€. Nach den 7&nbsp;Tagen 49,90&nbsp;€ im Monat inkl. MwSt., monatlich kündbar. Kündigst du vorher, zahlst du nichts.</p>
+      </section>
+    </div>
+  </form>
+</dialog>
+<script src="/assets/start/app.js?v=20261116b" defer></script>
+<script defer src="https://cloud.umami.is/script.js" data-website-id="507b740f-264e-4ba1-a7d0-9dbe49db75af" data-domains="tattoofin.de"></script>
+<script src="/js/tf-track.js?v=20261117b"></script>
+<script src="/js/studios.js"></script>
+<script>/* Consent-Leiste offen: erster Bildschirm schrumpft um ihre Höhe, damit Überschrift, Knopf und Preiszeile sichtbar bleiben (E14) */
+(function(){var d=document.documentElement;function m(){var c=document.querySelector('.tf-cc'),h=0;if(c){c.setAttribute('data-consent','');var r=c.getBoundingClientRect();if(document.body.classList.contains('tf-cc-offen')&&r.height>0&&getComputedStyle(c).display!=='none'){h=Math.max(0,Math.round(innerHeight-r.top))}}d.style.setProperty('--banner-h',h+'px')}
+new MutationObserver(m).observe(document.body,{attributes:true,attributeFilter:['class'],childList:true});addEventListener('resize',m);m();})();</script>
+<script>/* So läuft eine Zahlung: Positionsanzeige 1/5 und Punkte unter dem Wischband (nur solange es wischt) */
+(function(){var r=document.querySelector('.zeigen-reihe'),st=document.querySelector('[data-zeigen-stand]');if(!r||!st)return;
+var bs=[].slice.call(r.children),pk=[].slice.call(st.querySelectorAll('[data-zeigen-punkt]')),z=st.querySelector('.zeigen-zahl'),akt=-1;
+function idx(){var w=bs.length>1?bs[1].offsetLeft-bs[0].offsetLeft:1;return Math.max(0,Math.min(bs.length-1,Math.round(r.scrollLeft/(w||1))))}
+function setz(){var i=idx();if(i===akt)return;akt=i;z.textContent=(i+1)+'/'+bs.length;pk.forEach(function(b,j){if(j===i)b.setAttribute('aria-current','true');else b.removeAttribute('aria-current')})}
+var t=0;r.addEventListener('scroll',function(){cancelAnimationFrame(t);t=requestAnimationFrame(setz)},{passive:true});
+pk.forEach(function(b,j){b.addEventListener('click',function(){var ruhig=matchMedia('(prefers-reduced-motion: reduce)').matches;r.scrollTo({left:bs[j].offsetLeft-bs[0].offsetLeft,behavior:ruhig?'auto':'smooth'})})});
+st.hidden=false;setz();})();</script>
+<script>/* Funnel nach dem Schilling-Konzept, Kapitel 13 (Muster scripts/funnel-muster.html, angepasst an Tattoofin) */
+(() => {
+  const dlg = document.querySelector('[data-funnel]');
+  if (!dlg || typeof dlg.showModal !== 'function') return;          // ohne <dialog>: Knopf bleibt Link auf /start
+  const root = document.documentElement, vv = window.visualViewport;
+  const form = dlg.querySelector('form'), inhalt = dlg.querySelector('.fn-inhalt');
+  const schritte = [...dlg.querySelectorAll('[data-funnel-schritt]')], gesamt = schritte.length;
+  const ANZEIGE = gesamt + 1;                                          // Schritt 5 = Vertrag & Karte bei Stripe (/start), zählt ehrlich mit
+  const kopfTitel = dlg.querySelector('[data-funnel-kopf-titel]');
+  const stand = dlg.querySelector('.fn-stand'), balken = dlg.querySelector('.fn-balken i'), zurueck = dlg.querySelector('[data-funnel-zurueck]');
+  const ruhig = matchMedia('(prefers-reduced-motion: reduce)');
+  const antworten = {};                                               // nur im Arbeitsspeicher (13 §11)
+  const herkunft = Object.fromEntries([...new URLSearchParams(location.search)].filter(([k]) => /^(utm_[a-z]+|ad_id)$/.test(k)));
+  const TEXTFELD = 'input:not([type=hidden]):not([type=checkbox]):not([type=radio])';
+  let aktuell = '1', tiefe = 0, ausloeser = null, sperreY = 0, popIgnorieren = 0, eigenesClose = false, weg = false, vorbelegt = false;
+  const track = (n, d) => { try { return window.umami && window.umami.track(n, d); } catch (e) {} };
+  const aktiv = () => schritte.find(s => s.dataset.funnelSchritt === aktuell);
+
+  /* A Tastatur: nur solange ein Textfeld im Funnel Fokus hat, endet der Funnel an der sichtbaren Fläche (13 §13) */
+  const tippt = () => { const el = document.activeElement; return !!(vv && el && dlg.contains(el) && el.matches(TEXTFELD + ', textarea')); };
+  function sync() {
+    if (dlg.open && tippt()) {
+      root.style.setProperty('--vvh', vv.height + 'px');
+      root.style.setProperty('--vvt', vv.offsetTop + 'px');
+      root.classList.add('fn-tastatur');
+      sichtbarHalten();
+    } else {
+      root.classList.remove('fn-tastatur');
+      root.style.removeProperty('--vvh'); root.style.removeProperty('--vvt');
+    }
+  }
+  let raf = 0;
+  const plane = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(sync); };
+  function sichtbarHalten() {                                         // nur im Funnel scrollen, nie das Fenster
+    const el = document.activeElement, s = aktiv();
+    if (!el || !s) return;
+    el.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'instant' });
+    const knopf = s.querySelector('[data-funnel-aktion]');
+    if (!knopf) return;
+    const b = inhalt.getBoundingClientRect(), k = knopf.getBoundingClientRect(), f = el.getBoundingClientRect();
+    const fehlt = k.bottom + 8 - b.bottom, luft = f.top - b.top - 8;
+    if (fehlt > 0 && luft > 0) inhalt.scrollTop += Math.min(fehlt, luft);
+  }
+  if (vv) { vv.addEventListener('resize', plane); vv.addEventListener('scroll', plane); }
+  dlg.addEventListener('focusin', plane);
+  dlg.addEventListener('focusout', () => { plane(); setTimeout(plane, 350); });
+
+  /* B Hintergrund sperren ohne Sprung */
+  function sperren() {
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    sperreY = window.scrollY;
+    root.style.setProperty('--sperre-top', -sperreY + 'px');
+    root.classList.add('fn-offen');
+  }
+  function freigeben() {
+    root.classList.remove('fn-offen', 'fn-tastatur');
+    ['--sperre-top', '--vvh', '--vvt'].forEach(v => root.style.removeProperty(v));
+    window.scrollTo({ top: sperreY, left: 0, behavior: 'instant' });
+  }
+
+  /* C Schritte, Fortschritt, Fokus */
+  const MERK = {
+    bar: 'Statt Bargeld schickst du einen Link per WhatsApp, dein Kunde zahlt am Handy.',
+    karte: 'Ohne Kartengerät: Du schickst einen Link per WhatsApp, dein Kunde zahlt am Handy.',
+    ueberweisung: 'Statt auf eine Überweisung zu warten: Du schickst einen Link, dein Kunde zahlt am Handy.',
+    gemischt: 'Ein Weg für alle: Du schickst einen Link per WhatsApp, dein Kunde zahlt am Handy.',
+  };
+  function merkzettel() {
+    const t = dlg.querySelector('[data-funnel-merk-text]');
+    const raten = antworten.raten === 'oft' || antworten.raten === 'manchmal';
+    t.textContent = (MERK[antworten.zahlung] || MERK.gemischt) + (raten ? ' Bei großen Motiven auch in Raten* über Klarna.' : ' Mit Karte, Apple Pay, Google Pay oder Klarna*.');
+  }
+  function zeige(n, push) {
+    aktuell = String(n);
+    schritte.forEach(s => { s.hidden = s.dataset.funnelSchritt !== aktuell; });
+    const nr = Number(aktuell);
+    stand.textContent = 'Schritt ' + nr + ' von ' + ANZEIGE;
+    balken.style.transform = 'scaleX(' + nr / ANZEIGE + ')';
+    const h = aktiv().querySelector('h2'); if (kopfTitel && h) kopfTitel.textContent = h.textContent.replace(/\s+/g, ' ').trim();
+    zurueck.hidden = nr === 1;
+    if (nr === 3) merkzettel();
+    if (push) { history.pushState({ fn: aktuell, i: ++tiefe }, ''); if (nr > 1) track('funnel-schritt-' + nr); }
+    inhalt.scrollTop = 0;
+    const s = aktiv(), felder = [...s.querySelectorAll(TEXTFELD)];
+    const feld = felder.find(f => !f.value.trim()) || felder[0];
+    (feld || s.querySelector('h2')).focus({ preventScroll: true });   // Feld synchron im Tipp fokussieren, sonst keine Tastatur auf iOS
+  }
+  const naechster = () => String(Math.min(gesamt, Number(aktuell) + 1));
+
+  /* D Prüfen (gleiche Regeln wie /start) */
+  const REGELN = {
+    firma: v => v.length >= 2 || 'Bitte gib den Namen deines Studios ein.',
+    inhaber: v => v.length >= 2 || 'Bitte gib deinen Vor- und Nachnamen ein.',
+    email: v => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v) || 'Bitte gib eine gültige E-Mail-Adresse ein.',
+    telefon: v => v.replace(/\D/g, '').length >= 6 || 'Bitte gib deine Handynummer mit Vorwahl ein.',
+  };
+  function pruefe(input) {
+    const r = REGELN[input.name]; if (!r) return true;
+    const ok = r(input.value.trim()), meldung = document.getElementById(input.id + '-f');
+    input.setAttribute('aria-invalid', ok === true ? 'false' : 'true');
+    if (meldung) { meldung.hidden = ok === true; meldung.textContent = ok === true ? '' : ok; }
+    return ok === true;
+  }
+  function schrittOk() {
+    const falsch = [...aktiv().querySelectorAll(TEXTFELD)].filter(f => !pruefe(f));
+    if (falsch.length) { falsch[0].focus({ preventScroll: true }); plane(); return false; }
+    return true;
+  }
+  function weiter() { if (schrittOk()) zeige(naechster(), true); }
+  form.addEventListener('focusout', e => { if (e.target.matches('input') && e.target.value) pruefe(e.target); });
+  form.addEventListener('input', e => { if (e.target.getAttribute('aria-invalid') === 'true') pruefe(e.target); });
+  form.addEventListener('keydown', e => {                             // Enter: nächstes Feld, im letzten Feld Weiter bzw. Übergabe
+    if (e.key !== 'Enter' || !e.target.matches('input')) return;
+    e.preventDefault();
+    const felder = [...aktiv().querySelectorAll(TEXTFELD)], i = felder.indexOf(e.target);
+    if (i > -1 && i < felder.length - 1) felder[i + 1].focus({ preventScroll: true });
+    else if (aktuell === String(gesamt)) uebergeben(); else weiter();
+  });
+  form.addEventListener('submit', e => { e.preventDefault(); uebergeben(); });
+
+  /* E Übergabe an /start: Angaben per sessionStorage im Format von start.js, nie in der Adresse (13 §9) */
+  const endKnopf = dlg.querySelector('[data-funnel-schritt="' + gesamt + '"] [data-funnel-aktion]'), endText = endKnopf.innerHTML;
+  const wert = n => (form.elements.namedItem(n).value || '').trim();
+  function uebergeben() {
+    if (weg || !schrittOk()) return;
+    const neu = { paket: 'monatlich', firma: wert('firma'), inhaber: wert('inhaber'), email: wert('email'), telefon: wert('telefon') };
+    try {
+      let alt = {}; try { alt = JSON.parse(sessionStorage.getItem('tf-start') || '{}') || {}; } catch (x) {}
+      sessionStorage.setItem('tf-start', JSON.stringify(Object.assign(alt, neu)));
+      sessionStorage.setItem('schilling-funnel', JSON.stringify({ antworten, herkunft, t: Date.now() }));
+    } catch (x) {}
+    weg = true; endKnopf.disabled = true; endKnopf.textContent = 'Einen Moment …';
+    const ziel = (ausloeser && ausloeser.getAttribute('href')) || '/start.html';
+    let los = false; const geh = () => { if (!los) { los = true; location.assign(ziel); } };
+    Promise.resolve(track('funnel-weiter-start')).then(geh, geh); setTimeout(geh, 400);
+  }
+  addEventListener('pageshow', e => { if (e.persisted) { weg = false; endKnopf.disabled = false; endKnopf.innerHTML = endText; } });
+
+  /* F Öffnen, Schließen, Zurück (Handy-Zurück = ein Schritt zurück, Adresse bleibt gleich) */
+  function vorbelegen() {                                             // zurück von /start: Angaben dieser Sitzung wieder eintragen
+    if (vorbelegt) return; vorbelegt = true;
+    try { const d = JSON.parse(sessionStorage.getItem('tf-start') || '{}') || {};
+      ['firma', 'inhaber', 'email', 'telefon'].forEach(k => { const el = form.elements.namedItem(k); if (el && !el.value && typeof d[k] === 'string') el.value = d[k]; });
+    } catch (x) {}
+  }
+  function oeffnen(e) {
+    e.preventDefault();
+    ausloeser = e.currentTarget;
+    vorbelegen();
+    sperren();
+    dlg.showModal();
+    tiefe = 0;
+    zeige(aktuell, true);
+    track('funnel-start', { ort: ausloeser.dataset.ort || '', schritt: aktuell });
+  }
+  function schliessen() {
+    if (tiefe > 0) { const d = tiefe; tiefe = 0; popIgnorieren = 0; history.go(-d); }
+    else abschluss();
+  }
+  function abschluss() {
+    if (!dlg.open) return;
+    eigenesClose = true; dlg.close();
+    freigeben();
+    track('funnel-zu', { schritt: aktuell });
+    if (ausloeser) ausloeser.focus({ preventScroll: true });
+  }
+  addEventListener('popstate', e => {
+    if (!dlg.open) return;
+    if (popIgnorieren) { popIgnorieren--; return; }
+    const st = e.state;
+    if (st && st.fn) { tiefe = st.i; zeige(st.fn, false); }
+    else { tiefe = 0; abschluss(); }
+  });
+  dlg.addEventListener('cancel', e => { e.preventDefault(); schliessen(); });
+  dlg.addEventListener('close', () => {
+    if (eigenesClose) { eigenesClose = false; return; }
+    const d = tiefe; tiefe = 0; freigeben();
+    if (d > 0) { popIgnorieren = 1; history.go(-d); }
+    if (ausloeser) ausloeser.focus({ preventScroll: true });
+  });
+  document.querySelectorAll('[data-funnel-oeffnen]').forEach(b => {
+    if (b.tagName === 'A') b.setAttribute('role', 'button');
+    b.addEventListener('click', oeffnen);
+  });
+  dlg.querySelector('[data-funnel-zu]').addEventListener('click', schliessen);
+  zurueck.addEventListener('click', () => { if (tiefe > 1) history.back(); else zeige(String(Math.max(1, Number(aktuell) - 1)), false); });
+
+  /* G Antworten: Tipp springt weiter; folgt ein Textfeld, sofort (iOS öffnet die Tastatur nur im Tipp) */
+  dlg.addEventListener('click', e => {
+    const b = e.target.closest('[data-funnel-antwort]');
+    if (b) {
+      const s = b.closest('[data-funnel-schritt]');
+      s.querySelectorAll('[data-funnel-antwort]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+      antworten[b.dataset.feld] = b.dataset.wert;
+      const ziel = schritte.find(x => x.dataset.funnelSchritt === naechster());
+      if ((ziel && ziel.querySelector(TEXTFELD)) || ruhig.matches) weiter(); else setTimeout(weiter, 160);
+      return;
+    }
+    if (e.target.closest('[data-funnel-weiter]')) weiter();
+  });
+
+  /* H Wischen auf der Kopfzeile schiebt nie die Seite dahinter */
+  dlg.addEventListener('touchmove', e => { if (!e.target.closest('.fn-inhalt')) e.preventDefault(); }, { passive: false });
+})();
+</script>
+</body>
+</html>

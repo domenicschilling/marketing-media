@@ -25,7 +25,7 @@
      "a": ["Im Portal, zum Ende des Abrechnungsmonats. Dein Stripe-Konto bleibt bei dir, Zahlungslinks und QR-Code enden. Lehnt Stripe dein Studio endgültig ab, bekommst du die gezahlten Monate zurück, außer bei falschen Angaben oder Pflichtverletzung."]},
     {"id": "geld-wann", "gruppe": "geld", "start": true, "fn": false, "seiten": ["anzahlung", "zahlungslink"],
      "q": "Wann kommt das Geld, und was brauche ich?",
-     "a": ["Stripe zahlt auf dein Bankkonto aus, laut Stripe in Deutschland in der Regel [[auszahlung.werktage]] nach der Zahlung, die allererste Auszahlung nach [[auszahlung.erste]]. Du brauchst [[anmeldung.braucht]]."]},
+     "a": ["Stripe zahlt auf dein Bankkonto aus, laut Stripe in Deutschland in der Regel [[auszahlung.werktage]] nach der Zahlung, die allererste in der Regel innerhalb von [[auszahlung.erste]]. Du brauchst [[anmeldung.braucht]]."]},
     {"id": "anfangen", "gruppe": "anfangen", "start": true, "fn": false, "seiten": ["so-gehts"],
      "q": "Wie fange ich an?",
      "a": ["Online anmelden, dann legst du dein Stripe-Konto an und Stripe prüft dein Studio. Danach richtet unser Team alles mit dir ein, mit einer Testzahlung."]},

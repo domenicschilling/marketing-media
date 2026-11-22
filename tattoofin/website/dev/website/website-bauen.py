@@ -219,16 +219,16 @@ fall = '''<div class="rechnung">
       </div>'''
 seite("/funktionen/ratenzahlung/",
       "Klarna im Tattoo-Studio, ohne Onlineshop | Tattoofin",
-      "Raten* über Klarna für deine Kunden, der ganze Betrag für dich. *Raten über Klarna nach deren Bonitätsprüfung. Achtung! Kreditaufnahme kostet Geld.",
+      "Raten* über Klarna für deine Kunden, dein Geld in einer Summe. *Raten über Klarna nach deren Bonitätsprüfung. Achtung! Kreditaufnahme kostet Geld.",
       "funktionen",
-      seitenkopf("Raten* für deinen Kunden. Der ganze Betrag für&nbsp;dich.", "Dein Kunde wählt beim Bezahlen Klarna. Du finanzierst nichts vor und wartest auf keine Rate*.",
+      seitenkopf("Raten* für deinen Kunden. Dein Geld in einer&nbsp;Summe.", "Dein Kunde wählt beim Bezahlen Klarna. Du finanzierst nichts vor und wartest auf keine Rate*.",
                  "ratenzahlung", HERZ, KR_F, unter="\n      " + fn()),
       abschnitt("geldfluss", "So läuft das Geld.", '''<div class="fluss">
         <div class="fluss-station"><span class="wer">Dein Kunde</span><strong>wählt Klarna</strong><p>Beim Bezahlen per Link oder QR-Code.</p></div>
         <span class="fluss-pfeil" aria-hidden="true">→</span>
         <div class="fluss-station"><span class="wer">Klarna</span><strong>prüft deinen Kunden</strong><p>Den Vertrag über die Raten* schließt er mit Klarna, nicht mit dir.</p></div>
         <span class="fluss-pfeil" aria-hidden="true">→</span>
-        <div class="fluss-station"><span class="wer">Du</span><strong>bekommst den ganzen Betrag</strong><p>Abzüglich Stripe-Gebühr, auf dein eigenes Stripe-Konto.</p></div>
+        <div class="fluss-station"><span class="wer">Du</span><strong>bekommst den Betrag in einer Summe</strong><p>Abzüglich Stripe-Gebühr, auf dein eigenes Stripe-Konto.</p></div>
       </div>
       ''' + fn(FN_L) + '''
       <ul class="text" style="margin-top:var(--s5);padding-left:1.2em">
@@ -306,7 +306,7 @@ KARTEN = [
     ("zahlungslink", motiv("motiv-2", ""), "Zahlungslink", "Nach der Sitzung.", "Den ganzen Betrag oder den Rest nach der Anzahlung, per Link oder QR-Code.", False),
     ("gutschein", motiv("motiv-5", ""), "Gutschein", "Zum Verschenken.", "Dein Kunde kauft per Link und bekommt Code und PDF per E-Mail.", False),
     ("app", motiv("motiv-4", "", "tf-b6", "tf-u6"), "iPhone-App", "Immer dabei.", "Links, QR-Code, Gutscheine und Auszahlungen am Handy. Alles geht auch im Browser.", False),
-    ("ratenzahlung", motiv("flash-1", "", "tf-b1", "tf-u1"), "Klarna im Studio", "Für große Tattoos.", "Dein Kunde zahlt in Raten* über Klarna. Du bekommst den ganzen Betrag auf einmal.", True),
+    ("ratenzahlung", motiv("flash-1", "", "tf-b1", "tf-u1"), "Klarna im Studio", "Für große Tattoos.", "Dein Kunde zahlt in Raten* über Klarna. Du bekommst den Betrag in einer Summe.", True),
 ]
 # „Was es dir bringt“: auf der Startseite seit 19.11. nur die Überschriften (Domenic „Ja, kürzen“), die Sätze stehen hier (gleicher Wortlaut wie dev/startseite-bauen.py VORTEILE)
 VORTEILE = [

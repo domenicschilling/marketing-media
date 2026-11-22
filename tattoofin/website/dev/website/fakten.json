@@ -39,10 +39,10 @@
     "quelle": "stripe.com/de/pricing, gelesen 01.11.2026; zahlt das Studio direkt an Stripe"
   },
   "auszahlung": {
-    "text": "Stripe zahlt auf dein Bankkonto aus, laut Stripe in Deutschland in der Regel 3 Werktage nach der Zahlung, die allererste Auszahlung nach 7 Tagen.",
-    "quelle": "docs.stripe.com/payments/balances (Settlement timing, Germany), Stand 16.11.2026. Nie „sofort“.",
+    "text": "Stripe zahlt auf dein Bankkonto aus, laut Stripe in Deutschland in der Regel 3 Werktage nach der Zahlung, die allererste in der Regel innerhalb von 7 bis 14 Tagen.",
+    "quelle": "docs.stripe.com/payments/balances (Settlement timing, Germany) + docs.stripe.com/payouts (erste Auszahlung „in der Regel innerhalb von 7 bis 14 Tagen“), Stand 18.11.2026, Domenic 18.11. Nie „sofort“.",
     "werktage": "3 Werktage",
-    "erste": "7 Tagen"
+    "erste": "7 bis 14 Tagen"
   },
   "zahlarten": {
     "satz": "Karte, Apple Pay, Google Pay oder Klarna",

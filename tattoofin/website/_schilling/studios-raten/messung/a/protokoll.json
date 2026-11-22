@@ -1,0 +1,1210 @@
+[
+  {
+    "heroOben": 53,
+    "heroHoehe": 614,
+    "bildschirm": 667,
+    "breite": 375,
+    "abweichung": 0,
+    "bannerSichtbar": false,
+    "bannerOben": 667,
+    "woerter": 30,
+    "text": "Raten* für deine Kunden. Dein Geld auf einmal. Für Tattoo-Studios: Link schicken, Kunde zahlt per Klarna. 7 Tage kostenlos testen Heute 0 €, 4 Angaben. Danach 49,90 € im Monat, monatlich kündbar.",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 57,
+        "unten": 182,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 188,
+        "unten": 229,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "a.knopf",
+        "oben": 559,
+        "unten": 610,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 616,
+        "unten": 655,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 12px: \"*Raten über Klarna, nach deren\"",
+      "p 15px: \"Heute 0 €, 4 Angaben. Danach 4\""
+    ],
+    "probleme": [],
+    "nr": "1",
+    "geraet": "iPhone SE",
+    "zustand": "ohne-banner",
+    "screenshot": "_schilling/studios-raten/messung/a/1-375x667-ohne-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 614,
+    "bildschirm": 667,
+    "breite": 375,
+    "abweichung": 0,
+    "bannerSichtbar": true,
+    "bannerOben": 563,
+    "woerter": 30,
+    "text": "Raten* für deine Kunden. Dein Geld auf einmal. Für Tattoo-Studios: Link schicken, Kunde zahlt per Klarna. 7 Tage kostenlos testen Heute 0 €, 4 Angaben. Danach 49,90 € im Monat, monatlich kündbar.",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 57,
+        "unten": 182,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 188,
+        "unten": 229,
+        "sichtbar": true,
+        "mussSichtbar": false
+      },
+      {
+        "name": "a.knopf",
+        "oben": 455,
+        "unten": 506,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 512,
+        "unten": 551,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 12px: \"*Raten über Klarna, nach deren\"",
+      "p 15px: \"Heute 0 €, 4 Angaben. Danach 4\""
+    ],
+    "probleme": [],
+    "nr": "1",
+    "geraet": "iPhone SE",
+    "zustand": "mit-banner",
+    "screenshot": "_schilling/studios-raten/messung/a/1-375x667-mit-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 791,
+    "bildschirm": 844,
+    "breite": 390,
+    "abweichung": 0,
+    "bannerSichtbar": false,
+    "bannerOben": 844,
+    "woerter": 30,
+    "text": "Raten* für deine Kunden. Dein Geld auf einmal. Für Tattoo-Studios: Link schicken, Kunde zahlt per Klarna. 7 Tage kostenlos testen Heute 0 €, 4 Angaben. Danach 49,90 € im Monat, monatlich kündbar.",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 57,
+        "unten": 187,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 193,
+        "unten": 236,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "a.knopf",
+        "oben": 724,
+        "unten": 782,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 788,
+        "unten": 832,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 12px: \"*Raten über Klarna, nach deren\""
+    ],
+    "probleme": [],
+    "nr": "2a",
+    "geraet": "iPhone 13/14 (Layout-Höhe)",
+    "zustand": "ohne-banner",
+    "screenshot": "_schilling/studios-raten/messung/a/2a-390x844-ohne-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 791,
+    "bildschirm": 844,
+    "breite": 390,
+    "abweichung": 0,
+    "bannerSichtbar": true,
+    "bannerOben": 740,
+    "woerter": 30,
+    "text": "Raten* für deine Kunden. Dein Geld auf einmal. Für Tattoo-Studios: Link schicken, Kunde zahlt per Klarna. 7 Tage kostenlos testen Heute 0 €, 4 Angaben. Danach 49,90 € im Monat, monatlich kündbar.",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 57,
+        "unten": 187,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 193,
+        "unten": 236,
+        "sichtbar": true,
+        "mussSichtbar": false
+      },
+      {
+        "name": "a.knopf",
+        "oben": 620,
+        "unten": 678,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 684,
+        "unten": 728,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 12px: \"*Raten über Klarna, nach deren\""
+    ],
+    "probleme": [],
+    "nr": "2a",
+    "geraet": "iPhone 13/14 (Layout-Höhe)",
+    "zustand": "mit-banner",
+    "screenshot": "_schilling/studios-raten/messung/a/2a-390x844-mit-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 611,
+    "bildschirm": 664,
+    "breite": 390,
+    "abweichung": 0,
+    "bannerSichtbar": false,
+    "bannerOben": 664,
+    "woerter": 30,
+    "text": "Raten* für deine Kunden. Dein Geld auf einmal. Für Tattoo-Studios: Link schicken, Kunde zahlt per Klarna. 7 Tage kostenlos testen Heute 0 €, 4 Angaben. Danach 49,90 € im Monat, monatlich kündbar.",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 57,
+        "unten": 187,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 193,
+        "unten": 236,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "a.knopf",
+        "oben": 557,
+        "unten": 607,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 613,
+        "unten": 652,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 12px: \"*Raten über Klarna, nach deren\"",
+      "p 15px: \"Heute 0 €, 4 Angaben. Danach 4\""
+    ],
+    "probleme": [],
+    "nr": "2b",
+    "geraet": "iPhone 13/14 (Safari sichtbar)",
+    "zustand": "ohne-banner",
+    "screenshot": "_schilling/studios-raten/messung/a/2b-390x664-ohne-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 611,
+    "bildschirm": 664,
+    "breite": 390,
+    "abweichung": 0,
+    "bannerSichtbar": true,
+    "bannerOben": 560,
+    "woerter": 30,
+    "text": "Raten* für deine Kunden. Dein Geld auf einmal. Für Tattoo-Studios: Link schicken, Kunde zahlt per Klarna. 7 Tage kostenlos testen Heute 0 €, 4 Angaben. Danach 49,90 € im Monat, monatlich kündbar.",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 57,
+        "unten": 187,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 193,
+        "unten": 236,
+        "sichtbar": true,
+        "mussSichtbar": false
+      },
+      {
+        "name": "a.knopf",
+        "oben": 453,
+        "unten": 503,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 509,
+        "unten": 548,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 12px: \"*Raten über Klarna, nach deren\"",
+      "p 15px: \"Heute 0 €, 4 Angaben. Danach 4\""
+    ],
+    "probleme": [],
+    "nr": "2b",
+    "geraet": "iPhone 13/14 (Safari sichtbar)",
+    "zustand": "mit-banner",
+    "screenshot": "_schilling/studios-raten/messung/a/2b-390x664-mit-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 879,
+    "bildschirm": 932,
+    "breite": 430,
+    "abweichung": 0,
+    "bannerSichtbar": false,
+    "bannerOben": 932,
+    "woerter": 30,
+    "text": "Raten* für deine Kunden. Dein Geld auf einmal. Für Tattoo-Studios: Link schicken, Kunde zahlt per Klarna. 7 Tage kostenlos testen Heute 0 €, 4 Angaben. Danach 49,90 € im Monat, monatlich kündbar.",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 57,
+        "unten": 200,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 206,
+        "unten": 254,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "a.knopf",
+        "oben": 812,
+        "unten": 870,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 876,
+        "unten": 920,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 12px: \"*Raten über Klarna, nach deren\""
+    ],
+    "probleme": [],
+    "nr": "3",
+    "geraet": "iPhone Pro Max",
+    "zustand": "ohne-banner",
+    "screenshot": "_schilling/studios-raten/messung/a/3-430x932-ohne-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 879,
+    "bildschirm": 932,
+    "breite": 430,
+    "abweichung": 0,
+    "bannerSichtbar": true,
+    "bannerOben": 828,
+    "woerter": 30,
+    "text": "Raten* für deine Kunden. Dein Geld auf einmal. Für Tattoo-Studios: Link schicken, Kunde zahlt per Klarna. 7 Tage kostenlos testen Heute 0 €, 4 Angaben. Danach 49,90 € im Monat, monatlich kündbar.",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 57,
+        "unten": 200,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 206,
+        "unten": 254,
+        "sichtbar": true,
+        "mussSichtbar": false
+      },
+      {
+        "name": "a.knopf",
+        "oben": 708,
+        "unten": 766,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 772,
+        "unten": 816,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 12px: \"*Raten über Klarna, nach deren\""
+    ],
+    "probleme": [],
+    "nr": "3",
+    "geraet": "iPhone Pro Max",
+    "zustand": "mit-banner",
+    "screenshot": "_schilling/studios-raten/messung/a/3-430x932-mit-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 862,
+    "bildschirm": 915,
+    "breite": 412,
+    "abweichung": 0,
+    "bannerSichtbar": false,
+    "bannerOben": 915,
+    "woerter": 30,
+    "text": "Raten* für deine Kunden. Dein Geld auf einmal. Für Tattoo-Studios: Link schicken, Kunde zahlt per Klarna. 7 Tage kostenlos testen Heute 0 €, 4 Angaben. Danach 49,90 € im Monat, monatlich kündbar.",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 57,
+        "unten": 194,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 200,
+        "unten": 246,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "a.knopf",
+        "oben": 795,
+        "unten": 853,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 859,
+        "unten": 903,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 12px: \"*Raten über Klarna, nach deren\""
+    ],
+    "probleme": [],
+    "nr": "4",
+    "geraet": "Android",
+    "zustand": "ohne-banner",
+    "screenshot": "_schilling/studios-raten/messung/a/4-412x915-ohne-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 862,
+    "bildschirm": 915,
+    "breite": 412,
+    "abweichung": 0,
+    "bannerSichtbar": true,
+    "bannerOben": 811,
+    "woerter": 30,
+    "text": "Raten* für deine Kunden. Dein Geld auf einmal. Für Tattoo-Studios: Link schicken, Kunde zahlt per Klarna. 7 Tage kostenlos testen Heute 0 €, 4 Angaben. Danach 49,90 € im Monat, monatlich kündbar.",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 57,
+        "unten": 194,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 200,
+        "unten": 246,
+        "sichtbar": true,
+        "mussSichtbar": false
+      },
+      {
+        "name": "a.knopf",
+        "oben": 691,
+        "unten": 749,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 755,
+        "unten": 799,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 12px: \"*Raten über Klarna, nach deren\""
+    ],
+    "probleme": [],
+    "nr": "4",
+    "geraet": "Android",
+    "zustand": "mit-banner",
+    "screenshot": "_schilling/studios-raten/messung/a/4-412x915-mit-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 971,
+    "bildschirm": 1024,
+    "breite": 768,
+    "abweichung": 0,
+    "bannerSichtbar": false,
+    "bannerOben": 1024,
+    "woerter": 30,
+    "text": "Raten* für deine Kunden. Dein Geld auf einmal. Für Tattoo-Studios: Link schicken, Kunde zahlt per Klarna. 7 Tage kostenlos testen Heute 0 €, 4 Angaben. Danach 49,90 € im Monat, monatlich kündbar.",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 57,
+        "unten": 270,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 276,
+        "unten": 305,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "a.knopf",
+        "oben": 926,
+        "unten": 984,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 990,
+        "unten": 1012,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 12px: \"*Raten über Klarna, nach deren\""
+    ],
+    "probleme": [],
+    "nr": "5",
+    "geraet": "iPad hoch",
+    "zustand": "ohne-banner",
+    "screenshot": "_schilling/studios-raten/messung/a/5-768x1024-ohne-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 971,
+    "bildschirm": 1024,
+    "breite": 768,
+    "abweichung": 0,
+    "bannerSichtbar": true,
+    "bannerOben": 956,
+    "woerter": 30,
+    "text": "Raten* für deine Kunden. Dein Geld auf einmal. Für Tattoo-Studios: Link schicken, Kunde zahlt per Klarna. 7 Tage kostenlos testen Heute 0 €, 4 Angaben. Danach 49,90 € im Monat, monatlich kündbar.",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 57,
+        "unten": 270,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 276,
+        "unten": 305,
+        "sichtbar": true,
+        "mussSichtbar": false
+      },
+      {
+        "name": "a.knopf",
+        "oben": 858,
+        "unten": 916,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 922,
+        "unten": 944,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 12px: \"*Raten über Klarna, nach deren\""
+    ],
+    "probleme": [],
+    "nr": "5",
+    "geraet": "iPad hoch",
+    "zustand": "mit-banner",
+    "screenshot": "_schilling/studios-raten/messung/a/5-768x1024-mit-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 1313,
+    "bildschirm": 1366,
+    "breite": 1024,
+    "abweichung": 0,
+    "bannerSichtbar": false,
+    "bannerOben": 1366,
+    "woerter": 30,
+    "text": "Raten* für deine Kunden. Dein Geld auf einmal. Für Tattoo-Studios: Link schicken, Kunde zahlt per Klarna. 7 Tage kostenlos testen Heute 0 €, 4 Angaben. Danach 49,90 € im Monat, monatlich kündbar.",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 509,
+        "unten": 645,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 651,
+        "unten": 696,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "a.knopf",
+        "oben": 764,
+        "unten": 822,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 828,
+        "unten": 872,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 13px: \"*Raten über Klarna, nach deren\""
+    ],
+    "probleme": [],
+    "nr": "6",
+    "geraet": "iPad Pro hoch",
+    "zustand": "ohne-banner",
+    "screenshot": "_schilling/studios-raten/messung/a/6-1024x1366-ohne-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 1313,
+    "bildschirm": 1366,
+    "breite": 1024,
+    "abweichung": 0,
+    "bannerSichtbar": true,
+    "bannerOben": 1114,
+    "woerter": 30,
+    "text": "Raten* für deine Kunden. Dein Geld auf einmal. Für Tattoo-Studios: Link schicken, Kunde zahlt per Klarna. 7 Tage kostenlos testen Heute 0 €, 4 Angaben. Danach 49,90 € im Monat, monatlich kündbar.",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 509,
+        "unten": 645,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 651,
+        "unten": 696,
+        "sichtbar": true,
+        "mussSichtbar": false
+      },
+      {
+        "name": "a.knopf",
+        "oben": 764,
+        "unten": 822,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 828,
+        "unten": 872,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 13px: \"*Raten über Klarna, nach deren\""
+    ],
+    "probleme": [],
+    "nr": "6",
+    "geraet": "iPad Pro hoch",
+    "zustand": "mit-banner",
+    "screenshot": "_schilling/studios-raten/messung/a/6-1024x1366-mit-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 667,
+    "bildschirm": 720,
+    "breite": 1280,
+    "abweichung": 0,
+    "bannerSichtbar": false,
+    "bannerOben": 720,
+    "woerter": 30,
+    "text": "Raten* für deine Kunden. Dein Geld auf einmal. Für Tattoo-Studios: Link schicken, Kunde zahlt per Klarna. 7 Tage kostenlos testen Heute 0 €, 4 Angaben. Danach 49,90 € im Monat, monatlich kündbar.",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 186,
+        "unten": 351,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 357,
+        "unten": 407,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "a.knopf",
+        "oben": 466,
+        "unten": 521,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 527,
+        "unten": 568,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 13px: \"*Raten über Klarna, nach deren\"",
+      "p 15.84px: \"Heute 0 €, 4 Angaben. Danach 4\""
+    ],
+    "probleme": [],
+    "nr": "7",
+    "geraet": "Laptop",
+    "zustand": "ohne-banner",
+    "screenshot": "_schilling/studios-raten/messung/a/7-1280x720-ohne-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 667,
+    "bildschirm": 720,
+    "breite": 1280,
+    "abweichung": 0,
+    "bannerSichtbar": true,
+    "bannerOben": 468,
+    "woerter": 30,
+    "text": "Raten* für deine Kunden. Dein Geld auf einmal. Für Tattoo-Studios: Link schicken, Kunde zahlt per Klarna. 7 Tage kostenlos testen Heute 0 €, 4 Angaben. Danach 49,90 € im Monat, monatlich kündbar.",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 186,
+        "unten": 351,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 357,
+        "unten": 407,
+        "sichtbar": true,
+        "mussSichtbar": false
+      },
+      {
+        "name": "a.knopf",
+        "oben": 466,
+        "unten": 521,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 527,
+        "unten": 568,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 13px: \"*Raten über Klarna, nach deren\"",
+      "p 15.84px: \"Heute 0 €, 4 Angaben. Danach 4\""
+    ],
+    "probleme": [],
+    "nr": "7",
+    "geraet": "Laptop",
+    "zustand": "mit-banner",
+    "screenshot": "_schilling/studios-raten/messung/a/7-1280x720-mit-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 715,
+    "bildschirm": 768,
+    "breite": 1366,
+    "abweichung": 0,
+    "bannerSichtbar": false,
+    "bannerOben": 768,
+    "woerter": 30,
+    "text": "Raten* für deine Kunden. Dein Geld auf einmal. Für Tattoo-Studios: Link schicken, Kunde zahlt per Klarna. 7 Tage kostenlos testen Heute 0 €, 4 Angaben. Danach 49,90 € im Monat, monatlich kündbar.",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 198,
+        "unten": 374,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 380,
+        "unten": 434,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "a.knopf",
+        "oben": 494,
+        "unten": 552,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 558,
+        "unten": 602,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 13px: \"*Raten über Klarna, nach deren\""
+    ],
+    "probleme": [],
+    "nr": "8",
+    "geraet": "Laptop",
+    "zustand": "ohne-banner",
+    "screenshot": "_schilling/studios-raten/messung/a/8-1366x768-ohne-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 715,
+    "bildschirm": 768,
+    "breite": 1366,
+    "abweichung": 0,
+    "bannerSichtbar": true,
+    "bannerOben": 516,
+    "woerter": 30,
+    "text": "Raten* für deine Kunden. Dein Geld auf einmal. Für Tattoo-Studios: Link schicken, Kunde zahlt per Klarna. 7 Tage kostenlos testen Heute 0 €, 4 Angaben. Danach 49,90 € im Monat, monatlich kündbar.",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 198,
+        "unten": 374,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 380,
+        "unten": 434,
+        "sichtbar": true,
+        "mussSichtbar": false
+      },
+      {
+        "name": "a.knopf",
+        "oben": 494,
+        "unten": 552,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 558,
+        "unten": 602,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 13px: \"*Raten über Klarna, nach deren\""
+    ],
+    "probleme": [],
+    "nr": "8",
+    "geraet": "Laptop",
+    "zustand": "mit-banner",
+    "screenshot": "_schilling/studios-raten/messung/a/8-1366x768-mit-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 847,
+    "bildschirm": 900,
+    "breite": 1440,
+    "abweichung": 0,
+    "bannerSichtbar": false,
+    "bannerOben": 900,
+    "woerter": 30,
+    "text": "Raten* für deine Kunden. Dein Geld auf einmal. Für Tattoo-Studios: Link schicken, Kunde zahlt per Klarna. 7 Tage kostenlos testen Heute 0 €, 4 Angaben. Danach 49,90 € im Monat, monatlich kündbar.",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 219,
+        "unten": 472,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 478,
+        "unten": 538,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "a.knopf",
+        "oben": 601,
+        "unten": 659,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 665,
+        "unten": 709,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 13px: \"*Raten über Klarna, nach deren\""
+    ],
+    "probleme": [],
+    "nr": "9",
+    "geraet": "Desktop",
+    "zustand": "ohne-banner",
+    "screenshot": "_schilling/studios-raten/messung/a/9-1440x900-ohne-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 847,
+    "bildschirm": 900,
+    "breite": 1440,
+    "abweichung": 0,
+    "bannerSichtbar": true,
+    "bannerOben": 648,
+    "woerter": 30,
+    "text": "Raten* für deine Kunden. Dein Geld auf einmal. Für Tattoo-Studios: Link schicken, Kunde zahlt per Klarna. 7 Tage kostenlos testen Heute 0 €, 4 Angaben. Danach 49,90 € im Monat, monatlich kündbar.",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 219,
+        "unten": 472,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 478,
+        "unten": 538,
+        "sichtbar": true,
+        "mussSichtbar": false
+      },
+      {
+        "name": "a.knopf",
+        "oben": 601,
+        "unten": 659,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 665,
+        "unten": 709,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 13px: \"*Raten über Klarna, nach deren\""
+    ],
+    "probleme": [],
+    "nr": "9",
+    "geraet": "Desktop",
+    "zustand": "mit-banner",
+    "screenshot": "_schilling/studios-raten/messung/a/9-1440x900-mit-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 1027,
+    "bildschirm": 1080,
+    "breite": 1920,
+    "abweichung": 0,
+    "bannerSichtbar": false,
+    "bannerOben": 1080,
+    "woerter": 30,
+    "text": "Raten* für deine Kunden. Dein Geld auf einmal. Für Tattoo-Studios: Link schicken, Kunde zahlt per Klarna. 7 Tage kostenlos testen Heute 0 €, 4 Angaben. Danach 49,90 € im Monat, monatlich kündbar.",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 226,
+        "unten": 635,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 641,
+        "unten": 701,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "a.knopf",
+        "oben": 768,
+        "unten": 826,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 832,
+        "unten": 876,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 13px: \"*Raten über Klarna, nach deren\""
+    ],
+    "probleme": [],
+    "nr": "10",
+    "geraet": "Desktop",
+    "zustand": "ohne-banner",
+    "screenshot": "_schilling/studios-raten/messung/a/10-1920x1080-ohne-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 1027,
+    "bildschirm": 1080,
+    "breite": 1920,
+    "abweichung": 0,
+    "bannerSichtbar": true,
+    "bannerOben": 828,
+    "woerter": 30,
+    "text": "Raten* für deine Kunden. Dein Geld auf einmal. Für Tattoo-Studios: Link schicken, Kunde zahlt per Klarna. 7 Tage kostenlos testen Heute 0 €, 4 Angaben. Danach 49,90 € im Monat, monatlich kündbar.",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 226,
+        "unten": 635,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 641,
+        "unten": 701,
+        "sichtbar": true,
+        "mussSichtbar": false
+      },
+      {
+        "name": "a.knopf",
+        "oben": 768,
+        "unten": 826,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 832,
+        "unten": 876,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 13px: \"*Raten über Klarna, nach deren\""
+    ],
+    "probleme": [],
+    "nr": "10",
+    "geraet": "Desktop",
+    "zustand": "mit-banner",
+    "screenshot": "_schilling/studios-raten/messung/a/10-1920x1080-mit-banner.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 611,
+    "bildschirm": 664,
+    "breite": 390,
+    "abweichung": 0,
+    "bannerSichtbar": false,
+    "bannerOben": 664,
+    "woerter": 30,
+    "text": "Raten* für deine Kunden. Dein Geld auf einmal. Für Tattoo-Studios: Link schicken, Kunde zahlt per Klarna. 7 Tage kostenlos testen Heute 0 €, 4 Angaben. Danach 49,90 € im Monat, monatlich kündbar.",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 57,
+        "unten": 187,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 193,
+        "unten": 236,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "a.knopf",
+        "oben": 557,
+        "unten": 607,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 613,
+        "unten": 652,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 12px: \"*Raten über Klarna, nach deren\"",
+      "p 15px: \"Heute 0 €, 4 Angaben. Danach 4\""
+    ],
+    "probleme": [],
+    "nr": "2b",
+    "geraet": "iPhone 13/14 (Safari sichtbar)",
+    "zustand": "ohne-banner-reduced-motion",
+    "screenshot": "_schilling/studios-raten/messung/a/2b-390x664-ohne-banner-reduced-motion.png",
+    "bestanden": true
+  },
+  {
+    "heroOben": 53,
+    "heroHoehe": 611,
+    "bildschirm": 664,
+    "breite": 390,
+    "abweichung": 0,
+    "bannerSichtbar": false,
+    "bannerOben": 664,
+    "woerter": 30,
+    "text": "Raten* für deine Kunden. Dein Geld auf einmal. Für Tattoo-Studios: Link schicken, Kunde zahlt per Klarna. 7 Tage kostenlos testen Heute 0 €, 4 Angaben. Danach 49,90 € im Monat, monatlich kündbar.",
+    "elemente": [
+      {
+        "name": "h1",
+        "oben": 57,
+        "unten": 187,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.unterzeile",
+        "oben": 193,
+        "unten": 236,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "a.knopf",
+        "oben": 557,
+        "unten": 607,
+        "sichtbar": true,
+        "mussSichtbar": true
+      },
+      {
+        "name": "p.preiszeile",
+        "oben": 613,
+        "unten": 652,
+        "sichtbar": true,
+        "mussSichtbar": true
+      }
+    ],
+    "klein": [
+      "p 12px: \"*Raten über Klarna, nach deren\"",
+      "p 15px: \"Heute 0 €, 4 Angaben. Danach 4\""
+    ],
+    "probleme": [],
+    "nr": "2b",
+    "geraet": "iPhone 13/14 (Safari sichtbar)",
+    "zustand": "ohne-banner-dunkel",
+    "screenshot": "_schilling/studios-raten/messung/a/2b-390x664-ohne-banner-dunkel.png",
+    "bestanden": true
+  }
+]
