@@ -1,0 +1,26 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><title>DS Beispiel 01 – FS Kreativ Küchen, Raster A</title>
+<!-- Musterfall 01: Raster A (Rahmen) + Markenzeichen Maßlinie. Foto: echte Kundenküche (Felix' Referenz, brands/kreativ-kuechen/notes.md),
+     Quelle 455 px, mit `upscale … 4` hochgerechnet, nicht nachgeschärft. Werte aus brands/kreativ-kuechen/brand.json (Theme light). -->
+<link rel="stylesheet" href="../../vorlagen/ds.css">
+<style>
+/* MARKE FS Kreativ Küchen (brand.json light) */
+:root { --grund:#F6F3EE; --flaeche:#EDE6DB; --tinte:#1B1C1E; --gedaempft:#6B6660; --akzent:#A9794B; --hf:"Fraunces",serif; --hw:400; --hls:-0.02em; --bf:"Inter",sans-serif;
+        --foto-filter:saturate(.9) contrast(1.03) sepia(.04); --korn:.05; }
+/* RASTER A */
+:root { --w:1080px; --h:1350px; --h1:92px; --klein:28px; }
+.foto { left:80px; top:80px; width:920px; height:860px; }
+.zeile { left:80px; top:990px; width:920px; }
+.logo { bottom:80px; height:38px; }
+/* Markenzeichen Maßlinie: Bemaßung wie im Küchenplan, unter dem Foto, Breite = Foto. Zahl nur, wenn sie aus Felix' Plan stammt. */
+.mass { position:absolute; left:80px; top:960px; width:920px; height:14px; border-left:1.5px solid var(--gedaempft); border-right:1.5px solid var(--gedaempft); }
+.mass::after { content:""; position:absolute; left:0; right:0; top:6px; border-top:1.5px solid var(--gedaempft); }
+.ort { position:absolute; right:80px; bottom:84px; font-size:var(--klein); color:var(--gedaempft); }
+</style></head><body>
+<div class="ds" data-w="1080" data-h="1350">
+  <img class="foto" src="fotos/dachschraege-x4.jpg" alt="Küche unter einer Dachschräge, Kundenprojekt" style="object-position:62% 50%">
+  <div class="mass" data-gehoert="foto"></div>
+  <div class="zeile">Die Schräge hat mit&shy;geplant.</div>
+  <img class="logo marke" src="fotos/logo-dunkel.png" alt="FS Kreativ Küchen">
+  <div class="ort" data-gehoert="absender">Kundenküche, geplant von Felix Tramowsky</div>
+  <div class="korn"></div>
+</div></body></html>

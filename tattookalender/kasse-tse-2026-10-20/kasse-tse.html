@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Tattookalender Kasse und TSE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* Kasse/TSE-Ablauf Tattookalender – 20.10.2026. PDF: _baue-pdf.sh (Chrome headless), Kontrolle mit Apple PDFKit.
+     Marke: Schwarz + Gold aus brand-overrides/tattookalender. Kein Text-Verlauf, kein background-clip:text. */
+  @page { size: A4; margin: 0; }
+  :root {
+    --paper: #fcfbf8;
+    --ink: #141416;
+    --night: #0b0b0d;      /* Marken-Schwarz (App-Icon) */
+    --gold: #c9a24f;       /* Marken-Gold, für Siegel, Linien */
+    --gold-deep: #7d5a12;  /* Gold als Textfarbe (Kontrast auf Weiß) */
+    --gold-tint: #f6eedb;  /* Spur der Kasse im Ablauf */
+    --muted: #66645f;
+    --line: #e3e0d8;
+    --soft: #f3f1ec;
+    --risk: #8f3a14;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--paper); }
+  body { font-family: Inter, system-ui, sans-serif; color: var(--ink); font-size: 8.4pt; line-height: 1.45;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .page { width: 210mm; height: 297mm; overflow: hidden; position: relative; padding: 12mm 15mm 10mm;
+    display: flex; flex-direction: column; break-after: page; background: var(--paper); }
+  .page:last-child { break-after: auto; }
+
+  .run { display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 2.6mm;
+    border-bottom: 0.25mm solid var(--line); margin-bottom: 6mm; }
+  .run .mark { font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: 10.5pt; letter-spacing: -0.03em; }
+  .run .mark span { color: var(--gold-deep); }
+  .run .meta { font-size: 7.2pt; color: var(--muted); }
+  .foot { margin-top: auto; padding-top: 2.5mm; display: flex; justify-content: space-between; font-size: 6.9pt; color: var(--muted); }
+
+  h1, h2, h3, .display { font-family: "Bricolage Grotesque", sans-serif; }
+  h2 { font-weight: 700; font-size: 13pt; line-height: 1.12; letter-spacing: -0.02em; margin-bottom: 2mm; }
+  h3 { font-weight: 700; font-size: 9.4pt; letter-spacing: -0.01em; line-height: 1.2; margin-bottom: 1.1mm; }
+  p + p { margin-top: 1.5mm; }
+  b, strong { font-weight: 600; }
+  .muted { color: var(--muted); }
+  .small { font-size: 7.2pt; color: var(--muted); line-height: 1.4; }
+  sup.q { white-space: nowrap; font-size: 5.8pt; color: var(--gold-deep); font-weight: 600; vertical-align: 0.5em; line-height: 0; margin-left: 0.3mm; }
+  ul.list { list-style: none; }
+  ul.list li { position: relative; padding-left: 3.4mm; margin-bottom: 1.1mm; }
+  ul.list li::before { content: "–"; position: absolute; left: 0; color: var(--muted); }
+
+  /* Deckblatt */
+  .band { margin: -12mm -15mm 0; padding: 10mm 15mm 8mm; background: var(--night); color: #f2efe8; }
+  .band-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .band-top img { height: 12.5mm; display: block; margin-left: -1.2mm; }
+  .band-top .stamp { font-size: 7.4pt; color: #a9a397; text-align: right; line-height: 1.5; }
+  .band h1 { margin-top: 9mm; font-weight: 800; font-size: 31pt; line-height: 0.98; letter-spacing: -0.04em; color: #f6f3ec; max-width: 165mm; }
+  .band .sub { margin-top: 3.5mm; font-size: 10pt; line-height: 1.45; color: #cfc9bc; max-width: 150mm; }
+
+  .answer { display: grid; grid-template-columns: 1fr 74mm; gap: 8mm; margin-top: 6mm; }
+  .answer p { font-size: 8.9pt; line-height: 1.47; color: #2a2a2e; }
+  .rule { border-left: 1.1mm solid var(--gold); padding: 1mm 0 1mm 4.5mm; }
+  .rule .big { font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: 15pt; line-height: 1.1; letter-spacing: -0.025em; }
+  .rule p { font-size: 8pt; color: var(--muted); margin-top: 2mm; line-height: 1.45; }
+
+  .scen3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; margin-top: 6mm; }
+  .sc { border-top: 0.6mm solid var(--ink); padding-top: 2.6mm; }
+  .sc .letter { font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: 22pt; line-height: 0.9; color: var(--gold-deep); letter-spacing: -0.03em; }
+  .sc h3 { margin-top: 1.6mm; font-size: 10pt; }
+  .sc p { font-size: 7.9pt; color: #34343a; }
+  .sc dl { margin-top: 2mm; display: grid; grid-template-columns: 17mm 1fr; gap: 0.8mm 2mm; font-size: 7.5pt; }
+  .sc dt { color: var(--muted); }
+
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-weight: 600; font-size: 7.2pt; color: var(--muted); padding: 1.4mm 2mm; border-bottom: 0.3mm solid var(--ink); vertical-align: bottom; }
+  td { padding: 1.7mm 2mm; border-bottom: 0.2mm solid var(--line); vertical-align: top; font-size: 7.7pt; line-height: 1.38; }
+  td.k { font-weight: 600; }
+  td .tag { display: inline-block; font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; color: var(--gold-deep); font-size: 9.5pt; margin-right: 1.2mm; }
+  .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+  /* Recht */
+  .law { display: grid; grid-template-columns: 1fr 1fr; gap: 4.2mm 8mm; }
+  .law .it p { font-size: 8pt; color: #2e2e33; }
+  .risk { margin-top: 6mm; background: var(--soft); border-radius: 1.6mm; padding: 4mm 5mm; }
+  .risk h2 { font-size: 11.5pt; }
+  .risk ul.list li { font-size: 7.9pt; margin-bottom: 1.4mm; }
+  .risk ul.list li::before { color: var(--risk); content: "!"; font-weight: 700; }
+  .risk li b { color: var(--risk); }
+
+  /* Szenarien */
+  .scene + .scene { margin-top: 7mm; }
+  .scene-head { display: flex; align-items: baseline; gap: 3.5mm; }
+  .scene-head .letter { font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: 26pt; line-height: 0.9; color: var(--gold-deep); letter-spacing: -0.03em; }
+  .scene-head h2 { margin: 0; }
+  .scene-head p { font-size: 8.4pt; color: var(--muted); margin-left: auto; text-align: right; max-width: 70mm; }
+  .flow { margin-top: 2.5mm; }
+  .flow svg { width: 100%; height: auto; display: block; }
+  .cols { display: grid; grid-template-columns: 1.25fr 1fr 0.85fr; gap: 6mm; margin-top: 3mm; }
+  .cols h3 { font-size: 8.6pt; }
+  .cols p, .cols li { font-size: 7.7pt; }
+  .pm li.plus::before { content: "+"; color: var(--gold-deep); font-weight: 700; }
+  .pm li.minus::before { content: "–"; color: var(--risk); font-weight: 700; }
+  .effort .d { font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: 13pt; letter-spacing: -0.02em; line-height: 1.05; }
+  .effort .d + p { margin-top: 0.6mm; }
+  .effort p + .d { margin-top: 2mm; }
+  .legend { display: flex; gap: 6mm; font-size: 7pt; color: var(--muted); margin-top: 1.5mm; align-items: center; }
+  .legend i { display: inline-block; vertical-align: -0.7mm; margin-right: 1.2mm; }
+  .legend .s1 { width: 3.4mm; height: 3.4mm; border-radius: 50%; background: var(--gold); }
+  .legend .s2 { width: 3.4mm; height: 3.4mm; border-radius: 50%; border: 0.3mm dashed var(--gold-deep); }
+  .legend .s3 { width: 6mm; height: 3.4mm; background: var(--gold-tint); }
+
+  .q-online { margin-top: 3.5mm; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; }
+  .q-online > div { border-top: 0.35mm solid var(--line); padding-top: 2mm; }
+  .q-online p { font-size: 7.9pt; }
+  .q-online .v { font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; font-size: 10pt; }
+
+  ol.steps { list-style: none; counter-reset: s; }
+  ol.steps li { counter-increment: s; position: relative; padding: 1.3mm 0 1.3mm 8mm; border-bottom: 0.2mm solid var(--line); font-size: 7.9pt; }
+  ol.steps li::before { content: counter(s); position: absolute; left: 0; top: 1.1mm; width: 5mm; height: 5mm; border-radius: 50%; background: var(--gold); color: var(--night); font-weight: 700; font-size: 7pt; display: grid; place-items: center; }
+
+  .sources { columns: 2; column-gap: 7mm; font-size: 6.6pt; line-height: 1.38; color: #3a3a40; }
+  .sources p { break-inside: avoid; margin: 0 0 1.2mm; }
+  .sources b { color: var(--gold-deep); }
+  .sources a { color: inherit; text-decoration: none; word-break: break-all; }
+</style>
+</head>
+<body>
+
+<!-- ============ Seite 1 ============ -->
+<section class="page">
+  <div class="band">
+    <div class="band-top">
+      <img src="logo-lockup.png" alt="Tattookalender">
+      <div class="stamp">Stand 20.10.2026<br>Ablauf am Tresen, Recht, Aufwand</div>
+    </div>
+    <h1>Das Studio hat schon eine Kasse. Und jetzt?</h1>
+    <p class="sub">Wie Tattookalender mit SumUp, Zettle und anderen Kassen zusammenarbeitet: was erlaubt ist, wie der Alltag am Tresen aussieht und was wir dafür bauen müssten.</p>
+  </div>
+
+  <div class="answer">
+    <div>
+      <p><b>Kurz: Ja, das geht – ohne dass das Studio seine Kasse wechseln muss.</b> Tattookalender übernimmt Termine, Anzahlungen und Online-Zahlungen. Am Tresen kassiert das Studio weiter mit SumUp, und Tattookalender erfährt, dass der Termin bezahlt ist – von Hand oder automatisch über die SumUp-Schnittstelle.</p>
+      <p>Was nicht geht: Tattookalender kann die TSE von SumUp nicht mitbenutzen. Eine TSE gehört immer zu einer Kasse, und SumUp bietet dafür keine Schnittstelle an. „Verbinden“ heißt deshalb: <b>Zahlungen abgleichen, nicht gemeinsam signieren.</b></p>
+      <p>Wer lieber alles in einem System hat, nimmt die Kasse von Tattookalender mit eigener TSE (Zusatz 19&nbsp;€ im Monat netto, im Komplett-Paket enthalten). Das vorhandene SumUp-Gerät kann dann als reines Kartenterminal weiterlaufen – das müssten wir aber noch bauen.</p>
+    </div>
+    <div class="rule">
+      <div class="big">Jede Zahlung am Tresen landet in genau einer Kasse und bekommt genau eine Signatur.</div>
+      <p>Zwei Kassen nebeneinander sind erlaubt, jede mit eigener TSE. Verboten ist, dieselbe Zahlung in beiden zu buchen: Dann stimmen Umsatz, Kassenbestand und Buchhaltung nicht mehr.</p>
+    </div>
+  </div>
+
+  <div class="scen3">
+    <div class="sc">
+      <div class="letter">A</div>
+      <h3>SumUp bleibt die Kasse</h3>
+      <p>Tattookalender macht alles vor dem Tresen. Kassiert und signiert wird in SumUp, Tattookalender gleicht nur ab.</p>
+      <dl><dt>Für wen</dt><dd>Studios mit laufender TSE-Kasse</dd><dt>Aufwand</dt><dd>1–2 Tage, mit Automatik 4–7</dd></dl>
+    </div>
+    <div class="sc">
+      <div class="letter">B</div>
+      <h3>Tattookalender wird die Kasse</h3>
+      <p>Eine Kasse, eine TSE, ein Bon. SumUp bleibt nur noch Kartenleser und bucht selbst nichts mehr.</p>
+      <dl><dt>Für wen</dt><dd>Studios, die alles in einem wollen und Karte am Tresen brauchen</dd><dt>Aufwand</dt><dd>2–3 Tage, mit Geräteanbindung 6–11</dd></dl>
+    </div>
+    <div class="sc">
+      <div class="letter">C</div>
+      <h3>Bar in Tattookalender, Karte online</h3>
+      <p>So ist es heute gebaut: Bargeld in der Tattookalender-Kasse, Karte nur per Stripe-Link oder QR-Code.</p>
+      <dl><dt>Für wen</dt><dd>Studios ohne TSE-Kasse oder mit offener Ladenkasse</dd><dt>Aufwand</dt><dd>fertig, plus 1–2 Tage Nacharbeit</dd></dl>
+    </div>
+  </div>
+
+  <h2 style="margin-top:6mm">Welcher Weg für welches Studio</h2>
+  <table>
+    <thead><tr><th style="width:44%">Das Studio hat heute …</th><th style="width:12%">Weg</th><th>Warum</th></tr></thead>
+    <tbody>
+      <tr><td>SumUp, Zettle oder ready2order als Kasse mit TSE und ist zufrieden</td><td class="k"><span class="tag">A</span></td><td>Kein Umstieg, keine neue Meldung ans Finanzamt. Der schnellste Weg zur Unterschrift.</td></tr>
+      <tr><td>nur ein SumUp-Kartenlesegerät, Bargeld in der Schublade</td><td class="k"><span class="tag">C</span> später <span class="tag">B</span></td><td>Es gibt keine richtige Kasse. Tattookalender-Kasse bringt TSE, Bon und Tagesabschluss gleich mit.</td></tr>
+      <tr><td>eine offene Ladenkasse mit Kassenbuch auf Papier</td><td class="k"><span class="tag">C</span></td><td>Tattoostudios müssen jeden Verkauf einzeln aufschreiben. Die Kasse in Tattookalender spart das.</td></tr>
+      <tr><td>Planity oder Shore mit eingebauter Kasse</td><td class="k"><span class="tag">B</span> / <span class="tag">C</span></td><td>Dort gibt es keine offene Schnittstelle. Wer wechselt, wechselt komplett.</td></tr>
+      <tr><td>mehrere Standorte</td><td class="k">je Standort</td><td>Jede Betriebsstätte meldet ihre Kassen einzeln. Pro Standort ein Weg, im besten Fall überall derselbe.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="foot"><span>Tattookalender, Stand 20.10.2026. Keine Steuerberatung, Einschätzung nach Gesetz und Erlass (Quellen Seite 5).</span><span>1 / 5</span></div>
+</section>
+
+<!-- ============ Seite 2: Recht ============ -->
+<section class="page">
+  <div class="run"><div class="mark">tattoo<span>kalender</span></div><div class="meta">Was das Gesetz verlangt</div></div>
+  <h2 style="font-size:17pt;margin-bottom:5mm">Was das Gesetz verlangt, in einfachen Worten</h2>
+
+  <div class="law">
+    <div class="it">
+      <h3>Wann ist ein Programm eine Kasse?</h3>
+      <p>Sobald man damit Bargeld erfassen <b>kann</b> – oder vor Ort angenommene Gutscheine und Guthaben. Dann hat es eine „Kassenfunktion“. Ein Kalender, der nur Online- oder Kartenzahlungen kennt, ist keine Kasse.<sup class="q">3</sup></p>
+    </div>
+    <div class="it">
+      <h3>TSE-Pflicht</h3>
+      <p>Jede Kasse braucht eine zertifizierte TSE. Signiert wird jeder Vorgang in dieser Kasse: Barzahlung, Kartenzahlung, Storno, Gutschein-Verkauf und -Einlösung, Einlage, Entnahme.<sup class="q">1 2 3</sup> Mehrere Geräte dürfen sich eine TSE teilen, wenn sie zu einem System gehören.</p>
+    </div>
+    <div class="it">
+      <h3>Beleg für jeden Verkauf</h3>
+      <p>Papier oder digital, zum Beispiel als QR-Code zum Scannen, als Link oder per E-Mail. Den Beleg nur auf dem Bildschirm zu zeigen, reicht nicht. Die Tattookalender-Kasse kann das schon (QR-Bon und 80-mm-Druck).<sup class="q">3</sup></p>
+    </div>
+    <div class="it">
+      <h3>Meldung ans Finanzamt über ELSTER</h3>
+      <p>Seit 1.1.2025 Pflicht. Je Betriebsstätte eine Meldung mit allen Kassen. Neue Kassen innerhalb eines Monats nach Anschaffung melden, ebenso das Abschalten. Gemeldet wird nur die Kasse, nicht ein angebundener Terminkalender ohne Kassenfunktion.<sup class="q">3 4</sup></p>
+    </div>
+    <div class="it">
+      <h3>Zwei Kassen gleichzeitig</h3>
+      <p>Erlaubt. Jede Kasse hat ihre eigene TSE und steht in der ELSTER-Meldung. Das Problem ist nicht das Nebeneinander, sondern die doppelte Buchung: Landet eine Zahlung in beiden Kassen, ist der Umsatz doppelt und der Kassenbestand stimmt nicht. Bei einer Prüfung fällt das sofort auf.</p>
+    </div>
+    <div class="it">
+      <h3>Offene Ladenkasse</h3>
+      <p>Ohne elektronische Kasse weiter erlaubt, mit täglichem Kassenbericht. Weil ein Tattoostudio seine Kunden kennt (Termin, Einwilligung), gilt die Ausnahme vom Einzel-Aufschreiben nach unserer Lesart nicht.<sup class="q">6</sup> Und: Wer Bargeld in einer Software erfasst, hat keine offene Ladenkasse mehr, sondern eine Kasse, die eine TSE braucht.</p>
+    </div>
+    <div class="it" style="grid-column: 1 / -1">
+      <h3>Was ab 2028 kommen soll</h3>
+      <p>Das Bundeskabinett hat am 23.09.2026 das Zweite Kassengesetz beschlossen, der Bundestag noch nicht. Geplant: Pflicht zur elektronischen Kasse ab mehr als 100.000&nbsp;€ Gesamtumsatz im Jahr (befreit, wer unter 12.000&nbsp;€ bar einnimmt), frühestens ab 1.1.2028. Der Papierbon soll durch einen digitalen Beleg ersetzt werden, etwa per QR-Code. Viele Tattoostudios liegen über 100.000&nbsp;€ Umsatz – für sie wird eine Kasse mit TSE dann Pflicht.<sup class="q">5</sup></p>
+    </div>
+  </div>
+
+  <div class="risk">
+    <h2>Was noch offen ist</h2>
+    <ul class="list">
+      <li><b>Lücke bei uns:</b> Kartenzahlungen per Stripe-QR-Code am Tresen und das Einlösen von Gutscheinen oder Guthaben signiert Tattookalender heute nicht. Das Finanzamt zählt die Gutschein-Einlösung ausdrücklich zu den Kassenvorgängen.<sup class="q">3</sup> Wir sollten beides vor dem Livegang mitsignieren (Zahlart „unbar“). Die TSE-Schnittstelle kennt diese Zahlart schon.</li>
+      <li><b>Online-Anzahlung:</b> Zahlt der Kunde zu Hause per Stripe-Link, behandeln wir das wie einen Onlineshop: keine Kassenfunktion, keine TSE, Beleg ist die Rechnung aus Tattookalender. So lesen wir den Erlass, ausdrücklich geregelt ist der Fall dort nicht.</li>
+      <li><b>Weg A braucht einen Schalter:</b> In einem Studio mit SumUp-Kasse darf Tattookalender gar kein Bargeld erfassen können, sonst ist es doch eine zweite Kasse. Diesen Schalter „Kasse aus, externe Kasse“ gibt es noch nicht.</li>
+      <li><b>Mehrere Inhaber:</b> Die TSE gehört dem Studio-Inhaber. Tattookalender speichert bisher einen fiskaly-Zugang für alle Studios. Sobald Studios verschiedener Inhaber die Kasse nutzen, braucht jeder eigene Zugangsdaten.</li>
+      <li><b>Gutscheine:</b> Ob ein Gutschein beim Verkauf schon versteuert wird (Einzweck) oder erst beim Einlösen (Mehrzweck), ändert den Bon. Das bitte einmal mit dem Steuerberater des Studios abstimmen.</li>
+      <li><b>Bußgeld:</b> Eine Kasse ohne passende TSE kann bis 25.000&nbsp;€ kosten (§ 379 AO). Ein Studio, das heute Bargeld in einer Software ohne TSE erfasst, hat dieses Risiko schon jetzt.</li>
+    </ul>
+  </div>
+
+  <div class="foot"><span>Hochgestellte Zahlen verweisen auf die Quellen auf Seite 5.</span><span>2 / 5</span></div>
+</section>
+
+<!-- ============ Seite 3: A und B ============ -->
+<section class="page">
+  <div class="run"><div class="mark">tattoo<span>kalender</span></div><div class="meta">Ablauf am Tresen, Wege A und B</div></div>
+
+  <div class="scene">
+    <div class="scene-head"><div class="letter">A</div><h2>SumUp bleibt die Kasse</h2><p>Tattookalender bucht am Tresen nichts selbst.</p></div>
+    <div class="flow" data-flow="A"></div>
+    <div class="cols">
+      <div>
+        <h3>So läuft es</h3>
+        <p>Termin, Erinnerung, Einwilligung und Anzahlung laufen über Tattookalender. Den Rest kassiert die Rezeption in SumUp, bar oder mit Karte. SumUp signiert und gibt den Bon. Gutscheine verkauft und löst das Studio ebenfalls in SumUp ein.</p>
+        <p>Danach steht der Termin in Tattookalender auf „bezahlt über SumUp“, mit SumUp-Belegnummer. Automatisch: Tattookalender holt alle 15 Minuten die SumUp-Umsätze und schlägt den passenden Termin vor (gleicher Betrag wie der offene Rest, gleicher Tag, Uhrzeit passt). Die Rezeption bestätigt mit einem Klick. Ganz ohne Klick geht es nicht, weil SumUp keine Terminnummer mitschickt.<sup class="q">8</sup></p>
+      </div>
+      <div>
+        <h3>Gut und schwierig</h3>
+        <ul class="list pm">
+          <li class="plus">Kein Umstieg, keine neue TSE, keine neue ELSTER-Meldung</li>
+          <li class="plus">Leichtester Einstieg im Verkaufsgespräch</li>
+          <li class="minus">Zwei Programme am Tresen</li>
+          <li class="minus">Steuerberater bekommt zwei Exporte: Online-Zahlungen aus Tattookalender, Tresen aus SumUp. Tattookalender darf die SumUp-Zahlungen nicht noch einmal als Umsatz exportieren.</li>
+          <li class="minus">Kasse-Zusatz (19&nbsp;€) wird nicht verkauft</li>
+        </ul>
+      </div>
+      <div class="effort">
+        <h3>Aufwand für uns</h3>
+        <div class="d">1–2 Tage</div><p>Schalter „externe Kasse“ und Feld für die Belegnummer</p>
+        <div class="d">+3–5 Tage</div><p>Automatischer SumUp-Abgleich (Zugang je Studio, Abruf, Vorschlag). Laufende Kosten: keine bekannt.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="scene">
+    <div class="scene-head"><div class="letter">B</div><h2>Tattookalender wird die Kasse</h2><p>SumUp nur noch als Kartenleser.</p></div>
+    <div class="flow" data-flow="B"></div>
+    <div class="cols">
+      <div>
+        <h3>So läuft es</h3>
+        <p>Die Kasse von Tattookalender mit TSE (fiskaly) ist die einzige Kasse. Bar wie heute. Für Karte bleibt das SumUp-Gerät: Entweder tippt die Rezeption den Betrag ein und wählt in Tattookalender „Karte (Terminal)“, oder Tattookalender schickt den Betrag direkt ans Gerät (SumUp Cloud-API für das Solo, oder Stripe Terminal).<sup class="q">10 16</sup> Tattookalender signiert die Zahlung als „unbar“ und gibt den Bon aus.</p>
+        <p>Die SumUp-App bucht dann nur noch Karte, nie „Bar“, und die SumUp-Kasse wird über ELSTER abgemeldet, die Tattookalender-Kasse angemeldet.</p>
+      </div>
+      <div>
+        <h3>Gut und schwierig</h3>
+        <ul class="list pm">
+          <li class="plus">Eine Kasse, eine TSE, ein Bon, ein Export</li>
+          <li class="plus">Kasse-Zusatz wird verkauft</li>
+          <li class="minus">Studio muss umsteigen und umlernen</li>
+          <li class="minus">Betrag von Hand eintippen: Tippfehler möglich, Abgleich mit dem Tagesbericht des Terminals nötig</li>
+          <li class="minus">Widerspricht der Entscheidung vom 14.10.2026 „kein Kartenterminal“. Heute lehnt Tattookalender Karte am Tresen bewusst ab.</li>
+        </ul>
+      </div>
+      <div class="effort">
+        <h3>Aufwand für uns</h3>
+        <div class="d">2–3 Tage</div><p>Karte am Tresen freischalten, Zahlart „unbar“ an die TSE, Tagesabschluss bar und Karte getrennt</p>
+        <div class="d">+4–8 Tage</div><p>Gerät direkt ansteuern. Stripe Terminal: Gerät 259&nbsp;€ netto, 1,4&nbsp;% + 0,10&nbsp;€ je Zahlung.<sup class="q">16</sup></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend"><span><i class="s3"></i>Hier steht die Kasse</span><span><i class="s1"></i>TSE signiert hier</span><span><i class="s2"></i>sollte signiert werden, ist noch offen</span></div>
+  <div class="foot"><span>Tattookalender, Stand 20.10.2026</span><span>3 / 5</span></div>
+</section>
+
+<!-- ============ Seite 4: C + Systeme ============ -->
+<section class="page">
+  <div class="run"><div class="mark">tattoo<span>kalender</span></div><div class="meta">Weg C und gängige Kassen</div></div>
+
+  <div class="scene">
+    <div class="scene-head"><div class="letter">C</div><h2>Bar in Tattookalender, Karte online</h2><p>Der heutige Bauplan, ohne Kartenterminal.</p></div>
+    <div class="flow" data-flow="C"></div>
+    <div class="cols">
+      <div>
+        <h3>So läuft es</h3>
+        <p>Anzahlung per Stripe-Link. Am Tresen: Bargeld in der Tattookalender-Kasse, die TSE signiert sofort, der Kunde scannt den Bon. Wer mit Karte zahlen will, scannt einen QR-Code und zahlt am eigenen Handy über Stripe. Abends Tagesabschluss mit Zählprotokoll, Übertrag an DSFinV-K.</p>
+      </div>
+      <div>
+        <h3>Gut und schwierig</h3>
+        <ul class="list pm">
+          <li class="plus">Fertig gebaut, keine Hardware, keine Terminal-Miete</li>
+          <li class="minus">Karte über Stripe kostet das Studio Stripe-Gebühr plus 5&nbsp;% Plattformgebühr, also mehr als ein Terminal</li>
+          <li class="minus">Manche Kunden wollen ihre Karte einfach stecken</li>
+        </ul>
+      </div>
+      <div class="effort">
+        <h3>Aufwand für uns</h3>
+        <div class="d">1–2 Tage</div><p>QR-Zahlungen und Gutschein-Einlösungen mitsignieren, dann fiskaly live schalten</p>
+      </div>
+    </div>
+    <h3 style="margin-top:4.5mm">Brauchen Online-Zahlungen eine TSE?</h3>
+    <div class="q-online" style="margin-top:1.5mm">
+      <div><div class="v">Zu Hause per Link</div><p>Keine Kasse beteiligt, keine TSE. Beleg ist die Rechnung aus Tattookalender. Wie ein Onlineshop.</p></div>
+      <div><div class="v">Per QR-Code am Tresen</div><p>Geld fließt über Stripe, aber die Zahlung wird in der Kasse zum Termin erfasst. Darum mitsignieren.</p></div>
+      <div><div class="v">Überweisung auf Rechnung</div><p>Keine TSE. Normale Rechnung mit Zahlungsziel, wie bei der Ausfallgebühr.</p></div>
+    </div>
+  </div>
+
+  <h2 style="margin-top:7.5mm">Gängige Kassen in Tattoostudios</h2>
+  <table>
+    <thead><tr><th style="width:17%">System</th><th style="width:24%">Kasse mit TSE</th><th style="width:33%">Umsätze für den Abgleich auslesen</th><th>Für uns</th></tr></thead>
+    <tbody>
+      <tr><td class="k">SumUp</td><td>Ja, Cloud-TSE laut SumUp ohne Aufpreis (App mit Solo, POS Lite, POS Pro)<sup class="q">7</sup></td><td>Ja: Umsatzliste mit Zeitfilter und Einzelabruf mit Bon-Daten. Das Solo-Gerät lässt sich zusätzlich von außen ansteuern.<sup class="q">8 9 10</sup></td><td>Häufigster Fall, zuerst anbinden</td></tr>
+      <tr><td class="k">Zettle (PayPal)</td><td>Ja, TSE-Version laut Vergleichsportal 9,90&nbsp;€ im Monat<sup class="q">12</sup></td><td>Ja: Kaufliste bis 3 Jahre zurück, mit Zahlart bar oder Karte und Belegnummer<sup class="q">11</sup></td><td>Kein Testkonto, Test nur mit echtem Studio</td></tr>
+      <tr><td class="k">ready2order</td><td>Ja</td><td>Ja: offene Schnittstelle mit Rechnungen und Webhooks, Studio gibt den Zugriff frei<sup class="q">13</sup></td><td>Gut anbindbar</td></tr>
+      <tr><td class="k">orderbird</td><td>Ja</td><td>Keine offene Schnittstelle gefunden</td><td>Gastro-Kasse, im Tattoostudio selten</td></tr>
+      <tr><td class="k">Shore Kasse</td><td>iPad-Kasse auf Basis von Tillhub<sup class="q">14</sup></td><td>Keine offene Schnittstelle gefunden</td><td>Wechsel statt Verbindung</td></tr>
+      <tr><td class="k">Planity</td><td>Kasse als eigene Paketstufe, laut Drittquelle TSE-konform<sup class="q">15</sup></td><td>Keine offene Schnittstelle gefunden</td><td>Direkter Wettbewerber</td></tr>
+      <tr><td class="k">Stripe Terminal</td><td>Nein, nur Kartenzahlung. Die TSE muss die Kasse liefern.</td><td>Ja, über die Stripe-Anbindung, die wir schon haben<sup class="q">16</sup></td><td>Passt zu Weg B</td></tr>
+    </tbody>
+  </table>
+
+  <div class="legend"><span><i class="s3"></i>Hier steht die Kasse</span><span><i class="s1"></i>TSE signiert hier</span><span><i class="s2"></i>sollte signiert werden, ist noch offen</span></div>
+  <div class="foot"><span>Angaben zu fremden Kassen laut Hersteller oder Vergleichsportal, nicht von uns getestet.</span><span>4 / 5</span></div>
+</section>
+
+<!-- ============ Seite 5: Bausteine + Quellen ============ -->
+<section class="page">
+  <div class="run"><div class="mark">tattoo<span>kalender</span></div><div class="meta">Was wir bauen könnten</div></div>
+  <h2 style="font-size:17pt;margin-bottom:4mm">Was wir bauen könnten</h2>
+  <table>
+    <thead><tr><th style="width:33%">Baustein</th><th style="width:10%">Für Weg</th><th class="num" style="width:13%">Aufwand</th><th>Laufende Kosten, Hinweis</th></tr></thead>
+    <tbody>
+      <tr><td class="k">QR-Zahlungen und Gutschein-Einlösungen signieren</td><td>B, C</td><td class="num">1–2 Tage</td><td>Keine extra. Schließt die Lücke von Seite 2, gehört vor den Livegang.</td></tr>
+      <tr><td class="k">fiskaly-Zugang je Inhaber</td><td>B, C</td><td class="num">1–2 Tage</td><td>fiskaly-Preis je Kasse, Angebot noch offen. Nötig ab dem zweiten Kunden mit Kasse.</td></tr>
+      <tr><td class="k">Schalter „externe Kasse“ mit Belegnummer</td><td>A</td><td class="num">1–2 Tage</td><td>Keine. Damit sind SumUp-Studios sofort anschließbar.</td></tr>
+      <tr><td class="k">SumUp-Abgleich automatisch</td><td>A</td><td class="num">3–5 Tage</td><td>Keine bekannt. Zugang über SumUp-Anmeldung des Studios.</td></tr>
+      <tr><td class="k">Zettle- oder ready2order-Abgleich</td><td>A</td><td class="num">je 2–3 Tage</td><td>Keine bekannt. Nutzt den Abgleich aus dem SumUp-Baustein.</td></tr>
+      <tr><td class="k">Karte am Tresen, Betrag eintippen</td><td>B</td><td class="num">2–3 Tage</td><td>Keine. Hebt „kein Kartenterminal“ auf, braucht dein OK.</td></tr>
+      <tr><td class="k">Terminal direkt ansteuern</td><td>B</td><td class="num">4–8 Tage</td><td>SumUp Solo per Cloud-API oder Stripe Terminal (259&nbsp;€ Gerät, 1,4&nbsp;% + 0,10&nbsp;€).</td></tr>
+    </tbody>
+  </table>
+
+  <div style="display:grid;grid-template-columns:1.1fr 1fr;gap:8mm;margin-top:6mm">
+    <div>
+      <h2>Unsere Empfehlung</h2>
+      <ol class="steps">
+        <li>Vor dem fiskaly-Livegang die zwei Lücken schließen: QR- und Gutschein-Zahlungen signieren, fiskaly-Zugang je Inhaber.</li>
+        <li>Schalter „externe Kasse“ bauen. Ab dann gilt im Verkauf: Studios mit SumUp behalten ihre Kasse (Weg A).</li>
+        <li>Den SumUp-Abgleich bauen, sobald das erste SumUp-Studio unterschreibt.</li>
+        <li>Alle ohne TSE-Kasse bekommen die Tattookalender-Kasse (Weg C, 19&nbsp;€ oder im Komplett-Paket).</li>
+        <li>Weg B erst bauen, wenn mehrere Studios Karte am Tresen in Tattookalender verlangen.</li>
+      </ol>
+    </div>
+    <div>
+      <h2>Satz fürs Verkaufsgespräch</h2>
+      <p style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:12pt;line-height:1.25;letter-spacing:-0.015em">„Deine SumUp-Kasse bleibt, wie sie ist. Tattookalender kümmert sich um alles bis zum Tresen und weiß danach, dass bezahlt ist.“</p>
+      <p class="small" style="margin-top:2.5mm">Und für Studios ohne richtige Kasse: „Bargeld mit TSE und digitalem Bon ist bei uns schon drin. Ab 2028 wird das für viele Studios Pflicht.“</p>
+    </div>
+  </div>
+
+  <h2 style="margin-top:6.5mm;font-size:11pt">Quellen (abgerufen 20.10.2026)</h2>
+  <div class="sources">
+    <p><b>1</b> § 146a AO, Ordnungsvorschrift für elektronische Aufzeichnungssysteme. <a>gesetze-im-internet.de/ao_1977/__146a.html</a></p>
+    <p><b>2</b> Kassensicherungsverordnung (KassenSichV). <a>gesetze-im-internet.de/kassensichv/</a></p>
+    <p><b>3</b> BMF, Neufassung AEAO zu § 146a vom 30.06.2023, gültig ab 1.1.2024: Nr. 1.2 Kassenfunktion, 1.6 eine TSE je System, 1.10.2 Gutschein-Einlösung, 1.16 Mitteilung, 2.5 Beleg, 2.6 nur Kasse meldepflichtig. <a>lfst.bayern.de/fileadmin/RESSOURCEN/INFORMATIONEN/Steuerinfos/Weitere_Themen/Elektronische_Kassensysteme/2023-06-30-AEAO-Par-146-AO.pdf</a></p>
+    <p><b>4</b> Mitteilungspflicht ab 1.1.2025 (BMF-Schreiben 28.06.2024), Frist 31.07.2025 für Altgeräte, sonst ein Monat. <a>grantthornton.de/themen/2025/mitteilungspflicht-fuer-elektronische-kassensysteme-frist-endet-am-31.-juli-2025</a></p>
+    <p><b>5</b> Zweites Kassengesetz, Regierungsentwurf, Kabinett 23.09.2026: 100.000&nbsp;€ Umsatz, 12.000&nbsp;€ bar, ab 2028, digitaler Beleg. <a>deubner-steuern.de/themen/kasseng-gesetz-zum-schutz-vor-kassenmanipulation/kassenpflicht-2028-zweites-kassengesetz.html</a>; Vorentwurf: <a>topagrar.com/betriebsleitung/news/kassenpflicht-doch-ausnahmen-geplant-20028162.html</a></p>
+    <p><b>6</b> Einzelaufzeichnung und Ausnahme bei Dienstleistungen (AEAO zu § 146). <a>deubner-steuern.de/themen/kasseng-gesetz-zum-schutz-vor-kassenmanipulation/kassenfuehrung-bmf-regelt-einzelaufzeichnungspflicht.html</a></p>
+    <p><b>7</b> SumUp, KassenSichV und TSE. <a>sumup.com/de-de/kassensichv-tse/</a>, <a>sumup.com/de-de/kassensicherungsverordnung/</a></p>
+    <p><b>8</b> SumUp Transactions-API (Liste, Einzelabruf, Berechtigung transactions.history). <a>developer.sumup.com/api/transactions</a></p>
+    <p><b>9</b> SumUp Receipts-API. <a>developer.sumup.com/api/receipts</a></p>
+    <p><b>10</b> SumUp Cloud-API für das Solo-Gerät. <a>developer.sumup.com/terminal-payments/cloud-api</a></p>
+    <p><b>11</b> Zettle Purchase-API. <a>github.com/iZettle/api-documentation/blob/master/purchase.adoc</a></p>
+    <p><b>12</b> Zettle TSE-Preis (Vergleichsportal, nicht vom Hersteller bestätigt). <a>trusted.de/zettle-by-paypal</a></p>
+    <p><b>13</b> ready2order API (Rechnungen, Webhooks). <a>ready2order.com/api/doc</a></p>
+    <p><b>14</b> Shore Kasse im App Store (auf Basis Tillhub). <a>apps.apple.com/app/id1395163886</a></p>
+    <p><b>15</b> Planity-Pakete laut Drittquelle (Wettbewerber-Blog, unsicher). <a>pabau.com/de/blog/planity-kosten/</a></p>
+    <p><b>16</b> Stripe Terminal Deutschland, Preise. <a>stripe.com/de/terminal</a>; S700: <a>docs.stripe.com/terminal/readers/stripe-reader-s700</a></p>
+    <p><b>Intern</b> Stand Tattookalender: apps/tf-studio/docs/BETRIEB.md (TSE/Kasse), docs/VERFAHRENSDOKUMENTATION-KASSE.md, src/lib/pos/actions.ts (Karte am Tresen abgelehnt), src/lib/tse/receipt.ts (nur Zahlart bar).</p>
+  </div>
+
+  <div class="foot"><span>Keine Steuer- oder Rechtsberatung. Einschätzung nach Gesetz, Erlass und Herstellerangaben.</span><span>5 / 5</span></div>
+</section>
+
+<script>
+/* Ablauf-Grafiken: Spuren (Kunde / Tattookalender / Fremdsystem), Schritte von links nach rechts.
+   Die Spur, in der die Kasse steht, ist gold hinterlegt; das Siegel zeigt, wo die TSE signiert. */
+const FLOWS = {
+  A: {
+    till: 2, steps: 4,
+    lanes: [["Kunde", ""], ["Tattookalender", "Termine, Online-Zahlung"], ["SumUp-Kasse", "eigene TSE"]],
+    nodes: [
+      { s: 0, l: 1, t: ["Termin gebucht,", "Anzahlung online", "per Stripe-Link"] },
+      { s: 1, l: 0, t: ["Tattoo-Termin", "im Studio"] },
+      { s: 2, l: 2, t: ["Rest kassieren,", "bar oder Karte,", "Bon aus SumUp"], seal: "on" },
+      { s: 3, l: 1, t: ["„bezahlt über SumUp“,", "von Hand oder", "per Abgleich"] },
+    ],
+    edges: [[0, 1], [1, 2], [2, 3]],
+  },
+  B: {
+    till: 1, steps: 5,
+    lanes: [["Kunde", ""], ["Tattookalender-Kasse", "eigene TSE (fiskaly)"], ["SumUp-Gerät", "nur Kartenleser"]],
+    nodes: [
+      { s: 0, l: 1, t: ["Termin gebucht,", "Anzahlung online", "per Stripe-Link"] },
+      { s: 1, l: 0, t: ["Tattoo-Termin", "im Studio"] },
+      { s: 2, l: 1, t: ["Rest abrechnen,", "bar oder Karte"] },
+      { s: 3, l: 2, t: ["Karte zahlen,", "Betrag kommt aus", "Tattookalender"] },
+      { s: 4, l: 1, t: ["Signatur bar", "oder unbar, Bon", "per QR oder Druck"], seal: "on" },
+    ],
+    edges: [[0, 1], [1, 2], [2, 3], [3, 4], [2, 4]],
+  },
+  C: {
+    till: 1, steps: 4,
+    lanes: [["Kunde", ""], ["Tattookalender-Kasse", "eigene TSE (fiskaly)"], ["Stripe", "Karte online"]],
+    nodes: [
+      { s: 0, l: 2, t: ["Anzahlung online", "per Link, zu Hause"] },
+      { s: 1, l: 0, t: ["Tattoo-Termin", "im Studio"] },
+      { s: 2, l: 1, t: ["Rest bar am Tresen,", "ins Kassenbuch,", "Bon per QR"], seal: "on" },
+      { s: 2, l: 2, t: ["Rest mit Karte:", "QR-Code, Kunde zahlt", "am eigenen Handy"], seal: "open" },
+      { s: 3, l: 1, t: ["Tagesabschluss,", "DSFinV-K-Export"] },
+    ],
+    edges: [[0, 1], [1, 2], [1, 3], [2, 4], [3, 4]],
+  },
+};
+
+const C = { ink: "#141416", muted: "#66645f", line: "#d9d5cc", gold: "#c9a24f", deep: "#7d5a12", tint: "#f6eedb", night: "#0b0b0d" };
+const W = 900, LABEL = 150, TOP = 22, LANE = 66, NODE_H = 50;
+
+function el(tag, attrs, text) {
+  const e = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (text != null) e.textContent = text;
+  return e;
+}
+
+function draw(holder, f) {
+  const H = TOP + LANE * f.lanes.length + 4;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, "font-family": "Inter, sans-serif" });
+  const defs = el("defs", {});
+  const m = el("marker", { id: "ah" + holder.dataset.flow, viewBox: "0 0 8 8", refX: "7", refY: "4", markerWidth: "7", markerHeight: "7", orient: "auto" });
+  m.appendChild(el("path", { d: "M0,0 L8,4 L0,8 z", fill: C.muted }));
+  defs.appendChild(m); svg.appendChild(defs);
+
+  const colW = (W - LABEL) / f.steps;
+  // Spuren
+  f.lanes.forEach(([name, sub], i) => {
+    const y = TOP + i * LANE;
+    svg.appendChild(el("rect", { x: 0, y, width: W, height: LANE, fill: i === f.till ? C.tint : "none" }));
+    svg.appendChild(el("line", { x1: 0, x2: W, y1: y, y2: y, stroke: C.line, "stroke-width": 1 }));
+    const ty = y + LANE / 2 + (sub ? -3 : 4);
+    svg.appendChild(el("text", { x: 4, y: ty, "font-size": 12.5, "font-weight": 700, fill: C.ink, "font-family": "Bricolage Grotesque, sans-serif" }, name));
+    if (sub) svg.appendChild(el("text", { x: 4, y: ty + 14, "font-size": 10, fill: i === f.till ? C.deep : C.muted }, sub));
+  });
+  svg.appendChild(el("line", { x1: 0, x2: W, y1: TOP + LANE * f.lanes.length, y2: TOP + LANE * f.lanes.length, stroke: C.line, "stroke-width": 1 }));
+  // Schrittnummern
+  for (let s = 0; s < f.steps; s++) {
+    svg.appendChild(el("text", { x: LABEL + s * colW + 10, y: 14, "font-size": 10, "font-weight": 600, fill: C.muted }, `Schritt ${s + 1}`));
+  }
+  const box = (n) => {
+    const x = LABEL + n.s * colW + 10, w = colW - 30;
+    const y = TOP + n.l * LANE + (LANE - NODE_H) / 2;
+    return { x, y, w, h: NODE_H };
+  };
+  // Verbindungen zuerst (unter den Kästen)
+  f.edges.forEach(([a, b]) => {
+    const A = box(f.nodes[a]), B = box(f.nodes[b]);
+    const x1 = A.x + A.w, y1 = A.y + A.h / 2, x2 = B.x - 2, y2 = B.y + B.h / 2;
+    let d;
+    if (Math.abs(y1 - y2) < 1) d = `M${x1},${y1} H${x2}`;
+    else { const xm = x1 + 9; d = `M${x1},${y1} H${xm} V${y2} H${x2}`; }
+    svg.appendChild(el("path", { d, fill: "none", stroke: C.muted, "stroke-width": 1.3, "marker-end": `url(#ah${holder.dataset.flow})` }));
+  });
+  // Kästen
+  f.nodes.forEach((n) => {
+    const b = box(n);
+    const inTill = n.l === f.till;
+    svg.appendChild(el("rect", { x: b.x, y: b.y, width: b.w, height: b.h, rx: 7, fill: "#ffffff", stroke: inTill ? C.ink : C.line, "stroke-width": inTill ? 1.4 : 1.1 }));
+    const lh = 13, start = b.y + b.h / 2 - ((n.t.length - 1) * lh) / 2 + 4;
+    n.t.forEach((line, i) => svg.appendChild(el("text", { x: b.x + 10, y: start + i * lh, "font-size": 10.5, fill: C.ink }, line)));
+    if (n.seal) {
+      const cx = b.x + b.w - 14, cy = b.y;
+      if (n.seal === "on") {
+        svg.appendChild(el("circle", { cx, cy, r: 13, fill: C.gold, stroke: C.paper || "#fcfbf8", "stroke-width": 2 }));
+        svg.appendChild(el("text", { x: cx, y: cy + 3.1, "font-size": 8.5, "font-weight": 700, fill: C.night, "text-anchor": "middle" }, "TSE"));
+      } else {
+        svg.appendChild(el("circle", { cx, cy, r: 13, fill: "#fff", stroke: C.deep, "stroke-width": 1.3, "stroke-dasharray": "3 2.5" }));
+        svg.appendChild(el("text", { x: cx, y: cy + 3.1, "font-size": 8.5, "font-weight": 700, fill: C.deep, "text-anchor": "middle" }, "TSE"));
+      }
+    }
+  });
+  holder.appendChild(svg);
+}
+document.querySelectorAll("[data-flow]").forEach((h) => draw(h, FLOWS[h.dataset.flow]));
+</script>
+</body>
+</html>

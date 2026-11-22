@@ -1,0 +1,11 @@
+[build]
+  publish = "."
+  command = ""
+
+# noindex bleibt bis zum Live-Gang, dann diese Zeile und die Meta-Tags entfernen.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"

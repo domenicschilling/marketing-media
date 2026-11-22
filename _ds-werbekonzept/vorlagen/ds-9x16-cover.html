@@ -1,0 +1,24 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><title>DS 9:16 – Reel-Cover und Story</title>
+<!-- 9:16 (1080 x 1920) für Reel-Cover, Story-Bild und Story-Anzeige.
+     Alles Wichtige im Feld x 80–1000, y 269–1248 (Meta Safe Zone 14 % / 35 % / 6 %, x mit 80 px DS-Rand).
+     Zeile Oberkante y 300; Absender mit Unterkante y 1248 (nie tiefer). Darunter nur Bild, kein Text, kein Logo, kein Knopf.
+     Hook-Zeile: 2–4 Wörter bis 132 px, 5–8 Wörter 96 px, max. 36 Zeichen je Zeile bei 132 px. Klasse .foto entfernen = Typo-Story auf Grund. -->
+<link rel="stylesheet" href="../../_ds-werbekonzept/vorlagen/ds.css">
+<style>
+/* MARKE – nur hier ändern (Werte aus Kit/brand.json oder Markenkarte in 05). Platzhalter: Startwelt "Hell, Grotesk" aus ds.css */
+:root { --grund:#F1F1EC; --flaeche:#E2E3DD; --tinte:#121417; --gedaempft:#575C63; --akzent:#C42B17; --auf-foto:#F1F1EC;
+        --hf:"Schibsted Grotesk",sans-serif; --hw:800; --hls:-0.025em; --hlh:.98; --bf:"Schibsted Grotesk",sans-serif; --korn:.05; }
+/* RASTER 9:16 – nicht ändern */
+:root { --w:1080px; --h:1920px; --h1:120px; --klein:32px; }
+.foto { inset:0; width:100%; height:100%; }
+.zeile { left:80px; top:300px; width:900px; color:var(--auf-foto); }
+.ds .zeile.dunkel, .ds .marke.dunkel { color:var(--auf-foto-dunkel); }
+.ds .marke { left:80px; top:1206px; font-size:var(--klein); line-height:42px; color:var(--auf-foto); font-weight:600; }  /* Unterkante 1248 */
+.logo { top:1196px; }                                               /* 52 px hoch, Unterkante 1248 */
+</style></head><body>
+<div class="ds" data-w="1080" data-h="1920">
+  <img class="foto" src="platzhalter-foto.svg" alt="" style="object-position:50% 50%">
+  <div class="zeile">Zwei bis vier Wörter.</div>
+  <div class="klein marke">Marke · Ort</div>
+  <div class="korn"></div>
+</div></body></html>

@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>prüfklar: Der Sehtest für Ihre Website</title>
+<meta name="description" content="Können Ihre Kunden Ihre Website lesen? Gratis-Schnelltest, danach auf Wunsch ein technischer Prüfbericht zur digitalen Barrierefreiheit. Für Online-Shops und Firmenwebsites.">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#fbfaf6">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23fbfaf6'/%3E%3Cpath d='M26 13.2A11 11 0 1 0 26 18.8' fill='none' stroke='%230a0a0a' stroke-width='6'/%3E%3C/svg%3E">
+<link rel="preload" href="assets/fonts/hepta-slab-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/atkinson-next-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/pk.css">
+<script>document.documentElement.classList.add('js')</script>
+<noscript><style>.linsen{display:none}.nur-ohne-js{display:block!important}</style></noscript>
+<script src="assets/pk.js" defer></script>
+</head>
+<body>
+<a class="sprung" href="#inhalt">Zum Inhalt springen</a>
+
+<header class="kopf">
+  <a class="marke" href="#inhalt" aria-label="prüfklar, zum Seitenanfang">
+    <svg viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M27 13.1A11.5 11.5 0 1 0 27 18.9" fill="none" stroke="currentColor" stroke-width="6.2"/></svg>
+    <span>prüfklar</span>
+  </a>
+  <nav aria-label="Hauptnavigation">
+    <ul>
+      <li class="nur-gross"><a href="#tafeln">Besser so?</a></li>
+      <li class="nur-gross"><a href="#preise">Preise</a></li>
+      <li class="nur-gross"><a href="#fragen">Fragen</a></li>
+      <li><a href="https://pruefklar.de/#code-bereich">Prüfcode aus dem Brief</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main id="inhalt" tabindex="-1">
+
+  <section class="hero" aria-labelledby="titel">
+    <div class="hero-tafel">
+      <h1 class="reihen" id="titel">
+        <span class="reihe r1" style="--b:3.545">Kann</span>
+        <span class="reihe r2" style="--b:6.684">Ihr Kunde</span>
+        <span class="reihe r3" style="--b:10.52">das hier lesen?</span>
+      </h1>
+      <figure class="blass">
+        <svg class="blass-knopf" role="img" aria-label="Vorführung: ein Einkaufsknopf mit der Aufschrift „In den Warenkorb“, weiße Schrift auf hellem Beige, kaum lesbar.">
+          <rect class="k-blass" width="100%" height="100%"/>
+          <text class="k-blass-t" x="50%" y="50%" dy=".35em" text-anchor="middle">In den Warenkorb</text>
+        </svg>
+        <figcaption><span class="etikett">Demo</span> Absichtlich zu blass. Da steht „In den Warenkorb“, Kontrast 1,6 : 1.</figcaption>
+      </figure>
+    </div>
+
+    <div class="hero-duo">
+      <div class="hero-duo-innen">
+        <p class="antwort">Wenn nicht, kauft er woanders.</p>
+        <p class="kurz">prüfklar prüft die Barrierefreiheit von Online-Shops und Firmenwebsites: wo Kunden hängen bleiben und wie Sie es beheben.</p>
+
+        <form class="test" id="test" novalidate data-ergebnis="ergebnis-oben">
+          <label for="adresse-oben">Adresse Ihrer Website</label>
+          <div class="test-zeile">
+            <input id="adresse-oben" name="url" type="text" inputmode="url" autocomplete="url" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" placeholder="www.ihre-firma.de" aria-describedby="hinweis-oben fehler-oben">
+            <button type="submit">Gratis testen</button>
+          </div>
+          <p class="fehler" id="fehler-oben" hidden></p>
+          <p class="hinweis" id="hinweis-oben">Ohne Anmeldung, nur Ihre Startseite. <strong>Entwurf:</strong> Hier läuft nur eine Vorführung, Ihre Adresse wird nicht gesendet.</p>
+          <p class="hinweis nur-ohne-js">Ohne JavaScript startet die Vorführung nicht. Alles Weitere auf dieser Seite können Sie lesen.</p>
+        </form>
+
+        <div class="linsen" role="group" aria-labelledby="linsen-titel">
+          <p class="linsen-titel" id="linsen-titel">Oder gleich ausprobieren: diese Seite mit anderen Augen.</p>
+          <div class="linsen-reihe">
+            <button type="button" class="linse" data-linse="unscharf" aria-pressed="false">
+              <span class="glas" aria-hidden="true"><svg viewBox="0 0 60 60"><filter id="g-weich" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2.2"/></filter><text x="30" y="40" text-anchor="middle" class="g-unscharf" filter="url(#g-weich)">Aa</text></svg></span>
+              <span class="linse-name">Lesebrille vergessen</span>
+            </button>
+            <button type="button" class="linse" data-linse="sonne" aria-pressed="false">
+              <span class="glas" aria-hidden="true"><svg viewBox="0 0 60 60"><text x="30" y="40" text-anchor="middle" class="g-sonne">Aa</text><path class="g-strahl" d="M0 46 46 0h14L0 60Z"/></svg></span>
+              <span class="linse-name">Sonne aufs Display</span>
+            </button>
+            <button type="button" class="linse" data-linse="rotgruen" aria-pressed="false">
+              <span class="glas" aria-hidden="true"><svg viewBox="0 0 60 60"><rect class="g-r" width="30" height="60"/><rect class="g-g" x="30" width="30" height="60"/></svg></span>
+              <span class="linse-name">Rot-Grün-Schwäche</span>
+            </button>
+            <button type="button" class="linse" data-linse="vorlesen" aria-haspopup="dialog">
+              <span class="glas glas-dunkel" aria-hidden="true"><svg viewBox="0 0 60 60"><path class="g-laut" d="M14 24h7l10-8v28l-10-8h-7ZM37 23a10 10 0 0 1 0 14M42 18a17 17 0 0 1 0 24"/></svg></span>
+              <span class="linse-name">Vorlese&shy;programm</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="linsenleiste" id="linsenleiste" hidden>
+          <p><span class="etikett etikett-hell">Demo, vereinfacht</span> <span id="linsen-text"></span></p>
+          <button type="button" id="scharf">Normal sehen</button>
+        </div>
+      </div>
+      <div class="ergebnis-platz" id="ergebnis-oben"></div>
+    </div>
+  </section>
+
+  <section class="abschnitt tafeln-abschnitt" id="tafeln" aria-labelledby="tafeln-titel">
+    <div class="eng">
+      <h2 class="reihen" id="tafeln-titel" data-fokus>
+        <span class="reihe" style="--b:6.584">Besser so</span>
+        <span class="reihe" style="--b:5.808">oder so?</span>
+      </h2>
+      <p class="vorspann">Die Frage vom Augenarzt, gestellt an Ihre Website. Drei typische Stellen, alle aus unserem erfundenen Beispiel-Shop „Röstwerk Regnitz“.</p>
+    </div>
+
+    <div class="band" id="band" tabindex="0" role="group" aria-label="Drei Beispiele, seitlich wischen oder mit den Pfeiltasten bewegen">
+      <ul>
+        <li class="platte">
+          <div class="vergleich">
+            <div class="halb halb-rot">
+              <p class="seite">Heute</p>
+              <div class="kachel">
+                <p class="k-name">Hausmischung</p>
+                <p class="k-preis">9,90 € / 250 g</p>
+                <svg viewBox="0 0 140 36" role="img" aria-label="Einkaufsknopf „In den Warenkorb“: weiße Schrift auf Beige, kaum lesbar."><rect class="k-blass" width="140" height="36"/><text class="k-blass-t k-klein" x="70" y="23" text-anchor="middle">In den Warenkorb</text></svg>
+              </div>
+              <p class="wert"><span>Kontrast</span>1,6 : 1</p>
+            </div>
+            <div class="halb halb-gruen">
+              <p class="seite">Nachher</p>
+              <div class="kachel">
+                <p class="k-name">Hausmischung</p>
+                <p class="k-preis">9,90 € / 250 g</p>
+                <p class="k-knopf">In den Warenkorb</p>
+              </div>
+              <p class="wert"><span>Kontrast</span>13,7 : 1</p>
+            </div>
+          </div>
+          <h3>Der wichtigste Knopf ist kaum lesbar</h3>
+          <p><strong>Ihr Kunde:</strong> Mit Sehschwäche oder am Handy in der Sonne ist „In den Warenkorb“ kaum zu erkennen.</p>
+          <p><strong>Lösung:</strong> eine dunklere Farbe für den Knopf. Meist eine kleine Änderung.</p>
+        </li>
+        <li class="platte">
+          <div class="vergleich">
+            <div class="halb halb-rot">
+              <p class="seite">Heute</p>
+              <p class="spricht">Vorleseprogramm sagt:</p>
+              <p class="gesagt">„Link. Bild.“</p>
+            </div>
+            <div class="halb halb-gruen">
+              <p class="seite">Nachher</p>
+              <p class="spricht">Vorleseprogramm sagt:</p>
+              <p class="gesagt gesagt-lang">„Link. Haus&shy;mischung, 250-g-Beutel.“</p>
+            </div>
+          </div>
+          <h3>Das Produktbild bleibt stumm</h3>
+          <p><strong>Ihr Kunde:</strong> Er lässt sich die Seite vorlesen und hört nur „Link. Bild.“, nicht, welcher Kaffee das ist.</p>
+          <p><strong>Lösung:</strong> ein kurzer Text zu jedem Bild, zum Beispiel „Hausmischung, 250-g-Beutel“.</p>
+        </li>
+        <li class="platte">
+          <div class="vergleich">
+            <div class="halb halb-rot">
+              <p class="seite">Heute</p>
+              <p class="spricht">Vorleseprogramm sagt:</p>
+              <p class="gesagt">„Eingabe&shy;feld. Link.“</p>
+            </div>
+            <div class="halb halb-gruen">
+              <p class="seite">Nachher</p>
+              <p class="spricht">Vorleseprogramm sagt:</p>
+              <p class="gesagt gesagt-lang">„Suche, Eingabe&shy;feld. Mein Konto, Link.“</p>
+            </div>
+          </div>
+          <h3>Suche und Konto ohne Namen</h3>
+          <p><strong>Ihr Kunde:</strong> Er hört nur „Eingabefeld“ und „Link“ und weiß nicht, wofür sie da sind.</p>
+          <p><strong>Lösung:</strong> eine unsichtbare Beschriftung wie „Suche“ und „Mein Konto“. Für Ihre Agentur eine Sache von Minuten.</p>
+        </li>
+      </ul>
+    </div>
+
+    <div class="band-steuerung nur-mit-js">
+      <button type="button" id="band-zurueck" aria-label="Vorheriges Beispiel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8" fill="none" stroke="currentColor" stroke-width="3"/></svg></button>
+      <p id="band-stand" aria-live="polite">Beispiel 1 von 3</p>
+      <button type="button" id="band-vor" aria-label="Nächstes Beispiel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 4 8 8-8 8" fill="none" stroke="currentColor" stroke-width="3"/></svg></button>
+    </div>
+
+    <div class="eng trick">
+      <button type="button" class="knopf-linie" data-linse="rotgruen" aria-pressed="false">Rot und Grün wegnehmen</button>
+      <p>Mit Rot-Grün-Schwäche können beide Seiten fast gleich aussehen. Darum steht bei uns „Heute“ und „Nachher“ dran, nicht nur eine Farbe.</p>
+    </div>
+  </section>
+
+  <section class="abschnitt nacht" aria-labelledby="bescheid-titel">
+    <div class="eng">
+      <h2 class="reihen" id="bescheid-titel" data-fokus>
+        <span class="reihe" style="--b:9.859">Die wenigsten</span>
+        <span class="reihe" style="--b:10.857">sagen Bescheid.</span>
+      </h2>
+      <p class="vorspann">Kunden, die nicht weiterkommen, kaufen woanders. Sie merken es nur an der Kasse. Gemeint sind nicht wenige:</p>
+      <dl class="zahlen">
+        <div><dt>7,9 Mio.</dt><dd>Menschen in Deutschland haben eine anerkannte Schwerbehinderung.</dd></div>
+        <div><dt>Jeder 4.</dt><dd>Mensch in Deutschland ist 60 oder älter.</dd></div>
+      </dl>
+      <p class="quelle">Quellen: Statistisches Bundesamt, schwerbehinderte Menschen Ende 2023; Bevölkerung nach Altersgruppen 2023.</p>
+    </div>
+  </section>
+
+  <section class="abschnitt" id="preise" aria-labelledby="preise-titel">
+    <div class="eng">
+      <h2 class="reihen" id="preise-titel" data-fokus>
+        <span class="reihe" style="--b:10.58">Sehtest gratis.</span>
+        <span class="reihe" style="--b:11.407">Rezept einmalig.</span>
+      </h2>
+      <p class="vorspann">Sie sehen zuerst kostenlos, was wir finden. Bezahlen müssen Sie erst, wenn Sie mehr wollen, und dann nur einmal.</p>
+
+      <ol class="ablauf">
+        <li>
+          <div class="zeile-kopf"><h3>Sehtest</h3><p class="preis">0 €</p></div>
+          <p><strong>Der Schnelltest.</strong> Adresse eingeben, Ergebnis sofort, mit einem Tipp zu jeder Stelle. Er sieht sich nur Ihre Startseite an. Ohne Anmeldung und ohne E-Mail-Adresse.</p>
+          <p><a href="#test">Jetzt testen</a></p>
+        </li>
+        <li>
+          <div class="zeile-kopf"><h3>Rezept</h3><p class="preis">ab 49 €<small>netto</small></p></div>
+          <p><strong>Der Prüfbericht, einmal gekauft, kein Abo.</strong> Jede Stelle mit Bildschirmfoto, Wichtigkeit und Lösung, für Sie oder Ihre Agentur. Als PDF per E-Mail, ohne Installation und ohne Zugang zu Ihrer Website.</p>
+
+          <div class="pakete">
+            <details class="paket">
+              <summary>
+                <span class="p-name">Prüfbericht</span>
+                <span class="p-preis">49 € <small>netto, 58,31 € mit 19 % USt</small></span>
+              </summary>
+              <div class="p-inhalt">
+                <p>Der schnelle Überblick zum Einstiegspreis.</p>
+                <ul>
+                  <li>Startseite, eine Produktseite und Warenkorb</li>
+                  <li>Jede Stelle mit Bildschirmfoto, Wichtigkeit und Lösung</li>
+                  <li>Innerhalb von 2 Werktagen</li>
+                  <li>Wird voll angerechnet, wenn Sie innerhalb von 60 Tagen mehr buchen</li>
+                </ul>
+                <p><strong>Geld zurück:</strong> 14 Tage ohne Begründung, oder wenn er nichts Neues zeigt (einmal je Firma).</p>
+                <p><a class="bestellen" href="https://pruefklar.de/preise/?paket=kompakt#bestellen">Prüfbericht bestellen</a></p>
+              </div>
+            </details>
+            <details class="paket">
+              <summary>
+                <span class="p-name">Vollständiger Bericht</span>
+                <span class="p-preis">199 € <small>netto, 236,81 € mit 19 % USt</small></span>
+              </summary>
+              <div class="p-inhalt">
+                <p>Der ganze Shop bis vor die Zahlung, mit Plan, was zuerst zu tun ist.</p>
+                <ul>
+                  <li>Bis zu 25 Seiten: Kategorien, Produkte, Kontakt, Warenkorb</li>
+                  <li>Zusätzlich: Kommt man ohne Maus, nur mit der Tastatur, bis in den Warenkorb?</li>
+                  <li>Von einem Menschen gegengelesen, innerhalb von 3 Werktagen</li>
+                </ul>
+                <p><strong>Geld zurück:</strong> Findet der Bericht keine einzige echte Hürde, bekommen Sie den vollen Preis zurück.</p>
+                <p><a class="bestellen" href="https://pruefklar.de/preise/?paket=vollstaendig#bestellen">Vollständigen Bericht bestellen</a></p>
+              </div>
+            </details>
+            <details class="paket paket-tipp" open>
+              <summary>
+                <span class="p-name"><span class="empfehlung">Empfehlung</span> Vollständig + Nach-Prüfung</span>
+                <span class="p-preis">249 € <small>netto, 296,31 € mit 19 % USt</small></span>
+              </summary>
+              <div class="p-inhalt">
+                <p>Alles aus dem Vollständigen Bericht, dazu für 50 € mehr:</p>
+                <ul>
+                  <li>Nach-Prüfung innerhalb von 60 Tagen: was ist erledigt, was ist noch offen</li>
+                  <li>Rechtstexte-Technik-Check inklusive</li>
+                  <li>3 Monate Monatscheck inklusive, kein Abo, endet von selbst</li>
+                </ul>
+                <p><strong>Geld zurück:</strong> Findet der Bericht keine einzige echte Hürde, bekommen Sie den vollen Preis zurück.</p>
+                <p><a class="bestellen" href="https://pruefklar.de/preise/?paket=plus#bestellen">Vollständig + Nach-Prüfung bestellen</a></p>
+              </div>
+            </details>
+          </div>
+
+          <figure class="muster">
+            <a href="https://pruefklar.de/musterbericht/"><img src="assets/musterbericht-seite.jpg" width="636" height="900" loading="lazy" alt="Eine Seite aus dem Musterbericht: drei Befunde mit Wichtigkeit „Hoch“, Erklärung, „Was tun“ und einem Bildschirmfoto, auf dem die Stelle rot eingekreist ist."></a>
+            <figcaption><strong>So sieht ein Rezept aus.</strong> Beispielseite mit dem erfundenen Shop. <a href="https://pruefklar.de/musterbericht/">Musterbericht ansehen</a></figcaption>
+          </figure>
+        </li>
+        <li>
+          <div class="zeile-kopf"><h3>Brille</h3><p class="preis preis-text">Festpreis nach Angebot</p></div>
+          <p><strong>Beheben, freiwillig.</strong> Sie oder Ihre Agentur setzen die Lösungen aus dem Bericht um. Oder wir machen es für Sie. Beauftragen Sie uns innerhalb von 60 Tagen, rechnen wir den Berichtspreis voll an. <a href="https://pruefklar.de/umsetzung/">Umsetzung durch uns</a></p>
+        </li>
+        <li>
+          <div class="zeile-kopf"><h3>Kontrolle</h3><p class="preis">29 €<small>netto im Monat</small></p></div>
+          <p><strong>Der Monatscheck, freiwillig.</strong> Wir prüfen jeden Monat neu und schicken eine kurze Mail: Was ist neu, was ist behoben, was ist unverändert, dazu ein aktueller Textvorschlag für Ihre Barrierefreiheitserklärung. 34,51 € mit USt, monatlich kündbar. <a href="https://pruefklar.de/preise/?paket=waechter#bestellen">Monatscheck buchen</a></p>
+        </li>
+      </ol>
+      <p class="kleingedruckt">Alle Preise netto zzgl. 19 % Umsatzsteuer. Angebot nur für Unternehmen. Sofort bezahlen oder als Firma auf Rechnung bis 500 € netto (den Monatscheck nur über die Online-Kasse). <a href="https://pruefklar.de/preise/">Alle Preise im Detail</a></p>
+    </div>
+  </section>
+
+  <section class="abschnitt vertrauen" id="wer" aria-labelledby="wer-titel">
+    <div class="eng">
+      <h2 class="reihen" id="wer-titel" data-fokus>
+        <span class="reihe" style="--b:4.322">Seriös</span>
+        <span class="reihe" style="--b:10.009">oder Abzocke?</span>
+      </h2>
+      <p class="vorspann">Die Frage ist berechtigt. Hinter prüfklar steht die DSX Media Solutions UG (haftungsbeschränkt) aus Memmelsdorf bei Bamberg, eingetragen beim Amtsgericht Bamberg unter HRB 12150. Ihr Ergebnis ist kostenlos, ohne Anmeldung und ohne Abo.</p>
+      <ul class="nicht">
+        <li><strong>Keine Anwälte, keine Behörde.</strong> Wir prüfen technisch und zeigen, was wir finden, mit Beleg.</li>
+        <li><strong>Kein Druck.</strong> Wir drohen nicht mit rechtlichen Schritten und setzen keine künstlichen Fristen.</li>
+        <li><strong>Kein Overlay-Werkzeug.</strong> Wir verkaufen keine Einblendungen, die Probleme nur überdecken. Wir zeigen, was im Shop selbst zu ändern ist.</li>
+        <li><strong>Kein Abo-Zwang.</strong> Die Berichte sind Einmalzahlungen. Die 3 Monate Monatscheck in „Vollständig + Nach-Prüfung“ enden von selbst.</li>
+      </ul>
+      <p class="grenze"><strong>Was ein Test nicht kann:</strong> Automatische Tests finden nur einen Teil aller Hürden. Ein gutes Ergebnis heißt nicht, dass Ihre Website barrierefrei ist.</p>
+    </div>
+  </section>
+
+  <section class="abschnitt fragen" id="fragen" aria-labelledby="fragen-titel">
+    <div class="eng">
+      <h2 id="fragen-titel">Und bevor Sie bestellen.</h2>
+      <div class="fragen-liste">
+        <details>
+          <summary>Warum habe ich einen Brief bekommen, und woher haben Sie meine Adresse?</summary>
+          <div>
+            <p>Unser Prüfprogramm hat die Startseite Ihres Shops angesehen, so wie ein Kunde, nur lesend. Es hat nichts bestellt und nichts abgeschickt. Dabei hat es Stellen gefunden, an denen Kunden hängen bleiben können. Eine davon zeigen wir Ihnen im Brief, alle anderen unter Ihrem Prüfcode.</p>
+            <p>Firmenname und Anschrift stammen aus dem öffentlichen Impressum Ihrer Website, die Website-Adresse aus OpenStreetMap (© OpenStreetMap-Mitwirkende) oder einer öffentlichen Websuche. Namen von Personen verwenden wir dafür nicht. Keine Post mehr? <a href="https://pruefklar.de/w/">Keine Post mehr von prüfklar</a></p>
+          </div>
+        </details>
+        <details>
+          <summary>Betrifft mich das überhaupt?</summary>
+          <div>
+            <p>Seit dem 28. Juni 2025 gilt das Barrierefreiheitsstärkungsgesetz (BFSG) für viele Onlineshops, die an Verbraucher verkaufen. Ausgenommen sind Kleinstunternehmen: weniger als 10 Beschäftigte und höchstens 2 Mio. € Jahresumsatz oder Jahresbilanzsumme. Reine Shops für Firmenkunden sind nicht betroffen.</p>
+            <p>Ob das Gesetz für Ihren Shop gilt, beurteilen wir nicht. Wir prüfen die Technik, keine Rechtsberatung. <a href="https://pruefklar.de/bfsg-kleinstunternehmen/">Die Ausnahme erklärt</a></p>
+          </div>
+        </details>
+        <details>
+          <summary>Erfüllt meine Website danach das Gesetz?</summary>
+          <div><p>Das können wir nicht versprechen. Automatische Tests finden nur einen Teil aller Hürden, und wir prüfen technisch, nicht rechtlich. Der Bericht zeigt Ihnen die wichtigsten Hürden und was zu tun ist. Die Erklärung zur Barrierefreiheit, die betroffene Shops veröffentlichen müssen, erstellen Sie mit unserem <a href="https://pruefklar.de/erklaerung/">kostenlosen Generator</a>.</p></div>
+        </details>
+        <details>
+          <summary>Kann ich das nicht selbst machen, oder meine Agentur?</summary>
+          <div><p>Gern. Schon Ihr kostenloses Ergebnis enthält Tipps zum Selbermachen. Der Bericht ist die Arbeitsliste für Sie oder Ihre Agentur: Zu jeder Stelle steht, was zu tun ist, dazu die Fachangaben für Ihren Webdesigner.</p></div>
+        </details>
+        <details>
+          <summary>Was prüft der Bericht genau?</summary>
+          <div>
+            <ul>
+              <li><strong>Lesen und Vorlesen:</strong> Sind Schrift und Knöpfe gut lesbar? Haben Bilder eine Beschreibung? Sagt das Vorleseprogramm, wofür Felder und Knöpfe da sind?</li>
+              <li><strong>Bedienung ohne Maus:</strong> Kommt man nur mit der Tastatur bis in den Warenkorb? (Vollständiger Bericht)</li>
+              <li><strong>Kaufweg und Formulare:</strong> Ist klar, was in jedes Feld gehört? Versteht man die Fehlermeldungen? Bis vor die Zahlung.</li>
+              <li><strong>Barrierefreiheitserklärung:</strong> Vorhanden, auffindbar und vollständig?</li>
+              <li><strong>Pflichtseiten:</strong> Impressum, Datenschutz, AGB, Widerruf, Versand: vorhanden und verlinkt?</li>
+              <li><strong>Cookie-Banner:</strong> Laden Werbe- oder Statistikdienste schon, bevor der Kunde zugestimmt hat?</li>
+              <li><strong>Ladezeit und Handy:</strong> Gemessen am Handy und am Rechner.</li>
+            </ul>
+          </div>
+        </details>
+        <details>
+          <summary>Wie prüfen Sie?</summary>
+          <div><p>Unser Prüfprogramm öffnet Ihre Website in einem echten Browser, am Handy und am Rechner, so wie ein Kunde. Es prüft nach den international üblichen Regeln für barrierefreie Websites, Fachleute nennen sie WCAG 2.1, Stufe AA. Die Prüfregeln sind dieselben wie in anerkannten Fachwerkzeugen (axe-core). Jede Stelle belegen wir mit einem Bildschirmfoto. Den Vollständigen Bericht liest zusätzlich ein Mensch gegen. <a href="https://pruefklar.de/bot.html">Unser Prüfprogramm</a></p></div>
+        </details>
+        <details>
+          <summary>Ist der Bericht eine Rechtsberatung?</summary>
+          <div><p>Nein. Sie bekommen einen technischen Prüfbericht zum Stichtag: was wir gefunden haben, mit Bildschirmfoto, Fundstelle und Wichtigkeit.</p></div>
+        </details>
+        <details>
+          <summary>Muss ich etwas kaufen?</summary>
+          <div><p>Nein. Schnelltest und Ergebnis aus unserem Brief sind kostenlos. Den Bericht bestellen Sie nur, wenn er Ihnen etwas wert ist.</p></div>
+        </details>
+      </div>
+      <p class="mehr"><a href="https://pruefklar.de/fragen/">Alle Fragen und Antworten</a></p>
+    </div>
+  </section>
+
+  <section class="schluss" id="schluss" aria-labelledby="schluss-titel">
+    <div class="eng">
+      <h2 class="reihen" id="schluss-titel" data-fokus>
+        <span class="reihe" style="--b:10.426">Sehen Sie nach,</span>
+        <span class="reihe" style="--b:7.253">bevor Ihre</span>
+        <span class="reihe" style="--b:10.056">Kunden gehen.</span>
+      </h2>
+      <form class="test" novalidate data-ergebnis="ergebnis-unten">
+        <label for="adresse-unten">Adresse Ihrer Website</label>
+        <div class="test-zeile">
+          <input id="adresse-unten" name="url" type="text" inputmode="url" autocomplete="url" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" placeholder="www.ihre-firma.de" aria-describedby="hinweis-unten fehler-unten">
+          <button type="submit">Gratis testen</button>
+        </div>
+        <p class="fehler" id="fehler-unten" hidden></p>
+        <p class="hinweis" id="hinweis-unten">Sie müssen sich nicht anmelden und nichts kaufen. <strong>Entwurf:</strong> Hier läuft nur eine Vorführung, Ihre Adresse wird nicht gesendet.</p>
+      </form>
+    </div>
+    <div class="ergebnis-platz" id="ergebnis-unten"></div>
+  </section>
+  <a class="haft" id="haft" href="#test">Gratis testen</a>
+</main>
+
+<footer class="fuss">
+  <div class="eng">
+    <p class="fuss-marke">prüfklar</p>
+    <p>Technische Prüfung, keine Rechtsberatung. prüfklar ist eine Marke der DSX Media Solutions UG (haftungsbeschränkt), Am Weingarten 9, 96117 Memmelsdorf, Amtsgericht Bamberg HRB 12150. Geschäftsführer: Domenic Schilling. <a href="mailto:info@dsxmediasolutions.de">info@dsxmediasolutions.de</a></p>
+    <nav aria-label="Rechtliches und Hilfe">
+      <ul>
+        <li><a href="https://pruefklar.de/impressum.html">Impressum</a></li>
+        <li><a href="https://pruefklar.de/datenschutz.html">Datenschutz</a></li>
+        <li><a href="https://pruefklar.de/agb.html">AGB</a></li>
+        <li><a href="https://pruefklar.de/erstattung/">Geld zurück</a></li>
+        <li><a href="https://pruefklar.de/barrierefreiheit.html">Barrierefreiheit</a></li>
+        <li><a href="https://pruefklar.de/erklaerung/">Erklärung erstellen</a></li>
+        <li><a href="https://pruefklar.de/ratgeber/">Ratgeber</a></li>
+      </ul>
+    </nav>
+    <p class="schriftnotiz">Fließtext in Atkinson Hyperlegible, einer Schrift des Braille Institute für Menschen mit Sehschwäche. Die Linsen sind vereinfachte Darstellungen, kein medizinischer Test. Entwurf, nicht zur Veröffentlichung bestimmt.</p>
+  </div>
+</footer>
+
+<div class="linsenglas" id="linsenglas" aria-hidden="true"></div>
+<p class="nur-sr" id="ansage" role="status"></p>
+
+<dialog class="schwarz" id="schwarz" aria-labelledby="schwarz-titel">
+  <div class="schwarz-innen">
+    <p class="etikett etikett-hell">Demo</p>
+    <h2 id="schwarz-titel">Bildschirm aus. Nur noch hören.</h2>
+    <p>So könnte ein Vorleseprogramm zwei Seiten vorlesen. Vereinfachte Darstellung, als Text.</p>
+    <div class="hoeren">
+      <div>
+        <h3>Erfundener Beispiel-Shop</h3>
+        <ol>
+          <li>Link. Bild.</li>
+          <li>Eingabefeld.</li>
+          <li>Link.</li>
+        </ol>
+      </div>
+      <div>
+        <h3>Diese Seite</h3>
+        <ol>
+          <li>Überschrift: Kann Ihr Kunde das hier lesen?</li>
+          <li>Eingabefeld: Adresse Ihrer Website.</li>
+          <li>Schalter: Gratis testen.</li>
+        </ol>
+      </div>
+    </div>
+    <p>Wer sich eine Seite vorlesen lässt, erfährt ohne Text nicht, was auf dem Bild zu sehen ist. Bei Produktbildern fehlt so die wichtigste Information.</p>
+    <button type="button" id="schwarz-zu">Bildschirm wieder an</button>
+  </div>
+</dialog>
+
+<template id="ergebnis-vorlage">
+  <div class="ergebnis" tabindex="-1">
+    <p class="etikett">Vorführung</p>
+    <h2 class="e-titel">So würde Ihr Ergebnis aussehen.</h2>
+    <p class="e-offen"><strong>Ihre Adresse <span class="e-adresse"></span> wurde nicht geprüft und nicht gesendet.</strong> Dies ist ein Entwurf. Unten steht das Beispiel unseres erfundenen Shops „Röstwerk Regnitz“. Auf der echten Seite steht hier Ihr eigenes Ergebnis.</p>
+    <div class="e-note">
+      <p class="e-wert">72</p>
+      <p class="e-von">von 100 Punkten<br>roestwerk-regnitz.de, Startseite, Beispiel</p>
+    </div>
+    <ul class="e-stellen">
+      <li><strong>Bild ohne Beschreibung.</strong> Ein Produktbild wird nur als „Bild“ vorgelesen.</li>
+      <li><strong>Keine Barrierefreiheitserklärung.</strong> Auf der Startseite fehlt der Link dazu.</li>
+      <li><strong>Kein Sprung zum Inhalt.</strong> Wer sich die Seite vorlesen lässt, hört erst jedes Menü.</li>
+    </ul>
+    <p>Das war nur die Startseite. Automatische Tests finden nur einen Teil aller Hürden. Ein gutes Ergebnis hier heißt nicht, dass Ihre Website barrierefrei ist.</p>
+    <p class="e-weiter"><a class="bestellen" href="#preise">Prüfbericht ab 49 € netto ansehen</a> <a href="https://pruefklar.de/musterbericht/">Erst den Musterbericht ansehen</a></p>
+  </div>
+</template>
+</body>
+</html>

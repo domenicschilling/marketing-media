@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><title>01 November – Feed</title>
+<link rel="stylesheet" href="../_system/base.css">
+<link rel="stylesheet" href="../_system/aggro.css">
+<style>
+/* Idee: Daumen-Stopper. Spartaner/Löwe schaut dich an (Schwarzweiß, harter Kontrast),
+   darunter knallt die rote −25 % wie ein Plakat. Störer mit der echten Frist, weißer CTA-Balken. */
+.photo{inset:0}
+.shade{position:absolute;inset:0;z-index:2;background:
+  linear-gradient(180deg,rgba(11,11,11,.55) 0,rgba(11,11,11,0) 18%,rgba(11,11,11,0) 50%,rgba(11,11,11,.92) 68%,#0B0B0B 76%)}
+.logo{position:absolute;left:56px;top:52px;width:110px;height:110px;z-index:8;box-shadow:0 0 0 3px var(--ink)}
+.kick{position:absolute;left:186px;top:80px;z-index:8;font-size:44px}
+.st{right:26px;top:26px;width:340px;height:340px;transform:rotate(9deg)}
+.st b{font-size:38px;letter-spacing:.02em}
+.st big{display:block;font-size:70px;margin:6px 0 4px;letter-spacing:-.01em}
+.st s{text-decoration:none;font-size:34px;letter-spacing:.04em}
+
+.real{position:absolute;left:56px;top:186px;z-index:8;font-size:30px}
+.big{position:absolute;left:44px;top:826px;z-index:5;font-size:420px}
+.side{position:absolute;left:736px;top:850px;z-index:5;width:300px}
+.side .h{font-size:96px;line-height:.86;color:#fff;letter-spacing:-.01em}
+.side .h em{font-style:normal;color:var(--sig)}
+.side .box{margin-top:18px;font-size:40px}
+
+.cta{top:1144px;height:104px}
+.cta b{font-size:64px}
+.cta i{width:120px}
+.cta i svg{width:56px;height:56px}
+.bed{left:var(--g);top:1262px}
+</style></head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="sh" color-interpolation-filters="sRGB"><feConvolveMatrix order="3" kernelMatrix="0 -.3 0 -.3 2.2 -.3 0 -.3 0" preserveAlpha="true"/></filter></svg>
+<div class="c feed">
+  <div class="ph photo" data-src="../_system/img/05-loewe-spartaner-warm.png" data-crop="190,250,1070,1350" data-filter="url(#sh) saturate(.82) contrast(1.24) brightness(.96)"></div>
+  <div class="shade"></div>
+  <div class="logo"><img src="../_system/img/logo-480.webp" alt=""></div>
+  <span class="box r kick">Last Minute November</span>
+  <span class="box wt real">Echtes Tattoo · aus dem Studio</span>
+
+  <div class="burst-sh st"><div class="burst wt" style="position:absolute;inset:0"><b>Termin nur bis</b><big class="red">Sa 21.11.</big></div></div>
+
+  <p class="pct big"><span class="mi"></span>25<span class="pc">%</span></p>
+  <div class="side">
+    <p class="d h">Auf dein<br>Tattoo<em>.</em></p>
+    <span class="box wt">Ab 150 € · mit Code</span>
+  </div>
+
+  <div class="cta"><b>Jetzt Code sichern</b><i><svg viewBox="0 0 56 56"><path d="M6 28h40M30 10l18 18-18 18"/></svg></i></div>
+  <p class="bed"><b>Termin bis Sa 21.11.</b><i>·</i>danach 20 % bei Termin 23.–30.11.<br>ab 150 € Tattoo-Wert<i>·</i>Code auf der Aktionsseite</p>
+  <div class="grain"></div>
+</div>
+<script src="../_system/crop.js"></script>
+</body></html>

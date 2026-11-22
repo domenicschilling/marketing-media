@@ -1,0 +1,49 @@
+# Westside Ink – Vertrag und Unterlagen
+Stand 20.10.2026 · Kunde: Westside Ink, Am Amtshaus 6, 44359 Dortmund · Vertragspartner: TattooLeadz.de, Inhaber Andy Neelsen, München. Noch nichts wurde an den Kunden geschickt.
+
+## Was in diesem Ordner liegt
+- 01-Westside-Ink-Vertragspaket-zum-Unterschreiben.pdf – das schickst du dem Kunden (Rahmenvertrag, Anlage 1 Leistungen und Preise, Anlage 2 AGB, Anlage 3 Auftragsverarbeitung, SEPA-Mandat; 12 Blätter, durchnummeriert)
+- 02-Onboarding-Fragebogen-Westside-Ink.pdf – füllt das Studio aus
+- 03-Reel-Vorgaben-Westside-Ink.pdf – so filmt das Studio seine Reels
+- 04-Datenschutz-Textbausteine-Westside-Ink.pdf – Texte für Formular und Datenschutzerklärung des Studios
+- Westside-Ink-Komplett.pdf – alles oben in einer Datei: erst das Vertragspaket, dann die drei Onboarding-Unterlagen (ohne dieses Blatt, weil hier interne Hinweise stehen)
+- word/ – alle Dokumente als Word-Datei zum Ändern; in word/optional liegen die leeren Vorlagen Lead-Garantie und Gewinnspiel-Bedingungen (nicht Teil des Vertrags, nur falls später gebraucht)
+
+## Was vereinbart ist
+- Paket Standard: Anfragen (Leads) kommen in ein Google Sheet. Kein Superchat, kein WhatsApp-Bot, keine automatischen Nachrichten. Die Anfragen beantwortet das Studio selbst.
+- 1.000,00 € netto pro Monat + 19 % USt (190,00 €) = 1.190,00 € brutto pro Monat
+- Keine Einrichtungsgebühr
+- Mindestlaufzeit 3 Monate, Abrechnung Monat für Monat (keine Vorauszahlung für 3 Monate), per Überweisung oder SEPA-Lastschrift
+- Danach verlängert sich der Vertrag jeweils um 3 Monate, wenn er nicht 1 Monat vor Ende gekündigt wird (Regel aus der Vorlage, § 5)
+- Werbebudget: zahlt der Kunde selbst direkt an Meta über sein eigenes Werbekonto. Eingetragen sind 20 € pro Tag (Mindestbudget aus der Vorlage); Änderungen per WhatsApp oder E-Mail.
+
+## Was noch fehlt (gelbe Linien auf Seite 1 des Vertrags)
+Rechtsform, Inhaber/in, E-Mail, Telefon und USt-IdNr. von Westside Ink in Dortmund. Diese Daten sind nirgends öffentlich zu finden. Der Kunde kann sie beim Unterschreiben einfach von Hand auf die Linien schreiben. Im Datenschutz-Textbaustein fehlen ebenfalls Inhaber/in, E-Mail und der Link zur Datenschutzerklärung des Studios.
+
+Wo ich gesucht habe: Google und Google Maps, Instagram, Facebook, TikTok, North Data (Handelsregister), 11880, Gelbe Seiten, Das Örtliche, dein Gmail, der TattooLeadz-Drive (Ordner 06 Kunden > Westside Ink, Kundenlisten) und das Projekt. Ergebnis: Unter Am Amtshaus 6 in Dortmund-Mengede sind nur andere Firmen eingetragen, ein Studio „Westside Ink“ in Dortmund gibt es online nicht. Im Handelsregister steht keine „Westside Ink“, also vermutlich ein Einzelunternehmen, aber nicht belegt.
+
+## Vorschlag (NICHT im Vertrag eingetragen)
+Es gibt ein Studio mit gleichem Namen in Hagen: „Westside Ink Tattoo & Piercing Studio“, Mittelstraße 12, 58095 Hagen.
+- Betreiber laut Impressum westsideink.de/impressum: Sadek Buro (Rechtsform dort nicht angegeben, keine USt-IdNr. angegeben)
+- Telefon: +49 174 5831470 · E-Mail: info@westsideink.de
+- Instagram: @westsideink_hagen · Die Westfalenpost (04.03.2025) nennt Sadek Buro als Chef.
+Weder Website noch Instagram erwähnen Dortmund oder einen zweiten Standort. Wenn du weißt, dass Westside Ink Dortmund derselbe Betreiber ist, sag kurz Bescheid, dann trage ich die Daten ein.
+
+## Bitte prüfen
+1. SEPA: Die Gläubiger-ID DE05ZZZ00002843143 stammt aus dem alten TattooLeadz-SEPA-Mandat im Drive (2025). Mandatsreferenz WSI-2026-001. Die Liste „Lastschrift Mandatsreferenznummern Kunden“ im Drive ist leer; bitte WSI-2026-001 dort bei Westside Ink eintragen.
+2. Auftragsverarbeitung (Anlage 3): eingetragen sind Google (Sheet) und Make (Celonis, Server in der EU). Falls für Westside eine Landingpage (Netlify) gebaut wird, gehört sie noch in die Liste.
+3. Die Verlängerung um 3 Monate kommt aus der Vorlage. Wenn es nur 1 Monat sein soll, kurz sagen.
+
+## Reihenfolge beim Unterschreiben
+1. Du schaust kurz drüber (Punkte oben).
+2. Andy unterschreibt im Vertragspaket den Rahmenvertrag (Blatt 4) und die Auftragsverarbeitung (Blatt 11) – Ort München.
+3. Vertragspaket an Westside Ink schicken (WhatsApp-Gruppe oder Mail), dazu die drei Onboarding-PDFs.
+4. Westside Ink trägt auf Blatt 1 die fehlenden Daten ein, unterschreibt Blatt 4 und Blatt 11 und füllt das SEPA-Mandat auf Blatt 12 aus und unterschreibt.
+
+## Was der Kunde zurückschicken muss
+- Das unterschriebene Vertragspaket (mindestens Blatt 1, 4, 11 und 12) als Scan oder Foto
+- Den ausgefüllten Onboarding-Fragebogen
+- Danach: Logo, Tattoo-Bilder und Reels in den Upload-Ordner im Drive
+
+## Drive
+Die Dateien liegen nur hier in Downloads. Das Drive-Werkzeug kann keine Word- oder PDF-Dateien hochladen. Bitte den Ordner selbst in Google Drive (tattooleadz@gmail.com) nach 06 Kunden > Westside Ink > „Intern – Vertrag, Rechnung & Kampagne“ ziehen. Dieser Ordner wird nie geteilt; die unterschriebene Fassung später ebenfalls dort ablegen.

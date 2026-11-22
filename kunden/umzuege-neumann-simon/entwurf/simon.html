@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Simon Umzüge Bamberg – Entwurf</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Simon: Blau/Gelb aus dem Logo */
+:root{--b:#0b4c9c;--bd:#0a2f63;--b2:#1d63c0;--bl:#e9f2fc;--ink:#14202c;--mut:#5a6876;--line:#e2e8ef;--wa:#1fa855;--sy:#ffdd00}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Inter,system-ui,sans-serif;color:var(--ink);background:#fff;line-height:1.5}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1200px;margin:0 auto;padding:0 32px}
+.logo{font-family:"Archivo Black",Inter,sans-serif;color:var(--b);line-height:.92;font-size:25px;letter-spacing:.01em;text-shadow:1.5px 1.5px 0 rgba(0,40,90,.22)}
+.logo span{display:block}
+.topbar{background:var(--bd);color:#cfe0f3;font-size:13.5px}
+.topbar .wrap{display:flex;justify-content:space-between;height:38px;align-items:center}
+.topbar b{color:#fff;font-weight:600}
+header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.nav{display:flex;align-items:center;justify-content:space-between;height:84px}
+.links{display:flex;gap:28px;font-size:15px;font-weight:500;color:#33414f}
+.btn{display:inline-flex;align-items:center;gap:10px;font-weight:700;border-radius:10px;padding:14px 22px;font-size:16px;white-space:nowrap}
+.btn svg{width:20px;height:20px}
+.btn.call{background:var(--b);color:#fff}
+.btn.wa{background:var(--wa);color:#fff}
+.btn.light{background:#fff;color:var(--bd)}
+.hero{background:linear-gradient(110deg,var(--bd) 0%,var(--b) 58%,var(--b2) 100%);color:#fff;overflow:hidden;position:relative}
+.hero .g{display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center;padding:72px 32px 96px}
+.kicker{display:inline-block;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);padding:6px 14px;border-radius:30px;font-size:14px;font-weight:600}
+.hero h1{font-size:52px;line-height:1.05;letter-spacing:-.025em;font-weight:800;margin:20px 0 18px}
+.hero p.l{font-size:18.5px;color:#dbe8f6;max-width:540px}
+.ctas{display:flex;gap:12px;margin-top:30px;flex-wrap:wrap}
+.facts{display:flex;gap:26px;margin-top:28px;font-size:14.5px;color:#d6e5f5;flex-wrap:wrap}
+.facts b{display:block;color:#fff;font-size:22px;letter-spacing:-.01em}
+.photo{position:relative;border-radius:18px;overflow:hidden;box-shadow:0 30px 60px rgba(0,20,50,.35);transform:rotate(1.2deg);border:6px solid #fff}
+.photo img{display:block;width:100%;height:420px;object-fit:cover;object-position:center 40%}
+.cap{position:absolute;left:12px;bottom:12px;background:rgba(0,0,0,.6);color:#fff;font-size:12px;padding:5px 10px;border-radius:6px}
+.req{background:#fff;color:var(--ink);border-radius:16px;padding:24px 26px;box-shadow:0 24px 60px rgba(0,30,70,.22);margin-top:-52px;position:relative;z-index:3;display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr auto;gap:14px;align-items:end}
+.req h3{grid-column:1/-1;font-size:19px;display:flex;justify-content:space-between;align-items:baseline}
+.req h3 small{font-size:14px;color:var(--mut);font-weight:500}
+.f label{display:block;font-size:12.5px;font-weight:600;color:var(--mut);margin-bottom:6px}
+.f div{border:1.5px solid var(--line);border-radius:10px;padding:12px 14px;font-size:15px;color:#2a3744;background:#fafcfe}
+section{padding:80px 0}
+.h2{font-size:38px;letter-spacing:-.02em;line-height:1.1;font-weight:800;color:var(--bd);max-width:700px}
+.sub{color:var(--mut);font-size:17.5px;margin-top:12px;max-width:660px}
+.spec{display:grid;grid-template-columns:1.25fr 1fr 1fr;grid-template-rows:auto auto;gap:18px;margin-top:40px}
+.sp{border-radius:16px;padding:26px;background:var(--bl);position:relative}
+.sp h4{font-size:20px;color:var(--bd);margin-bottom:8px;letter-spacing:-.01em}
+.sp p{font-size:15px;color:#3b4957}
+.sp.big{grid-row:1/3;padding:0;overflow:hidden;background:var(--bd);color:#fff;display:flex;flex-direction:column}
+.sp.big img{width:100%;height:290px;object-fit:cover}
+.sp.big div{padding:24px 26px}
+.sp.big h4{color:#fff}.sp.big p{color:#cfe0f3}
+.tag{display:inline-block;font-size:12px;font-weight:700;color:var(--b);background:#fff;border-radius:20px;padding:3px 10px;margin-bottom:12px}
+.more{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+.more span{border:1px solid #cddbea;border-radius:30px;padding:8px 15px;font-size:14.5px;font-weight:500}
+.alt{background:#f3f7fb}
+.trust{display:grid;grid-template-columns:1fr 1fr 1.6fr;gap:18px;margin-top:40px}
+.t{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px}
+.t .s{color:#f4b400;font-size:20px;letter-spacing:2px}
+.t b{display:block;font-size:34px;color:var(--bd);letter-spacing:-.02em;line-height:1.1;margin-top:6px}
+.t span{font-size:14px;color:var(--mut)}
+.q{background:var(--b);color:#fff;border-radius:16px;padding:26px 28px;display:flex;flex-direction:column;justify-content:space-between}
+.q p{font-size:20px;line-height:1.4;font-weight:600}
+.q span{font-size:14px;color:#cfe0f3;margin-top:12px}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:40px}
+.step{background:#fff;border-radius:16px;padding:28px;border:1px solid var(--line)}
+.step .n{width:44px;height:44px;border-radius:50%;background:var(--b);color:#fff;font-weight:800;display:grid;place-items:center;font-size:18px;margin-bottom:16px}
+.step h4{font-size:19px;margin-bottom:8px}
+.step p{color:var(--mut);font-size:15px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.shop{border-radius:18px;background:var(--bd);color:#fff;padding:34px;display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.shop h3{font-size:26px;letter-spacing:-.01em;margin-bottom:10px}
+.shop p,.shop li{color:#d6e5f5;font-size:15.5px}
+.shop li{list-style:none;margin:5px 0}
+.shop b{color:#fff}
+.brands{border-radius:18px;border:1px solid var(--line);padding:34px;display:flex;flex-direction:column;justify-content:space-between}
+.brands h3{font-size:26px;color:var(--bd);letter-spacing:-.01em}
+.bl{display:flex;align-items:center;gap:22px;margin:20px 0 14px}
+.bl .plus{font-size:28px;color:#9aa8b6;font-weight:300}
+.bl img{height:64px}
+.brands p{color:var(--mut);font-size:15px}
+.brands i{font-style:normal;color:var(--bd);font-weight:600}
+.calc{background:var(--bl);border-radius:20px;padding:40px;display:grid;grid-template-columns:1.2fr 1fr;gap:30px;align-items:center}
+.calc ol{list-style:none;counter-reset:c;margin-top:18px}
+.calc li{counter-increment:c;padding:8px 0 8px 40px;position:relative;font-size:16px}
+.calc li::before{content:counter(c);position:absolute;left:0;top:6px;width:28px;height:28px;border-radius:50%;background:var(--b);color:#fff;font-weight:700;display:grid;place-items:center;font-size:14px}
+footer{background:#08213f;color:#b4c5d8;padding:54px 0 28px;font-size:14.5px}
+.fg{display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr;gap:32px}
+footer h5{color:#fff;font-size:15px;margin-bottom:12px}
+footer li{list-style:none;margin:6px 0}
+.flogo{display:inline-block;background:#fff;border-radius:8px;padding:10px 14px}
+.legal{border-top:1px solid #1d3a5c;margin-top:40px;padding-top:20px;display:flex;justify-content:space-between;font-size:13px}
+.draft{background:#fff4d6;color:#6b4a00;text-align:center;font-size:14px;padding:11px;font-weight:600}
+.mob-bar{display:none}
+@media (max-width:760px){
+ .wrap{padding:0 18px}
+ .topbar{display:none}
+ .links,.nav .btn span{display:none}
+ .nav{height:68px}.logo{font-size:20px}
+ .nav .btn{padding:11px 13px}
+ .hero .g{grid-template-columns:1fr;padding:34px 18px 70px;gap:28px}
+ .hero h1{font-size:34px;margin:14px 0 12px}
+ .hero p.l{font-size:16px}
+ .ctas{flex-direction:column}.ctas .btn{justify-content:center;width:100%}
+ .facts{gap:18px}.facts b{font-size:19px}
+ .photo{transform:none;border-width:4px}.photo img{height:220px}
+ .req{grid-template-columns:1fr;margin-top:-40px;padding:20px}
+ .req h3{display:block}.req h3 small{display:block}
+ section{padding:54px 0}.h2{font-size:28px}
+ .spec,.trust,.steps,.two,.shop,.calc,.fg{grid-template-columns:1fr}
+ .sp.big{grid-row:auto}
+ .mob-bar{display:grid;grid-template-columns:1fr 1fr;gap:8px;position:fixed;left:0;right:0;bottom:0;padding:10px 12px;background:#fff;border-top:1px solid var(--line);z-index:9}
+ .mob-bar .btn{justify-content:center;padding:13px 10px;font-size:15px}
+}
+.hero.sy{background:var(--sy);color:var(--bd)}
+.hero.sy .kicker{background:rgba(10,47,99,.08);border-color:rgba(10,47,99,.2);color:var(--bd)}
+.hero.sy p.l{color:#26364a}.hero.sy .facts{color:#35465b}.hero.sy .facts b{color:var(--bd)}
+.hero.sy .btn.light{background:var(--bd);color:#fff}
+.hero.sy h1 em{font-style:normal;color:var(--b)}
+.redline{height:5px;background:linear-gradient(90deg,var(--b) 0 55%,#e2231a 55% 100%)}
+.slogo{height:58px;display:block}
+</style></head><body>
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="tel" viewBox="0 0 24 24"><path fill="currentColor" d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1z"/></symbol>
+<symbol id="wa" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.5-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2.1 1-2.4c.3-.3.6-.3.8-.3h.6c.2 0 .4 0 .6.5l.9 2.1c.1.2.1.4 0 .6l-.4.6-.4.5c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.4 2.4 1.5.3.1.5.1.7-.1l.9-1.1c.2-.3.4-.2.7-.1l2 1c.3.1.5.2.5.3.1.2.1.7-.1 1.3z"/></symbol>
+</defs></svg>
+<div class="draft">Entwurf – Fotos, Texte und Farben passen wir mit Ihnen an</div>
+<div class="topbar"><div class="wrap"><span>Simon Umzüge · Bamberg</span><span><b>… alles aus einer Hand</b></span></div></div>
+<header><div class="wrap nav">
+  <img class="slogo" src="../assets/simon-logo.jpg" alt="Simon Umzüge">
+  <nav class="links"><a>Leistungen</a><a>Umzugs-App</a><a>Ablauf</a><a>Über uns</a><a>Kontakt</a></nav>
+  <a class="btn call"><svg><use href="#tel"/></svg><span>0951 5191770</span></a>
+</div><div class="redline"></div></header>
+
+<div class="hero sy"><div class="wrap g">
+  <div>
+    <span class="kicker">Ihr Umzugspartner aus Bamberg</span>
+    <h1>Mit Simon Umzüge <em>flieg ich durch die Welt.</em></h1>
+    <p class="l">Rundum-Sorglos-Umzug: Nah- und Fernumzüge, privat und für Firmen, im In- und Ausland. Sie wollen entspannt in Ihr neues Zuhause? Dann sind Sie bei uns richtig.</p>
+    <div class="ctas">
+      <a class="btn light"><svg><use href="#tel"/></svg>0951 5191770</a>
+      <a class="btn wa"><svg><use href="#wa"/></svg>Per WhatsApp anfragen</a>
+    </div>
+    <div class="facts"><div><b>Rundum-Sorglos</b>Full-Service</div><div><b>In- und Ausland</b>Nah und fern</div><div><b>Fair</b>Kostenvoranschlag</div></div>
+  </div>
+  <div class="photo"><img src="../assets/simon-aussenaufzug.jpg" alt="Außenaufzug im Einsatz"><span class="cap">Foto von simon-umzuege.de</span></div>
+</div></div>
+
+<div class="wrap">
+  <div class="req">
+    <h3>Umzug in 2 Minuten anfragen <small>Kostenlos und unverbindlich</small></h3>
+    <div class="f"><label>Von (PLZ / Ort)</label><div>Bamberg</div></div>
+    <div class="f"><label>Nach (PLZ / Ort)</label><div>z. B. Hallstadt</div></div>
+    <div class="f"><label>Wohnungsgröße</label><div>3 Zimmer</div></div>
+    <div class="f"><label>Wunschtermin</label><div>Datum wählen</div></div>
+    <a class="btn call" style="justify-content:center">Weiter →</a>
+  </div>
+</div>
+
+<section><div class="wrap">
+  <div class="h2">Wenn es schwer, sperrig oder wertvoll wird.</div>
+  <p class="sub">Wir haben die Ausrüstung, die Fähigkeiten und die Erfahrung für das Ungewöhnliche.</p>
+  <div class="spec">
+    <div class="sp big"><svg viewBox="0 0 400 230" style="width:100%;height:auto;display:block" aria-hidden="true"><rect width="400" height="230" fill="#0054a6"/><rect x="40" y="40" width="130" height="190" fill="#2988de" opacity=".55"/><g fill="#003a75" opacity=".6"><rect x="58" y="62" width="34" height="30"/><rect x="118" y="62" width="34" height="30"/><rect x="58" y="112" width="34" height="30"/><rect x="118" y="112" width="34" height="30"/><rect x="58" y="162" width="34" height="30"/><rect x="118" y="162" width="34" height="30"/></g><path d="M350 230 L190 50" stroke="#ffdd00" stroke-width="18" stroke-linecap="round"/><path d="M350 230 L190 50" stroke="#e8c600" stroke-width="4" stroke-dasharray="10 12"/><rect x="150" y="38" width="62" height="34" rx="3" fill="#fff"/><rect x="160" y="16" width="40" height="22" fill="#d9b48a"/><path d="M250 60 l0 -30 m-10 10 l10 -10 l10 10" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/></svg><div><span class="tag">Unsere Spezialität</span><h4>Außenaufzug</h4><p>Sperrige Möbel kommen über die Fassade in obere Stockwerke – kein Kampf mit engen Bamberger Treppenhäusern.</p></div></div>
+    <div class="sp"><h4>Klaviere, Flügel, Tresore</h4><p>Schweres und Ungewöhnliches transportieren wir sicher – mit dem passenden Gerät.</p></div>
+    <div class="sp"><h4>Möbellagerung</h4><p>Passt nicht alles in die neue Wohnung? Ihre Möbel lagern bei uns, bis sie ein Plätzchen haben.</p></div>
+    <div class="sp"><h4>Haushaltsauflösung</h4><p>Entrümpelung und Kleintransporte – umweltfreundlich entsorgt.</p></div>
+    <div class="sp"><h4>Möbel- und Küchenmontage</h4><p>Abbauen, aufbauen – die Küche komplett inklusive Elektro- und Wasserinstallation.</p></div>
+  </div>
+  <div class="more"><span>Nah- und Fernumzüge</span><span>Auslandstransporte, auch Übersee</span><span>Privat- und Firmenumzüge</span><span>Seniorenumzüge</span><span>Studentenumzüge</span><span>Kunst und Antiquitäten</span><span>Ein- und Auspacken</span><span>Packmaterial</span><span>Halteverbotszonen</span><span>Handwerkerservice</span></div>
+</div></section>
+
+<section class="alt"><div class="wrap">
+  <div class="h2">So läuft Ihr Umzug mit uns.</div>
+  <div class="steps">
+    <div class="step"><div class="n">1</div><h4>Anfrage stellen</h4><p>Per Telefon, WhatsApp oder Umzugs-App – in wenigen Minuten erledigt.</p></div>
+    <div class="step"><div class="n">2</div><h4>Kostenloses Angebot</h4><p>Wir schauen uns Ihr Objekt an und erstellen unmittelbar ein unverbindliches Angebot. Sie entscheiden in Ruhe.</p></div>
+    <div class="step"><div class="n">3</div><h4>Umzugstag</h4><p>Wir sind von der ersten Minute bis zum letzten Karton vor Ort für Sie ansprechbar.</p></div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <div class="calc">
+    <div><div class="h2" style="font-size:32px">Die Simon-Umzugs-App – jetzt mit einem Klick.</div>
+      <p class="sub">Aus dem bewährten Kalkulationsformular wird ein einfacher Rechner fürs Handy.</p>
+      <ol><li>Zimmer und Möbel antippen</li><li>Kubikmeter werden automatisch berechnet</li><li>Richtpreis sofort sehen</li><li>Kostenloses Angebot anfordern</li></ol>
+      <a class="btn call" style="margin-top:20px">Umzug jetzt berechnen →</a></div>
+    <div style="text-align:center"><img src="../assets/simon-logo.jpg" alt="" style="width:300px;border-radius:12px"></div>
+  </div>
+</div></section>
+
+<section style="padding-top:0"><div class="wrap two">
+  <div class="shop">
+    <div><h3>Ihr Umzugspartner vor Ort.</h3><p>Persönlich, verbindlich und auf Augenhöhe – aus Bamberg.</p></div>
+    <ul><li><b>Simon Umzüge</b></li><li>Kantstraße 30, 96052 Bamberg</li><li>Telefon 0951 5191770</li><li>info@simon-umzuege.de</li><li>WhatsApp</li></ul>
+  </div>
+  <div class="brands">
+    <div><h3>Zwei Namen, ein Team.</h3>
+      <div class="bl"><div class="logo" style="font-size:22px"><span>UMZÜGE</span><span>NEUMANN</span></div><span class="plus">+</span><img src="../assets/simon-logo.jpg" alt="Simon Umzüge"></div></div>
+    <p>Simon Umzüge und Umzüge Neumann – zwei bekannte Namen in Bamberg, ein Team. Alles aus einer Hand.</p>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  <div class="fg">
+    <div><div class="flogo"><img src="../assets/simon-logo.jpg" alt="" style="height:44px;display:block"></div><p style="margin-top:14px">Kantstraße 30<br>96052 Bamberg</p></div>
+    <div><h5>Kontakt</h5><ul><li>0951 5191770</li><li>info@simon-umzuege.de</li><li>WhatsApp</li></ul></div>
+    <div><h5>Leistungen</h5><ul><li>Privat- und Firmenumzüge</li><li>Außenaufzug</li><li>Möbellagerung</li><li>Haushaltsauflösung</li></ul></div>
+    <div><h5>Service</h5><ul><li>Halteverbotszone</li><li>Packmaterial</li><li>Handwerkerservice</li></ul></div>
+  </div>
+  <div class="legal"><span>© 2026 Simon Umzüge</span><span>Impressum · Datenschutz</span></div>
+</div></footer>
+<div class="mob-bar"><a class="btn call"><svg><use href="#tel"/></svg>Anrufen</a><a class="btn wa"><svg><use href="#wa"/></svg>WhatsApp</a></div>
+</body></html>

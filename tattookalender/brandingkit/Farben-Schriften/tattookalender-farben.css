@@ -1,0 +1,18 @@
+/* Tattookalender – Markenfarben und Schriften (Stand 20.10.2026) */
+:root {
+  --tk-nacht: #0B0B0D; /* Nachtschwarz: Haupt-Hintergrund (App, Website, Social, Druck) */
+  --tk-flaeche: #141311; /* Tinte: Flächen: Karten, Kästen, Eingabefelder */
+  --tk-flaeche-2: #1C1A16; /* Kalenderblatt: Erhöhte Flächen, Innenfläche der Bildmarke */
+  --tk-linie: #2C2822; /* Linie: Trennlinien und Rahmen auf Dunkel */
+  --tk-elfenbein: #F4F1EA; /* Elfenbein: Text auf Dunkel – und heller Hintergrund */
+  --tk-stein: #A7A39A; /* Stein: Nebentext auf Dunkel, Unterzeile im Logo */
+  --tk-schiefer: #6B675F; /* Schiefer: Nebentext auf Hell */
+  --tk-champagner: #F3D891; /* Champagner: Gold hell – oberer Verlaufston */
+  --tk-gold: #C9A24F; /* Gold: Akzentfarbe: Buttons, Hervorhebungen, Bildmarke */
+  --tk-altgold: #B88A2C; /* Altgold: Gold auf hellem Hintergrund (oben) */
+  --tk-bronze: #8A6418; /* Bronze: Gold auf hellem Hintergrund (unten), Gold-Text auf Hell */
+  --tk-verlauf-gold: linear-gradient(180deg, #F3D891, #C9A24F);
+  --tk-verlauf-gold-hell: linear-gradient(180deg, #B88A2C, #8A6418);
+  --tk-schrift-display: "Bricolage Grotesque", Inter, system-ui, sans-serif;
+  --tk-schrift-text: Inter, system-ui, sans-serif;
+}

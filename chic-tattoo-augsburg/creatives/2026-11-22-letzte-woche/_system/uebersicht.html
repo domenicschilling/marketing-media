@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><title>Übersicht</title>
+<link rel="stylesheet" href="base.css">
+<style>
+body{background:#1b1b1b}
+.sheet{width:1904px;padding:56px 60px 64px;background:#1b1b1b}
+.top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:36px}
+.top h1{font-size:56px}
+.top p{font-size:22px;color:var(--mute)}
+.grid{display:grid;grid-template-columns:repeat(4,416px);gap:40px}
+.cell p{font-size:20px;color:var(--bone2);margin-bottom:12px}
+.cell img{display:block;width:416px;box-shadow:0 0 0 1px #333}
+.feed img{height:520px}
+.story img{height:739.5px}
+.lbl{font-size:18px;color:var(--mute);margin:30px 0 14px}
+</style></head>
+<body><div class="sheet">
+  <div class="top"><h1 class="d">Chic Tattoo · Letzte Woche −20 %</h1><p class="txt">Entwurf 16.11.2026 · läuft 22.–30.11. · 4 Motive · Feed 4:5 oben, Story 9:16 unten</p></div>
+  <div class="grid feed" id="f"></div>
+  <p class="lab lbl">Story 9:16</p>
+  <div class="grid story" id="s"></div>
+</div>
+<script>
+const m=[['01-november','01 · November'],['03-bewertungen','03 · Bewertungen'],['04-diese-woche','04 · Diese Woche'],['05-augsburg','05 · Augsburg']];
+let n=0;const total=m.length*2;
+for(const [d,t] of m){for(const k of ['feed','story']){const c=document.createElement('div');c.className='cell';if(k==='feed'){c.innerHTML='<p class="lab">'+t+'</p>'}const i=new Image();i.onload=i.onerror=()=>{if(++n===total)document.documentElement.dataset.ready='1'};i.src='../'+d+'/'+k+'.png';c.appendChild(i);document.getElementById(k==='feed'?'f':'s').appendChild(c)}}
+</script>
+</body></html>

@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Tattoofin: Zahllinks für Tattoo-Studios (Entwurf)</title>
+<meta name="description" content="Entwurf: Zahllinks und Anzahlungen für Tattoo-Studios. Kassiert wird auf dem eigenen Stripe-Konto des Studios. 49 € netto im Monat.">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#fbb316">
+<link rel="preload" href="assets/fonts/LuckiestGuy.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/DMSans.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/img/wortmarke-sticker.svg" as="image">
+<link rel="stylesheet" href="style.css">
+<script>document.documentElement.classList.add('js')</script>
+<script src="app.js" defer></script>
+</head>
+<body>
+<main>
+
+<!-- 1 · Gelb ist die Bühne: Schild, Figur, Handy klappt raus -->
+<section class="hero" aria-labelledby="h-hero">
+  <div class="sun" aria-hidden="true"></div>
+  <p class="schild"><img class="wort" src="assets/img/wortmarke-sticker.svg" width="4320" height="1096" alt="Tattoofin" fetchpriority="high"></p>
+  <img class="figur" src="assets/img/figur-560.webp" srcset="assets/img/figur-560.webp 560w,assets/img/figur-1000.webp 1000w" sizes="(min-width:980px) 460px,240px" width="1000" height="1033" alt="Das Tattoofin-Maskottchen: tätowierter Comic-Typ mit Daumen hoch" fetchpriority="high">
+  <div class="hero-kopf">
+    <p class="tag">Für Tattoo-Studios</p>
+    <h1 id="h-hero"><span class="h-a">Link raus.</span> <span class="out" data-t="Anzahlung">Anzahlung</span> <span class="out" data-t="rein.">rein.</span></h1>
+  </div>
+  <div class="hand">
+    <figure class="phone" aria-label="Beispiel einer Zahlseite: Beispiel-Studio, Anzahlung 150,00 Euro. Studio und Betrag sind erfunden.">
+      <div class="phone-cam" aria-hidden="true"></div>
+      <p class="pay-top"><span class="pay-logo" aria-hidden="true">B</span><span>Zahlung an<b>Beispiel-Studio</b></span></p>
+      <p class="pay-what">Anzahlung · Rückenstück</p>
+      <p class="pay-sum">150,00 €</p>
+      <p class="pay-check"><span class="box" aria-hidden="true"></span>Bedingungen gelesen und einverstanden</p>
+      <p class="pay-btn">Weiter zur Zahlung</p>
+      <p class="pay-foot">Technisch bereitgestellt von Tattoofin</p>
+    </figure>
+    <p class="beispiel">Beispiel, erfunden</p>
+  </div>
+  <div class="hero-unten">
+    <p class="lead">Zahllink per WhatsApp schicken, auf deinem eigenen Stripe-Konto kassieren.</p>
+    <a class="btn" href="#start" data-umami-event="start-hero">Studio starten <span aria-hidden="true">→</span></a>
+    <p class="hero-preis"><b>49 € netto im Monat</b> · monatlich kündbar</p>
+  </div>
+</section>
+
+<!-- 2 · No-Show und Beleg -->
+<section class="noshow dark" aria-labelledby="h-noshow">
+  <div class="wrap noshow-in">
+    <div>
+      <p class="stk stk-y">Kennst du</p>
+      <h2 id="h-noshow"><span>Platz geblockt.</span> <span>Motiv gezeichnet.</span> <span class="hl">Kunde kommt nicht.</span></h2>
+      <p class="gross">Schick den Anzahlungslink schon bei der Terminvergabe. Dein Kunde hakt deine Bedingungen ab und zahlt. Das Häkchen wird mit Zeitpunkt gespeichert, dein Beleg.</p>
+    </div>
+    <div class="beleg-col">
+      <div class="karte beleg slap">
+        <p class="beleg-head">Anzahlungsbedingungen<span>Beispiel-Studio</span></p>
+        <p class="beleg-text">Die Anzahlung wird mit dem Preis deines Tattoos verrechnet. Bei Absage unter 48 Stunden oder Nichterscheinen bleibt sie beim Studio.</p>
+        <label class="beleg-check">
+          <input type="checkbox" id="beleg-box">
+          <span>Gelesen und einverstanden</span>
+          <span class="stempel" aria-live="polite"><b>Bestätigt</b> <span id="beleg-zeit">mit Uhrzeit</span></span>
+        </label>
+      </div>
+      <p class="probier"><span aria-hidden="true">↑</span> Tipp’s an. Beispiel, wird nicht gespeichert.</p>
+    </div>
+    <p class="ehrlich">Keine Garantie, dass jeder kommt. Wenn jemand fehlt, gelten deine Bedingungen, und du kannst belegen, dass er sie bestätigt hat.</p>
+  </div>
+</section>
+
+<!-- 3 · Drei Griffe -->
+<section class="griffe papier" aria-labelledby="h-griffe">
+  <div class="wrap">
+    <p class="stk">Am Handy, zwischen zwei Sitzungen</p>
+    <h2 id="h-griffe">Drei Griffe. Link raus.</h2>
+  </div>
+  <ol class="swipe griffe-row" tabindex="0" aria-label="Die drei Schritte, seitlich wischen">
+    <li class="karte griff slap">
+      <div class="mini">
+        <p class="mini-t">Neuer Zahllink</p>
+        <p class="mini-sum">150,00 €</p>
+        <p class="mini-pills"><span class="on">Anzahlung</span><span>Tattoo</span><span>Gutschein</span></p>
+        <p class="mini-btn">Link erstellen</p>
+      </div>
+      <h3><span class="nr" aria-hidden="true">1</span> Betrag tippen</h3>
+      <p>Betrag eintragen, Art wählen. Im Portal, am Handy oder am Rechner.</p>
+    </li>
+    <li class="karte griff slap">
+      <div class="mini">
+        <p class="mini-t">An Lena</p>
+        <p class="mini-bubble">Hi Lena, hier dein Link für die Anzahlung: <u>tattoofin.de/zahlung?z=…</u></p>
+        <p class="mini-bubble mini-bubble-r">Mega, danke!</p>
+      </div>
+      <h3><span class="nr" aria-hidden="true">2</span> Link schicken</h3>
+      <p>Per WhatsApp oder E-Mail. An der Theke scannt dein Kunde deinen QR-Code.</p>
+    </li>
+    <li class="karte griff slap">
+      <div class="mini">
+        <p class="mini-t">Zahlungen</p>
+        <p class="mini-row"><span>Lena · Anzahlung</span><b>bezahlt</b></p>
+        <p class="mini-row"><span>Tom · Tattoo</span><i>offen</i></p>
+        <p class="mini-row"><span>Mia · Gutschein</span><b>bezahlt</b></p>
+      </div>
+      <h3><span class="nr" aria-hidden="true">3</span> Zahlung sehen</h3>
+      <p>Im Portal siehst du, wer bezahlt hat und wer noch offen ist.</p>
+    </li>
+  </ol>
+  <div class="wrap griffe-fuss">
+    <p class="wisch" aria-hidden="true">Wischen <span>→</span></p>
+    <p class="klein">Beispiele: Namen und Beträge erfunden.</p>
+  </div>
+</section>
+
+<!-- 4 · Weg des Geldes -->
+<section class="geld gelb" aria-labelledby="h-geld">
+  <div class="wrap geld-in">
+    <div>
+      <h2 id="h-geld">Kassiert wird <span class="out" data-t="bei dir.">bei dir.</span></h2>
+      <p class="gross">Jedes Studio hat sein eigenes Stripe-Konto. Kundengeld landet nie auf Konten von Tattoofin.</p>
+    </div>
+    <ol class="fluss">
+      <li><b>Dein Kunde zahlt</b><span>per Link oder QR-Code</span></li>
+      <li class="an"><b>Dein Stripe-Konto</b><span>abzüglich Stripes Gebühr</span></li>
+      <li><b>Dein Bankkonto</b><span>Auszahlung nach Stripes Frist</span></li>
+    </ol>
+    <div class="karte frist">
+      <p class="frist-t">Wann kommt’s an?</p>
+      <dl>
+        <div><dt>Neues Konto</dt><dd>7 Tage ab Zahlung</dd></div>
+        <div><dt>Danach</dt><dd>in der Regel wenige Werktage</dd></div>
+      </dl>
+      <p class="klein">Die Frist legt Stripe fest.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 5 · Stickerbogen. Keine Ziffern: Nachbar des Zahlarten-Blocks -->
+<section class="bogen dark" aria-labelledby="h-bogen">
+  <div class="wrap">
+    <h2 id="h-bogen">Alles drin. <span class="hl">Alles fertig.</span></h2>
+  </div>
+  <ul class="swipe bogen-row" tabindex="0" aria-label="Was enthalten ist, seitlich wischen">
+    <li class="sticker slap">
+      <img src="assets/img/sticker-kette.webp" width="520" height="520" alt="Sticker: Kette mit Banner Zahllink" decoding="async">
+      <h3>Zahllinks</h3>
+      <p>Für Tattoo oder Anzahlung. Per WhatsApp, E-Mail oder QR-Code.</p>
+    </li>
+    <li class="sticker slap">
+      <img src="assets/img/sticker-anker.webp" width="520" height="520" alt="Sticker: Anker mit Banner Anzahlung" loading="lazy" decoding="async">
+      <h3>Anzahlung mit Bedingungen</h3>
+      <p>Dein Kunde bestätigt sie vor dem Bezahlen. Vorlage von uns, Frist und Text von dir.</p>
+    </li>
+    <li class="sticker slap">
+      <img src="assets/img/sticker-herz.webp" width="520" height="520" alt="Sticker: Herz mit Banner Dein Studio" loading="lazy" decoding="async">
+      <h3>Deine Zahlseite</h3>
+      <p>Mit deinem Namen und Logo. Dein Kunde sieht, an wen er zahlt.</p>
+    </li>
+    <li class="sticker slap">
+      <img src="assets/img/sticker-aufsteller.webp" width="520" height="520" alt="Sticker: Aufsteller mit QR-Code" loading="lazy" decoding="async">
+      <h3>QR-Aufsteller aus Holz</h3>
+      <p>Mit deinem Studionamen, für die Theke. Den QR-Code gibt’s auch digital.</p>
+    </li>
+    <li class="sticker slap">
+      <img src="assets/img/sticker-auge.webp" width="520" height="520" alt="Sticker: Auge mit Banner Alles im Blick" loading="lazy" decoding="async">
+      <h3>Portal für dein Team</h3>
+      <p>Zahlungen, Auszahlungen, Abrechnungen. Mit eigenen Zugängen je Mitarbeiter.</p>
+    </li>
+    <li class="sticker slap">
+      <img src="assets/img/sticker-gutschein.webp" width="520" height="520" alt="Sticker: Gutschein mit Stern" loading="lazy" decoding="async">
+      <h3>Gutscheine</h3>
+      <p>Per Link verkaufen, als PDF mit Code. Beim Termin als eingelöst markieren.</p>
+    </li>
+  </ul>
+  <div class="wrap"><p class="wisch" aria-hidden="true">Wischen <span>→</span></p></div>
+</section>
+
+<!-- 6 · Zahlarten. Einzige Stelle mit Raten, keine Ziffern hier und in den Nachbarblöcken -->
+<section class="zahlarten papier" aria-labelledby="h-zahlarten">
+  <div class="wrap zahlarten-in">
+    <h2 id="h-zahlarten">Was dein Kunde beim Bezahlen sieht.</h2>
+    <div>
+      <p class="gross">Die Zahlarten, die in deinem Stripe-Konto aktiv sind: Karte, Apple Pay, Google Pay und je nach Angebot Klarna, dort nach deren Prüfung auch Raten.*</p>
+      <p class="pflicht">Achtung! Kreditaufnahme kostet Geld.</p>
+      <p class="klein-t">*Vertragspartner der Raten ist Klarna, nicht Tattoofin. Welche Zahlarten du anbietest, entscheidest du selbst.</p>
+      <p class="fest"><b>Tattoofin kostet dasselbe, egal ob Karte oder Klarna.</b> Wir verdienen an keiner Zahlart mit.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 7 · Einrichtung. Keine Ziffern -->
+<section class="setup gelb" aria-labelledby="h-setup">
+  <div class="wrap setup-in">
+    <h2 id="h-setup">Du tätowierst. <span class="out" data-t="Wir machen">Wir machen</span> <span class="out" data-t="den Rest.">den Rest.</span></h2>
+    <div>
+      <ul class="chips">
+        <li>Zahlarten</li><li>Dein Logo</li><li>QR-Code</li><li>Testzahlung</li><li>Schulung fürs Team</li>
+      </ul>
+      <p class="setup-n">Dein Stripe-Konto legst du einmal selbst an, weil es dein Vertrag mit Stripe ist. Wir zeigen dir, wie.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 8 · Preis -->
+<section class="preis dark" id="preis" aria-labelledby="h-preis">
+  <div class="wrap preis-in">
+    <div class="preis-buehne">
+      <img class="preis-figur" src="assets/img/figur-560.webp" width="560" height="579" alt="" loading="lazy" decoding="async">
+      <div class="preis-sticker slap">
+        <p id="h-preis" class="preis-k">Ein Preis. Fertig.</p>
+        <p class="preis-zahl">49 €</p>
+        <p class="preis-e"><b>netto im Monat</b>, zzgl. 19 % USt.<br>Das sind 58,31 € inkl. USt.</p>
+      </div>
+    </div>
+    <div class="preis-rest">
+      <ul class="haken">
+        <li>Monatlich kündbar, ohne Mindestlaufzeit</li>
+        <li>Keine Einrichtungsgebühr</li>
+        <li>Keine Provision an Tattoofin, gleicher Preis bei jeder Zahlart</li>
+        <li>QR-Aufsteller aus Holz inklusive</li>
+      </ul>
+      <p class="dazu"><b>Dazu kommt:</b> Stripes Zahlungsgebühr, je nach Zahlart ca. 1,5 bis 3 % je Zahlung. Die zieht Stripe selbst ab, sie geht nicht an uns.</p>
+      <a class="btn btn-y" href="#start" data-umami-event="start-preis">Studio starten <span aria-hidden="true">→</span></a>
+      <p class="preis-n">Nur für Studios und Gewerbetreibende. <b>Entwurf:</b> Preis noch nicht final bestätigt.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 9 · Fragen -->
+<section class="fragen papier" aria-labelledby="h-fragen">
+  <div class="wrap fragen-in">
+    <h2 id="h-fragen">Was du noch wissen willst.</h2>
+    <div class="faq">
+      <details>
+        <summary>Wann ist das Geld auf meinem Bankkonto?</summary>
+        <p>Das bestimmt Stripe. Bei neuen Konten wird eine Zahlung 7 Tage danach freigegeben, danach dauert es in der Regel wenige Werktage. Die allererste Auszahlung eines Kontos kann laut Stripe bis zu 14 Tage dauern.</p>
+      </details>
+      <details>
+        <summary>Verhindert die Anzahlung jeden No-Show?</summary>
+        <p>Nein. Sie zeigt dir vorher, wer es ernst meint, und nach deinen Bedingungen bleibt sie bei dir, wenn jemand nicht kommt. Ob ein Einbehalt im Streitfall hält, hängt von deinen Bedingungen und vom Einzelfall ab.</p>
+      </details>
+      <details>
+        <summary>Was passiert bei einer Rückbuchung?</summary>
+        <p>Das läuft über dein Stripe-Konto. Stripe berechnet dafür derzeit 20 € und zieht sie bei dir ab. Du reichst deine Belege ein, zum Beispiel die bestätigten Bedingungen. Entscheiden tut die Bank oder der Zahlungsanbieter, wir nicht.</p>
+      </details>
+      <details>
+        <summary>Wie lange dauert der Start?</summary>
+        <p>Anmeldung ca. 3 Minuten, Stripe-Konto ca. 10 Minuten. Stripe prüft dann Identität und Bankverbindung, meist in 1 bis 3 Werktagen. Danach richten wir alles ein und testen mit dir.</p>
+      </details>
+      <details>
+        <summary>Kann ich wieder raus?</summary>
+        <p>Ja. Du kündigst monatlich mit einem Klick im Portal, ohne Mindestlaufzeit.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- 10 · Start -->
+<section class="start gelb" id="start" aria-labelledby="h-start">
+  <div class="wrap start-in">
+    <div>
+      <h2 id="h-start">Studio <span class="out" data-t="starten.">starten.</span></h2>
+      <p class="gross">Danach führen wir dich durch Vertrag und Stripe-Konto.</p>
+      <p class="start-wa">Lieber erst fragen? <a href="https://wa.me/491624502375" data-umami-event="whatsapp">WhatsApp 0162 4502375</a></p>
+    </div>
+    <div class="form-buehne">
+      <img class="form-figur" src="assets/img/figur-560.webp" width="560" height="579" alt="" loading="lazy" decoding="async">
+      <form class="karte form" id="form" action="#start" novalidate>
+        <p class="demo"><b>Demo:</b> Dieses Formular sendet und speichert in diesem Entwurf nichts.</p>
+        <div class="feld">
+          <label for="f-studio">Name deines Studios</label>
+          <input id="f-studio" name="organization" type="text" autocomplete="organization" required>
+          <p class="err" id="e-studio" hidden>Bitte trag den Namen deines Studios ein.</p>
+        </div>
+        <div class="feld">
+          <label for="f-mail">E-Mail</label>
+          <input id="f-mail" name="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" required>
+          <p class="err" id="e-mail" hidden>Bitte prüf deine E-Mail-Adresse.</p>
+        </div>
+        <div class="feld">
+          <label for="f-tel">Handy <span class="opt">(freiwillig)</span></label>
+          <input id="f-tel" name="tel" type="tel" inputmode="tel" autocomplete="tel">
+        </div>
+        <button class="btn" type="submit" data-umami-event="formular-gesendet">Studio starten <span aria-hidden="true">→</span></button>
+        <p class="form-ok" id="form-ok" role="status" hidden><b>Das wär’s gewesen.</b> In der Demo wurde nichts gesendet.</p>
+      </form>
+    </div>
+  </div>
+</section>
+<div class="stick" id="stick" hidden><a class="btn" href="#start" data-umami-event="start-klebend">Studio starten <span aria-hidden="true">→</span></a></div>
+</main>
+
+<footer class="fuss dark">
+  <div class="wrap fuss-in">
+    <p><img class="fuss-wort" src="assets/img/wortmarke.svg" width="519" height="116" alt="Tattoofin" loading="lazy"></p>
+    <p class="fuss-t">Software für Tattoo-Studios. Anbieter: DSX Media Solutions UG (haftungsbeschränkt). Entwurf, nicht öffentlich. Alle Studios, Namen, Beträge und Uhrzeiten in den Beispielen sind erfunden.</p>
+    <p class="fuss-l"><a href="#">Impressum (Platzhalter)</a><a href="#">Datenschutz (Platzhalter)</a><a href="#">Login (Platzhalter)</a></p>
+  </div>
+</footer>
+</body>
+</html>

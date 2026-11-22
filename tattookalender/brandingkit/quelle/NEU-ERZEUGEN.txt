@@ -1,0 +1,12 @@
+Brandingkit neu erzeugen (Ausgabe nach ~/Downloads/Tattookalender-Brandingkit, Stand 20.10.2026)
+Voraussetzung: Schriften von Google Fonts (OFL) in <Kit>/Farben-Schriften/Schriften/ (Bricolage-Grotesque/, Inter/),
+statische Schnitte per `uv run --with fonttools python statics.py` (im Ordner Schriften ausführen).
+
+1. node measure.mjs                       Glyphen-Positionen des App-Logos im Chromium messen -> measure.json
+2. uv run --with fonttools python outline.py   Schrift in Pfade (opsz 76 / wght 800 wie im App-Logo) -> paths.json
+3. node gen-logos.mjs                     alle Logo-SVGs + PNG 4000/1000 px
+4. node compare2.mjs                      Abgleich mit apps/tf-studio/.../tattookalender-logo.png (Versatz 0/0)
+5. node gen-colors.mjs | gen-templates.mjs | gen-profil.mjs | gen-card.mjs | gen-sig.mjs
+6. node gen-guide.mjs                     Tattookalender-Brandguide.pdf; Kontrolle mit Apple PDFKit:
+   swiftc -O pdf2png.swift -o pdf2png && ./pdf2png <pdf> <ordner> 1.4
+Hinweis: Die Trennlinie „M10 44h100“ aus dem alten icon.svg ist im Browser unsichtbar (Verlauf auf 0 px Höhe) und fehlt bewusst.

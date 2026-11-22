@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8">
+<style>
+@font-face{font-family:"Bricolage";src:url("bricolage.woff2") format("woff2");font-weight:400 800}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1128px;height:191px;overflow:hidden}
+body{position:relative;background:#eef0f6;font-family:"Bricolage",sans-serif;color:#1b2335;
+  -webkit-font-smoothing:antialiased}
+/* weiches Licht wie auf der Website */
+.licht{position:absolute;left:230px;top:-60px;width:520px;height:320px;
+  background:radial-gradient(closest-side,rgba(127,140,244,.24),rgba(102,198,249,.10) 55%,transparent 80%);filter:blur(24px)}
+.licht2{position:absolute;right:-120px;top:-80px;width:520px;height:340px;
+  background:radial-gradient(closest-side,rgba(154,104,241,.10),transparent 75%);filter:blur(20px)}
+.licht3{position:absolute;left:-140px;bottom:-160px;width:520px;height:320px;
+  background:radial-gradient(closest-side,rgba(102,198,249,.12),transparent 75%);filter:blur(20px)}
+/* feine Linie oben */
+.kante{position:absolute;left:0;right:0;bottom:0;height:3px;
+  background:linear-gradient(90deg,rgba(102,198,249,0) 0%,#66c6f9 30%,#7f8cf4 60%,#9a68f1 85%,rgba(154,104,241,0) 100%);opacity:.55}
+.buehne{position:absolute;left:318px;top:40px;width:260px;height:108px}
+.buehne img{width:260px;height:auto;display:block;position:relative;z-index:2;
+  filter:drop-shadow(0 6px 10px rgba(75,55,201,.16))}
+.schatten{position:absolute;left:20px;right:20px;bottom:-14px;height:16px;z-index:1;
+  background:radial-gradient(closest-side,rgba(75,55,201,.28),rgba(102,198,249,.10) 60%,transparent);filter:blur(5px)}
+.trenner{position:absolute;left:616px;top:46px;width:1px;height:100px;
+  background:linear-gradient(180deg,transparent,#c9cfe0 20%,#c9cfe0 80%,transparent)}
+.text{position:absolute;left:648px;top:0;height:191px;width:470px;display:flex;flex-direction:column;justify-content:center}
+.marke{font-size:13px;font-weight:640;letter-spacing:.2em;color:#48566d;text-transform:uppercase;margin-bottom:9px}
+.claim{font-size:26px;line-height:1.12;font-weight:700;letter-spacing:-.02em;font-variation-settings:"opsz" 96;color:#1b2335}
+.claim em{font-style:normal;background:linear-gradient(100deg,#2e6ad6 0%,#4f54d8 50%,#6a3ed6 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.ort{margin-top:11px;font-size:12.5px;font-weight:520;color:#48566d;letter-spacing:.01em}
+.ort b{font-weight:620;color:#4b37c9}
+</style></head><body>
+<div class="licht3"></div><div class="licht2"></div><div class="licht"></div>
+<div class="buehne"><img src="zeichen.png" alt="DSX"><div class="schatten"></div></div>
+<div class="trenner"></div>
+<div class="text">
+  <div class="marke">DSX Media Solutions</div>
+  <div class="claim">Software &amp; digitale Kundengewinnung<br>für <em>lokale Unternehmen</em></div>
+  <div class="ort">Memmelsdorf bei Bamberg &nbsp;·&nbsp; <b>dsxmediasolutions.de</b></div>
+</div>
+<div class="kante"></div>
+</body></html>

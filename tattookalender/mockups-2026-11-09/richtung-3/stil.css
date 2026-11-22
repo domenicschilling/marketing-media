@@ -1,0 +1,11 @@
+/* Richtung 3 – "Ein Termin, zwei Geräte": ruhige Geräte-Szene ohne Überlagerung. Links der Kalender im Studio, rechts das Handy des Kunden – derselbe Termin (Tom Meier, Mi. 11.11.). */
+.laptop{position:absolute}
+.laptop .lid{background:#1c1d20;border-radius:22px 22px 8px 8px;padding:14px;box-shadow:0 40px 80px -40px rgba(22,23,26,.45)}
+.laptop .scr{border-radius:6px;overflow:hidden;background:#fff}
+.laptop .base{position:relative;height:22px;margin:0 -56px;background:linear-gradient(#ecebe8,#c6c5c0 70%,#a9a8a3);border-radius:2px 2px 20px 20px;box-shadow:0 22px 30px -14px rgba(22,23,26,.35)}
+.laptop .base::before{content:"";position:absolute;left:50%;top:0;width:150px;margin-left:-75px;height:8px;background:#b4b3ae;border-radius:0 0 10px 10px}
+.phone{position:absolute;background:#1c1d20;padding:11px;box-shadow:0 40px 70px -34px rgba(22,23,26,.5),inset 0 0 0 2px #3a3b3f}
+.phone .scr{overflow:hidden;background:#fff;position:relative}
+.phone .scr::before{content:"";display:block;height:var(--sb,24px);background:#fff}
+.cap{position:absolute;color:var(--muted);font-weight:600}
+.cap b{color:var(--ink);font-weight:800}

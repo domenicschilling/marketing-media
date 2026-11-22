@@ -1,0 +1,24 @@
+Herz springt zu [ '#anzahlung', 12 ]
+Ring Stern #raten
+Schritt 1 100 Du schickst den Link
+Schritt 2 010 Dein Kunde wählt
+Schritt 3 001 Du siehst, wer bezahlt hat
+Links [
+  '#inhalt',
+  '#oben',
+  '#raten',
+  '#ablauf',
+  '#preis',
+  '/start.html',
+  'https://wa.me/491624502375',
+  '#anzahlung',
+  '#gutscheine',
+  '/vertrag.html',
+  '/impressum.html',
+  '/datenschutz.html'
+]
+Fehlende Anker 0
+Cookies/Storage [ '', 0 ]
+Robots noindex, nofollow
+ohne JS ok
+reduziert, laufende Animationen: 0 aus-Röhren: 0

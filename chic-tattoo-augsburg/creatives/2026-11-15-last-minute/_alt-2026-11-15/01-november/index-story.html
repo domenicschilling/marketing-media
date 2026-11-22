@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><title>01 November – Story</title>
+<link rel="stylesheet" href="../_system/base.css">
+<style>
+/* Idee: Plakat. Foto randlos, die schwarze Hose wird zur Textfläche.
+   Das rote Preisschild hängt am Hosenbund wie ein Etikett und bildet mit Zeile 1 der Headline eine Einheit.
+   Story: Foto enger (Faktor 1,33), damit der Bund tiefer liegt und der Textblock knapp über der 20-%-Zone endet. */
+.photo{left:0;top:0;width:1080px;height:1540px;--fade:260px}
+.logo{position:absolute;left:56px;top:296px;width:124px;height:124px;z-index:5;box-shadow:0 0 0 3px var(--ink),0 6px 18px rgba(0,0,0,.35)}
+.tag{position:absolute;right:64px;z-index:6;background:var(--red);color:#fff;padding:20px 24px 16px 22px;display:flex;align-items:flex-end;gap:14px;
+  box-shadow:0 14px 28px -10px rgba(0,0,0,.55)}
+.tag .bis{font-weight:900;font-stretch:72%;font-size:36px;line-height:1;text-transform:uppercase;writing-mode:vertical-rl;transform:rotate(180deg);letter-spacing:.1em;align-self:stretch;text-align:center;border-left:3px solid rgba(255,255,255,.9);padding-left:12px;margin-right:2px}
+.tag .pct{font-weight:900;font-stretch:62%;font-size:188px;line-height:.74;letter-spacing:-.02em}
+.tag .pct small{font-size:.5em;margin-left:6px;vertical-align:top;position:relative;top:.06em}
+.hl{position:absolute;left:var(--g);top:1128px;z-index:6;font-size:116px;letter-spacing:-.006em;white-space:nowrap;color:var(--bone)}
+.hl span{display:block}
+.rule{position:absolute;left:var(--g);right:var(--g);top:1352px;height:3px;background:var(--red);z-index:6}
+.cond{position:absolute;left:var(--g);top:1376px;z-index:6;font-size:26px;line-height:1.2;color:var(--bone2)}
+.cond b{color:var(--bone);font-weight:800}
+.cond i{font-style:normal;color:var(--red2);padding:0 .3em}
+.sender{position:absolute;right:var(--g);top:1379px;z-index:6;text-align:right;font-size:22px}
+</style></head>
+<body>
+<div class="c story">
+  <div class="ph photo fade-b" data-src="../_system/img/02-rose-huefte.png" data-crop="250,760,1062,1912" data-fit="width" data-filter="url(#sharp) contrast(1.07) saturate(.88) brightness(1.02)"></div>
+  <div class="logo"><img src="../_system/img/logo-480.webp" alt=""></div>
+  <div class="tag"><span class="bis">Bis</span><span class="pct tnum">25<small>%</small></span></div>
+  <h1 class="d hl"><span class="l1">Dein Tattoo</span><span>noch im November<i class="red2" style="font-style:normal">.</i></span></h1>
+  <div class="rule"></div>
+  <p class="txt cond"><b>Termin bis 30.11.</b><i>·</i>ab 150 €<i>·</i>Code auf der Seite</p>
+  <p class="sender"><b>Chic Tattoo</b> · Augsburg</p>
+  <div class="grain"></div>
+</div>
+<!-- leichte Unscharfmaskierung (klassischer Faltungsfilter, keine KI) gegen die Reel-Weichheit -->
+<svg width="0" height="0" style="position:absolute"><filter id="sharp" color-interpolation-filters="sRGB"><feConvolveMatrix order="3" preserveAlpha="true" kernelMatrix="0 -0.28 0 -0.28 2.12 -0.28 0 -0.28 0"/></filter></svg>
+<script>
+// Schild an Zeile 1 ausrichten: Unterkante Schild = Grundlinie „DEIN TATTOO“
+document.fonts.ready.then(() => {
+  const l1 = document.querySelector('.hl .l1'), tag = document.querySelector('.tag');
+  const r = l1.getBoundingClientRect();
+  const fs = parseFloat(getComputedStyle(l1).fontSize);
+  tag.style.top = (r.bottom - fs * 0.22 - tag.offsetHeight) + 'px';
+});
+</script>
+<script src="../_system/crop.js"></script>
+</body></html>

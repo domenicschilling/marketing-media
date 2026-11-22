@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>angebot.new: Sprechen Sie Ihr Angebot</title>
+<meta name="description" content="Sie sprechen in den Browser, die KI macht daraus Kunde, Positionen, Mengen und Preise. PDF nach DIN 5008, Versand per WhatsApp oder E-Mail. 14 Tage testen.">
+<meta name="theme-color" content="#1f2bff">
+<link rel="preload" href="fonts/Gambarino-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/GeneralSans-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="blatt.css">
+<script>
+  // Mit Skript startet das Blatt leer und schreibt sich selbst. Lädt das Modul nicht, bleibt es ausgefüllt sichtbar.
+  document.documentElement.classList.add("js");
+  setTimeout(function () { if (!window.__blatt) document.documentElement.classList.remove("js"); }, 2500);
+</script>
+<script type="module" src="blatt.js"></script>
+</head>
+<body>
+
+<a class="sprung" href="#angebot">Zum Angebot springen</a>
+
+<main>
+<!-- ============ Erstes Blatt: Stimme links, Papier rechts ============ -->
+<section class="start" id="start" aria-label="Vorführung: ein Angebot entsteht beim Sprechen">
+  <div class="stimme">
+    <header class="kopf">
+      <a class="marke" href="#start">angebot.new</a>
+      <nav aria-label="Seite">
+        <a class="nur-breit" href="#positionen">Positionen</a>
+        <a class="nur-breit" href="#hinweise">Hinweise</a>
+        <a href="#summe">Preise ab 19 € netto</a>
+      </nav>
+    </header>
+
+    <h1>Sprechen Sie<br>Ihr Angebot.</h1>
+    <p class="unter">Im Browser, ohne App. Die KI macht daraus Kunde, Positionen, Mengen und Preise.</p>
+
+    <div class="gesagt-feld">
+      <p class="status"><span class="welle" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><span id="status">Beispiel Malerbetrieb, gesprochen:</span></p>
+      <p class="gesagt" id="gesagt" aria-live="polite">Für Frau Berger: Wohnzimmer streichen, 35 Quadratmeter zu 14 Euro. Dazu Abkleben pauschal 90 Euro.</p>
+      <form class="tippen" id="tippen" hidden>
+        <label for="tippfeld">Tippen Sie, was Sie sagen würden</label>
+        <textarea id="tippfeld" name="diktat" rows="3" autocomplete="off" autocapitalize="sentences" enterkeyhint="done" placeholder="Für Frau Berger: Wohnzimmer streichen, 35 Quadratmeter zu 14 Euro."></textarea>
+      </form>
+      <p class="hinweis" id="hinweis" hidden></p>
+    </div>
+
+    <div class="reihe reihe-start">
+      <a class="knopf knopf-hell" href="https://6ae5e0f0124c91011f938fb5--angebot-new.netlify.app/start">14 Tage testen</a>
+      <p class="klein">Zahlungsart beim Start, erste Abbuchung nach dem Test, vorher kündbar.</p>
+    </div>
+  </div>
+
+  <article class="blatt" id="blatt" data-ui aria-label="Angebotsblatt, Beispiel">
+    <div class="blatt-innen">
+      <div class="blatt-kopf">
+        <p class="absender">Ihr Betrieb · Ihre Straße · Ihr Ort</p>
+        <p class="beispiel" id="beispiel-wer">Beispiel: Malerbetrieb</p>
+      </div>
+
+      <div class="anschrift">
+        <div>
+          <p class="etikett">An</p>
+          <p class="fuellung kunde" id="f-kunde">Frau Berger</p>
+        </div>
+        <div class="datum">
+          <p class="etikett">Datum</p>
+          <p id="f-datum">heute</p>
+        </div>
+      </div>
+
+      <div class="betreff">
+        <p class="etikett">Betreff: Angebot</p>
+        <p class="fuellung betreff-text" id="f-betreff">Wohnzimmer streichen</p>
+      </div>
+
+      <div class="tabelle-rahmen">
+        <table class="zeilen">
+          <thead>
+            <tr><th scope="col">Leistung</th><th scope="col" class="zahl breit">Menge</th><th scope="col" class="zahl breit">Preis</th><th scope="col" class="zahl">Summe</th></tr>
+          </thead>
+          <tbody id="f-zeilen">
+            <tr><td><span class="titel">Wohnzimmer streichen</span><span class="klein-zeile">35 m² × 14,00 €</span></td><td class="zahl breit">35 m²</td><td class="zahl breit">14,00 €</td><td class="zahl">490,00 €</td></tr>
+            <tr><td><span class="titel">Abkleben</span><span class="klein-zeile">1 pauschal × 90,00 €</span></td><td class="zahl breit">1 pauschal</td><td class="zahl breit">90,00 €</td><td class="zahl">90,00 €</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="blatt-fuss">
+        <div class="bedienung">
+          <button class="mikro" id="mikro" type="button" aria-pressed="false">
+            <svg class="i-mikro" viewBox="0 0 48 48" aria-hidden="true"><rect x="16" y="4" width="16" height="26" rx="8"/><path d="M8 22v2a16 16 0 0 0 32 0v-2M24 40v6M15 46h18" fill="none" stroke="currentColor" stroke-width="4"/></svg>
+            <svg class="i-stopp" viewBox="0 0 48 48" aria-hidden="true"><rect x="10" y="10" width="28" height="28"/></svg>
+            <svg class="i-tasten" viewBox="0 0 48 48" aria-hidden="true"><path d="M4 12h40v24H4zM11 19h4M19 19h4M27 19h4M35 19h2M11 27h26" fill="none" stroke="currentColor" stroke-width="4"/></svg>
+            <span id="mikro-text">Selbst sprechen</span>
+          </button>
+          <button class="weiter" id="weiter" type="button">Nächstes Beispiel: <span id="weiter-wer">Fotografin</span></button>
+        </div>
+
+        <dl class="summen">
+          <div><dt>Summe netto</dt><dd id="f-netto">580,00 €</dd></div>
+          <div><dt>zzgl. <span id="f-satz">19</span> % USt</dt><dd id="f-ust">110,20 €</dd></div>
+          <div class="gesamt"><dt>Gesamt</dt><dd id="f-brutto">690,20 €</dd></div>
+        </dl>
+      </div>
+    </div>
+  </article>
+</section>
+
+<!-- ============ Anschreiben ============ -->
+<section class="anschreiben" id="angebot">
+  <figure class="duo bild-tisch auf">
+    <img src="bilder/buero.jpg" width="1200" height="671" alt="Schreibtisch am Abend mit Papierstapeln, Taschenrechner und aufgeklapptem Laptop" loading="lazy">
+    <figcaption>Symbolbild</figcaption>
+  </figure>
+
+  <div class="brief">
+    <div class="brief-kopf auf" data-ui>
+      <div>
+        <p class="absender">angebot.new</p>
+        <p class="an">An alle, die Angebote schreiben</p>
+      </div>
+      <dl class="zeichen">
+        <div><dt>Ihr Zeichen</dt><dd>Küchentisch, abends</dd></div>
+        <div><dt>Unser Zeichen</dt><dd>Sprache</dd></div>
+        <div><dt>Datum</dt><dd id="f-datum-2">heute</dd></div>
+      </dl>
+    </div>
+
+    <h2 class="auf">Angebot<br>an Sie</h2>
+    <div class="brief-text auf">
+      <p>Guten Tag,</p>
+      <p>Ihr Kunde wartet auf das Angebot. Getippt wird es dann abends am Küchentisch, oder es bleibt erst einmal liegen. Währenddessen fragt mancher Kunde woanders an.</p>
+      <p>Darum bieten wir Ihnen an: Sie sagen in Ihren eigenen Worten, was gemacht wird und was es kostet. Daraus entsteht das fertige Blatt, und Sie prüfen es, bevor es rausgeht. Das gilt für den Malerbetrieb genauso wie für die Fotografin oder die Agentur.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Positionen ============ -->
+<section class="positionen" id="positionen">
+  <h2 class="auf">Positionen</h2>
+  <p class="neben auf">Unter „Menge“ steht, ab welchem Tarif die Leistung dabei ist. Die Preise stehen in der Summe.</p>
+  <table class="pos-tabelle">
+    <thead data-ui>
+      <tr><th scope="col">Pos.</th><th scope="col">Leistung</th><th scope="col" class="menge">Menge</th></tr>
+    </thead>
+    <tbody>
+      <tr class="pos-haupt auf"><td class="pos">1</td><td><strong>Angebot per Sprache</strong><span>Sie sprechen in den Browser, ohne App-Installation, am Handy und am Rechner. Die KI macht daraus Kunde, Positionen, Mengen und Preise.</span></td><td class="menge">alle Tarife</td></tr>
+      <tr class="auf"><td class="pos">2</td><td><strong>Ändern per Sprache oder von Hand</strong><span>Sagen Sie, was anders sein soll, oder tippen Sie in die Zeile. Vor dem Versand können Sie alles prüfen und ändern.</span></td><td class="menge">alle Tarife</td></tr>
+      <tr class="auf"><td class="pos">3</td><td><strong>PDF nach DIN 5008</strong><span>Anschriftfeld fürs Fensterkuvert, Betreff, Positionen, Umsatzsteuer und Gesamtbetrag.</span></td><td class="menge">alle Tarife</td></tr>
+      <tr class="auf"><td class="pos">4</td><td><strong>Versand per WhatsApp oder E-Mail</strong><span>Direkt aus dem Angebot heraus.</span></td><td class="menge">alle Tarife</td></tr>
+      <tr class="auf"><td class="pos">5</td><td><strong>Leistungskatalog</strong><span>Startvorlagen für 20 Branchen plus „Andere Branche“.</span></td><td class="menge">alle Tarife</td></tr>
+      <tr class="auf"><td class="pos">6</td><td><strong>Kunden-Link mit Online-Unterschrift</strong><span>Ihr Kunde liest das Angebot und unterschreibt. Die Zusage kommt zu Ihnen zurück.</span></td><td class="menge">ab Profi</td></tr>
+      <tr class="auf"><td class="pos">7</td><td><strong>Rechnung mit einem Tipp</strong><span>Aus dem Angebot wird die Rechnung.</span></td><td class="menge">ab Profi</td></tr>
+      <tr class="auf"><td class="pos">8</td><td><strong>Nachfass-Erinnerungen</strong><span>Sie sehen, welches Angebot noch keine Antwort hat, und fassen nach.</span></td><td class="menge">ab Profi</td></tr>
+      <tr class="auf"><td class="pos">9</td><td><strong>Eigenes Logo und eigene Farbe</strong><span>Das Blatt sieht nach Ihrem Betrieb aus.</span></td><td class="menge">ab Profi</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============ So kommt es beim Kunden an ============ -->
+<section class="anlage" id="beim-kunden">
+  <div class="anlage-kopf">
+    <h2 class="auf">So kommt<br class="nur-schmal"> es an</h2>
+    <p class="auf">Am Beispiel Malerbetrieb: Frau Berger, 690,20 € gesamt.</p>
+  </div>
+
+  <div class="mosaik">
+    <figure class="kachel kachel-pdf auf">
+      <figcaption>Das PDF nach DIN 5008. Das ist die echte Ausgabe der App, hier in der Farbe dieser Seite. <a href="bilder/beispiel-angebot.pdf">Ganzes PDF ansehen</a></figcaption>
+      <div class="pdf-ausschnitt"><img src="bilder/pdf-beispiel.jpg" width="1272" height="1800" alt="Angebots-PDF für Frau Berger mit zwei Positionen, Summe netto 580,00 Euro, zuzüglich 19 Prozent Umsatzsteuer 110,20 Euro, Gesamtbetrag 690,20 Euro" loading="lazy"></div>
+    </figure>
+
+    <div class="wisch" tabindex="0" role="group" aria-label="Weitere Beispiele, seitlich wischbar">
+      <figure class="kachel kachel-senden auf">
+        <figcaption>Per WhatsApp oder E-Mail raus.</figcaption>
+        <div class="ui-senden" data-ui>
+          <p class="ui-an">An Frau Berger</p>
+          <p class="ui-nachricht">Guten Tag Frau Berger, anbei Ihr Angebot. Sie können es direkt online annehmen.</p>
+          <p class="ui-anhang"><b>Angebot A-2026-0001</b><span>PDF</span></p>
+          <p class="ui-senden-knopf">Senden</p>
+        </div>
+      </figure>
+
+      <figure class="kachel kachel-foto duo auf">
+        <img src="bilder/maler.jpg" width="800" height="1000" alt="Maler im Arbeitsanzug spricht in sein Handy, im Hintergrund ein abgedeckter Raum" loading="lazy">
+        <figcaption>Symbolbild</figcaption>
+      </figure>
+
+      <figure class="kachel kachel-nachfassen auf">
+        <figcaption>Keine Antwort? Sie werden erinnert.</figcaption>
+        <div class="ui-nachfassen" data-ui>
+          <p class="ui-kopfzeile">Heute zu tun</p>
+          <p class="ui-merker"><b>Frau Berger</b>Angebot A-2026-0001, 690,20 €</p>
+          <p class="ui-feld">Noch keine Antwort.</p>
+          <p class="ui-senden-knopf">Nachfassen</p>
+        </div>
+      </figure>
+
+      <figure class="kachel kachel-link auf">
+        <figcaption>Ihr Kunde unterschreibt online.</figcaption>
+        <div class="ui-link" data-ui>
+          <p class="ui-von">Angebot von Ihr Betrieb</p>
+          <p class="ui-betrag">690,20 €</p>
+          <p class="ui-feld">Wohnzimmer streichen, Abkleben</p>
+          <svg class="ui-unterschrift" viewBox="0 0 420 110" aria-hidden="true"><use href="#unterschrift"/></svg>
+          <p class="ui-linie">Frau Berger</p>
+          <p class="ui-knopf">Angebot annehmen</p>
+        </div>
+      </figure>
+
+      <figure class="kachel kachel-rechnung auf">
+        <figcaption>Die Zusage kommt zurück, die Rechnung folgt mit einem Tipp.</figcaption>
+        <div class="ui-rechnung" data-ui>
+          <p class="ui-zusage">Frau Berger hat angenommen</p>
+          <p class="ui-kopf">Rechnung</p>
+          <p class="ui-zeile"><span>Summe netto</span><span>580,00 €</span></p>
+          <p class="ui-zeile"><span>zzgl. 19 % USt</span><span>110,20 €</span></p>
+          <p class="ui-zeile ui-gesamt"><span>Gesamt</span><span>690,20 €</span></p>
+        </div>
+      </figure>
+
+      <figure class="kachel kachel-foto duo auf">
+        <img src="bilder/elektrikerin.jpg" width="1000" height="671" alt="Elektrikerin sitzt im Lieferwagen und schaut auf ihr Handy, neben ihr eine Werkzeugtasche" loading="lazy">
+        <figcaption>Symbolbild</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Summe ============ -->
+<section class="summe" id="summe">
+  <div class="summe-text">
+    <h2 class="auf">Summe</h2>
+    <p class="auf">Pro Monat, für Unternehmer. Wählen Sie die Zeile, die zu Ihrem Betrieb passt. Das Blatt rechnet mit.</p>
+  </div>
+
+  <form class="summen-blatt auf" aria-label="Tarif wählen">
+    <fieldset>
+      <legend>Tarif</legend>
+
+      <label class="tarif">
+        <input type="radio" name="tarif" value="19">
+        <span class="tarif-zeile"><b>Start</b><span class="tarif-preis">19,00 €</span></span>
+        <span class="tarif-mehr">Für Einzelkämpfer, die ab und zu Angebote schreiben. 30 Angebote und Rechnungen im Monat.</span>
+      </label>
+
+      <label class="tarif">
+        <input type="radio" name="tarif" value="39" checked>
+        <span class="tarif-zeile"><b>Profi</b><span class="tarif-preis">39,00 €</span></span>
+        <span class="tarif-mehr">Unsere Empfehlung, wenn Sie jede Woche anbieten. Unbegrenzt Angebote und Rechnungen, Online-Annahme, Nachfassen, Logo.</span>
+      </label>
+
+      <label class="tarif">
+        <input type="radio" name="tarif" value="79">
+        <span class="tarif-zeile"><b>Team</b><span class="tarif-preis">79,00 €</span></span>
+        <span class="tarif-mehr">Alles aus Profi, dazu Auswertung der Zusagequote und persönliche Einrichtung. Mehrere Nutzer sind in Vorbereitung.</span>
+      </label>
+    </fieldset>
+
+    <dl class="summen summen-gross" data-ui aria-live="polite">
+      <div class="gesamt netto-gross"><dt>Summe netto im Monat</dt><dd id="p-netto">39,00 €</dd></div>
+      <div><dt>zzgl. 19 % USt</dt><dd id="p-ust">7,41 €</dd></div>
+      <div class="brutto-zeile"><dt>Gesamt</dt><dd id="p-brutto">46,41 €</dd></div>
+    </dl>
+
+    <div class="reihe reihe-summe">
+      <a class="knopf" href="https://6ae5e0f0124c91011f938fb5--angebot-new.netlify.app/start">14 Tage testen</a>
+      <p class="klein">Zahlungsart beim Start, erste Abbuchung nach dem Test, vorher kündbar.</p>
+    </div>
+  </form>
+</section>
+
+<!-- ============ Hinweise ============ -->
+<section class="hinweise" id="hinweise">
+  <h2 class="auf">Hinweise zum Angebot</h2>
+
+  <details class="auf" open>
+    <summary>Versteht die KI mich?</summary>
+    <p>Sprechen Sie, wie Sie es einem Kollegen sagen würden: für wen, was, wie viel, zu welchem Preis. Die KI ordnet das in Zeilen. Was nicht passt, sehen Sie sofort und ändern es. Ob es bei Ihnen sitzt, zeigt der Test mit Ihren eigenen Aufträgen am besten.</p>
+  </details>
+  <details class="auf">
+    <summary>Stimmen die Zahlen?</summary>
+    <p>Menge mal Preis, Netto, Umsatzsteuer und Gesamtbetrag rechnet das Programm. Ob Menge und Preis stimmen, entscheiden Sie: Sie sehen jede Zeile, bevor das Angebot rausgeht.</p>
+  </details>
+  <details class="auf">
+    <summary>Kann ich das ändern?</summary>
+    <p>Ja. Per Sprache, oder von Hand in jeder Zeile. Erst wenn Sie senden, geht etwas raus.</p>
+  </details>
+  <details class="auf">
+    <summary>Sieht das professionell aus?</summary>
+    <p>Das PDF folgt DIN 5008, mit Anschriftfeld fürs Fensterkuvert und Ihren Firmenangaben in der Fußzeile. Ab Profi mit Ihrem Logo und Ihrer Farbe. Die echte Ausgabe sehen Sie weiter oben.</p>
+  </details>
+  <details class="auf">
+    <summary>Passt das zu meiner Branche?</summary>
+    <p>Der Leistungskatalog hat Startvorlagen für 20 Branchen, vom Malerbetrieb bis zur Beratung. Für alles andere gibt es „Andere Branche“, und Ihre eigenen Leistungen tragen Sie selbst ein.</p>
+  </details>
+  <details class="auf">
+    <summary>Was kostet es, und wann wird abgebucht?</summary>
+    <p>Start 19 €, Profi 39 €, Team 79 € im Monat, jeweils netto zzgl. USt. 14 Tage Test: Die Zahlungsart hinterlegen Sie beim Start, die erste Abbuchung kommt nach dem Test, vorher können Sie kündigen. Das Angebot richtet sich nur an Unternehmer.</p>
+  </details>
+</section>
+
+<!-- ============ Unterschriftszeile ============ -->
+<section class="abschluss" id="abschluss">
+  <h2 class="auf">Sprechen Sie<br>Ihr nächstes.</h2>
+  <p class="gruss auf">Mit freundlichen Grüßen<br>angebot.new</p>
+
+  <div class="zeile-unterschrift auf">
+    <div class="linie">
+      <span class="kreuz" aria-hidden="true">×</span>
+      <svg class="unterschrift" viewBox="0 0 420 110" aria-hidden="true">
+        <defs><path id="unterschrift" pathLength="1" d="M14 78 C 26 52, 40 16, 52 12 C 62 9, 58 40, 46 66 C 40 80, 30 96, 26 92 C 22 86, 46 66, 68 60 C 80 56, 84 62, 80 70 C 78 76, 88 74, 96 64 C 104 54, 108 60, 106 68 C 104 76, 116 72, 124 62 C 134 48, 150 18, 158 20 C 166 24, 150 60, 142 74 C 140 80, 152 74, 162 64 C 170 56, 176 60, 174 68 C 172 76, 186 72, 196 62 C 206 52, 212 58, 210 66 C 208 74, 224 70, 236 60 C 250 48, 270 44, 268 54 C 266 62, 250 66, 256 68 C 278 72, 322 54, 352 40 C 372 32, 392 28, 406 30 M 66 100 C 150 84, 272 82, 372 74"/></defs>
+        <use href="#unterschrift"/>
+      </svg>
+      <a class="knopf knopf-gross" id="unterschreiben" href="https://6ae5e0f0124c91011f938fb5--angebot-new.netlify.app/start"><span id="unterschreiben-text">14 Tage Test starten</span></a>
+    </div>
+    <p class="linie-text">Die Linie ist nur ein Spiel mit der Form. Der Knopf startet Ihren Test, unterschrieben oder bestellt wird hier nichts.</p>
+    <p class="klein">Zahlungsart beim Start, erste Abbuchung nach dem Test, vorher kündbar. Danach ab 19 € im Monat, netto zzgl. USt. Nur für Unternehmer.</p>
+  </div>
+</section>
+
+<!-- Fester Knopf am Handy, erscheint erst unterhalb des ersten Blatts -->
+<div class="fest" id="fest" hidden>
+  <a class="knopf knopf-hell" href="https://6ae5e0f0124c91011f938fb5--angebot-new.netlify.app/start">14 Tage testen</a>
+  <p class="klein">Zahlungsart beim Start, erste Abbuchung nach dem Test, vorher kündbar.</p>
+</div>
+</main>
+
+<!-- ============ Fußzeile ============ -->
+<footer class="fuss">
+  <div class="fuss-spalten">
+    <p>Angebote per Sprache,<br>für alle Branchen.</p>
+    <ul>
+      <li><a href="#positionen">Positionen</a></li>
+      <li><a href="#summe">Summe</a></li>
+      <li><a href="#hinweise">Hinweise</a></li>
+    </ul>
+    <ul>
+      <li><a href="https://angebot-new.netlify.app/impressum/">Impressum</a></li>
+      <li><a href="https://angebot-new.netlify.app/datenschutz/">Datenschutz</a></li>
+    </ul>
+    <p>Namen und Beträge auf dieser Seite sind Beispiele. Fotos sind Symbolbilder, mit KI erzeugt.</p>
+  </div>
+  <p class="wortmarke" aria-hidden="true">angebot.new</p>
+</footer>
+
+
+</body>
+</html>

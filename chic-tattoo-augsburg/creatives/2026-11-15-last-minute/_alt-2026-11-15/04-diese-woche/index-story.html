@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><title>04 Diese Woche – Story</title>
+<link rel="stylesheet" href="../_system/base.css">
+<style>
+/* Idee: Abreißkalender. Zwei Kalenderblätter hängen vor dem dunklen Raben-Sleeve: erst 25 %, dann 20 %.
+   Dringlichkeit nur über die echten Daten. Raster: Kopf (Logo/Aktion) – Headline – Unterzeile – Blätter – Absender. */
+.photo{left:420px;top:0;width:660px;height:1350px;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 200px);mask-image:linear-gradient(90deg,transparent 0,#000 200px)}
+.shade{position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(11,11,11,0) 52%,rgba(11,11,11,.5) 80%,rgba(11,11,11,.85) 100%)}
+
+.brand{position:absolute;left:var(--g);top:60px;display:flex;align-items:center;gap:20px;z-index:5}
+.brand .logo{width:92px;height:92px;box-shadow:0 0 0 3px var(--ink)}
+.brand p{font-size:24px;line-height:1.22;color:var(--bone)}
+.brand p span{color:var(--red2)}
+
+.hl{position:absolute;left:var(--g);top:212px;font-size:124px;line-height:.86;z-index:4}
+.hl span{display:block}
+.sub{position:absolute;left:var(--g);top:452px;z-index:4;font-size:34px;line-height:1.2;color:var(--bone)}
+.sub b{font-weight:800}
+
+/* Kalenderblätter: identisches Zeilenraster -> Perforation und Prozentzahlen stehen auf einer Linie */
+.cards{position:absolute;left:var(--g);right:var(--g);top:636px;display:grid;grid-template-columns:1fr 1fr;gap:32px;z-index:4}
+.card{position:relative;display:grid;grid-template-rows:68px 176px 3px 226px;background:var(--bone);color:var(--ink);
+  box-shadow:0 2px 3px rgba(0,0,0,.45),0 26px 44px -8px rgba(0,0,0,.75)}
+.card .strip{background:var(--red);color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;position:relative}
+.card .strip::before,.card .strip::after{content:"";position:absolute;top:23px;width:22px;height:22px;border-radius:50%;background:var(--ink);box-shadow:inset 0 3px 2px rgba(0,0,0,.6)}
+.card .strip::before{left:22px}.card .strip::after{right:22px}
+.card .date{display:flex;align-items:center;justify-content:center;font-size:150px;line-height:.8;padding-top:6px}
+.card .perf{margin:0 20px;border-top:3px dashed rgba(11,11,11,.36)}
+.card .pct{display:flex;align-items:center;justify-content:center;font-size:206px;line-height:.78;color:var(--red);padding-top:8px}
+.card .pct small{font-size:.48em;margin-left:0;align-self:flex-start;margin-top:34px}
+.card.b{background:var(--ink2);color:var(--bone);box-shadow:inset 0 0 0 3px var(--bone2),0 2px 3px rgba(0,0,0,.45),0 26px 44px -8px rgba(0,0,0,.75)}
+.card.b .strip{background:var(--bone2);color:var(--ink);margin:0}
+.card.b .strip::before,.card.b .strip::after{background:var(--ink2)}
+.card.b .date{font-size:112px}
+.card.b .perf{border-top-color:rgba(244,241,236,.34)}
+.card.b .pct{color:var(--bone)}
+/* hängen wie echte Blätter: minimal schief, Drehpunkt oben */
+.card.a{transform:rotate(-1.4deg);transform-origin:50% 0}
+.card.b{transform:rotate(1.1deg);transform-origin:50% 0;margin-top:10px}
+
+.foot{position:absolute;left:var(--g);right:var(--g);top:1262px;display:flex;justify-content:space-between;align-items:baseline;font-size:21px;z-index:4}
+.foot .r{color:var(--bone2)}
+
+/* ---- Story: Text steht komplett auf freiem Schwarz (269–1440 px), der Rabe schaut zwischen Unterzeile und Blättern heraus,
+   der untere Arm (Krallen, Rosenkranz) füllt die textfreie Zone unten. Absender wandert in den Kopf, daher kein Fuß. ---- */
+.photo{left:380px;top:700px;width:700px;height:1220px;
+  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 240px),linear-gradient(180deg,transparent 0,#000 170px);
+  mask-image:linear-gradient(90deg,transparent 0,#000 240px),linear-gradient(180deg,transparent 0,#000 170px);
+  -webkit-mask-composite:source-in;mask-composite:intersect}
+.shade{background:none}
+.brand{top:300px}
+.brand p .s{color:var(--bone2)}
+.hl{top:452px;font-size:132px}
+.sub{top:700px;font-size:34px}
+.cond2{position:absolute;left:var(--g);top:752px;z-index:4;font-size:22px;color:var(--bone2)}
+.cards{top:1000px}
+.card{grid-template-rows:64px 166px 3px 214px}
+.card .date{font-size:144px}
+.card.b .date{font-size:108px}
+.card .pct{font-size:198px}
+</style></head>
+<body>
+<div class="c story">
+  <div class="ph photo" data-src="../_system/img/03-rabe-sleeve.png" data-crop="120,0,1057,1240" data-filter="url(#sharp) brightness(1.42) contrast(1.2) saturate(.4)"></div>
+  <div class="shade"></div>
+  <div class="brand"><div class="logo"><img src="../_system/img/logo-480.webp" alt=""></div><p class="lab"><span class="s">Chic Tattoo · Augsburg</span><br>Last Minute <span>November</span></p></div>
+  <h1 class="d hl"><span>Je früher,</span><span class="red2">desto mehr.</span></h1>
+  <p class="txt sub"><b>Rabatt auf dein Tattoo</b> – je nach Termin.</p>
+
+  <div class="cards">
+    <div class="card a">
+      <div class="strip lab">Termin bis Sa</div>
+      <b class="d date tnum">21.11.</b>
+      <div class="perf"></div>
+      <b class="d pct tnum">25<small>%</small></b>
+    </div>
+    <div class="card b">
+      <div class="strip lab">Termin ab Mo</div>
+      <b class="d date tnum">23.–30.11.</b>
+      <div class="perf"></div>
+      <b class="d pct tnum">20<small>%</small></b>
+    </div>
+  </div>
+  <p class="sender cond2">ab 150 € Tattoo-Wert · Code auf der Aktionsseite</p>
+  <div class="grain"></div>
+</div>
+<!-- leichte Unscharfmaskierung (klassischer Faltungsfilter, keine KI) gegen die Reel-Weichheit -->
+<svg width="0" height="0" style="position:absolute"><filter id="sharp" color-interpolation-filters="sRGB"><feConvolveMatrix order="3" preserveAlpha="true" kernelMatrix="0 -0.25 0 -0.25 2 -0.25 0 -0.25 0"/></filter></svg>
+<script src="../_system/crop.js"></script>
+</body></html>

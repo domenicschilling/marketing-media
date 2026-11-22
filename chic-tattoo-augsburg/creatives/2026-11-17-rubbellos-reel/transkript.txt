@@ -1,0 +1,52 @@
+Chic Tattoo & Piercing Augsburg – Rubbellos-Reel (17.11.2026, Fassung 2) – Transkript
+
+A) ROHMATERIAL (mlx_whisper large-v3-turbo, Deutsch, Wortzeiten; Schreibweise korrigiert: Whisper hört „Ruckellos/Ruppellos“ und „Ausdruck“, gesprochen ist „Rubbellos“ und „Augsburg“)
+
+v3.mov (3,6 s) – identisch mit den ersten 3,6 s von v2.mov (Bild und Ton bitgleich), daher nicht extra verwendet
+  0,00–2,06  Augsburg aufgepasst!
+
+v2.mov (25,5 s) – Take 1, vor dem Chic-Plakat, dann Gang zur Theke
+  0,86–2,06   Augsburg aufgepasst!
+  5,36–8,22   Wir haben eine richtig geile Aktion für euch.
+  8,38–13,88  Mit unserem neuen Rubbellos-Aktion [sic] … könnt ihr bis zu 25 Prozent gewinnen.
+ 14,52–22,78  Das Einzige, was ihr dafür tun müsst, ist auf den Link klicken und … einfach das Los freirubbeln und … dann euren Gutschein sichern.
+ 22,98–24,98  Wir wünschen euch ganz viel Glück und wir haben euch lieb!
+
+v4.mov (19,6 s) – Take 2, läuft ins Bild, dann an der Theke
+  1,14–2,18   Augsburg aufgepasst!
+  2,30–4,56   Wir haben eine richtig geile Aktion für euch.
+  4,72–6,00   Eine Rubbellos-Aktion.
+  6,28–9,52   Da könnt ihr bis zu 25 % gewinnen.
+  9,72–11,08  Was ihr dafür tun müsst,
+ 11,55–17,00  ist auf den Link klicken, das Rubbellos freirubbeln und euer Gutschein sichern.
+              (Das Wort bei 11,55 s ist kurz und undeutlich – „ist“ oder „jetzt“. Whisper hört im fertigen Reel und im
+               Zusammenhang „ist“, so sagt sie es auch in v2. Untertitel daher „ist“.)
+ 17,12–19,00  Wir wünschen euch ganz viel Glück und haben euch lieb!
+
+v1.mp4 (9,6 s) – am roten Tattoo-Stuhl
+  0,00–2,96   Wir machen keine Unterschiede bei den Tattoos.        (NICHT verwendet)
+  3,22–5,92   Macht einfach mit, klickt auf den Link.
+  6,08–9,04   Wir wünschen euch ganz viel Glück und wir melden uns bei euch.   (NICHT verwendet)
+
+Voice-Over (Pixie, Higgsfield elevenlabs_v4, jede Zeile einzeln erzeugt)
+  Zeile 1 (3,65 s): Ob Realistic, Black and Grey oder Farbe.
+  Zeile 2 (3,42 s): Auf jedem Los stehen mindestens fünfzehn Prozent.
+
+B) FERTIGES REEL (reel.mp4, 35,07 s) – gesprochener Text in Reihenfolge
+  0,17   [v2]  Augsburg aufgepasst!
+  1,89   [v4]  Wir haben eine richtig geile Aktion für euch. Eine Rubbellos-Aktion.
+               Da könnt ihr bis zu 25 % gewinnen. Was ihr dafür tun müsst,
+               ist auf den Link klicken, das Rubbellos freirubbeln und euren Gutschein sichern.
+ 17,21   [VO]  Ob Realistic, Black & Grey oder Farbe.
+ 22,06   [VO]  Auf jedem Los stehen mindestens 15 %.
+ 25,99   [v1]  Macht einfach mit, klickt auf den Link.
+ 29,06   [v2]  Wir wünschen euch ganz viel Glück und wir haben euch lieb!
+ 31,33   Endkarte (nur Musik): Rubbel dir bis zu 25 % frei · auf dein Tattoo · Jetzt Los holen · Link unten ·
+         Lose bis 31.12. · Ulmer Str. 14 · Augsburg-Oberhausen ·
+         Auf jedem Los mind. 15 % · Gutschein gültig bis 31.12.2026 · 1 pro Person · nicht kombinierbar · nicht für Piercings
+
+Einblendungen (eigene Texte): „Bis zu 25 % aufs Tattoo“ (0,15–5,85 s, oben rechts) · „Auf jedem Los mind. 15 %“ (5,85–9,24 s über dem Untertitel)
+
+C) WHISPER-PRÜFUNG des fertigen reel.mp4 (mlx_whisper large-v3-turbo):
+Augsburg aufgepasst! Wir haben eine richtig geile Aktion für euch. Eine Ruppellos-Aktion. Da könnt ihr bis zu 25% gewinnen. Was ihr dafür tun müsst, ist auf den Link klicken, das Ruppellos freiruppeln und euer Gutschein sichert. Ob realistic, black and grey oder Farbe. Auf jedem Los stehen mindestens 15%. Macht einfach mit, klickt auf den Link. Wir wünschen euch ganz viel Glück und wir haben euch lieb.
+(„Ruppellos/freiruppeln“ = gesprochen „Rubbellos/freirubbeln“; „sichert“ = gesprochen „sichern“, Endung leise.)

@@ -1,0 +1,60 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><title>prüfklar</title><style>
+@font-face { font-family: "Bricolage Grotesque"; font-weight: 200 800; font-stretch: 75% 100%; src: url("file:///Users/domi/mm-pk-web/landingpages/pruefklar/marke/schrift/bricolage-grotesque-latin.woff2") format("woff2"); }
+:root { --rot:#e10600; --grau:#575757; --grau-hell:#b8b8b8; --flaeche:#f3f3f0; --linie:#e0e0dc; --sans:"Bricolage Grotesque", sans-serif; }
+* { box-sizing: border-box; margin: 0; }
+html, body { width: 1080px; height: 1350px; background:#fff; }
+body { font-family: var(--sans); font-optical-sizing: auto; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+.s { width:1080px; height:1350px; position:relative; overflow:hidden; padding:84px 90px 0; display:flex; flex-direction:column; }
+.hell { background:#fff; color:#000; } .flaeche { background:var(--flaeche); color:#000; } .dunkel { background:#000; color:#fff; }
+.kopf { height:54px; display:flex; align-items:center; justify-content:space-between; flex:none; }
+.kopf img { height:54px; width:auto; }
+.kopf .tag { font-size:30px; font-weight:500; color:var(--grau); letter-spacing:.01em; }
+.dunkel .kopf .tag { color:var(--grau-hell); }
+.haupt { flex:1; display:flex; flex-direction:column; justify-content:center; padding-bottom:150px; gap:44px; min-height:0; }
+.fuss { position:absolute; left:90px; right:90px; bottom:62px; display:flex; justify-content:space-between; align-items:center; font-size:30px; font-weight:500; color:var(--grau); }
+.dunkel .fuss { color:var(--grau-hell); }
+.fuss .wisch { display:flex; align-items:center; gap:14px; font-weight:600; color:#000; } .dunkel .fuss .wisch { color:#fff; }
+.pfeil { width:46px; height:23px; }
+.kick { font-size:38px; font-weight:600; letter-spacing:.01em; color:var(--grau); }
+.dunkel .kick { color:var(--grau-hell); }
+h1, h2 { font-weight:800; font-stretch:75%; font-variation-settings:"opsz" 72; letter-spacing:.004em; line-height:.96; text-wrap:balance; }
+h1 { font-size:142px; } h2 { font-size:120px; }
+h2.m { font-size:104px; } h2.k { font-size:92px; }
+.t { font-size:48px; line-height:1.3; font-weight:450; font-stretch:92%; text-wrap:pretty; }
+.t b { font-weight:700; }
+.klein { font-size:31px; line-height:1.35; color:var(--grau); font-weight:450; }
+.dunkel .klein { color:var(--grau-hell); }
+.ring { position:relative; display:inline-block; white-space:nowrap; padding:0 .3em; margin:0 -.3em; }
+.ring svg { position:absolute; left:-15%; top:-50%; width:130%; height:210%; overflow:visible; pointer-events:none; }
+.ring svg path { fill:none; stroke:var(--rot); stroke-width:8px; stroke-linecap:round; }
+.rot { color:var(--rot); }
+.nb { white-space:nowrap; }
+.chips { display:flex; flex-direction:column; gap:22px; }
+.chip { display:flex; align-items:center; gap:22px; border:4px solid #000; border-radius:22px; padding:24px 30px; font-size:42px; line-height:1.18; font-weight:600; background:#fff; }
+.chip .a { font-weight:800; font-stretch:75%; font-size:54px; min-width:104px; }
+.chip.grau { background:var(--flaeche); border-color:#000; }
+.chip .pfeil { flex:none; }
+.karte { background:#fff; border-radius:30px; box-shadow:0 2px 4px rgba(0,0,0,.08), 0 30px 60px -28px rgba(0,0,0,.4); }
+.flaeche .karte { box-shadow:0 2px 4px rgba(0,0,0,.08), 0 30px 60px -28px rgba(0,0,0,.35); }
+.bsp { font-size:28px; color:var(--grau); font-weight:500; margin-top:18px; }
+.zeile2 { display:grid; grid-template-columns:1fr; gap:30px; }
+.block { border-top:4px solid #000; padding-top:22px; }
+.dunkel .block { border-top-color:#fff; }
+.block h3 { font-size:36px; font-weight:700; letter-spacing:.01em; margin-bottom:10px; }
+.block .t { font-size:44px; line-height:1.25; }
+.blase { position:relative; background:#000; color:#fff; border-radius:26px; padding:20px 34px; font-size:50px; font-weight:700; font-stretch:90%; display:inline-block; }
+.dunkel .blase { background:#fff; color:#000; }
+.blase::after { content:""; position:absolute; left:34px; top:-18px; border:18px solid transparent; border-top:0; border-bottom-color:#000; }
+.dunkel .blase::after { border-bottom-color:#fff; }
+.stat { display:flex; flex-direction:column; gap:6px; border-top:4px solid #fff; padding-top:20px; }
+.stat .z { font-weight:800; font-stretch:75%; font-size:178px; line-height:.9; letter-spacing:-.01em; }
+.stat .z small { font-size:70px; font-weight:700; letter-spacing:0; margin-left:10px; }
+.stat .e { font-size:44px; font-weight:500; line-height:1.2; color:#fff; }
+.cta-url { font-weight:800; font-stretch:75%; font-size:150px; line-height:.92; letter-spacing:-.012em; }
+.link-im-profil { display:inline-flex; align-items:center; gap:26px; border:5px solid #fff; border-radius:999px; padding:20px 50px; font-size:62px; font-weight:700; font-stretch:90%; }
+</style></head><body>
+<div class="s hell"><div class="kopf"><img src="file:///Users/domi/mm-pk-web/landingpages/pruefklar/marke/wortmarke.svg" alt="prüfklar"></div>
+<div class="haupt" style="gap:44px"><div class="kick">Mit kurzem Namen klingt es so</div>
+<div style="display:flex;gap:34px 22px;flex-wrap:wrap"><span class="blase">Suche öffnen.</span><span class="blase">Mein Konto.</span><span class="blase">Zum Warenkorb.</span></div>
+<h2 class="m">Der Name ist unsichtbar.</h2><div class="t">Ihr Shop sieht genau gleich aus. <span class='nb'>In der Regel eine kleine Änderung.</span></div></div>
+<div class="fuss"><span>prüfklar.de</span><span>5 / 7</span></div></div></body></html>

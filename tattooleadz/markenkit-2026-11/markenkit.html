@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TattooLeadz Markenkit</title>
+<link rel="stylesheet" href="assets/kit.css">
+<style>
+@page{size:1280px 720px;margin:0}
+html{background:#050505}
+body{margin:0}
+.page{position:relative;width:1280px;height:720px;overflow:hidden;padding:52px 72px 0;background:var(--ink-950);color:var(--cream-100);page-break-after:always;break-after:page;counter-increment:pg}
+.page.alt{background:var(--ink-900)}
+.page.cream{background:var(--cream-50);color:var(--ink-950)}
+.page::after{content:"TattooLeadz Markenkit · 31.10.2026 · Seite " counter(pg);position:absolute;left:72px;bottom:28px;font:500 12px/1 var(--bf);color:#7C766B}
+.page.cream::after{color:#6B655B}
+.page.cover::after{display:none}
+body{counter-reset:pg}
+h2{font:700 44px/1.05 var(--hf);letter-spacing:-.025em;margin-bottom:10px}
+.sub{font:400 17px/1.5 var(--bf);color:var(--muted);max-width:84ch;margin-bottom:20px}
+.cream .sub{color:var(--muted-on-cream)}
+h3{font:700 20px/1.2 var(--hf);letter-spacing:-.01em;margin-bottom:6px}
+p,li{font-size:15px;line-height:1.5}
+.mut{color:var(--muted)}.cream .mut{color:var(--muted-on-cream)}
+.grid{display:grid;gap:20px}
+.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+.cream .card{background:var(--white);border-color:rgba(10,10,10,.06);padding:22px}
+ul.clean{list-style:none;display:grid;gap:8px}
+ul.clean li{display:block;position:relative;padding-left:18px}
+ul.clean li::before{content:"";position:absolute;left:0;top:7px;width:8px;height:8px;border-radius:50%;background:var(--amber-500)}
+ul.no li::before{background:var(--alarm)}
+.cream ul.clean li::before{background:var(--amber-700)}
+.cream ul.no li::before{background:#B91C1C}
+.tagline{font:700 15px/1 var(--hf);color:var(--amber-700)}
+/* Cover */
+.cover{display:flex;flex-direction:column;justify-content:center;padding-left:96px;background:radial-gradient(70% 90% at 85% 10%,rgba(245,158,11,.20),transparent 60%),var(--ink-950)}
+.cover img.l{width:230px;margin-bottom:46px}
+.cover h1{font:700 84px/1 var(--hf);letter-spacing:-.03em}
+.cover .tl{font:500 24px/1.4 var(--bf);color:var(--muted);margin-top:26px;max-width:30ch}
+.cover .meta{position:absolute;left:96px;bottom:48px;font:500 14px/1.4 var(--bf);color:#7C766B}
+/* Logo-Seite */
+.lg{border-radius:20px;height:168px;display:grid;place-items:center;position:relative}
+.lg img{height:112px;width:auto}
+.lg.k{background:var(--ink-950);box-shadow:inset 0 0 0 1px rgba(245,242,234,.1)}
+.lg.w{background:var(--cream-50);box-shadow:inset 0 0 0 1px rgba(10,10,10,.1)}
+.lg.c{background:var(--cream-50);box-shadow:inset 0 0 0 1px rgba(10,10,10,.1)}
+.cap b{display:block;font:700 15px/1.2 var(--hf);margin:12px 0 2px}
+.cap span{font-size:13.5px;line-height:1.4;color:var(--muted);display:block}
+.cream .cap span{color:var(--muted-on-cream)}
+.schutz{position:relative;width:150px;height:150px;border:1.5px dashed rgba(245,158,11,.7);display:grid;place-items:center;border-radius:6px}
+.schutz img{width:86px}
+.schutz i{position:absolute;font:600 11px/1 var(--bf);color:var(--amber-400);font-style:normal}
+.x{position:relative}
+.x::after{content:"";position:absolute;left:10px;right:10px;top:50%;height:3px;background:#EF4444;transform:rotate(-14deg);border-radius:2px}
+/* Farben */
+.sw{border-radius:14px;overflow:hidden;background:var(--surface);border:1px solid var(--surface-line);display:flex;flex-direction:column}
+.sw .c{height:60px}
+.sw .t{padding:10px 12px 12px}
+.sw b{display:block;font:700 14px/1.2 var(--hf)}
+.sw code{font:500 12px/1.5 ui-monospace,Menlo,monospace;color:var(--muted);display:block}
+.sw span{font-size:12px;line-height:1.35;color:var(--muted);display:block;margin-top:3px}
+.ratio{display:flex;height:26px;border-radius:9999px;overflow:hidden;margin:16px 0 6px;box-shadow:inset 0 0 0 1px rgba(245,242,234,.12)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{font:700 12px/1 var(--hf);text-align:left;color:var(--muted);padding:6px 10px 8px;letter-spacing:.04em}
+td{padding:6px 10px;border-top:1px solid var(--surface-line);vertical-align:middle}
+.cream th{color:var(--muted-on-cream)}.cream td{border-top-color:rgba(10,10,10,.1)}
+.pill{display:inline-block;padding:2px 9px;border-radius:9999px;font:700 11px/1.5 var(--bf)}
+.pill.ok{background:rgba(34,197,94,.16);color:#4ADE80}.pill.no{background:rgba(239,68,68,.16);color:#F87171}
+.cream .pill.ok{background:#DCFCE7;color:#166534}.cream .pill.no{background:#FEE2E2;color:#991B1B}
+/* Typo */
+.spec{font:700 110px/.9 var(--hf);letter-spacing:-.03em}
+.scale div{display:grid;grid-template-columns:150px 1fr;gap:14px;align-items:baseline;padding:4px 0;border-top:1px solid rgba(10,10,10,.1)}
+.scale small{font:500 12px/1.3 var(--bf);color:var(--muted-on-cream)}
+/* Layout-Skizzen */
+.skz{position:relative;background:#141313;border-radius:6px;box-shadow:0 0 0 1px rgba(245,242,234,.15)}
+.skz .safe{position:absolute;border:1.5px dashed var(--amber-500);border-radius:3px}
+.skz .nogo{position:absolute;left:0;right:0;background:repeating-linear-gradient(135deg,rgba(239,68,68,.25) 0 6px,transparent 6px 12px)}
+.bl{position:absolute;background:rgba(245,242,234,.16);border-radius:3px}
+.bl.g{background:var(--amber-500)}
+.thumb{display:block;border-radius:8px;box-shadow:0 0 0 1px rgba(245,242,234,.14);width:auto}
+.ph{height:170px;border-radius:14px;object-fit:cover;width:100%}
+code.k{font:500 12.5px/1.55 ui-monospace,Menlo,monospace;color:#E8E1D2;background:#0E0E0E;border:1px solid var(--surface-line);border-radius:12px;padding:16px 18px;display:block;white-space:pre}
+@media screen and (max-width:1320px){body{zoom:calc(100vw / 1320)}}
+@media print{body{zoom:1}}
+</style>
+</head>
+<body>
+
+<!-- 1 Cover -->
+<section class="page cover">
+  <img class="l" src="assets/logo-gold.png" alt="TattooLeadz">
+  <h1>Markenkit</h1>
+  <p class="tl">So sieht TattooLeadz überall aus: wie die Website tattooleadz.de.</p>
+  <div class="meta">Stand 31.10.2026 · gemessen an der Live-Seite tattooleadz.de · Du-Ansprache, kein Verkäufer-Ton</div>
+</section>
+
+<!-- 2 Marke -->
+<section class="page alt">
+  <h2>Was die Marke sagt</h2>
+  <p class="sub">TattooLeadz arbeitet nur für Tattoo-Studios. Wir verkaufen Werbekampagnen, die dem Studio Anfragen bringen. Der Chat per WhatsApp ist ein Schritt auf diesem Weg, nicht das Produkt.</p>
+  <div class="grid g2" style="gap:28px">
+    <div>
+      <div class="card" style="margin-bottom:18px"><h3>Leitsatz auf der Website</h3>
+        <p style="font:700 34px/1.1 var(--hf);letter-spacing:-.025em;margin-top:8px">Du <span class="gold">tätowierst.</span><br>Wir kümmern uns um den Rest.</p></div>
+      <div class="card"><h3>Der Weg, den wir zeigen</h3>
+        <ul class="clean" style="margin-top:8px"><li>Gesehen werden: Werbung, die zum Stil des Studios passt</li><li>Anfrage kommt rein: Motiv, Körperstelle, Wunschzeitraum</li><li>Sofort-Antwort per WhatsApp</li><li>Fertig an das Studio übergeben. Preis und Termin macht immer das Studio.</li></ul></div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:18px"><h3>Vier Versprechen (aus der Website)</h3>
+        <p class="mut" style="margin:4px 0 10px">Jedes Motiv, jeder Post und jede Anzeige zahlt auf eines davon ein.</p>
+        <div class="grid g2" style="gap:10px"><div><b style="font:700 18px var(--hf)">Sicherheit</b><p class="mut">Jede Anfrage wird beantwortet.</p></div><div><b style="font:700 18px var(--hf)">Qualität</b><p class="mut">Lieber 10 echte Anfragen als 100 Schaulustige.</p></div><div><b style="font:700 18px var(--hf)">Zeit</b><p class="mut">Mehr Zeit an der Liege, weniger am Handy.</p></div><div><b style="font:700 18px var(--hf)">Kontrolle</b><p class="mut">Preis und Termin entscheidet immer das Studio.</p></div></div></div>
+      <div class="card"><h3>Ein Satz zum Merken</h3><p style="font:600 17px/1.4 var(--bf)">Wir verkaufen keine Leads. Wir übernehmen deine Anfragen.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 Logo -->
+<section class="page">
+  <h2>Logo</h2>
+  <p class="sub">Eine Wortmarke in Pinsel-Schrift, dreimal vorhanden. Die Website verwendet das Gold-Logo auf Schwarz. Vorhandene Dateien benutzen, nie nachzeichnen.</p>
+  <div class="grid g3" style="gap:22px">
+    <div><div class="lg k"><img src="assets/logo-gold.png" alt=""></div><div class="cap"><b>Gold (Standard)</b><span>Auf Schwarz oder Foto mit dunklem Verlauf. So steht es auf der Website, in Posts und in der App.<br>Datei: logo/TattooLeadz-Logo-gold-3D.png</span></div></div>
+    <div><div class="lg w"><img src="assets/logo-schwarz.png" alt=""></div><div class="cap"><b>Schwarz, einfarbig</b><span>Nur wenn Farbe nicht geht (Stempel, Folie, Druck auf hellem Stoff).<br>Datei: logo/TattooLeadz-Logo-schwarz.png</span></div></div>
+    <div><div class="lg k"><img src="assets/logo-weiss.png" alt=""></div><div class="cap"><b>Weiß, einfarbig</b><span>Nur wenn Farbe nicht geht (Druck auf dunklem Stoff, Gravur, Folie).<br>Datei: logo/TattooLeadz-Logo-weiss.png</span></div></div>
+  </div>
+  <div class="grid" style="grid-template-columns:170px 1fr 1fr;gap:28px;margin-top:20px;align-items:center">
+    <div class="schutz"><img src="assets/logo-gold.png" alt=""><i style="top:5px;left:50%;transform:translateX(-50%)">½ Logohöhe</i></div>
+    <div><h3>Platz und Größe</h3><ul class="clean"><li>Rundherum mindestens eine halbe Logohöhe frei lassen.</li><li>Mindestbreite: 96 px am Bildschirm, 25 mm im Druck.</li><li>Auf hellem Grund immer in der schwarzen Plakette (App-Symbol, Radius 22 %) oder die schwarze Version.</li></ul></div>
+    <div><h3>Nie</h3><ul class="clean no"><li>Gold-Logo direkt auf Creme, Weiß oder Amber: es verschwindet.</li><li>Verzerren, drehen, umfärben, mit Schatten oder Kontur versehen.</li><li>Neben Logos von Kundenstudios auf demselben Motiv mischen.</li></ul></div>
+  </div>
+</section>
+
+<!-- 4 Farben -->
+<section class="page alt">
+  <h2>Farben</h2>
+  <p class="sub">Schwarz trägt die Marke. Amber ist Akzent für Handlung und Betonung, Creme ist Schrift und die helle Fläche.</p>
+  <div class="grid" style="grid-template-columns:repeat(6,1fr);gap:12px">
+    <div class="sw"><div class="c" style="background:#0A0A0A;box-shadow:inset 0 -1px rgba(245,242,234,.12)"></div><div class="t"><b>Ink 950</b><code>#0A0A0A</code><code>10 · 10 · 10</code><span>Standard-Hintergrund</span></div></div>
+    <div class="sw"><div class="c" style="background:#111111"></div><div class="t"><b>Ink 900</b><code>#111111</code><code>17 · 17 · 17</code><span>Wechsel-Fläche, Karten-Grund</span></div></div>
+    <div class="sw"><div class="c" style="background:#F5F2EA"></div><div class="t"><b>Creme 100</b><code>#F5F2EA</code><code>245 · 242 · 234</code><span>Schrift auf Dunkel</span></div></div>
+    <div class="sw"><div class="c" style="background:#FAF8F3"></div><div class="t"><b>Creme 50</b><code>#FAF8F3</code><code>250 · 248 · 243</code><span>Helle Abschnitte, Karten in Weiß</span></div></div>
+    <div class="sw"><div class="c" style="background:#A8A196"></div><div class="t"><b>Muted</b><code>#A8A196</code><code>168 · 161 · 150</code><span>Nebentext auf Dunkel</span></div></div>
+    <div class="sw"><div class="c" style="background:#5C574E"></div><div class="t"><b>Muted Creme</b><code>#5C574E</code><code>92 · 87 · 78</code><span>Nebentext auf hellem Grund (Ergänzung)</span></div></div>
+  </div>
+  <div class="grid" style="grid-template-columns:repeat(6,1fr);gap:12px;margin-top:12px">
+    <div class="sw"><div class="c" style="background:#FBBF24"></div><div class="t"><b>Amber 400</b><code>#FBBF24</code><code>251 · 191 · 36</code><span>Verlauf hell, Text auf Dunkel</span></div></div>
+    <div class="sw"><div class="c" style="background:#F59E0B"></div><div class="t"><b>Amber 500</b><code>#F59E0B</code><code>245 · 158 · 11</code><span>Flacher Akzent in Posts und App</span></div></div>
+    <div class="sw"><div class="c" style="background:#D97706"></div><div class="t"><b>Amber 600</b><code>#D97706</code><code>217 · 119 · 6</code><span>Markenton der Website</span></div></div>
+    <div class="sw"><div class="c" style="background:#B45309"></div><div class="t"><b>Amber 700</b><code>#B45309</code><code>180 · 83 · 9</code><span>Amber-Text auf Creme (Ergänzung)</span></div></div>
+    <div class="sw" style="grid-column:span 2"><div class="c" style="background:linear-gradient(135deg,#FBBF24,#D97706)"></div><div class="t"><b>Button-Verlauf</b><code>135°: #FBBF24 → #D97706</code><span>Text auf dem Verlauf: immer Ink 950. Wort-Verlauf: 90°, #D97706 → #FBBF24 → #D97706.</span></div></div>
+  </div>
+  <div class="ratio"><i style="width:70%;background:#0A0A0A"></i><i style="width:10%;background:#111"></i><i style="width:10%;background:#F5F2EA"></i><i style="width:10%;background:linear-gradient(135deg,#FBBF24,#D97706)"></i></div>
+  <p class="mut" style="font-size:13px">Verhältnis: etwa 70 % Schwarz, 10 % zweite Fläche, 10 % Creme-Schrift, höchstens 10 % Amber.</p>
+</section>
+
+<!-- 5 Farb-Regeln -->
+<section class="page cream">
+  <h2>Lesbarkeit: diese Paare sind erlaubt</h2>
+  <p class="sub">Gemessen nach WCAG 2.2. Kleiner Text braucht mindestens 4,5:1, große Schrift (ab 24 px oder 19 px fett) mindestens 3:1.</p>
+  <div class="grid g2" style="gap:36px">
+    <table>
+      <tr><th>Schrift auf Fläche</th><th>Kontrast</th><th></th></tr>
+      <tr><td>Creme 100 auf Ink 950</td><td>17,7 : 1</td><td><span class="pill ok">immer</span></td></tr>
+      <tr><td>Muted auf Ink 950</td><td>7,7 : 1</td><td><span class="pill ok">immer</span></td></tr>
+      <tr><td>Amber 400 auf Ink 950</td><td>11,9 : 1</td><td><span class="pill ok">immer</span></td></tr>
+      <tr><td>Amber 600 auf Ink 950</td><td>6,2 : 1</td><td><span class="pill ok">immer</span></td></tr>
+      <tr><td>Ink 950 auf Amber 400 (Button)</td><td>11,9 : 1</td><td><span class="pill ok">immer</span></td></tr>
+      <tr><td>Ink 950 auf Amber 600 (Verlaufsende)</td><td>6,2 : 1</td><td><span class="pill ok">immer</span></td></tr>
+      <tr><td>Ink 950 auf Creme 50</td><td>18,7 : 1</td><td><span class="pill ok">immer</span></td></tr>
+      <tr><td>Muted Creme auf Creme 50</td><td>6,8 : 1</td><td><span class="pill ok">immer</span></td></tr>
+    </table>
+    <table>
+      <tr><th>Schrift auf Fläche</th><th>Kontrast</th><th></th></tr>
+      <tr><td>Amber 700 auf Creme 50</td><td>4,7 : 1</td><td><span class="pill ok">auch klein</span></td></tr>
+      <tr><td>Amber 600 auf Creme 50</td><td>3,0 : 1</td><td><span class="pill no">nur ab 24 px</span></td></tr>
+      <tr><td>Creme 100 auf Amber 600</td><td>2,9 : 1</td><td><span class="pill no">nie</span></td></tr>
+      <tr><td>Weiß auf WhatsApp-Grün</td><td>2,0 : 1</td><td><span class="pill no">nie</span></td></tr>
+      <tr><td>Creme mit 30 % Deckkraft auf Ink 950</td><td>ca. 2,4 : 1</td><td><span class="pill no">nie</span></td></tr>
+      <tr><td>Gold-Logo auf Creme oder Amber</td><td>Logo säuft ab</td><td><span class="pill no">nie</span></td></tr>
+    </table>
+  </div>
+  <div class="card" style="margin-top:26px"><h3>Was sich gegenüber der Website ändert</h3>
+    <p class="mut">Auf der Website steht der Link „Preise“ in der Kopfzeile mit nur 30 % Creme und einige kleine Amber-Labels stehen auf hellem Grund. Beides ist zu blass. Das Markenkit nimmt dafür Muted (#A8A196) und Amber 700 (#B45309). Alles andere ist 1:1 von der Website.</p></div>
+</section>
+
+<!-- 6 Typografie -->
+<section class="page cream">
+  <h2>Schrift</h2>
+  <p class="sub">Zwei Schriften, beide frei nutzbar (Open Font License) und auf der Website selbst gehostet: Space Grotesk für alles, was auffallen soll, Inter für Lesetext.</p>
+  <div class="grid" style="grid-template-columns:420px 1fr;gap:44px">
+    <div>
+      <div class="spec">Aa</div>
+      <p style="font:700 22px/1.2 var(--hf);margin-top:14px">Space Grotesk 700</p>
+      <p class="mut" style="margin-bottom:18px">Überschriften, Zahlen, Button-Text. Laufweite −0,025 em (eng).</p>
+      <div style="font:400 60px/1 var(--bf)">Aa</div>
+      <p style="font:600 22px/1.2 var(--bf);margin-top:10px">Inter 400 · 500 · 600</p>
+      <p class="mut">Lesetext, Nebentext, Formulare. Normale Laufweite.</p>
+      <p class="mut" style="margin-top:14px;font-size:13px">Dateien: assets/fonts/ (Variable-Fonts als WOFF2). Ersatzschrift: system-ui.</p>
+    </div>
+    <div class="scale">
+      <div><small>Überschrift 1<br>700 · 72/72 · mobil 40</small><span style="font:700 40px/1 var(--hf);letter-spacing:-.025em">Du tätowierst.</span></div>
+      <div><small>Überschrift 2<br>700 · 60/60 · mobil 30</small><span style="font:700 32px/1 var(--hf);letter-spacing:-.025em">Kennst du das?</span></div>
+      <div><small>Überschrift 3<br>700 · 30/36 · mobil 24</small><span style="font:700 24px/1.2 var(--hf);letter-spacing:-.02em">Gesehen werden</span></div>
+      <div><small>Preis-Zahl<br>700 · 44 · −0,03 em</small><span style="font:700 32px/1 var(--hf);letter-spacing:-.03em">1.299 €</span></div>
+      <div><small>Einleitung<br>Inter 400 · 20/28</small><span style="font:400 18px/1.4 var(--bf);color:var(--muted-on-cream)">Das System bringt neue Kunden in dein Studio.</span></div>
+      <div><small>Fließtext<br>Inter 400 · 16/25,6</small><span style="font:400 16px/1.6 var(--bf)">Motiv, Körperstelle und Wunschzeitraum liegen bereit.</span></div>
+      <div><small>Klein<br>Inter 400 · 14/20</small><span style="font:400 14px/1.4 var(--bf);color:var(--muted-on-cream)">15 Minuten · unverbindlich</span></div>
+      <div><small>Label (sparsam)<br>SG 700 · 12 · Großbuchstaben</small><span class="label" style="color:var(--amber-700)">Mit TattooLeadz</span></div>
+    </div>
+  </div>
+  <p style="margin-top:18px;font-size:14px"><b>Hervorhebung:</b> Pro Überschrift höchstens ein Wort oder eine kurze Wendung im Gold-Verlauf, wie „tätowierst.“ auf der Website. Auf Creme stattdessen Amber 700.</p>
+</section>
+
+<!-- 7 Komponenten -->
+<section class="page alt">
+  <h2>Bausteine</h2>
+  <p class="sub">Alles ist rund und ruhig. Eine Hauptaktion pro Fläche, sonst bleibt es dunkel und leise.</p>
+  <div class="grid" style="grid-template-columns:1.05fr 1fr 1fr;gap:20px">
+    <div class="card"><h3>Button</h3>
+      <p class="mut" style="margin-bottom:12px">Verlauf 135°, voll rund, 56 px hoch, Space Grotesk 700, Text in Ink 950.</p>
+      <div class="btn" style="margin-bottom:12px">Beratungsgespräch sichern <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+      <div style="display:flex;gap:10px;align-items:center"><span class="btn sm">Beratung sichern</span><span class="btn ghost sm">Alle Leistungen</span></div>
+      <p class="mut" style="margin-top:12px;font-size:13px">Pro Fläche nur ein Verlauf-Button. Zweite Aktion als Umriss.</p></div>
+    <div class="card"><h3>Karte auf Dunkel</h3>
+      <p class="mut" style="margin-bottom:12px">Radius 16, Creme 4 % auf Ink, Rand Creme 8 %. Kein Schatten.</p>
+      <div class="card" style="background:rgba(245,242,234,.03);padding:16px"><div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#9A9388"><span class="dot"></span><span>23:14</span></div><p style="margin-top:8px">Nachts um 23 Uhr noch DMs beantworten.</p></div>
+      <div class="card pick" style="margin-top:10px;padding:16px"><b style="font:700 16px var(--hf)">Empfohlene Karte</b><p class="mut" style="font-size:13px">Amber-Rand und warmer Grund heben genau eine Karte hervor.</p></div></div>
+    <div class="card"><h3>Chat (WhatsApp-Ansicht)</h3>
+      <p class="mut" style="margin-bottom:12px">Immer als „Beispiel“ kennzeichnen, mit „Demo Ink“. Keine echten Kundendaten.</p>
+      <div class="chat" style="padding:14px"><div class="bub">Hey Lena, danke für deine Anfrage bei Demo Ink! Hast du schon ein Motivbild?<small>14:02</small></div><div class="bub out">So in der Art.<small>14:03</small></div></div></div>
+  </div>
+  <div class="grid g4" style="margin-top:20px;gap:20px">
+    <div class="card" style="display:flex;gap:14px;align-items:center"><div class="tile"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><div><b style="font:700 15px var(--hf)">Icon-Kachel</b><p class="mut" style="font-size:12.5px">48 px, Radius 12, Amber 600 mit 8 %</p></div></div>
+    <div class="card"><b style="font:700 15px var(--hf)">Radien</b><p class="mut" style="font-size:12.5px">12 Kacheln · 16 Karten · 24 Panels und Handyrahmen · 9999 Buttons und Pillen</p></div>
+    <div class="card"><b style="font:700 15px var(--hf)">Abstände</b><p class="mut" style="font-size:12.5px">Raster 4 px. Karten innen 20 oder 32. Abschnitte oben und unten 64 bis 96 px.</p></div>
+    <div class="card"><b style="font:700 15px var(--hf)">Hintergrund-Wechsel</b><p class="mut" style="font-size:12.5px">Ink 950, Ink 900 und Creme 50 wechseln sich ab. Im Hero ein Amber-Schimmer oben rechts (16 %).</p></div>
+  </div>
+</section>
+
+<!-- 8 Layout Social -->
+<section class="page">
+  <h2>Aufbau für Social Media</h2>
+  <p class="sub">Alle Vorlagen folgen demselben Muster. Orange gestrichelt ist der sichere Bereich, rot schraffiert der Bereich, den Instagram mit Bedienelementen überdeckt.</p>
+  <div style="display:flex;gap:36px;align-items:flex-start">
+    <div style="width:216px"><div class="skz" style="width:216px;height:270px">
+      <div class="safe" style="left:14px;right:14px;top:14px;bottom:14px"></div>
+      <div class="bl g" style="left:14px;top:14px;width:30px;height:28px"></div>
+      <div class="bl" style="left:14px;top:150px;width:150px;height:9px"></div><div class="bl" style="left:14px;top:164px;width:120px;height:9px"></div>
+      <div class="bl g" style="left:14px;top:230px;width:84px;height:22px;border-radius:99px"></div></div>
+      <p class="mut" style="margin-top:10px;font-size:13px"><b style="color:var(--cream-100)">Post 4:5</b> · 1080 × 1350<br>Rand 72 px · Logo oben links</p></div>
+    <div style="width:216px"><div class="skz" style="width:216px;height:384px">
+      <div class="nogo" style="top:0;height:50px"></div><div class="nogo" style="bottom:0;height:68px"></div>
+      <div class="safe" style="left:14px;right:14px;top:50px;bottom:68px"></div>
+      <div class="bl g" style="left:14px;top:50px;width:34px;height:32px"></div>
+      <div class="bl" style="left:14px;top:200px;width:160px;height:11px"></div><div class="bl" style="left:14px;top:218px;width:130px;height:11px"></div>
+      <div class="bl g" style="left:14px;top:290px;width:90px;height:22px;border-radius:99px"></div></div>
+      <p class="mut" style="margin-top:10px;font-size:13px"><b style="color:var(--cream-100)">Story und Reel</b> · 1080 × 1920<br>oben 250 px und unten 340 px frei</p></div>
+    <div style="width:216px"><div class="skz" style="width:216px;height:384px">
+      <div class="safe" style="left:0;right:0;top:57px;bottom:57px;border-color:#FBBF24"></div>
+      <div class="bl g" style="left:14px;top:66px;width:34px;height:32px"></div>
+      <div class="bl" style="left:14px;top:200px;width:170px;height:16px"></div><div class="bl" style="left:14px;top:224px;width:150px;height:16px"></div></div>
+      <p class="mut" style="margin-top:10px;font-size:13px"><b style="color:var(--cream-100)">Reel-Cover</b><br>Titel liegt im mittleren 4:5-Streifen (y 285 bis 1635), den das Profilraster zeigt</p></div>
+    <div style="width:330px;flex:none"><h3>Reihenfolge im Motiv</h3>
+      <ul class="clean" style="margin-top:8px"><li>Logo oben links, bei Story unterhalb der freien Zone.</li><li>Überschrift groß in Space Grotesk, höchstens ein Wort in Gold.</li><li>Ein Satz Einleitung in Inter, Muted oder Creme.</li><li>Genau eine Handlung unten: Button mit Verlauf. Auf Stories „Link im Profil“.</li><li>Foto: dunkler Verlauf von oben und unten nach Ink 950, damit Schrift lesbar bleibt.</li></ul></div>
+  </div>
+</section>
+
+<!-- 9 Bildsprache -->
+<section class="page alt">
+  <h2>Bildsprache</h2>
+  <p class="sub">TattooLeadz zeigt die Welt der Studios: echte Haut, echte Arbeiten, echte Menschen. Kein glattes Computerbild.</p>
+  <div class="grid g3" style="gap:18px">
+    <div><img class="ph" src="fotos/stock-zeus-blackwork.jpg" alt="" style="object-position:50% 30%"><p class="mut" style="font-size:12.5px;margin-top:8px">Nahaufnahme einer fertigen Arbeit, natürliches Licht, Hautton unverfälscht.</p></div>
+    <div><img class="ph" src="fotos/stock-artist-arbeitet.jpg" alt="" style="object-position:50% 35%"><p class="mut" style="font-size:12.5px;margin-top:8px">Artist bei der Arbeit, dunkle Räume, warmes Licht passen zur Farbwelt.</p></div>
+    <div><img class="ph" src="fotos/stock-skull-folie.jpg" alt="" style="object-position:50% 40%"><p class="mut" style="font-size:12.5px;margin-top:8px">Frisches Tattoo mit Folie: zeigt Handwerk und Alltag.</p></div>
+  </div>
+  <div class="grid g2" style="margin-top:22px;gap:36px">
+    <div><h3>Ja</h3><ul class="clean"><li>Echte Arbeiten und echte Videos aus dem Studio des Kunden, mit Einverständnis der gezeigten Personen.</li><li>Hochkant filmen, ruhige Bilder, Ton nah am Mund.</li><li>Die Handy-Ansichten der Website: Instagram-Anzeige, Anfrageformular, WhatsApp-Chat, Termin.</li><li>Screenshots nur mit Demo-Daten („Demo Ink“) und als Beispiel gekennzeichnet.</li></ul></div>
+    <div><h3>Nein</h3><ul class="clean no"><li>Keine KI-Bilder von Tattoos, Händen oder Menschen und keine glatten 3D-Renderings.</li><li>Keine Filter, die Haut oder Farben verfälschen. Nur ein dunkler Verlauf für die Lesbarkeit.</li><li>Keine Stockfotos mit Studio-Klischees (Handschuhe, Maschine in Großaufnahme), wenn echte Fotos da sind.</li><li>Keine Bilder von Domenic oder anderen Personen ohne Freigabe.</li></ul></div>
+  </div>
+  <p class="mut" style="margin-top:14px;font-size:12.5px">Die drei Fotos oben sind Platzhalter aus der Website (Pexels, frei nutzbar). In echten Beiträgen ersetzen sie die Fotos des Kundenstudios.</p>
+</section>
+
+<!-- 10 Ton -->
+<section class="page cream">
+  <h2>Ton und Sprache</h2>
+  <p class="sub">Du, direkt, ehrlich, mit Respekt vor dem Handwerk. Kurze Sätze. Wir zeigen, wie der Weg zum Termin aussieht, und drängen nie.</p>
+  <div class="grid g2" style="gap:36px">
+    <div>
+      <h3>So klingt TattooLeadz</h3>
+      <ul class="clean" style="margin:8px 0 16px"><li>„Du tätowierst. Wir kümmern uns um den Rest.“</li><li>„Du bist Künstler, nicht Sekretär.“</li><li>„Preis und Termin machst immer du.“</li><li>„Wir verkaufen keine Leads. Wir übernehmen deine Anfragen.“</li></ul>
+      <div class="card"><h3>Erste Antwort an eine Anfrage</h3><p class="mut" style="margin-bottom:8px">Zuerst danken, dann fragen, ob es Fragen gibt. Kein Angebot, kein Preis, kein Druck.</p>
+        <p style="font:500 15px/1.5 var(--bf)">„Hey Lena, danke für deine Anfrage! Hast du Fragen an uns?“</p></div>
+    </div>
+    <div>
+      <h3>Das sagen wir nicht</h3>
+      <ul class="clean no" style="margin:8px 0 16px"><li>Rabatte, Aktionspreise, „nur noch 3 Plätze“, Countdown, „nur heute“.</li><li>Garantien wie „garantiert ausgebucht“.</li><li>Zahlen oder Studios, die wir nicht belegen können.</li><li>Verkäufer-Sprache: „Revolutioniere dein Studio“, „maßgeschneiderte Lösungen“.</li><li>Den Chatbot als Produkt. Verkauft werden Werbekampagnen, die Anfragen bringen.</li></ul>
+      <div class="card"><h3>Kleine Regeln</h3><ul class="clean" style="margin-top:6px"><li>„Link im Profil“, nicht „Link in Bio“.</li><li>Höchstens drei Emojis pro Beitrag, am Ende.</li><li>Beispiele immer als Beispiel kennzeichnen.</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<!-- 11 Do Dont -->
+<section class="page">
+  <h2>Richtig und falsch auf einen Blick</h2>
+  <p class="sub">Links das Muster der Website, rechts die häufigsten Fehler in Beiträgen.</p>
+  <div class="grid g2" style="gap:36px">
+    <div>
+      <div class="pill ok" style="margin-bottom:12px;background:rgba(34,197,94,.16);color:#4ADE80">So</div>
+      <div class="grid g2" style="gap:12px">
+        <div class="card" style="padding:16px"><p style="font:700 26px/1.05 var(--hf);letter-spacing:-.025em">Du <span class="gold">tätowierst.</span> Wir kümmern uns um den Rest.</p><p class="mut" style="font-size:12.5px;margin-top:8px">Schwarz, Creme, ein goldenes Wort</p></div>
+        <div class="card" style="padding:16px;display:flex;flex-direction:column;justify-content:space-between"><span class="btn sm" style="align-self:flex-start">Beratungsgespräch sichern</span><p class="mut" style="font-size:12.5px;margin-top:10px">Eine Handlung, Verlauf-Button, Ink-Schrift</p></div>
+        <div class="card" style="padding:16px"><div style="display:flex;gap:12px;align-items:center"><div style="background:#0A0A0A;border-radius:14px;padding:6px;box-shadow:0 0 0 1px rgba(245,242,234,.1)"><img src="assets/logo-gold.png" style="width:52px" alt=""></div><p style="font-size:13px">Auf hellem Grund: Logo in der schwarzen Plakette</p></div></div>
+        <div class="card" style="padding:16px"><p class="mut" style="font-size:13px">Fotos von echten Arbeiten, dunkler Verlauf, Handy-Ansichten aus dem System mit „Demo Ink“.</p></div>
+      </div>
+    </div>
+    <div>
+      <div class="pill no" style="margin-bottom:12px">Nicht so</div>
+      <div class="grid g2" style="gap:12px">
+        <div class="card x" style="padding:16px"><p style="font:700 24px/1.1 'Comic Sans MS',cursive;color:#FF4D4D">-20 % nur diese Woche!</p><p class="mut" style="font-size:12.5px;margin-top:8px">Rabatt, Knappheit, andere Schrift</p></div>
+        <div class="card x" style="padding:16px;background:#FAF8F3"><img src="assets/logo-gold.png" style="width:60px;margin-bottom:6px" alt=""><p style="font-size:12.5px;color:#5C574E">Gold-Logo auf Creme ohne Plakette</p></div>
+        <div class="card x" style="padding:16px"><p style="font:700 20px/1.1 var(--hf);background:linear-gradient(90deg,#8B5CF6,#EC4899);-webkit-background-clip:text;color:transparent">Revolutioniere dein Studio</p><p class="mut" style="font-size:12.5px;margin-top:8px">Fremde Farbverläufe und Floskeln</p></div>
+        <div class="card x" style="padding:16px"><p class="mut" style="font-size:13px">KI-Tattoos, Maschinen-Großaufnahmen aus dem Stockarchiv, Fotos ohne Einverständnis, erfundene Zahlen.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 12 Vorlagen -->
+<section class="page alt">
+  <h2>Vorlagen</h2>
+  <p class="sub">Acht fertige Motive als PNG und als HTML zum Ändern (Ordner vorlagen/). Texte im HTML austauschen, dann mit render.py neu erzeugen. Die Fotos sind Platzhalter.</p>
+  <div style="display:flex;gap:44px;align-items:flex-start">
+    <div style="display:grid;gap:14px">
+      <div style="display:flex;gap:14px">
+        <img class="thumb" style="height:210px" src="vorlagen/post-4x5-foto.png" alt="">
+        <img class="thumb" style="height:210px" src="vorlagen/post-4x5-kennst-du-das.png" alt="">
+        <img class="thumb" style="height:210px" src="vorlagen/post-4x5-creme.png" alt="">
+        <img class="thumb" style="height:210px" src="vorlagen/post-4x5-vorher-nachher.png" alt="">
+      </div>
+      <div style="display:flex;gap:14px">
+        <img class="thumb" style="height:262px" src="vorlagen/story-9x16-foto.png" alt="">
+        <img class="thumb" style="height:262px" src="vorlagen/story-9x16-chat.png" alt="">
+        <img class="thumb" style="height:262px" src="vorlagen/story-9x16-cta.png" alt="">
+        <img class="thumb" style="height:262px" src="vorlagen/reel-cover-9x16.png" alt="">
+      </div>
+    </div>
+    <div style="flex:1"><ul class="clean"><li><b>Post 4:5</b> (1080 × 1350): Foto, Kennst du das, Creme, Vorher/Nachher</li><li><b>Story 9:16</b> (1080 × 1920): Foto, Beispiel-Chat, Abschluss</li><li><b>Reel-Cover 9:16</b>: Titel im mittleren 4:5-Streifen</li><li>Texte stammen von der Website. Zahlen, Preise und Aktionen kommen nicht vor.</li><li>Das Chat-Motiv ist ein Beispiel mit „Demo Ink“.</li></ul></div>
+  </div>
+</section>
+
+<!-- 13 Technik -->
+<section class="page">
+  <h2>Für Entwickler und die automatische Erstellung</h2>
+  <p class="sub">Die Farben stehen als CSS-Variablen in assets/kit.css. Die automatische Post-Erstellung (brands/tattooleadz/brand.json) nutzt dieselben Werte.</p>
+  <div class="grid g2" style="gap:28px">
+<code class="k">:root{
+  --ink-950:#0A0A0A;  --ink-900:#111111;
+  --cream-100:#F5F2EA; --cream-50:#FAF8F3;
+  --muted:#A8A196;     --muted-on-cream:#5C574E;
+  --amber-400:#FBBF24; --amber-500:#F59E0B;
+  --amber-600:#D97706; --amber-700:#B45309;
+  --grad-btn:linear-gradient(135deg,#FBBF24,#D97706);
+  --grad-text:linear-gradient(90deg,#D97706,#FBBF24,#D97706);
+  --hf:'Space Grotesk'; --bf:'Inter';
+  --r-tile:12px; --r-card:16px; --r-panel:24px; --r-pill:9999px;
+}</code>
+    <div><h3>Dateien in diesem Ordner</h3>
+      <ul class="clean" style="margin-top:6px"><li><b>markenkit.html</b> und <b>TattooLeadz-Markenkit.pdf</b>: dieses Handbuch</li><li><b>logo/</b>: Gold, Schwarz, Weiß, App-Symbol</li><li><b>assets/</b>: kit.css, Schriften, Logos fürs Web</li><li><b>vorlagen/</b>: acht Motive (PNG und HTML)</li><li><b>fotos/</b>: drei Platzhalter-Fotos</li><li><b>render.py</b>: erzeugt PNG und PDF neu</li></ul>
+      <p class="mut" style="margin-top:12px;font-size:13px">Neu erzeugen: im Ordner <code style="font-family:ui-monospace,Menlo,monospace">uv run --with playwright python render.py</code></p></div>
+  </div>
+</section>
+
+</body>
+</html>

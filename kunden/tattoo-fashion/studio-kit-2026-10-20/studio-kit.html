@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Studio-Kit Tattoo Fashion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* Studio-Kit für Mads Kristensen (Tattoo Fashion), 20.10.2026. Für TF bestimmt, darf Tattoo Fashion nennen.
+     Look = Tattoo-Fashion-Marke (Schwarz/Gold, Oswald), damit Mads sein eigenes Haus wiedererkennt.
+     Kein Text-Verlauf (background-clip:text) – Apple Vorschau stellt das falsch dar. */
+  @page { size: A4; margin: 0; }
+  :root {
+    --schwarz: #0e0d0b;
+    --flaeche: #181611;
+    --flaeche2: #211e17;
+    --linie: #332e24;
+    --gold: #c8a35a;
+    --gold-hell: #e4cb92;
+    --text: #efe9dc;
+    --grau: #a39a87;
+    --grau2: #7b7363;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--schwarz); }
+  body { font-family: Inter, system-ui, sans-serif; color: var(--text); font-size: 8.9pt; line-height: 1.45;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .page { width: 210mm; height: 297mm; overflow: hidden; position: relative; padding: 14mm 15mm 11mm;
+    display: flex; flex-direction: column; break-after: page; background: var(--schwarz); }
+  .page:last-child { break-after: auto; }
+  img { display: block; }
+  b, strong { font-weight: 600; color: #fff; }
+
+  h1, h2, .osw { font-family: Oswald, "Arial Narrow", sans-serif; font-weight: 600; letter-spacing: 0.005em; }
+  h2 { font-size: 25pt; line-height: 1.02; text-transform: uppercase; color: #fff; }
+  h3 { font-family: Inter, sans-serif; font-size: 9.6pt; font-weight: 700; color: #fff; margin-bottom: 1.2mm; }
+  .lead { font-size: 10.2pt; line-height: 1.5; color: #d9d2c3; max-width: 150mm; margin-top: 3.5mm; }
+  .small { font-size: 7.2pt; color: var(--grau); line-height: 1.4; }
+  .gold { color: var(--gold); }
+
+  /* Kopfzeile Innenseiten */
+  .run { display: flex; justify-content: space-between; align-items: center; padding-bottom: 3mm; border-bottom: 0.25mm solid var(--linie); margin-bottom: 7mm; }
+  .run img { height: 8mm; }
+  .run span { font-size: 7.4pt; color: var(--grau); }
+  .foot { margin-top: auto; padding-top: 3mm; display: flex; justify-content: space-between; gap: 8mm; font-size: 7pt; color: var(--grau2); }
+  .foot span:first-child { flex: 1; }
+
+  /* Produkt-Marke (Logo + Name) */
+  .mark { display: flex; align-items: center; gap: 2.4mm; }
+  .mark img { height: 9mm; }
+
+  /* Geräte */
+  .phone { background: #000; border: 0.35mm solid #4a4335; border-radius: 6.5mm; padding: 1.5mm; }
+  .phone img { width: 100%; border-radius: 5.2mm; }
+  .browser { background: #000; border: 0.35mm solid #4a4335; border-radius: 2.2mm; overflow: hidden; }
+  .browser .bar { height: 4.4mm; display: flex; align-items: center; gap: 1.2mm; padding: 0 2.2mm; background: #1c1a15; border-bottom: 0.25mm solid #2e2a21; }
+  .browser .bar i { width: 1.5mm; height: 1.5mm; border-radius: 50%; background: #4a4335; display: block; }
+  .browser .bar span { margin-left: 2mm; font-size: 6pt; color: var(--grau2); }
+  .browser img { width: 100%; }
+  .cap { font-size: 6.9pt; color: var(--grau); margin-top: 1.8mm; line-height: 1.35; }
+
+  /* ---------- Seite 1: Deckblatt ---------- */
+  .cover-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .cover-top .tf { height: 17mm; }
+  .cover-top .an { text-align: right; font-size: 8pt; color: var(--grau); line-height: 1.55; }
+  .cover-top .an b { font-size: 9.5pt; }
+  .cover h1 { margin-top: 13mm; font-size: 49pt; line-height: 0.95; text-transform: uppercase; color: #fff; }
+  .cover h1 .z2 { color: var(--gold); display: block; }
+  .cover .lead { font-size: 11pt; max-width: 128mm; }
+  .stage { position: relative; height: 122mm; margin-top: 9mm; }
+  .stage .line { position: absolute; inset: 0; }
+  .stage .phone { position: absolute; width: 50mm; }
+  .stage .p1 { left: 4mm; top: 10mm; transform: rotate(-4deg); }
+  .stage .p2 { left: 66mm; top: 2mm; }
+  .stage .p3 { left: 128mm; top: 12mm; transform: rotate(4deg); }
+  .stage .tag { position: absolute; font-size: 7.4pt; color: var(--gold-hell); background: var(--schwarz); border: 0.3mm solid var(--gold); border-radius: 3mm; padding: 0.8mm 2.4mm; white-space: nowrap; }
+  .trio { margin-top: auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; }
+  .trio > div { border-top: 0.5mm solid var(--gold); padding-top: 3mm; }
+  .trio img { height: 9.5mm; margin-bottom: 2.6mm; }
+  .trio p { font-size: 8.4pt; color: #d9d2c3; }
+  .trio .st { display: inline-block; margin-top: 1.8mm; font-size: 7pt; font-weight: 600; color: var(--gold); }
+
+  /* ---------- Seite 2: Kette ---------- */
+  .chain { position: relative; margin-top: 6mm; }
+  .step { display: grid; grid-template-columns: 11mm 1fr 34mm; gap: 3mm; align-items: start; padding: 1.75mm 0; position: relative; }
+  .step .n { width: 8mm; height: 8mm; border-radius: 50%; border: 0.45mm solid var(--gold); background: var(--schwarz); color: var(--gold);
+    font-family: Oswald, sans-serif; font-weight: 600; font-size: 10pt; display: grid; place-items: center; position: relative; z-index: 2; margin-left: 1.5mm; }
+  .step h3 { font-size: 9.6pt; margin: 0.6mm 0 0.6mm; }
+  .step p { font-size: 8.1pt; color: #cfc8b8; line-height: 1.4; }
+  .step .who { display: flex; flex-direction: column; align-items: flex-end; gap: 1.2mm; padding-top: 0.8mm; }
+  .step .who img { height: 5.6mm; }
+  .chain .rail { position: absolute; left: 5.4mm; top: 6mm; bottom: 9mm; width: 0.5mm; background: var(--gold); z-index: 1; }
+  .loop { display: flex; align-items: center; gap: 3mm; margin: 1mm 0 0 1.5mm; font-size: 8pt; color: var(--gold-hell); }
+  .loop svg { flex: none; }
+  .vs { margin-top: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 0.3mm solid var(--linie); border-radius: 2.5mm; overflow: hidden; }
+  .vs > div { padding: 4mm 5mm; }
+  .vs .heute { background: var(--flaeche); }
+  .vs .kit { background: #241e12; border-left: 0.5mm solid var(--gold); }
+  .vs h3 { font-size: 9.8pt; }
+  .vs ul { list-style: none; }
+  .vs li { position: relative; padding-left: 3.6mm; margin-top: 1.2mm; font-size: 8.2pt; color: #d9d2c3; }
+  .vs li::before { content: ""; position: absolute; left: 0; top: 1.7mm; width: 1.5mm; height: 0.35mm; background: var(--grau2); }
+  .vs .kit li::before { background: var(--gold); }
+
+  /* ---------- Produktseiten ---------- */
+  .prodhead { display: flex; justify-content: space-between; align-items: flex-end; gap: 6mm; }
+  .prodhead .logo { height: 15mm; }
+  .status { font-size: 7.6pt; font-weight: 600; color: #0e0d0b; background: var(--gold); border-radius: 1.2mm; padding: 1mm 2.6mm; white-space: nowrap; }
+  .proof { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3mm; margin-top: 6mm; }
+  .proof > div { background: var(--flaeche); border-radius: 2.2mm; padding: 3.6mm 4mm; }
+  .proof .big { font-family: Oswald, sans-serif; font-weight: 600; font-size: 25pt; line-height: 1; color: #fff; }
+  .proof .big small { font-size: 13pt; color: var(--gold); font-weight: 500; }
+  .proof p { font-size: 7.8pt; color: #cfc8b8; margin-top: 1.4mm; }
+  .proof .hl { background: #241e12; outline: 0.35mm solid var(--gold); }
+  .src { font-size: 6.8pt; color: var(--grau2); margin-top: 1.8mm; line-height: 1.38; }
+
+  .feat { display: grid; gap: 3mm 6mm; align-content: start; }
+  .feat h3 { color: var(--gold-hell); font-size: 9pt; }
+  .feat ul { list-style: none; }
+  .feat li { position: relative; padding-left: 3.4mm; margin-bottom: 1mm; font-size: 8.1pt; color: #d9d2c3; line-height: 1.38; }
+  .feat li::before { content: ""; position: absolute; left: 0; top: 1.55mm; width: 1.3mm; height: 1.3mm; border-radius: 50%; background: var(--gold); }
+
+  .funnel { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 0.3mm solid var(--linie); border-bottom: 0.3mm solid var(--linie); margin-top: 2mm; }
+  .funnel > div { padding: 2.6mm 3mm; border-left: 0.3mm solid var(--linie); }
+  .funnel > div:first-child { border-left: none; padding-left: 0; }
+  .funnel .v { font-family: Oswald, sans-serif; font-size: 18pt; font-weight: 600; color: #fff; line-height: 1; }
+  .funnel .v small { font-size: 10pt; color: var(--gold); }
+  .funnel p { font-size: 7.4pt; color: var(--grau); margin-top: 1mm; }
+
+  .live { background: #241e12; border-left: 0.6mm solid var(--gold); border-radius: 0 2mm 2mm 0; padding: 3.2mm 4.5mm; }
+  .live h3 { color: var(--gold-hell); }
+  .live p { font-size: 8.1pt; color: #d9d2c3; }
+
+  /* ---------- Preise ---------- */
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-weight: 600; font-size: 7.2pt; color: var(--grau); padding: 1.6mm 2mm; border-bottom: 0.35mm solid var(--gold); vertical-align: bottom; }
+  td { padding: 2mm 2mm; border-bottom: 0.2mm solid var(--linie); vertical-align: top; font-size: 8pt; line-height: 1.35; color: #d9d2c3; }
+  td.st { font-weight: 600; color: #fff; white-space: nowrap; }
+  td.st span { display: block; font-weight: 400; font-size: 6.9pt; color: var(--grau); }
+  .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  td.p { font-family: Oswald, sans-serif; font-size: 12.5pt; font-weight: 600; color: #fff; line-height: 1.1; }
+  td.p span { font-variant-numeric: normal; display: block; font-family: Inter, sans-serif; font-size: 6.9pt; font-weight: 400; color: var(--grau); }
+  .ok { color: var(--gold-hell); font-weight: 600; }
+  .sums { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 3mm; margin-top: 4.5mm; }
+  .sums > div { background: var(--flaeche); border-radius: 2.2mm; padding: 3.4mm 4mm; }
+  .sums .big { font-family: Oswald, sans-serif; font-size: 22pt; font-weight: 600; color: #fff; line-height: 1; margin: 1.4mm 0 1.2mm; }
+  .sums h3 { font-size: 8.4pt; margin: 0; }
+  .sums p { font-size: 7.4pt; color: var(--grau); }
+  .sums .hl { background: #241e12; outline: 0.35mm solid var(--gold); }
+  .sums .hl .big { color: var(--gold-hell); }
+  .terms { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm; margin-top: 4.5mm; }
+  .terms > div { border-top: 0.45mm solid var(--gold); padding-top: 2.2mm; }
+  .terms .t { font-family: Oswald, sans-serif; font-size: 15pt; font-weight: 600; color: #fff; line-height: 1.05; }
+  .terms p { font-size: 7.5pt; color: #cfc8b8; margin-top: 1mm; }
+  .next { display: grid; grid-template-columns: 1.35fr 1fr; gap: 6mm; margin-top: 5.5mm; align-items: stretch; }
+  .next ol { list-style: none; counter-reset: s; }
+  .next ol li { counter-increment: s; position: relative; padding-left: 8mm; margin-bottom: 2mm; font-size: 8.2pt; color: #d9d2c3; }
+  .next ol li::before { content: counter(s); position: absolute; left: 0; top: -0.3mm; width: 5.4mm; height: 5.4mm; border-radius: 50%; border: 0.35mm solid var(--gold); color: var(--gold); font-family: Oswald, sans-serif; font-weight: 600; font-size: 8pt; display: grid; place-items: center; }
+  .contact { background: #241e12; border: 0.35mm solid var(--gold); border-radius: 2.5mm; padding: 4.5mm 5mm; display: flex; flex-direction: column; }
+  .contact .call { font-family: Oswald, sans-serif; font-size: 16pt; font-weight: 600; text-transform: uppercase; color: #fff; line-height: 1.05; }
+  .contact .who { margin-top: 3mm; font-size: 8.4pt; color: #d9d2c3; line-height: 1.55; }
+  .contact .who b { font-size: 9.4pt; }
+  s.alt { color: var(--grau); text-decoration: line-through; text-decoration-color: #e0634f; text-decoration-thickness: 0.35mm; }
+  .big-alt { color: var(--grau); font-size: inherit; }
+  .hub { position: relative; height: 128mm; margin-top: 6mm; }
+  .hub-mitte { position: absolute; left: 60mm; top: 48mm; width: 60mm; height: 30mm; border: 0.6mm solid var(--gold); border-radius: 4mm; background: #241e12; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2mm; z-index: 2; }
+  .hub-mitte img { height: 8mm; }
+  .hub-mitte span { font-size: 7.4pt; color: var(--gold-hell); }
+  .hub-k { position: absolute; width: 50mm; background: var(--flaeche); border: 0.3mm solid var(--linie); border-radius: 2.5mm; padding: 3mm 3.5mm; z-index: 2; }
+  .hub-k img { height: 5.5mm; margin-bottom: 1.5mm; }
+  .hub-k b { display: block; font-size: 8.8pt; color: #fff; }
+  .hub-k span { display: block; font-size: 7.2pt; color: #cfc8b8; line-height: 1.35; margin-top: 0.8mm; }
+  .hub .k1 { left: 0; top: 0; } .hub .k2 { left: 65mm; top: 0; } .hub .k3 { left: 130mm; top: 0; }
+  .hub .k4 { left: 0; top: 96mm; } .hub .k5 { left: 65mm; top: 96mm; } .hub .k6 { left: 130mm; top: 96mm; }
+  .hub::before { content: ""; position: absolute; left: 25mm; right: 25mm; top: 22mm; bottom: 32mm; border: 0.4mm dashed var(--gold); border-radius: 6mm; z-index: 1; }
+</style>
+</head>
+<body>
+
+<!-- =========================================================== 1 · DECKBLATT -->
+<section class="page cover">
+  <div class="cover-top">
+    <img class="tf" src="assets/logo-tf.png" alt="Tattoo Fashion">
+    <div class="an"><b>Für Mads Kristensen</b><br>Für deine Studios in Deutschland und Dänemark<br>Stand 20.10.2026</div>
+  </div>
+
+  <h1>Das Studio-Kit<span class="z2">für Tattoo Fashion</span></h1>
+  <p class="lead">Neue Kunden, Chat, Kalender und Zahlungen in einem verbundenen System. Von der Anzeige bis zur Bewertung nach dem Termin greift alles ineinander, in allen deinen Studios.</p>
+  <p class="lead" style="margin-top:2mm; font-size:9.6pt; color:var(--gold-hell)">Gebaut von unserem Team: Domenic Schilling und Andy Neelsen.</p>
+
+  <div class="stage">
+    <svg class="line" viewBox="0 0 180 112" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M2 96 C 30 112, 44 22, 74 40 S 118 104, 140 60 S 168 30, 178 44" fill="none" stroke="#c8a35a" stroke-width="0.5" stroke-dasharray="1.6 1.2"/>
+    </svg>
+    <div class="phone p1"><img src="assets/tl-lp-husum.jpg" alt="Wunsch-Aktion Husum"></div>
+    <div class="phone p2"><img src="assets/tl-chat-lisa.jpg" alt="Chat mit Anfrage"></div>
+    <div class="phone p3"><img src="assets/tk-m-kal.jpg" alt="Tattookalender Tagesansicht"></div>
+    <div class="tag" style="left:9mm; top:4mm">1 · Die Anfrage kommt rein</div>
+    <div class="tag" style="left:72mm; top:-4mm">2 · WhatsApp sofort beantwortet</div>
+    <div class="tag" style="left:128mm; top:5mm">3 · Termin steht im Kalender</div>
+  </div>
+
+  <div class="trio">
+    <div><img src="assets/logo-tl.png" alt="TattooLeadz"><p><b>TattooLeadz</b> bringt neue Anfragen ins Studio und beantwortet sie per WhatsApp.</p><span class="st">Läuft bereits in deinen Studios</span></div>
+    <div><img src="assets/logo-tk.png" alt="Tattookalender" style="height:6.4mm; margin:1.6mm 0 3.6mm"><p><b>Tattookalender</b> macht aus Chats Termine: Kalender, Kunden, Anzahlung, Erinnerung.</p><span class="st">Deine Studios im Norden schon angelegt</span></div>
+    <div><img src="assets/logo-tfin-wort.png" alt="Tattoofin" style="height:6.6mm; margin:1.5mm 0 3.6mm"><p><b>Tattoofin</b> macht große Motive bezahlbar: Raten* für deine Kunden, die Zahlung geht aufs Studio-Konto.</p><span class="st">Für Tattoo Fashion ohne Provision</span></div>
+  </div>
+  <div class="foot"><span>Bildschirme: Wunsch-Aktion Husum (live). Chat: neues TattooLeadz-Postfach, Start nach Meta-Freigabe, heute läuft Superchat. Kalender: Beispiel mit Demo-Daten. *Ratenzahlung über externe Anbieter wie Klarna, nach deren Prüfung. Tattoofin ist kein Kreditgeber. Achtung: Kreditaufnahme kostet Geld.</span></div>
+</section>
+
+<!-- =========================================================== 2 · SO HÄNGT ALLES ZUSAMMEN -->
+<section class="page">
+  <div class="run"><img src="assets/logo-tf.png" alt="Tattoo Fashion"><span>Das Studio-Kit · So hängt alles zusammen</span></div>
+  <h2>Der Kalender ist<br>die Drehscheibe</h2>
+  <p class="lead">Alles läuft über den Tattookalender: Die Anfragen aus TattooLeadz landen direkt im Kalender, Anzahlungen und Zahlungslinks gehen vom Kalender raus, Raten* über Tattoofin werden aus dem Kalender angestoßen, WhatsApp-Erinnerungen, Chat, Bewertung, Geburtstags-Guthaben und Lückenfüller laufen dort. Ein Ort, kein Springen zwischen Programmen.</p>
+
+  <div class="hub">
+    <div class="hub-mitte"><img src="assets/logo-tk.png" alt="Tattookalender"><span>Termine, Kunden, Chat, Zahlungen</span></div>
+    <div class="hub-k k1"><img src="assets/logo-tl.png" alt="TattooLeadz"><b>Neukunden-Anfragen</b><span>Anzeige und WhatsApp-Bot, die Anfrage wird zum Kunden im Kalender</span></div>
+    <div class="hub-k k2"><b>Anzahlung per Link</b><span>Aus dem Termin per WhatsApp, Termin wird fest, wenn bezahlt ist</span></div>
+    <div class="hub-k k3"><img src="assets/logo-tfin-wort.png" alt="Tattoofin"><b>Finanzierung in Raten*</b><span>Große Motive, Zahlungslink aus dem Kalender, Klarna entscheidet</span></div>
+    <div class="hub-k k4"><b>WhatsApp-Erinnerung und Chat</b><span>Einen Tag vorher automatisch, Chat neben dem Termin (Sønderborg per E-Mail)</span></div>
+    <div class="hub-k k5"><b>Der Termin</b><span>Einwilligung am Tablet, Restzahlung, Beleg, Provision je Artist</span></div>
+    <div class="hub-k k6"><b>Danach</b><span>Bitte um Google-Bewertung, Geburtstags-Guthaben, Lückenfüller-Story für freie Termine</span></div>
+  </div>
+
+  <div class="vs">
+    <div class="heute"><h3>Heute in vielen Studios</h3>
+      <ul><li>Superchat, Kalendertool, Listen und Excel laufen getrennt</li><li>Anfragen werden von Hand übertragen, manche gehen unter</li><li>Anzahlung, Erinnerung und Bewertung hängen am Team</li><li>Kein Überblick über alle Studios an einer Stelle</li></ul></div>
+    <div class="kit"><h3>Mit dem Studio-Kit</h3>
+      <ul><li>Anfrage, Chat, Termin und Zahlung hängen zusammen</li><li>Erinnerungen und Links gehen automatisch raus</li><li>Alle Studios arbeiten nach demselben Ablauf, Sønderborg auf Dänisch</li><li>Du siehst alle Studios in einer Übersicht</li></ul></div>
+  </div>
+  <div class="foot"><span>*Ratenzahlung über externe Anbieter wie Klarna, nach deren Prüfung. Tattoofin ist kein Kreditgeber. Achtung: Kreditaufnahme kostet Geld. Online-Zahlungen starten mit dem Vertrag, bis dahin Testbetrieb.</span><span>2</span></div>
+</section>
+
+<!-- =========================================================== 3 · TATTOOLEADZ -->
+<section class="page">
+  <div class="run"><img src="assets/logo-tf.png" alt="Tattoo Fashion"><span>Das Studio-Kit · Neue Kunden</span></div>
+  <div class="prodhead">
+    <div><img class="logo" src="assets/logo-tl.png" alt="TattooLeadz" style="height:19mm"></div>
+    <div style="flex:1"><h2>Die Anfragen sind da</h2><p class="lead" style="margin-top:2mm">TattooLeadz läuft schon in deinen Studios: Anzeigen, Studio-Seiten, WhatsApp-Vorlagen und Bots. Seit dem 12. und 13. Oktober mit der neuen Wunsch-Aktion.</p></div>
+    <span class="status">Läuft bereits</span>
+  </div>
+
+  <div class="proof">
+    <div><div class="big">229</div><p>Anfragen in 7 Tagen aus den Wunsch-Aktionen von fünf Tattoo-Fashion-Studios, darunter Eckernförde, Husum, Flensburg und Sønderborg</p></div>
+    <div><div class="big">3,08 <small>€</small></div><p>pro Anfrage im Schnitt, bei 705&nbsp;€ Werbeausgaben für alle fünf Studios zusammen</p></div>
+    <div class="hl"><div class="big">−34 <small>%</small></div><p>Kosten pro Anfrage gegenüber den alten Kampagnen: 4,84&nbsp;€ vorher, 3,20&nbsp;€ jetzt (Sønderborg, Flensburg, Eckernförde und ein weiteres TF-Studio)</p></div>
+  </div>
+  <p class="src">Quelle: Meta-Werbekonten, Zeitraum 13.–19.10.2026, Abruf 19.10.2026. Vorher: Auswertung der Vorgänger-Kampagnen am 12./13.10.2026, je 7 Tage. Anfragen = Formular-Anfragen bei Meta.</p>
+
+  <div style="display:grid; grid-template-columns: 44mm 1fr; gap: 7mm; margin-top: 6mm; align-items:start">
+    <div>
+      <div class="phone"><img src="assets/tl-lp-husum.jpg" alt="Wunsch-Aktion Husum"></div>
+      <p class="cap">Wunsch-Aktion Husum, live seit 12.10. Gleiche Seite für alle Nord-Studios, Sønderborg auf Dänisch mit Kronen.</p>
+    </div>
+    <div>
+      <h3 style="font-size:10.5pt">Was mit einer Anfrage in Husum passiert</h3>
+      <p class="small" style="font-size:7.8pt">Chat-Check Husum, 05.–19.10.2026: Die KI liest jeden Chat mit und zeigt, wo Anfragen hängen bleiben.</p>
+      <div class="funnel">
+        <div><div class="v">40</div><p>neue Anfragen</p></div>
+        <div><div class="v">95 <small>%</small></div><p>reagieren auf die WhatsApp (38)</p></div>
+        <div><div class="v">88 <small>%</small></div><p>schreiben selbst (35)</p></div>
+        <div><div class="v">25 <small>%</small></div><p>haben einen Termin (10)</p></div>
+      </div>
+      <div class="browser" style="margin-top:4mm"><div class="bar"><i></i><i></i><i></i><span>Chat-Check Husum</span></div><img src="assets/tl-chatcheck-husum.jpg" alt="Chat-Check Husum"></div>
+      <p class="cap">Echter Bericht vom 19.10.2026, ohne Namen und Nummern. Links zählen nur neue Anfragen, rechts alle Chats mit Antwort. Zwischen „schreibt“ und „Termin“ liegt die Arbeit des Studios, genau dort setzt die Schulung an.</p>
+    </div>
+  </div>
+
+  <div class="feat" style="grid-template-columns: 1fr 1fr 1fr; margin-top: 6mm">
+    <div><h3>Werbung</h3><ul><li>Kampagne je Studio, Stadt plus 25 km</li><li>Nur Facebook und Instagram</li><li>Bilder und Reels aus echtem Studio-Material</li></ul></div>
+    <div><h3>WhatsApp</h3><ul><li>Vorlage mit Motiv, Stelle und Wunschpreis</li><li>Bot fragt Bild und Wunschzeit ab</li><li>Erinnerung, wenn niemand antwortet</li></ul></div>
+    <div><h3>Kontrolle</h3><ul><li>Chat-Check mit Bericht je Studio</li><li>Antwortzeit und Termine sichtbar</li><li>Eigenes Postfach als Superchat-Ersatz ist gebaut, Umzug nach Meta-Freigabe</li></ul></div>
+  </div>
+  <div class="foot"><span>Zahlen nur aus Tattoo-Fashion-Studios, mit Zeitraum. Ergebnisse schwanken von Woche zu Woche.</span><span>3</span></div>
+</section>
+
+<!-- =========================================================== 4 · TATTOOKALENDER -->
+<section class="page">
+  <div class="run"><img src="assets/logo-tf.png" alt="Tattoo Fashion"><span>Das Studio-Kit · Termine, Kunden, Geld</span></div>
+  <div class="prodhead">
+    <div style="flex:1"><img src="assets/logo-tk.png" alt="Tattookalender" style="height:9mm; margin-bottom:4mm"><h2>Aus Chats werden Termine</h2>
+      <p class="lead" style="margin-top:2mm">Ein Kalender, der für Tattoo-Studios gebaut ist: Artists und Plätze, Einwilligung, Anzahlung je Sitzung, WhatsApp neben dem Termin. Am PC, Tablet und Handy.</p></div>
+    <span class="status">Angelegt für deine Studios</span>
+  </div>
+
+  <div class="browser" style="margin-top:6mm"><div class="bar"><i></i><i></i><i></i><span>tattookalender.de · Kalender, Wochenansicht</span></div><img src="assets/tk-kal-woche-ohne-menue.jpg" alt="Wochenkalender" style="height:108mm; object-fit:cover; object-position:top"></div>
+
+  <div style="display:grid; grid-template-columns: 1fr 1fr 40mm; gap: 5mm; margin-top: 5mm">
+    <div class="feat"><div><h3>Termine und Kunden</h3><ul><li>Kalender je Artist und Platz, Tag, Woche, Monat</li><li>Online-Buchung für Beratungen, Ausfallgebühr bei No-Show optional</li><li>Kundenkartei mit Fotos, Verlauf und Notizen</li><li>Einwilligung und Aufklärung am Tablet</li><li>Warteliste und Aufgaben fürs Team</li></ul></div>
+      <div><h3>Für dich als Inhaber</h3><ul><li>Übersicht über alle Studios: Umsatz, offene Zahlungen, Warnungen</li><li>Auslastung je Studio und Artist</li><li>Jeder sieht nur sein Studio, du siehst alle</li></ul></div></div>
+    <div class="feat"><div><h3>Geld</h3><ul><li>Anzahlung bei Buchung, Zahlungslinks, Restzahlung</li><li>Geburtstags-Guthaben und Gutscheine</li><li>Provision je Artist, Belege, DATEV-Export</li><li>Keine Provision an uns auf eure Zahlungen</li></ul></div>
+      <div><h3>Chat und Automatik</h3><ul><li>WhatsApp, Instagram und Facebook neben dem Termin</li><li>Erinnerung am Vortag, Bitte um Bewertung</li><li>Lückenfüller: freie Termine als Instagram-Story, je Studio nach Instagram-Verbindung</li></ul></div></div>
+    <div><div class="phone"><img src="assets/tk-m-chat.jpg" alt="Chat am Handy"></div><p class="cap">Chat am Handy</p></div>
+  </div>
+
+  <div class="live" style="margin-top:5mm"><h3>Deine Studios im Norden sind schon angelegt</h3>
+    <p>Eckernförde, Husum, Flensburg und Sønderborg stehen bereits im Tattookalender. In Eckernförde, Husum und Flensburg ist WhatsApp verbunden, die Vorlagen für Anzahlung, Erinnerung, Bestätigung, Einwilligung, Restzahlung und Geburtstag sind von Meta freigegeben. Sønderborg läuft auf Dänisch, mit Nachrichten per E-Mail. Als Nächstes: Arbeitszeiten eintragen, Teams einladen.</p></div>
+  <div class="foot"><span>Bildschirme: Beispiel-Studio mit Demo-Daten (Stand 20.10.2026). Online-Zahlungen starten mit dem Vertrag.</span><span>4</span></div>
+</section>
+
+<!-- =========================================================== 5 · TATTOOFIN + ÜBERSICHT -->
+<section class="page">
+  <div class="run"><img src="assets/logo-tf.png" alt="Tattoo Fashion"><span>Das Studio-Kit · Raten und Überblick</span></div>
+  <div style="display:grid; grid-template-columns: 1fr 48mm; gap: 8mm; align-items:start">
+    <div>
+      <img src="assets/logo-tfin-wort.png" alt="Tattoofin" style="height:9mm; margin-bottom:4mm">
+      <h2>Große Motive,<br>leichter bezahlbar</h2>
+      <p class="lead">Ein Sleeve scheitert oft am Geld. Mit Tattoofin schickt das Studio einen Zahlungslink, und der Kunde wählt, wie er zahlt: per Karte, Apple Pay oder in Raten* über Klarna. Die Zahlung geht über Stripe auf das eigene Konto des Studios, abzüglich der Gebühren von Stripe und Klarna.</p>
+      <div class="feat" style="grid-template-columns: 1fr 1fr; margin-top: 5mm">
+        <div><h3>So läuft es</h3><ul><li>Zahlungslink per WhatsApp oder QR-Code am Tresen</li><li>Klarna prüft und entscheidet über die Raten</li><li>Anzahlung vorab per Link. Sagt jemand kurzfristig ab, bleibt sie nach euren Bedingungen bei euch</li></ul></div>
+        <div><h3>Für Tattoo Fashion</h3><ul><li><b>Im Kit-Preis enthalten</b>, keine Provision</li><li>Ihr zahlt nur die Gebühren von Stripe und Klarna, direkt an Stripe</li><li>Eigenes Stripe-Konto je Studio</li></ul></div>
+      </div>
+    </div>
+    <div><div class="phone"><img src="assets/tfin-zahlseite.jpg" alt="Tattoofin Zahlseite"></div><p class="cap">Die Seite, die dein Kunde sieht. Beispiel mit Testdaten.</p></div>
+  </div>
+
+  <div style="margin-top:9mm; padding-top:7mm; border-top:0.25mm solid var(--linie)">
+    <div style="display:flex; justify-content:space-between; align-items:flex-end; gap:6mm">
+      <div><h2 style="font-size:20pt">Alle Studios auf einen Blick</h2>
+        <p class="lead" style="margin-top:2mm">Die Ketten-Übersicht im Tattookalender zeigt dir Umsatz, offene Zahlungen und Warnungen aller Studios. Für Tattoo Fashion gratis.</p></div>
+    </div>
+    <div class="browser" style="margin-top:4.5mm"><div class="bar"><i></i><i></i><i></i><span>tattookalender.de · Inhaber-Übersicht</span></div><img src="assets/tk-inhaber-ketten.jpg" alt="Inhaber-Übersicht" style="height:88mm; object-fit:cover; object-position:top"></div>
+    <p class="cap">Beispiel-Kette mit Demo-Daten. Studioleitungen sehen nur ihr eigenes Studio.</p>
+  </div>
+  <div class="foot"><span>*Ratenzahlung über externe Anbieter wie Klarna, nach deren Prüfung. Tattoofin ist kein Kreditgeber. Achtung: Kreditaufnahme kostet Geld.</span><span>5</span></div>
+</section>
+
+<!-- =========================================================== 6 · PREISE + NÄCHSTE SCHRITTE -->
+<section class="page">
+  <div class="run"><img src="assets/logo-tf.png" alt="Tattoo Fashion"><span>Das Studio-Kit · Preise für die Kette</span></div>
+  <h2>Was das Kit kostet</h2>
+  <p class="lead" style="margin-top:2mm">TattooLeadz läuft weiter wie bisher. Dazu kommt der Tattookalender mit Tattoofin. Normal kostet das Komplett-Paket 299&nbsp;€ im Monat je Studio. Weil deine Studios einen TattooLeadz-Vertrag haben und der Chat schon dort läuft, zahlst du nur 149&nbsp;€.</p>
+
+  <table style="margin-top:5mm">
+    <thead><tr><th style="width:25%">Studio</th><th style="width:15%">TattooLeadz</th><th style="width:25%">Tattookalender mit Tattoofin</th><th class="num" style="width:11%">Normalpreis</th><th class="num" style="width:12%">für dich</th><th class="num" style="width:12%">bei Jahreszahlung</th></tr></thead>
+    <tbody>
+      <tr><td class="st">Eckernförde</td><td class="ok">läuft bereits</td><td>Voller Umfang, Chat über TattooLeadz</td><td class="num"><s class="alt">299&nbsp;€</s></td><td class="num p">149&nbsp;€</td><td class="num p">129&nbsp;€</td></tr>
+      <tr><td class="st">Husum</td><td class="ok">läuft bereits</td><td>Voller Umfang, Chat über TattooLeadz</td><td class="num"><s class="alt">299&nbsp;€</s></td><td class="num p">149&nbsp;€</td><td class="num p">129&nbsp;€</td></tr>
+      <tr><td class="st">Flensburg</td><td class="ok">läuft bereits</td><td>Voller Umfang, Chat über TattooLeadz</td><td class="num"><s class="alt">299&nbsp;€</s></td><td class="num p">149&nbsp;€</td><td class="num p">129&nbsp;€</td></tr>
+      <tr><td class="st">Sønderborg (DK)<span>dänisch, in Kronen</span></td><td class="ok">läuft bereits</td><td>Kalender und Zahlungen, Nachrichten per E-Mail</td><td class="num"><s class="alt">299&nbsp;€</s></td><td class="num p">149&nbsp;€<span>oder 1.099&nbsp;kr.</span></td><td class="num p">129&nbsp;€</td></tr>
+    </tbody>
+  </table>
+
+  <div class="sums">
+    <div><h3>Normalpreis, 4 Studios</h3><div class="big"><s class="alt big-alt">1.196&nbsp;€</s></div><p>im Monat (4&nbsp;×&nbsp;299&nbsp;€)</p></div>
+    <div class="hl"><h3>Für dich, 4 Studios</h3><div class="big">596&nbsp;€</div><p>im Monat (4&nbsp;×&nbsp;149&nbsp;€). Bei Jahreszahlung 516&nbsp;€ im Monat.</p></div>
+    <div><h3>Du sparst</h3><div class="big">600&nbsp;€</div><p>im Monat, also 150&nbsp;€ je Studio.</p></div>
+  </div>
+
+  <div class="terms" style="grid-template-columns: repeat(3, 1fr)">
+    <div><div class="t">0&nbsp;%</div><p>Provision auf eure Zahlungen im Kalender und bei Tattoofin, statt Plattformgebühr. Nur die Gebühren von Stripe und Klarna.</p></div>
+    <div><div class="t">0&nbsp;€</div><p>Ketten-Übersicht über alle deine Studios, sonst 149&nbsp;€ im Monat.</p></div>
+    <div><div class="t">0&nbsp;€</div><p>Einrichtung, sonst 499&nbsp;€.</p></div>
+  </div>
+
+  <div class="next">
+    <div><h3 style="font-size:10.5pt; margin-bottom:3mm">So geht es weiter</h3>
+      <ol>
+        <li><b>20 Minuten sprechen</b>, du, Andy und Domenic: Fragen klären, Start festlegen.</li>
+        <li><b>Ein Vertrag für die Kette</b>, Rechnung zentral oder je Studio, wie es für euch passt.</li>
+        <li><b>Teams einladen</b>, Arbeitszeiten eintragen, kurze Einweisung je Studio.</li>
+        <li><b>Zahlungen live schalten</b> und die Stripe-Konten der Studios verbinden.</li>
+      </ol></div>
+    <div class="contact"><div class="call">Lass uns 20 Minuten sprechen</div>
+      <div class="who"><b>Domenic Schilling &amp; Andy Neelsen</b><br>Domenic: WhatsApp +49&nbsp;162&nbsp;4502375<br>info@dsxmediasolutions.de<br>Andy: neelsen.andy@gmail.com<br><span style="font-size:7.4pt;color:var(--grau)">DSX Media Solutions UG (haftungsbeschränkt)</span></div></div>
+  </div>
+  <div class="foot"><span>Alle Preise netto zzgl. USt., Stand 20.10.2026. Angebot, kein Vertrag. Normalpreis = Komplett-Paket laut Tattookalender-Preisliste.</span><span>6</span></div>
+</section>
+
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><title>02 Narbe – Story</title>
+<link rel="stylesheet" href="../_system/base.css">
+<style>
+/* Story: Nachher groß rechtsbündig, Vorher als eingeklebtes Beweisfoto mit Bein-Rahmen unten links (wie im Original-Reel).
+   Text nur zwischen y269 und y1536 (Safe-Zones 14 % / 20 %). */
+.nach{left:229px;top:90px;width:851px;height:1000px}
+.burn{position:absolute;left:229px;top:90px;width:851px;height:1000px;z-index:2;
+  background:linear-gradient(90deg,rgba(11,11,11,0) 68%,rgba(11,11,11,.55) 100%),linear-gradient(0deg,rgba(11,11,11,.45) 0,rgba(11,11,11,0) 20%)}
+.logo{position:absolute;left:44px;top:292px;width:140px;height:140px;z-index:4}
+.rule-v{position:absolute;left:113px;top:462px;width:3px;height:210px;background:var(--red);z-index:3}
+
+.vorher{left:64px;top:716px;width:318px;height:452px;z-index:6;outline:7px solid var(--bone);box-shadow:0 18px 40px rgba(0,0,0,.55)}
+.tag{position:absolute;z-index:7;font-size:23px;padding:11px 14px 9px;line-height:1}
+.tag.v{left:57px;top:709px;background:var(--bone);color:var(--ink);padding-left:21px}
+.tag.n{left:406px;top:1090px;transform:translateY(-100%);background:var(--red);color:#fff}
+
+.hl{position:absolute;left:var(--g);top:1222px;font-size:136px}
+.hl span{display:block}
+.offer{position:absolute;left:var(--g);top:1474px;font-size:24px;color:var(--bone)}
+.offer em{font-style:normal;color:var(--red2)}
+.foot{position:absolute;left:420px;right:var(--g);top:1112px;display:flex;flex-direction:column;align-items:flex-end;gap:6px;font-size:21px;text-align:right}
+</style></head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="sh" color-interpolation-filters="sRGB"><feConvolveMatrix order="3" kernelMatrix="0 -0.22 0 -0.22 1.88 -0.22 0 -0.22 0" preserveAlpha="true"/></filter></svg>
+<div class="c story">
+  <div class="ph nach" data-src="../_system/img/04-narben-coverup-rabe.png" data-crop="268,0,949,800" data-filter="url(#sh) contrast(1.1) brightness(1.04)"></div>
+  <div class="burn"></div>
+  <div class="logo"><img src="../_system/img/logo-480.webp" alt=""></div>
+  <div class="rule-v"></div>
+
+  <div class="ph vorher" data-src="../_system/img/04-narben-coverup-vorher.png" data-crop="62,50,282,363" data-filter="url(#sh) contrast(1.42) saturate(.6) brightness(.9)"></div>
+  <span class="lab tag v">Vorher</span>
+  <span class="lab tag n">Nachher</span>
+
+  <h1 class="d hl"><span>Diese Narbe?</span><span class="red2">Wird ein Motiv.</span></h1>
+  <p class="lab offer">Last Minute November · <em>bis 25 %</em> · Termin bis 30.11. · ab 150 €</p>
+  <p class="sender foot"><span><b>Chic Tattoo &amp; Piercing</b></span><span>Ulmer Str. 14 · Augsburg</span></p>
+  <div class="grain"></div>
+</div>
+<script src="../_system/crop.js"></script>
+</body></html>

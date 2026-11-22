@@ -1,0 +1,28 @@
+A=[
+ ("1-gutschein","a.png","Weihnachts-Gutschein",'Zahl <b>1.000&nbsp;€</b>.<br>Schenk <b>1.250&nbsp;€</b>.','<span class=st><i>100 €</i> → <em>120 €</em></span><span class=st><i>250 €</i> → <em>300 €</em></span><span class=st><i>500 €</i> → <em>600 €</em></span><span class=st><i>800 €</i> → <em>1.000 €</em></span><span class=st><i>1.000 €</i> → <em>1.250 €</em></span>',"Gutschein sichern","Bis 500 €: +20 % geschenkt · ab 800 €: +25 % · bis 23.12. · Preise inkl. USt"),
+ ("2-januar-ticket","b.png","Januar-Ticket",'<b>200&nbsp;€</b> zahlen.<br><b>250&nbsp;€</b> tätowieren.',"Sichere dir jetzt deinen Termin im Januar oder Februar. 50&nbsp;€ Bonus obendrauf.","Termin sichern","Nur im Dezember buchbar · Bonus gilt für Termine im Januar und Februar"),
+ ("3-wunsch-unterm-baum","c.png","Wunschtattoo unterm Baum",'Dein Motiv.<br>Dein <b>Wunschpreis</b>.',"Motiv, Stelle und Preis eintragen. Wir prüfen deinen Wunsch persönlich und melden uns.","Wunsch abgeben","Kostenlos und unverbindlich · bis 23.12."),
+]
+T='''<!doctype html><meta charset=utf-8><style>
+@font-face{font-family:SG;src:url(file:///Users/domi/Marketing-Maschine/sites/tattooleadz-de/fonts/SpaceGrotesk-latin-3.woff2);font-weight:300 700}
+@font-face{font-family:SG;src:url(file:///Users/domi/Marketing-Maschine/sites/tattooleadz-de/fonts/SpaceGrotesk-latin-ext-2.woff2);font-weight:300 700;unicode-range:U+0100-02AF,U+20AC}
+@font-face{font-family:In;src:url(file:///Users/domi/Marketing-Maschine/sites/tattooleadz-de/fonts/Inter-latin-1.woff2);font-weight:100 900}
+@font-face{font-family:In;src:url(file:///Users/domi/Marketing-Maschine/sites/tattooleadz-de/fonts/Inter-latin-ext-0.woff2);font-weight:100 900;unicode-range:U+0100-02AF,U+20AC}
+*{box-sizing:border-box;margin:0}
+body{width:1080px;height:1350px;background:#0a0a0a;color:#f5f2ea;position:relative;overflow:hidden;font-family:In}
+.art{position:absolute;left:0;top:-40px;width:1080px;height:1350px;object-fit:cover}
+.fade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,10,10,0) 38%,rgba(10,10,10,.92) 58%,#0a0a0a 68%)}
+.logo{position:absolute;left:64px;top:52px;border:2px dashed rgba(245,242,234,.65);border-radius:999px;padding:12px 26px;font:600 25px SG;background:rgba(10,10,10,.55)}
+.txt{position:absolute;left:64px;right:64px;bottom:56px}
+.eye{font:600 30px SG;letter-spacing:.08em;text-transform:uppercase;color:#fbbf24}
+h1{font:700 104px/1.02 SG;letter-spacing:-.03em;margin-top:14px}
+h1 b{font-weight:700;background:linear-gradient(90deg,#fbbf24,#d97706);-webkit-background-clip:text;background-clip:text;color:transparent}
+p{font:500 34px/1.28 In;margin-top:20px;color:#e6e2d8}
+.cta{margin-top:30px;background:linear-gradient(90deg,#fbbf24,#d97706);color:#0a0a0a;font:700 40px SG;border-radius:999px;padding:24px 42px;display:flex;justify-content:space-between}
+p .st{display:inline-block;margin:0 22px 10px 0;font:600 31px SG;color:#e6e2d8}p .st i{font-style:normal}p .st em{font-style:normal;color:#fbbf24}
+.fn{font:400 25px/1.3 In;color:#c2bfb6;margin-top:16px;text-align:center}
+</style><img class=art src="%s"><div class=fade></div><div class=logo>Dein Logo</div><div class=txt><div class=eye>%s</div><h1>%s</h1><p>%s</p><div class=cta><span>%s</span><span>→</span></div><div class=fn>%s</div></div>'''
+for n,img,e,h,p,c,f in A:
+    o=T
+    for v in (img,e,h,p,c,f): o=o.replace('%s',v,1)
+    open(n+'.html','w',encoding='utf-8').write(o)

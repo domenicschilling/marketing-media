@@ -1,0 +1,23 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><title>DS Beispiel 03 – Prüfklar Karussell 1/6</title>
+<!-- Musterfall 03: Karussell 6 Folien, Markenkarte Prüfklar B1 "Tusche" (spots/pruefklar-erklaer, Memory barrierefrei-check: Domenic wählte B1 am 19.10.2026).
+     Bestehende Markenwerte bleiben (auch #000). Rot #E10600 nur am Kringel = Markenzeichen. Material: echter Prüfbericht des erfundenen Demo-Shops, als Beispiel gekennzeichnet. -->
+<link rel="stylesheet" href="../../vorlagen/ds.css">
+<style>
+:root { --grund:#F4F4F2; --flaeche:#E4E4E1; --tinte:#000000; --gedaempft:#595959; --akzent:#E10600;
+        --hf:"Bricolage Grotesque",sans-serif; --hw:800; --hls:-0.01em; --bf:"Bricolage Grotesque",sans-serif; --korn:.035; }
+:root { --w:1080px; --h:1350px; --h1:100px; --klein:28px; }
+.titel { font-stretch:75%; font-variation-settings:"wdth" 75; }
+.nr { position:absolute; left:80px; top:80px; font-size:var(--klein); color:var(--gedaempft); font-variant-numeric:tabular-nums; }
+.titel { position:absolute; left:80px; top:150px; width:920px; font-family:var(--hf); font-weight:var(--hw); font-size:var(--h1); line-height:.98; letter-spacing:var(--hls); text-wrap:balance; }
+.text { position:absolute; left:80px; width:880px; font-size:38px; line-height:1.25; font-weight:400; }
+.bild { position:absolute; left:80px; top:700px; width:920px; height:520px; object-fit:cover; object-position:50% 0; }
+.bild.anschnitt { width:1000px; }
+.marke { left:80px; bottom:80px; font-size:var(--klein); color:var(--gedaempft); }
+.marke img { height:30px; vertical-align:-6px; margin-right:14px; }
+.zahl { font-family:var(--hf); font-weight:800; font-stretch:75%; font-size:240px; line-height:.9; letter-spacing:-.02em; }
+</style></head><body>
+<div class="ds" data-w="1080" data-h="1350">
+  <div class="nr" data-gehoert="titel">1/6</div><div class="titel">Schöner Knopf.<br>Bei Sonne kaum lesbar.</div><img class="bild anschnitt" src="bilder/beweis-kringel-zuschnitt.jpg" alt="Warenkorb-Knopf mit rotem Kringel" style="top:620px;height:600px;object-position:0 60%">
+  <div class="klein marke"><img src="bilder/wortmarke.svg" alt="prüfklar">Beispiel aus einem erfundenen Demo-Shop</div>
+  <div class="korn"></div>
+</div></body></html>

@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=393">
+<title>Monat</title><link rel="stylesheet" href="app.css">
+<style>
+.seg{display:grid;grid-template-columns:1fr 1fr;height:34px;padding:2px;border-radius:10px;background:var(--flaeche2);margin:12px 0 16px}
+.seg span{display:grid;place-items:center;border-radius:8px;font:600 13.5px/1 Inter;color:var(--mut)}
+.seg span.an{background:#36313b;color:var(--bone);box-shadow:0 2px 6px rgba(0,0,0,.35)}
+
+.held{padding:14px 16px 4px}
+.held .l{font:600 13px/1.2 Inter;color:var(--mut)}
+.held .betrag{margin:8px 0 4px}
+.held .betrag b{font:400 50px/1 var(--disp);letter-spacing:.005em;font-weight:400;white-space:nowrap}
+.held .betrag b small{font-size:32px;color:var(--mut);margin-right:6px;vertical-align:5px}
+.held .delta{font:650 14px/1.2 Inter;color:var(--gruen);margin-bottom:6px}
+.held .rech{font:500 13.5px/1.3 Inter;color:var(--mut);display:flex;align-items:center;gap:5px}
+.held .rech u{text-decoration:none;color:var(--bone);font-weight:600;border-bottom:1px dashed rgba(241,235,224,.4);display:inline-flex;align-items:center;gap:4px}
+.held .rech svg{width:13px;height:13px}
+.held .zeile{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-top:1px solid var(--line)}
+.held .zeile.erste{margin-top:10px}
+.held .zeile .k{font:500 14px/1.3 Inter;color:var(--bone)}
+.held .zeile .k small{display:block;white-space:nowrap;font:450 12.5px/1.3 Inter;color:var(--mut2);margin-top:1px}
+.held .zeile .v{font:650 15px/1.2 Inter;white-space:nowrap;text-align:right}
+.held .zeile .v small.x{display:block;font:600 12.5px/1.3 Inter;color:var(--gruen);margin-top:1px}
+
+.trichter{padding:6px 14px}
+.stufe{display:grid;grid-template-columns:86px 1fr 30px 40px;align-items:center;gap:10px;height:27px}
+.stufe .n{font:500 14px/1 Inter;color:var(--bone)}
+.stufe .bar{height:10px;border-radius:5px;background:rgba(241,235,224,.07);position:relative;overflow:hidden}
+.stufe .bar i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:rgba(241,235,224,.38)}
+.stufe .z{font:650 15px/1 Inter;text-align:right}
+.stufe .q{font:500 12px/1 Inter;color:var(--mut2);text-align:right}
+.stufe.ende .n,.stufe.ende .z{font-weight:700}
+.stufe.ende .bar i{background:var(--bone)}
+
+.mini{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}
+.mini .karte{padding:10px 10px 10px 11px;border-radius:18px}
+.mini .l{font:600 12.5px/1.2 Inter;color:var(--mut);white-space:nowrap}
+.mini .w{font:700 21px/1 Inter;letter-spacing:-.02em;margin:7px 0 6px;white-space:nowrap}
+.mini .v{font:500 11px/1.25 Inter;color:var(--mut2);white-space:nowrap;letter-spacing:-.01em}
+.mini .v.gut{color:var(--gruen)}
+.teilen{margin-top:14px}
+.unter-z{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px}
+.unter-z a{font:600 14px/1 Inter;color:var(--bone);display:inline-flex;align-items:center;gap:3px}
+.unter-z a svg{width:11px;height:11px;color:var(--mut)}
+</style></head>
+<body><div class="phone" data-tab="monat"><div class="inhalt">
+
+  <div class="navbar">
+    <span class="bsp">Beispieldaten</span>
+    <div class="r"><div class="rund"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 14.5V3.5M8 7.5l4-4 4 4"/><path d="M8.5 10.5H7A1.5 1.5 0 0 0 5.5 12v7A1.5 1.5 0 0 0 7 20.5h10a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5h-1.5"/></svg></div></div>
+  </div>
+  <h1 class="gross">Oktober</h1>
+  <div class="unter-z"><span class="unter">1.–31. Okt. · abgeschlossen</span><a>November bisher<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5.5 15.5 12 9 18.5"/></svg></a></div>
+
+
+  <div class="karte held">
+    <div class="l">Umsatz aus deinen Anfragen</div>
+    <div class="betrag"><b><small>≈</small>4.900 €</b></div>
+    <div class="delta">+1.400 € mehr als im September</div>
+    <div class="rech">7 gestochen × <u>700 € Ø-Preis <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg></u> (änderbar)</div>
+    <div class="zeile erste"><span class="k">Deine Kosten<small>612 € Werbung + 1.299 € TattooLeadz</small></span><span class="v">1.911 €<small class="x">2,6× zurück</small></span></div>
+    <div class="zeile"><span class="k">Noch offen: 4 gebuchte Termine</span><span class="v">≈ 2.800 €</span></div>
+  </div>
+
+  <div class="sek" style="margin-top:16px"><h2 style="font-size:17px">Von der Anfrage zum Tattoo</h2></div>
+  <div class="karte trichter">
+    <div class="stufe"><span class="n">Anfragen</span><span class="bar"><i style="width:100%"></i></span><span class="z">84</span><span class="q"></span></div>
+    <div class="stufe"><span class="n">Kontaktiert</span><span class="bar"><i style="width:84.5%"></i></span><span class="z">71</span><span class="q">85 %</span></div>
+    <div class="stufe"><span class="n">Beratung</span><span class="bar"><i style="width:26.2%"></i></span><span class="z">22</span><span class="q">31 %</span></div>
+    <div class="stufe"><span class="n">Gebucht</span><span class="bar"><i style="width:13.1%"></i></span><span class="z">11</span><span class="q">50 %</span></div>
+    <div class="stufe ende"><span class="n">Gestochen</span><span class="bar"><i style="width:8.3%"></i></span><span class="z">7</span><span class="q">64 %</span></div>
+  </div>
+  <div class="sek-fuss">% = von der Stufe davor · Gebucht = Anzahlung ist da</div>
+
+  <div class="mini">
+    <div class="karte"><div class="l">Werbung</div><div class="w">612 €</div><div class="v">Sept.: 604 €</div></div>
+    <div class="karte"><div class="l">Pro Anfrage</div><div class="w">7,29 €</div><div class="v gut">0,66 € günstiger</div></div>
+    <div class="karte"><div class="l">Antwort Team</div><div class="w">18 Min.</div><div class="v gut">23 Min. schneller</div></div>
+  </div>
+  <div class="sek-fuss">Vergleich mit September. Ted antwortet sofort, „Antwort Team“ zählt ab Übergabe an euch.</div>
+
+  <div class="teilen"><div class="btn btn-s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 14.5V3.5M8 7.5l4-4 4 4"/><path d="M8.5 10.5H7A1.5 1.5 0 0 0 5.5 12v7A1.5 1.5 0 0 0 7 20.5h10a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5h-1.5"/></svg>Monatsbericht teilen (PDF)</div></div>
+
+</div></div>
+<script src="shared.js"></script>
+</body></html>

@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><title>02 Narbe – Feed</title>
+<link rel="stylesheet" href="../_system/base.css">
+<style>
+/* Idee: Beweis-Diptychon wie eine Fallakte. Vorher als Beleg links (Narben gut sichtbar), Nachher groß rechts.
+   Logo oben rechts als Absender-Stempel, Angebot unten links bündig zur Bildkante. */
+.hl{position:absolute;left:var(--g);top:60px;font-size:134px}
+.hl span{display:block}
+.logo{position:absolute;right:var(--g);top:54px;width:146px;height:146px}
+
+/* Belegrahmen: beide Bilder starten auf derselben Kante (y340) und enden unten auf derselben Linie (y1262) */
+.vorher{left:var(--g);top:340px;width:300px;height:500px}
+.nach{left:400px;top:340px;width:680px;height:922px}
+.burn{position:absolute;left:400px;top:340px;width:680px;height:922px;z-index:2;
+  background:linear-gradient(90deg,rgba(11,11,11,0) 70%,rgba(11,11,11,.55) 100%),linear-gradient(0deg,rgba(11,11,11,.35) 0,rgba(11,11,11,0) 22%)}
+.tag{position:absolute;z-index:5;font-size:21px;padding:10px 13px 8px;line-height:1}
+.tag.v{left:var(--g);top:340px;background:var(--bone);color:var(--ink)}
+.tag.n{left:400px;top:340px;background:var(--red);color:#fff}
+
+.cap{position:absolute;left:var(--g);top:862px;width:300px;font-size:25px;line-height:1.22;color:var(--bone2)}
+.cap b{color:var(--bone);font-weight:800}
+
+/* Angebot: unten bündig zur Bildunterkante */
+.offer{position:absolute;left:var(--g);width:310px;bottom:88px}
+.offer .k{font-size:19px;color:var(--bone2);display:flex;align-items:center;gap:10px}
+.offer .k i{display:inline-block;width:26px;height:3px;background:var(--red)}
+.offer .big{font-weight:900;font-stretch:62%;text-transform:uppercase;font-size:104px;line-height:.86;color:var(--red2);margin:14px 0 10px;letter-spacing:-.006em;white-space:nowrap}
+.offer .s{font-size:22px;line-height:1.25;color:var(--bone2)}
+
+.foot{position:absolute;left:var(--g);right:var(--g);bottom:30px;display:flex;justify-content:space-between;font-size:20px}
+</style></head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="sh" color-interpolation-filters="sRGB"><feConvolveMatrix order="3" kernelMatrix="0 -0.22 0 -0.22 1.88 -0.22 0 -0.22 0" preserveAlpha="true"/></filter></svg>
+<div class="c feed">
+  <h1 class="d hl"><span>Diese Narbe?</span><span class="red2">Wird ein Motiv.</span></h1>
+  <div class="logo"><img src="../_system/img/logo-480.webp" alt=""></div>
+
+  <div class="ph vorher" data-src="../_system/img/04-narben-coverup-vorher.png" data-crop="72,62,282,412" data-filter="url(#sh) contrast(1.42) saturate(.6) brightness(.9)"></div>
+  <span class="lab tag v">Vorher</span>
+
+  <div class="ph nach" data-src="../_system/img/04-narben-coverup-rabe.png" data-crop="270,0,860,800" data-filter="url(#sh) contrast(1.1) brightness(1.04)"></div>
+  <div class="burn"></div>
+  <span class="lab tag n">Nachher</span>
+
+  <p class="txt cap"><b>Echtes Cover-up</b><br>aus dem Studio.</p>
+
+  <div class="offer">
+    <p class="lab k"><i></i>Last Minute November</p>
+    <p class="big">bis 25 %</p>
+    <p class="txt s">bei Termin bis 30.11.<br>ab 150 € · Code auf der Seite</p>
+  </div>
+
+  <p class="sender foot"><span><b>Chic Tattoo &amp; Piercing</b></span><span>Ulmer Str. 14 · Augsburg</span></p>
+  <div class="grain"></div>
+</div>
+<script src="../_system/crop.js"></script>
+</body></html>

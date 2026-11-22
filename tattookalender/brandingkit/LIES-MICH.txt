@@ -1,0 +1,65 @@
+TATTOOKALENDER – BRANDINGKIT
+Stand: 20.10.2026
+
+Hier liegt alles, was du brauchst, damit der Tattookalender überall gleich aussieht:
+auf der Website, in Werbung, auf Social Media, auf Drucksachen und in Mails.
+Zuerst ins Markenhandbuch schauen: Tattookalender-Brandguide.pdf (8 Seiten).
+
+
+WAS LIEGT WO?
+
+Tattookalender-Brandguide.pdf
+   Das Markenhandbuch: Logo, Farben, Schriften, Regeln, Ton, Beispiele.
+
+Logo/
+   SVG/          Das Logo als Vektor – beliebig groß, gestochen scharf. Für Druckerei, Designer, Website.
+   PNG-4000px/   Große Bilddateien mit durchsichtigem Hintergrund (für Druck, Video, Präsentationen).
+   PNG-1000px/   Kleine Bilddateien mit durchsichtigem Hintergrund (für Website, Mails, Social Media).
+
+   Welche Datei nehme ich?
+   - …-quer-dunkel           Standard. Auf schwarzem oder dunklem Hintergrund.
+   - …-quer-hell             Auf weißem oder hellem Hintergrund.
+   - …-quer-kompakt-…        Ohne „DAS STUDIO-SYSTEM“ – wenn das Logo klein ist (unter 6 cm / 320 px).
+   - …-gestapelt-…           Untereinander – für Hochformat, Story, Visitenkarte.
+   - …-symbol-farbig         Nur das Kalender-Zeichen – für App, Profilbild, sehr kleine Flächen.
+   - …-schwarz / -weiss / -gold   Einfarbig – nur wenn kein Farbverlauf möglich ist
+                                   (Stempel, Gravur, Folie, Stick, T-Shirt-Druck).
+
+App-Symbol/
+   Das App-Symbol und Favicon (das kleine Bild im Browser-Tab), wie es in der App benutzt wird:
+   icon-1024/512/192.png, apple-touch-icon.png (iPhone), icon-maskable-512.png (Android),
+   favicon.svg, favicon-32.png, favicon.ico, icon.svg und manifest.webmanifest (für Entwickler).
+   profilbild-social-1080.png = Profilbild für Instagram, Facebook, WhatsApp Business.
+
+Farben-Schriften/
+   Farben.txt                  Alle Farben mit HEX, RGB und CMYK und wofür sie da sind.
+   tattookalender-farben.css   Die Farben für Website-Entwickler.
+   tattookalender-farben.ase   Farbfeld-Datei für Illustrator, InDesign, Photoshop, Affinity.
+   Schriften/                  Die beiden Schriften (Bricolage Grotesque, Inter) zum Installieren
+                               + SCHRIFTEN-LIES-MICH.txt. Beide frei nutzbar (Open Font License).
+
+Vorlagen/
+   Social-Media/      Instagram-Post (1080 × 1350) und Story (1080 × 1920), je zwei Vorlagen:
+                      .png = fertig zum Posten, .svg = zum Ändern (Figma, Illustrator, Inkscape
+                      oder im Texteditor die Wörter austauschen). Vorher die Schriften installieren.
+   Bilder/            Bildschirmfotos aus dem Beispiel-Studio mit Demo-Daten (für Vorlagen und Werbung).
+   Visitenkarte/      visitenkarte-druck.pdf = Druckdatei (85 × 55 mm + 3 mm Rand zum Abschneiden,
+                      Vorder- und Rückseite). visitenkarte.html = zum Ändern. Vorschau-Bilder dabei.
+   E-Mail-Signatur/   email-signatur.html im Browser öffnen, Signatur markieren, kopieren und in
+                      Gmail/Apple Mail einfügen (Anleitung steht oben in der Datei).
+
+Video-Stills/
+   Standbilder aus dem Werbevideo (Hochformat) + Titelbilder + Kontaktbögen (alle Bilder auf einen Blick).
+
+
+DIE WICHTIGSTEN REGELN
+
+1. Logo nie verzerren, umfärben, nachtippen oder mit Effekten versehen.
+2. Um das Logo herum Platz lassen (mindestens halb so viel wie das Kalender-Zeichen hoch ist).
+3. Farben: Schwarz ist der Normalfall, Gold nur als Akzent, Text in Elfenbein.
+4. Ton: immer „du“, einfach, ehrlich, kein Verkäufer-Gerede.
+5. Nie mit Logos von Kunden-Studios (z. B. Tattoo Fashion) mischen und keine echten Kundendaten
+   zeigen. Bildschirmfotos nur aus dem Beispiel-Studio „Nadelwerk“ und als „Demo-Daten“ kennzeichnen.
+
+
+Fragen? info@dsxmediasolutions.de · +49 162 4502375

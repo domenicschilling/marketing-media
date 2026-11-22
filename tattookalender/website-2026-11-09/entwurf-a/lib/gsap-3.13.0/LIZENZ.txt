@@ -1,0 +1,3 @@
+GSAP 3.13.0 (npm pack gsap@3.13.0, Dateien aus dist/)
+Lizenz: GSAP Standard 'no charge' license, https://gsap.com/standard-license
+Kostenlos auch kommerziell (seit 30.04.2025, Webflow). Ausnahme: nicht in Werkzeugen, die mit Webflow konkurrieren (visuelle No-Code-Website-Baukaesten) - trifft hier nicht zu.

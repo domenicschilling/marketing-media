@@ -1,0 +1,21 @@
+Whisper (mlx-community/whisper-large-v3-turbo, de) über das fertige reel.mp4, Fassung 4 (Logo-Korrektur, neu gerendert), 14.11.2026 – Ton unverändert, Ergebnis identisch zum Lauf davor
+
+[00.00–04.16] Neues Studio, neues Gewinnspiel. Wir bieten euch die Rubbellose.
+[04.50–08.38] Macht mit, ihr könnt bis zu 25% auf euer Tattoo gewinnen.
+[08.66–12.02] Egal ob groß, ob klein, ob billig, ob teuer.
+[12.14–14.54] Wir machen keine Unterschiede bei den Tattoos.
+[14.86–18.32] Macht einfach mit, klickt auf den Link, versucht euer Glück
+[18.32–21.98] und ich melde mich ganz, ganz, ganz schnell auch bei dir.
+[22.40–24.68] So meine liebe Jill, du bist zufrieden mit deinem Tattoo?
+[24.78–25.32] Ja, zufrieden.
+[25.32–26.98] Das wollte ich sehr, das wollte ich sehr.
+[26.98–31.94] Wie, ihr seid noch hier? Wir können bei diesem Link 25% gewinnen.
+[32.20–34.36] Macht mit und rubbelt, was das Zeug hält.
+[34.64–36.72] Egal welcher Preis, jeder kann ein Gewinner sein.
+
+Hinweise zu Fehlhörern
+- Erstes Wort: Whisper setzt „Neues“ auf 0,00 s. Laut Lautstärke-Hüllkurve beginnt es bei 0,23 s, vorher ist nur Raumton (mit 20 ms Einblende). Der Wortanfang ist also nicht angeschnitten.
+- „Das wollte ich sehr“ (25,3–27,0 s) ist ein Fehlhörer. Über die reine Sprachspur hört Whisper „Das freut mich sehr.“ Auch die Rohdatei IMG_3520 und Fassung 3 ergeben „Das freut mich sehr“.
+- „Wir können bei diesem Link“ (ca. 28,9 s): Zwei Whisper-Läufe über die Rohdatei IMG_3520 ergeben „Ihr könnt bei diesem Link“, der Auftrag nennt denselben Wortlaut. Nur die bearbeitete Spur hört Whisper als „Wir können“. Die Untertitel bleiben bei „Ihr könnt bei diesem Link“.
+- Jill (24,8–25,3 s): Wie in Fassung 3 ergibt das ganze Reel „Ja, zufrieden.“ Ein kurzer Einzelausschnitt ergibt einen erfundenen „Herzlichen Glückwunsch“. Sicher ist nur „zufrieden“. Die Untertitelzeile bleibt deshalb „Zufrieden, danke.“ mit dem Namensschild „Jill“.
+- Gesprochen wird bis 36,78 s („sein.“). Danach läuft 0,5 s Raumton, der von 37,25 bis 37,49 s ausblendet. Ab 37,5 s ist nur noch Musik zu hören, und Whisper erfindet dort nichts.

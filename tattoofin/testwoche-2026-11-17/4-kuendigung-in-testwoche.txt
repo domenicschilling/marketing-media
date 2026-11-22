@@ -1,0 +1,15 @@
+Betreff: Deine Kündigung ist eingegangen
+
+Schade, aber verstanden. Kündigung bestätigt.
+
+Hey Karl,
+
+wir bestätigen deine Kündigung zum 25.11.2026. Bis dahin funktionieren Zahlungslinks und Zahlseite ganz normal.
+
+Du hast in der Testwoche gekündigt. Es wird nichts abgebucht.
+
+Dein Stripe-Konto gehört deinem Studio und bleibt bestehen. Nach Vertragsende trennen wir nur die Verbindung zu Tattoofin. Bitte entferne dann Aufkleber und QR-Codes, die auf die Tattoofin-Zahlseite zeigen.
+
+Falls du es dir anders überlegst: Im Portal kannst du die Kündigung bis zum Stichtag mit einem Klick zurücknehmen.
+
+Kündigung zurücknehmen: https://tattoofin.de/portal.html#vertrag

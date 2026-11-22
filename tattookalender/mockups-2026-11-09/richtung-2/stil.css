@@ -1,0 +1,14 @@
+/* Richtung 2 – "Die Kette": drei echte Bildschirme in Reihenfolge – Anfrage, reserviert mit offener Anzahlung, bezahlt und bestätigt. */
+.tile{position:absolute;border-radius:26px;overflow:hidden;background:#fff;box-shadow:0 0 0 1px rgba(22,23,26,.10),0 24px 50px -24px rgba(22,23,26,.30)}
+.ring{position:absolute;border:2.5px solid var(--ink);border-radius:12px;pointer-events:none}
+.num{position:absolute;font-stretch:65%;font-weight:800;line-height:.8;letter-spacing:-.02em}
+.lab{position:absolute}
+.lab b{display:block;font-weight:800}
+.lab span{display:block;color:var(--muted);font-weight:500}
+.pfeil{position:absolute;height:2px;background:var(--ink)}
+.pfeil::after{content:"";position:absolute;right:-2px;top:-6px;border-left:12px solid var(--ink);border-top:7px solid transparent;border-bottom:7px solid transparent}
+.vpfeil{position:absolute;width:2px;background:var(--ink)}
+.vpfeil::after{content:"";position:absolute;bottom:-2px;left:-6px;border-top:12px solid var(--ink);border-left:7px solid transparent;border-right:7px solid transparent}
+.strip{position:absolute;background:#fff;border-radius:22px;overflow:hidden;box-shadow:0 0 0 1px rgba(22,23,26,.10),0 20px 40px -22px rgba(22,23,26,.30)}
+.strip .shot{display:block;position:relative}
+.strip hr{border:0;border-top:1.5px dashed var(--line);margin:0}

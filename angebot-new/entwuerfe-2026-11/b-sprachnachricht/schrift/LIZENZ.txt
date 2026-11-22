@@ -1,0 +1,2 @@
+Inter, The Inter Project Authors (github.com/rsms/inter). SIL Open Font License 1.1, siehe OFL.txt.
+Datei: inter-var.woff2 = variable Latin-Teilmenge von @fontsource-variable/inter 5.2.5, unverändert.

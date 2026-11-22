@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><title>02 Narbe – Feed</title>
+<link rel="stylesheet" href="../_system/base.css">
+<link rel="stylesheet" href="../_system/aggro.css">
+<style>
+/* Beweis zuerst: Vorher (Narben) → Nachher (Rabe), hart nebeneinander. Darunter die rote −25 % mit Frist, CTA-Balken. */
+.hl{position:absolute;left:var(--g);top:46px;font-size:114px;z-index:5}
+.hl span{display:block}
+.logo{position:absolute;right:var(--g);top:52px;width:118px;height:118px;z-index:5}
+
+.vorher{left:var(--g);top:268px;width:300px;height:470px}
+.nach{left:384px;top:268px;width:696px;height:590px}
+.burn{position:absolute;left:384px;top:268px;width:696px;height:590px;z-index:2;
+  background:linear-gradient(0deg,rgba(11,11,11,.7) 0,rgba(11,11,11,0) 26%)}
+.tag{position:absolute;z-index:6;font-size:30px}
+.tag.v{left:var(--g);top:268px}
+.tag.n{left:384px;top:268px}
+.arrow{position:absolute;left:304px;top:460px;z-index:7;width:120px;height:92px;background:var(--sig);display:flex;align-items:center;justify-content:center}
+.arrow svg{width:64px;height:64px;fill:none;stroke:#fff;stroke-width:10;stroke-linecap:square}
+.cap{position:absolute;left:var(--g);top:758px;width:300px;font-size:30px;line-height:1.1;color:#fff;z-index:5}
+.cap em{font-style:normal;color:var(--sig)}
+
+.big{position:absolute;left:38px;top:880px;z-index:5;font-size:292px}
+.side{position:absolute;left:548px;top:886px;z-index:5}
+.side .h{font-size:68px;line-height:.9;color:#fff}
+.side .box{display:table;margin-top:12px;font-size:78px}
+.side .box.ab{font-size:40px}
+
+.cta{top:1146px;height:98px}
+.cta b{font-size:62px}
+.cta i{width:116px}
+.cta i svg{width:54px;height:54px}
+.bed{left:var(--g);top:1262px}
+</style></head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="sh" color-interpolation-filters="sRGB"><feConvolveMatrix order="3" kernelMatrix="0 -0.22 0 -0.22 1.88 -0.22 0 -0.22 0" preserveAlpha="true"/></filter></svg>
+<div class="c feed">
+  <h1 class="d hl"><span>Diese Narbe?</span><span style="color:var(--sig)">Wird ein Motiv.</span></h1>
+  <div class="logo"><img src="../_system/img/logo-480.webp" alt=""></div>
+
+  <div class="ph vorher" data-src="../_system/img/04-narben-coverup-vorher.png" data-crop="72,62,282,412" data-filter="url(#sh) contrast(1.42) saturate(.6) brightness(.9)"></div>
+  <span class="box wt tag v">Vorher</span>
+  <div class="ph nach" data-src="../_system/img/04-narben-coverup-rabe.png" data-crop="270,0,860,500" data-filter="url(#sh) contrast(1.15) brightness(1.04)"></div>
+  <div class="burn"></div>
+  <span class="box r tag n">Nachher</span>
+  <div class="arrow"><svg viewBox="0 0 64 64"><path d="M6 32h46M34 12l20 20-20 20"/></svg></div>
+  <p class="d72 cap">Echtes Cover-up<br><em>aus dem Studio.</em></p>
+
+  <p class="pct big"><span class="mi"></span>25<span class="pc">%</span></p>
+  <div class="side">
+    <p class="d h">Termin nur bis</p>
+    <span class="box wt">Sa 21.11.</span>
+    <span class="box wt ab">Ab 150 € · mit Code</span>
+  </div>
+
+  <div class="cta"><b>Jetzt Code sichern</b><i><svg viewBox="0 0 56 56"><path d="M6 28h40M30 10l18 18-18 18"/></svg></i></div>
+  <p class="bed"><b>Termin bis Sa 21.11.</b><i>·</i>danach 20 % bei Termin 23.–30.11.<br>ab 150 € Tattoo-Wert<i>·</i>Code auf der Aktionsseite</p>
+  <div class="grain"></div>
+</div>
+<script src="../_system/crop.js"></script>
+</body></html>

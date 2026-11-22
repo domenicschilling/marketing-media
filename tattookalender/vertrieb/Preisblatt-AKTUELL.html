@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Tattookalender – Preise und Pakete</title>
+<style>
+  @font-face{font-family:Archivo;src:url(file:///Users/domi/Marketing-Maschine/content/tattookalender/werbung-2026-11-02/quellen/schrift/archivo.woff2) format("woff2");font-weight:100 900;font-stretch:62% 125%}
+  @page { size: A4; margin: 0; }
+  :root { --bg:#fff; --panel:#f6f6f3; --line:#cfcfc9; --gold:#16171a; --cream:#16171a; --muted:#50535a; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { background:var(--bg); }
+  body { font-family:Archivo,"Helvetica Neue",Arial,sans-serif; color:var(--cream); -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  .page { width:210mm; height:297mm; overflow:hidden; padding:9mm 13mm 6.5mm; display:flex; flex-direction:column; background:var(--bg); }
+  header { display:flex; align-items:baseline; justify-content:space-between; }
+  .word img { height:10mm; display:block; }
+  .tag { font-size:8pt; color:var(--muted); text-align:right; }
+  h1 { margin-top:4mm; font-size:16.5pt; line-height:1.1; letter-spacing:-.02em; }
+  .lead { margin-top:2mm; font-size:9pt; line-height:1.42; color:#26282c; }
+  .aktion { margin-top:3.6mm; border:.3mm solid var(--gold); border-radius:3mm; padding:2.6mm 4mm; font-size:8.8pt; line-height:1.42; background:#fff; }
+  .aktion b { color:var(--gold); }
+  .pakete { margin-top:3.6mm; display:grid; grid-template-columns:repeat(3,1fr); gap:3mm; }
+  .paket { background:var(--panel); border:.3mm solid var(--line); border-radius:3.2mm; padding:3.2mm 3.4mm 3mm; }
+  .paket small { display:block; font-size:7pt; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:700; min-height:3mm; }
+  .paket h2 { font-size:11pt; margin:1mm 0 1.4mm; }
+  .preis { font-size:22pt; font-weight:800; letter-spacing:-.03em; line-height:1; }
+  .preis span { font-size:8pt; font-weight:500; color:var(--muted); letter-spacing:0; }
+  .jahr { margin-top:1mm; font-size:7.8pt; color:var(--muted); }
+  .einr { margin-top:.8mm; font-size:7.8pt; font-weight:700; color:#26282c; }
+  ul { list-style:none; margin-top:2.2mm; display:grid; gap:1.1mm; }
+  li { font-size:7.8pt; line-height:1.33; padding-left:3.6mm; position:relative; color:#26282c; }
+  li::before { content:""; position:absolute; left:0; top:1.4mm; width:1.8mm; height:1.8mm; border-radius:50%; background:var(--gold); }
+  .plus { margin-top:2.2mm; font-size:7.6pt; color:var(--muted); }
+  .band { margin-top:3.4mm; display:grid; grid-template-columns:1fr 1fr; gap:2.6mm; }
+  .box { background:var(--panel); border:.3mm solid var(--line); border-radius:3.2mm; padding:2.8mm 3.6mm; font-size:8pt; line-height:1.42; }
+  .box.breit { grid-column:1 / -1; }
+  .box h3 { font-size:9.6pt; margin-bottom:1.2mm; }
+  .box b { color:var(--gold); }
+  footer { margin-top:auto; padding-top:2mm; display:flex; justify-content:space-between; align-items:flex-end; font-size:7.8pt; color:var(--muted); line-height:1.5; }
+  footer b { color:var(--cream); }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <div class="word"><img src="file:///Users/domi/Marketing-Maschine/content/tattookalender/werbung-2026-11-02/quellen/logo-hell.svg" alt="Tattookalender"></div>
+    <div class="tag"><b>Preise und Pakete</b><br>Stand 11.11.2026</div>
+  </header>
+  <h1>Ein Preis pro Studio. Anzahlung und Einwilligung in jedem Paket.</h1>
+  <p class="lead">Anzahlung per Bezahllink und Einwilligung mit Unterschrift gibt es schon im Paket Kalender. Je nach Paket kommen ein WhatsApp-Chat mit deiner eigenen Nummer und die Abrechnung fürs Studio dazu. 0 % Provision auf die Zahlungen deiner Kunden. Alle Preise netto zzgl. 19 % USt, nur für Unternehmen.</p>
+  <div class="aktion"><b>Aktion bis 31.12.2026: erster Monat gratis</b> (bei monatlicher und jährlicher Zahlung, Karte nötig). Kündigst du in den 30 Tagen, zahlst du nichts, auch keine Einrichtungsgebühr. Wenn du bleibst, wird die Einrichtungsgebühr (nur bei Kalender + WhatsApp und Studio komplett) erst mit der ersten Zahlung nach dem Gratismonat fällig.</div>
+  <div class="pakete">
+    <section class="paket">
+      <small>&nbsp;</small><h2>Kalender</h2>
+      <div class="preis">69 €<span> / Monat</span></div>
+      <div class="jahr">Jährlich 59 € im Monat (708 € im Jahr)</div>
+      <div class="einr">Keine Einrichtungsgebühr</div>
+      <ul>
+        <li>Kalender je Artist und Platz, auch am Handy</li>
+        <li>Online-Buchung von Beratungsterminen</li>
+        <li>Kundenkartei mit Fotos, Verlauf und Notizen</li>
+        <li>Einwilligung mit Unterschrift am Tablet oder Handy</li>
+        <li>Erinnerungen per E-Mail (7, 2 und 1 Tag vorher)</li>
+        <li>Warteliste, Aufgaben und Lückenfüller</li>
+        <li>Anzahlung, Zahlungslinks, Restzahlung über dein Stripe-Konto</li>
+        <li>Ausfallgebühr für online gebuchte Beratungen</li>
+      </ul>
+    </section>
+    <section class="paket">
+      <small>Gemeinsam eingerichtet</small><h2>Kalender + WhatsApp</h2>
+      <div class="preis">149 €<span> / Monat</span></div>
+      <div class="jahr">Jährlich 129 € im Monat (1.548 € im Jahr)</div>
+      <div class="einr">+ 249 € Einrichtung einmalig</div>
+      <p class="plus">Alles aus Kalender, dazu:</p>
+      <ul>
+        <li>WhatsApp-Chat fürs ganze Team mit deiner eigenen Nummer</li>
+        <li>Erinnerungen und Anzahlungslinks automatisch per WhatsApp</li>
+        <li>KI-Assistent, der Fragen im Chat beantwortet und ans Team übergibt</li>
+        <li>Kostenloser Umzug aus deinem bisherigen Tool</li>
+      </ul>
+    </section>
+    <section class="paket">
+      <small>Gemeinsam eingerichtet</small><h2>Studio komplett</h2>
+      <div class="preis">199 €<span> / Monat</span></div>
+      <div class="jahr">Jährlich 179 € im Monat (2.148 € im Jahr)</div>
+      <div class="einr">+ 249 € Einrichtung einmalig</div>
+      <p class="plus">Alles aus Kalender + WhatsApp, dazu:</p>
+      <ul>
+        <li>Provision je Artist als Monatsabrechnung (PDF)</li>
+        <li>Belege und DATEV-Export für deine Steuerkanzlei</li>
+        <li>Gutscheine einlösen und Geburtstags-Guthaben</li>
+        <li>Kostenloser Umzug aus deinem bisherigen Tool</li>
+      </ul>
+    </section>
+  </div>
+  <div class="band">
+    <div class="box"><h3>In jedem Paket</h3>1 Standort, bis 5 Artists, unbegrenzt Logins, Termine und Kunden. Jeder weitere Artist ab Nummer 6: <b>9 € im Monat</b>. Daten in Frankfurt am Main, Vertrag zur Auftragsverarbeitung unter tattookalender.de/avv.</div>
+    <div class="box"><h3>Laufzeit</h3>Monatlich bezahlt: monatlich kündbar zum Ende des Abrechnungsmonats. Jährlich bezahlt: 12 Monate Mindestlaufzeit, im Voraus bezahlt, danach monatlich weiter und monatlich kündbar. Kündigen geht selbst unter tattookalender.de/abo oder per E-Mail.</div>
+    <div class="box"><h3>Umzug aus deinem bisherigen Tool</h3>Kunden und künftige Termine übernehmen wir <b>kostenlos bei Jahreszahlung oder ab Kalender + WhatsApp</b>, mit Export-Datei oder von Hand. Bei Kalender monatlich ist der Umzug nicht dabei, die Kundenliste spielst du selbst als CSV ein (ohne Termine). Vergangene Termine und meist auch Einwilligungen kommen nicht mit.</div>
+    <div class="box"><h3>Zahlungen und WhatsApp</h3>Das Geld geht direkt auf dein eigenes Stripe-Konto, wir nehmen keine Provision, Stripe berechnet seine Gebühr selbst. Den WhatsApp-Chat richten wir mit dir ein, einen festen Starttermin sagen wir vorab nicht zu. Für bestimmte WhatsApp-Nachrichten (z. B. Erinnerungen) berechnet Meta eine Gebühr je Nachricht, die zahlst du direkt an Meta. Eine Kasse gehört nicht dazu.</div>
+    <div class="box breit"><h3>Mit Werbung für neue Kunden</h3>Zusätzlich neue Anfragen über Werbung: stellen wir im Beratungsgespräch per WhatsApp mit dir zusammen, nicht online buchbar. Das Werbebudget zahlst du direkt an Meta.</div>
+  </div>
+  <footer>
+    <div><b>DSX Media Solutions UG (haftungsbeschränkt)</b><br>Am Weingarten 9, 96117 Memmelsdorf<br>WhatsApp +49 162 4502375 · info@dsxmediasolutions.de</div>
+    <div style="text-align:right"><b>tattookalender.de</b><br>AGB, Impressum und Datenschutz auf der Website</div>
+  </footer>
+</div>
+</body>
+</html>

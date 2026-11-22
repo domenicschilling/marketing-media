@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><title>Rechnung TEST-DSX-MR-202611-fs-kreativ-kuechen</title>
+<style>
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { font: 10.2pt/1.45 -apple-system, "Helvetica Neue", Arial, sans-serif; color: #17181C; }
+  .seite { width: 210mm; height: 297mm; padding: 15mm 18mm 12mm 20mm; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+  .test { position: absolute; top: 120mm; left: 0; right: 0; text-align: center; font-size: 46pt; font-weight: 800; color: rgba(227,36,43,.13); transform: rotate(-24deg); pointer-events: none; }
+  .kopf { display: flex; justify-content: space-between; }
+  .marke { font-size: 15pt; font-weight: 800; }
+  .klein { font-size: 8.4pt; color: #5F6470; }
+  .absender-klein { font-size: 7.4pt; color: #5F6470; border-bottom: 1px solid #999; display: inline-block; margin: 12mm 0 2mm; }
+  .adresse { min-height: 30mm; }
+  .meta { font-size: 9.4pt; border-collapse: collapse; }
+  .meta td { padding: .6mm 0 .6mm 8mm; }
+  .meta td:first-child { color: #5F6470; padding-left: 0; }
+  h1 { font-size: 16pt; margin: 8mm 0 3mm; }
+  table.pos { width: 100%; border-collapse: collapse; margin-top: 4mm; }
+  table.pos th { text-align: left; font-size: 8.8pt; color: #5F6470; border-bottom: 1.5px solid #17181C; padding: 2mm 1mm; }
+  table.pos td { border-bottom: 1px solid rgba(23,24,28,.12); padding: 2.5mm 1mm; vertical-align: top; }
+  .r { text-align: right; white-space: nowrap; }
+  table.summe { margin-left: auto; margin-top: 4mm; border-collapse: collapse; }
+  table.summe td { padding: 1.2mm 1mm 1.2mm 10mm; }
+  table.summe tr.gesamt td { font-weight: 700; border-top: 1.5px solid #17181C; font-size: 11.5pt; }
+  .fuss { margin-top: auto; padding-top: 3mm; border-top: 1px solid rgba(23,24,28,.12); display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; font-size: 7.8pt; color: #5F6470; }
+</style></head><body><div class="seite">
+  <div class="test">TESTRECHNUNG</div>
+  <div class="kopf">
+    <div class="marke">DSX Media Solutions UG (haftungsbeschränkt)</div>
+    <div class="klein" style="text-align:right">Am Weingarten 9<br>96117 Memmelsdorf<br>info@gastrosite24.de</div>
+  </div>
+  <div class="absender-klein">DSX Media Solutions UG (haftungsbeschränkt) · Am Weingarten 9 · 96117 Memmelsdorf</div>
+  <div style="display:flex; justify-content:space-between; gap:10mm">
+    <div class="adresse">FS Kreativ Küchen<br>Felix Tramowsky<br>Grabensee 2<br>96173 Oberhaid</div>
+    <table class="meta">
+      <tr><td>Rechnungsnummer</td><td><strong>TEST-DSX-MR-202611-fs-kreativ-kuechen</strong></td></tr>
+      <tr><td>Rechnungsdatum</td><td>01.11.2026</td></tr>
+      <tr><td>Leistungszeitraum</td><td>01.11.2026 – 30.11.2026</td></tr>
+      <tr><td>Fällig am</td><td>15.11.2026</td></tr>
+    </table>
+  </div>
+  <h1>Rechnung (Test – bitte nicht bezahlen)</h1>
+  <p>Für den Leistungszeitraum 01.11.2026 – 30.11.2026 berechnen wir:</p>
+  <table class="pos">
+    <thead><tr><th style="width:9mm">Pos.</th><th>Leistung</th><th class="r">Menge</th><th class="r">Einzelpreis netto</th><th class="r">Gesamt netto</th></tr></thead>
+    <tbody><tr><td>1</td><td>Performance-Marketing (Meta-Werbung, Landingpage, Anfragen-Weiterleitung) – November 2026</td><td class="r">1</td><td class="r">499,00 €</td><td class="r">499,00 €</td></tr></tbody>
+  </table>
+  <table class="summe">
+    <tr><td>Summe netto</td><td class="r">499,00 €</td></tr>
+    <tr><td>zzgl. 19 % USt. auf 499,00 €</td><td class="r">94,81 €</td></tr>
+    <tr class="gesamt"><td>Rechnungsbetrag</td><td class="r">593,81 €</td></tr>
+  </table>
+  <p style="margin-top:8mm">Zahlbar ohne Abzug bis zum <strong>15.11.2026</strong> über den Bezahl-Link in der Rechnungs-E-Mail (Überweisung oder Lastschrift), Verwendungszweck: <strong>TEST-DSX-MR-202611-fs-kreativ-kuechen</strong>.</p>
+  <div class="fuss">
+    <div>DSX Media Solutions UG (haftungsbeschränkt)<br>Am Weingarten 9<br>96117 Memmelsdorf</div>
+    <div>Geschäftsführer: Domenic Schilling<br>Amtsgericht Bamberg, HRB 12150<br>USt-IdNr.: DE456133925</div>
+    <div>Zahlung über Stripe<br>(Bezahl-Link in der Rechnungs-E-Mail)</div>
+  </div>
+</div></body></html>

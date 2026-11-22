@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=393">
+<title>Heute</title><link rel="stylesheet" href="app.css">
+<style>
+.kpis{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1fr);gap:8px;margin:16px 0 22px}
+.kpi{padding:11px 12px 12px}
+.kpi .lab{font:600 13px/1.2 Inter;color:var(--mut);white-space:nowrap}
+.kpi .zahl{font:700 30px/1 Inter;letter-spacing:-.02em;margin:7px 0 6px}
+.kpi .zus{font:500 12px/1.2 Inter;color:var(--mut2);white-space:nowrap}
+.kpi.warn{border-color:rgba(255,66,85,.45)}
+.kpi.warn .lab{color:var(--bone)}
+.kpi.warn .zahl{color:var(--rot)}
+.kpi.warn .zus{color:var(--rot-hell)}
+
+.liste{padding:0}
+.zeile{display:flex;align-items:flex-start;gap:13px;padding:12px 14px;position:relative}
+.zeile+.zeile:before{content:"";position:absolute;top:0;left:75px;right:0;height:1px;background:var(--line)}
+.zeile .motiv{margin-top:2px}
+.zeile .txt{flex:1;min-width:0}
+.zeile .n{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.zeile .n b{font:650 16px/1.25 Inter;letter-spacing:-.01em}
+.zeile .w{font:600 13px/1 Inter;color:var(--mut2);white-space:nowrap}
+.zeile .w.alt{color:var(--rot)}
+.zeile .d{font:450 14px/1.3 Inter;color:var(--mut);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.zeile .grund{font:500 13px/1.3 Inter;color:var(--bone);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.zeile .grund span{color:var(--mut2)}
+
+.check{margin:12px 0 0;padding:13px 12px 13px 14px;display:flex;gap:12px;align-items:center}
+.check .ci{flex:none;width:30px;height:30px;display:grid;place-items:center;color:var(--gelb)}
+.check .ci svg{width:24px;height:24px}
+.check .tx{flex:1}
+.check h3{font:650 15px/1.2 Inter;margin:0 0 3px}
+.check p{font:450 13.5px/1.32 Inter;color:var(--mut)}
+.check .chev{flex:none;color:var(--mut2)}
+.check .chev svg{width:14px;height:14px}
+
+.termin{display:flex;align-items:center;gap:14px;padding:12px 14px;position:relative}
+.termin+.termin:before{content:"";position:absolute;top:0;left:78px;right:0;height:1px;background:var(--line)}
+.termin .uhr{width:50px;font:650 16px/1 Inter;letter-spacing:-.01em}
+.termin b{display:block;font:600 15px/1.25 Inter}
+.termin span{font:450 13.5px/1.3 Inter;color:var(--mut)}
+</style></head>
+<body><div class="phone" data-tab="heute"><div class="inhalt">
+
+  <div class="navbar">
+    <span class="bsp">Beispieldaten</span>
+    <div class="r">
+      <div class="rund"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9.5a6 6 0 0 1 12 0c0 5 2 6.5 2 6.5H4s2-1.5 2-6.5M10 19.5a2.2 2.2 0 0 0 4 0"/></svg></div>
+    </div>
+  </div>
+  <h1 class="gross">Heute</h1>
+  <div class="unter">Musterstudio · Fr., 13. Nov.</div>
+
+  <div class="kpis">
+    <div class="kpi karte warn"><div class="lab">Warten auf dich</div><div class="zahl">3</div><div class="zus">älteste seit 3 Std.</div></div>
+    <div class="kpi karte"><div class="lab">Neu heute</div><div class="zahl">6</div><div class="zus">gestern 4</div></div>
+    <div class="kpi karte"><div class="lab">Beratungen</div><div class="zahl">2</div><div class="zus">morgen 3</div></div>
+  </div>
+
+  <div class="sek"><h2>Jetzt antworten</h2><a>Alle<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5.5 15.5 12 9 18.5"/></svg></a></div>
+  <div class="karte liste">
+    <div class="zeile">
+      <div class="motiv">
+        <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 9.5c2.6 0 4.2 1.7 4.2 3.8 0 2.4-2 4.2-4.6 4.2-2.1 0-3.6-1.4-3.6-3.2 0-1.6 1.2-2.7 2.8-2.7 1.3 0 2.2.9 2.2 2"/><path d="M11 12.2c-1.4 1.1-2.2 2.6-2.2 4.3 0 3.6 3.2 6 7.2 6s7.2-2.4 7.2-6c0-1.7-.8-3.2-2.2-4.3"/><path d="M16 22.5V28M16 25.5c-1.8-1.6-4.2-1.8-5.8-.8 1.4 1.7 3.8 1.9 5.8.8zM16 26.5c1.6-1.4 3.8-1.6 5.2-.6-1.3 1.5-3.4 1.7-5.2.6z"/></svg>
+        <span class="kanal wa"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.2a9.7 9.7 0 0 0-8.4 14.6L2.3 21.7l5-1.3A9.7 9.7 0 1 0 12 2.2z"/></svg></span>
+      </div>
+      <div class="txt">
+        <div class="n"><b>Nina F.</b><span class="w alt">seit 3 Std.</span></div>
+        <div class="d">Rosenranke · Knöchel · 10 cm</div>
+        <div class="grund"><span>Ted:</span> will mit dem Artist sprechen</div>
+      </div>
+    </div>
+    <div class="zeile">
+      <div class="motiv">
+        <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 11v13"/><path d="M15.2 13.5c-2.8-3.4-7-4.2-9-2.6.4 3.6 4.2 5.6 8.8 4.4M16.8 13.5c2.8-3.4 7-4.2 9-2.6-.4 3.6-4.2 5.6-8.8 4.4M15 16.8c-2.4.4-5.4 2.6-5.6 5.6 2.8.4 5-1.6 5.8-4.6M17 16.8c2.4.4 5.4 2.6 5.6 5.6-2.8.4-5-1.6-5.8-4.6"/><path d="M15 10.5l-1.6-3M17 10.5l1.6-3"/></svg>
+        <span class="kanal ig"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><rect x="4" y="4" width="16" height="16" rx="5"/><circle cx="12" cy="12" r="3.6"/></svg></span>
+      </div>
+      <div class="txt">
+        <div class="n"><b>Tom K.</b><span class="w alt">seit 2 Std.</span></div>
+        <div class="d">Motte, Fineline · Brustbein · 12 cm</div>
+        <div class="grund"><span>Ted:</span> hat Fotos geschickt, braucht deinen Blick</div>
+      </div>
+    </div>
+    <div class="zeile">
+      <div class="motiv">
+        <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="16" r="9.5"/><path d="M16 6.5v3M16 22.5v3M6.5 16h3M22.5 16h3"/><path d="M16 10.5l2 5.5-2 5.5-2-5.5z"/></svg>
+        <span class="kanal wa"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.2a9.7 9.7 0 0 0-8.4 14.6L2.3 21.7l5-1.3A9.7 9.7 0 1 0 12 2.2z"/></svg></span>
+      </div>
+      <div class="txt">
+        <div class="n"><b>Sarah B.</b><span class="w">seit 25 Min.</span></div>
+        <div class="d">Kompass · Oberarm außen · 10 cm</div>
+        <div class="grund"><span>Ted:</span> fragt nach einem Termin im Dezember</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="karte check">
+    <div class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 2.8 19.5h18.4z"/><path d="M12 10v4.5M12 17.2v.1"/></svg></div>
+    <div class="tx">
+      <h3>Chatcheck: 2 Anfragen</h3>
+      <p>Preis genannt, aber kein Termin angeboten – nachfassen?</p>
+    </div>
+    <div class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5.5 15.5 12 9 18.5"/></svg></div>
+  </div>
+
+
+</div></div>
+<script src="shared.js"></script>
+</body></html>

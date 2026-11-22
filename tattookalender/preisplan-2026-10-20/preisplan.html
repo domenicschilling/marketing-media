@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Tattookalender Preisplan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* Preisplan Tattookalender – Entwurf 20.10.2026. PDF: _baue-pdf.sh (Chrome headless). Kein Text-Verlauf (Apple Vorschau). */
+  @page { size: A4; margin: 0; }
+  :root {
+    --paper: #fbfbf9;
+    --ink: #1b1d2a;        /* Tattoo-Tinte, blauschwarz */
+    --stencil: #5a3e9e;    /* Thermo-Stencil-Violett: nur für Empfehlung & Hervorhebung */
+    --stencil-tint: #efebf8;
+    --muted: #62656f;
+    --line: #dcdce3;
+    --soft: #f1f1ee;
+    --warn: #9a5b12;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--paper); }
+  body {
+    font-family: Inter, system-ui, sans-serif; color: var(--ink); font-size: 8.6pt; line-height: 1.45;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    
+  }
+  .page {
+    width: 210mm; height: 297mm; overflow: hidden; position: relative;
+    padding: 13mm 15mm 12mm; display: flex; flex-direction: column;
+    page-break-after: always; break-after: page; background: var(--paper);
+  }
+  .page:last-child { page-break-after: auto; break-after: auto; }
+  .display { font-family: "Bricolage Grotesque", sans-serif; letter-spacing: -0.02em; }
+
+  /* Kopf & Fuß */
+  .run { display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 3mm; border-bottom: 0.25mm solid var(--line); margin-bottom: 7mm; }
+  .run .mark { font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: 11pt; letter-spacing: -0.03em; }
+  .run .meta { font-size: 7.4pt; color: var(--muted); }
+  .foot { margin-top: auto; padding-top: 3mm; display: flex; justify-content: space-between; font-size: 7pt; color: var(--muted); }
+
+  h1 { font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: 22pt; line-height: 1.05; letter-spacing: -0.03em; }
+  h2 { font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; font-size: 12pt; line-height: 1.15; letter-spacing: -0.015em; margin-bottom: 2.5mm; }
+  h3 { font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; font-size: 9.6pt; letter-spacing: -0.01em; margin-bottom: 1.4mm; }
+  p + p { margin-top: 1.6mm; }
+  .lead { font-size: 9.6pt; line-height: 1.45; color: #34374a; max-width: 150mm; margin-top: 3mm; }
+  .small { font-size: 7.4pt; color: var(--muted); line-height: 1.4; }
+  .unsicher { color: var(--warn); font-weight: 600; }
+  b, strong { font-weight: 600; }
+
+  /* Deckblatt */
+  .cover-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .wordmark { font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: 15pt; letter-spacing: -0.035em; }
+  .stamp { font-size: 7.6pt; color: var(--muted); text-align: right; line-height: 1.5; }
+  .cover-title { margin-top: 20mm; font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: 44pt; line-height: 0.95; letter-spacing: -0.045em; }
+  .cover-sub { margin-top: 5mm; font-size: 11pt; line-height: 1.45; color: #34374a; max-width: 140mm; }
+
+  .tiers { margin-top: 13mm; display: grid; grid-template-columns: 1fr 1fr 1.08fr; gap: 4mm; align-items: stretch; }
+  .tier { border: 0.3mm solid var(--line); border-radius: 2.5mm; padding: 5mm 5mm 4.5mm; background: #fff; position: relative; }
+  .tier .name { font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; font-size: 11pt; letter-spacing: -0.01em; line-height: 1.15; min-height: 10.5mm; }
+  .tier .price { margin-top: 3mm; font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: 30pt; letter-spacing: -0.04em; line-height: 1; }
+  .tier .price small { font-size: 9pt; font-weight: 500; letter-spacing: 0; color: var(--muted); font-family: Inter, sans-serif; }
+  .tier .year { margin-top: 1.8mm; font-size: 7.8pt; color: var(--muted); }
+  .tier .what { margin-top: 3.5mm; font-size: 8pt; line-height: 1.42; }
+  /* Das eine auffällige Element: Stencil-Linie um die Empfehlung */
+  .tier.rec { border: 0.55mm dashed var(--stencil); background: var(--stencil-tint); }
+  .tier.rec .price { color: var(--stencil); }
+  .flag { position: absolute; top: -3.2mm; left: 4mm; background: var(--stencil); color: #fff; font-size: 7pt; font-weight: 600; padding: 0.9mm 2.4mm; border-radius: 1.2mm; }
+
+  .keypoints { margin-top: 11mm; display: grid; grid-template-columns: 1fr 1fr; gap: 4mm 9mm; }
+  .kp h3 { font-size: 9.6pt; }
+  .kp p { font-size: 8.4pt; color: #34374a; }
+
+  /* Tabellen */
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-weight: 600; font-size: 7.4pt; color: var(--muted); padding: 1.6mm 2mm; border-bottom: 0.3mm solid var(--ink); vertical-align: bottom; }
+  td { padding: 2mm 2mm; border-bottom: 0.2mm solid var(--line); vertical-align: top; font-size: 7.8pt; line-height: 1.38; }
+  td.who { font-weight: 600; white-space: nowrap; }
+  td.who span { display: block; font-weight: 400; color: var(--muted); font-size: 7pt; white-space: normal; }
+  tr.us td { background: var(--stencil-tint); }
+  tr.us td.who { color: var(--stencil); }
+  .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .src { font-size: 6.8pt; color: var(--muted); }
+
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 8mm; }
+  .box { background: var(--soft); border-radius: 2mm; padding: 4mm 4.5mm; }
+  .box.rec { background: var(--stencil-tint); border: 0.45mm dashed var(--stencil); }
+  ul.list { list-style: none; }
+  ul.list li { position: relative; padding-left: 3.6mm; margin-bottom: 1.3mm; }
+  ul.list li::before { content: "–"; position: absolute; left: 0; top: 0; color: var(--muted); }
+  ol.list { padding-left: 5mm; }
+  ol.list li { margin-bottom: 1.6mm; padding-left: 0.8mm; }
+
+  /* Paket-Matrix */
+  .matrix th.pk { font-family: "Bricolage Grotesque", sans-serif; font-size: 9.6pt; color: var(--ink); font-weight: 700; letter-spacing: -0.01em; width: 18.5%; line-height: 1.15; }
+  .matrix th.pk .p { display: block; font-size: 16pt; font-weight: 800; letter-spacing: -0.035em; margin-top: 1mm; }
+  .matrix th.pk .y { display: block; font-family: Inter, sans-serif; font-size: 7pt; color: var(--muted); font-weight: 500; letter-spacing: 0; margin-top: 0.6mm; }
+  .matrix th.pk.rec, .matrix td.rec { background: var(--stencil-tint); }
+  .matrix th.pk.rec { color: var(--stencil); border-top: 0.55mm dashed var(--stencil); }
+  .matrix td { font-size: 7.6pt; padding: 1.05mm 2mm; }
+  .matrix td.c { text-align: center; }
+  .matrix tr.grp td { font-weight: 600; font-size: 7.6pt; padding-top: 2.4mm; border-bottom: 0.3mm solid var(--ink); background: none; }
+  .yes { display: inline-block; width: 2.2mm; height: 2.2mm; vertical-align: -0.2mm; border-radius: 50%; background: var(--ink); }
+  .rec .yes { background: var(--stencil); }
+  .no { color: #b5b7c0; }
+
+  .calc td.num, .calc th.num { text-align: right; }
+  .calc td { padding: 1.5mm 2mm; }
+  .calc tr.sum td { font-weight: 700; border-top: 0.3mm solid var(--ink); border-bottom: none; }
+  .calc tr.res td { font-weight: 700; color: var(--stencil); border-bottom: none; }
+
+  .figure { font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: 20pt; letter-spacing: -0.035em; line-height: 1; }
+  .figure.v { color: var(--stencil); }
+  .scen { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; margin-top: 3mm; }
+  .scen .box h3 { margin-bottom: 0.8mm; }
+  .scen .box .figure { margin: 1.5mm 0 1mm; }
+  .scen .box { padding: 3mm 4mm; }
+
+  .decisions { counter-reset: d; }
+  .decisions li { list-style: none; position: relative; padding: 1.4mm 0 1.4mm 9mm; border-bottom: 0.2mm solid var(--line); font-size: 8.2pt; }
+  .decisions li::before { counter-increment: d; content: counter(d); position: absolute; left: 0; top: 1.1mm; width: 5.2mm; height: 5.2mm; border: 0.35mm solid var(--stencil); border-radius: 50%; color: var(--stencil); font-weight: 700; font-size: 7.4pt; display: grid; place-items: center; }
+  .decisions li em { font-style: normal; color: var(--stencil); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<!-- ============ Seite 1: Überblick ============ -->
+<section class="page">
+  <div class="cover-top">
+    <div class="wordmark">Tattookalender</div>
+    <div class="stamp">Entwurf zur Entscheidung<br>Stand 20.10.2026<br>Alle Preise netto zzgl. 19&nbsp;% USt.</div>
+  </div>
+
+  <div class="cover-title">Preisplan:<br>drei Pakete</div>
+  <p class="cover-sub">Vom reinen Kalender bis zum Komplett-Paket mit eigenem WhatsApp-Postfach. Ausgerichtet an Shore und Planity, aber bewusst darüber: Tattookalender ist für Tattoostudios gebaut, nicht für Friseure.</p>
+
+  <div class="tiers">
+    <div class="tier">
+      <div class="name">Kalender</div>
+      <div class="price">99&nbsp;€<small> / Monat</small></div>
+      <div class="year">bei Jahreszahlung 89&nbsp;€</div>
+      <div class="what">Kalender für Artists und Stationen, Online-Buchung, Kundenkartei, Einwilligung am Tablet, Erinnerungen per E-Mail.</div>
+    </div>
+    <div class="tier">
+      <div class="name">Kalender + Zahlungen</div>
+      <div class="price">169&nbsp;€<small> / Monat</small></div>
+      <div class="year">bei Jahreszahlung 149&nbsp;€</div>
+      <div class="what">Dazu Anzahlung bei Buchung, Zahlungslinks, Ratenzahlung, No-Show-Gebühr, Belege und DATEV-Export. 0&nbsp;% Provision.</div>
+    </div>
+    <div class="tier rec">
+      <span class="flag">Empfehlung</span>
+      <div class="name">Komplett mit eigenem Chat</div>
+      <div class="price">299&nbsp;€<small> / Monat</small></div>
+      <div class="year">bei Jahreszahlung 269&nbsp;€</div>
+      <div class="what">Dazu WhatsApp-, Instagram- und Facebook-Postfach fürs ganze Team, automatische Nachrichten, Bots, KI-Vorschläge. Ersetzt Superchat. Kasse mit TSE inklusive.</div>
+    </div>
+  </div>
+
+  <div class="keypoints">
+    <div class="kp">
+      <h3>Teurer als Shore und Planity, mit Grund</h3>
+      <p>Shore kostet 49,90 bis 129,90&nbsp;€, Planity laut Vergleichsseiten etwa 69 bis 99&nbsp;€. Beide sind für kurze Friseur- und Kosmetiktermine gemacht. Wir decken ab, was nur Tattoostudios brauchen: Einwilligung, Anzahlung je Sitzung, Ratenzahlung für große Projekte, Gastartists.</p>
+    </div>
+    <div class="kp">
+      <h3>Komplett ersetzt zwei Abos</h3>
+      <p>Shore All-in-One (129,90&nbsp;€) plus Superchat Professional (149&nbsp;€) kosten zusammen rund 279&nbsp;€ im Monat, plus Meta-Gebühren und 19&nbsp;€ je weiterem Login. Bei uns sind es 299&nbsp;€ für alles in einem System, Logins unbegrenzt.</p>
+    </div>
+    <div class="kp">
+      <h3>Keine Provision auf Zahlungen</h3>
+      <p>Empfehlung: Die technisch eingestellten 5&nbsp;% auf 0&nbsp;% setzen. Die Stripe-Gebühr zahlt das Studio direkt an Stripe, uns kostet das nichts. 5&nbsp;% würden bei Tattoo-Beträgen schnell mehrere hundert Euro im Monat ausmachen und jeden Vergleich verlieren.</p>
+    </div>
+    <div class="kp">
+      <h3>Rechnet sich ab wenigen Studios</h3>
+      <p>Kosten je Studio geschätzt 6 bis 63&nbsp;€ im Monat, es bleiben über 80&nbsp;% übrig. 20 Studios im gemischten Paket bringen rund 4.000&nbsp;€ im Monat. Einrichtung 299 bis 499&nbsp;€ einmalig, bei Jahresvertrag gratis.</p>
+    </div>
+  </div>
+
+  <div class="foot"><span>Tattookalender, DSX Media Solutions UG</span><span>1 / 5</span></div>
+</section>
+
+<!-- ============ Seite 2: Markt ============ -->
+<section class="page">
+  <div class="run"><span class="mark">Tattookalender</span><span class="meta">Preisplan, Entwurf 20.10.2026</span></div>
+  <h1>Was der Markt verlangt</h1>
+  <p class="lead">Preise netto, abgerufen am 20.10.2026. <span class="unsicher">Orange</span> heißt: nicht vom Anbieter selbst veröffentlicht, sondern aus Vergleichsseiten (oft von Konkurrenten). Vor einem Verkaufsgespräch selbst prüfen.</p>
+
+  <table style="margin-top:5mm">
+    <thead><tr><th style="width:19%">Anbieter</th><th style="width:30%">Preis im Monat</th><th style="width:22%">Zahlungen</th><th style="width:29%">Provision, Laufzeit, Extras</th></tr></thead>
+    <tbody>
+      <tr><td class="who">Shore<span>Termin + Kasse für Salons, Kosmetik</span></td>
+        <td>Booking 59,90&nbsp;€ (jährl. 49,90&nbsp;€)<br>Booking + Marketing 79,90&nbsp;€ (69,90&nbsp;€)<br>All-in-One 129,90&nbsp;€ (119,90&nbsp;€)</td>
+        <td>Vorabzahlung per Karte; Gebühren nur auf Anfrage</td>
+        <td>Keine Provision. Monatlich, 14 Tage Kündigung, oder 12 Monate. Cloud-TSE +9&nbsp;€, Website +65&nbsp;€</td></tr>
+      <tr><td class="who">Planity<span>Friseur, Beauty, mit Marktplatz</span></td>
+        <td><span class="unsicher">Keine offiziellen Preise.</span> Gemeldet: Kalender ca. 69&nbsp;€, Kalender + Kasse 99&nbsp;€ (inkl. TSE, 100 SMS, alle Mitarbeiter)</td>
+        <td>Planity Pay 0,79&nbsp;% + 0,19&nbsp;€; Terminal 0,99&nbsp;% + 0,19&nbsp;€</td>
+        <td>0&nbsp;% Provision, auch auf dem Marktplatz. Monatlich kündbar, keine Einrichtung. Extra-SMS 0,09&nbsp;€</td></tr>
+      <tr><td class="who">Treatwell<span>Beauty-Marktplatz</span></td>
+        <td><span class="unsicher">Starter 39&nbsp;€, Advanced 49&nbsp;€ + 7,50&nbsp;€ TSE</span></td>
+        <td>2&nbsp;% auf Online-Vorauszahlungen</td>
+        <td><span class="unsicher">35&nbsp;% auf die erste Marktplatz-Buchung jedes Neukunden</span></td></tr>
+      <tr><td class="who">Fresha<span>Beauty, Billig-Anbieter</span></td>
+        <td>Solo 12,95&nbsp;€<br>Team 8,95&nbsp;€ je Mitarbeiter</td>
+        <td>1,29&nbsp;% + 0,20&nbsp;€ (alles inkl.); Klarna 3,49&nbsp;% + 0,50&nbsp;€</td>
+        <td>Marktplatz-Neukunden laut DE-Seite gratis. SMS 0,14&nbsp;€, WhatsApp 0,14–0,25&nbsp;€ je Nachricht</td></tr>
+      <tr><td class="who">TattooGenda<span>Tattoo-Nischentool</span></td>
+        <td><span class="unsicher">0 / 16 / 30 / 45&nbsp;€ je nach Studiogröße</span></td>
+        <td>Anzahlung per Zahlungsknopf in Mails</td>
+        <td>SMS-Erinnerungen, Gastartists, Umsatzbeteiligung</td></tr>
+      <tr><td class="who">Ink Studio Manager<span>Tattoo-Nischentool</span></td>
+        <td><span class="unsicher">29&nbsp;€ (Probemonat 3,95&nbsp;€)</span></td>
+        <td>keine Angabe</td>
+        <td>einfache Verwaltung, kein Chat</td></tr>
+      <tr><td class="who">Superchat<span>WhatsApp-Postfach, alle Branchen</span></td>
+        <td>Basic 89&nbsp;€ (3 Logins)<br>Professional 149&nbsp;€ (6 Logins)<br>Advanced 299&nbsp;€ (12 Logins)</td>
+        <td>keine</td>
+        <td>12 Monate Mindestlaufzeit. Login +19&nbsp;€, Nummer +49&nbsp;€, KI-Copilot +29&nbsp;€, KI-Agent +49&nbsp;€. Meta-Gebühren extra</td></tr>
+      <tr class="us"><td class="who">Tattookalender<span>Vorschlag</span></td>
+        <td>99&nbsp;€ / 169&nbsp;€ / 299&nbsp;€<br>jährlich 89&nbsp;€ / 149&nbsp;€ / 269&nbsp;€</td>
+        <td>nur Stripe: 1,5&nbsp;% + 0,25&nbsp;€ (EU-Karten), direkt ans Studio</td>
+        <td>0&nbsp;% Provision. Monatlich kündbar. Logins unbegrenzt. Meta-Gebühren zum Einkaufspreis</td></tr>
+    </tbody>
+  </table>
+
+  <div class="two" style="margin-top:7mm">
+    <div class="box">
+      <h3>WhatsApp-Kosten von Meta (Deutschland, seit 1.10.2026)</h3>
+      <ul class="list">
+        <li>Werbe-Nachricht (Aktion, Newsletter): 0,1131&nbsp;€</li>
+        <li>Erinnerung, Zahlungslink, Code: 0,0456&nbsp;€</li>
+        <li>Normale Antworten im Chat: die ersten 1.000 je Nummer und Monat gratis, danach 0,0456&nbsp;€</li>
+        <li>Nach Klick auf eine WhatsApp-Anzeige: 72 Stunden alles gratis</li>
+      </ul>
+      <p class="small" style="margin-top:2mm">Gilt bei jedem Anbieter, auch bei Superchat. Quelle ist eine Anbieter-Hilfeseite, vor dem Start bei Meta gegenprüfen.</p>
+    </div>
+    <div class="box">
+      <h3>Was das für uns heißt</h3>
+      <ul class="list">
+        <li>Salon-Software liegt bei 50–130&nbsp;€, Tattoo-Nischentools bei 16–45&nbsp;€. Ein Premium-Angebot nur für Tattoostudios gibt es nicht.</li>
+        <li>Shore und Planity nehmen keine Provision, Fresha rund 1,3&nbsp;% inklusive Kartenkosten. 5&nbsp;% Plattformgebühr würden sofort auffallen.</li>
+        <li>Wer heute Shore oder Planity und Superchat nutzt, zahlt 160–430&nbsp;€ im Monat für zwei getrennte Systeme.</li>
+      </ul>
+    </div>
+  </div>
+
+  <p class="small" style="margin-top:4mm">Quellen mit Links und Datum: content/tattookalender/preisplan-2026-10-20/quellen.html</p>
+  <div class="foot"><span>Tattookalender, DSX Media Solutions UG</span><span>2 / 5</span></div>
+</section>
+
+<!-- ============ Seite 3: Pakete ============ -->
+<section class="page">
+  <div class="run"><span class="mark">Tattookalender</span><span class="meta">Preisplan, Entwurf 20.10.2026</span></div>
+  <h1>Die Pakete im Detail</h1>
+
+  <table class="matrix" style="margin-top:5mm">
+    <thead>
+      <tr>
+        <th style="width:44.5%"></th>
+        <th class="pk">Kalender<span class="p">99&nbsp;€</span><span class="y">jährlich 89&nbsp;€, Einrichtung 299&nbsp;€</span></th>
+        <th class="pk">Kalender + Zahlungen<span class="p">169&nbsp;€</span><span class="y">jährlich 149&nbsp;€, Einrichtung 399&nbsp;€</span></th>
+        <th class="pk rec">Komplett mit eigenem Chat<span class="p">299&nbsp;€</span><span class="y">jährlich 269&nbsp;€, Einrichtung 499&nbsp;€</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="grp"><td colspan="4">Termine und Kunden</td></tr>
+      <tr><td>Kalender für Artists und Stationen, Tag/Woche/Monat, Handy</td><td class="c"><span class="yes"></span></td><td class="c"><span class="yes"></span></td><td class="c rec"><span class="yes"></span></td></tr>
+      <tr><td>Online-Buchung von Beratungsterminen</td><td class="c"><span class="yes"></span></td><td class="c"><span class="yes"></span></td><td class="c rec"><span class="yes"></span></td></tr>
+      <tr><td>Kundenkartei mit Fotos, Verlauf, Notizen</td><td class="c"><span class="yes"></span></td><td class="c"><span class="yes"></span></td><td class="c rec"><span class="yes"></span></td></tr>
+      <tr><td>Einwilligung und Aufklärung am Tablet</td><td class="c"><span class="yes"></span></td><td class="c"><span class="yes"></span></td><td class="c rec"><span class="yes"></span></td></tr>
+      <tr><td>Erinnerungen und Bewertungsanfrage per E-Mail</td><td class="c"><span class="yes"></span></td><td class="c"><span class="yes"></span></td><td class="c rec"><span class="yes"></span></td></tr>
+      <tr><td>Warteliste, Aufgaben, Lückenfüller (Story für freie Termine)</td><td class="c"><span class="yes"></span></td><td class="c"><span class="yes"></span></td><td class="c rec"><span class="yes"></span></td></tr>
+      <tr class="grp"><td colspan="4">Geld</td></tr>
+      <tr><td>Anzahlung bei Buchung, Zahlungslinks, Restzahlung</td><td class="c no">–</td><td class="c"><span class="yes"></span></td><td class="c rec"><span class="yes"></span></td></tr>
+      <tr><td>Ratenzahlung für große Projekte</td><td class="c no">–</td><td class="c"><span class="yes"></span></td><td class="c rec"><span class="yes"></span></td></tr>
+      <tr><td>No-Show-Gebühr, Geburtstags-Guthaben, Gutscheine</td><td class="c no">–</td><td class="c"><span class="yes"></span></td><td class="c rec"><span class="yes"></span></td></tr>
+      <tr><td>Provision je Artist, Belege, DATEV-Export</td><td class="c no">–</td><td class="c"><span class="yes"></span></td><td class="c rec"><span class="yes"></span></td></tr>
+      <tr><td>Kasse mit TSE: Kassenbuch, Tagesabschluss, DSFinV-K*</td><td class="c">+19&nbsp;€</td><td class="c">+19&nbsp;€</td><td class="c rec">inklusive</td></tr>
+      <tr><td>Provision für uns auf Zahlungen</td><td class="c no">–</td><td class="c">0&nbsp;%</td><td class="c rec">0&nbsp;%</td></tr>
+      <tr class="grp"><td colspan="4">Chat</td></tr>
+      <tr><td>WhatsApp-Postfach fürs ganze Team, eigene Nummer</td><td class="c no">–</td><td class="c no">–</td><td class="c rec"><span class="yes"></span></td></tr>
+      <tr><td>Instagram- und Facebook-Nachrichten im selben Postfach</td><td class="c no">–</td><td class="c no">–</td><td class="c rec"><span class="yes"></span></td></tr>
+      <tr><td>Erinnerungen und Anzahlungslinks automatisch per WhatsApp</td><td class="c no">–</td><td class="c no">–</td><td class="c rec"><span class="yes"></span></td></tr>
+      <tr><td>Bots, Vorlagen, KI-Antwortvorschläge</td><td class="c no">–</td><td class="c no">–</td><td class="c rec"><span class="yes"></span></td></tr>
+      <tr><td>Meta-Guthaben inklusive (ca. 330 Erinnerungen)</td><td class="c no">–</td><td class="c no">–</td><td class="c rec">15&nbsp;€ / Monat</td></tr>
+    </tbody>
+  </table>
+
+  <div class="two" style="margin-top:5mm; gap:7mm">
+    <div>
+      <h3>Zusatzleistungen</h3>
+      <table>
+        <tbody>
+          <tr><td>Jeder weitere Artist (ab Nr. 6)</td><td class="num">9&nbsp;€ / Monat</td></tr>
+          <tr><td>Gastartist bis 14 Tage am Stück</td><td class="num">gratis</td></tr>
+          <tr><td>Weitere WhatsApp-Nummer</td><td class="num">29&nbsp;€ / Monat</td></tr>
+          <tr><td>Umzug von Kunden und Terminen (Planity, Shore, Excel …)</td><td class="num">199&nbsp;€ einmalig</td></tr>
+          <tr><td>Kasse mit TSE* (Kassenbuch, Tagesabschluss, DSFinV-K-Export, digitaler Beleg), 1 Kasse je Studio</td><td class="num">19&nbsp;€ / Monat<br>im Komplett inklusive</td></tr>
+        </tbody>
+      </table>
+      <p class="small" style="margin-top:2mm">In jedem Paket: 1 Standort, 5 Artists, unbegrenzt Logins, Termine und Kunden. Bei Jahreszahlung sind Einrichtung und Umzug gratis. *Kasse verfügbar nach Abschluss der fiskaly-Einrichtung.</p>
+    </div>
+    <div>
+      <h3>Ketten ab 2 Studios</h3>
+      <p>Paketpreis je Studio plus <b>Ketten-Modul 149&nbsp;€ im Monat</b>: Inhaber-Übersicht über alle Studios, gemeinsame Kundenkartei, ein Postfach für alle Nummern. Ab 4 Studios 10&nbsp;% Nachlass je Studio, ab 7 Studios auf Anfrage. Einrichtung 499&nbsp;€ plus 249&nbsp;€ je weiteres Studio.</p>
+      <div class="box rec" style="margin-top:3.5mm">
+        <h3>Gründer-Angebot (Vorschlag)</h3>
+        <p>Für die ersten 10 Studios: 3 Monate halber Preis, Einrichtung und Umzug gratis. Dafür Jahresvertrag, eine ehrliche Bewertung und ein kurzes Video fürs Marketing.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot"><span>Tattookalender, DSX Media Solutions UG</span><span>3 / 5</span></div>
+</section>
+
+<!-- ============ Seite 4: Zahlungsmodell + Preispsychologie ============ -->
+<section class="page">
+  <div class="run"><span class="mark">Tattookalender</span><span class="meta">Preisplan, Entwurf 20.10.2026</span></div>
+  <h1>Provision oder Pauschale?</h1>
+  <p class="lead">Heute ist im Programm eine Plattformgebühr von 5&nbsp;% auf jede Zahlung eingestellt. Das Rechenbeispiel zeigt, was das bei einem Tattoostudio bedeutet.</p>
+
+  <p style="margin-top:5mm"><b>Beispiel-Studio:</b> 3 Artists, Paket Kalender + Zahlungen, 12.000&nbsp;€ laufen im Monat über Tattookalender (Anzahlungen und Restzahlungen, rund 100 Zahlungen).</p>
+
+  <table class="calc" style="margin-top:3mm">
+    <thead><tr><th style="width:34%"></th><th class="num">A: 5&nbsp;% wie heute</th><th class="num">B: 1&nbsp;%, max. 99&nbsp;€</th><th class="num" style="color:var(--stencil)">C: 0&nbsp;%, nur Pauschale</th></tr></thead>
+    <tbody>
+      <tr><td>Monatspreis Paket</td><td class="num">169&nbsp;€</td><td class="num">169&nbsp;€</td><td class="num">169&nbsp;€</td></tr>
+      <tr><td>Plattformgebühr an uns</td><td class="num">600&nbsp;€</td><td class="num">99&nbsp;€</td><td class="num">0&nbsp;€</td></tr>
+      <tr><td>Stripe-Gebühr (1,5&nbsp;% + 0,25&nbsp;€), zahlt das Studio direkt</td><td class="num">205&nbsp;€</td><td class="num">205&nbsp;€</td><td class="num">205&nbsp;€</td></tr>
+      <tr class="sum"><td>Studio zahlt im Monat</td><td class="num">974&nbsp;€</td><td class="num">473&nbsp;€</td><td class="num">374&nbsp;€</td></tr>
+      <tr class="res"><td>Davon bei uns</td><td class="num">769&nbsp;€</td><td class="num">268&nbsp;€</td><td class="num">169&nbsp;€</td></tr>
+    </tbody>
+  </table>
+  <p class="small" style="margin-top:2mm">Zum Vergleich, gleiche 12.000&nbsp;€: Fresha nimmt rund 175&nbsp;€ Gebühr, Planity Pay rund 114&nbsp;€, Shore und Planity verlangen keine Provision.</p>
+
+  <div class="two" style="margin-top:6mm">
+    <div class="box rec">
+      <h3>Empfehlung: C, Pauschale ohne Provision</h3>
+      <ul class="list">
+        <li><b>Verkauft sich leichter.</b> „0&nbsp;% Provision, dein Geld geht direkt auf dein Konto“ ist ein Satz, den jeder Inhaber versteht. Bei 5&nbsp;% rechnet der Inhaber nach und landet bei 974&nbsp;€ statt 130&nbsp;€ bei Shore.</li>
+        <li><b>Kein Ausweichen.</b> Bei hoher Gebühr lassen Studios bar oder per Überweisung zahlen. Dann fehlt die Gebühr trotzdem, und Belege, DATEV und No-Show-Schutz laufen ins Leere.</li>
+        <li><b>Kostet uns nichts.</b> Jedes Studio hat ein eigenes Stripe-Konto (Standard-Konto). Stripe zieht seine Gebühr direkt beim Studio ab, für uns fallen keine Connect-Gebühren an.</li>
+        <li><b>Planbares Geld.</b> Feste Abos sind jeden Monat gleich und machen das Geschäft mehr wert als schwankende Gebühren.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Wenn du doch an Zahlungen verdienen willst</h3>
+      <p>Dann Variante B: höchstens 1&nbsp;%, mit Deckel von 99&nbsp;€ im Monat, offen auf der Preisseite. Das Studio landet dann bei rund 2,5&nbsp;% + 0,25&nbsp;€ je Zahlung, fast doppelt so viel wie bei Fresha. Es bleibt erklärbar, ist aber im Verkaufsgespräch ein Einwand mehr.</p>
+      <p>Technisch ist es nur eine Zahl: Satz je Studio in der Gebührentabelle, Standard heute 500 (= 5&nbsp;%). Umstellen erst nach deinem OK.</p>
+
+      <h3 style="margin-top:5mm">So wirken die Preise</h3>
+      <ul class="list">
+        <li><b>Anker:</b> Auf der Preisseite steht „Was du heute zahlst: Shore + Superchat + Meta, über 290&nbsp;€“ direkt neben unseren 299&nbsp;€ für alles.</li>
+        <li><b>Brücke:</b> Vom mittleren Paket zum Komplett-Paket sind es 130&nbsp;€, weniger als Superchat Professional allein (149&nbsp;€).</li>
+        <li><b>Hervorhebung:</b> Komplett als rechte, markierte Spalte. Kalender bleibt Einstieg, damit niemand am Preis hängen bleibt.</li>
+        <li><b>Jahreszahlung:</b> Komplett jährlich spart 360&nbsp;€ plus 499&nbsp;€ Einrichtung, zusammen 859&nbsp;€ im ersten Jahr.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="foot"><span>Tattookalender, DSX Media Solutions UG</span><span>4 / 5</span></div>
+</section>
+
+<!-- ============ Seite 5: Kalkulation + Entscheidungen ============ -->
+<section class="page">
+  <div class="run"><span class="mark">Tattookalender</span><span class="meta">Preisplan, Entwurf 20.10.2026</span></div>
+  <h1>Was übrig bleibt</h1>
+  <p class="lead">Unsere Kosten je Studio und Monat, grob geschätzt. Annahme: alle Studios laufen auf einer gemeinsamen Installation. Bekommt jedes Studio eine eigene Datenbank, kommen rund 9&nbsp;€ je Studio dazu.</p>
+
+  <table class="calc" style="margin-top:4mm">
+    <thead><tr><th style="width:40%">Kostenblock (Schätzung)</th><th class="num">Kalender</th><th class="num">+ Zahlungen</th><th class="num" style="color:var(--stencil)">Komplett</th></tr></thead>
+    <tbody>
+      <tr><td>Datenbank und Speicher (Supabase, Anteil)</td><td class="num">3–8&nbsp;€</td><td class="num">3–8&nbsp;€</td><td class="num">3–8&nbsp;€</td></tr>
+      <tr><td>Hosting (Netlify, Anteil)</td><td class="num">1–3&nbsp;€</td><td class="num">1–3&nbsp;€</td><td class="num">1–3&nbsp;€</td></tr>
+      <tr><td>E-Mails (Erinnerungen, Belege)</td><td class="num">1–2&nbsp;€</td><td class="num">1–2&nbsp;€</td><td class="num">1–2&nbsp;€</td></tr>
+      <tr><td>Abo-Abbuchung über Stripe (SEPA oder Karte)</td><td class="num">1–3&nbsp;€</td><td class="num">2–4&nbsp;€</td><td class="num">3–6&nbsp;€</td></tr>
+      <tr><td>Stripe-Gebühren der Kundenzahlungen</td><td class="num">–</td><td class="num">0&nbsp;€</td><td class="num">0&nbsp;€</td></tr>
+      <tr><td>Chat-Postfach Betrieb (eigener Server)</td><td class="num">–</td><td class="num">–</td><td class="num">3–6&nbsp;€</td></tr>
+      <tr><td>Meta-Guthaben inklusive</td><td class="num">–</td><td class="num">–</td><td class="num">15&nbsp;€</td></tr>
+      <tr><td>Kasse mit TSE (fiskaly, Angebot anfragen)</td><td class="num">–</td><td class="num">Zusatz 19&nbsp;€</td><td class="num">6–15&nbsp;€</td></tr>
+      <tr><td>KI-Antwortvorschläge</td><td class="num">–</td><td class="num">–</td><td class="num">2–8&nbsp;€</td></tr>
+      <tr class="sum"><td>Kosten je Studio</td><td class="num">6–16&nbsp;€</td><td class="num">7–17&nbsp;€</td><td class="num">34–63&nbsp;€</td></tr>
+      <tr><td>Preis (monatlich)</td><td class="num">99&nbsp;€</td><td class="num">169&nbsp;€</td><td class="num">299&nbsp;€</td></tr>
+      <tr class="res"><td>Bleibt übrig</td><td class="num">83–93&nbsp;€</td><td class="num">152–162&nbsp;€</td><td class="num">236–265&nbsp;€</td></tr>
+    </tbody>
+  </table>
+  <p class="small" style="margin-top:2mm">Nicht eingerechnet: deine Zeit für Support (anfangs ca. 1–2 Std. je Studio und Monat) und Werbung. Die Einrichtungsgebühr deckt 3–5 Std. Einrichtung. Alle Werte sind Schätzungen und vor dem Start mit echten Rechnungen zu prüfen.</p>
+
+  <div class="scen">
+    <div class="box"><h3>10 Studios</h3><div class="figure">2.000&nbsp;€</div><p class="small">im Monat (3 Kalender, 3 Zahlungen, 4 Komplett), nach Kosten ca. 1.750&nbsp;€</p></div>
+    <div class="box"><h3>20 Studios</h3><div class="figure">4.070&nbsp;€</div><p class="small">im Monat (5 Kalender, 7 Zahlungen, 8 Komplett), nach Kosten ca. 3.550&nbsp;€</p></div>
+    <div class="box rec"><h3>40 Studios</h3><div class="figure v">8.140&nbsp;€</div><p class="small">im Monat bei gleicher Mischung, nach Kosten ca. 7.100&nbsp;€</p></div>
+  </div>
+
+  <h2 style="margin-top:5mm">Was du entscheiden musst</h2>
+  <ol class="decisions">
+    <li><b>Preise 99 / 169 / 299&nbsp;€</b> so freigeben? Alter Entwurf vom 18.10. war Basis 149&nbsp;€ und Komplett 299&nbsp;€.</li>
+    <li><b>Plattformgebühr:</b> von 5&nbsp;% auf 0&nbsp;% stellen <em>(Empfehlung)</em> oder 1&nbsp;% mit 99-€-Deckel?</li>
+    <li><b>Einrichtung</b> 299 / 399 / 499&nbsp;€ und bei Jahresvertrag gratis?</li>
+    <li><b>Gründer-Angebot:</b> 3 Monate halber Preis (neu) oder 199&nbsp;€ für 12 Monate (alter Entwurf, kostet uns mehr)?</li>
+    <li><b>Laufzeit:</b> monatlich kündbar mit Jahresrabatt <em>(Empfehlung, wie Shore und Planity)</em> oder 12 Monate fest wie Superchat?</li>
+    <li><b>Meta-Guthaben:</b> 15&nbsp;€ im Komplett-Paket inklusive oder alles 1:1 weiterberechnen?</li>
+    <li><b>Kasse mit TSE:</b> 19&nbsp;€ als Zusatz und im Komplett-Paket inklusive <em>(Empfehlung)</em>? Unsere Kosten 6–15&nbsp;€ je Kasse, Angebot von fiskaly fehlt noch.</li>
+    <li><b>Adresse tattookalender.de:</b> muss frei sein, bevor wir verkaufen.</li>
+  </ol>
+
+  <div class="foot"><span>Tattookalender, DSX Media Solutions UG</span><span>5 / 5</span></div>
+</section>
+
+</body>
+</html>

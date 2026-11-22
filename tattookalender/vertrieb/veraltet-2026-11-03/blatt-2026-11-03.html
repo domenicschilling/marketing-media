@@ -1,0 +1,71 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><title>Tattookalender: das Wichtigste auf einem Blatt</title>
+<style>
+@font-face{font-family:Archivo;src:url(schrift/archivo.woff2) format("woff2");font-weight:100 900;font-stretch:62% 125%}
+@page{size:A4;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:210mm;height:297mm;background:#fff;font-family:Archivo,sans-serif;color:#16171a;font-size:12.6pt;line-height:1.26;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+#s{position:relative;width:210mm;height:297mm;padding:9.5mm 10mm 8mm;overflow:hidden}
+.kopf{display:flex;align-items:center;justify-content:space-between}
+.kopf img{height:9mm}
+.kopf span{font-size:11.5pt;font-weight:600;color:#50535a}
+h1{font-size:28pt;line-height:1.02;letter-spacing:-.022em;font-weight:800;margin-top:4mm}
+.was{font-size:13.5pt;line-height:1.26;margin-top:2.4mm;font-weight:500;color:#26282c}
+h2{font-size:14pt;font-weight:800;letter-spacing:-.012em;margin-bottom:1.3mm}
+.pakete{display:grid;grid-template-columns:1fr 1fr 1fr;gap:2.6mm;margin-top:4mm}
+.p{border:.35mm solid #cfcfc9;border-radius:3mm;padding:2.8mm 2.8mm 2.4mm;background:#f6f6f3}
+.p h3{font-size:13.5pt;line-height:1.08;font-weight:800;min-height:10.2mm}
+.tipp{font-size:9.5pt;font-weight:700;color:#50535a;margin-bottom:.4mm;letter-spacing:.02em;text-transform:uppercase}
+.preis{font-size:25pt;font-weight:800;letter-spacing:-.02em;margin-top:1mm;line-height:1}
+.preis small{display:block;font-size:10.5pt;font-weight:600;letter-spacing:0;color:#50535a;margin-top:.8mm}
+.p ul{list-style:none;margin-top:2mm;font-size:11.5pt;line-height:1.2}
+.p li{padding-left:3.4mm;position:relative;margin-bottom:.9mm}
+.p li::before{content:"";position:absolute;left:.3mm;top:1.7mm;width:1.5mm;height:1.5mm;background:#16171a;border-radius:50%}
+.p .plus{font-weight:700;font-size:11.5pt;margin-top:2mm;margin-bottom:-1.2mm}
+.fein{font-size:10.5pt;line-height:1.24;color:#3a3c41;margin-top:2mm}
+.zwei{display:grid;grid-template-columns:1fr 1fr;gap:6mm;margin-top:3.6mm}
+ol{list-style:none;counter-reset:n}
+ol li{counter-increment:n;padding-left:6.4mm;position:relative;margin-bottom:1.2mm;font-size:12pt;line-height:1.22}
+ol li::before{content:counter(n);position:absolute;left:0;top:.1mm;width:4.8mm;height:4.8mm;border-radius:50%;background:#16171a;color:#fff;font-size:9.5pt;font-weight:700;text-align:center;line-height:4.8mm}
+.zwei p{font-size:12pt;line-height:1.22;margin-bottom:1.2mm}
+.angebot{margin-top:3.4mm;background:#16171a;color:#fff;border-radius:3mm;padding:3mm 4mm}
+.angebot b{font-size:15pt;font-weight:800}
+.angebot div{font-size:11.5pt;line-height:1.25;margin-top:.8mm;color:#ececea}
+.aktion{margin-top:3mm;display:grid;grid-template-columns:1.25fr 1fr;gap:4mm;align-items:start}
+.link{display:block;background:#f6f6f3;border:.35mm solid #cfcfc9;border-radius:3mm;padding:2.4mm 3mm;color:#16171a;text-decoration:none;margin-bottom:1.6mm}
+.link small{display:block;font-size:10.5pt;color:#50535a;font-weight:600}
+.link strong{font-size:12.6pt;font-weight:800;word-break:break-word}
+.fuss{position:absolute;left:10mm;right:10mm;bottom:6.5mm;font-size:9.8pt;line-height:1.24;color:#50535a}
+</style></head><body><div id="s">
+<div class="kopf"><img src="logo-hell.svg" alt="Tattookalender"><span>Für Tattoostudios</span></div>
+<h1>Anfrage, Termin, Einwilligung und Anzahlung in einem Kalender.</h1>
+<p class="was">Der Tattookalender ist die Software für dein Studio, am Handy, Tablet und Computer. Dein Team sieht jeden Termin je Artist und Platz, und im Kalender steht, wo noch eine Einwilligung oder Anzahlung fehlt.</p>
+
+<div class="pakete">
+  <div class="p"><h3>Kalender</h3><div class="preis">99 €<small>netto im Monat</small></div>
+    <ul><li>Kalender je Artist und Platz</li><li>Online-Buchung für Beratungen</li><li>Kundenkartei mit Fotos</li><li>Einwilligung am Tablet oder Handy</li><li>Erinnerungen per E-Mail</li><li>Warteliste, Aufgaben, Lückenfüller</li></ul></div>
+  <div class="p"><div class="tipp">Unsere Empfehlung</div><h3>Kalender + Zahlungen</h3><div class="preis">169 €<small>netto im Monat</small></div>
+    <div class="plus">Alles aus Kalender, dazu:</div>
+    <ul><li>Anzahlung per Bezahllink aus dem Termin</li><li>Zahlungslinks, Restzahlung</li><li>Ausfallgebühr bei online gebuchten Beratungen</li><li>Gutscheine einlösen</li><li>Provision je Artist, Belege, DATEV-Export</li></ul></div>
+  <div class="p"><h3>Komplett mit eigenem Chat</h3><div class="preis">299 €<small>netto im Monat</small></div>
+    <div class="plus">Alles aus den beiden, dazu:</div>
+    <ul><li>WhatsApp-Chat mit deiner Nummer, gemeinsam eingerichtet</li><li>Erinnerungen per WhatsApp</li><li>KI-Assistent beantwortet Fragen im Chat</li><li>Kasse mit Kassenbuch, ohne automatische TSE</li></ul></div>
+</div>
+<p class="fein">In jedem Paket: 1 Standort, bis 5 Artists, unbegrenzt Logins, Termine und Kunden. Jeder weitere Artist 9 € netto im Monat. Bei Jahreszahlung im Voraus 89, 149 oder 269 € netto im Monat, 12 Monate Mindestlaufzeit. Anzahlungen laufen über dein eigenes Stripe-Konto: 0 % Provision für uns, Stripe berechnet seine Gebühr selbst. Komplett richten wir gemeinsam mit dir ein: Der Chat startet erst nach der Prüfung durch Meta, einen Termin können wir nicht zusagen. Eine TSE ist nicht automatisch dabei, das klären wir vorher mit dir.</p>
+
+<div class="angebot"><b>Bis 31.12.2026: erster Monat gratis, Karte nötig, danach ab 99 € netto im Monat.</b>
+<div>Abgebucht wird nach 30 Tagen, wenn du nicht vorher kündigst. Keine Einrichtungsgebühr, bei monatlicher Zahlung monatlich kündbar. Der Umzug ist in der Aktion kostenlos.</div></div>
+
+<div class="zwei">
+  <div><h2>So läuft es ab</h2>
+    <ol><li>Demo ausprobieren: ein Klick, kein Passwort.</li><li>Paket wählen, Karte hinterlegen, Zugang per E-Mail.</li><li>Artists, Plätze, Zeiten eintragen, gern mit uns.</li><li>Wir ziehen um, du prüfst und stellst um.</li></ol></div>
+  <div><h2>Kostenloser Umzug</h2>
+    <p>Kunden und künftige Termine aus deinem bisherigen Tool übernehmen wir, mit Export-Datei oder von Hand. Dabei geht keine Nachricht an deine Kunden raus.</p>
+    <p><strong>Nicht dabei:</strong> vergangene Termine, und Einwilligungen kommen in der Regel nicht mit.</p></div>
+</div>
+
+<div class="aktion">
+  <a class="link" href="https://tattookalender-demo.netlify.app/demo"><small>Echte Demo, ohne Anmeldung (erfundene Daten)</small><strong>tattookalender-demo.netlify.app/demo</strong></a>
+  <a class="link" href="https://wa.me/491624502375"><small>Fragen per WhatsApp</small><strong>+49 162 4502375</strong></a>
+</div>
+<p class="fuss">Anbieter: DSX Media Solutions UG (haftungsbeschränkt), Am Weingarten 9, 96117 Memmelsdorf. Nur für Unternehmen. Alle Preise netto zzgl. 19 % USt. Es gelten die AGB auf tattookalender.de. Stand: 03.11.2026.</p>
+</div></body></html>

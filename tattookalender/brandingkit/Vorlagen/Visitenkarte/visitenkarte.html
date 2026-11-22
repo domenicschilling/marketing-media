@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Tattookalender – Visitenkarte</title>
+<!--
+  Visitenkarte 85 × 55 mm, je Seite mit 3 mm Beschnitt (Seite = 91 × 61 mm).
+  Texte unten zwischen den Kommentaren ändern. Als PDF speichern: in Chrome öffnen → Drucken → „Als PDF sichern“,
+  Ränder „Keine“, Hintergrundgrafiken an. Fertige Druckdatei liegt daneben: visitenkarte-druck.pdf
+-->
+<style>
+  @font-face { font-family: "Bricolage Grotesque"; font-weight: 800; src: url("../../Farben-Schriften/Schriften/Bricolage-Grotesque/einzeln/BricolageGrotesque-ExtraBold.ttf"); }
+  @font-face { font-family: Inter; font-weight: 400; src: url("../../Farben-Schriften/Schriften/Inter/einzeln/Inter-Regular.ttf"); }
+  @font-face { font-family: Inter; font-weight: 500; src: url("../../Farben-Schriften/Schriften/Inter/einzeln/Inter-Medium.ttf"); }
+  @font-face { font-family: Inter; font-weight: 600; src: url("../../Farben-Schriften/Schriften/Inter/einzeln/Inter-SemiBold.ttf"); }
+  @page { size: 91mm 61mm; margin: 0; }
+  :root { --nacht: #0b0b0d; --elfenbein: #f4f1ea; --stein: #a7a39a; --gold: #c9a24f; --linie: #2c2822; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: #3a3a3a; }
+  body { -webkit-print-color-adjust: exact; print-color-adjust: exact; font-family: Inter, sans-serif; }
+  .seite { width: 91mm; height: 61mm; position: relative; overflow: hidden; background: var(--nacht); page-break-after: always; margin: 0 auto 8mm; }
+  @media print { html, body { background: none; } .seite { margin: 0; } }
+  /* Schnittkante 3 mm vom Rand; Inhalte mindestens 4 mm weiter innen */
+  .vorne { display: grid; place-items: center;
+    background: radial-gradient(70mm 50mm at 35% -10%, rgba(217,180,104,.22), rgba(217,180,104,0) 70%), var(--nacht); }
+  .vorne img { width: 46mm; height: auto; }
+  .hinten { padding: 10mm 10mm 9mm 10mm; color: var(--elfenbein); }
+  .name { font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: 15pt; letter-spacing: -0.02em; line-height: 1.05; }
+  .rolle { font-size: 7pt; color: var(--stein); margin-top: 1.2mm; }
+  .kontakt { margin-top: 5mm; font-size: 7.2pt; line-height: 1.6; }
+  .kontakt b { font-weight: 600; color: var(--gold); }
+  .fuss { position: absolute; left: 10mm; right: 10mm; bottom: 8mm; display: flex; align-items: center; gap: 2.4mm; border-top: 0.25mm solid var(--linie); padding-top: 2.4mm; font-size: 5.6pt; color: var(--stein); }
+  .fuss img { width: 4.6mm; height: auto; }
+</style>
+</head>
+<body>
+  <!-- Vorderseite -->
+  <section class="seite vorne">
+    <img src="../../Logo/SVG/tattookalender-logo-gestapelt-dunkel.svg" alt="Tattookalender – Das Studio-System">
+  </section>
+
+  <!-- Rückseite -->
+  <section class="seite hinten">
+    <div class="name">Domenic Schilling</div>
+    <div class="rolle">Geschäftsführer</div>
+    <div class="kontakt">
+      +49 162 4502375<br>
+      info@dsxmediasolutions.de<br>
+      <b>tattookalender.de</b>
+    </div>
+    <div class="fuss">
+      <img src="../../Logo/SVG/tattookalender-symbol-farbig.svg" alt="">
+      <span>DSX Media Solutions UG (haftungsbeschränkt), Am Weingarten 9, 96117 Memmelsdorf</span>
+    </div>
+  </section>
+</body>
+</html>

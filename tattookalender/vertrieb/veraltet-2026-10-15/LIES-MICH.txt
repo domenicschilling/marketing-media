@@ -1,0 +1,11 @@
+VERALTET – nicht mehr verwenden (Stand 27.10.2026).
+
+Das sind die Verkaufsunterlagen vom 15.10.2026. Sie nennen Preise und Aussagen, die nicht mehr stimmen
+(299 / 149 / 199 € Gründerangebot, 499 € Einrichtung, 1.000-WhatsApp-Grenze, Plattformgebühr, "Basis"-Paket).
+Aktuell gilt: 3 Pakete 99 / 169 / 299 € netto im Monat (jährlich 89 / 149 / 269 €), keine Einrichtungsgebühr,
+0 % Provision, Aktion bis 31.12.2026: erster Monat gratis + kostenloser Umzug. Quelle: apps/tf-studio/src/lib/verkauf/pakete.ts
+und die Verkaufsseite tattookalender.de.
+
+Aktuelle Unterlagen: ../README.md, ../gespraechsleitfaden.md, ../einwaende.md, ../onboarding-checkliste.md
+und das Preisblatt Preisblatt-AKTUELL.pdf (Kopie von preisblatt-2026-10-27.pdf aus dem Branch claude/tattookalender-verkaufsfertig, PR #181,
+Ordner content/tattookalender/vertrieb; nach dem Merge hier daneben).

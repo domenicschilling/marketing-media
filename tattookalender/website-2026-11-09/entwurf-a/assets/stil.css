@@ -1,0 +1,411 @@
+/* Tattookalender, Entwurf A „Die Nadel zieht den Haken“ (09.11.2026)
+   Mobil zuerst. Alle Inhalte sind ohne JavaScript sichtbar; Bewegung kommt nur als Zusatz (Klasse .js / .scrolly). */
+
+@font-face {
+  font-family: Archivo;
+  src: url(font/archivo-sub.woff2) format("woff2");
+  font-weight: 400 800;
+  font-stretch: 68% 100%;
+  font-display: swap;
+}
+
+:root {
+  --creme: #f5f0e6;
+  --creme-2: #ede5d4;
+  --papier: #fffdf8;
+  --tinte: #15130f;
+  --tinte-2: #4a4439;      /* 8,4:1 auf --creme */
+  --linie: #dcd2bd;
+  --gold-hell: #f3d891;
+  --gold: #c9a24f;
+  --gold-tief: #8a6418;
+  --gold-text: #6f4d0f;    /* 6,6:1 auf --creme */
+  --blatt: #12100d;
+  --orange-bg: #fdebd3; --orange: #8a4200;
+  --gruen-bg: #dcf3e2;  --gruen: #14532d;
+  --rot-bg: #fde4e4;    --rot: #9f1d1d;
+  --grau-bg: #e8e6e0;   --grau: #34363b;
+
+  --kopf-h: 60px;
+  --fx: 14px;               /* x-Lage des Fadens im Innenrahmen */
+  --rand-l: 38px;
+  --rand-r: 16px;
+  --schritt-weg: clamp(230px, 30svh, 320px);
+  --eng: 70%;               /* schmale Archivo für Überschriften */
+}
+@media (min-width: 900px) {
+  :root { --kopf-h: 68px; --fx: 30px; --rand-l: 92px; --rand-r: 40px; --schritt-weg: clamp(300px, 42svh, 440px); }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html {
+  color-scheme: light;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-padding-top: calc(var(--kopf-h) + 8px);
+  overflow-x: clip;
+}
+body {
+  margin: 0;
+  background: var(--creme);
+  color: var(--tinte);
+  font-family: Archivo, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 17px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+}
+img, svg { display: block; max-width: 100%; }
+a { color: inherit; }
+h1, h2, h3, p, ul, ol, figure { margin: 0; }
+ul, ol { padding: 0; list-style: none; }
+:focus-visible { outline: 3px solid var(--gold-tief); outline-offset: 3px; border-radius: 6px; }
+
+.skip { position: absolute; left: 12px; top: -60px; z-index: 100; background: var(--tinte); color: #fff; padding: 10px 14px; border-radius: 10px; }
+.skip:focus { top: 10px; }
+
+.innen { position: relative; max-width: 1240px; margin: 0 auto; padding-left: var(--rand-l); padding-right: var(--rand-r); }
+
+.ueber {
+  font-size: 13px; font-weight: 650; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--gold-text); margin-bottom: 12px;
+}
+.titel {
+  font-stretch: var(--eng); font-weight: 800; letter-spacing: -.012em;
+  font-size: clamp(36px, 9.6vw, 80px); line-height: .98; text-wrap: balance;
+}
+.lead { margin-top: 14px; color: var(--tinte-2); max-width: 44ch; }
+
+/* Knöpfe */
+.knopf {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  min-height: 52px; padding: 0 22px; border-radius: 14px;
+  background: var(--tinte); color: #fff; text-decoration: none;
+  font-weight: 700; font-size: 17px; white-space: nowrap;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .12) inset, 0 10px 24px -14px rgba(21, 19, 15, .7);
+  transition: transform .2s ease, background-color .2s ease;
+}
+.knopf:hover { background: #2a251c; }
+.knopf:active { transform: translateY(1px) scale(.99); }
+.knopf-pfeil { color: var(--gold-hell); font-weight: 800; transition: transform .2s ease; }
+.knopf:hover .knopf-pfeil { transform: translateX(3px); }
+.knopf-leise { background: transparent; color: var(--tinte); box-shadow: inset 0 0 0 1.5px var(--tinte); }
+.knopf-leise:hover { background: rgba(21, 19, 15, .06); }
+.knopf-gold { background: linear-gradient(180deg, var(--gold-hell), var(--gold)); color: var(--tinte); }
+.knopf-gold:hover { background: var(--gold-hell); }
+.knopf-klein { min-height: 40px; padding: 0 14px; font-size: 15px; border-radius: 11px; }
+.knopf-breit { width: 100%; }
+.knopf-gross { min-height: 60px; padding: 0 30px; font-size: 19px; }
+
+/* Status-Chips wie in der App */
+.chip { display: inline-flex; align-items: center; min-height: 26px; padding: 2px 10px; border-radius: 8px; font-size: 13.5px; font-weight: 600; line-height: 1.2; }
+.chip-orange { background: var(--orange-bg); color: var(--orange); }
+.chip-gruen { background: var(--gruen-bg); color: var(--gruen); }
+.chip-rot { background: var(--rot-bg); color: var(--rot); }
+.chip-grau { background: var(--grau-bg); color: var(--grau); }
+.chip-dunkel { background: var(--tinte); color: #fff; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+
+/* ================= Kopfzeile ================= */
+.kopf {
+  position: fixed; inset: 0 0 auto 0; z-index: 50; height: var(--kopf-h);
+  background: var(--creme);   /* deckend: kein durchscheinender Text hinter dem Logo (Gegenprüfung 10.11.) */
+  border-bottom: 1px solid rgba(220, 210, 189, .7);
+}
+.kopf-innen { height: 100%; max-width: 1240px; margin: 0 auto; padding: 0 var(--rand-r) 0 16px; display: flex; align-items: center; gap: 16px; }
+@media (min-width: 900px) { .kopf-innen { padding-left: 40px; } }
+.kopf-logo { display: block; flex: 0 0 auto; }
+.kopf-logo img { height: 26px; width: auto; }
+@media (min-width: 900px) { .kopf-logo img { height: 30px; } }
+.kopf-nav { display: none; margin-left: auto; gap: 26px; font-size: 15px; font-weight: 550; }
+.kopf-nav a { text-decoration: none; padding: 8px 0; }
+.kopf-nav a:hover { color: var(--gold-text); }
+.kopf .knopf { margin-left: auto; }
+@media (min-width: 900px) { .kopf-nav { display: flex; } .kopf .knopf { margin-left: 8px; } }
+.kopf-fortschritt { position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: linear-gradient(90deg, var(--gold), var(--gold-tief)); transform-origin: 0 50%; transform: scaleX(0); }
+@supports (animation-timeline: scroll()) {
+  .kopf-fortschritt { animation: fortschritt linear both; animation-timeline: scroll(root); }
+  @keyframes fortschritt { to { transform: scaleX(1); } }
+}
+
+/* ================= Faden ================= */
+main { position: relative; display: block; }
+/* Rückfall ohne JS: ruhige goldene Linie links */
+main::before {
+  content: ""; position: absolute; top: 120px; bottom: 360px; width: 2px; z-index: 2;
+  left: calc(max(0px, (100% - 1240px) / 2) + var(--fx) - 1px);
+  background: linear-gradient(var(--gold), var(--gold-tief)); opacity: .55;
+}
+.faden-an main::before { display: none; }
+.faden { position: absolute; left: 0; top: 0; width: 100%; height: 0; z-index: 3; pointer-events: none; overflow: visible; }
+.faden path { fill: none; stroke: url(#faden-gold); stroke-linecap: round; stroke-linejoin: round; }
+.faden-weg { stroke-width: 2.5; }
+.faden-haken, .faden-nadel { stroke: #d9b25c !important; }
+.faden-oehr { fill: #d9b25c; transform-box: fill-box; transform-origin: center; transition: transform .4s cubic-bezier(.3, 1.6, .5, 1); }
+.faden-kopf { opacity: 0; transition: opacity .3s; }
+.faden-laeuft .faden-kopf { opacity: 1; }
+.faden-glanz { fill: rgba(217, 178, 92, .28); }
+.faden-spitze { fill: #f6dc9a; stroke: var(--gold-tief); stroke-width: 1.2; }
+
+.stich {
+  position: absolute; left: var(--fx); width: 15px; height: 15px; margin: 2px 0 0 -7.5px; z-index: 4;
+  border-radius: 50%; background: var(--creme); border: 2px solid var(--gold);
+  transition: background-color .3s, transform .45s cubic-bezier(.3, 1.6, .5, 1);
+}
+.stich.erreicht { background: var(--gold); transform: scale(1.15); }
+
+/* ================= Kopfbereich ================= */
+.held { padding: calc(var(--kopf-h) + 22px) 0 44px; overflow-x: clip; }
+.held-raster { display: grid; grid-template-columns: minmax(0, 1fr); }
+.held-titel {
+  font-stretch: 68%; font-weight: 800; letter-spacing: -.016em;
+  font-size: clamp(40px, 11.4vw, 112px); line-height: .97;
+}
+.held-titel .zeile { display: flex; align-items: center; gap: .14em; white-space: nowrap; }
+.haken { width: .6em; height: .5em; flex: 0 0 auto; overflow: visible; }
+.haken path { fill: none; stroke: var(--gold); stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 80; stroke-dashoffset: 0; }
+@media (prefers-reduced-motion: no-preference) {
+  .haken path { animation: haken-ziehen .7s cubic-bezier(.6, 0, .2, 1) both; }
+  .zeile:nth-child(1) .haken path { animation-delay: .35s; }
+  .zeile:nth-child(2) .haken path { animation-delay: .75s; }
+  .zeile:nth-child(3) .haken path { animation-delay: 1.15s; }
+  @keyframes haken-ziehen { from { stroke-dashoffset: 80; } }
+}
+.held-satz { margin-top: 18px; font-size: 17.5px; color: var(--tinte-2); max-width: 36ch; }
+.held-satz::first-line { color: var(--tinte); }
+.held-mehr { margin-top: 26px; }
+.held-aktion { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 22px; }
+.held-aktion .knopf { flex: 1 1 auto; }
+.held-aktion .knopf-leise { display: none; }
+.held-klein { margin-top: 12px; font-size: 14px; color: var(--tinte-2); }
+.held-klein a { color: var(--gold-text); font-weight: 650; }
+
+.held-buehne { position: relative; display: flex; justify-content: center; padding: 24px 0 14px; }
+
+/* Lupe: lesbarer Ausschnitt zu Tom Meiers Termin */
+.lupe {
+  position: absolute; left: -6px; bottom: 4%; z-index: 5; width: min(222px, 62%);
+  background: var(--papier); border: 1px solid var(--linie); border-radius: 16px; padding: 12px 14px 12px;
+  box-shadow: 0 18px 40px -22px rgba(40, 30, 10, .55), 0 2px 6px rgba(40, 30, 10, .08);
+}
+.lupe::before { content: ""; position: absolute; left: 14px; right: 14px; top: -1px; height: 3px; border-radius: 0 0 3px 3px; background: linear-gradient(90deg, var(--gold), var(--gold-tief)); }
+.lupe-kopf { display: grid; gap: 1px; font-size: 13px; color: var(--tinte-2); line-height: 1.35; }
+.lupe-kopf strong { font-size: 17px; color: var(--tinte); }
+.lupe-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 9px; }
+
+/* ================= 3D-Telefon (CSS 3D, echte Aufnahme als Bildschirm) ================= */
+.telefon { --pw: clamp(220px, 66vw, 300px); --r: calc(var(--pw) * .15); --rahmen: calc(var(--pw) * .03);
+  position: relative; width: var(--pw); perspective: 1500px; perspective-origin: 50% 40%; }
+.telefon-koerper {
+  --rx: 10deg; --ry: -24deg; --rz: 2.5deg; --sx: 0deg; --sy: 0deg; --zx: 0deg; --zy: 0deg; --fy: 0px;
+  position: relative; transform-style: preserve-3d;
+  transform: translateY(var(--fy)) rotateX(calc(var(--rx) + var(--sx) + var(--zx))) rotateY(calc(var(--ry) + var(--sy) + var(--zy))) rotateZ(var(--rz));
+  will-change: transform;
+}
+.telefon-front {
+  position: relative; padding: var(--rahmen); border-radius: var(--r); background: #0d0c0a;
+  box-shadow: inset 0 0 0 1px rgba(255, 230, 170, .28), inset 0 0 0 2.5px #0d0c0a, inset 0 0 0 3.5px rgba(255, 255, 255, .06);
+  transform: translateZ(6px);
+}
+.telefon-schirm {
+  position: relative; aspect-ratio: 720 / 1558; border-radius: calc(var(--r) - var(--rahmen)); overflow: hidden;
+  background: #f4f3ef; transform: translateZ(0);
+}
+.telefon-schirm img { position: absolute; inset: 0; width: 100%; height: 100%; }
+.telefon-rand { position: absolute; inset: 0; border-radius: var(--r); transform: translateZ(var(--z));
+  background: linear-gradient(100deg, #8a6c38, #3a3124 10%, #1c1914 50%, #3a3124 90%, #8a6c38); }
+.telefon-ruecken { position: absolute; inset: 0; border-radius: var(--r); transform: translateZ(-6.5px) rotateY(180deg);
+  background: linear-gradient(150deg, #2c271f, #0f0e0c 70%); display: grid; place-items: center; }
+.telefon-ruecken img { width: 26%; height: auto; }
+.telefon-glanz { position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(112deg, rgba(255, 255, 255, 0) 38%, rgba(255, 255, 255, .16) 47%, rgba(255, 255, 255, 0) 56%);
+  background-size: 300% 100%; background-position: var(--gx, 70%) 0; }
+.telefon-schatten { position: absolute; z-index: -1; left: 6%; right: 6%; bottom: -26px; height: 44px; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(60, 42, 10, .34), rgba(60, 42, 10, 0)); }
+@media (prefers-reduced-motion: reduce) {
+  .telefon-koerper { --rx: 4deg; --ry: -10deg; --rz: 1deg; }
+}
+
+/* ================= Problem ================= */
+.problem { padding: 76px 0 70px; background: var(--creme-2); }
+.problem-raster { display: grid; gap: 22px; margin-top: 26px; }
+.knaeuel { width: 100%; height: auto; overflow: visible; }
+.knaeuel path { fill: none; stroke: #6d6455; stroke-width: 1.8; stroke-linecap: round; }
+.zettel { display: grid; gap: 0; }
+.zettel li { display: grid; gap: 2px; padding: 12px 0; border-top: 1px solid var(--linie); }
+.zettel li:last-child { border-bottom: 1px solid var(--linie); }
+.zettel-quelle { font-size: 13px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase; color: var(--tinte-2); }
+.wende { margin-top: 30px; font-size: clamp(21px, 5.4vw, 32px); line-height: 1.3; font-weight: 500; max-width: 30ch; text-wrap: pretty; }
+.wende strong { font-weight: 800; color: var(--gold-text); }
+
+/* ================= Ablauf ================= */
+.ablauf { padding-top: 76px; }
+.ablauf-kopf { padding-bottom: 28px; }
+.ablauf-raster { display: grid; gap: 22px; padding-bottom: 50px; }
+.kette { display: none; }
+.ablauf-telefon { display: flex; justify-content: center; padding: 6px 0 22px; }
+.telefon-ablauf { --pw: clamp(210px, 60vw, 280px); }
+.telefon-ablauf .telefon-koerper { --rx: 5deg; --ry: -12deg; --rz: 1deg; }
+.schirm { opacity: 0; }
+.schirm.aktiv { opacity: 1; }
+.schritte { display: grid; gap: 22px; counter-reset: s; }
+.schritt { padding-left: 0; }
+.schritt-nr { font-size: 13px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--gold-text); }
+.schritt h3 { margin-top: 4px; font-stretch: var(--eng); font-weight: 800; font-size: clamp(25px, 6.6vw, 46px); line-height: 1.04; }
+.schritt > p:not(.schritt-nr):not(.chips) { margin-top: 6px; color: var(--tinte-2); max-width: 40ch; }
+
+/* Mit JS: gepinnte Bühne, Schritte wechseln beim Scrollen */
+.scrolly .ablauf-strecke { position: relative; height: calc(100svh - var(--kopf-h) + 4 * var(--schritt-weg)); }
+.scrolly .ablauf-buehne { position: sticky; top: var(--kopf-h); height: calc(100svh - var(--kopf-h)); overflow: clip; }
+.scrolly .ablauf-raster { height: 100%; padding-top: 10px; padding-bottom: 14px; gap: 0;
+  grid-template-rows: auto minmax(0, 1fr) auto; }
+.scrolly .kette { display: flex; position: relative; justify-content: space-between; align-items: center; height: 34px; margin: 0 4px; }
+.kette li { position: relative; z-index: 1; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%;
+  background: var(--creme); border: 2px solid var(--linie); font-size: 13px; font-weight: 700; color: var(--tinte-2);
+  transition: background-color .3s, border-color .3s, color .3s, transform .4s cubic-bezier(.3, 1.6, .5, 1); }
+.kette li.erreicht { border-color: var(--gold); color: var(--tinte); }
+.kette li.aktiv { background: var(--tinte); border-color: var(--tinte); color: var(--gold-hell); transform: scale(1.12); }
+.kette-linie { position: absolute; left: 14px; right: 14px; top: 50%; height: 2px; margin-top: -1px; background: var(--linie); }
+.kette-fuell { position: absolute; inset: 0; background: linear-gradient(90deg, var(--gold), var(--gold-tief)); transform-origin: 0 50%; transform: scaleX(var(--p, 0)); }
+.scrolly .ablauf-telefon { min-height: 0; padding: 12px 0 18px; align-items: center; }
+.scrolly .telefon-ablauf { --pw: clamp(150px, calc((100svh - var(--kopf-h) - 290px) / 2.17), 290px); }
+.scrolly .schritte { position: relative; display: block; min-height: 168px; }
+/* Text: alter Schritt geht schnell, neuer kommt danach (nie zwei Texte übereinander) */
+.scrolly .schritt { position: absolute; inset: 0 0 auto 0; opacity: 0; transform: translateY(10px); pointer-events: none;
+  transition: opacity .12s ease, transform .12s ease; }
+.scrolly .schritt.aktiv { opacity: 1; transform: none; pointer-events: auto;
+  transition: opacity .2s ease .12s, transform .45s cubic-bezier(.2, .8, .2, 1) .12s; }
+/* Bildschirm: neuer schiebt sich deckend herein wie in der App, kein Überblenden */
+.scrolly .schirm { z-index: 1; transform: translateX(102%); transition: transform .5s cubic-bezier(.2, .8, .2, 1), opacity 0s linear .5s; }
+.scrolly .schirm.vorbei { transform: translateX(-30%); }
+.scrolly .schirm.aktiv { z-index: 2; opacity: 1; transform: none; box-shadow: -12px 0 28px rgba(20, 16, 8, .18);
+  transition: transform .5s cubic-bezier(.2, .8, .2, 1), opacity 0s; }
+@media (max-width: 899px) {
+  .scrolly .kette { height: 24px; margin: 0 2px; }
+  .scrolly .kette li { width: 22px; height: 22px; font-size: 11px; border-width: 1.5px; }
+  .scrolly .kette-linie { left: 11px; right: 11px; }
+  .scrolly .schritt .chips { display: none; }
+  .scrolly .schritt h3 { font-size: 25px; }
+  .scrolly .schritt > p:not(.schritt-nr):not(.chips) { font-size: 16px; line-height: 1.42; }
+  .scrolly .ablauf-telefon { padding: 10px 0 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* .aktiv mit aufnehmen: sonst gewinnt die Überblendung mit Verzögerung (höhere Spezifität) und der Text ist kurz leer */
+  .scrolly .schritt, .scrolly .schritt.aktiv, .scrolly .schirm, .scrolly .schirm.aktiv, .kette li { transition: none !important; transform: none !important; }
+}
+
+/* ================= Funktionen ================= */
+.funktionen { padding: 80px 0 64px; }
+.ausschnitte { display: grid; gap: 28px; margin-top: 28px; }
+.ausschnitt { transform-origin: 50% 100%; }
+.ausschnitt-bild { position: relative; overflow: hidden; border-radius: 18px; background: #f4f3ef;
+  border: 1px solid var(--linie); box-shadow: 0 22px 44px -30px rgba(40, 30, 10, .6); }
+.ausschnitt-bild img { width: 100%; height: auto; }
+.ausschnitt figcaption { margin-top: 12px; color: var(--tinte-2); font-size: 16px; max-width: 42ch; }
+.ausschnitt figcaption strong { color: var(--tinte); }
+.liste { margin-top: 34px; display: grid; }
+.liste li { display: grid; align-content: start; gap: 2px; padding: 13px 0; border-top: 1px solid var(--linie); font-size: 16px; }
+.liste li:last-child { border-bottom: 1px solid var(--linie); }
+.liste span { color: var(--tinte-2); }
+
+/* ================= Preise ================= */
+.preise { padding: 80px 0 70px; background: var(--creme-2); }
+.aktion { display: inline-block; margin-top: 18px; padding: 10px 14px; border-radius: 12px; background: var(--papier); border: 1px solid var(--gold); font-size: 16px; }
+.stufen { display: grid; gap: 14px; margin-top: 24px; }
+.stufe { position: relative; display: grid; grid-template-columns: 1fr auto; align-items: baseline; column-gap: 12px;
+  padding: 18px 18px 18px; border-radius: 18px; background: var(--papier); border: 1px solid var(--linie); }
+.stufe h3 { font-stretch: var(--eng); font-weight: 800; font-size: 25px; line-height: 1.05; }
+.preis { display: grid; justify-items: end; text-align: right; }
+.preis-zahl { font-stretch: var(--eng); font-weight: 800; font-size: 34px; line-height: 1; }
+.preis-art { font-size: 13px; color: var(--tinte-2); }
+.preis-zahl-text { font-size: 17px; font-stretch: 100%; font-weight: 700; line-height: 1.25; }
+.einrichtung { grid-column: 1 / -1; margin-top: 6px; font-size: 14.5px; font-weight: 600; color: var(--gold-text); }
+.stufe ul { grid-column: 1 / -1; margin-top: 10px; display: grid; gap: 4px; font-size: 15.5px; line-height: 1.36; }
+.stufe li { position: relative; padding-left: 22px; }
+.stufe li::before { content: ""; position: absolute; left: 2px; top: .42em; width: 11px; height: 6px; border-left: 2.2px solid var(--gold-tief); border-bottom: 2.2px solid var(--gold-tief); transform: rotate(-45deg); }
+.stufe li.dazu { padding-left: 0; font-weight: 650; }
+.stufe li.dazu::before { display: none; }
+.stufe-hinweis { grid-column: 1 / -1; margin-top: 10px; font-size: 13.5px; color: var(--tinte-2); }
+.stufe-dunkel { background: var(--blatt); color: #f5f0e6; border-color: #3a3124; grid-template-columns: 1fr; }
+.stufe-dunkel .preis { justify-items: start; text-align: left; margin-top: 6px; }
+.stufe-dunkel .preis-zahl-text { color: var(--gold-hell); }
+.stufe-dunkel li::before { border-color: var(--gold-hell); }
+.stufe-dunkel .knopf { margin-top: 16px; justify-self: start; }
+.preise-fuss { margin-top: 18px; font-size: 14px; color: var(--tinte-2); max-width: 70ch; }
+.preise-aktion { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 22px; }
+.preise-aktion .knopf { flex: 1 1 260px; }
+
+/* ================= Fragen ================= */
+.fragen { padding: 76px 0 40px; }
+.fragen-liste { margin-top: 24px; border-top: 1px solid var(--linie); }
+.fragen details { border-bottom: 1px solid var(--linie); }
+.fragen summary { position: relative; display: block; cursor: pointer; padding: 16px 40px 16px 0; font-weight: 650; font-size: 17.5px; line-height: 1.35; list-style: none; }
+.fragen summary::-webkit-details-marker { display: none; }
+.fragen summary::after { content: ""; position: absolute; right: 6px; top: 50%; width: 12px; height: 12px; margin-top: -9px;
+  border-right: 2.4px solid var(--gold-tief); border-bottom: 2.4px solid var(--gold-tief); transform: rotate(45deg); transition: transform .25s; }
+.fragen details[open] summary::after { transform: rotate(225deg); margin-top: -3px; }
+.fragen details p { padding: 0 0 18px; color: var(--tinte-2); max-width: 64ch; }
+
+/* ================= Abschluss ================= */
+.abschluss { padding: 40px 0 80px; text-align: center; }
+.abschluss-innen { display: grid; justify-items: center; }
+.stich-ende { top: 0; }
+.bogen { width: clamp(124px, 34vw, 190px); height: auto; margin-top: 40px; overflow: visible; }
+.faden-an .bogen-haken-statisch { opacity: 0; }
+.abschluss-titel { margin-top: 26px; font-stretch: 68%; font-weight: 800; font-size: clamp(46px, 13vw, 120px); line-height: .95; letter-spacing: -.016em; }
+.abschluss-satz { margin-top: 18px; max-width: 34ch; color: var(--tinte-2); font-size: 17.5px; }
+.abschluss .knopf { margin-top: 26px; }
+.abschluss-klein { margin-top: 16px; font-size: 15.5px; color: var(--tinte-2); }
+.abschluss-klein a { color: var(--gold-text); font-weight: 650; }
+
+/* ================= Fuß ================= */
+.fuss { padding: 34px 0 calc(34px + env(safe-area-inset-bottom)); border-top: 1px solid var(--linie); background: var(--creme-2); font-size: 14px; color: var(--tinte-2); }
+.fuss-innen { display: grid; gap: 14px; }
+.fuss img { height: 24px; width: auto; }
+.fuss nav { display: flex; flex-wrap: wrap; gap: 6px 18px; }
+.fuss nav a { color: var(--tinte); padding: 4px 0; }
+
+/* ================= Ab 900 px ================= */
+@media (min-width: 900px) {
+  body { font-size: 18px; }
+  .held { padding-top: calc(var(--kopf-h) + 56px); padding-bottom: 90px; }
+  .held-raster { grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); align-items: center; column-gap: 48px; }
+  .held-satz { font-size: 20px; }
+  .held-titel { font-size: clamp(40px, 5.7vw, 96px); }
+  .held-raster { grid-template-areas: "text buehne" "mehr buehne"; grid-template-rows: auto 1fr; }
+  .held-text { grid-area: text; align-self: end; }
+  .held-mehr { grid-area: mehr; align-self: start; }
+  .held-buehne { grid-area: buehne; }
+  .held-aktion .knopf { flex: 0 0 auto; }
+  .held-aktion .knopf-leise { display: inline-flex; }
+  .nur-handy { display: none; }
+  .held-buehne { padding: 0; }
+  .telefon-held { --pw: clamp(280px, 25vw, 340px); }
+  .lupe { left: -30px; bottom: 12%; width: 240px; }
+  .problem-raster { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: 48px; }
+  .wende { margin-top: 44px; }
+
+  .ablauf-raster { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; }
+  .scrolly .ablauf-raster { grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto auto; align-content: center; column-gap: 60px; }
+  .scrolly .kette { grid-column: 1; grid-row: 1; align-self: end; max-width: 420px; width: 100%; margin: 0 0 34px; }
+  .scrolly .schritte { grid-column: 1; grid-row: 2; align-self: start; min-height: 260px; }
+  .scrolly .ablauf-telefon { grid-column: 2; grid-row: 1 / span 2; padding: 20px 60px 30px; }
+  .scrolly .telefon-ablauf { --pw: clamp(220px, calc((100svh - var(--kopf-h) - 90px) / 2.17), 330px); }
+  .scrolly .ablauf-raster { padding-top: 20px; padding-bottom: 20px; }
+  .scrolly .schritt h3 { font-size: clamp(36px, 3.6vw, 54px); }
+
+  .ausschnitte { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px; align-items: start; }
+  .liste { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 40px; }
+  .liste li:nth-last-child(-n+2) { border-bottom: 1px solid var(--linie); }
+
+  .stufen { grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: stretch; }
+  .stufe { grid-template-columns: 1fr; align-content: start; }
+  .stufe .preis { justify-items: start; text-align: left; margin-top: 10px; }
+  .stufe h3 { min-height: 2.1em; }
+
+  .fragen-liste { columns: 2; column-gap: 48px; border-top: 0; }
+  .fragen details { break-inside: avoid; border-top: 1px solid var(--linie); border-bottom: 0; }
+}
+.bogen { transition: filter .6s ease; }
+.bogen.fertig { filter: drop-shadow(0 12px 26px rgba(201, 162, 79, .5)); }
+.telefon-schirm img[data-src]:not([src]) { visibility: hidden; }

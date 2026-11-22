@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tattookalender – Software für Tattoostudios</title>
+<meta name="description" content="Kalender je Artist und Platz, Anzahlung per Bezahllink über dein eigenes Stripe-Konto und Einwilligung mit Unterschrift am Handy. Ab 69 € netto im Monat. Demo ohne Anmeldung.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#f2ede2">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="assets/font/archivo-tk.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/stil.css">
+<script>
+  // 3D-Geschichte nur, wenn Bewegung erwünscht ist. main.js nimmt die Klasse wieder weg, falls GSAP fehlt.
+  try { if (!matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('story'); } catch (e) {}
+  // Rückfall: Läuft main.js nach 4 s nicht, wird alles flach und sichtbar angezeigt.
+  setTimeout(function () { if (!window.__tkStory) document.documentElement.classList.remove('story'); }, 4000);
+</script>
+<script defer src="lib/gsap-3.13.0/gsap.min.js"></script>
+<script defer src="lib/gsap-3.13.0/ScrollTrigger.min.js"></script>
+<script defer src="lib/lenis-1.3.11/lenis.min.js"></script>
+<script defer src="assets/main.js"></script>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-geld" viewBox="0 0 24 24"><path d="M19 7V5a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v3M3 6v13a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12h-4a2 2 0 0 0 0 4h4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="i-blatt" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 9v5M12 17.5v.01" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+  <symbol id="i-ok" viewBox="0 0 24 24"><path d="M4.5 12.5l5 5L19.5 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-pfeil" viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</svg>
+
+<header class="kopf">
+  <div class="huelle">
+    <a class="kopf-logo" href="#start" aria-label="Tattookalender, zum Anfang"><img src="assets/img/logo-hell.svg" alt="Tattookalender" width="625" height="107"></a>
+    <nav aria-label="Seite">
+      <a href="#ablauf">So läuft es</a>
+      <a href="#funktionen">Funktionen</a>
+      <a href="#preise">Preise</a>
+      <a href="#fragen">Fragen</a>
+    </nav>
+    <a class="knopf" href="https://tattookalender-demo.netlify.app/demo" rel="noopener">Demo öffnen</a>
+  </div>
+</header>
+
+<main>
+<!-- Kopfbereich: Der Kalender füllt sich -->
+<section class="buehne" id="start" aria-labelledby="titel">
+  <div class="buehne-fix">
+    <div class="huelle held-text">
+      <h1 id="titel">Erst die Anzahlung. Dann der Termin.</h1>
+      <div>
+        <p class="held-satz">Software für Tattoostudios: Kalender je Artist und Platz, Anzahlung per Bezahllink, Einwilligung mit Unterschrift am Handy. Alles hängt am selben Termin.</p>
+        <div class="held-aktion">
+          <a class="knopf" href="https://tattookalender-demo.netlify.app/demo" rel="noopener">Demo öffnen <svg aria-hidden="true"><use href="#i-pfeil"/></svg></a>
+          <a class="link-pfeil" href="#preise">Pakete ab 69 €</a>
+        </div>
+        <p class="held-hinweis">Die echte App mit Demo-Studio, ohne Anmeldung.</p>
+      </div>
+    </div>
+
+    <div class="huelle szene">
+      <div class="kal" data-ui role="group" aria-label="Kalender am Mittwoch, 11. November, mit Demo-Daten">
+        <div class="kal-kopf">
+          <span class="pfeil" aria-hidden="true">‹</span>
+          <span class="kal-datum">Mi 11.11.</span>
+          <span class="pfeil" aria-hidden="true">›</span>
+          <span class="kal-ansicht" aria-hidden="true"><span class="an">Tag</span><span>Woche</span><span>Monat</span><span>Liste</span></span>
+          <span class="kal-demo">Demo-Daten</span>
+        </div>
+        <ol class="kal-tage" aria-label="Woche vom 9. bis 15. November">
+          <li style="--n:3">Mo<b>9</b><i></i></li>
+          <li style="--n:2">Di<b>10</b><i></i></li>
+          <li class="an" data-heute style="--n:7">Mi<b>11</b><i></i></li>
+          <li style="--n:2">Do<b>12</b><i></i></li>
+          <li style="--n:4">Fr<b>13</b><i></i></li>
+          <li style="--n:5">Sa<b>14</b><i></i></li>
+          <li style="--n:0">So<b>15</b><i></i></li>
+        </ol>
+        <p class="kal-zeile" aria-live="off"><span data-z="termine">7 Termine</span> · <span class="z-anz" data-z="anz">3 Anzahlungen offen</span> · <span class="z-einw" data-z="einw">4 Einwilligungen fehlen</span></p>
+        <div class="kal-raster">
+          <div class="kal-zeiten" aria-hidden="true"><span>10:00</span><span>11:00</span><span>12:00</span><span>13:00</span><span>14:00</span><span>15:00</span><span>16:00</span></div>
+          <div class="kal-spalten">
+            <div class="kal-spalte">
+              <p class="kal-artist"><i style="--c:#4a90e2"></i>Ben Albrecht</p>
+              <div class="kal-flaeche">
+                <article class="karte" style="--von:0;--dauer:4">
+                  <time>10:00–14:00</time><strong>Max Schwarz</strong><span class="motiv">Wikingerschiff</span>
+                  <span class="marken"><span class="marke" data-art="einw" aria-label="Einwilligung"><svg class="nein" aria-hidden="true"><use href="#i-blatt"/></svg><svg class="ja" aria-hidden="true"><use href="#i-ok"/></svg><em class="wort"><span class="wort-offen">Einwilligung fehlt</span><span class="wort-ok">Einwilligung vollständig</span></em></span></span>
+                </article>
+                <article class="karte mittel" style="--von:4;--dauer:1.5">
+                  <time>14:00–15:30</time><strong>Leon Richter</strong><span class="motiv">Blumen-Sleeve</span>
+                  <span class="marken"><span class="marke" data-art="einw" aria-label="Einwilligung"><svg class="nein" aria-hidden="true"><use href="#i-blatt"/></svg><svg class="ja" aria-hidden="true"><use href="#i-ok"/></svg><em class="wort"><span class="wort-offen">Einwilligung fehlt</span><span class="wort-ok">Einwilligung vollständig</span></em></span></span>
+                </article>
+              </div>
+            </div>
+            <div class="kal-spalte">
+              <p class="kal-artist"><i style="--c:#e0735a"></i>Kaja Lindner</p>
+              <div class="kal-flaeche">
+                <article class="karte orange" data-tom style="--von:1;--dauer:4">
+                  <time>11:00–15:00</time><strong>Tom Meier</strong><span class="motiv">Rosen-Ranke</span>
+                  <span class="marken">
+                    <span class="marke" data-art="anz" aria-label="Anzahlung"><svg class="nein" aria-hidden="true"><use href="#i-geld"/></svg><svg class="ja" aria-hidden="true"><use href="#i-ok"/></svg><em class="wort"><span class="wort-offen">Anzahlung offen</span><span class="wort-ok">Anzahlung bezahlt</span></em></span>
+                    <span class="marke" data-art="einw" aria-label="Einwilligung"><svg class="nein" aria-hidden="true"><use href="#i-blatt"/></svg><svg class="ja" aria-hidden="true"><use href="#i-ok"/></svg><em class="wort"><span class="wort-offen">Einwilligung fehlt</span><span class="wort-ok">Einwilligung vollständig</span></em></span>
+                  </span>
+                </article>
+                <article class="karte mittel" data-neu style="--von:5.5;--dauer:1.5">
+                  <time>15:30–17:00</time><strong>Jonas Wolf</strong><span class="motiv">Fineline Blume</span>
+                  <span class="marken">
+                    <span class="marke" data-art="anz" aria-label="Anzahlung"><svg class="nein" aria-hidden="true"><use href="#i-geld"/></svg><svg class="ja" aria-hidden="true"><use href="#i-ok"/></svg><em class="wort"><span class="wort-offen">Anzahlung offen</span><span class="wort-ok">Anzahlung bezahlt</span></em></span>
+                    <span class="marke" data-art="einw" aria-label="Einwilligung"><svg class="nein" aria-hidden="true"><use href="#i-blatt"/></svg><svg class="ja" aria-hidden="true"><use href="#i-ok"/></svg><em class="wort"><span class="wort-offen">Einwilligung fehlt</span><span class="wort-ok">Einwilligung vollständig</span></em></span>
+                  </span>
+                </article>
+              </div>
+            </div>
+            <div class="kal-spalte">
+              <p class="kal-artist"><i style="--c:#a77ee6"></i>Mia Roth</p>
+              <div class="kal-flaeche">
+                <article class="karte kurz" style="--von:1;--dauer:.75">
+                  <time>11:00–11:45</time><strong>Lina Krüger</strong>
+                </article>
+                <article class="karte" data-neu style="--von:2;--dauer:2">
+                  <time>12:00–14:00</time><strong>Marie Krause</strong><span class="motiv">Minimal Linework</span>
+                  <span class="marken"><span class="marke" data-art="anz" aria-label="Anzahlung"><svg class="nein" aria-hidden="true"><use href="#i-geld"/></svg><svg class="ja" aria-hidden="true"><use href="#i-ok"/></svg><em class="wort"><span class="wort-offen">Anzahlung offen</span><span class="wort-ok">Anzahlung bezahlt</span></em></span></span>
+                </article>
+                <article class="karte" data-neu style="--von:4.5;--dauer:2">
+                  <time>14:30–16:30</time><strong>Luca Lange</strong><span class="motiv">Portrait</span>
+                </article>
+              </div>
+            </div>
+          </div>
+        </div>
+        <span class="kal-schleier" aria-hidden="true"></span>
+      </div>
+
+    </div>
+
+    <div class="detail" data-ui role="group" aria-label="Termin Tom Meier, Demo-Daten">
+      <div class="detail-kopf">
+        <strong>Tom Meier</strong>
+        <span>Mi., 11.11.2026 · 11:00–15:00</span>
+        <span>Kaja Lindner · Platz 3 · Rosen-Ranke</span>
+      </div>
+      <dl class="detail-liste">
+        <div><dt>Status</dt><dd><span class="wechsel"><span class="dreh"><span class="chip orange vorher">Reserviert</span><span class="pfeil-zw" aria-hidden="true">→</span><span class="chip grau nachher">Bestätigt</span></span></span></dd></div>
+        <div><dt>Anzahlung 100 €</dt><dd><span class="wechsel"><span class="dreh"><span class="chip orange vorher">Anzahlung offen</span><span class="pfeil-zw" aria-hidden="true">→</span><span class="chip gruen nachher">Anzahlung bezahlt</span></span></span></dd></div>
+        <div><dt>Einwilligung</dt><dd><span class="wechsel"><span class="dreh"><span class="chip rot vorher">Einwilligung fehlt</span><span class="pfeil-zw" aria-hidden="true">→</span><span class="chip gruen nachher">Einwilligung vollständig</span></span></span></dd></div>
+      </dl>
+      <div class="detail-fuss">
+        <svg class="stempel" viewBox="2 0 116 116" aria-hidden="true">
+    <rect x="10" y="18" width="100" height="92" rx="22" fill="#121214" stroke="#c9a24f" stroke-width="5"/>
+    <rect x="32" y="6" width="9" height="24" rx="4.5" fill="#d8b46a"/>
+    <rect x="79" y="6" width="9" height="24" rx="4.5" fill="#d8b46a"/>
+    <path class="check-zug" pathLength="80" d="M34 77 L51 93 L88 56" fill="none" stroke="#e2bf6f" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    <path class="nadel" d="M88 56 L99 45" fill="none" stroke="#e2bf6f" stroke-width="3.5" stroke-linecap="round"/>
+    <circle class="nadel" cx="101.5" cy="42.5" r="3.2" fill="#e2bf6f"/>
+  </svg>
+        <p>Bezahlt und unterschrieben. Der Termin steht.</p>
+      </div>
+    </div>
+
+    <p class="huelle szene-fazit">Grün heißt: bezahlt und unterschrieben. Was fehlt, siehst du, bevor der Kunde im Studio steht.</p>
+  </div>
+</section>
+
+<!-- Problem -->
+<section class="abschnitt dunkel problem" aria-labelledby="h-problem">
+  <div class="huelle">
+    <div>
+      <h2 id="h-problem">Fünf Apps, ein Buch, ein Ordner.</h2>
+      <p class="problem-satz">Und am Ende fehlt trotzdem die Anzahlung.</p>
+    </div>
+    <div>
+      <ul class="problem-liste">
+        <li><p>Anzahlung da? Mal eben in PayPal nachschauen.</p><span class="wechsel"><span class="dreh"><span class="chip orange vorher">Anzahlung offen</span><span class="pfeil-zw" aria-hidden="true">→</span><span class="chip gruen nachher">Anzahlung bezahlt</span></span></span></li>
+        <li><p>Die Einwilligung liegt im Ordner unter dem Tresen.</p><span class="wechsel"><span class="dreh"><span class="chip rot vorher">Einwilligung fehlt</span><span class="pfeil-zw" aria-hidden="true">→</span><span class="chip gruen nachher">Einwilligung vollständig</span></span></span></li>
+        <li><p>Kommt der Kunde morgen? Keiner weiß es genau.</p><span class="wechsel"><span class="dreh"><span class="chip rot vorher">Keine Antwort</span><span class="pfeil-zw" aria-hidden="true">→</span><span class="chip gruen nachher">Kommt</span></span></span></li>
+      </ul>
+      <p class="problem-schluss">Im Tattookalender hängt das alles am Termin. <strong>Rot und Orange zeigen dir, was noch fehlt.</strong> Grün heißt: erledigt.</p>
+    </div>
+  </div>
+</section>
+
+<!-- So läuft es -->
+<section class="abschnitt ablauf" id="ablauf" aria-labelledby="h-ablauf">
+  <div class="huelle">
+    <div class="ablauf-kopf">
+      <h2 id="h-ablauf">Von der Anfrage bis zum Stuhl.</h2>
+      <p>Ein Termin, vier Zustände. Alle Bilder sind echte Bildschirme aus der Demo, mit erfundenen Kunden.</p>
+    </div>
+    <ol class="schritte">
+      <li class="schritt">
+        <div class="schritt-text">
+          <h3>Die Anfrage landet auf einer Tafel.</h3>
+          <div class="schritt-chips"><span class="chip grau">Neu</span></div>
+          <p>Anfragen aus deinem Anfrageformular kommen mit Motiv in die Spalte „Neu“. Karte antippen, antworten oder direkt einen Termin anlegen.</p>
+        </div>
+        <div class="schritt-bild"><figure class="app-bild"><img src="assets/img/anfragen.webp" width="720" height="642" loading="lazy" decoding="async" alt="Anfragen-Tafel in der App: Spalte Neu mit Luca Lange, Portrait meines Hundes, und Jonas Wolf, Fineline Blume"></figure></div>
+      </li>
+      <li class="schritt">
+        <div class="schritt-text">
+          <h3>Der Termin ist reserviert, mit Frist.</h3>
+          <div class="schritt-chips"><span class="chip orange">Reserviert</span><span class="chip orange">Anzahlung offen</span><span class="chip rot">Einwilligung fehlt</span></div>
+          <p>Artist, Platz, Motiv und Preis stehen drin. Aus dem Termin forderst du die Anzahlung per Bezahllink an. Läuft die Frist ab, steht das bei deinen Aufgaben.</p>
+        </div>
+        <div class="schritt-bild"><figure class="app-bild"><img src="assets/img/termin-offen.webp" width="720" height="770" loading="lazy" decoding="async" alt="Termin Tom Meier am Handy: Reserviert, Anzahlung offen, Einwilligung fehlt, reserviert bis Dienstag 15 Uhr"></figure></div>
+      </li>
+      <li class="schritt">
+        <div class="schritt-text">
+          <h3>Der Kunde unterschreibt am eigenen Handy.</h3>
+          <div class="schritt-chips"><span class="chip rot">Einwilligung fehlt</span></div>
+          <p>Du schickst den Link. Er prüft seine Daten, beantwortet die Gesundheitsfragen und unterschreibt mit dem Finger. Danach wird die Einwilligung nicht mehr verändert.</p>
+          <p><strong>Ohne Einwilligung kein Check-in:</strong> Fehlt die Unterschrift, bleibt der Check-in gesperrt, bis der Kunde unterschrieben hat oder die Studioleitung übersteuert.</p>
+        </div>
+        <div class="schritt-bild"><figure class="app-bild"><img src="assets/img/unterschrift.webp" width="720" height="682" loading="lazy" decoding="async" alt="Einwilligungsformular am Handy: Name Tom Meier und Unterschrift mit dem Finger"></figure></div>
+      </li>
+      <li class="schritt">
+        <div class="schritt-text">
+          <h3>Bezahlt und unterschrieben. Der Termin steht.</h3>
+          <div class="schritt-chips"><span class="chip grau">Bestätigt</span><span class="chip gruen">Anzahlung bezahlt</span><span class="chip gruen">Einwilligung vollständig</span></div>
+          <p>Die Anzahlung läuft über dein eigenes Stripe-Konto, das Geld geht direkt an dich. Wir nehmen 0 % Provision. Im Kalender sieht dein Team, dass alles da ist.</p>
+        </div>
+        <div class="schritt-bild"><figure class="app-bild"><img src="assets/img/termin-bezahlt.webp" width="720" height="770" loading="lazy" decoding="async" alt="Termin Lina Krüger am Handy: Bestätigt, Anzahlung bezahlt, Einwilligung vollständig, Kommt"></figure></div>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<!-- Funktionen -->
+<section class="abschnitt funktionen" id="funktionen" aria-labelledby="h-funktionen">
+  <div class="huelle">
+    <h2 id="h-funktionen">Was jeden Tag sonst noch anfällt.</h2>
+    <div class="funktionen-bild">
+      <figure class="app-bild mobil"><img src="assets/img/heute.webp" width="720" height="354" loading="lazy" decoding="async" alt="Ansicht Heute in der App: Bitte prüfen, 4 Termine morgen ohne Einwilligung, 12 Anfragen länger als 12 Stunden unbeantwortet, 2 Zahlungen überfällig"></figure>
+      <figure class="app-bild desk"><img src="assets/img/heute-desktop.webp" width="1600" height="906" loading="lazy" decoding="async" alt="Ansicht Heute am Computer: Bitte prüfen, Kennzahlen, Termine heute mit Status, Aufgaben und offene Zahlungen"></figure>
+    </div>
+    <dl class="funktionen-liste">
+      <div><dt>Heute-Ansicht für Inhaber</dt><dd>Ein Blick am Morgen: Termine ohne Einwilligung, offene Anfragen, überfällige Zahlungen.</dd></div>
+      <div><dt>Kalender je Artist und Platz</dt><dd>Tag, Woche, Monat, Liste und eine Ansicht fürs Handy. Kein Platz wird doppelt belegt.</dd></div>
+      <div><dt>Online-Buchung für Beratungen</dt><dd>Deine Buchungsseite mit freien Zeiten, auf Wunsch mit Ausfallgebühr per Häkchen.</dd></div>
+      <div><dt>Kundenkartei</dt><dd>Fotos, Verlauf und Notizen. Doppelte Kunden erkennt das System und führt sie auf Wunsch zusammen.</dd></div>
+      <div><dt>WhatsApp-Chat fürs Team</dt><dd>Ein gemeinsamer Chat mit deiner Nummer, aus dem du Termine anlegst und Bezahllinks schickst. Ab Kalender + WhatsApp.</dd></div>
+    </dl>
+  </div>
+</section>
+
+<!-- Preise. Preise Stand Entwurf 09.11.2026: noch nicht von Domenic entschieden, vor Livegang bestätigen lassen. -->
+<section class="abschnitt preise" id="preise" aria-labelledby="h-preise">
+  <div class="huelle">
+    <h2 id="h-preise">Was es im Monat kostet.</h2>
+    <p class="aktion"><b>Bis 31.12.2026:</b> erster Monat gratis (Karte nötig)</p>
+    <div class="pakete">
+      <section class="paket p1" aria-labelledby="p1">
+        <div class="paket-kopf"><h3 id="p1">Kalender</h3>
+        <p class="paket-preis"><b>69 €</b><span>netto im Monat</span></p></div>
+        <ul>
+          <li>Kalender je Artist und Platz</li>
+          <li>Online-Buchung für Beratungen</li>
+          <li>Kundenkartei</li>
+          <li>Einwilligung mit Unterschrift am Handy</li>
+          <li>Anzahlung per Bezahllink über dein Stripe-Konto</li>
+        </ul>
+        <a class="knopf rahmen" href="https://wa.me/491624502375?text=Hallo%2C%20ich%20interessiere%20mich%20f%C3%BCr%20das%20Paket%20Kalender%20vom%20Tattookalender.%20Mein%20Studio%3A%20" rel="noopener">Paket anfragen<span class="nur-sr">: Kalender</span></a>
+      </section>
+      <section class="paket p2" aria-labelledby="p2">
+        <div class="paket-kopf"><h3 id="p2">Kalender + WhatsApp</h3>
+        <p class="paket-preis"><b>149 €</b><span>netto im Monat</span></p></div>
+        <p class="paket-einr">+ 249 € Einrichtung, einmalig</p>
+        <ul>
+          <li>Alles aus Kalender</li>
+          <li>WhatsApp-Chat fürs Team mit deiner Nummer</li>
+          <li>Erinnerungen und Bezahllinks per WhatsApp</li>
+        </ul>
+        <p class="paket-notiz">Der Chat startet, sobald Meta deine Nummer geprüft hat.</p>
+        <a class="knopf rahmen" href="https://wa.me/491624502375?text=Hallo%2C%20ich%20interessiere%20mich%20f%C3%BCr%20das%20Paket%20Kalender%20%2B%20WhatsApp%20vom%20Tattookalender.%20Mein%20Studio%3A%20" rel="noopener">Paket anfragen<span class="nur-sr">: Kalender + WhatsApp</span></a>
+      </section>
+      <section class="paket p3" aria-labelledby="p3">
+        <div class="paket-kopf"><h3 id="p3">Studio komplett</h3>
+        <p class="paket-preis"><b>199 €</b><span>netto im Monat</span></p></div>
+        <p class="paket-einr">+ 249 € Einrichtung, einmalig</p>
+        <ul>
+          <li>Alles aus Kalender + WhatsApp</li>
+          <li>Kasse mit Kassenbuch und Tagesabschluss</li>
+          <li>Gutscheine am Tresen verkaufen</li>
+        </ul>
+        <p class="paket-notiz">Eine TSE ist nicht automatisch eingerichtet. Ob und wie, klären wir vor dem Start.</p>
+        <a class="knopf rahmen" href="https://wa.me/491624502375?text=Hallo%2C%20ich%20interessiere%20mich%20f%C3%BCr%20das%20Paket%20Studio%20komplett%20vom%20Tattookalender.%20Mein%20Studio%3A%20" rel="noopener">Paket anfragen<span class="nur-sr">: Studio komplett</span></a>
+      </section>
+      <section class="paket p4" aria-labelledby="p4">
+        <div class="paket-kopf"><h3 id="p4">Mit Werbung für neue Kunden</h3></div>
+        <p>Das Studio-System plus Werbung für dein Studio. Die Anfragen landen direkt im Tattookalender. Umfang und Preis besprechen wir im Beratungsgespräch, das Werbebudget zahlst du direkt an Meta.</p>
+        <a class="knopf" href="https://wa.me/491624502375?text=Hallo%2C%20ich%20m%C3%B6chte%20eine%20Beratung%20zum%20Tattookalender%20mit%20Werbung%20f%C3%BCr%20mein%20Studio.%20Mein%20Studio%3A%20" rel="noopener">Beratung per WhatsApp</a>
+      </section>
+    </div>
+    <p class="preise-fuss">Alle Preise netto zzgl. USt., nur für Unternehmen. Jedes Paket: ein Standort, bis 5 Artists, beliebig viele Logins. Für Anzahlungen nimmt Stripe seine eigene Gebühr, wir keine Provision.</p>
+  </div>
+</section>
+
+<!-- Fragen -->
+<section class="abschnitt fragen" id="fragen" aria-labelledby="h-fragen">
+  <div class="huelle">
+    <h2 id="h-fragen">Was Inhaber fragen.</h2>
+    <div class="fragen-liste">
+      <details>
+        <summary>Ihr seid neu. Warum soll ich euch vertrauen?</summary>
+        <div><p>Als Produkt für andere Studios ist der Tattookalender neu. Deshalb zeigen wir dir keine Kundenstimmen, die es noch nicht gibt. Prüf es selbst: Öffne die Demo ohne Anmeldung und nutze bis 31.12.2026 den ersten Monat gratis. Wer hinter dem Tattookalender steht, steht im Impressum.</p></div>
+      </details>
+      <details>
+        <summary>Verdient ihr an meinen Anzahlungen mit?</summary>
+        <div><p>Nein, 0 % Provision. Anzahlungen laufen über dein eigenes Konto beim Zahlungsdienst Stripe, das Geld geht direkt an dich. Stripe berechnet seine übliche Gebühr selbst und zieht sie von der Auszahlung ab.</p></div>
+      </details>
+      <details>
+        <summary>Wie funktioniert der Gratismonat?</summary>
+        <div><p>Bis 31.12.2026 ist der erste Monat gratis. Du hinterlegst beim Abschluss eine Karte. Abgebucht wird erst nach dem Gratismonat, wenn du nicht vorher kündigst.</p></div>
+      </details>
+      <details>
+        <summary>Wann läuft der WhatsApp-Chat?</summary>
+        <div><p>Den Chat richten wir gemeinsam mit dir ein. Er startet, wenn Meta deine Nummer geprüft und freigegeben hat; einen Termin dafür können wir nicht zusagen. Bis dahin arbeitest du mit Kalender, Online-Buchung und Erinnerungen per E-Mail. Nachrichten aus Instagram oder Facebook kommen nicht in den Chat.</p></div>
+      </details>
+      <details>
+        <summary>Wer sieht die Gesundheitsangaben aus der Einwilligung?</summary>
+        <div><p>Nur Inhaber, Studioleitung und der Artist des jeweiligen Termins. Jeder Abruf wird protokolliert. Die Rezeption sieht nur, ob die Einwilligung vorliegt. Nach der Unterschrift wird die Einwilligung nicht mehr verändert.</p></div>
+      </details>
+      <details>
+        <summary>Kann ich aus meinem alten Tool umziehen?</summary>
+        <div><p>Ja. Wir übernehmen Kunden und künftige Termine, zum Beispiel aus Planity, Shore, Treatwell, Google Kalender oder Excel. Erst ein Probelauf, dann wird eingespielt, ohne Nachrichten an deine Kunden. Vergangene Termine, Rechnungen und meist auch Einwilligungen ziehen nicht mit.</p></div>
+      </details>
+      <details>
+        <summary>Wie lange bin ich gebunden?</summary>
+        <div><p>Bei monatlicher Zahlung kündigst du zum Ende des Abrechnungsmonats, jederzeit selbst unter „Abo verwalten“. Die Einzelheiten stehen in den AGB.</p></div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- Abschluss -->
+<section class="abschnitt dunkel schluss" id="demo" aria-labelledby="h-schluss">
+  <div class="huelle">
+    <svg class="schluss-zeichen" viewBox="2 0 116 116" aria-hidden="true">
+    <rect x="10" y="18" width="100" height="92" rx="22" fill="#121214" stroke="#c9a24f" stroke-width="5"/>
+    <rect x="32" y="6" width="9" height="24" rx="4.5" fill="#d8b46a"/>
+    <rect x="79" y="6" width="9" height="24" rx="4.5" fill="#d8b46a"/>
+    <path class="check-zug" pathLength="80" d="M34 77 L51 93 L88 56" fill="none" stroke="#e2bf6f" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    <path class="nadel" d="M88 56 L99 45" fill="none" stroke="#e2bf6f" stroke-width="3.5" stroke-linecap="round"/>
+    <circle class="nadel" cx="101.5" cy="42.5" r="3.2" fill="#e2bf6f"/>
+  </svg>
+    <h2 id="h-schluss">Klick dich durch den Mittwoch.</h2>
+    <p>Die Demo ist der echte Tattookalender mit Demo-Studio. Keine Anmeldung, keine Karte.</p>
+    <div class="schluss-aktion">
+      <a class="knopf gold" href="https://tattookalender-demo.netlify.app/demo" rel="noopener">Demo öffnen <svg aria-hidden="true"><use href="#i-pfeil"/></svg></a>
+      <a class="link-pfeil" href="https://wa.me/491624502375?text=Hallo%2C%20ich%20m%C3%B6chte%20eine%20Beratung%20zum%20Tattookalender%20f%C3%BCr%20mein%20Studio%20buchen.%20Mein%20Studio%3A%20" rel="noopener">Lieber reden: Beratung per WhatsApp</a>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="fuss">
+  <div class="huelle">
+    <img class="fuss-marke" src="assets/img/logo-dunkel.svg" alt="Tattookalender" width="625" height="107" loading="lazy">
+    <nav class="fuss-links" aria-label="Rechtliches und Konto">
+      <a href="/impressum">Impressum</a>
+      <a href="/datenschutz">Datenschutz</a>
+      <a href="/agb">AGB</a>
+      <a href="/avv">Auftragsverarbeitung</a>
+      <a href="/login">Login für Studios</a>
+      <a href="/abo">Abo verwalten und kündigen</a>
+    </nav>
+    <p>Software für Tattoostudios. Alle Bilder: echte Bildschirme aus der Demo mit erfundenen Kunden.</p>
+  </div>
+</footer>
+
+<div class="leiste" aria-hidden="true">
+  <p>Bis 31.12.2026: erster Monat gratis <span class="leiste-klein">(Karte nötig)</span></p>
+  <a class="knopf gold" href="https://tattookalender-demo.netlify.app/demo" rel="noopener" tabindex="-1">Demo öffnen</a>
+</div>
+</body>
+</html>
