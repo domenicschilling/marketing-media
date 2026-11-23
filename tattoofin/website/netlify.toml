@@ -75,10 +75,6 @@
   [headers.values]
     X-Robots-Tag = "noindex"
 [[headers]]
-  for = "/gutschein-kaufen.html"
-  [headers.values]
-    X-Robots-Tag = "noindex"
-[[headers]]
   for = "/zahlen/*"
   [headers.values]
     X-Robots-Tag = "noindex"
@@ -192,11 +188,22 @@
   from = "/zahlen/*"
   to = "/zahlen.html"
   status = 200
-# Gutschein-Shop eines Studios (23.11.2026, nur Tattoo Fashion Munich, siehe netlify/functions/_lib/gutschein-shop.mjs)
+# Gutschein-Shop (23.11.2026, Tattoo Fashion München + Landshut, siehe netlify/functions/_lib/gutschein-shop.mjs): statische Seiten je Stadt
+# public/gutschein-kaufen/<slug>.html (dev/gutschein-seiten.mjs), Netlify liefert /gutschein-kaufen/<slug> direkt aus, unbekannte → 404.
+# Alte Adressen der ersten Fassung leiten weiter.
 [[redirects]]
-  from = "/gutschein-kaufen/tattoo-fashion-munich"
-  to = "/gutschein-kaufen.html"
-  status = 200
+  from = "/gutschein-kaufen.html"
+  query = {s = ":s"}
+  to = "/gutschein-kaufen/:s"
+  status = 301
+[[redirects]]
+  from = "/gutschein-kaufen.html"
+  to = "/gutschein-kaufen/tattoo-fashion-munich"
+  status = 301
+[[redirects]]
+  from = "/gutschein-kaufen-datenschutz.html"
+  to = "/gutschein-kaufen/tattoo-fashion-munich-datenschutz"
+  status = 301
 # Studio-Dashboard (Web-App)
 [[redirects]]
   from = "/app"

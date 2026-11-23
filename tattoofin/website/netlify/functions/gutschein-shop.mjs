@@ -1,4 +1,4 @@
-// Öffentlicher Gutschein-Shop eines Studios (seit 23.11.2026, nur Tattoo Fashion Munich, siehe _lib/gutschein-shop.mjs)
+// Öffentlicher Gutschein-Shop eines Studios (seit 23.11.2026, Tattoo Fashion München und Landshut, siehe _lib/gutschein-shop.mjs)
 //   GET  /api/gutschein-shop?s=<slug>     Angebot, Stückzahlen, Bedingungen, Widerrufsbelehrung, Anbieter
 //   POST /api/gutschein-shop { s, auswahl: "nr1".."nr5" | "frei", betrag?, kunde, email, empfaenger?, nachricht?, inhaltOk }
 //        → { url } Stripe-Checkout (nur Karte inkl. Apple Pay / Google Pay, Kasse 30 Min.)
@@ -18,10 +18,11 @@ const NICHT_DA = "Diesen Gutschein-Shop gibt es nicht.";
 // Nur Vorschau-Site (eigener Speicher, Stripe-Simulation): Beispiel-Studio mit den echten öffentlichen Studio-Angaben anlegen,
 // damit der Shop dort ohne Anmeldung getestet werden kann. Auf der echten Site nie.
 async function vorschauStudio(slug) {
-  if (!CFG.vorschau || !SHOPS[slug]) return null;
+  const c = SHOPS[slug];
+  if (!CFG.vorschau || !c) return null;
   const acct = await stripe("POST", "/accounts", { type: "standard", email: "vorschau@example.com", metadata: { vorschau: "gutschein-shop" } });
-  return saveStudio({ id: "st_vorschau_" + slug.replace(/[^a-z0-9]/g, "").slice(0, 20), firma: "Tattoo Fashion Munich", slug, email: "vorschau-studio@example.com", inhaber: "Vorschau",
-    strasse: "Landshuter Allee 42", plz: "80637", ort: "München", modell: "kauf", zahlart: "geschenk", status: "live", createdAt: now(), vorschauBeispiel: true,
+  return saveStudio({ id: "st_vorschau_" + slug.replace(/[^a-z0-9]/g, "").slice(0, 20), firma: c.seite.firma, slug, email: "vorschau-studio@example.com", inhaber: "Vorschau",
+    strasse: c.anbieter.strasse, plz: c.anbieter.plz, ort: c.anbieter.ort, modell: "kauf", zahlart: "geschenk", status: "live", createdAt: now(), vorschauBeispiel: true,
     stripe: { accountId: acct.id, chargesEnabled: true, payoutsEnabled: true, detailsSubmitted: true, kontoTyp: "standard" } });
 }
 
@@ -116,9 +117,12 @@ export default handler(async (req, context) => {
   try {
     const url = await checkoutFuer(s, z, {
       nurKarte: true,
-      // Kasse im Look der Shop-Seite (TF-Logo, Schwarz, Gold). Lehnt Stripe das ab, läuft die Kasse ohne (checkoutFuer).
-      branding: { display_name: "Tattoo Fashion München", logo: { type: "url", url: `${CFG.siteUrl}/assets/gs-shop/tfm/logo.png` }, background_color: "#0B0B0B", button_color: "#C8A35A", border_style: "pill" },
+      // Kasse im Look der Shop-Seite (TF-Logo der Stadt, Schwarz, Gold). Lehnt Stripe das ab, läuft die Kasse ohne (checkoutFuer).
+      branding: { display_name: c.seite?.name || s.firma, logo: { type: "url", url: `${CFG.siteUrl}${c.marke.logoPfad}` }, background_color: "#0B0B0B", button_color: "#C8A35A", border_style: "pill" },
       extra: {
+        // Möglichst einfache Kasse (Domenic 23.11.2026): keine Pflicht-Rechnungsadresse, keine Telefonnummer
+        billing_address_collection: "auto",
+        phone_number_collection: { enabled: false },
         // Kasse genau so lange offen wie die Reservierung (Stripe: mindestens 30 Minuten). Danach checkout.session.expired → Einheit frei
         expires_at: Math.floor(jetzt().getTime() / 1000) + KASSE_MINUTEN * 60 + 30,
         submit_type: "pay",

@@ -1,0 +1,3 @@
+Bilder: echte Arbeiten aus dem Studio Tattoo Fashion Landshut (aus landingpages/tf-landshut-wunsch, ohne erkennbare Personen ausgewählt 23.11.2026).
+Logo: TF-Zeichen aus dem Münchner Logo, darunter „LANDSHUT“ in Raleway (SIL Open Font License 1.1) wie „MUNICH“.
+Schriften: siehe ../schrift/LIZENZ.txt

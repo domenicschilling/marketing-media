@@ -1,6 +1,19 @@
-# Gutschein-Shop Tattoo Fashion München – Bericht (23.11.2026)
+# Gutschein-Shop Tattoo Fashion München + Landshut – Bericht (23.11.2026)
 
-## LIVE seit 23.11.2026 (Domenics OK im Chat)
+## Runde 23.11. abends: Seite perfekt, Landshut dazu, WhatsApp-Vorschau neu (Entwurf, NICHT live)
+
+- **Entwürfe:** https://tfm-gutschein-design--tattoofin.netlify.app/gutschein-kaufen/tattoo-fashion-munich und …/tattoo-fashion-landshut (läuft mit echtem Stripe und echten Daten: dort keine Kasse öffnen).
+- **Kauf in 2 Schritten:** Gutschein wählen → Name + E-Mail (Empfänger und Gruß eingeklappt, freiwillig) → direkt Stripe. Kein Häkchen, keine Übersicht. Tipp auf eine Gutschein-Karte springt gleich zu Schritt 2. Stripe fragt keine Rechnungsadresse (nur wenn Stripe sie selbst braucht) und keine Telefonnummer mehr.
+- **Keine Rechtstexte auf der Seite:** Bedingungen, Widerruf, Verkäufer stehen auf eigenen schlichten Seiten im gleichen Look (Fuß-Links Impressum · Datenschutz · Widerruf · Gutscheinbedingungen, je Stadt). Im Kauf-Fenster unter dem Knopf eine kleine Zeile mit „Bedingungen · Widerruf“. Die Gutschein-Mail enthält weiter Bedingungen + Widerrufsbelehrung. Auf der Seite bleibt nur „Gut zu wissen“: voller Wert bis 31.03.2027, in Teilen einlösbar, sofort per PDF, Motiv frei wählbar.
+- **Je Stadt eine eigene Seite** aus einer Vorlage: `dev/gutschein/seite.html` + `SHOPS[…].seite` in `netlify/functions/_lib/gutschein-shop.mjs` → `node dev/gutschein-seiten.mjs [--og]` schreibt `public/gutschein-kaufen/<slug>.html` (+ `-impressum`, `-datenschutz`, `-widerruf`, `-bedingungen`). Netlify liefert sie ohne Umleitung, unbekannte Städte → 404. Alte Adressen `/gutschein-kaufen.html` und `/gutschein-kaufen-datenschutz.html` leiten weiter (301).
+- **Landshut:** Studio `st_ybbij1eOoS9l`, gleiches Angebot (Nr. 1–5, 21 Stück, Wertgutschein 50–2.000 €), Stückzahl getrennt von München, Verkäufer Tattoo Fashion Landshut (Inhaber Andy Neelsen, Neustadt 502, neelsen.andy@gmail.com), Pixel 1324284036136356, 4,8 Sterne / 167 Bewertungen (Stand 22.11.), Logo mit „LANDSHUT“ (gleiche Schrift wie „MUNICH“), 12 echte Arbeiten ohne erkennbare Personen, Kasse/PDF/Mail im Landshut-Look. `freigegeben: true` wie München – live geht es erst mit dem Prod-Deploy (dein OK).
+- **WhatsApp-/Facebook-Vorschau neu je Stadt:** `public/assets/gs-shop/<tfm|tfla>/og-weihnachten.jpg` (1200×630). Die Mitte (Quadrat) funktioniert allein: Logo, „GUTSCHEINE UNTER WERT“, „NUR BIS 24.12., 16 UHR“ – lesbar auch als kleines Quadrat. Links/rechts in der großen Vorschau: Karten „500 € – du zahlst 375 €“ und „2.000 € – du zahlst 1.500 €“, goldene Schneeflocken. Titel „Weihnachts-Gutscheine unter Wert“, Text „Tattoo Fashion <Stadt>: z. B. 500 € Gutschein für 375 €. Nur 21 Stück, bis 24.12., 16 Uhr.“ Bild-Adresse mit Prüfsumme (`?v=…`), damit WhatsApp/Facebook ein neues Bild laden.
+- **Hero:** Logo im Fluss über dem Text (wird auf kleinen Handys kleiner, nie über dem Text), quer: Logo links, Text rechts. Abnahme 12/12 Geräte je Stadt.
+- **e2e-Abbruch:** Kein Fehler im Code, sondern Zeitnot: Der Mac lief mit Last 600–900 (viele Testläufe/Chats gleichzeitig), feste Wartezeiten waren zu knapp (Abbrüche an wechselnden Stellen: Firmen-Zahlung, Zahlungslink, untere Leiste). Behoben in `dev/e2e.mjs`: Standard-Wartezeit 60 s statt 30 s, Rückweg nach der Firmen-Zahlung bis 30 s, untere Leiste bis 3 s. Danach 410/0 unter voller Last.
+- **Geprüft:** `dev/gutschein-shop-test.mjs` 109/0 (neu u. a.: Landshut-Angebot, Stückzahl getrennt, 1 pro Person je Studio, Kasse/Mail/PDF Landshut, og-Tags + Bildmaße + Prüfsumme je Stadt, keine Rechtstexte im Inhalt, Rechtsseiten je Stadt, 2-Schritt-Kauf, Enter startet Kasse, Hero 320×460 bis quer), `dev/e2e.mjs` 410/0, Abnahme beider Entwurfs-Adressen mit `--soll "500 €"` bestanden (12/12 Geräte, axe ok). WhatsApp-Nachbau: `whatsapp-vorschau/whatsapp-<slug>.png`.
+
+
+## LIVE seit 23.11.2026 (Domenics OK im Chat) – erste Fassung, nur München
 
 - **Adresse:** https://tattoofin.de/gutschein-kaufen/tattoo-fashion-munich
 - **Deploy:** `6b048ffb197b079eb3620c2d` (Branch `claude/tfm-gutschein-shop-live` = Live-Stand `claude/tattoofin-keine-anzahlung` b603506 + Shop). **Rücksprung:** `6b048cfce6ae82c890f2f60c`.

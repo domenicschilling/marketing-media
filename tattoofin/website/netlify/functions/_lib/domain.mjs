@@ -325,9 +325,11 @@ export async function checkoutFuer(studio, z, { nurKarte = false, extra = null, 
     metadata: meta,
     success_url: `${CFG.siteUrl}/bezahlt.html?z=${z.id}`,
     cancel_url: `${CFG.siteUrl}/zahlung.html?z=${z.id}&abbruch=1`,
-    // Gutschein-Shop: feste Kassen-Dauer (Reservierung der Stückzahl), Rückkehr in den Shop, Knopf „Bezahlen“
+    // Gutschein-Shop: feste Kassen-Dauer (Reservierung der Stückzahl), Rückkehr in den Shop, Knopf „Bezahlen“, einfache Kasse
     ...(extra || {}),
   };
+  // Ohne Pflicht-Rechnungsadresse (Gutschein-Shop) nur den Namen beim Kunden speichern, keine Adresse
+  if (params.customer && params.billing_address_collection !== "required") params.customer_update = { name: "auto" };
   // Logo/Farben des Studios im Checkout (falls im Admin hinterlegt). Lehnt Stripe das Branding ab,
   // läuft die Zahlung ohne – die Kasse darf daran nie scheitern.
   const branding = brandingWunsch || checkoutBranding(studio);

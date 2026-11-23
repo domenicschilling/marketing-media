@@ -1,4 +1,4 @@
-// Gutschein-Onlineshop (seit 23.11.2026, Vorschlag, nur für Tattoo Fashion Munich – keine Funktion für alle Studios).
+// Gutschein-Onlineshop (seit 23.11.2026, nur für Tattoo Fashion München und Landshut – keine Funktion für alle Studios).
 // Sitzt im bestehenden Gutschein-System (_lib/gutschein.mjs): Eine Shop-Bestellung ist eine Zahlung mit art „gutschein“,
 // nach der Zahlung entstehen Code, PDF und Mail wie bei jedem Gutschein. Neu sind:
 //   • Wert ≠ bezahlter Betrag (Aktions-Gutscheine): z.betragCent = bezahlter Betrag (alle Geldflüsse, Gebühren, Erstattungen),
@@ -6,7 +6,7 @@
 //   • Bonus-Frist: Der Bonus gilt bis bonusBis (31.03.2027), danach wird der bezahlte Betrag weiter angerechnet, bis zum Ende der
 //     gesetzlichen Frist (gueltigBis = 31.12. des dritten Folgejahres, §§ 195, 199 BGB). Der bezahlte Betrag verfällt nie vorher.
 //   • Stückzahl je Aktions-Gutschein, serverseitig sicher gegen Doppelverkauf (Reservierungs-Tickets, siehe unten).
-//   • Öffentliche Shop-Seite /gutschein-kaufen/<studio> ohne vorher erstellten Zahlungslink.
+//   • Öffentliche Shop-Seite /gutschein-kaufen/<studio> ohne vorher erstellten Zahlungslink (statisch je Stadt, dev/gutschein-seiten.mjs).
 // Klarna ist für Gutscheine ausgeschlossen (Klarna-Regeln), bezahlt wird nur per Karte (inkl. Apple Pay / Google Pay).
 // Aussteller und Verkäufer ist das Studio. Tattoofin stellt nur die Technik.
 //
@@ -21,38 +21,70 @@ import { gueltigBis } from "./gutschein.mjs";
 const berlinTag = (iso) => new Date(iso).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" });
 export const tagesende = (ymd) => [`${ymd}T22:59:59.000Z`, `${ymd}T21:59:59.000Z`].find((x) => berlinTag(x) === ymd);
 
-// Look des Studios für Mail und PDF der Shop-Gutscheine (TF: Schwarz/Gold, Logo aus public/assets/gs-shop/tfm/)
+// Look des Studios für Mail und PDF der Shop-Gutscheine (TF: Schwarz/Gold, Logo aus public/assets/gs-shop/<kuerzel>/)
 export const markeFuer = (c) => (c?.marke ? {
   ...c.marke, logo: `${CFG.siteUrl}${c.marke.logoPfad}`,
   fragen: c.anbieter ? `Fragen? Schreib ${c.anbieter.name.split(",")[0]}: ${c.anbieter.email}${c.anbieter.telefon ? " · " + c.anbieter.telefon : ""}. Technik und Zahlung: Tattoofin.` : null,
 } : null);
 
-// ---------- Angebot (Domenic-Entscheidung 23.11.2026) ----------
+// ---------- Angebot (Domenic-Entscheidung 23.11.2026, je Stadt gleich) ----------
+// Weihnachts-Aktion der Tattoo-Fashion-Studios: gleiches Angebot je Studio, Stückzahl getrennt je Studio (Tickets je studioId).
+const TF_WEIHNACHTEN = {
+  titel: "Weihnachts-Gutscheine",
+  // Nr. · Wert · Preis · Stück
+  aktionen: [
+    { id: "nr1", nr: 1, wertCent: 200000, preisCent: 150000, stueck: 1 },
+    { id: "nr2", nr: 2, wertCent: 150000, preisCent: 125000, stueck: 2 },
+    { id: "nr3", nr: 3, wertCent: 100000, preisCent: 75000, stueck: 2 },
+    { id: "nr4", nr: 4, wertCent: 50000, preisCent: 37500, stueck: 6 },
+    { id: "nr5", nr: 5, wertCent: 30000, preisCent: 20000, stueck: 10 },
+  ],
+  bonusBis: "2027-03-31",
+  // Verkaufszeitraum der Aktions-Gutscheine (Domenic 23.11.2026: Start sofort, Ende 24.12.2026 16 Uhr; Wertgutschein läuft weiter)
+  aktionAb: null,
+  aktionBis: "2026-12-24T16:00:00+01:00",
+  // Ein Aktions-Gutschein pro Käufer (E-Mail), Domenic 23.11.2026: beibehalten. null = ohne Grenze
+  aktionJeKaeufer: 1,
+  // Normaler Wertgutschein mit frei wählbarem Betrag (50–2.000 €, volle Euro), ganzjährig
+  frei: { minCent: 5000, maxCent: 200000, vorschlaege: [5000, 10000, 15000, 25000] },
+};
+const tfMarke = (kuerzel, alt) => ({ kopf: "#0B0B0B", logoPfad: `/assets/gs-shop/${kuerzel}/logo.png`, alt, knopf: "#C8A35A", knopfText: "#0B0B0B", titel: "#0B0B0B", band: "#0B0B0B", akzent: "#C8A35A", kasten: "#f6efe0" });
+
+// seite: Angaben für die statische Shop-Seite je Stadt (dev/gutschein-seiten.mjs → public/gutschein-kaufen/<slug>.html)
 export const SHOPS = {
   "tattoo-fashion-munich": {
     studioId: "st_nqoyv1Q2wj7F",
-    titel: "Weihnachts-Gutscheine",
-    marke: { kopf: "#0B0B0B", logoPfad: "/assets/gs-shop/tfm/logo.png", alt: "Tattoo Fashion München", knopf: "#C8A35A", knopfText: "#0B0B0B", titel: "#0B0B0B", band: "#0B0B0B", akzent: "#C8A35A", kasten: "#f6efe0" },
-    // Nr. · Wert · Preis · Stück
-    aktionen: [
-      { id: "nr1", nr: 1, wertCent: 200000, preisCent: 150000, stueck: 1 },
-      { id: "nr2", nr: 2, wertCent: 150000, preisCent: 125000, stueck: 2 },
-      { id: "nr3", nr: 3, wertCent: 100000, preisCent: 75000, stueck: 2 },
-      { id: "nr4", nr: 4, wertCent: 50000, preisCent: 37500, stueck: 6 },
-      { id: "nr5", nr: 5, wertCent: 30000, preisCent: 20000, stueck: 10 },
-    ],
-    bonusBis: "2027-03-31",
-    // Verkaufszeitraum der Aktions-Gutscheine (Domenic 23.11.2026: Start sofort, Ende 24.12.2026 16 Uhr; Wertgutschein läuft weiter)
-    aktionAb: null,
-    aktionBis: "2026-12-24T16:00:00+01:00",
-    // Ein Aktions-Gutschein pro Käufer (E-Mail), Domenic 23.11.2026: beibehalten. null = ohne Grenze
-    aktionJeKaeufer: 1,
-    // Normaler Wertgutschein mit frei wählbarem Betrag (Vorschlag 50–2.000 €, volle Euro), ganzjährig
-    frei: { minCent: 5000, maxCent: 200000, vorschlaege: [5000, 10000, 15000, 25000] },
+    ...TF_WEIHNACHTEN,
+    marke: tfMarke("tfm", "Tattoo Fashion München"),
     // Verkäufer laut Impressum (aus der Tattoofin-Anmeldung, Vertrag 2026-12 von Andy Neelsen unterschrieben; Einzelunternehmen,
     // keine USt-IdNr. hinterlegt). Ohne diese Angaben geht der Shop nicht live.
     anbieter: { name: "Tattoo Fashion Munich, Inhaber Andy Neelsen", rechtsform: "Einzelunternehmen", strasse: "Landshuter Allee 42", plz: "80637", ort: "München", email: "tattoofashion.munich@gmail.com", telefon: "+49 89 94403786" },
+    seite: {
+      kuerzel: "tfm", name: "Tattoo Fashion München", firma: "Tattoo Fashion Munich", stadt: "München",
+      telefon: "089 94403786", telefonLink: "+498994403786", whatsapp: "491626527442", instagram: "tattoofashion_munich",
+      // Google-Bewertungen: Stand 22.11.2026 (bei Änderung hier anpassen und Seiten neu erzeugen)
+      google: { sterne: "4,9", anzahl: 348, stand: "22.11.2026", suche: "Tattoo Fashion Munich, Landshuter Allee 42, 80637 München" },
+      zeiten: [["Montag bis Freitag", "10–18 Uhr"], ["Samstag", "10–16 Uhr"], ["Sonntag", "geschlossen"]],
+      pixel: "2379676156103158",
+      bilder: ["blackwork-eagle", "color-phoenix", "realismus-lion", "fineline-floral", "blackwork-skull", "color-palm", "realismus-owl", "blackwork-snake", "fineline-mandala", "realismus-cross", "color-snake-oranges", "blackwork-geoface"],
+    },
     // Domenic 23.11.2026: „mach alles fertig, dass alles läuft“ (Live-Gang nur mit seinem OK im Chat)
+    freigegeben: true,
+  },
+  "tattoo-fashion-landshut": {
+    studioId: "st_ybbij1eOoS9l",
+    ...TF_WEIHNACHTEN,
+    marke: tfMarke("tfla", "Tattoo Fashion Landshut"),
+    anbieter: { name: "Tattoo Fashion Landshut, Inhaber Andy Neelsen", rechtsform: "Einzelunternehmen", strasse: "Neustadt 502", plz: "84028", ort: "Landshut", email: "neelsen.andy@gmail.com", telefon: "+49 871 14210163" },
+    seite: {
+      kuerzel: "tfla", name: "Tattoo Fashion Landshut", firma: "Tattoo Fashion Landshut", stadt: "Landshut",
+      telefon: "0871 14210163", telefonLink: "+4987114210163", whatsapp: "491625642090", instagram: "tattoofashion_landshut",
+      google: { sterne: "4,8", anzahl: 167, stand: "22.11.2026", suche: "Tattoo Fashion Landshut, Neustadt 502, 84028 Landshut" },
+      zeiten: [["Montag bis Freitag", "10–18 Uhr"], ["Samstag", "10–16 Uhr"], ["Sonntag", "geschlossen"]],
+      pixel: "1324284036136356",
+      bilder: ["bulle", "mandala", "rabe-sanduhr", "schmetterling", "baum", "herzen", "rabe", "kirschblueten", "buddha", "mutter", "ruecken", "wade"],
+    },
+    // Domenic 23.11.2026: gleiche Aktion für Landshut (Live-Gang nur mit seinem OK im Chat)
     freigegeben: true,
   },
 };
@@ -195,8 +227,9 @@ export function bonusSatz(g, { kurz = false } = {}) {
     : `Bis ${datum(g.bonusBis)} löst du den vollen Wert von ${w} ein. Danach gilt der bezahlte Betrag von ${b}, einlösbar bis ${datum(g.gueltigBis)}.`;
 }
 
-export function bedingungen(s, c, kaufJahr = jetzt()) {
-  const bis = datum(gueltigBis(kaufJahr));
+// seite: true → Text für die Seite „Gutscheinbedingungen“ (ohne festes Kaufjahr; die Mail nennt das genaue Datum)
+export function bedingungen(s, c, kaufJahr = jetzt(), { seite = false } = {}) {
+  const bis = seite ? `zum 31.12. des dritten Jahres nach dem Kauf (bei Kauf ${kaufJahr.getFullYear()}: ${datum(gueltigBis(kaufJahr))})` : datum(gueltigBis(kaufJahr));
   const verkaeufer = c.anbieter?.name || s.firma;
   return [
     `Verkäufer und Aussteller der Gutscheine ist ${verkaeufer}. Tattoofin stellt nur die Technik für Verkauf und Zahlung bereit; bezahlt wird über Stripe.`,

@@ -55,6 +55,8 @@ const errors = [];
 async function neueSeite(opts = { viewport: { width: 1280, height: 900 } }) {
   const c = await browser.newContext(opts);
   const p = await c.newPage();
+  // Unter Last (viele Testläufe gleichzeitig auf dem Mac, 23.11.2026) reichten die 30 s Standard-Wartezeit nicht immer
+  p.setDefaultTimeout(60000);
   p.on("pageerror", (e) => errors.push(e.message));
   p.on("console", (m) => { if (m.type() === "error" && !/404|Failed to load resource/.test(m.text())) errors.push(m.text()); });
   p.on("dialog", (d) => d.accept(p._dialogAntwort || undefined));
@@ -185,8 +187,9 @@ try {
       const sicht = () => p.evaluate(() => { const l = document.getElementById("leiste"), cs = getComputedStyle(l), r = l.getBoundingClientRect(); return cs.display !== "none" && cs.visibility === "visible" && r.top < innerHeight - 4; });
       const anfang = await sicht();
       await p.evaluate(() => { const k = document.querySelector(".auftakt-knopf .knopf"); scrollTo(0, k.getBoundingClientRect().bottom + scrollY + 40); });
-      await p.waitForTimeout(600);
-      const danach = await sicht();
+      // bis 3 s warten (statt fest 600 ms): unter Last (parallele Läufe) kam die Leiste einmal etwas später (23.11.2026)
+      let danach = false;
+      for (let i = 0; i < (w < 900 ? 15 : 3) && !danach; i++) { await p.waitForTimeout(200); danach = await sicht(); }
       await p.context().close();
       if (anfang || (w < 900 && !danach)) fehler.push(`Leiste ${w}x${h}: beim Laden ${anfang ? "sichtbar" : "weg"}, nach dem Knopf ${danach ? "sichtbar" : "weg"}`);
     }
@@ -408,7 +411,8 @@ try {
     check(kundenE.length === 1 && sE2.stripe.customerId === sE.stripe.customerId && kundenE[0].address?.line1 === "Rechnungsweg 7" && kundenE[0].name === "Ink Einfach", "Erneutes Absenden: derselbe Stripe-Kunde, die Rechnungsadresse aus Stripe bleibt (keine leeren Felder geschickt)", JSON.stringify(kundenE.map((c) => c.address)));
     // Bezahlen „als Unternehmen“ (Rechnungsadresse + USt-IdNr. im Checkout) → Webhook übernimmt beides getrennt, nicht als Studio-Adresse
     await pE.click("#pay-firma");
-    await pE.waitForURL(/app\.html/, { timeout: 15000 });
+    // 30 s statt 15 s: Unter Last (mehrere Testläufe parallel) kam der Webhook-Rückweg einmal zu spät (Abbruch 23.11.2026)
+    await pE.waitForURL(/app\.html/, { timeout: 30000 });
     const sE3 = await storeMod.studioBy("email", "einfach@example.com");
     check(sE3.status === "einrichtung" && sE3.ustid === "DE123456789" && sE3.rechnungsadresse?.strasse === "Rechnungsweg 7" && sE3.rechnungsadresse?.ort === "Bamberg" && sE3.rechnungsname === "Ink Einfach GmbH" && !sE3.strasse, "Webhook: USt-IdNr. und Rechnungsadresse aus dem Checkout übernommen, Studio-Adresse NICHT aus der Rechnungsadresse", JSON.stringify({ u: sE3.ustid, r: sE3.rechnungsadresse, s: sE3.strasse }));
     const mE = mailsAn("domenicschilling@gmail.com").find((m) => m.subject.includes("Paket Monatlich") && m.subject.includes("Ink Einfach"));
