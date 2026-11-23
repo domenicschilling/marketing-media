@@ -187,8 +187,8 @@ export function bedingungen(s, c, kaufJahr = jetzt()) {
   return [
     `Verkäufer und Aussteller der Gutscheine ist ${verkaeufer}. Tattoofin stellt nur die Technik für Verkauf und Zahlung bereit; bezahlt wird über Stripe.`,
     `Die Gutscheine gelten für alle Leistungen bei ${s.firma}${s.strasse ? ", " + s.strasse + ", " + [s.plz, s.ort].filter(Boolean).join(" ") : ""}, zum Beispiel Tattoos und Piercings. Das Motiv sucht sich der Beschenkte selbst aus.`,
-    // Barauszahlung: Domenics Antwort 23.11. war nicht eindeutig → bis zur Klärung kein Satz dazu
-    "Du kannst einen Gutschein in Teilen einlösen, der Restwert bleibt auf dem Gutschein. Die Gutscheine sind nicht mit anderen Aktionen kombinierbar.",
+    // Domenic 23.11.2026: Teil-Einlösung ja, keine Barauszahlung, nicht kombinierbar
+    "Du kannst einen Gutschein in Teilen einlösen, der Restwert bleibt auf dem Gutschein. Eine Barauszahlung ist nicht möglich. Die Gutscheine sind nicht mit anderen Aktionen kombinierbar.",
     `Aktions-Gutscheine (Nr. 1 bis ${c.aktionen.length}): Du zahlst weniger, als der Gutschein wert ist. Der Unterschied ist ein Bonus. Den vollen Wert löst du bis ${datum(bonusBisIso(c))} ein. Danach verfällt nur der Bonus: Der bezahlte Betrag wird weiter voll angerechnet, bis ${bis}.`,
     `Jeder Aktions-Gutschein ist nur in der angegebenen Stückzahl verfügbar. Ist eine Nummer verkauft, gibt es sie nicht mehr.${c.aktionJeKaeufer ? ` Pro Person ${c.aktionJeKaeufer === 1 ? "ein Aktions-Gutschein" : "höchstens " + c.aktionJeKaeufer + " Aktions-Gutscheine"}.` : ""}${c.aktionBis ? ` Verkauf der Aktions-Gutscheine bis ${datum(aktionEndeIso(c))}${uhrzeit(aktionEndeIso(c))}, solange verfügbar.` : ""}`,
     `Wertgutschein mit eigenem Betrag: einlösbar bis ${bis}.`,

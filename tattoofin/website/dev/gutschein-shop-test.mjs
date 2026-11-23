@@ -65,7 +65,7 @@ check(shop.shopFuer({ id: "st_fremd", slug: "tattoo-fashion-munich" }, { test: f
 check(!shop.shopZustand(sEcht, { ...c0, freigegeben: false }, new Date(), { test: false }).offen, "Echte Site: ohne Domenics Freigabe zu");
 check(!shop.shopZustand(sEcht, { ...c0, freigegeben: true, anbieter: null }, new Date(), { test: false }).offen, "Echte Site: freigegeben, aber ohne Anbieter-Angaben (Impressum) weiter zu");
 check(shop.shopZustand(sEcht, c0, new Date(), { test: false }).offen && c0.freigegeben && /Andy Neelsen/.test(c0.anbieter.name), "Echte Site: freigegeben + Verkäufer Andy Neelsen eingetragen → offen");
-check(d.shop.bedingungen.some((t) => /in Teilen einlösen/.test(t) && /nicht mit anderen Aktionen kombinierbar/.test(t)) && d.shop.bedingungen.some((t) => /Piercings/.test(t)) && d.shop.bedingungen.some((t) => /24\.12\.2026 um 16 Uhr/.test(t)), "Bedingungen: Teil-Einlösung, nicht kombinierbar, inkl. Piercing, Aktion bis 24.12.2026 16 Uhr");
+check(d.shop.bedingungen.some((t) => /in Teilen einlösen/.test(t) && /Barauszahlung ist nicht möglich/.test(t) && /nicht mit anderen Aktionen kombinierbar/.test(t)) && d.shop.bedingungen.some((t) => /Piercings/.test(t)) && d.shop.bedingungen.some((t) => /24\.12\.2026 um 16 Uhr/.test(t)), "Bedingungen: Teil-Einlösung, nicht kombinierbar, inkl. Piercing, Aktion bis 24.12.2026 16 Uhr");
 
 console.log("Kauf Nr. 4 (Wert 500 €, Preis 375 €)");
 let r = await kauf("nr4", "kim@example.com", { empfaenger: "Lena", nachricht: "Frohe Weihnachten!" });
