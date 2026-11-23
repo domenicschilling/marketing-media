@@ -713,13 +713,24 @@ export async function monatsabrechnung(monat, { dryRun = false } = {}) {
 // Nie an Test-/Demo-Anmeldungen, App-Entwürfe (Apple 3.1.3: kein Link zur Web-Anmeldung) und das geschlossene Paket Risikofrei.
 export const istTestAnmeldung = (s) => Boolean(s?.demo || s?.sandbox || /\btest\b/i.test(s?.firma || "") || /\btest\b/i.test(s?.quelle?.source || "") ||
   /@(tattoofin\.de|[a-z0-9-]+\.test|example\.(com|org|net))$/i.test(String(s?.email || "").trim()));
+// Hat dieselbe Person schon ein Studio abgeschlossen (andere E-Mail, gleiche Handynummer oder gleicher Studio-Name)?
+// Dann keine „Anmeldung abgebrochen“-Mails an den alten Entwurf (Fall Jasmina 19.11.2026: zwei Entwürfe, einer abgeschlossen).
+const telNorm = (t) => String(t || "").replace(/\D/g, "").replace(/^(00)?49/, "0").replace(/^0+/, "");
+const nameNorm = (n) => String(n || "").toLowerCase().replace(/[^a-z0-9äöüß]/g, "");
+export function schonAbgeschlossen(s, alle) {
+  const tel = telNorm(s.telefon || s.studioTelefon), name = nameNorm(s.firma), mail = normEmail(s.email);
+  return alle.some((x) => x.id !== s.id && !x.demo && ["einrichtung", "live", "zahlung_offen", "gekuendigt"].includes(x.status) &&
+    ((tel.length >= 6 && telNorm(x.telefon || x.studioTelefon) === tel) || (name.length >= 3 && nameNorm(x.firma) === name) || (mail && normEmail(x.email) === mail)));
+}
 export async function anmeldungenNachfassen(jetztD = new Date(), { abStunden = 2, bisTage = 7 } = {}) {
   const out = [];
   // Stunde in deutscher Zeit (formatToParts: „de-DE“ liefert sonst „23 Uhr“ → keine Zahl)
   const stunde = Number(new Intl.DateTimeFormat("en-US", { timeZone: "Europe/Berlin", hour: "numeric", hourCycle: "h23" }).formatToParts(jetztD).find((x) => x.type === "hour")?.value);
   if (!Number.isFinite(stunde) || stunde < 8 || stunde >= 21) return out;
-  for (const s of await allStudios()) {
+  const alleStudios = await allStudios();
+  for (const s of alleStudios) {
     if (!["entwurf", "abgebrochen"].includes(s.status) || s.nachgefasstAm || istApple(s) || s.paket === "risikofrei" || istTestAnmeldung(s) || !s.email) continue;
+    if (schonAbgeschlossen(s, alleStudios)) continue;
     const seitStd = (jetztD.getTime() - Date.parse(s.vertrag?.akzeptiertAm || s.createdAt)) / 3600e3;
     if (!(seitStd >= abStunden && seitStd <= bisTage * 24)) continue;
     s.nachgefasstAm = now(); s.nachgefasstAuto = true;
@@ -770,7 +781,8 @@ export async function taeglicheJobs(heute = new Date()) {
   try { out.push(...(await appleAufraeumen())); } catch (e) { out.push(["apple-aufraeumen-fehler", e.message]); }
   // QR-Aufsteller aus Holz (eingestellt): Logos ohne Bestellung löschen
   try { out.push(...(await aufstellerLogosAufraeumen())); } catch (e) { out.push(["aufsteller-logos-aufraeumen-fehler", e.message]); }
-  for (const s of await allStudios()) {
+  const studiosFuerAbgleich = await allStudios();
+  for (const s of studiosFuerAbgleich) {
     if (s.demo) continue;
     const alterStd = (Date.now() - new Date(s.createdAt).getTime()) / 3600e3;
     // App-Entwürfe (Anmeldung in der App ohne Kauf): keine Erinnerungs-Mail (die würde auf die Web-Anmeldung führen, Apple 3.1.3),
@@ -788,7 +800,7 @@ export async function taeglicheJobs(heute = new Date()) {
       out.push(["apple-verlaengerung-fehlt", s.firma]);
     }
     // Alte Entwürfe im (geschlossenen) Paket Risikofrei bekommen keine Erinnerung: Der Link würde in eine Sackgasse führen.
-    if (s.status === "entwurf" && !s.erinnertAbbruch && alterStd > 20 && s.paket !== "risikofrei") {
+    if (s.status === "entwurf" && !s.erinnertAbbruch && alterStd > 20 && s.paket !== "risikofrei" && !istTestAnmeldung(s) && !schonAbgeschlossen(s, studiosFuerAbgleich)) {
       s.erinnertAbbruch = now(); await saveStudio(s);
       await notify(s, mails.anmeldungAbgebrochen(s, { resumeUrl: resumeUrl(s) }));
       out.push(["abbruch-erinnerung", s.firma]);

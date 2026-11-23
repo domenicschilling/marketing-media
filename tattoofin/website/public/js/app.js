@@ -332,7 +332,7 @@
   function artHinweis() {
     // Studio ohne Anzahlungen (Tattoo Fashion München/Landshut): Auswahl ausblenden, immer Projektpreis
     var seg = document.querySelector("#f-link .seg");
-    if (seg) seg.hidden = Boolean(D.studio.anzahlungAus);
+    if (seg) seg.classList.toggle("hidden", Boolean(D.studio.anzahlungAus));
     if (D.studio.anzahlungAus) document.querySelector('#f-link input[name=art][value=gesamt]').checked = true;
     var anz = document.querySelector('#f-link input[name=art]:checked').value === "anzahlung";
     $("l-heute-box").classList.toggle("hidden", anz);
@@ -559,8 +559,8 @@
   function einstellungen() {
     $("k-email").value = D.studio.benachrichtigung.email || ""; $("k-anz").value = D.studio.anzahlungsbedingungen || "";
     var aw = D.studio.ausweichAnzahlung || {}; $("k-aw-an").checked = Boolean(aw.an); $("k-aw-pr").value = aw.prozent || 30;
-    var awKarte = $("k-aw-an").closest(".card-a"); if (awKarte) awKarte.hidden = Boolean(D.studio.anzahlungAus);
-    var anzKarte = $("k-anz").closest(".card-a"); if (anzKarte) anzKarte.hidden = Boolean(D.studio.anzahlungAus);
+    var awKarte = $("k-aw-an").closest(".card-a"); if (awKarte) awKarte.classList.toggle("hidden", Boolean(D.studio.anzahlungAus));
+    var anzKarte = $("k-anz").closest(".card-a"); if (anzKarte) anzKarte.classList.toggle("hidden", Boolean(D.studio.anzahlungAus));
     $("k-zh-an").checked = Boolean(D.studio.zahlartenHinweis);
   }
   $("k-aw-save").onclick = async function () { try { D.studio = await TF.api("/api/portal/kontakt", { method: "PATCH", body: { ausweichAnzahlung: { an: $("k-aw-an").checked, prozent: $("k-aw-pr").value } } }); einstellungen(); toast("Gespeichert."); } catch (err) { toast(err.message, true); } };

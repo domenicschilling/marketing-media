@@ -69,7 +69,7 @@ if (/[?&]app=1(&|#|$)/.test(location.search)) document.querySelectorAll(".powere
     if (studio.klarna === false) document.querySelector(".fuss").innerHTML = "Bezahlt wird per Karte (auch Apple Pay / Google Pay). Dein Vertrag über das Tattoo besteht nur mit dem Studio; Tattoofin stellt nur die Technik bereit. Deine gesetzlichen Rechte bleiben von den Häkchen unberührt.";
     $("bed-text").textContent = studio.anzahlungsbedingungen;
     // Studio ohne Anzahlungen (z. B. Tattoo Fashion München/Landshut): Auswahl ausblenden, immer „Tattoo bezahlen“
-    if (studio.anzahlungAus) { var seg = document.querySelector(".seg[role=radiogroup]"); if (seg) seg.hidden = true; f.art.value = "gesamt"; }
+    if (studio.anzahlungAus) { var seg = document.querySelector(".seg[role=radiogroup]"); if (seg) seg.classList.add("hidden"); var g = document.querySelector("#schritt1 input[name=art][value=gesamt]"); if (g) g.checked = true; }
     $("weiter").disabled = false;
     if (!studio.aktiv) {
       $("weiter").disabled = true; $("schritt1").classList.add("hidden");
