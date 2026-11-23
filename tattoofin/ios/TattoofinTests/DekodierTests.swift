@@ -113,4 +113,12 @@ struct DekodierTests {
         #expect(z.zahlung.istOffen)
         #expect(z.whatsappText?.contains(z.link) == true)
     }
+
+    /// Server schickt bei Gutscheinen ohne Empfänger `"empfaenger": ""` → nur „Gutschein“, nie „Gutschein für“
+    @Test func gutscheinTitelOhneEmpfaenger() throws {
+        let leer: Zahlung = try dekodiere(#"{"id":"zl_1","status":"offen","betragCent":5000,"art":"gutschein","gutschein":{"empfaenger":""}}"#)
+        #expect(leer.titel == "Gutschein")
+        let mit: Zahlung = try dekodiere(#"{"id":"zl_2","status":"offen","betragCent":5000,"art":"gutschein","gutschein":{"empfaenger":"Lena"}}"#)
+        #expect(mit.titel == "Gutschein für Lena")
+    }
 }

@@ -94,7 +94,7 @@ final class RegistrierungUITests: XCTestCase {
         if !schicken.isHittable { app.swipeUp() }
         schicken.tap()
 
-        let code = app.textFields["6-stelliger Code"]
+        let code = app.textFields["Code mit 6 Ziffern"]
         XCTAssertTrue(code.waitForExistence(timeout: 10))
         foto(app, "03-code")
         code.tap()

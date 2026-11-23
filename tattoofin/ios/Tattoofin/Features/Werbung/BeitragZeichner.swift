@@ -185,7 +185,7 @@ final class KitSchemaHandler: NSObject, WKURLSchemeHandler {
             daten = Data(Self.seite.utf8)
             mime = "text/html"
         } else if let d = Self.dateien[url.path()], let u = Self.bundleURL(d.name, d.typ) {
-            daten = try? Data(contentsOf: u)
+            daten = try? Data(contentsOf: u)  // ds-ok: fehlende Datei wird darunter als 404 behandelt und protokolliert
             mime = d.mime
         } else {
             daten = nil

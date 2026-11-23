@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Abschnitt „Dein Studio“ im Konto: Einstellungen, rechtliche Lage, Fragebogen, Abrechnungen (nur Provision über Stripe),
-/// QR-Aufsteller (nur Inhaber), Bei Stripe ansehen (nur Inhaber, Stripe verbunden), Hilfe per WhatsApp.
+/// Bei Stripe ansehen (nur Inhaber, Stripe verbunden), Hilfe per WhatsApp.
 struct StudioMehrAbschnitt: View {
     @Environment(AppState.self) private var app
     @State private var mehr = StudioMehrStore.shared
@@ -36,12 +36,6 @@ struct StudioMehrAbschnitt: View {
                 NavigationLink { AbrechnungenView() } label: {
                     zeile(Texte.Mehr.abrechnungen, nil, "doc.text")
                 }
-            }
-            if istInhaber {
-                NavigationLink { AufstellerView() } label: {
-                    zeile(Texte.Mehr.aufsteller, Texte.Mehr.aufstellerText, "qrcode")
-                }
-                .accessibilityIdentifier("aufsteller")
             }
             if istInhaber && s?.stripe?.verbunden == true {
                 Button {

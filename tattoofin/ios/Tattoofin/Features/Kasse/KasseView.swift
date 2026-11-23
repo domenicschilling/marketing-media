@@ -12,6 +12,10 @@ struct KasseView: View {
     @State private var thekeOffen = false
     @State private var erfolgZaehler = 0
     @State private var heute = false
+    /// Sichtbare Höhe der Kasse: auf kleinen iPhones (SE) wird alles enger, damit der ganze Ziffernblock über dem Knopf steht
+    @State private var hoehe: CGFloat = 800
+    @Environment(\.dynamicTypeSize) private var schrift
+    private var kompakt: Bool { hoehe < 560 }
 
     var body: some View {
         NavigationStack {
@@ -65,6 +69,19 @@ struct KasseView: View {
         KlarnaTexte.istGutscheinWort(entwurf.beschreibung, entwurf.anzahlung ? "" : entwurf.sitzungen)
     }
 
+    private var gueltigerBetrag: Bool { betragFehler == nil && (eingabe.cent ?? 0) > 0 }
+
+    private var grenzenZeile: some View {
+        Text(betragFehler ?? Texte.Kasse.grenzen(min: portal.config.min, max: portal.config.max))
+            .font(.dm(.footnote, weight: betragFehler == nil ? .regular : .semibold))
+            .foregroundStyle(betragFehler == nil ? Color.tfLeise : Color.tfRot)
+            // Normale Schrift: eine Zeile (fester Platz über dem Ziffernblock). Ab AX-Größen umbrechen statt abschneiden (DS 18.11.2026).
+            .lineLimit(schrift.isAccessibilitySize ? nil : 1)
+            .minimumScaleFactor(schrift.isAccessibilitySize ? 1 : 0.8)
+            .fixedSize(horizontal: false, vertical: schrift.isAccessibilitySize)
+            .multilineTextAlignment(.center)
+    }
+
     private var bereit: Bool {
         guard let c = eingabe.cent else { return false }
         return c >= portal.config.min && c <= portal.config.max && !sendet
@@ -73,7 +90,8 @@ struct KasseView: View {
     private var formular: some View {
         ScrollView {
             // Enger gesetzt: Start-Zeile, Betrag, Ziffernblock und „Zahlungslink erstellen“ passen bei normaler Schrift in den ersten Bildschirm
-            VStack(spacing: 10) {
+            VStack(spacing: kompakt ? 6 : 10) {
+                AktualisierenFehlerZeile()
                 StartBereich()
 
                 // Nach einem Testkauf (Apple-Sandbox, auch App Review): Hinweis „Testmodus“ steht im StartBereich statt der Monatszeile
@@ -81,17 +99,25 @@ struct KasseView: View {
                 // Betrag
                 VStack(spacing: 4) {
                     Text(eingabe.anzeige)
-                        .font(.luckiest(46, relativeTo: .largeTitle))
+                        .font(.luckiest(kompakt ? 38 : 46, relativeTo: .largeTitle))
                         .foregroundStyle(Color.tfTinte)
                         .lineLimit(1)
                         .minimumScaleFactor(0.4)
                         .contentTransition(.numericText())
                         .accessibilityLabel(Texte.Kasse.betragLabel)
                         .accessibilityValue(eingabe.cent.map(Euro.gesprochen) ?? "0 Euro")
-                    Text(betragFehler ?? Texte.Kasse.grenzen(min: portal.config.min, max: portal.config.max))
-                        .font(.dm(.footnote, weight: betragFehler == nil ? .regular : .semibold))
-                        .foregroundStyle(betragFehler == nil ? Color.tfLeise : Color.tfRot)
-                    if betragFehler == nil { GebuehrHinweis(cent: eingabe.cent) }
+                    // Feste Höhe: Grenzen bzw. Fehler stehen immer in einer Zeile, der Gebührenhinweis hat seinen Platz immer
+                    // (unsichtbar, solange der Betrag ungültig ist). So rutscht beim Tippen nichts über dem Ziffernblock.
+                    // Kleine iPhones (SE): Grenzen und Gebührenhinweis teilen sich denselben festen Platz.
+                    if kompakt {
+                        ZStack(alignment: .top) {
+                            GebuehrHinweis(cent: eingabe.cent, sichtbar: gueltigerBetrag)
+                            if !gueltigerBetrag { grenzenZeile }
+                        }
+                    } else {
+                        grenzenZeile
+                        GebuehrHinweis(cent: eingabe.cent, sichtbar: betragFehler == nil)
+                    }
                 }
                 .frame(maxWidth: .infinity)
 
@@ -101,9 +127,13 @@ struct KasseView: View {
                 }
                 .pickerStyle(.segmented)
 
-                if !entwurf.anzahlung { HeuteSchalter(an: $heute) }
+                // Bei „Anzahlung“ bleibt der Platz des Schalters frei, damit der Ziffernblock beim Umschalten nicht springt
+                HeuteSchalter(an: $heute, kompakt: kompakt)
+                    .opacity(entwurf.anzahlung ? 0 : 1)
+                    .disabled(entwurf.anzahlung)
+                    .accessibilityHidden(entwurf.anzahlung)
 
-                Ziffernblock(eingabe: $eingabe)
+                Ziffernblock(eingabe: $eingabe, tastenHoehe: kompakt ? 44 : 52, abstand: kompakt ? 6 : 8)
 
                 DisclosureGroup(isExpanded: $detailsOffen) {
                     VStack(spacing: 10) {
@@ -123,11 +153,21 @@ struct KasseView: View {
                     Text(Texte.Kasse.details)
                         .font(.dm(.body, weight: .semibold))
                         .foregroundStyle(Color.tfTinte)
+                        .frame(minHeight: 44, alignment: .leading)
                 }
                 .karte()
-
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, kompakt ? 4 : 8)
+            .padding(.bottom, 16)
+        }
+        .scrollDismissesKeyboard(.interactively)
+        .refreshable { await portal.laden() }
+        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { hoehe = $0 }
+        // „Zahlungslink erstellen“ über der Tab-Leiste angeheftet: auch auf dem iPhone SE und bei großer Schrift immer zu sehen
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            VStack(spacing: 8) {
                 if let fehler { FehlerZeile(text: fehler) }
-
                 Button {
                     erstellen()
                 } label: {
@@ -137,11 +177,11 @@ struct KasseView: View {
                 .disabled(!bereit)
             }
             .padding(.horizontal, 16)
-            .padding(.top, 8)
-            .padding(.bottom, 16)
+            .padding(.top, kompakt ? 5 : 8)
+            .padding(.bottom, 8)
+            .frame(maxWidth: .infinity)
+            .background(Color.tfHintergrund)
         }
-        .scrollDismissesKeyboard(.interactively)
-        .refreshable { await portal.laden() }
     }
 
     private func erstellen() {
@@ -200,7 +240,9 @@ struct Eingabefeld: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(titel).font(.dm(.subheadline, weight: .semibold)).foregroundStyle(Color.tfTinte)
+                .accessibilityHidden(true)
             TextField(titel, text: $text, prompt: tfPlatzhalter(self.platzhalter ?? titel))
+                .accessibilityLabel(titel)
                 .textContentType(inhalt)
                 .keyboardType(tastatur)
                 .textInputAutocapitalization(tastatur == .emailAddress ? .never : grossschreibung)
@@ -208,7 +250,7 @@ struct Eingabefeld: View {
                 .font(.dm(.body))
                 .padding(12)
                 .background(Color.tfHintergrund, in: RoundedRectangle(cornerRadius: 12))
-                .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.tfLinie, lineWidth: 1.5))
+                .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.tfFeldRahmen, lineWidth: 1.5))
         }
     }
 }
@@ -216,12 +258,15 @@ struct Eingabefeld: View {
 /// Ziffernblock 1–9, Komma, 0, Löschen
 struct Ziffernblock: View {
     @Binding var eingabe: BetragEingabe
+    /// 52 pt, auf kleinen Bildschirmen 44 pt (Mindestgröße für Tippflächen)
+    var tastenHoehe: CGFloat = 52
+    var abstand: CGFloat = 8
     @State private var tipp = 0
 
     private let reihen = [["1", "2", "3"], ["4", "5", "6"], ["7", "8", "9"], [",", "0", "⌫"]]
 
     var body: some View {
-        Grid(horizontalSpacing: 10, verticalSpacing: 8) {
+        Grid(horizontalSpacing: 10, verticalSpacing: abstand) {
             ForEach(reihen, id: \.self) { reihe in
                 GridRow {
                     ForEach(reihe, id: \.self) { t in
@@ -234,7 +279,7 @@ struct Ziffernblock: View {
                             }
                             .font(.dm(28, relativeTo: .title, weight: .semibold))
                             .foregroundStyle(Color.tfTinte)
-                            .frame(maxWidth: .infinity, minHeight: 52)
+                            .frame(maxWidth: .infinity, minHeight: tastenHoehe)
                             .background(Color.tfKarte, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                             .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Color.tfLinie, lineWidth: 1))
                         }
@@ -248,6 +293,9 @@ struct Ziffernblock: View {
             }
         }
         .sensoryFeedback(.selection, trigger: tipp)
+        // Einzige Schrift-Grenze der App: 12 Tasten in 3 Spalten passen bei AX-Größen nicht mehr nebeneinander, und
+        // Ziffern auf einer Taste brauchen keine größere Schrift, um lesbar zu sein (Brief ds-brief-kern.md).
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)  // ds-ok: Ziffernblock, 3 Spalten, Ziffern bleiben lesbar
     }
 }
 
@@ -303,7 +351,7 @@ struct GesperrtKarte: View {
 
     private func symbol(_ name: String) -> some View {
         Image(systemName: name)
-            .font(.system(size: 44))
+            .font(.system(size: 44))  // ds-ok: Zier-Symbol im Sperr-Hinweis (44 pt), Text wächst mit
             .foregroundStyle(Color.tfAkzent)
             .accessibilityHidden(true)
     }

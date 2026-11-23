@@ -25,7 +25,7 @@ enum WerbungTexte {
         case .druck: "Drucken"
         }
     }
-    static let vorFreigabe = "Werbung gibt es, sobald dein Zahlungskonto freigegeben ist. Dann funktioniert auch dein QR-Code."
+    static let vorFreigabe = "Werbung gibt es, sobald dein Stripe-Konto freigegeben ist. Dann funktioniert auch dein QR-Code."
     static let neuLaden = "Neu laden"
     /// Pflicht-Fußnote, wo Raten gemeint sind (klein, aber lesbar)
     static let fussnote = KlarnaTexte.pflichtsatz
@@ -49,6 +49,8 @@ enum WerbungTexte {
     static let videoLabel = "Werbevideo: Bei uns ganz bequem übers Handy bezahlen"
     static let fotosKeinZugriff = "Tattoofin darf nichts in Fotos speichern. Du kannst es in den iPhone-Einstellungen unter Tattoofin › Fotos erlauben."
     static let fotosFehler = "Speichern hat nicht geklappt. Bitte versuch es nochmal."
+    /// DS-Kern (18.11.2026): Bilder für „Teilen“ ließen sich nicht ablegen → nicht still nichts tun
+    static let teilenFehler = "Teilen hat nicht geklappt. Bitte versuch es nochmal."
     static let ladeFehler = "Laden hat nicht geklappt. Bitte prüf dein Internet und versuch es nochmal."
 
     // Beiträge
@@ -78,13 +80,11 @@ enum WerbungTexte {
     static let qrSpeichern = "QR-Code in Fotos speichern"
     static let zahlseiteAnsehen = "Zahlseite ansehen"
     static let qrLabel = "QR-Code zu deiner Zahlseite"
-    static let theke = "Der QR-Code steht an der Theke"
-    static let holzAufsteller = "QR-Aufsteller aus Holz"
-    static let holzAufstellerText = "Für deine Theke, mit deinem Namen oder Logo"
+    static let theke = "Mein QR-Code hängt an der Theke"
 
     // Druck
     static let druckTitel = "Zum Ausdrucken"
-    static let druckText = "Fensteraufkleber, Flyer und Aufsteller mit deinem Studionamen und QR-Code. Öffnen, dann über Teilen drucken oder als PDF sichern."
+    static let druckText = "Fensteraufkleber, Flyer und mehr mit deinem Studionamen und QR-Code. Öffnen, dann über Teilen drucken oder als PDF sichern."
     static let druckZeile = "Mit deinem Studionamen und QR-Code"
 
     // So geht's
@@ -116,15 +116,15 @@ enum WerbungTexte {
 
         static let konto = "Konto angelegt"
         static let kontoText = "Dein Studio ist bei Tattoofin angemeldet."
-        static let stripe = "Zahlungskonto einrichten"
+        static let stripe = "Stripe-Konto einrichten"
         static let stripeOk = "Freigegeben. Das Geld deiner Kunden kommt auf dein Bankkonto."
-        static let stripeTestmodus = "Testmodus: Für Testzahlungen brauchst du kein Zahlungskonto."
+        static let stripeTestmodus = "Testmodus: Für Testzahlungen brauchst du kein Stripe-Konto."
         static let stripeWarte = "Stripe prüft deine Angaben, meist 1 bis 3 Werktage."
-        static let stripeOffen = "Ca. 10 Minuten. Ausweis und IBAN bereithalten."
+        static let stripeOffen = "Ausweis und IBAN bereithalten."
         static let fragebogen = "Fragebogen ausfüllen"
-        static let fragebogenText = "Hilft uns bei der Einrichtung (10 Minuten)."
+        static let fragebogenText = "Hilft uns bei der Einrichtung."
         static let recht = "Deine rechtliche Lage lesen"
-        static let rechtText = "5 Minuten: Wer trägt welches Risiko?"
+        static let rechtText = "Wer trägt welches Risiko? Kurz erklärt."
         static let link = "Ersten Zahlungslink erstellen"
         static let linkText = "Zum Ausprobieren gern an dich selbst."
         static let linkGesperrt = "Geht, sobald deine Kasse offen ist."

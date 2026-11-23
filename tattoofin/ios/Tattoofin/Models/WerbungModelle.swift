@@ -20,7 +20,7 @@ extension KeyedDecodingContainer where Key == FreierSchluessel {
     func erster<T: Decodable>(_ typ: T.Type, _ namen: String...) -> T? {
         for n in namen {
             let k = FreierSchluessel(n)
-            if contains(k), let w = try? decodeIfPresent(T.self, forKey: k) { return w }
+            if contains(k), let w = try? decodeIfPresent(T.self, forKey: k) { return w }  // ds-ok: tolerantes Dekodieren, fehlender Wert = Standard
         }
         return nil
     }
@@ -28,7 +28,7 @@ extension KeyedDecodingContainer where Key == FreierSchluessel {
     func text(_ namen: String...) -> String? {
         for n in namen {
             let k = FreierSchluessel(n)
-            if contains(k), let w = try? decodeIfPresent(String.self, forKey: k), !w.isEmpty { return w }
+            if contains(k), let w = try? decodeIfPresent(String.self, forKey: k), !w.isEmpty { return w }  // ds-ok: tolerantes Dekodieren
         }
         return nil
     }
@@ -38,8 +38,8 @@ extension KeyedDecodingContainer where Key == FreierSchluessel {
         for n in namen {
             let k = FreierSchluessel(n)
             guard contains(k) else { continue }
-            if let b = try? decodeIfPresent(Bool.self, forKey: k) { return b }
-            if let i = try? decodeIfPresent(Int.self, forKey: k) { return i != 0 }
+            if let b = try? decodeIfPresent(Bool.self, forKey: k) { return b }  // ds-ok: tolerantes Dekodieren
+            if let i = try? decodeIfPresent(Int.self, forKey: k) { return i != 0 }  // ds-ok: tolerantes Dekodieren
         }
         return nil
     }
@@ -59,7 +59,7 @@ struct WerbeVideoDatei: Decodable, Sendable, Hashable {
 
     init(from decoder: any Decoder) throws {
         // Auch nur eine Adresse als Text erlauben: "reel": "/media/studio-video/reel.mp4"
-        if let s = try? decoder.singleValueContainer().decode(String.self) {
+        if let s = try? decoder.singleValueContainer().decode(String.self) {  // ds-ok: tolerantes Dekodieren
             url = s
             return
         }
@@ -211,7 +211,7 @@ struct WerbungAntwort: Decodable, Sendable {
 
     init(from decoder: any Decoder) throws {
         let c = try decoder.container(keyedBy: FreierSchluessel.self)
-        let s = try? c.nestedContainer(keyedBy: FreierSchluessel.self, forKey: FreierSchluessel("studio"))
+        let s = try? c.nestedContainer(keyedBy: FreierSchluessel.self, forKey: FreierSchluessel("studio"))  // ds-ok: tolerantes Dekodieren, älterer Server ohne Feld
         // klarnaDauerhaft hat Vorrang vor klarna (klarna allein kann nur „bis zum Stichtag“ heißen)
         klarnaDauerhaft = c.jaNein("klarnaDauerhaft") ?? s?.jaNein("klarnaDauerhaft") ?? c.jaNein("klarna") ?? s?.jaNein("klarna")
         firma = c.text("firma") ?? s?.text("firma")
@@ -361,7 +361,7 @@ struct StartAntwort: Decodable, Sendable {
 
     init(from decoder: any Decoder) throws {
         let c = try decoder.container(keyedBy: FreierSchluessel.self)
-        let k = try? c.nestedContainer(keyedBy: FreierSchluessel.self, forKey: FreierSchluessel("checkliste"))
+        let k = try? c.nestedContainer(keyedBy: FreierSchluessel.self, forKey: FreierSchluessel("checkliste"))  // ds-ok: tolerantes Dekodieren, älterer Server ohne Feld
         punkte = (k?.erster([ServerCheckpunkt].self, "punkte") ?? c.erster([ServerCheckpunkt].self, "punkte") ?? [])
             .filter { !$0.id.isEmpty && !$0.titel.isEmpty }
         rolle = c.text("rolle")

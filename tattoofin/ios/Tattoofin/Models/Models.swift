@@ -80,7 +80,8 @@ struct Zahlung: Codable, Sendable, Hashable, Identifiable {
     var istBezahlt: Bool { status == "bezahlt" || status == "in_pruefung" }
 
     var titel: String {
-        if istGutschein { return "Gutschein" + (gutschein?.empfaenger.map { " für \($0)" } ?? "") }
+        // Der Server schickt bei fehlendem Empfänger "" → dann nur „Gutschein“ (nicht „Gutschein für“)
+        if istGutschein { return "Gutschein" + (gutschein?.empfaenger?.leerAlsNil.map { " für \($0)" } ?? "") }
         return beschreibung?.isEmpty == false ? beschreibung! : "Tattoo-Projekt"
     }
 

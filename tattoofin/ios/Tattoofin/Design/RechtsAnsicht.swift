@@ -146,7 +146,7 @@ struct RechtsWebAnsicht: UIViewRepresentable {
         context.coordinator.versuch = versuch
         Task { @MainActor in
             // Erst die Regeln, dann laden (sonst könnte das Skript schon laufen)
-            if let liste = try? await WKContentRuleListStore.default().compileContentRuleList(
+            if let liste = try? await WKContentRuleListStore.default().compileContentRuleList(  // ds-ok: Inhaltsfilter optional, die Seite lädt auch ohne
                 forIdentifier: "tattoofin-rechtstexte", encodedContentRuleList: Self.regeln) {
                 web.configuration.userContentController.add(liste)
             }
@@ -211,9 +211,13 @@ struct RechtsFuss: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            Button(Texte.Konto.impressum) { seite = .impressum }
+            Button { seite = .impressum } label: {
+                Text(Texte.Konto.impressum).frame(minHeight: 44).padding(.horizontal, 6).contentShape(Rectangle())
+            }
             Text("·").accessibilityHidden(true)
-            Button(Texte.Konto.datenschutz) { seite = .datenschutz }
+            Button { seite = .datenschutz } label: {
+                Text(Texte.Konto.datenschutz).frame(minHeight: 44).padding(.horizontal, 6).contentShape(Rectangle())
+            }
         }
         .font(.dm(.footnote, weight: .semibold))
         .foregroundStyle(Color.tfLeise)

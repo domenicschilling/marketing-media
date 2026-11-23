@@ -4,10 +4,9 @@ import XCTest
 /// Je Bildschirm ein Bildschirmfoto als Anhang (p01-…), Export mit `xcrun xcresulttool export attachments`.
 /// Server-Port: TEST_RUNNER_TF_UI_API=http://localhost:<port>.
 ///  - testInhaber: Kasse mit Start-Bereich, Werbung (Video, Speichern, Beiträge, Name, Großansicht, Zahlseiten-QR, Druck), So geht's,
-///    Link mit „heute“, Nachweis-PDF, Einstellungen, Recht, Fragebogen, Aufsteller, Stripe, WhatsApp, zuletzt die Fotos-App.
+///    Link mit „heute“, Nachweis-PDF, Einstellungen, Recht, Fragebogen, kein Aufsteller, Stripe, WhatsApp, zuletzt die Fotos-App.
 ///  - testTeam: team@beispiel.test, Inhaber-Funktionen gesperrt.  - testOhneKlarna: ohne@beispiel.test, kein Raten-Material.
 ///  - testDunkelGross: Werbung + Einstellungen, dunkel (stellt der Test selbst ein) mit großer Schrift.
-///  - testZuletztAufstellerKauf (läuft nach testOhneKlarna, danach ist das Logo gesperrt): ohne@beispiel.test (Aufsteller nicht enthalten): Stripe-Checkout im Nachbau, Rückkehr, Prüfung.
 @MainActor
 final class ParitaetRundgangUITests: XCTestCase {
     private var praefix = "p"
@@ -36,7 +35,7 @@ final class ParitaetRundgangUITests: XCTestCase {
         let schicken = app.buttons["Code schicken"]
         XCTAssertTrue(schicken.waitForExistence(timeout: 15))
         schicken.tap()
-        let code = app.textFields["6-stelliger Code"]
+        let code = app.textFields["Code mit 6 Ziffern"]
         XCTAssertTrue(code.waitForExistence(timeout: 10))
         code.tap()
         code.typeText("123456")
@@ -255,10 +254,7 @@ final class ParitaetRundgangUITests: XCTestCase {
         let qrSpeichern = knopf(app, "QR-Code in Fotos speichern")
         nachOben(app, app.staticTexts["Deine Zahlseite"])
         foto("zahlseite-karte")
-        let holz = app.buttons["werbung-aufsteller"]
-        bisSichtbar(app, holz)
-        XCTAssertTrue(holz.exists, "Weg zum Holz-Aufsteller in der Zahlseiten-Karte fehlt")
-        foto("zahlseite-holz-aufsteller-zeile")
+        XCTAssertFalse(app.buttons["werbung-aufsteller"].exists, "Zeile QR-Aufsteller in der Zahlseiten-Karte ist noch da")
         bisSichtbar(app, qrSpeichern)
         qrSpeichern.tap()
         gespeichert(app, "zahlseite-qr-gespeichert")
@@ -318,7 +314,7 @@ final class ParitaetRundgangUITests: XCTestCase {
 
     }
 
-    /// Teil 2 (nach testInhaber): Nachweis, Konto „Dein Studio“, Einstellungen, Recht, Fragebogen, Aufsteller, Stripe, WhatsApp, Fotos-App
+    /// Teil 2 (nach testInhaber): Nachweis, Konto „Dein Studio“, Einstellungen, Recht, Fragebogen, Stripe, WhatsApp, Fotos-App
     func testInhaberStudio() throws {
         praefix = "q"
         let app = starten(email: "studio@beispiel.test")
@@ -402,29 +398,8 @@ final class ParitaetRundgangUITests: XCTestCase {
         foto("fragebogen-gesendet")
         zurueck(app)
 
-        // Aufsteller (Bamberg: im Paket enthalten → anfordern)
-        let auf = app.buttons["aufsteller"]
-        bisSichtbar(app, auf)
-        auf.tap()
-        XCTAssertTrue(app.segmentedControls.buttons["Dunkel"].waitForExistence(timeout: 15))
-        foto("aufsteller-vorschau-hell")
-        app.segmentedControls.buttons["Dunkel"].tap()
-        app.segmentedControls.buttons["Dein Logo"].tap()
-        Thread.sleep(forTimeInterval: 1)
-        foto("aufsteller-dunkel-logo")
-        app.segmentedControls.buttons["Studioname"].tap()
-        let bestellen = app.buttons["aufsteller-bestellen"]
-        bisSichtbar(app, bestellen)
-        foto("aufsteller-bestellen")
-        bestellen.tap()
-        let ja = app.alerts.buttons["Anfordern"]
-        if ja.waitForExistence(timeout: 5) {
-            foto("aufsteller-rueckfrage")
-            ja.tap()
-            XCTAssertTrue(etwas(app, "Bestellt").waitForExistence(timeout: 20))
-            foto("aufsteller-angefordert")
-        }
-        zurueck(app)
+        // Den QR-Aufsteller aus Holz gibt es nicht mehr (seit 1.1)
+        XCTAssertFalse(app.buttons["aufsteller"].exists, "Zeile QR-Aufsteller im Konto ist noch da")
 
         // Bei Stripe ansehen
         let stripe = knopf(app, "Bei Stripe ansehen")
@@ -570,39 +545,8 @@ final class ParitaetRundgangUITests: XCTestCase {
             foto("abrechnungen")
             zurueck(app)
         }
-        let auf = app.buttons["aufsteller"]
-        bisSichtbar(app, auf)
-        auf.tap()
-        XCTAssertTrue(app.segmentedControls.buttons["Dunkel"].waitForExistence(timeout: 15))
-        XCTAssertFalse(etwas(app, "Kreditaufnahme").exists, "Ohne Klarna keine Raten-Zeile auf dem Aufsteller")
-        foto("ohne-klarna-aufsteller")
-        // Logo aus Fotos (PhotosPicker, läuft außerhalb der App): ein gespeichertes Bild wählen
-        let logoSeg = app.segmentedControls.buttons["Dein Logo"]
-        bisSichtbar(app, logoSeg)
-        logoSeg.tap()
-        let waehlen = app.buttons["logo-waehlen"]
-        XCTAssertTrue(waehlen.waitForExistence(timeout: 5))
-        bisSichtbar(app, waehlen)
-        waehlen.tap()
-        Thread.sleep(forTimeInterval: 3)
-        foto("aufsteller-logo-auswahl")
-        // Auswahl läuft in einem eigenen Prozess: ein Bild in der Raster-Ansicht antippen (2. Reihe, 2. Spalte)
-        Thread.sleep(forTimeInterval: 4)
-        app.windows.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.55)).tap()
-        Thread.sleep(forTimeInterval: 2)
-        let hinzu = app.buttons["Hinzufügen"].firstMatch
-        if hinzu.exists { hinzu.tap() }
-        XCTAssertTrue(etwas(app, "Logo gespeichert").waitForExistence(timeout: 20) || etwas(app, "Anderes Logo").waitForExistence(timeout: 2),
-                      "Logo aus Fotos wird nicht übernommen")
-        foto("aufsteller-logo-gespeichert")
-        app.swipeDown(); app.swipeDown()
-        foto("aufsteller-mit-logo")
-        // Logo wieder löschen (Datenschutz: so lange gespeichert, wie man es braucht)
-        let loeschen = app.buttons["logo-entfernen"]
-        bisSichtbar(app, loeschen)
-        loeschen.tap()
-        XCTAssertTrue(etwas(app, "Logo gelöscht").waitForExistence(timeout: 15), "Logo lässt sich nicht löschen")
-        foto("aufsteller-logo-geloescht")
+        // Den QR-Aufsteller aus Holz gibt es nicht mehr (seit 1.1)
+        XCTAssertFalse(app.buttons["aufsteller"].exists, "Zeile QR-Aufsteller ist noch da")
     }
 
     // MARK: Dunkel + große Schrift
@@ -644,39 +588,5 @@ final class ParitaetRundgangUITests: XCTestCase {
         foto("dunkel-gross-einstellungen-ausweg")
         app.swipeUp(); app.swipeUp()
         foto("dunkel-gross-einstellungen-unten")
-    }
-
-    // MARK: Aufsteller kaufen (Stripe-Checkout im Nachbau)
-
-    func testZuletztAufstellerKauf() throws {
-        // Ink Studio Coburg (Risikofrei): Aufsteller nicht im Paket → Kauf über Stripe-Checkout (Nachbau)
-        praefix = "a"
-        let app = starten(email: "ohne@beispiel.test")
-        anmelden(app)
-        app.tabBars.buttons["Konto"].tap()
-        let auf = app.buttons["aufsteller"]
-        bisSichtbar(app, auf)
-        auf.tap()
-        XCTAssertTrue(app.segmentedControls.buttons["Dunkel"].waitForExistence(timeout: 15))
-        foto("aufsteller-kauf-vorschau")
-        let bestellen = app.buttons["aufsteller-bestellen"]
-        bisSichtbar(app, bestellen)
-        foto("aufsteller-kauf-preis")
-        bestellen.tap()
-        let ja = app.alerts.buttons["Weiter zur Bezahlung"]
-        XCTAssertTrue(ja.waitForExistence(timeout: 5))
-        foto("aufsteller-kauf-rueckfrage")
-        ja.tap()
-        let bezahlen = app.buttons.containing(NSPredicate(format: "label CONTAINS[c] %@", "Bezahlen")).firstMatch
-        XCTAssertTrue(bezahlen.waitForExistence(timeout: 20), "Checkout öffnet nicht")
-        Thread.sleep(forTimeInterval: 1)
-        foto("aufsteller-kauf-checkout")
-        bezahlen.tap()
-        XCTAssertTrue(app.staticTexts.containing(NSPredicate(format: "label CONTAINS[c] %@", "Tattoofin-App")).firstMatch.waitForExistence(timeout: 20))
-        foto("aufsteller-kauf-rueckkehr-seite")
-        app.buttons["Fertig"].firstMatch.tap()
-        XCTAssertTrue(etwas(app, "Bestellt").waitForExistence(timeout: 20) || etwas(app, "Bezahlt").exists, "Nach der Rückkehr keine Bestätigung")
-        Thread.sleep(forTimeInterval: 1)
-        foto("aufsteller-kauf-bezahlt")
     }
 }

@@ -42,7 +42,7 @@ final class StoreBilderUITests: XCTestCase {
         feld.tap()
         feld.typeText(email)
         app.buttons["Code schicken"].tap()
-        let codeFeld = app.textFields["6-stelliger Code"]
+        let codeFeld = app.textFields["Code mit 6 Ziffern"]
         XCTAssertTrue(codeFeld.waitForExistence(timeout: 20), "Code-Feld fehlt")
         codeFeld.tap()
         codeFeld.typeText(code)

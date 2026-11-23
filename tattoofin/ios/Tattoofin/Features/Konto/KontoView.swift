@@ -10,6 +10,8 @@ struct KontoView: View {
     @Environment(\.openURL) private var openURL
 
     @State private var geraet: Geraet?
+    /// Laden der Geräte-Einstellungen fehlgeschlagen (sonst sähe man still die Standardwerte und könnte sie überschreiben)
+    @State private var geraetFehler: String?
     @State private var mitteilungenZahlungen = true
     @State private var mitteilungenAuszahlungen = true
     @State private var kundenname = false
@@ -33,9 +35,12 @@ struct KontoView: View {
     var body: some View {
         NavigationStack {
             TFListe {
+                // Ohne Daten (kein Netz, Server weg): oben ein klarer Fehler statt Lade-Kreisel und roter Kreuze
+                if studio == nil, let f = portal.fehler { ladeFehlerAbschnitt(f) }
+                AktualisierenFehlerZeile()
                 studioAbschnitt
                 if studio?.istApple == true { aboAbschnitt }
-                stripeAbschnitt
+                if studio != nil { stripeAbschnitt }
                 StudioMehrAbschnitt()
                 SoGehtsAbschnitt()
                 mitteilungenAbschnitt
@@ -72,6 +77,23 @@ struct KontoView: View {
 
     // MARK: Abschnitte
 
+    private func ladeFehlerAbschnitt(_ f: String) -> some View {
+        Section {
+            VStack(alignment: .leading, spacing: 10) {
+                Label(Texte.Fehler.titel, systemImage: FehlerAnsicht.symbol(f))
+                    .font(.dm(.headline, weight: .bold))
+                    .foregroundStyle(Color.tfTinte)
+                Text(f).font(.dm(.body)).foregroundStyle(Color.tfTinte)
+                    .fixedSize(horizontal: false, vertical: true)
+                Button(Texte.Allgemein.nochmal) { Task { await allesLaden() } }
+                    .buttonStyle(.zweit)
+                    .disabled(portal.laedt)
+                    .accessibilityIdentifier("konto-nochmal")
+            }
+            .padding(.vertical, 6)
+        }
+    }
+
     private var studioAbschnitt: some View {
         Section {
             if let s = studio {
@@ -81,7 +103,11 @@ struct KontoView: View {
                 }
                 .padding(.vertical, 4)
                 if let p = s.paketName?.leerAlsNil { WertZeile(titel: Texte.Konto.paket, wert: p) }
-                if let st = s.statusText?.leerAlsNil { WertZeile(titel: Texte.Konto.vertrag, wert: st) }
+                if s.istTestmodus {
+                    WertZeile(titel: Texte.Konto.vertrag, wert: Texte.Konto.vertragTestmodus)
+                } else if let st = s.statusText?.leerAlsNil {
+                    WertZeile(titel: Texte.Konto.vertrag, wert: st)
+                }
                 if let k = s.kuendigung, let zum = Datum.tag(k.zum) {
                     WertZeile(titel: Texte.Konto.vertragEndet, wert: zum)
                     if istInhaber {
@@ -92,8 +118,10 @@ struct KontoView: View {
                     WertZeile(titel: Texte.Konto.angemeldetAls, wert: sitzung.email)
                     WertZeile(titel: Texte.Konto.rolle, wert: sitzung.istInhaber ? Texte.Konto.rolleInhaber : Texte.Konto.rolleTeam)
                 }
-            } else {
+            } else if portal.fehler == nil {
                 ProgressView()
+            } else if let sitzung = app.sitzung {
+                WertZeile(titel: Texte.Konto.angemeldetAls, wert: sitzung.email)
             }
         } header: {
             ListenKopf(Texte.Konto.studio)
@@ -132,9 +160,16 @@ struct KontoView: View {
     private var stripeAbschnitt: some View {
         Section {
             let st = studio?.stripe
-            statusZeile(Texte.Konto.stripeVerbunden, st?.verbunden == true)
-            statusZeile(Texte.Konto.stripeFreigegeben, st?.freigegeben == true)
-            statusZeile(Texte.Konto.stripeAuszahlungen, st?.auszahlungen == true)
+            if studio?.istTestmodus == true && st?.verbunden != true {
+                // Testkauf: Stripe ist absichtlich aus, drei rote Kreuze wären falsch
+                Label(Texte.Konto.stripeTestmodus, systemImage: "testtube.2")
+                    .foregroundStyle(Color.tfTinte)
+                    .accessibilityIdentifier("stripe-testmodus")
+            } else {
+                statusZeile(Texte.Konto.stripeVerbunden, st?.verbunden == true)
+                statusZeile(Texte.Konto.stripeFreigegeben, st?.freigegeben == true)
+                statusZeile(Texte.Konto.stripeAuszahlungen, st?.auszahlungen == true)
+            }
             Button {
                 stripePruefen()
             } label: {
@@ -144,7 +179,7 @@ struct KontoView: View {
                 }
             }
             .disabled(prueftStripe)
-            if let u = studio?.connectUrl.flatMap(URL.init(string:)), st?.freigegeben != true {
+            if let u = studio?.connectUrl.flatMap(URL.init(string:)), st?.freigegeben != true, studio?.istTestmodus != true {
                 Button { openURL(u) } label: { Label(Texte.Kasse.stripeOeffnen, systemImage: "safari") }
             }
         } header: {
@@ -180,12 +215,20 @@ struct KontoView: View {
                     }
                 }
             }
-            Toggle(Texte.Konto.pushZahlung, isOn: $mitteilungenZahlungen)
-                .onChange(of: mitteilungenZahlungen) { alt, neu in if alt != neu { mitteilungenSpeichern() } }
-            Toggle(Texte.Konto.pushAuszahlung, isOn: $mitteilungenAuszahlungen)
-                .onChange(of: mitteilungenAuszahlungen) { alt, neu in if alt != neu { mitteilungenSpeichern() } }
-            Toggle(Texte.Konto.pushVorname, isOn: $kundenname)
-                .onChange(of: kundenname) { alt, neu in if alt != neu { kundennameSpeichern() } }
+            if let geraetFehler {
+                TeilFehlerZeile(text: "\(Texte.Konto.mitteilungenNichtGeladen) \(geraetFehler)") {
+                    Task { await geraetLaden() }
+                }
+            }
+            Group {
+                Toggle(Texte.Konto.pushZahlung, isOn: $mitteilungenZahlungen)
+                    .onChange(of: mitteilungenZahlungen) { alt, neu in if alt != neu { mitteilungenSpeichern() } }
+                Toggle(Texte.Konto.pushAuszahlung, isOn: $mitteilungenAuszahlungen)
+                    .onChange(of: mitteilungenAuszahlungen) { alt, neu in if alt != neu { mitteilungenSpeichern() } }
+                Toggle(Texte.Konto.pushVorname, isOn: $kundenname)
+                    .onChange(of: kundenname) { alt, neu in if alt != neu { kundennameSpeichern() } }
+            }
+            .disabled(geraetFehler != nil)
         } header: {
             ListenKopf(Texte.Konto.mitteilungen)
         } footer: {
@@ -285,8 +328,15 @@ struct KontoView: View {
     }
 
     private func geraetLaden() async {
-        guard let liste = try? await APIClient.shared.geraete(),
-              let ich = liste.first(where: { $0.diesesGeraet == true }) else { return }
+        let liste: [Geraet]
+        do {
+            liste = try await APIClient.shared.geraete()
+            geraetFehler = nil
+        } catch {
+            geraetFehler = fehlerText(error)
+            return
+        }
+        guard let ich = liste.first(where: { $0.diesesGeraet == true }) else { return }
         geraet = ich
         if let m = ich.mitteilungen {
             mitteilungenZahlungen = m.zahlungen

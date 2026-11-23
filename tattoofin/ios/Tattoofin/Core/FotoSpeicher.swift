@@ -63,15 +63,17 @@ enum FotoSpeicher {
 enum TeilenDateien {
     static var ordner: URL {
         let u = FileManager.default.temporaryDirectory.appending(path: "tf-werbung", directoryHint: .isDirectory)
-        try? FileManager.default.createDirectory(at: u, withIntermediateDirectories: true)
+        try? FileManager.default.createDirectory(at: u, withIntermediateDirectories: true)  // ds-ok: Ordner gibt es evtl. schon; Schreibfehler meldet der folgende Schreibvorgang
         return u
     }
 
-    /// PNG-Daten als Dateien mit sprechendem Namen ablegen
-    static func bilder(_ pngs: [Data], name: String) -> [URL] {
-        pngs.enumerated().compactMap { i, d in
+    /// PNG-Daten als Dateien mit sprechendem Namen ablegen. Wirft, wenn eine Datei nicht geschrieben werden kann
+    /// (DS: lieber eine Meldung als stilles „Teilen tut nichts“ oder ein unvollständiges Karussell).
+    static func bilder(_ pngs: [Data], name: String) throws -> [URL] {
+        try pngs.enumerated().map { i, d in
             let u = ordner.appending(path: pngs.count > 1 ? "\(name)-\(i + 1).png" : "\(name).png")
-            return (try? d.write(to: u, options: .atomic)) != nil ? u : nil
+            try d.write(to: u, options: .atomic)
+            return u
         }
     }
 
@@ -82,7 +84,7 @@ enum TeilenDateien {
         kopf.httpMethod = "HEAD"
         kopf.timeoutInterval = 10
         var stand: String?
-        if let (_, a) = try? await URLSession.shared.data(for: kopf), let h = a as? HTTPURLResponse, (200..<300).contains(h.statusCode) {
+        if let (_, a) = try? await URLSession.shared.data(for: kopf), let h = a as? HTTPURLResponse, (200..<300).contains(h.statusCode) {  // ds-ok: Stand-Abfrage optional; ohne Antwort vorhandene Fassung oder normal laden (mit Fehlermeldung)
             stand = h.value(forHTTPHeaderField: "ETag") ?? h.value(forHTTPHeaderField: "Last-Modified") ?? h.value(forHTTPHeaderField: "Content-Length")
         }
         guard let stand else {
@@ -98,17 +100,17 @@ enum TeilenDateien {
     private static func herunterladen(_ url: URL, nach ziel: URL) async throws -> URL {
         let (tmp, antwort) = try await URLSession.shared.download(from: url)
         guard let http = antwort as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
-            try? FileManager.default.removeItem(at: tmp)
+            try? FileManager.default.removeItem(at: tmp)  // ds-ok: Aufräumen
             throw APIFehler.unbekannt
         }
-        try? FileManager.default.removeItem(at: ziel)
+        try? FileManager.default.removeItem(at: ziel)  // ds-ok: Aufräumen
         try FileManager.default.moveItem(at: tmp, to: ziel)
         return ziel
     }
 
     private static func unterordner(_ n: String) -> URL {
         let u = ordner.appending(path: n, directoryHint: .isDirectory)
-        try? FileManager.default.createDirectory(at: u, withIntermediateDirectories: true)
+        try? FileManager.default.createDirectory(at: u, withIntermediateDirectories: true)  // ds-ok: Ordner gibt es evtl. schon; Schreibfehler meldet der folgende Schreibvorgang
         return u
     }
 
@@ -120,13 +122,13 @@ enum TeilenDateien {
     /// Zuletzt geladene Datei dieses Namens (in irgendeinem Stand-Ordner)
     private static func vorhandene(_ name: String) -> URL? {
         let fm = FileManager.default
-        let ordnerListe = (try? fm.contentsOfDirectory(at: ordner, includingPropertiesForKeys: [.contentModificationDateKey])) ?? []
+        let ordnerListe = (try? fm.contentsOfDirectory(at: ordner, includingPropertiesForKeys: [.contentModificationDateKey])) ?? []  // ds-ok: Suche nach vorhandener Datei, nichts gefunden = normal laden
         return ordnerListe
             .map { $0.appending(path: name) }
             .filter { fm.fileExists(atPath: $0.path()) }
             .max { a, b in
-                let da = (try? a.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast
-                let db = (try? b.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast
+                let da = (try? a.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast  // ds-ok: nur Sortierung
+                let db = (try? b.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast  // ds-ok: nur Sortierung
                 return da < db
             }
     }

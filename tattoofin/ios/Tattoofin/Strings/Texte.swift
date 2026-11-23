@@ -19,7 +19,11 @@ enum Texte {
     enum Fehler {
         static let titel = "Das hat nicht geklappt"
         static let keinNetz = "Keine Verbindung. Bitte prüf dein Internet und versuch es nochmal."
-        static let server = "Unser Server antwortet gerade nicht. Bitte versuch es gleich nochmal."
+        static let server = "Tattoofin ist gerade nicht erreichbar. Bitte versuch es gleich nochmal."
+        /// Daten sind da, aber das Neuladen hat nicht geklappt (kleine Zeile über dem alten Stand)
+        static func aktualisierenFehlgeschlagen(_ uhrzeit: String?) -> String {
+            "Aktualisieren hat nicht geklappt." + (uhrzeit.map { " Stand von \($0)." } ?? "")
+        }
         static let unbekannt = "Da ist etwas schiefgelaufen. Bitte versuch es nochmal."
         static let nichtAngemeldet = "Bitte melde dich neu an."
     }
@@ -53,7 +57,7 @@ enum Texte {
         static let codeNavTitel = "Code"
         static let codeHinweis = "Wenn die Adresse bei uns hinterlegt ist, kommt gleich ein Code mit 6 Ziffern."
         static let verzoegert = "Der Mailversand dauert gerade länger."
-        static let codeLabel = "6-stelliger Code"
+        static let codeLabel = "Code mit 6 Ziffern"
         static let anmelden = "Anmelden"
         static let neuerCode = "Neuen Code schicken"
         static func neuerCodeIn(_ s: Int) -> String { "Neuen Code schicken (in \(s) s)" }
@@ -74,13 +78,13 @@ enum Texte {
         static let einleitung = "Wir schicken dir einen Code. Damit bestätigst du deine E-Mail-Adresse."
         static let emailUngueltig = "Bitte gib eine gültige E-Mail-Adresse ein."
         static let wiederherstellenLink = "Abo schon gekauft? Käufe wiederherstellen"
-        static let codeHinweis = "Gleich kommt eine Mail mit einem Code aus 6 Ziffern an diese Adresse:"
+        static let codeHinweis = "Gleich kommt eine Mail mit einem Code mit 6 Ziffern an diese Adresse:"
         static let codeBestaetigen = "Bestätigen"
 
         static let angabenTitel = "Dein Studio"
         static let angabenEinleitung = "Diese Angaben kommen in deinen Vertrag. Tattoofin ist nur für Unternehmen."
         static let firma = "Studio / Firma"
-        static let inhaber = "Inhaber/in"
+        static let inhaber = "Inhaber"
         static let strasse = "Straße und Hausnummer"
         static let plz = "PLZ"
         static let ort = "Ort"
@@ -136,10 +140,10 @@ enum Texte {
             return t == 1 ? "1 Tag" : "\(t) Tage"
         }
         static func gratisAbzeichen(_ dauer: String) -> String { "Die ersten \(dauer) kostenlos" }
-        static func danach(_ dauer: String) -> String { "nach der kostenlosen Zeit · monatlich kündbar" }
+        static func danach(_ dauer: String) -> String { "nach der kostenlosen Zeit · jederzeit kündbar" }
         static func kaufenGratis(_ dauer: String) -> String { "\(dauer) kostenlos starten" }
         static func kleingedrucktGratis(_ dauer: String, preis: String) -> String {
-            "Die ersten \(dauer) sind kostenlos. Danach bucht Apple \(preis) pro Monat über deinen Apple-Account ab, wenn du nicht mindestens 24 Stunden vor Ende der kostenlosen Zeit kündigst. Danach verlängert sich das Abo automatisch jeden Monat, wenn du es nicht mindestens 24 Stunden vor Ende des laufenden Zeitraums kündigst. Kündigen kannst du jederzeit in den Einstellungen deines Apple-Accounts unter Abos. Es gibt keine Mindestlaufzeit."
+            "Die ersten \(dauer) sind kostenlos. Danach bucht Apple \(preis) pro Monat über deinen Apple-Account ab, wenn du nicht mindestens 24 Stunden vor Ende der kostenlosen Zeit kündigst. Ab dann verlängert sich das Abo automatisch jeden Monat, wenn du es nicht mindestens 24 Stunden vor Ende des laufenden Zeitraums kündigst. Kündigen kannst du jederzeit in den Einstellungen deines Apple-Accounts unter Abos. Es gibt keine Mindestlaufzeit."
         }
         static let kleingedruckt = "Die Zahlung wird bei Bestätigung des Kaufs über deinen Apple-Account abgebucht. Das Abo verlängert sich automatisch jeden Monat, wenn du es nicht mindestens 24 Stunden vor Ende des laufenden Zeitraums kündigst. Kündigen kannst du jederzeit in den Einstellungen deines Apple-Accounts unter Abos. Es gibt keine Mindestlaufzeit."
         static let vertragLink = "Vertrag (Nutzungsbedingungen)"
@@ -147,9 +151,9 @@ enum Texte {
         static let eulaLink = "Apple-Lizenzvertrag (EULA)"
         static let wiederherstellen = "Käufe wiederherstellen"
         static let ladeFehler = "Das Abo konnte gerade nicht geladen werden."
-        static let nichtBestaetigt = "Dein Kauf ist bei Apple durch. Wir konnten ihn gerade nicht bestätigen. Tippe auf „Nochmal versuchen“. Es wird nichts doppelt abgebucht."
+        static let nichtBestaetigt = "Dein Kauf ist bei Apple durch. Wir konnten ihn gerade nicht bestätigen. Tipp auf „Nochmal versuchen“. Es wird nichts doppelt abgebucht."
         static let wartet = "Dein Kauf wartet noch auf eine Bestätigung. Sobald Apple ihn bestätigt, geht es automatisch weiter."
-        static let unverifiziert = "Apple hat den Kauf nicht bestätigt. Bitte versuch es noch einmal."
+        static let unverifiziert = "Apple hat den Kauf nicht bestätigt. Bitte versuch es nochmal."
         static let erneuernTitel = "Abo wieder abschließen"
         static let erneuert = "Dein Abo läuft wieder. Zahlungslinks und Zahlseite sind offen."
         static let wiederhergestellt = "Dein Abo ist auf dem neuesten Stand."
@@ -184,14 +188,18 @@ enum Texte {
     enum Einrichtung {
         static func schritt(_ n: Int, von: Int) -> String { "Schritt \(n) von \(von)" }
         static func faceIDTitel(_ art: String) -> String { "\(art) zum Öffnen nutzen?" }
-        static let faceIDText = "Dann kann nur jemand mit deinem Gesicht oder deinem Gerätecode die App öffnen. Die Sperre greift beim Start und wenn die App länger als 5 Minuten im Hintergrund war."
+        /// art: „Face ID“ oder „Touch ID“
+        static func faceIDText(_ art: String) -> String {
+            let womit = art == "Touch ID" ? "mit deinem Fingerabdruck" : "mit deinem Gesicht"
+            return "Dann kann nur jemand \(womit) oder deinem Gerätecode die App öffnen. Die App sperrt sich beim Start und wenn sie länger als 5 Minuten im Hintergrund war."
+        }
         static func faceIDJa(_ art: String) -> String { "\(art) einschalten" }
         static let faceIDNein = "Nicht jetzt"
         static let pushTitel = "Mitteilungen erlauben?"
         static let pushText = "Wir sagen dir sofort Bescheid, wenn etwas Wichtiges passiert:"
         static let pushPunktZahlung = "Zahlung eingegangen"
         static let pushPunktAuszahlung = "Auszahlung unterwegs"
-        static let pushSpaeter = "Du kannst das jederzeit im Konto ändern. Danach fragt dein iPhone einmal nach."
+        static let pushSpaeter = "Dein iPhone fragt gleich einmal nach. Ändern kannst du das jederzeit unter Konto."
         static let pushJa = "Mitteilungen erlauben"
         static let pushNein = "Später"
     }
@@ -206,7 +214,7 @@ enum Texte {
         static let anzahlung = "Anzahlung"
         static let details = "Kunde und Motiv (optional)"
         static let kunde = "Name des Kunden"
-        static let email = "E-Mail des Kunden (freiwillig, für die Quittung)"
+        static let email = "E-Mail des Kunden (optional, für die Quittung)"
         static let motiv = "Motiv / Beschreibung"
         static let sitzungen = "Sitzungen"
         static let kundeBeispiel = "z. B. Lena Beispiel"
@@ -222,7 +230,7 @@ enum Texte {
             default: t
             }
         }
-        static let gesperrtTitel = "Gleich kannst du kassieren"
+        static let gesperrtTitel = "Bald kannst du kassieren"
         static let gesperrtText = "Dein Stripe-Konto ist noch nicht freigegeben. Sobald Stripe die Prüfung abgeschlossen hat, kannst du hier Zahlungslinks erstellen."
         static let vertragNichtAktiv = "Dein Vertrag ist gerade nicht aktiv. Bitte schreib uns an info@tattoofin.de."
         static let statusPruefen = "Status neu prüfen"
@@ -233,18 +241,16 @@ enum Texte {
         static let sandboxText = "Testkauf (Apple-Sandbox). Die Stripe-Einrichtung ist für Testkonten ausgeschaltet."
         /// Kasse nach einem Testkauf (Apple-Sandbox, auch App Review): offen im Testmodus
         static let testmodusText = "Testmodus: Hier fließt kein echtes Geld."
-        /// Testkauf (Apple-Sandbox): Der QR-Aufsteller (Ware mit Kosten) lässt sich nicht bestellen
         /// Werbung-Tab im Testmodus (Testkauf): QR-Code und Zahlseite nehmen kein Geld an
         static let werbungTestmodus = "Testmodus: Über diesen QR-Code kann niemand wirklich bezahlen."
-        static let aufstellerTestmodus = "Im Testmodus kannst du den Aufsteller nicht bestellen. Es wird nichts bezahlt."
         static let aboAbgelaufenTitel = "Dein Abo ist abgelaufen"
         static let aboAbgelaufenText = "Zahlungslinks und Zahlseite sind gesperrt. Deine Daten bleiben erhalten."
         static let aboWiederAbschliessen = "Abo wieder abschließen"
-        static let aboTeamHinweis = "Bitte den Inhaber, das Abo zu erneuern."
+        static let aboTeamHinweis = "Frag den Inhaber, ob er das Abo wieder abschließt."
         /// Werbung bei beendetem Abo (Inhaber): wechselt zur Kasse mit „Abo wieder abschließen“
         static let aboZurKasse = "Abo wieder abschließen"
         static let stripeTitel = "Letzter Schritt: Stripe verbinden"
-        static let stripeText = "Über dein Stripe-Konto bekommst du das Geld deiner Kunden. Die Einrichtung dauert etwa 10 Minuten, danach prüft Stripe meist 1 bis 3 Werktage."
+        static let stripeText = "Über dein Stripe-Konto bekommst du das Geld deiner Kunden. Ausweis und IBAN bereithalten. Danach prüft Stripe meist 1 bis 3 Werktage."
         static let stripeEinrichten = "Stripe-Konto einrichten"
     }
 
@@ -310,12 +316,13 @@ enum Texte {
         static let leistung = "Leistungsbestätigung"
         static let leistungText = "Nach dem Termin: Dein Kunde scannt den Code und bestätigt kurz, dass die Sitzung stattgefunden hat."
         static let leistungQRLabel = "QR-Code für die Leistungsbestätigung"
-        static let erstattungHinweis = "Erstattungen machst du im Dashboard bzw. in deinem Stripe-Konto."
+        static let erstattungHinweis = "Geld an deinen Kunden zurückzahlen: in deinem Stripe-Konto (Konto → Bei Stripe ansehen)."
     }
 
     enum Auszahlungen {
         static let verfuegbar = "Verfügbar"
-        static let unterwegs = "Noch unterwegs"
+        /// Guthaben, das bald verfügbar wird („Unterwegs“ heißt nur die Überweisung aufs Bankkonto)
+        static let unterwegs = "Kommt in den nächsten Tagen"
         static let listeTitel = "Auszahlungen aufs Bankkonto"
         static let leer = "Noch keine Auszahlungen."
         static let mehr = "Mehr laden"
@@ -337,7 +344,8 @@ enum Texte {
         static let suchen = "Gutschein suchen"
         static let verkauft = "Verkaufte Gutscheine"
         static let verkaufen = "Gutschein verkaufen"
-        static let verkaufenTitel = "Gutschein verkaufen"
+        /// Kurz, damit der Titel im Blatt nicht an „Abbrechen“ klebt und bei großer Schrift nicht abgeschnitten wird
+        static let verkaufenTitel = "Gutschein"
         static let leerTitel = "Noch keine Gutscheine"
         static let leerText = "Verkaufe deinen ersten Gutschein über „Gutschein verkaufen“."
         static let ohneCode = "Code kommt nach der Zahlung"
@@ -387,6 +395,8 @@ enum Texte {
         static let eintippenHinweis = "Tipp den Code einfach ein."
         static let keineKamera = "Hier gibt es keine Kamera. Tipp den Code einfach ein."
         static let keineErlaubnis = "Die App darf die Kamera nicht nutzen. Du kannst das in den iPhone-Einstellungen ändern oder den Code eintippen."
+        /// DS-Kern (18.11.2026): Kamera ließ sich nicht starten → nicht schwarz stehen lassen
+        static let kameraFehler = "Die Kamera ließ sich gerade nicht starten. Tipp den Code einfach ein."
     }
 
     enum Konto {
@@ -404,12 +414,17 @@ enum Texte {
         static let stripeVerbunden = "Verbunden"
         static let stripeFreigegeben = "Freigegeben"
         static let stripeAuszahlungen = "Auszahlungen aktiv"
+        /// Testkauf (Apple-Sandbox, auch App Review): keine Stripe-Einrichtung
+        static let stripeTestmodus = "Testmodus: kein Stripe nötig"
+        static let vertragTestmodus = "Testmodus"
         static let neuPruefen = "Neu prüfen"
         static let mitteilungen = "Mitteilungen auf diesem iPhone"
         static let pushZahlung = "Mitteilung bei Zahlung"
         static let pushAuszahlung = "Mitteilung bei Auszahlung"
         static let pushVorname = "Vorname des Kunden in der Mitteilung"
         static let mitteilungenHinweis = "Gilt nur für dieses Gerät. Den Vornamen zeigt das iPhone auch auf dem Sperrbildschirm."
+        /// DS-Kern (18.11.2026): Geräteliste nicht geladen → nicht still die Standardwerte zeigen
+        static let mitteilungenNichtGeladen = "Deine Mitteilungs-Einstellungen konnten nicht geladen werden."
         static let pushAus = "Mitteilungen sind in den iPhone-Einstellungen ausgeschaltet."
         static let einstellungenOeffnen = "iPhone-Einstellungen öffnen"
         static let sicherheit = "Sicherheit und Team"
@@ -428,7 +443,7 @@ enum Texte {
         static let abmeldenFrage = "Auf diesem iPhone abmelden?"
         static let ueberall = "Auf allen Geräten abmelden"
         static let ueberallFrage = "Auf allen Geräten abmelden?"
-        static let ueberallText = "Alle iPhones und alle Browser (Web-Dashboard) werden abgemeldet, auch dieses Gerät."
+        static let ueberallText = "Alle iPhones und alle Browser (Studio-Bereich auf tattoofin.de) werden abgemeldet, auch dieses Gerät."
         static let ueberallJa = "Überall abmelden"
         static let ueberallErledigt = "Alle Geräte wurden abgemeldet."
         static let loeschen = "Konto kündigen und löschen"
@@ -449,7 +464,7 @@ enum Texte {
         static let entfernenText = "Die App-Geräte dieser Adresse werden sofort abgemeldet."
         static let entfernen = "Entfernen"
         static let alleAbmelden = "Zusätzlich alle abmelden"
-        static let alleAbmeldenHinweis = "Im Web-Dashboard lassen sich einzelne Adressen nicht trennen. Mit diesem Schalter werden beim Speichern alle Geräte und Browser abgemeldet, auch dieses iPhone."
+        static let alleAbmeldenHinweis = "Im Studio-Bereich auf tattoofin.de lassen sich einzelne Adressen nicht trennen. Mit diesem Schalter werden beim Speichern alle Geräte und Browser abgemeldet, auch dieses iPhone."
         static let zugangEntfernen = "Meinen Zugang entfernen"
         static let zugangEntfernenFrage = "Deinen Zugang wirklich entfernen?"
         static let zugangEntfernenText = "Deine Adresse wird aus dem Studio entfernt und alle deine Geräte werden abgemeldet."
@@ -489,7 +504,10 @@ enum Texte {
         ]
         static let grund = "Warum gehst du? (optional)"
         static let grundPlatzhalter = "Dein Grund hilft uns, besser zu werden."
-        static let bestaetigen = "Tippe LÖSCHEN zur Bestätigung"
+        static let bestaetigen = "Tipp LÖSCHEN zur Bestätigung"
+        static let bestaetigenPlatzhalter = "Hier LÖSCHEN eintippen"
+        static let knopfNochGrau = "Der Knopf geht erst, wenn im Feld LÖSCHEN steht."
+        static let eingabeFalsch = "Bitte genau LÖSCHEN eintippen."
         static let knopf = "Konto kündigen und löschen"
         static let erledigtTitel = "Deine Löschung ist eingegangen"
         static let vertragEndet = "Vertrag endet am"
