@@ -1,6 +1,6 @@
 // Ausgabe von Studio und Zahlungen an das Studio selbst (Dashboard /api/portal und App /api/app). Ohne interne Werte.
 import { CFG, provisionSatz, paketVon, BAUSTEINE_SIMULIERT, istApple, appleCfg, sandboxKasse, testKasse } from "./config.mjs";
-import { hatUmstellungsangebot, connectUrl, darfKassieren, studioAdresseDa, anzahlungsbedingungen, eingebettet, klarnaFuer, klarnaDauerhaft, STATUS, hatGarantie } from "./domain.mjs";
+import { anzahlungAus, hatUmstellungsangebot, connectUrl, darfKassieren, studioAdresseDa, anzahlungsbedingungen, eingebettet, klarnaFuer, klarnaDauerhaft, STATUS, hatGarantie } from "./domain.mjs";
 import { gutscheinStatus, gutscheinUrl } from "./gutschein.mjs";
 
 export const zahlseite = (s) => `${CFG.siteUrl}/zahlen/${s.slug}`;
@@ -51,7 +51,8 @@ export const oeffentlich = (s) => ({
   recht: s.recht ? { version: s.recht.version, am: s.recht.am, aktuell: s.recht.version === CFG.rechtVersion } : null,
   checkliste: s.checkliste || {}, extrasAngefragt: Object.keys(s.extras || {}), eingebettet: eingebettet(), simulation: BAUSTEINE_SIMULIERT,
   anzahlungsbedingungen: anzahlungsbedingungen(s),
-  ausweichAnzahlung: { an: Boolean(s.ausweichAnzahlung?.an), prozent: s.ausweichAnzahlung?.prozent || 30 },
+  ausweichAnzahlung: { an: Boolean(s.ausweichAnzahlung?.an) && !anzahlungAus(s), prozent: s.ausweichAnzahlung?.prozent || 30 },
+  anzahlungAus: anzahlungAus(s),
   zahlartenHinweis: Boolean(s.zahlartenHinweis),
   umstellungAngebot: hatUmstellungsangebot(s) ? { monatNetto: s.umstellung.monatNetto,
     zugestimmtAm: s.umstellung.zustimmung?.monatNetto === s.umstellung.monatNetto ? s.umstellung.zustimmung.am || null : null } : null,

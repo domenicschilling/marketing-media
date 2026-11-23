@@ -108,6 +108,8 @@ export default handler(async (req) => {
       // Anschrift korrigieren (z. B. Firmenname im Feld Straße) – wichtig für Monatsabrechnung und Vertrag
       for (const k of ["strasse", "plz", "ort", "website"]) if (b[k] !== undefined) s[k] = clean(b[k], 160);
       if (b.status && STATUS[b.status]) s.status = b.status;
+      // Anzahlungen für dieses Studio ausschalten (nur Finanzierung + Gutscheine), Domenic 23.11.2026
+      if (b.keineAnzahlung !== undefined) { s.keineAnzahlung = Boolean(b.keineAnzahlung); if (s.keineAnzahlung && s.ausweichAnzahlung) s.ausweichAnzahlung.an = false; }
       await saveStudio(s);
       return json(s);
     }

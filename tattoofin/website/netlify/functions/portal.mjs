@@ -50,7 +50,7 @@ import { saveStudio, zahlungenVon, getZahlung, saveZahlung, abrechnungenVon, get
 import { currentStudio, clearCookie } from "./_lib/auth.mjs";
 import { geraeteWiderrufen } from "./_lib/app-geraete.mjs";
 import { stripe, dashboardLink, accountSession, ensureConnectedAccount } from "./_lib/stripe.mjs";
-import { hatUmstellungsangebot, umstellungCheckout, notify, notifyAdmin, connectUrl, connectUrlGehostet, darfKassieren, studioAdresseDa, provisionVerdient, kontoAbgleichen, eingebettet, klarnaFuer, provisionZahlung, aufstellerBezahlt, aufstellerLogoLoeschen, istAufstellerPruefStudio, kuendigungEinreichen, kuendigungZuruecknehmen, zahlungAbgleichen } from "./_lib/domain.mjs";
+import { anzahlungAus, ANZAHLUNG_AUS_TEXT, hatUmstellungsangebot, umstellungCheckout, notify, notifyAdmin, connectUrl, connectUrlGehostet, darfKassieren, studioAdresseDa, provisionVerdient, kontoAbgleichen, eingebettet, klarnaFuer, provisionZahlung, aufstellerBezahlt, aufstellerLogoLoeschen, istAufstellerPruefStudio, kuendigungEinreichen, kuendigungZuruecknehmen, zahlungAbgleichen } from "./_lib/domain.mjs";
 import { fuerStudio, oeffentlich, zahlungsLink } from "./_lib/studio-ansicht.mjs";
 import { randomBytes } from "node:crypto";
 import { KLARNA_NAME, PFLICHTSATZ_STUDIO, gutscheinWort, GUTSCHEIN_HINWEIS } from "./_lib/klarna-texte.mjs";
@@ -155,6 +155,7 @@ export default handler(async (req, context) => {
       if (!(betragCent >= CFG.minBetragCent && betragCent <= CFG.maxBetragCent)) return fail(`Bitte einen Betrag zwischen ${CFG.minBetragCent / 100} € und ${CFG.maxBetragCent / 100} € eingeben.`);
       const email = clean(b.email, 160).toLowerCase();
       if (email && !isEmail(email)) return fail("Bitte eine gültige E-Mail-Adresse eingeben oder das Feld leer lassen.");
+      if (b.art === "anzahlung" && anzahlungAus(s)) return fail(ANZAHLUNG_AUS_TEXT, 409);
       const fee = plattformgebuehr(betragCent, s);
       const gutschein = b.art === "gutschein";
       if (gutschein && !clean(b.kunde, 80)) return fail("Bitte den Namen des Käufers eintragen.");
@@ -309,7 +310,7 @@ export default handler(async (req, context) => {
     if (b.ausweichAnzahlung !== undefined) {
       const pr = Math.round(Number(b.ausweichAnzahlung?.prozent) || 30);
       if (pr < 10 || pr > 50) return fail("Bitte einen Anteil zwischen 10 und 50 % eingeben.");
-      s.ausweichAnzahlung = { an: Boolean(b.ausweichAnzahlung?.an), prozent: pr, am: now() };
+      s.ausweichAnzahlung = { an: Boolean(b.ausweichAnzahlung?.an) && !anzahlungAus(s), prozent: pr, am: now() };
     }
     // Hinweis zu den Zahlarten auf der Zahlseite: entscheidet allein das Studio (Standard: aus)
     if (b.zahlartenHinweis !== undefined) s.zahlartenHinweis = Boolean(b.zahlartenHinweis);

@@ -221,6 +221,10 @@ export const ANZAHLUNG_STANDARD = "Die Anzahlung sichert deinen Termin und wird 
   + "Sagt das Studio den Termin ab, bekommst du die Anzahlung zurück oder auf Wunsch einen neuen Termin.";
 export const anzahlungsbedingungen = (s) => (s.anzahlungsbedingungen || ANZAHLUNG_STANDARD);
 export const istAnzahlung = (z) => z.art === "anzahlung" || Boolean(z.anzahlung);
+// Studios ohne Anzahlungen (Domenic 23.11.2026: Tattoo Fashion München + Landshut nur Finanzierung und Gutscheine).
+// Gesperrt sind alle Wege zu einer Anzahlung: Link „Anzahlung“, Zahlseite „als Anzahlung“, Ausweg nach Klarna-Ablehnung.
+export const anzahlungAus = (s) => Boolean(s?.keineAnzahlung);
+export const ANZAHLUNG_AUS_TEXT = "Bei deinem Studio sind Anzahlungen ausgeschaltet. Erstelle einen Zahlungslink über den ganzen Betrag (mit Ratenzahlung*) oder einen Gutschein.";
 
 // Zahlarten je Zahlung: Gutscheine nur per Karte (Klarna lässt „Wertkarten, Gutscheine und Geschenkkarten“ nicht zu,
 // docs.stripe.com/payments/klarna/compliance). nurKarte: Ausweg, wenn Klarna abgelehnt hat (Kunde wählt „mit Karte zahlen“).

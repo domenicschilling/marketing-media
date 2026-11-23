@@ -216,7 +216,7 @@
     g.innerHTML = s.kannKassieren ? "" : s.stripe.freigegeben && adresseFehlt(s) ? '<div class="card-a"><b>Adresse fehlt noch.</b><p class="klein muted">Trag kurz die Adresse deiner Zahlseite ein, dann kannst du Zahlungslinks erstellen.</p><a class="btn gold small" href="#start">Adresse eintragen</a></div>'
       : '<div class="card-a"><b>Erst noch das Zahlungskonto.</b><p class="klein muted">Sobald Stripe dein Konto freigegeben hat, kannst du Zahlungslinks erstellen.</p>' + (s.stripe.angabenGemacht ? "" : '<a class="btn gold small" href="#einrichtung">Jetzt einrichten</a>') + "</div>";
     $("l-btn").disabled = !s.kannKassieren;
-    feeHinweis();
+    feeHinweis(); artHinweis();
     setTimeout(function () { if (s.kannKassieren && !$("l-out").innerHTML) $("l-betrag").focus(); }, 50);
   }
   function betragCent(v) { var n = parseFloat(String(v || "").replace(/\s|€/g, "").replace(/\.(?=\d{3}(\D|$))/g, "").replace(",", ".")); return isFinite(n) ? Math.round(n * 100) : 0; }
@@ -322,6 +322,10 @@
   function ratenHilfe() { $("raten-text").textContent = D.ratenText || ""; }
   $("raten-kopieren").onclick = function () { (navigator.clipboard ? navigator.clipboard.writeText(D.ratenText || "") : Promise.reject()).then(function () { toast("Text kopiert"); }).catch(function () { toast("Bitte Text markieren und kopieren"); }); };
   function artHinweis() {
+    // Studio ohne Anzahlungen (Tattoo Fashion München/Landshut): Auswahl ausblenden, immer Projektpreis
+    var seg = document.querySelector("#f-link .seg");
+    if (seg) seg.hidden = Boolean(D.studio.anzahlungAus);
+    if (D.studio.anzahlungAus) document.querySelector('#f-link input[name=art][value=gesamt]').checked = true;
     var anz = document.querySelector('#f-link input[name=art]:checked').value === "anzahlung";
     $("l-heute-box").classList.toggle("hidden", anz);
     if (D.studio.klarna === false) { $("l-art-hinweis").textContent = "Dein Kunde zahlt per Karte, Apple Pay oder Google Pay."; return; }
@@ -546,6 +550,8 @@
   function einstellungen() {
     $("k-email").value = D.studio.benachrichtigung.email || ""; $("k-anz").value = D.studio.anzahlungsbedingungen || "";
     var aw = D.studio.ausweichAnzahlung || {}; $("k-aw-an").checked = Boolean(aw.an); $("k-aw-pr").value = aw.prozent || 30;
+    var awKarte = $("k-aw-an").closest(".card-a"); if (awKarte) awKarte.hidden = Boolean(D.studio.anzahlungAus);
+    var anzKarte = $("k-anz").closest(".card-a"); if (anzKarte) anzKarte.hidden = Boolean(D.studio.anzahlungAus);
     $("k-zh-an").checked = Boolean(D.studio.zahlartenHinweis);
   }
   $("k-aw-save").onclick = async function () { try { D.studio = await TF.api("/api/portal/kontakt", { method: "PATCH", body: { ausweichAnzahlung: { an: $("k-aw-an").checked, prozent: $("k-aw-pr").value } } }); einstellungen(); toast("Gespeichert."); } catch (err) { toast(err.message, true); } };

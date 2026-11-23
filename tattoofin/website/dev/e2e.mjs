@@ -854,6 +854,21 @@ try {
     const csK = (await mock("state")).sessions[rK.url.split("/pay/")[1]];
     check(JSON.stringify(csK.payment_method_types) === '["card"]' && csK.amount_total === 60000 && !st.customers[csK.customer], "„Mit Karte zahlen“: gleicher Betrag, nur Karte (ohne neue Bestätigung, da schon bestätigt)");
     await api(pA, "/api/portal/kontakt", { method: "PATCH", body: { ausweichAnzahlung: { an: false, prozent: 30 } } });
+    // Studio ohne Anzahlungen (Tattoo Fashion München/Landshut): alle Wege zur Anzahlung gesperrt, Projektpreis + Gutschein gehen weiter
+    {
+      await admin(`studio/${provId}`, { method: "PATCH", body: { keineAnzahlung: true } });
+      const sp = await api(pA, "/api/portal/zahlung", { method: "POST", body: { betrag: "100", kunde: "Anna", art: "anzahlung", beschreibung: "Termin" } });
+      check(sp.status === 409 && /Anzahlungen ausgeschaltet/.test(sp.data?.error || ""), "Ohne Anzahlungen: Link „Anzahlung“ wird abgelehnt", sp.status);
+      const ge = await api(pA, "/api/portal/zahlung", { method: "POST", body: { betrag: "300", kunde: "Anna", art: "gesamt", beschreibung: "Rose" } });
+      check(ge.status === 201, "Ohne Anzahlungen: Link über den ganzen Betrag geht weiter", ge.status);
+      const gs = await api(pA, "/api/portal/zahlung", { method: "POST", body: { betrag: "100", kunde: "Anna", email: "anna@example.com", art: "gutschein" } });
+      check(gs.status === 201, "Ohne Anzahlungen: Gutschein geht weiter", gs.status);
+      await api(pA, "/api/portal/kontakt", { method: "PATCH", body: { ausweichAnzahlung: { an: true, prozent: 30 } } });
+      const st = (await api(pA, "/api/portal")).data?.studio || {};
+      check(st.anzahlungAus === true && st.ausweichAnzahlung?.an === false, "Ohne Anzahlungen: Ausweg-Anzahlung bleibt aus, App sieht anzahlungAus", JSON.stringify(st.ausweichAnzahlung));
+      await admin(`studio/${provId}`, { method: "PATCH", body: { keineAnzahlung: false } });
+      await api(pA, "/api/portal/kontakt", { method: "PATCH", body: { ausweichAnzahlung: { an: false, prozent: 30 } } });
+    }
     // --- Gutschein-Wörter im normalen Projektfeld: kein Klarna, Hinweis auf die Gutschein-Funktion (11.11.2026)
     { const gw = await api(pA, "/api/portal/zahlung", { method: "POST", body: { betrag: "200", kunde: "Gina Gut", beschreibung: "Gutschein für Freundin" } });
       await post("/api/pay", { z: gw.data.zahlung.id, inhaltOk: true });

@@ -10,14 +10,14 @@
 import { CFG, BAUSTEINE_SIMULIERT, testKasse } from "./_lib/config.mjs";
 import { json, fail, body, clean, id, now, handler, isEmail, parseBetrag, euro, clientIp } from "./_lib/util.mjs";
 import { getStudio, studioBy, zahlungBy, saveZahlung } from "./_lib/store.mjs";
-import { checkoutFuer, bezahlfeldFuer, darfKassieren, anzahlungsbedingungen, istAnzahlung, bezahlfeld, zahlungBezahlt, plattformKassiert, klarnaVersuch, zahlartenFuer, klarnaFuer, notify, zahlungAbgleichen, oeffentlicheAdresse } from "./_lib/domain.mjs";
+import { anzahlungAus, checkoutFuer, bezahlfeldFuer, darfKassieren, anzahlungsbedingungen, istAnzahlung, bezahlfeld, zahlungBezahlt, plattformKassiert, klarnaVersuch, zahlartenFuer, klarnaFuer, notify, zahlungAbgleichen, oeffentlicheAdresse } from "./_lib/domain.mjs";
 import { mails } from "./_lib/emails.mjs";
 import { log } from "./_lib/store.mjs";
 import { stripe } from "./_lib/stripe.mjs";
 import { brandingOeffentlich } from "./_lib/branding.mjs";
 import { gutscheinWort, GUTSCHEIN_HINWEIS } from "./_lib/klarna-texte.mjs";
 
-const studioInfo = (s) => ({ klarna: klarnaFuer(s), zahlartenHinweis: Boolean(s.zahlartenHinweis), firma: s.firma, ...oeffentlicheAdresse(s), slug: s.slug, aktiv: Boolean(darfKassieren(s)), anzahlungsbedingungen: anzahlungsbedingungen(s), branding: brandingOeffentlich(s) });
+const studioInfo = (s) => ({ klarna: klarnaFuer(s), zahlartenHinweis: Boolean(s.zahlartenHinweis), firma: s.firma, ...oeffentlicheAdresse(s), slug: s.slug, aktiv: Boolean(darfKassieren(s)), anzahlungAus: anzahlungAus(s), anzahlungsbedingungen: anzahlungsbedingungen(s), branding: brandingOeffentlich(s) });
 // Doppelzahlung sperren: Hat die Kundin nach einem Klarna-Nein die Anzahlung (Ausweg) schon bezahlt, darf der ursprüngliche Link nicht mehr
 // zahlbar sein (sonst zahlt sie versehentlich den Gesamtbetrag zusätzlich). Umgekehrt: Ist das Original bezahlt, ist die Anzahlung gesperrt.
 export const schonBezahltDurchAusweich = (z) => Boolean(z.ausweich?.bezahltAm);
@@ -48,7 +48,7 @@ function bestaetigen(req, context, s, z) {
 // Betrag: eingestellter Prozentsatz vom Gesamtbetrag, auf volle Euro gerundet, mindestens der Mindestbetrag.
 export function ausweichAngebot(s, z) {
   const a = s.ausweichAnzahlung || {};
-  if (!a.an || z.art === "gutschein" || istAnzahlung(z) || z.ausweichVon || z.ausweich?.bezahltAm) return null;
+  if (!a.an || anzahlungAus(s) || z.art === "gutschein" || istAnzahlung(z) || z.ausweichVon || z.ausweich?.bezahltAm) return null;
   const prozent = Math.min(50, Math.max(10, Number(a.prozent) || 30));
   const betragCent = Math.max(CFG.minBetragCent, Math.round(z.betragCent * prozent / 100 / 100) * 100);
   if (betragCent >= z.betragCent) return null;
@@ -151,6 +151,7 @@ export default handler(async (req, context) => {
   const kunde = clean(b.kunde, 80), email = clean(b.email, 160).toLowerCase();
   if (!kunde) return fail("Bitte gib deinen Namen an.");
   if (email && !isEmail(email)) return fail("Bitte gib eine gültige E-Mail-Adresse an.");
+  if (b.anzahlung && anzahlungAus(s)) return fail("Dieses Studio nimmt keine Anzahlungen über Tattoofin an. Du kannst den ganzen Betrag bezahlen.", 409);
   const anzahlung = Boolean(b.anzahlung);
   if (anzahlung && !b.bedingungen) return fail(NICHT_BESTAETIGT);
   if (!b.inhaltOk) return fail(INHALT_FEHLT);
