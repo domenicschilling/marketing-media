@@ -57,12 +57,12 @@ const call = async (method, url, { token, cookie, body, admin } = {}) => {
 const stripeForm = (url, felder = {}) => fetch(STRIPE + url, { method: "POST", redirect: "manual", headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams(felder) });
 const mock = (p, body) => fetch(`${STRIPE}/mock/${p}`, body ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) } : undefined).then((r) => r.json());
 
-async function studio(email, firma, ort) {
-  const r = await call("POST", "/api/signup", { body: { firma, inhaber: "Alex Beispiel", strasse: "Beispielstraße 1", plz: "96047", ort, email, telefon: "0151 1234567", studioTelefon: "0951 123456", unterzeichner: "Alex Beispiel", paket: "monatlich", akzeptiert: { vertrag: true, avv: true, unternehmer: true, kmu: true } } });
+async function studio(email, firma, ort, { inhaber = "Alex Beispiel", strasse = "Beispielstraße 1", plz = "96047" } = {}) {
+  const r = await call("POST", "/api/signup", { body: { firma, inhaber, strasse, plz, ort, email, telefon: "0151 1234567", studioTelefon: "0951 123456", unterzeichner: inhaber, paket: "monatlich", akzeptiert: { vertrag: true, avv: true, unternehmer: true, kmu: true } } });
   const cookie = (r.headers.get("set-cookie") || "").split(";")[0];
   await stripeForm(new URL(r.data.url).pathname, { pm: "card" }); await wait(200);
   const sess = await call("POST", "/api/portal/stripe-session", { cookie });
-  await stripeForm(`/onboarding-fertig/${sess.data.konto}`, { name: "Alex Beispiel", iban: "DE89370400440532013000" }); await wait(200);
+  await stripeForm(`/onboarding-fertig/${sess.data.konto}`, { name: inhaber, iban: "DE89370400440532013000" }); await wait(200);
   const id = (await call("GET", "/api/admin/studios", { admin: true })).data.find((s) => s.email === email).id;
   await call("POST", `/api/admin/studio/${id}/live`, { admin: true, body: {} });
   return { id, konto: sess.data.konto, cookie };
@@ -104,6 +104,25 @@ await mock("payout", { account: bamberg.konto, amount: 45800, status: "paid", cr
 await mock("payout", { account: bamberg.konto, amount: 98000, status: "in_transit", created: jetzt - 1 * tag, arrival_date: jetzt + 1 * tag });
 await mock("webhooks?an=1");
 await mock(`saldo/${bamberg.konto}?verfuegbar=12345&unterwegs=48000`);
+// Store-Bilder (App Store): eigenes Studio mit glaubwürdigen, erfundenen Daten (keine „Beispiel“-Namen im Bild)
+const store = await studio("store@beispiel.test", "Nordlicht Tattoo", "Hamburg", { inhaber: "Sam Lindqvist", strasse: "Schanzenstraße 12", plz: "20357" });
+{
+  const ts = await appToken("store@beispiel.test", store.id);
+  await bezahlt(ts, { betrag: "1200", kunde: "Jonas Keller", beschreibung: "Rückenstück, Sitzung 1", sitzungen: "Sitzung 1 von 3" });
+  await bezahlt(ts, { betrag: "150", kunde: "Mia Sommer", beschreibung: "Fineline Schulter", art: "anzahlung" });
+  await bezahlt(ts, { betrag: "480", kunde: "Tom Richter", beschreibung: "Unterarm Blackwork" });
+  await bezahlt(ts, { betrag: "650", kunde: "Lea Brandt", beschreibung: "Mandala Oberschenkel" });
+  await bezahlt(ts, { betrag: "100", kunde: "Paul Neumann", beschreibung: "Fineline Handgelenk", art: "anzahlung" });
+  await bezahlt(ts, { art: "gutschein", betrag: "150", kunde: "Greta Hansen", email: "greta@beispiel.test", empfaenger: "Max", nachricht: "Alles Gute zum Geburtstag!" });
+  await bezahlt(ts, { art: "gutschein", betrag: "300", kunde: "Nina Vogel", email: "nina@beispiel.test", empfaenger: "Lisa", nachricht: "Frohe Weihnachten!" });
+  await call("POST", "/api/portal/zahlung", { token: ts, body: { betrag: "250", kunde: "Elif Demir", beschreibung: "Anzahlung Cover-up", art: "anzahlung" } });
+  await call("POST", "/api/app/abmelden", { token: ts });
+  await mock("webhooks?an=0");
+  await mock("payout", { account: store.konto, amount: 184000, status: "paid", created: jetzt - 8 * tag, arrival_date: jetzt - 6 * tag });
+  await mock("payout", { account: store.konto, amount: 113000, status: "in_transit", created: jetzt - 1 * tag, arrival_date: jetzt + 1 * tag });
+  await mock("webhooks?an=1");
+  await mock(`saldo/${store.konto}?verfuegbar=63000&unterwegs=113000`);
+}
 // Demo-Studio + Review-Zugang (wie später bei Apple)
 const demo = (await call("POST", "/api/admin/app-demo", { admin: true, body: { email: "review@beispiel.test" } })).data;
 Object.assign(process.env, { APP_REVIEW_EMAIL: "review@beispiel.test", APP_REVIEW_CODE: REVIEW_CODE, APP_REVIEW_STUDIO_ID: demo.studioId, APP_REVIEW_REG_EMAIL: "review-neu@beispiel.test" });
