@@ -700,35 +700,13 @@ try {
   const dStart = await call("GET", "/api/app/start", { token: tR });
   const dPk = (id) => dStart.data.checkliste?.punkte.find((p) => p.id === id) || {};
   check(dStart.status === 200 && dPk("stripe").ok === true && dPk("stripe").wartet === false && dPk("stripe").ziel === null && dPk("stripe").text === "Testmodus: Für Testzahlungen brauchst du kein Zahlungskonto." && dPk("link").ziel === "link" && dPk("link").gesperrt === false && dPk("link").text === "Zum Ausprobieren gern an dich selbst.", "Demo-Studio: Start-Checkliste mit Stripe-Punkt „Testmodus“ (ohne Ziel), Link-Punkt offen", JSON.stringify([dPk("stripe"), dPk("link")]));
-  // QR-Aufsteller im Demo-Studio (Apple-Prüfer, App 1.0 (1)): bis Apple 1.0 freigegeben hat wie früher (Entscheidung Domenic 16.11.2026),
-  // kostenlos „bestellbar“, aber ohne echte Bestellung, ohne Mail, ohne Stripe-Checkout
-  const LOGO_D = "data:image/jpeg;base64," + Buffer.from("demo-logo").toString("base64");
-  const dAdminVor = mailsAn("admin@app.test").length, dState = await mock("state"), dSessVor = Object.keys(dState.sessions || {}).length, dCusVor = Object.keys(dState.customers || {}).length, dMailsVor = mails().length;
+  // QR-Aufsteller: Apple hat 1.0 am 18.11.2026 freigegeben, Ausnahme für Prüf-Studios seit 23.11.2026 aus → auch das Demo-Studio bekommt 410
+  const dMailsVor = mails().length;
   const dAuf = await call("GET", "/api/app/aufsteller", { token: tR });
-  const dA = dAuf.data.aufsteller || {};
-  check(dAuf.status === 200 && dAuf.headers.get("cache-control") === "no-store" && dA.kostenlos === true && dA.bestellbar === true && dA.knopf === "Kostenlos bestellen" && dA.preisText === "Für dich kostenlos" && dA.preis === null && dA.status === "offen" && dA.holz === "hell" && dA.variante === "name" && dA.hatLogo === false && dA.logo === null && dA.firma === "Tattoofin Demo-Studio" && dA.zahlseite === `${BASE}/zahlen/tattoofin-demo-studio` && dA.artikel && dA.holzHinweis?.dunkel && !dAuf.data.url && !dAuf.data.cs,
-    "Demo-Studio (App 1.0 (1)): GET /api/app/aufsteller → 200 wie früher (kostenlos, „Kostenlos bestellen“, kein Preis, Vorschau mit Firma und Zahlseite)", dAuf.text.slice(0, 240));
-  const dHolz = await call("POST", "/api/portal/aufsteller", { token: tR, body: { holz: "dunkel", variante: "name" } });
-  const dLogo = await call("POST", "/api/portal/aufsteller", { token: tR, body: { holz: "dunkel", variante: "logo", logo: LOGO_D, logoW: 400, logoH: 200 } });
-  const dAuf2 = await call("GET", "/api/app/aufsteller", { token: tR });
-  check(dHolz.status === 200 && dHolz.data.aufsteller?.holz === "dunkel" && dLogo.status === 200 && dLogo.data.aufsteller?.hatLogo === true && dLogo.data.aufsteller?.variante === "logo" && !("logo" in dLogo.data.aufsteller) && dAuf2.data.aufsteller?.logo?.src === LOGO_D && dAuf2.data.aufsteller.logo.w === 400 && dAuf2.data.aufsteller.logo.h === 200 && dAuf2.data.aufsteller.holz === "dunkel" && blob("aufsteller-logo/" + demo.studioId)?.src === LOGO_D,
-    "Demo-Studio: Holzton speichern und Logo hochladen → 200, GET liefert das Logo für die Vorschau", `${dHolz.status} ${dLogo.text.slice(0, 160)}`);
-  const dKaputt = await call("POST", "/api/portal/aufsteller", { token: tR, body: { holz: "hell", variante: "logo", logo: "data:image/png;base64,AAAA" } });
-  check(dKaputt.status === 400 && blob("aufsteller-logo/" + demo.studioId)?.src === LOGO_D, "Demo-Studio: falsches Bildformat → 400 wie früher, altes Logo bleibt", dKaputt.text);
   const dBest = await call("POST", "/api/portal/aufsteller", { token: tR, body: { holz: "dunkel", variante: "logo", bestellen: true } });
-  const dBest2 = await call("POST", "/api/portal/aufsteller", { token: tR, body: { holz: "dunkel", variante: "logo", bestellen: true } });
   const dPruef = await call("POST", "/api/portal/aufsteller-pruefen", { token: tR, body: { cs: "cs_test_x" } });
-  check(dBest.status === 200 && dBest.data.aufsteller?.status === "bestellt" && dBest.data.aufsteller.statusText && !("url" in dBest.data) && !("cs" in dBest.data) && dBest2.status === 200 && dBest2.data.aufsteller?.status === "bestellt" && !("url" in dBest2.data) && dPruef.status === 200 && dPruef.data.aufsteller?.status === "bestellt" && dPruef.data.bezahlt === true && blob("studio/" + demo.studioId).aufsteller?.pruefung === true,
-    "Demo-Studio: Bestellen → 200 „bestellt“ ohne url/cs (App: „angefordert“), zweites Mal wieder 200, aufsteller-pruefen → 200", `${dBest.text.slice(0, 160)} | ${dBest2.status} | ${dPruef.text.slice(0, 80)}`);
-  const dWeg = await call("POST", "/api/portal/aufsteller", { token: tR, body: { holz: "dunkel", variante: "name", logo: null } });
-  check(dWeg.status === 200 && dWeg.data.aufsteller?.hatLogo === false && dWeg.data.aufsteller.variante === "name" && !blob("aufsteller-logo/" + demo.studioId), "Demo-Studio: Logo löschen → 200, Logo weg", dWeg.text.slice(0, 120));
-  const dState2 = await mock("state");
-  check(mailsAn("admin@app.test").length === dAdminVor && mails().length === dMailsVor && Object.keys(dState2.sessions || {}).length === dSessVor && Object.keys(dState2.customers || {}).length === dCusVor && !logs("aufsteller-angefordert").length && !logs("aufsteller-checkout").length && !logs("aufsteller-logo-geloescht").length && logs("aufsteller-pruefstudio").length >= 5 && rl.data.token && (await call("GET", "/api/portal", { token: tR })).status === 200,
-    "Demo-Studio: keine Mail (auch keine Admin-Mail „QR-Aufsteller bestellen“), kein Stripe-Checkout/-Kunde, eigenes Log, Token bleibt gültig");
-  // Demo-Reset danach: Prüfer sieht wieder „Kostenlos bestellen“
-  await admin("app-demo", { email: "review@tattoofin.test" });
-  const dReset = await call("GET", "/api/app/aufsteller", { token: tR });
-  check(!blob("studio/" + demo.studioId).aufsteller && !blob("aufsteller-logo/" + demo.studioId) && dReset.status === 200 && dReset.data.aufsteller?.status === "offen" && dReset.data.aufsteller.hatLogo === false, "Demo-Reset nach Bestellen: Status wieder „offen“, kein Logo", dReset.text.slice(0, 120));
+  check(entfallen(dAuf) && entfallen(dBest) && dPruef.status === 410 && mails().length === dMailsVor && !blob("studio/" + demo.studioId)?.aufsteller,
+    "Demo-Studio (nach Apple-Freigabe): GET /api/app/aufsteller, Bestellen und aufsteller-pruefen → 410 aufsteller_entfallen, keine Mail, nichts gespeichert", `${dAuf.status} ${dBest.status} ${dPruef.status}`);
   check(mailsAn("review@tattoofin.test").length === 0, "Demo-Studio bekommt keine Mails (auch kein „Neues Gerät“)");
   const jobsD = await admin("jobs", {});
   const abr = await admin("abrechnung", { dryRun: true });
@@ -922,8 +900,8 @@ try {
     const pInh = await call("GET", "/api/app/aufsteller", { token: tD });
     const dNach = blob("studio/" + D.id);
     setBlob("studio/" + D.id, dEcht);
-    check([pt, ptPost, ptPruef].every((r) => r.status === 403 && r.data.code === "nur_inhaber") && entfallen(pWeb) && entfallen(pWebPruef) && pInh.status === 200 && pInh.data.aufsteller?.kostenlos === true && !dNach.aufsteller,
-      "Prüf-Studio: Team → 403 nur_inhaber (App zeigt eigenen Text), Dashboard-Cookie → 410, Inhaber → 200; nichts gespeichert", JSON.stringify([pt.status, ptPost.status, ptPruef.status, pWeb.status, pInh.status]));
+    check([pt, ptPost, pWeb, pInh].every(entfallen) && [ptPruef, pWebPruef].every((r) => r.status === 410) && !dNach.aufsteller,
+      "Prüf-Studio (nach Apple-Freigabe 18.11.): Team, Inhaber und Dashboard → 410 aufsteller_entfallen; nichts gespeichert", JSON.stringify([pt.status, ptPost.status, ptPruef.status, pWeb.status, pInh.status]));
   }
   // Dashboard (Cookie): ebenfalls 410; einzige Ausnahme: ein früher gespeichertes Logo löschen (Datenschutz)
   const webAuf = await call("POST", "/api/portal/aufsteller", { cookie: E.cookie, body: { holz: "dunkel", variante: "name" } });
@@ -964,10 +942,10 @@ try {
   process.env.AUFSTELLER_LOGOS_AUFRAEUMEN = "1";
   setBlob("aufsteller-logo/" + demo.studioId, { src: LOGO, w: 400, h: 200 });
   const jobLogo = await admin("jobs", {});
-  check(Boolean(blob("aufsteller-logo/" + demo.studioId)) && blob("studio/" + demo.studioId)?.demo === true, "Tagesjob verschont das Logo des Prüf-/Demo-Studios (App 1.0 bei Apple)");
+  check(!blob("aufsteller-logo/" + demo.studioId) && blob("studio/" + demo.studioId)?.demo === true, "Tagesjob löscht seit der Apple-Freigabe auch das Logo des Demo-Studios");
   const geloeschtJob = (jobLogo || []).filter((x) => x[0] === "aufsteller-logo-geloescht").map((x) => x[1]);
   check(!blob("aufsteller-logo/" + D.id) && blob("studio/" + D.id).aufsteller?.hatLogo === false && blob("studio/" + D.id).aufsteller?.logoGeloeschtAm && !blob("aufsteller-logo/st_gibtesnicht") &&
-    blob("aufsteller-logo/" + E.id) && blob("studio/" + E.id).aufsteller?.hatLogo === true && geloeschtJob.includes(D.id) && !geloeschtJob.includes(E.id) && logs("aufsteller-logo-geloescht").length === logVorJob + 2,
+    blob("aufsteller-logo/" + E.id) && blob("studio/" + E.id).aufsteller?.hatLogo === true && geloeschtJob.includes(D.id) && !geloeschtJob.includes(E.id) && geloeschtJob.includes(demo.studioId) && logs("aufsteller-logo-geloescht").length === logVorJob + 3,
     "Tagesjob löscht Aufsteller-Logos ohne Bestellung (auch ohne Studio), Logo eines bezahlten Altfalls bleibt", JSON.stringify(geloeschtJob));
   const admLogo = await call("POST", "/api/admin/studio/" + E.id + "/aufsteller-logo", { body: {}, headers: { authorization: "Bearer admin" } });
   const admLogoStudio = await call("POST", "/api/admin/studio/" + E.id + "/aufsteller-logo", { cookie: E.cookie, body: {} });
@@ -1360,15 +1338,14 @@ try {
   const sbKauf = await call("POST", "/api/portal/aufsteller", { token: tS, body: { holz: "hell", variante: "logo", bestellen: true } });
   const sbKauf2 = await call("POST", "/api/portal/aufsteller", { token: tS, body: { kaufen: true } });
   const sbState = await mock("state");
-  check(sbAuf.status === 200 && sbAuf.data.aufsteller?.kostenlos === true && sbAuf.data.aufsteller.bestellbar === true && sbAuf.data.aufsteller.knopf === "Kostenlos bestellen" && sbAuf.data.aufsteller.preis === null && sbAuf.data.aufsteller.testmodusHinweis === null && sbLogo.status === 200 && sbLogo.data.aufsteller?.hatLogo === true && sbKauf.status === 200 && sbKauf.data.aufsteller?.status === "bestellt" && !("url" in sbKauf.data) && !("cs" in sbKauf.data) && sbKauf2.status === 200 && !("url" in sbKauf2.data),
-    "Sandbox (App-Prüfung/TestFlight): Aufsteller → 200 wie früher, Logo speichern, Bestellen ohne Checkout (kein url/cs)", `${sbAuf.text.slice(0, 160)} | ${sbKauf.text.slice(0, 120)}`);
-  check(Object.keys(sbState.sessions || {}).length === sbSessVor && Object.keys(sbState.customers || {}).length === sbCusVor && mailsAn("admin@app.test").length === sbAdminVor && mailsAn("sandra@neu-app.test").length === sbStudioMails && !logs("aufsteller-angefordert").length && !logs("aufsteller-checkout").length && blob("studio/" + S.entwurfId).aufsteller?.pruefung === true,
-    "Sandbox: kein Stripe-Aufruf, keine Admin-Mail, keine Mail ans Studio, Bestellung nur als Prüfung vermerkt");
+  check([sbAuf, sbLogo, sbKauf].every(entfallen), "Sandbox (App-Prüfung/TestFlight) nach Apple-Freigabe: Aufsteller, Logo, Bestellen → 410 aufsteller_entfallen", `${sbAuf.status} ${sbLogo.status} ${sbKauf.status}`);
+  check(Object.keys(sbState.sessions || {}).length === sbSessVor && Object.keys(sbState.customers || {}).length === sbCusVor && mailsAn("admin@app.test").length === sbAdminVor && mailsAn("sandra@neu-app.test").length === sbStudioMails && !logs("aufsteller-angefordert").length && !logs("aufsteller-checkout").length,
+    "Sandbox: kein Stripe-Aufruf, keine Admin-Mail, keine Mail ans Studio");
   // APPLE_SANDBOX_STRIPE=1 (Sandbox mit echter Stripe-Testkasse): bleibt Prüf-Studio
   process.env.APPLE_SANDBOX_STRIPE = "1";
   const sbStripe = await call("GET", "/api/app/aufsteller", { token: tS });
   delete process.env.APPLE_SANDBOX_STRIPE;
-  check(sbStripe.status === 200 && sbStripe.data.aufsteller?.status === "bestellt", "APPLE_SANDBOX_STRIPE=1: Sandbox-Studio bleibt Prüf-Studio (200)", sbStripe.text.slice(0, 120));
+  check(entfallen(sbStripe), "APPLE_SANDBOX_STRIPE=1: Sandbox-Studio → ebenfalls 410", sbStripe.text.slice(0, 120));
   // Aufräumen: Sandbox-Studio ohne Aufsteller-Daten für die folgenden Teile (Web-Cookie eines Prüf-Studios → 410: siehe Teil QR-Aufsteller, Studio D)
   await call("POST", "/api/portal/aufsteller", { token: tS, body: { logo: null } });
   setBlob("studio/" + S.entwurfId, { ...blob("studio/" + S.entwurfId), aufsteller: null });
@@ -1386,8 +1363,8 @@ try {
       pruef({ abrechnung: "apple", sandbox: true }), pruef({ abrechnung: "apple", apple: { umgebung: "Sandbox" } }), pruef({ abrechnung: "apple", apple: { umgebung: "Xcode" } })];
     const echtMitEnv = [pruef({ id: "st_echt", email: "chef@studio.test" }), pruef({ abrechnung: "apple", sandbox: false, apple: { umgebung: "Production" } }), pruef({ sandbox: true, email: "a@b.test" })];
     for (const [k, v] of [["APP_REVIEW_EMAIL", envAlt.a], ["APP_REVIEW_REG_EMAIL", envAlt.b], ["APP_REVIEW_STUDIO_ID", envAlt.c]]) { if (v === undefined) delete process.env[k]; else process.env[k] = v; }
-    check(ohneEnv.every((x) => x === false) && leer.every((x) => x === false) && mitEnv.every((x) => x === true) && echtMitEnv.every((x) => x === false),
-      "istAufstellerPruefStudio: Demo, Review-Studio-ID, Review-Adressen (auch Groß/klein), Review-Registrierung, Apple-Sandbox/Xcode → true; echte Studios, Production, leere Variablen → false", JSON.stringify({ ohneEnv, leer, mitEnv, echtMitEnv }));
+    check([...ohneEnv, ...leer, ...mitEnv, ...echtMitEnv].every((x) => x === false),
+      "istAufstellerPruefStudio nach Apple-Freigabe (23.11.2026): immer false, auch Demo/Review/Sandbox", JSON.stringify({ ohneEnv, leer, mitEnv, echtMitEnv }));
   }
   const sbWeb = await call("GET", "/api/portal", { token: tS });
   check(sbWeb.status === 200 && !("aufsteller" in (sbWeb.data.studio || {})) && !("aufstellerInklusive" in (sbWeb.data.studio || {})), "GET /api/portal (Sandbox): keine Aufsteller-Felder mehr");
@@ -1522,7 +1499,7 @@ try {
     setBlob("studio/" + e1.data.entwurfId, { ...rvBlob, sandbox: false, apple: { ...(rvBlob.apple || {}), umgebung: "Production" }, reviewRegistrierung: undefined });
     const rvAufMail = await call("GET", "/api/app/aufsteller", { token: b1.data.token });
     setBlob("studio/" + e1.data.entwurfId, rvBlob);
-    check(rvAuf.status === 200 && rvAuf.data.aufsteller?.knopf === "Kostenlos bestellen" && rvAufProd.status === 200 && rvAufMail.status === 200, "Review-Registrierung: Aufsteller → 200 (Sandbox, auch über reviewRegistrierung bzw. die Adresse APP_REVIEW_REG_EMAIL allein)", `${rvAuf.status} ${rvAufProd.status} ${rvAufMail.status}`);
+    check([rvAuf, rvAufProd, rvAufMail].every(entfallen), "Review-Registrierung nach Apple-Freigabe: Aufsteller → 410", `${rvAuf.status} ${rvAufProd.status} ${rvAufMail.status}`);
     rlReset();
     const rv2 = await pruefen(RV, "246810");
     const alt = blob("studio/" + e1.data.entwurfId);

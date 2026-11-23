@@ -69,6 +69,7 @@ export function paketDetails(s) {
 }
 
 // ---- QR-Aufsteller nur noch für die App-Prüfung bei Apple ----
+const AUFSTELLER_AUSNAHME_AUS = true;
 // nur bis Apple 1.0 freigegeben hat, dann entfernen (Entscheidung Domenic 16.11.2026)
 // App 1.0 (1) liegt mit der Aufsteller-Ansicht bei Apple in Prüfung. Der Prüfer darf dort keine Fehlermeldung sehen: Für „Prüf-Studios“
 // läuft der alte Ablauf (Vorschau, Holzton, Logo, Bestellen) weiter, aber ohne echte Bestellung, ohne Stripe, ohne Mail, ohne Hersteller-Link.
@@ -76,6 +77,9 @@ export function paketDetails(s) {
 // unabhängig von APPLE_SANDBOX_STRIPE), (c) Review-Registrierung oder E-Mail = APP_REVIEW_EMAIL / APP_REVIEW_REG_EMAIL.
 // Alle anderen Studios bekommen weiter 410 aufsteller_entfallen. Werte bei jedem Aufruf aus process.env (leere Variablen passen nie).
 export function istAufstellerPruefStudio(s) {
+  // 23.11.2026: Apple hat 1.0 am 18.11. freigegeben, App ist veröffentlicht (Domenic „Tattoofin App live“).
+  // Ausnahme beendet: Der Aufsteller ist jetzt für ALLE Studios weg (auch Demo/Review/Sandbox) → immer 410 aufsteller_entfallen.
+  if (AUFSTELLER_AUSNAHME_AUS) return false;
   if (!s || typeof s !== "object") return false;
   const env = process.env;
   if (s.demo === true || (env.APP_REVIEW_STUDIO_ID && s.id === env.APP_REVIEW_STUDIO_ID)) return true;
