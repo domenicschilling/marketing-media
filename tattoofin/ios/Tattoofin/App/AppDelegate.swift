@@ -38,10 +38,17 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         return [.banner, .list, .sound]
     }
 
-    /// Angetippt: in den passenden Tab bzw. die Detailseite springen
+    /// Angetippt: in den passenden Tab bzw. die Detailseite springen.
+    /// Fassung mit Abschluss-Rückruf statt `async`: Die async-Fassung rief den Abschluss nicht auf dem Haupt-Thread auf, UIKit brach die
+    /// App dann ab (Absturz beim Antippen einer Mitteilung, wenn die App im Hintergrund war; gefunden im Simulator-Test 23.11.2026).
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter,
-                                            didReceive response: UNNotificationResponse) async {
+                                            didReceive response: UNNotificationResponse,
+                                            withCompletionHandler completionHandler: @escaping () -> Void) {
         let f = Self.felder(response.notification)
-        await MainActor.run { AppState.shared.mitteilungGeoeffnet(typ: f.typ, zahlungId: f.zahlungId, payoutId: f.payoutId) }
+        nonisolated(unsafe) let fertig = completionHandler
+        DispatchQueue.main.async {
+            MainActor.assumeIsolated { AppState.shared.mitteilungGeoeffnet(typ: f.typ, zahlungId: f.zahlungId, payoutId: f.payoutId) }
+            fertig()
+        }
     }
 }
