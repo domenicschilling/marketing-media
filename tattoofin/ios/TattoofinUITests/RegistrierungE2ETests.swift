@@ -95,7 +95,7 @@ final class RegistrierungE2ETests: XCTestCase {
     }
 
     private func codeEingeben(_ app: XCUIApplication) {
-        let code = app.textFields["6-stelliger Code"]
+        let code = app.textFields["Code mit 6 Ziffern"]
         XCTAssertTrue(code.waitForExistence(timeout: 10), "Code-Feld fehlt")
         code.tap()
         code.typeText("123456")
@@ -113,7 +113,7 @@ final class RegistrierungE2ETests: XCTestCase {
         XCTAssertTrue(schicken.waitForExistence(timeout: 5))
         if fotos { foto("r02-email-bestaetigen") }
         sichtbar(app, schicken)
-        let code = app.textFields["6-stelliger Code"]
+        let code = app.textFields["Code mit 6 Ziffern"]
         // Tipp während der Seiten-Animation geht manchmal verloren → bis zu 3 Versuche
         for _ in 0..<3 where !code.exists {
             if schicken.isHittable { schicken.tap() }

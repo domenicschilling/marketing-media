@@ -83,8 +83,13 @@ enum GutscheinCode {
     static let alphabet = Set("ABCDEFGHJKLMNPQRSTUVWXYZ23456789")
 
     /// Formatiert eine Eingabe beim Tippen: „gsab“ → „GS-AB“, „abcd2345“ → „GS-ABCD-2345“
+    /// Steht ein vollständiger Code in der Eingabe (z. B. eingefügt hinter einen alten Code), gilt der letzte vollständige Code.
     static func formatieren(_ eingabe: String) -> String {
-        var t = eingabe.uppercased().filter { $0.isASCII && ($0.isLetter || $0.isNumber) }
+        let gross = eingabe.uppercased()
+        if let letzter = gross.matches(of: /GS-?([A-HJ-NP-Z2-9]{4})-?([A-HJ-NP-Z2-9]{4})/).last {
+            return "GS-\(letzter.1)-\(letzter.2)"
+        }
+        var t = gross.filter { $0.isASCII && ($0.isLetter || $0.isNumber) }
         // „G“ bzw. „GS“ allein: der Nutzer tippt gerade das Präfix
         if "GS".hasPrefix(t) { return t }
         if t.hasPrefix("GS") { t.removeFirst(2) }
@@ -127,9 +132,9 @@ enum GutscheinCode {
 enum Datum {
     static func parse(_ s: String?) -> Date? {
         guard let s, !s.isEmpty else { return nil }
-        if let d = try? Date(s, strategy: .iso8601) { return d }
-        if let d = try? Date(s, strategy: Date.ISO8601FormatStyle(includingFractionalSeconds: true)) { return d }
-        if s.count == 10, let d = try? Date(s, strategy: Date.ISO8601FormatStyle().year().month().day()) { return d }
+        if let d = try? Date(s, strategy: .iso8601) { return d }  // ds-ok: Datumsformate nacheinander probieren
+        if let d = try? Date(s, strategy: Date.ISO8601FormatStyle(includingFractionalSeconds: true)) { return d }  // ds-ok: Datumsformate nacheinander probieren
+        if s.count == 10, let d = try? Date(s, strategy: Date.ISO8601FormatStyle().year().month().day()) { return d }  // ds-ok: Datumsformate nacheinander probieren
         return nil
     }
 

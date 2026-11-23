@@ -86,6 +86,7 @@ struct RechtView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(Texte.Recht.name).font(.dm(.subheadline, weight: .semibold)).foregroundStyle(Color.tfTinte)
                         TextField(Texte.Recht.name, text: $name, prompt: tfPlatzhalter(Texte.Recht.name))
+                            .accessibilityLabel(Texte.Recht.name)
                             .textContentType(.name)
                             .textInputAutocapitalization(.words)
                             .autocorrectionDisabled()

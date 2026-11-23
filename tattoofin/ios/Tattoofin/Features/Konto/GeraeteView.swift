@@ -47,6 +47,7 @@ struct GeraeteView: View {
         }
         .alert(Texte.Geraete.umbenennenTitel, isPresented: $umbenennen) {
             TextField(Texte.Geraete.umbenennenTitel, text: $neuerName, prompt: Text(Texte.Geraete.namePlatzhalter))
+                .accessibilityLabel(Texte.Geraete.umbenennenTitel)
             Button(Texte.Geraete.speichern) { nameSpeichern() }
                 .disabled(neuerName.leerAlsNil == nil)
             Button(Texte.Allgemein.abbrechen, role: .cancel) {}

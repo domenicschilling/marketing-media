@@ -4,19 +4,27 @@ import SwiftUI
 /// Nur dann steht auf der Bezahlseite „heute im Studio“.
 struct HeuteSchalter: View {
     @Binding var an: Bool
+    /// Kleine iPhones: Erklärung in einer Zeile
+    var kompakt = false
+    @Environment(\.dynamicTypeSize) private var schrift
 
     var body: some View {
-        // Flach (ohne Karte), damit Ziffernblock und „Zahlungslink erstellen“ in den ersten Bildschirm passen
-        Toggle(isOn: $an) {
-            VStack(alignment: .leading, spacing: 1) {
+        // Flach (ohne Karte), damit Ziffernblock und „Zahlungslink erstellen“ in den ersten Bildschirm passen.
+        // Der Hinweis steht unter dem Schalter statt in seinem Label: Im Label wurde er bei großer Schrift abgeschnitten
+        // (DS-Audit 18.11.2026). Kleine iPhones: weiter eine Zeile, aber umbrechen statt verkleinern ab AX-Größen.
+        VStack(alignment: .leading, spacing: 1) {
+            Toggle(isOn: $an) {
                 Text(Texte.Kasse2.heute).font(.dm(.subheadline, weight: .semibold)).foregroundStyle(Color.tfTinte)
-                Text(Texte.Kasse2.heuteHinweis).font(.dm(.caption)).foregroundStyle(Color.tfLeise)
-                    .fixedSize(horizontal: false, vertical: true)
             }
+            .tint(Color.tfGruen)
+            .accessibilityHint(Texte.Kasse2.heuteHinweis)
+            .accessibilityIdentifier("heute-im-studio")
+            Text(Texte.Kasse2.heuteHinweis).font(.dm(.caption)).foregroundStyle(Color.tfLeise)
+                .lineLimit(kompakt && !schrift.isAccessibilitySize ? 1 : nil)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityHidden(true)
         }
-        .tint(Color.tfGruen)
         .padding(.horizontal, 4)
-        .accessibilityIdentifier("heute-im-studio")
     }
 }
 
@@ -24,7 +32,12 @@ struct HeuteSchalter: View {
 /// sonst Hinweis auf die Gebühr des Zahlungsanbieters.
 struct GebuehrHinweis: View {
     let cent: Int?
+    /// false: Platz bleibt reserviert, Text unsichtbar (ungültiger Betrag), damit darunter nichts verrutscht
+    var sichtbar: Bool = true
     @State private var mehr = StudioMehrStore.shared
+
+    /// Längster möglicher Betrag (5 Stellen vor dem Komma) für den reservierten Platz
+    private static let platzhalterCent = 9_999_999
 
     static func text(cent: Int?, studio: StudioMehr?) -> String? {
         guard let cent, cent > 0, let studio else { return nil }
@@ -37,18 +50,24 @@ struct GebuehrHinweis: View {
     }
 
     var body: some View {
-        // VStack mit festem Platzhalter, damit .task auch ohne sichtbaren Text läuft
-        VStack(spacing: 0) {
+        // ZStack mit unsichtbarem längsten Text: Die Höhe bleibt gleich, egal ob und welcher Betrag gerade dasteht
+        ZStack {
             Color.clear.frame(height: 0)
-            if let t = Self.text(cent: cent, studio: mehr.studio) {
-                Text(t)
-                    .font(.dm(.footnote))
-                    .foregroundStyle(Color.tfLeise)
-                    .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .accessibilityIdentifier("gebuehr-hinweis")
+            if let platz = Self.text(cent: Self.platzhalterCent, studio: mehr.studio) {
+                zeile(platz).hidden().accessibilityHidden(true)
+            }
+            if sichtbar, let t = Self.text(cent: cent, studio: mehr.studio) {
+                zeile(t).accessibilityIdentifier("gebuehr-hinweis")
             }
         }
         .task { await mehr.laden(wennAelterAls: 300) }
+    }
+
+    private func zeile(_ t: String) -> some View {
+        Text(t)
+            .font(.dm(.footnote))
+            .foregroundStyle(Color.tfLeise)
+            .multilineTextAlignment(.center)
+            .fixedSize(horizontal: false, vertical: true)
     }
 }

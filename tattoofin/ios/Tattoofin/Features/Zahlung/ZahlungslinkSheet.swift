@@ -18,6 +18,9 @@ struct ZahlungslinkSheet: View {
     @State private var storniert = false
     @State private var fehler: String?
     @State private var bezahltZaehler = 0
+    /// Status-Abfrage fehlgeschlagen: „offen“ ist dann evtl. nicht mehr aktuell (DS: nie still einen alten Stand zeigen)
+    @State private var abgleichFehler: String?
+    @State private var stand = Date.now
 
     init(erstellt: ZahlungErstellt) {
         self.erstellt = erstellt
@@ -77,7 +80,8 @@ struct ZahlungslinkSheet: View {
                 Text(Euro.text(zahlung.betragCent))
                     .font(.luckiest(40, relativeTo: .largeTitle))
                     .foregroundStyle(Color.tfTinte)
-                Text(([zahlung.artText, zahlung.titel, zahlung.kunde] as [String?]).verbunden())
+                // Beim Gutschein steht „Gutschein“ schon im Titel, die Art nicht doppelt
+                Text(([zahlung.istGutschein ? nil : zahlung.artText, zahlung.titel, zahlung.kunde] as [String?]).verbunden())
                     .font(.dm(.body))
                     .foregroundStyle(Color.tfLeise)
                     .multilineTextAlignment(.center)
@@ -114,13 +118,16 @@ struct ZahlungslinkSheet: View {
                 }
             }
             if let fehler { FehlerZeile(text: fehler) }
+            if let abgleichFehler, zahlung.istOffen {
+                TeilFehlerZeile(text: abgleichFehler) { Task { await neuLaden() } }
+            }
         }
     }
 
     private var bezahltAnsicht: some View {
         VStack(spacing: 18) {
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 120))
+                .font(.system(size: 120))  // ds-ok: Zier-Symbol „bezahlt“ (120 pt), Text darunter wächst mit
                 .foregroundStyle(Color.tfGruen)
                 .symbolEffect(.bounce, value: bezahltZaehler)
                 .padding(.top, 30)
@@ -152,7 +159,16 @@ struct ZahlungslinkSheet: View {
     }
 
     private func neuLaden() async {
-        guard let a = try? await APIClient.shared.zahlung(zahlung.id, abgleich: true) else { return }
+        let a: ZahlungEinzeln
+        do {
+            a = try await APIClient.shared.zahlung(zahlung.id, abgleich: true)
+            stand = .now
+            abgleichFehler = nil
+        } catch {
+            if Task.isCancelled { return }
+            abgleichFehler = Texte.Fehler.aktualisierenFehlgeschlagen(stand.formatted(date: .omitted, time: .shortened))
+            return
+        }
         let warOffen = !zahlung.istBezahlt
         zahlung = a.zahlung
         portal.aktualisieren(a.zahlung)
@@ -193,6 +209,7 @@ struct TheckenQRView: View {
 
     private var adresse: String? { portal.studio?.zahlseite ?? Einstellungen.zahlseite }
     private var name: String { portal.studio?.name ?? Einstellungen.studioName ?? "" }
+    @Environment(\.dynamicTypeSize) private var schrift
 
     var body: some View {
         ZStack {
@@ -219,8 +236,9 @@ struct TheckenQRView: View {
                     .lineLimit(2)
                     .minimumScaleFactor(0.5)
                 if let adresse {
+                    // Große Schrift: QR etwas kleiner, damit die Anleitung ganz Platz hat
                     QRCodeView(inhalt: adresse, beschreibung: Texte.Theke.qrLabel(name))
-                        .frame(maxWidth: 420)
+                        .frame(maxWidth: schrift.isAccessibilitySize || schrift >= .xxLarge ? 300 : 420)
                 } else {
                     Text(Texte.Theke.fehlt).font(.dm(.body)).foregroundStyle(Color.tfBlau)
                 }
@@ -228,6 +246,7 @@ struct TheckenQRView: View {
                     .font(.dm(.title3, weight: .semibold))
                     .foregroundStyle(Color.tfBlau)
                     .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 0)
                 Image(.wortmarke)
                     .resizable()

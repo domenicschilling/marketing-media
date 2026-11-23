@@ -34,7 +34,7 @@ struct SoGehtsView: View {
                                     Image(.figur).resizable().scaledToFit().frame(width: 90).opacity(0.6)
                                 }
                                 Image(systemName: spieler.status.fehler ? "arrow.clockwise.circle.fill" : "play.circle.fill")
-                                    .font(.system(size: 64))
+                                    .font(.system(size: 64))  // ds-ok: Abspielsymbol auf dem Video (64 pt), Knopf hat Beschriftung
                                     .symbolRenderingMode(.palette)
                                     .foregroundStyle(Color.tfBlau, Color.tfGelb)
                                     .shadow(radius: 6)
@@ -150,7 +150,7 @@ final class SoGehtsSpieler {
     }
 
     func abspielen(_ url: URL, ab: Double) {
-        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback)
+        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback)  // ds-ok: Ton-Kategorie optional, Video spielt trotzdem
         neu()
         if player == nil {
             let item = AVPlayerItem(url: url)

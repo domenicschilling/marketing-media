@@ -62,13 +62,13 @@ enum Einstellungen {
     }
 
     static var sitzung: SitzungInfo? {
-        get { d.data(forKey: K.sitzung).flatMap { try? JSONDecoder().decode(SitzungInfo.self, from: $0) } }
-        set { d.set(newValue.flatMap { try? JSONEncoder().encode($0) }, forKey: K.sitzung) }
+        get { d.data(forKey: K.sitzung).flatMap { try? JSONDecoder().decode(SitzungInfo.self, from: $0) } }  // ds-ok: lokaler Speicher, fehlt oder kaputt = nicht gespeichert
+        set { d.set(newValue.flatMap { try? JSONEncoder().encode($0) }, forKey: K.sitzung) }  // ds-ok: lokaler Speicher
     }
 
     static var kasseEntwurf: KasseEntwurf? {
-        get { d.data(forKey: K.kasseEntwurf).flatMap { try? JSONDecoder().decode(KasseEntwurf.self, from: $0) } }
-        set { d.set(newValue.flatMap { try? JSONEncoder().encode($0) }, forKey: K.kasseEntwurf) }
+        get { d.data(forKey: K.kasseEntwurf).flatMap { try? JSONDecoder().decode(KasseEntwurf.self, from: $0) } }  // ds-ok: lokaler Speicher, fehlt oder kaputt = kein Entwurf
+        set { d.set(newValue.flatMap { try? JSONEncoder().encode($0) }, forKey: K.kasseEntwurf) }  // ds-ok: lokaler Speicher
     }
 
     /// Letzter Abgleich des Apple-Abos mit dem Server (höchstens alle 6 Stunden)

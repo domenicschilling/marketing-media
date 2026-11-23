@@ -58,6 +58,8 @@ struct WerbevideoKarte: View {
             }
             Button { withAnimation { textOffen.toggle() } } label: {
                 Text(textOffen ? WerbungTexte.textAusblenden : WerbungTexte.textAnsehen).font(.dm(.subheadline, weight: .semibold))
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
             }
             .foregroundStyle(Color.tfAkzent)
 
@@ -161,7 +163,7 @@ struct PosterVideo: View {
                             Image(.figur).resizable().scaledToFit().frame(width: 90).opacity(0.6)
                         }
                         Image(systemName: status.fehler ? "arrow.clockwise.circle.fill" : "play.circle.fill")
-                            .font(.system(size: 64))
+                            .font(.system(size: 64))  // ds-ok: Abspielsymbol auf dem Video (64 pt), Knopf hat Beschriftung
                             .symbolRenderingMode(.palette)
                             .foregroundStyle(Color.tfBlau, Color.tfGelb)
                             .shadow(radius: 6)
@@ -198,7 +200,7 @@ struct PosterVideo: View {
 
     private func abspielen() {
         // Ton auch bei stummgeschaltetem iPhone (wie jedes Video)
-        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback)
+        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback)  // ds-ok: Ton-Kategorie optional, Video spielt trotzdem
         let item = AVPlayerItem(url: video)
         status.beobachten(item)
         let p = AVPlayer(playerItem: item)

@@ -7,8 +7,14 @@ struct BeitraegeKarte: View {
     let zahlseite: String
 
     @Environment(WerbungStore.self) private var werbung
+    @Environment(\.dynamicTypeSize) private var schrift
     @State private var nameFeld = ""
     @FocusState private var nameFokus: Bool
+
+    /// Große Schrift: „Übernehmen“ unter das Namensfeld, sonst wird beides zu schmal
+    private var nameReihe: AnyLayout {
+        schrift >= .xxLarge ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8)) : AnyLayout(HStackLayout(spacing: 8))
+    }
 
     private var gepostet: Binding<Bool> {
         Binding(get: { werbung.checkliste.werbung != nil },
@@ -35,8 +41,9 @@ struct BeitraegeKarte: View {
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(WerbungTexte.nameLabel).font(.dm(.subheadline, weight: .semibold)).foregroundStyle(Color.tfTinte)
-                    HStack(spacing: 8) {
+                    nameReihe {
                         TextField(WerbungTexte.nameLabel, text: $nameFeld, prompt: tfPlatzhalter(firma))
+                            .accessibilityLabel(WerbungTexte.nameLabel)
                             .textContentType(.organizationName)
                             .textInputAutocapitalization(.words)
                             .autocorrectionDisabled()
@@ -46,7 +53,7 @@ struct BeitraegeKarte: View {
                             .font(.dm(.body))
                             .padding(12)
                             .background(Color.tfHintergrund, in: RoundedRectangle(cornerRadius: 12))
-                            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.tfLinie, lineWidth: 1.5))
+                            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.tfFeldRahmen, lineWidth: 1.5))
                             .onChange(of: nameFeld) { _, neu in if neu.count > 60 { nameFeld = String(neu.prefix(60)) } }
                         Button(WerbungTexte.nameUebernehmen) { nameUebernehmen() }
                             .font(.dm(.body, weight: .semibold))
@@ -138,6 +145,24 @@ struct BeitragKachel: View {
         }
     }
 
+    private var bilderReihe: some View {
+        HStack(spacing: 10) {
+            ForEach(Array(bilder.enumerated()), id: \.offset) { i, b in
+                Button { gross = i } label: {
+                    Image(uiImage: b)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(height: beitrag.art == "story" ? 300 : 240)
+                        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).stroke(Color.tfLinie, lineWidth: 1))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(WerbungTexte.bildLabel(beitrag.anzeigeTitel, i + 1, bilder.count))
+                .accessibilityHint(WerbungTexte.grossHinweis)
+            }
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
@@ -150,22 +175,10 @@ struct BeitragKachel: View {
             Text(beitrag.wofuer).font(.dm(.subheadline)).foregroundStyle(Color.tfLeise)
                 .fixedSize(horizontal: false, vertical: true)
 
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 10) {
-                    ForEach(Array(bilder.enumerated()), id: \.offset) { i, b in
-                        Button { gross = i } label: {
-                            Image(uiImage: b)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(height: beitrag.art == "story" ? 300 : 240)
-                                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                                .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).stroke(Color.tfLinie, lineWidth: 1))
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel(WerbungTexte.bildLabel(beitrag.anzeigeTitel, i + 1, bilder.count))
-                        .accessibilityHint(WerbungTexte.grossHinweis)
-                    }
-                }
+            // Passen alle Bilder in die Breite: mittig ohne Scrollen, sonst seitlich scrollen
+            ViewThatFits(in: .horizontal) {
+                bilderReihe.frame(maxWidth: .infinity)
+                ScrollView(.horizontal, showsIndicators: false) { bilderReihe }
             }
 
             Button { speichern(beitrag.bilder) } label: {
@@ -188,6 +201,8 @@ struct BeitragKachel: View {
             if beitrag.kopieren == nil {
                 Button { withAnimation { textOffen.toggle() } } label: {
                     Text(textOffen ? WerbungTexte.textAusblenden : WerbungTexte.textAnsehen).font(.dm(.subheadline, weight: .semibold))
+                        .frame(minHeight: 44)
+                        .contentShape(Rectangle())
                 }
                 .foregroundStyle(Color.tfAkzent)
             }
@@ -225,9 +240,15 @@ struct BeitragKachel: View {
     }
 
     private func teilenOeffnen() {
-        let dateien = TeilenDateien.bilder(beitrag.bilder, name: dateiName)
-        guard !dateien.isEmpty else { return }
-        teilen = TeilenInhalt(dinge: dateien)
+        do {
+            let dateien = try TeilenDateien.bilder(beitrag.bilder, name: dateiName)
+            guard !dateien.isEmpty else { return }
+            fehler = nil
+            teilen = TeilenInhalt(dinge: dateien)
+        } catch {
+            log.error("Teilen-Dateien: \(error.localizedDescription, privacy: .public)")
+            fehler = WerbungTexte.teilenFehler
+        }
     }
 }
 
@@ -273,8 +294,14 @@ struct BeitragGrossansicht: View {
                         .buttonStyle(.haupt)
                     Button {
                         guard beitrag.bilder.indices.contains(seite) else { return }
-                        let d = TeilenDateien.bilder([beitrag.bilder[seite]], name: "\(TeilenDateien.slug(werbung.bildName))-\(beitrag.id)-\(seite + 1)")
-                        if !d.isEmpty { teilen = TeilenInhalt(dinge: d) }
+                        do {
+                            let d = try TeilenDateien.bilder([beitrag.bilder[seite]], name: "\(TeilenDateien.slug(werbung.bildName))-\(beitrag.id)-\(seite + 1)")
+                            fehler = nil
+                            if !d.isEmpty { teilen = TeilenInhalt(dinge: d) }
+                        } catch {
+                            log.error("Teilen-Datei: \(error.localizedDescription, privacy: .public)")
+                            fehler = WerbungTexte.teilenFehler
+                        }
                     } label: { Label(WerbungTexte.teilen, systemImage: "square.and.arrow.up") }
                         .buttonStyle(.zweit)
                 }

@@ -7,7 +7,6 @@ struct ZahlseiteKarte: View {
     let firma: String
 
     @Environment(WerbungStore.self) private var werbung
-    @Environment(AppState.self) private var app
     @State private var ansehen: URL?
     @State private var arbeitet = false
     @State private var fehler: String?
@@ -65,26 +64,6 @@ struct ZahlseiteKarte: View {
 
             if let fehler { FehlerZeile(text: fehler) }
             RueckmeldungsText(text: meldung)
-
-            // Zweiter Weg zum Holz-Aufsteller (steht auch im Konto). Nur Inhaber, ohne Preis.
-            if app.sitzung?.istInhaber == true {
-                Divider().overlay(Color.tfLinie)
-                NavigationLink { AufstellerView() } label: {
-                    HStack(spacing: 12) {
-                        Image(systemName: "qrcode").foregroundStyle(Color.tfAkzent).accessibilityHidden(true)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(WerbungTexte.holzAufsteller).font(.dm(.body, weight: .semibold)).foregroundStyle(Color.tfTinte)
-                            Text(WerbungTexte.holzAufstellerText).font(.dm(.caption)).foregroundStyle(Color.tfLeise)
-                        }
-                        Spacer(minLength: 8)
-                        Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(Color.tfLeise)
-                            .accessibilityHidden(true)
-                    }
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier("werbung-aufsteller")
-            }
         }
         .karte()
         .sheet(item: Binding(get: { ansehen.map(WebZiel.init) }, set: { ansehen = $0?.url })) { z in

@@ -30,14 +30,14 @@ enum RegistrierungSpeicher {
     @discardableResult
     static func speichern(_ e: RegistrierungEntwurf) -> Bool {
         sperre.withLock { imSpeicher = e }
-        guard let daten = try? JSONEncoder().encode(e) else { return false }
+        guard let daten = try? JSONEncoder().encode(e) else { return false }  // ds-ok: Rückgabe false wird ausgewertet, Entwurf bleibt im Speicher
         return KeychainStore.speichern(daten, konto: KeychainStore.registrierungKonto)
     }
 
     /// Gespeicherter Entwurf, nur solange er gültig ist (abgelaufene werden gelöscht)
     static func lesen(jetzt: Date = .now) -> RegistrierungEntwurf? {
         let e = KeychainStore.lesen(konto: KeychainStore.registrierungKonto)
-            .flatMap { try? JSONDecoder().decode(RegistrierungEntwurf.self, from: $0) }
+            .flatMap { try? JSONDecoder().decode(RegistrierungEntwurf.self, from: $0) }  // ds-ok: kaputter Entwurf = kein Entwurf
             ?? sperre.withLock { imSpeicher }
         guard let e else { return nil }
         guard e.gueltig(jetzt: jetzt) else {

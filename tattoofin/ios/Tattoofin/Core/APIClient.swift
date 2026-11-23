@@ -20,7 +20,7 @@ struct APIFehler: Error, LocalizedError, Sendable, Equatable {
     /// Fehlerkörper des Servers lesen
     static func aus(status: Int, daten: Data) -> APIFehler {
         struct Koerper: Decodable { var error: String?; var code: String?; var restVersuche: Int?; var felder: [String]? }
-        let k = try? JSONDecoder().decode(Koerper.self, from: daten)
+        let k = try? JSONDecoder().decode(Koerper.self, from: daten)  // ds-ok: Fehlertext vom Server ist optional, sonst Standardmeldung
         let text = k?.error?.isEmpty == false ? k!.error! : (status >= 500 ? Texte.Fehler.server : Texte.Fehler.unbekannt)
         return APIFehler(status: status, meldung: text, code: k?.code, restVersuche: k?.restVersuche, felder: k?.felder)
     }

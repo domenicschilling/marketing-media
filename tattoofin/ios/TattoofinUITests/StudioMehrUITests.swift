@@ -2,10 +2,9 @@ import XCTest
 
 /// Ende zu Ende im Simulator gegen den lokalen Server (dev/app-lokal.mjs, Code 123456, Inhaber studio@beispiel.test):
 /// Kasse (heute im Studio, Gebührenhinweis) → Zahlungsdetail (Nachweis als PDF) → Konto „Dein Studio“ → Einstellungen speichern →
-/// Recht lesen und bestätigen → Fragebogen absenden → QR-Aufsteller (Vorschau, dunkel, anfordern bzw. Stripe-Checkout) → Stripe ansehen.
+/// Recht lesen und bestätigen → Fragebogen absenden → kein QR-Aufsteller mehr → Stripe ansehen.
 /// Bildschirmfotos als Anhänge (b01-… ), Export mit `xcrun xcresulttool export attachments`.
-/// Server-Port: TEST_RUNNER_TF_UI_API=http://localhost:<port>. TEST_RUNNER_TF_UI_AUFSTELLER_KAUF=1, wenn der Server den Aufsteller
-/// verkauft (AUFSTELLER_PAKETE=einmal): Dann läuft der Stripe-Checkout im Nachbau.
+/// Server-Port: TEST_RUNNER_TF_UI_API=http://localhost:<port>.
 @MainActor
 final class StudioMehrUITests: XCTestCase {
     private var praefix = ""
@@ -32,7 +31,7 @@ final class StudioMehrUITests: XCTestCase {
         let schicken = app.buttons["Code schicken"]
         XCTAssertTrue(schicken.waitForExistence(timeout: 15))
         schicken.tap()
-        let code = app.textFields["6-stelliger Code"]
+        let code = app.textFields["Code mit 6 Ziffern"]
         XCTAssertTrue(code.waitForExistence(timeout: 10))
         code.tap()
         code.typeText("123456")
@@ -87,8 +86,17 @@ final class StudioMehrUITests: XCTestCase {
         // Zahlungsdetail: Nachweis als PDF teilen
         if !kurz {
             app.tabBars.buttons["Zahlungen"].tap()
+            // Unabhängig von der Reihenfolge (z. B. nach dem Rundgang mit neuen Links): erst über die Suche, sonst scrollen
             let bezahlt = app.staticTexts["Jonas Beispiel"].firstMatch
-            XCTAssertTrue(bezahlt.waitForExistence(timeout: 10))
+            let suche = app.searchFields.firstMatch
+            if !suche.waitForExistence(timeout: 3) { app.collectionViews.firstMatch.swipeDown() }
+            if suche.waitForExistence(timeout: 5) {
+                suche.tap()
+                suche.typeText("Jonas")
+            } else {
+                bisSichtbar(app, bezahlt)
+            }
+            XCTAssertTrue(bezahlt.waitForExistence(timeout: 10), "Zahlung von Jonas Beispiel nicht gefunden")
             bezahlt.tap()
             let nachweis = app.buttons["nachweis-pdf"]
             bisSichtbar(app, nachweis)
@@ -185,44 +193,8 @@ final class StudioMehrUITests: XCTestCase {
 
         if kurz { return }
 
-        // QR-Aufsteller: dunkles Holz, Vorschau, bestellen
-        let aufsteller = app.buttons["aufsteller"]
-        bisSichtbar(app, aufsteller)
-        aufsteller.tap()
-        XCTAssertTrue(app.segmentedControls.buttons["Dunkel"].waitForExistence(timeout: 15), "Aufsteller lädt nicht")
-        foto("b11-aufsteller-hell")
-        app.segmentedControls.buttons["Dunkel"].tap()
-        foto("b12-aufsteller-dunkel")
-        app.segmentedControls.buttons["Dein Logo"].tap()
-        XCTAssertTrue(app.buttons["logo-waehlen"].waitForExistence(timeout: 5))
-        foto("b13-aufsteller-logo-feld")
-        app.segmentedControls.buttons["Studioname"].tap()
-        let bestellen = app.buttons["aufsteller-bestellen"]
-        bisSichtbar(app, bestellen)
-        XCTAssertTrue(bestellen.waitForExistence(timeout: 5))
-        foto("b14-aufsteller-bestellen")
-        bestellen.tap()
-        let kauf = ProcessInfo.processInfo.environment["TF_UI_AUFSTELLER_KAUF"] == "1"
-        let ja = app.alerts.buttons[kauf ? "Weiter zur Bezahlung" : "Anfordern"]
-        XCTAssertTrue(ja.waitForExistence(timeout: 5), "Rückfrage vor der Bestellung fehlt")
-        foto("b15-aufsteller-frage")
-        ja.tap()
-        if kauf {
-            // Stripe-Checkout (Nachbau) in der Safari-Ansicht: bezahlen, dann „Fertig“ → App prüft
-            let bezahlen = app.buttons.containing(NSPredicate(format: "label CONTAINS[c] %@", "Bezahlen")).firstMatch
-            XCTAssertTrue(bezahlen.waitForExistence(timeout: 20), "Checkout öffnet nicht")
-            foto("b16-aufsteller-checkout")
-            bezahlen.tap()
-            XCTAssertTrue(app.staticTexts.containing(NSPredicate(format: "label CONTAINS[c] %@", "Tattoofin-App")).firstMatch.waitForExistence(timeout: 20),
-                          "Rücksprung-Seite fehlt")
-            foto("b17-aufsteller-fertig-seite")
-            app.buttons["Fertig"].firstMatch.tap()
-        }
-        XCTAssertTrue(app.staticTexts.containing(NSPredicate(format: "label BEGINSWITH %@", "Bestellt")).firstMatch.waitForExistence(timeout: 20)
-                      || app.otherElements.containing(NSPredicate(format: "label BEGINSWITH %@", "Bestellt")).firstMatch.exists,
-                      "Bestellung ohne Bestätigung")
-        foto("b18-aufsteller-bestellt")
-        zurueck(app)
+        // Den QR-Aufsteller aus Holz gibt es nicht mehr (seit 1.1)
+        XCTAssertFalse(app.buttons["aufsteller"].exists, "Zeile QR-Aufsteller ist noch da")
 
         // Bei Stripe ansehen (Safari-Ansicht)
         let stripe = zeile(app, "Bei Stripe ansehen")

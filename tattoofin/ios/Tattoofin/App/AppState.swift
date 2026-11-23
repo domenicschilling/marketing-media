@@ -82,7 +82,7 @@ final class AppState {
 
     /// Dieses Gerät abmelden (Server) und lokal alles löschen
     func abmelden() async {
-        try? await APIClient.shared.abmelden()
+        try? await APIClient.shared.abmelden()  // ds-ok: Abmelden klappt lokal immer, Server-Abmeldung ist nur Aufräumen
         await lokalAbmelden()
     }
 
@@ -190,7 +190,7 @@ final class PortalStore {
         kennzahlenTask = Task { [weak self] in
             try? await Task.sleep(for: .milliseconds(300))
             guard !Task.isCancelled, let self else { return }
-            if let a = try? await APIClient.shared.portal() { self.uebernehmen(a) }
+            if let a = try? await APIClient.shared.portal() { self.uebernehmen(a) }  // ds-ok: Hintergrund-Nachladen der Kennzahlen; einen Fehler zeigt das nächste portal.laden() mit Stand-Zeile
         }
     }
 

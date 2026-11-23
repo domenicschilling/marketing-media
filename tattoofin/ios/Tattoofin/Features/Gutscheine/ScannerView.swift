@@ -41,11 +41,11 @@ struct ScannerView: View {
                     Color.black.ignoresSafeArea()
                     ProgressView().tint(.white)
                 case .vision:
-                    VisionScanner { melden($0) }
+                    VisionScanner(gefunden: { melden($0) }, fehlgeschlagen: { modus = .manuell(Texte.Scanner.kameraFehler) })
                         .ignoresSafeArea()
                     sucher
                 case .avQR:
-                    QRKameraAnsicht { melden($0) }
+                    QRKameraAnsicht(gefunden: { melden($0) }, fehlgeschlagen: { modus = .manuell(Texte.Scanner.kameraFehler) })
                         .ignoresSafeArea()
                     sucher
                 case let .manuell(grund):
@@ -96,13 +96,14 @@ struct ScannerView: View {
                 HinweisKarte(text: grund, symbol: "camera.fill")
                 Text(Texte.Gutscheine.codeEingeben).font(.dm(.subheadline, weight: .semibold)).foregroundStyle(Color.tfTinte)
                 TextField(Texte.Gutscheine.codeEingeben, text: $code, prompt: tfPlatzhalter(Texte.Gutscheine.codePlatzhalter))
+                    .accessibilityLabel(Texte.Gutscheine.codeEingeben)
                     .font(.system(.title2, design: .monospaced).weight(.semibold))
                     .textInputAutocapitalization(.characters)
                     .autocorrectionDisabled()
                     .keyboardType(.asciiCapable)
                     .padding(14)
                     .background(Color.tfKarte, in: RoundedRectangle(cornerRadius: 14))
-                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.tfLinie, lineWidth: 1.5))
+                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.tfFeldRahmen, lineWidth: 1.5))
                     .onChange(of: code) { _, neu in
                         let f = GutscheinCode.formatieren(neu)
                         if f != neu { code = f }
@@ -147,6 +148,8 @@ struct ScannerView: View {
 
 struct VisionScanner: UIViewControllerRepresentable {
     let gefunden: (ScanTreffer) -> Void
+    /// Scanner ließ sich nicht starten (DS: kein stiller schwarzer Bildschirm, sondern Eingabe von Hand)
+    let fehlgeschlagen: () -> Void
 
     func makeCoordinator() -> Koordinator { Koordinator(gefunden: gefunden) }
 
@@ -157,7 +160,13 @@ struct VisionScanner: UIViewControllerRepresentable {
             isHighFrameRateTrackingEnabled: false, isPinchToZoomEnabled: true,
             isGuidanceEnabled: true, isHighlightingEnabled: true)
         c.delegate = context.coordinator
-        try? c.startScanning()
+        do {
+            try c.startScanning()
+        } catch {
+            log.error("Scanner startet nicht: \(error.localizedDescription, privacy: .public)")
+            let melden = fehlgeschlagen
+            DispatchQueue.main.async { melden() }
+        }
         return c
     }
 
@@ -210,11 +219,16 @@ struct VisionScanner: UIViewControllerRepresentable {
 
 struct QRKameraAnsicht: UIViewRepresentable {
     let gefunden: (ScanTreffer) -> Void
+    let fehlgeschlagen: () -> Void
 
     func makeUIView(context: Context) -> Vorschau {
         let v = Vorschau()
         let kamera = QRKamera { inhalt in
             if let t = ScanTreffer.aus(qr: inhalt) { gefunden(t) }
+        }
+        if !kamera.bereit {
+            let melden = fehlgeschlagen
+            DispatchQueue.main.async { melden() }
         }
         v.kamera = kamera
         v.vorschau.session = kamera.session
@@ -242,19 +256,26 @@ final class QRKamera: NSObject, AVCaptureMetadataOutputObjectsDelegate, @uncheck
     private let schlange = DispatchQueue(label: "de.tattoofin.qrkamera")
     private let gefunden: @MainActor (String) -> Void
     private var fertig = false
+    /// false = Kamera ließ sich nicht einrichten (die Ansicht schaltet dann auf Eingabe von Hand)
+    private(set) var bereit = false
 
     init(gefunden: @escaping @MainActor (String) -> Void) {
         self.gefunden = gefunden
         super.init()
-        guard let geraet = AVCaptureDevice.default(for: .video),
-              let eingang = try? AVCaptureDeviceInput(device: geraet),
-              session.canAddInput(eingang) else { return }
+        guard let geraet = AVCaptureDevice.default(for: .video) else { return }
+        let eingang: AVCaptureDeviceInput
+        do { eingang = try AVCaptureDeviceInput(device: geraet) } catch {
+            log.error("Kamera-Eingang: \(error.localizedDescription, privacy: .public)")
+            return
+        }
+        guard session.canAddInput(eingang) else { return }
         session.addInput(eingang)
         let ausgang = AVCaptureMetadataOutput()
         guard session.canAddOutput(ausgang) else { return }
         session.addOutput(ausgang)
         ausgang.setMetadataObjectsDelegate(self, queue: schlange)
         if ausgang.availableMetadataObjectTypes.contains(.qr) { ausgang.metadataObjectTypes = [.qr] }
+        bereit = true
     }
 
     func starten() { schlange.async { [self] in if !session.isRunning { session.startRunning() } } }

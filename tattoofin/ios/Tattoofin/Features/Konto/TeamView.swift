@@ -35,6 +35,8 @@ struct TeamView: View {
                                     entfernenFrage = e
                                 } label: {
                                     Image(systemName: "minus.circle.fill").foregroundStyle(Color.tfRot)
+                                        .frame(minWidth: 44, minHeight: 44)
+                                        .contentShape(Rectangle())
                                 }
                                 .buttonStyle(.plain)
                                 .accessibilityLabel(Texte.Team.entfernenLabel(e))
@@ -50,6 +52,7 @@ struct TeamView: View {
                 if darfAendern && t.team.count < max {
                     Section {
                         TextField(Texte.Team.hinzufuegen, text: $neueAdresse, prompt: tfPlatzhalter(Texte.Team.adressePlatzhalter))
+                            .accessibilityLabel(Texte.Team.hinzufuegen)
                             .textContentType(.emailAddress)
                             .keyboardType(.emailAddress)
                             .textInputAutocapitalization(.never)

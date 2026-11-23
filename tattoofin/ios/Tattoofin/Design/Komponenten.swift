@@ -80,9 +80,14 @@ struct FehlerAnsicht: View {
     let text: String
     var nochmal: (() -> Void)?
 
+    /// WLAN-Symbol nur, wenn wirklich das Internet fehlt; sonst ein allgemeines Warnzeichen
+    static func symbol(_ text: String) -> String {
+        text == Texte.Fehler.keinNetz ? "wifi.exclamationmark" : "exclamationmark.triangle"
+    }
+
     var body: some View {
         ContentUnavailableView {
-            Label(Texte.Fehler.titel, systemImage: "wifi.exclamationmark")
+            Label(Texte.Fehler.titel, systemImage: Self.symbol(text))
                 .font(.dm(.title3, weight: .bold))
         } description: {
             Text(text).font(.dm(.body))
@@ -103,7 +108,7 @@ struct LeerAnsicht: View {
     var body: some View {
         VStack(spacing: 10) {
             Image(systemName: symbol)
-                .font(.system(size: 40, weight: .regular))
+                .font(.system(size: 40, weight: .regular))  // ds-ok: Zier-Symbol im Leerzustand (40 pt), Titel und Text darunter wachsen mit
                 .foregroundStyle(Color.tfLeise)
                 .accessibilityHidden(true)
             Text(titel)
@@ -141,6 +146,23 @@ struct HinweisKarte: View {
     }
 }
 
+/// Kleine Zeile, wenn Daten da sind, das Aktualisieren aber nicht geklappt hat: „Aktualisieren hat nicht geklappt. Stand von 14:05.“
+struct AktualisierenFehlerZeile: View {
+    @Environment(PortalStore.self) private var portal
+
+    var body: some View {
+        if portal.studio != nil, portal.fehler != nil {
+            Label(Texte.Fehler.aktualisierenFehlgeschlagen(portal.geladenAm.map { $0.formatted(date: .omitted, time: .shortened) }),
+                  systemImage: FehlerAnsicht.symbol(portal.fehler ?? ""))
+                .font(.dm(.footnote, weight: .medium))
+                .foregroundStyle(Color.tfLeise)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityIdentifier("aktualisieren-fehler")
+        }
+    }
+}
+
 /// Fehlermeldung unter einem Formular
 struct FehlerZeile: View {
     let text: String
@@ -151,6 +173,22 @@ struct FehlerZeile: View {
             .foregroundStyle(Color.tfRot)
             .fixedSize(horizontal: false, vertical: true)
             .accessibilityLabel("Fehler: \(text)")
+    }
+}
+
+/// Fehlerzeile für einen Teil eines Bildschirms (DS „Teilweise“): Der Rest bleibt nutzbar, hier steht, was fehlt, mit „Nochmal versuchen“.
+struct TeilFehlerZeile: View {
+    let text: String
+    let nochmal: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            FehlerZeile(text: text)
+            Button(Texte.Allgemein.nochmal, action: nochmal)
+                .font(.dm(.subheadline, weight: .semibold))
+                .foregroundStyle(Color.tfAkzent)
+        }
+        .padding(.vertical, 4)
     }
 }
 

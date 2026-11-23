@@ -60,6 +60,10 @@ struct GutscheinCodeTests {
         // 0, O, 1, I gibt es im Alphabet nicht
         #expect(GutscheinCode.formatieren("gs-o0i1abcd") == "GS-ABCD")
         #expect(GutscheinCode.formatieren("") == "")
+        // Einfügen hinter einen stehen gebliebenen (falschen) Code: der eingefügte, vollständige Code gilt
+        #expect(GutscheinCode.formatieren("GS-ABCD-EFGHGS-K7QM-4XPA") == "GS-K7QM-4XPA")
+        #expect(GutscheinCode.formatieren("GS-ABCD-EFGH gs-k7qm-4xpa") == "GS-K7QM-4XPA")
+        #expect(GutscheinCode.formatieren("GS-ABCDGS-K7QM-4XPA") == "GS-K7QM-4XPA")
     }
 
     @Test func muster() {
