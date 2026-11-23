@@ -217,7 +217,7 @@
   function vertragLaden() {
     if (vertragGeladen) return; vertragGeladen = true;
     fetch("/vertrag.html").then(function (r) { return r.text(); }).then(function (t) {
-      var m = t.match(/<main class="doc">([\s\S]*?)<\/main>/);
+      var m = t.match(/<main[^>]*class="doc"[^>]*>([\s\S]*?)<\/main>/);
       var box = document.getElementById("vertrag-box");
       box.innerHTML = m ? '<p style="background:#fff3cd;border:1px solid #e0b84b;border-radius:8px;padding:10px 12px;font-size:14px;margin:0 0 12px"><b>Hinweis:</b> Neu abschließen kannst du das Paket <b>Monatlich</b>.</p>' + m[1].replace(/<img[^>]*>/g, "") : "Vertrag konnte nicht geladen werden. Bitte über den Link öffnen.";
       box.querySelectorAll("[data-cfg]").forEach(function (el) { el.textContent = ""; });
