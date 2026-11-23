@@ -766,7 +766,7 @@ for ENTWURF, DATEI in (("a", "studios-raten.html"), ("b", "../_schilling/studios
 <meta name="description" content="Dein Kunde kann per Klarna zahlen, du bekommst das Geld in einer Summe aufs eigene Stripe-Konto. Keine Provision. 7 Tage kostenlos testen, danach 49,90 € im Monat inkl. MwSt.">
 <meta name="robots" content="noindex,follow">
 <meta name="theme-color" content="#f5ead2">
-<link rel="canonical" href="https://tattoofin.de/studios">
+<link rel="canonical" href="https://tattoofin.de/studios-raten">
 <meta property="og:type" content="website"><meta property="og:locale" content="de_DE"><meta property="og:site_name" content="Tattoofin">
 <meta property="og:title" content="Raten* für deine Kunden. Dein Geld auf einmal.">
 <meta property="og:description" content="7 Tage kostenlos testen. *Raten über Klarna, nach deren Bonitätsprüfung. Achtung! Kreditaufnahme kostet Geld.">

@@ -89,8 +89,9 @@
     "quelle": "domain.mjs artikelText (Gutschein), § 195/199 BGB; Code GS-XXXX-XXXX + PDF per Mail (Memory 23.10.2026)"
   },
   "app": {
-    "satz": "Die iPhone-App bekommst du nach der Anmeldung von uns.",
-    "status": "App 1.0 bei Apple in Prüfung, kein öffentlicher Store-Link (Domenic 16.11.2026). Nicht „im App Store“ schreiben.",
+    "satz": "Du lädst sie im App Store und meldest dich mit deinem Studio-Konto an.",
+    "storeLink": "https://apps.apple.com/de/app/tattoofin/id6834834820",
+    "status": "App 1.0 seit 18.11.2026 im App Store (DE/AT/CH), Store-Link auf der Website seit 23.11.2026 (Domenic). Anmeldung auch direkt in der App (Apple-Abo, 7 Tage gratis, dann 49,90 €).",
     "browser": "Alles geht auch im Browser, am Handy und am Rechner."
   },
   "anmeldung": {

@@ -165,7 +165,7 @@ def bauen(seite):
     VORTEILE = [
         ("Weniger No-Shows.", "Du blockst erst, wenn die Anzahlung da ist. Sagt der Kunde kurzfristig ab, gelten deine Bedingungen."),
         ("Kein Hinterherlaufen.", "Link schicken statt Kontonummer diktieren. Du siehst sofort, wer bezahlt hat."),
-        ("Nachricht bei jeder Zahlung.", "Per E-Mail oder in der iPhone-App. Die App bekommst du nach der Anmeldung von uns."),
+        ("Nachricht bei jeder Zahlung.", "Per E-Mail oder in der iPhone-App. Die App ist im Preis enthalten."),
         ("Umsatz, auch wenn zu ist.", "Gutscheine verkaufst du per Link, abends, am Wochenende, vor Weihnachten."),
         ("Dein Studio, dein Name.", "Dein Kunde zahlt auf einer Seite mit deinem Studionamen, nicht mit unserem."),
         ("Alles an einem Ort.", "Zahlungslinks, Anzahlungen, Gutscheine und Auszahlungen in einer App und im Browser."),
@@ -226,7 +226,7 @@ def bauen(seite):
 <meta name="description" content="Zahlungslink per WhatsApp, Anzahlung vorab per Link gegen No-Shows und mehrere Zahlarten für dein Tattoo-Studio. Keine Provision: [[preis.monat]] im Monat inkl. MwSt., keine Einrichtungsgebühr.">
 <meta name="robots" content="noindex,follow">
 <meta name="theme-color" content="#f5ead2">
-<link rel="canonical" href="https://tattoofin.de/">
+<link rel="canonical" href="https://tattoofin.de/studios">
 <meta property="og:type" content="website"><meta property="og:locale" content="de_DE"><meta property="og:site_name" content="Tattoofin">
 <meta property="og:title" content="Tattoofin – Zahlungslinks, Anzahlungen und mehr Zahlarten für deine Kunden">
 <meta property="og:description" content="Zahlungslink per WhatsApp, Anzahlung vorab per Link gegen No-Shows und mehrere Zahlarten für Tattoo-Studios. Keine Provision: [[preis.monat]] im Monat inkl. MwSt.">
@@ -362,6 +362,7 @@ def bauen(seite):
 {nutzen}{vorteile}{geld}  <section class="ablauf" id="ablauf" data-beleg aria-labelledby="ablauf-titel">
     <h2 id="ablauf-titel">So läuft&rsquo;s.</h2>
     <p class="abschnitt-satz">In der iPhone-App oder im Browser. Ohne Kartengerät.</p>
+    <p class="app-store-zeile">{rahmen.app_store("ablauf")}</p>
     <ol>
       <li><div class="stufe-bild">{motiv("stufe-1")}<span class="nr" aria-hidden="true">1</span></div><p><b>Betrag eintippen.</b> Zum Beispiel [[fall.betrag]] für einen Drachen auf dem Rücken.</p></li>
       <li id="nr4"><div class="stufe-bild">{motiv("stufe-2")}<span class="nr" aria-hidden="true">2</span></div><p><b>Link schicken.</b> Per WhatsApp. Oder dein Kunde scannt deinen QR-Code an der Theke.</p></li>

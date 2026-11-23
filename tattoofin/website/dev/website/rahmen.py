@@ -15,7 +15,7 @@ PUB = ROOT / "public"
 F = json.loads((HIER / "fakten.json").read_text(encoding="utf-8"))
 MOTIVE = (ROOT / "dev" / "vorlage" / "motive.html").read_text(encoding="utf-8")
 LIVE = "https://tattoofin.de"
-CSS_V = "20261119a"
+CSS_V = "20261123a"
 
 
 def fakt(pfad):
@@ -122,6 +122,15 @@ def kopf(aktiv=None):
   </header>'''
 
 
+APP_STORE = "https://apps.apple.com/de/app/tattoofin/id6834834820"
+
+
+def app_store(ort, klasse="app-store"):
+    """Offizieller deutscher Apple-Badge „Laden im App Store“ (lokal, assets/app-store-badge-de.svg), Domenic 23.11.2026."""
+    return (f'<a class="{klasse}" href="{APP_STORE}" data-umami-event="appstore-{ort}">'
+            '<img src="/assets/app-store-badge-de.svg" alt="Laden im App Store" width="120" height="40" loading="lazy" decoding="async"></a>')
+
+
 def fuss(zusatz=""):
     seiten = "".join(f'<li><a href="{h}">{t}</a></li>' for t, h in FUSS_SEITEN)
     fi = F["firma"]
@@ -135,6 +144,7 @@ def fuss(zusatz=""):
           <li>Wir antworten [[kontakt.antwortzeit]].</li>
           <li><a href="mailto:{fakt("kontakt.mail")}" data-umami-event="mail-fuss">{fakt("kontakt.mail")}</a></li>
           <li><a href="/login.html">Studio-Login</a></li>
+          <li class="fuss-app">{app_store("fuss")}</li>
           <li><a href="/raten">Für Tattoo-Kunden</a></li>
           <li><a href="{fi["instagram"]}" rel="me noopener">Instagram</a></li>
         </ul></div>
@@ -170,6 +180,10 @@ MENUE_JS = f'<script src="/assets/site/menue.js?v={CSS_V}" defer></script>'
 
 def kopfdaten(titel, beschreibung, pfad, ld=None, robots=None, og_bild="/assets/og.jpg"):
     r = f'\n<meta name="robots" content="{robots}">' if robots else ""
+    # Smart-App-Banner (Safari, iPhone) nur auf der App-Seite: nicht auf der Startseite, damit der Hero unverändert im 1. Bildschirm bleibt
+    if pfad == "/funktionen/app/":
+        r += '\n<meta name="apple-itunes-app" content="app-id=6834834820">'
+
     ld_html = '\n<script type="application/ld+json">%s</script>' % json.dumps(ld, ensure_ascii=False) if ld else ""
     t, b = html.escape(titel), html.escape(beschreibung)
     return f'''<!doctype html>

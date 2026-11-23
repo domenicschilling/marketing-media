@@ -9,7 +9,7 @@
 
 Alle Zahlen: dev/website/fakten.json ([[gruppe.feld]]). Alle Fragen: dev/website/fragen.json. Kopf/Fuß: rahmen.py.
 Regeln: Absender „wir/unser Team“, nie Domenic. Raten nur als „Raten*“ mit Fußnote und Warnsatz klein direkt darunter.
-Kein PayPal, kein Aufsteller, keine Studionamen/Kundenstimmen, Auszahlung nie „sofort“. App: kein Store-Link.
+Kein PayPal, kein Aufsteller, keine Studionamen/Kundenstimmen, Auszahlung nie „sofort“. App: Store-Link nur über R.app_store() (seit 23.11.2026).
 """
 import html
 import json
@@ -294,7 +294,9 @@ seite("/funktionen/app/",
         <li class="karte"><h3>Auch im Browser</h3><p>Am Rechner oder am Android-Handy nutzt du Tattoofin im Browser.</p></li>
       </ul>''')
       + abschnitt("bekommen", "So bekommst du die App.", '<div class="schritte-bild"><div class="text">'
-          '<p>[[app.satz]] Du meldest dich an, unser Team richtet alles mit dir ein und schickt dir den Weg zur App.</p>'
+          '<p>Lade die App im App Store und melde dich mit der E-Mail-Adresse deines Studios an.</p>'
+          '<p>Noch kein Konto? Leg dein Studio direkt in der App an oder hier im Browser: 1 Woche testen, danach [[preis.monat]] im Monat inkl. MwSt.</p>'
+          '<p class="app-store-zeile">' + R.app_store("app-seite") + '</p>'
           '<p>Die App ist im Preis enthalten. Eine eigene Android-App gibt es nicht.</p></div>' + FILM + "</div>")
       + fragen_fuer("app", "Fragen zur App.")
       + weiter("app", "Erst testen, dann die App.", [("Zahlungslink", "/funktionen/zahlungslink/"), ("So geht’s", "/so-gehts/"), ("Fragen", "/fragen/")]),
@@ -312,7 +314,7 @@ KARTEN = [
 VORTEILE = [
     ("Weniger No-Shows.", "Du blockst erst, wenn die Anzahlung da ist. Sagt der Kunde kurzfristig ab, gelten deine Bedingungen."),
     ("Kein Hinterherlaufen.", "Link schicken statt Kontonummer diktieren. Du siehst sofort, wer bezahlt hat."),
-    ("Nachricht bei jeder Zahlung.", "Per E-Mail oder in der iPhone-App. Die App bekommst du nach der Anmeldung von uns."),
+    ("Nachricht bei jeder Zahlung.", "Per E-Mail oder in der iPhone-App. Die App ist im Preis enthalten."),
     ("Umsatz, auch wenn zu ist.", "Gutscheine verkaufst du per Link, abends, am Wochenende, vor Weihnachten."),
     ("Dein Studio, dein Name.", "Dein Kunde zahlt auf einer Seite mit deinem Studionamen, nicht mit unserem."),
     ("Alles an einem Ort.", "Zahlungslinks, Anzahlungen, Gutscheine und Auszahlungen in einer App und im Browser."),
@@ -600,7 +602,7 @@ SITEMAP = [("/", "1.0"), ("/funktionen/", "0.9"), ("/funktionen/anzahlung/", "0.
            ("/funktionen/ratenzahlung/", "0.8"), ("/funktionen/gutschein/", "0.8"), ("/funktionen/app/", "0.7"), ("/so-gehts/", "0.8"),
            ("/preis/", "0.9"), ("/fragen/", "0.7"), ("/ueber-uns/", "0.5"), ("/ratgeber.html", "0.6"), ("/tattoo-anzahlung.html", "0.6"),
            ("/tattoo-finanzieren.html", "0.6"), ("/ratenzahlung-tattoostudio.html", "0.5"),
-           ("/raten", "0.5"), ("/vertrag.html", "0.3"), ("/avv.html", "0.2"), ("/impressum.html", "0.2"), ("/datenschutz.html", "0.2")]
+           ("/raten", "0.5"), ("/video", "0.4"), ("/vertrag.html", "0.3"), ("/avv.html", "0.2"), ("/impressum.html", "0.2"), ("/datenschutz.html", "0.2")]
 (PUB / "sitemap.xml").write_text('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
                                   + "".join(f"  <url><loc>{LIVE}{u}</loc><lastmod>{HEUTE}</lastmod><priority>{pr}</priority></url>\n" for u, pr in SITEMAP)
                                   + "</urlset>\n", encoding="utf-8")
