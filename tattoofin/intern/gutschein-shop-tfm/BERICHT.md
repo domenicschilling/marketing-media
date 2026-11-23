@@ -1,5 +1,16 @@
 # Gutschein-Shop Tattoo Fashion München – Bericht (23.11.2026)
 
+## LIVE seit 23.11.2026 (Domenics OK im Chat)
+
+- **Adresse:** https://tattoofin.de/gutschein-kaufen/tattoo-fashion-munich
+- **Deploy:** `6b048ffb197b079eb3620c2d` (Branch `claude/tfm-gutschein-shop-live` = Live-Stand `claude/tattoofin-keine-anzahlung` b603506 + Shop). **Rücksprung:** `6b048cfce6ae82c890f2f60c`.
+- **Geprüft vor dem Deploy:** e2e 410/0, Shop-Test 57/0, Entwurf auf der echten Site (alle Schnittstellen 200), Abnahme der Shop-Seite bestanden. Ordner-Abnahme mit Notausgang `ABNAHME_UEBERSPRINGEN=1` (Domenics OK; 13 alte Fehler der Startseite, live identisch).
+- **Geprüft nach dem Deploy:** `/`, `/api/config`, `/api/status` (ok, keine Störungen), `/api/pay`, `/zahlen/…`, `/app.html`, `/studios`, Shop-Seite, Shop-Datenschutz, `/api/gutschein-shop` → 200; anderes Studio → 404. Live-Kasse geöffnet (Nr. 5, 200 €): Stripe zeigt Apple Pay und Karte, **kein Klarna**, Knopf „Bezahlen“ mit Satz „… zahlungspflichtig …“. Nicht bezahlt, Kasse beendet, Stückzahl wieder 10/10. Live-Abnahme der Seite bestanden.
+- **Entscheidungen (Domenic 23.11.):** Start sofort · Aktions-Gutscheine bis 24.12.2026 16 Uhr, Wertgutschein läuft weiter · 1 Aktions-Gutschein pro E-Mail · Teil-Einlösung ja (Restwert bleibt) · keine Barauszahlung · nicht kombinierbar · alle Leistungen inkl. Piercing · Verkäufer Tattoo Fashion Munich, Inhaber Andy Neelsen (Einzelunternehmen, aus der Tattoofin-Anmeldung, keine USt-IdNr. hinterlegt).
+- **Anzeigen:** NICHT eingeschaltet, an Meta nichts geändert. Neuer Link und Text unten unter „Was die Anzeigen dafür brauchen“.
+
+Die Abschnitte darunter sind der Bericht vom Bau (Stand vor dem Live-Gang; die offenen Fragen sind oben beantwortet).
+
 **Stand:** fertig gebaut und geprüft, **nicht live**. Branch `claude/tfm-gutschein-shop` (abgezweigt vom neuesten Tattoofin-Stand `claude/tattoofin-aufsteller-aus`).
 
 **Vorschau (Testgeld, Stripe-Simulation):** https://tfm-gutschein-shop--tattoofin-vorschau.netlify.app/gutschein-kaufen/tattoo-fashion-munich
