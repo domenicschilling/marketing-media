@@ -108,7 +108,9 @@ await mock(`saldo/${bamberg.konto}?verfuegbar=12345&unterwegs=48000`);
 const store = await studio("store@beispiel.test", "Nordlicht Tattoo", "Hamburg", { inhaber: "Sam Lindqvist", strasse: "Schanzenstraße 12", plz: "20357" });
 {
   const ts = await appToken("store@beispiel.test", store.id);
-  await bezahlt(ts, { betrag: "1200", kunde: "Jonas Keller", beschreibung: "Rückenstück, Sitzung 1", sitzungen: "Sitzung 1 von 3" });
+  const klarnaId = await bezahlt(ts, { betrag: "1200", kunde: "Jonas Keller", beschreibung: "Rückenstück", sitzungen: "Sitzung 1 von 3" });
+  // Store-Bild „Raten*“: diese Zahlung lief über Klarna (der Stripe-Nachbau kennt nur Karte)
+  { const f = path.join(dataDir, encodeURIComponent(`zahlung/${store.id}/${klarnaId}`) + ".json"); fs.writeFileSync(f, JSON.stringify({ ...JSON.parse(fs.readFileSync(f, "utf8")), zahlart: "klarna", zahlartText: "Klarna" }, null, 2)); }
   await bezahlt(ts, { betrag: "150", kunde: "Mia Sommer", beschreibung: "Fineline Schulter", art: "anzahlung" });
   await bezahlt(ts, { betrag: "480", kunde: "Tom Richter", beschreibung: "Unterarm Blackwork" });
   await bezahlt(ts, { betrag: "650", kunde: "Lea Brandt", beschreibung: "Mandala Oberschenkel" });
