@@ -105,6 +105,8 @@ export default handler(async (req, context) => {
   try {
     const url = await checkoutFuer(s, z, {
       nurKarte: true,
+      // Kasse im Look der Shop-Seite (TF-Logo, Schwarz, Gold). Lehnt Stripe das ab, läuft die Kasse ohne (checkoutFuer).
+      branding: { display_name: "Tattoo Fashion München", logo: { type: "url", url: `${CFG.siteUrl}/assets/gs-shop/tfm/logo.png` }, background_color: "#0B0B0B", button_color: "#C8A35A", border_style: "pill" },
       extra: {
         // Kasse genau so lange offen wie die Reservierung (Stripe: mindestens 30 Minuten). Danach checkout.session.expired → Einheit frei
         expires_at: Math.floor(jetzt().getTime() / 1000) + KASSE_MINUTEN * 60 + 30,
@@ -112,6 +114,8 @@ export default handler(async (req, context) => {
         // § 312j BGB: Am Knopf muss klar sein, dass der Kauf zahlungspflichtig ist (Stripe zeigt „Bezahlen“, darüber dieser Satz)
         custom_text: { submit: { message: `Mit „Bezahlen“ kaufst du ${gutschein.aktion ? `den Aktions-Gutschein Nr. ${gutschein.aktion.nr} (Wert ${euro(gutschein.wertCent)})` : "den Wertgutschein"} zahlungspflichtig bei ${s.firma}. Den Gutschein bekommst du sofort per E-Mail.` } },
         cancel_url: `${CFG.siteUrl}/gutschein-kaufen/${encodeURIComponent(s.slug)}?abbruch=${z.id}`,
+        // Danke im Shop-Look (statt der allgemeinen Tattoofin-Seite bezahlt.html)
+        success_url: `${CFG.siteUrl}/gutschein-kaufen/${encodeURIComponent(s.slug)}?bezahlt=${z.id}`,
       },
     });
     await log("gutschein-shop-kasse", { studioId: s.id, zahlungId: z.id, auswahl: b.auswahl, betragCent, wertCent: gutschein.wertCent || betragCent });

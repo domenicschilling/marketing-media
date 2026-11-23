@@ -154,8 +154,10 @@ export async function gutscheinPdf(s, z) {
   const page = pdf.addPage([W, H]);
   const f = await pdf.embedFont(StandardFonts.Helvetica), fb = await pdf.embedFont(StandardFonts.HelveticaBold);
   const fi = await pdf.embedFont(StandardFonts.HelveticaOblique), fm = await pdf.embedFont(StandardFonts.CourierBold);
-  const navy = hex("#13243d"), gelb = hex("#ffbd16"), grau = hex("#5b6370"), weiss = rgb(1, 1, 1);
-  const bandFarbe = s.branding?.farbe && !hell(s.branding.farbe) ? s.branding.farbe : "#13243d";
+  // Shop-Gutscheine im Look des Studios (TF: Schwarz/Gold mit Logo), sonst Studiofarbe bzw. Tattoofin-Navy/Gelb
+  const marke = g.shop ? shopTexte(s)?.marke : null;
+  const navy = hex(marke ? "#0B0B0B" : "#13243d"), gelb = hex(marke?.akzent || "#ffbd16"), grau = hex("#5b6370"), weiss = rgb(1, 1, 1);
+  const bandFarbe = marke?.band || (s.branding?.farbe && !hell(s.branding.farbe) ? s.branding.farbe : "#13243d");
   const band = hex(bandFarbe);
   const text = (t, x, y, font, size, color = navy) => page.drawText(sauber(t), { x, y, font, size, color });
   const rechts = (t, xr, y, font, size, color) => text(t, xr - font.widthOfTextAtSize(sauber(t), size), y, font, size, color);
@@ -167,7 +169,10 @@ export async function gutscheinPdf(s, z) {
   page.drawRectangle({ x: 14, y: bandY, width: W - 28, height: bandH, color: band });
   page.drawRectangle({ x: 14, y: bandY - 5, width: W - 28, height: 5, color: gelb });
 
-  const bild = await bildFuer(pdf, s);
+  let bild = await bildFuer(pdf, s);
+  if (!bild && marke?.logo) {
+    try { const r = await fetch(marke.logo); if (r.ok) bild = { img: await pdf.embedPng(Buffer.from(await r.arrayBuffer())), hellesLogo: true }; } catch { /* ohne Logo */ }
+  }
   let nameX = R + 6;
   if (bild) {
     const maxH = 64, maxW = 170;
@@ -205,7 +210,7 @@ export async function gutscheinPdf(s, z) {
   // Gutscheine ohne Token (vor der Zahlung) bekommen keinen QR; ältere, schon verschickte PDFs haben keinen (dort hilft die Code-Erkennung der App).
   const mitQr = Boolean(g.code && g.token);
   const kx = W - R - 210, kw = 210, kh = mitQr ? 133 : 92, ky = bandY - 58 - kh; // Oberkante wie bisher
-  page.drawRectangle({ x: kx, y: ky, width: kw, height: kh, color: hex("#fff5d6"), borderColor: hex("#f5d77a"), borderWidth: 1.2 });
+  page.drawRectangle({ x: kx, y: ky, width: kw, height: kh, color: hex(marke?.kasten || "#fff5d6"), borderColor: hex(marke?.akzent || "#f5d77a"), borderWidth: 1.2 });
   text("Gutschein-Code", kx + 14, ky + kh - 22, f, 10, grau);
   text(g.code || "wird nach Zahlung vergeben", kx + 14, ky + kh - 52, g.code ? fm : f, g.code ? 21 : 11, navy);
   if (mitQr) {

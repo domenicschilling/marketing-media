@@ -21,11 +21,18 @@ import { gueltigBis } from "./gutschein.mjs";
 const berlinTag = (iso) => new Date(iso).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" });
 export const tagesende = (ymd) => [`${ymd}T22:59:59.000Z`, `${ymd}T21:59:59.000Z`].find((x) => berlinTag(x) === ymd);
 
+// Look des Studios für Mail und PDF der Shop-Gutscheine (TF: Schwarz/Gold, Logo aus public/assets/gs-shop/tfm/)
+export const markeFuer = (c) => (c?.marke ? {
+  ...c.marke, logo: `${CFG.siteUrl}${c.marke.logoPfad}`,
+  fragen: c.anbieter ? `Fragen? Schreib ${c.anbieter.name.split(",")[0]}: ${c.anbieter.email}${c.anbieter.telefon ? " · " + c.anbieter.telefon : ""}. Technik und Zahlung: Tattoofin.` : null,
+} : null);
+
 // ---------- Angebot (Domenic-Entscheidung 23.11.2026) ----------
 export const SHOPS = {
   "tattoo-fashion-munich": {
     studioId: "st_nqoyv1Q2wj7F",
     titel: "Weihnachts-Gutscheine",
+    marke: { kopf: "#0B0B0B", logoPfad: "/assets/gs-shop/tfm/logo.png", alt: "Tattoo Fashion München", knopf: "#C8A35A", knopfText: "#0B0B0B", titel: "#0B0B0B", band: "#0B0B0B", akzent: "#C8A35A", kasten: "#f6efe0" },
     // Nr. · Wert · Preis · Stück
     aktionen: [
       { id: "nr1", nr: 1, wertCent: 200000, preisCent: 150000, stueck: 1 },
@@ -215,7 +222,7 @@ export function widerruf(s, c) {
 export function shopTexte(s, kauf) {
   const c = SHOPS[s?.slug];
   if (!c) return null;
-  return { bedingungen: bedingungen(s, c, kauf ? new Date(kauf) : jetzt()), widerruf: widerruf(s, c), anbieter: c.anbieter || null };
+  return { bedingungen: bedingungen(s, c, kauf ? new Date(kauf) : jetzt()), widerruf: widerruf(s, c), anbieter: c.anbieter || null, marke: markeFuer(c) };
 }
 
 // Öffentliche Ausgabe für /gutschein-kaufen/<studio>

@@ -283,7 +283,7 @@ async function zahlartFehlt(studio, z, e) {
 //             application_fee_amount = 10 % vom Zahlbetrag. Stripe-Gebühren trägt Tattoofin aus diesen 10 %.
 // Für die Klarna-Prüfung (23.10.2026; Kunde braucht Vor-/Nachname, Anschrift, Telefon, E-Mail –, docs.stripe.com/payments/klarna/best-practices): klarer Artikelname mit Menge 1,
 // Kunde als Stripe-Customer mit Name + E-Mail (vorausgefüllt), Rechnungsadresse und Telefonnummer verpflichtend.
-export async function checkoutFuer(studio, z, { nurKarte = false, extra = null } = {}) {
+export async function checkoutFuer(studio, z, { nurKarte = false, extra = null, branding: brandingWunsch = null } = {}) {
   if (!darfKassieren(studio)) throw new HttpError(409, "Dieses Studio kann gerade keine Zahlungen annehmen.");
   const plattform = plattformKassiert(studio);
   const direkt = direktCharge(studio);
@@ -328,7 +328,7 @@ export async function checkoutFuer(studio, z, { nurKarte = false, extra = null }
   };
   // Logo/Farben des Studios im Checkout (falls im Admin hinterlegt). Lehnt Stripe das Branding ab,
   // läuft die Zahlung ohne – die Kasse darf daran nie scheitern.
-  const branding = checkoutBranding(studio);
+  const branding = brandingWunsch || checkoutBranding(studio);
   const anlegen = async (p) => {
     let sitzung;
     if (branding) {

@@ -16,19 +16,21 @@ const monatPreisText = (nettoCent) => `${euro(brutto(nettoCent))} im Monat inkl.
 
 const gelb = "#ffbd16", navy = "#13243d";
 
-function layout({ preheader = "", title, body, cta, ctaUrl, footerNote = "" }) {
+// marke (optional, Gutschein-Shop): Kopf, Logo und Knopf im Look des Studios statt Tattoofin
+function layout({ preheader = "", title, body, cta, ctaUrl, footerNote = "", marke = null }) {
   const button = cta && ctaUrl
-    ? `<p style="margin:26px 0"><a href="${esc(ctaUrl)}" style="background:${gelb};color:${navy};text-decoration:none;font-weight:700;padding:13px 22px;border-radius:99px;display:inline-block">${esc(cta)}</a></p>`
+    ? `<p style="margin:26px 0"><a href="${esc(ctaUrl)}" style="background:${marke?.knopf || gelb};color:${marke?.knopfText || navy};text-decoration:none;font-weight:700;padding:13px 22px;border-radius:99px;display:inline-block">${esc(cta)}</a></p>`
     : "";
   const html = `<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>
 <body style="margin:0;background:#f7f7f4;font:15px/1.6 -apple-system,Segoe UI,'DM Sans',Arial,sans-serif;color:#14161a">
 <span style="display:none;max-height:0;overflow:hidden">${esc(preheader)}</span>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 12px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:580px;background:#fff;border-radius:14px;overflow:hidden">
-<tr><td style="background:${navy};padding:16px 26px"><img src="${CFG.siteUrl}/assets/wortmarke.png" alt="Tattoofin" height="30" style="height:30px;background:#fff;border-radius:8px;padding:5px 8px"></td></tr>
-<tr><td style="padding:26px 26px 8px"><h1 style="font-size:21px;line-height:1.25;margin:0 0 14px;color:${navy}">${title}</h1>${body}${button}</td></tr>
+${marke ? `<tr><td style="background:${marke.kopf};padding:16px 26px"><img src="${esc(marke.logo)}" alt="${esc(marke.alt)}" height="44" style="height:44px"></td></tr>`
+    : `<tr><td style="background:${navy};padding:16px 26px"><img src="${CFG.siteUrl}/assets/wortmarke.png" alt="Tattoofin" height="30" style="height:30px;background:#fff;border-radius:8px;padding:5px 8px"></td></tr>`}
+<tr><td style="padding:26px 26px 8px"><h1 style="font-size:21px;line-height:1.25;margin:0 0 14px;color:${marke?.titel || navy}">${title}</h1>${body}${button}</td></tr>
 <tr><td style="padding:8px 26px 24px;color:#5b6370;font-size:13px">${footerNote}
-<p style="margin:14px 0 0">Fragen? Antworte einfach auf diese E-Mail oder schreib uns per WhatsApp: ${esc(CFG.telefon)}.<br>
+<p style="margin:14px 0 0">${marke?.fragen || `Fragen? Antworte einfach auf diese E-Mail oder schreib uns per WhatsApp: ${esc(CFG.telefon)}.`}<br>
 ${esc(CFG.firma)} · ${esc(CFG.adresse)}<br>Tattoofin ist kein Kreditgeber. Zahlungen werden über externe Zahlungsanbieter abgewickelt.</p></td></tr></table></td></tr></table></body></html>`;
   const text = (title + "\n\n" + body + (cta ? `\n\n${cta}: ${ctaUrl}` : ""))
     .replace(/<br\s*\/?>/g, "\n").replace(/<\/(p|div)>/g, "\n\n").replace(/<\/(li|tr|h\d)>/g, "\n").replace(/<\/td>\s*<td/g, ": </td><td").replace(/<\/(p|li|tr|h\d|div)>\s*</g, "\n<").replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ")
@@ -328,12 +330,12 @@ export const mails = {
       preheader: `Code ${g.code} · ${bonus ? "voller Wert bis " + datum(g.bonusBis) : "gültig bis " + datum(g.gueltigBis)}`,
       title: `Dein Gutschein ist da 🎁`,
       body: p(`Hi ${esc((z.kunde || "").split(" ")[0])}, danke für deinen Einkauf! Hier ist dein Tattoo-Gutschein von <b>${esc(s.firma)}</b>${g.empfaenger ? ` für <b>${esc(g.empfaenger)}</b>` : ""}.`) +
-        `<div style="border:2px dashed #f5d77a;background:#fff5d6;border-radius:12px;padding:16px 18px;margin:0 0 16px;text-align:center">
-<div style="font-size:30px;font-weight:800;color:${navy}">${euro(wert)}</div>
-<div style="color:#5b6370;font-size:13px;margin:4px 0 10px">${art}</div>
-<div style="font:700 20px/1.3 'Courier New',monospace;letter-spacing:1px;color:${navy}">${esc(g.code)}</div>
+        `<div style="border:2px dashed ${shop?.marke ? "#C8A35A" : "#f5d77a"};background:${shop?.marke ? "#0B0B0B" : "#fff5d6"};border-radius:12px;padding:16px 18px;margin:0 0 16px;text-align:center">
+<div style="font-size:30px;font-weight:800;color:${shop?.marke ? "#E8CD92" : navy}">${euro(wert)}</div>
+<div style="color:${shop?.marke ? "#B3AB9C" : "#5b6370"};font-size:13px;margin:4px 0 10px">${art}</div>
+<div style="font:700 20px/1.3 'Courier New',monospace;letter-spacing:1px;color:${shop?.marke ? "#F4EFE6" : navy}">${esc(g.code)}</div>
 ${g.nachricht ? `<div style="font-style:italic;color:#5b6370;margin-top:10px">„${esc(g.nachricht)}“</div>` : ""}</div>` +
-        (bonus ? box(`<b>So lange gilt dein Gutschein:</b> ${esc(bonus)}`) : "") +
+        (bonus ? `<div style="background:${shop?.marke ? "#f6efe0" : "#fff5d6"};border:1px solid ${shop?.marke ? "#C8A35A" : "#f5d77a"};border-radius:10px;padding:12px 14px;margin:0 0 14px"><b>So lange gilt dein Gutschein:</b> ${esc(bonus)}</div>` : "") +
         rows([["Ausgestellt am", datum(g.ausgestelltAm)],
           ...(bonus ? [["Gutscheinwert", euro(wert) + " bis " + datum(g.bonusBis)], ["Bezahlt", euro(g.bezahltCent || z.betragCent)], ["Danach einlösbar", euro(g.bezahltCent || z.betragCent) + " bis " + datum(g.gueltigBis)]]
             : [["Gültig bis", datum(g.gueltigBis)]]),
@@ -346,6 +348,7 @@ ${g.nachricht ? `<div style="font-style:italic;color:#5b6370;margin-top:10px">�
 ${shop.anbieter ? `<p style="margin:12px 0 0"><b>Verkäufer:</b> ${esc([shop.anbieter.name, shop.anbieter.rechtsform, shop.anbieter.vertreten, shop.anbieter.strasse, [shop.anbieter.plz, shop.anbieter.ort].filter(Boolean).join(" "), shop.anbieter.email, shop.anbieter.telefon, shop.anbieter.register, shop.anbieter.ustid].filter(Boolean).join(" · "))}</p>` : ""}</div>` : ""),
       cta: "Gutschein online ansehen", ctaUrl: url,
       footerNote: `Der Gutschein wurde von ${esc(verkaeufer)} ausgestellt und über Tattoofin verkauft. Fragen zum Termin klärst du direkt mit dem Studio.`,
+      ...(shop?.marke ? { marke: shop.marke } : {}),
     });
   },
 
