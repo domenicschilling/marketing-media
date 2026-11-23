@@ -34,6 +34,7 @@ import {
   reviewPruefen, reviewRegFuer, codePruefen, nachAnmeldeCode, geraetFertig, maskiereEmail,
 } from "./app-code.mjs";
 import { AT, appleFehler, jwsPruefen, transaktionPruefen, otxBeanspruchen, otxSchluessel, studioIdZuOtx, appleAktivieren, appleStatusAnwenden, uuidNorm } from "./apple.mjs";
+import { weiteresStudioErlaubt } from "./studio-wechsel.mjs";
 
 const RT = {
   registrierungAbgelaufen: "Deine Bestätigung ist abgelaufen. Fordere bitte einen neuen Code an.",
@@ -161,7 +162,8 @@ async function registrieren(req, context) {
   const { d, fehlt, felder } = studioDatenPruefen(b, { mitEmail: false });
   if (fehlt.length) return fehler("Bitte ausfüllen: " + fehlt.join(", "), 400, "eingabe", { felder });
   if (!bestaetigungenOk(b.akzeptiert)) return fehler(RT.bestaetigung, 400, "bestaetigung_fehlt");
-  if ((await studiosPerEmail(email)).some(AKTIV)) return fehler(AT.schonAktiv, 409, "schon_aktiv");
+  // Seit 23.11.2026: Team-Adresse eines anderen Studios darf ein eigenes Studio anlegen (in der App ohne Einladung nur das)
+  if (!(await weiteresStudioErlaubt(email)).erlaubt) return fehler(AT.schonAktiv, 409, "schon_aktiv");
 
   // Vorhandenen Entwurf zu dieser Adresse wiederverwenden (App oder Web), sonst neu
   let s = await studioBy("email", email);

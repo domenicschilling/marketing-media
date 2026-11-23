@@ -46,19 +46,23 @@ export const zweckOk = (token, zweck, studioId) => { const p = verify(token, zwe
 export const LOGIN_STUNDEN = 24;
 export const ADMIN_LOGIN_STUNDEN = 2;
 const nonce = () => crypto.randomBytes(9).toString("base64url");
-export const loginLink = (studioId, minutes = LOGIN_STUNDEN * 60) =>
-  `${CFG.siteUrl}/api/auth?token=${sign({ t: "login", sid: studioId, n: nonce(), exp: Date.now() + minutes * 60000 })}`;
+// email (seit 23.11.2026, Studio-Wechsel): Link aus /api/login gilt für die Adresse und damit für alle ihre Studios; sid = Start-Studio.
+export const loginLink = (studioId, minutes = LOGIN_STUNDEN * 60, email = null) =>
+  `${CFG.siteUrl}/api/auth?token=${sign({ t: "login", sid: studioId, ...(email ? { email: normEmail(email) } : {}), n: nonce(), exp: Date.now() + minutes * 60000 })}`;
 
 // Einmal-Links: verbrauchte Kennungen merken (Schlüssel einmal/<n>). Ältere Token ohne „n“ gelten bis zum Ablauf.
 export const einmalBenutzt = async (p) => Boolean(p?.n) && Boolean(await store.get("einmal/" + p.n));
 export const einmalVerbrauchen = async (p) => { if (p?.n) await store.set("einmal/" + p.n, { am: new Date().toISOString(), t: p.t, exp: p.exp }); };
 
 // Sitzung 30 Tage. „sv“ = Sitzungsversion des Studios: „Auf allen Geräten abmelden“ zählt sie hoch, alte Cookies verfallen.
-export function sessionCookie(studioOderId) {
+// Studio-Wechsel (seit 23.11.2026): Sitzungen aus einem Adress-Link tragen „email“ (gilt für alle Studios dieser Adresse, aktiv ist
+// „sid“) und „svs“ = Sitzungsversionen aller Studios beim Anmelden. Wechsel behält Ablauf (exp), Adresse und svs.
+export function sessionCookie(studioOderId, { email = null, svs = null, exp = null } = {}) {
   const s = typeof studioOderId === "object" ? studioOderId : { id: studioOderId };
-  const val = sign({ t: "session", sid: s.id, sv: s.sessionVersion || 0, exp: Date.now() + 30 * 864e5 });
+  const bis = exp && exp > Date.now() ? exp : Date.now() + 30 * 864e5;
+  const val = sign({ t: "session", sid: s.id, sv: s.sessionVersion || 0, ...(email ? { email: normEmail(email), svs: svs || {} } : {}), exp: bis });
   const secure = CFG.siteUrl.startsWith("https") ? "; Secure" : "";
-  return `${COOKIE}=${val}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${30 * 86400}${secure}`;
+  return `${COOKIE}=${val}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${Math.max(60, Math.round((bis - Date.now()) / 1000))}${secure}`;
 }
 
 export const clearCookie = () => `${COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`;
@@ -111,6 +115,12 @@ export async function currentStudio(req) {
     return s;
   }
   if ((p.sv || 0) !== (s.sessionVersion || 0)) return null;
+  // Adress-Sitzung (Studio-Wechsel): Die Adresse muss im aktiven Studio noch Inhaber oder Team sein (Team-Adresse entfernt → abgemeldet)
+  if (p.email) {
+    const rolle = rolleFuer(s, p.email);
+    if (!rolle) return null;
+    Object.defineProperty(s, "_sitzung", { value: { email: p.email, rolle, svs: p.svs || {}, exp: p.exp }, enumerable: false });
+  }
   return s;
 }
 

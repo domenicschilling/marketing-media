@@ -169,3 +169,20 @@ braucht `NODE_PATH` zusätzlich einen Ordner mit `playwright` (z. B. `…/Market
 
 - Luckiest Guy (Apache License 2.0) und DM Sans (SIL Open Font License 1.1), beide frei nutzbar, aus `website/public/assets/fonts` nach TTF gewandelt:
   `uvx --from 'fonttools[woff]' fonttools ttLib.woff2 decompress -o <name>.ttf <name>.woff2`
+
+## Studio-Wechsel (Version 1.2, Auftrag Domenic 23.11.2026)
+
+Wer mit einer Adresse zu mehreren Studios gehört (Hauptadresse = Inhaber, Team-Adresse = Team), wechselt ohne neuen Code.
+
+- Server: `GET /api/app/studios` (Liste mit Rolle je Studio), `POST /api/app/wechseln { studioId }` (Gerätetoken fürs Zielstudio, nur wenn
+  die Adresse dort Inhaber oder Team ist; `_lib/studio-wechsel.mjs`). Push-Index je Push-Token ist eine Liste: dasselbe Handy mit derselben
+  Adresse behält den Token in allen Studios; übernimmt eine andere Adresse den Token, verlieren ihn alle fremden Geräte.
+  Mitteilungen tragen `studioId`, bei Geräten mit mehreren Studios den Studionamen als Untertitel.
+- App: Zugänge je Studio im Schlüsselbund (`app-zugaenge`, `StudioZugang`), aktives Token wie bisher unter `app-token` (1.0/1.1 werden beim
+  Start übernommen). `AppState.studiosAktualisieren()` lädt die Liste (beim Start der Hauptansicht und bei jedem Öffnen der Liste), vergisst
+  Zugänge ohne Rolle und holt fehlende (Mitteilungen aus allen Studios). Wechsel = `AppState.wechseln(zu:)`, die Hauptansicht baut sich
+  neu auf (`.id(studioId)`), Zahlungs-Zwischenspeicher je Studio. Knopf oben links in jedem Tab und im Konto, nur bei mehr als einem Studio.
+  Abmelden fragt bei mehreren Zugängen „Nur bei <Studio>“ oder „Bei allen Studios“. 401 eines Studios → nur dieses verlassen, weiter im nächsten.
+  Mitteilung aus einem anderen Studio antippen → erst wechseln, dann springen.
+- Tests: `TattoofinTests/StudioWechselTests.swift`, `TattoofinUITests/StudioWechselUITests.swift` (lokaler Server, `zwei@beispiel.test`),
+  Server `dev/app-api.mjs` (Abschnitt Studio-Wechsel) und `dev/studio-wechsel.mjs` (Web: ein Login-Link für alle Studios, Wechsler im Dashboard).

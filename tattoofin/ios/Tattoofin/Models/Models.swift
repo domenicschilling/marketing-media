@@ -193,6 +193,38 @@ struct StudioKurz: Codable, Sendable, Hashable, Identifiable {
     let id: String
     var firma: String?
     var ort: String?
+    /// Nur bei POST /api/app/wechseln: "inhaber" | "team"
+    var rolle: String?
+}
+
+// MARK: - Studio-Wechsel (seit 23.11.2026, Version 1.2)
+
+/// Eine Zeile aus GET /api/app/studios: Studio, zu dem die angemeldete Adresse gehört
+struct StudioEintrag: Codable, Sendable, Hashable, Identifiable {
+    let id: String
+    var firma: String
+    var ort: String
+    var rolle: String          // "inhaber" | "team"
+    var aktuell: Bool
+
+    var istInhaber: Bool { rolle == "inhaber" }
+}
+
+struct StudiosAntwort: Codable, Sendable {
+    var studios: [StudioEintrag]
+}
+
+/// Anmeldung für ein Studio auf diesem Gerät (im Schlüsselbund, eine Liste für alle Studios derselben Adresse)
+struct StudioZugang: Codable, Sendable, Hashable, Identifiable {
+    var studioId: String
+    var firma: String
+    var ort: String
+    var rolle: String
+    var geraetId: String
+    var email: String
+    var token: String
+
+    var id: String { studioId }
 }
 
 /// POST /api/app/anmelden: entweder fertig (token) oder Auswahl nötig (auswahl + auswahlToken)

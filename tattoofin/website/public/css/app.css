@@ -7,6 +7,20 @@ body.app{background-color:var(--cream);background-image:none;padding-bottom:calc
 .app-brand span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .app-top-r{font-size:12.5px;font-weight:700;background:var(--yellow);color:var(--ink);border-radius:99px;padding:4px 10px;white-space:nowrap}
 .app-top-r.warn{background:#fff;color:var(--ink)}
+/* Studio-Wechsel (23.11.2026) */
+.studio-wechsel{flex:none;margin-left:auto;font:700 13px/1.2 var(--body,inherit);color:#fff;background:transparent;border:1.5px solid rgba(255,255,255,.55);border-radius:99px;padding:7px 12px;min-height:44px;cursor:pointer}
+.studio-wechsel:hover,.studio-wechsel:focus-visible{border-color:var(--yellow);color:var(--yellow)}
+.studio-dialog{border:0;border-radius:18px;padding:20px;width:min(440px,calc(100vw - 32px));max-height:calc(100dvh - 48px);color:var(--ink);background:#fff}
+.studio-dialog::backdrop{background:rgba(19,36,61,.55)}
+.studio-dialog h2{margin:0 0 6px;font-size:20px}
+.studio-liste{list-style:none;margin:14px 0;padding:0;display:grid;gap:8px}
+.studio-liste button{width:100%;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:10px;background:#f4f1ea;border:2px solid transparent;border-radius:12px;padding:12px 14px;min-height:56px;font:inherit;color:var(--ink);cursor:pointer}
+.studio-liste button:hover,.studio-liste button:focus-visible{border-color:var(--ink)}
+.studio-liste button[aria-current="true"]{border-color:var(--ink);background:#fff}
+.studio-liste b{display:block;font-size:16px}
+.studio-liste small{display:block;color:#4a5566;font-size:13.5px;margin-top:2px}
+.studio-liste .marke{flex:none;font-size:13px;font-weight:700;background:var(--yellow);border-radius:99px;padding:3px 9px}
+@media (max-width:420px){.studio-wechsel .lang{display:none}}
 .sim-hinweis{background:var(--orange-t);color:#fff;font-weight:700;font-size:13px;text-align:center;padding:6px 12px}
 .offline{background:var(--ink-2);color:#fff;font-size:13px;text-align:center;padding:6px 12px}
 .app-main{max-width:620px;margin:0 auto;padding:16px 16px 24px}

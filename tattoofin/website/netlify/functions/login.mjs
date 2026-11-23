@@ -12,10 +12,14 @@ import { notify } from "./_lib/domain.mjs";
 import { mails } from "./_lib/emails.mjs";
 import { SECRETS } from "./_lib/config.mjs";
 import { warteschlangeStatus } from "./_lib/mail.mjs";
+import { studiosFuerWechsel } from "./_lib/studio-wechsel.mjs";
 
 const hash = (x) => crypto.createHmac("sha256", SECRETS.sessionSecret).update(String(x)).digest("hex").slice(0, 32);
 // „y•••••@gmail.com“ – nur für den Hinweis nach „Neuen Link schicken“ (der Besitzer des alten Links kennt die Adresse ohnehin)
 const maskiert = (e) => String(e || "").replace(/^(.)[^@]*(@.*)$/, "$1•••••$2");
+
+// Empfänger: Hauptadresse (undefined = s.email) oder die hinterlegte Team-Adresse in ihrer Schreibweise
+const an = (s, email) => (normEmail(s.email) === normEmail(email) ? undefined : (s.teamEmails || []).find((t) => normEmail(t) === normEmail(email)));
 
 export default handler(async (req, context) => {
   if (req.method !== "POST") return fail("Methode nicht erlaubt", 405);
@@ -25,6 +29,16 @@ export default handler(async (req, context) => {
 
   if (b.neu) {
     const p = verify(clean(b.neu, 2000), "login", { abgelaufenOk: true });
+    // Adress-Link (seit 23.11.2026): neuer Link an dieselbe Adresse, solange sie noch zu einem Studio gehört
+    if (p?.email) {
+      const liste = ipOk ? await studiosFuerWechsel(p.email) : [];
+      const start = liste.find((x) => x.id === p.sid) || liste[0];
+      const s0 = start && (await getStudio(start.id));
+      if (!s0) return antwort();
+      if (!(await zaehleVersuch(`rl/login-mail/${hash(p.email)}`, 3, 15 * 60e3))) return antwort({ an: maskiert(p.email), gedrosselt: true });
+      const ok = await notify(s0, mails.login(s0, { url: loginLink(s0.id, undefined, p.email), stunden: LOGIN_STUNDEN, studios: liste }), an(s0, p.email));
+      return antwort({ an: maskiert(p.email), gesendet: ok === true });
+    }
     const s = p && (await getStudio(p.sid));
     if (!ipOk || !s || !s.email) return antwort();
     if (!(await zaehleVersuch(`rl/login-neu/${hash(s.id)}`, 3, 15 * 60e3))) return antwort({ an: maskiert(s.email), gedrosselt: true });
@@ -36,12 +50,13 @@ export default handler(async (req, context) => {
   if (!ipOk || !email) return antwort();
   const mailOk = await zaehleVersuch(`rl/login-mail/${hash(email)}`, 3, 15 * 60e3);
   if (!mailOk) return antwort();
-  // Alle aktiven Studios zu dieser Adresse (nicht nur den letzten Index-Eintrag): je Studio ein Link, höchstens 3
-  // Link geht an die eingegebene Adresse (Hauptadresse oder hinterlegte Team-Adresse – beides passt laut studiosPerEmail)
-  for (const s of (await studiosPerEmail(email)).filter(AKTIV).slice(0, 3)) {
-    const an = normEmail(s.email) === normEmail(email) ? undefined : (s.teamEmails || []).find((t) => normEmail(t) === normEmail(email));
-    await notify(s, mails.login(s, { url: loginLink(s.id), stunden: LOGIN_STUNDEN }), an);
-  }
+  // Seit 23.11.2026 (Studio-Wechsel): EIN Link für alle aktiven Studios dieser Adresse (vorher je Studio ein Link, höchstens 3).
+  // Start ist das zuletzt geänderte Studio, im Dashboard wechselt man oben. Link geht an die eingegebene Adresse (Haupt- oder Team-Adresse).
+  const aktiv = (await studiosPerEmail(email)).filter(AKTIV);
+  if (!aktiv.length) return antwort();
+  const s = aktiv[0];
+  const liste = await studiosFuerWechsel(email, s);
+  await notify(s, mails.login(s, { url: loginLink(s.id, undefined, email), stunden: LOGIN_STUNDEN, studios: liste }), an(s, email));
   return antwort();
 });
 

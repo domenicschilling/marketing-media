@@ -27,6 +27,8 @@ struct KontoView: View {
     @State private var testErgebnis: String?
     @State private var aboVerwalten = false
     @State private var aboErneuern = false
+    @State private var wechselOffen = false
+    @State private var abmeldenWahl = false
 
     private var studio: Studio? { portal.studio }
     private var istInhaber: Bool { app.sitzung?.istInhaber ?? false }
@@ -55,6 +57,7 @@ struct KontoView: View {
             .scrollContentBackground(.hidden)
             .tfHintergrund()
             .navigationTitle(Texte.Konto.titel)
+            .studioWechsler()
             .navigationBarTitleDisplayMode(.inline)
             .refreshable { await allesLaden() }
             .task { await allesLaden() }
@@ -62,6 +65,14 @@ struct KontoView: View {
             .sheet(isPresented: $aboErneuern) { AboErneuernSheet() }
             .manageSubscriptionsSheet(isPresented: $aboVerwalten)
             .onChange(of: aboVerwalten) { _, offen in if !offen { Task { await portal.laden() } } }
+            .sheet(isPresented: $wechselOffen) { StudioWechselView() }
+            .confirmationDialog(Texte.Wechsel.abmeldenTitel, isPresented: $abmeldenWahl, titleVisibility: .visible) {
+                Button(Texte.Wechsel.nurHier(app.sitzung?.firma ?? ""), role: .destructive) { Task { await app.abmelden(alle: false) } }
+                Button(Texte.Wechsel.ueberall, role: .destructive) { Task { await app.abmelden(alle: true) } }
+                Button(Texte.Allgemein.abbrechen, role: .cancel) {}
+            } message: {
+                Text(Texte.Wechsel.abmeldenText)
+            }
             .alert(Texte.Konto.abmeldenFrage, isPresented: $abmeldenFrage) {
                 Button(Texte.Konto.abmelden, role: .destructive) { Task { await app.abmelden() } }
                 Button(Texte.Allgemein.abbrechen, role: .cancel) {}
@@ -118,15 +129,33 @@ struct KontoView: View {
                     WertZeile(titel: Texte.Konto.angemeldetAls, wert: sitzung.email)
                     WertZeile(titel: Texte.Konto.rolle, wert: sitzung.istInhaber ? Texte.Konto.rolleInhaber : Texte.Konto.rolleTeam)
                 }
+                wechselZeile
             } else if portal.fehler == nil {
                 ProgressView()
             } else if let sitzung = app.sitzung {
                 WertZeile(titel: Texte.Konto.angemeldetAls, wert: sitzung.email)
+                wechselZeile
             }
         } header: {
             ListenKopf(Texte.Konto.studio)
         }
     }
+
+    /// Studio-Wechsel (1.2): nur bei mehr als einem Studio
+    @ViewBuilder private var wechselZeile: some View {
+        if app.mehrereStudios {
+            Button {
+                wechselOffen = true
+            } label: {
+                Label(Texte.Wechsel.knopf, systemImage: "arrow.left.arrow.right.circle")
+            }
+            .foregroundStyle(Color.tfTinte)
+            .accessibilityIdentifier("konto-studio-wechseln")
+        }
+    }
+
+    /// Mehr als ein Studio auf diesem iPhone angemeldet → beim Abmelden fragen: nur hier oder überall
+    private var mehrereZugaenge: Bool { app.zugaenge.count > 1 }
 
     /// Nur bei Studios, die ihr Tattoofin-Abo über Apple bezahlen
     private var aboAbschnitt: some View {
@@ -283,7 +312,8 @@ struct KontoView: View {
     private var abmeldenAbschnitt: some View {
         Section {
             if let fehler { FehlerZeile(text: fehler) }
-            Button(Texte.Konto.abmelden) { abmeldenFrage = true }
+            Button(Texte.Konto.abmelden) { if mehrereZugaenge { abmeldenWahl = true } else { abmeldenFrage = true } }
+                .accessibilityIdentifier("konto-abmelden")
             if istInhaber {
                 Button(Texte.Konto.ueberall, role: .destructive) { ueberallFrage = true }
                     .disabled(arbeitet)

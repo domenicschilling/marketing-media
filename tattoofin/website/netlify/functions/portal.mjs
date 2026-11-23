@@ -25,6 +25,8 @@
 //                                          Stripe, Mail oder Hersteller-Link (Bestellen = nur „angefordert“ vermerkt, pruefung: true).
 //   POST   /api/portal/checkliste          { punkt, erledigt } Einrichtungs-Checkliste (manuelle Punkte)
 //   POST   /api/portal/abmelden            Auf allen Geräten abmelden (Sitzungsversion hochzählen)
+//   GET    /api/portal/studios             Studios der angemeldeten Adresse (Studio-Wechsel, seit 23.11.2026; nur Web, Adress-Sitzung)
+//   POST   /api/portal/studio-wechseln     { studioId } aktives Studio wechseln: neues Sitzungs-Cookie, ohne neue Login-Mail
 //   POST   /api/portal/zahlung { art: "gutschein", betrag, kunde (Käufer), email (Pflicht), empfaenger?, nachricht? }  Gutschein-Zahlungslink
 //   POST   /api/portal/gutschein/:id/einloesen   { notiz? } Gutschein als eingelöst markieren
 //   DELETE /api/portal/gutschein/:id/einloesen   Einlösung zurücknehmen (Versehen)
@@ -47,7 +49,8 @@
 import { CFG, plattformgebuehr, provisionSatz, paketVon, BAUSTEINE_SIMULIERT, testKasse } from "./_lib/config.mjs";
 import { json, fail, body, clean, id, now, handler, isEmail, parseBetrag, clientIp, euro } from "./_lib/util.mjs";
 import { saveStudio, zahlungenVon, getZahlung, saveZahlung, abrechnungenVon, getLeistung, store, log } from "./_lib/store.mjs";
-import { currentStudio, clearCookie } from "./_lib/auth.mjs";
+import { currentStudio, clearCookie, sessionCookie } from "./_lib/auth.mjs";
+import { studiosFuerWechsel, wechselZiel } from "./_lib/studio-wechsel.mjs";
 import { geraeteWiderrufen } from "./_lib/app-geraete.mjs";
 import { stripe, dashboardLink, accountSession, ensureConnectedAccount } from "./_lib/stripe.mjs";
 import { hatUmstellungsangebot, umstellungCheckout, notify, notifyAdmin, connectUrl, connectUrlGehostet, darfKassieren, studioAdresseDa, provisionVerdient, kontoAbgleichen, eingebettet, klarnaFuer, provisionZahlung, aufstellerBezahlt, aufstellerLogoLoeschen, istAufstellerPruefStudio, kuendigungEinreichen, kuendigungZuruecknehmen, zahlungAbgleichen } from "./_lib/domain.mjs";
@@ -103,7 +106,7 @@ const CHECK_MANUELL = ["app", "werbung", "theke"];
 import { mails } from "./_lib/emails.mjs";
 
 // Mit App-Token gesperrte Bereiche (nur im Dashboard)
-const NUR_WEB = ["stripe-session", "rechnungen", "umstellung", "erstattung", "extra"];
+const NUR_WEB = ["stripe-session", "rechnungen", "umstellung", "erstattung", "extra", "studios", "studio-wechseln"];
 // Mit App-Token einer Team-Adresse gesperrt (nur der Inhaber darf das; im Web gilt das Cookie wie bisher)
 const NUR_INHABER = ["kuendigung", "stripe-dashboard", "kontakt", "abmelden", "recht", "fragebogen", "adresse"];
 
@@ -500,6 +503,27 @@ export default handler(async (req, context) => {
       const ok = await gutscheinSenden(s, z);
       return json({ ...fuerStudio(z), gesendet: ok });
     }
+  }
+
+  // Studio-Wechsel im Dashboard (seit 23.11.2026). Nur mit Adress-Sitzung (Login-Link ab 23.11.2026, auth.mjs sessionCookie email/svs).
+  // Der Server prüft beim Wechsel und danach bei jedem Aufruf (currentStudio), ob die Adresse im Zielstudio Inhaber oder Team ist.
+  if (bereich === "studios" && req.method === "GET") {
+    const sz = s._sitzung;
+    if (!sz) return json({ studios: [], wechselMoeglich: false });
+    return json({ studios: await studiosFuerWechsel(sz.email, s), email: sz.email, rolle: sz.rolle, wechselMoeglich: true });
+  }
+  if (bereich === "studio-wechseln" && req.method === "POST") {
+    const sz = s._sitzung;
+    if (!sz) return json({ error: "Bitte einmal neu einloggen, dann kannst du zwischen deinen Studios wechseln.", code: "neu_einloggen" }, 400);
+    const b = await body(req);
+    const ziel = await wechselZiel(sz.email, clean(b.studioId, 40));
+    if (!ziel) return json({ error: "Für dieses Studio ist deine Adresse nicht (mehr) freigeschaltet.", code: "kein_zugang" }, 403);
+    // „Auf allen Geräten abmelden“ im Zielstudio nach dem Login → kein Wechsel mehr mit dieser Sitzung
+    const svBekannt = sz.svs?.[ziel.id];
+    if (svBekannt !== undefined && svBekannt !== (ziel.sessionVersion || 0)) return json({ error: "In diesem Studio wurden alle Geräte abgemeldet. Bitte logge dich neu ein.", code: "neu_einloggen" }, 403);
+    const svs = { ...(sz.svs || {}), [ziel.id]: ziel.sessionVersion || 0 };
+    await log("web-studio-gewechselt", { von: s.id, nach: ziel.id });
+    return json({ ok: true, studio: { id: ziel.id, firma: ziel.firma } }, 200, { "Set-Cookie": sessionCookie(ziel, { email: sz.email, svs, exp: sz.exp }) });
   }
 
   if (bereich === "abmelden" && req.method === "POST") {

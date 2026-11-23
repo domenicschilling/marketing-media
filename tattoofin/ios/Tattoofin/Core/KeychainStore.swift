@@ -7,6 +7,8 @@ enum KeychainStore {
     private static let dienst = "de.tattoofin.app"
     static let tokenKonto = "app-token"
     static let registrierungKonto = "app-registrierung"
+    /// Seit 1.2 (Studio-Wechsel): Anmeldungen aller Studios dieser Adresse auf diesem Gerät, JSON-Liste von StudioZugang
+    static let zugaengeKonto = "app-zugaenge"
 
     private static func basis(_ konto: String) -> [String: Any] {
         [
@@ -25,6 +27,22 @@ enum KeychainStore {
     static func lesen() -> String? { lesen(konto: tokenKonto).flatMap { String(data: $0, encoding: .utf8) } }
 
     static func loeschen() { loeschen(konto: tokenKonto) }
+
+    // MARK: Studio-Zugänge (1.2)
+
+    static func zugaengeLesen() -> [StudioZugang] {
+        guard let d = lesen(konto: zugaengeKonto) else { return [] }
+        return (try? JSONDecoder().decode([StudioZugang].self, from: d)) ?? []  // ds-ok: kaputter Eintrag = keine weiteren Studios gespeichert
+    }
+
+    @discardableResult
+    static func zugaengeSpeichern(_ z: [StudioZugang]) -> Bool {
+        guard !z.isEmpty else { loeschen(konto: zugaengeKonto); return true }
+        guard let d = try? JSONEncoder().encode(z) else { return false }  // ds-ok: Kodieren einfacher Texte schlägt nicht fehl
+        return speichern(d, konto: zugaengeKonto)
+    }
+
+    static func zugaengeLoeschen() { loeschen(konto: zugaengeKonto) }
 
     // MARK: Allgemein
 

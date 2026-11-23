@@ -104,11 +104,49 @@ struct HauptView: View {
                     .accessibilityIdentifier("bildschirm.konto")
             }
         }
+        // Studio-Wechsel (1.2): neues Studio = neue Ansicht (alle Tabs, Pfade und Eingaben beginnen frisch)
+        .id(app.sitzung?.studioId)
         .environment(WerbungStore.shared)
-        .task {
+        .task(id: app.sitzung?.studioId) {
             await portal.laden()
             // Apple-Studios: Stand des Abos höchstens alle 6 Stunden an den Server
             await AboManager.shared.abgleichWennNoetig(studio: portal.studio)
+            // Studios dieser Adresse (Knopf „Studio wechseln“, Mitteilungen aus allen Studios)
+            await app.studiosAktualisieren()
+        }
+        .overlay(alignment: .top) { WechselHinweisBanner() }
+    }
+}
+
+/// Kurzer Hinweis oben nach einem Studio-Wechsel (verschwindet nach 8 Sekunden oder beim Antippen, VoiceOver liest ihn vor)
+struct WechselHinweisBanner: View {
+    @Environment(AppState.self) private var app
+
+    var body: some View {
+        if let text = app.wechselHinweis {
+            Text(text)
+                .font(.dm(.subheadline, weight: .semibold))
+                .foregroundStyle(Color.tfBlau)   // dunkle Schrift auf Gelb, hell und dunkel gleich (Kontrast > 6:1)
+                .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.tfGelbHell, in: RoundedRectangle(cornerRadius: 14))
+                .padding(.horizontal, 12)
+                .padding(.top, 4)
+                .transition(.move(edge: .top).combined(with: .opacity))
+                .onTapGesture { app.wechselHinweis = nil }
+                .accessibilityIdentifier("wechsel-hinweis")
+                .task(id: text) {
+                    UIAccessibility.post(notification: .announcement, argument: text)
+                    #if DEBUG
+                    // Nur UI-Tests: Hinweis bleibt bis zum Antippen (XCTest wartet nach dem Tippen auf Ruhe, das kann > 8 s dauern)
+                    if UserDefaults.standard.bool(forKey: "TFHinweisBleibt") { return }
+                    #endif
+                    try? await Task.sleep(for: .seconds(8))  // ds-ok: abgebrochen = Hinweis schon weg oder neuer Hinweis
+                    if app.wechselHinweis == text { withAnimation { app.wechselHinweis = nil } }
+                }
         }
     }
 }

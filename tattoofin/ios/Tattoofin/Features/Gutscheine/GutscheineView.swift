@@ -98,6 +98,7 @@ struct GutscheineView: View {
             .scrollDismissesKeyboard(.immediately)
             .refreshable { await portal.laden() }
             .navigationTitle(Texte.Gutscheine.titel)
+            .studioWechsler()
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 if portal.studio?.darfKassieren == true {

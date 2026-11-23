@@ -82,7 +82,8 @@ actor APIClient {
 
     // MARK: Kern
 
-    private func anfrage(_ methode: String, _ pfad: String, query: [URLQueryItem] = [], koerper: Data? = nil, auth: Bool) -> URLRequest {
+    private func anfrage(_ methode: String, _ pfad: String, query: [URLQueryItem] = [], koerper: Data? = nil, auth: Bool,
+                         mitToken eigenes: String? = nil) -> URLRequest {
         var comp = URLComponents(url: basis.appending(path: pfad), resolvingAgainstBaseURL: false)!
         if !query.isEmpty { comp.queryItems = query }
         var r = URLRequest(url: comp.url!)
@@ -93,11 +94,12 @@ actor APIClient {
             r.httpBody = koerper
             r.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
         }
-        if auth, let token { r.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }
+        if auth, let t = eigenes ?? token { r.setValue("Bearer \(t)", forHTTPHeaderField: "Authorization") }
         return r
     }
 
-    private func ausfuehren(_ r: URLRequest, auth: Bool) async throws -> (Data, HTTPURLResponse) {
+    /// global401: false bei Aufrufen mit dem Token eines ANDEREN Studios (Studio-Wechsel): 401 meldet dann nur dieses Studio ab
+    private func ausfuehren(_ r: URLRequest, auth: Bool, global401: Bool = true) async throws -> (Data, HTTPURLResponse) {
         let daten: Data, antwort: URLResponse
         do {
             (daten, antwort) = try await session.data(for: r)
@@ -111,16 +113,17 @@ actor APIClient {
         }
         guard let http = antwort as? HTTPURLResponse else { throw APIFehler.unbekannt }
         if http.statusCode == 401 && auth {
-            await sitzungUngueltig()
+            if global401 { await sitzungUngueltig(benutzt: r.value(forHTTPHeaderField: "Authorization")) }
             throw APIFehler.nichtAngemeldet
         }
         guard (200..<300).contains(http.statusCode) else { throw APIFehler.aus(status: http.statusCode, daten: daten) }
         return (daten, http)
     }
 
-    /// 401: Token löschen und global abmelden
-    private func sitzungUngueltig() async {
-        guard token != nil else { return }
+    /// 401: Token löschen und global abmelden. Nur, wenn die Anfrage noch mit dem aktuellen Token lief: Eine verspätete Antwort aus
+    /// dem vorigen Studio (nach einem Studio-Wechsel) darf das neue Studio nicht abmelden.
+    private func sitzungUngueltig(benutzt: String?) async {
+        guard let aktuell = token, benutzt == "Bearer \(aktuell)" else { return }
         token = nil
         KeychainStore.loeschen()
         await MainActor.run { AppState.shared.sitzungAbgelaufen() }
@@ -128,9 +131,11 @@ actor APIClient {
 
     func senden<T: Decodable & Sendable>(_ methode: String, _ pfad: String, query: [URLQueryItem] = [],
                                          body: (any Encodable & Sendable)? = nil, auth: Bool = true,
+                                         mitToken eigenes: String? = nil,
                                          als: T.Type = T.self) async throws -> T {
         let koerper = try body.map { try JSONEncoder().encode($0) }
-        let (daten, _) = try await ausfuehren(anfrage(methode, pfad, query: query, koerper: koerper, auth: auth), auth: auth)
+        let r = anfrage(methode, pfad, query: query, koerper: koerper, auth: auth, mitToken: eigenes)
+        let (daten, _) = try await ausfuehren(r, auth: auth, global401: eigenes == nil)
         do {
             return try JSONDecoder().decode(T.self, from: daten)
         } catch {
@@ -166,9 +171,23 @@ extension APIClient {
         return try await senden("POST", "api/app/anmelden", body: B(auswahlToken: auswahlToken, studioId: studioId, geraet: geraet), auth: false)
     }
 
-    func abmelden() async throws {
+    /// mitToken: ein anderes Studio dieses Geräts abmelden (Studio-Wechsel, „bei allen Studios abmelden“)
+    func abmelden(mitToken eigenes: String? = nil) async throws {
         struct B: Encodable, Sendable {}
-        let _: OK = try await senden("POST", "api/app/abmelden", body: B())
+        let _: OK = try await senden("POST", "api/app/abmelden", body: B(), mitToken: eigenes)
+    }
+
+    // Studio-Wechsel (seit 1.2)
+    func studios() async throws -> [StudioEintrag] {
+        let a: StudiosAntwort = try await senden("GET", "api/app/studios")
+        return a.studios
+    }
+
+    /// Gerätetoken für ein anderes Studio derselben Adresse, ohne neuen Code (Server prüft Inhaber/Team im Zielstudio)
+    func wechseln(studioId: String) async throws -> AnmeldenAntwort {
+        struct G: Encodable, Sendable { let appVersion: String }
+        struct B: Encodable, Sendable { let studioId: String; let geraet: G }
+        return try await senden("POST", "api/app/wechseln", body: B(studioId: studioId, geraet: G(appVersion: APIClient.appVersionText)))
     }
 
     // Portal
@@ -275,9 +294,9 @@ extension APIClient {
         return r.geraet
     }
 
-    func pushTokenSenden(_ token: String, umgebung: String) async throws -> PushAntwort {
+    func pushTokenSenden(_ token: String, umgebung: String, mitToken eigenes: String? = nil) async throws -> PushAntwort {
         struct B: Encodable, Sendable { let token: String; let platform = "ios"; let umgebung: String }
-        return try await senden("PUT", "api/app/push", body: B(token: token, umgebung: umgebung))
+        return try await senden("PUT", "api/app/push", body: B(token: token, umgebung: umgebung), mitToken: eigenes)
     }
 
     func pushTest() async throws -> PushTestAntwort {

@@ -60,13 +60,23 @@ final class PushManager {
     }
 
     func tokenSenden(_ hex: String) async {
-        guard AppState.shared.sitzung != nil else { return }
+        guard let aktiv = AppState.shared.sitzung?.studioId else { return }
         do {
             let a = try await APIClient.shared.pushTokenSenden(hex, umgebung: Self.umgebung)
             apnsAktiv = a.apnsAktiv
             log.info("Mitteilungen: Token gesendet, apnsAktiv=\(a.apnsAktiv ?? false, privacy: .public)")
         } catch {
             log.error("Mitteilungen: Token senden fehlgeschlagen: \(fehlerText(error), privacy: .public)")
+        }
+        // Studio-Wechsel (1.2): denselben Token auch in den anderen Studios dieses Geräts melden → Mitteilungen aus allen Studios
+        for z in AppState.shared.zugaenge where z.studioId != aktiv {
+            do {
+                _ = try await APIClient.shared.pushTokenSenden(hex, umgebung: Self.umgebung, mitToken: z.token)
+            } catch let f as APIFehler where f.status == 401 {
+                AppState.shared.zugangVergessen(z.studioId)
+            } catch {
+                log.error("Mitteilungen: Token für weiteres Studio nicht gesendet: \(fehlerText(error), privacy: .public)")
+            }
         }
     }
 }

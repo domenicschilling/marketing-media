@@ -7,6 +7,7 @@
 // (der neue Link geht an die hinterlegte Studio-Adresse, siehe /api/login { neu }).
 import { verify, sessionCookie, vorschauVorbereiten, einmalBenutzt, einmalVerbrauchen, currentStudio } from "./_lib/auth.mjs";
 import { getStudio } from "./_lib/store.mjs";
+import { studiosFuerWechsel } from "./_lib/studio-wechsel.mjs";
 import { zwischenseite, weiter } from "./_lib/seiten.mjs";
 
 // Nur eigene Seiten als Ziel (kein offener Redirect). Standard: das Studio-Dashboard (Web-App).
@@ -21,7 +22,20 @@ export default async (req) => {
     try { const f = await req.formData(); token = String(f.get("token") || ""); next = String(f.get("next") || ""); } catch { /* leer */ }
   }
   const p = verify(token, "login");
-  const s = p && (await getStudio(p.sid));
+  let s = p && (await getStudio(p.sid));
+  // Adress-Link (seit 23.11.2026): gilt für alle Studios der Adresse. Start ist p.sid; hat die Adresse dort keine Rolle mehr,
+  // das erste andere Studio der Adresse. svs = Sitzungsversionen aller Studios (für „Auf allen Geräten abmelden“ je Studio).
+  let adresse = null;
+  if (p?.email) {
+    const liste = await studiosFuerWechsel(p.email);
+    const start = liste.find((x) => x.id === p.sid) || liste[0];
+    s = start ? await getStudio(start.id) : null;
+    if (s) {
+      const svs = {};
+      for (const x of liste) svs[x.id] = x.id === s.id ? s.sessionVersion || 0 : (await getStudio(x.id))?.sessionVersion || 0;
+      adresse = { email: p.email, svs };
+    }
+  }
   if (!s) return abgelaufen(verify(token, "login", { abgelaufenOk: true }) ? token : "");
 
   if (req.method !== "POST") return zwischenseite({ action: "/api/auth", felder: { token, next } });
@@ -32,7 +46,7 @@ export default async (req) => {
     return abgelaufen(token);
   }
   await einmalVerbrauchen(p);
-  return weiter(ziel(next), { "Set-Cookie": sessionCookie(s) });
+  return weiter(ziel(next), { "Set-Cookie": sessionCookie(s, adresse || {}) });
 };
 
 export const config = { path: "/api/auth" };

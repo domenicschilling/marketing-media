@@ -465,7 +465,10 @@ struct StudioAuswahlView: View {
                         HStack {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(s.firma ?? s.id).font(.dm(.body, weight: .semibold)).foregroundStyle(Color.tfTinte)
-                                if let ort = s.ort { Text(ort).font(.dm(.subheadline)).foregroundStyle(Color.tfLeise) }
+                                // Ort und Rolle je Studio (seit 1.2): Inhaber oder Team
+                                let rolle = s.rolle.map { $0 == "inhaber" ? Texte.Wechsel.rolleInhaber : Texte.Wechsel.rolleTeam } ?? ""
+                                let zeile = Texte.Wechsel.zeile(ort: s.ort ?? "", rolle: rolle)
+                                if !zeile.isEmpty { Text(zeile).font(.dm(.subheadline)).foregroundStyle(Color.tfLeise) }
                             }
                             Spacer()
                             if laedt == s.id { ProgressView() } else { Image(systemName: "chevron.right").foregroundStyle(Color.tfLeise) }

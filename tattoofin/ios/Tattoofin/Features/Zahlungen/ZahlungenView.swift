@@ -46,6 +46,7 @@ struct ZahlungenView: View {
             }
             .tfHintergrund()
             .navigationTitle(bereich == .zahlungen ? Texte.Zahlungen.zahlungen : Texte.Zahlungen.auszahlungen)
+            .studioWechsler()
             .navigationBarTitleDisplayMode(.inline)
             .navigationDestination(for: String.self) { id in
                 ZahlungDetailView(id: id, vorschau: portal.zahlungen.first { $0.id == id })

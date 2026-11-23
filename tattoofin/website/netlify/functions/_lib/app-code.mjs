@@ -147,7 +147,7 @@ export async function nachAnmeldeCode(rec, email, gd) {
   const ids = studios.map((s) => s.id);
   return {
     daten: {
-      auswahl: studios.map((s) => ({ id: s.id, firma: s.firma, ort: s.ort || "" })),
+      auswahl: studios.map((s) => ({ id: s.id, firma: s.firma, ort: s.ort || "", rolle: rolleFuer(s, email) })),
       auswahlToken: sign({ t: "appauswahl", email, ids, exp: Date.now() + 5 * 60e3, n: crypto.randomBytes(9).toString("base64url") }),
     },
   };

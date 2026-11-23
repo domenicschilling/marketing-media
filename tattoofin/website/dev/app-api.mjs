@@ -404,7 +404,7 @@ try {
   // Gleicher Push-Token in einem anderen Studio (Handy jetzt bei Studio A angemeldet) → beim alten Studio entfernt
   const tAp = await loginA(A.id, "Handy von C");
   await call("PUT", "/api/app/push", { token: tAp, body: { token: TOK_C, platform: "ios", umgebung: "sandbox" } });
-  check(blob(`appgeraet/${C.id}/${g1.id}`).push === null && blob("idx/apppush/" + crypto.createHash("sha256").update(TOK_C).digest("hex"))?.startsWith(A.id + "/"), "Gleicher Push-Token bei einem anderen Studio → beim alten Studio entfernt (Index über alle Studios)");
+  check(blob(`appgeraet/${C.id}/${g1.id}`).push === null && JSON.stringify(blob("idx/apppush/" + crypto.createHash("sha256").update(TOK_C).digest("hex"))).includes(`"${A.id}/`), "Gleicher Push-Token bei einem anderen Studio (andere Adresse) → beim alten Studio entfernt (Index über alle Studios)");
   await call("POST", "/api/app/abmelden", { token: tAp });
   await call("PUT", "/api/app/push", { token: tC, body: { token: TOK_C, platform: "ios", umgebung: "sandbox" } });
   rlReset();
@@ -562,11 +562,61 @@ try {
   }
 
   // ==================================================================================================
+  teil("Studio-Wechsel in der App (seit 23.11.2026): Liste, Token fürs andere Studio, Push aus beiden Studios");
+  rlReset();
+  const stA = await call("GET", "/api/app/studios", { token: tA });
+  const stA_A = stA.data.studios?.find((x) => x.id === A.id), stA_B = stA.data.studios?.find((x) => x.id === B.id);
+  check(stA.status === 200 && stA.data.studios.length === 2 && stA_A?.rolle === "inhaber" && stA_A.aktuell === true && stA_A.firma === "Ink Studio A" && stA_A.ort === "Bamberg" && stA_B?.rolle === "team" && stA_B.aktuell === false && stA.data.studios[0].id === A.id, "GET /api/app/studios (Inhaberin A, Team B) → beide, nach Name sortiert, A aktuell, Rolle je Studio", stA.text);
+  const stB = await call("GET", "/api/app/studios", { token: tB });
+  check(stB.data.studios?.length === 1 && stB.data.studios[0].id === B.id && stB.data.studios[0].aktuell === true, "Inhaber nur von B → genau eine Zeile (App zeigt keinen Wechsel-Knopf)", stB.text);
+  check((await call("GET", "/api/app/studios", { cookie: C.cookie })).status === 401 && (await call("GET", "/api/portal/studios", { token: tA })).data.code === "nur_web", "Studio-Liste der App nur mit App-Token, die des Dashboards nur mit Cookie");
+  const geraetA = (await call("GET", "/api/app/geraete", { token: tA })).data.geraete.find((x) => x.diesesGeraet);
+  check(blob(`appgeraet/${A.id}/${geraetA.id}`).mehrereStudios === true, "Gerät merkt sich „mehrere Studios“ (Studioname in Mitteilungen)");
+  const mailsChefVorher = mailsAn("chef@ink-b.test").length;
+  const w = await call("POST", "/api/app/wechseln", { token: tA, body: { studioId: B.id, geraet: { appVersion: "1.2 (4)" } } });
+  const tWB = w.data.token;
+  check(w.status === 200 && /^tfa_ag_/.test(tWB || "") && w.data.studio?.id === B.id && w.data.studio.rolle === "team" && w.data.geraet?.rolle === "team" && w.data.geraet.name === geraetA.name, "POST /api/app/wechseln { B } → Token für B ohne neuen Code, Rolle team, gleicher Gerätename", w.text.slice(0, 200));
+  const gWB = blob(`appgeraet/${B.id}/${w.data.geraet?.id}`);
+  check(gWB?.email === "lisa@ink-a.test" && gWB.mehrereStudios === true && gWB.appVersion === "1.2 (4)" && logs("app-studio-gewechselt").some((l) => l.von === A.id && l.nach === B.id), "Neues Gerät in B: gleiche Adresse, mehrereStudios, App-Version; log app-studio-gewechselt", JSON.stringify(gWB).slice(0, 200));
+  check((await call("GET", "/api/portal", { token: tWB })).data.studio?.id === B.id && (await call("GET", "/api/portal", { token: tA })).data.studio?.id === A.id, "Beide Tokens gelten nebeneinander (B-Token → B, A-Token → A)");
+  check(mailsAn("chef@ink-b.test").length === mailsChefVorher + 1, "Inhaber von B bekommt wie bei jeder Anmeldung die Mail „neues Gerät“");
+  const wGleich = await call("POST", "/api/app/wechseln", { token: tA, body: { studioId: A.id } });
+  const wFremd = await call("POST", "/api/app/wechseln", { token: tA, body: { studioId: C.id } });
+  const wKaputt = await call("POST", "/api/app/wechseln", { token: tA, body: { studioId: "../studio/x" } });
+  check(wGleich.status === 400 && wGleich.data.code === "gleiches_studio" && wFremd.status === 403 && wFremd.data.code === "kein_zugang" && wKaputt.status === 403, "Wechsel ins eigene Studio → 400, fremdes Studio (keine Rolle) → 403 kein_zugang, Unsinn → 403", [wGleich.status, wFremd.status, wKaputt.status].join());
+  check((await call("POST", "/api/app/wechseln", { body: { studioId: B.id } })).status === 401, "Wechsel ohne Token → 401");
+  // Dasselbe Handy (gleicher Push-Token) in A und B → Mitteilungen aus beiden Studios mit Studionamen und studioId
+  const TOK_L = crypto.randomBytes(32).toString("hex");
+  await call("PUT", "/api/app/push", { token: tA, body: { token: TOK_L, platform: "ios", umgebung: "sandbox" } });
+  await call("PUT", "/api/app/push", { token: tWB, body: { token: TOK_L, platform: "ios", umgebung: "sandbox" } });
+  check(blob(`appgeraet/${A.id}/${geraetA.id}`).push?.token === TOK_L && blob(`appgeraet/${B.id}/${w.data.geraet.id}`).push?.token === TOK_L, "Gleicher Push-Token, gleiche Adresse, anderes Studio: beide Geräte behalten ihn");
+  const zWA = await zahlungBezahlen(tA, { betrag: "150", kunde: "Kim Aal", beschreibung: "Stern" });
+  const zWB = await zahlungBezahlen(tB, { betrag: "160", kunde: "Kim Bär", beschreibung: "Mond" });
+  await wait(300);
+  const pWA = apns.empfangen.find((x) => x.payload.zahlungId === zWA && x.token === TOK_L);
+  const pWB = apns.empfangen.find((x) => x.payload.zahlungId === zWB && x.token === TOK_L);
+  check(pWA?.payload.studioId === A.id && pWA.payload.aps.alert.subtitle === "Ink Studio A" && pWA.payload.aps["thread-id"] === `zahlungen-${A.id}` && pWB?.payload.studioId === B.id && pWB.payload.aps.alert.subtitle === "Ink Studio B", "Push aus A und aus B kommen auf demselben Handy an, mit Studioname (Untertitel), studioId und Thread je Studio", JSON.stringify([pWA?.payload, pWB?.payload]).slice(0, 300));
+  const pChef = apns.empfangen.find((x) => x.payload.zahlungId === zWB && x.token !== TOK_L);
+  check(!pChef || (pChef.payload.studioId === B.id && !pChef.payload.aps.alert.subtitle), "Geräte mit nur einem Studio: studioId dabei, aber kein Untertitel", JSON.stringify(pChef?.payload || {}).slice(0, 200));
+  // Anderer Mensch (andere Adresse) übernimmt den Push-Token → wie bisher beim alten Gerät entfernt
+  const tCx = (await appLogin("tom@ink-c.test", GERAET("iPhone Tom neu"))).token;
+  await call("PUT", "/api/app/push", { token: tCx, body: { token: TOK_L, platform: "ios", umgebung: "sandbox" } });
+  const idxL = blob("idx/apppush/" + crypto.createHash("sha256").update(TOK_L).digest("hex"));
+  check(!blob(`appgeraet/${B.id}/${w.data.geraet.id}`).push && !blob(`appgeraet/${A.id}/${geraetA.id}`).push && Array.isArray(idxL) && idxL.length === 1 && idxL[0].startsWith(C.id + "/"), "Handy mit diesem Push-Token gehört jetzt einer anderen Adresse → BEIDE Geräte von Lisa (A und B) verlieren den Token, Index zeigt nur noch auf Tom", JSON.stringify(idxL));
+  await call("POST", "/api/app/abmelden", { token: tCx, body: {} });
+  rlReset();
+
+  // ==================================================================================================
   teil("Team: Adresse entfernen → App-Token tot; selbst austreten; alle abmelden");
   const gLisaB = (await call("GET", "/api/app/geraete", { token: tLisaB })).data.geraete.find((x) => x.diesesGeraet);
   const tput = await call("PUT", "/api/app/team", { token: tB, body: { emails: ["Anna@Ink-B.test", "anna@ink-b.test", "chef@ink-b.test"] } });
   check(tput.status === 200 && JSON.stringify(tput.data) === JSON.stringify({ hauptadresse: "chef@ink-b.test", team: ["anna@ink-b.test"], max: 5, darfAendern: true }), "PUT /api/app/team: Dubletten und Hauptadresse fallen raus", tput.text);
   check((await call("GET", "/api/portal", { token: tLisaB })).status === 401 && blob(`appgeraet/${B.id}/${gLisaB.id}`).widerrufenAm, "Entfernte Team-Adresse: App-Gerät sofort widerrufen → 401");
+  // Studio-Wechsel: Rolle in B entzogen → B-Token (aus dem Wechsel) tot, B fehlt in der Liste, kein neuer Wechsel; A bleibt
+  const stNachher = await call("GET", "/api/app/studios", { token: tA });
+  const wNachher = await call("POST", "/api/app/wechseln", { token: tA, body: { studioId: B.id } });
+  check((await call("GET", "/api/portal", { token: tWB })).status === 401 && stNachher.data.studios?.length === 1 && stNachher.data.studios[0].id === A.id && wNachher.status === 403 && wNachher.data.code === "kein_zugang" && (await call("GET", "/api/portal", { token: tA })).status === 200, "Team-Adresse in B entfernt → Wechsel-Token für B 401, Liste nur noch A, Wechsel nach B 403, A bleibt angemeldet", [stNachher.text, wNachher.status].join(" "));
+  check(blob(`appgeraet/${A.id}/${geraetA.id}`).mehrereStudios === false, "Liste wieder mit einem Studio → Gerät ohne „mehrere Studios“ (Mitteilungen ohne Untertitel)");
   const ohneListe = await call("PUT", "/api/app/team", { token: tB, body: { team: ["x@y.de"] } });
   check(ohneListe.status === 400 && ohneListe.data.code === "emails" && blob("studio/" + B.id).teamEmails.includes("anna@ink-b.test"), "PUT /api/app/team ohne emails-Liste → 400, Team bleibt unverändert", ohneListe.text);
   check((await call("PUT", "/api/app/team", { token: tB, body: { emails: ["a@b.de", "c@d.de", "e@f.de", "g@h.de", "i@j.de", "k@l.de"] } })).data.error === "Höchstens 5 Team-Adressen" && (await call("PUT", "/api/app/team", { token: tB, body: { emails: ["kaputt"] } })).data.error === "Keine gültige E-Mail: kaputt", "Gleiche Prüfung wie im Admin (höchstens 5, gültige Adressen)");

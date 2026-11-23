@@ -24,6 +24,7 @@ enum Einstellungen {
         static let sitzung = "tf.sitzung"
         static let kasseEntwurf = "tf.kasseEntwurf"
         static let aboAbgleichAm = "tf.aboAbgleichAm"
+        static let studios = "tf.studios"
     }
 
     /// Schlüsselbund-Einträge überleben eine Neuinstallation. Beim allerersten Start nach der Installation
@@ -31,6 +32,7 @@ enum Einstellungen {
     static func ersterStartAufraeumen() {
         guard !d.bool(forKey: K.installiert) else { return }
         KeychainStore.loeschen()
+        KeychainStore.zugaengeLoeschen()
         RegistrierungSpeicher.loeschen()
         d.set(true, forKey: K.installiert)
     }
@@ -77,9 +79,23 @@ enum Einstellungen {
         set { d.set(newValue, forKey: K.aboAbgleichAm) }
     }
 
+    /// Studios der angemeldeten Adresse (Studio-Wechsel, 1.2): Namen und Rollen, nichts Geheimes. Für den Knopf auch ohne Netz.
+    static var studios: [StudioEintrag] {
+        get { d.data(forKey: K.studios).flatMap { try? JSONDecoder().decode([StudioEintrag].self, from: $0) } ?? [] }  // ds-ok: lokaler Speicher, fehlt = keine Liste
+        set { d.set(newValue.isEmpty ? nil : try? JSONEncoder().encode(newValue), forKey: K.studios) }  // ds-ok: lokaler Speicher
+    }
+
     /// Beim Abmelden: alles Studio-Bezogene vergessen (Merker „installiert“ bleibt).
     static func abmelden() {
-        for k in [K.faceID, K.einrichtungFertig, K.zahlseite, K.studioName, K.sitzung, K.kasseEntwurf, K.aboAbgleichAm] {
+        for k in [K.faceID, K.einrichtungFertig, K.zahlseite, K.studioName, K.sitzung, K.kasseEntwurf, K.aboAbgleichAm, K.studios] {
+            d.removeObject(forKey: k)
+        }
+    }
+
+    /// Beim Studio-Wechsel: nur, was zum vorigen Studio gehört (Zahlseite, Name, Kassen-Entwurf, Abo-Abgleich).
+    /// Face ID, Einrichtung und Mitteilungen gelten für das Gerät und bleiben.
+    static func studioWechseln() {
+        for k in [K.zahlseite, K.studioName, K.kasseEntwurf, K.aboAbgleichAm] {
             d.removeObject(forKey: k)
         }
     }
@@ -95,4 +111,19 @@ struct KasseEntwurf: Codable, Sendable, Equatable {
     var sitzungen: String = ""
 
     var istLeer: Bool { self == KasseEntwurf() }
+}
+
+/// Studios, in denen man sich auf diesem Gerät bewusst „nur hier“ abgemeldet hat (Studio-Wechsel, 1.2).
+/// Die App holt dort nicht von selbst wieder einen Zugang; in der Liste bleibt das Studio wählbar.
+enum StudioAbmeldungen {
+    private static let schluessel = "tf.studiosAbgemeldet"
+    private static var d: UserDefaults { .standard }
+    private static var ids: Set<String> {
+        get { Set(d.stringArray(forKey: schluessel) ?? []) }
+        set { d.set(newValue.isEmpty ? nil : Array(newValue).sorted(), forKey: schluessel) }
+    }
+    static func merken(_ id: String) { ids.insert(id) }
+    static func entfernen(_ id: String) { ids.remove(id) }
+    static func enthaelt(_ id: String) -> Bool { ids.contains(id) }
+    static func alleVergessen() { ids = [] }
 }

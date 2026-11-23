@@ -19,6 +19,7 @@ import { stripe, ensureCustomer, taxRateId, TATTOOFIN_BRANDING } from "./_lib/st
 import { notify, notifyAdmin, slugify, einrichtungUrl, paketDetails, resumeUrl } from "./_lib/domain.mjs";
 import { mails } from "./_lib/emails.mjs";
 import { loginLink, sessionCookie, currentStudio, zweckOk } from "./_lib/auth.mjs";
+import { weiteresStudioErlaubt } from "./_lib/studio-wechsel.mjs";
 
 // Nach dem Abschluss: Danke-Seite (Messung der Anmeldung) leitet sofort ins Dashboard weiter
 const weiter = (s) => `/danke.html?id=${s.id}&weiter=app`;
@@ -74,9 +75,17 @@ export default handler(async (req, context) => {
 
   // Bestehenden Abschluss fortsetzen oder Dublette verhindern
   // Schon ein aktiver Vertrag mit dieser Adresse (auch gmail/googlemail-Varianten)? → Login statt Dublette
-  if (!b.resumeId && (await studiosPerEmail(d.email)).some(AKTIV)) return fail("Für diese E-Mail gibt es schon einen Vertrag. Bitte melde dich im Studio-Bereich an.", 409);
+  // Seit 23.11.2026 (Studio-Wechsel): Team-Adresse eines anderen Studios darf ein eigenes Studio anmelden; Inhaber-Adresse nur mit
+  // Einladung für genau diese Adresse (z. B. Partner-Einladung für ein zweites Studio). Sonst Schutz vor doppelten Verträgen wie bisher.
+  const einladungPasst = Boolean(geschenk && normEmail(geschenk.email) === normEmail(d.email));
+  const weiteres = await weiteresStudioErlaubt(d.email, { einladung: einladungPasst });
+  if (!b.resumeId && !weiteres.erlaubt) return fail("Für diese E-Mail gibt es schon einen Vertrag. Bitte melde dich im Studio-Bereich an.", 409);
   let s = b.resumeId ? await getStudio(b.resumeId) : await studioBy("email", d.email);
-  if (s && !["entwurf", "abgebrochen"].includes(s.status)) return fail("Für diese E-Mail gibt es schon einen Vertrag. Bitte melde dich im Studio-Bereich an.", 409);
+  if (s && !["entwurf", "abgebrochen"].includes(s.status)) {
+    // Erlaubtes weiteres Studio: neuen Datensatz anlegen statt den bestehenden Vertrag zu überschreiben
+    if (!b.resumeId && weiteres.erlaubt) s = null;
+    else return fail("Für diese E-Mail gibt es schon einen Vertrag. Bitte melde dich im Studio-Bereich an.", 409);
+  }
   if (s && s.email !== d.email && b.resumeId) s = null;
   // Offener App-Entwurf (Anmeldung in der App, E-Mail per Code bestätigt, Kauf noch offen): Das Web prüft die Adresse nicht, darum
   // darf es ihn nicht übernehmen (sonst könnte jemand mit fremder Adresse den Entwurf überschreiben und einen späteren Apple-Kauf ins

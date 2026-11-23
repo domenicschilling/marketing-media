@@ -20,6 +20,7 @@ struct WerbungView: View {
             }
             .tfHintergrund()
             .navigationTitle(WerbungTexte.titel)
+            .studioWechsler()
             .navigationBarTitleDisplayMode(.inline)
         }
         .task { await werbung.laden() }

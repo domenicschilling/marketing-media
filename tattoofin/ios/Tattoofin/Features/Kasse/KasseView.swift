@@ -30,6 +30,7 @@ struct KasseView: View {
             }
             .tfHintergrund()
             .navigationTitle(Texte.Kasse.titel)
+            .studioWechsler()
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 if portal.studio?.darfKassieren == true {

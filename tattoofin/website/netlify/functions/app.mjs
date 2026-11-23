@@ -4,6 +4,9 @@
 //   POST   /api/app/code             { email, platform }                    → immer 200 { ok, verzoegert } (verrät nicht, ob es die Adresse gibt)
 //   POST   /api/app/anmelden         { email, code, geraet } | { auswahlToken, studioId, geraet } → { token, geraet, studio } | { auswahl, auswahlToken }
 //   POST   /api/app/abmelden         dieses Gerät abmelden
+//   GET    /api/app/studios             Studios dieser Adresse (Studio-Wechsel, seit 23.11.2026) → { studios: [{ id, firma, ort, rolle, aktuell }] }
+//   POST   /api/app/wechseln            { studioId } → { token, geraet, studio } neues Gerätetoken fürs andere Studio derselben Adresse
+//                                     (ohne neuen Code; Adresse muss dort Inhaber oder Team sein, _lib/studio-wechsel.mjs)
 //   GET    /api/app/geraete          angemeldete Geräte des Studios          DELETE /api/app/geraete/:id   ein Gerät abmelden
 //   PATCH  /api/app/geraet           { name?, mitteilungen?, kundennameInMitteilung? }
 //   PUT    /api/app/push             { token, platform, umgebung, mitteilungen? }   DELETE /api/app/push   POST /api/app/push/test
@@ -35,7 +38,7 @@ import { notify, notifyAdmin, kuendigungEinreichen, istAufstellerPruefStudio } f
 import { mails } from "./_lib/emails.mjs";
 import { warteschlangeStatus } from "./_lib/mail.mjs";
 import { stripe } from "./_lib/stripe.mjs";
-import { PLATTFORMEN, geraetLaden, geraetAktualisieren, geraetWiderrufen, geraeteWiderrufen, geraetOeffentlich, geraeteVon, rolleFuer, pushIndex } from "./_lib/app-geraete.mjs";
+import { PLATTFORMEN, geraetLaden, geraetAktualisieren, geraetWiderrufen, geraeteWiderrufen, geraetOeffentlich, geraeteVon, rolleFuer, pushIndex, pushIndexLesen, pushIndexEntfernen } from "./_lib/app-geraete.mjs";
 import { apnsAktiv, pushTest, pushAnStudio, mitZeitlimit, nachrichtZahlung } from "./_lib/push.mjs";
 import { demoAuszahlungen, abgelaufenZuruecksetzen } from "./_lib/app-demo.mjs";
 import { oeffentlich, fuerStudio } from "./_lib/studio-ansicht.mjs";
@@ -45,6 +48,7 @@ import { aj, fehler, hash, T, reviewFuer, codeIpErlaubt, codeAdresseErlaubt, akt
 import { appRegistrierungRoute } from "./_lib/app-registrierung.mjs";
 import { werbungFuer, werbungMitKlarna, AUFSTELLER_ENTFALLEN, aufstellerFuerPruefApp } from "./_lib/werbung.mjs";
 import { zahlungenVon } from "./_lib/store.mjs";
+import { studiosFuerWechsel, wechselZiel } from "./_lib/studio-wechsel.mjs";
 
 const berlinTag = (ms) => new Date(ms).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" });
 
@@ -102,6 +106,26 @@ async function anmelden(req, context) {
 }
 
 const fertig = async (s, email, gd) => aj(await geraetFertig(s, email, gd));
+
+// ---------------------------------------------------------------- Studio wechseln (seit 23.11.2026)
+// Mit gültigem Token eines Studios ein Token für ein anderes Studio derselben Adresse holen. Gerätename und Modell kommen vom
+// aktuellen Gerät (gleiches Handy). Der Inhaber des Zielstudios bekommt wie bei jeder Anmeldung die Mail „neues Gerät“.
+async function wechseln(s, ich, g, req) {
+  if (!(await zaehleAtomar(`rl/appwechseln/${g.id}`, 30, 3600e3))) return fehler(T.zuViele, 429, "zu_viele");
+  const b = await body(req);
+  const zielId = clean(b.studioId, 40);
+  if (zielId === s.id) return fehler("Du bist schon in diesem Studio.", 400, "gleiches_studio");
+  const ziel = await wechselZiel(ich.email, zielId);
+  if (!ziel) return fehler("Für dieses Studio ist deine Adresse nicht (mehr) freigeschaltet.", 403, "kein_zugang");
+  const gd = { platform: g.platform, name: g.name, modell: g.modell, osVersion: g.osVersion, appVersion: clean(b.geraet?.appVersion, 30) || g.appVersion };
+  const daten = await geraetFertig(ziel, ich.email, gd);
+  // Neues Gerät gehört zu mehreren Studios → Mitteilungen mit Studionamen
+  const neu = await geraetLaden(daten.geraet.id);
+  if (neu) await geraetAktualisieren(neu, (x) => { x.mehrereStudios = true; });
+  if (!g.mehrereStudios) await geraetAktualisieren(g, (x) => { x.mehrereStudios = true; });
+  await log("app-studio-gewechselt", { von: s.id, nach: ziel.id, geraetId: g.id, neuesGeraet: daten.geraet.id });
+  return aj({ ...daten, studio: { ...daten.studio, rolle: daten.geraet.rolle } });
+}
 
 // ---------------------------------------------------------------- Auszahlungen
 const STATUS_TEXT = { paid: "Angekommen", in_transit: "Unterwegs", pending: "Wird vorbereitet", failed: "Fehlgeschlagen", canceled: "Abgebrochen" };
@@ -248,6 +272,15 @@ async function route(req, context) {
 
   if (bereich === "abmelden" && m === "POST") { await geraetWiderrufen(g, "abgemeldet"); await log("app-abmeldung", { studioId: s.id, geraetId: g.id }); return aj({ ok: true }); }
 
+  // Studio-Wechsel: Liste der Studios dieser Adresse. Merkt am Gerät, ob es mehrere sind (dann zeigt jede Mitteilung den Studionamen).
+  if (bereich === "studios" && !sub && m === "GET") {
+    const studios = await studiosFuerWechsel(ich.email, s);
+    const mehrere = studios.length > 1;
+    if (Boolean(g.mehrereStudios) !== mehrere) await geraetAktualisieren(g, (x) => { x.mehrereStudios = mehrere; });
+    return aj({ studios });
+  }
+  if (bereich === "wechseln" && !sub && m === "POST") return wechseln(s, ich, g, req);
+
   if (bereich === "geraete" && !sub && m === "GET") return aj({ geraete: (await geraeteVon(s.id)).map((x) => geraetOeffentlich(x, { aktuell: ich })) });
   if (bereich === "geraete" && sub && m === "DELETE") {
     const x = await geraetLaden(sub);
@@ -288,13 +321,18 @@ async function route(req, context) {
       const umgebung = ["sandbox", "production"].includes(b.umgebung) ? b.umgebung : g.platform === "ios" ? null : "production";
       if (!umgebung) return fehler("Bitte umgebung sandbox oder production angeben.", 400, "umgebung");
       const pt = g.platform === "ios" ? token.toLowerCase() : token;
-      // Derselbe Token an einem anderen Gerät (App neu installiert, anderes Studio …) → dort entfernen. Index über alle Studios.
+      // Derselbe Push-Token an anderen Geräten (App neu installiert, Handy weitergegeben …) → dort entfernen. Index über alle Studios.
+      // Ausnahme Studio-Wechsel (23.11.2026): dasselbe Handy mit DERSELBEN Adresse in einem ANDEREN Studio behält den Token, damit
+      // Mitteilungen aller Studios ankommen. Eine andere Adresse übernimmt den Token → alle fremden Geräte verlieren ihn.
       const ziel = `${s.id}/${g.id}`;
-      const bisher = await store.get(pushIndex(pt));
-      if (bisher && bisher !== ziel) {
-        const [sid, gid] = String(bisher).split("/");
+      const behalten = [];
+      for (const eintrag of await pushIndexLesen(pt)) {
+        if (eintrag === ziel) continue;
+        const [sid, gid] = eintrag.split("/");
         const alt = sid && gid ? await store.get(`appgeraet/${sid}/${gid}`) : null;
-        if (alt) await geraetAktualisieren(alt, (x) => { if (x.push?.token !== pt) return false; x.push = null; });
+        if (!alt || alt.push?.token !== pt || alt.widerrufenAm) continue;
+        if (alt.studioId !== s.id && normEmail(alt.email) === normEmail(g.email)) { behalten.push(eintrag); continue; }
+        await geraetAktualisieren(alt, (x) => { if (x.push?.token !== pt) return false; x.push = null; });
       }
       // Ältere Einträge ohne Index (vor dem 13.11.2026) im eigenen Studio
       for (const x of await geraeteVon(s.id)) if (x.id !== g.id && x.push?.token === pt) await geraetAktualisieren(x, (y) => { if (y.push?.token !== pt) return false; y.push = null; });
@@ -306,14 +344,14 @@ async function route(req, context) {
         }
       });
       if (!neu) return fehler(T.login, 401, "nicht_angemeldet");
-      await store.set(pushIndex(pt), ziel);
-      if (altToken && altToken !== pt && (await store.get(pushIndex(altToken))) === ziel) await store.del(pushIndex(altToken));
+      await store.set(pushIndex(pt), [...behalten, ziel]);
+      if (altToken && altToken !== pt) await pushIndexEntfernen(altToken, ziel);
       return aj({ ok: true, apnsAktiv: apnsAktiv() });
     }
     if (!sub && m === "DELETE") {
       const altToken = g.push?.token;
       await geraetAktualisieren(g, (x) => { x.push = null; });
-      if (altToken && (await store.get(pushIndex(altToken))) === `${s.id}/${g.id}`) await store.del(pushIndex(altToken));
+      await pushIndexEntfernen(altToken, `${s.id}/${g.id}`);
       return aj({ ok: true });
     }
   }

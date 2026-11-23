@@ -25,23 +25,30 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
     }
 
     /// Inhalt der Mitteilung (typ, zahlungId, payoutId) als einfache Texte auslesen
-    private nonisolated static func felder(_ n: UNNotification) -> (typ: String?, zahlungId: String?, payoutId: String?) {
+    private nonisolated static func felder(_ n: UNNotification) -> (typ: String?, zahlungId: String?, payoutId: String?, studioId: String?) {
         let info = n.request.content.userInfo
-        return (info["typ"] as? String, info["zahlungId"] as? String, info["payoutId"] as? String)
+        return (info["typ"] as? String, info["zahlungId"] as? String, info["payoutId"] as? String, info["studioId"] as? String)
     }
 
     /// Auch im Vordergrund als Banner zeigen; offenes Zahlungslink-Sheet lädt sofort neu.
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter,
                                             willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
         let f = Self.felder(notification)
-        await MainActor.run { AppState.shared.mitteilungErhalten(typ: f.typ, zahlungId: f.zahlungId) }
+        await MainActor.run { AppState.shared.mitteilungErhalten(typ: f.typ, zahlungId: f.zahlungId, studioId: f.studioId) }
         return [.banner, .list, .sound]
     }
 
-    /// Angetippt: in den passenden Tab bzw. die Detailseite springen
+    /// Angetippt: in den passenden Tab bzw. die Detailseite springen.
+    /// Fassung mit Abschluss-Rückruf statt `async`: Die async-Fassung rief den Abschluss nicht auf dem Haupt-Thread auf, UIKit brach die
+    /// App dann ab (Absturz beim Antippen einer Mitteilung, wenn die App im Hintergrund war; gefunden im Simulator-Test 23.11.2026).
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter,
-                                            didReceive response: UNNotificationResponse) async {
+                                            didReceive response: UNNotificationResponse,
+                                            withCompletionHandler completionHandler: @escaping () -> Void) {
         let f = Self.felder(response.notification)
-        await MainActor.run { AppState.shared.mitteilungGeoeffnet(typ: f.typ, zahlungId: f.zahlungId, payoutId: f.payoutId) }
+        nonisolated(unsafe) let fertig = completionHandler
+        DispatchQueue.main.async {
+            MainActor.assumeIsolated { AppState.shared.mitteilungGeoeffnet(typ: f.typ, zahlungId: f.zahlungId, payoutId: f.payoutId, studioId: f.studioId) }
+            fertig()
+        }
     }
 }

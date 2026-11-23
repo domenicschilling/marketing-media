@@ -22,8 +22,52 @@
     if (D.adminAnsicht && !document.getElementById("admin-ansicht")) {
       document.body.insertAdjacentHTML("afterbegin", '<div id="admin-ansicht" role="status" style="position:sticky;top:0;z-index:200;background:#a8231a;color:#fff;font:700 14px/1.4 system-ui,sans-serif;padding:8px 12px;display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap"><span>Admin-Ansicht: ' + e(D.studio.firma) + ' · nur lesen</span><a href="/api/admin-ansicht/ende" style="color:#fff;background:rgba(0,0,0,.25);padding:4px 10px;border-radius:99px;text-decoration:none">Zurück zum Admin</a></div>');
     }
-    kopf(); route(); aufRueckkehr();
+    kopf(); route(); aufRueckkehr(); studiosLaden();
   }
+
+  // ---------- Studio-Wechsel (seit 23.11.2026) ----------
+  // Nur mit Adress-Sitzung (Login-Link ab 23.11.2026) und mehr als einem Studio sichtbar. Der Server prüft beim Wechsel und bei jedem
+  // weiteren Aufruf, ob die Adresse im Zielstudio Inhaber oder Team ist. Wechsel = neues Cookie, dann Seite neu laden (keine alten Daten).
+  var studios = [];
+  async function studiosLaden() {
+    if (D.adminAnsicht) return;
+    var r; try { r = await TF.api("/api/portal/studios"); } catch (err) { return; }
+    studios = (r && r.studios) || [];
+    var mehrere = studios.length > 1;
+    $("studio-wechsel").classList.toggle("hidden", !mehrere);
+    $("studio-wechsel-2").classList.toggle("hidden", !mehrere);
+    $("studio-dialog-email").textContent = r.email || "";
+  }
+  function studioDialog() {
+    var dlg = $("studio-dialog"), liste = $("studio-liste");
+    liste.innerHTML = studios.map(function (x) {
+      var rolle = x.rolle === "inhaber" ? "Inhaber" : "Team";
+      return '<li><button type="button" data-studio="' + e(x.id) + '"' + (x.aktuell ? ' aria-current="true"' : "") + '><span><b>' + e(x.firma) + "</b><small>" + e([x.ort, rolle].filter(Boolean).join(" · ")) + "</small></span>" + (x.aktuell ? '<span class="marke">Aktuell</span>' : "") + "</button></li>";
+    }).join("");
+    liste.querySelectorAll("button[data-studio]").forEach(function (b) {
+      b.onclick = async function () {
+        var id = b.getAttribute("data-studio");
+        var x = studios.find(function (y) { return y.id === id; });
+        if (!x || x.aktuell) { dlg.close(); return; }
+        b.disabled = true;
+        try {
+          await TF.api("/api/portal/studio-wechseln", { body: { studioId: id } });
+          try { sessionStorage.setItem("tf-gewechselt", x.firma); } catch (y) {}
+          location.hash = "#start"; location.reload();
+        } catch (err) {
+          b.disabled = false; dlg.close();
+          if (err.status === 401) { location.href = "/login.html?app=1"; return; }
+          toast(err.message, true); studiosLaden();
+        }
+      };
+    });
+    if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", "");
+    var aktiv = liste.querySelector('[aria-current="true"]') || liste.querySelector("button"); if (aktiv) aktiv.focus();
+  }
+  $("studio-wechsel").onclick = studioDialog;
+  $("studio-wechsel-2").onclick = studioDialog;
+  $("studio-dialog-zu").onclick = function () { $("studio-dialog").close(); };
+  try { var gew = sessionStorage.getItem("tf-gewechselt"); if (gew) { sessionStorage.removeItem("tf-gewechselt"); setTimeout(function () { toast("Du bist jetzt in " + gew + "."); }, 300); } } catch (y) {}
 
   function kopf() {
     var s = D.studio;

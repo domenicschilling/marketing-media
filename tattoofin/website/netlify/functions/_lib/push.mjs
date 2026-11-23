@@ -118,9 +118,14 @@ async function anGeraete(geraete, nachricht, ereignis) {
     if (!session) { await log("push-fehler", { grund: "verbindung", umgebung, ereignis }); continue; }
     try {
       const ergebnisse = await Promise.all(gruppe.map(async (g) => {
+        // Studio-Wechsel (23.11.2026): studioId immer dabei (Antippen wechselt ins richtige Studio). Gehört das Gerät zu mehreren Studios
+        // (mehrereStudios, gesetzt von /api/app/studios bzw. /wechseln), steht der Studioname als Untertitel in der Mitteilung.
+        const alert = { title: nachricht.titel, body: g.kundennameInMitteilung && nachricht.textMitName ? nachricht.textMitName : nachricht.text };
+        if (g.mehrereStudios && nachricht.studioName) alert.subtitle = nachricht.studioName;
         const payload = {
-          aps: { alert: { title: nachricht.titel, body: g.kundennameInMitteilung && nachricht.textMitName ? nachricht.textMitName : nachricht.text }, sound: "default", "thread-id": nachricht.thread },
+          aps: { alert, sound: "default", "thread-id": g.mehrereStudios ? `${nachricht.thread}-${g.studioId}` : nachricht.thread },
           ...nachricht.daten,
+          studioId: g.studioId,
         };
         return auswerten(g, await sende(session, k, g.push.token, payload, nachricht.collapseId));
       }));
@@ -145,7 +150,7 @@ export async function pushAnStudio(s, art, nachricht) {
   try {
     if (!s?.id) return { gesendet: 0 };
     const geraete = await pushEmpfaenger(s, art);
-    return await anGeraete(geraete, nachricht, art);
+    return await anGeraete(geraete, { ...nachricht, studioName: s.firma || "" }, art);
   } catch (e) {
     console.error("[push]", e.message);
     try { await log("push-fehler", { grund: String(e.message).slice(0, 120), ereignis: art, studioId: s?.id }); } catch { /* egal */ }

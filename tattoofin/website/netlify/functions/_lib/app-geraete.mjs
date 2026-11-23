@@ -5,7 +5,9 @@
 //   appgeraet/<studioId>/<geraetId>   Gerät (Name, Modell, Rolle, Push-Token, Mitteilungen, sv = Sitzungsversion beim Anmelden)
 //   idx/appgeraet/<geraetId>          -> studioId
 //   appwiderruf/<studioId>/<geraetId> Widerruf (getrennt gespeichert, wird nie überschrieben; seit 13.11.2026)
-//   idx/apppush/<sha256(pushToken)>   -> "studioId/geraetId" (ein Push-Token gehört immer nur zu einem Gerät, auch über Studios hinweg)
+//   idx/apppush/<sha256(pushToken)>   -> ["studioId/geraetId", …] Geräte mit diesem Push-Token. Seit 23.11.2026 (Studio-Wechsel) eine Liste:
+//                                        dasselbe Handy darf mit DERSELBEN Adresse in mehreren Studios angemeldet sein. Ältere Einträge
+//                                        sind ein einzelner Text "studioId/geraetId" (pushIndexLesen versteht beides).
 // Schreiben nach dem Anlegen nur über geraetAktualisieren (frisch laden, nur Änderung übernehmen, widerrufene Geräte nie wieder beleben).
 // Ein Token gilt nicht mehr, wenn das Gerät widerrufen ist, die Sitzungsversion des Studios hochgezählt wurde („Auf allen Geräten
 // abmelden“), die Adresse weder Haupt- noch Team-Adresse ist, 180 Tage keine Nutzung war oder das Studio fehlt (siehe auth.mjs appStudio).
@@ -22,6 +24,18 @@ export const neueGeraetId = () => "ag_" + crypto.randomBytes(9).toString("base64
 const schluessel = (studioId, geraetId) => `appgeraet/${studioId}/${geraetId}`;
 const widerrufSchluessel = (studioId, geraetId) => `appwiderruf/${studioId}/${geraetId}`;
 export const pushIndex = (token) => "idx/apppush/" + sha(token);
+export async function pushIndexLesen(token) {
+  const v = await store.get(pushIndex(token));
+  return (Array.isArray(v) ? v : v ? [v] : []).filter((x) => typeof x === "string" && x.includes("/"));
+}
+// Ein Gerät aus dem Index nehmen (Abmelden, Push aus, Aufräumen); leere Liste → Schlüssel löschen
+export async function pushIndexEntfernen(token, ziel) {
+  if (!token) return;
+  const liste = await pushIndexLesen(token);
+  if (!liste.includes(ziel)) return;
+  const rest = liste.filter((x) => x !== ziel);
+  if (rest.length) await store.set(pushIndex(token), rest); else await store.del(pushIndex(token));
+}
 
 // ---- Token ----
 export function tokenErzeugen(geraetId) {
@@ -124,7 +138,7 @@ export async function geraetWiderrufen(g, grund = "abgemeldet") {
   delete g.tokenHash;
   g.push = null;
   await geraetSpeichern(g);
-  if (pushToken && (await store.get(pushIndex(pushToken))) === `${g.studioId}/${g.id}`) await store.del(pushIndex(pushToken));
+  await pushIndexEntfernen(pushToken, `${g.studioId}/${g.id}`);
   return g;
 }
 
@@ -165,7 +179,7 @@ export async function geraeteAufraeumen(jetzt = Date.now()) {
     await store.del(k);
     await store.del("idx/appgeraet/" + g.id);
     await store.del(widerrufSchluessel(g.studioId, g.id));
-    if (g.push?.token && (await store.get(pushIndex(g.push.token))) === `${g.studioId}/${g.id}`) await store.del(pushIndex(g.push.token));
+    await pushIndexEntfernen(g.push?.token, `${g.studioId}/${g.id}`);
     out.push(["app-geraet-geloescht", g.studioId, g.id]);
   }
   return out;

@@ -38,7 +38,8 @@ const apns = await startApnsNachbau({
   antwort: (p) => new Promise((ok) => {
     const datei = path.join(tmp, `push-${Date.now()}.json`);
     fs.writeFileSync(datei, JSON.stringify(p.payload));
-    execFile("xcrun", ["simctl", "push", "booted", BUNDLE, datei], (err) => {
+    // TF_SIM=<UDID>: nur an diesen Simulator (wenn mehrere laufen, z. B. andere Chats), sonst an den gebooteten
+    execFile("xcrun", ["simctl", "push", process.env.TF_SIM || "booted", BUNDLE, datei], (err) => {
       if (err) console.log(`[apns-nachbau] simctl push nicht möglich (${String(err.message).split("\n")[0].slice(0, 100)})`);
       fs.rmSync(datei, { force: true });
       ok({ status: 200 });

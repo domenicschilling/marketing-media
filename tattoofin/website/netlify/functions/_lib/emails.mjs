@@ -182,12 +182,18 @@ export const mails = {
       + (!(String(s.strasse || "").trim() && String(s.ort || "").trim()) ? p("Eins fehlt noch: Trag in deinem Studio-Bereich unter „Einrichtung“ die Adresse deiner Zahlseite ein. Erst dann sehen deine Kunden, bei welchem Studio sie bezahlen, und du kannst Zahlungslinks erstellen.") : ""),
   }),
 
-  login: (s, { url, stunden = 24 }) => mk(`Dein Login-Link für das Tattoofin-Portal (${s.firma})`, {
-    preheader: "Einfach klicken, kein Passwort nötig.",
-    title: "Dein Login-Link",
-    body: hallo(s) + p(`hier ist dein persönlicher Link zum Studio-Portal. Er ist ${stunden} Stunden gültig, funktioniert einmal und nur für dich. Danach bleibst du 30 Tage angemeldet. Ist er abgelaufen, kannst du auf der Seite mit einem Klick einen neuen anfordern. Wenn du ihn nicht angefordert hast, kannst du diese E-Mail ignorieren.`),
-    cta: "Jetzt einloggen", ctaUrl: url,
-  }),
+  // studios (seit 23.11.2026): gehört die Adresse zu mehreren Studios, gilt der eine Link für alle (Wechsel oben im Dashboard)
+  login: (s, { url, stunden = 24, studios = [] }) => {
+    const mehrere = (studios || []).length > 1;
+    const namen = mehrere ? studios.map((x) => x.firma + (x.ort ? ` (${x.ort})` : "")) : [];
+    return mk(mehrere ? "Dein Login-Link für das Tattoofin-Portal (alle deine Studios)" : `Dein Login-Link für das Tattoofin-Portal (${s.firma})`, {
+      preheader: "Einfach klicken, kein Passwort nötig.",
+      title: "Dein Login-Link",
+      body: hallo(s) + p(`hier ist dein persönlicher Link zum Studio-Portal. Er ist ${stunden} Stunden gültig, funktioniert einmal und nur für dich. Danach bleibst du 30 Tage angemeldet. Ist er abgelaufen, kannst du auf der Seite mit einem Klick einen neuen anfordern. Wenn du ihn nicht angefordert hast, kannst du diese E-Mail ignorieren.`)
+        + (mehrere ? p(`Der Link gilt für alle deine Studios: ${namen.map(esc).join(", ")}. Oben im Studio-Bereich wechselst du zwischen ihnen.`) : ""),
+      cta: "Jetzt einloggen", ctaUrl: url,
+    });
+  },
 
   // ---- Tattoofin-App für Studios ----
   // Anmelde-Code (6 Ziffern) für die App. Betreff mit Code, damit er in der Mitteilung des Mail-Programms schon zu sehen ist.
