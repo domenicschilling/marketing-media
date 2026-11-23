@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Tattoo-Gutscheine unter Wert · Tattoo Fashion München</title>
+<title>Weihnachts-Aktion: Tattoo-Gutscheine unter Wert · Tattoo Fashion München</title>
 <meta name="description" content="Weihnachtsgutscheine von Tattoo Fashion München: bis zu 500 € unter ihrem Wert. Online kaufen, sofort als PDF per E-Mail.">
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#0B0B0B">
@@ -57,6 +57,18 @@ a{color:inherit}
 .hero h1 span{display:block}
 .hero p.lead{font-size:17px;color:#ECE5D6;max-width:30em;margin:0 auto 20px}
 .mini{margin-top:12px;font-size:13px;color:var(--mute);text-align:center}
+/* Countdown bis Aktionsende (echtes Ende 24.12.2026 16 Uhr aus der API, setzt sich nie zurück) */
+.cd{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:4px auto 18px;max-width:420px}
+.cd div{background:rgba(20,19,17,.85);border:1px solid var(--line);border-radius:14px;padding:10px 0 8px;text-align:center}
+.cd b{display:block;font:700 30px/1 var(--hf);color:var(--gold2)}
+.cd small{display:block;margin-top:4px;font:600 10px/1 var(--hf);letter-spacing:.18em;text-transform:uppercase;color:var(--mute)}
+.cd-titel{font:600 12px/1 var(--hf);letter-spacing:.2em;text-transform:uppercase;color:var(--gold2);margin:0 0 10px}
+/* Weihnachten: feine goldene Schneeflocken im Hero */
+.flocken{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+.flocken i{position:absolute;top:-10px;width:var(--s);height:var(--s);border-radius:50%;background:radial-gradient(circle,#F6E7C3,rgba(232,205,146,0) 70%);opacity:.75;animation:fall var(--d) linear infinite;animation-delay:var(--w)}
+@keyframes fall{to{transform:translate3d(var(--x),110svh,0)}}
+@media(prefers-reduced-motion:reduce){.flocken{display:none}}
+.dot.rot{background:#c0392b;box-shadow:0 0 0 0 rgba(192,57,43,.7)}
 .mini a{color:var(--mute)}
 .rate{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px 14px;margin-top:12px;font-size:13px;color:#d9d1c1}
 .rate a{text-decoration:none}
@@ -193,8 +205,10 @@ textarea{min-height:80px;resize:vertical}
 .done p{color:#e9dfc9;font-size:16px;margin:8px 0}
 .done small{display:block;color:var(--mute);font-size:13px;margin-top:12px}
 @media(min-width:900px){.hero .in{max-width:760px}.hero p.lead{font-size:19px}}
+@media(max-height:700px){.cd b{font-size:24px}.cd div{padding:8px 0 6px}.cd{margin-bottom:12px}.cd-titel{display:none}}
 @media(max-height:620px){.hero .in{padding-top:64px}.hero h1{font-size:clamp(32px,9vw,52px);margin:8px 0 6px}.hero p.lead{font-size:15px;margin-bottom:12px}.btn{padding:16px 26px}.rate{display:none}}
-@media(max-height:520px) and (orientation:landscape){.hero .in{padding-top:56px}.hero h1{font-size:30px}.hero h1 span{display:inline}.mini{display:none}}
+@media(max-height:520px) and (orientation:landscape){.hero .in{padding-top:56px}.hero h1{font-size:30px}.hero h1 span{display:inline}.mini{display:none}.cd{display:none}}
+@media(max-height:560px) and (orientation:portrait){.cd{display:none}}
 </style>
 </head>
 <body>
@@ -202,18 +216,21 @@ textarea{min-height:80px;resize:vertical}
 
 <header class="top" id="top">
   <img src="/assets/gs-shop/tfm/logo.png" alt="Tattoo Fashion München" width="74" height="40">
-  <span class="eyebrow">Bis zu 500&nbsp;€ unter Wert</span>
+  <span class="eyebrow"><span class="dot rot"></span>Nur bis 24.12.</span>
 </header>
 
 <main>
   <section class="hero" data-hero style="padding:0">
+    <div class="flocken" aria-hidden="true" id="flocken"></div>
     <div class="slides" aria-hidden="true">
       <img class="on" src="/assets/gs-shop/tfm/hero-tfm.jpg" alt=""><img src="/assets/gs-shop/tfm/hero-800.webp" alt="" loading="lazy"><img src="/assets/gs-shop/tfm/w-realismus-lion.jpg" alt="" loading="lazy">
     </div>
     <div class="in">
-      <span class="eyebrow"><span class="dot"></span>Weihnachtsgutscheine · München</span>
-      <h1 class="h" data-hero-pflicht="immer"><span>Mehr Tattoo,</span><span class="g">als du bezahlst.</span></h1>
-      <p class="lead" data-hero-pflicht="immer">Gutscheine von Tattoo Fashion München, bis zu 500&nbsp;€ unter ihrem Wert. Online kaufen, sofort als PDF.</p>
+      <span class="eyebrow"><span class="dot rot"></span>Weihnachts-Aktion · München</span>
+      <h1 class="h" data-hero-pflicht="immer"><span>Mehr Tattoo</span><span class="g">unterm Baum.</span></h1>
+      <p class="lead" data-hero-pflicht="immer">Weihnachtsgutscheine von Tattoo Fashion München, bis zu 500&nbsp;€ unter ihrem Wert. Online kaufen, sofort als PDF verschenken.</p>
+      <p class="cd-titel" data-cd-titel>Aktion endet am 24.12. um 16 Uhr</p>
+      <div class="cd" data-cd role="timer" aria-label="Zeit bis zum Ende der Weihnachts-Aktion"><div><b data-t>–</b><small>Tage</small></div><div><b data-h>–</b><small>Std</small></div><div><b data-m>–</b><small>Min</small></div><div><b data-s>–</b><small>Sek</small></div></div>
       <button type="button" class="btn full" id="hero-kaufen" data-ev="kaufen-start" data-ort="hero" data-hero-pflicht="immer">Gutschein kaufen →</button>
       <div class="mini" id="hero-klein" data-hero-pflicht="immer">Nur 21 Stück · solange verfügbar · <a href="#bedingungen">Bedingungen</a></div>
       <div class="rate"><a href="#bewertungen"><span class="stars">★★★★★</span> <b>4,9</b> · 348 Google-Bewertungen</a></div>
@@ -223,9 +240,9 @@ textarea{min-height:80px;resize:vertical}
   <section id="gutscheine" style="padding-top:44px">
     <div class="wrap">
       <div class="reveal">
-        <span class="eyebrow">Die Gutscheine</span>
+        <span class="eyebrow"><span class="dot rot"></span>Weihnachts-Aktion · nur 21 Stück</span>
         <h2 class="h sec-h">Fünf Gutscheine. <span class="g">Jeder unter Wert.</span></h2>
-        <p class="sub">Tipp auf eine Nummer. Ist sie verkauft, gibt es sie nicht mehr.</p>
+        <p class="sub">Nur bis 24.12. um 16 Uhr und nur solange verfügbar. Tipp auf eine Nummer. Ist sie verkauft, gibt es sie nicht mehr.</p>
       </div>
       <div class="gs" id="bogen" role="group" aria-label="Gutscheine zu Weihnachten 2026 bei Tattoo Fashion München"></div>
       <div class="gilt reveal"><span class="eyebrow" style="padding:8px 10px;flex:none">Wichtig</span><span id="gilt"><b>Voller Wert bis 31.03.2027.</b> Danach verfällt nur der Bonus, der bezahlte Betrag zählt weiter bis 31.12.2029.</span></div>
@@ -236,12 +253,12 @@ textarea{min-height:80px;resize:vertical}
     <div class="wrap">
       <div class="reveal">
         <span class="eyebrow">So läuft's</span>
-        <h2 class="h sec-h">Aussuchen. Bezahlen. <span class="g">Verschenken.</span></h2>
+        <h2 class="h sec-h">Aussuchen. Bezahlen. <span class="g">Unter den Baum.</span></h2>
       </div>
       <div class="steps">
         <div class="step reveal"><div class="n">1</div><div><b>Nummer aussuchen</b><p>Oder einen eigenen Betrag. Name des Beschenkten und Gruß sind freiwillig.</p></div></div>
         <div class="step reveal"><div class="n">2</div><div><b>Online bezahlen</b><p>Per Karte, Apple Pay oder Google Pay. Dauert eine Minute.</p></div></div>
-        <div class="step reveal"><div class="n">3</div><div><b>Verschenken</b><p>Der Gutschein kommt sofort als PDF per E-Mail. Das Motiv sucht sich der Beschenkte selbst aus.</p></div></div>
+        <div class="step reveal"><div class="n">3</div><div><b>Verschenken</b><p>Der Gutschein kommt sofort als PDF per E-Mail, auch noch an Heiligabend. Ausdrucken, unter den Baum legen. Das Motiv sucht sich der Beschenkte selbst aus.</p></div></div>
       </div>
       <div style="margin-top:22px" class="reveal"><button type="button" class="btn full" data-ev="kaufen-start" data-ort="schritte" data-kaufen>Gutschein kaufen →</button></div>
     </div>
@@ -325,9 +342,10 @@ textarea{min-height:80px;resize:vertical}
 
   <section class="final">
     <div class="wrap" style="max-width:640px">
-      <span class="eyebrow"><span class="dot"></span>Bis 24.12., 16 Uhr</span>
-      <h2 class="h sec-h">Mehr Tattoo. <span class="g">Weniger zahlen.</span></h2>
-      <p class="sub" style="margin:0 auto 22px">Gutschein aussuchen, online bezahlen, sofort als PDF verschenken.</p>
+      <span class="eyebrow"><span class="dot rot"></span>Weihnachts-Aktion · bis 24.12., 16 Uhr</span>
+      <h2 class="h sec-h">Das Geschenk <span class="g">für Tattoo-Fans.</span></h2>
+      <p class="sub" style="margin:0 auto 18px">Gutschein aussuchen, online bezahlen, sofort als PDF verschenken. Nur solange die Stückzahl reicht.</p>
+      <div class="cd" data-cd role="timer" aria-label="Zeit bis zum Ende der Weihnachts-Aktion"><div><b data-t>–</b><small>Tage</small></div><div><b data-h>–</b><small>Std</small></div><div><b data-m>–</b><small>Min</small></div><div><b data-s>–</b><small>Sek</small></div></div>
       <button type="button" class="btn full" data-ev="kaufen-start" data-ort="abschluss" data-kaufen>Gutschein kaufen →</button>
       <p class="addr">Tattoo Fashion München · Landshuter Allee 42 · 80637 München</p>
     </div>
@@ -432,10 +450,12 @@ document.documentElement.classList.add("js");
     }).join("");
     h += '<button type="button" class="zeile frei" data-wahl="frei"' + (zu ? " disabled" : "") + '><span class="nr">€</span><span class="wert">Eigener Betrag</span><span class="rest pfeil">→</span><span class="preis">Wertgutschein, ' + EURO(sh.frei.minCent) + " bis " + EURO(sh.frei.maxCent) + "</span></button>";
     $("bogen").innerHTML = h;
+    cdEnde = sh.aktionOffen && sh.aktionBis ? new Date(sh.aktionBis).getTime() : null;
+    if (!cdEnde) document.querySelectorAll("[data-cd],[data-cd-titel]").forEach(function (x) { x.hidden = true; }); else cd();
     $("gilt").innerHTML = "<b>Voller Wert bis " + esc(DATUM(sh.bonusBis)) + ".</b> Danach verfällt nur der Bonus, der bezahlte Betrag zählt weiter bis " + esc(DATUM(sh.gueltigBis)) + ".";
     var rest = sh.aktionen.reduce(function (s, a) { return s + a.verfuegbar; }, 0), alle = sh.aktionen.reduce(function (s, a) { return s + a.stueck; }, 0);
     $("hero-klein").innerHTML = esc(zu ? (sh.grund || "Online-Kauf gerade nicht möglich.") : !sh.aktionOffen ? sh.aktionGrund + " Wertgutscheine gibt es weiter." : rest <= 0 ? "Alle Aktions-Gutscheine sind weg. Wertgutscheine gibt es weiter." :
-      "Noch " + rest + " von " + alle + " Stück · bis " + DATUM(sh.aktionBis).slice(0, 6) + UHR(sh.aktionBis)) + ' · <a href="#bedingungen">Bedingungen</a>';
+      "Noch " + rest + " von " + alle + " Aktions-Gutscheinen · solange verfügbar") + ' · <a href="#bedingungen">Bedingungen</a>';
     document.querySelectorAll("#hero-kaufen,[data-kaufen]").forEach(function (b) { b.disabled = zu; });
     $("bed-liste").innerHTML = sh.bedingungen.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("");
     $("widerruf-text").innerHTML = sh.widerruf.text.map(function (t) { return "<p>" + esc(t) + "</p>"; }).join("") + "<p>" + esc(sh.widerruf.formular) + "</p>";
@@ -545,6 +565,21 @@ document.documentElement.classList.add("js");
   $("hero-kaufen").addEventListener("click", function () { oeffnen(); });
   document.querySelectorAll("[data-kaufen]").forEach(function (b) { b.addEventListener("click", function () { oeffnen(); }); });
   $("bogen").addEventListener("click", function (e) { var z = e.target.closest("button.zeile[data-wahl]"); if (z && !z.disabled) { ev("kaufen-start", { ort: "liste", wahl: z.dataset.wahl }); oeffnen(z.dataset.wahl); } });
+
+  // Countdown bis Aktionsende (aus der API) und Schneeflocken
+  var cdEnde = null;
+  function cd() {
+    if (!cdEnde) return;
+    var r = Math.max(0, cdEnde - Date.now()), zwei = function (n) { return (n < 10 ? "0" : "") + n; };
+    document.querySelectorAll("[data-cd]").forEach(function (b) {
+      if (!r) { b.hidden = true; return; }
+      b.querySelector("[data-t]").textContent = zwei(Math.floor(r / 864e5)); b.querySelector("[data-h]").textContent = zwei(Math.floor(r / 36e5) % 24);
+      b.querySelector("[data-m]").textContent = zwei(Math.floor(r / 6e4) % 60); b.querySelector("[data-s]").textContent = zwei(Math.floor(r / 1e3) % 60);
+    });
+    if (!r) document.querySelectorAll("[data-cd-titel]").forEach(function (x) { x.hidden = true; });
+  }
+  setInterval(cd, 1000);
+  (function () { var h = ""; for (var i = 0; i < 26; i++) h += '<i style="left:' + (i * 37 % 100) + "%;--s:" + (3 + i % 4) + "px;--d:" + (9 + i % 7) + "s;--w:-" + (i * 1.3 % 9).toFixed(1) + "s;--x:" + ((i % 5) - 2) * 18 + 'px"></i>'; $("flocken").innerHTML = h; })();
 
   // Zurück von Stripe: Danke im selben Look (statt der allgemeinen Tattoofin-Seite)
   var bezahlt = params.get("bezahlt");
