@@ -375,12 +375,12 @@ document.documentElement.classList.add("js");
     $("gilt").innerHTML = "<b>Voller Wert bis " + esc(DATUM(sh.bonusBis)) + ".</b> Danach verfällt nur der Bonus: Den bezahlten Betrag rechnet das Studio weiter voll an, bis " + esc(DATUM(sh.gueltigBis)) + ".";
     $("frei-kaufen").textContent = "Wertgutschein von " + EURO(sh.frei.minCent) + " bis " + EURO(sh.frei.maxCent);
     var alleWeg = sh.aktionen.every(function (a) { return a.verfuegbar <= 0; });
-    $("hero-klein").textContent = zu ? (sh.grund || "Online-Kauf gerade nicht möglich.") : !sh.aktionOffen ? sh.aktionGrund + " Wertgutscheine gibt es weiter." : alleWeg ? "Alle Aktions-Gutscheine sind weg. Wertgutscheine gibt es weiter." : "Sofort als PDF per E-Mail. Solange verfügbar" + (sh.aktionBis ? ", bis " + DATUM(sh.aktionBis).replace(/ \d{4}$/, "") : "") + ".";
+    $("hero-klein").textContent = zu ? (sh.grund || "Online-Kauf gerade nicht möglich.") : !sh.aktionOffen ? sh.aktionGrund + " Wertgutscheine gibt es weiter." : alleWeg ? "Alle Aktions-Gutscheine sind weg. Wertgutscheine gibt es weiter." : "Sofort als PDF per E-Mail. Solange verfügbar" + (sh.aktionBis ? ", bis " + DATUM(sh.aktionBis).replace(/ \d{4}$/, "") + (function (u) { return u === "23:59" ? "" : ", " + u.replace(/:00$/, "") + " Uhr"; })(new Date(sh.aktionBis).toLocaleTimeString("de-DE", { hour: "numeric", minute: "2-digit", timeZone: "Europe/Berlin" })) : "") + ".";
     ["hero-kaufen", "studio-kaufen", "frei-kaufen"].forEach(function (id) { $(id).disabled = zu; });
     $("bed-liste").innerHTML = sh.bedingungen.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("");
     $("widerruf-text").innerHTML = sh.widerruf.text.map(function (t) { return "<p>" + esc(t) + "</p>"; }).join("") + "<p>" + esc(sh.widerruf.formular) + "</p>";
     var a = sh.anbieter;
-    $("anbieter-text").innerHTML = a ? "<p>" + [a.name, a.vertreten ? "vertreten durch " + a.vertreten : "", a.strasse, [a.plz, a.ort].join(" "), a.email ? "E-Mail: " + a.email : "", a.telefon ? "Telefon: " + a.telefon : "", a.register, a.ustid ? "USt-IdNr.: " + a.ustid : ""].filter(Boolean).map(esc).join("<br>") + "</p>"
+    $("anbieter-text").innerHTML = a ? "<p>" + [a.name, a.rechtsform, a.vertreten ? "vertreten durch " + a.vertreten : "", a.strasse, [a.plz, a.ort].join(" "), a.email ? "E-Mail: " + a.email : "", a.telefon ? "Telefon: " + a.telefon : "", a.register, a.ustid ? "USt-IdNr.: " + a.ustid : ""].filter(Boolean).map(esc).join("<br>") + "</p>"
       : "<p>Die Angaben zum Verkäufer werden vor dem Start ergänzt.</p>";
     if (!$("funnel").hidden) wahlZeichnen();
   }

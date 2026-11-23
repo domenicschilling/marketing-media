@@ -55,16 +55,17 @@ let d = await get("/api/gutschein-shop?s=tattoo-fashion-munich");
 const nr = (id) => d.shop.aktionen.find((a) => a.id === id);
 check(d.shop.aktionen.map((a) => `${a.nr}:${a.wertCent / 100}/${a.preisCent / 100}/${a.stueck}`).join(" ") === "1:2000/1500/1 2:1500/1250/2 3:1000/750/2 4:500/375/6 5:300/200/10", "5 Aktions-Gutscheine mit Wert / Preis / Stück wie entschieden", d.shop.aktionen);
 check(d.shop.bonusBis.startsWith("2027-03-31") && d.shop.gueltigBis.startsWith("2029-12-31") && d.shop.frei.minCent === 5000 && d.shop.frei.maxCent === 200000, "Bonus bis 31.03.2027, bezahlter Betrag bis 31.12.2029, freier Betrag 50–2.000 €");
-check(d.shop.offen && d.shop.vorschau && d.studio.aktiv, "Lokal/Vorschau offen, als Vorschau gekennzeichnet");
+check(d.shop.offen && !d.shop.vorschau && d.studio.aktiv && d.shop.anbieter?.email === "tattoofashion.munich@gmail.com", "Shop offen, freigegeben (kein Vorschau-Schild), Verkäufer-Angaben da");
 check(d.shop.bedingungen.some((t) => /31\.03\.2027/.test(t) && /bezahlte Betrag/.test(t)) && /vierzehn Tagen/.test(d.shop.widerruf.text[0]), "Bedingungen nennen Bonus-Frist, Widerrufsbelehrung da");
 check((await fetch(BASE + "/api/gutschein-shop?s=anderes-studio")).status === 404, "Anderes Studio hat keinen Shop (nur München)");
 
 console.log("Freischaltung (echte Site)");
 const c0 = shop.SHOPS["tattoo-fashion-munich"], sEcht = { id: "st_nqoyv1Q2wj7F", slug: "tattoo-fashion-munich" };
 check(shop.shopFuer({ id: "st_fremd", slug: "tattoo-fashion-munich" }, { test: false }) === null && shop.shopFuer(sEcht, { test: false }) === c0, "Echte Site: Shop nur für die Studio-ID st_nqoyv1Q2wj7F");
-check(!shop.shopZustand(sEcht, c0, new Date(), { test: false }).offen, "Echte Site: ohne Domenics Freigabe zu");
-check(!shop.shopZustand(sEcht, { ...c0, freigegeben: true }, new Date(), { test: false }).offen, "Echte Site: freigegeben, aber ohne Anbieter-Angaben (Impressum) weiter zu");
-check(shop.shopZustand(sEcht, { ...c0, freigegeben: true, anbieter: { name: "X GmbH", strasse: "A 1", plz: "1", ort: "M", email: "a@b.de" } }, new Date(), { test: false }).offen, "Echte Site: Freigabe + Anbieter → offen");
+check(!shop.shopZustand(sEcht, { ...c0, freigegeben: false }, new Date(), { test: false }).offen, "Echte Site: ohne Domenics Freigabe zu");
+check(!shop.shopZustand(sEcht, { ...c0, freigegeben: true, anbieter: null }, new Date(), { test: false }).offen, "Echte Site: freigegeben, aber ohne Anbieter-Angaben (Impressum) weiter zu");
+check(shop.shopZustand(sEcht, c0, new Date(), { test: false }).offen && c0.freigegeben && /Andy Neelsen/.test(c0.anbieter.name), "Echte Site: freigegeben + Verkäufer Andy Neelsen eingetragen → offen");
+check(d.shop.bedingungen.some((t) => /in Teilen einlösen/.test(t) && /nicht mit anderen Aktionen kombinierbar/.test(t)) && d.shop.bedingungen.some((t) => /Piercings/.test(t)) && d.shop.bedingungen.some((t) => /24\.12\.2026 um 16 Uhr/.test(t)), "Bedingungen: Teil-Einlösung, nicht kombinierbar, inkl. Piercing, Aktion bis 24.12.2026 16 Uhr");
 
 console.log("Kauf Nr. 4 (Wert 500 €, Preis 375 €)");
 let r = await kauf("nr4", "kim@example.com", { empfaenger: "Lena", nachricht: "Frohe Weihnachten!" });
@@ -154,6 +155,10 @@ check(mf && !/löst du den vollen Wert/.test(mf.html) && /Widerrufsbelehrung/.te
 check((await kauf("frei", "frei@example.com", { betrag: "100", inhaltOk: false })).status === 400 && (await kauf("frei", "", { betrag: "100" })).status === 400, "Ohne Häkchen bzw. ohne E-Mail: abgewiesen");
 
 console.log("Verkaufszeitraum");
+process.env.TF_JETZT = "2026-12-24T15:59:00+01:00";
+check((await get("/api/gutschein-shop?s=tattoo-fashion-munich")).shop.aktionOffen, "24.12. 15:59: Aktions-Gutscheine noch kaufbar");
+process.env.TF_JETZT = "2026-12-24T16:01:00+01:00";
+check(!(await get("/api/gutschein-shop?s=tattoo-fashion-munich")).shop.aktionOffen, "24.12. 16:01: Aktion vorbei");
 process.env.TF_JETZT = "2026-12-25T10:00:00+01:00";
 d = await get("/api/gutschein-shop?s=tattoo-fashion-munich");
 const nach = await kauf("nr5", "spaet@example.com"), fr2 = await kauf("frei", "spaet@example.com", { betrag: "80" });

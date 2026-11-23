@@ -35,16 +35,18 @@ export const SHOPS = {
       { id: "nr5", nr: 5, wertCent: 30000, preisCent: 20000, stueck: 10 },
     ],
     bonusBis: "2027-03-31",
-    // Verkaufszeitraum der Aktions-Gutscheine (offene Frage an Domenic: sofort oder ab 01.12.? Ende 24.12.?)
+    // Verkaufszeitraum der Aktions-Gutscheine (Domenic 23.11.2026: Start sofort, Ende 24.12.2026 16 Uhr; Wertgutschein läuft weiter)
     aktionAb: null,
-    aktionBis: "2026-12-24",
-    // Ein Aktions-Gutschein pro Käufer (E-Mail), wie bisher im Studio (offene Frage: online beibehalten?). null = ohne Grenze
+    aktionBis: "2026-12-24T16:00:00+01:00",
+    // Ein Aktions-Gutschein pro Käufer (E-Mail), Domenic 23.11.2026: beibehalten. null = ohne Grenze
     aktionJeKaeufer: 1,
     // Normaler Wertgutschein mit frei wählbarem Betrag (Vorschlag 50–2.000 €, volle Euro), ganzjährig
     frei: { minCent: 5000, maxCent: 200000, vorschlaege: [5000, 10000, 15000, 25000] },
-    // Verkäufer laut Impressum (offene Frage: Betreiber des Münchner Studios?). Ohne diese Angaben geht der Shop nicht live.
-    anbieter: null, // { name, vertreten, strasse, plz, ort, email, telefon, register, ustid }
-    freigegeben: false,
+    // Verkäufer laut Impressum (aus der Tattoofin-Anmeldung, Vertrag 2026-12 von Andy Neelsen unterschrieben; Einzelunternehmen,
+    // keine USt-IdNr. hinterlegt). Ohne diese Angaben geht der Shop nicht live.
+    anbieter: { name: "Tattoo Fashion Munich, Inhaber Andy Neelsen", rechtsform: "Einzelunternehmen", strasse: "Landshuter Allee 42", plz: "80637", ort: "München", email: "tattoofashion.munich@gmail.com", telefon: "+49 89 94403786" },
+    // Domenic 23.11.2026: „mach alles fertig, dass alles läuft“ (Live-Gang nur mit seinem OK im Chat)
+    freigegeben: true,
   },
 };
 
@@ -59,6 +61,9 @@ export function shopFuer(s, { test = testUmgebung(), shops = SHOPS } = {}) {
 }
 
 export const bonusBisIso = (c) => tagesende(c.bonusBis);
+// Ende der Aktion: Datum (Tagesende) oder genauer Zeitpunkt (z. B. 24.12.2026 16 Uhr)
+export const aktionEndeIso = (c) => (c.aktionBis.length === 10 ? tagesende(c.aktionBis) : new Date(c.aktionBis).toISOString());
+const uhrzeit = (iso) => { const t = new Date(iso).toLocaleTimeString("de-DE", { hour: "numeric", minute: "2-digit", timeZone: "Europe/Berlin" }); return t === "23:59" ? "" : " um " + t.replace(/:00$/, "") + " Uhr"; };
 
 // Ist der Shop offen? grund: text für die Seite, wenn nicht
 export function shopZustand(s, c, zeit = jetzt(), { test = testUmgebung() } = {}) {
@@ -67,7 +72,7 @@ export function shopZustand(s, c, zeit = jetzt(), { test = testUmgebung() } = {}
   let offen = true, grund = "";
   if (!test && (!c.freigegeben || !anbieterDa)) { offen = false; grund = "Der Gutschein-Shop ist noch nicht freigeschaltet."; }
   const aktionStart = c.aktionAb ? new Date(c.aktionAb + "T00:00:00+01:00").getTime() : 0;
-  const aktionEnde = c.aktionBis ? new Date(tagesende(c.aktionBis)).getTime() : Infinity;
+  const aktionEnde = c.aktionBis ? new Date(aktionEndeIso(c)).getTime() : Infinity;
   const aktionOffen = offen && t >= aktionStart && t <= aktionEnde;
   const aktionGrund = !offen ? grund : t < aktionStart ? `Die Aktions-Gutscheine gibt es ab ${datum(new Date(aktionStart).toISOString())}.` : t > aktionEnde ? "Die Weihnachts-Aktion ist vorbei." : "";
   return { offen, grund, aktionOffen, aktionGrund, anbieterDa, vorschau: test && !(c.freigegeben && anbieterDa) };
@@ -181,9 +186,11 @@ export function bedingungen(s, c, kaufJahr = jetzt()) {
   const verkaeufer = c.anbieter?.name || s.firma;
   return [
     `Verkäufer und Aussteller der Gutscheine ist ${verkaeufer}. Tattoofin stellt nur die Technik für Verkauf und Zahlung bereit; bezahlt wird über Stripe.`,
-    `Die Gutscheine gelten für alle Leistungen bei ${s.firma}${s.strasse ? ", " + s.strasse + ", " + [s.plz, s.ort].filter(Boolean).join(" ") : ""}. Das Motiv sucht sich der Beschenkte selbst aus.`,
+    `Die Gutscheine gelten für alle Leistungen bei ${s.firma}${s.strasse ? ", " + s.strasse + ", " + [s.plz, s.ort].filter(Boolean).join(" ") : ""}, zum Beispiel Tattoos und Piercings. Das Motiv sucht sich der Beschenkte selbst aus.`,
+    // Barauszahlung: Domenics Antwort 23.11. war nicht eindeutig → bis zur Klärung kein Satz dazu
+    "Du kannst einen Gutschein in Teilen einlösen, der Restwert bleibt auf dem Gutschein. Die Gutscheine sind nicht mit anderen Aktionen kombinierbar.",
     `Aktions-Gutscheine (Nr. 1 bis ${c.aktionen.length}): Du zahlst weniger, als der Gutschein wert ist. Der Unterschied ist ein Bonus. Den vollen Wert löst du bis ${datum(bonusBisIso(c))} ein. Danach verfällt nur der Bonus: Der bezahlte Betrag wird weiter voll angerechnet, bis ${bis}.`,
-    `Jeder Aktions-Gutschein ist nur in der angegebenen Stückzahl verfügbar. Ist eine Nummer verkauft, gibt es sie nicht mehr.${c.aktionJeKaeufer ? ` Pro Person ${c.aktionJeKaeufer === 1 ? "ein Aktions-Gutschein" : "höchstens " + c.aktionJeKaeufer + " Aktions-Gutscheine"}.` : ""}${c.aktionBis ? ` Verkauf der Aktions-Gutscheine bis ${datum(tagesende(c.aktionBis))}, solange verfügbar.` : ""}`,
+    `Jeder Aktions-Gutschein ist nur in der angegebenen Stückzahl verfügbar. Ist eine Nummer verkauft, gibt es sie nicht mehr.${c.aktionJeKaeufer ? ` Pro Person ${c.aktionJeKaeufer === 1 ? "ein Aktions-Gutschein" : "höchstens " + c.aktionJeKaeufer + " Aktions-Gutscheine"}.` : ""}${c.aktionBis ? ` Verkauf der Aktions-Gutscheine bis ${datum(aktionEndeIso(c))}${uhrzeit(aktionEndeIso(c))}, solange verfügbar.` : ""}`,
     `Wertgutschein mit eigenem Betrag: einlösbar bis ${bis}.`,
     "Alle Preise sind Endpreise inklusive Umsatzsteuer. Es kommen keine Versandkosten oder sonstigen Kosten dazu. Den Gutschein bekommst du direkt nach der Zahlung als PDF per E-Mail.",
     "Bezahlen kannst du per Karte, Apple Pay oder Google Pay. Ratenkauf ist für Gutscheine nicht möglich.",
@@ -215,7 +222,7 @@ export function shopTexte(s, kauf) {
 export async function shopOeffentlich(s, c) {
   const z = shopZustand(s, c), b = await bestand(s, c);
   return {
-    titel: c.titel, bonusBis: bonusBisIso(c), gueltigBis: gueltigBis(jetzt()), aktionBis: c.aktionBis ? tagesende(c.aktionBis) : null, aktionAb: c.aktionAb,
+    titel: c.titel, bonusBis: bonusBisIso(c), gueltigBis: gueltigBis(jetzt()), aktionBis: c.aktionBis ? aktionEndeIso(c) : null, aktionAb: c.aktionAb,
     offen: z.offen, grund: z.grund, aktionOffen: z.aktionOffen, aktionGrund: z.aktionGrund, vorschau: z.vorschau, aktionJeKaeufer: c.aktionJeKaeufer,
     aktionen: c.aktionen.map((a) => ({ id: a.id, nr: a.nr, wertCent: a.wertCent, preisCent: a.preisCent, bonusCent: a.wertCent - a.preisCent, stueck: a.stueck, ...b[a.id], ausverkauft: b[a.id].verkauft >= a.stueck })),
     frei: c.frei,

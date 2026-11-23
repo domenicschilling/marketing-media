@@ -343,7 +343,7 @@ ${g.nachricht ? `<div style="font-style:italic;color:#5b6370;margin-top:10px">�
 <p style="margin:0 0 8px"><b>Gutscheinbedingungen</b></p>${shop.bedingungen.map((x) => `<p style="margin:0 0 6px">${esc(x)}</p>`).join("")}
 <p style="margin:12px 0 8px"><b>${esc(shop.widerruf.titel)}</b></p>${shop.widerruf.text.map((x) => `<p style="margin:0 0 6px">${esc(x)}</p>`).join("")}
 <p style="margin:0 0 6px">${esc(shop.widerruf.formular)}</p>
-${shop.anbieter ? `<p style="margin:12px 0 0"><b>Verkäufer:</b> ${esc([shop.anbieter.name, shop.anbieter.vertreten, shop.anbieter.strasse, [shop.anbieter.plz, shop.anbieter.ort].filter(Boolean).join(" "), shop.anbieter.email, shop.anbieter.telefon, shop.anbieter.register, shop.anbieter.ustid].filter(Boolean).join(" · "))}</p>` : ""}</div>` : ""),
+${shop.anbieter ? `<p style="margin:12px 0 0"><b>Verkäufer:</b> ${esc([shop.anbieter.name, shop.anbieter.rechtsform, shop.anbieter.vertreten, shop.anbieter.strasse, [shop.anbieter.plz, shop.anbieter.ort].filter(Boolean).join(" "), shop.anbieter.email, shop.anbieter.telefon, shop.anbieter.register, shop.anbieter.ustid].filter(Boolean).join(" · "))}</p>` : ""}</div>` : ""),
       cta: "Gutschein online ansehen", ctaUrl: url,
       footerNote: `Der Gutschein wurde von ${esc(verkaeufer)} ausgestellt und über Tattoofin verkauft. Fragen zum Termin klärst du direkt mit dem Studio.`,
     });
