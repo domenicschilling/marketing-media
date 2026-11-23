@@ -28,7 +28,8 @@ extension Studio {
     /// Wie adresseFehlt() im Web: Testkassen (Demo, Testkauf) brauchen keine Adresse
     var adresseFehlt: Bool { !hatTestkasse && zahlseiteAdresse?.fehlt == true }
     var adresseIstVorschlag: Bool { zahlseiteAdresse?.vorschlag == true }
-    var adresseIstPrivat: Bool { zahlseiteAdresse?.privat == true }
+    /// Vorschlag ist die private Adresse aus Stripe (nur solange er noch nicht bestätigt ist, wie im Web)
+    var adresseIstPrivat: Bool { adresseIstVorschlag && zahlseiteAdresse?.privat == true }
     /// Postleitzahl muss 5 Ziffern haben (wie der Server, nur für Deutschland)
     var adresseInDeutschland: Bool { (land ?? "DE").uppercased() == "DE" }
 }
@@ -60,6 +61,14 @@ extension KasseEntwurf {
         var e = self
         e.anzahlung = false
         return e
+    }
+}
+
+/// „Stimmt so“ nur, wenn ein unbestätigter Vorschlag aus Stripe unverändert übernommen wird (sonst „Speichern“)
+enum AdresseKnopf {
+    static func stimmtSo(vorschlag: Bool, felder: [String], original: [String]) -> Bool {
+        let f = felder.map { $0.trimmingCharacters(in: .whitespaces) }
+        return vorschlag && f == original && f.allSatisfy { !$0.isEmpty }
     }
 }
 

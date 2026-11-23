@@ -20,8 +20,7 @@ struct AdresseView: View {
 
     private var studio: Studio? { portal.studio }
     private var deutschland: Bool { studio?.adresseInDeutschland ?? true }
-    private var unveraendert: Bool { [strasse, plz, ort].map { $0.trimmingCharacters(in: .whitespaces) } == original }
-    private var stimmtSo: Bool { unveraendert && original[0].leerAlsNil != nil && original[2].leerAlsNil != nil }
+    private var stimmtSo: Bool { AdresseKnopf.stimmtSo(vorschlag: studio?.adresseIstVorschlag == true, felder: [strasse, plz, ort], original: original) }
 
     var body: some View {
         ScrollView {

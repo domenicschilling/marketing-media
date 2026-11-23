@@ -12,8 +12,8 @@ extension Texte {
         static let adresseEintragen = "Adresse eintragen"
         static let adressePruefen = "Adresse prüfen"
         static let adresseSchonJetzt = "Adresse schon jetzt eintragen"
-        static let adresseTeam = "Die Adresse kann nur der Inhaber eintragen. Bitte gib ihm kurz Bescheid."
-        static let adresseNochNoetig = "Stripe ist frei. Es fehlt nur noch die Adresse deiner Zahlseite."
+        static let adresseTeam = "Die Adresse kann nur der Studio-Inhaber eintragen. Sag ihm oder ihr kurz Bescheid."
+        static let adresseNochNoetig = "Dein Zahlungskonto ist freigegeben. Es fehlt nur noch die Adresse deiner Zahlseite."
         static let checklisteAdresseKnopf = "Eintragen"
         static let checklisteAdresseText = "Steht auf deiner Zahlseite und auf Gutscheinen. Erst damit kannst du kassieren."
 

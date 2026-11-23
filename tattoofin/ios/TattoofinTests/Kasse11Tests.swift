@@ -68,6 +68,23 @@ struct Kasse11Tests {
         #expect(GesperrtKarte.pruefMeldung(frei) == nil)
     }
 
+    // MARK: Prüfer-Nachbesserung: privat-Hinweis und „Stimmt so“ nur bei offenem Vorschlag
+
+    @Test func privatHinweisNurBeiOffenemVorschlag() throws {
+        let offen = try studio(#""zahlseiteAdresse":{"fehlt":true,"vorschlag":true,"privat":true}"#)
+        #expect(offen.adresseIstPrivat)
+        let bestaetigt = try studio(#""zahlseiteAdresse":{"fehlt":false,"vorschlag":false,"privat":true}"#)
+        #expect(!bestaetigt.adresseIstPrivat)
+    }
+
+    @Test func stimmtSoNurBeiUnveraendertemVorschlag() {
+        let o = ["Hauptstraße 1", "96047", "Bamberg"]
+        #expect(AdresseKnopf.stimmtSo(vorschlag: true, felder: [" Hauptstraße 1", "96047", "Bamberg "], original: o))
+        #expect(!AdresseKnopf.stimmtSo(vorschlag: true, felder: ["Hauptstraße 2", "96047", "Bamberg"], original: o))
+        #expect(!AdresseKnopf.stimmtSo(vorschlag: false, felder: o, original: o))
+        #expect(!AdresseKnopf.stimmtSo(vorschlag: true, felder: ["", "", ""], original: ["", "", ""]))
+    }
+
     // MARK: Adresse prüfen (wie portal.mjs)
 
     @Test func adressePruefung() {
