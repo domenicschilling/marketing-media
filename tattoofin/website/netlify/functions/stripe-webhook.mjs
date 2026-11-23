@@ -16,6 +16,7 @@
 //      Für das Paket Monatlich (Abo) zusätzlich empfohlen: customer.subscription.deleted (Abo von Stripe beendet,
 //      z. B. nach endgültig fehlgeschlagenen Zahlungen) – wird unten verarbeitet, sobald das Ereignis abonniert ist.
 //   Secrets: STRIPE_WEBHOOK_SECRET (1) und STRIPE_CONNECT_WEBHOOK_SECRET (2)
+import { reservierungFreigeben } from "./_lib/gutschein-shop.mjs";
 import { CFG, istApple } from "./_lib/config.mjs";
 import { json, fail, now, brutto, handler } from "./_lib/util.mjs";
 import { stripe, verifyWebhook } from "./_lib/stripe.mjs";
@@ -109,7 +110,9 @@ async function kundenEreignis(event) {
       z.paymentIntentId = o.payment_intent || z.paymentIntentId;
       if (event.type === "checkout.session.expired") {
         if (z.status !== "bezahlt") z.letzterFehler = fehlerEintrag({ text: "Checkout-Sitzung abgelaufen" }, { ereignis: "abgelaufen" });
-        if (z.status === "offen" && z.art === "zahlseite") z.status = "abgebrochen";
+        if (z.status === "offen" && (z.art === "zahlseite" || z.gutschein?.shop)) z.status = "abgebrochen";
+        // Gutschein-Shop: reservierte Einheit wieder freigeben
+        if (z.gutschein?.reservierung) await reservierungFreigeben(z, "kasse-abgelaufen");
         await saveZahlung(z); break;
       }
       if (event.type === "checkout.session.async_payment_failed") { z.status = "fehlgeschlagen"; z.letzterFehler = fehlerEintrag({ text: "Zahlung später fehlgeschlagen" }); await saveZahlung(z); break; }

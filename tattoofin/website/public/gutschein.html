@@ -13,6 +13,7 @@
         <p class="gs-fuer hidden" id="gs-fuer"></p>
         <div class="gs-betrag" id="gs-betrag"></div>
         <div class="muted klein" id="gs-art"></div>
+        <p class="gs-daten" id="gs-bonus" style="font-weight:700"></p>
         <p class="gs-nachricht hidden" id="gs-nachricht"></p>
         <div><small class="muted">Gutschein-Code</small></div>
         <div class="gs-code" id="gs-code"></div>
@@ -42,8 +43,12 @@
     $("gs-firma").textContent = s.firma;
     if (s.branding && s.branding.farbe) $("gs-band").style.setProperty("--studio-farbe", s.branding.farbe);
     if (g.empfaenger) { $("gs-fuer").textContent = "für " + g.empfaenger; $("gs-fuer").classList.remove("hidden"); }
-    $("gs-betrag").textContent = TF.euro(g.betragCent, true);
-    $("gs-art").textContent = "Wertgutschein · für alle Leistungen bei " + s.firma;
+    $("gs-betrag").textContent = TF.euro(g.wertCent || g.betragCent, true);
+    $("gs-art").textContent = (g.aktion ? "Aktions-Gutschein Nr. " + g.aktion.nr : "Wertgutschein") + " · für alle Leistungen bei " + s.firma;
+    // Aktions-Gutschein: Bonus-Frist (gleicher Satz wie PDF und Mail)
+    if (g.bonusCent) $("gs-bonus").textContent = g.bonusAktiv
+      ? "Bis " + TF.datum(g.bonusBis) + " löst du den vollen Wert von " + TF.euro(g.wertCent, true) + " ein. Danach gilt der bezahlte Betrag von " + TF.euro(g.bezahltCent, true) + ", einlösbar bis " + TF.datum(g.gueltigBis) + "."
+      : "Die Bonus-Frist ist am " + TF.datum(g.bonusBis) + " abgelaufen. Einlösbar ist jetzt der bezahlte Betrag von " + TF.euro(g.bezahltCent, true) + ", bis " + TF.datum(g.gueltigBis) + ".";
     if (g.nachricht) { $("gs-nachricht").textContent = "„" + g.nachricht + "“"; $("gs-nachricht").classList.remove("hidden"); }
     $("gs-code").textContent = g.code;
     $("gs-daten").textContent = "Ausgestellt am " + TF.datum(g.ausgestelltAm) + " · Gültig bis " + TF.datum(g.gueltigBis);

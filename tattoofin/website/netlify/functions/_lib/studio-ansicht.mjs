@@ -1,7 +1,7 @@
 // Ausgabe von Studio und Zahlungen an das Studio selbst (Dashboard /api/portal und App /api/app). Ohne interne Werte.
 import { CFG, provisionSatz, paketVon, BAUSTEINE_SIMULIERT, istApple, appleCfg, sandboxKasse, testKasse } from "./config.mjs";
 import { hatUmstellungsangebot, connectUrl, darfKassieren, studioAdresseDa, anzahlungsbedingungen, eingebettet, klarnaFuer, klarnaDauerhaft, STATUS, hatGarantie } from "./domain.mjs";
-import { gutscheinStatus, gutscheinUrl } from "./gutschein.mjs";
+import { gutscheinStatus, gutscheinUrl, gutscheinWertCent, aktuellerWertCent } from "./gutschein.mjs";
 
 export const zahlseite = (s) => `${CFG.siteUrl}/zahlen/${s.slug}`;
 // Kurzer Zahlungslink zum Teilen (seit 15.11.2026, mit Link-Vorschau, netlify/functions/teilen.mjs). /zahlung.html?z=<id> bleibt gültig.
@@ -12,8 +12,9 @@ export const fuerStudio = (z) => {
   if (rest.kundeBestaetigt) rest.kundeBestaetigt = { am: rest.kundeBestaetigt.am, inhalt: rest.kundeBestaetigt.inhalt, version: rest.kundeBestaetigt.version };
   if (leistungToken) rest.leistungLink = `${CFG.siteUrl}/bestaetigung.html?t=${leistungToken.t}`;
   if (rest.gutschein) {
-    const { token, ...g } = rest.gutschein;
-    rest.gutschein = { ...g, status: gutscheinStatus(z), link: token ? gutscheinUrl(rest.gutschein) : null };
+    const { token, reservierung, ...g } = rest.gutschein;
+    // Wert UND bezahlter Betrag (Aktions-Gutscheine aus dem Shop: Wert > bezahlt; nach der Bonus-Frist gilt der bezahlte Betrag)
+    rest.gutschein = { ...g, status: gutscheinStatus(z), link: token ? gutscheinUrl(rest.gutschein) : null, wertCent: gutscheinWertCent(z), bezahltCent: z.betragCent, aktuellerWertCent: aktuellerWertCent(z) };
   }
   return rest;
 };

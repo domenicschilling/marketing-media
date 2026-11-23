@@ -297,7 +297,11 @@
   function gsChip(z) { var st = (z.gutschein && z.gutschein.status) || "offen"; return '<span class="chip ' + e(st) + '">' + e(GS_STATUS[st] || st) + "</span>"; }
   function gutscheinDetail(z, box, zeilen, bez, zl) {
     var g = z.gutschein || {}, st = g.status || "offen";
-    var reihen = [["Wert", euro(z.betragCent, true)], ["Käufer", e(z.kunde || "") + (z.email ? "<br><small>" + e(z.email) + "</small>" : "")], g.empfaenger ? ["Für", e(g.empfaenger)] : null, g.nachricht ? ["Nachricht", e(g.nachricht)] : null,
+    // Aktions-Gutschein aus dem Shop: Wert > bezahlt; der Bonus gilt bis bonusBis, danach zählt der bezahlte Betrag
+    var wert = g.wertCent || z.betragCent, mitBonus = Boolean(g.bonusCent);
+    var reihen = [["Wert", euro(wert, true) + (mitBonus ? "<br><small>bis " + dat(g.bonusBis) + ", danach " + euro(z.betragCent, true) + "</small>" : "")], mitBonus ? ["Bezahlt", euro(z.betragCent, true)] : null,
+      mitBonus && g.aktuellerWertCent !== wert ? ["Heute einlösbar", "<b>" + euro(g.aktuellerWertCent, true) + "</b> (Bonus-Frist vorbei)"] : null,
+      g.aktion ? ["Aktion", "Nr. " + e(g.aktion.nr) + " aus dem Gutschein-Shop"] : g.shop ? ["Verkauft", "im Gutschein-Shop"] : null, ["Käufer", e(z.kunde || "") + (z.email ? "<br><small>" + e(z.email) + "</small>" : "")], g.empfaenger ? ["Für", e(g.empfaenger)] : null, g.nachricht ? ["Nachricht", e(g.nachricht)] : null,
       ["Erstellt", dat(z.createdAt)], g.ausgestelltAm ? ["Ausgestellt", dat(g.ausgestelltAm)] : null, g.gueltigBis ? ["Gültig bis", dat(g.gueltigBis)] : null,
       g.eingeloestAm ? ["Eingelöst", dat(g.eingeloestAm) + (g.einloeseNotiz ? " · " + e(g.einloeseNotiz) : "")] : null, g.gesendetAm ? ["Per E-Mail", "gesendet am " + dat(g.gesendetAm)] : null,
       prov() && bez ? ["Tattoofin " + D.studio.provisionProzent + " %", euro(Math.max(0, (z.gebuehrBruttoCent || 0) - (z.gebuehrErstattetCent || 0)), true)] : null].filter(Boolean);
@@ -306,7 +310,7 @@
     if (st === "gueltig" || st === "abgelaufen") akt += '<button class="btn gold big w100" id="gs-einloesen" style="margin-top:10px">Als eingelöst markieren</button>';
     if (st === "eingeloest") akt += '<button class="btn ghost small" id="gs-zurueck" style="margin-top:10px">Einlösung zurücknehmen</button>';
     if (g.code) akt += '<div class="row-a" style="margin-top:10px"><a class="btn dark small" target="_blank" href="/api/portal/gutschein/' + e(z.id) + '/pdf">Gutschein als PDF</a><button class="btn ghost small" id="gs-senden">Nochmal per E-Mail senden</button></div>';
-    box.innerHTML = '<div class="detail-kopf">' + gsChip(z) + '<div class="amt">' + euro(z.betragCent, true) + "</div><b>🎁 Gutschein" + (g.code ? ' · <span class="gs-code-a">' + e(g.code) + "</span>" : "") + "</b></div>" +
+    box.innerHTML = '<div class="detail-kopf">' + gsChip(z) + '<div class="amt">' + euro(wert, true) + "</div><b>🎁 Gutschein" + (g.code ? ' · <span class="gs-code-a">' + e(g.code) + "</span>" : "") + "</b></div>" +
       '<div class="card-a"><table class="tbl-a">' + reihen.map(function (r) { return "<tr><th>" + r[0] + "</th><td>" + r[1] + "</td></tr>"; }).join("") + "</table>" + akt + "</div>" +
       '<p class="muted klein">Du bist Aussteller des Gutscheins. Er gilt für alle Leistungen in deinem Studio bis zum angegebenen Datum. Beim Termin Code prüfen und als eingelöst markieren.</p>';
     var nachladen = async function () { D = await TF.api("/api/portal"); geladenAm = Date.now(); zahlungDetail(z.id); };
@@ -362,10 +366,11 @@
     b.disabled = !D.studio.kannKassieren; b.textContent = "Gutschein-Link erstellen";
   });
   function gutscheine() {
-    var l = D.zahlungen.filter(function (z) { return z.art === "gutschein" && z.status !== "storniert"; });
+    // Shop-Bestellungen erst zeigen, wenn bezahlt (abgebrochene Kassen sind keine Gutscheine)
+    var l = D.zahlungen.filter(function (z) { return z.art === "gutschein" && z.status !== "storniert" && !(z.gutschein && z.gutschein.shop && !z.gutschein.code); });
     $("gs-liste").innerHTML = '<div class="card-a">' + (l.length ? '<ul class="zl">' + l.map(function (z) {
       var g = z.gutschein || {};
-      return '<li><a href="#zahlung/' + e(z.id) + '"><span class="wer"><b>' + e(g.empfaenger || z.kunde || "Gutschein") + "</b><small>" + (g.code ? '<span class="gs-code-a">' + e(g.code) + "</span> · " : "") + "von " + e(z.kunde || "") + " · " + dat(g.ausgestelltAm || z.createdAt) + '</small></span><span class="betrag">' + euro(z.betragCent, true) + "<small>" + gsChip(z) + "</small></span></a></li>";
+      return '<li><a href="#zahlung/' + e(z.id) + '"><span class="wer"><b>' + e(g.empfaenger || z.kunde || "Gutschein") + "</b><small>" + (g.code ? '<span class="gs-code-a">' + e(g.code) + "</span> · " : "") + "von " + e(z.kunde || "") + " · " + dat(g.ausgestelltAm || z.createdAt) + '</small></span><span class="betrag">' + euro(g.wertCent || z.betragCent, true) + "<small>" + (g.bonusCent ? "bezahlt " + euro(z.betragCent, true) + " · " : "") + gsChip(z) + "</small></span></a></li>";
     }).join("") + "</ul>" : '<p class="leer">Noch keine Gutscheine. Perfekt für Geburtstage und Weihnachten.</p>') + "</div>";
   }
   $("gs-suche-btn").onclick = async function () {

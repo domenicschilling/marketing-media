@@ -240,6 +240,10 @@ export const zahlartenFuer = (z, { nurKarte = false, studio = null, zeit } = {})
 export function artikelText(studio, z) {
   const besch = (z.beschreibung || "").trim();
   const motiv = besch && !/^(tattoo-projekt|anzahlung|tattoo)$/i.test(besch) ? besch.replace(/^anzahlung:\s*/i, "") : "";
+  if (z.art === "gutschein" && z.gutschein?.aktion) return {
+    name: `Aktions-Gutschein Nr. ${z.gutschein.aktion.nr}: Wert ${(z.gutschein.wertCent / 100).toLocaleString("de-DE")} € – ${studio.firma}`.slice(0, 200),
+    description: `Gutschein für alle Leistungen bei ${studio.firma}${z.gutschein.empfaenger ? ", für " + z.gutschein.empfaenger : ""}. Voller Wert bis ${new Date(z.gutschein.bonusBis).toLocaleDateString("de-DE", { timeZone: "Europe/Berlin" })}, danach wird der bezahlte Betrag bis zum Ende des dritten Jahres nach dem Kauf angerechnet. PDF per E-Mail.`.slice(0, 480),
+  };
   if (z.art === "gutschein") return {
     name: `Wertgutschein ${(z.betragCent / 100).toLocaleString("de-DE")} € – ${studio.firma}`.slice(0, 200),
     description: `Wertgutschein, einlösbar für alle Leistungen bei ${studio.firma}${z.gutschein?.empfaenger ? ", für " + z.gutschein.empfaenger : ""}. Gültig bis Ende des dritten Jahres nach dem Kauf.`.slice(0, 480),
@@ -275,7 +279,7 @@ async function zahlartFehlt(studio, z, e) {
 //             application_fee_amount = 10 % vom Zahlbetrag. Stripe-Gebühren trägt Tattoofin aus diesen 10 %.
 // Für die Klarna-Prüfung (23.10.2026; Kunde braucht Vor-/Nachname, Anschrift, Telefon, E-Mail –, docs.stripe.com/payments/klarna/best-practices): klarer Artikelname mit Menge 1,
 // Kunde als Stripe-Customer mit Name + E-Mail (vorausgefüllt), Rechnungsadresse und Telefonnummer verpflichtend.
-export async function checkoutFuer(studio, z, { nurKarte = false } = {}) {
+export async function checkoutFuer(studio, z, { nurKarte = false, extra = null } = {}) {
   if (!darfKassieren(studio)) throw new HttpError(409, "Dieses Studio kann gerade keine Zahlungen annehmen.");
   const plattform = plattformKassiert(studio);
   const direkt = direktCharge(studio);
@@ -315,6 +319,8 @@ export async function checkoutFuer(studio, z, { nurKarte = false } = {}) {
     metadata: meta,
     success_url: `${CFG.siteUrl}/bezahlt.html?z=${z.id}`,
     cancel_url: `${CFG.siteUrl}/zahlung.html?z=${z.id}&abbruch=1`,
+    // Gutschein-Shop: feste Kassen-Dauer (Reservierung der Stückzahl), Rückkehr in den Shop, Knopf „Bezahlen“
+    ...(extra || {}),
   };
   // Logo/Farben des Studios im Checkout (falls im Admin hinterlegt). Lehnt Stripe das Branding ab,
   // läuft die Zahlung ohne – die Kasse darf daran nie scheitern.

@@ -2,7 +2,7 @@
 //   GET /api/gutschein?t=<token>         Daten für /gutschein.html
 //   GET /api/gutschein?t=<token>&pdf=1   Gutschein als PDF
 import { json, fail, handler } from "./_lib/util.mjs";
-import { gutscheinPerToken, gutscheinPdf, gutscheinStatus } from "./_lib/gutschein.mjs";
+import { gutscheinPerToken, gutscheinPdf, gutscheinStatus, gutscheinWertCent, aktuellerWertCent, bonusAktiv } from "./_lib/gutschein.mjs";
 import { brandingOeffentlich } from "./_lib/branding.mjs";
 import { oeffentlicheAdresse } from "./_lib/domain.mjs";
 
@@ -17,7 +17,8 @@ export default handler(async (req) => {
   }
   return json({
     studio: { firma: s.firma, ...oeffentlicheAdresse(s), branding: brandingOeffentlich(s) },
-    gutschein: { code: g.code, betragCent: z.betragCent, empfaenger: g.empfaenger || "", nachricht: g.nachricht || "", ausgestelltAm: g.ausgestelltAm, gueltigBis: g.gueltigBis, status: gutscheinStatus(z), eingeloestAm: g.eingeloestAm || null },
+    gutschein: { code: g.code, betragCent: z.betragCent, wertCent: gutscheinWertCent(z), bezahltCent: z.betragCent, bonusCent: g.bonusCent || 0, bonusBis: g.bonusBis || null,
+      bonusAktiv: bonusAktiv(g), aktuellerWertCent: aktuellerWertCent(z), aktion: g.aktion ? { nr: g.aktion.nr } : null, empfaenger: g.empfaenger || "", nachricht: g.nachricht || "", ausgestelltAm: g.ausgestelltAm, gueltigBis: g.gueltigBis, status: gutscheinStatus(z), eingeloestAm: g.eingeloestAm || null },
   }, 200, { "cache-control": "no-store" });
 });
 

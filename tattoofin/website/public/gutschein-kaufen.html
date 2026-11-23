@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tattoo-Gutscheine zu Weihnachten · Tattoo Fashion München</title>
+<meta name="description" content="Tattoo-Gutscheine von Tattoo Fashion München online kaufen: Du zahlst weniger, als der Gutschein wert ist. Sofort als PDF per E-Mail.">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0E0D0B">
+<meta property="og:title" content="Tattoo-Gutscheine zu Weihnachten · Tattoo Fashion München">
+<meta property="og:description" content="Mehr Tattoo, als du bezahlst. Online kaufen, sofort als PDF.">
+<meta property="og:image" content="/assets/gs-shop/tfm/og.jpg">
+<link rel="icon" href="/assets/gs-shop/tfm/favicon.png">
+<link rel="preload" as="font" type="font/woff2" href="/assets/gs-shop/tfm/newsreader-opsz-var.woff2" crossorigin>
+<link rel="preload" as="image" href="/assets/gs-shop/tfm/hero-800.webp" imagesrcset="/assets/gs-shop/tfm/hero-800.webp 800w, /assets/gs-shop/tfm/hero-1400.webp 1400w" imagesizes="(min-width: 900px) 50vw, 100vw">
+<style>
+@font-face { font-family:"Newsreader"; font-weight:200 800; font-display:swap; src:url(/assets/gs-shop/tfm/newsreader-opsz-var.woff2) format("woff2"); }
+@font-face { font-family:"Jost"; font-weight:300 700; font-display:swap; src:url(/assets/gs-shop/tfm/jost-latin.woff2) format("woff2"); }
+:root { --grund:#0E0D0B; --flaeche:#1A1814; --linie:#34302A; --tinte:#EEE6D6; --gedaempft:#B5AC9E; --akzent:#E0A526; --fehler:#FF8A7A; --banner:0px;
+        --hf:"Newsreader", Georgia, serif; --bf:"Jost", system-ui, sans-serif; --rand:20px; }
+* { box-sizing:border-box; margin:0; padding:0; }
+html { -webkit-text-size-adjust:100%; }
+body { background:var(--grund); color:var(--tinte); font:400 18px/1.55 var(--bf); -webkit-font-smoothing:antialiased; }
+body.zu { overflow:hidden; }
+img { display:block; max-width:100%; height:auto; }
+a { color:inherit; }
+:focus-visible { outline:3px solid var(--akzent); outline-offset:3px; }
+h1, h2, h3 { font-family:var(--hf); font-weight:400; letter-spacing:-.02em; line-height:1.02; text-wrap:balance; }
+.knopf { display:inline-flex; align-items:center; justify-content:center; min-height:56px; padding:0 28px; border-radius:4px; border:0; cursor:pointer;
+         background:var(--akzent); color:var(--grund); font:600 19px/1 var(--bf); text-decoration:none; }
+.knopf:active { transform:translateY(1px); }
+.knopf[disabled] { opacity:.55; cursor:default; }
+.knopf.zweit { background:transparent; color:var(--tinte); border:1px solid var(--tinte); }
+.leise { color:var(--tinte); text-decoration:underline; text-underline-offset:3px; text-decoration-color:var(--linie); background:none; border:0; font:inherit; cursor:pointer; padding:0; }
+
+/* HERO: exakt erster Bildschirm (auch mit Banner, --banner per JS) */
+.hero { height:100svh; display:flex; flex-direction:column; position:relative; }
+.hero .foto { flex:1 1 auto; min-height:0; overflow:hidden; }
+.hero .foto img { width:100%; height:100%; object-fit:cover; object-position:50% 40%; filter:saturate(.9) contrast(1.04) sepia(.05); }
+.hero .text { flex:0 0 auto; padding:22px var(--rand) calc(20px + var(--banner) + env(safe-area-inset-bottom)); }
+.hero h1 { font-size:clamp(40px, 11vw, 56px); }
+.hero .stuetz { margin-top:12px; color:var(--tinte); font-size:18px; line-height:1.4; max-width:34ch; }
+.hero .knopf { margin-top:18px; width:100%; }
+.hero .klein { margin-top:10px; color:var(--gedaempft); font-size:16px; }
+.marke { position:absolute; left:var(--rand); top:calc(16px + env(safe-area-inset-top)); width:150px; height:auto; }
+
+section { padding:64px var(--rand); border-top:1px solid var(--linie); }
+section h2 { font-size:clamp(34px, 9vw, 52px); max-width:16ch; }
+section .lead { margin-top:14px; color:var(--gedaempft); max-width:38ch; }
+
+/* Signatur: Flash-Bogen mit Nummern (wie in den Anzeigen), jede Zeile ist ein Knopf */
+.bogen { margin-top:28px; font-variant-numeric:tabular-nums; }
+.bogen .kopf, .bogen button.zeile { display:grid; grid-template-columns:3.2em 1fr auto 4.4em 14px; align-items:baseline; gap:0 10px; width:100%; }
+.bogen button.zeile::after { content:"›"; color:var(--akzent); font:400 26px/1 var(--hf); align-self:center; }
+.bogen button.zeile[disabled]::after { content:""; }
+.bogen .kopf { font:500 14px/1.3 var(--bf); color:var(--gedaempft); padding:0 0 8px; }
+.bogen .kopf span:nth-child(n+2) { text-align:right; }
+.bogen button.zeile { background:none; border:0; border-top:1px solid var(--linie); color:inherit; font:inherit; text-align:right; padding:16px 0; cursor:pointer; }
+.bogen button.zeile:last-of-type { border-bottom:1px solid var(--linie); }
+.bogen .nr { font-family:var(--hf); color:var(--akzent); font-size:22px; text-align:left; }
+.bogen .wert { font-family:var(--hf); font-size:clamp(26px, 7vw, 36px); }
+.bogen .preis { font-weight:600; font-size:19px; }
+.bogen .rest { color:var(--gedaempft); font-size:15px; line-height:1.2; }
+.bogen .rest b { color:var(--tinte); font-weight:600; }
+.bogen button.zeile[disabled] { cursor:default; }
+/* Ausverkauft: nur gedämpft, NIE durchgestrichen (sähe sonst wie ein Streichpreis aus, PAngV § 11) */
+.bogen button.zeile[disabled] .wert, .bogen button.zeile[disabled] .preis, .bogen button.zeile[disabled] .nr { color:var(--gedaempft); opacity:.6; }
+.bogen button.zeile:not([disabled]):hover .wert { color:var(--akzent); }
+@media (prefers-reduced-motion: no-preference) {
+  .js .bogen button.zeile { opacity:0; transform:translateY(14px); transition:opacity .45s cubic-bezier(.16,1,.3,1), transform .45s cubic-bezier(.16,1,.3,1); }
+  .js .bogen button.zeile.da { opacity:1; transform:none; }
+}
+.gilt { margin-top:18px; color:var(--gedaempft); font-size:16px; max-width:44ch; }
+.gilt b { color:var(--tinte); font-weight:500; }
+.frei-link { margin-top:22px; display:flex; flex-wrap:wrap; gap:6px 12px; align-items:baseline; }
+.frei-link span { color:var(--gedaempft); }
+
+ol.ablauf { list-style:none; margin-top:28px; display:grid; gap:22px; counter-reset:s; }
+ol.ablauf li { counter-increment:s; display:grid; grid-template-columns:44px 1fr; gap:4px 12px; }
+ol.ablauf li::before { content:counter(s); grid-row:span 2; font:400 34px/1 var(--hf); color:var(--akzent); }
+ol.ablauf b { font-weight:600; }
+ol.ablauf span { color:var(--gedaempft); grid-column:2; }
+
+.arbeiten { margin-top:28px; display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; }
+.arbeiten img { aspect-ratio:4/5; object-fit:cover; width:100%; filter:saturate(.9) contrast(1.04) sepia(.05); }
+.beleg { margin-top:14px; color:var(--gedaempft); font-size:15px; }
+
+ul.bed { list-style:none; margin-top:24px; }
+ul.bed li { padding:14px 0; border-top:1px solid var(--linie); }
+ul.bed li:last-child { border-bottom:1px solid var(--linie); }
+details.recht { margin-top:18px; border-bottom:1px solid var(--linie); padding:0 0 14px; }
+details.recht summary { cursor:pointer; font-weight:600; padding:6px 0; }
+details.recht p { margin-top:10px; color:var(--gedaempft); font-size:16px; }
+
+.studio address { font-style:normal; margin-top:20px; font-size:19px; line-height:1.5; }
+.studio dl { margin-top:18px; display:grid; grid-template-columns:auto 1fr; gap:4px 18px; color:var(--gedaempft); }
+.studio dt { color:var(--tinte); }
+.studio .knopf { margin-top:26px; width:100%; }
+.studio .wege { margin-top:16px; display:flex; flex-wrap:wrap; gap:10px 24px; }
+
+footer { padding:36px var(--rand) calc(48px + var(--banner)); border-top:1px solid var(--linie); color:var(--gedaempft); font-size:15px; }
+footer nav { display:flex; flex-wrap:wrap; gap:8px 22px; }
+footer button { background:none; border:0; color:inherit; font:inherit; text-decoration:underline; text-underline-offset:3px; cursor:pointer; padding:0; }
+footer p { margin-top:14px; max-width:60ch; }
+
+.meldung { position:fixed; left:12px; right:12px; top:calc(12px + env(safe-area-inset-top)); z-index:70; background:var(--flaeche); border:1px solid var(--akzent); border-radius:6px; padding:14px 16px; font-size:16px; }
+.meldung[hidden] { display:none; }
+.vorschau-schild { position:fixed; top:0; left:50%; transform:translateX(-50%); z-index:40; background:#3a2c0c; color:var(--tinte); font-size:12px; line-height:1.3; padding:3px 10px 4px; border-radius:0 0 6px 6px; max-width:calc(100vw - 16px); text-align:center; }
+
+/* Kauf-Funnel: Vollbild am Handy, mit offener Tastatur bedienbar (Knopf klebt unten über der Tastatur) */
+.funnel { position:fixed; inset:0; z-index:60; background:var(--grund); display:flex; flex-direction:column; height:100dvh; }
+.funnel[hidden] { display:none; }
+.f-kopf { flex:0 0 auto; display:flex; align-items:center; gap:12px; padding:calc(10px + env(safe-area-inset-top)) var(--rand) 10px; border-bottom:1px solid var(--linie); }
+.f-kopf .schritt { flex:1; color:var(--gedaempft); font-size:15px; }
+.f-kopf button { background:none; border:0; color:var(--tinte); font:500 16px/1 var(--bf); min-height:44px; min-width:44px; cursor:pointer; }
+.f-inhalt { flex:1 1 auto; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:22px var(--rand) 24px; }
+.f-inhalt h3 { font-size:clamp(28px, 8vw, 38px); margin-bottom:16px; }
+.f-fuss { flex:0 0 auto; padding:12px var(--rand) calc(12px + env(safe-area-inset-bottom)); border-top:1px solid var(--linie); background:var(--grund); }
+.f-fuss .knopf { width:100%; }
+.f-fuss .summe-z { display:flex; justify-content:space-between; font-size:16px; color:var(--gedaempft); margin-bottom:10px; }
+.f-fuss .summe-z b { color:var(--tinte); font-weight:600; }
+.wahl { display:grid; gap:10px; }
+.wahl label { display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:4px 14px; border:1px solid var(--linie); border-radius:6px; padding:14px; cursor:pointer; }
+.wahl label:has(input:checked) { border-color:var(--akzent); background:var(--flaeche); }
+.wahl label.weg { opacity:.5; cursor:default; }
+.wahl input[type=radio] { width:22px; height:22px; accent-color:var(--akzent); }
+.wahl .w-t b { font-family:var(--hf); font-weight:400; font-size:24px; display:block; line-height:1.1; }
+.wahl .w-t small, .wahl .w-r small { color:var(--gedaempft); font-size:15px; display:block; }
+.wahl .w-r { text-align:right; font-weight:600; }
+.frei-feld { grid-column:1 / -1; display:none; margin-top:8px; }
+.wahl label:has(input:checked) .frei-feld { display:block; }
+.chips { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+.chips button { background:none; border:1px solid var(--linie); color:var(--tinte); border-radius:99px; min-height:40px; padding:0 14px; font:500 16px/1 var(--bf); cursor:pointer; }
+.feld { display:block; margin-top:16px; }
+.feld span { display:block; font-size:16px; margin-bottom:6px; }
+.feld small { color:var(--gedaempft); font-size:15px; }
+.feld input, .feld textarea { width:100%; min-height:52px; background:var(--flaeche); color:var(--tinte); border:1px solid var(--linie); border-radius:6px; padding:12px 14px; font:400 18px/1.3 var(--bf); }
+.feld textarea { min-height:84px; resize:vertical; }
+.feld input:focus, .feld textarea:focus { border-color:var(--akzent); outline:none; }
+.feld .betrag { display:flex; align-items:center; gap:8px; }
+.feld .betrag input { font:400 26px/1 var(--hf); max-width:180px; }
+.fehler { color:var(--fehler); font-size:16px; margin-top:12px; }
+.fehler:empty { display:none; }
+.ueber { border:1px solid var(--linie); border-radius:6px; padding:16px; }
+.ueber dl { display:grid; grid-template-columns:auto 1fr; gap:6px 14px; }
+.ueber dt { color:var(--gedaempft); }
+.ueber dd { text-align:right; }
+.ueber .gross { font-family:var(--hf); font-size:30px; }
+.ueber p { margin-top:12px; font-size:16px; color:var(--gedaempft); }
+.haken { display:grid; grid-template-columns:auto 1fr; gap:12px; margin-top:18px; font-size:16px; line-height:1.45; cursor:pointer; }
+.haken input { width:24px; height:24px; accent-color:var(--akzent); margin-top:1px; }
+.haken a { color:var(--tinte); }
+.zahl-info { margin-top:14px; color:var(--gedaempft); font-size:15px; }
+
+.consent { position:fixed; left:0; right:0; bottom:0; z-index:50; background:var(--flaeche); border-top:1px solid var(--linie);
+           padding:12px var(--rand) calc(12px + env(safe-area-inset-bottom)); display:flex; gap:10px 14px; align-items:center; flex-wrap:wrap; font-size:14px; line-height:1.4; }
+.consent[hidden] { display:none; }
+.consent p { flex:1 1 220px; color:var(--tinte); }
+.consent .k { display:flex; gap:10px; flex:1 1 200px; }
+.consent button { flex:1; min-height:44px; border-radius:4px; font:600 15px/1 var(--bf); cursor:pointer; background:transparent; color:var(--tinte); border:1px solid var(--tinte); }
+
+/* Sehr schmale Handys (320–359 px): Liste enger, damit nichts seitlich übersteht */
+@media (max-width: 359px) {
+  .bogen .kopf, .bogen button.zeile { grid-template-columns:2.6em minmax(0,1fr) auto 3.4em 10px; gap:0 6px; }
+  .bogen .nr { font-size:18px; } .bogen .wert { font-size:22px; } .bogen .preis { font-size:16px; } .bogen .rest { font-size:13px; }
+  .bogen .kopf { font-size:12px; }
+}
+@media (max-height: 560px) {
+  .hero .text { padding-top:14px; }
+  .hero h1 { font-size:34px; }
+  .hero .stuetz { font-size:16px; margin-top:8px; }
+  .hero .knopf { margin-top:12px; min-height:48px; }
+  .hero .klein { margin-top:6px; font-size:16px; }
+  .marke { width:110px; top:10px; }
+}
+@media (max-height: 560px) and (orientation: landscape) {
+  .hero { flex-direction:row; }
+  .hero .foto { flex:0 0 40%; }
+  .hero .text { flex:1 1 60%; display:flex; flex-direction:column; justify-content:center; padding:12px 28px calc(12px + var(--banner)); }
+  .hero h1 { font-size:30px; }
+  .hero .knopf { width:auto; align-self:flex-start; }
+}
+@media (min-width: 900px) {
+  :root { --rand:56px; }
+  .hero { flex-direction:row; }
+  .hero .foto { flex:1 1 50%; }
+  .hero .text { flex:1 1 50%; display:flex; flex-direction:column; justify-content:center; padding:56px 56px calc(56px + var(--banner)); }
+  .hero h1 { font-size:clamp(56px, 5.4vw, 84px); }
+  .hero .stuetz { font-size:21px; }
+  .hero .knopf { width:auto; align-self:flex-start; }
+  .marke { left:auto; right:56px; top:40px; width:190px; }
+  section { display:grid; grid-template-columns:minmax(0, 5fr) minmax(0, 7fr); gap:0 64px; padding:96px 56px; }
+  section > :not(h2):not(.lead) { grid-column:2; }
+  section h2, section .lead { grid-column:1; }
+  section > h2 { grid-row:1; } section > .lead { grid-row:2; align-self:start; }
+  section > :nth-child(3) { grid-row:1 / span 3; margin-top:0; }
+  .studio .knopf { width:auto; }
+  .funnel { inset:auto 0 0 auto; width:520px; height:100dvh; border-left:1px solid var(--linie); }
+}
+</style>
+</head>
+<body>
+<div class="meldung" id="meldung" role="status" hidden></div>
+<main>
+  <header class="hero" data-hero>
+    <div class="foto"><img src="/assets/gs-shop/tfm/hero-800.webp" srcset="/assets/gs-shop/tfm/hero-800.webp 800w, /assets/gs-shop/tfm/hero-1400.webp 1400w" sizes="(min-width: 900px) 50vw, 100vw" width="1400" height="1366" alt="Fertiges Tattoo aus dem Studio Tattoo Fashion München" fetchpriority="high"></div>
+    <img class="marke" src="/assets/gs-shop/tfm/wortmarke.webp" width="300" height="95" alt="Tattoo Fashion München">
+    <div class="text">
+      <h1 data-hero-pflicht="immer">Mehr Tattoo, als du bezahlst.</h1>
+      <p class="stuetz" data-hero-pflicht="immer">Weihnachtsgutscheine von Tattoo Fashion München, bis zu 500 € unter ihrem Wert.</p>
+      <button type="button" class="knopf" id="hero-kaufen" data-ev="kaufen-start" data-ort="hero" data-hero-pflicht="immer">Gutschein online kaufen</button>
+      <p class="klein" data-hero-pflicht="immer" id="hero-klein">Sofort als PDF per E-Mail. Solange verfügbar.</p>
+    </div>
+  </header>
+
+  <section id="gutscheine" aria-labelledby="h-gutscheine">
+    <h2 id="h-gutscheine">Fünf Gutscheine. Jeder kostet weniger, als er wert ist.</h2>
+    <p class="lead">Tipp auf eine Nummer, um sie zu kaufen. Die Stückzahl gilt nur für Tattoo Fashion München. Ist eine Nummer verkauft, gibt es sie nicht mehr.</p>
+    <div>
+      <div class="bogen" id="bogen" role="group" aria-label="Gutscheine zu Weihnachten 2026 bei Tattoo Fashion München">
+        <div class="kopf" aria-hidden="true"><span>Nr.</span><span>Gutscheinwert</span><span>Du zahlst</span><span>Noch da</span><span></span></div>
+        <!-- Zeilen kommen aus /api/gutschein-shop (Stückzahl live). Ohne JavaScript: feste Liste -->
+        <button type="button" class="zeile" disabled><span class="nr">Nr. 1</span><span class="wert">2.000 €</span><span class="preis">1.500 €</span><span class="rest">1 ×</span></button>
+        <button type="button" class="zeile" disabled><span class="nr">Nr. 2</span><span class="wert">1.500 €</span><span class="preis">1.250 €</span><span class="rest">2 ×</span></button>
+        <button type="button" class="zeile" disabled><span class="nr">Nr. 3</span><span class="wert">1.000 €</span><span class="preis">750 €</span><span class="rest">2 ×</span></button>
+        <button type="button" class="zeile" disabled><span class="nr">Nr. 4</span><span class="wert">500 €</span><span class="preis">375 €</span><span class="rest">6 ×</span></button>
+        <button type="button" class="zeile" disabled><span class="nr">Nr. 5</span><span class="wert">300 €</span><span class="preis">200 €</span><span class="rest">10 ×</span></button>
+      </div>
+      <p class="gilt" id="gilt"><b>Voller Wert bis 31. März 2027.</b> Danach verfällt nur der Bonus: Den bezahlten Betrag rechnet das Studio weiter voll an, bis Ende 2029.</p>
+      <p class="frei-link"><span>Lieber einen eigenen Betrag?</span><button type="button" class="leise" id="frei-kaufen" data-ev="kaufen-start" data-ort="frei">Wertgutschein ab 50 €</button></p>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-motiv">
+    <h2 id="h-motiv">Das Motiv sucht sich der Beschenkte selbst aus.</h2>
+    <p class="lead">Du musst nicht wissen, was es werden soll. Das klärt der Beschenkte mit unseren Tätowierern.</p>
+    <div>
+      <div class="arbeiten">
+        <img src="/assets/gs-shop/tfm/arbeit-1.webp" width="480" height="600" loading="lazy" alt="Tattoo aus dem Studio Tattoo Fashion München">
+        <img src="/assets/gs-shop/tfm/arbeit-2.webp" width="480" height="600" loading="lazy" alt="Tattoo aus dem Studio Tattoo Fashion München">
+        <img src="/assets/gs-shop/tfm/arbeit-3.webp" width="480" height="600" loading="lazy" alt="Tattoo aus dem Studio Tattoo Fashion München">
+      </div>
+      <p class="beleg">Echte Arbeiten aus dem Studio. 4,9 von 5 Sternen bei Google aus 348 Bewertungen, Stand 22.11.2026.</p>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-ablauf">
+    <h2 id="h-ablauf">So kommst du an den Gutschein.</h2>
+    <ol class="ablauf">
+      <li><b>Nummer aussuchen</b><span>Oder einen eigenen Betrag. Name des Beschenkten und ein Gruß sind freiwillig.</span></li>
+      <li><b>Online bezahlen</b><span>Per Karte, Apple Pay oder Google Pay.</span></li>
+      <li><b>Verschenken</b><span>Der Gutschein kommt sofort als PDF per E-Mail, zum Ausdrucken oder Weiterschicken.</span></li>
+    </ol>
+  </section>
+
+  <section aria-labelledby="h-bed" id="bedingungen">
+    <h2 id="h-bed">Die Bedingungen.</h2>
+    <div>
+      <ul class="bed" id="bed-liste"><li>Die Bedingungen werden geladen …</li></ul>
+      <details class="recht" id="widerruf"><summary>Widerrufsbelehrung</summary><div id="widerruf-text"></div></details>
+      <details class="recht" id="anbieter"><summary>Verkäufer (Impressum)</summary><div id="anbieter-text"></div></details>
+    </div>
+  </section>
+
+  <section class="studio" aria-labelledby="h-studio">
+    <h2 id="h-studio">Hier löst du sie ein.</h2>
+    <div>
+      <address>Tattoo Fashion München<br>Landshuter Allee 42<br>80637 München</address>
+      <dl><dt>Mo bis Fr</dt><dd>10 bis 18 Uhr</dd><dt>Samstag</dt><dd>10 bis 16 Uhr</dd><dt>Sonntag</dt><dd>geschlossen</dd></dl>
+      <button type="button" class="knopf" data-ev="kaufen-start" data-ort="studio" id="studio-kaufen">Gutschein online kaufen</button>
+      <p class="wege"><a class="leise" href="https://wa.me/491626527442?text=Hallo%2C%20ich%20habe%20eine%20Frage%20zu%20den%20Tattoo-Gutscheinen%20bei%20Tattoo%20Fashion%20M%C3%BCnchen." data-ev="whatsapp" data-ort="studio" rel="noopener">Per WhatsApp fragen</a><a class="leise" href="tel:+498994403786" data-ev="anruf">Anrufen: 089 94403786</a><a class="leise" href="https://www.google.com/maps/search/?api=1&query=Tattoo+Fashion+Munich+Landshuter+Allee+42+M%C3%BCnchen" data-ev="route" rel="noopener">Route planen</a></p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <nav aria-label="Rechtliches"><a href="#anbieter" id="impressum-link">Impressum</a><a href="/gutschein-kaufen-datenschutz.html">Datenschutz</a><a href="#widerruf" id="widerruf-link">Widerruf</a><button type="button" id="consent-auf">Messung ändern</button></nav>
+  <p>Verkauf und Gutschein: Tattoo Fashion München. Technik und sichere Zahlung über Stripe: Tattoofin (<a href="/impressum.html">Impressum Tattoofin</a>). Öffnungszeiten laut Google-Eintrag des Studios, Stand 22.11.2026.</p>
+</footer>
+
+<!-- Kauf-Funnel -->
+<div class="funnel" id="funnel" role="dialog" aria-modal="true" aria-labelledby="f-titel" hidden>
+  <div class="f-kopf"><button type="button" id="f-zurueck" aria-label="Zurück">←</button><span class="schritt" id="f-schritt">Schritt 1 von 3</span><button type="button" id="f-zu" aria-label="Schließen">✕</button></div>
+  <form class="f-inhalt" id="f-form" novalidate autocomplete="on">
+    <div data-schritt="1">
+      <h3 id="f-titel">Welcher Gutschein?</h3>
+      <div class="wahl" id="wahl" role="radiogroup" aria-labelledby="f-titel"></div>
+    </div>
+    <div data-schritt="2" hidden>
+      <h3>Wer kauft?</h3>
+      <label class="feld"><span>Dein Name</span><input type="text" name="name" id="f-name" autocomplete="name" autocapitalize="words" enterkeyhint="next" required maxlength="80"></label>
+      <label class="feld"><span>Deine E-Mail <small>(dorthin kommt der Gutschein)</small></span><input type="email" name="email" id="f-email" autocomplete="email" inputmode="email" enterkeyhint="next" required maxlength="160"></label>
+      <label class="feld"><span>Für wen ist er? <small>(freiwillig, steht auf dem Gutschein)</small></span><input type="text" name="empfaenger" id="f-empf" autocomplete="off" autocapitalize="words" enterkeyhint="next" maxlength="80"></label>
+      <label class="feld"><span>Gruß <small>(freiwillig)</small></span><textarea name="gruss" id="f-gruss" autocomplete="off" enterkeyhint="done" maxlength="240" rows="3"></textarea></label>
+    </div>
+    <div data-schritt="3" hidden>
+      <h3>Alles richtig?</h3>
+      <div class="ueber" id="ueber"></div>
+      <label class="haken"><input type="checkbox" id="f-ok"> <span id="f-ok-text">Ich habe die <a href="#bedingungen" data-schliessen>Gutscheinbedingungen</a> und die <a href="#widerruf" data-schliessen>Widerrufsbelehrung</a> gelesen.</span></label>
+      <p class="zahl-info">Im nächsten Schritt bezahlst du bei Stripe per Karte, Apple Pay oder Google Pay. Ratenkauf ist für Gutscheine nicht möglich.</p>
+    </div>
+    <p class="fehler" id="f-fehler" role="alert"></p>
+  </form>
+  <div class="f-fuss"><div class="summe-z" id="f-summe" hidden></div><button type="button" class="knopf" id="f-weiter">Weiter</button></div>
+</div>
+
+<div class="consent" id="consent" data-consent role="region" aria-label="Einwilligung" hidden>
+  <p>Dürfen wir messen, ob unsere Werbung bei Instagram und Facebook dich hierher gebracht hat? Dafür lädt das Meta-Pixel. <a href="/gutschein-kaufen-datenschutz.html">Mehr</a></p>
+  <div class="k"><button type="button" data-wahl="nein">Nein</button><button type="button" data-wahl="ja">Ja</button></div>
+</div>
+
+<script>
+document.documentElement.classList.add("js");
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var slug = (location.pathname.match(/^\/gutschein-kaufen\/([^/?#]+)/) || [])[1] || new URLSearchParams(location.search).get("s") || "tattoo-fashion-munich";
+  var EURO = function (c) { return (c / 100).toLocaleString("de-DE", { minimumFractionDigits: c % 100 ? 2 : 0, maximumFractionDigits: 2 }) + " €"; };
+  var DATUM = function (iso) { return new Date(iso).toLocaleDateString("de-DE", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Berlin" }); };
+  var esc = function (t) { return String(t == null ? "" : t).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
+  function meldung(t, ms) { var m = $("meldung"); m.textContent = t; m.hidden = !t; if (t && ms) setTimeout(function () { m.hidden = true; }, ms); }
+
+  // ---------- Messung: Meta-Pixel nur mit Ja und nur auf der echten Adresse (nie in der Vorschau), Umami ohne Cookies ----------
+  var PIXEL = "2379676156103158", KEY = "tf-gutschein-consent", echt = location.hostname === "tattoofin.de";
+  var box = $("consent");
+  function lies() { try { return localStorage.getItem(KEY); } catch (e) { return null; } }
+  function setz(v) { try { localStorage.setItem(KEY, v); } catch (e) {} }
+  function hoehe() { document.documentElement.style.setProperty("--banner", box.hidden ? "0px" : box.offsetHeight + "px"); }
+  function pixel() {
+    if (window.fbq || !echt) return;
+    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+    fbq("init", PIXEL); fbq("track", "PageView");
+  }
+  function zeig() { box.hidden = false; hoehe(); }
+  var w = lies();
+  if (w === "ja") pixel(); else if (w !== "nein") zeig();
+  box.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-wahl]"); if (!b) return;
+    setz(b.dataset.wahl); box.hidden = true; hoehe();
+    if (b.dataset.wahl === "ja") pixel();
+  });
+  $("consent-auf").addEventListener("click", function () { try { localStorage.removeItem(KEY); } catch (e) {} zeig(); });
+  addEventListener("resize", hoehe);
+  function ev(name, daten) { if (window.umami) umami.track(name, daten || {}); }
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest("[data-ev]"); if (!a) return;
+    ev(a.dataset.ev, { ort: a.dataset.ort || "" });
+    if (window.fbq && a.dataset.ev === "whatsapp") fbq("track", "Contact", { content_name: "gutschein-whatsapp" });
+    if (window.fbq && a.dataset.ev === "anruf") fbq("track", "Contact", { content_name: "gutschein-anruf" });
+  });
+
+  // ---------- Daten ----------
+  var D = null, auswahl = null, schritt = 1;
+  var params = new URLSearchParams(location.search);
+  if (params.get("abbruch")) {
+    fetch("/api/gutschein-shop", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ abbruch: params.get("abbruch") }) }).then(function () { laden(); }).catch(function () {});
+    meldung("Kauf abgebrochen. Es wurde nichts bezahlt.", 6000);
+    history.replaceState(null, "", location.pathname);
+  }
+
+  function laden() {
+    return fetch("/api/gutschein-shop?s=" + encodeURIComponent(slug), { cache: "no-store" }).then(function (r) { return r.json().then(function (d) { if (!r.ok) throw new Error(d.error || "Fehler"); return d; }); })
+      .then(function (d) { D = d; zeichnen(); }).catch(function (err) { meldung(err.message || "Die Gutscheine konnten nicht geladen werden. Bitte lade die Seite neu."); });
+  }
+
+  function zeichnen() {
+    var sh = D.shop;
+    if (sh.vorschau && !document.querySelector(".vorschau-schild") && !/vorschau/.test(location.hostname) && !document.querySelector('a[href="/vorschau.html"]')) document.body.insertAdjacentHTML("afterbegin", '<div class="vorschau-schild">Vorschau · noch nicht freigeschaltet · nichts wird echt bezahlt</div>');
+    var zu = !sh.offen || !D.studio.aktiv;
+    var zeilen = sh.aktionen.map(function (a) {
+      var weg = a.verfuegbar <= 0, text = a.ausverkauft ? "ausverkauft" : weg ? "gerade in der Kasse" : "<b>" + a.verfuegbar + "</b> von " + a.stueck;
+      return '<button type="button" class="zeile da" data-wahl="' + a.id + '"' + (weg || zu || !sh.aktionOffen ? " disabled" : "") + ' aria-label="Nummer ' + a.nr + ": Wert " + EURO(a.wertCent) + ", du zahlst " + EURO(a.preisCent) + ", " + (a.ausverkauft ? "ausverkauft" : weg ? "gerade in der Kasse" : "noch " + a.verfuegbar + " von " + a.stueck) + '">' +
+        '<span class="nr">Nr. ' + a.nr + '</span><span class="wert">' + EURO(a.wertCent) + '</span><span class="preis">' + EURO(a.preisCent) + '</span><span class="rest">' + text + "</span></button>";
+    }).join("");
+    var bogen = $("bogen"); bogen.querySelectorAll("button.zeile").forEach(function (b) { b.remove(); }); bogen.insertAdjacentHTML("beforeend", zeilen);
+    $("gilt").innerHTML = "<b>Voller Wert bis " + esc(DATUM(sh.bonusBis)) + ".</b> Danach verfällt nur der Bonus: Den bezahlten Betrag rechnet das Studio weiter voll an, bis " + esc(DATUM(sh.gueltigBis)) + ".";
+    $("frei-kaufen").textContent = "Wertgutschein von " + EURO(sh.frei.minCent) + " bis " + EURO(sh.frei.maxCent);
+    var alleWeg = sh.aktionen.every(function (a) { return a.verfuegbar <= 0; });
+    $("hero-klein").textContent = zu ? (sh.grund || "Online-Kauf gerade nicht möglich.") : !sh.aktionOffen ? sh.aktionGrund + " Wertgutscheine gibt es weiter." : alleWeg ? "Alle Aktions-Gutscheine sind weg. Wertgutscheine gibt es weiter." : "Sofort als PDF per E-Mail. Solange verfügbar" + (sh.aktionBis ? ", bis " + DATUM(sh.aktionBis).replace(/ \d{4}$/, "") : "") + ".";
+    ["hero-kaufen", "studio-kaufen", "frei-kaufen"].forEach(function (id) { $(id).disabled = zu; });
+    $("bed-liste").innerHTML = sh.bedingungen.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("");
+    $("widerruf-text").innerHTML = sh.widerruf.text.map(function (t) { return "<p>" + esc(t) + "</p>"; }).join("") + "<p>" + esc(sh.widerruf.formular) + "</p>";
+    var a = sh.anbieter;
+    $("anbieter-text").innerHTML = a ? "<p>" + [a.name, a.vertreten ? "vertreten durch " + a.vertreten : "", a.strasse, [a.plz, a.ort].join(" "), a.email ? "E-Mail: " + a.email : "", a.telefon ? "Telefon: " + a.telefon : "", a.register, a.ustid ? "USt-IdNr.: " + a.ustid : ""].filter(Boolean).map(esc).join("<br>") + "</p>"
+      : "<p>Die Angaben zum Verkäufer werden vor dem Start ergänzt.</p>";
+    if (!$("funnel").hidden) wahlZeichnen();
+  }
+
+  // ---------- Funnel ----------
+  var funnel = $("funnel"), form = $("f-form");
+  function oeffnen(vorwahl) {
+    if (!D) return;
+    auswahl = vorwahl || auswahl;
+    wahlZeichnen();
+    funnel.hidden = false; document.body.classList.add("zu");
+    zeige(vorwahl ? 2 : 1);
+    ev("funnel-auf", { wahl: vorwahl || "" });
+  }
+  function schliessen() { funnel.hidden = true; document.body.classList.remove("zu"); }
+  function wahlZeichnen() {
+    var sh = D.shop, h = "";
+    sh.aktionen.forEach(function (a) {
+      var weg = a.verfuegbar <= 0 || !sh.aktionOffen;
+      h += '<label class="' + (weg ? "weg" : "") + '"><input type="radio" name="wahl" value="' + a.id + '"' + (weg ? " disabled" : "") + (auswahl === a.id && !weg ? " checked" : "") + '>' +
+        '<span class="w-t"><b>Nr. ' + a.nr + " · " + EURO(a.wertCent) + "</b><small>" + (a.ausverkauft ? "ausverkauft" : a.verfuegbar <= 0 ? "gerade in der Kasse" : !sh.aktionOffen ? esc(sh.aktionGrund) : "noch " + a.verfuegbar + " von " + a.stueck) + "</small></span>" +
+        '<span class="w-r">' + EURO(a.preisCent) + "<small>du zahlst</small></span></label>";
+    });
+    h += '<label><input type="radio" name="wahl" value="frei"' + (auswahl === "frei" ? " checked" : "") + '><span class="w-t"><b>Eigener Betrag</b><small>Wertgutschein, ' + EURO(sh.frei.minCent) + " bis " + EURO(sh.frei.maxCent) + "</small></span><span></span>" +
+      '<span class="frei-feld"><span class="feld"><span class="betrag"><input type="text" inputmode="numeric" id="f-betrag" aria-label="Betrag in Euro" placeholder="100" autocomplete="transaction-amount" enterkeyhint="done"> €</span></span>' +
+      '<span class="chips">' + sh.frei.vorschlaege.map(function (c) { return '<button type="button" data-betrag="' + c / 100 + '">' + EURO(c) + "</button>"; }).join("") + "</span></span></label>";
+    var alt = $("f-betrag") ? $("f-betrag").value : "";
+    $("wahl").innerHTML = h;
+    if (alt) $("f-betrag").value = alt;
+  }
+  $("wahl").addEventListener("change", function (e) { if (e.target.name === "wahl") { auswahl = e.target.value; $("f-fehler").textContent = ""; if (auswahl === "frei") setTimeout(function () { $("f-betrag").focus(); }, 30); } });
+  $("wahl").addEventListener("click", function (e) { var c = e.target.closest("[data-betrag]"); if (c) { e.preventDefault(); $("f-betrag").value = c.dataset.betrag; auswahl = "frei"; form.querySelector("input[value=frei]").checked = true; } });
+  function betragCent() { var v = String(($("f-betrag") || {}).value || "").replace(/[\s€.]/g, "").replace(",", "."); var n = Number(v); return isFinite(n) && v ? Math.round(n * 100) : 0; }
+  function gewaehlt() {
+    var sh = D.shop;
+    if (auswahl === "frei") { var c = betragCent(); return { frei: true, wertCent: c, preisCent: c, titel: "Wertgutschein" }; }
+    var a = sh.aktionen.filter(function (x) { return x.id === auswahl; })[0];
+    return a ? { aktion: a, wertCent: a.wertCent, preisCent: a.preisCent, titel: "Aktions-Gutschein Nr. " + a.nr } : null;
+  }
+  function zeige(n) {
+    schritt = n;
+    form.querySelectorAll("[data-schritt]").forEach(function (d) { d.hidden = Number(d.dataset.schritt) !== n; });
+    $("f-schritt").textContent = "Schritt " + n + " von 3";
+    $("f-zurueck").style.visibility = n > 1 ? "visible" : "hidden";
+    $("f-weiter").textContent = n === 3 ? "Weiter zur Zahlung" : "Weiter";
+    $("f-fehler").textContent = "";
+    var g = D && gewaehlt();
+    $("f-summe").hidden = !(n > 1 && g);
+    if (g) $("f-summe").innerHTML = "<span>" + esc(g.titel) + " · Wert " + EURO(g.wertCent) + "</span><b>" + EURO(g.preisCent) + "</b>";
+    if (n === 3) ueberZeichnen();
+    form.scrollTop = 0;
+    if (n === 2) setTimeout(function () { if (!$("f-name").value) $("f-name").focus(); }, 60);
+  }
+  function ueberZeichnen() {
+    var g = gewaehlt(), sh = D.shop, empf = $("f-empf").value.trim();
+    var gilt = g.aktion ? "Voller Wert " + EURO(g.wertCent) + " bis " + DATUM(sh.bonusBis) + ". Danach gilt der bezahlte Betrag von " + EURO(g.preisCent) + " bis " + DATUM(sh.gueltigBis) + "."
+      : "Gültig bis " + DATUM(sh.gueltigBis) + ".";
+    $("ueber").innerHTML = '<dl><dt>Gutschein</dt><dd>' + esc(g.titel) + "</dd><dt>Gutscheinwert</dt><dd>" + EURO(g.wertCent) + "</dd>" +
+      (empf ? "<dt>Für</dt><dd>" + esc(empf) + "</dd>" : "") + "<dt>An</dt><dd>" + esc($("f-email").value.trim()) + "</dd>" +
+      '<dt>Du zahlst</dt><dd class="gross">' + EURO(g.preisCent) + "</dd></dl><p>" + esc(gilt) + " Einlösbar für alle Leistungen bei " + esc(D.studio.firma) + ". Endpreis inkl. Umsatzsteuer, keine weiteren Kosten.</p>";
+  }
+  function pruefen() {
+    var f = $("f-fehler"), sh = D.shop;
+    if (schritt === 1) {
+      if (!auswahl) return (f.textContent = "Bitte wähle einen Gutschein aus."), false;
+      if (auswahl === "frei") { var c = betragCent(); if (!(c >= sh.frei.minCent && c <= sh.frei.maxCent && c % 100 === 0)) { f.textContent = "Bitte einen Betrag in vollen Euro zwischen " + EURO(sh.frei.minCent) + " und " + EURO(sh.frei.maxCent) + " eingeben."; $("f-betrag").focus(); return false; } }
+    }
+    if (schritt === 2) {
+      if (!$("f-name").value.trim()) return (f.textContent = "Bitte gib deinen Namen ein.", $("f-name").focus()), false;
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test($("f-email").value.trim())) return (f.textContent = "Bitte gib eine gültige E-Mail-Adresse ein. Dorthin kommt der Gutschein.", $("f-email").focus()), false;
+    }
+    if (schritt === 3 && !$("f-ok").checked) return (f.textContent = "Bitte bestätige, dass du die Gutscheinbedingungen und die Widerrufsbelehrung gelesen hast."), false;
+    return true;
+  }
+  $("f-weiter").addEventListener("click", function () {
+    if (!pruefen()) return;
+    if (schritt < 3) { ev("funnel-schritt-" + (schritt + 1)); return zeige(schritt + 1); }
+    var btn = $("f-weiter"), g = gewaehlt();
+    btn.disabled = true; btn.textContent = "Einen Moment …";
+    fetch("/api/gutschein-shop", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({
+      s: slug, auswahl: auswahl, betrag: g.frei ? String(g.preisCent / 100) : undefined, kunde: $("f-name").value.trim(), email: $("f-email").value.trim(),
+      empfaenger: $("f-empf").value.trim(), nachricht: $("f-gruss").value.trim(), inhaltOk: true,
+    }) }).then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); }).then(function (x) {
+      if (!x.ok || !x.d.url) {
+        $("f-fehler").textContent = x.d.error || "Das hat nicht geklappt. Bitte versuch es noch einmal.";
+        btn.disabled = false; btn.textContent = "Weiter zur Zahlung";
+        if (x.d.code === "ausverkauft") { laden(); zeige(1); $("f-fehler").textContent = x.d.error; }
+        return;
+      }
+      ev("kasse", { wahl: auswahl });
+      if (window.fbq) fbq("track", "InitiateCheckout", { value: g.preisCent / 100, currency: "EUR", content_name: g.titel });
+      location.href = x.d.url;
+    }).catch(function () { $("f-fehler").textContent = "Keine Verbindung. Bitte versuch es noch einmal."; btn.disabled = false; btn.textContent = "Weiter zur Zahlung"; });
+  });
+  form.addEventListener("submit", function (e) { e.preventDefault(); $("f-weiter").click(); });
+  form.addEventListener("keydown", function (e) { if (e.key === "Enter" && e.target.tagName === "INPUT" && e.target.type !== "checkbox") { e.preventDefault(); var felder = [].slice.call(form.querySelectorAll("[data-schritt]:not([hidden]) input:not([type=radio]):not([type=checkbox]), [data-schritt]:not([hidden]) textarea")); var i = felder.indexOf(e.target); if (i >= 0 && i < felder.length - 1) felder[i + 1].focus(); else $("f-weiter").click(); } });
+  $("f-zurueck").addEventListener("click", function () { if (schritt > 1) zeige(schritt - 1); });
+  $("f-zu").addEventListener("click", schliessen);
+  funnel.addEventListener("keydown", function (e) { if (e.key === "Escape") schliessen(); });
+  funnel.addEventListener("click", function (e) { if (e.target.closest("[data-schliessen]")) { schliessen(); var d = document.querySelector(e.target.getAttribute("href")); if (d && d.tagName === "DETAILS") d.open = true; } });
+  window.addEventListener("pageshow", function (e) { if (e.persisted) { var b = $("f-weiter"); b.disabled = false; if (schritt === 3) b.textContent = "Weiter zur Zahlung"; laden(); } });
+
+  $("hero-kaufen").addEventListener("click", function () { oeffnen(); });
+  $("studio-kaufen").addEventListener("click", function () { oeffnen(); });
+  $("frei-kaufen").addEventListener("click", function () { auswahl = "frei"; oeffnen(); zeige(1); setTimeout(function () { var b = $("f-betrag"); if (b) b.focus(); }, 60); });
+  $("bogen").addEventListener("click", function (e) { var z = e.target.closest("button.zeile[data-wahl]"); if (z && !z.disabled) { ev("kaufen-start", { ort: "liste", wahl: z.dataset.wahl }); oeffnen(z.dataset.wahl); } });
+  $("impressum-link").addEventListener("click", function () { $("anbieter").open = true; });
+  $("widerruf-link").addEventListener("click", function () { $("widerruf").open = true; });
+
+  laden();
+  var s50 = 0, s90 = 0;
+  addEventListener("scroll", function () { var p = (scrollY + innerHeight) / document.body.scrollHeight;
+    if (!s50 && p > .5) { s50 = 1; ev("scroll-50"); } if (!s90 && p > .9) { s90 = 1; ev("scroll-90"); } }, { passive: true });
+})();
+</script>
+<script defer src="https://cloud.umami.is/script.js" data-website-id="507b740f-264e-4ba1-a7d0-9dbe49db75af" data-domains="tattoofin.de"></script>
+</body>
+</html>
