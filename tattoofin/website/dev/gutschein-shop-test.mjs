@@ -166,6 +166,41 @@ check(!d.shop.aktionOffen && nach.status === 409 && fr2.status === 200, "Ab 25.1
 await post({ abbruch: fr2.zahlung });
 process.env.TF_JETZT = "2026-11-23T21:05:00+01:00";
 
+console.log("Sicherheit: alter Link, Zurück-Taste, fremde Adresse");
+{
+  // Abgebrochene Shop-Bestellung (Nr. 3 von oben) über den normalen Zahlungslink: gesperrt
+  const alt = await fetch(BASE + "/api/pay", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ z: gew[0].zahlung, inhaltOk: true }) });
+  check(alt.status === 410, "Abgebrochener Aktions-Gutschein lässt sich über zahlung.html?z= NICHT nachkaufen (410)", alt.status);
+  const offen = await kauf("nr2", "zurueck@example.com");
+  const alt2 = await fetch(BASE + "/api/pay", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ z: offen.zahlung, inhaltOk: true }) });
+  check(alt2.status === 410, "Auch eine offene Shop-Kasse nicht über den normalen Link (keine zweite Kasse)", alt2.status);
+  // Zurück-Taste aus Stripe (ohne Abbrechen-Link): neuer Versuch mit derselben E-Mail beendet die alte Kasse und geht durch
+  const neu = await kauf("nr4", "zurueck@example.com");
+  st = await mockState();
+  const zAlt = await getZahlung("st_tfm_test", offen.zahlung);
+  check(neu.status === 200 && zAlt.status === "abgebrochen" && Object.values(st.sessions).find((x) => x.client_reference_id === offen.zahlung).status === "expired", "Zurück-Taste: neuer Kauf möglich, alte Kasse beendet und freigegeben", neu);
+  await post({ abbruch: neu.zahlung });
+  check((await fetch(BASE + "/gutschein-kaufen/anderes-studio")).status === 404, "/gutschein-kaufen/<anderes Studio> → 404 (keine TFM-Seite)");
+}
+
+console.log("Teil-Einlösung (Restwert bleibt)");
+{
+  const { sessionCookie } = await import("../netlify/functions/_lib/auth.mjs");
+  const ck = sessionCookie("st_tfm_test").split(";")[0];
+  const ein = (zid, b, method = "POST") => fetch(`${BASE}/api/portal/gutschein/${zid}/einloesen`, { method, headers: { "content-type": "application/json", cookie: ck }, body: method === "POST" ? JSON.stringify(b) : undefined }).then(async (r) => ({ ...(await r.json()), http: r.status }));
+  let r1 = await ein(z.id, { betrag: "200" });
+  check(r1.http === 200 && r1.gutschein.aktuellerWertCent === 30000 && r1.gutschein.status === "gueltig", "Nr. 4 (Wert 500 €): 200 € eingelöst → noch 300 €, weiter gültig", r1);
+  const zt = await getZahlung("st_tfm_test", z.id);
+  check(gs.aktuellerWertCent(zt, new Date("2027-04-01T08:00:00Z")) === 30000, "Nach Bonus-Frist: eingelöster Betrag zählt zuerst gegen den Bonus → noch 300 € (375 − (200 − 125))");
+  check((await ein(z.id, { betrag: "400" })).http === 409, "Mehr als der Restwert: abgewiesen");
+  const gat = await get("/api/gutschein?t=" + z.gutschein.token);
+  check(gat.gutschein.restCent === 30000, "Online-Ansicht des Käufers zeigt Restwert 300 €");
+  r1 = await ein(z.id, {});
+  check(r1.http === 200 && r1.gutschein.status === "eingeloest" && r1.gutschein.aktuellerWertCent === 0, "Ohne Betrag (wie iPhone-App): Rest ganz eingelöst");
+  r1 = await ein(z.id, null, "DELETE");
+  check(r1.http === 200 && r1.gutschein.status === "gueltig" && r1.gutschein.aktuellerWertCent === 30000, "Letzte Einlösung zurücknehmen → wieder 300 € offen");
+}
+
 console.log("Seite im Browser (Handy)");
 const browser = await chromium.launch();
 const errors = [];

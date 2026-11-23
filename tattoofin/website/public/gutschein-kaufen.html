@@ -7,13 +7,14 @@
 <meta name="description" content="Weihnachtsgutscheine von Tattoo Fashion München: bis zu 500 € unter ihrem Wert. Online kaufen, sofort als PDF per E-Mail.">
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#0B0B0B">
-<meta property="og:title" content="Mehr Tattoo, als du bezahlst – Gutscheine von Tattoo Fashion München">
-<meta property="og:description" content="Bis zu 500 € unter Wert. Online kaufen, sofort als PDF.">
-<meta property="og:image" content="/assets/gs-shop/tfm/og.jpg">
+<meta property="og:title" content="Weihnachts-Aktion: Tattoo-Gutscheine unter Wert · Tattoo Fashion München">
+<meta property="og:description" content="Bis zu 500 € unter Wert. Nur bis 24.12., 16 Uhr. Online kaufen, sofort als PDF.">
+<meta property="og:image" content="https://tattoofin.de/assets/gs-shop/tfm/og.jpg">
+<meta property="og:url" content="https://tattoofin.de/gutschein-kaufen/tattoo-fashion-munich">
 <link rel="icon" href="/assets/gs-shop/tfm/favicon.png">
 <link rel="preload" as="font" type="font/woff2" href="/assets/gs-shop/tfm/oswald-latin.woff2" crossorigin>
 <link rel="preload" as="font" type="font/woff2" href="/assets/gs-shop/tfm/inter-latin.woff2" crossorigin>
-<link rel="preload" as="image" href="/assets/gs-shop/tfm/hero-tfm.jpg">
+<link rel="preload" as="image" href="/assets/gs-shop/tfm/logo.png">
 <!-- Meta-Pixel Tattoo Fashion München (wie die übrigen TF-Landingpages; nur auf tattoofin.de, nie in Vorschau/Test) -->
 <script>
 if (location.hostname === "tattoofin.de") {
@@ -45,9 +46,17 @@ a{color:inherit}
 .btn.full{width:100%}
 .top{position:fixed;top:0;left:0;right:0;z-index:40;display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:linear-gradient(180deg,rgba(11,11,11,.85),rgba(11,11,11,0));transition:background .3s}
 .top.solid{background:rgba(11,11,11,.93);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
-.top img{height:40px;width:auto}
+.top img{height:40px;width:auto;transition:opacity .3s}
+.top:not(.solid) img{opacity:0}
 .top .eyebrow{font-size:10.5px;padding:8px 12px}
 .hero{position:relative;height:100svh;display:flex;align-items:flex-end;overflow:hidden}
+/* Hero-Hintergrund: großes TF-Logo mit goldenem Schimmer (statt Fotos, Domenic 23.11.) */
+.logo-bg{position:absolute;inset:0;height:62%;display:flex;align-items:flex-start;justify-content:center;padding-top:calc(76px + env(safe-area-inset-top));background:radial-gradient(60% 55% at 50% 48%,rgba(200,163,90,.22),rgba(11,11,11,0) 70%),radial-gradient(120% 90% at 50% 0%,#1d170d,var(--ink) 75%)}
+.logo-bg img{width:min(72vw,440px);height:auto;filter:drop-shadow(0 10px 40px rgba(200,163,90,.35));animation:schimmer 6s ease-in-out infinite}
+@keyframes schimmer{50%{filter:drop-shadow(0 10px 56px rgba(232,205,146,.55))}}
+@media(prefers-reduced-motion:reduce){.logo-bg img{animation:none}}
+@media(max-height:760px){.logo-bg{padding-top:calc(58px + env(safe-area-inset-top))}.logo-bg img{width:min(46vw,260px)}}
+@media(max-height:560px){.logo-bg{display:none}}
 .hero .slides{position:absolute;inset:0;height:80%}
 .hero .slides img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1.08);transition:opacity 1.4s ease,transform 7s linear}
 .hero .slides img.on{opacity:1;transform:scale(1)}
@@ -216,16 +225,14 @@ textarea{min-height:80px;resize:vertical}
 <div class="meldung" id="meldung" role="status" hidden></div>
 
 <header class="top" id="top">
-  <img src="/assets/gs-shop/tfm/logo.png" alt="Tattoo Fashion München" width="74" height="40">
+  <img src="/assets/gs-shop/tfm/logo.png" alt="Tattoo Fashion München" width="74" height="40" id="top-logo">
   <span class="eyebrow"><span class="dot rot"></span>Nur bis 24.12.</span>
 </header>
 
 <main>
   <section class="hero" data-hero style="padding:0">
     <div class="flocken" aria-hidden="true" id="flocken"></div>
-    <div class="slides" aria-hidden="true">
-      <img class="on" src="/assets/gs-shop/tfm/hero-tfm.jpg" alt=""><img src="/assets/gs-shop/tfm/hero-800.webp" alt="" loading="lazy"><img src="/assets/gs-shop/tfm/w-realismus-lion.jpg" alt="" loading="lazy">
-    </div>
+    <div class="logo-bg" aria-hidden="true"><img src="/assets/gs-shop/tfm/logo.png" alt="" width="480" height="261"></div>
     <div class="in">
       <span class="eyebrow"><span class="dot rot"></span>Weihnachts-Aktion · München</span>
       <h1 class="h" data-hero-pflicht="immer"><span>Mehr Tattoo</span><span class="g">unterm Baum.</span></h1>
@@ -422,8 +429,6 @@ document.documentElement.classList.add("js");
 
   var top = $("top"), sticky = $("sticky"), hero = document.querySelector(".hero"), funnel = $("funnel"), form = $("f-form");
   addEventListener("scroll", function () { top.classList.toggle("solid", scrollY > 40); sticky.classList.toggle("show", scrollY > hero.offsetHeight * .8 && funnel.hidden); }, { passive: true });
-  var slides = document.querySelectorAll(".slides img"), si = 0;
-  if (!matchMedia("(prefers-reduced-motion: reduce)").matches) setInterval(function () { slides[si].classList.remove("on"); si = (si + 1) % slides.length; slides[si].classList.add("on"); }, 5000);
   var io = "IntersectionObserver" in window ? new IntersectionObserver(function (es) { es.forEach(function (x) { if (x.isIntersecting) { x.target.classList.add("in"); io.unobserve(x.target); } }); }, { threshold: .12 }) : null;
   document.querySelectorAll(".reveal").forEach(function (el) { io ? io.observe(el) : el.classList.add("in"); });
   var bilder = ["blackwork-eagle", "color-phoenix", "realismus-lion", "fineline-floral", "blackwork-skull", "color-palm", "realismus-owl", "blackwork-snake", "fineline-mandala", "realismus-cross", "color-snake-oranges", "blackwork-geoface"];

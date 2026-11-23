@@ -55,7 +55,7 @@ export async function startDev({ port = PORT, mock = !process.env.STRIPE_SECRET_
       return;
     }
     // Umschreibungen wie in netlify.toml
-    const pfad = /^\/zahlen\/[^/]+$/.test(url.pathname) ? "/zahlen.html" : /^\/gutschein-kaufen\/[^/]+$/.test(url.pathname) ? "/gutschein-kaufen.html" : url.pathname === "/app" ? "/app.html" : url.pathname;
+    const pfad = /^\/zahlen\/[^/]+$/.test(url.pathname) ? "/zahlen.html" : /^\/gutschein-kaufen\/tattoo-fashion-munich$/.test(url.pathname) ? "/gutschein-kaufen.html" : url.pathname === "/app" ? "/app.html" : url.pathname;
     let p = path.join(root, "public", decodeURIComponent(pfad));
     if (url.pathname.endsWith("/")) p = path.join(p, "index.html");
     try {

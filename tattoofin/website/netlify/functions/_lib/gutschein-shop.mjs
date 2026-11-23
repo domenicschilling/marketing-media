@@ -132,6 +132,13 @@ async function zaehlen(s, c, { email, ip }) {
   return { kaeufer, offenIp };
 }
 
+// Offene (reservierte, nicht abgelaufene) Kassen dieser E-Mail – z. B. jemand kam mit der Zurück-Taste aus Stripe zurück
+export async function offeneKassen(s, c, email) {
+  const n = normEmail(email), ms = jetzt().getTime(), out = [];
+  for (const a of c.aktionen) for (const t of await tickets(s.id, a.id)) if (t.status === "reserviert" && aktiv(t, ms) && t.email === n) out.push(t);
+  return out;
+}
+
 export async function reservieren(s, c, a, { zahlungId, email, ip = "" }) {
   const n = await zaehlen(s, c, { email, ip });
   if (n.offenIp >= maxOffenJeIp()) throw new ShopFehler("Du hast schon mehrere Gutscheine in der Kasse. Bitte schließ erst einen Kauf ab oder warte ein paar Minuten.", 429, "zu_viele");

@@ -285,6 +285,8 @@ async function zahlartFehlt(studio, z, e) {
 // Kunde als Stripe-Customer mit Name + E-Mail (vorausgefüllt), Rechnungsadresse und Telefonnummer verpflichtend.
 export async function checkoutFuer(studio, z, { nurKarte = false, extra = null, branding: brandingWunsch = null } = {}) {
   if (!darfKassieren(studio)) throw new HttpError(409, "Dieses Studio kann gerade keine Zahlungen annehmen.");
+  // Shop-Bestellungen nur aus dem Shop (mit Reservierung), nie über andere Wege nachkaufbar
+  if (z.gutschein?.shop && !extra) throw new HttpError(410, "Diese Bestellung ist nicht mehr offen. Bitte kauf den Gutschein neu im Gutschein-Shop des Studios.");
   const plattform = plattformKassiert(studio);
   const direkt = direktCharge(studio);
   const fee = plattformgebuehr(z.betragCent, studio);
@@ -396,6 +398,7 @@ export async function klarnaVersuch(studio, z) {
 // Klarna leitet zur Bestätigung kurz zu Klarna weiter und dann zurück auf /bezahlt.html (das ist bei Klarna immer so).
 export async function bezahlfeldFuer(studio, z) {
   if (!darfKassieren(studio)) throw new HttpError(409, "Dieses Studio kann gerade keine Zahlungen annehmen.");
+  if (z.gutschein?.shop) throw new HttpError(410, "Diese Bestellung ist nicht mehr offen. Bitte kauf den Gutschein neu im Gutschein-Shop des Studios.");
   const plattform = plattformKassiert(studio);
   const direkt = direktCharge(studio);
   const fee = plattformgebuehr(z.betragCent, studio);

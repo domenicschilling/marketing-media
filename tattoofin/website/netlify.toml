@@ -194,7 +194,7 @@
   status = 200
 # Gutschein-Shop eines Studios (23.11.2026, nur Tattoo Fashion Munich, siehe netlify/functions/_lib/gutschein-shop.mjs)
 [[redirects]]
-  from = "/gutschein-kaufen/*"
+  from = "/gutschein-kaufen/tattoo-fashion-munich"
   to = "/gutschein-kaufen.html"
   status = 200
 # Studio-Dashboard (Web-App)

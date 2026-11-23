@@ -56,7 +56,7 @@ import { randomBytes } from "node:crypto";
 import { KLARNA_NAME, PFLICHTSATZ_STUDIO, gutscheinWort, GUTSCHEIN_HINWEIS } from "./_lib/klarna-texte.mjs";
 import { materialLinks, werbungMitKlarna, AUFSTELLER_ENTFALLEN, aufstellerFuerPruefApp } from "./_lib/werbung.mjs";
 import { nachweisPdf } from "./_lib/nachweis-pdf.mjs";
-import { gutscheinStatus, gutscheinPdf, gutscheinSenden, normCode, gutscheinPerToken } from "./_lib/gutschein.mjs";
+import { gutscheinStatus, gutscheinPdf, gutscheinSenden, normCode, gutscheinPerToken, aktuellerWertCent } from "./_lib/gutschein.mjs";
 
 // Extras (Zusatzangebote): nur Anzeige + Anfrage, keine Abrechnung. Preise sind Vorschläge.
 export const EXTRAS = [
@@ -485,10 +485,20 @@ export default handler(async (req, context) => {
       if (req.method === "POST") {
         if (st === "eingeloest") return fail("Dieser Gutschein ist schon eingelöst.", 409);
         if (st !== "gueltig" && st !== "abgelaufen") return fail("Nur bezahlte Gutscheine können eingelöst werden.", 409);
-        z.gutschein.eingeloestAm = now(); z.gutschein.einloeseNotiz = clean((await body(req)).notiz, 200);
+        // Teil-Einlösung (seit 23.11.2026): { betrag } kleiner als der Restwert → Teil, Rest bleibt. Ohne Betrag (z. B. iPhone-App) = ganz einlösen.
+        const b = await body(req), notiz = clean(b.notiz, 200), rest = aktuellerWertCent(z);
+        const teil = b.betrag !== undefined && b.betrag !== "" ? parseBetrag(b.betrag) : NaN;
+        if (!Number.isNaN(teil) && !(teil > 0)) return fail("Bitte einen Betrag über 0 € eingeben.");
+        if (!Number.isNaN(teil) && teil > rest) return fail(`Auf dem Gutschein sind nur noch ${euro(rest)} einlösbar.`, 409);
+        const cent = Number.isNaN(teil) ? rest : teil;
+        z.gutschein.teile = [...(z.gutschein.teile || []), { am: now(), cent, notiz }];
+        if (cent >= rest) { z.gutschein.eingeloestAm = now(); z.gutschein.einloeseNotiz = notiz; }
       } else if (req.method === "DELETE") {
-        if (st !== "eingeloest") return fail("Dieser Gutschein ist nicht eingelöst.", 409);
-        z.gutschein.einloesungZurueck = [...(z.gutschein.einloesungZurueck || []), { am: now(), war: z.gutschein.eingeloestAm }];
+        // Letzte Einlösung zurücknehmen (Versehen)
+        const teile = z.gutschein.teile || [];
+        if (st !== "eingeloest" && !teile.length) return fail("Dieser Gutschein ist nicht eingelöst.", 409);
+        z.gutschein.einloesungZurueck = [...(z.gutschein.einloesungZurueck || []), { am: now(), war: z.gutschein.eingeloestAm || null, teil: teile[teile.length - 1] || null }];
+        if (teile.length) z.gutschein.teile = teile.slice(0, -1);
         delete z.gutschein.eingeloestAm; delete z.gutschein.einloeseNotiz;
       } else return fail("Methode nicht erlaubt", 405);
       await saveZahlung(z);

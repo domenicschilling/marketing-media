@@ -10,7 +10,7 @@ import { studioBy, zahlungBy, saveZahlung, getStudio, saveStudio, log } from "./
 import { checkoutFuer, darfKassieren, oeffentlicheAdresse } from "./_lib/domain.mjs";
 import { stripe } from "./_lib/stripe.mjs";
 import { brandingOeffentlich } from "./_lib/branding.mjs";
-import { SHOPS, shopFuer, shopZustand, shopOeffentlich, reservieren, reservierungFreigeben, bonusBisIso, ShopFehler, KASSE_MINUTEN } from "./_lib/gutschein-shop.mjs";
+import { SHOPS, shopFuer, shopZustand, shopOeffentlich, offeneKassen, reservieren, reservierungFreigeben, bonusBisIso, ShopFehler, KASSE_MINUTEN } from "./_lib/gutschein-shop.mjs";
 import { bestaetigen } from "./pay.mjs";
 
 const NICHT_DA = "Diesen Gutschein-Shop gibt es nicht.";
@@ -90,6 +90,17 @@ export default handler(async (req, context) => {
     const a = c.aktionen.find((x) => x.id === b.auswahl);
     if (!a) return fail("Bitte wähle einen Gutschein aus.");
     if (!zustand.aktionOffen) return fail(zustand.aktionGrund || "Die Aktions-Gutscheine gibt es gerade nicht.", 409);
+    // Wer mit der Zurück-Taste aus der Kasse kommt, hat noch eine offene Kasse: die alte beenden und freigeben, sonst wäre er
+    // (ein Aktions-Gutschein pro E-Mail) 30 Minuten gesperrt. Ist sie inzwischen bezahlt, bleibt sie (Stripe lehnt das Beenden ab).
+    for (const t of await offeneKassen(s, c, email)) {
+      const alt = await zahlungBy("zahlung", t.zahlungId);
+      if (!alt || alt.status !== "offen") continue;
+      try {
+        if (alt.checkoutSessionId) await stripe("POST", `/checkout/sessions/${alt.checkoutSessionId}/expire`, {}, alt.abwicklung === "plattform" ? {} : { account: s.stripe?.accountId });
+        await reservierungFreigeben(alt, "neuer-versuch");
+        alt.status = "abgebrochen"; alt.abgebrochenAm = now(); await saveZahlung(alt);
+      } catch (e) { console.error("[gutschein-shop] alte Kasse nicht beendet:", e.message); }
+    }
     const ipHash = crypto.createHash("sha256").update(String(clientIp(req, context)) + CFG.siteUrl).digest("hex").slice(0, 16);
     let res;
     try { res = await reservieren(s, c, a, { zahlungId: zid, email, ip: ipHash }); }

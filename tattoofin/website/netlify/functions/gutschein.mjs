@@ -18,7 +18,7 @@ export default handler(async (req) => {
   return json({
     studio: { firma: s.firma, ...oeffentlicheAdresse(s), branding: brandingOeffentlich(s) },
     gutschein: { code: g.code, betragCent: z.betragCent, wertCent: gutscheinWertCent(z), bezahltCent: z.betragCent, bonusCent: g.bonusCent || 0, bonusBis: g.bonusBis || null,
-      bonusAktiv: bonusAktiv(g), aktuellerWertCent: aktuellerWertCent(z), aktion: g.aktion ? { nr: g.aktion.nr } : null, empfaenger: g.empfaenger || "", nachricht: g.nachricht || "", ausgestelltAm: g.ausgestelltAm, gueltigBis: g.gueltigBis, status: gutscheinStatus(z), eingeloestAm: g.eingeloestAm || null },
+      bonusAktiv: bonusAktiv(g), aktuellerWertCent: aktuellerWertCent(z), restCent: aktuellerWertCent(z), eingeloestTeile: (g.teile || []).length, aktion: g.aktion ? { nr: g.aktion.nr } : null, empfaenger: g.empfaenger || "", nachricht: g.nachricht || "", ausgestelltAm: g.ausgestelltAm, gueltigBis: g.gueltigBis, status: gutscheinStatus(z), eingeloestAm: g.eingeloestAm || null },
   }, 200, { "cache-control": "no-store" });
 });
 

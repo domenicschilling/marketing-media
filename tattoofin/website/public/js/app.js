@@ -300,14 +300,17 @@
     // Aktions-Gutschein aus dem Shop: Wert > bezahlt; der Bonus gilt bis bonusBis, danach zählt der bezahlte Betrag
     var wert = g.wertCent || z.betragCent, mitBonus = Boolean(g.bonusCent);
     var reihen = [["Wert", euro(wert, true) + (mitBonus ? "<br><small>bis " + dat(g.bonusBis) + ", danach " + euro(z.betragCent, true) + "</small>" : "")], mitBonus ? ["Bezahlt", euro(z.betragCent, true)] : null,
-      mitBonus && g.aktuellerWertCent !== wert ? ["Heute einlösbar", "<b>" + euro(g.aktuellerWertCent, true) + "</b> (Bonus-Frist vorbei)"] : null,
+      (g.teile && g.teile.length) || (mitBonus && g.aktuellerWertCent !== wert) ? ["Noch einlösbar", "<b>" + euro(g.aktuellerWertCent, true) + "</b>" + (mitBonus && g.bonusBis && new Date(g.bonusBis) < new Date() ? " (Bonus-Frist vorbei)" : "")] : null,
+      g.teile && g.teile.length ? ["Eingelöst", g.teile.map(function (x) { return euro(x.cent, true) + " am " + dat(x.am) + (x.notiz ? " · " + e(x.notiz) : ""); }).join("<br>")] : null,
       g.aktion ? ["Aktion", "Nr. " + e(g.aktion.nr) + " aus dem Gutschein-Shop"] : g.shop ? ["Verkauft", "im Gutschein-Shop"] : null, ["Käufer", e(z.kunde || "") + (z.email ? "<br><small>" + e(z.email) + "</small>" : "")], g.empfaenger ? ["Für", e(g.empfaenger)] : null, g.nachricht ? ["Nachricht", e(g.nachricht)] : null,
       ["Erstellt", dat(z.createdAt)], g.ausgestelltAm ? ["Ausgestellt", dat(g.ausgestelltAm)] : null, g.gueltigBis ? ["Gültig bis", dat(g.gueltigBis)] : null,
       g.eingeloestAm ? ["Eingelöst", dat(g.eingeloestAm) + (g.einloeseNotiz ? " · " + e(g.einloeseNotiz) : "")] : null, g.gesendetAm ? ["Per E-Mail", "gesendet am " + dat(g.gesendetAm)] : null,
       prov() && bez ? ["Tattoofin " + D.studio.provisionProzent + " %", euro(Math.max(0, (z.gebuehrBruttoCent || 0) - (z.gebuehrErstattetCent || 0)), true)] : null].filter(Boolean);
     var akt = "";
     if (z.status === "offen") akt = '<div class="row-a"><a class="btn wa small" target="_blank" rel="noopener" href="https://wa.me/?text=' + encodeURIComponent("Hier ist dein Link für den Gutschein: " + zl) + '">WhatsApp</a><button class="btn dark small" data-copytext="' + e(zl) + '">Link kopieren</button><button class="btn ghost small" id="z-storno">Stornieren</button></div>';
-    if (st === "gueltig" || st === "abgelaufen") akt += '<button class="btn gold big w100" id="gs-einloesen" style="margin-top:10px">Als eingelöst markieren</button>';
+    // Teil-Einlösung (23.11.2026): Betrag eintragen, Rest bleibt auf dem Gutschein. Leer lassen = ganz einlösen.
+    if (st === "gueltig" || st === "abgelaufen") akt += '<label class="lbl" for="gs-teil" style="margin-top:12px">Betrag einlösen (leer = ganz, noch ' + euro(g.aktuellerWertCent || z.betragCent, true) + ')</label><div class="betrag-feld"><input type="text" inputmode="decimal" id="gs-teil" placeholder="' + ((g.aktuellerWertCent || z.betragCent) / 100) + '"><span>€</span></div><button class="btn gold big w100" id="gs-einloesen" style="margin-top:10px">Einlösen</button>';
+    if (st !== "eingeloest" && g.teile && g.teile.length) akt += '<button class="btn ghost small" id="gs-zurueck" style="margin-top:10px">Letzte Einlösung zurücknehmen</button>';
     if (st === "eingeloest") akt += '<button class="btn ghost small" id="gs-zurueck" style="margin-top:10px">Einlösung zurücknehmen</button>';
     if (g.code) akt += '<div class="row-a" style="margin-top:10px"><a class="btn dark small" target="_blank" href="/api/portal/gutschein/' + e(z.id) + '/pdf">Gutschein als PDF</a><button class="btn ghost small" id="gs-senden">Nochmal per E-Mail senden</button></div>';
     box.innerHTML = '<div class="detail-kopf">' + gsChip(z) + '<div class="amt">' + euro(wert, true) + "</div><b>🎁 Gutschein" + (g.code ? ' · <span class="gs-code-a">' + e(g.code) + "</span>" : "") + "</b></div>" +
@@ -316,9 +319,10 @@
     var nachladen = async function () { D = await TF.api("/api/portal"); geladenAm = Date.now(); zahlungDetail(z.id); };
     var st0 = $("z-storno"); if (st0) st0.onclick = async function () { if (!confirm("Gutschein-Link stornieren?")) return; try { await TF.api("/api/portal/zahlung/" + z.id, { method: "DELETE" }); toast("Storniert."); nachladen(); } catch (err) { toast(err.message, true); } };
     var ei = $("gs-einloesen"); if (ei) ei.onclick = async function () {
-      if (!confirm("Gutschein " + g.code + " über " + euro(z.betragCent, true) + " als eingelöst markieren?" + (st === "abgelaufen" ? " Achtung: Das Gültigkeitsdatum ist schon vorbei." : ""))) return;
+      var teil = ($("gs-teil") || {}).value || "", rest = g.aktuellerWertCent || z.betragCent;
+      if (!confirm((teil ? euro(Math.round(parseFloat(teil.replace(",", ".")) * 100), true) + " von Gutschein " + g.code + " einlösen?" : "Gutschein " + g.code + " über " + euro(rest, true) + " ganz einlösen?") + (st === "abgelaufen" ? " Achtung: Das Gültigkeitsdatum ist schon vorbei." : ""))) return;
       ei.disabled = true;
-      try { await TF.api("/api/portal/gutschein/" + z.id + "/einloesen", { body: {} }); toast("Als eingelöst markiert ✓"); nachladen(); } catch (err) { ei.disabled = false; toast(err.message, true); }
+      try { var r = await TF.api("/api/portal/gutschein/" + z.id + "/einloesen", { body: teil ? { betrag: teil } : {} }); toast(r.gutschein && r.gutschein.status === "eingeloest" ? "Ganz eingelöst ✓" : "Eingelöst ✓ Rest: " + euro(r.gutschein.aktuellerWertCent, true)); nachladen(); } catch (err) { ei.disabled = false; toast(err.message, true); }
     };
     var zu = $("gs-zurueck"); if (zu) zu.onclick = async function () { if (!confirm("Einlösung zurücknehmen? Der Gutschein ist dann wieder gültig.")) return; try { await TF.api("/api/portal/gutschein/" + z.id + "/einloesen", { method: "DELETE" }); toast("Zurückgenommen."); nachladen(); } catch (err) { toast(err.message, true); } };
     var se = $("gs-senden"); if (se) se.onclick = async function () { se.disabled = true; try { var r = await TF.api("/api/portal/gutschein/" + z.id + "/senden", { body: {} }); toast(r.gesendet ? "Gutschein erneut gesendet an " + z.email : "Versand verzögert, wir versuchen es automatisch weiter.", !r.gesendet); } catch (err) { toast(err.message, true); } se.disabled = false; };

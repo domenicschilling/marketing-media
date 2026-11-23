@@ -22,8 +22,17 @@ import { notifyAdmin } from "./domain.mjs";
 // (fehlt bei normalen Gutscheinen → Wert = bezahlter Betrag). Bonus (Wert − bezahlt) gilt bis bonusBis, danach zählt der bezahlte Betrag.
 export const gutscheinWertCent = (z) => Number(z?.gutschein?.wertCent) || z?.betragCent || 0;
 export const bonusAktiv = (g, zeit = new Date()) => Boolean(g?.bonusCent && g.bonusBis && new Date(g.bonusBis) >= zeit);
-// Was der Gutschein heute wert ist (nach Ablauf der Bonus-Frist: der bezahlte Betrag)
-export const aktuellerWertCent = (z, zeit = new Date()) => (z?.gutschein?.bonusCent && !bonusAktiv(z.gutschein, zeit) ? (z.gutschein.bezahltCent || z.betragCent) : gutscheinWertCent(z));
+// Teil-Einlösungen (Domenic 23.11.2026: in Teilen einlösbar, Restwert bleibt): g.teile = [{ am, cent, notiz }]
+export const eingeloestCent = (g) => (g?.teile || []).reduce((s, x) => s + (Number(x.cent) || 0), 0);
+// Was heute noch einlösbar ist. Vor Ablauf der Bonus-Frist: Wert − eingelöst. Danach verfällt nur der noch nicht genutzte Bonus:
+// Eingelöste Beträge zählen zuerst gegen den Bonus (zugunsten des Kunden) → bezahlt − max(0, eingelöst − Bonus).
+export function aktuellerWertCent(z, zeit = new Date()) {
+  const g = z?.gutschein || {};
+  if (g.eingeloestAm) return 0;
+  const used = eingeloestCent(g);
+  if (g.bonusCent && !bonusAktiv(g, zeit)) return Math.max(0, (g.bezahltCent || z.betragCent) - Math.max(0, used - g.bonusCent));
+  return Math.max(0, gutscheinWertCent(z) - used);
+}
 const kurzEuro = (c) => euro(c).replace(",00 €", " €");
 
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // ohne 0/O, 1/I – gut vorlesbar
