@@ -77,7 +77,8 @@ Die 6 fertigen Motive (`content/tattoofashion-munich/creatives/2026-11-22-gutsch
 5. **Piercing** auch mit dem Gutschein bezahlbar? (Jetzt steht „alle Leistungen bei Tattoo Fashion Munich“.)
 6. **Kombinierbar** mit anderen Aktionen?
 7. **Verkäufer / Impressum:** Wer betreibt das Münchner Studio (Name, Rechtsform, Anschrift, Vertreter, Register, USt-IdNr., E-Mail)? Fashionista GmbH oder eine eigene Firma?
-8. **Freigabe:** Darf der Stand live gehen (Prod-Deploy von tattoofin.de, danach `freigegeben: true`)? Vorher die anderen offenen Tattoofin-Branches zusammenführen.
+8. **Zusammenführen vor dem Live-Gang:** Der Haupt-Chat baut `claude/tattoofin-keine-anzahlung` (keine Anzahlungen für München + Landshut). Beide Branches ändern `pay.mjs`, `studio-ansicht.mjs`, `domain.mjs` und `public/js/app.js` → vor dem Deploy zusammenführen. Der Shop selbst bietet keine Anzahlung an (nur Gutscheine).
+9. **Freigabe:** Darf der Stand live gehen (Prod-Deploy von tattoofin.de, danach `freigegeben: true`)? Vorher die anderen offenen Tattoofin-Branches zusammenführen.
 
 ## Technik kurz
 
