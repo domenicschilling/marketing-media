@@ -71,6 +71,14 @@
   [headers.values]
     X-Robots-Tag = "noindex"
 [[headers]]
+  for = "/gutschein-kaufen/*"
+  [headers.values]
+    X-Robots-Tag = "noindex"
+[[headers]]
+  for = "/gutschein-kaufen.html"
+  [headers.values]
+    X-Robots-Tag = "noindex"
+[[headers]]
   for = "/zahlen/*"
   [headers.values]
     X-Robots-Tag = "noindex"
@@ -183,6 +191,11 @@
 [[redirects]]
   from = "/zahlen/*"
   to = "/zahlen.html"
+  status = 200
+# Gutschein-Shop eines Studios (23.11.2026, nur Tattoo Fashion Munich, siehe netlify/functions/_lib/gutschein-shop.mjs)
+[[redirects]]
+  from = "/gutschein-kaufen/*"
+  to = "/gutschein-kaufen.html"
   status = 200
 # Studio-Dashboard (Web-App)
 [[redirects]]

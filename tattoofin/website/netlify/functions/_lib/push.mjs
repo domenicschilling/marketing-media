@@ -177,7 +177,8 @@ const tagMonat = (ankunft) => {
 };
 export function nachrichtZahlung(z) {
   const gutschein = z.art === "gutschein";
-  const was = gutschein ? (z.gutschein?.empfaenger ? `Gutschein für ${z.gutschein.empfaenger}` : "Wertgutschein")
+  const wert = z.gutschein?.wertCent ? ` (Wert ${euro(z.gutschein.wertCent).replace(",00 €", " €")})` : "";
+  const was = gutschein ? (z.gutschein?.aktion ? `Aktions-Gutschein Nr. ${z.gutschein.aktion.nr}${wert}` : z.gutschein?.empfaenger ? `Gutschein für ${z.gutschein.empfaenger}` : "Wertgutschein")
     : `${z.art === "anzahlung" || z.anzahlung ? "Anzahlung " : ""}${z.beschreibung || "Tattoo-Projekt"}`;
   const text = `${euro(z.betragCent)} · ${was}`.slice(0, 160);
   const vorname = String(z.kunde || "").trim().split(/\s+/)[0];

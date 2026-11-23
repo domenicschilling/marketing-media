@@ -14,6 +14,17 @@ import { sendMail } from "./mail.mjs";
 import { mails } from "./emails.mjs";
 import { now, euro, datum } from "./util.mjs";
 import { qrMatrix } from "./qr.mjs";
+import { reservierungVerkauft, bonusSatz, shopTexte } from "./gutschein-shop.mjs";
+import { notifyAdmin } from "./domain.mjs";
+
+// Wert und bezahlter Betrag (seit 23.11.2026, Gutschein-Shop): Aktions-Gutscheine kosten weniger, als sie wert sind.
+// z.betragCent ist immer der BEZAHLTE Betrag (Stripe, Gebühren, Erstattungen). Der Gutscheinwert steht in z.gutschein.wertCent
+// (fehlt bei normalen Gutscheinen → Wert = bezahlter Betrag). Bonus (Wert − bezahlt) gilt bis bonusBis, danach zählt der bezahlte Betrag.
+export const gutscheinWertCent = (z) => Number(z?.gutschein?.wertCent) || z?.betragCent || 0;
+export const bonusAktiv = (g, zeit = new Date()) => Boolean(g?.bonusCent && g.bonusBis && new Date(g.bonusBis) >= zeit);
+// Was der Gutschein heute wert ist (nach Ablauf der Bonus-Frist: der bezahlte Betrag)
+export const aktuellerWertCent = (z, zeit = new Date()) => (z?.gutschein?.bonusCent && !bonusAktiv(z.gutschein, zeit) ? (z.gutschein.bezahltCent || z.betragCent) : gutscheinWertCent(z));
+const kurzEuro = (c) => euro(c).replace(",00 €", " €");
 
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // ohne 0/O, 1/I – gut vorlesbar
 export function neuerCode() {
@@ -53,10 +64,16 @@ export async function gutscheinAusstellen(s, z) {
     g.token = crypto.randomBytes(18).toString("base64url");
     g.ausgestelltAm = z.bezahltAm || now();
     g.gueltigBis = gueltigBis(g.ausgestelltAm);
+    if (g.wertCent) g.bezahltCent = z.betragCent;
     z.gutschein = g;
     await store.set("idx/gutschein/" + code, `${s.id}/${z.id}`);
     await store.set("idx/gst/" + g.token, `${s.id}/${z.id}`);
     await saveZahlung(z);
+    // Shop: reservierte Einheit des Aktions-Gutscheins ist jetzt verkauft
+    if (g.reservierung) {
+      const r = await reservierungVerkauft(z);
+      if (r.ueberverkauft) await notifyAdmin(`⚠️ Gutschein-Shop: Nr. ${g.aktion?.nr} ist ${r.verkauft}× verkauft (Stückzahl ${g.aktion?.stueck})`, s, { Zahlung: z.id, Code: g.code, Tipp: "Zahlung kam nach Ablauf der Reservierung an. Mit dem Studio klären: Gutschein gilt oder Erstattung." });
+    }
   }
   if (z.email && !g.gesendetAm) await gutscheinSenden(s, z);
   return z.gutschein;
@@ -72,7 +89,7 @@ export async function gutscheinSenden(s, z) {
     return true;
   }
   const pdf = await gutscheinPdf(s, z);
-  const m = mails.gutscheinKaeufer(s, z, { url: gutscheinUrl(g) });
+  const m = mails.gutscheinKaeufer(s, z, { url: gutscheinUrl(g), bonus: bonusSatz(g), shop: g.shop ? shopTexte(s, g.ausgestelltAm) : null });
   const ok = await sendMail({
     to: z.email, subject: m.subject, html: m.html, text: m.text,
     attachments: [{ filename: `Gutschein-${(s.slug || "studio")}-${g.code}.pdf`, content: Buffer.from(pdf).toString("base64"), contentType: "application/pdf" }],
@@ -170,13 +187,19 @@ export async function gutscheinPdf(s, z) {
   // Betrag, Empfänger, Nachricht
   let y = bandY - 44;
   if (g.empfaenger) { text("für " + g.empfaenger, R + 6, y, fb, 16, navy); y -= 50; } else y -= 22;
-  text(euro(z.betragCent).replace(",00 €", " €"), R + 6, y, fb, 52, navy);
+  text(kurzEuro(gutscheinWertCent(z)), R + 6, y, fb, 52, navy);
   // Links bis vor den Code-Kasten umbrechen (lange Studionamen liefen sonst unter den Kasten)
   const linksMax = W - R - 210 - (R + 8) - 14;
   let ay = y - 20;
-  for (const zeile of umbrechen("Wertgutschein · für alle Leistungen bei " + s.firma, f, 12, linksMax, 2)) { text(zeile, R + 8, ay, f, 12, grau); ay -= 15; }
+  const art = g.aktion ? `Aktions-Gutschein Nr. ${g.aktion.nr}` : "Wertgutschein";
+  for (const zeile of umbrechen(art + " · für alle Leistungen bei " + s.firma, f, 12, linksMax, 2)) { text(zeile, R + 8, ay, f, 12, grau); ay -= 15; }
+  // Aktions-Gutschein: Bonus-Frist deutlich unter dem Betrag (Seite, PDF und Mail sagen dasselbe, Text aus bonusSatz)
+  if (g.bonusCent) {
+    ay -= 3;
+    for (const zeile of umbrechen(bonusSatz({ ...g, gueltigBis: g.gueltigBis || gueltigBis() }), fb, 10, linksMax, 3)) { text(zeile, R + 8, ay, fb, 10, navy); ay -= 13; }
+  }
   let my = ay - 11;
-  for (const zeile of umbrechen(sauber(g.nachricht) ? "„" + sauber(g.nachricht) + "“" : "", fi, 12, Math.min(300, linksMax), 3)) { text(zeile, R + 6, my, fi, 12, grau); my -= 16; }
+  for (const zeile of umbrechen(sauber(g.nachricht) ? "„" + sauber(g.nachricht) + "“" : "", fi, 12, Math.min(300, linksMax), g.bonusCent ? 2 : 3)) { text(zeile, R + 6, my, fi, 12, grau); my -= 16; }
 
   // Code-Kasten rechts. Seit 13.11.2026 mit QR-Code (Link gutschein.html?t=…), den die Tattoofin-App beim Termin scannt.
   // Gutscheine ohne Token (vor der Zahlung) bekommen keinen QR; ältere, schon verschickte PDFs haben keinen (dort hilft die Code-Erkennung der App).
@@ -199,7 +222,9 @@ export async function gutscheinPdf(s, z) {
   // Fuß: Daten + Einlöseort
   const adr = [s.strasse, [s.plz, s.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ");
   page.drawLine({ start: { x: R, y: 92 }, end: { x: W - R, y: 92 }, thickness: 0.6, color: rgb(0.88, 0.87, 0.84) });
-  text(`Ausgestellt am ${datum(g.ausgestelltAm || now())}   ·   Gültig bis ${datum(g.gueltigBis || gueltigBis())}`, R + 6, 72, fb, 10.5, navy);
+  text(g.bonusCent
+    ? `Ausgestellt am ${datum(g.ausgestelltAm || now())}  ·  ${kurzEuro(gutscheinWertCent(z))} bis ${datum(g.bonusBis)}  ·  danach ${kurzEuro(g.bezahltCent || z.betragCent)} bis ${datum(g.gueltigBis || gueltigBis())}`
+    : `Ausgestellt am ${datum(g.ausgestelltAm || now())}   ·   Gültig bis ${datum(g.gueltigBis || gueltigBis())}`, R + 6, 72, fb, 10.5, navy);
   text(`Einlösbar bei ${s.firma}${adr ? ", " + adr : ""}`, R + 6, 56, f, 10.5, navy);
   text(`Der Gutschein wurde von ${s.firma} ausgestellt und über Tattoofin verkauft und bezahlt.`, R + 6, 34, f, 8, grau);
   rechts("tattoofin", W - R - 6, 34, fb, 9, grau);

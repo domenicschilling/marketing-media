@@ -8,7 +8,7 @@
 // Absicherung fürs Studio (Rechtsprüfung durch Anwalt empfohlen): Der Kunde bestätigt vor dem Bezahlen per Häkchen den Inhalt
 // (Studio, Motiv/Projekt, Sitzungen, Betrag) und bei Anzahlungen die Anzahlungsbedingungen. Gespeichert mit Zeitstempel.
 import { CFG, BAUSTEINE_SIMULIERT, testKasse } from "./_lib/config.mjs";
-import { json, fail, body, clean, id, now, handler, isEmail, parseBetrag, euro, clientIp } from "./_lib/util.mjs";
+import { json, fail, body, clean, id, now, handler, isEmail, parseBetrag, euro, clientIp, datum } from "./_lib/util.mjs";
 import { getStudio, studioBy, zahlungBy, saveZahlung } from "./_lib/store.mjs";
 import { anzahlungAus, checkoutFuer, bezahlfeldFuer, darfKassieren, anzahlungsbedingungen, istAnzahlung, bezahlfeld, zahlungBezahlt, plattformKassiert, klarnaVersuch, zahlartenFuer, klarnaFuer, notify, zahlungAbgleichen, oeffentlicheAdresse } from "./_lib/domain.mjs";
 import { mails } from "./_lib/emails.mjs";
@@ -29,6 +29,11 @@ const DEMO = "Testmodus: Bei diesem Studio wird nichts bezahlt.";
 
 // Text, den der Kunde mit dem Häkchen bestätigt (wird so gespeichert)
 export function inhaltText(s, z) {
+  if (z.art === "gutschein" && z.gutschein?.aktion) return `Ich kaufe den Aktions-Gutschein Nr. ${z.gutschein.aktion.nr} von ${s.firma} im Wert von ${euro(z.gutschein.wertCent)} für ${euro(z.betragCent)}` +
+    `${z.kunde ? ` (Name: ${z.kunde})` : ""}${z.gutschein.empfaenger ? ` für ${z.gutschein.empfaenger}` : ""}. Den vollen Wert löse ich bis ${datum(z.gutschein.bonusBis)} ein, danach wird der bezahlte Betrag von ${euro(z.betragCent)} angerechnet. ` +
+    "Die Gutscheinbedingungen und die Widerrufsbelehrung habe ich gelesen. Den Gutschein mit Code bekomme ich nach der Zahlung per E-Mail.";
+  if (z.art === "gutschein" && z.gutschein?.shop) return `Ich kaufe einen Wertgutschein über ${euro(z.betragCent)} von ${s.firma}${z.kunde ? ` (Name: ${z.kunde})` : ""}` +
+    `${z.gutschein.empfaenger ? ` für ${z.gutschein.empfaenger}` : ""}, einlösbar für alle Leistungen bei ${s.firma}. Die Gutscheinbedingungen und die Widerrufsbelehrung habe ich gelesen. Den Gutschein mit Code bekomme ich nach der Zahlung per E-Mail.`;
   if (z.art === "gutschein") return `Ich kaufe einen Wertgutschein über ${euro(z.betragCent)} von ${s.firma}${z.kunde ? ` (Name: ${z.kunde})` : ""}` +
     `${z.gutschein?.empfaenger ? ` für ${z.gutschein.empfaenger}` : ""}, einlösbar für alle Leistungen bei ${s.firma}. Den Gutschein mit Code bekomme ich nach der Zahlung per E-Mail.`;
   return `Ich zahle ${euro(z.betragCent)} an ${s.firma}${z.kunde ? ` (Name: ${z.kunde})` : ""} für: ${z.beschreibung || "Tattoo-Projekt"}` +
@@ -36,7 +41,7 @@ export function inhaltText(s, z) {
     "Betrag und Projekt sind so mit dem Studio abgesprochen.";
 }
 
-function bestaetigen(req, context, s, z) {
+export function bestaetigen(req, context, s, z) {
   z.kundeBestaetigt = {
     am: now(), version: CFG.bestaetigungVersion, inhalt: inhaltText(s, z),
     ip: clientIp(req, context), ua: (req.headers.get("user-agent") || "").slice(0, 200),
@@ -90,7 +95,7 @@ export default handler(async (req, context) => {
       return json({
         studio: studioInfo(s),
         zahlung: { id: z.id, betragCent: z.betragCent, beschreibung: z.beschreibung, sitzungen: z.sitzungen || "", kunde: (z.kunde || "").split(" ")[0], status: z.status, art: z.art, zahlart: z.zahlart || "", restCent: z.restCent || 0,
-          empfaenger: z.gutschein?.empfaenger || "", zahlarten: zahlartenFuer(z, { studio: s }), ausweichAnzahlungId: z.ausweich?.anzahlungId || null,
+          empfaenger: z.gutschein?.empfaenger || "", wertCent: z.gutschein?.wertCent || null, zahlarten: zahlartenFuer(z, { studio: s }), ausweichAnzahlungId: z.ausweich?.anzahlungId || null,
           anzahlungBezahlt: schonBezahltDurchAusweich(z) ? { betragCent: z.ausweich.betragCent, restCent: Math.max(0, z.betragCent - (z.ausweich.betragCent || 0)) } : null,
           gutscheinHinweis: z.art !== "gutschein" && gutscheinWort(z.beschreibung, z.sitzungen) ? GUTSCHEIN_HINWEIS : "" },
         klarnaAbgelehnt: Boolean(klarna || z.klarnaAbgelehnt),

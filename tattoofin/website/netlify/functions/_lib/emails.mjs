@@ -282,11 +282,12 @@ export const mails = {
     cta: "Zur Tattoofin-App", ctaUrl: `${CFG.siteUrl}/app.html`,
   }),
 
-  zahlungEingegangen: (s, z) => mk(z.art === "gutschein" ? `🎁 Gutschein verkauft: ${euro(z.betragCent)} an ${z.kunde || "Kunde"}` : `💸 Zahlung eingegangen: ${euro(z.betragCent)} von ${z.kunde || "Kunde"}`, {
+  zahlungEingegangen: (s, z) => mk(z.art === "gutschein" ? `🎁 Gutschein verkauft: ${z.gutschein?.wertCent ? "Wert " + euro(z.gutschein.wertCent) + ", bezahlt " + euro(z.betragCent) : euro(z.betragCent)} an ${z.kunde || "Kunde"}` : `💸 Zahlung eingegangen: ${euro(z.betragCent)} von ${z.kunde || "Kunde"}`, {
     preheader: `${z.beschreibung || "Tattoo-Projekt"} · ${z.zahlartText || ""}`,
     title: `Zahlung eingegangen: ${euro(z.betragCent)}`,
     body: rows([
-      ["Kunde", esc(z.kunde)], ["Projekt", esc(z.beschreibung)], ["Betrag", euro(z.betragCent)],
+      ["Kunde", esc(z.kunde)], ["Projekt", esc(z.beschreibung)], ["Betrag", euro(z.betragCent) + (z.gutschein?.wertCent ? " (bezahlt)" : "")],
+      ["Gutscheinwert", z.gutschein?.wertCent ? euro(z.gutschein.wertCent) + " bis " + datum(z.gutschein.bonusBis) + ", danach " + euro(z.betragCent) : ""],
       ["Gutschein-Code", z.gutschein?.code ? esc(z.gutschein.code) + (z.gutschein.empfaenger ? " (für " + esc(z.gutschein.empfaenger) + ")" : "") + ", gültig bis " + datum(z.gutschein.gueltigBis) : ""],
       ["Zahlungsart", esc(z.zahlartText || z.zahlart || "")],
       ["Tattoofin " + provisionSatz(s) + " % (alles inklusive)", istProv(z) ? euro(z.gebuehrBruttoCent) : ""],
@@ -317,22 +318,34 @@ export const mails = {
   }),
 
   // Gutschein an den Käufer (PDF hängt an, Link zur Online-Ansicht als Rückfall)
-  gutscheinKaeufer: (s, z, { url }) => {
+  gutscheinKaeufer: (s, z, { url, bonus = "", shop = null }) => {
     const g = z.gutschein || {};
+    const wert = Number(g.wertCent) || z.betragCent;
     const adr = [s.strasse, [s.plz, s.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ");
-    return mk(`Dein Gutschein von ${s.firma} über ${euro(z.betragCent)}`, {
-      preheader: `Code ${g.code} · gültig bis ${datum(g.gueltigBis)}`,
+    const art = g.aktion ? `Aktions-Gutschein Nr. ${g.aktion.nr}` : "Tattoo-Gutschein";
+    const verkaeufer = shop?.anbieter?.name || s.firma;
+    return mk(`Dein Gutschein von ${s.firma} über ${euro(wert)}`, {
+      preheader: `Code ${g.code} · ${bonus ? "voller Wert bis " + datum(g.bonusBis) : "gültig bis " + datum(g.gueltigBis)}`,
       title: `Dein Gutschein ist da 🎁`,
       body: p(`Hi ${esc((z.kunde || "").split(" ")[0])}, danke für deinen Einkauf! Hier ist dein Tattoo-Gutschein von <b>${esc(s.firma)}</b>${g.empfaenger ? ` für <b>${esc(g.empfaenger)}</b>` : ""}.`) +
         `<div style="border:2px dashed #f5d77a;background:#fff5d6;border-radius:12px;padding:16px 18px;margin:0 0 16px;text-align:center">
-<div style="font-size:30px;font-weight:800;color:${navy}">${euro(z.betragCent)}</div>
-<div style="color:#5b6370;font-size:13px;margin:4px 0 10px">Tattoo-Gutschein</div>
+<div style="font-size:30px;font-weight:800;color:${navy}">${euro(wert)}</div>
+<div style="color:#5b6370;font-size:13px;margin:4px 0 10px">${art}</div>
 <div style="font:700 20px/1.3 'Courier New',monospace;letter-spacing:1px;color:${navy}">${esc(g.code)}</div>
 ${g.nachricht ? `<div style="font-style:italic;color:#5b6370;margin-top:10px">„${esc(g.nachricht)}“</div>` : ""}</div>` +
-        rows([["Ausgestellt am", datum(g.ausgestelltAm)], ["Gültig bis", datum(g.gueltigBis)], ["Einlösbar bei", esc(s.firma) + (adr ? "<br>" + esc(adr) : "")]]) +
-        p("Den Gutschein zum Ausdrucken oder Weiterschicken findest du als PDF im Anhang. Bitte den Code beim Termin angeben."),
+        (bonus ? box(`<b>So lange gilt dein Gutschein:</b> ${esc(bonus)}`) : "") +
+        rows([["Ausgestellt am", datum(g.ausgestelltAm)],
+          ...(bonus ? [["Gutscheinwert", euro(wert) + " bis " + datum(g.bonusBis)], ["Bezahlt", euro(g.bezahltCent || z.betragCent)], ["Danach einlösbar", euro(g.bezahltCent || z.betragCent) + " bis " + datum(g.gueltigBis)]]
+            : [["Gültig bis", datum(g.gueltigBis)]]),
+          ["Einlösbar bei", esc(s.firma) + (adr ? "<br>" + esc(adr) : "")]]) +
+        p("Den Gutschein zum Ausdrucken oder Weiterschicken findest du als PDF im Anhang. Bitte den Code beim Termin angeben.") +
+        (shop ? `<div style="border-top:1px solid #e6e3dc;margin:18px 0 0;padding-top:12px;font-size:12px;color:#5b6370">
+<p style="margin:0 0 8px"><b>Gutscheinbedingungen</b></p>${shop.bedingungen.map((x) => `<p style="margin:0 0 6px">${esc(x)}</p>`).join("")}
+<p style="margin:12px 0 8px"><b>${esc(shop.widerruf.titel)}</b></p>${shop.widerruf.text.map((x) => `<p style="margin:0 0 6px">${esc(x)}</p>`).join("")}
+<p style="margin:0 0 6px">${esc(shop.widerruf.formular)}</p>
+${shop.anbieter ? `<p style="margin:12px 0 0"><b>Verkäufer:</b> ${esc([shop.anbieter.name, shop.anbieter.vertreten, shop.anbieter.strasse, [shop.anbieter.plz, shop.anbieter.ort].filter(Boolean).join(" "), shop.anbieter.email, shop.anbieter.telefon, shop.anbieter.register, shop.anbieter.ustid].filter(Boolean).join(" · "))}</p>` : ""}</div>` : ""),
       cta: "Gutschein online ansehen", ctaUrl: url,
-      footerNote: `Der Gutschein wurde von ${esc(s.firma)} ausgestellt und über Tattoofin verkauft. Fragen zum Termin klärst du direkt mit dem Studio.`,
+      footerNote: `Der Gutschein wurde von ${esc(verkaeufer)} ausgestellt und über Tattoofin verkauft. Fragen zum Termin klärst du direkt mit dem Studio.`,
     });
   },
 

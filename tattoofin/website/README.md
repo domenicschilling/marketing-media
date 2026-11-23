@@ -60,6 +60,13 @@ Garantie-Erstattung · Abschluss abgebrochen · Rückbuchung (Belege) · Rückbu
 | Admin | Login per E-Mail-Link oder 6-stelligem Code aus derselben Mail (`POST /api/admin-login/code`, 15 Min., einmal, max. 5 Versuche je Code und 10 falsche Codes je Adresse in 24 Std., danach nur noch der Link + Admin-Mail; für die Homescreen-App, die eigene Cookies hat) (`ADMIN_EMAILS`/`ADMIN_EMAIL`, 12 h Sitzung) oder `ADMIN_TOKEN`. „Dashboard ansehen“ = Studio-Dashboard nur lesend, protokolliert. |
 | Mails | Vorübergehende Fehler (z. B. IONOS „450 Mail send limit exceeded“) → Warteschlange, `mail-nachsenden.mjs` alle 10 Min. Gleiche Admin-Meldung max. 1×/30 Min. |
 
+## Gutschein-Shop Tattoo Fashion München (23.11.2026, Branch `claude/tfm-gutschein-shop`, nicht live)
+
+Öffentliche Handy-Landingpage mit Kauf: `/gutschein-kaufen/tattoo-fashion-munich` (`public/gutschein-kaufen.html`, API `/api/gutschein-shop`, Logik `_lib/gutschein-shop.mjs`). Nur für das Studio `st_nqoyv1Q2wj7F`, keine Funktion für alle Studios.
+5 Aktions-Gutscheine mit Stückzahl (Wert > Preis) + Wertgutschein 50–2.000 €. `z.betragCent` = bezahlt, `z.gutschein.wertCent` = Wert, Bonus (Wert − bezahlt) bis `bonusBis` (31.03.2027), danach zählt der bezahlte Betrag bis `gueltigBis`.
+Stückzahl: Reservierungs-Tickets `gsshop/<studio>/<nr>/<laufnummer>` (store.setNeu, atomar), Kasse 30 Min. (`expires_at`), Abbruch/Ablauf gibt frei. Auf der echten Site zu, bis `freigegeben: true` UND `anbieter` (Impressum des Verkäufers) gesetzt sind; Vorschau/lokal offen (Vorschau legt ein Beispiel-Studio an).
+Test: `NODE_PATH=… node dev/gutschein-shop-test.mjs` (54 Prüfungen). Bericht: `tattoofin/intern/gutschein-shop-tfm/BERICHT.md`.
+
 ## Einrichtung auf Netlify
 
 1. Neues Netlify-Projekt aus diesem Repo, **Base directory: `tattoofin/website`** (Publish `public`, Functions `netlify/functions` stehen in `netlify.toml`).

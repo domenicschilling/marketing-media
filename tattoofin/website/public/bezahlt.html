@@ -34,7 +34,7 @@
       if (d.zahlung.status === "bezahlt") {
         // Drei Texte je Art: Projekt, Anzahlung, Gutschein
         var z = d.zahlung, betrag = TF.euro(z.betragCent, true), art = z.art;
-        if (art === "gutschein") msg.textContent = d.studio.firma + " hat deine Zahlung über " + betrag + " erhalten. Den Gutschein mit Code schicken wir dir in wenigen Minuten per E-Mail (bitte auch im Spam-Ordner nachsehen).";
+        if (art === "gutschein") msg.textContent = d.studio.firma + " hat deine Zahlung über " + betrag + " erhalten. " + (z.wertCent ? "Deinen Gutschein im Wert von " + TF.euro(z.wertCent, true) + " mit Code" : "Den Gutschein mit Code") + " schicken wir dir in wenigen Minuten per E-Mail (bitte auch im Spam-Ordner nachsehen).";
         else if (art === "anzahlung") msg.textContent = d.studio.firma + " hat deine Anzahlung über " + betrag + " erhalten. Sie wird mit dem Preis deines Tattoos verrechnet." + (z.restCent ? " Den Rest von " + TF.euro(z.restCent, true) + " zahlst du direkt im Studio." : " Den Rest zahlst du direkt im Studio.");
         else msg.textContent = d.studio.firma + " hat deine Zahlung über " + betrag + " erhalten. Danke!";
         // Klarna-Satz nur, wenn wirklich mit Klarna bezahlt wurde (nur der Name, ohne Raten-Aussage)
