@@ -14,7 +14,9 @@ export const fuerStudio = (z) => {
   if (rest.gutschein) {
     const { token, reservierung, ...g } = rest.gutschein;
     // Wert UND bezahlter Betrag (Aktions-Gutscheine aus dem Shop: Wert > bezahlt; nach der Bonus-Frist gilt der bezahlte Betrag)
-    rest.gutschein = { ...g, status: gutscheinStatus(z), link: token ? gutscheinUrl(rest.gutschein) : null, wertCent: gutscheinWertCent(z), bezahltCent: z.betragCent, aktuellerWertCent: aktuellerWertCent(z) };
+    rest.gutschein = { ...g, status: gutscheinStatus(z), link: token ? gutscheinUrl(rest.gutschein) : null, wertCent: gutscheinWertCent(z), bezahltCent: z.betragCent, aktuellerWertCent: aktuellerWertCent(z),
+      // Für die iPhone-App (1.1, 23.11.2026): Teil-Einlösung möglich (POST /api/portal/gutschein/:id/einloesen { betrag }), Restwert
+      teilbar: true, restCent: aktuellerWertCent(z) };
   }
   return rest;
 };
