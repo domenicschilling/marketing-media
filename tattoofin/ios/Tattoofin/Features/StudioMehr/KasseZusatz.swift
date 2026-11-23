@@ -35,6 +35,7 @@ struct GebuehrHinweis: View {
     /// false: Platz bleibt reserviert, Text unsichtbar (ungültiger Betrag), damit darunter nichts verrutscht
     var sichtbar: Bool = true
     @State private var mehr = StudioMehrStore.shared
+    @Environment(PortalStore.self) private var portal
 
     /// Längster möglicher Betrag (5 Stellen vor dem Komma) für den reservierten Platz
     private static let platzhalterCent = 9_999_999
@@ -60,7 +61,10 @@ struct GebuehrHinweis: View {
                 zeile(t).accessibilityIdentifier("gebuehr-hinweis")
             }
         }
-        .task { await mehr.laden(wennAelterAls: 300) }
+        // Erst nach der Portal-Abfrage der Kasse: Die liefert den Konto-Teil mit, dann ist hier nichts mehr zu laden
+        .task(id: portal.geladenAm) {
+            if portal.geladenAm != nil { await mehr.laden(wennAelterAls: 300) }
+        }
     }
 
     private func zeile(_ t: String) -> some View {

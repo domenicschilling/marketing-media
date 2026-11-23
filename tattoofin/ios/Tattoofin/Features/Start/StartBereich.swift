@@ -138,7 +138,8 @@ struct StartBereich: View {
             // damit „Zahlungslink erstellen“ ohne Scrollen sichtbar bleibt (App Review sieht diesen Bildschirm zuerst)
             Label(Texte.Kasse.testmodusText, systemImage: "testtube.2")
                 .font(.dm(.footnote, weight: .semibold))
-                .foregroundStyle(Color.tfBlau)
+                // tfAkzent (hell Blau, dunkel Gelb): tfBlau auf dem dunklen Hintergrund hätte nur etwa 1,6:1
+                .foregroundStyle(Color.tfAkzent)
                 .padding(.horizontal, 4)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .accessibilityElement(children: .combine)
@@ -215,6 +216,7 @@ struct ChecklistenBlatt: View {
                 switch z {
                 case .recht: RechtView()
                 case .fragebogen: FragebogenView()
+                case .adresse: AdresseView()
                 }
             }
             .task { await werbung.laden(abstand: 5) }
@@ -267,6 +269,7 @@ struct ChecklistenBlatt: View {
         case .werbung: zurWerbung(punkt == "theke" ? .zahlseite : .beitraege)
         case .recht: ziel = .recht
         case .fragebogen: ziel = .fragebogen
+        case .adresse: ziel = .adresse
         }
     }
 }
@@ -292,7 +295,7 @@ enum StartBlatt: String, Identifiable {
 
     /// Unterseiten der Checkliste
     enum Ziel: String, Hashable, Identifiable {
-        case recht, fragebogen
+        case recht, fragebogen, adresse
         var id: String { rawValue }
     }
 }
@@ -305,7 +308,7 @@ enum WerbungAbschnitt: String, Hashable, CaseIterable, Identifiable {
 
 /// Ein Punkt der Einrichtungs-Checkliste
 struct StartCheckpunkt: Identifiable, Equatable {
-    enum Aktion: Equatable { case werbung, recht, fragebogen }
+    enum Aktion: Equatable { case werbung, recht, fragebogen, adresse }
 
     var id: String
     var ok: Bool
@@ -324,6 +327,7 @@ extension StartCheckpunkt.Aktion {
         case .werbung: WerbungTexte.Start.zurWerbung
         case .recht: WerbungTexte.Start.lesen
         case .fragebogen: WerbungTexte.Start.ausfuellen
+        case .adresse: Texte.Kasse11.checklisteAdresseKnopf
         }
     }
 }
@@ -342,11 +346,14 @@ enum StartCheckpunkte {
                 case "werbung": aktion = .werbung
                 case "recht": aktion = .recht
                 case "fragebogen": aktion = .fragebogen
-                default: aktion = nil
+                // Adresse der Zahlseite: der Server liefert kein Ziel (ziel: null), die App hat jetzt eine eigene Maske
+                default: aktion = p.id == "adresse" && !p.ok ? .adresse : nil
                 }
             }
             let manuell = darf && ["app", "theke", "werbung"].contains(p.manuell ?? "") ? p.manuell : nil
-            return StartCheckpunkt(id: p.id, ok: p.ok, wartet: p.wartet ?? false, titel: p.titel, text: p.text ?? "", aktion: aktion, manuell: manuell)
+            // Server-Text schickt zu tattoofin.de; in der App gibt es die Maske direkt hier
+            let text = aktion == .adresse ? Texte.Kasse11.checklisteAdresseText : p.text ?? ""
+            return StartCheckpunkt(id: p.id, ok: p.ok, wartet: p.wartet ?? false, titel: p.titel, text: text, aktion: aktion, manuell: manuell)
         }
     }
 

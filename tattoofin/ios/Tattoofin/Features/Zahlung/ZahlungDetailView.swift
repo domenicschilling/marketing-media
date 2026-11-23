@@ -53,11 +53,22 @@ struct ZahlungDetailView: View {
                             .font(.luckiest(36, relativeTo: .largeTitle))
                             .foregroundStyle(Color.tfTinte)
                         Spacer()
-                        StatusChip(zahlung: z.status)
+                        StatusChip(zahlung: z.anzeigeStatus)
                     }
                     Text(z.titel).font(.dm(.headline)).foregroundStyle(Color.tfTinte)
                 }
                 .padding(.vertical, 4)
+            }
+
+            // Ausweich-Anzahlung bezahlt: Original-Link ist erledigt (kein QR, kein Teilen, kein Stornieren mehr)
+            if z.istAusweichAngezahlt {
+                Section {
+                    HinweisKarte(text: z.ausweich?.betragCent.flatMap { a in z.restImStudioCent.map { Texte.Kasse11.angezahlt(anzahlung: a, rest: $0) } }
+                                    ?? Texte.Kasse11.angezahltKurz, symbol: "checkmark.circle.fill")
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(Color.clear)
+                        .accessibilityIdentifier("ausweich-angezahlt")
+                }
             }
 
             Section {
@@ -69,6 +80,8 @@ struct ZahlungDetailView: View {
                 if let d = Datum.tag(z.verfuegbarAb) { WertZeile(titel: Texte.Detail.verfuegbarAb, wert: d) }
                 if let e = z.erstattetCent, e > 0 { WertZeile(titel: Texte.Detail.erstattet, wert: Euro.text(e)) }
                 if let s = z.sitzungen?.leerAlsNil { WertZeile(titel: Texte.Detail.sitzungen, wert: s) }
+                if z.istAusweichAngezahlt, let a = z.ausweich?.betragCent { WertZeile(titel: Texte.Kasse11.angezahltWert, wert: Euro.text(a)) }
+                if let r = z.restImStudioCent, r > 0 { WertZeile(titel: Texte.Kasse11.restImStudio, wert: Euro.text(r)) }
             }
 
             if z.kunde?.leerAlsNil != nil || z.email?.leerAlsNil != nil {
@@ -108,7 +121,7 @@ struct ZahlungDetailView: View {
                 if let aktionFehler { FehlerZeile(text: aktionFehler) }
             } footer: {
                 if z.istBezahlt {
-                    Text(Texte.Detail.erstattungHinweis).font(.dm(.footnote))
+                    Text(z.erstattungHinweis).font(.dm(.footnote))
                 }
             }
         }

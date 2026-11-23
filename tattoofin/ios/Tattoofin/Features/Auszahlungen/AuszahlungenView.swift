@@ -40,6 +40,9 @@ struct AuszahlungenView: View {
                         }
                     } header: {
                         ListenKopf(Texte.Auszahlungen.listeTitel)
+                    } footer: {
+                        // Wann kommt mein Geld? (häufigste Frage neuer Studios)
+                        ListenFuss(Texte.Kasse11.ersteAuszahlung)
                     }
                 }
                 if let fehler { Section { FehlerZeile(text: fehler) } }

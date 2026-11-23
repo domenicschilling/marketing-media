@@ -27,6 +27,8 @@ struct StudioMehr: Codable, Sendable, Hashable {
     var zahlartenHinweis: Bool?
     var recht: RechtStand?
     var fragebogenAm: String?
+    /// Studio nimmt über Tattoofin keine Anzahlungen an (z. B. TF München/Landshut)
+    var anzahlungAus: Bool?
 
     struct Benachrichtigung: Codable, Sendable, Hashable {
         var email: String?

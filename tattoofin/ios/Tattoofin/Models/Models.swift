@@ -29,6 +29,12 @@ struct Studio: Codable, Sendable, Hashable {
     var apple: AppleAbo?
     /// Testkauf (Apple-Sandbox, auch App Review): Kasse im Testmodus wie das Demo-Studio (Testzahlung ohne Geld, keine Stripe-Einrichtung)
     var testmodus: Bool?
+    // 1.1 Kasse (Felder aus oeffentlich(), siehe Kasse11Modelle.swift)
+    var strasse: String?
+    var plz: String?
+    var land: String?
+    var zahlseiteAdresse: ZahlseiteAdresse?
+    var anzahlungAus: Bool?
 
     var name: String { firma ?? "Dein Studio" }
     var darfKassieren: Bool { kannKassieren ?? false }
@@ -74,9 +80,16 @@ struct Zahlung: Codable, Sendable, Hashable, Identifiable {
     var nurKarte: Bool?
     var leistungLink: String?
     var gutschein: GutscheinInfo?
+    // 1.1 Kasse: Abwicklung (plattform | direkt = Provision) und Ausweich-Anzahlung nach Klarna-Ablehnung (Kasse11Modelle.swift)
+    var abwicklung: String?
+    var ausweich: ZahlungAusweich?
+    var ausweichVon: String?
+    var restCent: Int?
+    var hinweis: String?
 
     var istGutschein: Bool { art == "gutschein" }
-    var istOffen: Bool { status == "offen" }
+    /// Offen und noch nicht über eine Ausweich-Anzahlung angezahlt (dann ist der Link erledigt)
+    var istOffen: Bool { status == "offen" && !istAusweichAngezahlt }
     var istBezahlt: Bool { status == "bezahlt" || status == "in_pruefung" }
 
     var titel: String {

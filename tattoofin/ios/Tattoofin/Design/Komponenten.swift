@@ -10,6 +10,7 @@ struct StatusChip: View {
     init(zahlung status: String) {
         let (t, f): (String, Color) = switch status {
         case "offen": ("offen", .tfOrange)
+        case "angezahlt": ("angezahlt", .tfGruen)
         case "in_pruefung": ("in Prüfung", .tfOrange)
         case "bezahlt": ("bezahlt", .tfGruen)
         case "storniert": ("storniert", .tfLeise)
