@@ -49,7 +49,9 @@ struct RootView: View {
         .onChange(of: phase) { _, neu in
             switch neu {
             case .background: sperre.inDenHintergrund()
-            case .active: sperre.wiederAktiv()
+            case .active:
+                sperre.wiederAktiv()
+                PushManager.shared.imVordergrund()
             default: break
             }
         }

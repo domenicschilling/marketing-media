@@ -13,6 +13,7 @@ struct KontoLoeschenView: View {
     @State private var fehler: String?
     @State private var ergebnis: KontoLoeschenAntwort?
     @State private var aboVerwalten = false
+    @State private var zugangFrage = false
 
     private var istInhaber: Bool { app.sitzung?.istInhaber ?? false }
     private var istApple: Bool { portal.studio?.istApple ?? false }
@@ -37,6 +38,13 @@ struct KontoLoeschenView: View {
         .navigationTitle(istInhaber ? Texte.Loeschen.titel : Texte.Team.zugangEntfernen)
         .navigationBarTitleDisplayMode(.inline)
         .manageSubscriptionsSheet(isPresented: $aboVerwalten)
+        // Wie in TeamView: erst nachfragen, rückgängig machen kann es nur der Inhaber
+        .alert(Texte.Team.zugangEntfernenFrage, isPresented: $zugangFrage) {
+            Button(Texte.Team.zugangEntfernen, role: .destructive) { zugangEntfernen() }
+            Button(Texte.Allgemein.abbrechen, role: .cancel) {}
+        } message: {
+            Text(Texte.Team.zugangEntfernenText)
+        }
     }
 
     /// Hinweis: Apple-Abo zusätzlich in den Einstellungen des Apple-Accounts kündigen
@@ -125,20 +133,23 @@ struct KontoLoeschenView: View {
             Ueberschrift(Texte.Team.zugangEntfernen, groesse: 26)
             Text(Texte.Team.zugangEntfernenErklaerung).font(.dm(.body)).foregroundStyle(Color.tfTinte).fixedSize(horizontal: false, vertical: true)
             if let fehler { FehlerZeile(text: fehler) }
-            Button(Texte.Team.zugangEntfernen) {
-                arbeitet = true
-                Task {
-                    defer { arbeitet = false }
-                    do {
-                        try await APIClient.shared.eigenenZugangEntfernen()
-                        await app.lokalAbmelden(hinweis: Texte.Team.zugangEntferntHinweis)
-                    } catch {
-                        fehler = fehlerText(error)
-                    }
-                }
+            Button(Texte.Team.zugangEntfernen) { zugangFrage = true }
+                .buttonStyle(.gefahr)
+                .disabled(arbeitet)
+                .accessibilityIdentifier("zugang-entfernen")
+        }
+    }
+
+    private func zugangEntfernen() {
+        arbeitet = true
+        fehler = nil
+        Task {
+            defer { arbeitet = false }
+            do {
+                try await app.eigenenZugangEntfernen()
+            } catch {
+                fehler = fehlerText(error)
             }
-            .buttonStyle(.gefahr)
-            .disabled(arbeitet)
         }
     }
 

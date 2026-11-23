@@ -129,8 +129,9 @@ struct TeamView: View {
                 team = try await APIClient.shared.teamSpeichern(emails, alleAbmelden: alleAbmelden)
                 neueAdresse = ""
                 if alleAbmelden {
-                    // „Zusätzlich alle abmelden“ trifft auch dieses Gerät
-                    await app.lokalAbmelden(hinweis: Texte.Konto.ueberallErledigt)
+                    // „Zusätzlich alle abmelden“ trifft auch dieses Gerät. Der Server lässt es gültig, darum hier
+                    // richtig abmelden (sonst bekäme es weiter Zahlungs-Mitteilungen).
+                    await app.abmelden(hinweis: Texte.Konto.ueberallErledigt)
                 }
             } catch {
                 fehler = fehlerText(error)
@@ -141,8 +142,7 @@ struct TeamView: View {
     private func eigenenZugangEntfernen() {
         Task {
             do {
-                try await APIClient.shared.eigenenZugangEntfernen()
-                await app.lokalAbmelden(hinweis: Texte.Team.zugangEntferntHinweis)
+                try await app.eigenenZugangEntfernen()
             } catch {
                 fehler = fehlerText(error)
             }

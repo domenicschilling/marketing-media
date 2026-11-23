@@ -8,7 +8,7 @@ struct StartBereich: View {
     @Environment(PortalStore.self) private var portal
     @Environment(WerbungStore.self) private var werbung
     @Environment(\.dynamicTypeSize) private var schrift
-    /// Ab „größer als Standard“ untereinander (die App begrenzt die Schrift auf xxxLarge, Bedienungshilfen-Größen kommen nie an)
+    /// Ab „größer als Standard“ untereinander. Die Schrift wächst hier bis AX5 (begrenzt ist nur der Ziffernblock der Kasse).
     private var grosseSchrift: Bool { schrift > .large }
 
     @AppStorage("tf-start-checkliste-aus") private var checklisteAus = false
@@ -87,11 +87,23 @@ struct StartBereich: View {
                     }
                     .frame(width: 20, height: 20)
                 }
-                Text(WerbungTexte.Start.einrichtung).font(.dm(.subheadline, weight: .bold)).foregroundStyle(Color.tfTinte)
-                    .lineLimit(1)
-                Spacer(minLength: 2)
-                Text(fertig == von ? "✓" : "\(fertig)/\(von)").font(.dm(.subheadline, weight: .semibold).monospacedDigit())
+                // Bei Bedienungshilfen-Größen steht der Zähler unter dem Wort, damit „Einrichtung“ nicht zu „Einrich…“ wird
+                // (iPhone SE/17e ab etwa AX4). Nur im Notfall leicht verkleinern statt kürzen.
+                let zaehler = Text(fertig == von ? "✓" : "\(fertig)/\(von)").font(.dm(.subheadline, weight: .semibold).monospacedDigit())
                     .foregroundStyle(Color.tfLeise)
+                let wort = Text(WerbungTexte.Start.einrichtung).font(.dm(.subheadline, weight: .bold)).foregroundStyle(Color.tfTinte)
+                    .lineLimit(1)
+                if schrift.isAccessibilitySize {
+                    VStack(alignment: .leading, spacing: 2) {
+                        wort.minimumScaleFactor(0.7)
+                        zaehler
+                    }
+                    Spacer(minLength: 2)
+                } else {
+                    wort
+                    Spacer(minLength: 2)
+                    zaehler
+                }
                 Image(systemName: "chevron.right").font(.caption.weight(.bold)).foregroundStyle(Color.tfLeise)
             }
             .frame(maxWidth: .infinity, minHeight: 28)
@@ -264,7 +276,7 @@ struct ChecklistenBlatt: View {
 
     private func ausfuehren(_ a: StartCheckpunkt.Aktion, punkt: String) {
         switch a {
-        case .werbung: zurWerbung(punkt == "theke" ? .zahlseite : .beitraege)
+        case .werbung: zurWerbung(StartCheckpunkte.werbungZiel(punkt: punkt, klarnaMaterial: werbung.klarnaMaterial))
         case .recht: ziel = .recht
         case .fragebogen: ziel = .fragebogen
         }

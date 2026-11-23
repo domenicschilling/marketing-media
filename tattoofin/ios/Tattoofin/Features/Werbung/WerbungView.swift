@@ -6,6 +6,8 @@ struct WerbungView: View {
     @Environment(AppState.self) private var app
     @Environment(PortalStore.self) private var portal
     @Environment(WerbungStore.self) private var werbung
+    @State private var stripeLaedt = false
+    @State private var stripeFehler: String?
 
     var body: some View {
         NavigationStack {
@@ -150,7 +152,7 @@ struct WerbungView: View {
                             .font(.dm(.subheadline, weight: .semibold))
                             .foregroundStyle(Color.tfTinte)
                             .padding(.horizontal, 14)
-                            .frame(minHeight: 36)
+                            .frame(minHeight: 44)
                             .background(Color.tfKarte, in: Capsule())
                             .overlay(Capsule().stroke(Color.tfLinie, lineWidth: 1))
                     }
@@ -163,12 +165,30 @@ struct WerbungView: View {
         .accessibilityIdentifier("werbung-sprungleiste")
     }
 
-    /// Studio ohne Klarna dauerhaft: kurz sagen, was es gibt und was man tun kann
+    /// Studio ohne Klarna-Material: kurz sagen, warum, was es gibt und was man tun kann.
+    /// Klarna dauerhaft, aber im Stripe-Konto aus: ehrlicher Hinweis + (Inhaber) „Bei Stripe ansehen“.
     private var ohneKlarnaKarte: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(WerbungTexte.ohneKlarnaTitel).font(.dm(.headline, weight: .bold)).foregroundStyle(Color.tfTinte)
-            Text(WerbungTexte.ohneKlarnaText).font(.dm(.subheadline)).foregroundStyle(Color.tfLeise)
+        let aus = werbung.klarnaFall == .klarnaAus
+        let inhaber = app.sitzung?.istInhaber == true
+        return VStack(alignment: .leading, spacing: 10) {
+            Text(aus ? Texte.Konto11.klarnaAusTitel : WerbungTexte.ohneKlarnaTitel)
+                .font(.dm(.headline, weight: .bold)).foregroundStyle(Color.tfTinte)
                 .fixedSize(horizontal: false, vertical: true)
+            Text(aus ? (inhaber ? Texte.Konto11.klarnaAusInhaber : Texte.Konto11.klarnaAusTeam) : Texte.Konto11.ohneKlarnaText)
+                .font(.dm(.subheadline)).foregroundStyle(Color.tfLeise)
+                .fixedSize(horizontal: false, vertical: true)
+            if aus && inhaber && portal.studio?.stripe?.verbunden == true {
+                Button { stripeOeffnen() } label: {
+                    HStack {
+                        Label(Texte.Mehr.stripeAnsehen, systemImage: "building.columns")
+                        if stripeLaedt { ProgressView() }
+                    }
+                }
+                .buttonStyle(.zweit)
+                .disabled(stripeLaedt)
+                .accessibilityIdentifier("werbung-klarna-stripe")
+                if let stripeFehler { FehlerZeile(text: stripeFehler) }
+            }
             Link(destination: StudioMehrAbschnitt.whatsappURL) {
                 Label(WerbungTexte.hilfeWhatsApp, systemImage: "message")
             }
@@ -176,6 +196,20 @@ struct WerbungView: View {
             .accessibilityHint("Öffnet WhatsApp")
         }
         .karte()
+    }
+
+    /// Stripe-Dashboard (nur Inhaber, Server prüft) im In-App-Safari, wie unter Konto → Dein Studio
+    private func stripeOeffnen() {
+        stripeLaedt = true
+        stripeFehler = nil
+        Task {
+            defer { stripeLaedt = false }
+            do {
+                SafariOeffner.oeffnen(try await APIClient.shared.stripeDashboardLink())
+            } catch {
+                stripeFehler = fehlerText(error)
+            }
+        }
     }
 }
 

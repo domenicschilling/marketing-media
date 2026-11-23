@@ -59,14 +59,46 @@ final class PushManager {
         log.notice("Mitteilungen: Registrierung bei APNs nicht möglich: \(fehler.localizedDescription, privacy: .public)")
     }
 
+    /// Letzter Versand ist gescheitert (kein Netz o. Ä.): beim nächsten Wechsel in den Vordergrund nochmal
+    private(set) var sendenAusstehend = false
+    private var sendet = false
+
     func tokenSenden(_ hex: String) async {
         guard AppState.shared.sitzung != nil else { return }
+        sendet = true
+        defer { sendet = false }
         do {
             let a = try await APIClient.shared.pushTokenSenden(hex, umgebung: Self.umgebung)
             apnsAktiv = a.apnsAktiv
+            sendenAusstehend = false
             log.info("Mitteilungen: Token gesendet, apnsAktiv=\(a.apnsAktiv ?? false, privacy: .public)")
         } catch {
+            sendenAusstehend = true
             log.error("Mitteilungen: Token senden fehlgeschlagen: \(fehlerText(error), privacy: .public)")
         }
+    }
+
+    /// Nach jeder Anmeldung: Der Server hat ein neues Gerät ohne Token angelegt. Einen gemerkten Token sofort schicken
+    /// (APNs antwortet erst nach der neuen Registrierung am Ende der Einrichtung), wenn Mitteilungen erlaubt sind.
+    func nachAnmeldung() {
+        guard let t = Einstellungen.pushToken, !t.isEmpty else { return }
+        Task {
+            let s = await status()
+            guard s == .authorized || s == .provisional || s == .ephemeral else { return }
+            await tokenSenden(t)
+        }
+    }
+
+    /// App kommt in den Vordergrund: gescheiterten Versand wiederholen
+    func imVordergrund() {
+        guard !sendet, let t = Self.erneutSenden(ausstehend: sendenAusstehend, angemeldet: AppState.shared.sitzung != nil,
+                                                  token: Einstellungen.pushToken) else { return }
+        Task { await tokenSenden(t) }
+    }
+
+    /// Welcher Token soll erneut gesendet werden? nil = keiner
+    nonisolated static func erneutSenden(ausstehend: Bool, angemeldet: Bool, token: String?) -> String? {
+        guard ausstehend, angemeldet, let token, !token.isEmpty else { return nil }
+        return token
     }
 }

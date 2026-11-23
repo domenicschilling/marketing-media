@@ -20,6 +20,9 @@ struct KontoView: View {
     @State private var pushErlaubt: Bool?
     @State private var prueftStripe = false
     @State private var fehler: String?
+    /// Fehler direkt im jeweiligen Abschnitt (nicht erst unten bei „Abmelden“)
+    @State private var mitteilungenFehler: String?
+    @State private var stripeFehler: String?
     @State private var rechtsseite: Rechtsseite?
     @State private var abmeldenFrage = false
     @State private var ueberallFrage = false
@@ -138,12 +141,15 @@ struct KontoView: View {
                 if let d = Datum.tag(abo.laeuftBis) { WertZeile(titel: Texte.Abo.laeuftBis, wert: d) }
                 if abo.istSandbox { Text(Texte.Abo.sandbox).font(.dm(.footnote)).foregroundStyle(Color.tfLeise) }
             }
-            Button {
-                aboVerwalten = true
-            } label: {
-                Label(Texte.Abo.verwalten, systemImage: "creditcard")
+            // Apples Fenster zeigt die Abos der Apple-ID dieses iPhones: beim Team-Mitglied steht dort kein Tattoofin-Abo
+            if istInhaber {
+                Button {
+                    aboVerwalten = true
+                } label: {
+                    Label(Texte.Abo.verwalten, systemImage: "creditcard")
+                }
+                .foregroundStyle(Color.tfTinte)
             }
-            .foregroundStyle(Color.tfTinte)
             if abo?.istBeendet == true && istInhaber {
                 Button {
                     aboErneuern = true
@@ -154,6 +160,8 @@ struct KontoView: View {
             }
         } header: {
             ListenKopf(Texte.Abo.abschnitt)
+        } footer: {
+            if !istInhaber { ListenFuss(Texte.Konto11.aboNurHauptadresse) }
         }
     }
 
@@ -179,6 +187,7 @@ struct KontoView: View {
                 }
             }
             .disabled(prueftStripe)
+            if let stripeFehler { FehlerZeile(text: Texte.Konto11.nichtGeprueft(stripeFehler)) }
             if let u = studio?.connectUrl.flatMap(URL.init(string:)), st?.freigegeben != true, studio?.istTestmodus != true {
                 Button { openURL(u) } label: { Label(Texte.Kasse.stripeOeffnen, systemImage: "safari") }
             }
@@ -229,6 +238,7 @@ struct KontoView: View {
                     .onChange(of: kundenname) { alt, neu in if alt != neu { kundennameSpeichern() } }
             }
             .disabled(geraetFehler != nil)
+            if let mitteilungenFehler { FehlerZeile(text: Texte.Konto11.nichtGespeichert(mitteilungenFehler)) }
         } header: {
             ListenKopf(Texte.Konto.mitteilungen)
         } footer: {
@@ -359,9 +369,12 @@ struct KontoView: View {
         Task {
             do {
                 geraet = try await APIClient.shared.geraetAendern(.init(mitteilungen: m))
-                fehler = nil
+                mitteilungenFehler = nil
             } catch {
-                fehler = fehlerText(error)
+                // Schalter zurück auf den gespeicherten Stand (wie beim Kundennamen), sonst zeigt er etwas, das nicht gilt
+                mitteilungenZahlungen = geraet?.mitteilungen?.zahlungen ?? true
+                mitteilungenAuszahlungen = geraet?.mitteilungen?.auszahlungen ?? true
+                mitteilungenFehler = fehlerText(error)
             }
         }
     }
@@ -371,23 +384,24 @@ struct KontoView: View {
         Task {
             do {
                 geraet = try await APIClient.shared.geraetAendern(.init(kundennameInMitteilung: kundenname))
-                fehler = nil
+                mitteilungenFehler = nil
             } catch {
                 kundenname = geraet?.kundennameInMitteilung ?? false
-                fehler = fehlerText(error)
+                mitteilungenFehler = fehlerText(error)
             }
         }
     }
 
     private func stripePruefen() {
         prueftStripe = true
+        stripeFehler = nil
         Task {
             defer { prueftStripe = false }
             do {
                 _ = try await APIClient.shared.kontoStatus()
                 await portal.laden()
             } catch {
-                fehler = fehlerText(error)
+                stripeFehler = fehlerText(error)
             }
         }
     }
