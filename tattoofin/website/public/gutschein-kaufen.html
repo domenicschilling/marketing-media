@@ -47,7 +47,7 @@ a{color:inherit}
 .top.solid{background:rgba(11,11,11,.93);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
 .top img{height:40px;width:auto}
 .top .eyebrow{font-size:10.5px;padding:8px 12px}
-.hero{position:relative;height:100svh;min-height:520px;display:flex;align-items:flex-end;overflow:hidden}
+.hero{position:relative;height:100svh;display:flex;align-items:flex-end;overflow:hidden}
 .hero .slides{position:absolute;inset:0;height:80%}
 .hero .slides img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1.08);transition:opacity 1.4s ease,transform 7s linear}
 .hero .slides img.on{opacity:1;transform:scale(1)}
@@ -61,7 +61,7 @@ a{color:inherit}
 .cd{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:4px auto 18px;max-width:420px}
 .cd div{background:rgba(20,19,17,.85);border:1px solid var(--line);border-radius:14px;padding:10px 0 8px;text-align:center}
 .cd b{display:block;font:700 30px/1 var(--hf);color:var(--gold2)}
-.cd small{display:block;margin-top:4px;font:600 10px/1 var(--hf);letter-spacing:.18em;text-transform:uppercase;color:var(--mute)}
+.cd small{display:block;margin-top:4px;font:600 12px/1 var(--hf);letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
 .cd-titel{font:600 12px/1 var(--hf);letter-spacing:.2em;text-transform:uppercase;color:var(--gold2);margin:0 0 10px}
 /* Weihnachten: feine goldene Schneeflocken im Hero */
 .flocken{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
@@ -208,7 +208,8 @@ textarea{min-height:80px;resize:vertical}
 @media(max-height:700px){.cd b{font-size:24px}.cd div{padding:8px 0 6px}.cd{margin-bottom:12px}.cd-titel{display:none}}
 @media(max-height:620px){.hero .in{padding-top:64px}.hero h1{font-size:clamp(32px,9vw,52px);margin:8px 0 6px}.hero p.lead{font-size:15px;margin-bottom:12px}.btn{padding:16px 26px}.rate{display:none}}
 @media(max-height:520px) and (orientation:landscape){.hero .in{padding-top:56px}.hero h1{font-size:30px}.hero h1 span{display:inline}.mini{display:none}.cd{display:none}}
-@media(max-height:560px) and (orientation:portrait){.cd{display:none}}
+@media(max-height:560px) and (orientation:portrait){.cd{display:none}.hero .in>.eyebrow{display:none}.hero .in{padding-top:58px;padding-bottom:16px}.hero p.lead{font-size:14px;margin-bottom:10px}.mini{margin-top:8px}}
+@media(max-height:420px) and (orientation:landscape){.hero .in>.eyebrow,.hero p.lead,.rate{display:none}.hero .in{padding:52px 20px 14px}.hero h1{font-size:28px;margin:0 0 10px}.btn{padding:13px 22px;font-size:16px}.hero .btn.full{width:auto;min-width:300px}}
 </style>
 </head>
 <body>
