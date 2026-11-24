@@ -6,7 +6,10 @@
      verkleinert, bis er passt: Überschrift höchstens 540 px (Quadrat-Rand ≥ 45 px), Kartentext mit mindestens 24 px Rand links und rechts
      (sonst wurde „als PDF“ abgeschnitten). Alles in Großbuchstaben (Oswald). Die Goldzeilen haben oben Luft, sonst schneidet der
      Gold-Verlauf (background-clip:text) die Punkte über dem Ü ab. Drei Fassungen: „angebot“ (500 € für 375 €), „neutral“ (ohne Beträge,
-     wenn der 500er oder der günstigste ausverkauft ist), „danach“ (nach dem 24.12., 16 Uhr oder wenn alles verkauft ist). --><style>
+     wenn der 500er oder der günstigste ausverkauft ist), „danach“ (nach dem 24.12., 16 Uhr oder wenn alles verkauft ist).
+     24.11.2026 abends (Domenic): „Für 375 € kaufen, / 500 € bekommen*“ (bezahlter Betrag zuerst, Wert gold und größer), Pille
+     „Tattoo-Gutschein“, Karte „Für 200 € / 300 € / bekommen“, unten die Bedingung zum Sternchen (einzige Zeile unter 30 px, sie ist der
+     Pflicht-Hinweis, kein Werbetext; nur in der Fassung „angebot“). --><style>
 @font-face{font-family:"Oswald";font-weight:500 700;src:url({{assets}}/schrift/oswald-latin.woff2) format("woff2")}
 @font-face{font-family:"Inter";font-weight:400 700;src:url({{assets}}/schrift/inter-latin.woff2) format("woff2")}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -25,6 +28,7 @@ html,body{width:1200px;height:630px;overflow:hidden;background:#0B0B0B}
 h1{margin-top:12px;font-family:Oswald;font-weight:700;text-transform:uppercase;line-height:1}
 h1 span{display:block;width:max-content;margin:0 auto;white-space:nowrap}
 h1 .a{font-size:76px;color:#F4EFE6}
+h1.kaufen .a{font-size:62px}
 h1 .b{font-size:108px;line-height:1.12;padding-top:.12em;margin-top:-.08em}
 .g{background:linear-gradient(180deg,#F6E7C3 0%,#E8CD92 40%,#C8A35A 75%,#A9843F 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
 .bis{margin-top:6px;font:700 40px/1 Oswald;letter-spacing:.04em;text-transform:uppercase;color:#0B0B0B;background:linear-gradient(180deg,#E8CD92,#C8A35A);border-radius:999px;padding:12px 30px 11px;white-space:nowrap}
@@ -36,6 +40,8 @@ h1 .b{font-size:108px;line-height:1.12;padding-top:.12em;margin-top:-.08em}
 .karte .ab{font:600 32px/1 Oswald;letter-spacing:.1em;color:#E8CD92}
 .karte .p{font:700 76px/1.12 Oswald;margin:2px 0 4px;padding-top:.08em}
 .karte .w{font:600 30px/1 Oswald;letter-spacing:.04em;color:#F4EFE6}
+.fuss{position:absolute;left:40px;right:40px;bottom:26px;text-align:center;font:500 20px/1.2 Inter,sans-serif;color:#C9C0AE;white-space:nowrap}
+.fuss:empty{display:none}
 </style></head><body><div id="og">
 <div class="rahmen"></div>
 {{{zweigL}}}{{{zweigR}}}
@@ -45,9 +51,10 @@ h1 .b{font-size:108px;line-height:1.12;padding-top:.12em;margin-top:-.08em}
 <div class="mitte">
  <img class="logo" src="{{assets}}/{{kuerzel}}/logo-gold-960.webp" alt="">
  <span class="aktion">{{pille}}</span>
- <h1><span class="a">{{zeileA}}</span><span class="b g">{{zeileB}}</span></h1>
+ <h1 class="{{h1Klasse}}"><span class="a">{{zeileA}}</span><span class="b g">{{zeileB}}</span></h1>
  <span class="bis">{{bis}}</span>
 </div>
+<div class="fuss">{{fuss}}</div>
 </div>
 <script>var F='<svg viewBox="-12 -12 24 24" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round">'+[0,60,120,180,240,300].map(function(r){return '<g transform="rotate('+r+')"><path d="M0 0V-11M0-7.5l-2.6-2.6M0-7.5l2.6-2.6M0-3.8l-1.8-1.8M0-3.8l1.8-1.8"/></g>'}).join("")+'</svg>';
 // Jeden Text messen und verkleinern, bis er passt: Überschrift ≤ 540 px, Pillen ≤ 560 px, Kartentext ≤ Kartenbreite − 2 × 24 px
@@ -59,6 +66,8 @@ window.fertig=document.fonts.ready.then(function(){
   while(e.offsetWidth>max&&f>24){f-=1;e.style.fontSize=f+"px"}
   if(e.offsetWidth>max)ok=false;
  });
+ // Bedingung zum Sternchen: eine Zeile innerhalb des Rahmens
+ var fu=document.querySelector(".fuss");if(fu.textContent&&fu.scrollWidth>fu.clientWidth)ok=false;
  // Kartentext auch in der Höhe: Zeilen zusammen höchstens Kartenhöhe − Band − 20 px
  var hoehe=[].reduce.call(karte.querySelectorAll("span"),function(s,e){return s+e.offsetHeight},0);
  if(hoehe>karte.clientHeight-34-20)ok=false;

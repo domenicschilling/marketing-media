@@ -1,0 +1,1629 @@
+// End-to-End-Test aller Abläufe mit Stripe-Nachbau (inkl. Connect, eingebettete Bausteine, Bezahlfeld) und echtem Browser (Playwright).
+//   node dev/e2e.mjs [screenshot-ordner] [handy-screenshot-ordner]
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { createRequire } from "node:module";
+import { fileURLToPath } from "node:url";
+import { startDev } from "./server.mjs";
+import { sendeWebhook } from "../netlify/functions/_lib/stripe-sim.mjs";
+import { randomBytes } from "node:crypto";
+
+const require = createRequire(import.meta.url);
+let chromium;
+try { ({ chromium } = require("playwright")); } catch { ({ chromium } = require("/opt/node22/lib/node_modules/playwright")); }
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const PORT = Number(process.env.E2E_PORT || 8899), BASE = `http://localhost:${PORT}`, RESEND_FAKE_PORT = Number(process.env.E2E_RESEND_PORT || 12199);
+// Stripe-Nachbau: Port einstellbar (STRIPE_MOCK_PORT), damit zwei Testläufe parallel laufen können
+const MOCK_PORT = Number(process.env.STRIPE_MOCK_PORT || 12111), MOCK_PAY = new RegExp(`localhost:${MOCK_PORT}\\/pay\\/`), MOCK_ONBOARD = new RegExp(`localhost:${MOCK_PORT}\\/onboard\\/`);
+const shots = process.argv[2] || path.join(os.tmpdir(), "tf-e2e");
+const handyShots = process.argv[3] || path.join(shots, "handy");
+fs.mkdirSync(shots, { recursive: true }); fs.mkdirSync(handyShots, { recursive: true });
+const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "tf-data-"));
+// Feste „Jetzt“-Zeit vor dem Klarna-Stichtag (20.11.2026), damit die Tests nicht vom Kalendertag abhängen
+process.env.TF_JETZT = "2026-10-27T12:00:00+01:00";
+// Seit 26.10.2026 ist das Paket Risikofrei für Neukunden geschlossen. Die Abläufe der BESTANDSSTUDIOS (Risikofrei) werden hier weiter geprüft:
+// Diese Studios werden wie vor der Schließung angelegt (Notschalter RISIKOFREI_NEU). Das Sperr-Verhalten selbst prüft der Abschnitt „Risikofrei geschlossen“ weiter unten.
+process.env.RISIKOFREI_NEU = "1"; process.env.EINMAL_NEU = "1";
+await startDev({ port: PORT, mock: true, dataDir, quiet: true });
+// erst nach startDev laden (die Module lesen die Umgebung beim Import)
+const storeMod = await import("../netlify/functions/_lib/store.mjs");
+const { mails: mailVorlagen } = await import("../netlify/functions/_lib/emails.mjs");
+
+let ok = 0, fail = 0;
+const check = (cond, name, info) => { if (cond) { ok++; console.log("  ✓", name); } else { fail++; console.log("  ✗", name, info ? "→ " + String(info).slice(0, 600) : ""); } };
+const admin = (p, opts = {}) => fetch(`${BASE}/api/admin/${p}`, { method: opts.body ? "POST" : "GET", ...opts, headers: { Authorization: "Bearer admin", "content-type": "application/json" }, body: opts.body ? JSON.stringify(opts.body) : undefined }).then((r) => r.json());
+const mailsAn = (to) => fs.readdirSync(dataDir).filter((f) => f.startsWith("mail%2F")).map((f) => JSON.parse(fs.readFileSync(path.join(dataDir, f)))).filter((m) => [].concat(m.to).includes(to));
+const linkAus = (m, re) => (m.html.match(re) || [])[1]?.replace(/&amp;/g, "&");
+const mock = (p, opts) => fetch(`http://localhost:${MOCK_PORT}/` + (opts ? "" : "mock/") + p, opts).then((r) => r.json());
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+const post = (url, b, cookie) => fetch(BASE + url, { method: "POST", headers: { "content-type": "application/json", ...(cookie ? { cookie } : {}) }, body: JSON.stringify(b) });
+// Formular absenden wie die Zwischenseite beim Login per Link (POST, application/x-www-form-urlencoded)
+const formPost = (url, felder, cookie) => fetch(BASE + url, { method: "POST", redirect: "manual", headers: { "content-type": "application/x-www-form-urlencoded", ...(cookie ? { cookie } : {}) }, body: new URLSearchParams(felder).toString() });
+// Neue Einladungen sind seit 11.11.2026 abgeschaltet (POST /api/admin/einladen → 410). Für die Tests der noch gültigen, früher
+// ausgestellten Einladungs-Codes (Bestandsweg bleibt) wird so ein Code direkt im Speicher angelegt.
+const altEinladung = async ({ email, firma, bezeichnung = null }) => {
+  const code = randomBytes(9).toString("base64url");
+  await storeMod.store.set(`geschenk/${code}`, { code, email, firma, bezeichnung, erstellt: new Date().toISOString(), benutzt: null });
+  return { ok: true, link: `${BASE}/start.html?modell=kauf&geschenk=${code}`, bezeichnung, gesendet: false };
+};
+const studioPer = async (email) => (await admin("studios")).find((s) => s.email === email);
+
+const browser = await chromium.launch();
+const errors = [];
+const LAST = os.loadavg()[0] / Math.max(1, os.cpus().length);
+const WARTEN = Math.round(Math.min(240000, Math.max(60000, 60000 * LAST / 4)));
+if (WARTEN > 60000) console.log(`Rechner stark ausgelastet (Last ${os.loadavg()[0].toFixed(0)}): Wartezeit je Schritt ${Math.round(WARTEN / 1000)} s`);
+async function neueSeite(opts = { viewport: { width: 1280, height: 900 } }) {
+  const c = await browser.newContext(opts);
+  const p = await c.newPage();
+  // Unter Last (viele Testläufe gleichzeitig auf dem Mac, 23.11.2026) reichten die 30 s Standard-Wartezeit nicht immer.
+  // 24.11.2026: bei Last 500–700 auch 60 s nicht (Abbrüche an wechselnden Stellen, z. B. Fragebogen, Studio-Anmeldung) →
+  // Wartezeit wächst mit der Last des Rechners (bis 4 Minuten). Ohne Last bleibt es bei 60 s.
+  p.setDefaultTimeout(WARTEN);
+  p.setDefaultNavigationTimeout(WARTEN);
+  p.on("pageerror", (e) => errors.push(e.message));
+  p.on("console", (m) => { if (m.type() === "error" && !/404|Failed to load resource/.test(m.text())) errors.push(m.text()); });
+  p.on("dialog", (d) => d.accept(p._dialogAntwort || undefined));
+  return p;
+}
+// API-Aufruf mit der Sitzung (Cookie) der Seite
+const api = (p, url, { method = "GET", body } = {}) => p.evaluate(async ([url, method, body]) => {
+  const r = await fetch(url, { method, headers: { "content-type": "application/json" }, body: body ? JSON.stringify(body) : undefined });
+  let data = {}; try { data = await r.json(); } catch { /* leer */ }
+  return { status: r.status, data };
+}, [url, method, body]);
+
+// Cookie-Fenster (Meta-Pixel) schließen, damit es keine Knöpfe verdeckt
+async function cookiesAblehnen(p) {
+  const nein = await p.waitForSelector(".tf-cc .nein", { timeout: 1500 }).catch(() => null);
+  if (nein) await nein.click();
+}
+
+// Paket Einmalzahlung ist seit 02.11.2026 nicht mehr auf der Seite wählbar (Notschalter EINMAL_NEU). Bestandsabläufe: Auswahl wie früher nachbilden.
+async function einmalNachbilden(p, zahlart) {
+  // Einfache Anmeldung (16.11.2026): Die Seite blendet die Adressfelder bei Einmalzahlung ein, sobald sich das Paket ändert (change)
+  await p.evaluate((z) => { const f = document.getElementById("f"); f.insertAdjacentHTML("beforeend", `<input type="radio" name="paket" value="einmal" checked style="display:none"><input type="radio" name="zahlart" value="${z || "sofort"}" checked style="display:none">`); f.querySelector("input[name=paket][value=einmal]").dispatchEvent(new Event("change", { bubbles: true })); }, zahlart);
+}
+
+// paket: monatlich | einmal; alternativ modell (alter Link: kauf → einmal). Risikofrei ist für Neukunden geschlossen (Bestandsstudios werden per API angelegt).
+async function signup(p, { paket, modell, email, firma, zahlart, geschenk, shot }) {
+  await p.goto(`${BASE}/start.html?${geschenk ? "geschenk=" + geschenk : paket ? "paket=" + paket : "modell=" + modell}`);
+  await cookiesAblehnen(p);
+  if (shot) await p.screenshot({ path: path.join(shot, "01-einladung.png"), fullPage: true });
+  if (paket === "einmal" || modell === "kauf") await einmalNachbilden(p, zahlart);
+  // Einfache Anmeldung (16.11.2026): ein Bildschirm, 4 Felder + 1 Häkchen. Adresse nur bei Einladung bzw. Einmalzahlung (dann sichtbar und Pflicht).
+  const mitAdresse = Boolean(geschenk) || paket === "einmal" || modell === "kauf";
+  check(await p.isVisible("#adresse-block") === mitAdresse, `/start (${geschenk ? "Einladung" : paket || modell}): Adressfelder ${mitAdresse ? "sichtbar" : "ausgeblendet"}`);
+  for (const [k, v] of Object.entries({ firma, inhaber: "Alex Muster", email, telefon: "0151 1234567", ...(mitAdresse ? { strasse: "Musterstr. 1", plz: "96047", ort: "Bamberg" } : {}) })) await p.fill("#" + k, v);
+  if (shot) await p.screenshot({ path: path.join(shot, "02-einladung-daten.png"), fullPage: true });
+  await p.check("input[name=ak_alle]");
+  await p.screenshot({ path: path.join(shot || shots, shot ? "03-einladung-vertrag.png" : `start-${paket || modell || "geschenk"}.png`), fullPage: true });
+  await p.click("#submit");
+}
+
+// Eingebettete Einrichtung im Dashboard (Simulation des Stripe-Bausteins „account-onboarding“)
+async function einrichtungEingebettet(p, shot) {
+  await p.waitForURL(/app\.html#einrichtung/, { timeout: 15000 });
+  await p.waitForSelector("#so-weiter");
+  if (shot) await appShot(p, path.join(shot, "04-einrichtung.png"));
+  await p.click("#so-weiter"); await p.click("#so-weiter");
+  if (shot) await appShot(p, path.join(shot, "05-einrichtung-bank.png"));
+  await p.click("#so-weiter");
+  await p.waitForFunction(() => /Bereit/.test(document.getElementById("top-status").textContent), null, { timeout: 15000 });
+}
+
+// Ganzseitiger Screenshot der App: untere Leiste ans Seitenende statt mitten ins Bild, Hinweis-Toast ausblenden
+async function appShot(p, datei) {
+  const st = await p.addStyleTag({ content: "body.app{position:relative}.tabbar{position:absolute!important}.toast{display:none!important}" });
+  await p.screenshot({ path: datei, fullPage: true });
+  await st.evaluate((el) => el.remove());
+}
+
+async function signatur(p) {
+  const b = await p.locator("#sig").boundingBox();
+  await p.mouse.move(b.x + 30, b.y + 120); await p.mouse.down();
+  for (let i = 0; i <= 24; i++) await p.mouse.move(b.x + 30 + i * 11, b.y + 120 - Math.sin(i / 2.5) * 45 - i * 2);
+  await p.mouse.up();
+}
+
+try {
+  // ---------------------------------------------------------------- Startseite
+  console.log("Startseite: ein Preis (49,90 € inkl. MwSt.) + QR-Code zum Ausdrucken, kein Risikofrei, keine Einmalzahlung");
+  // QR-Aufsteller eingestellt (15.11.2026): keine öffentliche Seite nennt ihn mehr (sichtbarer Text ohne Kommentare/Skripte).
+  // Ausnahmen: archivierte Vertragsfassungen (vertrag-20*.html, unverändert) und die Datenschutzerklärung (nur der Hinweis „entfallen“).
+  {
+    const alle = [];
+    const lauf = (d) => { for (const f of fs.readdirSync(d, { withFileTypes: true })) { const x = path.join(d, f.name); if (f.isDirectory()) lauf(x); else if (/\.html$/.test(f.name)) alle.push(x); } };
+    lauf(path.join(root, "public"));
+    const sichtbar = (h) => h.replace(/<!--[\s\S]*?-->/g, "").replace(/<script[\s\S]*?<\/script>/gi, "").replace(/<style[\s\S]*?<\/style>/gi, "");
+    const treffer = alle.filter((f) => !/\/vertrag-20[^/]*\.html$/.test(f)).map((f) => [path.relative(path.join(root, "public"), f), sichtbar(fs.readFileSync(f, "utf8"))])
+      .map(([f, h]) => [f, f === "datenschutz.html" ? h.replace(/<li><b>QR-Aufsteller aus Holz \(entfallen seit November 2026\):<\/b>[^<]*<\/li>/, "").replace(/; nur zur Abwicklung einer früheren, bezahlten oder vertraglich zugesagten Bestellung des QR-Aufstellers aus Holz der Betrieb, der ihn fertigt und verschickt \(Abschnitt 7\)\./, ".") : h])
+      .filter(([, h]) => /aufsteller|Gravur|Holzschild/i.test(h)).map(([f]) => f);
+    check(alle.length > 30 && treffer.length === 0, `Öffentliche Seiten (${alle.length} HTML-Dateien): kein QR-Aufsteller mehr (außer Vertragsarchiv und „entfallen“-Hinweis im Datenschutz)`, treffer.join(", "));
+    const jsTreffer = ["js/start.js", "js/app.js", "js/studios.js", "js/landing.js", "js/doc-defaults.js", "js/werbung-texte.js", "js/app-kit.js"].filter((f) => /Aufsteller aus Holz|Holz-Aufsteller|Wert 29 €/.test(fs.readFileSync(path.join(root, "public", f), "utf8")));
+    check(jsTreffer.length === 0 && !fs.existsSync(path.join(root, "public/js/aufsteller.js")) && !fs.existsSync(path.join(root, "public/aufsteller.html")), "Skripte der Website ohne Aufsteller-Texte; aufsteller.js und aufsteller.html gelöscht", jsTreffer.join(", "));
+    // Bilder vom Holz-Aufsteller (KI-Visualisierung) werden nicht mehr ausgeliefert
+    const bilder = ["/assets/lp/aufsteller-theke-480.webp", "/assets/lp/aufsteller-theke-800.webp", "/assets/lp/aufsteller-scannen-480.webp", "/assets/lp/aufsteller-scannen-800.webp", "/assets/start/aufsteller-scannen-800.webp"];
+    const bildStatus = await Promise.all(bilder.map(async (u) => (await fetch(BASE + u)).status));
+    const reste = [];
+    const lauf2 = (d) => { for (const f of fs.readdirSync(d, { withFileTypes: true })) { const x = path.join(d, f.name); if (f.isDirectory()) lauf2(x); else if (/aufsteller/i.test(f.name)) reste.push(path.relative(root, x)); } };
+    lauf2(path.join(root, "public"));
+    check(bildStatus.every((st) => st === 404) && reste.length === 0, "Aufsteller-Bilder (lp/aufsteller-*.webp, start/aufsteller-scannen-800.webp) liefern 404, keine Datei mit „aufsteller“ im Namen unter public/", bildStatus.join(",") + " " + reste.join(", "));
+    // Datenschutz: Aufsteller-Absatz ganz gestrichen (Entscheidung Domenic 16.11.2026), auch kein Hersteller mehr bei den Empfängern
+    const ds = fs.readFileSync(path.join(root, "public/datenschutz.html"), "utf8");
+    check(!/aufsteller/i.test(ds), "Datenschutz: kein Absatz und kein Empfänger zum QR-Aufsteller mehr (Entscheidung Domenic 16.11.2026)");
+    const cfgOeff = await (await fetch(BASE + "/api/config")).json();
+    check(!/aufsteller/i.test(JSON.stringify(cfgOeff)) && cfgOeff.vertragVersion === "2026-12f", "GET /api/config ohne Aufsteller-Preis/-Pakete, Vertrag 2026-12f");
+  }
+  const p0 = await neueSeite();
+  await p0.goto(BASE + "/");
+  check((await p0.textContent("h1")).replace(/\u00a0/g, " ").includes("auf einmal"), "Hero lädt (Überschrift für Studio-Inhaber, 16.11.2026)");
+  // Seit 16.11.2026 nachts: Hero ohne Raten*-Aussage und ohne Fußnote; die erste Fußnote steht im Abschnitt „Was du damit machen kannst“
+  { const w = await p0.evaluate(() => ({ heroFn: document.querySelectorAll(".auftakt .raten-fn").length, heroRaten: /(Raten|Klarna)\*/.test(document.querySelector(".auftakt").innerText),
+      ersteFn: document.querySelector("main .raten-fn")?.closest("section")?.id }));
+    check(w.heroFn === 0 && !w.heroRaten && w.ersteFn === "nutzen", "Hero ohne Raten*-Aussage und ohne Fußnote, erste Fußnote im Nutzen-Abschnitt", JSON.stringify(w)); }
+  // PFLICHT Domenic 16.11.2026: Kopf + Hero = genau der erste Bildschirm, auf jedem Gerät (Maß wie hero_check.py von Ultron, Höhen = sichtbare Fläche
+  // in Safari bzw. Browser). Unterkante Hero = Fensterhöhe ±8 px, Knopf und Preiszeile ganz sichtbar, Handybild überdeckt weder Satz noch Knopf.
+  { const GERAETE = [[375, 548], [390, 664], [430, 739], [412, 839], [768, 954], [1024, 1292], [1280, 720], [1366, 768], [1440, 900], [1920, 1080], [320, 568], [320, 460], [568, 320], [844, 390]];
+    const fehler = [];
+    for (const pf of ["/", "/studios.html", "/?utm_content=tv-a", "/?utm_content=tv-d"]) {
+      for (const [w, h] of GERAETE) {
+        const p = await neueSeite({ viewport: { width: w, height: h } });
+        await p.goto(BASE + pf, { waitUntil: "load" }); await p.waitForTimeout(400);
+        const m = await p.evaluate(() => {
+          const h = document.querySelector("section.auftakt"), b = (s) => h.querySelector(s).getBoundingClientRect();
+          const k = b(".auftakt-knopf .knopf"), pr = b(".preiszeile"), s = b(".unterzeile"), ha = b(".auftakt-handy");
+          const deckt = (a, c) => a.left < c.right && a.right > c.left && a.top < c.bottom - 2 && a.bottom > c.top + 2;
+          return { vh: innerHeight, unten: Math.round(h.getBoundingClientRect().bottom), knopf: Math.round(k.bottom), preis: Math.round(pr.bottom),
+            quer: document.documentElement.scrollWidth > innerWidth, deckt: deckt(ha, s) || deckt(ha, k),
+            // einspaltiger Hero (hochkant): Knopfmitte = Seitenmitte ±4 px
+            mitte: matchMedia("(orientation:portrait)").matches ? Math.round(Math.abs((k.left + k.right) / 2 - document.documentElement.clientWidth / 2)) : 0 };
+        });
+        await p.context().close();
+        if (!(Math.abs(m.unten - m.vh) <= 8 && m.knopf <= m.vh && m.preis <= m.vh && !m.quer && !m.deckt && m.mitte <= 4)) fehler.push(`${pf} ${w}x${h} ${JSON.stringify(m)}`);
+      }
+    }
+    // Untere Leiste („49,90 € … | Studio anmelden | WhatsApp“): beim Laden nie sichtbar (sie läge sonst über dem Hero-Knopf), erst nach dem
+    // Scrollen am Hero-Knopf vorbei. Ab 900 px Breite gibt es sie nicht (display:none).
+    for (const [w, h] of GERAETE) {
+      const p = await neueSeite({ viewport: { width: w, height: h } });
+      await p.goto(BASE + "/", { waitUntil: "load" }); await p.waitForTimeout(500);
+      const sicht = () => p.evaluate(() => { const l = document.getElementById("leiste"), cs = getComputedStyle(l), r = l.getBoundingClientRect(); return cs.display !== "none" && cs.visibility === "visible" && r.top < innerHeight - 4; });
+      const anfang = await sicht();
+      await p.evaluate(() => { const k = document.querySelector(".auftakt-knopf .knopf"); scrollTo(0, k.getBoundingClientRect().bottom + scrollY + 40); });
+      // bis 3 s warten (statt fest 600 ms): unter Last (parallele Läufe) kam die Leiste einmal etwas später (23.11.2026)
+      let danach = false;
+      for (let i = 0; i < (w < 900 ? 15 : 3) && !danach; i++) { await p.waitForTimeout(200); danach = await sicht(); }
+      await p.context().close();
+      if (anfang || (w < 900 && !danach)) fehler.push(`Leiste ${w}x${h}: beim Laden ${anfang ? "sichtbar" : "weg"}, nach dem Knopf ${danach ? "sichtbar" : "weg"}`);
+    }
+    // Cookie-Hinweis (erster Besuch): überdeckt nie Knopf oder Preiszeile im Hero (weicht aus wie auf /start), nach dem Hero ist er da
+    for (const [w, h] of GERAETE) {
+      const p = await neueSeite({ viewport: { width: w, height: h } });
+      await p.goto(BASE + "/", { waitUntil: "load" }); await p.waitForTimeout(400);
+      await p.evaluate(() => { scrollTo(0, 300); }); await p.waitForTimeout(300);
+      await p.evaluate(() => { scrollTo(0, 0); }); await p.waitForTimeout(500);
+      const deckt = await p.evaluate(() => {
+        const c = document.querySelector(".tf-cc"); if (!c || c.classList.contains("tf-cc-weg") || getComputedStyle(c).visibility !== "visible") return false;
+        const r = c.getBoundingClientRect();
+        return [...document.querySelectorAll(".auftakt .auftakt-knopf .knopf, .auftakt .preiszeile")].some((e) => { const q = e.getBoundingClientRect(); return q.left < r.right && q.right > r.left && q.top < r.bottom && q.bottom > r.top; });
+      });
+      await p.evaluate(() => { const k = document.querySelector(".auftakt .preiszeile"); scrollTo(0, k.getBoundingClientRect().bottom + scrollY + 60); }); await p.waitForTimeout(500);
+      const spaeter = await p.evaluate(() => { const c = document.querySelector(".tf-cc"); return Boolean(c) && !c.classList.contains("tf-cc-weg") && getComputedStyle(c).visibility === "visible"; });
+      const gleich = await p.evaluate(() => { const b = [...document.querySelectorAll(".tf-cc button")].map((x) => x.getBoundingClientRect()); return b.length === 2 && Math.abs(b[0].width - b[1].width) < 2 && Math.abs(b[0].height - b[1].height) < 2; });
+      await p.context().close();
+      if (deckt || !spaeter || !gleich) fehler.push(`Cookie-Hinweis ${w}x${h}: deckt Knopf/Preis ${deckt}, nach dem Hero da ${spaeter}, Knöpfe gleich ${gleich}`);
+    }
+    check(fehler.length === 0, "Hero = genau der erste Bildschirm auf 14 Geräten (inkl. 320×460 und Handy quer) (Start, /studios, Varianten No-Show und Gutschein): Unterkante = Fensterhöhe ±8 px, Knopf und Preiszeile sichtbar, nichts verdeckt, hochkant Knopf mittig (±4 px); untere Leiste beim Laden nie sichtbar, am Handy nach dem Hero-Knopf da; Cookie-Hinweis verdeckt nie Knopf/Preiszeile, nach dem Hero da, Knöpfe gleich groß", fehler.slice(0, 2).join(" ; ").slice(0, 400)); }
+  check(await p0.locator("#preis").count() === 1 && await p0.locator("#r-monat").count() === 0, "Ein Preis auf der Startseite, kein Paket-Rechner");
+  const preise = await p0.textContent("#preis");
+  check(preise.includes("49,90") && preise.includes("41,93") && !preise.includes("58,31") && !preise.includes("999") && !preise.includes("Einmalzahlung") && !/Gründer|Profi\b|Risikofrei|10 %|900 €|Grundge/.test(preise) && !/Raten\*|Klarna\*/.test(preise), "Preisbereich: nur 49,90 € inkl. MwSt. (klein 41,93 € netto), kein 58,31 €, keine Raten-Aussage (deshalb dort kein Warnsatz nötig)");
+  // Seit 16.11.2026 auch im Nutzen-Block direkt unter dem Hero erlaubt, aber nur mit eigener Fußnote im selben Abschnitt ≤ 560 px unter jeder Aussage
+  { const raten = await p0.evaluate(() => { const y = (e) => e.getBoundingClientRect().top + scrollY;
+      const cl = [...document.querySelectorAll("main h1, main h2, main h3, main p, main li, main span, main div")].filter((e) => !e.closest("#fragen, .fragen, [hidden]") && e.getBoundingClientRect().height > 1 && e.children.length < 6 && /(Raten|Klarna|Ratenzahlung)\*/.test(e.textContent) && !/Achtung! Kreditaufnahme/.test(e.textContent));
+      const fnIn = (n) => [...n.querySelectorAll(".raten-fn")].filter((f) => /Achtung! Kreditaufnahme kostet Geld\./.test(f.textContent));
+      const NUTZEN = "main > section.nutzen#nutzen, main > section.geld#geld";
+      const imNutzen = cl.filter((e) => e.closest(NUTZEN));
+      return document.querySelectorAll(".nutzen").length === 1 && cl.every((e) => e.closest(".auftakt, " + NUTZEN)) && imNutzen.length >= 1 && imNutzen.every((e) => fnIn(e.closest(NUTZEN)).some((f) => y(f) >= y(e) && y(f) - y(e) <= 560)); });
+    check(raten, "Raten*-Aussagen außerhalb der Fragen nur im ersten Bildschirm und im Nutzen-Block, dort mit eigener Fußnote ≤ 560 px darunter"); }
+  { const domenic = (await p0.content()).match(/Domenic/g) || []; check(domenic.length === 0, "Startseite: spricht vom Team, nicht von Domenic"); }
+  { const sichtbar = await p0.evaluate(() => document.body.innerText); check(!/Ich spar noch|Einmalzahlung|beiden Paketen|999 €/.test(sichtbar), "Startseite: kein „Ich spar noch.“, keine Einmalzahlung, keine zwei Pakete"); }
+  const ld = await p0.textContent('script[type="application/ld+json"]');
+  check(/"price": "49\.90"/.test(ld) && /"valueAddedTaxIncluded": true/.test(ld) && !/"price": "49\.00"|58,31/.test(ld) && !/Einmalzahlung|999 €/.test(ld) && !/Risikofrei|10 %/.test(ld), "Strukturierte Daten: 49.90 inkl. MwSt., kein Risikofrei");
+  await p0.waitForTimeout(1000);
+  await p0.screenshot({ path: path.join(shots, "landing.png"), fullPage: true });
+  const pS = await neueSeite();
+  await pS.goto(BASE + "/studios.html");
+  { const sh = await pS.content(); check((await pS.textContent("#preis")).includes("49,90") && !/58,31/.test(sh) && (await pS.locator("#preis .preis-schild").count()) === 1 && !/risikofrei|999&nbsp;|Einmalzahlung/i.test(sh), "/studios: ein Preis, kein Risikofrei, keine Einmalzahlung"); }
+  { const sh = await pS.content(); check(/noindex/.test(sh) && /utm_source=studios&amp;utm_medium=seite&amp;utm_content=auftakt/.test(sh) && (await pS.locator("#anfrage #anfrage-form input[autocomplete=tel]").count()) === 1 && !/Domenic/.test(sh), "/studios: noindex, Start-Links mit utm, Anfrage-Formular (zugeklappt) mit Autofill, Team statt Domenic"); }
+
+  // ---------------------------------------------------------------- A: Paket Start
+  console.log("Bestandsstudio Paket Risikofrei (angelegt wie vor der Schließung): Dashboard → eingebettete Einrichtung");
+  const pA = await neueSeite();
+  { const r = await post("/api/signup", { firma: "Ink Provision", inhaber: "Alex Muster", strasse: "Musterstr. 1", plz: "96047", ort: "Bamberg", email: "prov@example.com", telefon: "0151 1234567", studioTelefon: "0951 123456", unterzeichner: "Alex Muster", paket: "risikofrei", akzeptiert: { vertrag: true, avv: true, unternehmer: true, kmu: true } });
+    const ck = (r.headers.get("set-cookie") || "").split(";")[0]; const [cn, ...cv] = ck.split("=");
+    await pA.context().addCookies([{ name: cn, value: cv.join("="), url: BASE }]);
+    await pA.goto(BASE + "/app.html#einrichtung"); }
+  await einrichtungEingebettet(pA);
+  check(true, "Nach dem Abschluss eingeloggt im Dashboard, Einrichtung eingebettet abgeschlossen");
+  const mProv = mailsAn("prov@example.com");
+  check(mProv.some((m) => m.subject.startsWith("Willkommen")) && mProv.some((m) => m.subject.includes("freigegeben")), "E-Mails: Willkommen + Konto freigegeben");
+  const willkommen = mProv.find((m) => m.subject.startsWith("Willkommen"));
+  check(/api\/auth\?token=[^"]+next=%2Fapp\.html%23einrichtung/.test(willkommen.html), "Willkommens-Mail führt mit Login direkt in die Einrichtung im Dashboard");
+  let state = await mock("state");
+  const provAcct = Object.values(state.accounts).find((a) => a.email === "prov@example.com");
+  check(!provAcct?.type && provAcct?.controller?.stripe_dashboard?.type === "express" && provAcct?.controller?.losses?.payments === "application" && provAcct?.controller?.fees?.payer === "application" && provAcct?.capabilities?.klarna_payments?.requested === "true", "Risikofrei: Express-Verhalten über Controller-Eigenschaften (Hotfix) mit Karte + Klarna");
+  check(mailsAn("domenicschilling@gmail.com").some((m) => m.subject.includes("Paket Risikofrei") && !m.html.includes("aufsteller.html")), "Admin-Mail Risikofrei: Paket, ohne Aufsteller");
+  check(state.accountSessions.some((s) => s.account === provAcct.id) === false, "Simulation: keine echte Account Session nötig");
+
+  // ---------------------------------------------------------------- B: Paket Profi
+  console.log("Paket Einmalzahlung (alter Link ?modell=kauf)");
+  const pB = await neueSeite();
+  await signup(pB, { modell: "kauf", email: "kauf@example.com", firma: "Ink Kauf" });
+  await pB.waitForURL(MOCK_PAY);
+  check((await pB.textContent("body")).includes("1188.81"), "Stripe-Betrag 999 € netto + 19 % = 1.188,81 €");
+  await pB.click("#pay");
+  await einrichtungEingebettet(pB);
+  check(mailsAn("kauf@example.com").some((m) => m.subject.includes("Zahlung erhalten")), "E-Mail: Zahlung erhalten; danach direkt ins Dashboard");
+  const mAdminKauf = mailsAn("domenicschilling@gmail.com").find((m) => m.subject.includes("Einmalzahlung bezahlt") && m.subject.includes("Ink Kauf"));
+  check(mAdminKauf && !/Aufsteller|aufsteller\.html|Gravurdatei/.test(mAdminKauf.subject + mAdminKauf.html) && mAdminKauf.html.includes("Einmalzahlung"), "Admin-Mail Einmalzahlung: Paket, ohne QR-Aufsteller (eingestellt)");
+
+  console.log("Rechnung, Abbruch, Fehlerfälle");
+  const pC = await neueSeite();
+  await signup(pC, { paket: "einmal", email: "rechnung@example.com", firma: "Ink Rechnung", zahlart: "rechnung" });
+  await pC.waitForURL(/app\.html/, { timeout: 15000 });
+  { let sR; // Studio wird evtl. erst kurz nach dem Wechsel ins Dashboard gespeichert: bis 5 s nachfragen
+    for (let i = 0; i < 20 && sR?.status !== "zahlung_offen"; i++) { sR = await studioPer("rechnung@example.com"); if (sR?.status !== "zahlung_offen") await new Promise((r) => setTimeout(r, 250)); }
+    check(sR?.status === "zahlung_offen", "Rechnung offen, trotzdem schon im Dashboard" + (sR?.status === "zahlung_offen" ? "" : " [" + JSON.stringify(sR) + "]")); }
+  check(mailsAn("rechnung@example.com").some((m) => m.subject.includes("Rechnung")), "E-Mail: Rechnung");
+  const pC2 = await neueSeite();
+  await signup(pC2, { paket: "einmal", email: "abbruch@example.com", firma: "Ink Abbruch" });
+  await pC2.waitForURL(MOCK_PAY);
+  await pC2.click("#cancel");
+  await pC2.waitForURL(/start\.html\?resume=/);
+  await pC2.waitForFunction(() => document.getElementById("firma").value === "Ink Abbruch");
+  check(true, "Nach Abbruch sind Angaben wieder da");
+  const basis = { firma: "x", inhaber: "x", strasse: "x", plz: "96047", ort: "x", telefon: "0151 123456", studioTelefon: "0951 123456", unterzeichner: "x", akzeptiert: { vertrag: true, avv: true, unternehmer: true, kmu: true } };
+  check((await post("/api/signup", { ...basis, paket: "monatlich", email: "kauf@example.com" })).status === 409, "Doppelte Anmeldung abgelehnt");
+  { const r1 = await post("/api/signup", { ...basis, plz: "x", telefon: "1", studioTelefon: "1", paket: "monatlich", email: "unsinn@example.com" }); const t = (await r1.json()).error || "";
+    check(r1.status === 400 && /PLZ/.test(t) && /Mobilnummer/.test(t), "Anmeldung: PLZ „x“ und Telefon „1“ werden abgelehnt (PLZ 5 Ziffern, Telefon mind. 6 Ziffern)"); }
+  check((await post("/api/signup", { paket: "einmal", email: "neu@example.com" })).status === 400, "Signup ohne Pflichtangaben abgelehnt");
+  // Runde 2 (16.11.2026): Studio-Telefon im Web optional, leer → Handynummer; ohne Handynummer weiterhin abgelehnt
+  { const r0 = await post("/api/signup", { ...basis, studioTelefon: "", paket: "monatlich", email: "ohne-studiotel@example.com" });
+    const s0 = await storeMod.studioBy("email", "ohne-studiotel@example.com");
+    check(r0.status === 200 && s0?.studioTelefon === "0151 123456" && s0?.telefon === "0151 123456", "Anmeldung ohne Studio-Telefon: Handynummer wird übernommen", `${r0.status} ${s0?.studioTelefon}`);
+    const r0b = await post("/api/signup", { ...basis, studioTelefon: "", telefon: "", paket: "monatlich", email: "ohne-tel@example.com" });
+    const t0b = (await r0b.json()).error || "";
+    check(r0b.status === 400 && /Mobilnummer/.test(t0b) && !/Studio-Telefon/.test(t0b), "Anmeldung ohne Handy- und Studio-Telefon abgelehnt, Meldung nennt nur die Mobilnummer (Studio-Telefon ist optional)", t0b);
+    const r0c = await post("/api/signup", { ...basis, studioTelefon: "", telefon: "12", paket: "monatlich", email: "kurz-tel@example.com" });
+    const t0c = (await r0c.json()).error || "";
+    check(r0c.status === 400 && /Mobilnummer \(mindestens 6 Ziffern\)/.test(t0c) && !/Studio-Telefon/.test(t0c), "Zu kurze Handynummer ohne Studio-Telefon: nur die Mobilnummer wird bemängelt", t0c); }
+  await post("/api/signup", { ...basis, paket: "einmal", aktionscode: "RATENJA", email: "code@example.com" });
+  check(!Object.values((await mock("state")).sessions).some((x) => x.amount_total === 148631), "Aktionscode RATENJA abgeschaltet (Preis bleibt 999 €)");
+
+  // ---------------------------------------------------------------- D: Paket Monatlich (Abo)
+  console.log("Paket Monatlich: Abo 41,93 € netto (49,90 € inkl. MwSt.) auf dem DSX-Konto → Dashboard → eigenes Standard-Konto");
+  const pD = await neueSeite();
+  await signup(pD, { paket: "monatlich", email: "abo@example.com", firma: "Ink Abo" });
+  await pD.waitForURL(MOCK_PAY);
+  const kasse = await pD.textContent("body");
+  check(kasse.includes("subscription"), "Stripe-Kasse im Abo-Modus (Testwoche: heute 0 €)");
+  state = await mock("state");
+  const sessAbo = Object.values(state.sessions).find((x) => x.mode === "subscription");
+  check(sessAbo?.line_items?.[0]?.price_data?.recurring?.interval === "month" && sessAbo?.metadata?.paket === "monatlich" && !sessAbo.account, "Abo monatlich auf dem DSX-Konto, Metadaten Paket");
+  { const li = sessAbo?.line_items?.[0] || {}, n = Number(li.price_data?.unit_amount);
+    check(n === 4193 && li.tax_rates?.length === 1 && n + Math.round(n * 19 / 100) === 4990 && Number(sessAbo.subscription_data?.trial_period_days) === 7 && sessAbo.payment_method_collection === "always" && Number(sessAbo.amount_total) === 0, "Abo: 4193 netto + 797 USt. = 4990 brutto nach der Testwoche, 7 Tage Testwoche mit hinterlegter Karte (heute 0 €)"); }
+  check(/USt-IdNr\. DE456133925/.test(Object.values(state.customers).find((c) => c.email === "abo@example.com")?.invoice_settings?.footer || ""), "Rechnungsfuß mit DSX + USt-IdNr.");
+  await pD.click("#pay");
+  await einrichtungEingebettet(pD);
+  const aboStudio = await studioPer("abo@example.com");
+  check(aboStudio?.status === "einrichtung" && aboStudio?.paket === "Monatlich" && aboStudio?.provisionProzent === 0, "Abo-Studio in Einrichtung, Paket Monatlich, 0 % Provision");
+  check(mailsAn("abo@example.com").some((m) => /Deine Testwoche läuft bis/.test(m.subject)), "E-Mail: Testwoche gestartet (läuft bis …)");
+  check(mailsAn("domenicschilling@gmail.com").some((m) => m.subject.includes("Paket Monatlich") && m.subject.includes("Ink Abo")) && !mailsAn("domenicschilling@gmail.com").some((m) => /Aufsteller|aufsteller\.html|Gravurdatei/.test(m.subject + m.html) && m.subject.includes("Ink Abo")), "Admin-Mail Monatlich: ohne QR-Aufsteller (eingestellt)");
+  check(!mailsAn("abo@example.com").some((m) => /Aufsteller/i.test(m.subject + m.html)), "Mails an das Abo-Studio: kein Aufsteller");
+  check(Object.values((await mock("state")).accounts).find((a) => a.email === "abo@example.com")?.type === "standard", "Monatlich: eigenes Standard-Konto");
+  const kAbo = await api(pD, "/api/portal/kuendigung", { method: "POST", body: { grund: "Test", garantie: true } });
+  check(kAbo.data.status === "gekuendigt" && !kAbo.data.kuendigung?.garantie && Object.values((await mock("state")).subscriptions)[0]?.cancel_at_period_end === true, "Kündigung Monatlich: keine Garantie, Abo endet zum Periodenende");
+  const zAbo = await api(pD, "/api/portal/kuendigung", { method: "DELETE" });
+  check(zAbo.data.status !== "gekuendigt" && Object.values((await mock("state")).subscriptions)[0]?.cancel_at_period_end === false, "Kündigung zurückgenommen: Abo läuft weiter");
+  // QR-Aufsteller eingestellt (15.11.2026): Hersteller-Daten, Admin-Link und Studio-Felder gibt es nicht mehr
+  const aufApi = await api(pD, "/api/aufsteller?s=ink-abo");
+  check(aufApi.status === 410 && aufApi.data.code === "aufsteller_entfallen" && (await fetch(`${BASE}/api/aufsteller?s=ink-abo`)).status === 410, "GET /api/aufsteller (Hersteller-Daten) → 410 aufsteller_entfallen, mit und ohne Sitzung");
+  const aboAdmin = await admin(`studio/${aboStudio.id}`);
+  check(!("aufstellerLink" in aboAdmin) && aboAdmin.studio && !("aufsteller" in (aboAdmin.studio.vertrag || {})), "Admin: kein Gravur-Link mehr, neuer Vertrag ohne Aufsteller-Feld");
+  const inklAbo = await api(pD, "/api/portal");
+  check(!("aufsteller" in inklAbo.data.studio) && !("aufstellerInklusive" in inklAbo.data.studio) && inklAbo.data.studio.paketName === "Monatlich", "Dashboard-Daten: Paket Monatlich ohne Aufsteller-Felder");
+
+  // ---------------------------------------------------------------- D2: Einfache Anmeldung (16.11.2026)
+  console.log("Einfache Anmeldung: ein Bildschirm, 4 Felder, 1 Häkchen, 1 Knopf; Rechnungsdaten aus dem Checkout, Adresse aus dem Stripe-Konto bzw. der Karte");
+  {
+    const ereignisse = [];
+    const pE = await neueSeite({ viewport: { width: 390, height: 844 }, hasTouch: true });
+    await pE.route(/cloud\.umami\.is/, (r) => r.abort());
+    await pE.exposeFunction("__melde", (x) => { ereignisse.push(x); });
+    // Messung mitschneiden: Umami-Ereignisse und Meta-Ereignisse über TFTrack.track (ohne Einwilligung nur vorgemerkt, gezählt wird der Aufruf)
+    await pE.addInitScript(() => {
+      window.umami = { track: (e) => window.__melde("umami:" + e) };
+      let tf; Object.defineProperty(window, "TFTrack", { configurable: true, get: () => tf, set: (v) => { const o = v.track; v.track = function (n) { window.__melde("meta:" + n); return o.apply(this, arguments); }; tf = v; } });
+    });
+    await pE.goto(`${BASE}/start.html?paket=monatlich&utm_source=meta&utm_campaign=einfach`);
+    await pE.waitForTimeout(300);
+    const form = await pE.evaluate(() => {
+      const sichtbar = (el) => el && el.getClientRects().length > 0 && getComputedStyle(el).visibility !== "hidden";
+      const felder = [...document.querySelectorAll("#f input, #f select, #f textarea")].filter(sichtbar);
+      const a = (id) => { const el = document.getElementById(id); return el ? [el.type, el.getAttribute("autocomplete"), el.getAttribute("inputmode") || ""].join("|") : ""; };
+      const knopf = document.getElementById("submit"), kurz = document.getElementById("kurz-box");
+      return {
+        felder: felder.map((el) => el.name).join(","), h1: document.querySelector("h1").textContent.trim(),
+        alt: document.querySelectorAll(".steps-bar, [data-back], [data-next], #unterzeichner, input[name=ak_kmu], #studioTelefon, #website, section[data-step]").length,
+        firma: a("firma"), inhaber: a("inhaber"), email: a("email"), telefon: a("telefon"),
+        knopf: knopf.textContent.replace(/\s+/g, " ").trim(), knopfUnten: knopf.getBoundingClientRect().bottom, sicher: document.getElementById("anm-sicher").textContent,
+        kurzUnter: kurz.getBoundingClientRect().top > knopf.getBoundingClientRect().bottom && !kurz.open, label: document.querySelector("label[for=firma]").textContent + "|" + document.querySelector("label[for=inhaber]").textContent + "|" + document.querySelector("label[for=telefon]").textContent,
+        minuten: /Minute/.test(document.querySelector("main").innerText.split("Das Wichtigste")[0]), haken: document.querySelector("label.check").textContent.replace(/\s+/g, " "),
+        vertragLink: Boolean(document.querySelector("label.check a[href='/vertrag.html']") && document.querySelector("label.check a[href='/avv.html']")),
+      };
+    });
+    check(form.felder === "firma,inhaber,email,telefon,ak_alle" && form.alt === 0, "/start: genau 4 Felder + 1 Häkchen, kein Fortschrittsbalken, kein Zurück, kein Unterzeichner, kein KMU-Extra, kein Studio-Telefon/Website", form.felder + " alt=" + form.alt);
+    check(form.label === "Name deines Studios|Dein Vor- und Nachname|Handynummer (WhatsApp)" && form.firma === "text|organization|" && form.inhaber === "text|name|" && form.email === "email|email|email" && form.telefon === "tel|tel|tel", "/start: Beschriftungen + Autofill-Tokens (organization, name, email, tel) + Handy-Tastatur", JSON.stringify(form));
+    check(form.h1 === "1 Woche testen." && !form.minuten, "/start: Überschrift „1 Woche testen.“ (Testwoche seit 17.11.2026), keine Minutenangabe über dem Knopf");
+    check(form.knopf.replace(/\u00a0/g, " ") === "1 Woche testen · heute 0 €" && /Karte sicher bei Stripe hinterlegen\. Kündigst du in der Testwoche, zahlst du nichts\./.test(form.sicher), "/start: Knopf „1 Woche testen · heute 0 €“, darunter klein „Karte sicher bei Stripe hinterlegen. Kündigst du in der Testwoche, zahlst du nichts.“", form.knopf);
+    check(form.kurzUnter && /Unternehmer an \(weniger als 250 Mitarbeitende\) und akzeptiere den Vertrag und den AVV/.test(form.haken) && form.vertragLink, "/start: ein Häkchen (Unternehmer < 250 MA + Vertrag + AVV, verlinkt), „Das Wichtigste in Kürze“ zugeklappt unter dem Knopf", form.haken);
+    check(form.knopfUnten <= 844, "/start 390×844: Knopf im ersten Bildschirm (ohne Tastatur)", String(Math.round(form.knopfUnten)));
+    // Leer absenden: Fehlermeldung, keine Anfrage, keine Messung
+    await pE.click("#submit");
+    const leer = await pE.evaluate(() => ({ oben: document.getElementById("alert").textContent, am: ["firma", "inhaber", "email", "telefon"].map((k) => { const p = document.getElementById(k + "-err"); return p && !p.hidden && /Bitte ausfüllen/.test(p.textContent) && (document.getElementById(k).getAttribute("aria-describedby") || "").includes(k + "-err"); }).every(Boolean), fokus: document.activeElement?.id }));
+    check(/Felder aus/.test(leer.oben) && leer.am && leer.fokus === "firma" && !ereignisse.some((x) => /checkout-weiter|InitiateCheckout/.test(x)), "Leer absenden: Hinweis oben + direkt an jedem Feld (aria-describedby), Fokus aufs erste Feld, keine Messung", JSON.stringify(leer));
+    for (const [k, v] of Object.entries({ firma: "Ink Einfach", inhaber: "Eva Einfach", email: "einfach@example.com", telefon: "0151 7654321" })) await pE.fill("#" + k, v);
+    await pE.evaluate(() => document.querySelectorAll("[id$=-err]").forEach((p) => { if (!p.hidden) throw new Error("Fehler bleibt stehen: " + p.id); }));
+    await pE.click("#submit");
+    await pE.waitForTimeout(400);
+    const ohneH = await pE.evaluate(() => { const p = document.getElementById("ak_alle-err"), lab = document.querySelector("label.anm-check"), r = p && p.getBoundingClientRect();
+      return { text: p && !p.hidden ? p.textContent : "", rot: lab.classList.contains("anm-check-fehler"), imBild: Boolean(r) && r.top >= 0 && r.bottom <= innerHeight, oben: document.getElementById("alert").textContent, vorHaken: p && p.nextElementSibling === lab }; });
+    check(/Häkchen/.test(ohneH.text) && ohneH.rot && ohneH.imBild && ohneH.vorHaken && !ohneH.oben && !ereignisse.some((x) => /checkout-weiter|InitiateCheckout/.test(x)), "Ohne Häkchen: Satz direkt über dem Häkchen (im Bild), Häkchen rot umrandet, keine Messung", JSON.stringify(ohneH));
+    check(/Du schließt ab als: Eva Einfach, Ink Einfach/.test(await pE.textContent("#anm-als")), "Unter dem Knopf: „Du schließt ab als: <Name>, <Studio>“");
+    await pE.check("#ak_alle");
+    await pE.screenshot({ path: path.join(shots, "start-einfach-390.png"), fullPage: true });
+    await pE.click("#submit");
+    await pE.waitForURL(MOCK_PAY);
+    check(ereignisse.filter((x) => x === "meta:InitiateCheckout").length === 1 && ereignisse.filter((x) => x === "umami:checkout-weiter").length === 1, "Messung: InitiateCheckout (Meta) und Umami „checkout-weiter“ genau 1× beim Absenden", ereignisse.join(","));
+    const sE = await storeMod.studioBy("email", "einfach@example.com");
+    check(sE?.vertrag?.name === "Eva Einfach" && sE.inhaber === "Eva Einfach" && sE.studioTelefon === "0151 7654321" && !sE.strasse && !sE.plz && !sE.ort && sE.vertrag.kmu === true && sE.vertrag.avv === true && sE.quelle?.source === "meta", "Server: Unterzeichner = Inhaber/in, Studio-Telefon = Handy, keine Adresse, alle 4 Bestätigungen, Herkunft gespeichert", JSON.stringify({ n: sE?.vertrag?.name, t: sE?.studioTelefon, s: sE?.strasse }));
+    { const startHtml = await (await fetch(BASE + "/start.html")).text();
+      const satz = (startHtml.match(/<label class="check anm-check">([\s\S]*?)<\/label>/) || [])[1]?.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
+      check(sE.vertrag?.bestaetigung?.art === "ein-haekchen" && sE.vertrag.bestaetigung.version === "v1" && Boolean(satz) && sE.vertrag.bestaetigung.text === satz, "Vertragsannahme: Art „ein Häkchen“ und Wortlaut mitgespeichert, gleichlautend mit dem Häkchen auf /start", JSON.stringify({ gespeichert: sE.vertrag?.bestaetigung?.text, seite: satz })); }
+    let st = await mock("state");
+    const csE = st.sessions[sE.stripe.checkoutSessionId];
+    check(String(csE?.tax_id_collection?.enabled) === "true" && csE.customer_update?.address === "auto" && !csE.payment_method_types && !csE.name_collection && csE.billing_address_collection !== "required" && csE.excluded_payment_method_types?.includes("klarna") && /^Heute zahlst du nichts: 7 Tage testen\. Danach 49,90 € im Monat inkl\. MwSt\., außer du kündigst vorher im Studio-Bereich\./.test(csE.custom_text?.submit?.message || ""), "Abo-Checkout: USt-IdNr. optional, Adresse auto (keine Pflicht), keine festen Zahlarten, kein name_collection, Hinweis „Heute zahlst du nichts: 7 Tage testen …“", JSON.stringify({ t: csE?.tax_id_collection, c: csE?.customer_update, m: csE?.custom_text }));
+    const cusE = st.customers[sE.stripe.customerId];
+    check(cusE && !("address" in cusE) && cusE.name === "Ink Einfach" && cusE.phone === "0151 7654321", "Stripe-Kunde: ohne leere Adresse angelegt (ensureCustomer schickt nur vorhandene Angaben)", JSON.stringify(cusE?.address));
+    // Abbruch im Checkout → /start?resume…&abbruch=1: 4 Felder vorbelegt, Häkchen erneut, gleicher Stripe-Kunde, nichts überschrieben
+    await fetch(`http://localhost:${MOCK_PORT}/v1/customers/${sE.stripe.customerId}`, { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ "address[line1]": "Rechnungsweg 7", "address[city]": "Bamberg", "address[postal_code]": "96047", "address[country]": "DE" }) });
+    await pE.click("#cancel");
+    await pE.waitForURL(/start\.html\?resume=.*abbruch=1/);
+    await pE.waitForFunction(() => document.getElementById("email").value === "einfach@example.com");
+    await pE.waitForTimeout(150);
+    const wieder = await pE.evaluate(() => { const h = document.getElementById("ak-hinweis"), r = h.getBoundingClientRect(); return { f: ["firma", "inhaber", "email", "telefon"].map((k) => document.getElementById(k).value).join("|"), adr: getComputedStyle(document.getElementById("adresse-block")).display, fokus: document.activeElement?.id, hinweis: h.hidden ? "" : h.textContent, imBild: r.top >= 60 && r.bottom <= innerHeight, hervor: document.querySelector("label.anm-check").classList.contains("anm-check-hervor"), oben: document.getElementById("alert").textContent }; });
+    check(wieder.f === "Ink Einfach|Eva Einfach|einfach@example.com|0151 7654321" && wieder.adr === "none" && /Häkchen setzen/.test(wieder.hinweis) && wieder.imBild && wieder.hervor && /gespeichert/.test(wieder.oben) && ereignisse.includes("umami:checkout-abbruch"), "Wiederaufnahme nach Abbruch: 4 Felder vorbelegt, keine Adressfelder, Satz direkt über dem Häkchen (im Bild, nicht unter der Navigation), Häkchen hervorgehoben, Umami „checkout-abbruch“", JSON.stringify(wieder));
+    await pE.waitForTimeout(120);
+    check(["ak_alle", "submit"].includes(await pE.evaluate(() => document.activeElement?.id)), "Wiederaufnahme: Fokus direkt beim Häkchen/Knopf");
+    await pE.check("#ak_alle");
+    await pE.click("#submit");
+    await pE.waitForURL(MOCK_PAY);
+    st = await mock("state");
+    const sE2 = await storeMod.studioBy("email", "einfach@example.com");
+    const kundenE = Object.values(st.customers).filter((c) => c.email === "einfach@example.com");
+    check(kundenE.length === 1 && sE2.stripe.customerId === sE.stripe.customerId && kundenE[0].address?.line1 === "Rechnungsweg 7" && kundenE[0].name === "Ink Einfach", "Erneutes Absenden: derselbe Stripe-Kunde, die Rechnungsadresse aus Stripe bleibt (keine leeren Felder geschickt)", JSON.stringify(kundenE.map((c) => c.address)));
+    // Bezahlen „als Unternehmen“ (Rechnungsadresse + USt-IdNr. im Checkout) → Webhook übernimmt beides getrennt, nicht als Studio-Adresse
+    await pE.click("#pay-firma");
+    // 30 s statt 15 s: Unter Last (mehrere Testläufe parallel) kam der Webhook-Rückweg einmal zu spät (Abbruch 23.11.2026)
+    await pE.waitForURL(/app\.html/, { timeout: 30000 });
+    const sE3 = await storeMod.studioBy("email", "einfach@example.com");
+    check(sE3.status === "einrichtung" && sE3.ustid === "DE123456789" && sE3.rechnungsadresse?.strasse === "Rechnungsweg 7" && sE3.rechnungsadresse?.ort === "Bamberg" && sE3.rechnungsname === "Ink Einfach GmbH" && !sE3.strasse, "Webhook: USt-IdNr. und Rechnungsadresse aus dem Checkout übernommen, Studio-Adresse NICHT aus der Rechnungsadresse", JSON.stringify({ u: sE3.ustid, r: sE3.rechnungsadresse, s: sE3.strasse }));
+    const mE = mailsAn("domenicschilling@gmail.com").find((m) => m.subject.includes("Paket Monatlich") && m.subject.includes("Ink Einfach"));
+    check(Boolean(mE) && /DE123456789/.test(mE.html) && /Rechnungsweg 7/.test(mE.html), "Admin-Mail „Neuer Abschluss (Paket Monatlich)“ mit USt-IdNr. und Rechnungsadresse");
+    // Stripe-Konto ohne Adresse (Standard-Konto liefert keine) → Zahlseite noch nicht bereit, Karte „Adresse deiner Zahlseite“ leer
+    await mock("konto-ohne-adresse?an=1");
+    await pE.goto(BASE + "/app.html#einrichtung");
+    await pE.waitForSelector("#so-weiter");
+    await pE.click("#so-weiter"); await pE.click("#so-weiter"); await pE.click("#so-weiter");
+    await pE.waitForFunction(() => /Adresse fehlt/.test(document.getElementById("top-status").textContent), null, { timeout: 15000 });
+    await mock("konto-ohne-adresse?an=0");
+    await pE.goto(BASE + "/app.html#start"); await pE.waitForSelector("#adr-form");
+    const karte = await pE.evaluate(() => ({ s: document.getElementById("adr-strasse").value + document.getElementById("adr-plz").value + document.getElementById("adr-ort").value,
+      ac: ["adr-strasse", "adr-plz", "adr-ort"].map((id) => document.getElementById(id).getAttribute("autocomplete")).join(","), plz: document.getElementById("adr-plz").getAttribute("inputmode"),
+      undef: /undefined/.test(document.getElementById("app").innerText), knopf: document.getElementById("adr-ok").textContent }));
+    check(karte.s === "" && karte.ac === "address-line1,postal-code,address-level2" && karte.plz === "numeric" && !karte.undef, "Studio-Bereich: Karte „Adresse deiner Zahlseite“ leer zum Ausfüllen, Autofill-Tokens + Zahlentastatur, nirgends „undefined“", JSON.stringify(karte));
+    await appShot(pE, path.join(shots, "app-adresse-fehlt-390.png"));
+    const portalE = await api(pE, "/api/portal");
+    const zahlE = await api(pE, "/api/portal/zahlung", { method: "POST", body: { betrag: "100", art: "gesamt", kunde: "Test", email: "k@example.com", beschreibung: "Rose" } });
+    const payInfo = await (await fetch(`${BASE}/api/pay?s=${sE3.slug}`)).json();
+    check(portalE.data.studio.stripe.freigegeben === true && portalE.data.studio.kannKassieren === false && portalE.data.studio.zahlseiteAdresse.fehlt === true && zahlE.status === 409 && /Adresse fehlt/.test(zahlE.data.error) && payInfo.studio?.aktiv === false, "Ohne Studio-Adresse: Zahlseite nicht bereit (kein Zahlungslink, Zahlseite inaktiv), obwohl Stripe freigegeben ist", `${zahlE.status} ${zahlE.data.error}`);
+    await pE.goto(BASE + "/app.html#konto"); await pE.waitForTimeout(300);
+    check(!/undefined/.test(await pE.evaluate(() => document.getElementById("app").innerText)), "Konto-Ansicht ohne Adresse: kein „undefined“");
+    await pE.goto(BASE + "/app.html#start"); await pE.waitForSelector("#adr-form");
+    await pE.fill("#adr-strasse", "Studiogasse 3"); await pE.fill("#adr-plz", "12"); await pE.fill("#adr-ort", "Bamberg");
+    await pE.click("#adr-ok");
+    await pE.waitForSelector(".toast.err");
+    check(/PLZ \(5 Ziffern\)/.test(await pE.textContent("#toast")), "Karte: PLZ wird geprüft (5 Ziffern bei DE)");
+    await pE.fill("#adr-plz", "96049"); await pE.click("#adr-ok");
+    await pE.waitForFunction(() => /Bereit/.test(document.getElementById("top-status").textContent), null, { timeout: 8000 });
+    const sE4 = await storeMod.studioBy("email", "einfach@example.com");
+    check(sE4.strasse === "Studiogasse 3" && sE4.plz === "96049" && sE4.ort === "Bamberg" && sE4.adresseBestaetigt === true && sE4.adresseQuelle === "studio" && sE4.rechnungsadresse?.strasse === "Rechnungsweg 7" && !(await pE.isVisible("#adr-form")), "Karte gespeichert: Zahlseite bereit, Rechnungsadresse bleibt getrennt", JSON.stringify({ s: sE4.strasse, q: sE4.adresseQuelle }));
+    check((await (await fetch(`${BASE}/api/pay?s=${sE3.slug}`)).json()).studio?.aktiv === true, "Zahlseite nach der Adresse: bereit");
+    await pE.context().close();
+    // Abo-Studio von oben (Konto-Einrichtung mit Adresse): Vorschlag aus dem Stripe-Konto, vorbefüllt, 1 Knopf „Stimmt so“
+    const sAbo = await storeMod.studioBy("email", "abo@example.com");
+    check(sAbo.strasse === "Musterstr. 1" && sAbo.plz === "96047" && sAbo.ort === "Bamberg" && sAbo.adresseQuelle === "connect" && sAbo.adresseBestaetigt === false, "account.updated (Standard-Konto mit business_profile.support_address): Studio-Adresse als Vorschlag übernommen (Quelle connect, unbestätigt)", JSON.stringify({ s: sAbo.strasse, q: sAbo.adresseQuelle }));
+    await pD.goto(BASE + "/app.html#start"); await pD.waitForSelector("#adr-form");
+    check(await pD.inputValue("#adr-strasse") === "Musterstr. 1" && (await pD.textContent("#adr-ok")).trim() === "Stimmt so" && /Stripe-Konto übernommen/.test(await pD.textContent("#checkliste")), "Karte vorbefüllt aus dem Stripe-Konto, ein Knopf „Stimmt so“");
+    await appShot(pD, path.join(shots, "app-adresse-vorschlag.png"));
+    await pD.click("#adr-ok");
+    await pD.waitForFunction(() => !document.getElementById("adr-form"), null, { timeout: 8000 });
+    const sAbo2 = await storeMod.studioBy("email", "abo@example.com");
+    check(sAbo2.adresseBestaetigt === true && sAbo2.adresseQuelle === "connect" && sAbo2.strasse === "Musterstr. 1", "„Stimmt so“: Adresse bestätigt, Quelle bleibt Stripe-Konto");
+    // Eigene Angaben werden nie vom Stripe-Konto überschrieben
+    const dom2 = await import("../netlify/functions/_lib/domain.mjs");
+    const eigen = { ...(await storeMod.studioBy("email", "kauf@example.com")) };
+    eigen.strasse = "Eigene Str. 5"; eigen.stripe = { ...eigen.stripe };
+    await dom2.kontoAbgleichen(eigen, { id: eigen.stripe.accountId, charges_enabled: true, payouts_enabled: true, details_submitted: true, company: { address: { line1: "Andere Str. 9", postal_code: "10115", city: "Berlin", country: "DE" } } });
+    check(eigen.strasse === "Eigene Str. 5" && eigen.ort === "Bamberg" && eigen.adresseQuelle !== "connect", "account.updated überschreibt eine vorhandene Studio-Adresse nicht");
+    eigen.strasse = "Musterstr. 1"; await storeMod.saveStudio(eigen);
+    check(dom2.connectAdresse({ business_profile: { support_address: { line1: "Hilfe 1", city: "Köln", postal_code: "50667", country: "DE" } } })?.ort === "Köln" && dom2.connectAdresse({ individual: { address: { line1: "Priv 2", city: "Bonn" } } })?.strasse === "Priv 2" && dom2.connectAdresse({}) === null, "Adresse aus dem Stripe-Konto: company.address, sonst support_address, sonst individual.address, sonst keine");
+    // Private Wohnadresse (nur individual.address, z. B. Einzelunternehmer): nur zum Vorbefüllen, zählt und erscheint erst nach „Stimmt so“
+    {
+      const orig = await storeMod.studioBy("email", "kauf@example.com");
+      const vorher = dom2.darfKassieren(orig);
+      const pr = { ...orig, stripe: { ...orig.stripe } }; delete pr.strasse; delete pr.plz; delete pr.ort; delete pr.adresseQuelle; delete pr.adresseBestaetigt;
+      await dom2.kontoAbgleichen(pr, { id: pr.stripe.accountId, charges_enabled: true, payouts_enabled: true, details_submitted: true, individual: { address: { line1: "Wohnweg 9", postal_code: "96050", city: "Bamberg", country: "DE" } } });
+      const ansicht = (await import("../netlify/functions/_lib/studio-ansicht.mjs")).oeffentlich(pr);
+      const payP = await (await fetch(`${BASE}/api/pay?s=${pr.slug}`)).json();
+      const ok1 = vorher && pr.strasse === "Wohnweg 9" && pr.adresseQuelle === "connect-privat" && pr.adresseBestaetigt === false && !dom2.studioAdresseDa(pr) && !dom2.darfKassieren(pr)
+        && dom2.oeffentlicheAdresse(pr).strasse === "" && ansicht.zahlseiteAdresse.fehlt === true && ansicht.zahlseiteAdresse.vorschlag === true && ansicht.zahlseiteAdresse.privat === true
+        && payP.studio?.aktiv === false && !payP.studio?.strasse && !JSON.stringify(payP).includes("Wohnweg");
+      pr.adresseBestaetigt = true;
+      const ok2 = dom2.studioAdresseDa(pr) && dom2.darfKassieren(pr) && dom2.oeffentlicheAdresse(pr).strasse === "Wohnweg 9";
+      await storeMod.saveStudio(orig);
+      check(ok1 && ok2 && (await (await fetch(`${BASE}/api/pay?s=${orig.slug}`)).json()).studio?.aktiv === true, "Private Adresse aus dem Stripe-Konto: Vorschlag (connect-privat), Zahlseite nicht bereit und Adresse nirgends öffentlich, bis „Stimmt so“", JSON.stringify({ vorher, q: pr.adresseQuelle, ok1, ok2, pay: payP.studio }));
+    }
+  }
+  // Server: Lockerung nur Web + Monatlich + ohne Einladung; Einladung und Einmalzahlung (auch Rechnung) bleiben mit Adresse
+  {
+    const kurzD = { firma: "Ink Kurz", inhaber: "Kim Kurz", telefon: "0151 2223334", akzeptiert: { vertrag: true, avv: true, unternehmer: true, kmu: true } };
+    const r1 = await post("/api/signup", { ...kurzD, paket: "monatlich", email: "kurz@example.com" });
+    const sK = await storeMod.studioBy("email", "kurz@example.com");
+    check(r1.status === 200 && sK?.vertrag?.name === "Kim Kurz" && sK.studioTelefon === "0151 2223334", "POST /api/signup Monatlich nur mit Studio, Name, E-Mail, Handy → 200, Unterzeichner = Name, Studio-Telefon = Handy", String(r1.status));
+    const r2 = await post("/api/signup", { ...kurzD, paket: "einmal", zahlart: "rechnung", email: "kurz-rechnung@example.com" }); const t2 = (await r2.json()).error || "";
+    check(r2.status === 400 && /Straße/.test(t2) && /PLZ/.test(t2) && /Ort/.test(t2), "Einmalzahlung auf Rechnung ohne Adresse → 400 (Straße, PLZ, Ort)", t2);
+    const ein = await altEinladung({ email: "kurz-geschenk@example.com", firma: "Ink Geschenk Kurz" });
+    const r3 = await post("/api/signup", { ...kurzD, geschenk: new URL(ein.link).searchParams.get("geschenk"), email: "kurz-geschenk@example.com" }); const t3 = (await r3.json()).error || "";
+    check(r3.status === 400 && /Straße/.test(t3) && /PLZ/.test(t3) && /Ort/.test(t3), "Einladung (?geschenk) ohne Adresse → 400 (Straße, PLZ, Ort)", t3);
+    const r4 = await post("/api/signup", { ...kurzD, paket: "monatlich", plz: "unsinn", email: "kurz-plz@example.com" }); const t4 = (await r4.json()).error || "";
+    check(r4.status === 400 && /PLZ \(5 Ziffern\)/.test(t4), "Monatlich: mitgeschickte PLZ wird weiter geprüft", t4);
+  }
+
+  // ---------------------------------------------------------------- E: Notlösung ohne Einbettung
+  console.log("Notlösung: ohne öffentlichen Stripe-Schlüssel wie bisher zu Stripe weiterleiten");
+  process.env.TF_EINBETTEN = "aus";
+  const fb = await post("/api/signup", { ...basis, paket: "risikofrei", email: "fallback@example.com" });
+  const fbId = (await studioPer("fallback@example.com")).id;
+  const fbMailLink = linkAus(mailsAn("fallback@example.com").find((m) => m.subject.startsWith("Willkommen")), /href="([^"]*\/api\/connect\?id=[^"]+)"/);
+  const fbConnect = await fetch(fbMailLink, { redirect: "manual" });
+  check(fb.status === 200 && /&t=/.test(fbMailLink || "") && MOCK_ONBOARD.test(fbConnect.headers.get("location") || ""), "Ohne Einbettung: Stripe-Onboarding per signiertem Mail-Link");
+  const ohneToken = await fetch(`${BASE}/api/connect?id=${fbId}`, { redirect: "manual" });
+  check(/\/login\.html/.test(ohneToken.headers.get("location") || ""), "Sicherheit: /api/connect nur mit Studio-ID → Login statt Stripe-Link");
+  const falschToken = await fetch(`${BASE}/api/connect?id=${(await studioPer("prov@example.com")).id}&t=${new URL(fbMailLink).searchParams.get("t")}`, { redirect: "manual" });
+  check(/\/login\.html/.test(falschToken.headers.get("location") || ""), "Sicherheit: Link eines anderen Studios gilt nicht");
+  const zurueckOhne = await fetch(`${BASE}/api/connect/zurueck?id=${fbId}`, { redirect: "manual" });
+  check(/\/login\.html/.test(zurueckOhne.headers.get("location") || ""), "Sicherheit: /api/connect/zurueck ohne Token → Login");
+  const fbStatus = await (await fetch(`${BASE}/api/signup?id=${fbId}`)).json();
+  check(Object.keys(fbStatus).sort().join() === "id,status", "Sicherheit: /api/signup?id= ohne Sitzung liefert nur den Status, keine Studio-Daten");
+  delete process.env.TF_EINBETTEN;
+
+  // ---------------------------------------------------------------- Login + Fragebogen
+  console.log("Login per Magic Link + Fragebogen");
+  const loginUrl = linkAus(willkommen, /href="([^"]*\/api\/auth\?token=[^"]+)"/);
+  check(Boolean(loginUrl), "Login-Link in Willkommens-Mail");
+  await pA.goto(loginUrl.split("&next=")[0] + "&next=/onboarding.html");
+  await pA.waitForURL(/onboarding\.html/);
+  await pA.fill("input[name=kontoauszug]", "INK PROVISION");
+  await pA.click("form#f button");
+  await pA.waitForSelector(".alert.ok");
+  check(true, "Fragebogen gespeichert");
+  { const fb = await pA.content(); check(!/Flyer A6 \(Stück\)|name="flyer"|name="aufkleber"|w_paypal/.test(fb) && /name="vorlage_flyer"/.test(fb) && /zum Selbstdrucken/.test(fb), "Fragebogen: Studio Kit nur digital (Vorlagen zum Selbstdrucken, keine Stückzahlen), kein PayPal-Wunsch (Entscheidung Domenic 16.11.2026)"); }
+
+  // ---------------------------------------------------------------- G: Zahlungslink + Bezahlfeld
+  console.log("Live schalten + Zahlungslink im Dashboard + eingebettetes Bezahlfeld (Klarna)");
+  const provId = (await studioPer("prov@example.com")).id;
+  await admin(`studio/${provId}/live`, { body: {} });
+  check(mailsAn("prov@example.com").some((m) => m.subject.includes("live")), "E-Mail: Tattoofin ist live");
+  await pA.goto(BASE + "/app.html#link");
+  await pA.waitForSelector("#l-betrag");
+  await pA.fill("#l-betrag", "1.500"); await pA.fill("#l-kunde", "Lena Beispiel"); await pA.fill("#l-email", "lena@example.com");
+  await pA.fill("#l-beschreibung", "Sleeve linker Arm"); await pA.fill("#l-sitzungen", "3 Sitzungen");
+  check((await pA.textContent("#l-fee")).includes("1.350,00"), "Hinweis: du bekommst 1.350 € (Tattoofin 10 %)");
+  await pA.click("#l-btn");
+  await pA.waitForSelector("#l-out [data-copytext]");
+  const zahlLink = await pA.getAttribute("#l-out [data-copytext]", "data-copytext");
+  await pA.screenshot({ path: path.join(shots, "app-zahlungslink.png"), fullPage: true });
+  check(new RegExp(`^${BASE}/z/zl_[A-Za-z0-9_-]+$`).test(zahlLink), "Zahlungslink erzeugt (Kurzlink /z/<id>)", zahlLink);
+  const lenaId = zahlLink.split("/z/")[1];
+  const pK = await neueSeite();
+  await pK.goto(zahlLink);
+  await pK.waitForURL(/zahlung\.html\?z=zl_/);
+  check(pK.url() === `${BASE}/zahlung.html?z=${lenaId}`, "Kurzlink führt im Browser sofort zur Zahlseite", pK.url());
+  await pK.waitForFunction(() => document.getElementById("betrag").textContent.includes("1.500"));
+  { const ortT = (await pK.textContent("#ort")).trim(), studT = (await pK.textContent("#studio")).trim();
+    check(!ortT || !studT.toLowerCase().includes(ortT.toLowerCase()), "Zahlseite: Ortszeile nie doppelt zum Studionamen (z. B. nicht „Ink Studio Bamberg / Bamberg“)", `${studT} / ${ortT}`); }
+  await pK.click("#weiter");
+  check((await pK.textContent("#alert")).includes("Projekt und Betrag"), "Ohne Inhalts-Häkchen geht es nicht weiter");
+  check((await pK.textContent("#inhalt-text")).includes("Sleeve linker Arm, 3 Sitzungen"), "Kunde sieht Motiv, Sitzungen und Betrag im Häkchen-Text");
+  await pK.check("#inhalt-ok");
+  await pK.click("#weiter");
+  await pK.waitForSelector("#pay-jetzt");
+  await pK.screenshot({ path: path.join(shots, "kunde-bezahlfeld.png"), fullPage: true });
+  state = await mock("state");
+  const piLena = Object.values(state.paymentIntents).find((x) => x.metadata?.tattoofinZahlung === lenaId);
+  check(piLena && !piLena.account && piLena.transfer_data?.destination === provAcct.id && piLena.on_behalf_of === provAcct.id, "Bezahlfeld: Tattoofin kassiert als Plattform, Ziel = Studio-Konto, Studio ist Händler");
+  check(piLena?.application_fee_amount === 15000, "Provision 150 € = 10 % vom Zahlbetrag → 1.350 € an das Studio");
+  check(!Object.values(state.sessions).some((s) => s.metadata?.tattoofinZahlung === lenaId), "Kein Wechsel zum Stripe-Checkout");
+  await pK.click("label:has(> input[name=sim-pm][value=klarna])");
+  await pK.click("#pay-jetzt");
+  await pK.waitForURL(/bezahlt\.html/);
+  await pK.waitForFunction(() => /erhalten/.test(document.getElementById("msg").textContent), null, { timeout: 15000 });
+  check(true, "Kunde sieht Bestätigung");
+  check(mailsAn("prov@example.com").some((m) => m.subject.includes("Zahlung eingegangen: 1.500,00")), "E-Mail an Studio: Zahlung eingegangen");
+  check(mailsAn("lena@example.com").some((m) => m.subject.includes("Danke für deine Zahlung")), "E-Mail an Kundin: Bestätigung");
+  let det = await admin(`studio/${provId}`);
+  const lenaZ = det.zahlungen.find((z) => z.id === lenaId);
+  check(lenaZ?.zahlart === "klarna" && lenaZ?.kundeBestaetigt?.inhalt?.includes("1.500,00 €"), "Zahlart Klarna erkannt, Inhalts-Bestätigung mit Zeitstempel gespeichert");
+  await pK.goto(zahlLink);
+  await pK.waitForURL(/zahlung\.html\?z=zl_/);
+  await pK.waitForSelector(".alert-a.ok");
+  check(true, "Bereits bezahlter Link zeigt Hinweis statt erneuter Zahlung");
+
+  // ---------------------------------------------------------------- H: Zahlseite
+  console.log("Eigene Zahlseite tattoofin.de/zahlen/<studio>");
+  const slug = det.studio.slug;
+  await pK.goto(`${BASE}/zahlen/${slug}`);
+  await pK.waitForFunction(() => document.getElementById("studio").textContent === "Ink Provision");
+  await pK.fill("#betrag", "300"); await pK.fill("#kunde", "Tom"); await pK.fill("#beschreibung", "Rückenstück");
+  await pK.click("label:has(> input[name=art][value=anzahlung])");
+  await pK.check("#inhalt-ok");
+  await pK.click("#weiter");
+  check((await pK.textContent("#alert")).includes("Anzahlungsbedingungen"), "Anzahlung nur mit bestätigten Anzahlungsbedingungen");
+  await pK.check("#bed-ok");
+  await pK.screenshot({ path: path.join(shots, "kunde-zahlseite.png"), fullPage: true });
+  await pK.click("#weiter");
+  await pK.waitForSelector("#pay-jetzt");
+  await pK.click("#pay-jetzt");
+  await pK.waitForURL(/bezahlt\.html/);
+  await pK.waitForFunction(() => /erhalten/.test(document.getElementById("msg").textContent), null, { timeout: 15000 });
+  check(true, "Zahlung über die Zahlseite mit eingebettetem Bezahlfeld");
+  const anzRaw = await (await post("/api/pay", { s: slug, betrag: "100", kunde: "Mia", anzahlung: true, bedingungen: true, inhaltOk: true })).json();
+  check(Boolean(anzRaw.clientSecret) && anzRaw.simulation === true && !anzRaw.url, "API liefert Client-Schlüssel fürs Bezahlfeld (keine Weiterleitung)");
+  await mock("bestaetigen", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ pi: anzRaw.clientSecret.split("_secret_")[0], client_secret: anzRaw.clientSecret, pm: "card" }) });
+  await wait(300);
+  check((await post("/api/pay", { s: slug, betrag: "5", kunde: "x", inhaltOk: true })).status === 400, "Mindestbetrag wird geprüft");
+  check((await post("/api/pay", { s: slug, betrag: "200", kunde: "x" })).status === 400, "Ohne Inhalts-Bestätigung keine Zahlung (auch per API)");
+  process.env.TF_EINBETTEN = "aus";
+  const alt = await (await post("/api/pay", { s: slug, betrag: "200", kunde: "Alt", inhaltOk: true })).json();
+  check(MOCK_PAY.test(alt.url || ""), "Notlösung: ohne Einbettung weiter Stripe-Checkout");
+  delete process.env.TF_EINBETTEN;
+  process.env.TF_BEZAHLFELD = "aus";
+  const live = await (await post("/api/pay", { s: slug, betrag: "200", kunde: "Live", inhaltOk: true })).json();
+  const liveSession = await api(pA, "/api/portal/stripe-session", { method: "POST", body: {} });
+  check(MOCK_PAY.test(live.url || "") && !live.clientSecret && liveSession.data.modus !== "weiterleitung", "Live-Einstellung ohne payment_intent-Webhooks (TF_BEZAHLFELD aus): Kunde zahlt im Stripe-Checkout, Einrichtung bleibt eingebettet");
+  delete process.env.TF_BEZAHLFELD;
+
+  // ---------------------------------------------------------------- H2: Branding je Studio (Logo/Farbe)
+  console.log("Branding je Studio: Admin setzt Logo/Farbe → Zahlseite, Checkout, Stripe-Konto");
+  {
+    const png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+    check((await admin(`studio/${provId}/branding`, { body: { farbe: "rot" } })).error?.includes("#RRGGBB"), "Branding: ungültige Farbe wird abgelehnt");
+    const br = await admin(`studio/${provId}/branding`, { body: { icon: png, logo: png, farbe: "#0E0B08", akzent: "#b08d57", kurzbezeichnung: "Ink Provision", stripe: true } });
+    check(br.branding?.farbe === "#0e0b08" && br.branding?.kurzbezeichnung === "INK PROVISION" && /^file_mock_/.test(br.stripe?.dateien?.icon || "") && /^file_mock_/.test(br.stripe?.dateien?.logo || ""), "Branding gespeichert + Icon/Logo bei Stripe hochgeladen");
+    check(br.stripe?.branding?.primary_color === "#0e0b08" && br.stripe?.branding?.secondary_color === "#b08d57" && br.stripe?.abrechnungstext === "INK PROVISION", "Stripe-Konto: Farben + Abrechnungstext gesetzt");
+    const st = await mock("state");
+    check(st.files.every((f) => f.account === det.studio.stripe.accountId), "Branding-Dateien liegen auf dem verbundenen Konto (Stripe-Account-Header)");
+    const nur = await admin(`studio/${provId}/branding`, { body: { akzent: "#c09a5f" } });
+    check(nur.branding?.logo && nur.branding?.farbe === "#0e0b08" && nur.branding?.akzent === "#c09a5f", "Branding: nur geänderte Felder werden überschrieben, Logo bleibt");
+    const bild = await fetch(`${BASE}/api/studio-bild?s=${slug}&art=logo`);
+    check(bild.status === 200 && bild.headers.get("content-type") === "image/png", "/api/studio-bild liefert das Logo");
+    check((await fetch(`${BASE}/api/studio-bild?s=gibt-es-nicht&art=logo`)).status === 404, "/api/studio-bild: unbekanntes Studio → 404");
+    const info = await (await fetch(`${BASE}/api/pay?s=${slug}`)).json();
+    check(/\/api\/studio-bild\?s=/.test(info.studio.branding?.logoUrl || "") && info.studio.branding.farbe === "#0e0b08", "Zahlseiten-API liefert Logo-URL + Farbe");
+    process.env.TF_BEZAHLFELD = "aus";
+    const mitLogo = await (await post("/api/pay", { s: slug, betrag: "200", kunde: "Logo", inhaltOk: true })).json();
+    delete process.env.TF_BEZAHLFELD;
+    const cs = (await mock("state")).sessions[mitLogo.url.split("/pay/")[1]];
+    check(cs?.branding_settings?.display_name === "Ink Provision" && /studio-bild/.test(cs.branding_settings.logo?.url || "") && cs.branding_settings.background_color === "#0e0b08" && cs.branding_settings.button_color === "#c09a5f", "Checkout zeigt Logo/Farben des Studios (branding_settings)");
+    await pK.goto(`${BASE}/zahlen/${slug}`);
+    await pK.waitForFunction(() => { const i = document.querySelector(".kunde-kopf .studio-logo"); return i && i.complete && i.naturalWidth > 0; });
+    check(true, "Zahlseite zeigt das Studio-Logo");
+  }
+
+  // ---------------------------------------------------------------- I/J: Erstattung + Rückbuchung
+  console.log("Erstattung (Portal) → Betrag vom Studio zurück, Provision anteilig abzüglich Stripe-Gebühr");
+  det = await admin(`studio/${provId}`);
+  const lena = det.zahlungen.find((z) => z.id === lenaId);
+  check(lena.stripeGebuehrCent === 4520 && lena.transferId, "Stripe-Gebühr (Klarna 45,20 €) und Transfer gemerkt");
+  await pA.goto(BASE + "/portal.html#zahlungen");
+  await pA.waitForSelector(`[data-erstatten="${lena.id}"]`);
+  pA._dialogAntwort = "750";
+  await pA.click(`[data-erstatten="${lena.id}"]`);
+  await pA.waitForSelector(".alert.ok");
+  pA._dialogAntwort = undefined;
+  await wait(500);
+  state = await mock("state");
+  const re = state.refunds.find((r) => r.payment_intent === lena.paymentIntentId);
+  check(re?.amount === 75000 && re.reverse_transfer && !re.refund_application_fee, "Erstattung 750 € über die Plattform mit reverse_transfer");
+  check(state.feeRefunds.some((r) => r.amount === 4811), "Provision zurück: (150 € − 53,79 € Gebühr inkl. USt.) × 50 % = 48,11 €");
+  check(mailsAn("prov@example.com").some((m) => m.subject.includes("Erstattung an Lena")), "E-Mail an Studio: Erstattung");
+  check((await api(pA, "/api/portal/erstattung/" + lena.id, { method: "POST", body: { betrag: "800" } })).status === 400, "Mehr als den Restbetrag erstatten wird abgelehnt");
+
+  console.log("Rückbuchung (Dispute)");
+  det = await admin(`studio/${provId}`);
+  const tom = det.zahlungen.find((z) => z.kunde === "Tom");
+  check(tom.anzahlung && tom.bedingungen?.text && tom.kundeBestaetigt?.inhalt, "Anzahlung mit Bedingungen + Inhalts-Bestätigung gespeichert (Beleg)");
+  await mock(`dispute/${tom.paymentIntentId}?status=lost`);
+  await wait(300);
+  state = await mock("state");
+  check(state.reversals.some((r) => r.transfer === tom.transferId && r.amount === 29000), "Verloren: 300 € − 30 € Provision + 20 € Gebühr = 290 € vom Studio zurückgeholt");
+  check(mailsAn("prov@example.com").some((m) => m.subject.includes("Rückbuchung:")) && mailsAn("prov@example.com").some((m) => m.subject.includes("Rückbuchung entschieden")), "E-Mails an Studio: Rückbuchung (Belege) + Entscheidung");
+  const mia = det.zahlungen.find((z) => z.kunde === "Mia");
+  await mock(`dispute/${mia.paymentIntentId}?status=won`);
+  await wait(300);
+  state = await mock("state");
+  check(state.reversals.some((r) => r.transfer === mia.transferId && r.amount === 10000) && state.transfers.some((t) => t.destination === provAcct.id && t.amount === 10000), "Gewonnen: zurückgeholte 100 € wieder an das Studio überwiesen");
+  check(Object.values(state.paymentIntents).concat(Object.values(state.sessions)).every((x) => !JSON.stringify(x.payment_method_types || []).includes("sepa_debit")), "Bezahlen ohne SEPA-Lastschrift");
+  check(/\/express\//.test((await api(pA, "/api/portal/stripe-dashboard", { method: "POST", body: {} })).data.url || ""), "Notlösung: Login-Link ins Stripe-Express-Dashboard");
+
+  console.log("Monatsabrechnung");
+  const monat = new Date().toISOString().slice(0, 7);
+  const probe = (await admin("abrechnung", { body: { monat, dryRun: true } })).find((x) => x.studio === "Ink Provision");
+  check(probe?.provisionBruttoCent === 11189 && probe?.provisionNettoCent === 9403 && probe?.auszahlungCent === 73811, "Probelauf: Lena 101,89 € + Mia 10 € (Tom verloren = 0) = 111,89 € inkl. USt., Auszahlung 738,11 €");
+  const echt = (await admin("abrechnung", { body: { monat, dryRun: false } })).find((x) => x.studio === "Ink Provision");
+  check(echt?.rechnung?.startsWith("TEST-"), "Rechnung erstellt (als bereits bezahlt markiert)");
+  state = await mock("state");
+  check(Object.values(state.invoices).some((i) => i.paid_out_of_band), "Rechnung außerhalb von Stripe als bezahlt markiert");
+  check(state.items.some((i) => i.amount === 11189 && Object.values(state.taxRates).some((t) => t.id === i.tax_rates[0] && t.inclusive === "true")), "Rechnungsposition 111,89 € mit USt. inklusive");
+  check(mailsAn("prov@example.com").some((m) => m.subject.includes("Abrechnung")), "E-Mail: Monatsabrechnung");
+  check((await admin("abrechnung", { body: { monat, dryRun: false } })).find((x) => x.studio === "Ink Provision")?.status === "schon abgerechnet", "Keine doppelte Abrechnung");
+
+  // ---------------------------------------------------------------- K2: Gutscheine (alle Pakete)
+  console.log("Gutschein verkaufen: Link → Zahlung (nur Karte) → Code + PDF per Mail → Liste → einlösen");
+  {
+    await pA.goto(BASE + "/app.html#gutschein");
+    await pA.waitForSelector("#g-betrag");
+    await pA.fill("#g-betrag", "150"); await pA.fill("#g-kunde", "Greta Käufer"); await pA.fill("#g-email", "greta@example.com");
+    await pA.fill("#g-empfaenger", "Max"); await pA.fill("#g-nachricht", "Alles Gute zum Geburtstag! 🎉");
+    await pA.click("#g-btn");
+    await pA.waitForSelector("#g-out [data-copytext]");
+    await pA.screenshot({ path: path.join(shots, "app-gutschein-link.png"), fullPage: true });
+    const gsLink = await pA.getAttribute("#g-out [data-copytext]", "data-copytext");
+    const gsId = gsLink.split("/z/")[1];
+    check(/\/z\/zl_/.test(gsLink), "Gutschein-Link erstellt (Kurzlink /z/<id>)");
+    check((await api(pA, "/api/portal/zahlung", { method: "POST", body: { art: "gutschein", betrag: "100", kunde: "Ohne Mail" } })).status === 400, "Gutschein ohne Käufer-E-Mail wird abgelehnt");
+    await pK.goto(gsLink);
+    await pK.waitForURL(/zahlung\.html\?z=zl_/);
+    await pK.waitForFunction(() => document.getElementById("betrag").textContent.includes("150"));
+    check((await pK.textContent("#sub")).includes("Wertgutschein für Max") && (await pK.textContent("#inhalt-text")).includes("Wertgutschein über 150,00 €"), "Kaufseite: Wertgutschein für Max, Häkchen-Text passt");
+    check(!/Kreditaufnahme/.test(await pK.textContent("#fuss-raten")), "Kaufseite Gutschein: keine Raten-Hinweise (nur Karte)");
+    await pK.check("#inhalt-ok"); await pK.click("#weiter");
+    await pK.waitForSelector("#pay-jetzt");
+    check(await pK.locator("input[name=sim-pm][value=klarna]").count() === 0, "Gutschein: Bezahlfeld ohne Klarna (Klarna-Regel: keine Gutscheine)");
+    state = await mock("state");
+    const piGs = Object.values(state.paymentIntents).find((x) => x.metadata?.tattoofinZahlung === gsId);
+    check(JSON.stringify(piGs?.payment_method_types) === '["card"]' && piGs?.metadata?.typ === "gutschein", "Gutschein-PaymentIntent: nur Karte, Typ gutschein");
+    await pK.click("#pay-jetzt");
+    await pK.waitForURL(/bezahlt\.html/);
+    await pK.waitForFunction(() => /erhalten/.test(document.getElementById("msg").textContent), null, { timeout: 15000 });
+    const gm = mailsAn("greta@example.com").find((m) => m.subject.includes("Dein Gutschein von Ink Provision"));
+    check(gm && (gm.anhaenge || [])[0]?.endsWith(".pdf") && !mailsAn("greta@example.com").some((m) => m.subject.includes("Danke für deine Zahlung")), "Käufer bekommt Gutschein-Mail mit PDF-Anhang (statt normaler Quittung)");
+    check(mailsAn("prov@example.com").some((m) => m.subject.includes("Gutschein verkauft: 150,00")), "Studio bekommt „Gutschein verkauft“");
+    det = await admin(`studio/${provId}`);
+    const gz = det.zahlungen.find((z) => z.id === gsId);
+    const jahr = new Date().getUTCFullYear();
+    check(/^GS-[A-Z2-9]{4}-[A-Z2-9]{4}$/.test(gz?.gutschein?.code || "") && gz.gutschein.gueltigBis.startsWith(`${jahr + 3}-12-31`) && gz.status === "bezahlt", "Code " + gz?.gutschein?.code + ", gültig bis 31.12." + (jahr + 3) + " (§ 195 BGB, Jahresende)");
+    check(gm.html.includes(gz.gutschein.code) && gm.html.includes("Max") && gm.html.includes("Einlösbar bei"), "Mail zeigt Code, Empfänger, Einlöseort");
+    const gsUrl = linkAus(gm, /href="([^"]*gutschein\.html\?t=[^"]+)"/);
+    const pdfR = await fetch(gsUrl.replace("/gutschein.html?", "/api/gutschein?") + "&pdf=1");
+    const pdfB = Buffer.from(await pdfR.arrayBuffer());
+    check(pdfR.headers.get("content-type") === "application/pdf" && pdfB.subarray(0, 5).toString() === "%PDF-" && pdfB.length > 2000, "Gutschein-PDF öffentlich über den Token-Link (" + pdfB.length + " Bytes)");
+    fs.writeFileSync(path.join(shots, "gutschein.pdf"), pdfB);
+    check((await fetch(`${BASE}/api/gutschein?t=falsch-falsch-falsch-falsch`)).status === 404, "Gutschein: falscher Token → 404");
+    await pK.goto(gsUrl);
+    await pK.waitForFunction(() => /^GS-/.test(document.getElementById("gs-code").textContent));
+    check((await pK.textContent("#gs-fuer")) === "für Max" && (await pK.textContent("#gs-daten")).includes("Gültig bis 31.12." + (jahr + 3)), "Online-Ansicht des Gutscheins");
+    await pK.screenshot({ path: path.join(shots, "kunde-gutschein.png"), fullPage: true });
+    const pdfStudio = await pA.evaluate((id) => fetch("/api/portal/gutschein/" + id + "/pdf").then(async (r) => r.headers.get("content-type") + "|" + (await r.arrayBuffer()).byteLength), gsId);
+    check(pdfStudio.startsWith("application/pdf|"), "Studio kann das PDF im Dashboard öffnen");
+    await pA.goto(BASE + "/app.html#gutscheine");
+    await pA.waitForSelector("#gs-liste .zl");
+    check((await pA.textContent("#gs-liste")).includes(gz.gutschein.code) && (await pA.textContent("#gs-liste")).includes("gültig"), "Liste „Gutscheine“ zeigt Code + Status gültig");
+    await pA.fill("#gs-suche", gz.gutschein.code.toLowerCase().replace(/-/g, ""));
+    await pA.click("#gs-suche-btn");
+    await pA.waitForSelector("#gs-einloesen");
+    await pA.screenshot({ path: path.join(shots, "app-gutschein-detail.png"), fullPage: true });
+    await pA.click("#gs-einloesen");
+    await pA.waitForSelector(".detail-kopf .chip.eingeloest");
+    check(true, "Code prüfen (auch klein/ohne Striche) → Detail → als eingelöst markiert");
+    check((await api(pA, `/api/portal/gutschein/${gsId}/einloesen`, { method: "POST", body: {} })).status === 409, "Doppelt einlösen nicht möglich");
+    const fremd = await api(pB, "/api/portal/gutschein-code?code=" + gz.gutschein.code);
+    check(fremd.status === 404, "Anderes Studio findet den Gutschein nicht (Mandantentrennung)");
+    check((await (await fetch(gsUrl.replace("/gutschein.html?", "/api/gutschein?"))).json()).gutschein.status === "eingeloest", "Online-Ansicht zeigt „eingelöst“");
+    const { zahlartenFuer } = await import("../netlify/functions/_lib/domain.mjs");
+    process.env.TF_GUTSCHEIN_KLARNA = "an";
+    check(JSON.stringify(zahlartenFuer({ art: "gutschein" })) === '["card"]', "Gutschein nie mit Klarna (auch nicht per Umgebungsvariable)");
+    delete process.env.TF_GUTSCHEIN_KLARNA;
+  }
+
+  // ---------------------------------------------------------------- K3: Klarna – was Stripe bekommt + Ausweg bei Ablehnung
+  console.log("Klarna: Checkout-Daten (Name, Adresse, Telefon, Artikel) + Ausweg bei Ablehnung");
+  {
+    process.env.TF_BEZAHLFELD = "aus";
+    const kl = await api(pA, "/api/portal/zahlung", { method: "POST", body: { betrag: "1200", kunde: "Kai Klarna", email: "kai@example.com", beschreibung: "Rückenstück Drache", sitzungen: "2 Sitzungen" } });
+    const klId = kl.data.zahlung.id;
+    check(/Klarna verfügbar/.test(kl.data.whatsappText) && !/Raten|später bezahlen|Kreditaufnahme/i.test(kl.data.whatsappText) && !/„Klarna“ als Zahlungsart wählen|So geht's/.test(kl.data.whatsappText), "WhatsApp-Text Projektpreis: nur der Name „Klarna verfügbar“ (keine Raten-/Später-Aussage, deshalb kein Warnsatz nötig), keine Anleitung");
+    await pK.goto(`${BASE}/zahlung.html?z=${klId}`);
+    await pK.waitForSelector("#inhalt-text");
+    await pK.waitForFunction(() => document.getElementById("inhalt-text").textContent.length > 0);
+    check((await pK.textContent("#raten-hinweis")).trim() === "" && !/Ratenzahlung|in Raten/.test(await pK.textContent("#fuss-raten")) && /Zahlung an/.test(await pK.textContent("#hallo")), "Kundenseite: ohne Einstellung des Studios kein Raten-Hinweis, „Zahlung an <Studio>“");
+    await api(pA, "/api/portal/kontakt", { method: "PATCH", body: { zahlartenHinweis: true } });
+    await pK.reload();
+    await pK.waitForSelector("#raten-hinweis .raten-box");
+    { const h = await pK.textContent("#raten-hinweis"); check(/Zahlarten, die dir angeboten werden/.test(h) && /Klarna verfügbar/.test(h) && !/Raten|später/i.test(h) && !/Wähle|10\.000/.test(h) && (await pK.locator(".raten-schritte li").count()) === 0, "Hinweis nur auf Wunsch des Studios: neutraler Satz mit „Klarna verfügbar“ (nur Name), keine Anleitung"); }
+    await pK.screenshot({ path: path.join(shots, "kunde-raten-hinweis.png"), fullPage: true });
+    const anzL = await api(pA, "/api/portal/zahlung", { method: "POST", body: { betrag: "100", kunde: "Anna", art: "anzahlung", beschreibung: "Termin" } });
+    check(/per Karte/.test(anzL.data.whatsappText) && !/Klarna/.test(anzL.data.whatsappText), "WhatsApp-Text Anzahlung: per Karte, Klarna nicht beworben");
+    await pK.goto(`${BASE}/zahlung.html?z=${anzL.data.zahlung.id}`);
+    await pK.waitForSelector("#raten-hinweis .raten-box.ruhig");
+    check(/Zahlarten, die dir angeboten werden/.test(await pK.textContent("#raten-hinweis")), "Kundenseite Anzahlung: derselbe neutrale Hinweis");
+    await api(pA, "/api/portal/kontakt", { method: "PATCH", body: { zahlartenHinweis: false } });
+    const rAnzL = await (await post("/api/pay", { z: anzL.data.zahlung.id, inhaltOk: true, bedingungen: true })).json();
+    check(JSON.stringify((await mock("state")).sessions[rAnzL.url.split("/pay/")[1]].payment_method_types) === '["card","klarna"]', "Anzahlung: Karte zuerst, Klarna technisch weiter erlaubt");
+    await pA.goto(BASE + "/app.html#raten");
+    await pA.waitForFunction(() => /Klarna/.test(document.getElementById("raten-text").textContent));
+    check(/\[Zahlungslink\]/.test(await pA.textContent("#raten-text")), "Dashboard-Hilfe „So zahlt dein Kunde in Raten*“ mit fertigem WhatsApp-Text");
+    const r1 = await (await post("/api/pay", { z: klId, inhaltOk: true })).json();
+    let st = await mock("state");
+    const cs1 = st.sessions[r1.url.split("/pay/")[1]];
+    const li = cs1.line_items[0];
+    check(li.quantity === "1" && li.price_data.product_data.name === "Tattoo bei Ink Provision – Rückenstück Drache" && !/direkt nach der Zahlungsfreigabe/.test(li.price_data.product_data.description) && /Tätowierung bei Ink Provision/.test(li.price_data.product_data.description) && /2 Sitzungen/.test(li.price_data.product_data.description) && /Musterstr\. 1, 96047 Bamberg/.test(li.price_data.product_data.description), "Checkout: Artikel „Tattoo bei Ink Provision – Rückenstück Drache“ (neutral „Tätowierung bei <Studio>“, ohne „direkt nach der Zahlungsfreigabe“), Menge 1, Sitzungen + Studio-Anschrift in der Beschreibung");
+    check(cs1.billing_address_collection === "required" && cs1.phone_number_collection?.enabled === "true", "Checkout: Rechnungsadresse und Telefonnummer verpflichtend");
+    const kunde = st.customers[cs1.customer];
+    check(kunde?.name === "Kai Klarna" && kunde?.email === "kai@example.com" && cs1.customer_update?.name === "auto", "Checkout: Kunde mit Name + E-Mail vorausgefüllt (Stripe-Customer)");
+    check(JSON.stringify(cs1.payment_method_types) === '["card","klarna"]' && cs1.payment_intent_data.on_behalf_of === provAcct.id, "Checkout: Karte zuerst, dann Klarna; Studio ist Händler (on_behalf_of)");
+    check(/Zurück-Pfeil/.test(cs1.custom_text?.submit?.message || ""), "Checkout: Hinweis auf weitere Möglichkeiten, falls Klarna nicht zustimmt");
+    const gsCheckout = await api(pA, "/api/portal/zahlung", { method: "POST", body: { art: "gutschein", betrag: "80", kunde: "Gina", email: "gina@example.com" } });
+    const rG = await (await post("/api/pay", { z: gsCheckout.data.zahlung.id, inhaltOk: true })).json();
+    const csG = (await mock("state")).sessions[rG.url.split("/pay/")[1]];
+    check(JSON.stringify(csG.payment_method_types) === '["card"]' && /^Wertgutschein 80 € – Ink Provision$/.test(csG.line_items[0].price_data.product_data.name), "Gutschein-Checkout: nur Karte, Artikel „Wertgutschein 80 € – Ink Provision“");
+
+    // Kunde versucht Klarna → Klarna lehnt ab → „Zurück“ → Auswege
+    await pK.goto(r1.url);
+    await pK.click("#pay-klarna-abgelehnt");
+    await pK.waitForSelector("#fehler");
+    await pK.click("#cancel");
+    await pK.waitForURL(/abbruch=1/);
+    await pK.waitForSelector("#ausweg:not(.hidden)");
+    check((await pK.textContent("#ausweg-titel")).includes("Klarna hat nicht zugestimmt") && await pK.isHidden("#aw-anz") && await pK.isHidden("#schritt1") && await pK.isHidden("#aw-nochmal"), "Nach Klarna-Ablehnung: Hinweis + „Mit Karte zahlen“, kein erneuter Klarna-Versuch (Anzahlung aus, solange das Studio sie nicht erlaubt)");
+    check(mailsAn("prov@example.com").filter((m) => m.subject.includes("Klarna hat bei Kai Klarna nicht zugestimmt")).length === 1, "Studio bekommt einmal Bescheid: Klarna hat nicht zugestimmt");
+    check((await api(pA, "/api/portal/kontakt", { method: "PATCH", body: { ausweichAnzahlung: { an: true, prozent: 70 } } })).status === 400, "Einstellung: Anzahlung über 50 % wird abgelehnt");
+    await pA.goto(BASE + "/app.html#einstellungen");
+    await pA.waitForSelector("#k-aw-an");
+    await pA.check("#k-aw-an"); await pA.fill("#k-aw-pr", "30"); await pA.click("#k-aw-save");
+    await pA.waitForFunction(() => /Gespeichert/.test(document.getElementById("toast").textContent));
+    check((await admin(`studio/${provId}`)).studio.ausweichAnzahlung?.an === true, "Einstellung „Anzahlung als Ausweg“ (30 %) im Dashboard gespeichert");
+    await pK.reload();
+    await pK.waitForSelector("#aw-anz:not(.hidden)");
+    check((await pK.textContent("#aw-anz")).includes("360,00") && (await pK.textContent("#aw-anz")).includes("840,00"), "Ausweg: 360 € Anzahlung jetzt (30 %), 840 € direkt im Studio");
+    check(mailsAn("prov@example.com").filter((m) => m.subject.includes("Klarna hat bei Kai Klarna nicht zugestimmt")).length === 1, "Neu laden schickt keine zweite Mail");
+    await pK.screenshot({ path: path.join(shots, "kunde-klarna-ausweg.png"), fullPage: true });
+    await pK.click("#aw-anz");
+    await pK.click("#aw-anz-los");
+    check((await pK.textContent("#alert")).includes("Anzahlungsbedingungen"), "Ausweg-Anzahlung nur mit bestätigten Anzahlungsbedingungen");
+    await pK.check("#aw-bed-ok"); await pK.check("#aw-inhalt-ok");
+    await pK.click("#aw-anz-los");
+    await pK.waitForURL(MOCK_PAY);
+    st = await mock("state");
+    const csA = st.sessions[pK.url().split("/pay/")[1]];
+    check(csA.amount_total === 36000 && JSON.stringify(csA.payment_method_types) === '["card"]' && /^Anzahlung für Tattoo bei Ink Provision – Rückenstück Drache/.test(csA.line_items[0].price_data.product_data.name) && /Anzahlungsbedingungen/.test(csA.custom_text?.submit?.message || ""), "Ausweg-Checkout: 360 € nur Karte, Artikel „Anzahlung für Tattoo bei …“, Bedingungen im Checkout");
+    check(await pK.locator("#pay-klarna").count() === 0, "Ausweg-Checkout bietet Klarna nicht noch einmal an");
+    await pK.click("#pay");
+    await pK.waitForURL(/bezahlt\.html/);
+    await pK.waitForFunction(() => /Anzahlung/.test(document.getElementById("msg").textContent), null, { timeout: 15000 });
+    { const msg = await pK.textContent("#msg"), fuss = await pK.textContent("#fuss"), ortz = await pK.textContent("#ort-zeile");
+      check(!/Klarna|Raten|später/i.test(fuss + msg) && /Fragen zur Zahlung klärst du mit dem Studio/.test(fuss) && /Anzahlung/.test(msg) && /840,00/.test(msg) && /verrechnet/.test(msg), "Danke-Seite nach Kartenzahlung (Anzahlung): kein Klarna-/Raten-Satz, Rest 840 € im Studio, Verrechnung genannt");
+      check(/Ink Provision/.test(ortz) && /Bamberg/.test(ortz) && await pK.locator('a[href="/impressum.html"]').count() > 0 && await pK.locator('a[href^="/datenschutz.html"]').count() > 0, "Danke-Seite: Studioname + Ort, Impressum und Datenschutz verlinkt"); }
+    await wait(400);
+    det = await admin(`studio/${provId}`);
+    const orig = det.zahlungen.find((z) => z.id === klId);
+    const anzA = det.zahlungen.find((z) => z.ausweichVon === klId);
+    check(orig.klarnaAbgelehnt?.code === "payment_method_provider_decline" && orig.ausweich?.bezahltAm && orig.status === "offen", "Original-Link: Klarna-Ablehnung + bezahlte Anzahlung vermerkt (Rest bleibt offen)");
+    check(anzA?.status === "bezahlt" && anzA.art === "anzahlung" && anzA.bedingungen?.text && /Rest von 840,00 €/.test(anzA.kundeBestaetigt?.inhalt || ""), "Anzahlung bezahlt, mit Bedingungen + Bestätigung „Rest direkt im Studio“");
+    // --- Doppelzahlung gesperrt (11.11.2026): Anzahlung per Karte bezahlt → der ursprüngliche Link ist nicht mehr zahlbar
+    check(orig.letzterFehler?.code === "payment_method_provider_decline" && orig.letzterFehler.typ === "ablehnung" && orig.letzterFehler.zahlart === "klarna" && Boolean(orig.letzterFehler.am) && "declineCode" in orig.letzterFehler && Boolean(orig.letzterFehler.text), "Letzter Fehler getrennt gespeichert: Code, Decline-Code, Typ „ablehnung“, Zahlart klarna, Text, Zeit");
+    { const dp = await post("/api/pay", { z: klId, inhaltOk: true }); const dj = await dp.json();
+      const dp2 = await post("/api/pay", { z: klId, ausweich: "karte" });
+      const dp3 = await post("/api/pay", { z: klId, ausweich: "anzahlung", bedingungen: true, inhaltOk: true });
+      const info = await (await fetch(`${BASE}/api/pay?z=${klId}`)).json();
+      check(dp.status === 409 && /Anzahlung/.test(dj.error || "") && dp2.status === 409 && dp3.status === 409 && !dj.url, "Doppelzahlung gesperrt: nach bezahlter Anzahlung lehnt der Server jede weitere Zahlung für den Link ab (409)");
+      check(info.zahlung.anzahlungBezahlt?.betragCent === 36000 && info.zahlung.anzahlungBezahlt?.restCent === 84000 && info.ausweich === null, "Link-Infos: „Anzahlung 360 € bezahlt, Rest 840 € im Studio“, kein Ausweg-Angebot mehr");
+      await pK.goto(`${BASE}/zahlung.html?z=${klId}`);
+      await pK.waitForFunction(() => /nichts mehr zu bezahlen/.test(document.getElementById("alert").textContent));
+      check(await pK.isHidden("#schritt1") && /360,00/.test(await pK.textContent("#alert")) && /840,00/.test(await pK.textContent("#alert")), "Zahlungslink-Seite: „Anzahlung 360 € bezahlt, Rest 840 € im Studio“, ohne Bezahlknopf");
+    }
+    check((await (await post("/api/pay", { z: klId, ausweich: "anzahlung", bedingungen: true, inhaltOk: true })).json()).error !== undefined, "Ausweg erneut aufrufen: klare Fehlermeldung statt zweiter Zahlung");
+    // „Mit Karte zahlen“: gleicher Betrag, nur Karte
+    const kk = await api(pA, "/api/portal/zahlung", { method: "POST", body: { betrag: "600", kunde: "Karla", beschreibung: "Unterarm" } });
+    await post("/api/pay", { z: kk.data.zahlung.id, inhaltOk: true });
+    const rK = await (await post("/api/pay", { z: kk.data.zahlung.id, ausweich: "karte" })).json();
+    const csK = (await mock("state")).sessions[rK.url.split("/pay/")[1]];
+    check(JSON.stringify(csK.payment_method_types) === '["card"]' && csK.amount_total === 60000 && !st.customers[csK.customer], "„Mit Karte zahlen“: gleicher Betrag, nur Karte (ohne neue Bestätigung, da schon bestätigt)");
+    await api(pA, "/api/portal/kontakt", { method: "PATCH", body: { ausweichAnzahlung: { an: false, prozent: 30 } } });
+    // Studio ohne Anzahlungen (Tattoo Fashion München/Landshut): alle Wege zur Anzahlung gesperrt, Projektpreis + Gutschein gehen weiter
+    {
+      await admin(`studio/${provId}`, { method: "PATCH", body: { keineAnzahlung: true } });
+      const sp = await api(pA, "/api/portal/zahlung", { method: "POST", body: { betrag: "100", kunde: "Anna", art: "anzahlung", beschreibung: "Termin" } });
+      check(sp.status === 409 && /Anzahlungen ausgeschaltet/.test(sp.data?.error || ""), "Ohne Anzahlungen: Link „Anzahlung“ wird abgelehnt", sp.status);
+      const ge = await api(pA, "/api/portal/zahlung", { method: "POST", body: { betrag: "300", kunde: "Anna", art: "gesamt", beschreibung: "Rose" } });
+      check(ge.status === 201, "Ohne Anzahlungen: Link über den ganzen Betrag geht weiter", ge.status);
+      const gs = await api(pA, "/api/portal/zahlung", { method: "POST", body: { betrag: "100", kunde: "Anna", email: "anna@example.com", art: "gutschein" } });
+      check(gs.status === 201, "Ohne Anzahlungen: Gutschein geht weiter", gs.status);
+      await api(pA, "/api/portal/kontakt", { method: "PATCH", body: { ausweichAnzahlung: { an: true, prozent: 30 } } });
+      const st = (await api(pA, "/api/portal")).data?.studio || {};
+      check(st.anzahlungAus === true && st.ausweichAnzahlung?.an === false, "Ohne Anzahlungen: Ausweg-Anzahlung bleibt aus, App sieht anzahlungAus", JSON.stringify(st.ausweichAnzahlung));
+      await admin(`studio/${provId}`, { method: "PATCH", body: { keineAnzahlung: false } });
+      await api(pA, "/api/portal/kontakt", { method: "PATCH", body: { ausweichAnzahlung: { an: false, prozent: 30 } } });
+    }
+    // --- Gutschein-Wörter im normalen Projektfeld: kein Klarna, Hinweis auf die Gutschein-Funktion (11.11.2026)
+    { const gw = await api(pA, "/api/portal/zahlung", { method: "POST", body: { betrag: "200", kunde: "Gina Gut", beschreibung: "Gutschein für Freundin" } });
+      await post("/api/pay", { z: gw.data.zahlung.id, inhaltOk: true });
+      const rG = await (await post("/api/pay", { z: gw.data.zahlung.id, inhaltOk: true })).json();
+      const csG = (await mock("state")).sessions[rG.url.split("/pay/")[1]];
+      const gi = await (await fetch(`${BASE}/api/pay?z=${gw.data.zahlung.id}`)).json();
+      check(/Gutschein-Funktion/.test(gw.data.hinweis || "") && JSON.stringify(csG.payment_method_types) === '["card"]' && JSON.stringify(gi.zahlung.zahlarten) === '["card"]' && /Gutschein-Funktion/.test(gi.zahlung.gutscheinHinweis), "Gutschein-Wort im Projektfeld: nur Karte (kein Klarna) + Hinweis „Für Gutscheine bitte die Gutschein-Funktion nutzen“");
+      const slugP = (await admin(`studio/${provId}`)).studio.slug;
+      const zs = await post("/api/pay", { s: slugP, betrag: "150", kunde: "Gabi", beschreibung: "Guthaben aufladen", inhaltOk: true });
+      const zsj = await zs.json(); const csZ = (await mock("state")).sessions[zsj.url.split("/pay/")[1]];
+      check(JSON.stringify(csZ.payment_method_types) === '["card"]' && /Gutschein-Funktion/.test(zsj.hinweis || ""), "Öffentliche Zahlseite: Wort „Guthaben“ im Projektfeld → nur Karte + Hinweis");
+      const normal = await api(pA, "/api/portal/zahlung", { method: "POST", body: { betrag: "300", kunde: "Nora Normal", beschreibung: "Rose" } });
+      check(!normal.data.hinweis && !normal.data.zahlung.nurKarte, "Normales Projektfeld: kein Gutschein-Hinweis, Klarna bleibt erlaubt");
+      // „heute im Studio“: Der Satz „direkt nach der Zahlungsfreigabe“ steht nur, wenn das Studio es ausdrücklich gewählt hat
+      const he = await api(pA, "/api/portal/zahlung", { method: "POST", body: { betrag: "400", kunde: "Hanna Heute", beschreibung: "Anker", heute: true } });
+      await post("/api/pay", { z: he.data.zahlung.id, inhaltOk: true });
+      const rH = await (await post("/api/pay", { z: he.data.zahlung.id, inhaltOk: true })).json();
+      const csH = (await mock("state")).sessions[rH.url.split("/pay/")[1]];
+      check(he.data.zahlung.heute === true && /direkt nach der Zahlungsfreigabe/.test(csH.line_items[0].price_data.product_data.description), "Studio wählt „heute im Studio“: dann steht „direkt nach der Zahlungsfreigabe“ im Warenkorb");
+      const dom = await import("../netlify/functions/_lib/domain.mjs");
+      const neutral = dom.artikelText({ firma: "Test Ink", strasse: "A 1", plz: "12345", ort: "X" }, { beschreibung: "Rose", sitzungen: "Sitzung 2 von 3", betragCent: 10000 });
+      check(!/direkt nach der Zahlungsfreigabe/.test(neutral.description) && /Tätowierung bei Test Ink/.test(neutral.description) && /Sitzung 2 von 3/.test(neutral.description), "artikelText ohne „direkt nach der Zahlungsfreigabe“ (neutral, mit Sitzungen)");
+    }
+    delete process.env.TF_BEZAHLFELD;
+  }
+
+  // ---------------------------------------------------------------- Klarna-Texte: eine zentrale Stelle (11.11.2026)
+  console.log("Klarna-Texte: Backend- und Frontend-Konstante gleich, freigegebener Wortlaut");
+  {
+    const kt = await import("../netlify/functions/_lib/klarna-texte.mjs");
+    const jsSrc = await (await fetch(`${BASE}/js/klarna-texte.js`)).text();
+    const glaeser = [kt.KLARNA_WARNSATZ, kt.KLARNA_NAME.verfuegbar, kt.KLARNA_NAME.mitKlarna, kt.KLARNA_AUSSAGE.spaeter, kt.KLARNA_AUSSAGE.tage30, kt.KLARNA_AUSSAGE.finanzierung, kt.KLARNA_ZUSATZ, kt.KLARNA_ZUSATZ_STUDIO];
+    check(glaeser.every((t) => jsSrc.includes(t)), "klarna-texte.js (Browser) enthält alle Texte der Backend-Konstante wortgleich");
+    check(kt.KLARNA_WARNSATZ === "Achtung! Kreditaufnahme kostet Geld." && kt.KLARNA_AUSSAGE.spaeter === "Jetzt shoppen. Bezahle später mit Klarna." && kt.KLARNA_AUSSAGE.tage30 === "In bis zu 30 Tagen bezahlen mit Klarna." && kt.KLARNA_AUSSAGE.finanzierung === "Bezahle in 6, 12, 24 oder 36 Monatsraten mit Klarna.", "Klarna-Wortlaut exakt wie von Klarna freigegeben (später, 30 Tage, Monatsraten, Warnsatz)");
+    // Tattoofin-App (iOS): Klarna-Texte nur aus …/KlarnaTexte.swift, Werte wortgleich mit _lib/klarna-texte.mjs; keine Kopien in anderen Swift-Dateien
+    {
+      const iosDir = path.join(root, "..", "ios", "Tattoofin");
+      const swiftDateien = [];
+      const sammeln = (d) => { try { for (const e of fs.readdirSync(d, { withFileTypes: true })) { const p2 = path.join(d, e.name); if (e.isDirectory()) sammeln(p2); else if (e.name.endsWith(".swift")) swiftDateien.push(p2); } } catch { /* keine App */ } };
+      sammeln(iosDir);
+      const kts = swiftDateien.find((f) => path.basename(f) === "KlarnaTexte.swift");
+      if (!kts) check(!swiftDateien.some((f) => /Kreditaufnahme|Monatsraten|später mit Klarna|Raten über Klarna/.test(fs.readFileSync(f, "utf8"))), "App (iOS): keine KlarnaTexte.swift, also auch keine Klarna-Raten-Texte in Swift-Dateien");
+      else {
+        const src = fs.readFileSync(kts, "utf8");
+        const wert = (name) => (src.match(new RegExp(`static let ${name}\\s*=\\s*"((?:[^"\\\\]|\\\\.)*)"`)) || [])[1];
+        const paare = [["warnsatz", kt.KLARNA_WARNSATZ], ["nameVerfuegbar", kt.KLARNA_NAME.verfuegbar], ["nameMitKlarna", kt.KLARNA_NAME.mitKlarna], ["spaeter", kt.KLARNA_AUSSAGE.spaeter], ["tage30", kt.KLARNA_AUSSAGE.tage30], ["finanzierung", kt.KLARNA_AUSSAGE.finanzierung], ["zusatz", kt.KLARNA_ZUSATZ], ["zusatzStudio", kt.KLARNA_ZUSATZ_STUDIO], ["gutscheinHinweis", kt.GUTSCHEIN_HINWEIS]];
+        const abweichend = paare.filter(([n, v]) => wert(n) !== undefined && wert(n) !== v).map(([n]) => n);
+        check(wert("warnsatz") === kt.KLARNA_WARNSATZ && !abweichend.length, "App (iOS): KlarnaTexte.swift wortgleich mit _lib/klarna-texte.mjs", abweichend.join(", "));
+        const kopien = swiftDateien.filter((f) => f !== kts && paare.some(([, v]) => fs.readFileSync(f, "utf8").includes(`"${v}"`) || fs.readFileSync(f, "utf8").includes("Kreditaufnahme")));
+        check(!kopien.length, "App (iOS): Klarna-Texte nur aus KlarnaTexte.swift, keine Kopien in anderen Swift-Dateien", kopien.map((f) => path.basename(f)).join(", "));
+      }
+    }
+    check(kt.gutscheinWort("Gutschein") && kt.gutscheinWort("Guthaben aufladen") && kt.gutscheinWort("Geschenkkarte") && !kt.gutscheinWort("Rose Unterarm", "Sitzung 2 von 3"), "Gutschein-Wörter werden erkannt (Gutschein, Guthaben, Geschenkkarte), normale Motive nicht");
+    for (const f of ["public/js/app-kit.js", "public/bezahlt.html", "public/zahlung.html", "public/zahlen.html"]) {
+      const src = fs.readFileSync(path.join(root, f), "utf8");
+      check(!/in 3 Raten|3 Teilzahlungen/i.test(src), `${f}: kein „In 3 Raten/Teilzahlungen“ (gibt es nur auf Anfrage bei Klarna)`);
+    }
+    // Tippfehler aus der Preisumstellung 15.11.2026 („inkl. MwSt..“) darf nirgends stehen
+    const doppelPunkt = fs.readdirSync(path.join(root, "public")).filter((f) => f.endsWith(".html") && fs.readFileSync(path.join(root, "public", f), "utf8").includes("MwSt.."));
+    check(doppelPunkt.length === 0, "public/*.html: kein „MwSt..“ (doppelter Punkt)", doppelPunkt.join(", "));
+  }
+
+  // ---------------------------------------------------------------- K4: Auszahlungs-Korrektur (01.11.2026)
+  console.log("Klarna: Transfer-/Gebühren-IDs kommen erst nach dem ersten Webhook → werden nachgetragen; doppelte Webhooks → genau eine Mail");
+  {
+    const piVon = (raw) => raw.clientSecret.split("_secret_")[0];
+    const bezahleKlarna = (raw) => mock("bestaetigen", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ pi: piVon(raw), client_secret: raw.clientSecret, pm: "klarna" }) });
+    const zahlungMit = async (kunde) => (await admin(`studio/${provId}`)).zahlungen.find((z) => z.kunde === kunde);
+    const mailsZahlung = (kunde) => mailsAn("prov@example.com").filter((m) => m.subject.includes("Zahlung eingegangen") && m.subject.includes(kunde));
+    await mock("klarna-verzoegert");
+
+    // a) charge.updated trägt die IDs nach
+    const nina = await (await post("/api/pay", { s: slug, betrag: "400", kunde: "Nina Nachtrag", email: "nina@example.com", inhaltOk: true })).json();
+    await bezahleKlarna(nina);
+    await wait(500);
+    let zn = await zahlungMit("Nina Nachtrag");
+    check(zn?.status === "bezahlt" && zn.zahlart === "klarna" && !zn.transferId && !zn.applicationFeeId && !zn.stripeGebuehrCent, "Klarna: beim ersten Webhook fehlen Transfer-ID, Plattformgebühr-ID und Stripe-Gebühr noch (wie live)");
+    check(!/Voraussichtlich verfügbar ab/.test(mailsZahlung("Nina Nachtrag")[0]?.html || "") && /7 Tage ab der Zahlung/.test(mailsZahlung("Nina Nachtrag")[0]?.html || ""), "Mail „Zahlung eingegangen“: Frist 7 Tage, ohne erfundenes Datum");
+    await mock(`nachtragen/${zn.paymentIntentId}`);
+    await wait(500);
+    zn = await zahlungMit("Nina Nachtrag");
+    check(/^tr_/.test(zn.transferId || "") && /^fee_/.test(zn.applicationFeeId || "") && zn.stripeGebuehrCent === 1231 && zn.chargeId, "charge.updated: Transfer-ID, Plattformgebühr-ID und Stripe-Gebühr (Klarna 12,31 €) nachgetragen");
+    check(zn.verfuegbarAb && new Date(zn.verfuegbarAb) > new Date(), "Verfügbar-ab-Datum aus Stripe (available_on) gemerkt");
+
+    // b) Notanker: Rückbuchung vor dem Nachtragen → Betrag wird trotzdem vom Studio zurückgeholt
+    const nora = await (await post("/api/pay", { s: slug, betrag: "400", kunde: "Nora Notanker", email: "nora@example.com", inhaltOk: true })).json();
+    await bezahleKlarna(nora);
+    await wait(500);
+    let zo = await zahlungMit("Nora Notanker");
+    check(!zo.transferId, "Notanker-Fall: Transfer-ID fehlt, bevor die Rückbuchung kommt");
+    await mock(`nachtragen/${zo.paymentIntentId}?ereignis=0`); // Stripe hängt die Daten an, aber charge.updated kommt nicht an
+    await mock(`dispute/${zo.paymentIntentId}?status=lost`);
+    await wait(500);
+    zo = await zahlungMit("Nora Notanker");
+    state = await mock("state");
+    check(/^tr_/.test(zo.transferId || "") && state.reversals.some((r) => r.transfer === zo.transferId) && !zo.rueckbuchung?.offenCent, "Rückbuchung: IDs vorher nachgeholt → Betrag vom Studio zurückgeholt (kein „Transfer-ID fehlt“)");
+
+    // c) Tagesjob: Klarna-Zahlung ohne charge.updated
+    const tina = await (await post("/api/pay", { s: slug, betrag: "400", kunde: "Tina Tagesjob", email: "tina@example.com", inhaltOk: true })).json();
+    await bezahleKlarna(tina);
+    await wait(500);
+    let zt = await zahlungMit("Tina Tagesjob");
+    await mock(`nachtragen/${zt.paymentIntentId}?ereignis=0`);
+    check(!zt.transferId, "Tagesjob-Fall: IDs fehlen, kein charge.updated angekommen");
+    const jobs = await admin("jobs", { body: {} });
+    zt = await zahlungMit("Tina Tagesjob");
+    check(/^tr_/.test(zt.transferId || "") && /^fee_/.test(zt.applicationFeeId || "") && zt.stripeGebuehrCent === 1231 && JSON.stringify(jobs).includes(zt.id), "Täglicher Job trägt die fehlenden IDs nach");
+    await mock("klarna-verzoegert?an=0");
+
+    // d) doppelte Webhooks derselben Zahlung (zwei verschiedene Ereignisse fast gleichzeitig) → genau eine Mail je Empfänger
+    await mock("webhooks?an=0"); // Simulation schickt nichts selbst, die Ereignisse kommen gleich von Hand
+    const dora = await (await post("/api/pay", { s: slug, betrag: "250", kunde: "Dora Doppelt", email: "dora@example.com", inhaltOk: true })).json();
+    await mock("bestaetigen", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ pi: piVon(dora), client_secret: dora.clientSecret, pm: "card" }) });
+    const piDora = (await mock("state")).paymentIntents[piVon(dora)];
+    const hook = () => sendeWebhook(`${BASE}/api/stripe-webhook`, "whsec_mock", "payment_intent.succeeded", piDora, undefined);
+    const antworten = await Promise.all([hook(), hook(), hook()]);
+    await wait(800);
+    const zd = await zahlungMit("Dora Doppelt");
+    check(antworten.every((a) => a === 200) && zd?.status === "bezahlt", "Drei gleichzeitige Webhooks: alle 200, Zahlung bezahlt");
+    check(mailsZahlung("Dora Doppelt").length === 1, "Doppelte Webhooks: genau 1 Mail „Zahlung eingegangen“ an das Studio");
+    check(mailsAn("dora@example.com").filter((m) => m.subject.includes("Danke")).length === 1, "Doppelte Webhooks: genau 1 Bestätigung an den Kunden");
+    await hook(); await wait(300);
+    check(mailsZahlung("Dora Doppelt").length === 1, "Später noch ein Webhook: weiterhin 1 Mail");
+    await mock("webhooks?an=1");
+  }
+
+  // ---------------------------------------------------------------- L: Profi + Studio-Satz
+  console.log("Einmalzahlung/Monatlich: keine Provision, Zahlung direkt auf dem eigenen Konto");
+  const kaufId = (await studioPer("kauf@example.com")).id;
+  await admin(`studio/${kaufId}/live`, { body: {} });
+  const rKauf = await api(pB, "/api/portal/zahlung", { method: "POST", body: { betrag: "1000", kunde: "Kim" } });
+  check(rKauf.data.zahlung?.gebuehrBruttoCent === 0, "Einmalzahlung: Zahlungslink ohne Plattformgebühr");
+  const kaufAcct = Object.values((await mock("state")).accounts).find((a) => a.email === "kauf@example.com");
+  check(kaufAcct?.type === "standard", "Einmalzahlung: eigenes Standard-Konto");
+  const rKim = await (await post("/api/pay", { z: rKauf.data.zahlung.id, inhaltOk: true })).json();
+  const piKim = (await mock("state")).paymentIntents[rKim.clientSecret.split("_secret_")[0]];
+  check(rKim.stripeAccount === kaufAcct.id && piKim.account === kaufAcct.id && !piKim.application_fee_amount, "Einmalzahlung: Bezahlfeld direkt auf dem Studio-Konto (Direct Charge, Stripe-Account), keine Gebühr für Tattoofin");
+  const aboId = (await studioPer("abo@example.com")).id;
+  await admin(`studio/${aboId}/live`, { body: {} });
+  const rAbo = await api(pD, "/api/portal/zahlung", { method: "POST", body: { betrag: "1000", kunde: "Sam" } });
+  check(rAbo.data.zahlung?.gebuehrBruttoCent === 0, "Paket Monatlich: Zahlungslink ohne Tattoofin-Provision");
+
+  // ---------------------------------------------------------------- M: Leistungsbestätigung
+  console.log("Leistungsbestätigung nach dem Termin");
+  const offen = await api(pA, "/api/portal/zahlung", { method: "POST", body: { betrag: "200", kunde: "Offen" } });
+  check((await api(pA, "/api/portal/bestaetigung/" + offen.data.zahlung.id, { method: "POST", body: {} })).status === 400, "Vor der Zahlung keine Leistungsbestätigung");
+  check((await api(pA, "/api/portal/bestaetigung/" + tom.id, { method: "POST", body: {} })).status === 400, "Zurückgebuchte Zahlung: keine neue Leistungsbestätigung");
+  const lbMia = await api(pA, "/api/portal/bestaetigung/" + mia.id, { method: "POST", body: {} });
+  const tMia = new URL(lbMia.data.link).searchParams.get("t");
+  check((await post("/api/bestaetigung", { t: tMia, name: "Mia", datum: "2026-10-18", sitzungErledigt: true })).status === 400, "Ohne Unterschrift abgelehnt");
+  check((await fetch(`${BASE}/api/bestaetigung?t=gibtesnichtgibtesnicht`)).status === 404, "Ungültiger Link → 404");
+  await pA.goto(`${BASE}/app.html#zahlung/${lenaId}`);
+  await pA.waitForSelector("#lb-btn");
+  await pA.click("#lb-btn");
+  await pA.waitForSelector("#lb-out [data-copytext]");
+  const lbLink = await pA.getAttribute("#lb-out [data-copytext]", "data-copytext");
+  const pM = await neueSeite({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
+  await pM.goto(lbLink);
+  await pM.waitForSelector("#f:not(.hidden)");
+  check((await pM.textContent("#text")).includes("Ink Provision") && !/Leistung erhalten/.test(await pM.textContent("body")), "Kunde bestätigt nach dem Termin, dass die Sitzung stattgefunden hat (kein „Leistung erhalten“ vorab)");
+  await pM.fill("#name", "Lena Beispiel"); await pM.check("#erledigt");
+  await signatur(pM);
+  await pM.setInputFiles("#foto", path.join(root, "public/assets/app/icon-192.png"));
+  await pM.waitForSelector("#foto-ok-l:not(.hidden)");
+  await pM.click("#senden");
+  check((await pM.textContent("#alert")).includes("Foto"), "Foto nur mit Einwilligung");
+  await pM.check("#foto-ok");
+  await pM.click("#senden");
+  await pM.waitForSelector("#danke:not(.hidden)");
+  check(true, "Leistungsbestätigung mit Unterschrift + Foto gespeichert");
+  const nw = await api(pA, "/api/portal/nachweis/" + lenaId);
+  check(nw.data.leistung?.unterschrift?.startsWith("data:image/png") && nw.data.leistung?.foto?.startsWith("data:image/jpeg") && nw.data.zahlung.leistung?.name === "Lena Beispiel", "Nachweis enthält Unterschrift, Foto, Name, Datum");
+  check((await post("/api/bestaetigung", { t: new URL(lbLink).searchParams.get("t"), name: "x", datum: "2026-10-18", sitzungErledigt: true, unterschrift: "data:image/png;base64," + "A".repeat(3000) })).status === 409, "Zweite Bestätigung → abgelehnt");
+  check(mailsAn("prov@example.com").some((m) => m.subject.includes("Leistungsbestätigung")), "E-Mail an Studio: Leistungsbestätigung");
+  await pA.goto(`${BASE}/nachweis.html?z=${lenaId}`);
+  await pA.waitForSelector("img.sig");
+  check((await pA.textContent("body")).includes("Keine Rechtsberatung") && !(await pA.textContent("body")).includes("Entwurf") && (await pA.textContent("body")).includes("Bestätigung beim Bezahlen"), "Nachweis-Seite (PDF) mit beiden Stufen, sachlicher Hinweis ohne „Entwurf“");
+  await pA.pdf?.({ path: path.join(shots, "nachweis.pdf") }).catch(() => {});
+  await pA.screenshot({ path: path.join(shots, "nachweis.png"), fullPage: true });
+
+  // ---------------------------------------------------------------- N: Mandantentrennung
+  console.log("Mandantentrennung: Studio B sieht und ändert nichts von Studio A");
+  const fremd = [
+    ["GET", "/api/portal/nachweis/" + lenaId], ["POST", "/api/portal/bestaetigung/" + lenaId], ["POST", "/api/portal/erstattung/" + lenaId],
+    ["DELETE", "/api/portal/zahlung/" + offen.data.zahlung.id],
+  ];
+  const fremdStatus = [];
+  for (const [method, url] of fremd) fremdStatus.push((await api(pB, url, { method, body: method === "GET" || method === "DELETE" ? undefined : { betrag: "1" } })).status);
+  check(fremdStatus.every((s) => s === 404), "Fremde Zahlungs-IDs → 404 (Nachweis, Bestätigung, Erstattung, Storno): " + fremdStatus.join(","));
+  const bPortal = await api(pB, "/api/portal");
+  check(bPortal.data.zahlungen.every((z) => z.studioId === kaufId) && bPortal.data.studio.email === "kauf@example.com", "Studio B bekommt nur eigene Zahlungen und Daten");
+  const bSess = await api(pB, "/api/portal/stripe-session", { method: "POST", body: {} });
+  check(bSess.data.konto === kaufAcct.id, "Stripe-Sitzung nur für das eigene Konto");
+  check(!JSON.stringify(bPortal.data).includes("clientSecret") && !JSON.stringify((await api(pA, "/api/portal")).data).includes('"ip"'), "Keine Client-Schlüssel oder Kunden-IP in der Portal-Antwort");
+  const cookieD = (await pD.context().cookies()).map((c) => `${c.name}=${c.value}`).join("; ");
+  check((await fetch(BASE + "/api/portal", { headers: { cookie: cookieD } })).status === 200, "Sitzung gültig");
+  await api(pD, "/api/portal/abmelden", { method: "POST", body: {} });
+  check((await fetch(BASE + "/api/portal", { headers: { cookie: cookieD } })).status === 401, "„Auf allen Geräten abmelden“: alte Sitzung ungültig");
+
+  // ---------------------------------------------------------------- O: Recht, Extras, Checkliste
+  console.log("Rechtliche Lage, Extras, Checkliste");
+  check((await api(pA, "/api/portal/recht", { method: "POST", body: { gelesen: true, version: "alt" } })).status === 409, "Zustimmung zu veralteter Version abgelehnt");
+  await pA.goto(BASE + "/app.html#recht");
+  await pA.waitForSelector("#r-btn");
+  check((await pA.textContent("#recht-inhalt")).includes("Klarna") && (await pA.textContent("#recht-inhalt")).includes("20,00 €"), "Blatt zeigt Klarna-Risiko und Rückbuchungsgebühr aus der Konfiguration");
+  await pA.check("#r-ok"); await pA.click("#r-btn");
+  await pA.waitForFunction(() => /Gelesen und bestätigt/.test(document.getElementById("recht-ok").textContent));
+  const rA = (await admin(`studio/${provId}`)).studio.recht;
+  check(rA?.version && rA?.am && rA?.name, "Zustimmung mit Zeitstempel, Version und Name gespeichert");
+  await pA.goto(BASE + "/app.html#extras");
+  await pA.waitForSelector("[data-extra]");
+  await pA.click('[data-extra="no-show"]');
+  await pA.waitForSelector(".chip.ok");
+  check(mailsAn("domenicschilling@gmail.com").some((m) => m.subject.includes("Extra angefragt")), "Extra angefragt → interne Meldung, keine Abrechnung");
+  check((await api(pA, "/api/portal/checkliste", { method: "POST", body: { punkt: "theke", erledigt: true } })).data.checkliste?.theke, "Checklisten-Punkt gespeichert");
+  // Druckvorlagen sagen „Ratenzahlung möglich*“ → bei Risikofrei (Klarna nicht dauerhaft) keine Liste und keine Karte „Zum Ausdrucken“
+  await pA.goto(BASE + "/app.html#werbung");
+  await pA.waitForFunction(() => (document.getElementById("zs-url").value || "").includes("/zahlen/"), null, { timeout: 15000 });
+  check(await pA.evaluate(() => document.getElementById("mat-karte").classList.contains("hidden") && !document.querySelector("#mat a")), "Dashboard Risikofrei: Karte „Zum Ausdrucken“ ausgeblendet (keine Druckvorlagen mit Raten-Aussage)");
+  await pA.goto(BASE + "/portal.html");
+  await pA.waitForFunction(() => (document.getElementById("zs-url").value || "").includes("/zahlen/"), null, { timeout: 15000 });
+  check(await pA.evaluate(() => document.getElementById("mat-karte").classList.contains("hidden")), "Portal Risikofrei: Bereich „Studio Kit“ ausgeblendet");
+
+  // ---------------------------------------------------------------- Kündigung, Garantie, Sicherheit
+  console.log("Kündigung & Rücknahme, Garantie");
+  await pA.goto(BASE + "/portal.html#vertrag");
+  await pA.click("#k-btn");
+  await pA.waitForSelector("#k-zurueck");
+  check(mailsAn("prov@example.com").some((m) => m.subject.includes("Kündigung ist eingegangen")), "E-Mail: Kündigungsbestätigung");
+  await pA.click("#k-zurueck");
+  await pA.waitForSelector("#k-btn");
+  check(mailsAn("prov@example.com").some((m) => m.subject.includes("zurückgenommen")), "E-Mail: Kündigung zurückgenommen");
+  const ref = await admin(`studio/${kaufId}/erstattung`, { body: {} });
+  check(ref.status === "erstattet" && mailsAn("kauf@example.com").some((m) => m.subject.includes("Erstattung")), "Garantie-Erstattung Kauf + E-Mail");
+
+  console.log("Sicherheit");
+  check((await fetch(`${BASE}/api/stripe-webhook`, { method: "POST", headers: { "stripe-signature": "t=1,v1=00" }, body: "{}" })).status === 400, "Webhook mit falscher Signatur abgelehnt");
+  check((await fetch(`${BASE}/api/admin/studios`)).status === 401, "Admin ohne Token abgelehnt");
+  check((await fetch(`${BASE}/api/portal`)).status === 401, "Portal ohne Login abgelehnt");
+  // Login-Link (24 h, einmal verwendbar): GET zeigt nur die Zwischenseite, erst der POST meldet an
+  await post("/api/login", { email: "rechnung@example.com" });
+  const llMail = mailsAn("rechnung@example.com").filter((m) => /Login-Link/.test(m.subject)).pop();
+  const llTok = new URL(linkAus(llMail, /href="([^"]*\/api\/auth\?token=[^"]+)"/)).searchParams.get("token");
+  check(/24 Stunden gültig, funktioniert einmal/.test(llMail.html), "Login-Mail: 24 Stunden gültig, einmal verwendbar");
+  const llGet = await fetch(`${BASE}/api/auth?token=${encodeURIComponent(llTok)}`, { redirect: "manual" });
+  check(llGet.status === 200 && !llGet.headers.get("set-cookie") && /method="post" action="\/api\/auth"/.test(await llGet.text()), "Login-Link: GET (z. B. Mail-Scanner) verbraucht den Link nicht, nur Zwischenseite");
+  const redir = await formPost("/api/auth", { token: llTok, next: "//evil.com" });
+  check(redir.headers.get("location") === "/app.html" && /tf_session=/.test(redir.headers.get("set-cookie") || ""), "Kein offener Redirect (Standardziel: Dashboard)");
+  const llCookie = (redir.headers.get("set-cookie") || "").split(";")[0];
+  check((await formPost("/api/auth", { token: llTok, next: "/app.html" }, llCookie)).headers.get("location") === "/app.html", "Login-Link doppelt angetippt (schon angemeldet): einfach weiter");
+  const llZweit = await formPost("/api/auth", { token: llTok });
+  check(/^\/login\.html\?abgelaufen=1&neu=/.test(llZweit.headers.get("location") || "") && !llZweit.headers.get("set-cookie"), "Login-Link ein zweites Mal (anderes Gerät): „abgelaufen“ mit Knopf für neuen Link");
+  const vorNeu = mailsAn("rechnung@example.com").filter((m) => /Login-Link/.test(m.subject)).length;
+  const neuR = await (await post("/api/login", { neu: llTok })).json();
+  check(neuR.ok && /^r•••••@example\.com$/.test(neuR.an || "") && mailsAn("rechnung@example.com").filter((m) => /Login-Link/.test(m.subject)).length === vorNeu + 1, "„Neuen Link schicken“: neuer Link an die Studio-Adresse (maskiert angezeigt)");
+  check((await (await post("/api/login", { neu: "gefaelscht.abc" })).json()).an === undefined, "„Neuen Link schicken“ mit gefälschtem Token: nichts verschickt");
+  const pAbg = await neueSeite();
+  await pAbg.goto(BASE + new URL(llZweit.headers.get("location"), BASE).pathname + new URL(llZweit.headers.get("location"), BASE).search);
+  await pAbg.click("#neu-btn");
+  await pAbg.waitForFunction(() => /Neuer Link ist unterwegs/.test(document.getElementById("alert").textContent));
+  check(!/neu=/.test(pAbg.url()), "Seite „Link abgelaufen“: ein Knopf, neuer Link unterwegs, alter Link aus der Adresszeile entfernt");
+  const blocked = await post("/api/pay", { s: (await studioPer("rechnung@example.com")).slug, betrag: "500", kunde: "x", inhaltOk: true });
+  check(blocked.status === 409, "Studio ohne freigegebenes Konto kann nicht kassieren");
+  check((await fetch(`${BASE}/api/vorschau/mails`)).status === 404 && (await post("/api/vorschau/einladen", { email: "x@example.com", firma: "x" })).status === 404, "Vorschau-Endpunkte außerhalb der Vorschau: 404");
+  const vorLogin = mailsAn("prov@example.com").filter((m) => /Login-Link/.test(m.subject)).length;
+  for (let i = 0; i < 6; i++) check((await (await post("/api/login", { email: "prov@example.com" })).json()).ok === true, "Login-Antwort immer gleich (" + (i + 1) + ")");
+  check(mailsAn("prov@example.com").filter((m) => /Login-Link/.test(m.subject)).length - vorLogin === 3, "Rate-Limit: höchstens 3 Login-Mails pro Adresse in 15 Minuten");
+  // E-Mail-Vergleich normalisiert (gmail = googlemail, Groß/Klein, Leerzeichen, Punkte/+ bei Gmail)
+  await post("/api/signup", { ...basis, paket: "risikofrei", email: "Test.Gmail+abc@googlemail.com" });
+  await post("/api/login", { email: " testgmail@GMAIL.com " });
+  check(mailsAn("test.gmail+abc@googlemail.com").some((m) => /Login-Link/.test(m.subject)), "Login: gmail/googlemail, Punkte, +Zusatz und Groß/Klein werden gleich behandelt");
+  check((await post("/api/signup", { ...basis, paket: "einmal", email: "testgmail@gmail.com" })).status === 409, "Keine Dublette mit Gmail-Variante derselben Adresse");
+  // Team-Adresse (z. B. Mitarbeiterin): Admin hinterlegt sie, Login-Link geht an die Mitarbeiterin, nicht an den Inhaber
+  const teamSid = (await studioPer("prov@example.com")).id;
+  check((await admin(`studio/${teamSid}/team`, { body: { emails: ["kein-mail"] } })).error, "Team: ungültige Adresse abgelehnt");
+  const team = await admin(`studio/${teamSid}/team`, { body: { emails: [" Mitarbeiterin@Example.com "] } });
+  check(team.teamEmails?.[0] === "mitarbeiterin@example.com", "Team-Adresse hinterlegt (bereinigt)");
+  const vorInhaber = mailsAn("prov@example.com").length;
+  await post("/api/login", { email: "mitarbeiterin@example.com" });
+  check(mailsAn("mitarbeiterin@example.com").some((m) => /Login-Link/.test(m.subject)) && mailsAn("prov@example.com").length === vorInhaber, "Team-Login: Link an die Mitarbeiterin, Inhaber bekommt keine Mail");
+  check((await post("/api/login", { email: "fremd2@example.com" })).ok && !mailsAn("fremd2@example.com").length, "Fremde Adresse ohne Team-Eintrag bekommt keinen Link");
+
+  console.log("Admin-Login per E-Mail + Dashboard ansehen (nur lesend)");
+  check((await (await post("/api/admin-login", { email: "fremd@example.com" })).json()).ok === true && !mailsAn("fremd@example.com").length, "Admin-Login: fremde Adresse bekommt keine Mail (Antwort gleich)");
+  await post("/api/admin-login", { email: "domenicschilling@googlemail.com" });
+  const adminMail = mailsAn("domenicschilling@googlemail.com").find((m) => /Admin-Login/.test(m.subject));
+  const adminLink = adminMail && (adminMail.html.match(/href="([^"]*\/api\/admin-login\?token=[^"]+)"/) || [])[1];
+  check(Boolean(adminLink), "Admin-Login-Link an domenicschilling@googlemail.com (gmail/googlemail normalisiert)");
+  const aGet = await fetch(adminLink, { redirect: "manual" });
+  check(aGet.status === 200 && !aGet.headers.get("set-cookie"), "Admin-Link: GET zeigt nur die Zwischenseite (2 Std., einmal verwendbar)");
+  const aTok = new URL(adminLink).searchParams.get("token");
+  const aResp = await formPost("/api/admin-login", { token: aTok });
+  const aCookie = (aResp.headers.get("set-cookie") || "").split(";")[0];
+  check(aResp.headers.get("location") === "/admin.html" && /^tf_admin=/.test(aCookie) && /HttpOnly/i.test(aResp.headers.get("set-cookie")), "Admin-Sitzung als httpOnly-Cookie");
+  check((await formPost("/api/admin-login", { token: aTok })).headers.get("location") === "/admin.html?abgelaufen=1", "Admin-Link nur einmal verwendbar");
+  const aStudios = await fetch(`${BASE}/api/admin/studios`, { headers: { cookie: aCookie } });
+  check(aStudios.status === 200 && (await aStudios.json()).length > 3, "Admin-Sitzung hat Admin-Rechte (Studios-Liste)");
+  check((await fetch(`${BASE}/api/admin/studios`, { headers: { cookie: "tf_admin=gefaelscht.x" } })).status === 401, "Gefälschtes Admin-Cookie abgelehnt");
+  const pAdmA = await neueSeite();
+  await pAdmA.context().addCookies([{ name: "tf_admin", value: aCookie.split("=").slice(1).join("="), url: BASE }]);
+  await pAdmA.goto(BASE + "/admin.html#" + provId);
+  await pAdmA.waitForSelector("#d-ansehen");
+  await pAdmA.click("#d-ansehen");
+  await pAdmA.waitForURL(/app\.html/);
+  await pAdmA.waitForSelector("#admin-ansicht");
+  check((await pAdmA.textContent("#admin-ansicht")).includes("Admin-Ansicht: Ink Provision"), "Dashboard ansehen: Banner „Admin-Ansicht: <Studio>“ mit Zurück-Link");
+  await appShot(pAdmA, path.join(shots, "admin-ansicht.png"));
+  const ro = await api(pAdmA, "/api/portal/zahlung", { method: "POST", body: { betrag: "100", kunde: "x" } });
+  check(ro.status === 403, "Admin-Ansicht: Zahlungslink erstellen gesperrt");
+  check((await api(pAdmA, "/api/portal/erstattung/x", { method: "POST", body: { betrag: "1" } })).status === 403 && (await api(pAdmA, "/api/portal/kuendigung", { method: "POST", body: {} })).status === 403, "Admin-Ansicht: Erstattung und Kündigung gesperrt");
+  check((await api(pAdmA, "/api/portal/stripe-session", { method: "POST", body: {} })).data.modus === "ansicht", "Admin-Ansicht: keine Stripe-Bausteine, stattdessen Hinweis");
+  const roPortal = await api(pAdmA, "/api/portal");
+  check(roPortal.status === 200 && roPortal.data.adminAnsicht && roPortal.data.zahlungen.length > 0, "Admin-Ansicht: Zahlungen sichtbar");
+  const roCookie = (await pAdmA.context().cookies()).filter((c) => c.name === "tf_session").map((c) => `${c.name}=${c.value}`).join("; ");
+  const roConnect = await fetch(`${BASE}/api/connect?id=${provId}`, { redirect: "manual", headers: { cookie: roCookie } });
+  check(Boolean(roCookie) && /\/login\.html/.test(roConnect.headers.get("location") || ""), "Admin-Ansicht startet keine Stripe-Einrichtung (Weiterleitung zum Login)");
+  const logs = fs.readdirSync(dataDir).filter((f) => f.startsWith("log%2F")).map((f) => JSON.parse(fs.readFileSync(path.join(dataDir, f))));
+  check(logs.some((l) => (l.type || l.typ) === "admin-ansicht" && JSON.stringify(l).includes("domenicschilling@gmail.com") && JSON.stringify(l).includes(provId)), "Admin-Ansicht protokolliert (wer, wann, welches Studio)");
+  await pAdmA.click("#admin-ansicht a");
+  await pAdmA.waitForURL(/admin\.html/);
+  check(true, "Zurück zum Admin");
+  const einr = await (await fetch(`${BASE}/api/admin/studio/${provId}/einrichtungslink`, { method: "POST", headers: { cookie: aCookie, "content-type": "application/json" }, body: "{}" })).json();
+  const einrR = await fetch(einr.url, { redirect: "manual" });
+  check(einr.gueltig === "24 Stunden" && /api\/connect\?id=.+&t=/.test(einr.url) && !/login\.html/.test(einrR.headers.get("location") || ""), "Admin: signierter Einrichtungslink (24 h) zum Weitergeben funktioniert ohne Login");
+  check((await fetch(`${BASE}/api/admin/studio/${provId}/einrichtungslink`, { method: "POST" })).status === 401, "Einrichtungslink nur für Admins");
+
+  console.log("Web-App (PWA)");
+  const man = await (await fetch(BASE + "/manifest.webmanifest")).json();
+  check(man.start_url.startsWith("/app.html") && man.display === "standalone" && man.icons.some((i) => i.purpose === "maskable"), "Manifest: Start im Dashboard, eigenständig, Icons");
+  check((await fetch(BASE + "/sw.js")).status === 200 && (await fetch(BASE + "/offline.html")).status === 200, "Service Worker + Offline-Seite vorhanden");
+
+  console.log("Seiten");
+  await pA.goto(BASE + "/portal.html#uebersicht");
+  await pA.waitForSelector("#kpis .kpi");
+  for (const p of ["vertrag.html", "avv.html", "impressum.html", "datenschutz.html", "login.html", "recht.html"]) { await pA.goto(BASE + "/" + p); await wait(250); }
+  const pAdm = await neueSeite();
+  await pAdm.goto(BASE + "/admin.html");
+  await pAdm.click("#login details summary");
+  await pAdm.fill("#token", "admin");
+  await pAdm.click("#login-token button");
+  await pAdm.waitForSelector("#kacheln .kachel");
+  await pAdm.screenshot({ path: path.join(shots, "admin.png"), fullPage: true });
+  check(true, "Admin-Oberfläche lädt");
+
+  // ---------------------------------------------------------------- Admin-App fürs Handy (15.11.2026)
+  console.log("Admin-App (Handy): Übersicht, Entwürfe, Demo-Studio getrennt, Anmeldung per Code");
+  for (const [name, h] of [["ohne Anmeldung", {}], ["falscher Token", { Authorization: "Bearer falsch" }], ["App-Token", { Authorization: "Bearer tfa_x.y" }], ["gefälschtes Admin-Cookie", { cookie: "tf_admin=gefaelscht.x" }]]) {
+    const r = await fetch(`${BASE}/api/admin/uebersicht`, { headers: h });
+    check(r.status === 401 && !/firma|email/i.test(await r.text()), `/api/admin/uebersicht ${name} → 401 ohne Daten`);
+  }
+  check((await fetch(`${BASE}/api/admin/mails?an=kauf@example.com`)).status === 401, "/api/admin/mails?an= nur für Admins");
+  const u0 = await admin("uebersicht");
+  const zaehlbar = u0.studios.filter((x) => ["einrichtung", "live", "gekuendigt"].includes(x.status) && !x.test);
+  check(Array.isArray(u0.studios) && u0.studios.length > 3 && typeof u0.kennzahlen.zahlend.gesamt === "number" && u0.kennzahlen.zahlend.gesamt + u0.kennzahlen.zahlend.kostenlos + u0.kennzahlen.zahlend.probe === zaehlbar.length && u0.kennzahlen.zahlend.gesamt === u0.studios.filter((x) => x.zahlend).length && u0.kennzahlen.zahlend.web + u0.kennzahlen.zahlend.apple === u0.kennzahlen.zahlend.gesamt, "Übersicht: Kennzahl zahlende Studios passt zur Studioliste (Web + Apple)", JSON.stringify(u0.kennzahlen.zahlend));
+  const umsatzSoll = (await Promise.all(u0.studios.filter((x) => !x.test).map(async (x) => (await admin(`studio/${x.id}`)).zahlungen))).flat()
+    .filter((z) => z.status === "bezahlt" && (z.bezahltAm || "").slice(0, 7) === u0.monat).reduce((a2, z) => a2 + z.betragCent - (z.erstattetCent || 0), 0);
+  check(u0.kennzahlen.umsatzStudios.cent === umsatzSoll && umsatzSoll > 0, `Übersicht: Umsatz der Studios im Monat = Summe der Kundenzahlungen (${umsatzSoll} Cent)`);
+  const ein = u0.kennzahlen.einnahmen.stripe;
+  check(!ein.fehler && ein.rechnungen >= 1 && ein.bruttoCent > 0 && ein.nettoCent < ein.bruttoCent, "Übersicht: unsere Einnahmen = bezahlte Stripe-Rechnungen von Tattoofin-Kunden", JSON.stringify(ein));
+  check(u0.mail && typeof u0.mail.ok === "boolean" && u0.studios.every((x) => x.paket && x.paket.name && typeof x.stripeFrei === "boolean" && "letzteZahlung" in x), "Übersicht: Mail-Status und Studio-Karten (Paket, Stripe frei, letzte Zahlung)");
+  // Abgebrochene Anmeldung mit 3-D-Secure-Fehler (Webhook payment_intent.payment_failed auf dem DSX-Konto)
+  check((await post("/api/signup", { ...basis, firma: "Entwurf Dreids", paket: "monatlich", email: "entwurf-3ds@example.com" })).status === 200, "Entwurf angelegt (Kasse offen)");
+  const ent = await studioPer("entwurf-3ds@example.com");
+  const entCus = (await admin(`studio/${ent.id}`)).studio.stripe.customerId;
+  await sendeWebhook(`${BASE}/api/stripe-webhook`, "whsec_mock", "payment_intent.payment_failed", { id: "pi_3ds_e2e", object: "payment_intent", customer: entCus, metadata: {}, last_payment_error: { code: "payment_intent_authentication_failure", message: "3-D-Secure abgelehnt (Test)" } });
+  const kaufS = (await admin(`studio/${kaufId}`)).studio;
+  if (kaufS.stripe?.customerId) await sendeWebhook(`${BASE}/api/stripe-webhook`, "whsec_mock", "payment_intent.payment_failed", { id: "pi_3ds_aktiv", object: "payment_intent", customer: kaufS.stripe.customerId, metadata: {}, last_payment_error: { code: "card_declined" } });
+  // Stripe schickt danach invoice.payment_failed (ohne Grund): der 3-D-Secure-Hinweis darf nicht verloren gehen
+  await sendeWebhook(`${BASE}/api/stripe-webhook`, "whsec_mock", "invoice.payment_failed", { id: "in_3ds_e2e", object: "invoice", customer: entCus, metadata: {}, amount_due: 4990, number: "TEST-3DS" });
+  const u1 = await admin("uebersicht");
+  const e1 = u1.entwuerfe.find((x) => x.id === ent.id);
+  check(e1 && e1.fehler?.dreiDS === true && e1.schritt === "Zahlung fehlgeschlagen" && e1.paket.name === "Monatlich" && e1.wann && u1.kennzahlen.zahlungFehlgeschlagen14 >= 1 && u1.kennzahlen.abgebrochen14 >= 1, "Entwürfe-Liste: Name, Paket, wann, „3-D-Secure nicht bestätigt“ (auch wenn invoice.payment_failed danach kommt)", JSON.stringify(e1).slice(0, 200));
+  check(!(await admin(`studio/${kaufId}`)).studio.anmeldungFehler && u1.entwuerfe.every((x) => !["live", "einrichtung", "gekuendigt"].includes(u1.studios.find((y) => y.id === x.id)?.status)), "Fehlgeschlagene Zahlung eines aktiven Studios ändert nichts, Entwürfe-Liste nur Entwürfe");
+  // Demo-Studio (Apple) getrennt, nie in den Kennzahlen
+  const demoE = await admin("app-demo", { body: { email: "review@example.com" } });
+  const u2 = await admin("uebersicht");
+  check(u2.demo.some((x) => x.id === demoE.studioId && x.appleReview) && !u2.studios.some((x) => x.id === demoE.studioId) && !u2.entwuerfe.some((x) => x.id === demoE.studioId), "Demo-Studio steht nur unter „demo“, nicht bei den Studios/Entwürfen");
+  check(JSON.stringify(u2.kennzahlen.zahlend) === JSON.stringify(u1.kennzahlen.zahlend) && u2.kennzahlen.umsatzStudios.cent === u1.kennzahlen.umsatzStudios.cent && u2.kennzahlen.einrichtung === u1.kennzahlen.einrichtung, "Demo-Studio (mit bezahlten Beispielzahlungen) ändert keine Kennzahl");
+  // Anmeldung per Code (Homescreen-App hat eigene Cookies)
+  await post("/api/admin-login", { email: "domenicschilling@googlemail.com" });
+  const codeMail = mailsAn("domenicschilling@googlemail.com").filter((m) => /Admin-Login/.test(m.subject)).pop();
+  const code = (codeMail?.html.match(/letter-spacing:6px">(\d{6})</) || [])[1];
+  check(Boolean(code) && /TF Admin/.test(codeMail.html), "Admin-Login-Mail enthält 6-stelligen Code für die App „TF Admin“");
+  const falsch = code === "000000" ? "111111" : "000000";
+  check((await post("/api/admin-login/code", { email: "domenicschilling@gmail.com", code: falsch })).status === 401, "Code: falscher Code → 401");
+  check((await post("/api/admin-login/code", { email: "fremd@example.com", code })).status === 401, "Code: fremde Adresse → 401");
+  const cOk = await post("/api/admin-login/code", { email: "domenicschilling@gmail.com", code });
+  const cCookie = (cOk.headers.get("set-cookie") || "").split(";")[0];
+  check(cOk.status === 200 && /^tf_admin=/.test(cCookie) && /HttpOnly/i.test(cOk.headers.get("set-cookie")) && (await fetch(`${BASE}/api/admin/uebersicht`, { headers: { cookie: cCookie } })).status === 200, "Code: richtiger Code → Admin-Sitzung (httpOnly), Übersicht erlaubt");
+  check((await post("/api/admin-login/code", { email: "domenicschilling@gmail.com", code })).status === 401, "Code: nur einmal verwendbar");
+  await post("/api/admin-login", { email: "domenicschilling@googlemail.com" });
+  const code2 = (mailsAn("domenicschilling@googlemail.com").filter((m) => /Admin-Login/.test(m.subject)).pop()?.html.match(/letter-spacing:6px">(\d{6})</) || [])[1];
+  const falsch2 = code2 === "000000" ? "111111" : "000000";
+  for (let i = 0; i < 5; i++) await post("/api/admin-login/code", { email: "domenicschilling@gmail.com", code: falsch2 });
+  check(Boolean(code2) && (await post("/api/admin-login/code", { email: "domenicschilling@gmail.com", code: code2 })).status === 401, "Code: nach 5 falschen Versuchen gesperrt (auch der richtige)");
+  // Neuer Code setzt die Fehlversuche je Adresse NICHT zurück: höchstens 10 falsche in 24 Std., dann gesperrt (+ Admin-Mail), Link geht weiter
+  // (andere Schreibweise derselben Adresse: das Mail-Limit 3/15 Min. zählt je Schreibweise, der Code-Zähler je normalisierter Adresse)
+  await post("/api/admin-login", { email: "domenicschilling@gmail.com" });
+  const code3 = (mailsAn("domenicschilling@gmail.com").filter((m) => /Admin-Login/.test(m.subject)).pop()?.html.match(/letter-spacing:6px">(\d{6})</) || [])[1];
+  const falsch3 = code3 === "000000" ? "111111" : "000000";
+  const st3 = [];
+  for (let i = 0; i < 4; i++) st3.push((await post("/api/admin-login/code", { email: "domenicschilling@gmail.com", code: falsch3 })).status);
+  const richtig3 = await post("/api/admin-login/code", { email: "domenicschilling@gmail.com", code: code3 });
+  check(Boolean(code3) && code3 !== code2 && st3.join() === "401,401,401,429" && richtig3.status === 429 && !richtig3.headers.get("set-cookie") && mailsAn("domenicschilling@gmail.com").some((m) => /Admin-Code gesperrt/.test(m.subject)), "Code: 10 falsche Codes je Adresse über neue Codes hinweg → gesperrt (auch der richtige) + Admin-Mail", st3.join() + " / " + richtig3.status);
+  // Handy 390 px: kein Querscrollen, alle Bereiche, Demo-Knopf mit Rückfrage
+  {
+    const ph = await neueSeite({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+    const fragen = []; ph.on("dialog", (d) => fragen.push(d.message()));
+    await ph.goto(BASE + "/admin.html");
+    await ph.evaluate(() => sessionStorage.setItem("tf-admin", "admin"));
+    await ph.reload();
+    await ph.waitForSelector("#kacheln .kachel");
+    const quer = () => ph.evaluate(() => document.documentElement.scrollWidth <= innerWidth);
+    let ok390 = await quer();
+    check((await ph.textContent("#entwuerfe")).includes("Entwurf Dreids") && (await ph.textContent("#entwuerfe")).includes("3-D-Secure nicht bestätigt"), "390 px Übersicht: abgebrochene Anmeldung mit 3-D-Secure-Hinweis");
+    const man2 = await (await fetch(BASE + "/admin.webmanifest")).json();
+    check(man2.name === "TF Admin" && man2.display === "standalone" && man2.start_url.startsWith("/admin.html") && await ph.evaluate(() => Boolean(document.querySelector('link[rel=apple-touch-icon][href*="/assets/admin/"]')) && /noindex/.test(document.querySelector("meta[name=robots]").content)) && (await fetch(BASE + "/assets/admin/apple-touch-icon.png")).status === 200, "Homescreen: Manifest „TF Admin“, eigenes apple-touch-icon, noindex");
+    check(!/\d+,\d\d\s?€|\d+ ?€|Provision|Umsatz|Einnahmen/.test((await (await fetch(BASE + "/admin.html")).text()).replace(/<script[\s\S]*?<\/script>/g, "") + JSON.stringify(man2)), "admin.html und Manifest enthalten keine Preise/Interna (alles erst nach Anmeldung)");
+    await ph.click('#tabs a[data-v="studios"]'); await ph.waitForSelector("#liste .karte"); ok390 = ok390 && await quer();
+    await ph.click('#filter button[data-f="entwurf"]');
+    check((await ph.$$eval("#liste .karte", (k) => k.length)) === u2.studios.filter((x) => x.gruppe === "entwurf" && !x.test).length && /Abgebrochen/.test(await ph.textContent('#filter button[data-f="entwurf"]')), "Filter „Abgebrochen“ zeigt genau die abgebrochenen Anmeldungen");
+    // Kachel „Zahlende Studios“ springt auf den Filter „Zahlend“ mit derselben Zahl
+    await ph.click('#tabs a[data-v="uebersicht"]'); await ph.click('#kacheln .kachel[data-ziel="studios:zahlend"]'); await ph.waitForSelector("#v-studios:not(.hidden) #liste .karte");
+    const zKachel = u2.kennzahlen.zahlend.gesamt, zChip = await ph.textContent('#filter button[data-f="zahlend"][aria-pressed="true"]'), zKarten = await ph.$$eval("#liste .karte", (k) => k.length);
+    check(zChip.includes(String(zKachel)) && zKarten === zKachel, "Kachel „Zahlende Studios“ → Filter „Zahlend“ mit gleicher Zahl", `${zKachel} / ${zChip} / ${zKarten}`);
+    check(!(await ph.$('#kacheln div.kachel[data-ziel]')) && Boolean(await ph.$("#kacheln div.kachel.still")), "Kachel ohne Ziel („Unsere Einnahmen“) ist kein Knopf");
+    await ph.click('#filter button[data-f="alle"]'); await ph.fill("#suche", "Ink Provision");
+    await ph.click("#liste .karte"); await ph.waitForSelector("#d-ansehen"); await ph.waitForFunction(() => !/geladen/.test(document.getElementById("d-mails").textContent)); ok390 = ok390 && await quer();
+    check((await ph.textContent("#detail")).includes("Ink Provision") && !(await ph.$("#d-live")) && await ph.$("#d-ansehen") && await ph.$("#d-konto") && await ph.$("#d-link") && await ph.$("#d-einr") && await ph.$("#b-save") && await ph.$("#d-notiz") && (await ph.$$("#d-mails li")).length >= 1, "390 px Studio-Detail: alle bisherigen Funktionen (Live-Knopf nur, solange nicht live) + E-Mails an das Studio");
+    check(/Provision/.test(await ph.textContent("#detail")) && /Nach Stripe-Gebühren/.test(await ph.textContent("#detail")) && /Zahlart\s*Provision/.test(await ph.textContent("#detail")), "390 px Studio-Detail (Provision): Provision netto und nach Stripe-Gebühren wie in der alten Admin-Seite, Zahlart in Worten");
+    await ph.click('#tabs a[data-v="demo"]'); await ph.waitForSelector("#v-demo:not(.hidden) #demo-neu"); ok390 = ok390 && await quer();
+    check((await ph.textContent("#demo")).includes("review@example.com"), "390 px Demo-Studio (Apple) als eigener Bereich");
+    const vorDemo = (await ph.evaluate(() => document.getElementById("demo").textContent));
+    await ph.click("#demo-neu");
+    await ph.waitForFunction(() => /Beispieldaten erneuert/.test(document.getElementById("alert").textContent));
+    check(Boolean(vorDemo) && fragen.some((f) => /^Sicher\?/.test(f)), "„Beispieldaten erneuern“ mit Rückfrage „Sicher?“ → erneuert", fragen.join(" | "));
+    await ph.click('#tabs a[data-v="mehr"]'); await ph.waitForFunction(() => !/geladen/.test(document.getElementById("mails").textContent)); ok390 = ok390 && await quer();
+    check(ok390, "Admin-Seite bei 390 px ohne horizontales Scrollen (Übersicht, Studios, Detail, Demo, Mehr)");
+    await ph.screenshot({ path: path.join(shots, "admin-handy.png") });
+    await ph.context().close();
+  }
+
+  // ---------------------------------------------------------------- Handy-Screenshots (390 px)
+  console.log("Handy-Screenshots: Einladung → Einrichtung → Dashboard → Zahlungslink → Zahlseite → Leistungsbestätigung");
+  const handy = { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, locale: "de-DE" };
+  // Dashboard nach der Einrichtung: Toast „Geschafft“ abwarten, Checkliste sichtbar
+  const S = handyShots;
+  const inv410b = await fetch(`${BASE}/api/admin/einladen`, { method: "POST", headers: { Authorization: "Bearer admin", "content-type": "application/json" }, body: JSON.stringify({ email: "neu@nadelwerk-test.de", firma: "Neu", senden: false }) });
+  const inv410t = (await inv410b.json()).error || "";
+  check(inv410b.status === 410 && /Neue Einladungen/.test(inv410t) && !mailsAn("neu@nadelwerk-test.de").length, "Neue 0-€-Einladung abgeschaltet: POST /api/admin/einladen → 410 mit klarer Meldung, keine Mail");
+  const inv = await altEinladung({ email: "hallo@nadelwerk-test.de", firma: "Nadelwerk Studio" });
+  const h = await neueSeite(handy);
+  await signup(h, { geschenk: new URL(inv.link).searchParams.get("geschenk"), email: "hallo@nadelwerk-test.de", firma: "Nadelwerk Studio", shot: S });
+  await einrichtungEingebettet(h, S);
+  check((await studioPer("hallo@nadelwerk-test.de"))?.status === "einrichtung", "Geschenk-Einladung → direkt ins Dashboard → Einrichtung eingebettet");
+  // Sonderkondition „Partner – nur Zahlungsgebühren“: gleiche Abwicklung wie Geschenk (eigenes Konto, 0 %), eigener Name + Mailtext
+  const invP = await altEinladung({ email: "partner@nadelwerk-test.de", firma: "Partner Studio", bezeichnung: "Partner – nur Zahlungsgebühren" });
+  const mP = mailVorlagen.geschenkEinladung({ firma: "Partner Studio", link: invP.link, bezeichnung: invP.bezeichnung });
+  check(invP.ok && invP.bezeichnung === "Partner – nur Zahlungsgebühren" && /keine Provision, nur Zahlungsgebühren/.test(mP.subject) && /keine Provision/.test(mP.html) && !/geschenkt/i.test(mP.subject), "Bestehender Einladungs-Code mit Sonderkondition: Mailvorlage „keine Provision, nur Zahlungsgebühren“ bleibt");
+  const hp = await neueSeite();
+  fs.mkdirSync(path.join(shots, "partner"), { recursive: true });
+  await signup(hp, { geschenk: new URL(invP.link).searchParams.get("geschenk"), email: "partner@nadelwerk-test.de", firma: "Partner Studio", shot: path.join(shots, "partner") });
+  await hp.waitForURL(/app\.html/, { timeout: 15000 });
+  const sp = await studioPer("partner@nadelwerk-test.de");
+  check(sp?.status === "einrichtung" && sp.paket === "Partner – nur Zahlungsgebühren" && sp.provisionProzent === 0 && sp.modell === "kauf", "Sonderkondition beim Studio: Name im Admin, 0 % Provision, eigenes Konto");
+  check(mailsAn("partner@nadelwerk-test.de").some((m) => /Partner – nur Zahlungsgebühren: keine Einrichtungsgebühr/.test(m.html)), "Willkommens-Mail nennt die Sonderkondition");
+  await hp.context().close();
+  const nwId = (await studioPer("hallo@nadelwerk-test.de")).id;
+  await admin(`studio/${nwId}/live`, { body: {} });
+  await h.goto(BASE + "/app.html#start");
+  await h.waitForSelector("#checkliste-karte");
+  await appShot(h, path.join(S, "06-dashboard.png"));
+  await h.goto(BASE + "/app.html#link");
+  await h.fill("#l-betrag", "800"); await h.fill("#l-kunde", "Jana Kurz"); await h.fill("#l-beschreibung", "Rose Unterarm"); await h.fill("#l-sitzungen", "1 Sitzung");
+  await appShot(h, path.join(S, "07-zahlungslink.png"));
+  await h.click("#l-btn");
+  await h.waitForSelector("#l-out [data-copytext]"); await h.waitForTimeout(400);
+  await appShot(h, path.join(S, "08-zahlungslink-fertig.png"));
+  const hK = await neueSeite(handy);
+  const nwSlug = (await studioPer("hallo@nadelwerk-test.de")).slug;
+  await hK.goto(`${BASE}/zahlen/${nwSlug}?betrag=150`);
+  await hK.waitForFunction(() => document.getElementById("studio").textContent === "Nadelwerk Studio");
+  await hK.fill("#kunde", "Jana Kurz"); await hK.fill("#email", "jana@example.com"); await hK.fill("#beschreibung", "Rose Unterarm");
+  await hK.click("label:has(> input[name=art][value=anzahlung])");
+  await hK.check("#bed-ok"); await hK.check("#inhalt-ok");
+  await hK.screenshot({ path: path.join(S, "09-zahlseite.png"), fullPage: true });
+  await hK.click("#weiter");
+  await hK.waitForSelector("#pay-jetzt");
+  await hK.screenshot({ path: path.join(S, "10-zahlseite-bezahlen.png"), fullPage: true });
+  await hK.click("#pay-jetzt");
+  await hK.waitForURL(/bezahlt\.html/);
+  await hK.waitForFunction(() => /erhalten/.test(document.getElementById("msg").textContent), null, { timeout: 15000 });
+  await hK.screenshot({ path: path.join(S, "11-bezahlt.png"), fullPage: true });
+  const jana = (await admin(`studio/${nwId}`)).zahlungen.find((z) => z.kunde === "Jana Kurz" && z.status === "bezahlt");
+  await h.goto(`${BASE}/app.html#zahlung/${jana.id}`);
+  await h.waitForSelector("#lb-btn");
+  await h.click("#lb-btn");
+  await h.waitForSelector("#lb-out [data-copytext]"); await h.waitForTimeout(400);
+  await appShot(h, path.join(S, "12-bestaetigung-anfordern.png"));
+  const hLink = await h.getAttribute("#lb-out [data-copytext]", "data-copytext");
+  await hK.goto(hLink);
+  await hK.waitForSelector("#f:not(.hidden)");
+  await hK.fill("#name", "Jana Kurz"); await hK.check("#erledigt");
+  await signatur(hK);
+  await hK.screenshot({ path: path.join(S, "13-leistungsbestaetigung.png"), fullPage: true });
+  await hK.click("#senden");
+  await hK.waitForSelector("#danke:not(.hidden)");
+  await hK.screenshot({ path: path.join(S, "14-bestaetigt.png"), fullPage: true });
+  await h.goto(`${BASE}/app.html#zahlungen`);
+  await h.waitForTimeout(300);
+  await h.goto(`${BASE}/app.html#zahlung/${jana.id}`);
+  await h.waitForTimeout(500);
+  await h.reload(); await h.waitForSelector("#z-detail .detail-kopf");
+  await appShot(h, path.join(S, "15-zahlung-mit-nachweisen.png"));
+  await h.goto(`${BASE}/nachweis.html?z=${jana.id}`);
+  await h.waitForSelector("img.sig");
+  await h.screenshot({ path: path.join(S, "16-nachweis-pdf.png"), fullPage: true });
+  for (const [hash, name, warte] of [["recht", "17-rechtliche-lage", "#r-btn"], ["werbung", "18-werbung", ".kit-item img"], ["extras", "19-extras", "[data-extra]"], ["geld", "20-geld", ".sim-box"], ["mehr", "21-mehr", "#logout"]]) {
+    await h.goto(`${BASE}/app.html#${hash}`);
+    await h.waitForSelector(warte, { timeout: 15000 });
+    await h.waitForTimeout(hash === "werbung" ? 1500 : 300);
+    await appShot(h, path.join(S, name + ".png"));
+  }
+  // ---- Werbung: fertige Beiträge „Ab jetzt Ratenzahlung*“ (js/app-kit.js) ----
+  console.log("Werbung: Beiträge für das Studio");
+  await h.goto(`${BASE}/app.html#werbung`);
+  await h.waitForFunction(() => document.querySelectorAll("#kit .kit-item").length === 5 && document.querySelectorAll("#kit .kit-bilder img").length === 8 && [...document.querySelectorAll("#kit .kit-bilder img")].every((i) => i.complete && i.naturalWidth), null, { timeout: 30000 });
+  const kit = await h.evaluate(() => [...document.querySelectorAll("#kit .kit-item")].map((el) => ({ id: el.dataset.vorlage, bilder: [...el.querySelectorAll(".kit-bilder img")].map((i) => i.naturalWidth + "x" + i.naturalHeight), text: el.querySelector("pre").textContent, knopf: el.querySelector('[data-kit="bild"]').textContent })));
+  check(kit.map((x) => x.id).join() === "ankuendigung,karussell,qr-story,schritte,frag-story", "Werbung: 5 Vorlagen (Ankündigung, Karussell, QR-Story, So geht's, Frag uns) – alte Anzahlungs-Vorlage entfernt");
+  const fmt = Object.fromEntries(kit.map((x) => [x.id, x.bilder.join()]));
+  check(fmt.ankuendigung === "1080x1350" && fmt.schritte === "1080x1350" && fmt.karussell === Array(4).fill("1080x1350").join() && fmt["qr-story"] === "1080x1920" && fmt["frag-story"] === "1080x1920", "Werbung: Beiträge 4:5 (1080 × 1350), Karussell 4 Bilder, Storys 9:16 (1080 × 1920)");
+  const FUSS_STUDIO = "Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, weder wir noch Tattoofin. Achtung! Kreditaufnahme kostet Geld.";
+  const posts = kit.filter((x) => !x.id.includes("story"));
+  check(posts.every((x) => /mit Klarna bezahlen/i.test(x.text) && !/in Raten|Ratenzahlung|später bezahlen|3 Raten/i.test(x.text.replace(FUSS_STUDIO, "")) && x.text.includes(FUSS_STUDIO) && (x.text.match(/#\S+/g) || []).length <= 5 && x.text.includes("#bambergtattoo")), "Werbung: Texte nur mit „Mit Klarna bezahlen“ (keine Raten-/Später-Aussage), Zusatz + Warnsatz, höchstens 5 Hashtags (mit Ort)");
+  check(kit.every((x) => !/\b0\s?%|zinsfrei|zinslos|Geld sofort|voller Betrag|Anzahlung|garantiert|jeder bekommt/i.test(x.text)), "Werbung: keine verbotenen Aussagen (0 %, zinsfrei, Geld sofort, voller Betrag, Anzahlung, Zusagen)");
+  check(kit.find((x) => x.id === "qr-story").text.includes(`${BASE}/zahlen/${nwSlug}`), "Werbung: QR-Story mit Link zur Zahlseite für den Link-Sticker");
+  check(kit.find((x) => x.id === "karussell").knopf === "Alle 4 Bilder speichern", "Werbung: Karussell – alle 4 Bilder auf einmal speichern");
+  check(await h.evaluate(() => !document.getElementById("mat-karte").classList.contains("hidden") && document.querySelectorAll("#mat a").length === 4 && ![...document.querySelectorAll("#mat a")].some((a) => /aufsteller/i.test(a.href + a.textContent))), "Werbung (Klarna dauerhaft): Karte „Zum Ausdrucken“ mit 4 Druckvorlagen (ohne Thekenaufsteller)");
+  // Speichern am Computer: ohne Teilen-Menü → Download (Karussell als ZIP)
+  await h.evaluate(() => { navigator.canShare = () => false; });
+  const [dlKar] = await Promise.all([h.waitForEvent("download"), h.click('[data-vorlage="karussell"] [data-kit="bild"]')]);
+  const zipBuf = fs.readFileSync(await dlKar.path());
+  const eocd = zipBuf.length - 22, zipNamen = [];
+  for (let o = 0; zipBuf.readUInt32LE(o) === 0x04034b50;) { const nl = zipBuf.readUInt16LE(o + 26), gr = zipBuf.readUInt32LE(o + 18), name = zipBuf.subarray(o + 30, o + 30 + nl).toString(), daten = zipBuf.subarray(o + 30 + nl, o + 30 + nl + gr); zipNamen.push(name + ":" + (daten.subarray(1, 4).toString() === "PNG" ? daten.readUInt32BE(16) + "x" + daten.readUInt32BE(20) : "?")); o += 30 + nl + gr; }
+  check(dlKar.suggestedFilename() === "nadelwerk-studio-klarna-karussell.zip" && zipBuf.readUInt32LE(eocd) === 0x06054b50 && zipBuf.readUInt16LE(eocd + 10) === 4 && zipNamen.join() === [1, 2, 3, 4].map((i) => `nadelwerk-studio-klarna-karussell-${i}.png:1080x1350`).join(), "Werbung: Karussell als ZIP mit 4 PNG (" + zipNamen.length + " Dateien)");
+  const [dlAnk] = await Promise.all([h.waitForEvent("download"), h.click('[data-vorlage="ankuendigung"] [data-kit="bild"]')]);
+  const ankBuf = fs.readFileSync(await dlAnk.path());
+  check(dlAnk.suggestedFilename() === "nadelwerk-studio-klarna-ankuendigung.png" && ankBuf.subarray(1, 4).toString() === "PNG" && ankBuf.readUInt32BE(16) === 1080 && ankBuf.readUInt32BE(20) === 1350, "Werbung: Einzelbild als PNG 1080 × 1350");
+  // Großansicht + Name auf den Bildern ändern (bleibt im Browser gespeichert)
+  await h.click('[data-vorlage="qr-story"] .kit-bilder img');
+  check(await h.isVisible(".kit-gross img"), "Werbung: Bild antippen → große Ansicht");
+  await h.click(".kit-gross .btn.ghost");
+  check((await h.inputValue("#kit-name")) === "Nadelwerk Studio" && (await h.getAttribute("#kit-name", "autocomplete")) === "organization", "Werbung: Feld „Name auf den Bildern“ mit Studioname (Autofill-Token)");
+  await h.fill("#kit-name", "Nadelwerk");
+  await h.click(".kit-name button");
+  await h.waitForFunction(() => document.querySelectorAll("#kit .kit-bilder img").length === 8 && document.querySelector('#kit [data-vorlage="ankuendigung"] [data-kit="bild"]') && localStorage.getItem(Object.keys(localStorage).find((k) => k.startsWith("tf-kit-name|")) || "") === "Nadelwerk", null, { timeout: 30000 });
+  check(true, "Werbung: Name auf den Bildern geändert → Bilder neu erstellt und gemerkt");
+  await h.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith("tf-kit-name|")).forEach((k) => localStorage.removeItem(k)));
+  const kitName = await h.evaluate(() => TFKit.anzeigeName("DSX Media Solutions UG (haftungsbeschränkt)") + "|" + TFKit.anzeigeName("Tattoo Kunst GmbH & Co. KG") + "|" + TFKit.anzeigeName("Chic Tattoo Augsburg"));
+  check(kitName === "DSX Media Solutions|Tattoo Kunst|Chic Tattoo Augsburg", "Werbung: Rechtsform fällt auf den Bildern weg (" + kitName + ")");
+
+  // ---- „So geht's“: Erklärvideo auf der Startseite und unter Mehr ----
+  console.log("So geht's (Erklärvideo)");
+  await h.goto(`${BASE}/app.html#start`); await h.reload();
+  await h.waitForSelector("#so-gehts video", { state: "attached", timeout: 15000 });
+  check(await h.evaluate(() => !document.querySelector("#so-gehts video").getAttribute("poster")), "So geht's: Vorschaubild lädt erst, wenn das Video in Sichtweite kommt");
+  await h.evaluate(() => document.getElementById("so-gehts").scrollIntoView());
+  await h.waitForSelector("#so-gehts video[poster]", { timeout: 15000 });
+  const sg = await h.evaluate(() => { const v = document.querySelector("#so-gehts video"); return { preload: v.preload, poster: v.getAttribute("poster"), src: v.querySelector("source").getAttribute("src"), kap: document.querySelectorAll("#so-gehts .sg-kap button").length, fuss: /Achtung! Kreditaufnahme kostet Geld/.test(document.getElementById("so-gehts").textContent) }; });
+  check(sg.preload === "none" && /9x16\.jpg$/.test(sg.poster) && /9x16\.mp4\?v=2026-11-16$/.test(sg.src), "So geht's: Video auf der Startseite lädt erst beim Abspielen (Hochformat am Handy, mit Vorschaubild)");
+  check(sg.kap === 10 && sg.fuss, "So geht's: 10 Kapitel + Raten-Fußnote unter dem Video");
+  const vr = await fetch(BASE + sg.src, { headers: { range: "bytes=0-1023" } });
+  check([200, 206].includes(vr.status) && /video\/mp4/.test(vr.headers.get("content-type") || ""), "So geht's: Videodatei wird ausgeliefert (video/mp4)");
+  for (const f of ["so-gehts-16x9.mp4", "so-gehts-16x9.jpg", "so-gehts-9x16.jpg"]) check((await fetch(`${BASE}/assets/app/hilfe/${f}`, { method: "HEAD" })).ok, "So geht's: " + f + " vorhanden");
+  await h.click("#so-gehts .sg-kap summary");
+  await h.click("#so-gehts .sg-kap button[data-i='1']");
+  // Der Testserver liefert keine Teilbereiche (Range), echtes Springen daher nur auf Netlify prüfbar – hier: richtiges Ziel angefordert
+  check(await h.evaluate(() => document.querySelector("#so-gehts video").dataset.ziel === "22.6"), "So geht's: Kapitel antippen springt an die Stelle (Ziel 0:22)");
+  await h.evaluate(() => document.querySelector("#so-gehts video").pause());
+  await h.click("#so-gehts .sg-aus");
+  check(await h.evaluate(() => document.getElementById("so-gehts").classList.contains("hidden")), "So geht's: auf der Startseite ausblendbar");
+  await h.goto(`${BASE}/app.html#mehr`); await h.waitForSelector("a[href='#video']");
+  await h.click("a[href='#video']");
+  await h.waitForSelector("#video-box video[poster]", { timeout: 15000 });
+  check(await h.evaluate(() => !document.querySelector("[data-view=video]").classList.contains("hidden") && document.querySelector("#tabbar a.on")?.dataset.tab === "mehr"), "So geht's: unter Mehr als eigene Ansicht (Tab Mehr aktiv)");
+  await appShot(h, path.join(S, "22-so-gehts.png"));
+  await h.click("#sg-wieder");
+  await h.goto(`${BASE}/app.html#start`); await h.reload(); await h.waitForSelector("#so-gehts video", { state: "attached", timeout: 15000 });
+  check(await h.evaluate(() => !document.getElementById("so-gehts").classList.contains("hidden")), "So geht's: wieder auf der Startseite eingeblendet");
+
+  // ---- QR-Aufsteller eingestellt (15.11.2026): Werbung ohne Holz-Aufsteller, digitaler QR-Code als PNG bleibt ----
+  console.log("Werbung ohne QR-Aufsteller (eingestellt), QR-Code als PNG bleibt");
+  await h.goto(`${BASE}/app.html#werbung`);
+  await h.waitForSelector("#zs-qr canvas, #zs-qr img", { state: "attached", timeout: 15000 });
+  const werbText = await h.evaluate(() => document.querySelector("[data-view=werbung]").innerText);
+  check(await h.locator("#auf, #auf-paket, #auf-img, [data-auf], input[name=auf-holz]").count() === 0 && !/Aufsteller|Holz|Gravur|Formulor/i.test(werbText) && /als Aufkleber für die Theke/.test(werbText), "Werbung: kein QR-Aufsteller mehr (keine Karte, kein Text), stattdessen Tipp „QR-Code ausdrucken, als Aufkleber für die Theke“");
+  const nwZahlseite = `${BASE}/zahlen/${nwSlug}`;
+  const runter = async (sel) => { const [d] = await Promise.all([h.waitForEvent("download"), h.click(sel)]); return { name: d.suggestedFilename(), buf: fs.readFileSync(await d.path()) }; };
+  const qrD = await runter("#zs-png");
+  check(qrD.buf.subarray(1, 4).toString() === "PNG" && qrD.buf.readUInt32BE(16) >= 1000 && qrD.name === "tattoofin-qr-zahlseite.png", "Digitaler QR-Code als PNG (" + qrD.buf.readUInt32BE(16) + " px, js/qr-bild.js)");
+  check(await h.evaluate(() => !window.TFAufsteller && typeof window.TFQr?.qrBild === "function" && ![...document.scripts].some((s) => /aufsteller\.js/.test(s.src))), "Dashboard lädt js/aufsteller.js nicht mehr (QR-Bild aus js/qr-bild.js)");
+  check(!(await h.isVisible("#mat-karte")) || /Fensteraufkleber und Flyer aus deinem Studio Kit/.test(werbText), "Karte „Zum Ausdrucken“: Fensteraufkleber und Flyer (ohne Aufsteller)");
+  check((await h.inputValue("#zs-url")) === nwZahlseite, "Zahlseite mit QR-Code bleibt unter Werbung");
+  await appShot(h, path.join(S, "18b-werbung-ohne-aufsteller.png"));
+  const nwStatusVor = (await admin(`studio/${nwId}`)).studio.status, sessVorAuf = Object.keys((await mock("state")).sessions || {}).length, mailVorAuf = mailsAn("domenicschilling@gmail.com").length;
+  const kaufAlt = await api(h, "/api/portal/aufsteller", { method: "POST", body: { holz: "dunkel", variante: "name", kaufen: true } });
+  const anfAlt = await api(h, "/api/portal/aufsteller", { method: "POST", body: { anfordern: true } });
+  const pruefAlt = await api(h, "/api/portal/aufsteller-pruefen", { method: "POST", body: { cs: "cs_test_x" } });
+  check([kaufAlt, anfAlt, pruefAlt].every((r) => r.status === 410 && r.data.code === "aufsteller_entfallen") && Object.keys((await mock("state")).sessions || {}).length === sessVorAuf && mailsAn("domenicschilling@gmail.com").length === mailVorAuf && !(await admin(`studio/${nwId}`)).studio.aufsteller && (await admin(`studio/${nwId}`)).studio.status === nwStatusVor, "Dashboard: Aufsteller kaufen/anfordern/prüfen → 410, kein Checkout, keine Admin-Mail, nichts gespeichert");
+  // Rückkehr eines alten Checkouts (?aufsteller=…): Seite lädt ohne Fehler, Adresse wird aufgeräumt
+  const fehlerVor = errors.length;
+  await h.goto(`${BASE}/app.html?aufsteller=bezahlt&cs=cs_test_x#werbung`);
+  await h.waitForSelector("#zs-qr canvas, #zs-qr img", { state: "attached", timeout: 15000 });
+  await h.waitForTimeout(400);
+  check(!/aufsteller|cs=/.test(h.url()) && errors.length === fehlerVor, "app.html?aufsteller=bezahlt (alter Checkout): Adresse aufgeräumt, kein Fehler");
+  check((await fetch(`${BASE}/aufsteller.html`)).status === 404 && (await fetch(`${BASE}/js/aufsteller.js`)).status === 404 && (await fetch(`${BASE}/druck/kunden/22-thekenaufsteller-a5.html`)).status === 404, "Hersteller-Seite, Gravur-Skript und Druckvorlage Thekenaufsteller gibt es nicht mehr (404)");
+  // Admin: Altdaten eines Studios bleiben sichtbar als „QR-Aufsteller (alt)“
+  const nwBlobPfad = path.join(dataDir, encodeURIComponent("studio/" + nwId) + ".json");
+  const nwBlob = JSON.parse(fs.readFileSync(nwBlobPfad, "utf8"));
+  fs.writeFileSync(nwBlobPfad, JSON.stringify({ ...nwBlob, aufsteller: { holz: "dunkel", variante: "name", angefordertAm: "2026-11-10T10:00:00.000Z" } }));
+  check(Boolean((await admin(`studio/${nwId}`)).studio.aufsteller?.angefordertAm), "Altdaten bleiben erhalten (Admin liest s.aufsteller weiter)");
+  {
+    // Admin-Kasten: echter Altfall mit Hinweis „erstatten oder liefern“; Test aus der App-Prüfung (pruefung: true) klar als Test
+    // (nur bis Apple 1.0 freigegeben hat, dann entfernen – Entscheidung Domenic 16.11.2026)
+    const pAuf = await neueSeite();
+    await pAuf.goto(BASE + "/admin.html");
+    await pAuf.evaluate(() => sessionStorage.setItem("tf-admin", "admin"));
+    const kasten = async () => {
+      await pAuf.goto(BASE + "/admin.html#" + nwId);
+      await pAuf.reload();
+      await pAuf.waitForSelector("#d-ansehen");
+      return pAuf.evaluate(() => [...document.querySelectorAll("#detail .block")].map((b) => b.textContent).find((t) => t.includes("QR-Aufsteller (alt)")) || "");
+    };
+    const kAlt = await kasten();
+    check(/angefordert/.test(kAlt) && kAlt.includes("erstatten oder ausnahmsweise liefern") && !kAlt.includes("App-Prüfung"), "Admin: Altfall-Kasten „QR-Aufsteller (alt)“ mit „angefordert“ und Hinweis erstatten/liefern");
+    fs.writeFileSync(nwBlobPfad, JSON.stringify({ ...nwBlob, aufsteller: { holz: "hell", variante: "logo", hatLogo: true, angefordertAm: "2026-11-16T10:00:00.000Z", pruefung: true } }));
+    const kTest = await kasten();
+    check(kTest.includes("Test (App-Prüfung bei Apple), nichts liefern, nichts erstatten") && !kTest.includes("erstatten oder ausnahmsweise liefern") && !/angefordert \d/.test(kTest) && Boolean(await pAuf.$("#d-auflogo")), "Admin: Test aus der App-Prüfung (pruefung: true) steht als Test da, ohne „angefordert“ und ohne erstatten/liefern; Logo löschbar");
+    await pAuf.close();
+  }
+  fs.writeFileSync(nwBlobPfad, JSON.stringify(nwBlob));
+
+  console.log("Mailversand: Resend zuerst, IONOS/SMTP als Rückfall, Warteschlange, Gesundheits-Check");
+  {
+    const { sendMail, warteschlangeStatus, warteschlangeAbarbeiten } = await import("../netlify/functions/_lib/mail.mjs");
+    let antwort = 500, aufrufe = 0;
+    const fake = (await import("node:http")).createServer((req, res) => { aufrufe++; let b = ""; req.on("data", (c) => (b += c)); req.on("end", () => { res.writeHead(antwort, { "content-type": "application/json" }); res.end(antwort === 200 ? '{"id":"re_1"}' : '{"message":"450 Mail send limit exceeded"}'); }); }).listen(RESEND_FAKE_PORT);
+    process.env.RESEND_API_KEY = "re_test"; process.env.RESEND_API_BASE = `http://localhost:${RESEND_FAKE_PORT}/emails`;
+    antwort = 200;
+    check(await sendMail({ to: "resend@example.com", subject: "Test Resend", html: "<p>x</p>" }) === true && aufrufe === 1, "Mit RESEND_API_KEY: Versand über Resend");
+    const mResend = fs.readdirSync(dataDir).filter((f) => f.startsWith("mail%2F")).map((f) => JSON.parse(fs.readFileSync(path.join(dataDir, f)))).find((m) => m.to === "resend@example.com");
+    check(mResend?.weg === "resend", "Protokoll: Versandweg „resend“ vermerkt");
+    antwort = 450;
+    check(await sendMail({ to: "warte@example.com", subject: "Test Warteschlange", html: "<p>x</p>" }) === false, "Resend-Fehler ohne SMTP-Rückfall: Mail nicht gesendet");
+    const ws = await warteschlangeStatus();
+    check(ws.anzahl === 1 && /limit/.test(ws.letzterFehler) && ws.wege.includes("resend"), "Vorübergehender Fehler → Warteschlange (Status zeigt Anzahl + Fehler)");
+    const msAdmin = await admin("mail-status");
+    check(msAdmin.anzahl === 1 && msAdmin.fehler.length >= 1, "Admin: /api/admin/mail-status zeigt hängende Mails");
+    const loginVerz = await (await post("/api/login", { email: "niemand@example.com" })).json();
+    check(loginVerz.ok === true && loginVerz.verzoegert === true, "Login-Seite bekommt Hinweis „Mailversand verzögert“ (für alle gleich)");
+    const pAdmM = await neueSeite();
+    await pAdmM.goto(BASE + "/admin.html");
+    await pAdmM.evaluate(() => sessionStorage.setItem("tf-admin", "admin"));
+    await pAdmM.goto(BASE + "/admin.html");
+    await pAdmM.waitForSelector("#hinweise .alert.err");
+    check(/1 E-Mail hängt in der Warteschlange/.test(await pAdmM.textContent("#hinweise")), "Admin-Bereich: Hinweis „E-Mail hängt in der Warteschlange“ + Knopf „Jetzt erneut senden“");
+    antwort = 200;
+    const nach = await warteschlangeAbarbeiten();
+    check(nach.length === 1 && nach[0][0] === "gesendet" && (await warteschlangeStatus()).anzahl === 0, "Warteschlange: nach Störung erneut gesendet");
+    const { gesundheitPruefen } = await import("../netlify/functions/_lib/gesundheit.mjs");
+    process.env.TF_TEST_SLUG = (await studioPer("prov@example.com")).slug;
+    const g = await gesundheitPruefen({ basis: BASE, mailen: false });
+    check(g.ok === true, "Gesundheits-Check: Startseite, Login-API, Zahlseite, Mails ok" + (g.ok ? "" : ": " + g.fehler.join(" | ")));
+    const st = await fetch(BASE + "/api/status");
+    check(st.status === 200 && (await st.json()).ok === true, "/api/status: 200 bei gesundem Check");
+    process.env.TF_TEST_SLUG = "gibt-es-nicht";
+    const g2 = await gesundheitPruefen({ basis: BASE, mailen: false });
+    const st2 = await fetch(BASE + "/api/status");
+    check(!g2.ok && st2.status === 503 && (await st2.json()).stoerungen.includes("Zahlseite"), "/api/status: 503 mit Störung „Zahlseite“ (Ultron-Wächter schlägt Alarm)");
+    process.env.TF_TEST_SLUG = (await studioPer("prov@example.com")).slug;
+    await gesundheitPruefen({ basis: BASE, mailen: false });
+    delete process.env.RESEND_API_KEY; delete process.env.RESEND_API_BASE; fake.close();
+  }
+  {
+    const pV = await neueSeite({ viewport: { width: 390, height: 844 }, isMobile: true });
+    await pV.goto(BASE + "/video.html");
+    check(await pV.evaluate(() => { const v = document.getElementById("v"); return v.hasAttribute("playsinline") && v.controls && v.preload === "metadata" && /tattoofin-ablauf\.mp4$/.test(v.querySelector("source").src) && document.documentElement.scrollWidth <= innerWidth; }), "/video: Video mit playsinline, controls, preload=metadata, kein Querscrollen");
+    await pV.goto(BASE + "/");
+    await cookiesAblehnen(pV);
+    check(await pV.evaluate(() => document.documentElement.scrollWidth <= innerWidth && !document.querySelector("video[autoplay]")), "Startseite (neu, ohne Video-Abschnitt): kein Querscrollen, kein Autoplay-Video");
+    await pV.goto(BASE + "/studios.html");
+    check(await pV.evaluate(() => Boolean(document.querySelector(".auftakt [data-film]")) && !document.querySelector("video[autoplay]") && document.documentElement.scrollWidth <= innerWidth), "/studios: 10-Sekunden-Aufnahme per Tipp, kein Autoplay, kein Querscrollen");
+    await cookiesAblehnen(pV);
+    await pV.click(".auftakt [data-film]");
+    check(await pV.evaluate(() => { const d = document.getElementById("film"), v = d && d.querySelector("video"); return Boolean(d && d.open && v && v.muted && v.hasAttribute("playsinline") && /zahlungslink\.mp4$/.test(v.src)); }), "10 Sek. ansehen: echte App-Aufnahme im Fenster, stumm, playsinline");
+    await pV.click(".film-zu");
+    const zu = await pV.waitForFunction(() => !document.getElementById("film").open && !document.querySelector("#film video"), null, { timeout: 5000 }).then(() => true, () => false);
+    check(zu, "10 Sek. ansehen: Schließen beendet die Aufnahme");
+  }
+
+  // ---------------------------------------------------------------- Risikofrei für Neukunden geschlossen (26.10.2026)
+  console.log("Risikofrei für Neukunden geschlossen: alte Links, Paketwahl, Anmeldung gesperrt");
+  delete process.env.RISIKOFREI_NEU; delete process.env.EINMAL_NEU;
+  for (const q of ["paket=risikofrei", "modell=provision", "paket=start"]) {
+    const pR = await neueSeite({ viewport: { width: 390, height: 844 } });
+    await pR.goto(`${BASE}/start.html?${q}`); await cookiesAblehnen(pR);
+    const info = await pR.textContent("#alert");
+    check(/nicht mehr/.test(info) && /49,90 € im Monat inkl\. MwSt\./.test(info), `start.html?${q}: freundlicher Hinweis auf den Preis`);
+    check(await pR.locator("input[name=paket][value=risikofrei]").count() === 0 && await pR.locator("input[name=paket]").count() === 1 && await pR.locator("input[name=paket][value=monatlich]:checked").count() === 1, `start.html?${q}: nur Monatlich, vorgewählt`);
+    await pR.context().close();
+  }
+  { const pM = await neueSeite({ viewport: { width: 390, height: 844 } });
+    await pM.goto(`${BASE}/start.html?paket=monatlich`); await cookiesAblehnen(pM);
+    check(await pM.locator("input[name=paket][value=monatlich]:checked").count() === 1 && !/nicht mehr/.test(await pM.textContent("#alert")), "start.html?paket=monatlich: Monatlich vorgewählt, kein Hinweis");
+    check(!/risikofrei|10 ?%|900 €|Grundgeb|Fixkosten/i.test(await pM.textContent("#f")), "Anmeldeformular: kein Wort von Risikofrei, 10 %, 900 €, Grundgebühr, Fixkosten");
+    await pM.context().close(); }
+  const sperre = await post("/api/signup", { ...basis, paket: "risikofrei", email: "neu-rf@example.com" });
+  const sperreD = await sperre.json();
+  check(sperre.status === 410 && sperreD.gesperrt === true && /gibt es für neue Anmeldungen nicht mehr/.test(sperreD.error) && !(await studioPer("neu-rf@example.com")), "API: Neuanmeldung Risikofrei wird mit klarer Meldung abgelehnt, kein Studio angelegt");
+  check((await post("/api/signup", { ...basis, modell: "provision", email: "neu-rf2@example.com" })).status === 410 && (await post("/api/signup", { ...basis, paket: "start", email: "neu-rf3@example.com" })).status === 410 && !(await studioPer("neu-rf2@example.com")) && !(await studioPer("neu-rf3@example.com")), "API: auch ?modell=provision und alter Name „start“ sind gesperrt");
+  check(mailsAn("neu-rf@example.com").length === 0 && mailsAn("neu-rf2@example.com").length === 0, "Gesperrte Anmeldung verschickt keine Mail");
+  const paketeListe = await (await fetch(BASE + "/api/signup?pakete=1")).json();
+  const cfgListe = await (await fetch(BASE + "/api/config")).json();
+  check(JSON.stringify(paketeListe.pakete.map((x) => x.id)) === '["monatlich"]' && JSON.stringify(cfgListe.pakete.map((x) => x.id)) === '["monatlich"]', "Paketlisten (/api/signup?pakete=1, /api/config): nur Monatlich");
+  check((await post("/api/signup", { ...basis, paket: "monatlich", email: "neu-mo@example.com" })).status === 200, "Monatlich lässt sich weiter abschließen");
+  const bestand = await (await fetch(`${BASE}/api/admin/studio/${(await studioPer("prov@example.com")).id}`, { headers: { Authorization: "Bearer admin" } })).json();
+  check(/risikofrei/i.test(bestand.studio.paket) && bestand.studio.modell === "provision" && ["einrichtung", "live"].includes(bestand.studio.status), "Bestandsstudio bleibt im Paket Risikofrei (Provision), auch bei geschlossener Anmeldung");
+  process.env.RISIKOFREI_NEU = "1"; process.env.EINMAL_NEU = "1";
+
+  await h.goto(`${BASE}/`);
+  await cookiesAblehnen(h);
+  await h.evaluate(() => document.querySelectorAll(".reveal").forEach((el) => el.classList.add("in")));
+  await h.addStyleTag({ content: ".nav,.tf-wa{position:static!important;display:none!important}.reveal{opacity:1!important;transform:none!important}" });
+  await h.locator("#preis").scrollIntoViewIfNeeded();
+  await h.waitForTimeout(1200);
+  await h.locator("#preis").screenshot({ path: path.join(S, "22-pakete-startseite.png") });
+  check(fs.readdirSync(S).filter((f) => f.endsWith(".png")).length >= 20, "Handy-Screenshots gespeichert: " + S);
+} catch (e) {
+  fail++;
+  console.error("ABBRUCH:", e);
+  // Zur Fehlersuche: Bild und Adresse jeder offenen Seite im Moment des Abbruchs
+  let n = 0;
+  for (const c of browser.contexts()) for (const pg of c.pages()) { try { console.error(`  offene Seite ${n}: ${pg.url()}`); await pg.screenshot({ path: path.join(shots, `abbruch-${n++}.png`) }); } catch {} }
+}
+check(errors.length === 0, "Keine JavaScript-Fehler im Browser" + (errors.length ? ": " + errors.join(" | ") : ""));
+console.log(`\n${ok} bestanden, ${fail} fehlgeschlagen · Screenshots: ${shots}`);
+await browser.close();
+process.exit(fail ? 1 : 0);

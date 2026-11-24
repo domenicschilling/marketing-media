@@ -1,0 +1,2 @@
+Stand vor „Für X € kaufen, Y € bekommen“ (24.11.2026, Domenic über Ultron) = Commit c24d3b9.
+Geändert danach: Hero (Zeile 1 „Für 375 € kaufen,“, Zeile 2 gold „500 € bekommen*“, Eyebrow „Tattoo-Gutschein“, Fußnote), Preis-Abschnitt „… Du bekommst mehr, als du zahlst.“, Karten der Liste und Kauf-Fenster (Du zahlst → du bekommst, „+125 € geschenkt“), Vorschau (Titel, Beschreibung, Bilder), Bedingungen.

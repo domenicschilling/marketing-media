@@ -2,13 +2,14 @@
 // netlify/functions/gutschein-seite.mjs. Vorher kam die Seite statisch: Vorschaubild und Titel warben auch dann noch mit
 // „500 € für 375 €“, wenn der 500er ausverkauft oder die Aktion vorbei war, und der Hero zeigte das alte Angebot, bis das Skript lief.
 //   • Titel, Beschreibung und Vorschaubild (WhatsApp, Facebook): Fassung je Bestand und Uhrzeit (Block <!--og--> … <!--/og-->)
-//       angebot  500er und günstigster Gutschein kaufbar          → „500 € Gutschein für 375 €“
+//       angebot  500er und günstigster Gutschein kaufbar          → „Gutschein für 375 € kaufen, 500 € bekommen“
 //       neutral  500er oder günstigster ausverkauft               → „Tattoo-Gutscheine zum Weihnachtspreis“ (ohne Beträge)
 //       danach   Aktion vorbei (24.12., 16 Uhr) oder alles verkauft → „Tattoo-Gutschein zum Verschenken“
 //   • Link der Werbung mit ?g=nr5 (nr1 … nr5): dieses Angebot steht oben (solange kaufbar), Vorschaubild bleibt gleich;
 //     ?g=frei: „Tattoo-Gutschein ab 50 €“ (Wertgutschein, Betrag frei) oben
 //   • Hero: Überschrift, Unterzeile, Stückzahl unter dem Knopf und Kopf-Pille wie das Skript der Seite (zeichnen()), html.aus nach
-//     der Aktion. data-stand am <html> sagt dem Skript, dass die Zahlen schon stimmen (kein Ausblenden bis zum Laden).
+//     der Aktion. Überschrift seit 24.11.2026 abends (Domenic: „du bekommst mehr für dein Geld“): Zeile 1 (#h-preis) „Für 375 € kaufen,“,
+//     Zeile 2 gold (#h-wert) „500 € bekommen*“, darüber die Pille „Tattoo-Gutschein“, darunter die Bedingung (#hero-fuss). data-stand am <html> sagt dem Skript, dass die Zahlen schon stimmen (kein Ausblenden bis zum Laden).
 const NB = " ";
 const ZAHL = (c) => (c / 100).toLocaleString("de-DE", { minimumFractionDigits: c % 100 ? 2 : 0, maximumFractionDigits: 2 });
 const EURO = (c) => ZAHL(c) + NB + "€";
@@ -26,7 +27,8 @@ export function heroTexte(sh, { stadt, heroId = "nr4" }) {
   const pille0 = rest0 <= 0 ? "Gerade alle reserviert" : rest0 >= alle0 ? `Nur ${alle0}${NB}Stück` : `Noch ${rest0}${NB}von ${alle0}`;
   if (heroId === "frei" && sh.frei) {
     const da0 = sh.aktionen.filter((a) => !a.ausverkauft), ab0 = [...da0].sort((x, y) => x.preisCent - y.preisCent)[0];
-    return { wert: "Tattoo-Gutschein", preis: `ab ${EURO(sh.frei.minCent)}`, klein: "Sofort als PDF per E-Mail",
+    // Wertgutschein ohne Bonus: kein Sternchen, keine Bedingung; Pille wie vorher „Weihnachts-Aktion“ (die Überschrift sagt „Tattoo-Gutschein“)
+    return { preis: "Tattoo-Gutschein", wert: `ab ${EURO(sh.frei.minCent)}`, eyebrow: "Weihnachts-Aktion", fuss: false, klein: "Sofort als PDF per E-Mail",
       lead: esc(`Für Tattoo oder Piercing in ${stadt}. `) + `<span class="nb">${esc("Betrag frei wählbar.")}</span>`,
       liste: ab0 ? `Schon ab ${EURO(ab0.preisCent)} (Wert${NB}${EURO(ab0.wertCent)}).` : null, pille: pille0 };
   }
@@ -35,7 +37,7 @@ export function heroTexte(sh, { stadt, heroId = "nr4" }) {
   const best = l.find((a) => !weg(a)) || l.find((a) => !a.ausverkauft) || null;
   const da = sh.aktionen.filter((a) => !a.ausverkauft), ab = [...da].sort((x, y) => x.preisCent - y.preisCent)[0];
   const rest = sh.aktionen.reduce((s, a) => s + a.verfuegbar, 0), alle = sh.aktionen.reduce((s, a) => s + a.stueck, 0);
-  // Steht der günstigste schon oben (z. B. „300 € Gutschein für 200 €“ aus der Werbung), nennt die Unterzeile den größten statt „schon ab“
+  // Steht der günstigste schon oben (z. B. „Für 200 € kaufen, 300 € bekommen*“ aus der Werbung), nennt die Unterzeile den größten statt „schon ab“
   const max = [...da].sort((x, y) => y.wertCent - x.wertCent)[0];
   const lead = esc(`Für Tattoo oder Piercing in ${stadt}. `) + (da.length <= 1 ? esc("Nur noch dieser Gutschein zum Weihnachtspreis.")
     : best && best.id === ab.id ? `<span class="nb">${esc(`Auch bis ${EURO(max.wertCent)} Wert.`)}</span>`
@@ -43,7 +45,8 @@ export function heroTexte(sh, { stadt, heroId = "nr4" }) {
   const klein = rest <= 0 || !best || best.verfuegbar <= 0 ? "Gerade sind alle Aktions-Gutscheine reserviert."
     : best.verfuegbar >= best.stueck ? `Nur ${best.stueck}${NB}Stück zu diesem Preis` : `Noch ${best.verfuegbar}${NB}von ${best.stueck}${NB}zu diesem Preis`;
   return {
-    wert: best ? `${EURO(best.wertCent)} Gutschein` : null, preis: best ? `für ${EURO(best.preisCent)}` : null, lead, klein,
+    preis: best ? `Für ${EURO(best.preisCent)} kaufen,` : null, wert: best ? `${EURO(best.wertCent)} bekommen*` : null, lang: Boolean(best && best.wertCent >= 100000),
+    eyebrow: "Tattoo-Gutschein", fuss: true, lead, klein,
     liste: ab ? `Schon ab ${EURO(ab.preisCent)} (Wert${NB}${EURO(ab.wertCent)}).` : null,
     pille: rest <= 0 ? "Gerade alle reserviert" : rest >= alle ? `Nur ${alle}${NB}Stück` : `Noch ${rest}${NB}von ${alle}`,
   };
@@ -66,7 +69,11 @@ export function seiteAnpassen(roh, daten, { stand = new Date().toISOString(), he
   html = html.replace(/<html lang="de"/, `<html lang="de" data-stand="${esc(stand)}" data-fassung="${fassung}"${aus ? ' class="aus"' : ""}`);
   if (aus) return html;
   const t = heroTexte(sh, { stadt: roh.stadt, heroId: heroAusLink(sh, heroId) || roh.heroId });
-  if (t.wert) { html = setze(html, "h-wert", esc(t.wert), "span"); html = setze(html, "h-preis", esc(t.preis), "span"); }
+  if (t.wert) { html = setze(html, "h-preis", esc(t.preis), "span"); html = setze(html, "h-wert", esc(t.wert), "span"); }
+  // Vierstelliger Wert („2.000 € bekommen*“): etwas kleiner, damit die Zeile am Handy nicht umbricht (wie das Skript der Seite)
+  html = html.replace(/<span class="g(?: lang)?" id="h-wert">/, `<span class="g${t.lang ? " lang" : ""}" id="h-wert">`);
+  html = setze(html, "hero-pille", esc(t.eyebrow), "span");
+  if (!t.fuss) html = html.replace(/(<p\b[^>]*\bid="hero-fuss")/, "$1 hidden");
   html = setze(html, "hero-lead", t.lead, "p");
   html = setze(html, "hero-klein", esc(t.klein), "div");
   html = setze(html, "top-stueck", esc(t.pille), "span");

@@ -114,8 +114,9 @@ const ICONS = {
   icWhatsapp: IC('<path d="M4.3 19.7l1.3-3.9a8.1 8.1 0 1 1 3 2.8z"/><path d="M9.3 8.6c.2 2.8 3 5.5 6 6l.9-1.4-1.9-1-.9.8c-1-.5-1.9-1.4-2.4-2.4l.8-.9-1-1.9z"/>'),
 };
 
-// Texte der Vorschau (Bild, Titel, og:description, Alt-Text) je Fassung (24.11.2026, Runde 3, einfache Sprache, kein „unter Wert“):
-//   "angebot"  „500 € Gutschein für 375 €“, rechts „Auch 300 € für 200 €“ (Standard, solange beide kaufbar sind)
+// Texte der Vorschau (Bild, Titel, og:description, Alt-Text) je Fassung (24.11.2026, Runde 3, einfache Sprache, kein „unter Wert“;
+// 24.11.2026 abends, Domenic: „nicht du zahlst weniger, sondern du bekommst mehr für dein Geld“ → bezahlter Betrag zuerst, Wert betont):
+//   "angebot"  „Für 375 € kaufen, 500 € bekommen*“ mit Bedingung unten, rechts „Für 200 € / 300 € / bekommen“ (Standard, solange beide kaufbar sind)
 //   "neutral"  „Tattoo-Gutscheine zum Weihnachtspreis“ ohne Beträge (500er oder günstigster ausverkauft)
 //   "danach"   „Tattoo-Gutschein zum Verschenken“ (nach dem 24.12., 16 Uhr oder wenn alle Aktions-Gutscheine verkauft sind)
 // Welche gilt, entscheidet die Seiten-Funktion aus dem echten Bestand (netlify/functions/_lib/gutschein-seite.mjs).
@@ -125,18 +126,21 @@ function ogTexte(c, fassung = "angebot") {
   const alle = c.aktionen.reduce((s, x) => s + x.stueck, 0), name = c.seite.name, stadt = c.seite.stadt;
   const frei = `${ZAHL(c.frei.minCent)} bis ${EURO(c.frei.maxCent)}`, ogDatei = FASSUNGEN[fassung];
   const karteSofort = { karteOben: "Sofort", karteMitte: "PDF", karteUnten: "per E-Mail" };
-  if (fassung === "danach") return { pille: "Tattoo & Piercing", zeileA: "Tattoo-Gutschein", zeileB: "zum Verschenken", bis: `Von ${frei}`, ...karteSofort,
+  if (fassung === "danach") return { fuss: "", h1Klasse: "", pille: "Tattoo & Piercing", zeileA: "Tattoo-Gutschein", zeileB: "zum Verschenken", bis: `Von ${frei}`, ...karteSofort,
     titel: `Tattoo-Gutschein zum Verschenken · ${name}`, ogText: `Für Tattoo oder Piercing in ${stadt}. Eigener Betrag von ${frei}, sofort als PDF.`,
     ogAlt: `${name}: Tattoo-Gutschein zum Verschenken, von ${frei}, sofort als PDF`, ogDatei };
-  if (fassung === "neutral") return { pille: "Weihnachts-Aktion", zeileA: "Tattoo-Gutscheine", zeileB: "zum Weihnachtspreis", bis: "Nur bis 24.12., 16 Uhr", ...karteSofort,
-    titel: `Tattoo-Gutscheine zum Weihnachtspreis · ${name}`, ogText: `Für Tattoo oder Piercing in ${stadt}. Du zahlst weniger, nur bis 24.12., 16 Uhr.`,
+  if (fassung === "neutral") return { fuss: "", h1Klasse: "", pille: "Weihnachts-Aktion", zeileA: "Tattoo-Gutscheine", zeileB: "zum Weihnachtspreis", bis: "Nur bis 24.12., 16 Uhr", ...karteSofort,
+    titel: `Tattoo-Gutscheine zum Weihnachtspreis · ${name}`, ogText: `Für Tattoo oder Piercing in ${stadt}. Du bekommst mehr, als du zahlst. Nur bis 24.12.`,
     ogAlt: `${name}: Weihnachts-Aktion, Tattoo-Gutscheine zum Weihnachtspreis, nur bis 24.12., 16 Uhr`, ogDatei };
-  return { pille: "Weihnachts-Aktion", zeileA: `${EURO(nr4.wertCent)} Gutschein`, zeileB: `für ${EURO(nr4.preisCent)}`, bis: "Nur bis 24.12., 16 Uhr",
-    karteOben: "Auch", karteMitte: EURO(ab.wertCent), karteUnten: `für ${EURO(ab.preisCent)}`,
-    // WhatsApp/Facebook: fette Zeile = Angebot + Studio, darunter wofür, wo und die richtige Stückzahl (21 = alle Aktions-Gutscheine zusammen)
-    titel: `${EURO(nr4.wertCent)} Gutschein für ${EURO(nr4.preisCent)} · ${name}`,
-    ogText: `Für Tattoo oder Piercing in ${stadt}. Auch ${EURO(ab.wertCent)} für ${EURO(ab.preisCent)}, insgesamt nur ${alle} Stück.`,
-    ogAlt: `${name}: Weihnachts-Aktion, ${EURO(nr4.wertCent)} Gutschein für ${EURO(nr4.preisCent)}, nur bis 24.12., 16 Uhr`, ogDatei };
+  // Pille „Tattoo-Gutschein“: WhatsApp zeigt oft nur das Quadrat aus der Mitte (ohne Geschenk links), dort muss klar sein, was man kauft
+  return { pille: "Tattoo-Gutschein", h1Klasse: "kaufen", zeileA: `Für ${EURO(nr4.preisCent)} kaufen,`, zeileB: `${EURO(nr4.wertCent)} bekommen*`, bis: "Nur bis 24.12., 16 Uhr",
+    karteOben: `Für ${EURO(ab.preisCent)}`, karteMitte: EURO(ab.wertCent), karteUnten: "bekommen",
+    fuss: `*Voller Wert bis ${DATUM(bonusBisIso(c))}, danach der Kaufpreis bis ${DATUM(gueltigBis(jetzt()))}.`,
+    // WhatsApp/Facebook: fette Zeile = Angebot + Studio, darunter wofür, wo, der günstigste (200 € → 300 €) und die richtige Stückzahl
+    // (21 = alle Aktions-Gutscheine zusammen); höchstens 85 Zeichen, sonst kürzt WhatsApp nach zwei Zeilen
+    titel: `Gutschein für ${EURO(nr4.preisCent)} kaufen, ${EURO(nr4.wertCent)} bekommen · ${name}`,
+    ogText: `Für Tattoo oder Piercing in ${stadt}. Auch ${EURO(ab.preisCent)} → ${EURO(ab.wertCent)}. Insgesamt nur ${alle} Stück.`,
+    ogAlt: `${name}: Tattoo-Gutschein für ${EURO(nr4.preisCent)} kaufen, ${EURO(nr4.wertCent)} bekommen, nur bis 24.12., 16 Uhr`, ogDatei };
 }
 const ogBildUrl = (k, datei) => `${BASIS}/assets/gs-shop/${k}/${datei}?v=${hash(path.join(root, `public/assets/gs-shop/${k}/${datei}`))}`;
 // Titel, Beschreibung und Vorschaubild je Fassung (Block zwischen <!--og--> und <!--/og--> der Vorlage)
@@ -156,8 +160,10 @@ function werte(slug, c) {
   const spanne = `${ZAHL(c.frei.minCent)}–${EURO(c.frei.maxCent)}`;
   const geschenk = [480, 960, 1400].map((w) => `/assets/gs-shop/${p.kuerzel}/geschenk-${w}.webp ${w}w`).join(", ");
   // Startzustand der Liste (das Skript ersetzt ihn mit den echten Stückzahlen): solange nichts weg ist „Nur 6 Stück“
-  const karte = (x) => `<button type="button" class="zeile" data-wahl="${x.id}"><span class="wert g">${EURO(x.wertCent)}</span><span class="preis">du zahlst <b>${EURO(x.preisCent)}</b></span>`
-    + `<span class="chip">${EURO(x.wertCent - x.preisCent)} geschenkt</span><span class="waehlen" aria-hidden="true">Wählen →</span><span class="rest">Nur ${x.stueck} Stück</span></button>`;
+  // 24.11.2026 (Domenic): erst der bezahlte Betrag, dann der Wert (gold, größer): „Du zahlst 375 € → Du bekommst 500 €“, „+125 € geschenkt“
+  const karte = (x) => `<button type="button" class="zeile" data-wahl="${x.id}"><span class="preis"><small>Du zahlst</small><b>${EURO(x.preisCent)}</b></span><span class="pf" aria-hidden="true">→</span>`
+    + `<span class="wert"><small>Du bekommst</small><b class="g">${EURO(x.wertCent)}</b></span>`
+    + `<span class="chip">+${EURO(x.wertCent - x.preisCent)} geschenkt</span><span class="waehlen" aria-hidden="true">Wählen →</span><span class="rest">Nur ${x.stueck} Stück</span></button>`;
   // Echte Google-Auszüge (SHOPS[…].seite.stimmen), wörtlich
   const stimmen = (p.stimmen?.liste || []).map(([n, zeit, t]) => `<figure class="rev"><span class="stars" style="--p:100%" aria-label="5 von 5 Sternen">★★★★★</span><p>„${esc(t)}“</p>`
     + `<figcaption class="who"><span class="av" aria-hidden="true">${esc(n[0])}</span><span><b>${esc(n)}</b>Google · ${esc(zeit)}</span></figcaption></figure>`).join("");
@@ -170,7 +176,7 @@ function werte(slug, c) {
     waText: encodeURIComponent(`Hallo, ich habe eine Frage zu den Tattoo-Gutscheinen bei ${p.name}.`),
     stueckAlle: alle, bonusBis: DATUM(bonusBis), gueltigBis: DATUM(gBis), nachBonus: DATUM(nachBonus), bonusKurz: DATUM(bonusBis).slice(0, 5),
     zahlwort: ["", "Ein", "Zwei", "Drei", "Vier", "Fünf", "Sechs", "Sieben"][c.aktionen.length] || String(c.aktionen.length),
-    heroWert: EURO(nr4.wertCent), heroPreis: EURO(nr4.preisCent), abPreis: EURO(ab.preisCent), abWert: EURO(ab.wertCent), freiSpanne: spanne,
+    heroWert: EURO(nr4.wertCent), heroWertLang: nr4.wertCent >= 100000 ? " lang" : "", heroPreis: EURO(nr4.preisCent), abPreis: EURO(ab.preisCent), abWert: EURO(ab.wertCent), freiSpanne: spanne,
     // Unter dem Knopf die Stückzahl des Angebots aus der Überschrift (nicht alle 21 zusammen)
     heroKlein: `Nur ${nr4.stueck} Stück zu diesem Preis`,
     stimmen, stimmenStand: p.stimmen?.stand || "", stimmenLink: p.stimmen?.link || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.google.suche)}`,
@@ -358,7 +364,11 @@ for (const [slug, c] of Object.entries(SHOPS)) {
     for (const f of Object.keys(FASSUNGEN)) {
       const og = ogTexte(c, f);
       const wa = fuelle(vorlage("whatsapp.html"), { ...w, ogTitel: og.titel, ogText: og.ogText, ogDatei: pathToFileURL(path.join(ASSETS, c.seite.kuerzel, og.ogDatei)).href, domain: new URL(BASIS).hostname });
-      await rendern(wa, path.join(path.resolve(VORSCHAU), `whatsapp-${slug}${f === "angebot" ? "" : "-" + f}.png`), { breite: 760, hoehe: 420, dpr: 2, element: "body" });
+      // Große Vorschau: Titel und Beschreibung je höchstens 2 Zeilen, sonst kürzt WhatsApp mit „…“ (wird hier gemessen und gemeldet)
+      await rendern(wa, path.join(path.resolve(VORSCHAU), `whatsapp-${slug}${f === "angebot" ? "" : "-" + f}.png`), { breite: 760, hoehe: 420, dpr: 2, element: "body", pruefen: async (p) => {
+        const gekuerzt = await p.evaluate(() => [...document.querySelectorAll(".big .t, .big .d")].filter((e) => e.scrollHeight > e.clientHeight + 1).map((e) => e.textContent));
+        if (gekuerzt.length) console.log(`  ! WhatsApp kürzt (${slug}, ${f}): ${gekuerzt.join(" | ")}`);
+      } });
     }
   }
   console.log(`✓ ${slug}: /gutschein-kaufen/${slug} (+ ${RECHT.map(([a]) => a).join(", ")})${MIT_OG ? ", Bilder" : ""}`);

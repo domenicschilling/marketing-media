@@ -316,8 +316,8 @@ console.log("Seiten je Stadt (statisch, og-Tags, Rechtliches nur im Fuß)");
     check(mass.w === 1200 && mass.h === 630 && jpg.length < 300000 && crypto.createHash("sha1").update(jpg).digest("hex").slice(0, 8) === new URL(img || "https://x/").searchParams.get("v"), `${t.stadt}: Vorschaubild ${t.k}/og-weihnachten.jpg 1200×630, < 300 KB, Prüfsumme in der Adresse aktuell`, { mass, kb: Math.round(jpg.length / 1024) });
     const ogT = meta(x.html, "og:title"), ogD = meta(x.html, "og:description") || "";
     // Fette Zeile in WhatsApp: Studio + Angebot; Beschreibung mit richtiger Stückzahl (21 = alle zusammen, nicht 21 vom 500er), kurz genug für 2 Zeilen
-    check(ogT.replace(/\u00a0/g, " ") === `500 € Gutschein für 375 € · Tattoo Fashion ${t.stadt}` && (/<title>([^<]*)/.exec(x.html) || [])[1] === ogT && ogD.replace(/\u00a0/g, " ") === `Für Tattoo oder Piercing in ${t.stadt}. Auch 300 € für 200 €, insgesamt nur 21 Stück.` && meta(x.html, "description") === ogD && ogD.length <= 85 && !/unter Wert|Beträge/.test(x.html.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<!--[\s\S]*?-->/g, "")),
-      `${t.stadt}: Titel/og:title „500 € Gutschein für 375 € · Tattoo Fashion ${t.stadt}“ (Angebot vorn), Beschreibung mit wofür und wo, kein „unter Wert“/„Beträge“`, { ogT, ogD, l: ogD.length });
+    check(ogT.replace(/\u00a0/g, " ") === `Gutschein für 375 € kaufen, 500 € bekommen · Tattoo Fashion ${t.stadt}` && (/<title>([^<]*)/.exec(x.html) || [])[1] === ogT && ogD.replace(/\u00a0/g, " ") === `Für Tattoo oder Piercing in ${t.stadt}. Auch 200 € → 300 €. Insgesamt nur 21 Stück.` && meta(x.html, "description") === ogD && ogD.length <= 85 && !/unter Wert|Beträge/.test(x.html.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<!--[\s\S]*?-->/g, "")),
+      `${t.stadt}: Titel/og:title „Gutschein für 375 € kaufen, 500 € bekommen · Tattoo Fashion ${t.stadt}“ (Angebot vorn, bezahlter Betrag zuerst), Beschreibung mit wofür, wo, 200 € → 300 € und 21 Stück insgesamt, kein „unter Wert“/„Beträge“`, { ogT, ogD, l: ogD.length });
     check(["icon-32.png", "icon-180.png", "icon-192.png", "geschenk-480.webp", "geschenk-960.webp", "geschenk-1400.webp", "geschenk-960.png", "pdf-muster.webp", "pdf-muster.jpg", "pdf-grund.jpg", "og-weihnachten-neutral.jpg", "og-gutschein.jpg", "logo-gold-480.webp", "logo-gold-960.webp", "logo-gold-1400.webp"].every((f) => fs.existsSync(path.join(root, "public/assets/gs-shop", t.k, f)))
       && x.html.includes(`apple-touch-icon" href="/assets/gs-shop/${t.k}/icon-180.png"`) && x.html.includes(`/assets/gs-shop/${t.k}/geschenk-1400.webp 1400w`) && !/w-[a-z-]+\.jpg|favicon\.png/.test(x.html), `${t.stadt}: scharfe Bilder (Geschenk 480/960/1400, Logo bis 1.400 px, Symbole 32/180/192, Gutschein-Muster)`);
     check(x.html.includes(`fbq('init','${t.pixel}')`) && !x.html.includes(anders.pixel) && x.html.includes(`/assets/gs-shop/${t.k}/logo-gold-480.webp`) && x.html.includes(t.tel) && x.html.includes(`wa.me/${t.wa}`) && x.html.includes(`instagram.com/${t.ig}/`) && x.html.includes(`Gutschein von Tattoo Fashion ${t.stadt} mit roter Schleife`) && x.html.includes(`<b>${t.g}</b> · ${t.n} Google-Bewertungen`) && !x.html.includes(anders.adr), `${t.stadt}: eigenes Pixel, Logo, Telefon, WhatsApp, Instagram, Google-Bewertung, keine Angaben der anderen Stadt`);
@@ -340,9 +340,14 @@ console.log("Seiten je Stadt (statisch, og-Tags, Rechtliches nur im Fuß)");
     const texte = { seite: x.html, ...Object.fromEntries(Object.entries(SEITEN_OG[t.slug].og).map(([f, h]) => ["vorschau-" + f, h])), impressum: imp.html, widerruf: wid.html, bedingungen: bed.html, datenschutz: dsg.html };
     const treffer = Object.entries(texte).filter(([, h]) => NUR_EIN_WEG.test(String(h).replace(/ /g, " "))).map(([k, h]) => k + ": " + (NUR_EIN_WEG.exec(String(h).replace(/ /g, " ")) || [])[0]);
     check(Object.keys(texte).length === 8 && !treffer.length, `${t.stadt}: nirgends „nur online“ oder „nur im Studio“ (Seite, 3 Vorschau-Fassungen, 4 Rechtsseiten)`, treffer);
+    // Domenic 24.11.2026: „nicht du zahlst weniger, sondern du bekommst mehr für dein Geld“, und „Gutschein“ statt „<Betrag> € Tattoo“
+    const ALT_FORMEL = /zahlst\s+weniger|draufsteht|als\s+auf\s+dem\s+Gutschein\s+steht|\d\s*€\s*Tattoo(?![-\w])|€\s*Gutschein\s+für\s+\d/i;
+    const alt = Object.entries(texte).filter(([, h]) => ALT_FORMEL.test(String(h).replace(/\u00a0/g, " "))).map(([k, h]) => k + ": " + (ALT_FORMEL.exec(String(h).replace(/\u00a0/g, " ")) || [])[0]);
+    check(!alt.length, `${t.stadt}: nirgends „Du zahlst weniger“, „draufsteht“, „… € Tattoo“ oder „500 € Gutschein für 375 €“ (Seite, 3 Vorschau-Fassungen, 4 Rechtsseiten)`, alt);
     check(imp.status === 200 && imp.html.includes(t.name) && imp.html.includes(t.adr) && imp.html.includes(t.mail) && !imp.html.includes(anders.mail), `${t.stadt}: Impressum mit Verkäufer ${t.name}`);
     check(wid.status === 200 && /vierzehn Tagen/.test(wid.html) && wid.html.includes(t.adr) && /Muster-Widerrufsformular/.test(wid.html), `${t.stadt}: Widerrufsbelehrung mit Adresse und Muster-Formular`);
     check(bed.status === 200 && /31\.03\.2027/.test(bed.html) && /in Teilen einlösen/.test(bed.html) && /24\.12\.2026 um 16 Uhr/.test(bed.html) && bed.html.includes(t.adr), `${t.stadt}: Gutscheinbedingungen (Bonus-Frist, Teil-Einlösung, Aktionsende, Adresse)`);
+    check(/Du bekommst mehr, als du zahlst\. Der Unterschied ist ein Bonus\./.test(bed.html) && !/zahlst weniger/i.test(bed.html), `${t.stadt}: Gutscheinbedingungen „Du bekommst mehr, als du zahlst. Der Unterschied ist ein Bonus.“ (Domenic 24.11.: mehr für dein Geld statt „weniger zahlen“)`);
     check(/Ist eine Nummer ausverkauft, gibt es sie nicht mehr\./.test(bed.html) && !/Nummer verkauft/.test(bed.html), `${t.stadt}: Gutscheinbedingungen „Ist eine Nummer ausverkauft, gibt es sie nicht mehr.“ (vom 300er gibt es 10, ein Verkauf beendet ihn nicht)`);
     check(dsg.status === 200 && dsg.html.includes(t.mail) && /Meta-Pixel/.test(dsg.html) && /Stripe/.test(dsg.html) && !/Telefonnummer, um/.test(dsg.html), `${t.stadt}: Datenschutz mit Verantwortlichem der Stadt`);
   }
@@ -370,15 +375,21 @@ await p.goto(BASE + "/gutschein-kaufen/tattoo-fashion-munich");
 await p.waitForSelector("button.zeile[data-wahl=nr4] .rest:has-text('von')");
 const heroOk = await p.evaluate(() => { const h = document.querySelector(".hero").getBoundingClientRect(), k = document.getElementById("hero-kaufen").getBoundingClientRect(), l = document.querySelector(".logo-box").getBoundingClientRect(), t = document.querySelector(".hero .text").getBoundingClientRect(); return Math.abs(h.height - innerHeight) <= 2 && k.bottom <= innerHeight && l.height >= 60 && l.bottom <= t.top + 1; });
 check(heroOk, "Hero = erster Bildschirm, Geschenk mit Logo über dem Text, Knopf „Gutschein aussuchen“ sichtbar");
-const heroText = await p.evaluate(() => [...document.querySelectorAll(".hero h1, .hero p.lead, .hero .cd-titel")].filter((x) => x.offsetParent).map((x) => x.textContent.replace(/ /g, " ")).join(" | "));
-check(/500 € Gutschein für 375 €/.test(heroText) && /Für Tattoo oder Piercing in München\. Schon ab 200 € \(Wert 300 €\)/.test(heroText) && /Aktion endet am 24\.12\. um 16 Uhr/.test(heroText) && !/bis zu|Beträge|unter Wert/i.test(heroText), "Hero: Angebot groß (500 € für 375 €), „Für Tattoo oder Piercing in München. Schon ab 200 €“, Aktionsende sichtbar, kein „bis zu“/„unter Wert“", heroText);
+const heroText = await p.evaluate(() => [...document.querySelectorAll(".hero h1, .hero p.lead, .hero p.fuss, .hero .cd-titel, #hero-pille")].filter((x) => x.offsetParent).map((x) => x.textContent.replace(/ /g, " ")).join(" | "));
+check(/Für 375 € kaufen, 500 € bekommen\*/.test(heroText) && /\*Voller Wert bis 31\.03\.2027, danach der Kaufpreis bis 31\.12\.2029\./.test(heroText) && /Tattoo-Gutschein/.test(heroText) && /Für Tattoo oder Piercing in München\. Schon ab 200 € \(Wert 300 €\)/.test(heroText) && /Aktion endet am 24\.12\. um 16 Uhr/.test(heroText) && !/bis zu|Beträge|unter Wert/i.test(heroText), "Hero: Pille „Tattoo-Gutschein“, Angebot groß („Für 375 € kaufen, 500 € bekommen*“, bezahlter Betrag zuerst), Bedingung zum Sternchen direkt darunter, „Für Tattoo oder Piercing in München. Schon ab 200 €“, Aktionsende sichtbar, kein „bis zu“/„unter Wert“", heroText);
 await p.screenshot({ path: path.join(shots, "handy-hero.png") });
 {
   const dApi = await get("/api/gutschein-shop?s=tattoo-fashion-munich");
   const soll = (a) => (a.ausverkauft ? "Ausverkauft" : a.verfuegbar <= 0 ? "Gerade reserviert" : a.verfuegbar >= a.stueck ? `Nur ${a.stueck} Stück` : `Noch ${a.verfuegbar} von ${a.stueck}`);
-  const karten = await p.$$eval("#bogen button.zeile[data-wahl^=nr]", (l) => l.map((x) => ({ id: x.dataset.wahl, rest: x.querySelector(".rest").textContent.replace(/ /g, " "), chip: x.querySelector(".chip").textContent.replace(/ /g, " "), aus: x.disabled })));
-  check(dApi.shop.aktionen.every((a, i) => karten[i].rest === soll(a) && karten[i].chip === `${((a.wertCent - a.preisCent) / 100).toLocaleString("de-DE")} € geschenkt`),
-    "Liste: je Karte Ersparnis („125 € geschenkt“) und Stückzahl („Nur 10 Stück“ solange nichts weg ist, sonst „Noch 5 von 6“)", karten);
+  const karten = await p.$$eval("#bogen button.zeile[data-wahl^=nr]", (l) => l.map((x) => ({ id: x.dataset.wahl, rest: x.querySelector(".rest").textContent.replace(/ /g, " "), chip: x.querySelector(".chip").textContent.replace(/ /g, " "), aus: x.disabled,
+    zahlt: x.querySelector(".preis b").textContent.replace(/ /g, " "), bekommt: x.querySelector(".wert b").textContent.replace(/ /g, " "), gold: x.querySelector(".wert b").classList.contains("g"),
+    zuerst: Boolean(x.querySelector(".preis").compareDocumentPosition(x.querySelector(".wert")) & Node.DOCUMENT_POSITION_FOLLOWING), groesser: parseFloat(getComputedStyle(x.querySelector(".wert b")).fontSize) > parseFloat(getComputedStyle(x.querySelector(".preis b")).fontSize),
+    labels: [...x.querySelectorAll("small")].map((y) => y.textContent).join("/") })));
+  const euroT = (c) => `${(c / 100).toLocaleString("de-DE")} €`;
+  check(dApi.shop.aktionen.every((a, i) => karten[i].rest === soll(a) && karten[i].chip === `+${euroT(a.wertCent - a.preisCent)} geschenkt`),
+    "Liste: je Karte Ersparnis („+125 € geschenkt“) und Stückzahl („Nur 10 Stück“ solange nichts weg ist, sonst „Noch 5 von 6“)", karten);
+  check(dApi.shop.aktionen.every((a, i) => karten[i].zahlt === euroT(a.preisCent) && karten[i].bekommt === euroT(a.wertCent) && karten[i].zuerst && karten[i].gold && karten[i].groesser && karten[i].labels === "Du zahlst/Du bekommst"),
+    "Liste: je Karte erst „Du zahlst 375 €“, dann „Du bekommst 500 €“ (gold und größer)", karten.map((k) => [k.zahlt, k.bekommt, k.zuerst, k.gold, k.groesser, k.labels]));
   const rest = dApi.shop.aktionen.reduce((s, a) => s + a.verfuegbar, 0);
   const klein = (await p.textContent("#hero-klein")).replace(/ /g, " "), pille = (await p.textContent("#top-stueck")).replace(/ /g, " ");
   const n4 = dApi.shop.aktionen.find((a) => a.id === "nr4");
@@ -389,9 +400,9 @@ await p.screenshot({ path: path.join(shots, "handy-hero.png") });
   check(kopf.imHero === "0" && kopf.punkt === "none" && !/Stück/.test(kopf.abschnitt) && !/21|Aktions-Gutscheine/.test(kopf.h2), "Stückzahl nur einmal je Bildschirm: Kopf-Pille erst nach dem Hero, Abschnitt ohne zweite „Nur 21 Stück“-Pille, roter Punkt pulsiert nicht", kopf);
   // Korrektur-Runde 1 (24.11.): „Fünf Gutscheine“ stand neben „Nur 21 Stück“ (zwei Stückzahlen), „Ist einer verkauft, gibt es ihn
   // nicht mehr“ stimmte nicht (vom 300er gibt es 10). Jetzt „Fünf Angebote“, sagt, weniger als was, und erklärt ausverkauft richtig.
-  check(kopf.h2 === "Fünf Angebote. Du zahlst weniger, als draufsteht." && !/Gutscheine/.test(kopf.h2)
+  check(kopf.h2 === "Fünf Angebote. Du bekommst mehr, als du zahlst." && !/Gutscheine|weniger/.test(kopf.h2)
     && /Tippe auf deinen Gutschein\. Ist er ausverkauft, kommt er nicht wieder\./.test(kopf.sub) && !/Tipp auf|Ist einer verkauft/.test(kopf.sub),
-    "Preis-Abschnitt: „Fünf Angebote. Du zahlst weniger, als draufsteht.“ (kein „Fünf Gutscheine“ neben „21 Stück“), „Tippe … Ist er ausverkauft, kommt er nicht wieder.“", kopf);
+    "Preis-Abschnitt: „Fünf Angebote. Du bekommst mehr, als du zahlst.“ (kein „Fünf Gutscheine“ neben „21 Stück“), „Tippe … Ist er ausverkauft, kommt er nicht wieder.“", kopf);
 }
 await p.locator("#gutscheine").scrollIntoViewIfNeeded();
 await p.screenshot({ path: path.join(shots, "handy-liste.png") });
@@ -408,6 +419,12 @@ check(await p.isVisible("#funnel") && /Schritt 1 von 2/.test(await p.textContent
   const w1 = await p.evaluate(() => ({ an: (document.querySelector("#wahl input:checked") || {}).value, erste: [...document.querySelectorAll("#wahl input")].map((i) => i.value + (i.disabled ? "-" : "")).join(" "), weg: (document.querySelector("#wahl .weg-zeile") || {}).textContent || "", regel: document.getElementById("f-regel").textContent }));
   check(w1.an === "nr4" && !/nr1/.test(w1.erste) && !/-/.test(w1.erste.split(" frei")[0]) && /Schon verkauft: 2\.000/.test(w1.weg.replace(/ /g, " ")) && /1 Aktions-Gutschein pro Person/.test(w1.regel),
     "Hero-Knopf: 500-€-Gutschein (Angebot der Überschrift) schon markiert; kaufbare zuerst, verkaufte nur als Zeile „Schon verkauft: 2.000 €“ am Ende; Hinweis „1 pro Person“", w1);
+  // Kauf-Fenster Schritt 1 in derselben Logik wie die Liste: „Du zahlst 375 €“ → „Du bekommst 500 €“ (gold, größer), „+125 € geschenkt“
+  const o4 = await p.evaluate(() => { const l = document.querySelector("#wahl label:has(input[value=nr4])"), z = l.querySelector(".o-z"), b = l.querySelector(".o-b");
+    return { text: l.innerText.replace(/\s+/g, " ").replace(/ /g, " "), zuerst: Boolean(z.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING), gold: b.querySelector("b").classList.contains("g"),
+      groesser: parseFloat(getComputedStyle(b.querySelector("b")).fontSize) > parseFloat(getComputedStyle(z.querySelector("b")).fontSize), chip: l.querySelector(".chip").textContent.replace(/ /g, " ") }; });
+  check(/^DU ZAHLST 375 € → DU BEKOMMST 500 € \+125 € GESCHENKT ?(Nur|Noch) /i.test(o4.text) && o4.zuerst && o4.gold && o4.groesser && o4.chip === "+125 € geschenkt",
+    "Kauf-Fenster: „Du zahlst 375 € → Du bekommst 500 €“ (Wert gold und größer), darunter „+125 € geschenkt“ und die Stückzahl", o4);
 }
 await p.screenshot({ path: path.join(shots, "handy-schritt1.png") });
 await p.click("#wahl label:has(input[value=nr5])");
@@ -509,13 +526,16 @@ for (const [eng, name] of [[chromium, "Chromium"], [webkit, "Safari"]]) {
     const c4 = await br.newContext({ viewport: { width: w, height: 740 }, deviceScaleFactor: 2 });
     const p4 = await c4.newPage(); beobachten(p4);
     await p4.goto(BASE + "/gutschein-kaufen/" + slug); await p4.waitForSelector("html.geladen");
-    const einzeilig = () => p4.evaluate(() => [...document.querySelectorAll("#bogen .wert, #bogen .preis, #bogen .chip, #bogen .rest, .opt .o-w b, .opt .r b, .opt .chip, .summe span, .summe b, #hero-klein, .hero .eyebrow, #gutscheine .eyebrow, .final .eyebrow")].filter((e) => e.offsetParent)
+    const einzeilig = () => p4.evaluate(() => [...document.querySelectorAll("#h-preis, #h-wert, #bogen .zeile.frei .wert, #bogen .zeile.frei .preis, #bogen .wert b, #bogen .preis b, #bogen .wert small, #bogen .preis small, #bogen .chip, #bogen .rest, .opt .o-w b, .opt .o-w small, .opt .r b, .opt .chip, .summe span, .summe b, #hero-klein, .hero .eyebrow, #gutscheine .eyebrow, .final .eyebrow")].filter((e) => e.offsetParent)
       .filter((e) => { const tops = new Set(), tw = document.createTreeWalker(e, NodeFilter.SHOW_TEXT); for (let n = tw.nextNode(); n; n = tw.nextNode()) { const r = document.createRange(); r.selectNodeContents(n); for (const x of r.getClientRects()) if (x.width > 0.5) tops.add(Math.round(x.bottom / 6)); } return tops.size > 1; }).map((e) => e.className + ": " + e.textContent));
     const vorher = await einzeilig();
     await p4.click("#hero-kaufen"); const imFenster = await einzeilig();
     await p4.click("#wahl label:has(input[value=nr2])"); await p4.waitForTimeout(450); const summe = await einzeilig();
     const breit = await p4.evaluate(() => document.documentElement.scrollWidth <= innerWidth);
-    check(!vorher.length && !imFenster.length && !summe.length && breit, `${name} ${w} px ${slug.slice(14)}: Beträge, Ersparnis, Stückzahl und Pillen einzeilig (kein € allein in der nächsten Zeile), kein Querscrollen`, [...vorher, ...imFenster, ...summe]);
+    // Längste Überschriften aus dem Anzeigen-Link: „Für 1.500 € kaufen, / 2.000 € bekommen*“ und „Für 1.250 € kaufen, / 1.500 € bekommen*“ je Zeile einzeilig
+    const lang = [];
+    if (w === 320) for (const g of ["nr1", "nr2"]) { await p4.goto(BASE + "/gutschein-kaufen/" + slug + "?g=" + g); await p4.waitForSelector("html.geladen"); lang.push(...(await einzeilig()).map((x) => g + " " + x)); }
+    check(!vorher.length && !imFenster.length && !summe.length && !lang.length && breit, `${name} ${w} px ${slug.slice(14)}: Überschrift-Zeilen, Beträge, Ersparnis, Stückzahl und Pillen einzeilig (kein € allein in der nächsten Zeile${w === 320 ? ", auch ?g=nr1/nr2" : ""}), kein Querscrollen`, [...vorher, ...imFenster, ...summe, ...lang]);
     await c4.close();
   }
   if (br !== browser) await br.close();
@@ -544,15 +564,15 @@ for (const [eng, name] of [[chromium, "Chromium"], [webkit, "Safari"]]) {
   const p7 = await c7.newPage(); beobachten(p7);
   await p7.goto(BASE + "/gutschein-kaufen/tattoo-fashion-landshut"); await p7.waitForSelector("html.geladen");
   const v7 = await p7.evaluate(() => ({ h1: document.querySelector(".hero h1").innerText.replace(/\s+/g, " ").replace(/ /g, " "), lead: document.getElementById("hero-lead").textContent.replace(/ /g, " "), ab: document.getElementById("liste-ab").textContent.replace(/ /g, " ") }));
-  check(dl3.shop.aktionen.find((a) => a.id === "nr4").ausverkauft && /300 € GUTSCHEIN FÜR 200 €/i.test(v7.h1) && !/375/.test(v7.h1 + v7.lead) && /^Für Tattoo oder Piercing in Landshut\. Auch bis [\d.]+ € Wert\.$/.test(v7.lead) && /^Schon ab 200 €/.test(v7.ab),
-    "500-€-Gutschein ausverkauft: Überschrift wirbt mit dem besten kaufbaren Angebot (300 € für 200 €), Unterzeile „Auch bis … € Wert.“ statt doppelt „Schon ab 200 €“", v7);
+  check(dl3.shop.aktionen.find((a) => a.id === "nr4").ausverkauft && /FÜR 200 € KAUFEN, 300 € BEKOMMEN\*/i.test(v7.h1) && !/375/.test(v7.h1 + v7.lead) && /^Für Tattoo oder Piercing in Landshut\. Auch bis [\d.]+ € Wert\.$/.test(v7.lead) && /^Schon ab 200 €/.test(v7.ab),
+    "500-€-Gutschein ausverkauft: Überschrift wirbt mit dem besten kaufbaren Angebot („Für 200 € kaufen, 300 € bekommen*“), Unterzeile „Auch bis … € Wert.“ statt doppelt „Schon ab 200 €“", v7);
   // Meldung an Domenic, sobald die letzte Einheit weg ist; Seite und Vorschau stellen sich schon beim Abruf um (vom Server, vor dem Skript)
   const admin = fs.readdirSync(dataDir).filter((f) => f.startsWith("mail%2F")).map((f) => JSON.parse(fs.readFileSync(path.join(dataDir, f)))).filter((m) => /500er ausverkauft \(Landshut\): Vorschau auf neutral stellen, Anzeige anpassen/.test(m.subject || ""));
   check(admin.length === 1 && /Anzeige/.test(admin[0].text || admin[0].html || ""), "Letzter 500er verkauft → genau eine Meldung an Domenic: „500er ausverkauft (Landshut): Vorschau auf neutral stellen, Anzeige anpassen“", admin.map((m) => m.subject));
   const rohL = await seiteHole("/gutschein-kaufen/tattoo-fashion-landshut");
   const vorSkript = { bild: metaVon(rohL.html, "og:image") || "", titel: metaVon(rohL.html, "og:title"), text: (metaVon(rohL.html, "og:description") || "").replace(/\u00a0/g, " "), t: (/<title>([^<]*)/.exec(rohL.html) || [])[1], wert: ((/id="h-wert"[^>]*>([^<]*)/.exec(rohL.html) || [])[1] || "").replace(/\u00a0/g, " "), stand: /<html lang="de" data-stand="[^"]+" data-fassung="neutral"/.test(rohL.html) };
-  check(/\/tfla\/og-weihnachten-neutral\.jpg\?v=[0-9a-f]{8}$/.test(vorSkript.bild) && vorSkript.titel === "Tattoo-Gutscheine zum Weihnachtspreis · Tattoo Fashion Landshut" && vorSkript.t === vorSkript.titel && !/375|500/.test(vorSkript.titel + vorSkript.text) && vorSkript.wert === "300 € Gutschein" && vorSkript.stand,
-    "Vom Server (vor dem Skript): Vorschau, Titel und Beschreibung ohne Beträge (neutral), Hero schon „300 € Gutschein“", vorSkript);
+  check(/\/tfla\/og-weihnachten-neutral\.jpg\?v=[0-9a-f]{8}$/.test(vorSkript.bild) && vorSkript.titel === "Tattoo-Gutscheine zum Weihnachtspreis · Tattoo Fashion Landshut" && vorSkript.t === vorSkript.titel && !/375|500/.test(vorSkript.titel + vorSkript.text) && vorSkript.wert === "300 € bekommen*" && vorSkript.stand,
+    "Vom Server (vor dem Skript): Vorschau, Titel und Beschreibung ohne Beträge (neutral), Hero schon „300 € bekommen*“", vorSkript);
   await p7.screenshot({ path: path.join(shots, "landshut-500-ausverkauft.png") });
   await p7.click("#hero-kaufen");
   const w7 = await p7.evaluate(() => ({ an: (document.querySelector("#wahl input:checked") || {}).value, weg: ((document.querySelector("#wahl .weg-zeile") || {}).textContent || "").replace(/ /g, " ") }));
@@ -641,42 +661,43 @@ for (const [eng, name] of [[chromium, "Chromium"], [webkit, "Safari"]]) {
   const { SEITEN } = await import("../netlify/functions/_lib/gutschein-seiten-html.mjs");
   const roh = SEITEN["tattoo-fashion-munich"], c = shop.SHOPS["tattoo-fashion-munich"];
   const sh = (mod = {}, offen = true) => ({ offen: true, aktionOffen: offen, aktionen: c.aktionen.map((a) => ({ ...a, verkauft: 0, reserviert: 0, verfuegbar: a.stueck, ausverkauft: false, ...(mod[a.id] || {}) })) });
-  const og = (h) => ({ bild: (metaVon(h, "og:image") || "").replace(/\?v=.*/, "").split("/").pop(), titel: (metaVon(h, "og:title") || "").replace(/ /g, " "), t: ((/<title>([^<]*)/.exec(h) || [])[1] || "").replace(/ /g, " "), wert: ((/id="h-wert"[^>]*>([^<]*)/.exec(h) || [])[1] || "").replace(/ /g, " "), klein: ((/id="hero-klein"[^>]*>([^<]*)/.exec(h) || [])[1] || "").replace(/ /g, " "), aus: /<html[^>]*class="aus"/.test(h) });
+  const og = (h) => ({ bild: (metaVon(h, "og:image") || "").replace(/\?v=.*/, "").split("/").pop(), titel: (metaVon(h, "og:title") || "").replace(/ /g, " "), t: ((/<title>([^<]*)/.exec(h) || [])[1] || "").replace(/ /g, " "), wert: ((/id="h-wert"[^>]*>([^<]*)/.exec(h) || [])[1] || "").replace(/ /g, " "), preis: ((/id="h-preis"[^>]*>([^<]*)/.exec(h) || [])[1] || "").replace(/ /g, " "),
+    pille: (/id="hero-pille"[^>]*>([^<]*)/.exec(h) || [])[1], fuss: /<p class="fuss nur-aktion" id="hero-fuss">\*Voller Wert bis 31\.03\.2027, danach der Kaufpreis bis 31\.12\.2029\.<\/p>/.test(h), lang: /class="g lang" id="h-wert"/.test(h), klein: ((/id="hero-klein"[^>]*>([^<]*)/.exec(h) || [])[1] || "").replace(/ /g, " "), aus: /<html[^>]*class="aus"/.test(h) });
   const v1 = og(seiteAnpassen(roh, { shop: sh(), aktiv: true }));
   const v2 = og(seiteAnpassen(roh, { shop: sh({ nr4: { verfuegbar: 0, verkauft: 6, ausverkauft: true } }), aktiv: true }));
   const v3 = og(seiteAnpassen(roh, { shop: sh({ nr5: { verfuegbar: 0, verkauft: 10, ausverkauft: true }, nr4: { verfuegbar: 2, verkauft: 4 } }), aktiv: true }));
   const v4 = og(seiteAnpassen(roh, { shop: sh({}, false), aktiv: true }));
-  check(v1.bild === "og-weihnachten.jpg" && v1.titel === "500 € Gutschein für 375 € · Tattoo Fashion München" && v1.t === v1.titel && v1.wert === "500 € Gutschein" && v1.klein === "Nur 6 Stück zu diesem Preis", "Server: alles da → Vorschau „500 € für 375 €“, Hero 500er, „Nur 6 Stück zu diesem Preis“", v1);
-  check(v2.bild === "og-weihnachten-neutral.jpg" && /Weihnachtspreis/.test(v2.titel) && v2.wert === "300 € Gutschein" && v2.klein === "Nur 10 Stück zu diesem Preis", "Server: 500er ausverkauft → Vorschau ohne Beträge, Hero „300 € Gutschein“", v2);
-  check(v3.bild === "og-weihnachten-neutral.jpg" && v3.wert === "500 € Gutschein" && v3.klein === "Noch 2 von 6 zu diesem Preis", "Server: günstigster ausverkauft → Vorschau ohne Beträge (sie nannte „300 € für 200 €“), Hero „Noch 2 von 6 zu diesem Preis“", v3);
+  check(v1.bild === "og-weihnachten.jpg" && v1.titel === "Gutschein für 375 € kaufen, 500 € bekommen · Tattoo Fashion München" && v1.t === v1.titel && v1.preis === "Für 375 € kaufen," && v1.wert === "500 € bekommen*" && !v1.lang && v1.pille === "Tattoo-Gutschein" && v1.fuss && v1.klein === "Nur 6 Stück zu diesem Preis", "Server: alles da → Vorschau „Für 375 € kaufen, 500 € bekommen“, Hero „Für 375 € kaufen, / 500 € bekommen*“ mit Pille „Tattoo-Gutschein“ und Bedingung, „Nur 6 Stück zu diesem Preis“", v1);
+  check(v2.bild === "og-weihnachten-neutral.jpg" && /Weihnachtspreis/.test(v2.titel) && v2.preis === "Für 200 € kaufen," && v2.wert === "300 € bekommen*" && v2.klein === "Nur 10 Stück zu diesem Preis", "Server: 500er ausverkauft → Vorschau ohne Beträge, Hero „Für 200 € kaufen, 300 € bekommen*“", v2);
+  check(v3.bild === "og-weihnachten-neutral.jpg" && v3.wert === "500 € bekommen*" && v3.klein === "Noch 2 von 6 zu diesem Preis", "Server: günstigster ausverkauft → Vorschau ohne Beträge (sie nannte „300 € für 200 €“), Hero „Noch 2 von 6 zu diesem Preis“", v3);
   check(v4.bild === "og-gutschein.jpg" && v4.titel === "Tattoo-Gutschein zum Verschenken · Tattoo Fashion München" && v4.aus, "Server: nach dem 24.12., 16 Uhr → Vorschau „Tattoo-Gutschein zum Verschenken“, Seite im Zustand danach", v4);
   // Link der Werbung mit ?g=nr5 / nr1: dieses Angebot oben, Vorschaubild gleich; falscher Wert oder ausverkauft → Standard
   const lead = (h) => ((/id="hero-lead"[^>]*>([\s\S]*?)<\/p>/.exec(h) || [])[1] || "").replace(/<[^>]+>/g, "").replace(/\u00a0/g, " ");
   const h5 = seiteAnpassen(roh, { shop: sh(), aktiv: true }, { heroId: "nr5" }), g5 = og(h5), g1 = og(seiteAnpassen(roh, { shop: sh(), aktiv: true }, { heroId: "nr1" }));
   const gx = og(seiteAnpassen(roh, { shop: sh(), aktiv: true }, { heroId: "nr9\"><script>" })), g5weg = og(seiteAnpassen(roh, { shop: sh({ nr5: { verfuegbar: 0, verkauft: 10, ausverkauft: true } }), aktiv: true }, { heroId: "nr5" }));
-  check(g5.wert === "300 € Gutschein" && g5.klein === "Nur 10 Stück zu diesem Preis" && /Auch bis 2\.000 € Wert\./.test(lead(h5)) && !/Schon ab/.test(lead(h5)) && g5.bild === v1.bild && g5.titel === v1.titel, "Server ?g=nr5: Hero „300 € Gutschein für 200 €“, „Nur 10 Stück“, Unterzeile „Auch bis 2.000 € Wert.“, Vorschau unverändert", { ...g5, lead: lead(h5) });
-  check(g1.wert === "2.000 € Gutschein" && g1.klein === "Nur 1 Stück zu diesem Preis" && JSON.stringify(gx) === JSON.stringify(v1) && g5weg.wert === "500 € Gutschein", "Server ?g=nr1 → 2.000er oben; unbekannter Wert → Standard (500er); ?g=nr5 ausverkauft → Standard", { g1, gx, g5weg });
+  check(g5.preis === "Für 200 € kaufen," && g5.wert === "300 € bekommen*" && g5.klein === "Nur 10 Stück zu diesem Preis" && /Auch bis 2\.000 € Wert\./.test(lead(h5)) && !/Schon ab/.test(lead(h5)) && g5.bild === v1.bild && g5.titel === v1.titel, "Server ?g=nr5: Hero „Für 200 € kaufen, 300 € bekommen*“, „Nur 10 Stück“, Unterzeile „Auch bis 2.000 € Wert.“, Vorschau unverändert", { ...g5, lead: lead(h5) });
+  check(g1.preis === "Für 1.500 € kaufen," && g1.wert === "2.000 € bekommen*" && g1.lang && g1.klein === "Nur 1 Stück zu diesem Preis" && JSON.stringify(gx) === JSON.stringify(v1) && g5weg.wert === "500 € bekommen*", "Server ?g=nr1 → 2.000er oben („2.000 € bekommen*“ etwas kleiner, Klasse lang); unbekannter Wert → Standard (500er); ?g=nr5 ausverkauft → Standard", { g1, gx, g5weg });
   const hF = seiteAnpassen(roh, { shop: { ...sh(), frei: c.frei }, aktiv: true }, { heroId: "frei" }), gF = og(hF);
   const hFaus = og(seiteAnpassen(roh, { shop: { ...sh({}, false), frei: c.frei }, aktiv: true }, { heroId: "frei" }));
-  check(gF.wert === "Tattoo-Gutschein" && /id="h-preis"[^>]*>ab 50 €</.test(hF.replace(/\u00a0/g, " ")) && gF.klein === "Sofort als PDF per E-Mail" && /Betrag frei wählbar\./.test(lead(hF)) && gF.bild === v1.bild && hFaus.aus, "Server ?g=frei: Hero „Tattoo-Gutschein ab 50 €“, „Betrag frei wählbar.“, „Sofort als PDF per E-Mail“, Vorschau unverändert; nach der Aktion Zustand danach", { ...gF, lead: lead(hF) });
+  check(gF.preis === "Tattoo-Gutschein" && gF.wert === "ab 50 €" && gF.pille === "Weihnachts-Aktion" && /id="hero-fuss" hidden/.test(hF) && !gF.lang && gF.klein === "Sofort als PDF per E-Mail" && /Betrag frei wählbar\./.test(lead(hF)) && gF.bild === v1.bild && hFaus.aus, "Server ?g=frei: Hero „Tattoo-Gutschein ab 50 €“ ohne Sternchen und Bedingung (Pille wie vorher „Weihnachts-Aktion“), „Betrag frei wählbar.“, „Sofort als PDF per E-Mail“, Vorschau unverändert; nach der Aktion Zustand danach", { ...gF, lead: lead(hF) });
   check(seiteAnpassen(roh, { shop: { ...sh(), offen: false }, aktiv: true }) === roh.html && seiteAnpassen(roh, { shop: sh(), aktiv: false }) === roh.html && fassungFuer(sh()) === "angebot", "Server: Shop zu oder Studio kann nicht kassieren → Seite unverändert");
   const fn = await seiteHole("/gutschein-kaufen/tattoo-fashion-munich");
   check(/data-stand="/.test(fn.html) && /s-maxage=30/.test(fn.kopf["netlify-cdn-cache-control"] || "") && fn.kopf["netlify-vary"] === "query=g" && fn.kopf["x-robots-tag"] === "noindex", "Seiten-Funktion: Stand vom Server, CDN hält die Seite 30 s (Schlüssel nur ?g=), noindex", fn.kopf);
   const fg = await seiteHole("/gutschein-kaufen/tattoo-fashion-landshut?g=nr5&utm_source=facebook&fbclid=x1");
-  check(og(fg.html).wert === "300 € Gutschein", "Seiten-Funktion mit ?g=nr5 aus der Werbung: Hero „300 € Gutschein“ schon im HTML (kein Springen beim Laden)", og(fg.html));
+  check(og(fg.html).wert === "300 € bekommen*" && og(fg.html).preis === "Für 200 € kaufen,", "Seiten-Funktion mit ?g=nr5 aus der Werbung: Hero „Für 200 € kaufen, 300 € bekommen*“ schon im HTML (kein Springen beim Laden)", og(fg.html));
   const c6g = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
   const p6g = await c6g.newPage(); beobachten(p6g);
   await p6g.goto(BASE + "/gutschein-kaufen/tattoo-fashion-landshut?g=nr5&utm_source=facebook"); await p6g.waitForSelector("button.zeile[data-wahl]");
   const hg = await p6g.evaluate(() => ({ h1: document.querySelector(".hero h1").innerText.replace(/\s+/g, " "), lead: document.getElementById("hero-lead").textContent.replace(/\s+/g, " "), klein: document.getElementById("hero-klein").textContent.replace(/\s+/g, " "), breit: document.documentElement.scrollWidth <= innerWidth }));
   await p6g.click("#hero-kaufen"); await p6g.waitForTimeout(450);
   const vg = await p6g.evaluate(() => { const i = document.querySelector("#wahl input:checked"); return i && i.value; });
-  check(/300 € GUTSCHEIN FÜR 200 €/i.test(hg.h1) && /Auch bis [\d.]+ € Wert\./.test(hg.lead) && /(Nur 10 Stück|Noch \d+ von 10) zu diesem Preis/.test(hg.klein) && hg.breit && vg === "nr5", "Browser ?g=nr5: Überschrift 300 € für 200 €, Stückzahl des 300ers, Hero-Knopf wählt den 300er vor, kein Querscrollen", { ...hg, vg });
+  check(/FÜR 200 € KAUFEN, 300 € BEKOMMEN\*/i.test(hg.h1) && /Auch bis [\d.]+ € Wert\./.test(hg.lead) && /(Nur 10 Stück|Noch \d+ von 10) zu diesem Preis/.test(hg.klein) && hg.breit && vg === "nr5", "Browser ?g=nr5: Überschrift „Für 200 € kaufen, 300 € bekommen*“, Stückzahl des 300ers, Hero-Knopf wählt den 300er vor, kein Querscrollen", { ...hg, vg });
   const p6f = await c6g.newPage(); beobachten(p6f);
   await p6f.goto(BASE + "/gutschein-kaufen/tattoo-fashion-landshut?g=frei&utm_source=facebook"); await p6f.waitForSelector("button.zeile[data-wahl]");
-  const hf = await p6f.evaluate(() => ({ h1: document.querySelector(".hero h1").innerText.replace(/\s+/g, " "), lead: document.getElementById("hero-lead").textContent.replace(/\s+/g, " "), klein: document.getElementById("hero-klein").textContent.replace(/\s+/g, " "), breit: document.documentElement.scrollWidth <= innerWidth }));
+  const hf = await p6f.evaluate(() => ({ h1: document.querySelector(".hero h1").innerText.replace(/\s+/g, " "), lead: document.getElementById("hero-lead").textContent.replace(/\s+/g, " "), klein: document.getElementById("hero-klein").textContent.replace(/\s+/g, " "), breit: document.documentElement.scrollWidth <= innerWidth, pille: document.getElementById("hero-pille").textContent, fussWeg: document.getElementById("hero-fuss").hidden && !document.getElementById("hero-fuss").offsetParent }));
   await p6f.click("#hero-kaufen"); await p6f.waitForTimeout(450);
   const vf = await p6f.evaluate(() => { const i = document.querySelector("#wahl input:checked"), e = document.querySelector("#wahl input"); return { an: i && i.value, erste: e && e.value }; });
-  check(/TATTOO-GUTSCHEIN AB 50 €/i.test(hf.h1) && /Betrag frei wählbar/.test(hf.lead) && /Sofort als PDF per E-Mail/.test(hf.klein) && hf.breit && vf.an === "frei" && vf.erste === "frei", "Browser ?g=frei: „Tattoo-Gutschein ab 50 €“, Hero-Knopf öffnet mit „Eigener Betrag“ vorne und vorgewählt", { ...hf, ...vf });
+  check(/TATTOO-GUTSCHEIN AB 50 €/i.test(hf.h1) && !/\*/.test(hf.h1) && hf.fussWeg && hf.pille === "Weihnachts-Aktion" && /Betrag frei wählbar/.test(hf.lead) && /Sofort als PDF per E-Mail/.test(hf.klein) && hf.breit && vf.an === "frei" && vf.erste === "frei", "Browser ?g=frei: „Tattoo-Gutschein ab 50 €“ (ohne Sternchen und Bedingung), Hero-Knopf öffnet mit „Eigener Betrag“ vorne und vorgewählt", { ...hf, ...vf });
   await c6g.close();
   // Vorschaubilder: jeder Text passt (Kartentext ≥ 24 px Rand, Überschrift ≤ 540 px), alle Städte und Fassungen
   const { spawnSync } = await import("node:child_process");
@@ -690,10 +711,11 @@ for (const [w, h] of [[320, 460], [375, 548], [375, 560], [320, 568], [390, 664]
   const p2 = await c2.newPage(); beobachten(p2);
   await p2.goto(BASE + "/gutschein-kaufen/tattoo-fashion-landshut"); await p2.waitForSelector("button.zeile[data-wahl]");
   const r = await p2.evaluate(() => { const H = document.querySelector(".hero").getBoundingClientRect(), k = document.getElementById("hero-kaufen").getBoundingClientRect(), l = document.querySelector(".logo-box").getBoundingClientRect(), t = document.querySelector(".hero .text").getBoundingClientRect(), quer = innerWidth > innerHeight, ct = document.querySelector(".hero .cd-titel").getBoundingClientRect();
-    const c = document.querySelector(".hero .cd").getBoundingClientRect(), e = document.querySelector(".hero .text>.eyebrow.nur-aktion").getBoundingClientRect();
+    const c = document.querySelector(".hero .cd").getBoundingClientRect(), e = document.querySelector(".hero .text>.eyebrow.nur-aktion").getBoundingClientRect(), f = document.getElementById("hero-fuss").getBoundingClientRect(), hh = document.querySelector(".hero h1").getBoundingClientRect();
     return { voll: Math.abs(H.height - innerHeight) <= 2, knopf: k.bottom <= innerHeight && k.top >= 0, logo: l.height >= 56 && (quer ? l.right <= t.left + 1 : l.bottom <= t.top + 1), breit: document.documentElement.scrollWidth <= innerWidth, ende: ct.height > 0 && ct.top >= 0 && ct.bottom <= innerHeight,
-      countdown: c.height > 0 && c.top >= ct.bottom - 1 && c.bottom <= k.top + 1, pille: quer || innerHeight < 480 || (e.height > 0 && e.top >= 0) }; });
-  check(r.voll && r.knopf && r.logo && r.breit && r.ende && r.countdown && r.pille, `${w}×${h}: Hero passt, Geschenk sichtbar ohne Überlappung, „Aktion endet …“, Countdown${h >= 480 && w < h ? ", Pille „Weihnachts-Aktion“" : ""} und Knopf sichtbar, kein Querscrollen`, r);
+      countdown: c.height > 0 && c.top >= ct.bottom - 1 && c.bottom <= k.top + 1, pille: quer || innerHeight < 480 || (e.height > 0 && e.top >= 0 && document.getElementById("hero-pille").textContent === "Tattoo-Gutschein"),
+      fuss: f.height > 0 && f.top >= hh.bottom - 1 && f.bottom <= k.top && parseFloat(getComputedStyle(document.getElementById("hero-fuss")).fontSize) >= 11 }; });
+  check(r.voll && r.knopf && r.logo && r.breit && r.ende && r.countdown && r.pille && r.fuss, `${w}×${h}: Hero passt, Geschenk sichtbar ohne Überlappung, Bedingung zum Sternchen unter der Überschrift, „Aktion endet …“, Countdown${h >= 480 && w < h ? ", Pille „Tattoo-Gutschein“" : ""} und Knopf sichtbar, kein Querscrollen`, r);
   await p2.screenshot({ path: path.join(shots, `hero-landshut-${w}x${h}.png`) });
   await c2.close();
 }
