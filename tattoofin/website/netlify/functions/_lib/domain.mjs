@@ -285,7 +285,7 @@ async function zahlartFehlt(studio, z, e) {
 // Kunde als Stripe-Customer mit Name + E-Mail (vorausgefüllt), Rechnungsadresse und Telefonnummer verpflichtend.
 export async function checkoutFuer(studio, z, { nurKarte = false, extra = null, branding: brandingWunsch = null } = {}) {
   if (!darfKassieren(studio)) throw new HttpError(409, "Dieses Studio kann gerade keine Zahlungen annehmen.");
-  // Shop-Bestellungen nur aus dem Shop (mit Reservierung), nie über andere Wege nachkaufbar
+  // Shop-Bestellungen nur aus dem Shop (mit Ticket für 1 pro Person), nie über andere Wege nachkaufbar
   if (z.gutschein?.shop && !extra) throw new HttpError(410, "Diese Bestellung ist nicht mehr offen. Bitte kauf den Gutschein neu im Gutschein-Shop des Studios.");
   const plattform = plattformKassiert(studio);
   const direkt = direktCharge(studio);
@@ -325,7 +325,7 @@ export async function checkoutFuer(studio, z, { nurKarte = false, extra = null, 
     metadata: meta,
     success_url: `${CFG.siteUrl}/bezahlt.html?z=${z.id}`,
     cancel_url: `${CFG.siteUrl}/zahlung.html?z=${z.id}&abbruch=1`,
-    // Gutschein-Shop: feste Kassen-Dauer (Reservierung der Stückzahl), Rückkehr in den Shop, Knopf „Bezahlen“, einfache Kasse
+    // Gutschein-Shop: feste Kassen-Dauer (Ticket für 1 pro Person), Rückkehr in den Shop, Knopf „Bezahlen“, einfache Kasse
     ...(extra || {}),
   };
   // Ohne Pflicht-Rechnungsadresse (Gutschein-Shop) nur den Namen beim Kunden speichern, keine Adresse

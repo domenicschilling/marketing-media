@@ -113,8 +113,8 @@ export default handler(async (req, context) => {
     const z = await zahlungBy("zahlung", clean(b.z, 40));
     if (!z) return fail("Zahlungslink nicht gefunden", 404);
     if (z.status === "bezahlt") return fail("Dieser Betrag ist bereits bezahlt. Danke!", 409);
-    // Gutschein-Shop: eine Bestellung wird nur über den Shop bezahlt (Reservierung, Stückzahl, Aktionsende). Über den alten
-    // Zahlungslink ginge sonst ein abgebrochener Aktions-Gutschein ohne Reservierung oder nach Aktionsende nachzukaufen.
+    // Gutschein-Shop: eine Bestellung wird nur über den Shop bezahlt (Ticket für 1 pro Person, Aktionsende). Über den alten
+    // Zahlungslink ginge sonst ein abgebrochener Aktions-Gutschein ohne Ticket oder nach Aktionsende nachzukaufen.
     if (z.gutschein?.shop) return fail("Diese Bestellung ist nicht mehr offen. Bitte kauf den Gutschein neu im Gutschein-Shop des Studios.", 410);
     if (!["offen", "abgebrochen"].includes(z.status)) return fail("Dieser Zahlungslink ist nicht mehr gültig. Bitte frag im Studio nach einem neuen Link.", 410);
     if (schonBezahltDurchAusweich(z)) return fail(DOPPELT, 409);

@@ -5,7 +5,8 @@
 //     z.gutschein.wertCent = Gutscheinwert, bonusCent = Wert − Preis, bonusBis = Ende der Bonus-Frist.
 //   • Bonus-Frist: Der Bonus gilt bis bonusBis (31.03.2027), danach wird der bezahlte Betrag weiter angerechnet, bis zum Ende der
 //     gesetzlichen Frist (gueltigBis = 31.12. des dritten Folgejahres, §§ 195, 199 BGB). Der bezahlte Betrag verfällt nie vorher.
-//   • Stückzahl je Aktions-Gutschein, serverseitig sicher gegen Doppelverkauf (Reservierungs-Tickets, siehe unten).
+//   • Aktions-Gutscheine unbegrenzt kaufbar (Domenic 24.11.2026): keine Stückzahl, kein „ausverkauft“, Knappheit nur aus der Frist
+//     (24.12.2026, 16 Uhr). Je Kasse ein Ticket, nur noch für „1 pro Person“ und gegen Kassen-Flut (siehe unten).
 //   • Öffentliche Shop-Seite /gutschein-kaufen/<studio> ohne vorher erstellten Zahlungslink (statisch je Stadt, dev/gutschein-seiten.mjs).
 // Klarna ist für Gutscheine ausgeschlossen (Klarna-Regeln), bezahlt wird nur per Karte (inkl. Apple Pay / Google Pay).
 // Aussteller und Verkäufer ist das Studio. Tattoofin stellt nur die Technik.
@@ -28,22 +29,23 @@ export const markeFuer = (c) => (c?.marke ? {
 } : null);
 
 // ---------- Angebot (Domenic-Entscheidung 23.11.2026, je Stadt gleich) ----------
-// Weihnachts-Aktion der Tattoo-Fashion-Studios: gleiches Angebot je Studio, Stückzahl getrennt je Studio (Tickets je studioId).
+// Weihnachts-Aktion der Tattoo-Fashion-Studios: gleiches Angebot je Studio, „1 pro Person“ getrennt je Studio (Tickets je studioId).
+// Unbegrenzt (Domenic 24.11.2026): keine Stückzahl. Alte Felder in gespeicherten Daten (stueck, Tickets mit grund „ausverkauft“) werden ignoriert.
 const TF_WEIHNACHTEN = {
   titel: "Weihnachts-Gutscheine",
-  // Nr. · Wert · Preis · Stück
+  // Nr. · Wert · Preis (unbegrenzt kaufbar)
   aktionen: [
-    { id: "nr1", nr: 1, wertCent: 200000, preisCent: 150000, stueck: 1 },
-    { id: "nr2", nr: 2, wertCent: 150000, preisCent: 125000, stueck: 2 },
-    { id: "nr3", nr: 3, wertCent: 100000, preisCent: 75000, stueck: 2 },
-    { id: "nr4", nr: 4, wertCent: 50000, preisCent: 37500, stueck: 6 },
-    { id: "nr5", nr: 5, wertCent: 30000, preisCent: 20000, stueck: 10 },
+    { id: "nr1", nr: 1, wertCent: 200000, preisCent: 150000 },
+    { id: "nr2", nr: 2, wertCent: 150000, preisCent: 125000 },
+    { id: "nr3", nr: 3, wertCent: 100000, preisCent: 75000 },
+    { id: "nr4", nr: 4, wertCent: 50000, preisCent: 37500 },
+    { id: "nr5", nr: 5, wertCent: 30000, preisCent: 20000 },
   ],
   bonusBis: "2027-03-31",
   // Verkaufszeitraum der Aktions-Gutscheine (Domenic 23.11.2026: Start sofort, Ende 24.12.2026 16 Uhr; Wertgutschein läuft weiter)
   aktionAb: null,
   aktionBis: "2026-12-24T16:00:00+01:00",
-  // Ein Aktions-Gutschein pro Käufer (E-Mail), Domenic 23.11.2026: beibehalten. null = ohne Grenze
+  // Ein Aktions-Gutschein pro Käufer (E-Mail, je Studio), Domenic 23.11.2026: beibehalten; durchgesetzt in reservieren() (Kasse). null = ohne Grenze
   aktionJeKaeufer: 1,
   // Normaler Wertgutschein mit frei wählbarem Betrag (50–2.000 €, volle Euro), ganzjährig
   // Vorschläge 100/200/300/500 € (24.11.2026: 50 € reicht kaum für ein Tattoo und setzt den Anker zu niedrig)
@@ -143,13 +145,15 @@ export function shopZustand(s, c, zeit = jetzt(), { test = testUmgebung() } = {}
   return { offen, grund, aktionOffen, aktionGrund, anbieterDa, vorschau: test && !(c.freigegeben && anbieterDa) };
 }
 
-// ---------- Stückzahl: Reservierungs-Tickets ----------
-// Je Aktions-Gutschein eine fortlaufende Liste von Tickets gsshop/<studioId>/<aktionId>/<0000…>. Ein Ticket wird mit store.setNeu
-// (atomar „nur anlegen, wenn neu“, Netlify Blobs onlyIfNew) angelegt und nie gelöscht → die Nummern sind lückenlos und eindeutig.
-// Aktiv (zählt gegen die Stückzahl) ist ein Ticket, das verkauft ist oder reserviert und noch nicht abgelaufen.
-// Ein neues Ticket k gilt nur, wenn weniger als „stueck“ aktive Tickets mit kleinerer Nummer existieren; sonst wird es sofort
-// wieder freigegeben. Zwei gleichzeitige Käufer der letzten Einheit: der mit der kleineren Nummer bekommt sie, der andere sieht
-// „ausverkauft“. Reservierung = Dauer der Stripe-Kasse (30 Min.) + Puffer, danach kann die Kasse nicht mehr bezahlt werden.
+// ---------- Kassen-Tickets: 1 pro Person, Schutz vor Kassen-Flut ----------
+// Seit 24.11.2026 (Domenic) sind die Aktions-Gutscheine unbegrenzt kaufbar: keine Stückzahl, kein „ausverkauft“, kein Zähler.
+// Je Kasse eines Aktions-Gutscheins entsteht weiter ein Ticket gsshop/<studioId>/<aktionId>/<00000…> (store.setNeu, atomar „nur anlegen,
+// wenn neu“, nie gelöscht). Es dient nur noch
+//   • „1 Aktions-Gutschein pro Person“ (E-Mail, je Studio): zählt verkaufte und gerade offene Kassen dieser E-Mail,
+//   • dem Schutz vor vielen gleichzeitig offenen Kassen vom selben Anschluss (IP gehasht, nur solange die Kasse offen ist),
+//   • dem Beenden einer alten offenen Kasse, wenn jemand mit der Zurück-Taste aus Stripe kommt.
+// Aktiv ist ein Ticket, das verkauft ist oder reserviert und noch nicht abgelaufen. Reservierung = Dauer der Stripe-Kasse (30 Min.)
+// + Puffer. Alte Tickets aus der Zeit mit Stückzahl (z. B. status „frei“, grund „ausverkauft“) stören nicht.
 export const KASSE_MINUTEN = 30;
 const RESERVIERUNG_MS = (KASSE_MINUTEN + 3) * 60 * 1000;
 const tPrefix = (sid, aid) => `gsshop/${sid}/${aid}/`;
@@ -159,7 +163,7 @@ const aktiv = (t, ms = jetzt().getTime()) => Boolean(t) && (t.status === "verkau
 // Lesen: alle Tickets einer Aktion gleichzeitig (nicht nacheinander) und je Anfrage nur einmal („Stand“, siehe unten).
 // Erledigte Tickets ändern sich nicht mehr und werden je Funktions-Exemplar gemerkt: „verkauft“ für immer, „frei“ 10 Minuten
 // (frei → verkauft gibt es nur, wenn eine schon beendete Kasse doch bezahlt würde; Stripe lässt das nicht zu).
-// So liest eine Anfrage bei 150 Tickets je Studio nicht 150 × nacheinander, sondern einmal die Liste und nur die offenen Tickets.
+// So liest eine Kasse bei 150 Tickets je Studio nicht 150 × nacheinander, sondern einmal die Liste und nur die offenen Tickets.
 const ERLEDIGT = new Map(), FREI_MERKEN_MS = 10 * 60 * 1000, GLEICHZEITIG = 32;
 const merken = (key, t) => { if (t?.status === "verkauft" || t?.status === "frei") ERLEDIGT.set(key, { t, am: Date.now() }); };
 const gemerkt = (key) => { const e = ERLEDIGT.get(key); if (!e) return null; if (e.t.status === "frei" && Date.now() - e.am > FREI_MERKEN_MS) { ERLEDIGT.delete(key); return null; } return e.t; };
@@ -173,26 +177,16 @@ async function lesen(keys) {
 async function tickets(sid, aid) {
   return lesen((await store.list(tPrefix(sid, aid))).sort());
 }
-// Stand: alle Tickets aller Aktions-Gutscheine eines Studios, einmal je Anfrage gelesen (Stückzahl, 1 pro Person, offene Kassen)
+// Stand: alle Tickets aller Aktions-Gutscheine eines Studios, einmal je Kasse gelesen (1 pro Person, offene Kassen)
 export async function stand(s, c) {
   const l = await Promise.all(c.aktionen.map((a) => tickets(s.id, a.id)));
   return Object.fromEntries(c.aktionen.map((a, i) => [a.id, l[i]]));
 }
 
-function bestandAus(liste, a, ms) {
-  const verkauft = liste.filter((t) => t.status === "verkauft").length;
-  const reserviert = liste.filter((t) => t.status === "reserviert" && aktiv(t, ms)).length;
-  return { verkauft, reserviert, verfuegbar: Math.max(0, a.stueck - verkauft - reserviert) };
-}
-export async function bestand(s, c, st = null) {
-  const ms = jetzt().getTime(), t = st || (await stand(s, c));
-  return Object.fromEntries(c.aktionen.map((a) => [a.id, bestandAus(t[a.id] || [], a, ms)]));
-}
-
 export class ShopFehler extends Error { constructor(msg, status = 409, code = "") { super(msg); this.status = status; this.code = code; } }
 
 // Wie viele Aktions-Gutscheine hat diese E-Mail schon (verkauft oder gerade in der Kasse)?
-// Gegen das Blockieren der Stückzahl (viele Kassen mit erfundenen Adressen): höchstens 3 offene Kassen je Anschluss (IP, gehasht)
+// Gegen Kassen-Flut (viele Kassen mit erfundenen Adressen): höchstens 3 offene Kassen je Anschluss (IP, gehasht)
 const maxOffenJeIp = () => Number(process.env.TF_GS_MAX_JE_IP) || 3;
 function zaehlen(st, c, { email, ip }) {
   const n = normEmail(email), ms = jetzt().getTime();
@@ -212,8 +206,7 @@ export async function offeneKassen(s, c, email, st = null) {
   return out;
 }
 
-// st: Stand dieser Anfrage (aus offeneKassen), damit nicht alles noch einmal gelesen wird. Die Prüfung nach dem Anlegen des
-// eigenen Tickets liest die Tickets dieses Gutscheins immer frisch (gleichzeitige Käufer).
+// st: Stand dieser Anfrage (aus offeneKassen), damit nicht alles noch einmal gelesen wird. Keine Stückzahl: jedes neue Ticket gilt.
 export async function reservieren(s, c, a, { zahlungId, email, ip = "", stand: st = null }) {
   const t0 = st || (await stand(s, c));
   const n = zaehlen(t0, c, { email, ip });
@@ -226,62 +219,31 @@ export async function reservieren(s, c, a, { zahlungId, email, ip = "", stand: s
   let k = (t0[a.id] || []).length, key = null;
   for (let i = 0; i < 200 && !key; i++, k++) if (await store.setNeu(tKey(s.id, a.id, k), eintrag)) key = tKey(s.id, a.id, k);
   if (!key) throw new ShopFehler("Gerade sind sehr viele gleichzeitig in der Kasse. Bitte versuch es gleich noch einmal.", 503);
-  // Prüfen: weniger als „stueck“ aktive Tickets VOR diesem?
-  const ms = jetzt().getTime(), frisch = await tickets(s.id, a.id);
-  const vorher = frisch.filter((t) => t.key < key && aktiv(t, ms)).length;
-  if (vorher >= a.stueck) {
-    const frei = { ...eintrag, status: "frei", freiAm: now(), grund: "ausverkauft" };
-    await store.set(key, frei); merken(key, frei);
-    const b = bestandAus(frisch.filter((t) => t.key !== key), a, ms);
-    // Käufer denken in Beträgen („der 500er“), nicht in Nummern
-    const name = `Der ${(a.wertCent / 100).toLocaleString("de-DE")}-€-Gutschein`;
-    throw new ShopFehler(b.reserviert > 0 && b.verkauft < a.stueck
-      ? `${name} ist gerade reserviert. Wird er nicht bezahlt, ist er in spätestens ${KASSE_MINUTEN} Minuten wieder frei.`
-      : `${name} ist ausverkauft.`, 409, "ausverkauft");
-  }
   return { key, bis: eintrag.bis };
 }
 
-// Nach der Zahlung (gutscheinAusstellen): Ticket als verkauft markieren. Ist das Ticket schon abgelaufen und die Einheit
-// inzwischen weg (sollte nie passieren, die Kasse läuft vorher ab), bleibt der Verkauf gültig und der Admin wird informiert.
-// ausverkauft: Mit diesem Verkauf ist die letzte Einheit weg (Meldung an Domenic, siehe ausverkauftMeldung).
+// Nach der Zahlung (gutscheinAusstellen): Ticket als verkauft markieren (zählt danach für „1 pro Person“). Keine Stückzahl, also
+// auch kein „ausverkauft“ und keine Meldung. Die Anschluss-Kennung (ip) braucht es nach der Kasse nicht mehr: sie fällt weg.
+// spaet: Zahlung kam erst nach Ablauf der Reservierung an (gültig wie jeder Verkauf, nur zur Nachvollziehbarkeit).
 export async function reservierungVerkauft(z) {
   const key = z.gutschein?.reservierung;
   if (!key) return { ok: true };
   const t = await store.get(key);
   if (t?.status === "verkauft") return { ok: true };
-  const warAktiv = aktiv(t);
-  const neu = { ...(t || { zahlungId: z.id }), status: "verkauft", verkauftAm: now(), ...(warAktiv ? {} : { spaet: true }) };
+  const { ip: _ip, ...rest } = t || { zahlungId: z.id };
+  const neu = { ...rest, status: "verkauft", verkauftAm: now(), ...(aktiv(t) ? {} : { spaet: true }) };
   await store.set(key, neu); ERLEDIGT.delete(key); merken(key, neu);
-  const a = z.gutschein.aktion || {}, l = (await tickets(z.studioId, a.id)).filter((x) => x.status === "verkauft").length;
-  return { ok: warAktiv || l <= (a.stueck || 0), ueberverkauft: !warAktiv && l > (a.stueck || 0), verkauft: l, ausverkauft: l >= (a.stueck || 0) };
+  return { ok: true };
 }
 
-// Letzte Einheit verkauft (24.11.2026): Meldung an Domenic (Mail, notifyAdmin), damit Werbung und Vorschau nichts mehr versprechen,
-// was es nicht mehr gibt. Die Seite und ihre WhatsApp-/Facebook-Vorschau stellen sich selbst um (gutschein-seite.mjs), die Anzeige nicht.
-export function ausverkauftMeldung(s, z) {
-  const c = SHOPS[s?.slug], g = z.gutschein || {}, a = g.aktion || {};
-  const wert = (g.wertCent / 100).toLocaleString("de-DE"), preis = (z.betragCent / 100).toLocaleString("de-DE");
-  const stadt = c?.seite?.stadt || s?.ort || "";
-  const beworben = a.id === "nr4" || a.id === "nr5";
-  return {
-    titel: `${wert}er ausverkauft (${stadt}): ${beworben ? "Vorschau auf neutral stellen, Anzeige anpassen" : "Gutschein-Shop"}`,
-    details: {
-      Gutschein: `${wert} € für ${preis} € (Nr. ${a.nr}, ${a.stueck} Stück), alle verkauft`,
-      Vorschau: beworben ? "Die Seite zeigt schon das beste noch kaufbare Angebot, die WhatsApp-/Facebook-Vorschau stellt sich selbst auf die Fassung ohne Beträge um (spätestens nach 2 Minuten)." : "keine Änderung nötig",
-      Anzeige: beworben ? `Jede Anzeige mit „${wert} €“ für ${stadt} jetzt pausieren oder ändern (Werbekonto, dein OK).` : "keine Änderung nötig",
-      Weitergeben: "an Ultron (Zentrale)",
-    },
-  };
-}
-
-// Kasse abgelaufen oder abgebrochen: Einheit wieder frei (nur solange nicht bezahlt)
+// Kasse abgelaufen oder abgebrochen: Ticket frei (zählt nicht mehr für „1 pro Person“; nur solange nicht bezahlt), ohne Anschluss-Kennung
 export async function reservierungFreigeben(z, grund) {
   const key = z.gutschein?.reservierung;
   if (!key || z.status === "bezahlt") return false;
   const t = await store.get(key);
   if (!t || t.status !== "reserviert") return false;
-  const frei = { ...t, status: "frei", freiAm: now(), grund };
+  const { ip: _ip, ...rest } = t;
+  const frei = { ...rest, status: "frei", freiAm: now(), grund };
   await store.set(key, frei); merken(key, frei);
   return true;
 }
@@ -308,11 +270,12 @@ export function bedingungen(s, c, kaufJahr = jetzt(), { seite = false } = {}) {
     // Domenic 23.11.2026: Teil-Einlösung ja, keine Barauszahlung, nicht kombinierbar
     "Du kannst einen Gutschein in Teilen einlösen, der Restwert bleibt auf dem Gutschein. Eine Barauszahlung ist nicht möglich. Die Gutscheine sind nicht mit anderen Aktionen kombinierbar.",
     `Aktions-Gutscheine (Nr. 1 bis ${c.aktionen.length}): Du bekommst mehr, als du zahlst. Der Unterschied ist ein Bonus. Den vollen Wert löst du bis ${datum(bonusBisIso(c))} ein. Was bis dahin eingelöst wird, zählt zuerst gegen den Bonus. Danach verfällt nur der noch nicht genutzte Bonus: Der bezahlte Betrag wird weiter voll angerechnet, bis ${bis}.`,
-    `Jeder Aktions-Gutschein ist nur in der angegebenen Stückzahl verfügbar. Ist eine Nummer ausverkauft, gibt es sie nicht mehr.${c.aktionJeKaeufer ? ` Pro Person ${c.aktionJeKaeufer === 1 ? "ein Aktions-Gutschein" : "höchstens " + c.aktionJeKaeufer + " Aktions-Gutscheine"}.` : ""}${c.aktionBis ? ` Verkauf der Aktions-Gutscheine bis ${datum(aktionEndeIso(c))}${uhrzeit(aktionEndeIso(c))}, solange verfügbar.` : ""}`,
+    // Unbegrenzt (Domenic 24.11.2026): keine Stückzahl mehr. „solange verfügbar“ stand hier schon vorher und bleibt (Domenics Entscheidung)
+    [c.aktionJeKaeufer ? `Pro Person ${c.aktionJeKaeufer === 1 ? "ein Aktions-Gutschein" : "höchstens " + c.aktionJeKaeufer + " Aktions-Gutscheine"}.` : "", c.aktionBis ? `Verkauf der Aktions-Gutscheine bis ${datum(aktionEndeIso(c))}${uhrzeit(aktionEndeIso(c))}, solange verfügbar.` : ""].filter(Boolean).join(" "),
     `Wertgutschein mit eigenem Betrag: einlösbar bis ${bis}.`,
     "Alle Preise sind Endpreise inklusive Umsatzsteuer. Es kommen keine Versandkosten oder sonstigen Kosten dazu. Den Gutschein bekommst du direkt nach der Zahlung als PDF per E-Mail.",
     "Bezahlen kannst du per Karte, Apple Pay oder Google Pay. Ratenkauf ist für Gutscheine nicht möglich.",
-  ];
+  ].filter(Boolean);
 }
 
 export function widerruf(s, c) {
@@ -336,13 +299,13 @@ export function shopTexte(s, kauf) {
   return { bedingungen: bedingungen(s, c, kauf ? new Date(kauf) : jetzt()), widerruf: widerruf(s, c), anbieter: c.anbieter || null, marke: markeFuer(c) };
 }
 
-// Öffentliche Ausgabe für /gutschein-kaufen/<studio>
+// Öffentliche Ausgabe für /gutschein-kaufen/<studio> (ohne Stückzahl: liest keine Tickets)
 export async function shopOeffentlich(s, c) {
-  const z = shopZustand(s, c), b = await bestand(s, c);
+  const z = shopZustand(s, c);
   return {
     titel: c.titel, bonusBis: bonusBisIso(c), gueltigBis: gueltigBis(jetzt()), aktionBis: c.aktionBis ? aktionEndeIso(c) : null, aktionAb: c.aktionAb,
     offen: z.offen, grund: z.grund, aktionOffen: z.aktionOffen, aktionGrund: z.aktionGrund, vorschau: z.vorschau, aktionJeKaeufer: c.aktionJeKaeufer,
-    aktionen: c.aktionen.map((a) => ({ id: a.id, nr: a.nr, wertCent: a.wertCent, preisCent: a.preisCent, bonusCent: a.wertCent - a.preisCent, stueck: a.stueck, ...b[a.id], ausverkauft: b[a.id].verkauft >= a.stueck })),
+    aktionen: c.aktionen.map((a) => ({ id: a.id, nr: a.nr, wertCent: a.wertCent, preisCent: a.preisCent, bonusCent: a.wertCent - a.preisCent })),
     frei: c.frei,
     anbieter: c.anbieter || null,
     bedingungen: bedingungen(s, c),

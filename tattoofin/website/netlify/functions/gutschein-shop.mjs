@@ -1,8 +1,8 @@
 // Öffentlicher Gutschein-Shop eines Studios (seit 23.11.2026, Tattoo Fashion München und Landshut, siehe _lib/gutschein-shop.mjs)
-//   GET  /api/gutschein-shop?s=<slug>     Angebot, Stückzahlen, Bedingungen, Widerrufsbelehrung, Anbieter
+//   GET  /api/gutschein-shop?s=<slug>     Angebot (unbegrenzt, ohne Stückzahl), Bedingungen, Widerrufsbelehrung, Anbieter
 //   POST /api/gutschein-shop { s, auswahl: "nr1".."nr5" | "frei", betrag?, kunde, email, empfaenger?, nachricht?, inhaltOk }
 //        → { url } Stripe-Checkout (nur Karte inkl. Apple Pay / Google Pay, Kasse 30 Min.)
-//   POST /api/gutschein-shop { abbruch: <zahlungId> }   Kasse verlassen: Sitzung beenden, Reservierung frei
+//   POST /api/gutschein-shop { abbruch: <zahlungId> }   Kasse verlassen: Sitzung beenden, Ticket frei (1 pro Person)
 import crypto from "node:crypto";
 import { CFG, jetzt, testKasse } from "./_lib/config.mjs";
 import { json, fail, body, clean, id, now, handler, isEmail, parseBetrag, euro, clientIp } from "./_lib/util.mjs";
@@ -14,7 +14,7 @@ import { SHOPS, shopFuer, shopZustand, shopOeffentlich, stand, offeneKassen, res
 import { bestaetigen } from "./pay.mjs";
 
 const NICHT_DA = "Diesen Gutschein-Shop gibt es nicht.";
-// Fachliche Ablehnung (ausverkauft, schon gekauft, Aktion vorbei …): Status 200 mit { error, code, status }, damit der Browser
+// Fachliche Ablehnung (schon gekauft, Aktion vorbei, zu viele Kassen …): Status 200 mit { error, code, status }, damit der Browser
 // im Kaufablauf keinen roten Netzwerkfehler meldet. „status“ nennt den eigentlichen Grund (409, 429, 503) für Tests und Auswertung.
 const abgelehnt = (error, status = 409, code = "") => json({ error, code, status, abgelehnt: true }, 200, { "cache-control": "no-store" });
 
@@ -49,7 +49,7 @@ export default handler(async (req, context) => {
   if (req.method !== "POST") return fail("Methode nicht erlaubt", 405);
   const b = await body(req);
 
-  // Zurück aus der Kasse: Sitzung bei Stripe beenden (dann kann sie nicht mehr bezahlt werden) und Einheit freigeben
+  // Zurück aus der Kasse: Sitzung bei Stripe beenden (dann kann sie nicht mehr bezahlt werden) und Ticket freigeben
   if (b.abbruch) {
     const z = await zahlungBy("zahlung", clean(b.abbruch, 40));
     if (!z?.gutschein?.shop) return fail("Nicht gefunden", 404);
@@ -96,7 +96,7 @@ export default handler(async (req, context) => {
     if (!zustand.aktionOffen) return abgelehnt(zustand.aktionGrund || "Die Aktions-Gutscheine gibt es gerade nicht.", 409, "aktion_vorbei");
     // Wer mit der Zurück-Taste aus der Kasse kommt, hat noch eine offene Kasse: die alte beenden und freigeben, sonst wäre er
     // (ein Aktions-Gutschein pro E-Mail) 30 Minuten gesperrt. Ist sie inzwischen bezahlt, bleibt sie (Stripe lehnt das Beenden ab).
-    // Alle Tickets einmal lesen (Stand dieser Anfrage) und für offene Kassen, 1 pro Person und Stückzahl gemeinsam nutzen
+    // Alle Tickets einmal lesen (Stand dieser Anfrage) und für offene Kassen und 1 pro Person gemeinsam nutzen (keine Stückzahl)
     const st = await stand(s, c);
     for (const t of await offeneKassen(s, c, email, st)) {
       const alt = await zahlungBy("zahlung", t.zahlungId);
@@ -115,7 +115,7 @@ export default handler(async (req, context) => {
     catch (e) { if (e instanceof ShopFehler) return abgelehnt(e.message, e.status, e.code); throw e; }
     betragCent = a.preisCent;
     beschreibung = `Aktions-Gutschein Nr. ${a.nr}`;
-    gutschein = { empfaenger, nachricht, shop: true, aktion: { id: a.id, nr: a.nr, stueck: a.stueck }, wertCent: a.wertCent, bezahltCent: a.preisCent, bonusCent: a.wertCent - a.preisCent, bonusBis: bonusBisIso(c), reservierung: res.key, reserviertBis: res.bis };
+    gutschein = { empfaenger, nachricht, shop: true, aktion: { id: a.id, nr: a.nr }, wertCent: a.wertCent, bezahltCent: a.preisCent, bonusCent: a.wertCent - a.preisCent, bonusBis: bonusBisIso(c), reservierung: res.key, reserviertBis: res.bis };
   }
 
   const z = { id: zid, studioId: s.id, createdAt: now(), art: "gutschein", quelle: "gutschein-shop", status: "offen", betragCent, kunde, email, beschreibung, sitzungen: "", nurKarte: true, gutschein };
@@ -130,7 +130,7 @@ export default handler(async (req, context) => {
         // Möglichst einfache Kasse (Domenic 23.11.2026): keine Pflicht-Rechnungsadresse, keine Telefonnummer
         billing_address_collection: "auto",
         phone_number_collection: { enabled: false },
-        // Kasse genau so lange offen wie die Reservierung (Stripe: mindestens 30 Minuten). Danach checkout.session.expired → Einheit frei
+        // Kasse genau so lange offen wie das Ticket (Stripe: mindestens 30 Minuten). Danach checkout.session.expired → Ticket frei
         expires_at: Math.floor(jetzt().getTime() / 1000) + KASSE_MINUTEN * 60 + 30,
         submit_type: "pay",
         // § 312j BGB: Am Knopf muss klar sein, dass der Kauf zahlungspflichtig ist (Stripe zeigt „Bezahlen“, darüber dieser Satz)

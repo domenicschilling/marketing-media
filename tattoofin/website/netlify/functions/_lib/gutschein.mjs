@@ -15,8 +15,7 @@ import { sendMail } from "./mail.mjs";
 import { mails } from "./emails.mjs";
 import { now, euro, datum } from "./util.mjs";
 import { qrMatrix } from "./qr.mjs";
-import { reservierungVerkauft, bonusSatz, shopTexte, ausverkauftMeldung } from "./gutschein-shop.mjs";
-import { notifyAdmin } from "./domain.mjs";
+import { reservierungVerkauft, bonusSatz, shopTexte } from "./gutschein-shop.mjs";
 
 // Wert und bezahlter Betrag (seit 23.11.2026, Gutschein-Shop): Aktions-Gutscheine kosten weniger, als sie wert sind.
 // z.betragCent ist immer der BEZAHLTE Betrag (Stripe, Gebühren, Erstattungen). Der Gutscheinwert steht in z.gutschein.wertCent
@@ -79,13 +78,9 @@ export async function gutscheinAusstellen(s, z) {
     await store.set("idx/gutschein/" + code, `${s.id}/${z.id}`);
     await store.set("idx/gst/" + g.token, `${s.id}/${z.id}`);
     await saveZahlung(z);
-    // Shop: reservierte Einheit des Aktions-Gutscheins ist jetzt verkauft
-    if (g.reservierung) {
-      const r = await reservierungVerkauft(z);
-      if (r.ueberverkauft) await notifyAdmin(`⚠️ Gutschein-Shop: Nr. ${g.aktion?.nr} ist ${r.verkauft}× verkauft (Stückzahl ${g.aktion?.stueck})`, s, { Zahlung: z.id, Code: g.code, Tipp: "Zahlung kam nach Ablauf der Reservierung an. Mit dem Studio klären: Gutschein gilt oder Erstattung." });
-      // Letzte Einheit weg: Domenic sofort Bescheid geben (Werbung mit diesem Betrag anpassen)
-      else if (r.ausverkauft) { const mld = ausverkauftMeldung(s, z); await notifyAdmin(mld.titel, s, mld.details); }
-    }
+    // Shop: Ticket des Aktions-Gutscheins ist jetzt verkauft (zählt für „1 pro Person“). Unbegrenzt seit 24.11.2026: keine Stückzahl,
+    // also auch keine Meldung „ausverkauft“ oder „überverkauft“ mehr
+    if (g.reservierung) await reservierungVerkauft(z);
   }
   if (z.email && !g.gesendetAm) await gutscheinSenden(s, z);
   return z.gutschein;

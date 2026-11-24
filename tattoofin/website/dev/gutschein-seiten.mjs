@@ -1,12 +1,11 @@
 // Gutschein-Shop: statische Seiten je Stadt aus einer Vorlage + Konfiguration (SHOPS in netlify/functions/_lib/gutschein-shop.mjs).
-//   node dev/gutschein-seiten.mjs                         → netlify/functions/_lib/gutschein-seiten-html.mjs (Shop-Seite je Stadt mit drei
+//   node dev/gutschein-seiten.mjs                         → netlify/functions/_lib/gutschein-seiten-html.mjs (Shop-Seite je Stadt mit zwei
 //                                                           Fassungen von Titel/Beschreibung/Vorschaubild; ausgeliefert von der Funktion
-//                                                           netlify/functions/gutschein-seite.mjs, die je nach Bestand und Uhrzeit wählt
-//                                                           und die Zahlen im Hero einsetzt) + public/gutschein-kaufen/<slug>-impressum,
+//                                                           netlify/functions/gutschein-seite.mjs, die je nach Uhrzeit wählt und die
+//                                                           Zahlen im Hero je ?g= einsetzt) + public/gutschein-kaufen/<slug>-impressum,
 //                                                           -datenschutz, -widerruf, -bedingungen
 //   node dev/gutschein-seiten.mjs --og                    → zusätzlich alle Bilder je Stadt (Playwright): Vorschaubilder og-weihnachten.jpg
-//                                                           („500 € für 375 €“), og-weihnachten-neutral.jpg (ohne Beträge, wenn der 500er oder
-//                                                           der günstigste ausverkauft ist) und og-gutschein.jpg (nach der Aktion; Kartentext
+//                                                           („Für 375 € kaufen, 500 € bekommen*“) und og-gutschein.jpg (nach der Aktion; Kartentext
 //                                                           wird gemessen, passt er nicht, bricht das Skript ab), Hero-Geschenk geschenk-*.webp/png,
 //                                                           PDF-Hintergrund pdf-grund.jpg (Karte mit Satinband und Schleife), Gutschein-Muster
 //                                                           pdf-muster.webp/jpg (das echte PDF mit Muster-Code, gerendert mit macOS Quick Look),
@@ -115,24 +114,20 @@ const ICONS = {
 };
 
 // Texte der Vorschau (Bild, Titel, og:description, Alt-Text) je Fassung (24.11.2026, Runde 3, einfache Sprache, kein „unter Wert“;
-// 24.11.2026 abends, Domenic: „nicht du zahlst weniger, sondern du bekommst mehr für dein Geld“ → bezahlter Betrag zuerst, Wert betont):
-//   "angebot"  „Für 375 € kaufen, 500 € bekommen*“ mit Bedingung unten, rechts „Für 200 € / 300 € / bekommen“ (Standard, solange beide kaufbar sind)
-//   "neutral"  „Tattoo-Gutscheine zum Weihnachtspreis“ ohne Beträge und ohne „bekommst mehr“ (500er oder günstigster ausverkauft)
-//   "danach"   „Tattoo-Gutschein zum Verschenken“ (nach dem 24.12., 16 Uhr oder wenn alle Aktions-Gutscheine verkauft sind)
-// Welche gilt, entscheidet die Seiten-Funktion aus dem echten Bestand (netlify/functions/_lib/gutschein-seite.mjs).
-const FASSUNGEN = { angebot: "og-weihnachten.jpg", neutral: "og-weihnachten-neutral.jpg", danach: "og-gutschein.jpg" };
+// 24.11.2026 abends, Domenic: „nicht du zahlst weniger, sondern du bekommst mehr für dein Geld“ → bezahlter Betrag zuerst, Wert betont;
+// 24.11.2026 spät, Domenic: Aktions-Gutscheine unbegrenzt, Knappheit nur aus der Frist → keine Stückzahl, keine Fassung „neutral“ mehr):
+//   "angebot"  „Für 375 € kaufen, 500 € bekommen*“ mit Bedingung unten, rechts „Für 200 € / 300 € / bekommen“ (bis 24.12., 16 Uhr)
+//   "danach"   „Tattoo-Gutschein zum Verschenken“ (nach dem 24.12., 16 Uhr)
+// Welche gilt, entscheidet die Seiten-Funktion nach der Uhrzeit (netlify/functions/_lib/gutschein-seite.mjs).
+const FASSUNGEN = { angebot: "og-weihnachten.jpg", danach: "og-gutschein.jpg" };
 function ogTexte(c, fassung = "angebot") {
   const nr4 = c.aktionen.find((x) => x.id === "nr4"), ab = [...c.aktionen].sort((x, y) => x.preisCent - y.preisCent)[0];
-  const alle = c.aktionen.reduce((s, x) => s + x.stueck, 0), name = c.seite.name, stadt = c.seite.stadt;
+  const name = c.seite.name, stadt = c.seite.stadt;
   const frei = `${ZAHL(c.frei.minCent)} bis ${EURO(c.frei.maxCent)}`, ogDatei = FASSUNGEN[fassung];
   const karteSofort = { karteOben: "Sofort", karteMitte: "PDF", karteUnten: "per E-Mail" };
   if (fassung === "danach") return { fuss: "", h1Klasse: "", pille: "Tattoo & Piercing", zeileA: "Tattoo-Gutschein", zeileB: "zum Verschenken", bis: `Von ${frei}`, ...karteSofort,
     titel: `Tattoo-Gutschein zum Verschenken · ${name}`, ogText: `Für Tattoo oder Piercing in ${stadt}. Eigener Betrag von ${frei}, sofort als PDF.`,
     ogAlt: `${name}: Tattoo-Gutschein zum Verschenken, von ${frei}, sofort als PDF`, ogDatei };
-  if (fassung === "neutral") return { fuss: "", h1Klasse: "", pille: "Weihnachts-Aktion", zeileA: "Tattoo-Gutscheine", zeileB: "zum Weihnachtspreis", bis: "Nur bis 24.12., 16 Uhr", ...karteSofort,
-    // Ohne „Du bekommst mehr, als du zahlst“: das neutrale Bild hat keine Fußzeile mit der Bedingung (UWG § 5, Prüfung 24.11.2026)
-    titel: `Tattoo-Gutscheine zum Weihnachtspreis · ${name}`, ogText: `Für Tattoo oder Piercing in ${stadt}. Weihnachts-Aktion nur bis 24.12., 16 Uhr.`,
-    ogAlt: `${name}: Weihnachts-Aktion, Tattoo-Gutscheine zum Weihnachtspreis, nur bis 24.12., 16 Uhr`, ogDatei };
   // Pille „Tattoo-Gutschein“: WhatsApp zeigt oft nur das Quadrat aus der Mitte (ohne Geschenk links), dort muss klar sein, was man kauft
   // Bedingung zum Sternchen (Überschrift und Karte „bekommen*“), unten im Bild ≥ 30 px auf höchstens zwei Zeilen und im Alt-Text
   // (Prüfung 24.11.2026, Runde 2: mit 20 px war sie in der WhatsApp-Vorschau nicht lesbar)
@@ -140,10 +135,10 @@ function ogTexte(c, fassung = "angebot") {
   return { pille: "Tattoo-Gutschein", h1Klasse: "kaufen", zeileA: `Für ${EURO(nr4.preisCent)} kaufen,`, zeileB: `${EURO(nr4.wertCent)} bekommen*`, bis: "Nur bis 24.12., 16 Uhr",
     karteOben: `Für ${EURO(ab.preisCent)}`, karteMitte: EURO(ab.wertCent), karteUnten: "bekommen*",
     fuss: `*${bedingung}`,
-    // WhatsApp/Facebook: fette Zeile = Angebot + Studio, darunter wofür, wo, der günstigste (200 € → 300 €) und die richtige Stückzahl
-    // (21 = alle Aktions-Gutscheine zusammen); höchstens 85 Zeichen, sonst kürzt WhatsApp nach zwei Zeilen
+    // WhatsApp/Facebook: fette Zeile = Angebot + Studio, darunter wofür, wo, der günstigste (200 € → 300 €) und die Frist (statt einer
+    // Stückzahl, Domenic 24.11.2026); höchstens 85 Zeichen, sonst kürzt WhatsApp nach zwei Zeilen
     titel: `Gutschein für ${EURO(nr4.preisCent)} kaufen, ${EURO(nr4.wertCent)} bekommen · ${name}`,
-    ogText: `Für Tattoo oder Piercing in ${stadt}. Auch ${EURO(ab.preisCent)} → ${EURO(ab.wertCent)}. Insgesamt nur ${alle} Stück.`,
+    ogText: `Für Tattoo oder Piercing in ${stadt}. Auch ${EURO(ab.preisCent)} → ${EURO(ab.wertCent)}. Nur bis 24.12., 16 Uhr.`,
     ogAlt: `${name}: Tattoo-Gutschein für ${EURO(nr4.preisCent)} kaufen, ${EURO(nr4.wertCent)} bekommen, nur bis 24.12., 16 Uhr. ${bedingung}`, ogDatei };
 }
 const ogBildUrl = (k, datei) => `${BASIS}/assets/gs-shop/${k}/${datei}?v=${hash(path.join(root, `public/assets/gs-shop/${k}/${datei}`))}`;
@@ -155,7 +150,7 @@ function metaBlock(c, w, fassung) {
 }
 
 function werte(slug, c) {
-  const p = c.seite, a = c.anbieter, alle = c.aktionen.reduce((s, x) => s + x.stueck, 0);
+  const p = c.seite, a = c.anbieter;
   const bonusBis = bonusBisIso(c), gBis = gueltigBis(jetzt());
   const nachBonus = new Date(new Date(bonusBis).getTime() + 2 * 3600e3);
   const og = ogTexte(c), ogDatei = path.join(root, `public/assets/gs-shop/${p.kuerzel}/${og.ogDatei}`);
@@ -163,11 +158,12 @@ function werte(slug, c) {
   const nr4 = c.aktionen.find((x) => x.id === "nr4"), ab = [...c.aktionen].sort((x, y) => x.preisCent - y.preisCent)[0];
   const spanne = `${ZAHL(c.frei.minCent)}–${EURO(c.frei.maxCent)}`;
   const geschenk = [480, 960, 1400].map((w) => `/assets/gs-shop/${p.kuerzel}/geschenk-${w}.webp ${w}w`).join(", ");
-  // Startzustand der Liste (das Skript ersetzt ihn mit den echten Stückzahlen): solange nichts weg ist „Nur 6 Stück“
-  // 24.11.2026 (Domenic): erst der bezahlte Betrag, dann der Wert (gold, größer): „Du zahlst 375 € → Du bekommst 500 €“, „+125 € geschenkt“
+  // Startzustand der Liste (das Skript zeichnet sie nach dem Laden gleich neu); unbegrenzt seit 24.11.2026: keine Stückzahl
+  // 24.11.2026 (Domenic): erst der bezahlte Betrag, dann der Wert (gold, größer): „Du zahlst 375 € → Du bekommst* 500 €“, „+125 € geschenkt*“
+  // (Sternchen am Chip: der geschenkte Teil gilt nur bis zur Bonus-Frist, wortgleich mit Bildern und Video der Anzeigen)
   const karte = (x) => `<button type="button" class="zeile" data-wahl="${x.id}"><span class="preis"><small>Du zahlst</small><b>${EURO(x.preisCent)}</b></span><span class="pf" aria-hidden="true">→</span>`
     + `<span class="wert"><small>Du bekommst*</small><b class="g">${EURO(x.wertCent)}</b></span>`
-    + `<span class="chip">+${EURO(x.wertCent - x.preisCent)} geschenkt</span><span class="waehlen" aria-hidden="true">Wählen →</span><span class="rest">Nur ${x.stueck} Stück</span></button>`;
+    + `<span class="chip">+${EURO(x.wertCent - x.preisCent)} geschenkt*</span><span class="waehlen" aria-hidden="true">Wählen →</span></button>`;
   // Echte Google-Auszüge (SHOPS[…].seite.stimmen), wörtlich
   const stimmen = (p.stimmen?.liste || []).map(([n, zeit, t]) => `<figure class="rev"><span class="stars" style="--p:100%" aria-label="5 von 5 Sternen">★★★★★</span><p>„${esc(t)}“</p>`
     + `<figcaption class="who"><span class="av" aria-hidden="true">${esc(n[0])}</span><span><b>${esc(n)}</b>Google · ${esc(zeit)}</span></figcaption></figure>`).join("");
@@ -178,11 +174,11 @@ function werte(slug, c) {
     sterne: p.google.sterne, sternProzent: Math.round((Number(p.google.sterne.replace(",", ".")) / 5) * 1000) / 10,
     bewertungen: p.google.anzahl, googleStand: p.google.stand, mapsQuery: encodeURIComponent(p.google.suche),
     waText: encodeURIComponent(`Hallo, ich habe eine Frage zu den Tattoo-Gutscheinen bei ${p.name}.`),
-    stueckAlle: alle, bonusBis: DATUM(bonusBis), gueltigBis: DATUM(gBis), nachBonus: DATUM(nachBonus), bonusKurz: DATUM(bonusBis).slice(0, 5),
+    bonusBis: DATUM(bonusBis), gueltigBis: DATUM(gBis), nachBonus: DATUM(nachBonus), bonusKurz: DATUM(bonusBis).slice(0, 5),
     zahlwort: ["", "Ein", "Zwei", "Drei", "Vier", "Fünf", "Sechs", "Sieben"][c.aktionen.length] || String(c.aktionen.length),
     heroWert: EURO(nr4.wertCent), heroWertLang: nr4.wertCent >= 100000 ? " lang" : "", heroPreis: EURO(nr4.preisCent), abPreis: EURO(ab.preisCent), abWert: EURO(ab.wertCent), freiSpanne: spanne,
-    // Unter dem Knopf die Stückzahl des Angebots aus der Überschrift (nicht alle 21 zusammen)
-    heroKlein: `Nur ${nr4.stueck} Stück zu diesem Preis`,
+    // FAQ „Was bekommt man mit einem 300-€-Gutschein?“ (nicht „für 300 €“: das läse sich wie der Kaufpreis)
+    abGutschein: `${ZAHL(ab.wertCent)}-€-Gutschein`,
     stimmen, stimmenStand: p.stimmen?.stand || "", stimmenLink: p.stimmen?.link || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.google.suche)}`,
     geschenkB: gb.b, geschenkH: gb.h,
     cdT: "–", cdH: "–", cdM: "–", cdS: "–",
@@ -195,7 +191,7 @@ function werte(slug, c) {
       `<button type="button" class="zeile frei" data-wahl="frei"><span class="wert">Eigener Betrag</span><span class="preis">Wertgutschein, ${spanne}</span><span class="pfeil" aria-hidden="true">→</span></button>`,
     zeiten: p.zeiten.map(([t, z]) => `<tr><td>${esc(t)}</td><td>${esc(z)}</td></tr>`).join(""),
     // heroId: Angebot der Überschrift, solange kaufbar (wie in der Werbung); sonst wählt die Seite das günstigste kaufbare
-    seiteJson: JSON.stringify({ slug, kuerzel: p.kuerzel, stadt: p.stadt, bilder: p.bilder, aktionBis: aktionEndeIso(c), heroId: "nr4" }).replace(/</g, "\\u003c"),
+    seiteJson: JSON.stringify({ slug, kuerzel: p.kuerzel, stadt: p.stadt, name: p.name, bilder: p.bilder, aktionBis: aktionEndeIso(c), heroId: "nr4" }).replace(/</g, "\\u003c"),
   };
 }
 
@@ -218,7 +214,7 @@ function rechtInhalt(art, slug, c, w) {
   // Datenschutz
   return [
     ["Verantwortlich", `Für den Kauf der Gutscheine verantwortlich ist der Verkäufer: ${a.name}, ${a.strasse}, ${a.plz} ${a.ort}, E-Mail ${a.email}, Telefon ${w.telefon}. Die Technik für Shop, Zahlung und Gutschein-Versand stellt Tattoofin im Auftrag des Studios bereit (Auftragsverarbeitung, Art. 28 DSGVO).`],
-    ["Deine Bestellung", "Für den Kauf verarbeiten wir deinen Namen, deine E-Mail-Adresse, den gewählten Gutschein und freiwillig den Namen des Beschenkten und deinen Gruß. Damit erstellen wir den Gutschein mit Code, schicken ihn dir per E-Mail und das Studio kann ihn beim Termin einlösen (Art. 6 Abs. 1 lit. b DSGVO). Rechnungsdaten heben wir so lange auf, wie es das Steuer- und Handelsrecht verlangt (Art. 6 Abs. 1 lit. c DSGVO). Damit die Stückzahl stimmt und niemand alle Gutscheine blockiert, speichern wir während der Kasse für höchstens 33 Minuten eine gekürzte, verschlüsselte Kennung deines Anschlusses (Art. 6 Abs. 1 lit. f DSGVO). Damit du nach dem Zurückkommen aus der Kasse nichts neu eintippen musst, merkt sich dein Browser deine Auswahl, deinen Namen und deine E-Mail-Adresse, bis du den Tab schließt. Das bleibt nur auf deinem Gerät."],
+    ["Deine Bestellung", "Für den Kauf verarbeiten wir deinen Namen, deine E-Mail-Adresse, den gewählten Gutschein und freiwillig den Namen des Beschenkten und deinen Gruß. Damit erstellen wir den Gutschein mit Code, schicken ihn dir per E-Mail und das Studio kann ihn beim Termin einlösen (Art. 6 Abs. 1 lit. b DSGVO). Rechnungsdaten heben wir so lange auf, wie es das Steuer- und Handelsrecht verlangt (Art. 6 Abs. 1 lit. c DSGVO). Zum Schutz vor Missbrauch (viele Kassen gleichzeitig vom selben Anschluss) speichern wir während der Kasse für höchstens 33 Minuten eine gekürzte, verschlüsselte Kennung deines Anschlusses (Art. 6 Abs. 1 lit. f DSGVO). Damit du nach dem Zurückkommen aus der Kasse nichts neu eintippen musst, merkt sich dein Browser deine Auswahl, deinen Namen und deine E-Mail-Adresse, bis du den Tab schließt. Das bleibt nur auf deinem Gerät."],
     ["Zahlung über Stripe", "Bezahlt wird über Stripe (Stripe Payments Europe Ltd., Irland). Stripe verarbeitet deine Zahlungsdaten und, falls für die Zahlung nötig, deine Rechnungsadresse, um die Zahlung abzuwickeln und Betrug zu verhindern (Art. 6 Abs. 1 lit. b und f DSGVO). Kartendaten sehen weder das Studio noch Tattoofin. Datenschutz bei Stripe: stripe.com/de/privacy."],
     ["Hosting und E-Mail", "Die Seite liegt bei Netlify (Netlify, Inc., USA, mit EU-Standardvertragsklauseln). Beim Aufruf verarbeitet der Server technisch nötige Daten wie IP-Adresse, Zeitpunkt und Browsertyp (Art. 6 Abs. 1 lit. f DSGVO). Schriften und Bilder kommen von dieser Seite selbst. Die Gutschein-Mail wird über den Mail-Dienst von Tattoofin versendet."],
     ["Reichweitenmessung ohne Cookies (Umami)", "Wir zählen mit Umami (Umami Software, Inc., USA), wie oft die Seite aufgerufen wird und welche Schritte des Kaufs genutzt werden. Umami setzt keine Cookies und speichert keine IP-Adressen (Art. 6 Abs. 1 lit. f DSGVO)."],
@@ -285,7 +281,7 @@ async function pdfMuster(slug, c, dir) {
   const a = c.aktionen.find((x) => x.id === "nr4");
   const s = { id: "st_muster", firma: c.seite.firma, slug, strasse: c.anbieter.strasse, plz: c.anbieter.plz, ort: c.anbieter.ort };
   const z = { id: "zl_muster", studioId: s.id, betragCent: a.preisCent, status: "bezahlt", gutschein: { shop: true, code: "GS-MUST-ER01", token: "muster", empfaenger: "Alex",
-    nachricht: "Frohe Weihnachten! Such dir was Schönes aus.", aktion: { id: a.id, nr: a.nr, stueck: a.stueck }, wertCent: a.wertCent, bezahltCent: a.preisCent,
+    nachricht: "Frohe Weihnachten! Such dir was Schönes aus.", aktion: { id: a.id, nr: a.nr }, wertCent: a.wertCent, bezahltCent: a.preisCent,
     bonusCent: a.wertCent - a.preisCent, bonusBis: bonusBisIso(c), ausgestelltAm: jetzt().toISOString() } };
   // Das Logo holt gutscheinPdf über die Website-Adresse → hier aus dem Ordner public/ lesen
   const echt = globalThis.fetch;
@@ -307,7 +303,7 @@ async function bilder(slug, c) {
   await rendern(fuelle(vorlage("geschenk.html"), { assets, kuerzel: k }), voll, { breite: 800, hoehe: 540, dpr: 2, durchsichtig: true, element: "#k" });
   await umrechnen(voll, [480, 960, 1400].map((b) => ({ breite: b, typ: "image/webp", q: 0.9, datei: path.join(dir, `geschenk-${b}.webp`) }))
     .concat([{ breite: 960, typ: "image/png", datei: path.join(dir, "geschenk-960.png") }]));
-  // 2. Vorschaubild WhatsApp/Facebook 1200×630 (Mitte als Quadrat allein lesbar), drei Fassungen (siehe ogTexte). Jeder Text wird im
+  // 2. Vorschaubild WhatsApp/Facebook 1200×630 (Mitte als Quadrat allein lesbar), zwei Fassungen (siehe ogTexte). Jeder Text wird im
   //    Bild gemessen (og.html: window.passt); passt einer nicht (z. B. Kartentext breiter als die Karte), bricht das Skript ab.
   for (const [fassung, datei] of Object.entries(FASSUNGEN)) {
     const og = fuelle(vorlage("og.html"), { assets, kuerzel: k, geschenk: pathToFileURL(voll).href, ...ogTexte(c, fassung), zweigL: zweig("zw l"), zweigR: zweig("zw r", { beeren: false }) });
@@ -355,7 +351,7 @@ for (const [slug, c] of Object.entries(SHOPS)) {
   if (MIT_OG) await bilder(slug, c);
   const w = werte(slug, c);
   // Die Seite selbst liefert die Funktion gutschein-seite.mjs aus (Standard-Fassung „angebot“, dazu die Meta-Blöcke aller Fassungen)
-  SEITEN[slug] = { html: fuelle(vorlage("seite.html"), w), og: Object.fromEntries(Object.keys(FASSUNGEN).map((f) => [f, metaBlock(c, w, f)])), stadt: c.seite.stadt, heroId: "nr4" };
+  SEITEN[slug] = { html: fuelle(vorlage("seite.html"), w), og: Object.fromEntries(Object.keys(FASSUNGEN).map((f) => [f, metaBlock(c, w, f)])), stadt: c.seite.stadt, name: c.seite.name, heroId: "nr4" };
   for (const [art, titel] of RECHT) {
     const fussLinks = RECHT.map(([a2, t2]) => `<a href="/gutschein-kaufen/${slug}-${a2}"${a2 === art ? ' aria-current="page"' : ""}>${esc(t2)}</a>`).join("") + `<a href="/gutschein-kaufen/${slug}">Zu den Gutscheinen</a>`;
     // Lange Wörter mit weichem Trennzeichen (bei 320 px passt „GUTSCHEINBEDINGUNGEN“ sonst nicht in die Zeile)
@@ -364,7 +360,7 @@ for (const [slug, c] of Object.entries(SHOPS)) {
   }
   if (VORSCHAU) {
     fs.mkdirSync(VORSCHAU, { recursive: true });
-    // Alle drei Fassungen so, wie WhatsApp sie zeigt: groß (~320 px breit) und als kleines Quadrat (96 px)
+    // Beide Fassungen so, wie WhatsApp sie zeigt: groß (~320 px breit) und als kleines Quadrat (96 px)
     for (const f of Object.keys(FASSUNGEN)) {
       const og = ogTexte(c, f);
       const wa = fuelle(vorlage("whatsapp.html"), { ...w, ogTitel: og.titel, ogText: og.ogText, ogDatei: pathToFileURL(path.join(ASSETS, c.seite.kuerzel, og.ogDatei)).href, domain: new URL(BASIS).hostname });
@@ -381,7 +377,7 @@ if (browser) await browser.close();
 // Modul für die Seiten-Funktion (wird mit der Funktion gebündelt, kein Dateizugriff zur Laufzeit)
 fs.writeFileSync(path.join(root, "netlify/functions/_lib/gutschein-seiten-html.mjs"),
   "// Erzeugt von dev/gutschein-seiten.mjs aus dev/gutschein/seite.html – nicht von Hand ändern.\n" +
-  "// Je Stadt: html (Standard-Fassung), og.{angebot,neutral,danach} (Titel/Beschreibung/Vorschaubild), stadt, heroId.\n" +
+  "// Je Stadt: html (Standard-Fassung), og.{angebot,danach} (Titel/Beschreibung/Vorschaubild), stadt, name, heroId.\n" +
   `export const SEITEN = ${JSON.stringify(SEITEN)};\n`);
 
 // Alte, nicht mehr erzeugte Seiten entfernen (der Ordner gehört nur diesem Skript)

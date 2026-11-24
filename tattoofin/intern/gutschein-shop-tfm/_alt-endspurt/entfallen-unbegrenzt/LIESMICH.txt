@@ -1,0 +1,9 @@
+Entfallen durch Domenics Entscheidung 24.11.2026 (über Ultron): Aktions-Gutscheine Nr. 1–5 unbegrenzt kaufbar,
+Knappheit nur noch aus der Frist „Nur bis Heiligabend, 24.12., 16 Uhr“.
+
+Hier liegen unverändert (md5 vorher = nachher, per git mv verschoben):
+- tfm-/tfla-og-weihnachten-neutral.jpg: neutrales Vorschaubild, das sich bei ausverkauftem 500er/300er selbst einschaltete (entfällt, es gibt keinen Ausverkauf mehr)
+- whatsapp-tattoo-fashion-*-neutral.png: WhatsApp-Muster dieser neutralen Fassung
+- vorschlag-text-mit-bedingung-whatsapp-*.png: alter Vorschlag für den Vorschau-Text mit „Insgesamt nur 21 Stück.“ (Stückzahl entfällt)
+
+Stand der Seite vor dieser Änderung: Commit 8be2103 (Branch claude/tfm-gutschein-shop-live).
