@@ -8,12 +8,15 @@
 - https://tfm-gutschein-design--tattoofin.netlify.app/gutschein-kaufen/tattoo-fashion-munich
 - https://tfm-gutschein-design--tattoofin.netlify.app/gutschein-kaufen/tattoo-fashion-landshut
 - Läuft mit echtem Stripe und echten Daten: dort NIE eine Kasse öffnen.
-- Korrektur Runde 1 erledigt (54 Befunde, siehe BERICHT.md oben): Angebot als Überschrift, Geschenk-Grafik mit Schleife und Tannenzweigen, neue WhatsApp-Vorschau, Fehler immer sichtbar, Zurück aus der Kasse gibt sofort frei, iPhone-Tastatur, Zustand nach Aktionsende, echtes PDF-Muster, 6 saubere Bilder je Studio, scharfe Logos und Symbole.
+- Korrektur Runde 2 erledigt (25 Befunde, siehe BERICHT.md oben): Überschrift aus dem Bestand, PDF als Geschenkkarte, Zahlen klar, Abschnitte im Glücksrad-Look mit sparsamer Weihnacht, neue Landshut-Bilder, WhatsApp-Vorschau (Ü, Quadrat, neutrale Fassung), schnelleres Lesen der Stückzahl.
+- Korrektur Runde 1 erledigt (54 Befunde): Angebot als Überschrift, Geschenk-Grafik mit Schleife und Tannenzweigen, neue WhatsApp-Vorschau, Fehler immer sichtbar, Zurück aus der Kasse gibt sofort frei, iPhone-Tastatur, Zustand nach Aktionsende, echtes PDF-Muster, 6 saubere Bilder je Studio, scharfe Logos und Symbole.
 - Seiten und Bilder: `node dev/gutschein-seiten.mjs [--og] [--vorschau <ordner>] [--basis <url>]` (eingecheckt wird ohne `--basis`). `--og` braucht macOS (Quick Look für das PDF-Muster).
-- Tests: `dev/gutschein-shop-test.mjs` 135/0, `dev/e2e.mjs` 410/0 (eigene Ports E2E_PORT, STRIPE_MOCK_PORT, E2E_RESEND_PORT; e2e wartet unter Last bis 4 Min. je Schritt). Abnahme beider Entwurfs-Adressen mit `--soll "500 €;375 €;200 €;300 €"` bestanden.
+- Tests: `dev/gutschein-shop-test.mjs` 149/0, `dev/e2e.mjs` 410/0 (Runde 2) (eigene Ports E2E_PORT, STRIPE_MOCK_PORT, E2E_RESEND_PORT; e2e wartet unter Last bis 4 Min. je Schritt). Abnahme beider Entwurfs-Adressen mit `--soll "500 €;375 €;200 €;300 €"` bestanden.
 
 **Offen (Domenic / Andy)**
 - Live-OK für den Prod-Deploy (danach Landshut sofort offen). Vorher neuesten Haupt-Chat-Stand einmischen.
+- **PayPal** über Stripe zuschalten? (Viele ältere Schenkende zahlen so; kein Ratenkauf.) Bei Ja: im Stripe-Konto beider Studios aktivieren, dann Texte „Karte, Apple Pay oder Google Pay“ an 4 Stellen ergänzen (FAQ, „So kaufst du“, Zeile unter dem Kauf-Knopf, Gutscheinbedingungen) und in `checkoutFuer` die Zahlart freigeben.
+- **500er ausverkauft → Anzeige „500 € für 375 €“ sofort pausieren**, Vorschau auf `vorschau: "neutral"` stellen und neu hochladen (dein OK). Vorschlag: Ultron-Wache meldet „nr4 ausverkauft“.
 - Termine bis 31.03.2027: Kann das Studio das zusagen? Die FAQ verspricht keine Termine, sie erklärt nur die Regel (Eingelöstes zählt zuerst gegen den geschenkten Teil).
 - 2–3 echte Google-Bewertungen wörtlich zeigen? Nur mit OK.
 - Reihenfolge der Liste: bleibt 2.000 € zuerst (Anker) oder 300 €/500 € zuerst?

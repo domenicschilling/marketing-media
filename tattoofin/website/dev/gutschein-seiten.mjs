@@ -1,8 +1,11 @@
 // Gutschein-Shop: statische Seiten je Stadt aus einer Vorlage + Konfiguration (SHOPS in netlify/functions/_lib/gutschein-shop.mjs).
 //   node dev/gutschein-seiten.mjs                         → public/gutschein-kaufen/<slug>.html (+ -impressum, -datenschutz, -widerruf, -bedingungen)
-//   node dev/gutschein-seiten.mjs --og                    → zusätzlich alle Bilder je Stadt (Playwright): Vorschaubild og-weihnachten.jpg,
-//                                                           Hero-Geschenk geschenk-*.webp/png, Gutschein-Muster pdf-muster.webp/jpg (das echte
-//                                                           PDF mit Muster-Code, gerendert mit macOS Quick Look), Symbole icon-32/180/192.png
+//   node dev/gutschein-seiten.mjs --og                    → zusätzlich alle Bilder je Stadt (Playwright): Vorschaubilder og-weihnachten.jpg
+//                                                           („500 € für 375 €“) und og-weihnachten-neutral.jpg (ohne Beträge; welches die Seite
+//                                                           nennt, steht in SHOPS[…].seite.vorschau), Hero-Geschenk geschenk-*.webp/png,
+//                                                           PDF-Hintergrund pdf-grund.jpg (Karte mit Satinband und Schleife), Gutschein-Muster
+//                                                           pdf-muster.webp/jpg (das echte PDF mit Muster-Code, gerendert mit macOS Quick Look),
+//                                                           Symbole icon-32/180/192.png
 //   node dev/gutschein-seiten.mjs --vorschau <ordner>     → zusätzlich WhatsApp-Vorschau (groß + kleines Quadrat) als PNG je Stadt
 //   node dev/gutschein-seiten.mjs --basis https://…       → absolute Adressen (og:url, og:image) für eine andere Site, z. B. den Entwurf
 // Netlify liefert /gutschein-kaufen/<slug> direkt aus <slug>.html (ohne Umleitung), unbekannte Slugs → 404.
@@ -72,12 +75,23 @@ function zweig(cls, { beeren = true } = {}) {
     .map(([x, y, rr]) => `<circle cx="${r1(x)}" cy="${r1(y)}" r="${rr}" fill="#8e1824" stroke="#d9b46e" stroke-width=".9"/>`).join("") : "";
   return `<svg class="${cls}" viewBox="0 0 220 170" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><path d="${stiel}" stroke-width="1.7"/><path d="${nadel}" stroke-width="1.05"/>${b}</svg>`;
 }
-// Schleife wie auf dem Geschenk im Hero (dev/gutschein/geschenk.html), hier für das Gutschein-Muster
-const SCHLEIFE = `<svg class="schleife" viewBox="-140 -86 280 220" aria-hidden="true"><defs><linearGradient id="pv" x1="0" x2="1"><stop offset="0" stop-color="#4c0b13"/><stop offset=".5" stop-color="#c0394a"/><stop offset="1" stop-color="#4c0b13"/></linearGradient><linearGradient id="pl" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#c63c4d"/><stop offset=".45" stop-color="#9a1b29"/><stop offset="1" stop-color="#560c15"/></linearGradient><linearGradient id="pr" x1="1" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#c63c4d"/><stop offset=".45" stop-color="#9a1b29"/><stop offset="1" stop-color="#560c15"/></linearGradient></defs>`
-  + `<path d="M-4 6C-14 40-30 74-50 112L-30 104-18 124C-8 88 0 50 6 10Z" fill="url(#pl)" stroke="#d9b46e" stroke-width="1.4"/><path d="M4 6C16 38 34 70 60 104L68 86 84 92C60 62 34 32 12 4Z" fill="url(#pr)" stroke="#d9b46e" stroke-width="1.4"/>`
-  + `<path d="M-6-2C-34-52-118-78-128-34-136 4-84 22-6 6Z" fill="url(#pl)" stroke="#d9b46e" stroke-width="1.6"/><path d="M-14-2C-44-30-92-44-104-28-96-14-58-2-14 2Z" fill="#3a060c" opacity=".55"/>`
-  + `<path d="M6-2C34-52 118-78 128-34 136 4 84 22 6 6Z" fill="url(#pr)" stroke="#d9b46e" stroke-width="1.6"/><path d="M14-2C44-30 92-44 104-28 96-14 58-2 14 2Z" fill="#3a060c" opacity=".55"/>`
-  + `<rect x="-19" y="-17" width="38" height="34" rx="11" fill="url(#pv)" stroke="#d9b46e" stroke-width="1.6"/></svg>`;
+// Feiner waagrechter Tannenzweig als Trenner (zwei Äste zur Mitte, drei dunkelrote Beeren in der Mitte)
+function zweigQuer() {
+  let stiel = "", nadel = "";
+  const Q = (t, a, c, b) => [(1 - t) ** 2 * a[0] + 2 * (1 - t) * t * c[0] + t * t * b[0], (1 - t) ** 2 * a[1] + 2 * (1 - t) * t * c[1] + t * t * b[1]];
+  const R = (t, a, c, b) => { const x = 2 * (1 - t) * (c[0] - a[0]) + 2 * t * (b[0] - c[0]), y = 2 * (1 - t) * (c[1] - a[1]) + 2 * t * (b[1] - c[1]), l = Math.hypot(x, y); return [x / l, y / l]; };
+  for (const sx of [1, -1]) {
+    const m = (p) => [120 + sx * (p[0] - 120), p[1]];
+    const A = m([112, 24]), C = m([60, 12]), B = m([6, 20]);
+    stiel += `M${r1(A[0])} ${r1(A[1])}Q${r1(C[0])} ${r1(C[1])} ${r1(B[0])} ${r1(B[1])}`;
+    for (let t = 0.06; t <= 1.0001; t += 0.05) {
+      const p = Q(t, A, C, B), [dx, dy] = R(t, A, C, B), L = 13 * (1 - 0.55 * t);
+      for (const w of [0.85, -0.85]) { const nx = dx * Math.cos(w) - dy * Math.sin(w), ny = dx * Math.sin(w) + dy * Math.cos(w); nadel += `M${r1(p[0])} ${r1(p[1])}l${r1(nx * L)} ${r1(ny * L)}`; }
+    }
+  }
+  const b = [[114, 26, 3.4], [120, 21, 3.8], [126, 26, 3.4]].map(([x, y, rr]) => `<circle cx="${x}" cy="${y}" r="${rr}" fill="#8e1824" stroke="#d9b46e" stroke-width=".8"/>`).join("");
+  return `<svg viewBox="0 0 240 40" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><path d="${stiel}" stroke-width="1.4"/><path d="${nadel}" stroke-width=".9"/>${b}</svg>`;
+}
 // Schlichte goldene Linien-Symbole (statt Ziffern, Emojis oder „31.3“)
 const IC = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 const ICONS = {
@@ -91,11 +105,25 @@ const ICONS = {
   icWhatsapp: IC('<path d="M4.3 19.7l1.3-3.9a8.1 8.1 0 1 1 3 2.8z"/><path d="M9.3 8.6c.2 2.8 3 5.5 6 6l.9-1.4-1.9-1-.9.8c-1-.5-1.9-1.4-2.4-2.4l.8-.9-1-1.9z"/>'),
 };
 
+// Texte der Vorschau (Bild, og:description, Alt-Text) je Fassung: "angebot" nennt den 500-€-Gutschein und den günstigsten,
+// "neutral" keine Beträge (wenn einer der beiden ausverkauft ist, siehe SHOPS[…].seite.vorschau)
+function ogTexte(c, fassung = c.seite.vorschau || "angebot") {
+  const nr4 = c.aktionen.find((x) => x.id === "nr4"), ab = [...c.aktionen].sort((x, y) => x.preisCent - y.preisCent)[0];
+  const alle = c.aktionen.reduce((s, x) => s + x.stueck, 0), name = c.seite.name;
+  if (fassung === "neutral") return { zeileA: "Tattoo-Gutscheine", zeileB: "unter Wert", karteOben: "Sofort", karteMitte: "als PDF", karteUnten: "per E-Mail",
+    ogText: `Weihnachts-Gutscheine unter Wert, nur bis 24.12. um 16 Uhr. Sofort als PDF per E-Mail.`,
+    ogAlt: `${name}: Weihnachts-Aktion, Tattoo-Gutscheine unter Wert, nur bis 24.12., 16 Uhr`, ogDatei: "og-weihnachten-neutral.jpg" };
+  return { zeileA: `${EURO(nr4.wertCent)} Gutschein`, zeileB: `für ${EURO(nr4.preisCent)}`, karteOben: "Ab", karteMitte: EURO(ab.preisCent), karteUnten: `Wert ${EURO(ab.wertCent)}`,
+    // Nur zwei Zeilen sichtbar: das Datum steht schon groß im Bild
+    ogText: `${EURO(nr4.wertCent)} Gutschein für ${EURO(nr4.preisCent)}, auch ${EURO(ab.wertCent)} für ${EURO(ab.preisCent)}. Insgesamt nur ${alle} Stück.`,
+    ogAlt: `${name}: Weihnachts-Aktion, ${EURO(nr4.wertCent)} Gutschein für ${EURO(nr4.preisCent)}, nur bis 24.12., 16 Uhr`, ogDatei: "og-weihnachten.jpg" };
+}
+
 function werte(slug, c) {
   const p = c.seite, a = c.anbieter, alle = c.aktionen.reduce((s, x) => s + x.stueck, 0);
   const bonusBis = bonusBisIso(c), gBis = gueltigBis(jetzt());
   const nachBonus = new Date(new Date(bonusBis).getTime() + 2 * 3600e3);
-  const ogDatei = path.join(root, `public/assets/gs-shop/${p.kuerzel}/og-weihnachten.jpg`);
+  const og = ogTexte(c), ogDatei = path.join(root, `public/assets/gs-shop/${p.kuerzel}/${og.ogDatei}`);
   // Hero und Vorschau zeigen den 500-€-Gutschein (wie die Werbung), dazu den günstigsten („schon ab 200 €“)
   const nr4 = c.aktionen.find((x) => x.id === "nr4"), ab = [...c.aktionen].sort((x, y) => x.preisCent - y.preisCent)[0];
   const spanne = `${ZAHL(c.frei.minCent)}–${EURO(c.frei.maxCent)}`;
@@ -109,23 +137,23 @@ function werte(slug, c) {
     sterne: p.google.sterne, sternProzent: Math.round((Number(p.google.sterne.replace(",", ".")) / 5) * 1000) / 10,
     bewertungen: p.google.anzahl, googleStand: p.google.stand, mapsQuery: encodeURIComponent(p.google.suche),
     waText: encodeURIComponent(`Hallo, ich habe eine Frage zu den Tattoo-Gutscheinen bei ${p.name}.`),
-    stueckAlle: alle, bonusBis: DATUM(bonusBis), gueltigBis: DATUM(gBis), nachBonus: DATUM(nachBonus),
+    stueckAlle: alle, bonusBis: DATUM(bonusBis), gueltigBis: DATUM(gBis), nachBonus: DATUM(nachBonus), bonusKurz: DATUM(bonusBis).slice(0, 5),
+    zahlwort: ["", "Ein", "Zwei", "Drei", "Vier", "Fünf", "Sechs", "Sieben"][c.aktionen.length] || String(c.aktionen.length),
     heroWert: EURO(nr4.wertCent), heroPreis: EURO(nr4.preisCent), abPreis: EURO(ab.preisCent), abWert: EURO(ab.wertCent), freiSpanne: spanne,
     cdT: "–", cdH: "–", cdM: "–", cdS: "–",
     titel: `Weihnachts-Gutscheine unter Wert · ${p.name}`,
     // WhatsApp/Facebook: fette Zeile mit Studio, darunter das Angebot mit richtiger Stückzahl (21 = alle Aktions-Gutscheine zusammen)
     ogTitel: `${p.name}: Weihnachts-Gutscheine unter Wert`,
-    // Nur zwei Zeilen sichtbar: das Datum steht schon groß im Bild
-    ogText: `${EURO(nr4.wertCent)} Gutschein für ${EURO(nr4.preisCent)}, auch ${EURO(ab.wertCent)} für ${EURO(ab.preisCent)}. Insgesamt nur ${alle} Stück.`,
-    ogAlt: `${p.name}: Weihnachts-Aktion, ${EURO(nr4.wertCent)} Gutschein für ${EURO(nr4.preisCent)}, nur bis 24.12., 16 Uhr`,
+    ogText: og.ogText, ogAlt: og.ogAlt,
     seitenUrl: `${BASIS}/gutschein-kaufen/${slug}`,
-    ogBild: `${BASIS}/assets/gs-shop/${p.kuerzel}/og-weihnachten.jpg?v=${hash(ogDatei)}`,
+    ogBild: `${BASIS}/assets/gs-shop/${p.kuerzel}/${og.ogDatei}?v=${hash(ogDatei)}`,
     ogDatei, geschenkSrcset: geschenk,
-    zweigLinks: zweig("zweig l"), zweigRechts: zweig("zweig r", { beeren: false }), zweigPdf: zweig("zweig-pdf", { beeren: false }), schleife: SCHLEIFE, ...ICONS,
+    zweigLinks: zweig("zweig l"), zweigRechts: zweig("zweig r", { beeren: false }), zweigPdf: zweig("zweig-pdf", { beeren: false }), zweigTrenner: zweigQuer(), ...ICONS,
     karten: c.aktionen.map(karte).join("") +
       `<button type="button" class="zeile frei" data-wahl="frei"><span class="wert">Eigener Betrag</span><span class="preis">Wertgutschein, ${spanne}</span><span class="pfeil" aria-hidden="true">→</span></button>`,
     zeiten: p.zeiten.map(([t, z]) => `<tr><td>${esc(t)}</td><td>${esc(z)}</td></tr>`).join(""),
-    seiteJson: JSON.stringify({ slug, kuerzel: p.kuerzel, stadt: p.stadt, bilder: p.bilder, aktionBis: aktionEndeIso(c) }).replace(/</g, "\\u003c"),
+    // heroId: Angebot der Überschrift, solange kaufbar (wie in der Werbung); sonst wählt die Seite das günstigste kaufbare
+    seiteJson: JSON.stringify({ slug, kuerzel: p.kuerzel, stadt: p.stadt, bilder: p.bilder, aktionBis: aktionEndeIso(c), heroId: "nr4" }).replace(/</g, "\\u003c"),
   };
 }
 
@@ -174,7 +202,7 @@ async function rendern(html, datei, { breite, hoehe, dpr = 1, jpeg = false, elem
   const p = await browser.newPage({ viewport: { width: breite, height: hoehe }, deviceScaleFactor: dpr });
   try {
     await p.goto(pathToFileURL(tmp).href, { waitUntil: "load" });
-    await p.evaluate(() => document.fonts.ready);
+    await p.evaluate(() => window.fertig || document.fonts.ready);
     const opts = { path: datei, omitBackground: durchsichtig, ...(jpeg ? { type: "jpeg", quality: 88 } : {}) };
     if (element) await p.locator(element).screenshot(opts); else await p.screenshot(opts);
   } finally { await p.close(); fs.rmSync(tmp, { force: true }); }
@@ -236,18 +264,23 @@ async function bilder(slug, c) {
   await rendern(fuelle(vorlage("geschenk.html"), { assets, kuerzel: k }), voll, { breite: 800, hoehe: 540, dpr: 2, durchsichtig: true, element: "#g" });
   await umrechnen(voll, [480, 960, 1400].map((b) => ({ breite: b, typ: "image/webp", q: 0.9, datei: path.join(dir, `geschenk-${b}.webp`) }))
     .concat([{ breite: 960, typ: "image/png", datei: path.join(dir, "geschenk-960.png") }]));
-  // 2. Vorschaubild WhatsApp/Facebook 1200×630 (Mitte als Quadrat allein lesbar)
-  const nr4 = c.aktionen.find((x) => x.id === "nr4"), ab = [...c.aktionen].sort((x, y) => x.preisCent - y.preisCent)[0];
-  const og = fuelle(vorlage("og.html"), { assets, kuerzel: k, geschenk: pathToFileURL(voll).href, wert: EURO(nr4.wertCent), preis: EURO(nr4.preisCent), abPreis: EURO(ab.preisCent), abWert: EURO(ab.wertCent),
-    zweigL: zweig("zw l"), zweigR: zweig("zw r", { beeren: false }) });
-  await rendern(og, path.join(dir, "og-weihnachten.jpg"), { breite: 1200, hoehe: 630, jpeg: true, element: "#og" });
+  // 2. Vorschaubild WhatsApp/Facebook 1200×630 (Mitte als Quadrat allein lesbar), zwei Fassungen (SHOPS[…].seite.vorschau):
+  //    og-weihnachten.jpg „500 € Gutschein für 375 €“ + rechts „Ab 200 €“, og-weihnachten-neutral.jpg ohne Beträge
+  for (const [fassung, datei] of [["angebot", "og-weihnachten.jpg"], ["neutral", "og-weihnachten-neutral.jpg"]]) {
+    const og = fuelle(vorlage("og.html"), { assets, kuerzel: k, geschenk: pathToFileURL(voll).href, ...ogTexte(c, fassung), zweigL: zweig("zw l"), zweigR: zweig("zw r", { beeren: false }) });
+    await rendern(og, path.join(dir, datei), { breite: 1200, hoehe: 630, jpeg: true, element: "#og" });
+  }
   fs.rmSync(voll, { force: true });
   // 3. Symbole 32 / 180 (iPhone) / 192 (Android)
   const icon = path.join(dir, ".icon-512.png");
   await rendern(ICON_HTML(assets), icon, { breite: 512, hoehe: 512, element: "#i" });
   await umrechnen(icon, [32, 180, 192].map((b) => ({ breite: b, typ: "image/png", datei: path.join(dir, `icon-${b}.png`) })));
   fs.rmSync(icon, { force: true });
-  // 4. Gutschein-Muster (echtes PDF)
+  // 4. Hintergrund des Gutschein-PDFs (Karte mit Satinband und Schleife, 3-fache Dichte) und das Gutschein-Muster (echtes PDF)
+  const grundPng = path.join(dir, ".pdf-grund.png");
+  await rendern(fuelle(vorlage("pdf-grund.html"), { assets, kuerzel: k }), grundPng, { breite: 595, hoehe: 420, dpr: 3, element: "#p" });
+  await umrechnen(grundPng, [{ breite: 1785, typ: "image/jpeg", q: 0.84, datei: path.join(dir, "pdf-grund.jpg") }]);
+  fs.rmSync(grundPng, { force: true });
   await pdfMuster(slug, c, dir);
 }
 

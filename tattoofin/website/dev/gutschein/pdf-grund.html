@@ -1,0 +1,51 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8">
+<!-- Hintergrund des Gutschein-PDFs der Shop-Gutscheine je Stadt (dev/gutschein-seiten.mjs --og → pdf-grund.jpg, 3-fache Dichte).
+     Gleicher Look wie die Gutschein-Karte im Hero: Schwarz-Gold, Rahmen, dunkelrotes Satinband mit Schleife, Logo groß.
+     1 CSS-Pixel = 1 PDF-Punkt (A5 quer, 595 × 420). Die Texte (Betrag, Name, Gruß, Code, QR) schreibt gutscheinPdf darüber,
+     die Flächen dafür bleiben hier frei. Lagen müssen zu PDF_LAGE in netlify/functions/_lib/gutschein.mjs passen. --><style>
+@font-face{font-family:"Oswald";font-weight:500 700;src:url({{assets}}/schrift/oswald-latin.woff2) format("woff2")}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:595px;height:420px;overflow:hidden;background:#0B0B0B}
+#p{position:relative;width:595px;height:420px;overflow:hidden;background:radial-gradient(60% 70% at 70% 30%,rgba(200,163,90,.13),rgba(11,11,11,0) 70%),linear-gradient(140deg,#241d13 0%,#100e0b 52%,#19140d 100%)}
+#p:after{content:"";position:absolute;inset:-40%;background:linear-gradient(115deg,transparent 44%,rgba(255,240,205,.05) 49%,transparent 55%);pointer-events:none}
+.rahmen{position:absolute;inset:12px;border:1.4px solid rgba(214,180,112,.75);border-radius:16px}
+.rahmen2{position:absolute;inset:19px;border:.8px solid rgba(200,163,90,.3);border-radius:11px}
+.wort{position:absolute;left:150px;right:20px;top:44px;text-align:center;font:600 13px/1 Oswald;letter-spacing:.42em;text-transform:uppercase;color:#d9be86}
+.logo{position:absolute;left:376px;top:132px;width:190px;height:auto}
+.kasten{position:absolute;left:372px;top:252px;width:198px;height:126px;border-radius:12px;background:rgba(11,11,11,.72);border:1px solid rgba(214,180,112,.7)}
+svg.band{position:absolute;left:0;top:0;width:595px;height:420px;overflow:visible}
+</style></head><body><div id="p">
+<div class="rahmen"></div><div class="rahmen2"></div>
+<span class="wort">Gutschein</span>
+<img class="logo" src="{{assets}}/{{kuerzel}}/logo-gold-1400.webp" alt="">
+<div class="kasten"></div>
+<svg class="band" viewBox="0 0 595 420" aria-hidden="true">
+ <defs>
+  <linearGradient id="bv" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#4c0b13"/><stop offset=".3" stop-color="#8f1825"/><stop offset=".5" stop-color="#c0394a"/><stop offset=".72" stop-color="#861622"/><stop offset="1" stop-color="#4c0b13"/></linearGradient>
+  <linearGradient id="bh" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#4c0b13"/><stop offset=".3" stop-color="#8f1825"/><stop offset=".5" stop-color="#c0394a"/><stop offset=".72" stop-color="#861622"/><stop offset="1" stop-color="#4c0b13"/></linearGradient>
+  <linearGradient id="sl" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#c63c4d"/><stop offset=".45" stop-color="#9a1b29"/><stop offset="1" stop-color="#560c15"/></linearGradient>
+  <linearGradient id="sr" x1="1" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#c63c4d"/><stop offset=".45" stop-color="#9a1b29"/><stop offset="1" stop-color="#560c15"/></linearGradient>
+  <clipPath id="kc"><rect x="12.7" y="12.7" width="569.6" height="394.6" rx="15.3"/></clipPath>
+  <filter id="sch" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="4" stdDeviation="4.5" flood-color="#000" flood-opacity=".55"/></filter>
+ </defs>
+ <!-- Band: senkrecht links, waagrecht oben, Ränder in Gold -->
+ <g clip-path="url(#kc)">
+  <rect x="92" y="0" width="26" height="420" fill="url(#bv)"/>
+  <rect x="0" y="88" width="595" height="26" fill="url(#bh)"/>
+  <g stroke="#d9b46e" stroke-width="1" opacity=".9"><path d="M92 0V420M118 0V420M0 88H595M0 114H595"/></g>
+  <rect x="92" y="88" width="26" height="26" fill="#7a1420" opacity=".55"/>
+ </g>
+ <!-- Schleife auf der Kreuzung (wie im Hero, 0,59-fach) -->
+ <g transform="translate(105 101) scale(.59)" filter="url(#sch)">
+  <path d="M-4 6C-14 40-30 74-50 112L-30 104-18 124C-8 88 0 50 6 10Z" fill="url(#sl)" stroke="#d9b46e" stroke-width="1.6"/>
+  <path d="M4 6C16 38 34 70 60 104L68 86 84 92C60 62 34 32 12 4Z" fill="url(#sr)" stroke="#d9b46e" stroke-width="1.6"/>
+  <path d="M-6-2C-34-52-118-78-128-34-136 4-84 22-6 6Z" fill="url(#sl)" stroke="#d9b46e" stroke-width="1.8"/>
+  <path d="M-14-2C-44-30-92-44-104-28-96-14-58-2-14 2Z" fill="#3a060c" opacity=".55"/>
+  <path d="M6-2C34-52 118-78 128-34 136 4 84 22 6 6Z" fill="url(#sr)" stroke="#d9b46e" stroke-width="1.8"/>
+  <path d="M14-2C44-30 92-44 104-28 96-14 58-2 14 2Z" fill="#3a060c" opacity=".55"/>
+  <path d="M-110-40C-90-60-50-56-20-20" fill="none" stroke="#e46a79" stroke-width="2.4" opacity=".5" stroke-linecap="round"/>
+  <path d="M110-40C90-60 50-56 20-20" fill="none" stroke="#e46a79" stroke-width="2.4" opacity=".35" stroke-linecap="round"/>
+  <rect x="-19" y="-17" width="38" height="34" rx="11" fill="url(#bv)" stroke="#d9b46e" stroke-width="1.8"/>
+ </g>
+</svg>
+</div></body></html>

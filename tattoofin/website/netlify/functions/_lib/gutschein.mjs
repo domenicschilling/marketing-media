@@ -186,6 +186,71 @@ export async function gutscheinPdf(s, z) {
   };
   const rechts = (t, xr, y, font, size, color) => text(t, xr - font.widthOfTextAtSize(sauber(t), size), y, font, size, color);
 
+  // ---------- Shop-Gutschein (TF München/Landshut, 24.11.2026): Geschenkkarte im Look der Hero-Karte ----------
+  // Schwarz-Gold, Rahmen, dunkelrotes Satinband mit Schleife, Logo groß (Hintergrund-Bild je Stadt aus dev/gutschein/pdf-grund.html,
+  // fehlt es, werden dieselben Lagen gezeichnet). Für den Beschenkten: „Weihnachts-Gutschein“ statt Aktions-Nummer, Gültigkeit
+  // neutral ohne „bezahlt“ (bonusSatz geschenk), Tattoofin nur ganz klein. Lagen von oben in Punkt, wie im Hintergrund-Bild.
+  if (marke) {
+    const GOLD = hex("#E8CD92"), HELL = hex("#F4EFE6"), CREME = hex("#ECE5D6"), MUTE = hex("#B3AB9C"), RAND = hex("#d9b46e");
+    const Y = (top) => H - top, L = 158, LB = 200;
+    let grund = null;
+    if (marke.grund) { try { const r = await fetch(marke.grund); if (r.ok) grund = await pdf.embedJpg(Buffer.from(await r.arrayBuffer())); } catch { /* gezeichnet */ } }
+    if (grund) page.drawImage(grund, { x: 0, y: 0, width: W, height: H });
+    else {
+      page.drawRectangle({ x: 0, y: 0, width: W, height: H, color: hex("#15120d") });
+      page.drawRectangle({ x: 12, y: 12, width: W - 24, height: H - 24, borderColor: RAND, borderWidth: 1.2, borderOpacity: 0.8, opacity: 0 });
+      const rot = hex("#8f1825");
+      page.drawRectangle({ x: 92, y: 13, width: 26, height: H - 26, color: rot, borderColor: RAND, borderWidth: 0.8 });
+      page.drawRectangle({ x: 13, y: Y(114), width: W - 26, height: 26, color: rot, borderColor: RAND, borderWidth: 0.8 });
+      const sl = { x: 105, y: Y(101), scale: 0.59, color: hex("#9a1b29"), borderColor: RAND, borderWidth: 1.6 };
+      ["M-4 6C-14 40-30 74-50 112L-30 104-18 124C-8 88 0 50 6 10Z", "M4 6C16 38 34 70 60 104L68 86 84 92C60 62 34 32 12 4Z", "M-6-2C-34-52-118-78-128-34-136 4-84 22-6 6Z", "M6-2C34-52 118-78 128-34 136 4 84 22 6 6Z",
+        "M-8-17H8A11 11 0 0 1 19-6V6A11 11 0 0 1 8 17H-8A11 11 0 0 1-19 6V-6A11 11 0 0 1-8-17Z"].forEach((d) => page.drawSvgPath(d, sl));
+      let logo = null;
+      try { const r = await fetch(marke.logo); if (r.ok) logo = await pdf.embedPng(Buffer.from(await r.arrayBuffer())); } catch { /* ohne Logo */ }
+      if (logo) { const lw = 190, lh = (logo.height * lw) / logo.width; page.drawImage(logo, { x: 376, y: Y(132) - lh, width: lw, height: lh }); }
+      const wort = "G U T S C H E I N";
+      text(wort, 150 + (W - 170 - 150 - fb.widthOfTextAtSize(wort, 11)) / 2, Y(56), fb, 11, GOLD);
+      page.drawRectangle({ x: 372, y: Y(378), width: 198, height: 126, color: hex("#0B0B0B"), borderColor: RAND, borderWidth: 1 });
+    }
+    // Links: für wen, Betrag, Art, Gruß; unten die Gültigkeit
+    let top = 150;
+    if (g.empfaenger) { for (const z1 of umbrechen("für " + g.empfaenger, fb, 17, LB, 1)) text(z1, L, Y(top), fb, 17, HELL); top += 56; } else top += 36;
+    const betrag = kurzEuro(gutscheinWertCent(z));
+    let bs = 58; while (bs > 34 && fb.widthOfTextAtSize(betrag, bs) > LB + 10) bs -= 2;
+    text(betrag, L - 2, Y(top), fb, bs, GOLD);
+    top += 22;
+    const art = g.aktion ? "Weihnachts-Gutschein" : "Gutschein";
+    for (const z1 of umbrechen(`${art} für alle Leistungen bei ${s.firma}`, f, 10.5, LB, 2, s.firma)) { text(z1, L, Y(top), f, 10.5, MUTE); top += 14; }
+    const gilt = g.bonusCent ? bonusSatz({ ...g, gueltigBis: g.gueltigBis || gueltigBis() }, { geschenk: true }) : `Gültig bis ${datum(g.gueltigBis || gueltigBis())}. In Teilen einlösbar.`;
+    const gz = umbrechen(gilt, fb, 9.5, LB, 4), gTop = 366 - (gz.length - 1) * 12.5;
+    gz.forEach((z1, i) => text(z1, L, Y(gTop + i * 12.5), fb, 9.5, GOLD));
+    const gruss = sauber(g.nachricht);
+    if (gruss) {
+      top += 8;
+      const platz = Math.max(1, Math.min(3, Math.floor((gTop - 16 - top) / 15) + 1));
+      for (const z1 of umbrechen("„" + gruss + "“", fi, 11.5, LB, platz)) { text(z1, L, Y(top), fi, 11.5, CREME); top += 15; }
+    }
+    // Rechts unten: Code-Kasten (Fläche im Hintergrund) mit QR-Code
+    text("Gutschein-Code", 384, Y(272), f, 9, MUTE);
+    text(g.code || "wird nach Zahlung vergeben", 384, Y(297), g.code ? fm : f, g.code ? 16 : 10, HELL);
+    if (g.code && g.token) {
+      const m = qrMatrix(gutscheinUrl(g)), gesamt = 62, modul = gesamt / (m.n + 4), qx = 372 + 198 - 12 - gesamt, qy = Y(366);
+      page.drawRectangle({ x: qx, y: qy, width: gesamt, height: gesamt, color: weiss });
+      for (let r = 0; r < m.n; r++) for (let c = 0; c < m.n; c++) {
+        if (m.dunkel(r, c)) page.drawRectangle({ x: qx + (c + 2) * modul, y: qy + gesamt - (r + 3) * modul, width: modul + 0.02, height: modul + 0.02, color: hex("#0B0B0B") });
+      }
+      text("Beim Termin den Code", 384, Y(346), f, 8.5, MUTE);
+      text("oder QR-Code zeigen.", 384, Y(357), f, 8.5, MUTE);
+    } else text("Bitte beim Termin angeben.", 384, Y(357), f, 8.5, MUTE);
+    // Fuß: wo einlösen; Tattoofin nur ganz klein
+    const adr = [s.strasse, [s.plz, s.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ");
+    const tf = "Technik: Tattoofin", tfB = f.widthOfTextAtSize(tf, 6.5);
+    const [fuss] = umbrechen(`Einlösbar bei ${s.firma}${adr ? ", " + adr : ""}`, f, 8.5, W - 25 - L - tfB - 16, 1);
+    text(fuss, L, Y(390), f, 8.5, MUTE);
+    rechts(tf, W - 25, Y(390), f, 6.5, hex("#7d7569"));
+    return pdf.save();
+  }
+
   // Rahmen + Kopfband in Studiofarbe (Rückfall Tattoofin-Navy)
   page.drawRectangle({ x: 0, y: 0, width: W, height: H, color: rgb(0.984, 0.98, 0.965) });
   page.drawRectangle({ x: 14, y: 14, width: W - 28, height: H - 28, color: weiss, borderColor: rgb(0.9, 0.89, 0.86), borderWidth: 1 });

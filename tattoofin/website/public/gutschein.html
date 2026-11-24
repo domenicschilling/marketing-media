@@ -44,11 +44,12 @@
     if (s.branding && s.branding.farbe) $("gs-band").style.setProperty("--studio-farbe", s.branding.farbe);
     if (g.empfaenger) { $("gs-fuer").textContent = "für " + g.empfaenger; $("gs-fuer").classList.remove("hidden"); }
     $("gs-betrag").textContent = TF.euro(g.wertCent || g.betragCent, true);
-    $("gs-art").textContent = (g.aktion ? "Aktions-Gutschein Nr. " + g.aktion.nr : "Wertgutschein") + " · für alle Leistungen bei " + s.firma;
-    // Aktions-Gutschein: Bonus-Frist (gleicher Satz wie PDF und Mail)
+    // Aktions-Gutschein (Shop): Diese Ansicht öffnet oft der Beschenkte (QR-Code auf dem PDF) → wie das PDF ohne Aktions-Nummer
+    // und ohne „bezahlt“ (24.11.2026)
+    $("gs-art").textContent = (g.aktion ? "Weihnachts-Gutschein" : "Wertgutschein") + " · für alle Leistungen bei " + s.firma;
     if (g.bonusCent) $("gs-bonus").textContent = g.bonusAktiv
-      ? "Bis " + TF.datum(g.bonusBis) + " löst du den vollen Wert von " + TF.euro(g.wertCent, true) + " ein. Danach gilt der bezahlte Betrag von " + TF.euro(g.bezahltCent, true) + ", einlösbar bis " + TF.datum(g.gueltigBis) + "."
-      : "Die Bonus-Frist ist am " + TF.datum(g.bonusBis) + " abgelaufen. Einlösbar ist jetzt der bezahlte Betrag von " + TF.euro(g.bezahltCent, true) + ", bis " + TF.datum(g.gueltigBis) + ".";
+      ? "Bis " + TF.datum(g.bonusBis) + " voller Wert " + TF.euro(g.wertCent, true) + ". Ab " + TF.datum(new Date(new Date(g.bonusBis).getTime() + 3 * 3600e3).toISOString()) + " noch " + TF.euro(g.bezahltCent, true) + " einlösbar, bis " + TF.datum(g.gueltigBis) + "."
+      : "Seit " + TF.datum(new Date(new Date(g.bonusBis).getTime() + 3 * 3600e3).toISOString()) + " noch " + TF.euro(g.bezahltCent, true) + " einlösbar, bis " + TF.datum(g.gueltigBis) + ".";
     if (g.nachricht) { $("gs-nachricht").textContent = "„" + g.nachricht + "“"; $("gs-nachricht").classList.remove("hidden"); }
     $("gs-code").textContent = g.code;
     $("gs-daten").textContent = "Ausgestellt am " + TF.datum(g.ausgestelltAm) + " · Gültig bis " + TF.datum(g.gueltigBis);

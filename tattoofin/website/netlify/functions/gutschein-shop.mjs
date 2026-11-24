@@ -6,11 +6,11 @@
 import crypto from "node:crypto";
 import { CFG, jetzt, testKasse } from "./_lib/config.mjs";
 import { json, fail, body, clean, id, now, handler, isEmail, parseBetrag, euro, clientIp } from "./_lib/util.mjs";
-import { studioBy, zahlungBy, saveZahlung, getStudio, saveStudio, log } from "./_lib/store.mjs";
+import { store, studioBy, zahlungBy, saveZahlung, getStudio, saveStudio, log } from "./_lib/store.mjs";
 import { checkoutFuer, darfKassieren, oeffentlicheAdresse } from "./_lib/domain.mjs";
 import { stripe } from "./_lib/stripe.mjs";
 import { brandingOeffentlich } from "./_lib/branding.mjs";
-import { SHOPS, shopFuer, shopZustand, shopOeffentlich, offeneKassen, reservieren, reservierungFreigeben, bonusBisIso, ShopFehler, KASSE_MINUTEN } from "./_lib/gutschein-shop.mjs";
+import { SHOPS, shopFuer, shopZustand, shopOeffentlich, stand, offeneKassen, reservieren, reservierungFreigeben, bonusBisIso, ShopFehler, KASSE_MINUTEN } from "./_lib/gutschein-shop.mjs";
 import { bestaetigen } from "./pay.mjs";
 
 const NICHT_DA = "Diesen Gutschein-Shop gibt es nicht.";
@@ -96,18 +96,22 @@ export default handler(async (req, context) => {
     if (!zustand.aktionOffen) return abgelehnt(zustand.aktionGrund || "Die Aktions-Gutscheine gibt es gerade nicht.", 409, "aktion_vorbei");
     // Wer mit der Zurück-Taste aus der Kasse kommt, hat noch eine offene Kasse: die alte beenden und freigeben, sonst wäre er
     // (ein Aktions-Gutschein pro E-Mail) 30 Minuten gesperrt. Ist sie inzwischen bezahlt, bleibt sie (Stripe lehnt das Beenden ab).
-    for (const t of await offeneKassen(s, c, email)) {
+    // Alle Tickets einmal lesen (Stand dieser Anfrage) und für offene Kassen, 1 pro Person und Stückzahl gemeinsam nutzen
+    const st = await stand(s, c);
+    for (const t of await offeneKassen(s, c, email, st)) {
       const alt = await zahlungBy("zahlung", t.zahlungId);
       if (!alt || alt.status !== "offen") continue;
       try {
         if (alt.checkoutSessionId) await stripe("POST", `/checkout/sessions/${alt.checkoutSessionId}/expire`, {}, alt.abwicklung === "plattform" ? {} : { account: s.stripe?.accountId });
         await reservierungFreigeben(alt, "neuer-versuch");
+        // Stand dieser Anfrage nachziehen (beim Beenden der Kasse kann auch der Webhook das Ticket schon freigegeben haben)
+        Object.assign(t, (await store.get(t.key)) || {});
         alt.status = "abgebrochen"; alt.abgebrochenAm = now(); await saveZahlung(alt);
       } catch (e) { console.error("[gutschein-shop] alte Kasse nicht beendet:", e.message); }
     }
     const ipHash = crypto.createHash("sha256").update(String(clientIp(req, context)) + CFG.siteUrl).digest("hex").slice(0, 16);
     let res;
-    try { res = await reservieren(s, c, a, { zahlungId: zid, email, ip: ipHash }); }
+    try { res = await reservieren(s, c, a, { zahlungId: zid, email, ip: ipHash, stand: st }); }
     catch (e) { if (e instanceof ShopFehler) return abgelehnt(e.message, e.status, e.code); throw e; }
     betragCent = a.preisCent;
     beschreibung = `Aktions-Gutschein Nr. ${a.nr}`;

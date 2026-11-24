@@ -23,7 +23,7 @@ export const tagesende = (ymd) => [`${ymd}T22:59:59.000Z`, `${ymd}T21:59:59.000Z
 
 // Look des Studios für Mail und PDF der Shop-Gutscheine (TF: Schwarz/Gold, Logo aus public/assets/gs-shop/<kuerzel>/)
 export const markeFuer = (c) => (c?.marke ? {
-  ...c.marke, logo: `${CFG.siteUrl}${c.marke.logoPfad}`,
+  ...c.marke, logo: `${CFG.siteUrl}${c.marke.logoPfad}`, grund: c.marke.grundPfad ? `${CFG.siteUrl}${c.marke.grundPfad}` : null,
   fragen: c.anbieter ? `Fragen? Schreib ${c.anbieter.name.split(",")[0]}: ${c.anbieter.email}${c.anbieter.telefon ? " · " + c.anbieter.telefon : ""}. Technik und Zahlung: Tattoofin.` : null,
 } : null);
 
@@ -46,9 +46,11 @@ const TF_WEIHNACHTEN = {
   // Ein Aktions-Gutschein pro Käufer (E-Mail), Domenic 23.11.2026: beibehalten. null = ohne Grenze
   aktionJeKaeufer: 1,
   // Normaler Wertgutschein mit frei wählbarem Betrag (50–2.000 €, volle Euro), ganzjährig
-  frei: { minCent: 5000, maxCent: 200000, vorschlaege: [5000, 10000, 15000, 25000] },
+  // Vorschläge 100/200/300/500 € (24.11.2026: 50 € reicht kaum für ein Tattoo und setzt den Anker zu niedrig)
+  frei: { minCent: 5000, maxCent: 200000, vorschlaege: [10000, 20000, 30000, 50000] },
 };
-const tfMarke = (kuerzel, alt) => ({ kopf: "#0B0B0B", logoPfad: `/assets/gs-shop/${kuerzel}/logo.png`, alt, knopf: "#C8A35A", knopfText: "#0B0B0B", titel: "#0B0B0B", band: "#0B0B0B", akzent: "#C8A35A", kasten: "#f6efe0" });
+// grundPfad: Hintergrund des Gutschein-PDFs (Karte mit Satinband, Schleife und Logo, dev/gutschein/pdf-grund.html)
+const tfMarke = (kuerzel, alt) => ({ kopf: "#0B0B0B", logoPfad: `/assets/gs-shop/${kuerzel}/logo.png`, grundPfad: `/assets/gs-shop/${kuerzel}/pdf-grund.jpg`, alt, knopf: "#C8A35A", knopfText: "#0B0B0B", titel: "#0B0B0B", band: "#0B0B0B", akzent: "#C8A35A", kasten: "#f6efe0" });
 
 // seite: Angaben für die statische Shop-Seite je Stadt (dev/gutschein-seiten.mjs → public/gutschein-kaufen/<slug>.html)
 export const SHOPS = {
@@ -68,6 +70,9 @@ export const SHOPS = {
       pixel: "2379676156103158",
       // Bildstreifen „Tattoos aus unserem Studio“: public/assets/gs-shop/tfm/b-<name>.jpg (600×800, ohne Personen/Wasserzeichen)
       bilder: ["adler", "phoenix", "loewe", "schlange", "schaedel", "blumen"],
+      // WhatsApp-/Facebook-Vorschau: "angebot" = „500 € Gutschein für 375 €“ + „Ab 200 €“, "neutral" = „Tattoo-Gutscheine unter Wert“
+      // ohne Beträge. Ist der 500-€- oder der 300-€-Gutschein ausverkauft: auf "neutral" stellen, Seiten neu erzeugen, hochladen.
+      vorschau: "angebot",
     },
     // Domenic 23.11.2026: „mach alles fertig, dass alles läuft“ (Live-Gang nur mit seinem OK im Chat)
     freigegeben: true,
@@ -83,7 +88,9 @@ export const SHOPS = {
       google: { sterne: "4,8", anzahl: 167, stand: "22.11.2026", suche: "Tattoo Fashion Landshut, Neustadt 502, 84028 Landshut" },
       zeiten: [["Montag bis Freitag", "10–18 Uhr"], ["Samstag", "10–16 Uhr"], ["Sonntag", "geschlossen"]],
       pixel: "1324284036136356",
-      bilder: ["rabe-sanduhr", "baum", "rabe", "blumen", "schmetterling", "tiere"],
+      // 24.11.2026: Rabe mit Runen, Tiere (unscharf) und Baum (angeblitzt) ersetzt durch Herzen, Mandala, Sonne
+      bilder: ["rabe-sanduhr", "herzen", "mandala", "blumen", "sonne", "schmetterling"],
+      vorschau: "angebot",
     },
     // Domenic 23.11.2026: gleiche Aktion für Landshut (Live-Gang nur mit seinem OK im Chat)
     freigegeben: true,
@@ -131,22 +138,37 @@ const tPrefix = (sid, aid) => `gsshop/${sid}/${aid}/`;
 const tKey = (sid, aid, k) => tPrefix(sid, aid) + String(k).padStart(5, "0");
 const aktiv = (t, ms = jetzt().getTime()) => Boolean(t) && (t.status === "verkauft" || (t.status === "reserviert" && new Date(t.bis).getTime() > ms));
 
+// Lesen: alle Tickets einer Aktion gleichzeitig (nicht nacheinander) und je Anfrage nur einmal („Stand“, siehe unten).
+// Erledigte Tickets ändern sich nicht mehr und werden je Funktions-Exemplar gemerkt: „verkauft“ für immer, „frei“ 10 Minuten
+// (frei → verkauft gibt es nur, wenn eine schon beendete Kasse doch bezahlt würde; Stripe lässt das nicht zu).
+// So liest eine Anfrage bei 150 Tickets je Studio nicht 150 × nacheinander, sondern einmal die Liste und nur die offenen Tickets.
+const ERLEDIGT = new Map(), FREI_MERKEN_MS = 10 * 60 * 1000, GLEICHZEITIG = 32;
+const merken = (key, t) => { if (t?.status === "verkauft" || t?.status === "frei") ERLEDIGT.set(key, { t, am: Date.now() }); };
+const gemerkt = (key) => { const e = ERLEDIGT.get(key); if (!e) return null; if (e.t.status === "frei" && Date.now() - e.am > FREI_MERKEN_MS) { ERLEDIGT.delete(key); return null; } return e.t; };
+async function lesen(keys) {
+  const out = new Array(keys.length);
+  let i = 0;
+  const arbeiter = async () => { while (i < keys.length) { const n = i++, k = keys[n]; let v = gemerkt(k); if (!v) { v = await store.get(k); if (v) merken(k, v); } out[n] = v ? { key: k, ...v } : null; } };
+  await Promise.all(Array.from({ length: Math.min(GLEICHZEITIG, keys.length) }, arbeiter));
+  return out.filter(Boolean);
+}
 async function tickets(sid, aid) {
-  const keys = (await store.list(tPrefix(sid, aid))).sort();
-  const out = [];
-  for (const k of keys) { const v = await store.get(k); if (v) out.push({ key: k, ...v }); }
-  return out;
+  return lesen((await store.list(tPrefix(sid, aid))).sort());
+}
+// Stand: alle Tickets aller Aktions-Gutscheine eines Studios, einmal je Anfrage gelesen (Stückzahl, 1 pro Person, offene Kassen)
+export async function stand(s, c) {
+  const l = await Promise.all(c.aktionen.map((a) => tickets(s.id, a.id)));
+  return Object.fromEntries(c.aktionen.map((a, i) => [a.id, l[i]]));
 }
 
-export async function bestand(s, c) {
-  const ms = jetzt().getTime(), out = {};
-  for (const a of c.aktionen) {
-    const l = await tickets(s.id, a.id);
-    const verkauft = l.filter((t) => t.status === "verkauft").length;
-    const reserviert = l.filter((t) => t.status === "reserviert" && aktiv(t, ms)).length;
-    out[a.id] = { verkauft, reserviert, verfuegbar: Math.max(0, a.stueck - verkauft - reserviert) };
-  }
-  return out;
+function bestandAus(liste, a, ms) {
+  const verkauft = liste.filter((t) => t.status === "verkauft").length;
+  const reserviert = liste.filter((t) => t.status === "reserviert" && aktiv(t, ms)).length;
+  return { verkauft, reserviert, verfuegbar: Math.max(0, a.stueck - verkauft - reserviert) };
+}
+export async function bestand(s, c, st = null) {
+  const ms = jetzt().getTime(), t = st || (await stand(s, c));
+  return Object.fromEntries(c.aktionen.map((a) => [a.id, bestandAus(t[a.id] || [], a, ms)]));
 }
 
 export class ShopFehler extends Error { constructor(msg, status = 409, code = "") { super(msg); this.status = status; this.code = code; } }
@@ -154,10 +176,10 @@ export class ShopFehler extends Error { constructor(msg, status = 409, code = ""
 // Wie viele Aktions-Gutscheine hat diese E-Mail schon (verkauft oder gerade in der Kasse)?
 // Gegen das Blockieren der Stückzahl (viele Kassen mit erfundenen Adressen): höchstens 3 offene Kassen je Anschluss (IP, gehasht)
 const maxOffenJeIp = () => Number(process.env.TF_GS_MAX_JE_IP) || 3;
-async function zaehlen(s, c, { email, ip }) {
+function zaehlen(st, c, { email, ip }) {
   const n = normEmail(email), ms = jetzt().getTime();
   let kaeufer = 0, offenIp = 0;
-  for (const a of c.aktionen) for (const t of await tickets(s.id, a.id)) {
+  for (const a of c.aktionen) for (const t of st[a.id] || []) {
     if (!aktiv(t, ms)) continue;
     if (t.email === n) kaeufer++;
     if (ip && t.ip === ip && t.status === "reserviert") offenIp++;
@@ -166,28 +188,33 @@ async function zaehlen(s, c, { email, ip }) {
 }
 
 // Offene (reservierte, nicht abgelaufene) Kassen dieser E-Mail – z. B. jemand kam mit der Zurück-Taste aus Stripe zurück
-export async function offeneKassen(s, c, email) {
-  const n = normEmail(email), ms = jetzt().getTime(), out = [];
-  for (const a of c.aktionen) for (const t of await tickets(s.id, a.id)) if (t.status === "reserviert" && aktiv(t, ms) && t.email === n) out.push(t);
+export async function offeneKassen(s, c, email, st = null) {
+  const n = normEmail(email), ms = jetzt().getTime(), out = [], t0 = st || (await stand(s, c));
+  for (const a of c.aktionen) for (const t of t0[a.id] || []) if (t.status === "reserviert" && aktiv(t, ms) && t.email === n) out.push(t);
   return out;
 }
 
-export async function reservieren(s, c, a, { zahlungId, email, ip = "" }) {
-  const n = await zaehlen(s, c, { email, ip });
+// st: Stand dieser Anfrage (aus offeneKassen), damit nicht alles noch einmal gelesen wird. Die Prüfung nach dem Anlegen des
+// eigenen Tickets liest die Tickets dieses Gutscheins immer frisch (gleichzeitige Käufer).
+export async function reservieren(s, c, a, { zahlungId, email, ip = "", stand: st = null }) {
+  const t0 = st || (await stand(s, c));
+  const n = zaehlen(t0, c, { email, ip });
   if (n.offenIp >= maxOffenJeIp()) throw new ShopFehler("Du hast schon mehrere Gutscheine in der Kasse. Bitte schließ erst einen Kauf ab oder warte ein paar Minuten.", 429, "zu_viele");
   if (c.aktionJeKaeufer && n.kaeufer >= c.aktionJeKaeufer)
-    throw new ShopFehler(c.aktionJeKaeufer === 1 ? "Pro Person gibt es einen Aktions-Gutschein. Für diese E-Mail-Adresse ist schon einer gekauft oder gerade in der Kasse." : `Pro Person gibt es höchstens ${c.aktionJeKaeufer} Aktions-Gutscheine.`, 409, "je_kaeufer");
+    throw new ShopFehler(c.aktionJeKaeufer === 1 ? "Pro Person gibt es einen Aktions-Gutschein. Für diese E-Mail-Adresse ist schon einer gekauft oder gerade in der Kasse. Einen Wertgutschein mit eigenem Betrag kannst du sofort dazu kaufen." : `Pro Person gibt es höchstens ${c.aktionJeKaeufer} Aktions-Gutscheine.`, 409, "je_kaeufer");
   const at = jetzt().getTime();
   const eintrag = { zahlungId, email: normEmail(email), ip, status: "reserviert", at: new Date(at).toISOString(), bis: new Date(at + RESERVIERUNG_MS).toISOString() };
-  let k = (await store.list(tPrefix(s.id, a.id))).length, key = null;
+  // Nummern sind lückenlos: Start bei der Anzahl aus dem Stand, belegte Nummern überspringt setNeu
+  let k = (t0[a.id] || []).length, key = null;
   for (let i = 0; i < 200 && !key; i++, k++) if (await store.setNeu(tKey(s.id, a.id, k), eintrag)) key = tKey(s.id, a.id, k);
   if (!key) throw new ShopFehler("Gerade sind sehr viele gleichzeitig in der Kasse. Bitte versuch es gleich noch einmal.", 503);
   // Prüfen: weniger als „stueck“ aktive Tickets VOR diesem?
-  const ms = jetzt().getTime();
-  const vorher = (await tickets(s.id, a.id)).filter((t) => t.key < key && aktiv(t, ms)).length;
+  const ms = jetzt().getTime(), frisch = await tickets(s.id, a.id);
+  const vorher = frisch.filter((t) => t.key < key && aktiv(t, ms)).length;
   if (vorher >= a.stueck) {
-    await store.set(key, { ...eintrag, status: "frei", freiAm: now(), grund: "ausverkauft" });
-    const b = (await bestand(s, c))[a.id];
+    const frei = { ...eintrag, status: "frei", freiAm: now(), grund: "ausverkauft" };
+    await store.set(key, frei); merken(key, frei);
+    const b = bestandAus(frisch.filter((t) => t.key !== key), a, ms);
     // Käufer denken in Beträgen („der 500er“), nicht in Nummern
     const name = `Der ${(a.wertCent / 100).toLocaleString("de-DE")}-€-Gutschein`;
     throw new ShopFehler(b.reserviert > 0 && b.verkauft < a.stueck
@@ -205,7 +232,8 @@ export async function reservierungVerkauft(z) {
   const t = await store.get(key);
   if (t?.status === "verkauft") return { ok: true };
   const warAktiv = aktiv(t);
-  await store.set(key, { ...(t || { zahlungId: z.id }), status: "verkauft", verkauftAm: now(), ...(warAktiv ? {} : { spaet: true }) });
+  const neu = { ...(t || { zahlungId: z.id }), status: "verkauft", verkauftAm: now(), ...(warAktiv ? {} : { spaet: true }) };
+  await store.set(key, neu); ERLEDIGT.delete(key); merken(key, neu);
   if (warAktiv) return { ok: true };
   const a = z.gutschein.aktion, l = (await tickets(z.studioId, a.id)).filter((x) => x.status === "verkauft").length;
   return { ok: l <= (a.stueck || 0), ueberverkauft: l > (a.stueck || 0), verkauft: l };
@@ -217,15 +245,18 @@ export async function reservierungFreigeben(z, grund) {
   if (!key || z.status === "bezahlt") return false;
   const t = await store.get(key);
   if (!t || t.status !== "reserviert") return false;
-  await store.set(key, { ...t, status: "frei", freiAm: now(), grund });
+  const frei = { ...t, status: "frei", freiAm: now(), grund };
+  await store.set(key, frei); merken(key, frei);
   return true;
 }
 
 // ---------- Texte (Seite, Kasse, PDF, Mail) ----------
 // Kurzer Satz zur Gültigkeit eines Aktions-Gutscheins – überall gleich
-export function bonusSatz(g, { kurz = false } = {}) {
+// geschenk: Satz für das PDF, das der Beschenkte bekommt (24.11.2026): neutral, ohne „bezahlt“ und ohne Aktions-Nummer
+export function bonusSatz(g, { kurz = false, geschenk = false } = {}) {
   if (!g?.bonusCent) return "";
   const w = euro(g.wertCent).replace(",00 €", " €"), b = euro(g.bezahltCent).replace(",00 €", " €");
+  if (geschenk) return `Bis ${datum(g.bonusBis)} voller Wert ${w}. Ab ${datum(new Date(new Date(g.bonusBis).getTime() + 3 * 3600e3).toISOString())} noch ${b} einlösbar, bis ${datum(g.gueltigBis)}.`;
   return kurz ? `${w} bis ${datum(g.bonusBis)}, danach ${b} bis ${datum(g.gueltigBis)}`
     : `Bis ${datum(g.bonusBis)} löst du den vollen Wert von ${w} ein. Danach gilt der bezahlte Betrag von ${b}, einlösbar bis ${datum(g.gueltigBis)}.`;
 }

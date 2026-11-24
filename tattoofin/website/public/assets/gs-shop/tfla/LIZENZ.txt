@@ -1,7 +1,9 @@
-Bilder b-*.jpg: echte Arbeiten aus dem Studio Tattoo Fashion Landshut (Quelle Marketing-Maschine/landingpages/tf-landshut-wunsch/img: hero2, w7, w8,
-w11, w14, hero3), 24.11.2026 auf 600×800 zugeschnitten: ohne Wasserzeichen, ohne Folie, ohne erkennbare Personen.
+Bilder b-*.jpg: echte Arbeiten aus dem Studio Tattoo Fashion Landshut (Quelle Marketing-Maschine/landingpages/tf-landshut-wunsch/img),
+auf 600×800 zugeschnitten, ohne Wasserzeichen, ohne erkennbare Personen: b-rabe-sanduhr (hero2), b-blumen (w11), b-schmetterling (w14)
+am 24.11.2026; b-herzen (w1), b-mandala (hero4 = w4 in groß), b-sonne (w10) am 24.11.2026 nachts als Ersatz für Rabe mit Runen,
+Tiere (unscharf) und Baum (angeblitzt).
 logo-gold-*.webp/png: TF-Zeichen aus dem Münchner Logo (1415 px), darunter „LANDSHUT“ aus dem Landshut-Logo (4-fach hochgerechnet mit
 Real-ESRGAN), alles im Gold-Verlauf der Seite.
 logo.png: bisheriges Logo, wird nur noch für Mail, PDF und Stripe-Kasse benutzt.
-geschenk-*, og-weihnachten.jpg, icon-*.png, pdf-muster.*: erzeugt mit dev/gutschein-seiten.mjs --og (nur Grafik, keine Fotos, keine KI-Bilder).
+geschenk-*, og-weihnachten*.jpg, icon-*.png, pdf-grund.jpg, pdf-muster.*: erzeugt mit dev/gutschein-seiten.mjs --og (nur Grafik, keine Fotos, keine KI-Bilder).
 Schriften: siehe ../schrift/LIZENZ.txt
