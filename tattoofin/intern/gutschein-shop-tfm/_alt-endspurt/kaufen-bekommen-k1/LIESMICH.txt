@@ -1,0 +1,4 @@
+Stand vor Korrektur-Runde 1 nach „kaufen-bekommen“ (neutrale Vorschau ohne Versprechen), 24.11.2026.
+Gleich wie Commit 547887b auf claude/tfm-gutschein-shop-live.
+Gesichert: dev/gutschein-seiten.mjs, dev/gutschein-shop-test.mjs, netlify/functions/_lib/gutschein-seiten-html.mjs,
+WhatsApp-Vorschau neutral (München, Landshut), STAND.md.

@@ -117,7 +117,7 @@ const ICONS = {
 // Texte der Vorschau (Bild, Titel, og:description, Alt-Text) je Fassung (24.11.2026, Runde 3, einfache Sprache, kein „unter Wert“;
 // 24.11.2026 abends, Domenic: „nicht du zahlst weniger, sondern du bekommst mehr für dein Geld“ → bezahlter Betrag zuerst, Wert betont):
 //   "angebot"  „Für 375 € kaufen, 500 € bekommen*“ mit Bedingung unten, rechts „Für 200 € / 300 € / bekommen“ (Standard, solange beide kaufbar sind)
-//   "neutral"  „Tattoo-Gutscheine zum Weihnachtspreis“ ohne Beträge (500er oder günstigster ausverkauft)
+//   "neutral"  „Tattoo-Gutscheine zum Weihnachtspreis“ ohne Beträge und ohne „bekommst mehr“ (500er oder günstigster ausverkauft)
 //   "danach"   „Tattoo-Gutschein zum Verschenken“ (nach dem 24.12., 16 Uhr oder wenn alle Aktions-Gutscheine verkauft sind)
 // Welche gilt, entscheidet die Seiten-Funktion aus dem echten Bestand (netlify/functions/_lib/gutschein-seite.mjs).
 const FASSUNGEN = { angebot: "og-weihnachten.jpg", neutral: "og-weihnachten-neutral.jpg", danach: "og-gutschein.jpg" };
@@ -130,7 +130,8 @@ function ogTexte(c, fassung = "angebot") {
     titel: `Tattoo-Gutschein zum Verschenken · ${name}`, ogText: `Für Tattoo oder Piercing in ${stadt}. Eigener Betrag von ${frei}, sofort als PDF.`,
     ogAlt: `${name}: Tattoo-Gutschein zum Verschenken, von ${frei}, sofort als PDF`, ogDatei };
   if (fassung === "neutral") return { fuss: "", h1Klasse: "", pille: "Weihnachts-Aktion", zeileA: "Tattoo-Gutscheine", zeileB: "zum Weihnachtspreis", bis: "Nur bis 24.12., 16 Uhr", ...karteSofort,
-    titel: `Tattoo-Gutscheine zum Weihnachtspreis · ${name}`, ogText: `Für Tattoo oder Piercing in ${stadt}. Du bekommst mehr, als du zahlst. Nur bis 24.12.`,
+    // Ohne „Du bekommst mehr, als du zahlst“: das neutrale Bild hat keine Fußzeile mit der Bedingung (UWG § 5, Prüfung 24.11.2026)
+    titel: `Tattoo-Gutscheine zum Weihnachtspreis · ${name}`, ogText: `Für Tattoo oder Piercing in ${stadt}. Weihnachts-Aktion nur bis 24.12., 16 Uhr.`,
     ogAlt: `${name}: Weihnachts-Aktion, Tattoo-Gutscheine zum Weihnachtspreis, nur bis 24.12., 16 Uhr`, ogDatei };
   // Pille „Tattoo-Gutschein“: WhatsApp zeigt oft nur das Quadrat aus der Mitte (ohne Geschenk links), dort muss klar sein, was man kauft
   return { pille: "Tattoo-Gutschein", h1Klasse: "kaufen", zeileA: `Für ${EURO(nr4.preisCent)} kaufen,`, zeileB: `${EURO(nr4.wertCent)} bekommen*`, bis: "Nur bis 24.12., 16 Uhr",
