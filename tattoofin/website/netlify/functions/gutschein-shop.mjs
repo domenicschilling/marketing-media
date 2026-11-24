@@ -14,6 +14,9 @@ import { SHOPS, shopFuer, shopZustand, shopOeffentlich, offeneKassen, reserviere
 import { bestaetigen } from "./pay.mjs";
 
 const NICHT_DA = "Diesen Gutschein-Shop gibt es nicht.";
+// Fachliche Ablehnung (ausverkauft, schon gekauft, Aktion vorbei …): Status 200 mit { error, code, status }, damit der Browser
+// im Kaufablauf keinen roten Netzwerkfehler meldet. „status“ nennt den eigentlichen Grund (409, 429, 503) für Tests und Auswertung.
+const abgelehnt = (error, status = 409, code = "") => json({ error, code, status, abgelehnt: true }, 200, { "cache-control": "no-store" });
 
 // Nur Vorschau-Site (eigener Speicher, Stripe-Simulation): Beispiel-Studio mit den echten öffentlichen Studio-Angaben anlegen,
 // damit der Shop dort ohne Anmeldung getestet werden kann. Auf der echten Site nie.
@@ -70,8 +73,8 @@ export default handler(async (req, context) => {
   if (!r) return fail(NICHT_DA, 404);
   const { s, c } = r;
   const zustand = shopZustand(s, c);
-  if (!zustand.offen) return fail(zustand.grund, 409);
-  if (testKasse(s) || !darfKassieren(s)) return fail("Bei diesem Studio ist der Online-Kauf gerade nicht möglich.", 409);
+  if (!zustand.offen) return abgelehnt(zustand.grund, 409, "zu");
+  if (testKasse(s) || !darfKassieren(s)) return abgelehnt("Bei diesem Studio ist der Online-Kauf gerade nicht möglich.", 409, "zu");
 
   const kunde = clean(b.kunde, 80), email = clean(b.email, 160).toLowerCase();
   if (!kunde) return fail("Bitte gib deinen Namen an.");
@@ -90,7 +93,7 @@ export default handler(async (req, context) => {
   } else {
     const a = c.aktionen.find((x) => x.id === b.auswahl);
     if (!a) return fail("Bitte wähle einen Gutschein aus.");
-    if (!zustand.aktionOffen) return fail(zustand.aktionGrund || "Die Aktions-Gutscheine gibt es gerade nicht.", 409);
+    if (!zustand.aktionOffen) return abgelehnt(zustand.aktionGrund || "Die Aktions-Gutscheine gibt es gerade nicht.", 409, "aktion_vorbei");
     // Wer mit der Zurück-Taste aus der Kasse kommt, hat noch eine offene Kasse: die alte beenden und freigeben, sonst wäre er
     // (ein Aktions-Gutschein pro E-Mail) 30 Minuten gesperrt. Ist sie inzwischen bezahlt, bleibt sie (Stripe lehnt das Beenden ab).
     for (const t of await offeneKassen(s, c, email)) {
@@ -105,7 +108,7 @@ export default handler(async (req, context) => {
     const ipHash = crypto.createHash("sha256").update(String(clientIp(req, context)) + CFG.siteUrl).digest("hex").slice(0, 16);
     let res;
     try { res = await reservieren(s, c, a, { zahlungId: zid, email, ip: ipHash }); }
-    catch (e) { if (e instanceof ShopFehler) return json({ error: e.message, code: e.code }, e.status); throw e; }
+    catch (e) { if (e instanceof ShopFehler) return abgelehnt(e.message, e.status, e.code); throw e; }
     betragCent = a.preisCent;
     beschreibung = `Aktions-Gutschein Nr. ${a.nr}`;
     gutschein = { empfaenger, nachricht, shop: true, aktion: { id: a.id, nr: a.nr, stueck: a.stueck }, wertCent: a.wertCent, bezahltCent: a.preisCent, bonusCent: a.wertCent - a.preisCent, bonusBis: bonusBisIso(c), reservierung: res.key, reserviertBis: res.bis };

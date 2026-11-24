@@ -33,7 +33,8 @@ let ok = 0, fail = 0;
 const check = (c, name, info) => { if (c) { ok++; console.log("  ✓", name); } else { fail++; console.log("  ✗", name, info !== undefined ? "→ " + String(typeof info === "string" ? info : JSON.stringify(info)).slice(0, 500) : ""); } };
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const get = (u) => fetch(BASE + u).then((r) => r.json());
-const post = (b) => fetch(BASE + "/api/gutschein-shop", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(b) }).then(async (r) => ({ status: r.status, ...(await r.json()) }));
+// Fachliche Ablehnungen kommen mit HTTP 200 und { abgelehnt, status } (kein roter Netzwerkfehler im Browser) → hier wie bisher als Status prüfen
+const post = (b) => fetch(BASE + "/api/gutschein-shop", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(b) }).then(async (r) => { const d = await r.json(); return { status: r.status, ...d, http: r.status }; });
 const mockState = () => fetch(`http://localhost:${MOCK_PORT}/mock/state`).then((r) => r.json());
 const bezahlen = (url) => fetch(url, { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: "pm=card", redirect: "manual" });
 const mailsAn = (to) => fs.readdirSync(dataDir).filter((f) => f.startsWith("mail%2F")).map((f) => JSON.parse(fs.readFileSync(path.join(dataDir, f)))).filter((m) => [].concat(m.to).includes(to));
@@ -44,7 +45,9 @@ function pdfText(buf) {
   const s = buf.toString("latin1"), out = [];
   for (const m of s.matchAll(/stream\r?\n([\s\S]*?)\r?\nendstream/g)) {
     let roh; try { roh = zlib.inflateSync(Buffer.from(m[1], "latin1")).toString("latin1"); } catch { continue; }
-    for (const t of roh.matchAll(/<([0-9A-Fa-f]+)>\s*Tj/g)) out.push(Buffer.from(t[1], "hex").toString("latin1"));
+    // Tj: einfacher Text; TJ: Text mit Abstand nach dem €-Zeichen (gutscheinPdf) → Teile ohne Trenner zusammensetzen
+    for (const t of roh.matchAll(/<([0-9A-Fa-f]+)>\s*Tj|\[((?:\s*(?:<[0-9A-Fa-f]*>|-?[\d.]+))*)\s*\]\s*TJ/g))
+      out.push(t[1] ? Buffer.from(t[1], "hex").toString("latin1") : [...t[2].matchAll(/<([0-9A-Fa-f]*)>/g)].map((h) => Buffer.from(h[1], "hex").toString("latin1")).join(""));
   }
   return out.join(" ").replace(/\x80/g, "€");
 }
@@ -116,7 +119,7 @@ check(fs1.gutschein.wertCent === 50000 && fs1.gutschein.bezahltCent === 37500 &&
 console.log("Stückzahl Nr. 1 (1 Stück)");
 const a1 = await kauf("nr1", "a1@example.com");
 const b1 = await kauf("nr1", "b1@example.com");
-check(a1.status === 200 && b1.status === 409 && b1.code === "ausverkauft" && /in der Kasse/.test(b1.error), "Zweiter Käufer während der Kasse: „gerade in der Kasse“", b1);
+check(a1.status === 200 && b1.status === 409 && b1.code === "ausverkauft" && /2\.000-€-Gutschein ist gerade reserviert/.test(b1.error), "Zweiter Käufer während der Kasse: „Der 2.000-€-Gutschein ist gerade reserviert“", b1);
 await bezahlen(a1.url); await bisBezahlt(a1.zahlung);
 const c1 = await kauf("nr1", "c1@example.com");
 check(c1.status === 409 && /ausverkauft/.test(c1.error), "Nach dem Verkauf: „ausverkauft“, nicht mehr kaufbar", c1);
@@ -269,8 +272,11 @@ console.log("Seiten je Stadt (statisch, og-Tags, Rechtliches nur im Fuß)");
     const datei = path.join(root, "public", new URL(img || "https://x/").pathname), jpg = fs.existsSync(datei) ? fs.readFileSync(datei) : Buffer.alloc(0), mass = jpegMasse(jpg);
     check(mass.w === 1200 && mass.h === 630 && jpg.length < 300000 && crypto.createHash("sha1").update(jpg).digest("hex").slice(0, 8) === new URL(img || "https://x/").searchParams.get("v"), `${t.stadt}: Vorschaubild ${t.k}/og-weihnachten.jpg 1200×630, < 300 KB, Prüfsumme in der Adresse aktuell`, { mass, kb: Math.round(jpg.length / 1024) });
     const ogT = meta(x.html, "og:title"), ogD = meta(x.html, "og:description") || "";
-    check(ogT === "Weihnachts-Gutscheine unter Wert" && ogD.startsWith(`Tattoo Fashion ${t.stadt}: z. B. 500 € Gutschein für 375 €.`) && /Nur 21 Stück, bis 24\.12\., 16 Uhr/.test(ogD) && ogD.length <= 100, `${t.stadt}: og:title/description kurz und verkaufsstark`, { ogT, ogD, l: ogD.length });
-    check(x.html.includes(`fbq('init','${t.pixel}')`) && !x.html.includes(anders.pixel) && x.html.includes(`/assets/gs-shop/${t.k}/logo.png`) && x.html.includes(t.tel) && x.html.includes(`wa.me/${t.wa}`) && x.html.includes(`instagram.com/${t.ig}/`) && x.html.includes(`Weihnachts-Aktion · ${t.stadt}`) && x.html.includes(`<b>${t.g}</b> · ${t.n} Google-Bewertungen`) && !x.html.includes(anders.adr), `${t.stadt}: eigenes Pixel, Logo, Telefon, WhatsApp, Instagram, Google-Bewertung, keine Angaben der anderen Stadt`);
+    // Fette Zeile in WhatsApp: Studio + Angebot; Beschreibung mit richtiger Stückzahl (21 = alle zusammen, nicht 21 vom 500er), kurz genug für 2 Zeilen
+    check(ogT === `Tattoo Fashion ${t.stadt}: Weihnachts-Gutscheine unter Wert` && ogD.replace(/\u00a0/g, " ") === "500 € Gutschein für 375 €, auch 300 € für 200 €. Insgesamt nur 21 Stück." && meta(x.html, "description") === ogD && ogD.length <= 80, `${t.stadt}: og:title mit Studio, Beschreibung „… Insgesamt nur 21 Stück.“ (≤ 80 Zeichen)`, { ogT, ogD, l: ogD.length });
+    check(["icon-32.png", "icon-180.png", "icon-192.png", "geschenk-480.webp", "geschenk-960.webp", "geschenk-1400.webp", "geschenk-960.png", "pdf-muster.webp", "pdf-muster.jpg", "logo-gold-480.webp", "logo-gold-960.webp", "logo-gold-1400.webp"].every((f) => fs.existsSync(path.join(root, "public/assets/gs-shop", t.k, f)))
+      && x.html.includes(`apple-touch-icon" href="/assets/gs-shop/${t.k}/icon-180.png"`) && x.html.includes(`/assets/gs-shop/${t.k}/geschenk-1400.webp 1400w`) && !/w-[a-z-]+\.jpg|favicon\.png/.test(x.html), `${t.stadt}: scharfe Bilder (Geschenk 480/960/1400, Logo bis 1.400 px, Symbole 32/180/192, Gutschein-Muster)`);
+    check(x.html.includes(`fbq('init','${t.pixel}')`) && !x.html.includes(anders.pixel) && x.html.includes(`/assets/gs-shop/${t.k}/logo-gold-480.webp`) && x.html.includes(t.tel) && x.html.includes(`wa.me/${t.wa}`) && x.html.includes(`instagram.com/${t.ig}/`) && x.html.includes(`Gutschein von Tattoo Fashion ${t.stadt} mit roter Schleife`) && x.html.includes(`<b>${t.g}</b> · ${t.n} Google-Bewertungen`) && !x.html.includes(anders.adr), `${t.stadt}: eigenes Pixel, Logo, Telefon, WhatsApp, Instagram, Google-Bewertung, keine Angaben der anderen Stadt`);
     const main = x.html.slice(x.html.indexOf("<main>"), x.html.indexOf("</main>"));
     check(!/Widerruf|Impressum|Verkäufer|Muster-Widerrufsformular|Gutscheinbedingungen|type="checkbox"/.test(main) && !/type="checkbox"|f-ok/.test(x.html), `${t.stadt}: keine Rechtstexte im Seiteninhalt, kein Häkchen im Kauf`);
     check(["impressum", "datenschutz", "widerruf", "bedingungen"].every((a) => x.html.includes(`href="/gutschein-kaufen/${t.slug}-${a}"`)), `${t.stadt}: Fuß-Links Impressum, Datenschutz, Widerruf, Gutscheinbedingungen`);
@@ -285,25 +291,46 @@ console.log("Seiten je Stadt (statisch, og-Tags, Rechtliches nur im Fuß)");
 }
 
 console.log("Seite im Browser (Handy)");
+let webkit = null;
+try { ({ webkit } = require("playwright")); } catch { try { ({ webkit } = require("/opt/node22/lib/node_modules/playwright")); } catch {} }
 const browser = await chromium.launch();
 const errors = [];
+const beobachten = (pg) => { pg.on("pageerror", (e) => errors.push(e.message)); pg.on("console", (m) => { if (m.type() === "error" && !/umami|fbevents/.test(m.text())) errors.push("Konsole: " + m.text()); }); };
 const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
 const p = await ctx.newPage();
-p.on("pageerror", (e) => errors.push(e.message));
+beobachten(p);
 await p.goto(BASE + "/gutschein-kaufen/tattoo-fashion-munich");
-await p.waitForSelector("button.zeile[data-wahl] .rest i:has-text('von')");
+await p.waitForSelector("button.zeile[data-wahl=nr4] .rest:has-text('von')");
 const heroOk = await p.evaluate(() => { const h = document.querySelector(".hero").getBoundingClientRect(), k = document.getElementById("hero-kaufen").getBoundingClientRect(), l = document.querySelector(".logo-box").getBoundingClientRect(), t = document.querySelector(".hero .text").getBoundingClientRect(); return Math.abs(h.height - innerHeight) <= 2 && k.bottom <= innerHeight && l.height >= 60 && l.bottom <= t.top + 1; });
-check(heroOk, "Hero = erster Bildschirm, Logo über dem Text, Knopf „Gutschein kaufen“ sichtbar");
+check(heroOk, "Hero = erster Bildschirm, Geschenk mit Logo über dem Text, Knopf „Gutschein aussuchen“ sichtbar");
+const heroText = await p.evaluate(() => [...document.querySelectorAll(".hero h1, .hero p.lead, .hero .cd-titel")].filter((x) => x.offsetParent).map((x) => x.textContent.replace(/ /g, " ")).join(" | "));
+check(/500 € Gutschein für 375 €/.test(heroText) && /schon ab 200 € \(Wert 300 €\)/.test(heroText) && /Aktion endet am 24\.12\. um 16 Uhr/.test(heroText) && !/bis zu/i.test(heroText), "Hero: Angebot groß (500 € für 375 €), „schon ab 200 €“, Aktionsende sichtbar, kein „bis zu“", heroText);
 await p.screenshot({ path: path.join(shots, "handy-hero.png") });
-check(await p.isDisabled("button.zeile[data-wahl=nr1]") && /ausverkauft/.test(await p.textContent("button.zeile[data-wahl=nr1]")) && /5 von 6/.test(await p.textContent("button.zeile[data-wahl=nr4]")) && /Noch 1[0-9] von 21 Aktions-Gutscheinen/.test(await p.textContent("#hero-klein")), "Liste: Nr. 1 ausverkauft (gesperrt), Nr. 4 „5 von 6“, Hero zeigt echte Reststückzahl");
+{
+  const dApi = await get("/api/gutschein-shop?s=tattoo-fashion-munich");
+  const soll = (a) => (a.ausverkauft ? "Ausverkauft" : a.verfuegbar <= 0 ? "Gerade reserviert" : a.verfuegbar >= a.stueck ? `Nur ${a.stueck} Stück` : `Noch ${a.verfuegbar} von ${a.stueck}`);
+  const karten = await p.$$eval("#bogen button.zeile[data-wahl^=nr]", (l) => l.map((x) => ({ id: x.dataset.wahl, rest: x.querySelector(".rest").textContent.replace(/ /g, " "), chip: x.querySelector(".chip").textContent.replace(/ /g, " "), aus: x.disabled })));
+  check(dApi.shop.aktionen.every((a, i) => karten[i].rest === soll(a) && karten[i].chip === `${((a.wertCent - a.preisCent) / 100).toLocaleString("de-DE")} € geschenkt`),
+    "Liste: je Karte Ersparnis („125 € geschenkt“) und Stückzahl („Nur 10 Stück“ solange nichts weg ist, sonst „Noch 5 von 6“)", karten);
+  const rest = dApi.shop.aktionen.reduce((s, a) => s + a.verfuegbar, 0);
+  check(karten[0].aus && karten[0].rest === "Ausverkauft" && (await p.textContent("#hero-klein")) === `Noch ${rest} von 21 Aktions-Gutscheinen`, "Nr. 1 ausverkauft (gesperrt), Hero zeigt echte Reststückzahl ohne „solange verfügbar“", await p.textContent("#hero-klein"));
+}
 await p.locator("#gutscheine").scrollIntoViewIfNeeded();
 await p.screenshot({ path: path.join(shots, "handy-liste.png") });
+// Feste Kauf-Leiste: weg, solange die Gutschein-Liste zu sehen ist; da, wenn nur Text zu sehen ist
+await p.evaluate(() => document.getElementById("bogen").scrollIntoView({ block: "center" })); await p.waitForTimeout(500);
+const leisteListe = await p.evaluate(() => document.getElementById("sticky").classList.contains("show"));
+await p.evaluate(() => document.getElementById("faq").scrollIntoView({ block: "start" })); await p.waitForTimeout(500);
+const leisteFaq = await p.evaluate(() => document.getElementById("sticky").classList.contains("show"));
+check(!leisteListe && leisteFaq, "Feste Kauf-Leiste verdeckt die Gutschein-Liste nicht (weg über der Liste, da bei den Fragen)", { leisteListe, leisteFaq });
+await p.evaluate(() => scrollTo(0, 0)); await p.waitForTimeout(300);
 await p.click("#hero-kaufen");
-check(await p.isVisible("#funnel") && await p.isDisabled("#wahl input[value=nr1]") && /Schritt 1 von 2/.test(await p.textContent("#f-schritt")), "Hero-Knopf öffnet den Kauf (Schritt 1 von 2), Nr. 1 nicht wählbar");
+check(await p.isVisible("#funnel") && await p.isDisabled("#wahl input[value=nr1]") && /Schritt 1 von 2/.test(await p.textContent("#f-schritt")) && await p.evaluate(() => document.querySelector("main").inert && document.activeElement.id === "f-titel"), "Hero-Knopf öffnet den Kauf (Schritt 1 von 2), Fokus im Fenster, Seite dahinter gesperrt, Nr. 1 nicht wählbar");
 await p.screenshot({ path: path.join(shots, "handy-schritt1.png") });
 await p.click("#wahl label:has(input[value=nr5])");
-await p.click("#f-weiter");
-check(/Schritt 2 von 2/.test(await p.textContent("#f-schritt")) && /Gutschein Nr\. 5 · Wert 300 €/.test(await p.textContent("#f-summe")) && /200 €/.test(await p.textContent("#f-summe")) && /Weiter zur Zahlung/.test(await p.textContent("#f-weiter")) && await p.isHidden("#f-extra"), "Schritt 2: Summe „Gutschein Nr. 5 · Wert 300 € – du zahlst 200 €“, Knopf „Weiter zur Zahlung“, Empfänger/Gruß eingeklappt");
+await p.waitForFunction(() => /Schritt 2 von 2/.test(document.getElementById("f-schritt").textContent), null, { timeout: 3000 }).catch(() => {});
+check(/Schritt 2 von 2/.test(await p.textContent("#f-schritt")) && /300 €-Gutschein|300-€-Gutschein/.test((await p.textContent("#f-summe")).replace(/ /g, " ")) && /du zahlst 200 €/.test((await p.textContent("#f-summe")).replace(/ /g, " ")) && /Weiter zur Zahlung/.test(await p.textContent("#f-weiter")) && await p.isHidden("#f-extra"),
+  "Tipp auf einen Aktions-Gutschein: gleich Schritt 2 (ohne „Weiter“), Summe „300-€-Gutschein – du zahlst 200 €“", await p.textContent("#f-summe"));
 await p.fill("#f-name", "Handy Käuferin"); await p.fill("#f-email", "handy@example.com");
 await p.click("#f-plus");
 await p.fill("#f-empf", "Jonas"); await p.fill("#f-gruss", "Für dein erstes Tattoo");
@@ -316,41 +343,133 @@ await p.screenshot({ path: path.join(shots, "handy-schritt2.png") });
 await Promise.all([p.waitForURL(new RegExp(`localhost:${MOCK_PORT}/pay/`)), p.click("#f-weiter")]);
 check(true, "Ohne Häkchen und ohne Übersicht direkt zur Zahlung (Stripe)");
 await Promise.all([p.waitForURL(/gutschein-kaufen\/tattoo-fashion-munich/), p.click("#pay")]);
-await p.waitForFunction(() => /im Wert von 300 € mit Code/.test(document.getElementById("danke-text").textContent), null, { timeout: 15000 }).catch(() => {});
-check(/Gutschein im Wert von 300 € mit Code/.test(await p.textContent("#danke-text")) && await p.isVisible("#danke"), "Nach der Zahlung: Danke im Shop-Look „Gutschein im Wert von 300 € mit Code per E-Mail“");
+await p.waitForFunction(() => /im Wert von 300 € mit Code/.test(document.getElementById("danke-text").textContent.replace(/ /g, " ")), null, { timeout: 15000 }).catch(() => {});
+check(/Gutschein im Wert von 300 € mit Code schicken wir dir sofort/.test((await p.textContent("#danke-text")).replace(/ /g, " ")) && await p.isVisible("#danke"), "Nach der Zahlung: Danke im Shop-Look „… im Wert von 300 € mit Code schicken wir dir sofort …“");
 await p.screenshot({ path: path.join(shots, "handy-danke.png") });
 const mh = mailsAn("handy@example.com").find((x) => /über 300,00 €/.test(x.subject));
 check(mh && /Jonas/.test(mh.html + JSON.stringify(mh)), "Gutschein-Mail an handy@example.com (Wert 300 €, für Jonas)");
-// Abbruch im Browser (Landshut, Karte direkt aus der Liste → gleich Schritt 2)
+// Abbruch im Browser (Landshut, Karte direkt aus der Liste → gleich Schritt 2). Danach: Fenster mit derselben Auswahl und den Eingaben wieder offen
 await p.goto(BASE + "/gutschein-kaufen/tattoo-fashion-landshut");
-await p.waitForSelector("button.zeile[data-wahl=nr4] .rest i:has-text('von')");
+await p.waitForSelector("button.zeile[data-wahl=nr4] .rest:has-text('Stück')");
 await p.screenshot({ path: path.join(shots, "handy-hero-landshut.png") });
 await p.click("button.zeile[data-wahl=nr4]");
 check(/Schritt 2 von 2/.test(await p.textContent("#f-schritt")), "Tipp auf eine Gutschein-Karte: direkt Schritt 2");
 await p.fill("#f-name", "Abbruch Test"); await p.fill("#f-email", "abbruch@example.com");
 await Promise.all([p.waitForURL(new RegExp(`localhost:${MOCK_PORT}/pay/`)), p.press("#f-email", "Enter")]);
 await Promise.all([p.waitForURL(/gutschein-kaufen\/tattoo-fashion-landshut/), p.click("#cancel")]);
-await p.waitForTimeout(800);
+await p.waitForFunction(() => !document.getElementById("funnel").hidden, null, { timeout: 5000 }).catch(() => {});
 const dl2 = await get("/api/gutschein-shop?s=tattoo-fashion-landshut");
 check(/abgebrochen/.test(await p.textContent("#meldung")) && dl2.shop.aktionen.find((a) => a.id === "nr4").verfuegbar === 6, "Landshut: Enter im E-Mail-Feld startet die Kasse; Abbrechen → Meldung „nichts bezahlt“, Nr. 4 wieder frei");
-// Kleine Handys und quer: Hero passt, Logo über/neben dem Text, Knopf ganz sichtbar
+check(/Schritt 2 von 2/.test(await p.textContent("#f-schritt")) && (await p.inputValue("#f-name")) === "Abbruch Test" && (await p.inputValue("#f-email")) === "abbruch@example.com" && /500-€-Gutschein/.test(await p.textContent("#f-summe")), "Nach dem Abbrechen: Kauf-Fenster wieder offen, gleiche Auswahl, Name und E-Mail schon eingetragen");
+await p.click("#f-zu");
+// Zurück-Taste aus der Kasse (ohne „Abbrechen“): Gutschein sofort wieder frei (Landshut Nr. 2, 2 Stück)
+{
+  await p.click("button.zeile[data-wahl=nr2]");
+  await p.fill("#f-name", "Zurück Taste"); await p.fill("#f-email", "zurueck-taste@example.com");
+  await Promise.all([p.waitForURL(new RegExp(`localhost:${MOCK_PORT}/pay/`)), p.click("#f-weiter")]);
+  const waehrend = (await get("/api/gutschein-shop?s=tattoo-fashion-landshut")).shop.aktionen.find((a) => a.id === "nr2").verfuegbar;
+  await p.goBack();
+  await p.waitForURL(/gutschein-kaufen\/tattoo-fashion-landshut/);
+  let frei = 0; for (let i = 0; i < 30 && frei !== 2; i++) { await wait(150); frei = (await get("/api/gutschein-shop?s=tattoo-fashion-landshut")).shop.aktionen.find((a) => a.id === "nr2").verfuegbar; }
+  await p.waitForFunction(() => !document.getElementById("funnel").hidden, null, { timeout: 5000 }).catch(() => {});
+  st = await mockState();
+  const sess = Object.values(st.sessions).filter((x) => x.customer_email === "zurueck-taste@example.com" || /zurueck-taste/.test(JSON.stringify(x))).pop();
+  check(waehrend === 1 && frei === 2 && (!sess || sess.status === "expired") && /Schritt 2 von 2/.test(await p.textContent("#f-schritt")), "Zurück-Taste aus der Kasse: Kasse sofort beendet, Gutschein gleich wieder frei (nicht 30 Minuten gesperrt), Fenster mit Auswahl wieder offen", { waehrend, frei, s: sess && sess.status });
+  await p.click("#f-zu");
+}
+await ctx.close();
+
+// Fehler sind immer sichtbar (fester Fuß über dem Knopf), auch auf kleinen Handys und in Safari (WebKit)
+for (const [eng, name] of [[chromium, "Chromium"], [webkit, "Safari"]]) {
+  if (!eng) { check(false, "WebKit fehlt (npx playwright install webkit)"); continue; }
+  const br = eng === chromium ? browser : await eng.launch();
+  for (const [w, h] of [[375, 667], [320, 568]]) {
+    const c3 = await br.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 2, ...(eng === chromium ? { isMobile: true, hasTouch: true } : {}) });
+    const p3 = await c3.newPage(); beobachten(p3);
+    await p3.goto(BASE + "/gutschein-kaufen/tattoo-fashion-munich"); await p3.waitForSelector("html.geladen");
+    const sichtbar = () => p3.evaluate(() => { const f = document.getElementById("f-fehler"), r = f.getBoundingClientRect(); if (!f.textContent || !r.height) return false; const x = r.left + r.width / 2, y = r.top + r.height / 2, e = document.elementFromPoint(x, y); return r.top >= 0 && r.bottom <= innerHeight && Boolean(e) && (e === f || f.contains(e)); });
+    const ergebnis = {};
+    await p3.click("#hero-kaufen"); await p3.click("#f-weiter"); ergebnis.keineWahl = await sichtbar();
+    await p3.click("#wahl label:has(input[value=frei])"); await p3.click("#f-weiter"); ergebnis.betrag = await sichtbar();
+    ergebnis.platzhalter = await p3.$eval("#f-betrag", (i) => i.placeholder === "z. B. 100" && parseFloat(getComputedStyle(i, "::placeholder").fontSize) <= 16);
+    await p3.click("#wahl label:has(input[value=nr5])"); await p3.waitForTimeout(450);
+    await p3.click("#f-weiter"); ergebnis.name = await sichtbar();
+    await p3.fill("#f-name", "Kim"); await p3.fill("#f-email", "kim@"); await p3.click("#f-weiter"); ergebnis.email = await sichtbar();
+    await p3.fill("#f-email", "kim@example.com"); await p3.click("#f-weiter"); // schon einen Aktions-Gutschein gekauft → Server lehnt ab
+    await p3.waitForFunction(() => /Pro Person/.test(document.getElementById("f-fehler").textContent), null, { timeout: 20000 }).catch(() => {});
+    ergebnis.server = await sichtbar();
+    await p3.screenshot({ path: path.join(shots, `fehler-${name}-${w}x${h}.png`) });
+    check(Object.values(ergebnis).every(Boolean), `${name} ${w}×${h}: jede Fehlermeldung (keine Wahl, Betrag, Name, E-Mail, Server „Pro Person …“) sichtbar über dem Knopf; Platzhalter „z. B. 100“ klein`, ergebnis);
+    await c3.close();
+  }
+  // €-Zeichen bricht nie allein um (Liste, Kauf-Fenster, Summe)
+  for (const w of [320, 360, 375]) for (const slug of ["tattoo-fashion-munich", "tattoo-fashion-landshut"]) {
+    const c4 = await br.newContext({ viewport: { width: w, height: 740 }, deviceScaleFactor: 2 });
+    const p4 = await c4.newPage(); beobachten(p4);
+    await p4.goto(BASE + "/gutschein-kaufen/" + slug); await p4.waitForSelector("html.geladen");
+    const einzeilig = () => p4.evaluate(() => [...document.querySelectorAll("#bogen .wert, #bogen .preis, #bogen .chip, #bogen .rest, .opt .o-w b, .opt .r b, .opt .chip, .summe span, .summe b, #hero-klein, .hero .eyebrow, #gutscheine .eyebrow, .final .eyebrow")].filter((e) => e.offsetParent)
+      .filter((e) => { const tops = new Set(), tw = document.createTreeWalker(e, NodeFilter.SHOW_TEXT); for (let n = tw.nextNode(); n; n = tw.nextNode()) { const r = document.createRange(); r.selectNodeContents(n); for (const x of r.getClientRects()) if (x.width > 0.5) tops.add(Math.round(x.bottom / 6)); } return tops.size > 1; }).map((e) => e.className + ": " + e.textContent));
+    const vorher = await einzeilig();
+    await p4.click("#hero-kaufen"); const imFenster = await einzeilig();
+    await p4.click("#wahl label:has(input[value=nr2])"); await p4.waitForTimeout(450); const summe = await einzeilig();
+    const breit = await p4.evaluate(() => document.documentElement.scrollWidth <= innerWidth);
+    check(!vorher.length && !imFenster.length && !summe.length && breit, `${name} ${w} px ${slug.slice(14)}: Beträge, Ersparnis, Stückzahl und Pillen einzeilig (kein € allein in der nächsten Zeile), kein Querscrollen`, [...vorher, ...imFenster, ...summe]);
+    await c4.close();
+  }
+  if (br !== browser) await br.close();
+}
+
+// iPhone-Safari: das Fenster bleibt bei offener Tastatur gleich groß, nur der sichtbare Bereich (visualViewport) schrumpft und
+// verschiebt sich. Nachgestellt mit einem künstlichen visualViewport: Kopf, Summe und Knopf müssen über der Tastatur bleiben.
+{
+  const c6 = await browser.newContext({ viewport: { width: 390, height: 664 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+  await c6.addInitScript(() => { const et = new EventTarget(), vv = { height: innerHeight, width: innerWidth, offsetTop: 0, offsetLeft: 0, scale: 1, addEventListener: et.addEventListener.bind(et), removeEventListener: et.removeEventListener.bind(et) };
+    Object.defineProperty(window, "visualViewport", { value: vv, configurable: true }); window.__tastatur = (h, top) => { vv.height = h; vv.offsetTop = top; et.dispatchEvent(new Event("resize")); }; });
+  const p6 = await c6.newPage(); beobachten(p6);
+  await p6.goto(BASE + "/gutschein-kaufen/tattoo-fashion-landshut"); await p6.waitForSelector("html.geladen");
+  await p6.click("button.zeile[data-wahl=nr5]"); await p6.waitForTimeout(700); // Fenster fährt hoch (0,35 s)
+  const lage = async (h, top) => { await p6.evaluate(([h, top]) => window.__tastatur(h, top), [h, top]); await p6.waitForTimeout(150); return p6.evaluate(([h, top]) => { const r = (id) => document.getElementById(id).getBoundingClientRect(); const k = r("f-schritt"), w = r("f-weiter"), s = r("f-summe"), x = r("f-zu");
+    return { kopf: k.top >= top && x.top >= top, knopf: w.bottom <= top + h + 1, summe: s.top >= top && s.bottom <= top + h }; }, [h, top]); };
+  const ohne = await lage(330, 0), geschoben = await lage(330, 120), zu = await lage(664, 0);
+  check([ohne, geschoben, zu].every((x) => x.kopf && x.knopf && x.summe), "Tastatur wie im iPhone (nur sichtbarer Bereich kleiner, auch verschoben): Kopf mit ×, Summe und „Weiter zur Zahlung“ bleiben über der Tastatur", { ohne, geschoben, zu });
+  await c6.close();
+}
+// Kleine Handys und quer: Hero passt, Geschenk über/neben dem Text, Knopf ganz sichtbar
 for (const [w, h] of [[320, 460], [375, 548], [430, 932], [844, 340]]) {
   const c2 = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
-  const p2 = await c2.newPage(); p2.on("pageerror", (e) => errors.push(e.message));
+  const p2 = await c2.newPage(); beobachten(p2);
   await p2.goto(BASE + "/gutschein-kaufen/tattoo-fashion-landshut"); await p2.waitForSelector("button.zeile[data-wahl]");
-  const r = await p2.evaluate(() => { const H = document.querySelector(".hero").getBoundingClientRect(), k = document.getElementById("hero-kaufen").getBoundingClientRect(), l = document.querySelector(".logo-box").getBoundingClientRect(), t = document.querySelector(".hero .text").getBoundingClientRect(), quer = innerWidth > innerHeight;
-    return { voll: Math.abs(H.height - innerHeight) <= 2, knopf: k.bottom <= innerHeight && k.top >= 0, logo: l.height >= 56 && (quer ? l.right <= t.left + 1 : l.bottom <= t.top + 1), breit: document.documentElement.scrollWidth <= innerWidth }; });
-  check(r.voll && r.knopf && r.logo && r.breit, `${w}×${h}: Hero passt, Logo sichtbar ohne Überlappung, Knopf sichtbar, kein Querscrollen`, r);
+  const r = await p2.evaluate(() => { const H = document.querySelector(".hero").getBoundingClientRect(), k = document.getElementById("hero-kaufen").getBoundingClientRect(), l = document.querySelector(".logo-box").getBoundingClientRect(), t = document.querySelector(".hero .text").getBoundingClientRect(), quer = innerWidth > innerHeight, ct = document.querySelector(".hero .cd-titel").getBoundingClientRect();
+    return { voll: Math.abs(H.height - innerHeight) <= 2, knopf: k.bottom <= innerHeight && k.top >= 0, logo: l.height >= 56 && (quer ? l.right <= t.left + 1 : l.bottom <= t.top + 1), breit: document.documentElement.scrollWidth <= innerWidth, ende: ct.height > 0 && ct.top >= 0 && ct.bottom <= innerHeight }; });
+  check(r.voll && r.knopf && r.logo && r.breit && r.ende, `${w}×${h}: Hero passt, Geschenk sichtbar ohne Überlappung, „Aktion endet am 24.12. um 16 Uhr“ und Knopf sichtbar, kein Querscrollen`, r);
   await p2.screenshot({ path: path.join(shots, `hero-landshut-${w}x${h}.png`) });
   await c2.close();
 }
-// Desktop-Ansicht
-const pd = await (await browser.newContext({ viewport: { width: 1280, height: 860 } })).newPage();
-pd.on("pageerror", (e) => errors.push(e.message));
+// Desktop-Ansicht: schwebende Leiste schmal, Abschnitte in einer Spalte bündig
+const pd = await (await browser.newContext({ viewport: { width: 1440, height: 900 } })).newPage();
+beobachten(pd);
 await pd.goto(BASE + "/gutschein-kaufen/tattoo-fashion-munich"); await pd.waitForSelector("button.zeile[data-wahl]");
+await pd.evaluate(() => document.getElementById("faq").scrollIntoView()); await pd.waitForTimeout(500);
+const dk = await pd.evaluate(() => ({ leiste: document.querySelector("#sticky .btn").getBoundingClientRect().width, faq: Math.round(document.querySelector("#faq h2").getBoundingClientRect().left), liste: Math.round(document.querySelector("#gutscheine h2").getBoundingClientRect().left) }));
+check(dk.leiste <= 450 && dk.faq === dk.liste, "Desktop 1440: schwebender Knopf höchstens 440 px breit, „Häufige Fragen“ bündig mit den anderen Abschnitten", dk);
 await pd.screenshot({ path: path.join(shots, "desktop.png"), fullPage: true });
-await p.screenshot({ path: path.join(shots, "handy-ganz.png"), fullPage: true });
-check(errors.length === 0, "Keine JavaScript-Fehler", errors.join(" | "));
+
+// Nach dem Aktionsende: kein Countdown, kein Rabatt-Versprechen, Wertgutschein vorne und vorgewählt
+process.env.TF_JETZT = "2026-12-24T16:05:00+01:00";
+{
+  const c5 = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+  const p5 = await c5.newPage(); beobachten(p5);
+  await p5.goto(BASE + "/gutschein-kaufen/tattoo-fashion-munich"); await p5.waitForSelector("#bogen button.zeile.frei");
+  await p5.waitForFunction(() => document.documentElement.classList.contains("aus"), null, { timeout: 5000 }).catch(() => {});
+  const v = await p5.evaluate(() => { const sicht = (s) => [...document.querySelectorAll(s)].some((x) => x.offsetParent); return { aus: document.documentElement.classList.contains("aus"), cd: sicht("[data-cd]") || sicht("[data-cd-titel]"), h1: document.querySelector(".hero h1").innerText.replace(/\s+/g, " "), erste: document.querySelector("#bogen button").dataset.wahl, aktionen: document.querySelectorAll("#bogen button.zeile[data-wahl^=nr]").length, klein: document.getElementById("hero-klein").textContent, pille: [...document.querySelectorAll(".top .eyebrow")].filter((x) => x.offsetParent).map((x) => x.textContent).join() }; });
+  await p5.click("#hero-kaufen");
+  const vor = await p5.evaluate(() => { const i = document.querySelector("#wahl input:checked"); return i && i.value; });
+  check(v.aus && !v.cd && !/375/.test(v.h1) && v.erste === "frei" && v.aktionen === 0 && /vorbei/.test(v.klein) && !/21 Stück/.test(v.pille) && vor === "frei", "Nach dem 24.12., 16 Uhr: kein Countdown, Hero und Liste zeigen den Wertgutschein (vorne, im Kauf vorgewählt), kein Rabatt mehr", { ...v, vor });
+  await p5.screenshot({ path: path.join(shots, "nach-aktion.png") });
+  await c5.close();
+}
+process.env.TF_JETZT = "2026-11-23T21:05:00+01:00";
+check(errors.length === 0, "Keine JavaScript-Fehler und keine roten Konsolen-Meldungen (auch nicht bei „Pro Person …“)", errors.join(" | "));
 await browser.close();
 
 console.log(`\n${ok} bestanden, ${fail} fehlgeschlagen · Screenshots: ${shots}`);

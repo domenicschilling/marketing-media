@@ -1,26 +1,23 @@
-# STAND Gutschein-Shop TF München + Landshut (23.11.2026, spätabends)
+# STAND Gutschein-Shop TF München + Landshut (24.11.2026, nachts)
 
 **Ziel:** Viele Weihnachtsgutscheine verkaufen. Shop-Seite je Stadt (München, Landshut) + Meta-Werbematerial. Nichts live ohne Domenics OK, nichts an Meta ändern.
 
 **Live (alt):** München erste Fassung seit 23.11. (Deploy `6b048ffb`, danach `6b049c12` vom Haupt-Chat). Landshut ist noch nicht live.
 
-**Fertig auf Branch `claude/tfm-gutschein-shop-live` (Arbeitskopie `~/mm-tfm-design`), Entwurf (nicht live):**
+**Entwurf (nicht live), Branch `claude/tfm-gutschein-shop-live` (Arbeitskopie `~/mm-tfm-design`):**
 - https://tfm-gutschein-design--tattoofin.netlify.app/gutschein-kaufen/tattoo-fashion-munich
 - https://tfm-gutschein-design--tattoofin.netlify.app/gutschein-kaufen/tattoo-fashion-landshut
-- Entwurf läuft mit echtem Stripe und echten Daten: dort NIE eine Kasse öffnen.
-- Kauf in 2 Schritten (Gutschein → Name + E-Mail → Stripe), kein Häkchen, Stripe ohne Pflicht-Adresse/Telefon. Rechtstexte nur über Fuß-Links (eigene Seiten je Stadt), Gutschein-Mail unverändert mit Bedingungen + Widerruf.
-- Seiten je Stadt statisch aus `dev/gutschein/seite.html` + `SHOPS[…].seite` (`netlify/functions/_lib/gutschein-shop.mjs`): `node dev/gutschein-seiten.mjs --og` (Vorschaubilder neu), `--vorschau <ordner>` (WhatsApp-Nachbau als PNG), `--basis <url>` nur für den Entwurf (danach ohne neu erzeugen, eingecheckt wird tattoofin.de).
-- Vorschaubild je Stadt `public/assets/gs-shop/<tfm|tfla>/og-weihnachten.jpg`, Mitte als Quadrat lesbar.
-- Tests: `dev/gutschein-shop-test.mjs` 109/0, `dev/e2e.mjs` 410/0 (eigene Ports setzen: E2E_PORT, STRIPE_MOCK_PORT, E2E_RESEND_PORT). Abnahme beider Entwurfs-Adressen mit `--soll "500 €"` bestanden (12/12 Geräte).
+- Läuft mit echtem Stripe und echten Daten: dort NIE eine Kasse öffnen.
+- Korrektur Runde 1 erledigt (54 Befunde, siehe BERICHT.md oben): Angebot als Überschrift, Geschenk-Grafik mit Schleife und Tannenzweigen, neue WhatsApp-Vorschau, Fehler immer sichtbar, Zurück aus der Kasse gibt sofort frei, iPhone-Tastatur, Zustand nach Aktionsende, echtes PDF-Muster, 6 saubere Bilder je Studio, scharfe Logos und Symbole.
+- Seiten und Bilder: `node dev/gutschein-seiten.mjs [--og] [--vorschau <ordner>] [--basis <url>]` (eingecheckt wird ohne `--basis`). `--og` braucht macOS (Quick Look für das PDF-Muster).
+- Tests: `dev/gutschein-shop-test.mjs` 135/0, `dev/e2e.mjs` 410/0 (eigene Ports E2E_PORT, STRIPE_MOCK_PORT, E2E_RESEND_PORT; e2e wartet unter Last bis 4 Min. je Schritt). Abnahme beider Entwurfs-Adressen mit `--soll "500 €;375 €;200 €;300 €"` bestanden.
 
-**Entscheidungen Domenic**
-- Angebot je Stadt gleich: Nr. 1–5 (2000/1500×1, 1500/1250×2, 1000/750×2, 500/375×6, 300/200×10) + Wertgutschein 50–2.000 €. Voller Wert bis 31.03.2027, danach bezahlter Betrag bis 31.12.2029. Aktion bis 24.12.2026 16 Uhr. 1 Aktions-Gutschein pro Person (je Studio). Teil-Einlösung ja, keine Barauszahlung, nicht kombinierbar, inkl. Piercing.
-- Verkäufer: Tattoo Fashion Munich bzw. Landshut, Inhaber Andy Neelsen.
-- Design = TF-Glücksrad-Look, Weihnachts-Aktion, Logo statt Tattoo-Fotos im Hero. Pixel ohne Einwilligungsfenster (nur tattoofin.de).
+**Offen (Domenic / Andy)**
+- Live-OK für den Prod-Deploy (danach Landshut sofort offen). Vorher neuesten Haupt-Chat-Stand einmischen.
+- Termine bis 31.03.2027: Kann das Studio das zusagen? Die FAQ verspricht keine Termine, sie erklärt nur die Regel (Eingelöstes zählt zuerst gegen den geschenkten Teil).
+- 2–3 echte Google-Bewertungen wörtlich zeigen? Nur mit OK.
+- Reihenfolge der Liste: bleibt 2.000 € zuerst (Anker) oder 300 €/500 € zuerst?
+- Einmal am echten iPhone den Kauf bis „Weiter zur Zahlung“ mit offener Tastatur ansehen (Simulator war ohne Freigabe nicht nutzbar).
+- Nach dem Live-Gang: beide Adressen in einem frischen WhatsApp-Chat testen; die Landshut-Adresse vorher nirgends teilen (sonst alte Vorschau im Speicher, dann mit `?v=2` verlinken). Facebook-Debugger einmal neu laden lassen.
 
-**Offen (Domenic)**
-- Live-OK für den Prod-Deploy (danach Landshut sofort offen, `freigegeben: true`). Vor dem Prod-Deploy den neuesten Haupt-Chat-Stand einmischen.
-- Nach dem Live-Gang: Vorschau einmal mit dem Facebook-Debugger neu laden lassen (nur Abruf, keine Änderung an Werbekonten).
-- Anzeigen erst nach Creative-OK + Budget. iPhone-App-Update (Wert/Rest/Teil-Einlösung).
-
-**Dateien:** `netlify/functions/_lib/gutschein-shop.mjs`, `netlify/functions/gutschein-shop.mjs`, `netlify/functions/_lib/domain.mjs` (Kasse), `dev/gutschein-seiten.mjs`, `dev/gutschein/*.html`, `public/gutschein-kaufen/`, `public/assets/gs-shop/{schrift,tfm,tfla}/`, `dev/gutschein-shop-test.mjs`, `netlify.toml`, `dev/server.mjs`. Bericht: `BERICHT.md`.
+**Dateien:** `dev/gutschein/{seite,og,geschenk,recht,whatsapp}.html`, `dev/gutschein-seiten.mjs`, `netlify/functions/_lib/gutschein-shop.mjs`, `netlify/functions/gutschein-shop.mjs`, `netlify/functions/_lib/gutschein.mjs` (PDF), `public/gutschein-kaufen/`, `public/assets/gs-shop/{tfm,tfla}/`, `dev/gutschein-shop-test.mjs`, `dev/e2e.mjs`.

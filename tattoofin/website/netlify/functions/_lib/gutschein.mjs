@@ -6,7 +6,7 @@
 // Aussteller des Gutscheins ist das Studio (es verkauft die Leistung), Tattoofin stellt nur die Technik.
 // Gültigkeit: regelmäßige Verjährung 3 Jahre ab Ende des Kaufjahres (§§ 195, 199 BGB) → 31.12. des dritten Folgejahres.
 import crypto from "node:crypto";
-import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { PDFDocument, StandardFonts, rgb, PDFNumber, PDFOperator, pushGraphicsState, popGraphicsState, beginText, endText, setFillingColor, setFontAndSize, moveText } from "pdf-lib";
 import { CFG, testKasse } from "./config.mjs";
 import { store, saveZahlung, getStudio, getZahlung } from "./store.mjs";
 import { ladeBild } from "./branding.mjs";
@@ -126,15 +126,20 @@ const sauber = (t) => [...String(t || "")].filter((c) => ERLAUBT.test(c)).join("
 const hex = (h, d) => { const m = /^#?([0-9a-f]{6})$/i.exec(h || "") ; const v = m ? m[1] : d; return rgb(parseInt(v.slice(0, 2), 16) / 255, parseInt(v.slice(2, 4), 16) / 255, parseInt(v.slice(4, 6), 16) / 255); };
 const hell = (h) => { const m = /^#?([0-9a-f]{6})$/i.exec(h || ""); if (!m) return false; const [r, g, b] = [0, 2, 4].map((i) => parseInt(m[1].slice(i, i + 2), 16)); return 0.299 * r + 0.587 * g + 0.114 * b > 170; };
 
-function umbrechen(text, font, size, breite, maxZeilen) {
-  const woerter = sauber(text).split(" ").filter(Boolean), zeilen = [];
+// zusammen: Wortgruppe (z. B. Studioname), die nicht mitten drin umbricht („bei Tattoo / Fashion Munich“), solange sie in eine Zeile passt
+function umbrechen(text, font, size, breite, maxZeilen, zusammen = "") {
+  const fest = sauber(zusammen), BINDE = " ";
+  let t = sauber(text);
+  if (fest.includes(" ") && font.widthOfTextAtSize(fest, size) <= breite) t = t.split(fest).join(fest.replace(/ /g, BINDE));
+  const woerter = t.split(" ").filter(Boolean), zeilen = [];
   let z = "";
   for (const w of woerter) {
     const probe = z ? z + " " + w : w;
-    if (font.widthOfTextAtSize(probe, size) <= breite) z = probe;
+    if (font.widthOfTextAtSize(probe.replaceAll(BINDE, " "), size) <= breite) z = probe;
     else { if (z) zeilen.push(z); z = w; }
   }
   if (z) zeilen.push(z);
+  for (let i = 0; i < zeilen.length; i++) zeilen[i] = zeilen[i].replaceAll(BINDE, " ");
   if (zeilen.length > maxZeilen) { zeilen.length = maxZeilen; zeilen[maxZeilen - 1] = zeilen[maxZeilen - 1].replace(/\s*\S*$/, "") + " …"; }
   return zeilen;
 }
@@ -168,7 +173,17 @@ export async function gutscheinPdf(s, z) {
   const navy = hex(marke ? "#0B0B0B" : "#13243d"), gelb = hex(marke?.akzent || "#ffbd16"), grau = hex("#5b6370"), weiss = rgb(1, 1, 1);
   const bandFarbe = marke?.band || (s.branding?.farbe && !hell(s.branding.farbe) ? s.branding.farbe : "#13243d");
   const band = hex(bandFarbe);
-  const text = (t, x, y, font, size, color = navy) => page.drawText(sauber(t), { x, y, font, size, color });
+  // Das €-Zeichen der Standardschrift zeichnen iPhone/Mac (Vorschau, Mail-App) breiter, als es Platz bekommt → es klebt am
+  // nächsten Zeichen („500 €ein“). Darum nach jedem € im selben Textlauf 0,14 em Luft (TJ-Abstand); alle anderen Abstände
+  // bleiben die des Betrachters (keine Verschiebung bei langen Zeilen).
+  const text = (t, x, y, font, size, color = navy) => {
+    const s = sauber(t);
+    if (!/€./.test(s)) return page.drawText(s, { x, y, font, size, color });
+    const key = page.node.newFontDictionary(font.name, font.ref);
+    const teile = pdf.context.obj([]);
+    s.split(/(?<=€)/).forEach((teil, i) => { if (i) teile.push(PDFNumber.of(-140)); teile.push(font.encodeText(teil)); });
+    page.pushOperators(pushGraphicsState(), beginText(), setFillingColor(color), setFontAndSize(key, size), moveText(x, y), PDFOperator.of("TJ", [teile]), endText(), popGraphicsState());
+  };
   const rechts = (t, xr, y, font, size, color) => text(t, xr - font.widthOfTextAtSize(sauber(t), size), y, font, size, color);
 
   // Rahmen + Kopfband in Studiofarbe (Rückfall Tattoofin-Navy)
@@ -206,7 +221,7 @@ export async function gutscheinPdf(s, z) {
   const linksMax = W - R - 210 - (R + 8) - 14;
   let ay = y - 20;
   const art = g.aktion ? `Aktions-Gutschein Nr. ${g.aktion.nr}` : "Wertgutschein";
-  for (const zeile of umbrechen(art + " · für alle Leistungen bei " + s.firma, f, 12, linksMax, 2)) { text(zeile, R + 8, ay, f, 12, grau); ay -= 15; }
+  for (const zeile of umbrechen(art + " · für alle Leistungen bei " + s.firma, f, 12, linksMax, 2, s.firma)) { text(zeile, R + 8, ay, f, 12, grau); ay -= 15; }
   // Aktions-Gutschein: Bonus-Frist deutlich unter dem Betrag (Seite, PDF und Mail sagen dasselbe, Text aus bonusSatz)
   if (g.bonusCent) {
     ay -= 3;

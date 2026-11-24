@@ -1,44 +1,47 @@
 <!doctype html><html lang="de"><head><meta charset="utf-8">
-<!-- Vorschaubild (og:image) 1200×630 je Stadt, gerendert von dev/gutschein-seiten.mjs --og. Wichtig: Die Mitte (Quadrat 630×630) muss allein
-     funktionieren, WhatsApp zeigt oft nur ein kleines Quadrat aus der Mitte. Karten links/rechts sind nur in der großen Vorschau zu sehen. --><style>
+<!-- Vorschaubild (og:image) 1200×630 je Stadt, gerendert von dev/gutschein-seiten.mjs --og. Die Mitte (Quadrat 630×630) muss allein
+     funktionieren: WhatsApp zeigt oft nur ein kleines Quadrat aus der Mitte. Kein Text unter 34 px (in WhatsApp ist das Bild ~330 px breit).
+     Links das Geschenk (Gutschein mit Schleife, wie im Hero), rechts der günstigste Aktions-Gutschein. --><style>
 @font-face{font-family:"Oswald";font-weight:500 700;src:url({{assets}}/schrift/oswald-latin.woff2) format("woff2")}
 @font-face{font-family:"Inter";font-weight:400 700;src:url({{assets}}/schrift/inter-latin.woff2) format("woff2")}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{width:1200px;height:630px;overflow:hidden;background:#0B0B0B}
 #og{position:relative;width:1200px;height:630px;overflow:hidden;color:#F4EFE6;font-family:Inter,sans-serif;
- background:radial-gradient(46% 62% at 50% 36%,rgba(200,163,90,.26),rgba(11,11,11,0) 70%),radial-gradient(120% 90% at 50% 0%,#1d170d,#0B0B0B 72%)}
-.rahmen{position:absolute;inset:16px;border:1.5px solid rgba(200,163,90,.45);border-radius:22px}
-.flocken i{position:absolute;border-radius:50%;background:radial-gradient(circle,#F6E7C3 0 30%,rgba(232,205,146,0) 72%)}
-.stern{position:absolute;color:#C8A35A}
+ background:radial-gradient(40% 58% at 50% 46%,rgba(200,163,90,.24),rgba(11,11,11,0) 72%),radial-gradient(120% 90% at 50% 0%,#1d170d,#0B0B0B 72%)}
+.rahmen{position:absolute;inset:14px;border:1.5px solid rgba(200,163,90,.42);border-radius:22px}
+.zw{position:absolute;top:0;width:250px;height:auto;color:#C8A35A;opacity:.7}
+.zw.l{left:0}.zw.r{right:0;transform:scaleX(-1)}
+.stern{position:absolute;color:#E8CD92}
 .stern svg{display:block;width:100%;height:100%}
 .mitte{position:absolute;left:285px;width:630px;top:0;height:630px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
-.logo{width:350px;height:auto;filter:drop-shadow(0 8px 30px rgba(200,163,90,.35));margin-bottom:6px}
-.pille{display:inline-flex;align-items:center;gap:12px;font:600 21px/1 Oswald;letter-spacing:.2em;text-transform:uppercase;color:#E8CD92;border:1.5px solid rgba(200,163,90,.7);border-radius:999px;padding:12px 22px;background:rgba(11,11,11,.6)}
-.dot{width:11px;height:11px;border-radius:50%;background:#c0392b}
-h1{font:700 106px/.98 Oswald;text-transform:uppercase;letter-spacing:-.005em;margin:18px 0 0}
-h1 span{display:block}
+.logo{width:236px;height:auto;margin-bottom:12px}
+.aktion{display:inline-block;font:600 34px/1 Oswald;letter-spacing:.14em;text-transform:uppercase;color:#F6E7C3;border:2px solid #d9b46e;border-radius:999px;padding:11px 26px 10px;
+ background:linear-gradient(180deg,#a3222f,#6d1119);box-shadow:0 8px 24px rgba(0,0,0,.45)}
+h1{margin-top:16px;font-family:Oswald;font-weight:700;text-transform:uppercase;line-height:.98}
+h1 .a{display:block;font-size:84px;color:#F4EFE6;white-space:nowrap}
+h1 .b{display:block;font-size:124px;white-space:nowrap;margin-top:12px}
 .g{background:linear-gradient(180deg,#F6E7C3 0%,#E8CD92 40%,#C8A35A 75%,#A9843F 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
-.bis{margin-top:20px;font:700 30px/1 Oswald;letter-spacing:.08em;text-transform:uppercase;color:#0B0B0B;background:linear-gradient(180deg,#E8CD92,#C8A35A);border-radius:999px;padding:13px 28px}
-.karte{position:absolute;width:212px;height:282px;border-radius:22px;border:1.5px solid rgba(200,163,90,.55);background:linear-gradient(145deg,#211b12,#0f0e0c);box-shadow:0 24px 60px rgba(0,0,0,.6);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:18px}
-.karte .nr{flex:none;width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:700 28px Oswald;color:#0B0B0B;background:linear-gradient(180deg,#E8CD92,#C8A35A)}
-.karte .w{font:700 54px/1 Oswald;margin:16px 0 6px;white-space:nowrap}
-.karte .wl{font:600 14px/1 Oswald;letter-spacing:.22em;text-transform:uppercase;color:#B3AB9C}
-.karte .p{margin-top:16px;font:500 19px/1.2 Inter;color:#D9D1C1}
-.karte .p b{display:block;font:700 34px/1.1 Oswald;color:#F4EFE6}
-.k1{left:44px;top:176px;transform:rotate(-6deg)}
-.k2{right:44px;top:176px;transform:rotate(6deg)}
+.bis{margin-top:12px;font:700 36px/1 Oswald;letter-spacing:.06em;text-transform:uppercase;color:#0B0B0B;background:linear-gradient(180deg,#E8CD92,#C8A35A);border-radius:999px;padding:12px 28px 11px;white-space:nowrap}
+.geschenk{position:absolute;left:4px;top:318px;width:292px;transform:rotate(-8deg);filter:drop-shadow(0 18px 30px rgba(0,0,0,.6))}
+.karte{position:absolute;left:944px;top:250px;width:222px;height:268px;border-radius:22px;border:2px solid rgba(214,180,112,.75);background:linear-gradient(145deg,#241d13,#0f0e0c);
+ box-shadow:0 24px 50px rgba(0,0,0,.6);transform:rotate(7deg);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;overflow:hidden}
+.karte:before{content:"";position:absolute;left:0;right:0;top:26px;height:30px;background:linear-gradient(180deg,#4c0b13,#a3222f 50%,#4c0b13);border-top:1.5px solid #d9b46e;border-bottom:1.5px solid #d9b46e}
+.karte .ab{margin-top:40px;font:600 40px/1 Oswald;letter-spacing:.12em;text-transform:uppercase;color:#E8CD92}
+.karte .p{font:700 84px/1 Oswald;white-space:nowrap;margin:6px 0 10px}
+.karte .w{font:600 34px/1 Oswald;letter-spacing:.04em;text-transform:uppercase;color:#F4EFE6;white-space:nowrap}
 </style></head><body><div id="og">
-<div class="flocken" id="fl"></div>
-<div class="rahmen"></div><div id="sterne"></div>
-{{{karteLinks}}}
-{{{karteRechts}}}
+<div class="rahmen"></div>
+{{{zweigL}}}{{{zweigR}}}
+<div id="sterne"></div>
+<img class="geschenk" src="{{geschenk}}" alt="">
+<div class="karte"><span class="ab">Ab</span><span class="p g">{{abPreis}}</span><span class="w">Wert {{abWert}}</span></div>
 <div class="mitte">
- <img class="logo" src="{{assets}}/{{kuerzel}}/logo.png" alt="">
- <span class="pille"><span class="dot"></span>Weihnachts-Aktion</span>
- <h1><span>Gutscheine</span><span class="g">unter Wert</span></h1>
+ <img class="logo" src="{{assets}}/{{kuerzel}}/logo-gold-960.webp" alt="">
+ <span class="aktion">Weihnachts-Aktion</span>
+ <h1><span class="a">{{wert}} Gutschein</span><span class="b g">für {{preis}}</span></h1>
  <span class="bis">Nur bis 24.12., 16 Uhr</span>
 </div>
 </div>
-<script>var F='<svg viewBox="-12 -12 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round">'+[0,60,120,180,240,300].map(function(r){return '<g transform="rotate('+r+')"><path d="M0 0V-11M0-7.5l-2.6-2.6M0-7.5l2.6-2.6M0-3.8l-1.8-1.8M0-3.8l1.8-1.8"/></g>'}).join("")+'</svg>';
-document.getElementById("sterne").innerHTML=[[66,40,34,.5],[236,92,20,.35],[176,506,26,.4],[1098,42,30,.45],[960,104,20,.33],[1066,512,34,.45],[44,566,18,.3],[1150,300,16,.28]].map(function(a){return '<span class="stern" style="left:'+a[0]+'px;top:'+a[1]+'px;width:'+a[2]+'px;height:'+a[2]+'px;opacity:'+a[3]+'">'+F+'</span>'}).join("");var h="";for(var i=0;i<60;i++){var s=3+i%6;h+='<i style="left:'+(i*53%100)+'%;top:'+(i*37%100)+'%;width:'+s+'px;height:'+s+'px;opacity:'+(.45+(i%4)*.15)+'"></i>'}document.getElementById("fl").innerHTML=h</script>
+<script>var F='<svg viewBox="-12 -12 24 24" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round">'+[0,60,120,180,240,300].map(function(r){return '<g transform="rotate('+r+')"><path d="M0 0V-11M0-7.5l-2.6-2.6M0-7.5l2.6-2.6M0-3.8l-1.8-1.8M0-3.8l1.8-1.8"/></g>'}).join("")+'</svg>';
+document.getElementById("sterne").innerHTML=[[236,182,26,.45],[60,236,18,.32],[1136,196,22,.4],[930,96,18,.3],[1090,566,24,.38],[250,560,20,.3],[150,140,16,.3]].map(function(a){return '<span class="stern" style="left:'+a[0]+'px;top:'+a[1]+'px;width:'+a[2]+'px;height:'+a[2]+'px;opacity:'+a[3]+'">'+F+'</span>'}).join("")</script>
 </body></html>

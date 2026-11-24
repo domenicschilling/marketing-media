@@ -52,11 +52,17 @@ const studioPer = async (email) => (await admin("studios")).find((s) => s.email 
 
 const browser = await chromium.launch();
 const errors = [];
+const LAST = os.loadavg()[0] / Math.max(1, os.cpus().length);
+const WARTEN = Math.round(Math.min(240000, Math.max(60000, 60000 * LAST / 4)));
+if (WARTEN > 60000) console.log(`Rechner stark ausgelastet (Last ${os.loadavg()[0].toFixed(0)}): Wartezeit je Schritt ${Math.round(WARTEN / 1000)} s`);
 async function neueSeite(opts = { viewport: { width: 1280, height: 900 } }) {
   const c = await browser.newContext(opts);
   const p = await c.newPage();
-  // Unter Last (viele Testläufe gleichzeitig auf dem Mac, 23.11.2026) reichten die 30 s Standard-Wartezeit nicht immer
-  p.setDefaultTimeout(60000);
+  // Unter Last (viele Testläufe gleichzeitig auf dem Mac, 23.11.2026) reichten die 30 s Standard-Wartezeit nicht immer.
+  // 24.11.2026: bei Last 500–700 auch 60 s nicht (Abbrüche an wechselnden Stellen, z. B. Fragebogen, Studio-Anmeldung) →
+  // Wartezeit wächst mit der Last des Rechners (bis 4 Minuten). Ohne Last bleibt es bei 60 s.
+  p.setDefaultTimeout(WARTEN);
+  p.setDefaultNavigationTimeout(WARTEN);
   p.on("pageerror", (e) => errors.push(e.message));
   p.on("console", (m) => { if (m.type() === "error" && !/404|Failed to load resource/.test(m.text())) errors.push(m.text()); });
   p.on("dialog", (d) => d.accept(p._dialogAntwort || undefined));
@@ -1613,6 +1619,9 @@ try {
 } catch (e) {
   fail++;
   console.error("ABBRUCH:", e);
+  // Zur Fehlersuche: Bild und Adresse jeder offenen Seite im Moment des Abbruchs
+  let n = 0;
+  for (const c of browser.contexts()) for (const pg of c.pages()) { try { console.error(`  offene Seite ${n}: ${pg.url()}`); await pg.screenshot({ path: path.join(shots, `abbruch-${n++}.png`) }); } catch {} }
 }
 check(errors.length === 0, "Keine JavaScript-Fehler im Browser" + (errors.length ? ": " + errors.join(" | ") : ""));
 console.log(`\n${ok} bestanden, ${fail} fehlgeschlagen · Screenshots: ${shots}`);

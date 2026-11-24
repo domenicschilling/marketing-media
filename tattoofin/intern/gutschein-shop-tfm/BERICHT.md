@@ -1,4 +1,17 @@
-# Gutschein-Shop Tattoo Fashion München + Landshut – Bericht (23.11.2026)
+# Gutschein-Shop Tattoo Fashion München + Landshut – Bericht (24.11.2026)
+
+## Runde 24.11. nachts: Korrektur Runde 1 (54 Prüfer-Befunde), Entwurf, NICHT live
+
+- **Hero:** Angebot ist die Überschrift: „500 € Gutschein für 375 €“, darunter „Fünf Tattoo-Gutscheine unter Wert, schon ab 200 € (Wert 300 €)“, „Aktion endet am 24.12. um 16 Uhr“ + Countdown auch am Handy. Kein „bis zu“ mehr. Statt nacktem Logo ein gezeichnetes Geschenk: Gutschein-Karte mit Logo, dunkelrotem Satinband und Schleife, goldene Tannenzweige in den Ecken, wenige feine Flocken nur um das Geschenk (nie über Text). Logo neu in Gold-Verlauf, scharf bis 1.400 px (je Stadt).
+- **Liste/Kauf:** Karten ohne Nummern, mit Ersparnis-Marke („125 € geschenkt“), Stückzahl „Nur 6 Stück“ solange nichts weg ist, sonst „Noch 5 von 6“; reserviert = „Gerade reserviert“ + „in spätestens 30 Minuten wieder frei“. Tipp auf einen Aktions-Gutschein springt allein zu Schritt 2. Fehler stehen im festen Fuß direkt über dem Knopf (immer sichtbar, auch 320×568, Safari). Platzhalter „z. B. 100“. Geschütztes Leerzeichen vor jedem €. iPhone-Tastatur: Fenster passt sich dem sichtbaren Bereich an (Kopf, Summe, Knopf bleiben über der Tastatur). Zurück-Taste/Abbrechen aus Stripe: Kasse wird sofort beendet, Gutschein gleich wieder frei, Fenster öffnet mit derselben Auswahl und Name/E-Mail. Fachliche Ablehnungen (ausverkauft, 1 pro Person) kommen ohne roten Netzwerkfehler.
+- **Nach dem 24.12., 16 Uhr oder ausverkauft:** kein Countdown, kein Rabatt-Text mehr; Hero, Liste, Kopf-Pille und Schluss zeigen den Wertgutschein (vorne, vorgewählt).
+- **Neu „Gut zu wissen“:** echtes Gutschein-PDF als Muster (Code GS-MUST-ER01, wird nie vergeben) mit Schleife; Linien-Symbole statt „31.3“/„½“. FAQ neu: „Und wenn das Tattoo mehrere Sitzungen braucht?“ – Antwort nur aus der Regel im Shop (Eingelöstes zählt zuerst gegen den geschenkten Teil); dieser Satz steht jetzt auch in den Gutscheinbedingungen.
+- **PDF (für alle Gutscheine):** Das €-Zeichen klebte in der iPhone/Mac-Ansicht am nächsten Wort („500 €ein“) – behoben (Abstand nach dem €).
+- **Überschriften** sachlich: „Die 5 Aktions-Gutscheine“, „Gut zu wissen“, „So kaufst du“, „Tattoos aus unserem Studio“, „Häufige Fragen“, „So findest du uns“; Wortspiel nur noch am Schluss („Mehr Tattoo unterm Baum.“).
+- **Bilder:** je Studio 6 starke Arbeiten (600×800, ohne Wasserzeichen, Folie oder Personen). Symbole 32/180/192 px („TF“ in Gold).
+- **WhatsApp-Vorschau neu:** Mitte „Weihnachts-Aktion · 500 € Gutschein für 375 € · Nur bis 24.12., 16 Uhr“ mit Logo (auch als kleines Quadrat lesbar, kein Text unter 34 px), links das Geschenk, rechts „Ab 200 € · Wert 300 €“. Titel „Tattoo Fashion <Stadt>: Weihnachts-Gutscheine unter Wert“, Text „500 € Gutschein für 375 €, auch 300 € für 200 €. Insgesamt nur 21 Stück.“ Nachbau: `whatsapp-vorschau/`.
+- **e2e-Abbruch:** wieder Rechnerlast (Last 560–730, Abbruch an wechselnden Stellen: Fragebogen, Anmeldung; die Seite war fertig, nur Playwright zu langsam). Keine Wechselwirkung mit dem Shop. `dev/e2e.mjs` wartet jetzt je nach Last bis 4 Minuten je Schritt (ohne Last 60 s) und speichert beim Abbruch ein Bild jeder offenen Seite.
+- **Geprüft:** `dev/gutschein-shop-test.mjs` 135/0 (neu: Fehler sichtbar 375×667 + 320×568 in Chromium und Safari, Zurück-Taste gibt sofort frei, € einzeilig auf 320/360/375, iPhone-Tastatur, Zustand nach Aktionsende, Kauf-Leiste über der Liste weg), `dev/e2e.mjs` 410/0, Abnahme beider Entwurfs-Adressen mit `--soll "500 €;375 €;200 €;300 €"` bestanden (12/12 Geräte, axe ok).
 
 ## Runde 23.11. abends: Seite perfekt, Landshut dazu, WhatsApp-Vorschau neu (Entwurf, NICHT live)
 

@@ -1,2 +1,6 @@
-Bilder: echte Arbeiten aus dem Studio Tattoo Fashion München (aus landingpages/tfm-750 und tf-gutschein-muenchen).
+Bilder b-*.jpg: echte Arbeiten aus dem Studio Tattoo Fashion München (Quelle Marketing-Maschine/landingpages/tfm-750/img), 24.11.2026 auf 600×800
+zugeschnitten, ohne erkennbare Personen (Adler: Hals/Kinn oben weggeschnitten).
+logo-gold-*.webp/png: Studio-Logo (Marketing-Maschine/brands/tattoofashion-munich/logo.png, 1415 px) im Gold-Verlauf der Seite.
+logo.png: bisheriges Logo, wird nur noch für Mail, PDF und Stripe-Kasse benutzt.
+geschenk-*, og-weihnachten.jpg, icon-*.png, pdf-muster.*: erzeugt mit dev/gutschein-seiten.mjs --og (nur Grafik, keine Fotos, keine KI-Bilder).
 Schriften: siehe ../schrift/LIZENZ.txt

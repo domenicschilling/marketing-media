@@ -66,7 +66,8 @@ export const SHOPS = {
       google: { sterne: "4,9", anzahl: 348, stand: "22.11.2026", suche: "Tattoo Fashion Munich, Landshuter Allee 42, 80637 München" },
       zeiten: [["Montag bis Freitag", "10–18 Uhr"], ["Samstag", "10–16 Uhr"], ["Sonntag", "geschlossen"]],
       pixel: "2379676156103158",
-      bilder: ["blackwork-eagle", "color-phoenix", "realismus-lion", "fineline-floral", "blackwork-skull", "color-palm", "realismus-owl", "blackwork-snake", "fineline-mandala", "realismus-cross", "color-snake-oranges", "blackwork-geoface"],
+      // Bildstreifen „Tattoos aus unserem Studio“: public/assets/gs-shop/tfm/b-<name>.jpg (600×800, ohne Personen/Wasserzeichen)
+      bilder: ["adler", "phoenix", "loewe", "schlange", "schaedel", "blumen"],
     },
     // Domenic 23.11.2026: „mach alles fertig, dass alles läuft“ (Live-Gang nur mit seinem OK im Chat)
     freigegeben: true,
@@ -82,7 +83,7 @@ export const SHOPS = {
       google: { sterne: "4,8", anzahl: 167, stand: "22.11.2026", suche: "Tattoo Fashion Landshut, Neustadt 502, 84028 Landshut" },
       zeiten: [["Montag bis Freitag", "10–18 Uhr"], ["Samstag", "10–16 Uhr"], ["Sonntag", "geschlossen"]],
       pixel: "1324284036136356",
-      bilder: ["bulle", "mandala", "rabe-sanduhr", "schmetterling", "baum", "herzen", "rabe", "kirschblueten", "buddha", "mutter", "ruecken", "wade"],
+      bilder: ["rabe-sanduhr", "baum", "rabe", "blumen", "schmetterling", "tiere"],
     },
     // Domenic 23.11.2026: gleiche Aktion für Landshut (Live-Gang nur mit seinem OK im Chat)
     freigegeben: true,
@@ -187,9 +188,11 @@ export async function reservieren(s, c, a, { zahlungId, email, ip = "" }) {
   if (vorher >= a.stueck) {
     await store.set(key, { ...eintrag, status: "frei", freiAm: now(), grund: "ausverkauft" });
     const b = (await bestand(s, c))[a.id];
+    // Käufer denken in Beträgen („der 500er“), nicht in Nummern
+    const name = `Der ${(a.wertCent / 100).toLocaleString("de-DE")}-€-Gutschein`;
     throw new ShopFehler(b.reserviert > 0 && b.verkauft < a.stueck
-      ? `Gutschein Nr. ${a.nr} ist gerade bei jemandem in der Kasse. Wird er nicht bezahlt, ist er in spätestens ${KASSE_MINUTEN} Minuten wieder frei.`
-      : `Gutschein Nr. ${a.nr} ist ausverkauft.`, 409, "ausverkauft");
+      ? `${name} ist gerade reserviert. Wird er nicht bezahlt, ist er in spätestens ${KASSE_MINUTEN} Minuten wieder frei.`
+      : `${name} ist ausverkauft.`, 409, "ausverkauft");
   }
   return { key, bis: eintrag.bis };
 }
@@ -236,7 +239,7 @@ export function bedingungen(s, c, kaufJahr = jetzt(), { seite = false } = {}) {
     `Die Gutscheine gelten für alle Leistungen bei ${s.firma}${s.strasse ? ", " + s.strasse + ", " + [s.plz, s.ort].filter(Boolean).join(" ") : ""}, zum Beispiel Tattoos und Piercings. Das Motiv sucht sich der Beschenkte selbst aus.`,
     // Domenic 23.11.2026: Teil-Einlösung ja, keine Barauszahlung, nicht kombinierbar
     "Du kannst einen Gutschein in Teilen einlösen, der Restwert bleibt auf dem Gutschein. Eine Barauszahlung ist nicht möglich. Die Gutscheine sind nicht mit anderen Aktionen kombinierbar.",
-    `Aktions-Gutscheine (Nr. 1 bis ${c.aktionen.length}): Du zahlst weniger, als der Gutschein wert ist. Der Unterschied ist ein Bonus. Den vollen Wert löst du bis ${datum(bonusBisIso(c))} ein. Danach verfällt nur der Bonus: Der bezahlte Betrag wird weiter voll angerechnet, bis ${bis}.`,
+    `Aktions-Gutscheine (Nr. 1 bis ${c.aktionen.length}): Du zahlst weniger, als der Gutschein wert ist. Der Unterschied ist ein Bonus. Den vollen Wert löst du bis ${datum(bonusBisIso(c))} ein. Was bis dahin eingelöst wird, zählt zuerst gegen den Bonus. Danach verfällt nur der noch nicht genutzte Bonus: Der bezahlte Betrag wird weiter voll angerechnet, bis ${bis}.`,
     `Jeder Aktions-Gutschein ist nur in der angegebenen Stückzahl verfügbar. Ist eine Nummer verkauft, gibt es sie nicht mehr.${c.aktionJeKaeufer ? ` Pro Person ${c.aktionJeKaeufer === 1 ? "ein Aktions-Gutschein" : "höchstens " + c.aktionJeKaeufer + " Aktions-Gutscheine"}.` : ""}${c.aktionBis ? ` Verkauf der Aktions-Gutscheine bis ${datum(aktionEndeIso(c))}${uhrzeit(aktionEndeIso(c))}, solange verfügbar.` : ""}`,
     `Wertgutschein mit eigenem Betrag: einlösbar bis ${bis}.`,
     "Alle Preise sind Endpreise inklusive Umsatzsteuer. Es kommen keine Versandkosten oder sonstigen Kosten dazu. Den Gutschein bekommst du direkt nach der Zahlung als PDF per E-Mail.",
