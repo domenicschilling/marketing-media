@@ -1,0 +1,3 @@
+Alte Fassungen vor Korrektur-Runde 3 nach „kaufen-bekommen“ (24.11.2026, Befund mittel: Unterzeile im Hero und in der Liste noch „Schon ab 200 € (Wert 300 €).“).
+Stand = Commit faddc48 (Branch claude/tfm-gutschein-shop-live), Entwurf-Deploy 6b05d19c73384bcba495f9cb.
+Dateien: seite.html (dev/gutschein), gutschein-seite.mjs und gutschein-seiten-html.mjs (netlify/functions/_lib), gutschein-shop-test.mjs (dev), STAND.md.

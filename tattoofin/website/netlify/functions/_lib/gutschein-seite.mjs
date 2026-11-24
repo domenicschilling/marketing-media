@@ -14,6 +14,11 @@ const NB = " ";
 const ZAHL = (c) => (c / 100).toLocaleString("de-DE", { minimumFractionDigits: c % 100 ? 2 : 0, maximumFractionDigits: 2 });
 const EURO = (c) => ZAHL(c) + NB + "€";
 const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+// „Auch für 200 € kaufen, 300 € bekommen.*“ (Korrektur 24.11.2026 abends): erst der bezahlte Betrag, dann der Wert, gold und fett
+// (b.wb), Sternchen zur Bedingung direkt darunter (#hero-fuss bzw. #liste-fuss). Ersetzt „Schon ab 200 € (Wert 300 €).“
+// Gleiche Form wie kaufenBekommen() im Skript der Seite (dev/gutschein/seite.html)
+// Ohne verschachtelte <span> (setze() unten ersetzt bis zum ersten schließenden Tag): feste Leerzeichen statt span.nb, b.wb bricht nicht um
+export const kaufenBekommen = (vor, a) => `${esc([vor, "für", EURO(a.preisCent), "kaufen,"].join(NB))} <b class="wb">${esc(`${EURO(a.wertCent)} bekommen`)}</b>.*`;
 
 export function fassungFuer(sh, heroId = "nr4") {
   if (!sh.aktionOffen || sh.aktionen.every((a) => a.ausverkauft)) return "danach";
@@ -30,24 +35,24 @@ export function heroTexte(sh, { stadt, heroId = "nr4" }) {
     // Wertgutschein ohne Bonus: kein Sternchen, keine Bedingung; Pille wie vorher „Weihnachts-Aktion“ (die Überschrift sagt „Tattoo-Gutschein“)
     return { preis: "Tattoo-Gutschein", wert: `ab ${EURO(sh.frei.minCent)}`, eyebrow: "Weihnachts-Aktion", fuss: false, klein: "Sofort als PDF per E-Mail",
       lead: esc(`Für Tattoo oder Piercing in ${stadt}. `) + `<span class="nb">${esc("Betrag frei wählbar.")}</span>`,
-      liste: ab0 ? `Schon ab ${EURO(ab0.preisCent)} (Wert${NB}${EURO(ab0.wertCent)}).` : null, pille: pille0 };
+      liste: ab0 ? kaufenBekommen("Schon", ab0) : null, pille: pille0 };
   }
   const weg = (a) => a.ausverkauft || !sh.aktionOffen || a.verfuegbar <= 0;
   const l = [...sh.aktionen].sort((x, y) => (y.id === heroId) - (x.id === heroId) || x.preisCent - y.preisCent);
   const best = l.find((a) => !weg(a)) || l.find((a) => !a.ausverkauft) || null;
   const da = sh.aktionen.filter((a) => !a.ausverkauft), ab = [...da].sort((x, y) => x.preisCent - y.preisCent)[0];
   const rest = sh.aktionen.reduce((s, a) => s + a.verfuegbar, 0), alle = sh.aktionen.reduce((s, a) => s + a.stueck, 0);
-  // Steht der günstigste schon oben (z. B. „Für 200 € kaufen, 300 € bekommen*“ aus der Werbung), nennt die Unterzeile den größten statt „schon ab“
-  const max = [...da].sort((x, y) => y.wertCent - x.wertCent)[0];
-  const lead = esc(`Für Tattoo oder Piercing in ${stadt}. `) + (da.length <= 1 ? esc("Nur noch dieser Gutschein zum Weihnachtspreis.")
-    : best && best.id === ab.id ? `<span class="nb">${esc(`Auch bis ${EURO(max.wertCent)} Wert.`)}</span>`
-    : `<span class="nb">${esc(`Schon ab ${EURO(ab.preisCent)} (Wert${NB}${EURO(ab.wertCent)}).`)}</span>`);
+  // Unterzeile: „Auch für 200 € kaufen, 300 € bekommen.*“ (der günstigste). Steht der günstigste schon oben (z. B. „Für 200 € kaufen,
+  // 300 € bekommen*“ aus der Werbung), nennt sie den größten noch kaufbaren: „Auch für 1.500 € kaufen, 2.000 € bekommen.*“
+  const max = [...da].filter((a) => !best || a.id !== best.id).sort((x, y) => y.wertCent - x.wertCent)[0];
+  const lead = esc(`Für Tattoo oder Piercing in ${stadt}. `) + (da.length <= 1 || !max ? esc("Nur noch dieser Gutschein zum Weihnachtspreis.")
+    : kaufenBekommen("Auch", best && best.id === ab.id ? max : ab));
   const klein = rest <= 0 || !best || best.verfuegbar <= 0 ? "Gerade sind alle Aktions-Gutscheine reserviert."
     : best.verfuegbar >= best.stueck ? `Nur ${best.stueck}${NB}Stück zu diesem Preis` : `Noch ${best.verfuegbar}${NB}von ${best.stueck}${NB}zu diesem Preis`;
   return {
     preis: best ? `Für ${EURO(best.preisCent)} kaufen,` : null, wert: best ? `${EURO(best.wertCent)} bekommen*` : null, lang: Boolean(best && best.wertCent >= 100000),
     eyebrow: "Tattoo-Gutschein", fuss: true, lead, klein,
-    liste: ab ? `Schon ab ${EURO(ab.preisCent)} (Wert${NB}${EURO(ab.wertCent)}).` : null,
+    liste: ab ? kaufenBekommen("Schon", ab) : null,
     pille: rest <= 0 ? "Gerade alle reserviert" : rest >= alle ? `Nur ${alle}${NB}Stück` : `Noch ${rest}${NB}von ${alle}`,
   };
 }
@@ -77,6 +82,6 @@ export function seiteAnpassen(roh, daten, { stand = new Date().toISOString(), he
   html = setze(html, "hero-lead", t.lead, "p");
   html = setze(html, "hero-klein", esc(t.klein), "div");
   html = setze(html, "top-stueck", esc(t.pille), "span");
-  if (t.liste) html = setze(html, "liste-ab", esc(t.liste), "span");
+  if (t.liste) html = setze(html, "liste-ab", t.liste, "span");
   return html;
 }
