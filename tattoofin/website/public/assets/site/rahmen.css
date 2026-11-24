@@ -60,3 +60,11 @@ html.menue-offen{overflow:hidden}
 
 /* Alte Startseiten-Regel .fuss nav{display:flex} stellte im neuen Fuß „Recht“ neben die Links (Gutachter 19.11.2026) */
 .fuss-web nav{display:block;font-weight:inherit}
+
+/* App-Store-Badge (offizieller DE-Badge, Domenic 23.11.2026): Mindestgröße laut Apple 40 px hoch, Freiraum drumherum */
+.app-store{display:inline-block;line-height:0;border-radius:9px}
+.app-store img{display:block;width:120px;height:40px}
+.app-store:focus-visible{outline:3px solid var(--gelb);outline-offset:3px}
+.app-store-zeile{margin:var(--s3,16px) 0 0}
+.fuss-web li.fuss-app{padding-top:var(--s2,8px)}
+.fuss-web li.fuss-app a{padding:0}
