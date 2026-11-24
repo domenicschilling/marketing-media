@@ -325,12 +325,34 @@ console.log("Seiten je Stadt (statisch, og-Tags, Rechtliches nur im Fuß)");
     check(!/Widerruf|Impressum|Verkäufer|Muster-Widerrufsformular|Gutscheinbedingungen|type="checkbox"/.test(main) && !/type="checkbox"|f-ok/.test(x.html), `${t.stadt}: keine Rechtstexte im Seiteninhalt, kein Häkchen im Kauf`);
     check(["impressum", "datenschutz", "widerruf", "bedingungen"].every((a) => x.html.includes(`href="/gutschein-kaufen/${t.slug}-${a}"`)), `${t.stadt}: Fuß-Links Impressum, Datenschutz, Widerruf, Gutscheinbedingungen`);
     const imp = await seite(`/gutschein-kaufen/${t.slug}-impressum`), wid = await seite(`/gutschein-kaufen/${t.slug}-widerruf`), bed = await seite(`/gutschein-kaufen/${t.slug}-bedingungen`), dsg = await seite(`/gutschein-kaufen/${t.slug}-datenschutz`);
+    // Domenic 24.11.2026: „Die Gutscheine gibt es online und vor Ort zu kaufen!“ → Studio-Frage in den FAQ (direkt nach „Wann bekomme
+    // ich den Gutschein?“) mit der Straße der Stadt, ein Satz im Abschnitt „Dein Studio“, und nirgends „nur online“ / „nur im Studio“
+    // (Seite, alle drei Vorschau-Fassungen, Rechtsseiten)
+    const faqTeil = x.html.slice(x.html.indexOf('<section id="faq"'), x.html.indexOf('<section id="studio"'));
+    const studioTeil = x.html.slice(x.html.indexOf('<section id="studio"'), x.html.indexOf('<section class="final"'));
+    const fragen = [...faqTeil.matchAll(/<summary>([^<]*)<\/summary>/g)].map((m) => m[1]);
+    check(fragen[0] === "Wann bekomme ich den Gutschein?" && fragen[1] === "Kann ich den Gutschein auch im Studio kaufen?"
+      && faqTeil.includes(`Ja, Gutscheine gibt es auch direkt bei uns im Studio in der ${t.adr}. Online geht es am schnellsten. Der Gutschein kommt dann sofort als PDF per E-Mail.`)
+      && !faqTeil.includes(anders.adr) && /<p class="sub" id="studio-vorort">Gutscheine bekommst du auch direkt bei uns vor Ort\.<\/p>/.test(studioTeil),
+    `${t.stadt}: FAQ „Kann ich den Gutschein auch im Studio kaufen?“ als 2. Frage mit ${t.adr}, Satz „Gutscheine bekommst du auch direkt bei uns vor Ort.“ im Abschnitt „Dein Studio“`, { fragen: fragen.slice(0, 3), studio: /studio-vorort/.test(studioTeil) });
+    const NUR_EIN_WEG = /nur\s+(noch\s+)?online|ausschlie(ß|ss)lich\s+online|online[\s-]+exklusiv|nur\s+(im|über\s+den)\s+(online-?)?shop|nur\s+im\s+(internet|netz)|nur\s+(im\s+studio|vor\s+ort)|nicht\s+im\s+studio/i;
+    const { SEITEN: SEITEN_OG } = await import("../netlify/functions/_lib/gutschein-seiten-html.mjs");
+    const texte = { seite: x.html, ...Object.fromEntries(Object.entries(SEITEN_OG[t.slug].og).map(([f, h]) => ["vorschau-" + f, h])), impressum: imp.html, widerruf: wid.html, bedingungen: bed.html, datenschutz: dsg.html };
+    const treffer = Object.entries(texte).filter(([, h]) => NUR_EIN_WEG.test(String(h).replace(/ /g, " "))).map(([k, h]) => k + ": " + (NUR_EIN_WEG.exec(String(h).replace(/ /g, " ")) || [])[0]);
+    check(Object.keys(texte).length === 8 && !treffer.length, `${t.stadt}: nirgends „nur online“ oder „nur im Studio“ (Seite, 3 Vorschau-Fassungen, 4 Rechtsseiten)`, treffer);
     check(imp.status === 200 && imp.html.includes(t.name) && imp.html.includes(t.adr) && imp.html.includes(t.mail) && !imp.html.includes(anders.mail), `${t.stadt}: Impressum mit Verkäufer ${t.name}`);
     check(wid.status === 200 && /vierzehn Tagen/.test(wid.html) && wid.html.includes(t.adr) && /Muster-Widerrufsformular/.test(wid.html), `${t.stadt}: Widerrufsbelehrung mit Adresse und Muster-Formular`);
     check(bed.status === 200 && /31\.03\.2027/.test(bed.html) && /in Teilen einlösen/.test(bed.html) && /24\.12\.2026 um 16 Uhr/.test(bed.html) && bed.html.includes(t.adr), `${t.stadt}: Gutscheinbedingungen (Bonus-Frist, Teil-Einlösung, Aktionsende, Adresse)`);
     check(dsg.status === 200 && dsg.html.includes(t.mail) && /Meta-Pixel/.test(dsg.html) && /Stripe/.test(dsg.html) && !/Telefonnummer, um/.test(dsg.html), `${t.stadt}: Datenschutz mit Verantwortlichem der Stadt`);
   }
   check(bilder[0] !== bilder[1], "Jede Stadt hat ihr eigenes Vorschaubild");
+  {
+    // Auch die Quellen von Vorschaubild, WhatsApp-Nachbau, Gutschein-PDF, Kauf-Mail, Bedingungen und Online-Ansicht: kein „nur online“
+    const NUR_EIN_WEG = /nur\s+(noch\s+)?online|ausschlie(ß|ss)lich\s+online|online[\s-]+exklusiv|nur\s+(im|über\s+den)\s+(online-?)?shop|nur\s+im\s+(internet|netz)|nur\s+(im\s+studio|vor\s+ort)|nicht\s+im\s+studio/i;
+    const quellen = ["dev/gutschein/seite.html", "dev/gutschein/og.html", "dev/gutschein/whatsapp.html", "dev/gutschein/recht.html", "dev/gutschein-seiten.mjs", "netlify/functions/_lib/gutschein-shop.mjs", "netlify/functions/_lib/gutschein.mjs", "netlify/functions/_lib/emails.mjs", "netlify/functions/gutschein-shop.mjs", "public/gutschein.html"];
+    const treffer = quellen.filter((f) => NUR_EIN_WEG.test(fs.readFileSync(path.join(root, f), "utf8")));
+    check(!treffer.length, "Quellen (Seite, Vorschaubild, WhatsApp, Rechtsseiten, PDF, Mail, Bedingungen, Online-Ansicht): nirgends „nur online“ oder „nur im Studio“", treffer);
+  }
   check((await fetch(BASE + "/gutschein-kaufen/tattoo-fashion-berlin")).status === 404, "Unbekannte Stadt /gutschein-kaufen/tattoo-fashion-berlin → 404");
 }
 

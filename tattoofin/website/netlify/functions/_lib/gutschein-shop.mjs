@@ -64,8 +64,8 @@ export const SHOPS = {
     seite: {
       kuerzel: "tfm", name: "Tattoo Fashion München", firma: "Tattoo Fashion Munich", stadt: "München",
       telefon: "089 94403786", telefonLink: "+498994403786", whatsapp: "491626527442", instagram: "tattoofashion_munich",
-      // Google-Bewertungen: Stand 22.11.2026 (bei Änderung hier anpassen und Seiten neu erzeugen)
-      google: { sterne: "4,9", anzahl: 348, stand: "22.11.2026", suche: "Tattoo Fashion Munich, Landshuter Allee 42, 80637 München" },
+      // Google-Bewertungen: Stand 24.11.2026, 03:30 Uhr geprüft (Bildschirmfotos tattoofin/intern/gutschein-shop-tfm/belege/; bei Änderung hier anpassen und Seiten neu erzeugen)
+      google: { sterne: "4,9", anzahl: 348, stand: "24.11.2026", suche: "Tattoo Fashion Munich, Landshuter Allee 42, 80637 München" },
       zeiten: [["Montag bis Freitag", "10–18 Uhr"], ["Samstag", "10–16 Uhr"], ["Sonntag", "geschlossen"]],
       pixel: "2379676156103158",
       // Bildstreifen „Tattoos aus unserem Studio“: public/assets/gs-shop/tfm/b-<name>.jpg (600×800, ohne Personen/Wasserzeichen)
@@ -93,7 +93,7 @@ export const SHOPS = {
     seite: {
       kuerzel: "tfla", name: "Tattoo Fashion Landshut", firma: "Tattoo Fashion Landshut", stadt: "Landshut",
       telefon: "0871 14210163", telefonLink: "+4987114210163", whatsapp: "491625642090", instagram: "tattoofashion_landshut",
-      google: { sterne: "4,8", anzahl: 167, stand: "22.11.2026", suche: "Tattoo Fashion Landshut, Neustadt 502, 84028 Landshut" },
+      google: { sterne: "4,8", anzahl: 167, stand: "24.11.2026", suche: "Tattoo Fashion Landshut, Neustadt 502, 84028 Landshut" },
       zeiten: [["Montag bis Freitag", "10–18 Uhr"], ["Samstag", "10–16 Uhr"], ["Sonntag", "geschlossen"]],
       pixel: "1324284036136356",
       // 24.11.2026: Rabe mit Runen, Tiere (unscharf) und Baum (angeblitzt) ersetzt; Runde 3: Herzen und Mandala (Folie im Hintergrund)

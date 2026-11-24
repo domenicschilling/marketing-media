@@ -1,0 +1,2 @@
+Stand vor dem Endspurt (Online oder im Studio, Google-Stand 24.11.), 24.11.2026.
+Gleich wie Commit e6d2cd1 auf claude/tfm-gutschein-shop-live.
