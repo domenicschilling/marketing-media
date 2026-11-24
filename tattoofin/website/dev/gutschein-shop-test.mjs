@@ -343,6 +343,7 @@ console.log("Seiten je Stadt (statisch, og-Tags, Rechtliches nur im Fuß)");
     check(imp.status === 200 && imp.html.includes(t.name) && imp.html.includes(t.adr) && imp.html.includes(t.mail) && !imp.html.includes(anders.mail), `${t.stadt}: Impressum mit Verkäufer ${t.name}`);
     check(wid.status === 200 && /vierzehn Tagen/.test(wid.html) && wid.html.includes(t.adr) && /Muster-Widerrufsformular/.test(wid.html), `${t.stadt}: Widerrufsbelehrung mit Adresse und Muster-Formular`);
     check(bed.status === 200 && /31\.03\.2027/.test(bed.html) && /in Teilen einlösen/.test(bed.html) && /24\.12\.2026 um 16 Uhr/.test(bed.html) && bed.html.includes(t.adr), `${t.stadt}: Gutscheinbedingungen (Bonus-Frist, Teil-Einlösung, Aktionsende, Adresse)`);
+    check(/Ist eine Nummer ausverkauft, gibt es sie nicht mehr\./.test(bed.html) && !/Nummer verkauft/.test(bed.html), `${t.stadt}: Gutscheinbedingungen „Ist eine Nummer ausverkauft, gibt es sie nicht mehr.“ (vom 300er gibt es 10, ein Verkauf beendet ihn nicht)`);
     check(dsg.status === 200 && dsg.html.includes(t.mail) && /Meta-Pixel/.test(dsg.html) && /Stripe/.test(dsg.html) && !/Telefonnummer, um/.test(dsg.html), `${t.stadt}: Datenschutz mit Verantwortlichem der Stadt`);
   }
   check(bilder[0] !== bilder[1], "Jede Stadt hat ihr eigenes Vorschaubild");
@@ -384,8 +385,13 @@ await p.screenshot({ path: path.join(shots, "handy-hero.png") });
   check(karten[0].aus && karten[0].rest === "Ausverkauft" && klein === `Noch ${n4.verfuegbar} von 6 zu diesem Preis` && pille === `Noch ${rest} von 21`, "Nr. 1 ausverkauft (gesperrt); unter dem Knopf die Stückzahl des 500ers aus der Überschrift („Noch 5 von 6 zu diesem Preis“), Kopf-Pille alle zusammen", { klein, pille });
   const waehlen = await p.$$eval("#bogen button.zeile", (l) => l.map((x) => ({ id: x.dataset.wahl, aus: x.disabled, pfeil: Boolean(x.querySelector(".waehlen,.pfeil") && getComputedStyle(x.querySelector(".waehlen,.pfeil")).display !== "none") })));
   check(waehlen.every((x) => x.aus ? !x.pfeil : x.pfeil), "Jede kaufbare Karte zeigt „Wählen →“ (bzw. den Pfeil beim eigenen Betrag), verkaufte nicht", waehlen);
-  const kopf = await p.evaluate(() => ({ imHero: getComputedStyle(document.getElementById("top-pille")).opacity, punkt: getComputedStyle(document.querySelector(".dot")).animationName, abschnitt: document.querySelector("#gutscheine .eyebrow").textContent, h2: document.querySelector("#gutscheine h2").textContent }));
+  const kopf = await p.evaluate(() => ({ imHero: getComputedStyle(document.getElementById("top-pille")).opacity, punkt: getComputedStyle(document.querySelector(".dot")).animationName, abschnitt: document.querySelector("#gutscheine .eyebrow").textContent, h2: document.querySelector("#gutscheine h2").textContent, sub: document.querySelector("#gutscheine p.sub").textContent }));
   check(kopf.imHero === "0" && kopf.punkt === "none" && !/Stück/.test(kopf.abschnitt) && !/21|Aktions-Gutscheine/.test(kopf.h2), "Stückzahl nur einmal je Bildschirm: Kopf-Pille erst nach dem Hero, Abschnitt ohne zweite „Nur 21 Stück“-Pille, roter Punkt pulsiert nicht", kopf);
+  // Korrektur-Runde 1 (24.11.): „Fünf Gutscheine“ stand neben „Nur 21 Stück“ (zwei Stückzahlen), „Ist einer verkauft, gibt es ihn
+  // nicht mehr“ stimmte nicht (vom 300er gibt es 10). Jetzt „Fünf Angebote“, sagt, weniger als was, und erklärt ausverkauft richtig.
+  check(kopf.h2 === "Fünf Angebote. Du zahlst weniger, als draufsteht." && !/Gutscheine/.test(kopf.h2)
+    && /Tippe auf deinen Gutschein\. Ist er ausverkauft, kommt er nicht wieder\./.test(kopf.sub) && !/Tipp auf|Ist einer verkauft/.test(kopf.sub),
+    "Preis-Abschnitt: „Fünf Angebote. Du zahlst weniger, als draufsteht.“ (kein „Fünf Gutscheine“ neben „21 Stück“), „Tippe … Ist er ausverkauft, kommt er nicht wieder.“", kopf);
 }
 await p.locator("#gutscheine").scrollIntoViewIfNeeded();
 await p.screenshot({ path: path.join(shots, "handy-liste.png") });

@@ -1,0 +1,2 @@
+Stand vor Korrektur-Runde 1 der Seiten (24.11.2026, 04:15) = Commit 310a885.
+Geändert danach: Preis-Überschrift „Fünf Angebote …“, Unterzeile „Tippe auf …“, Bedingungen „ausverkauft“.
