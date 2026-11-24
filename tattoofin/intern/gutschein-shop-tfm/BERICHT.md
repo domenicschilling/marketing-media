@@ -1,5 +1,13 @@
 # Gutschein-Shop Tattoo Fashion München + Landshut – Bericht (24.11.2026)
 
+## Runde 24.11. früh: Korrektur-Runde 1 der Seiten (Prüfer „verkauf-text“), Entwurf, NICHT live
+
+- **Preis-Abschnitt:** „Fünf Gutscheine. Du zahlst weniger.“ stand am Handy auf demselben Bildschirm wie die Kopf-Pille „Nur 21 Stück“ (zwei Stückzahlen). Jetzt „Fünf Angebote. Du zahlst weniger, als draufsteht.“ Am Handy in 3 Zeilen („Fünf Angebote.“ / „Du zahlst weniger,“ / „als draufsteht.“), am Rechner 2 Zeilen; gemessen 320, 360, 390, 430, 1280 px in Chromium und Safari, kein Querscrollen.
+- **Unterzeile:** „Tipp auf deinen Gutschein. Ist einer verkauft, gibt es ihn nicht mehr.“ stimmte nicht (vom 300er gibt es 10). Jetzt „Tippe auf deinen Gutschein. Ist er ausverkauft, kommt er nicht wieder.“
+- **Gutscheinbedingungen (beide Städte, auch Mail und Online-Ansicht):** „Ist eine Nummer ausverkauft, gibt es sie nicht mehr.“
+- **Entwurf:** Deploy `6b0502e9d1a1f66583f82cf9` (Alias tfm-gutschein-design, Rückweg `6b04f9ef4f96be4a16919bea`), per GET geprüft (beide Städte, Fassung „angebot“, neue Texte, Bedingungen). Abnahme beider Adressen mit `--soll "500 €;375 €;200 €;300 €"` bestanden (12/12 Geräte, axe ok).
+- **Geprüft:** `dev/gutschein-shop-test.mjs` 181/0 (neu: Überschrift und Unterzeile wörtlich, Bedingungen beider Städte), `dev/e2e.mjs` 410/0.
+
 ## Runde 24.11. nachts (3): Korrektur Runde 3 (23 Prüfer-Befunde), Entwurf, NICHT live
 
 **WhatsApp-/Facebook-Vorschau stellt sich jetzt selbst um.** Die Seite kommt nicht mehr als feste Datei, sondern über die Funktion `netlify/functions/gutschein-seite.mjs` (gleiche Adressen). Sie liest den echten Bestand und setzt Titel, Beschreibung, Vorschaubild und die Zahlen im Hero, bevor die Seite beim Besucher ankommt (das CDN hält sie 30 s, danach höchstens 90 s alt). Drei Fassungen je Stadt:
