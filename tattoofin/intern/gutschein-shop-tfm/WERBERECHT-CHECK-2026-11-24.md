@@ -1,5 +1,28 @@
 # Werberecht-Check Gutschein-Shop Tattoo Fashion München + Landshut (Endstand 24.11.2026)
 
+## Nachtrag 24.11.2026, ca. 21 Uhr: Seite und Shop unbegrenzt (Domenics Entscheidung über Ultron)
+
+Geprüft nach dem Skill `werberecht-check`, nur **Shop-Seiten beider Städte, Kauf-Fenster, Vorschau (WhatsApp/Facebook), Rechtsseiten, Kauf-Mail und PDF** (Werbung und Videos prüfen die Anzeigen-Chats). Fassung: Branch `claude/tfm-gutschein-shop-live`, Commit `80fe531` (Code) bzw. der Schluss-Commit laut STAND.md, Entwurf-Deploy `6b05e394d504030f630cc118` (nur GET angesehen). Normtext Anhang Nr. 5 und Nr. 7 UWG am 24.11.2026 neu abgerufen (https://www.gesetze-im-internet.de/uwg_2004/anhang.html).
+
+**Neue Lage:** Die Aktions-Gutscheine Nr. 1–5 sind unbegrenzt kaufbar (keine Stückzahl im Code, kein „ausverkauft“, kein Zähler, keine neutrale Ausverkauft-Fassung). Knappheit kommt nur noch aus der echten Frist 24.12.2026, 16 Uhr (`aktionBis` im Code, danach Zustand „danach“).
+
+**Kurzurteil für Seite/Shop/Mail/PDF:** unverändert **Verstoß** nur wegen des Meta-Pixels ohne Einwilligung [D3]; ohne diesen Punkt **Risiko (gering)**. Die Stückzahl-Punkte sind erledigt.
+
+| Nr. | Prüfpunkt | Ergebnis | Begründung mit Norm | so ja / Stand |
+|---|---|---|---|---|
+| Q1 | Stückzahl und Knappheit („Nur 21 Stück“, „Nur 6 Stück“, „Noch X von …“, „Ist er ausverkauft, kommt er nicht wieder“) | **entfällt** | Auf Seite, Kauf-Fenster, Vorschau, Rechtsseiten, Mail und PDF steht keine Stückzahl mehr (Shop-Test sucht danach in Seite samt Skript, beiden Vorschau-Fassungen, 4 Rechtsseiten, Mail und PDF). | – |
+| Q2 | Studio-Verkäufe und Online-Bestand [D4] | **entfällt** (für die Seite) | Ohne Bestand gibt es nichts mehr abzugleichen. „Online und im Studio“ bleibt (FAQ, Abschnitt „Dein Studio“). | – |
+| Q3 | Lockangebot / Werbung nach Ausverkauf (Anhang Nr. 5 UWG) | **entfällt** | Digitale Gutscheine ohne Vorrat; kein Ausverkauf, keine Ausverkauft-Mail, keine Pause-Regel nötig. | – |
+| Q4 | Frist und Countdown (Anhang Nr. 7 UWG) | ok | Frist echt und fest im Code; Countdown läuft auf 24.12., 16 Uhr, danach Zustand „danach“ (Test „Seite offen um 16 Uhr“). Neu: Mit `?g=frei` (Wertgutschein, ganzjährig kaufbar) kein Countdown und keine Pille „Weihnachts-Aktion“ im Hero mehr, damit nichts nach einer Frist des Wertgutscheins aussieht. | – |
+| U1 | „solange verfügbar“ in den Gutscheinbedingungen (Punkt 5, Seite „Gutscheinbedingungen“ und Kauf-Mail) | Risiko (gering) | Bei einem unbegrenzten Angebot deutet „solange verfügbar“ eine Begrenzung an, die es nicht gibt (§ 5 Abs. 2 Nr. 1 UWG); es steht nur klein in den Bedingungen, wo es vorher schon stand, nie als Werbeaussage, und bleibt nach Domenics Entscheidung. | Bewusst so gelassen; „Solange der Vorrat reicht“ steht auf Seite, Vorschau, Mail und PDF nirgends. |
+| U2 | „1 Aktions-Gutschein pro Person“ (Kauf-Fenster, FAQ, Bedingungen) | ok | Der Code setzt es durch: `netlify/functions/_lib/gutschein-shop.mjs` Z. 49 (`aktionJeKaeufer: 1`), Z. 191–196 (zählt verkaufte und offene Kassen derselben E-Mail), Z. 214–215 (Ablehnung `je_kaeufer`), aufgerufen vor der Stripe-Kasse in `netlify/functions/gutschein-shop.mjs` Z. 100–114. Grenze: je E-Mail-Adresse und Studio; wer eine zweite Adresse nimmt, kann ein zweites Mal kaufen. Die FAQ begründet die Regel nicht mehr mit Knappheit („damit möglichst viele …“ entfernt). | – |
+| Q10 | „+X € geschenkt“ (Anhang Nr. 20 UWG, § 5 UWG) | ok (vorher Risiko gering) | Chips in Liste und Kauf-Fenster jetzt „+X € geschenkt*“ mit Sternchen; die Bedingung „*Voller Wert bis 31.03.2027, danach der Kaufpreis bis 31.12.2029.“ steht direkt über der Liste und im Fuß des Kauf-Fensters, wortgleich mit den Anzeigen. | – |
+| I1 | Zusammenfassung vor der Kasse (§ 312j BGB, § 6 PAngV) | ok | Schritt 2 zeigt „Du zahlst 200 € → Du bekommst* 300 €“: Zahlbetrag zuerst, 20 px, volle Textfarbe; darüber die Bedingung, darunter „Endpreis, keine weiteren Kosten“; Knopf in der Stripe-Kasse „Bezahlen“ mit Satz „zahlungspflichtig“ unverändert. | – |
+| H5 | Datenschutz: Anschluss-Kennung | ok | Zweck jetzt „Schutz vor Missbrauch (viele Kassen gleichzeitig vom selben Anschluss)“ statt „damit die Stückzahl stimmt“; die Kennung wird nach Ende der Kasse (bezahlt, abgebrochen, abgelaufen) aus dem Ticket gelöscht, so stimmt „höchstens 33 Minuten“ jetzt auch technisch. | – |
+
+**Restrisiko in einem Satz (Domenics Entscheidung):** „solange verfügbar“ bleibt klein in den Gutscheinbedingungen, obwohl das Angebot unbegrenzt ist; wer streng liest, könnte darin eine angedeutete Knappheit sehen, das Risiko ist klein, weil es keine Werbeaussage ist und die Seite selbst keine Menge nennt.
+
+
 Geprüft am 24.11.2026 zwischen 04:30 und 05:10 Uhr nach dem Skill `werberecht-check` (Module A–J, Skala ok / Risiko / Verstoß). Das ist eine Selbstprüfung nach dem Wortlaut der Normen, keine Rechtsberatung. Das Restrisiko trägt Domenic bewusst.
 
 **Normtexte neu abgerufen am 24.11.2026** von gesetze-im-internet.de: UWG § 5, § 5b und Anhang, PAngV § 3, § 6 und § 11, BGB § 312g und § 312j, TDDDG § 25 und § 28, DDG § 5. Urteile (EuGH) stehen dort nicht und sind als solche markiert.

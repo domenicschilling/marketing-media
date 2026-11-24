@@ -189,7 +189,7 @@
   to = "/zahlen.html"
   status = 200
 # Gutschein-Shop (23.11.2026, Tattoo Fashion München + Landshut, siehe netlify/functions/_lib/gutschein-shop.mjs): Seite je Stadt
-# /gutschein-kaufen/<slug> liefert die Funktion netlify/functions/gutschein-seite.mjs (Vorschau und Hero aus dem Bestand, seit 24.11.2026),
+# /gutschein-kaufen/<slug> liefert die Funktion netlify/functions/gutschein-seite.mjs (Vorschau nach Uhrzeit, Hero je ?g=; seit 24.11.2026 unbegrenzt, ohne Bestand),
 # Rechtsseiten /gutschein-kaufen/<slug>-impressum usw. kommen statisch aus public/gutschein-kaufen/ (dev/gutschein-seiten.mjs), unbekannte → 404.
 # Alte Adressen der ersten Fassung leiten weiter.
 [[redirects]]
