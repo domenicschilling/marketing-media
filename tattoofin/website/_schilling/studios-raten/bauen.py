@@ -775,7 +775,8 @@ for ENTWURF, DATEI in (("a", "studios-raten.html"), ("b", "../_schilling/studios
 <link rel="preload" href="/assets/start/fonts/LuckiestGuy.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/start/fonts/DMSans.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/start/figur.webp" as="image" type="image/webp">
-<link rel="stylesheet" href="/assets/start/style.css?v=20261118a">
+<link rel="stylesheet" href="/assets/site/werte.css?v=20261123a">
+<link rel="stylesheet" href="/assets/start/style.css?v=20261123a">
 <style>{CSS}{FN_CSS}</style>
 </head>
 <body data-wa="aus">

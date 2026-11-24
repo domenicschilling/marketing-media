@@ -19,6 +19,9 @@ html{scroll-padding-top:calc(var(--kopf) + var(--s3))}
 .kopf-web .knopf.knopf-klein{height:36px;padding:.32em .8em .14em;font-size:var(--f-ui)}
 .kopf-login{display:none;font-weight:700;font-size:var(--f-ui);text-underline-offset:3px;padding:var(--s2) 0}
 .menue{position:static}
+/* Nachtprüfung 25.11.2026: Seiten mit /css/site.css (Impressum, Datenschutz, Ratgeber) gaben dem Menü sonst den Fragen-Kasten mit „+“ */
+.kopf details.menue,.kopf details.menue:hover{background:none;border:0;border-radius:0;padding:0;margin:0;box-shadow:none;transform:none;transition:none;color:inherit}
+.kopf .menue>summary::after{content:none;display:none}
 .menue>summary{list-style:none;cursor:pointer;display:grid;place-items:center;height:36px;padding:0 var(--s3);border:3px solid var(--blau);border-radius:var(--r-pille);background:var(--hell);font:800 var(--f-ui)/1 var(--text);color:var(--blau)}
 .menue>summary::-webkit-details-marker{display:none}
 .menue[open]>summary{background:var(--blau);color:var(--hell)}
