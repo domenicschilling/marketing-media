@@ -121,6 +121,8 @@ html.js:not([data-stand]):not(.zahlen) #h-wert,html.js:not([data-stand]):not(.za
 section{padding:68px 0}
 .sec-h{font-size:clamp(30px,8vw,52px);margin:14px 0 12px;line-height:1.12}
 .sub{color:var(--mute);max-width:36em}
+/* Bedingung zum Sternchen im Preis-Abschnitt (Prüfung 24.11.2026, Runde 2: „Du bekommst mehr, als du zahlst“ nur mit sichtbarer Bedingung) */
+.sub-fuss{font-size:12.5px;line-height:1.35;color:var(--mute);max-width:36em;margin-top:8px;text-wrap:balance}
 /* Gutschein-Liste */
 .gs{display:grid;gap:10px;margin-top:22px}
 button.zeile{position:relative;display:grid;grid-template-columns:1fr auto;align-items:center;gap:6px 14px;width:100%;text-align:left;cursor:pointer;color:var(--txt);font:inherit;background:linear-gradient(135deg,#1b1712,#0f0e0c);border:1px solid var(--line);border-radius:var(--r);padding:18px 18px 16px;transition:border-color .15s,transform .15s;-webkit-tap-highlight-color:transparent}
@@ -386,8 +388,9 @@ textarea{min-height:76px;resize:vertical}
       <div class="reveal">
         <span class="eyebrow nur-aktion"><span class="dot"></span>Bis Heiligabend, 16 Uhr</span>
         <span class="eyebrow nur-danach">Tattoo-Gutschein</span>
-        <h2 class="h sec-h nur-aktion">{{zahlwort}} Angebote. <span class="g"><span class="nb">Du bekommst mehr,</span> <span class="nb">als du zahlst.</span></span></h2>
+        <h2 class="h sec-h nur-aktion">{{zahlwort}} Angebote. <span class="g"><span class="nb">Du bekommst mehr,</span> <span class="nb">als du zahlst.*</span></span></h2>
         <p class="sub nur-aktion"><span id="liste-ab">Schon ab {{abPreis}} (Wert&nbsp;{{abWert}}).</span> Tippe auf deinen Gutschein. Ist er ausverkauft, kommt er nicht wieder.</p>
+        <p class="sub-fuss nur-aktion" id="liste-fuss">*Voller Wert bis {{bonusBis}}, danach der Kaufpreis bis {{gueltigBis}}.</p>
         <h2 class="h sec-h nur-danach">Gutschein mit <span class="g">eigenem Betrag.</span></h2>
         <p class="sub nur-danach" id="danach-sub">Von {{freiSpanne}}, sofort als PDF per E-Mail.</p>
       </div>
@@ -651,7 +654,7 @@ textarea{min-height:76px;resize:vertical}
   // Karte der Liste: erst der bezahlte Betrag, dann der Wert (gold, größer); gleiche Form wie dev/gutschein-seiten.mjs (karte)
   function paar(a) {
     return '<span class="preis"><small>Du zahlst</small><b>' + EURO(a.preisCent) + '</b></span><span class="pf" aria-hidden="true">→</span>' +
-      '<span class="wert"><small>Du bekommst</small><b class="g">' + EURO(a.wertCent) + "</b></span>";
+      '<span class="wert"><small>Du bekommst*</small><b class="g">' + EURO(a.wertCent) + "</b></span>";
   }
   function zeichnen() {
     var sh = D.shop, zu = !sh.offen || !D.studio.aktiv, aus = istAus(sh);
@@ -692,7 +695,7 @@ textarea{min-height:76px;resize:vertical}
     $("top-stueck").textContent = rest <= 0 ? "Gerade alle reserviert" : rest >= alle ? "Nur " + alle + NB + "Stück" : "Noch " + rest + NB + "von " + alle;
     $("top-pille").hidden = false;
     document.querySelectorAll("#hero-kaufen,[data-kaufen]").forEach(function (b) { b.disabled = zu; });
-    if (!funnel.hidden && schritt === 1) wahlZeichnen();
+    if (!funnel.hidden && schritt === 1) { wahlZeichnen(); bonusZeile(); }
   }
 
   // ---------- Kauf-Fenster ----------
@@ -741,7 +744,7 @@ textarea{min-height:76px;resize:vertical}
     var opt = function (a) {
       var w = weg(a, sh), an = auswahl === a.id && !w;
       return '<label class="opt' + (w ? " weg" : "") + (an ? " an" : "") + '"><input type="radio" name="wahl" value="' + a.id + '"' + (w ? " disabled" : "") + (an ? " checked" : "") + '><span class="k"></span>' +
-        '<span class="o-w paar"><span class="o-z"><small>Du zahlst</small><b>' + EURO(a.preisCent) + '</b></span><span class="pf" aria-hidden="true">→</span><span class="o-b"><small>Du bekommst</small><b class="g">' + EURO(a.wertCent) + "</b></span></span>" +
+        '<span class="o-w paar"><span class="o-z"><small>Du zahlst</small><b>' + EURO(a.preisCent) + '</b></span><span class="pf" aria-hidden="true">→</span><span class="o-b"><small>Du bekommst*</small><b class="g">' + EURO(a.wertCent) + "</b></span></span>" +
         '<small class="o-s"><i class="chip">+' + EURO(a.wertCent - a.preisCent) + " geschenkt</i>" + (reserviert(a, sh) ? "Gerade reserviert. " + HINWEIS : stueck(a, sh)) + "</small></label>";
     };
     var wegZeile = verkauft.length ? '<p class="weg-zeile">Schon verkauft: ' + verkauft.map(function (a) { return EURO(a.wertCent); }).join(" · ") + "</p>" : "";
@@ -750,12 +753,15 @@ textarea{min-height:76px;resize:vertical}
     if (alt) $("f-betrag").value = alt;
   }
   function markieren() { [].forEach.call($("wahl").querySelectorAll("label.opt"), function (l) { l.classList.toggle("an", l.querySelector("input").checked); }); bonusZeile(); }
-  // Die wichtigste Bedingung, solange ein Aktions-Gutschein gewählt ist (Schritt 1 und 2): voller Wert nur bis 31.03.2027
+  // Bedingung zum Sternchen („Du bekommst*“), wortgleich mit Hero und Vorschaubild (UWG § 5: „bekommen“ nur mit sichtbarer Bedingung).
+  // Schritt 1: immer, solange Aktions-Gutscheine in der Auswahl stehen, auch ohne Auswahl (Leiste, „So geht's“, Abschluss-Knopf) und
+  // mit „Eigener Betrag“ vorgewählt (?g=frei). Schritt 2: nur, wenn ein Aktions-Gutschein gewählt ist (Prüfung 24.11.2026, Runde 2).
   var DATUM = function (iso) { return new Date(iso).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "Europe/Berlin" }); };
   function bonusZeile() {
-    var b = $("f-bonus"), an = D && schritt !== 3 && auswahl && auswahl !== "frei" && D.shop.aktionOffen;
+    var b = $("f-bonus"), sh = D && D.shop;
+    var an = Boolean(sh && sh.aktionOffen && (schritt === 1 ? !istAus(sh) : schritt === 2 && auswahl && auswahl !== "frei"));
     b.hidden = !an;
-    if (an) b.textContent = "Voller Wert bis " + DATUM(D.shop.bonusBis) + ", danach zählt der bezahlte Betrag bis Ende " + new Date(D.shop.gueltigBis).getFullYear() + ".";
+    if (an) b.textContent = "*Voller Wert bis " + DATUM(sh.bonusBis) + ", danach der Kaufpreis bis " + DATUM(sh.gueltigBis) + ".";
   }
   // Bezahl-Knopf: unter 375 px kürzer („Zur Zahlung →“), damit er einzeilig bleibt
   function zahlText() { return innerWidth < 375 ? "Zur Zahlung →" : "Weiter zur Zahlung →"; }

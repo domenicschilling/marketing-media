@@ -134,14 +134,17 @@ function ogTexte(c, fassung = "angebot") {
     titel: `Tattoo-Gutscheine zum Weihnachtspreis · ${name}`, ogText: `Für Tattoo oder Piercing in ${stadt}. Weihnachts-Aktion nur bis 24.12., 16 Uhr.`,
     ogAlt: `${name}: Weihnachts-Aktion, Tattoo-Gutscheine zum Weihnachtspreis, nur bis 24.12., 16 Uhr`, ogDatei };
   // Pille „Tattoo-Gutschein“: WhatsApp zeigt oft nur das Quadrat aus der Mitte (ohne Geschenk links), dort muss klar sein, was man kauft
+  // Bedingung zum Sternchen (Überschrift und Karte „bekommen*“), unten im Bild ≥ 30 px auf höchstens zwei Zeilen und im Alt-Text
+  // (Prüfung 24.11.2026, Runde 2: mit 20 px war sie in der WhatsApp-Vorschau nicht lesbar)
+  const bedingung = `Voller Wert bis ${DATUM(bonusBisIso(c))}, danach der Kaufpreis bis ${DATUM(gueltigBis(jetzt()))}.`;
   return { pille: "Tattoo-Gutschein", h1Klasse: "kaufen", zeileA: `Für ${EURO(nr4.preisCent)} kaufen,`, zeileB: `${EURO(nr4.wertCent)} bekommen*`, bis: "Nur bis 24.12., 16 Uhr",
-    karteOben: `Für ${EURO(ab.preisCent)}`, karteMitte: EURO(ab.wertCent), karteUnten: "bekommen",
-    fuss: `*Voller Wert bis ${DATUM(bonusBisIso(c))}, danach der Kaufpreis bis ${DATUM(gueltigBis(jetzt()))}.`,
+    karteOben: `Für ${EURO(ab.preisCent)}`, karteMitte: EURO(ab.wertCent), karteUnten: "bekommen*",
+    fuss: `*${bedingung}`,
     // WhatsApp/Facebook: fette Zeile = Angebot + Studio, darunter wofür, wo, der günstigste (200 € → 300 €) und die richtige Stückzahl
     // (21 = alle Aktions-Gutscheine zusammen); höchstens 85 Zeichen, sonst kürzt WhatsApp nach zwei Zeilen
     titel: `Gutschein für ${EURO(nr4.preisCent)} kaufen, ${EURO(nr4.wertCent)} bekommen · ${name}`,
     ogText: `Für Tattoo oder Piercing in ${stadt}. Auch ${EURO(ab.preisCent)} → ${EURO(ab.wertCent)}. Insgesamt nur ${alle} Stück.`,
-    ogAlt: `${name}: Tattoo-Gutschein für ${EURO(nr4.preisCent)} kaufen, ${EURO(nr4.wertCent)} bekommen, nur bis 24.12., 16 Uhr`, ogDatei };
+    ogAlt: `${name}: Tattoo-Gutschein für ${EURO(nr4.preisCent)} kaufen, ${EURO(nr4.wertCent)} bekommen, nur bis 24.12., 16 Uhr. ${bedingung}`, ogDatei };
 }
 const ogBildUrl = (k, datei) => `${BASIS}/assets/gs-shop/${k}/${datei}?v=${hash(path.join(root, `public/assets/gs-shop/${k}/${datei}`))}`;
 // Titel, Beschreibung und Vorschaubild je Fassung (Block zwischen <!--og--> und <!--/og--> der Vorlage)
@@ -163,7 +166,7 @@ function werte(slug, c) {
   // Startzustand der Liste (das Skript ersetzt ihn mit den echten Stückzahlen): solange nichts weg ist „Nur 6 Stück“
   // 24.11.2026 (Domenic): erst der bezahlte Betrag, dann der Wert (gold, größer): „Du zahlst 375 € → Du bekommst 500 €“, „+125 € geschenkt“
   const karte = (x) => `<button type="button" class="zeile" data-wahl="${x.id}"><span class="preis"><small>Du zahlst</small><b>${EURO(x.preisCent)}</b></span><span class="pf" aria-hidden="true">→</span>`
-    + `<span class="wert"><small>Du bekommst</small><b class="g">${EURO(x.wertCent)}</b></span>`
+    + `<span class="wert"><small>Du bekommst*</small><b class="g">${EURO(x.wertCent)}</b></span>`
     + `<span class="chip">+${EURO(x.wertCent - x.preisCent)} geschenkt</span><span class="waehlen" aria-hidden="true">Wählen →</span><span class="rest">Nur ${x.stueck} Stück</span></button>`;
   // Echte Google-Auszüge (SHOPS[…].seite.stimmen), wörtlich
   const stimmen = (p.stimmen?.liste || []).map(([n, zeit, t]) => `<figure class="rev"><span class="stars" style="--p:100%" aria-label="5 von 5 Sternen">★★★★★</span><p>„${esc(t)}“</p>`

@@ -1,0 +1,4 @@
+Stand vor Korrektur-Runde 2 nach „kaufen-bekommen“ (Bedingung im Kauf-Fenster, im Preis-Abschnitt und im Vorschaubild), 24.11.2026.
+Gleich wie Commit 5d41f19 auf claude/tfm-gutschein-shop-live.
+Gesichert: dev/gutschein/seite.html, dev/gutschein/og.html, dev/gutschein-seiten.mjs, dev/gutschein-shop-test.mjs,
+netlify/functions/_lib/gutschein-seiten-html.mjs, Vorschaubilder og-weihnachten.jpg (tfm, tfla), WhatsApp-Vorschau angebot (München, Landshut), STAND.md.

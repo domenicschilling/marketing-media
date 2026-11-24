@@ -9,7 +9,8 @@
      wenn der 500er oder der günstigste ausverkauft ist), „danach“ (nach dem 24.12., 16 Uhr oder wenn alles verkauft ist).
      24.11.2026 abends (Domenic): „Für 375 € kaufen, / 500 € bekommen*“ (bezahlter Betrag zuerst, Wert gold und größer), Pille
      „Tattoo-Gutschein“, Karte „Für 200 € / 300 € / bekommen“, unten die Bedingung zum Sternchen (einzige Zeile unter 30 px, sie ist der
-     Pflicht-Hinweis, kein Werbetext; nur in der Fassung „angebot“). --><style>
+     Pflicht-Hinweis, kein Werbetext; nur in der Fassung „angebot“).
+     24.11.2026 (Prüfung Runde 2): Bedingung jetzt 30 px auf zwei Zeilen (mit 20 px in WhatsApp nicht lesbar), Karte „bekommen*“. --><style>
 @font-face{font-family:"Oswald";font-weight:500 700;src:url({{assets}}/schrift/oswald-latin.woff2) format("woff2")}
 @font-face{font-family:"Inter";font-weight:400 700;src:url({{assets}}/schrift/inter-latin.woff2) format("woff2")}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -40,8 +41,11 @@ h1 .b{font-size:108px;line-height:1.12;padding-top:.12em;margin-top:-.08em}
 .karte .ab{font:600 32px/1 Oswald;letter-spacing:.1em;color:#E8CD92}
 .karte .p{font:700 76px/1.12 Oswald;margin:2px 0 4px;padding-top:.08em}
 .karte .w{font:600 30px/1 Oswald;letter-spacing:.04em;color:#F4EFE6}
-.fuss{position:absolute;left:40px;right:40px;bottom:26px;text-align:center;font:500 20px/1.2 Inter,sans-serif;color:#C9C0AE;white-space:nowrap}
+/* Bedingung zum Sternchen (Prüfung 24.11.2026, Runde 2): 30 px auf höchstens zwei Zeilen, innerhalb des Quadrats aus der Mitte
+   (x 285–915); dafür rückt die Mitte etwas nach oben. Mit 20 px war sie in der WhatsApp-Vorschau (~330 pt breit) nicht lesbar. */
+.fuss{position:absolute;left:310px;width:580px;bottom:28px;text-align:center;font:500 30px/1.16 Inter,sans-serif;color:#DED5C3;text-wrap:balance}
 .fuss:empty{display:none}
+#og:has(.fuss:not(:empty)) .mitte{padding:0 0 62px}
 </style></head><body><div id="og">
 <div class="rahmen"></div>
 {{{zweigL}}}{{{zweigR}}}
@@ -66,12 +70,16 @@ window.fertig=document.fonts.ready.then(function(){
   while(e.offsetWidth>max&&f>24){f-=1;e.style.fontSize=f+"px"}
   if(e.offsetWidth>max)ok=false;
  });
- // Bedingung zum Sternchen: eine Zeile innerhalb des Rahmens
- var fu=document.querySelector(".fuss");if(fu.textContent&&fu.scrollWidth>fu.clientWidth)ok=false;
+ // Bedingung zum Sternchen: mindestens 30 px, höchstens zwei Zeilen, nicht breiter als ihr Feld, mit Luft unter der Datums-Pille
+ // und über dem Rahmen (unten 14 px)
+ var fu=document.querySelector(".fuss"),fuss=null;
+ if(fu.textContent){var r=fu.getBoundingClientRect(),cs=getComputedStyle(fu),lh=parseFloat(cs.lineHeight),bis=document.querySelector(".bis").getBoundingClientRect();
+  fuss={px:parseFloat(cs.fontSize),zeilen:Math.round(r.height/lh),abstand:Math.round(r.top-bis.bottom),unten:Math.round(630-r.bottom)};
+  if(fuss.px<30||fuss.zeilen>2||fu.scrollWidth>fu.clientWidth||fuss.abstand<14||fuss.unten<24)ok=false}
  // Kartentext auch in der Höhe: Zeilen zusammen höchstens Kartenhöhe − Band − 20 px
  var hoehe=[].reduce.call(karte.querySelectorAll("span"),function(s,e){return s+e.offsetHeight},0);
  if(hoehe>karte.clientHeight-34-20)ok=false;
- window.passt={ok:ok,innen:innen,hoehe:hoehe,spans:[].map.call(document.querySelectorAll(".karte span,h1 span"),function(e){return {t:e.textContent,b:e.offsetWidth}})};
+ window.passt={ok:ok,innen:innen,hoehe:hoehe,fuss:fuss,spans:[].map.call(document.querySelectorAll(".karte span,h1 span"),function(e){return {t:e.textContent,b:e.offsetWidth}})};
 });
 document.getElementById("sterne").innerHTML=[[240,150,22,.4],[60,236,18,.32],[1150,170,22,.4],[930,96,18,.3],[1090,580,22,.36],[246,560,20,.3],[150,140,16,.3]].map(function(a){return '<span class="stern" style="left:'+a[0]+'px;top:'+a[1]+'px;width:'+a[2]+'px;height:'+a[2]+'px;opacity:'+a[3]+'">'+F+'</span>'}).join("")</script>
 </body></html>

@@ -318,6 +318,10 @@ console.log("Seiten je Stadt (statisch, og-Tags, Rechtliches nur im Fuß)");
     // Fette Zeile in WhatsApp: Studio + Angebot; Beschreibung mit richtiger Stückzahl (21 = alle zusammen, nicht 21 vom 500er), kurz genug für 2 Zeilen
     check(ogT.replace(/\u00a0/g, " ") === `Gutschein für 375 € kaufen, 500 € bekommen · Tattoo Fashion ${t.stadt}` && (/<title>([^<]*)/.exec(x.html) || [])[1] === ogT && ogD.replace(/\u00a0/g, " ") === `Für Tattoo oder Piercing in ${t.stadt}. Auch 200 € → 300 €. Insgesamt nur 21 Stück.` && meta(x.html, "description") === ogD && ogD.length <= 85 && !/unter Wert|Beträge/.test(x.html.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<!--[\s\S]*?-->/g, "")),
       `${t.stadt}: Titel/og:title „Gutschein für 375 € kaufen, 500 € bekommen · Tattoo Fashion ${t.stadt}“ (Angebot vorn, bezahlter Betrag zuerst), Beschreibung mit wofür, wo, 200 € → 300 € und 21 Stück insgesamt, kein „unter Wert“/„Beträge“`, { ogT, ogD, l: ogD.length });
+    // Prüfung 24.11.2026, Runde 2: Alt-Text der Vorschau nennt die Bedingung (das Bild verspricht „500 € bekommen*“)
+    const ogAlt = (meta(x.html, "og:image:alt") || "").replace(/ /g, " ");
+    check(ogAlt === `Tattoo Fashion ${t.stadt}: Tattoo-Gutschein für 375 € kaufen, 500 € bekommen, nur bis 24.12., 16 Uhr. Voller Wert bis 31.03.2027, danach der Kaufpreis bis 31.12.2029.`,
+      `${t.stadt}: og:image:alt mit Bedingung „Voller Wert bis 31.03.2027, danach der Kaufpreis bis 31.12.2029.“`, ogAlt);
     check(["icon-32.png", "icon-180.png", "icon-192.png", "geschenk-480.webp", "geschenk-960.webp", "geschenk-1400.webp", "geschenk-960.png", "pdf-muster.webp", "pdf-muster.jpg", "pdf-grund.jpg", "og-weihnachten-neutral.jpg", "og-gutschein.jpg", "logo-gold-480.webp", "logo-gold-960.webp", "logo-gold-1400.webp"].every((f) => fs.existsSync(path.join(root, "public/assets/gs-shop", t.k, f)))
       && x.html.includes(`apple-touch-icon" href="/assets/gs-shop/${t.k}/icon-180.png"`) && x.html.includes(`/assets/gs-shop/${t.k}/geschenk-1400.webp 1400w`) && !/w-[a-z-]+\.jpg|favicon\.png/.test(x.html), `${t.stadt}: scharfe Bilder (Geschenk 480/960/1400, Logo bis 1.400 px, Symbole 32/180/192, Gutschein-Muster)`);
     check(x.html.includes(`fbq('init','${t.pixel}')`) && !x.html.includes(anders.pixel) && x.html.includes(`/assets/gs-shop/${t.k}/logo-gold-480.webp`) && x.html.includes(t.tel) && x.html.includes(`wa.me/${t.wa}`) && x.html.includes(`instagram.com/${t.ig}/`) && x.html.includes(`Gutschein von Tattoo Fashion ${t.stadt} mit roter Schleife`) && x.html.includes(`<b>${t.g}</b> · ${t.n} Google-Bewertungen`) && !x.html.includes(anders.adr), `${t.stadt}: eigenes Pixel, Logo, Telefon, WhatsApp, Instagram, Google-Bewertung, keine Angaben der anderen Stadt`);
@@ -388,8 +392,8 @@ await p.screenshot({ path: path.join(shots, "handy-hero.png") });
   const euroT = (c) => `${(c / 100).toLocaleString("de-DE")} €`;
   check(dApi.shop.aktionen.every((a, i) => karten[i].rest === soll(a) && karten[i].chip === `+${euroT(a.wertCent - a.preisCent)} geschenkt`),
     "Liste: je Karte Ersparnis („+125 € geschenkt“) und Stückzahl („Nur 10 Stück“ solange nichts weg ist, sonst „Noch 5 von 6“)", karten);
-  check(dApi.shop.aktionen.every((a, i) => karten[i].zahlt === euroT(a.preisCent) && karten[i].bekommt === euroT(a.wertCent) && karten[i].zuerst && karten[i].gold && karten[i].groesser && karten[i].labels === "Du zahlst/Du bekommst"),
-    "Liste: je Karte erst „Du zahlst 375 €“, dann „Du bekommst 500 €“ (gold und größer)", karten.map((k) => [k.zahlt, k.bekommt, k.zuerst, k.gold, k.groesser, k.labels]));
+  check(dApi.shop.aktionen.every((a, i) => karten[i].zahlt === euroT(a.preisCent) && karten[i].bekommt === euroT(a.wertCent) && karten[i].zuerst && karten[i].gold && karten[i].groesser && karten[i].labels === "Du zahlst/Du bekommst*"),
+    "Liste: je Karte erst „Du zahlst 375 €“, dann „Du bekommst* 500 €“ (gold und größer, Sternchen zur Bedingung)", karten.map((k) => [k.zahlt, k.bekommt, k.zuerst, k.gold, k.groesser, k.labels]));
   const rest = dApi.shop.aktionen.reduce((s, a) => s + a.verfuegbar, 0);
   const klein = (await p.textContent("#hero-klein")).replace(/ /g, " "), pille = (await p.textContent("#top-stueck")).replace(/ /g, " ");
   const n4 = dApi.shop.aktionen.find((a) => a.id === "nr4");
@@ -400,9 +404,16 @@ await p.screenshot({ path: path.join(shots, "handy-hero.png") });
   check(kopf.imHero === "0" && kopf.punkt === "none" && !/Stück/.test(kopf.abschnitt) && !/21|Aktions-Gutscheine/.test(kopf.h2), "Stückzahl nur einmal je Bildschirm: Kopf-Pille erst nach dem Hero, Abschnitt ohne zweite „Nur 21 Stück“-Pille, roter Punkt pulsiert nicht", kopf);
   // Korrektur-Runde 1 (24.11.): „Fünf Gutscheine“ stand neben „Nur 21 Stück“ (zwei Stückzahlen), „Ist einer verkauft, gibt es ihn
   // nicht mehr“ stimmte nicht (vom 300er gibt es 10). Jetzt „Fünf Angebote“, sagt, weniger als was, und erklärt ausverkauft richtig.
-  check(kopf.h2 === "Fünf Angebote. Du bekommst mehr, als du zahlst." && !/Gutscheine|weniger/.test(kopf.h2)
+  check(kopf.h2 === "Fünf Angebote. Du bekommst mehr, als du zahlst.*" && !/Gutscheine|weniger/.test(kopf.h2)
     && /Tippe auf deinen Gutschein\. Ist er ausverkauft, kommt er nicht wieder\./.test(kopf.sub) && !/Tipp auf|Ist einer verkauft/.test(kopf.sub),
-    "Preis-Abschnitt: „Fünf Angebote. Du bekommst mehr, als du zahlst.“ (kein „Fünf Gutscheine“ neben „21 Stück“), „Tippe … Ist er ausverkauft, kommt er nicht wieder.“", kopf);
+    "Preis-Abschnitt: „Fünf Angebote. Du bekommst mehr, als du zahlst.*“ (kein „Fünf Gutscheine“ neben „21 Stück“), „Tippe … Ist er ausverkauft, kommt er nicht wieder.“", kopf);
+  // Prüfung 24.11.2026, Runde 2: „Du bekommst mehr, als du zahlst“ und „+500 € geschenkt“ nur mit sichtbarer Bedingung im Abschnitt selbst
+  // (wer über die Leiste oder per Scrollen kommt, sieht den Hero-Hinweis nicht), direkt unter der Unterzeile vor der Liste, ≥ 12 px
+  await p.locator("#gutscheine h2.nur-aktion").scrollIntoViewIfNeeded(); await p.waitForTimeout(900);
+  const lf = await p.evaluate(() => { const f = document.getElementById("liste-fuss"), r = f.getBoundingClientRect(), s = document.querySelector("#gutscheine p.sub").getBoundingClientRect(), b = document.getElementById("bogen").getBoundingClientRect();
+    return { text: f.textContent.replace(/ /g, " "), px: parseFloat(getComputedStyle(f).fontSize), sichtbar: r.height > 0 && r.top >= 0 && r.bottom <= innerHeight && getComputedStyle(f).visibility !== "hidden" && getComputedStyle(f.closest(".reveal")).opacity === "1", unterSub: r.top >= s.bottom - 1 && r.bottom <= b.top + 1 }; });
+  check(lf.text === "*Voller Wert bis 31.03.2027, danach der Kaufpreis bis 31.12.2029." && lf.px >= 12 && lf.sichtbar && lf.unterSub,
+    "Preis-Abschnitt: Bedingung zum Sternchen „*Voller Wert bis 31.03.2027, danach der Kaufpreis bis 31.12.2029.“ sichtbar zwischen Unterzeile und Liste (≥ 12 px), wortgleich mit dem Hero", lf);
 }
 await p.locator("#gutscheine").scrollIntoViewIfNeeded();
 await p.screenshot({ path: path.join(shots, "handy-liste.png") });
@@ -423,8 +434,8 @@ check(await p.isVisible("#funnel") && /Schritt 1 von 2/.test(await p.textContent
   const o4 = await p.evaluate(() => { const l = document.querySelector("#wahl label:has(input[value=nr4])"), z = l.querySelector(".o-z"), b = l.querySelector(".o-b");
     return { text: l.innerText.replace(/\s+/g, " ").replace(/ /g, " "), zuerst: Boolean(z.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING), gold: b.querySelector("b").classList.contains("g"),
       groesser: parseFloat(getComputedStyle(b.querySelector("b")).fontSize) > parseFloat(getComputedStyle(z.querySelector("b")).fontSize), chip: l.querySelector(".chip").textContent.replace(/ /g, " ") }; });
-  check(/^DU ZAHLST 375 € → DU BEKOMMST 500 € \+125 € GESCHENKT ?(Nur|Noch) /i.test(o4.text) && o4.zuerst && o4.gold && o4.groesser && o4.chip === "+125 € geschenkt",
-    "Kauf-Fenster: „Du zahlst 375 € → Du bekommst 500 €“ (Wert gold und größer), darunter „+125 € geschenkt“ und die Stückzahl", o4);
+  check(/^DU ZAHLST 375 € → DU BEKOMMST\* 500 € \+125 € GESCHENKT ?(Nur|Noch) /i.test(o4.text) && o4.zuerst && o4.gold && o4.groesser && o4.chip === "+125 € geschenkt",
+    "Kauf-Fenster: „Du zahlst 375 € → Du bekommst* 500 €“ (Wert gold und größer), darunter „+125 € geschenkt“ und die Stückzahl", o4);
 }
 await p.screenshot({ path: path.join(shots, "handy-schritt1.png") });
 await p.click("#wahl label:has(input[value=nr5])");
@@ -630,11 +641,37 @@ for (const [eng, name] of [[chromium, "Chromium"], [webkit, "Safari"]]) {
   await p10.click("#wahl label.opt.an"); await p10.waitForTimeout(700);
   const b2 = await p10.evaluate(() => ({ schritt: document.getElementById("f-schritt").textContent, bonus: document.getElementById("f-bonus").hidden ? "" : document.getElementById("f-bonus").textContent }));
   check(b1.an === "nr4" && /Schritt 2 von 2/.test(b2.schritt), "Hero-Knopf: 500er vorgewählt, Tipp auf genau diese Karte geht weiter zu Name und E-Mail", { b1, b2 });
-  check(b1.bonus === "Voller Wert bis 31.03.2027, danach zählt der bezahlte Betrag bis Ende 2029." && b2.bonus === b1.bonus, "Kauf-Fenster: „Voller Wert bis 31.03.2027, danach zählt der bezahlte Betrag bis Ende 2029.“ in Schritt 1 und 2", { b1, b2 });
+  const BED = "*Voller Wert bis 31.03.2027, danach der Kaufpreis bis 31.12.2029.";
+  check(b1.bonus === BED && b2.bonus === b1.bonus, "Kauf-Fenster: Bedingung wortgleich mit Hero und Vorschaubild („*Voller Wert bis 31.03.2027, danach der Kaufpreis bis 31.12.2029.“) in Schritt 1 und 2", { b1, b2 });
+  // Eigener Betrag: in Schritt 1 bleibt die Bedingung (die Aktions-Gutscheine „Du bekommst* …“ stehen weiter in der Auswahl),
+  // in Schritt 2 mit eigenem Betrag keine Bonus-Zeile
   await p10.click("#f-zurueck"); await p10.click("#wahl input[value=frei] ~ .k");
-  const b3 = await p10.evaluate(() => document.getElementById("f-bonus").hidden);
-  check(b3, "Eigener Betrag gewählt: keine Bonus-Zeile");
+  const b3 = await p10.evaluate(() => !document.getElementById("f-bonus").hidden && document.getElementById("f-bonus").textContent);
+  await p10.fill("#f-betrag", "120"); await p10.click("#f-weiter"); await p10.waitForTimeout(300);
+  const b4 = await p10.evaluate(() => ({ schritt: document.getElementById("f-schritt").textContent, weg: document.getElementById("f-bonus").hidden }));
+  check(b3 === BED && /Schritt 2 von 2/.test(b4.schritt) && b4.weg, "Eigener Betrag: in Schritt 1 Bedingung weiter sichtbar (Aktions-Gutscheine stehen in der Auswahl), in Schritt 2 keine Bonus-Zeile", { b3, b4 });
   await c10.close();
+  // Prüfung 24.11.2026, Runde 2: Fenster ohne Vorauswahl (Leiste unten, „So geht's“, Abschluss-Knopf) und über den Hero mit ?g=frei
+  // („Eigener Betrag“ vorgewählt): Schritt 1 zeigt alle „Du bekommst* …“, also muss die Bedingung sichtbar im Fenster stehen (UWG § 5)
+  for (const [w, h] of [[360, 780], [390, 844]]) {
+    const cb = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+    const pb = await cb.newPage(); beobachten(pb);
+    const bonusSichtbar = () => pb.evaluate(() => { const b = document.getElementById("f-bonus"), r = b.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2, e = document.elementFromPoint(x, y);
+      return { text: b.hidden ? "" : b.textContent, sichtbar: !b.hidden && r.height > 0 && r.top >= 0 && r.bottom <= innerHeight && Boolean(e) && (e === b || b.contains(e)), px: parseFloat(getComputedStyle(b).fontSize),
+        bekommt: [...document.querySelectorAll("#wahl .o-b small")].filter((s) => s.textContent === "Du bekommst*").length, aktionen: document.querySelectorAll("#wahl input[value^=nr]").length, schritt: document.getElementById("f-schritt").textContent }; });
+    const erg = {};
+    for (const [wo, url, oeffnen] of [["leiste", "munich", (q) => q.evaluate(() => document.querySelector("#sticky [data-kaufen]").click())],
+      ["schritte", "munich", (q) => q.evaluate(() => document.querySelector('main [data-kaufen][data-ort="schritte"]').click())],
+      ["abschluss", "landshut", (q) => q.evaluate(() => document.querySelector('main [data-kaufen][data-ort="abschluss"]').click())],
+      ["frei-hero", "landshut?g=frei", (q) => q.click("#hero-kaufen")]]) {
+      await pb.goto(BASE + "/gutschein-kaufen/tattoo-fashion-" + url); await pb.waitForSelector("html.geladen");
+      await oeffnen(pb); await pb.waitForSelector("#funnel:not([hidden])"); await pb.waitForTimeout(450);
+      erg[wo] = await bonusSichtbar();
+    }
+    check(Object.values(erg).every((x) => x.text === BED && x.sichtbar && x.px >= 12 && x.aktionen >= 1 && x.bekommt === x.aktionen && /Schritt 1 von 2/.test(x.schritt)),
+      `${w}×${h}: Kauf-Fenster über Leiste, „So geht's“, Abschluss-Knopf (ohne Auswahl) und ?g=frei (Eigener Betrag vorgewählt): Bedingung „*Voller Wert …“ sichtbar neben jedem „Du bekommst*“`, erg);
+    await cb.close();
+  }
   // Bezahl-Knopf einzeilig, Zurück-Knopf rund (320/340/360 px; ab 375 der lange Text)
   for (const w of [320, 340, 360, 375]) {
     const c11 = await browser.newContext({ viewport: { width: w, height: 720 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
@@ -709,6 +746,10 @@ for (const [eng, name] of [[chromium, "Chromium"], [webkit, "Safari"]]) {
   const pr = spawnSync(process.execPath, [path.join(root, "dev/gutschein-seiten.mjs"), "--og-pruefen"], { encoding: "utf8", env: process.env, timeout: 120000 });
   let erg = []; try { erg = JSON.parse((/OG-PRUEFUNG (.*)/.exec(pr.stdout) || [])[1]); } catch {}
   check(erg.length === 6 && erg.every((x) => x.ok && x.spans.slice(0, 3).every((y) => y.b <= x.innen)), "Vorschaubilder (2 Städte × 3 Fassungen): Kartentext passt mit ≥ 24 px Rand, Überschrift ≤ 540 px", erg.filter((x) => !x.ok).concat(pr.stderr ? [pr.stderr.slice(0, 300)] : []));
+  // Prüfung 24.11.2026, Runde 2: Bedingung im Bild „angebot“ ≥ 30 px auf höchstens zwei Zeilen (20 px war in WhatsApp nicht lesbar), Karte „bekommen*“
+  const ang = erg.filter((x) => x.fassung === "angebot");
+  check(ang.length === 2 && ang.every((x) => x.fuss && x.fuss.px >= 30 && x.fuss.zeilen <= 2 && x.fuss.abstand >= 14 && x.spans[2] && x.spans[2].t === "bekommen*") && erg.filter((x) => x.fassung !== "angebot").every((x) => x.fuss === null),
+    "Vorschaubild „angebot“: Bedingung ≥ 30 px, höchstens zwei Zeilen, mit Luft unter der Datums-Pille, Karte „bekommen*“; neutral/danach ohne Fußzeile", erg.map((x) => [x.slug, x.fassung, x.fuss, x.spans[2]]));
 }
 // Kleine Handys und quer: Hero passt, Geschenk über/neben dem Text, Knopf ganz sichtbar
 for (const [w, h] of [[320, 460], [375, 548], [375, 560], [320, 568], [390, 664], [360, 780], [390, 844], [412, 839], [430, 932], [844, 340]]) {
