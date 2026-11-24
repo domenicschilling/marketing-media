@@ -55,7 +55,8 @@ export async function startDev({ port = PORT, mock = !process.env.STRIPE_SECRET_
       return;
     }
     // Umschreibungen wie in netlify.toml
-    // Gutschein-Shop: /gutschein-kaufen/<slug> → public/gutschein-kaufen/<slug>.html (wie Netlify ohne Umleitung; unbekannt → 404)
+    // Gutschein-Shop: die Seite je Stadt kommt aus der Funktion gutschein-seite.mjs (oben), Rechtsseiten /gutschein-kaufen/<slug>-…
+    // → public/gutschein-kaufen/<slug>-….html (wie Netlify ohne Umleitung; unbekannt → 404)
     const pfad = /^\/zahlen\/[^/]+$/.test(url.pathname) ? "/zahlen.html" : /^\/gutschein-kaufen\/[a-z0-9-]+$/.test(url.pathname) ? url.pathname + ".html" : url.pathname === "/app" ? "/app.html" : url.pathname;
     let p = path.join(root, "public", decodeURIComponent(pfad));
     if (url.pathname.endsWith("/")) p = path.join(p, "index.html");

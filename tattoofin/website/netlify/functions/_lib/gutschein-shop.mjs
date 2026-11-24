@@ -70,9 +70,17 @@ export const SHOPS = {
       pixel: "2379676156103158",
       // Bildstreifen „Tattoos aus unserem Studio“: public/assets/gs-shop/tfm/b-<name>.jpg (600×800, ohne Personen/Wasserzeichen)
       bilder: ["adler", "phoenix", "loewe", "schlange", "schaedel", "blumen"],
-      // WhatsApp-/Facebook-Vorschau: "angebot" = „500 € Gutschein für 375 €“ + „Ab 200 €“, "neutral" = „Tattoo-Gutscheine unter Wert“
-      // ohne Beträge. Ist der 500-€- oder der 300-€-Gutschein ausverkauft: auf "neutral" stellen, Seiten neu erzeugen, hochladen.
-      vorschau: "angebot",
+      // Echte Google-Bewertungen, wörtlich (gekürzt nur mit „…“), Vorname + Initiale, Zeitangabe wie bei Google am Stand-Datum
+      // (24.11.2026 im Google-Profil abgeschrieben). Nichts umformulieren, nichts dazuerfinden.
+      stimmen: {
+        stand: "24.11.2026",
+        link: "https://www.google.com/maps/place/Tattoo+Fashion+Munich/@48.1509028,11.5374496,17z/data=!4m8!3m7!1s0x479e7771662d1217:0x68af90ebeb49b298!8m2!3d48.1509028!4d11.5374496!9m1!1b1",
+        liste: [
+          ["Lejla P.", "vor einem Monat", "… Pablo hat sich von Anfang an sehr viel Zeit für die Beratung genommen, ist auf meine Wünsche eingegangen und hat mich super beraten. Das Tattoo ist wunderschön geworden und wurde mit viel Können und Liebe zum Detail gestochen. …"],
+          ["Melisa Z.", "vor 3 Monaten", "Absolut empfehlenswert! Ich habe mir hier mein Bauchnabelpiercing stechen lassen und bin mehr als zufrieden. Das Team ist super freundlich, nimmt sich Zeit und erklärt alles ganz genau. …"],
+          ["Twin", "vor einer Woche", "… Pablo und Nico haben unsere Wünsche absolut erfüllt. Alles war sauber, hygienisch und professionell. Insgesamt eine tolle Truppe mit viel Humor und Perfektionismus. …"],
+        ],
+      },
     },
     // Domenic 23.11.2026: „mach alles fertig, dass alles läuft“ (Live-Gang nur mit seinem OK im Chat)
     freigegeben: true,
@@ -88,9 +96,19 @@ export const SHOPS = {
       google: { sterne: "4,8", anzahl: 167, stand: "22.11.2026", suche: "Tattoo Fashion Landshut, Neustadt 502, 84028 Landshut" },
       zeiten: [["Montag bis Freitag", "10–18 Uhr"], ["Samstag", "10–16 Uhr"], ["Sonntag", "geschlossen"]],
       pixel: "1324284036136356",
-      // 24.11.2026: Rabe mit Runen, Tiere (unscharf) und Baum (angeblitzt) ersetzt durch Herzen, Mandala, Sonne
-      bilder: ["rabe-sanduhr", "herzen", "mandala", "blumen", "sonne", "schmetterling"],
-      vorschau: "angebot",
+      // 24.11.2026: Rabe mit Runen, Tiere (unscharf) und Baum (angeblitzt) ersetzt; Runde 3: Herzen und Mandala (Folie im Hintergrund)
+      // und Sonne (Flanke) ersetzt durch Ranken (dunkler Hintergrund), Mandala eng zugeschnitten (nur Haut) und Stier
+      bilder: ["rabe-sanduhr", "ranken", "mandala", "blumen", "stier", "schmetterling"],
+      // Echte Google-Bewertungen aus der Landshut-Seite (Marketing-Maschine/landingpages/tf-landshut-wunsch, am 12.10.2026 abgeschrieben)
+      stimmen: {
+        stand: "12.10.2026",
+        link: "https://www.google.com/maps/place/Tattoo+Fashion+Landshut/@48.5350968,12.1541868,17z/data=!4m8!3m7!1s0x479e2703b4a082b1:0xf2116c853922f11e!8m2!3d48.5350968!4d12.1541868!9m1!1b1",
+        liste: [
+          ["Uwe A.", "vor 10 Monaten", "Ich hatte ein Beratungsgespräch ausgemacht, wurde gleich sehr freundlich, kompetent und so genau auf meinen Wunsch beraten, dass ich gleich da geblieben bin um das Tattoo stechen zu lassen. Bin ausgesprochen zufrieden, war mein erstes Tattoo!!"],
+          ["Tina Z.", "vor 3 Jahren", "Sehr schöner Laden, kompetent und super freundlich. Hab mich super wohl gefühlt und mein Tattoo ist zu 100% so wie ich es wollte. Sehr empfehlenswert. 👍🏼"],
+          ["Lukas L.", "vor 2 Jahren", "… es wurde sich viel Zeit genommen um auf alle Wünsche einzugehen und auch preislich absolut unschlagbar! Bin sehr zufrieden mit meinem Tattoo …"],
+        ],
+      },
     },
     // Domenic 23.11.2026: gleiche Aktion für Landshut (Live-Gang nur mit seinem OK im Chat)
     freigegeben: true,
@@ -226,6 +244,7 @@ export async function reservieren(s, c, a, { zahlungId, email, ip = "", stand: s
 
 // Nach der Zahlung (gutscheinAusstellen): Ticket als verkauft markieren. Ist das Ticket schon abgelaufen und die Einheit
 // inzwischen weg (sollte nie passieren, die Kasse läuft vorher ab), bleibt der Verkauf gültig und der Admin wird informiert.
+// ausverkauft: Mit diesem Verkauf ist die letzte Einheit weg (Meldung an Domenic, siehe ausverkauftMeldung).
 export async function reservierungVerkauft(z) {
   const key = z.gutschein?.reservierung;
   if (!key) return { ok: true };
@@ -234,9 +253,26 @@ export async function reservierungVerkauft(z) {
   const warAktiv = aktiv(t);
   const neu = { ...(t || { zahlungId: z.id }), status: "verkauft", verkauftAm: now(), ...(warAktiv ? {} : { spaet: true }) };
   await store.set(key, neu); ERLEDIGT.delete(key); merken(key, neu);
-  if (warAktiv) return { ok: true };
-  const a = z.gutschein.aktion, l = (await tickets(z.studioId, a.id)).filter((x) => x.status === "verkauft").length;
-  return { ok: l <= (a.stueck || 0), ueberverkauft: l > (a.stueck || 0), verkauft: l };
+  const a = z.gutschein.aktion || {}, l = (await tickets(z.studioId, a.id)).filter((x) => x.status === "verkauft").length;
+  return { ok: warAktiv || l <= (a.stueck || 0), ueberverkauft: !warAktiv && l > (a.stueck || 0), verkauft: l, ausverkauft: l >= (a.stueck || 0) };
+}
+
+// Letzte Einheit verkauft (24.11.2026): Meldung an Domenic (Mail, notifyAdmin), damit Werbung und Vorschau nichts mehr versprechen,
+// was es nicht mehr gibt. Die Seite und ihre WhatsApp-/Facebook-Vorschau stellen sich selbst um (gutschein-seite.mjs), die Anzeige nicht.
+export function ausverkauftMeldung(s, z) {
+  const c = SHOPS[s?.slug], g = z.gutschein || {}, a = g.aktion || {};
+  const wert = (g.wertCent / 100).toLocaleString("de-DE"), preis = (z.betragCent / 100).toLocaleString("de-DE");
+  const stadt = c?.seite?.stadt || s?.ort || "";
+  const beworben = a.id === "nr4" || a.id === "nr5";
+  return {
+    titel: `${wert}er ausverkauft (${stadt}): ${beworben ? "Vorschau auf neutral stellen, Anzeige anpassen" : "Gutschein-Shop"}`,
+    details: {
+      Gutschein: `${wert} € für ${preis} € (Nr. ${a.nr}, ${a.stueck} Stück), alle verkauft`,
+      Vorschau: beworben ? "Die Seite zeigt schon das beste noch kaufbare Angebot, die WhatsApp-/Facebook-Vorschau stellt sich selbst auf die Fassung ohne Beträge um (spätestens nach 2 Minuten)." : "keine Änderung nötig",
+      Anzeige: beworben ? `Jede Anzeige mit „${wert} €“ für ${stadt} jetzt pausieren oder ändern (Werbekonto, dein OK).` : "keine Änderung nötig",
+      Weitergeben: "an Ultron (Zentrale)",
+    },
+  };
 }
 
 // Kasse abgelaufen oder abgebrochen: Einheit wieder frei (nur solange nicht bezahlt)
@@ -252,11 +288,12 @@ export async function reservierungFreigeben(z, grund) {
 
 // ---------- Texte (Seite, Kasse, PDF, Mail) ----------
 // Kurzer Satz zur Gültigkeit eines Aktions-Gutscheins – überall gleich
-// geschenk: Satz für das PDF, das der Beschenkte bekommt (24.11.2026): neutral, ohne „bezahlt“ und ohne Aktions-Nummer
+// geschenk: Satz für den Beschenkten (PDF, Online-Ansicht, 24.11.2026): ohne Aktions-Nummer und ohne den bezahlten Betrag
+// (der Beschenkte soll nicht lesen, was das Geschenk gekostet hat; der genaue Betrag steht in der Kauf-Mail)
 export function bonusSatz(g, { kurz = false, geschenk = false } = {}) {
   if (!g?.bonusCent) return "";
   const w = euro(g.wertCent).replace(",00 €", " €"), b = euro(g.bezahltCent).replace(",00 €", " €");
-  if (geschenk) return `Bis ${datum(g.bonusBis)} voller Wert ${w}. Ab ${datum(new Date(new Date(g.bonusBis).getTime() + 3 * 3600e3).toISOString())} noch ${b} einlösbar, bis ${datum(g.gueltigBis)}.`;
+  if (geschenk) return `Voller Wert ${w} bis ${datum(g.bonusBis)}. Danach gilt der bezahlte Betrag bis ${datum(g.gueltigBis)}.`;
   return kurz ? `${w} bis ${datum(g.bonusBis)}, danach ${b} bis ${datum(g.gueltigBis)}`
     : `Bis ${datum(g.bonusBis)} löst du den vollen Wert von ${w} ein. Danach gilt der bezahlte Betrag von ${b}, einlösbar bis ${datum(g.gueltigBis)}.`;
 }

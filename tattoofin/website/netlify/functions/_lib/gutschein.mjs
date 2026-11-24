@@ -6,7 +6,8 @@
 // Aussteller des Gutscheins ist das Studio (es verkauft die Leistung), Tattoofin stellt nur die Technik.
 // Gültigkeit: regelmäßige Verjährung 3 Jahre ab Ende des Kaufjahres (§§ 195, 199 BGB) → 31.12. des dritten Folgejahres.
 import crypto from "node:crypto";
-import { PDFDocument, StandardFonts, rgb, PDFNumber, PDFOperator, pushGraphicsState, popGraphicsState, beginText, endText, setFillingColor, setFontAndSize, moveText } from "pdf-lib";
+import { PDFDocument, StandardFonts, rgb, PDFNumber, PDFOperator, pushGraphicsState, popGraphicsState, beginText, endText, setFillingColor, setFontAndSize, moveText, setCharacterSpacing } from "pdf-lib";
+import fontkit from "@pdf-lib/fontkit";
 import { CFG, testKasse } from "./config.mjs";
 import { store, saveZahlung, getStudio, getZahlung } from "./store.mjs";
 import { ladeBild } from "./branding.mjs";
@@ -14,7 +15,7 @@ import { sendMail } from "./mail.mjs";
 import { mails } from "./emails.mjs";
 import { now, euro, datum } from "./util.mjs";
 import { qrMatrix } from "./qr.mjs";
-import { reservierungVerkauft, bonusSatz, shopTexte } from "./gutschein-shop.mjs";
+import { reservierungVerkauft, bonusSatz, shopTexte, ausverkauftMeldung } from "./gutschein-shop.mjs";
 import { notifyAdmin } from "./domain.mjs";
 
 // Wert und bezahlter Betrag (seit 23.11.2026, Gutschein-Shop): Aktions-Gutscheine kosten weniger, als sie wert sind.
@@ -82,6 +83,8 @@ export async function gutscheinAusstellen(s, z) {
     if (g.reservierung) {
       const r = await reservierungVerkauft(z);
       if (r.ueberverkauft) await notifyAdmin(`⚠️ Gutschein-Shop: Nr. ${g.aktion?.nr} ist ${r.verkauft}× verkauft (Stückzahl ${g.aktion?.stueck})`, s, { Zahlung: z.id, Code: g.code, Tipp: "Zahlung kam nach Ablauf der Reservierung an. Mit dem Studio klären: Gutschein gilt oder Erstattung." });
+      // Letzte Einheit weg: Domenic sofort Bescheid geben (Werbung mit diesem Betrag anpassen)
+      else if (r.ausverkauft) { const mld = ausverkauftMeldung(s, z); await notifyAdmin(mld.titel, s, mld.details); }
     }
   }
   if (z.email && !g.gesendetAm) await gutscheinSenden(s, z);
@@ -126,6 +129,16 @@ const sauber = (t) => [...String(t || "")].filter((c) => ERLAUBT.test(c)).join("
 const hex = (h, d) => { const m = /^#?([0-9a-f]{6})$/i.exec(h || "") ; const v = m ? m[1] : d; return rgb(parseInt(v.slice(0, 2), 16) / 255, parseInt(v.slice(2, 4), 16) / 255, parseInt(v.slice(4, 6), 16) / 255); };
 const hell = (h) => { const m = /^#?([0-9a-f]{6})$/i.exec(h || ""); if (!m) return false; const [r, g, b] = [0, 2, 4].map((i) => parseInt(m[1].slice(i, i + 2), 16)); return 0.299 * r + 0.587 * g + 0.114 * b > 170; };
 
+// Schriften der Shop-Seite fürs Geschenk-PDF (24.11.2026): Oswald und Inter als feste Schnitte (public/assets/gs-shop/schrift/*.ttf),
+// über die Website-Adresse geladen wie Logo und Hintergrund und je Funktions-Exemplar gemerkt. Fehlt eine, bleibt die Standardschrift.
+const SCHRIFTEN = new Map();
+function schrift(name) {
+  if (!SCHRIFTEN.has(name)) SCHRIFTEN.set(name, fetch(`${CFG.siteUrl}/assets/gs-shop/schrift/${name}.ttf`)
+    .then(async (r) => { if (!r.ok) throw new Error(`Schrift ${name}: ${r.status}`); return new Uint8Array(await r.arrayBuffer()); })
+    .catch((e) => { SCHRIFTEN.delete(name); throw e; }));
+  return SCHRIFTEN.get(name);
+}
+
 // zusammen: Wortgruppe (z. B. Studioname), die nicht mitten drin umbricht („bei Tattoo / Fashion Munich“), solange sie in eine Zeile passt
 function umbrechen(text, font, size, breite, maxZeilen, zusammen = "") {
   const fest = sauber(zusammen), BINDE = " ";
@@ -166,10 +179,25 @@ export async function gutscheinPdf(s, z) {
   pdf.setAuthor(s.firma); pdf.setCreator("Tattoofin"); pdf.setProducer("Tattoofin");
   const W = 595.28, H = 419.53, R = 34;
   const page = pdf.addPage([W, H]);
-  const f = await pdf.embedFont(StandardFonts.Helvetica), fb = await pdf.embedFont(StandardFonts.HelveticaBold);
-  const fi = await pdf.embedFont(StandardFonts.HelveticaOblique), fm = await pdf.embedFont(StandardFonts.CourierBold);
   // Shop-Gutscheine im Look des Studios (TF: Schwarz/Gold mit Logo), sonst Studiofarbe bzw. Tattoofin-Navy/Gelb
   const marke = g.shop ? shopTexte(s)?.marke : null;
+  // Standardschriften nur, wenn sie gebraucht werden (Shop-Gutscheine nutzen Oswald/Inter, die Standardschrift nur als Ersatz)
+  let f, fb, fi, fm;
+  const STANDARD = new Set();
+  const standard = async () => {
+    if (f) return;
+    [f, fb, fi, fm] = await Promise.all([StandardFonts.Helvetica, StandardFonts.HelveticaBold, StandardFonts.HelveticaOblique, StandardFonts.CourierBold].map((x) => pdf.embedFont(x)));
+    [f, fb, fi, fm].forEach((x) => STANDARD.add(x));
+  };
+  let eigene = null;
+  if (marke) {
+    try {
+      pdf.registerFontkit(fontkit);
+      const roh = await Promise.all(["oswald-700", "oswald-600", "inter-400"].map(schrift));
+      eigene = await Promise.all(roh.map((x) => pdf.embedFont(x, { subset: true })));
+    } catch { eigene = null; }
+  }
+  if (!eigene) await standard();
   const navy = hex(marke ? "#0B0B0B" : "#13243d"), gelb = hex(marke?.akzent || "#ffbd16"), grau = hex("#5b6370"), weiss = rgb(1, 1, 1);
   const bandFarbe = marke?.band || (s.branding?.farbe && !hell(s.branding.farbe) ? s.branding.farbe : "#13243d");
   const band = hex(bandFarbe);
@@ -178,21 +206,29 @@ export async function gutscheinPdf(s, z) {
   // bleiben die des Betrachters (keine Verschiebung bei langen Zeilen).
   const text = (t, x, y, font, size, color = navy) => {
     const s = sauber(t);
-    if (!/€./.test(s)) return page.drawText(s, { x, y, font, size, color });
+    // Eingebettete Schriften (Oswald/Inter) haben echte Breiten, der Trick ist nur für die Standardschrift nötig
+    if (!STANDARD.has(font) || !/€./.test(s)) return page.drawText(s, { x, y, font, size, color });
     const key = page.node.newFontDictionary(font.name, font.ref);
     const teile = pdf.context.obj([]);
     s.split(/(?<=€)/).forEach((teil, i) => { if (i) teile.push(PDFNumber.of(-140)); teile.push(font.encodeText(teil)); });
     page.pushOperators(pushGraphicsState(), beginText(), setFillingColor(color), setFontAndSize(key, size), moveText(x, y), PDFOperator.of("TJ", [teile]), endText(), popGraphicsState());
   };
   const rechts = (t, xr, y, font, size, color) => text(t, xr - font.widthOfTextAtSize(sauber(t), size), y, font, size, color);
+  // Gesperrt (Buchstabenabstand in Punkt), z. B. der Gutschein-Code in Oswald
+  const gesperrt = (t, x, y, font, size, color, abstand) => { page.pushOperators(pushGraphicsState(), setCharacterSpacing(abstand)); text(t, x, y, font, size, color); page.pushOperators(popGraphicsState()); };
+  const breiteGesperrt = (t, font, size, abstand) => font.widthOfTextAtSize(sauber(t), size) + abstand * Math.max(0, [...sauber(t)].length - 1);
 
   // ---------- Shop-Gutschein (TF München/Landshut, 24.11.2026): Geschenkkarte im Look der Hero-Karte ----------
   // Schwarz-Gold, Rahmen, dunkelrotes Satinband mit Schleife, Logo groß (Hintergrund-Bild je Stadt aus dev/gutschein/pdf-grund.html,
   // fehlt es, werden dieselben Lagen gezeichnet). Für den Beschenkten: „Weihnachts-Gutschein“ statt Aktions-Nummer, Gültigkeit
-  // neutral ohne „bezahlt“ (bonusSatz geschenk), Tattoofin nur ganz klein. Lagen von oben in Punkt, wie im Hintergrund-Bild.
+  // ohne „bezahlt“ und ohne den bezahlten Betrag (der Beschenkte sieht nicht, was das Geschenk gekostet hat; der genaue Betrag
+  // steht in der Kauf-Mail und hinter dem QR-Code), Tattoofin nur ganz klein. Schriften wie auf der Seite: Oswald für Betrag,
+  // Name, Gültigkeit und Code (gesperrt), Inter für den Fließtext. Lagen von oben in Punkt, wie im Hintergrund-Bild.
   if (marke) {
     const GOLD = hex("#E8CD92"), HELL = hex("#F4EFE6"), CREME = hex("#ECE5D6"), MUTE = hex("#B3AB9C"), RAND = hex("#d9b46e");
     const Y = (top) => H - top, L = 158, LB = 200;
+    // Oswald/Inter (oben eingebettet); klappte das nicht (Netz), bleibt Helvetica (alle Texte passen auch damit)
+    const [O7, O6, I4] = eigene || [fb, fb, f];
     let grund = null;
     if (marke.grund) { try { const r = await fetch(marke.grund); if (r.ok) grund = await pdf.embedJpg(Buffer.from(await r.arrayBuffer())); } catch { /* gezeichnet */ } }
     if (grund) page.drawImage(grund, { x: 0, y: 0, width: W, height: H });
@@ -208,46 +244,54 @@ export async function gutscheinPdf(s, z) {
       let logo = null;
       try { const r = await fetch(marke.logo); if (r.ok) logo = await pdf.embedPng(Buffer.from(await r.arrayBuffer())); } catch { /* ohne Logo */ }
       if (logo) { const lw = 190, lh = (logo.height * lw) / logo.width; page.drawImage(logo, { x: 376, y: Y(132) - lh, width: lw, height: lh }); }
-      const wort = "G U T S C H E I N";
-      text(wort, 150 + (W - 170 - 150 - fb.widthOfTextAtSize(wort, 11)) / 2, Y(56), fb, 11, GOLD);
+      const wort = "GUTSCHEIN", sp = 4.4;
+      gesperrt(wort, 150 + (W - 170 - 150 - breiteGesperrt(wort, O6, 11, sp)) / 2, Y(56), O6, 11, GOLD, sp);
       page.drawRectangle({ x: 372, y: Y(378), width: 198, height: 126, color: hex("#0B0B0B"), borderColor: RAND, borderWidth: 1 });
     }
-    // Links: für wen, Betrag, Art, Gruß; unten die Gültigkeit
+    // Links: für wen, Betrag, Art, Gruß; unten die Gültigkeit (feste Zeilen, kein Umbruch mitten im Datum)
     let top = 150;
-    if (g.empfaenger) { for (const z1 of umbrechen("für " + g.empfaenger, fb, 17, LB, 1)) text(z1, L, Y(top), fb, 17, HELL); top += 56; } else top += 36;
+    if (g.empfaenger) { for (const z1 of umbrechen("für " + g.empfaenger, O6, 19, LB, 1)) text(z1, L, Y(top), O6, 19, HELL); top += 62; } else top += 38;
     const betrag = kurzEuro(gutscheinWertCent(z));
-    let bs = 58; while (bs > 34 && fb.widthOfTextAtSize(betrag, bs) > LB + 10) bs -= 2;
-    text(betrag, L - 2, Y(top), fb, bs, GOLD);
+    let bs = 64; while (bs > 34 && O7.widthOfTextAtSize(sauber(betrag), bs) > LB + 10) bs -= 2;
+    text(betrag, L - 2, Y(top), O7, bs, GOLD);
     top += 22;
     const art = g.aktion ? "Weihnachts-Gutschein" : "Gutschein";
-    for (const z1 of umbrechen(`${art} für alle Leistungen bei ${s.firma}`, f, 10.5, LB, 2, s.firma)) { text(z1, L, Y(top), f, 10.5, MUTE); top += 14; }
-    const gilt = g.bonusCent ? bonusSatz({ ...g, gueltigBis: g.gueltigBis || gueltigBis() }, { geschenk: true }) : `Gültig bis ${datum(g.gueltigBis || gueltigBis())}. In Teilen einlösbar.`;
-    const gz = umbrechen(gilt, fb, 9.5, LB, 4), gTop = 366 - (gz.length - 1) * 12.5;
-    gz.forEach((z1, i) => text(z1, L, Y(gTop + i * 12.5), fb, 9.5, GOLD));
+    for (const z1 of umbrechen(`${art} für alle Leistungen bei ${s.firma}`, I4, 10, LB, 2, s.firma)) { text(z1, L, Y(top), I4, 10, MUTE); top += 14; }
+    const bis = datum(g.gueltigBis || gueltigBis());
+    const gz = g.bonusCent
+      ? [[`Voller Wert ${betrag} bis ${datum(g.bonusBis)}`, O6, 12.5, GOLD, 0.5], [`Danach gilt der bezahlte Betrag bis ${bis}.`, I4, 8.5, CREME, 0], ["In Teilen einlösbar. Bedingungen über den QR-Code.", I4, 8.5, MUTE, 0]]
+      : [[`Gültig bis ${bis}`, O6, 12.5, GOLD, 0.5], ["In Teilen einlösbar. Bedingungen über den QR-Code.", I4, 8.5, MUTE, 0]];
+    // Zu breit (lange Beträge, Ersatzschrift): kleiner statt umbrechen
+    const gTop = 366 - (gz.length - 1) * 13;
+    gz.forEach(([t, font, size, farbe, sp], i) => {
+      let gr = size; while (gr > 6.5 && breiteGesperrt(t, font, gr, sp) > LB + 6) gr -= 0.25;
+      gesperrt(sp ? t.toUpperCase() : t, L, Y(gTop + i * 13 + (i ? 1 : 0)), font, gr, farbe, sp);
+    });
     const gruss = sauber(g.nachricht);
     if (gruss) {
       top += 8;
-      const platz = Math.max(1, Math.min(3, Math.floor((gTop - 16 - top) / 15) + 1));
-      for (const z1 of umbrechen("„" + gruss + "“", fi, 11.5, LB, platz)) { text(z1, L, Y(top), fi, 11.5, CREME); top += 15; }
+      const platz = Math.max(1, Math.min(3, Math.floor((gTop - 18 - top) / 15) + 1));
+      for (const z1 of umbrechen("„" + gruss + "“", I4, 11, LB, platz)) { text(z1, L, Y(top), I4, 11, CREME); top += 15; }
     }
     // Rechts unten: Code-Kasten (Fläche im Hintergrund) mit QR-Code
-    text("Gutschein-Code", 384, Y(272), f, 9, MUTE);
-    text(g.code || "wird nach Zahlung vergeben", 384, Y(297), g.code ? fm : f, g.code ? 16 : 10, HELL);
+    text("Gutschein-Code", 384, Y(272), I4, 8.5, MUTE);
+    if (g.code) { let cs = 18; while (cs > 11 && breiteGesperrt(g.code, O6, cs, 1.6) > 172) cs -= 0.5; gesperrt(g.code, 384, Y(296), O6, cs, HELL, 1.6); }
+    else text("wird nach Zahlung vergeben", 384, Y(296), I4, 10, HELL);
     if (g.code && g.token) {
       const m = qrMatrix(gutscheinUrl(g)), gesamt = 62, modul = gesamt / (m.n + 4), qx = 372 + 198 - 12 - gesamt, qy = Y(366);
       page.drawRectangle({ x: qx, y: qy, width: gesamt, height: gesamt, color: weiss });
       for (let r = 0; r < m.n; r++) for (let c = 0; c < m.n; c++) {
         if (m.dunkel(r, c)) page.drawRectangle({ x: qx + (c + 2) * modul, y: qy + gesamt - (r + 3) * modul, width: modul + 0.02, height: modul + 0.02, color: hex("#0B0B0B") });
       }
-      text("Beim Termin den Code", 384, Y(346), f, 8.5, MUTE);
-      text("oder QR-Code zeigen.", 384, Y(357), f, 8.5, MUTE);
-    } else text("Bitte beim Termin angeben.", 384, Y(357), f, 8.5, MUTE);
+      text("Beim Termin den Code", 384, Y(346), I4, 8, MUTE);
+      text("oder QR-Code zeigen.", 384, Y(357), I4, 8, MUTE);
+    } else text("Bitte beim Termin angeben.", 384, Y(357), I4, 8, MUTE);
     // Fuß: wo einlösen; Tattoofin nur ganz klein
     const adr = [s.strasse, [s.plz, s.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ");
-    const tf = "Technik: Tattoofin", tfB = f.widthOfTextAtSize(tf, 6.5);
-    const [fuss] = umbrechen(`Einlösbar bei ${s.firma}${adr ? ", " + adr : ""}`, f, 8.5, W - 25 - L - tfB - 16, 1);
-    text(fuss, L, Y(390), f, 8.5, MUTE);
-    rechts(tf, W - 25, Y(390), f, 6.5, hex("#7d7569"));
+    const tf = "Technik: Tattoofin", tfB = I4.widthOfTextAtSize(tf, 6.5);
+    const [fuss] = umbrechen(`Einlösbar bei ${s.firma}${adr ? ", " + adr : ""}`, I4, 8, W - 25 - L - tfB - 16, 1);
+    text(fuss, L, Y(390), I4, 8, MUTE);
+    rechts(tf, W - 25, Y(390), I4, 6.5, hex("#7d7569"));
     return pdf.save();
   }
 

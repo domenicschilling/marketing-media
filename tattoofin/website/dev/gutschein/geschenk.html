@@ -1,18 +1,20 @@
 <!doctype html><html lang="de"><head><meta charset="utf-8">
 <!-- Hero-Bild „Geschenk“ je Stadt (dev/gutschein-seiten.mjs --og): Gutschein-Karte mit Logo, dunkelrotem Satinband und Schleife.
-     Nur Grafik (keine Fotos, keine KI-Bilder). Durchsichtiger Hintergrund, gerendert mit doppelter Dichte. --><style>
+     Nur Grafik (keine Fotos, keine KI-Bilder). Durchsichtiger Hintergrund, gerendert mit doppelter Dichte.
+     24.11.2026 (Runde 3): Ausschnitt #k genau auf die Karte (plus 6 px für die Schleife links), ohne durchsichtigen Rand und ohne
+     eingebrannten Schatten (Seitenverhältnis 1,72:1). Den Schatten setzt die Seite per CSS (filter:drop-shadow). --><style>
 @font-face{font-family:"Oswald";font-weight:500 700;src:url({{assets}}/schrift/oswald-latin.woff2) format("woff2")}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{width:800px;height:540px;overflow:hidden;background:transparent}
 #g{position:relative;width:800px;height:540px}
 .karte{position:absolute;left:50px;top:66px;width:700px;height:410px;border-radius:26px;overflow:hidden;
- background:linear-gradient(140deg,#241d13 0%,#100e0b 52%,#19140d 100%);border:2px solid rgba(214,180,112,.75);
- box-shadow:0 26px 50px rgba(0,0,0,.7),0 0 70px rgba(200,163,90,.16)}
+ background:linear-gradient(140deg,#241d13 0%,#100e0b 52%,#19140d 100%);border:2px solid rgba(214,180,112,.75)}
 .karte:before{content:"";position:absolute;inset:12px;border:1px solid rgba(200,163,90,.28);border-radius:17px}
 .karte:after{content:"";position:absolute;inset:-40%;background:linear-gradient(115deg,transparent 42%,rgba(255,240,205,.07) 48%,transparent 56%)}
 .logo{position:absolute;left:222px;top:146px;width:430px;height:auto}
 .wort{position:absolute;left:222px;width:430px;top:30px;text-align:center;font:600 21px/1 Oswald;letter-spacing:.42em;text-transform:uppercase;color:#d9be86;opacity:.9}
 svg.band{position:absolute;left:0;top:0;width:800px;height:540px;overflow:visible}
+#k{position:absolute;left:44px;top:66px;width:706px;height:410px;pointer-events:none}
 </style></head><body><div id="g">
 <div class="karte">
  <span class="wort">Gutschein</span>
@@ -47,4 +49,5 @@ svg.band{position:absolute;left:0;top:0;width:800px;height:540px;overflow:visibl
   <rect x="-19" y="-17" width="38" height="34" rx="11" fill="url(#bv)" stroke="#d9b46e" stroke-width="1.6"/>
  </g>
 </svg>
+<div id="k"></div>
 </div></body></html>

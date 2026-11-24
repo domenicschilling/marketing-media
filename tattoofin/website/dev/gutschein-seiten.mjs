@@ -1,14 +1,19 @@
 // Gutschein-Shop: statische Seiten je Stadt aus einer Vorlage + Konfiguration (SHOPS in netlify/functions/_lib/gutschein-shop.mjs).
-//   node dev/gutschein-seiten.mjs                         → public/gutschein-kaufen/<slug>.html (+ -impressum, -datenschutz, -widerruf, -bedingungen)
+//   node dev/gutschein-seiten.mjs                         → netlify/functions/_lib/gutschein-seiten-html.mjs (Shop-Seite je Stadt mit drei
+//                                                           Fassungen von Titel/Beschreibung/Vorschaubild; ausgeliefert von der Funktion
+//                                                           netlify/functions/gutschein-seite.mjs, die je nach Bestand und Uhrzeit wählt
+//                                                           und die Zahlen im Hero einsetzt) + public/gutschein-kaufen/<slug>-impressum,
+//                                                           -datenschutz, -widerruf, -bedingungen
 //   node dev/gutschein-seiten.mjs --og                    → zusätzlich alle Bilder je Stadt (Playwright): Vorschaubilder og-weihnachten.jpg
-//                                                           („500 € für 375 €“) und og-weihnachten-neutral.jpg (ohne Beträge; welches die Seite
-//                                                           nennt, steht in SHOPS[…].seite.vorschau), Hero-Geschenk geschenk-*.webp/png,
+//                                                           („500 € für 375 €“), og-weihnachten-neutral.jpg (ohne Beträge, wenn der 500er oder
+//                                                           der günstigste ausverkauft ist) und og-gutschein.jpg (nach der Aktion; Kartentext
+//                                                           wird gemessen, passt er nicht, bricht das Skript ab), Hero-Geschenk geschenk-*.webp/png,
 //                                                           PDF-Hintergrund pdf-grund.jpg (Karte mit Satinband und Schleife), Gutschein-Muster
 //                                                           pdf-muster.webp/jpg (das echte PDF mit Muster-Code, gerendert mit macOS Quick Look),
 //                                                           Symbole icon-32/180/192.png
 //   node dev/gutschein-seiten.mjs --vorschau <ordner>     → zusätzlich WhatsApp-Vorschau (groß + kleines Quadrat) als PNG je Stadt
 //   node dev/gutschein-seiten.mjs --basis https://…       → absolute Adressen (og:url, og:image) für eine andere Site, z. B. den Entwurf
-// Netlify liefert /gutschein-kaufen/<slug> direkt aus <slug>.html (ohne Umleitung), unbekannte Slugs → 404.
+// /gutschein-kaufen/<slug> liefert die Funktion gutschein-seite.mjs (config.path), unbekannte Slugs → 404.
 // Wichtig: Eingecheckt wird immer der Stand mit --basis https://tattoofin.de (Standard). Für den Entwurf vor dem Hochladen mit
 // --basis erzeugen und danach wieder ohne.
 // Einmalig erzeugt (nicht mit diesem Skript): logo-gold-*.webp/png (Logo im Gold-Verlauf der Seite, scharf bis 1.400 px) und
@@ -25,6 +30,8 @@ const arg = (n) => { const i = process.argv.indexOf(n); return i > 0 ? process.a
 const BASIS = (arg("--basis") || "https://tattoofin.de").replace(/\/$/, "");
 const MIT_OG = process.argv.includes("--og");
 const VORSCHAU = arg("--vorschau");
+// --og-pruefen: nur messen, ob alle Texte der Vorschaubilder passen (alle Städte und Fassungen), nichts schreiben (für den Shop-Test)
+const OG_PRUEFEN = process.argv.includes("--og-pruefen");
 // Das Gutschein-Muster (--og) zeigt den QR-Code mit der echten Adresse, nicht localhost
 if (MIT_OG && !process.env.SITE_URL) process.env.SITE_URL = "https://tattoofin.de";
 
@@ -44,6 +51,8 @@ const DATUM = (iso) => new Date(iso).toLocaleDateString("de-DE", { day: "2-digit
 const hash = (f) => (fs.existsSync(f) ? crypto.createHash("sha1").update(fs.readFileSync(f)).digest("hex").slice(0, 8) : "neu");
 const r1 = (n) => Math.round(n * 10) / 10;
 
+// Hero-Geschenk: Ausschnitt #k aus dev/gutschein/geschenk.html (706 × 410, doppelte Dichte), Seitenverhältnis für width/height
+const GESCHENK_MASS = { b: 1412, h: 820 };
 const ziel = path.join(root, "public/gutschein-kaufen");
 fs.mkdirSync(ziel, { recursive: true });
 const geschrieben = new Set();
@@ -105,18 +114,36 @@ const ICONS = {
   icWhatsapp: IC('<path d="M4.3 19.7l1.3-3.9a8.1 8.1 0 1 1 3 2.8z"/><path d="M9.3 8.6c.2 2.8 3 5.5 6 6l.9-1.4-1.9-1-.9.8c-1-.5-1.9-1.4-2.4-2.4l.8-.9-1-1.9z"/>'),
 };
 
-// Texte der Vorschau (Bild, og:description, Alt-Text) je Fassung: "angebot" nennt den 500-€-Gutschein und den günstigsten,
-// "neutral" keine Beträge (wenn einer der beiden ausverkauft ist, siehe SHOPS[…].seite.vorschau)
-function ogTexte(c, fassung = c.seite.vorschau || "angebot") {
+// Texte der Vorschau (Bild, Titel, og:description, Alt-Text) je Fassung (24.11.2026, Runde 3, einfache Sprache, kein „unter Wert“):
+//   "angebot"  „500 € Gutschein für 375 €“, rechts „Auch 300 € für 200 €“ (Standard, solange beide kaufbar sind)
+//   "neutral"  „Tattoo-Gutscheine zum Weihnachtspreis“ ohne Beträge (500er oder günstigster ausverkauft)
+//   "danach"   „Tattoo-Gutschein zum Verschenken“ (nach dem 24.12., 16 Uhr oder wenn alle Aktions-Gutscheine verkauft sind)
+// Welche gilt, entscheidet die Seiten-Funktion aus dem echten Bestand (netlify/functions/_lib/gutschein-seite.mjs).
+const FASSUNGEN = { angebot: "og-weihnachten.jpg", neutral: "og-weihnachten-neutral.jpg", danach: "og-gutschein.jpg" };
+function ogTexte(c, fassung = "angebot") {
   const nr4 = c.aktionen.find((x) => x.id === "nr4"), ab = [...c.aktionen].sort((x, y) => x.preisCent - y.preisCent)[0];
-  const alle = c.aktionen.reduce((s, x) => s + x.stueck, 0), name = c.seite.name;
-  if (fassung === "neutral") return { zeileA: "Tattoo-Gutscheine", zeileB: "unter Wert", karteOben: "Sofort", karteMitte: "als PDF", karteUnten: "per E-Mail",
-    ogText: `Weihnachts-Gutscheine unter Wert, nur bis 24.12. um 16 Uhr. Sofort als PDF per E-Mail.`,
-    ogAlt: `${name}: Weihnachts-Aktion, Tattoo-Gutscheine unter Wert, nur bis 24.12., 16 Uhr`, ogDatei: "og-weihnachten-neutral.jpg" };
-  return { zeileA: `${EURO(nr4.wertCent)} Gutschein`, zeileB: `für ${EURO(nr4.preisCent)}`, karteOben: "Ab", karteMitte: EURO(ab.preisCent), karteUnten: `Wert ${EURO(ab.wertCent)}`,
-    // Nur zwei Zeilen sichtbar: das Datum steht schon groß im Bild
-    ogText: `${EURO(nr4.wertCent)} Gutschein für ${EURO(nr4.preisCent)}, auch ${EURO(ab.wertCent)} für ${EURO(ab.preisCent)}. Insgesamt nur ${alle} Stück.`,
-    ogAlt: `${name}: Weihnachts-Aktion, ${EURO(nr4.wertCent)} Gutschein für ${EURO(nr4.preisCent)}, nur bis 24.12., 16 Uhr`, ogDatei: "og-weihnachten.jpg" };
+  const alle = c.aktionen.reduce((s, x) => s + x.stueck, 0), name = c.seite.name, stadt = c.seite.stadt;
+  const frei = `${ZAHL(c.frei.minCent)} bis ${EURO(c.frei.maxCent)}`, ogDatei = FASSUNGEN[fassung];
+  const karteSofort = { karteOben: "Sofort", karteMitte: "PDF", karteUnten: "per E-Mail" };
+  if (fassung === "danach") return { pille: "Tattoo & Piercing", zeileA: "Tattoo-Gutschein", zeileB: "zum Verschenken", bis: `Von ${frei}`, ...karteSofort,
+    titel: `Tattoo-Gutschein zum Verschenken · ${name}`, ogText: `Für Tattoo oder Piercing in ${stadt}. Eigener Betrag von ${frei}, sofort als PDF.`,
+    ogAlt: `${name}: Tattoo-Gutschein zum Verschenken, von ${frei}, sofort als PDF`, ogDatei };
+  if (fassung === "neutral") return { pille: "Weihnachts-Aktion", zeileA: "Tattoo-Gutscheine", zeileB: "zum Weihnachtspreis", bis: "Nur bis 24.12., 16 Uhr", ...karteSofort,
+    titel: `Tattoo-Gutscheine zum Weihnachtspreis · ${name}`, ogText: `Für Tattoo oder Piercing in ${stadt}. Du zahlst weniger, nur bis 24.12., 16 Uhr.`,
+    ogAlt: `${name}: Weihnachts-Aktion, Tattoo-Gutscheine zum Weihnachtspreis, nur bis 24.12., 16 Uhr`, ogDatei };
+  return { pille: "Weihnachts-Aktion", zeileA: `${EURO(nr4.wertCent)} Gutschein`, zeileB: `für ${EURO(nr4.preisCent)}`, bis: "Nur bis 24.12., 16 Uhr",
+    karteOben: "Auch", karteMitte: EURO(ab.wertCent), karteUnten: `für ${EURO(ab.preisCent)}`,
+    // WhatsApp/Facebook: fette Zeile = Angebot + Studio, darunter wofür, wo und die richtige Stückzahl (21 = alle Aktions-Gutscheine zusammen)
+    titel: `${EURO(nr4.wertCent)} Gutschein für ${EURO(nr4.preisCent)} · ${name}`,
+    ogText: `Für Tattoo oder Piercing in ${stadt}. Auch ${EURO(ab.wertCent)} für ${EURO(ab.preisCent)}, insgesamt nur ${alle} Stück.`,
+    ogAlt: `${name}: Weihnachts-Aktion, ${EURO(nr4.wertCent)} Gutschein für ${EURO(nr4.preisCent)}, nur bis 24.12., 16 Uhr`, ogDatei };
+}
+const ogBildUrl = (k, datei) => `${BASIS}/assets/gs-shop/${k}/${datei}?v=${hash(path.join(root, `public/assets/gs-shop/${k}/${datei}`))}`;
+// Titel, Beschreibung und Vorschaubild je Fassung (Block zwischen <!--og--> und <!--/og--> der Vorlage)
+const META = (() => { const v = vorlage("seite.html"), m = /<!--og-->[\s\S]*?<!--\/og-->/.exec(v); if (!m) throw new Error("<!--og--> fehlt in seite.html"); return m[0]; })();
+function metaBlock(c, w, fassung) {
+  const og = ogTexte(c, fassung);
+  return fuelle(META, { ...w, titel: og.titel, ogTitel: og.titel, ogText: og.ogText, ogAlt: og.ogAlt, ogBild: ogBildUrl(c.seite.kuerzel, og.ogDatei) });
 }
 
 function werte(slug, c) {
@@ -130,7 +157,11 @@ function werte(slug, c) {
   const geschenk = [480, 960, 1400].map((w) => `/assets/gs-shop/${p.kuerzel}/geschenk-${w}.webp ${w}w`).join(", ");
   // Startzustand der Liste (das Skript ersetzt ihn mit den echten Stückzahlen): solange nichts weg ist „Nur 6 Stück“
   const karte = (x) => `<button type="button" class="zeile" data-wahl="${x.id}"><span class="wert g">${EURO(x.wertCent)}</span><span class="preis">du zahlst <b>${EURO(x.preisCent)}</b></span>`
-    + `<span class="chip">${EURO(x.wertCent - x.preisCent)} geschenkt</span><span class="rest">Nur ${x.stueck} Stück</span></button>`;
+    + `<span class="chip">${EURO(x.wertCent - x.preisCent)} geschenkt</span><span class="waehlen" aria-hidden="true">Wählen →</span><span class="rest">Nur ${x.stueck} Stück</span></button>`;
+  // Echte Google-Auszüge (SHOPS[…].seite.stimmen), wörtlich
+  const stimmen = (p.stimmen?.liste || []).map(([n, zeit, t]) => `<figure class="rev"><span class="stars" style="--p:100%" aria-label="5 von 5 Sternen">★★★★★</span><p>„${esc(t)}“</p>`
+    + `<figcaption class="who"><span class="av" aria-hidden="true">${esc(n[0])}</span><span><b>${esc(n)}</b>Google · ${esc(zeit)}</span></figcaption></figure>`).join("");
+  const gb = GESCHENK_MASS;
   return {
     slug, kuerzel: p.kuerzel, name: p.name, firma: p.firma, stadt: p.stadt, strasse: a.strasse, plz: a.plz, ort: a.ort,
     telefon: p.telefon, telefonLink: p.telefonLink, whatsapp: p.whatsapp, instagram: p.instagram, pixel: p.pixel,
@@ -140,13 +171,14 @@ function werte(slug, c) {
     stueckAlle: alle, bonusBis: DATUM(bonusBis), gueltigBis: DATUM(gBis), nachBonus: DATUM(nachBonus), bonusKurz: DATUM(bonusBis).slice(0, 5),
     zahlwort: ["", "Ein", "Zwei", "Drei", "Vier", "Fünf", "Sechs", "Sieben"][c.aktionen.length] || String(c.aktionen.length),
     heroWert: EURO(nr4.wertCent), heroPreis: EURO(nr4.preisCent), abPreis: EURO(ab.preisCent), abWert: EURO(ab.wertCent), freiSpanne: spanne,
+    // Unter dem Knopf die Stückzahl des Angebots aus der Überschrift (nicht alle 21 zusammen)
+    heroKlein: `Nur ${nr4.stueck} Stück zu diesem Preis`,
+    stimmen, stimmenStand: p.stimmen?.stand || "", stimmenLink: p.stimmen?.link || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.google.suche)}`,
+    geschenkB: gb.b, geschenkH: gb.h,
     cdT: "–", cdH: "–", cdM: "–", cdS: "–",
-    titel: `Weihnachts-Gutscheine unter Wert · ${p.name}`,
-    // WhatsApp/Facebook: fette Zeile mit Studio, darunter das Angebot mit richtiger Stückzahl (21 = alle Aktions-Gutscheine zusammen)
-    ogTitel: `${p.name}: Weihnachts-Gutscheine unter Wert`,
-    ogText: og.ogText, ogAlt: og.ogAlt,
+    titel: og.titel, ogTitel: og.titel, ogText: og.ogText, ogAlt: og.ogAlt,
     seitenUrl: `${BASIS}/gutschein-kaufen/${slug}`,
-    ogBild: `${BASIS}/assets/gs-shop/${p.kuerzel}/${og.ogDatei}?v=${hash(ogDatei)}`,
+    ogBild: ogBildUrl(p.kuerzel, og.ogDatei),
     ogDatei, geschenkSrcset: geschenk,
     zweigLinks: zweig("zweig l"), zweigRechts: zweig("zweig r", { beeren: false }), zweigPdf: zweig("zweig-pdf", { beeren: false }), zweigTrenner: zweigQuer(), ...ICONS,
     karten: c.aktionen.map(karte).join("") +
@@ -187,7 +219,7 @@ function rechtInhalt(art, slug, c, w) {
 }
 
 
-const browserNoetig = MIT_OG || VORSCHAU;
+const browserNoetig = MIT_OG || VORSCHAU || OG_PRUEFEN;
 let browser = null;
 if (browserNoetig) {
   const require = createRequire(import.meta.url);
@@ -196,13 +228,14 @@ if (browserNoetig) {
   browser = await chromium.launch();
 }
 const ASSETS = path.join(root, "public/assets/gs-shop");
-async function rendern(html, datei, { breite, hoehe, dpr = 1, jpeg = false, element = null, durchsichtig = false }) {
+async function rendern(html, datei, { breite, hoehe, dpr = 1, jpeg = false, element = null, durchsichtig = false, pruefen = null }) {
   const tmp = path.join(ASSETS, `.render-${process.pid}.html`);
   fs.writeFileSync(tmp, html);
   const p = await browser.newPage({ viewport: { width: breite, height: hoehe }, deviceScaleFactor: dpr });
   try {
     await p.goto(pathToFileURL(tmp).href, { waitUntil: "load" });
     await p.evaluate(() => window.fertig || document.fonts.ready);
+    if (pruefen) await pruefen(p);
     const opts = { path: datei, omitBackground: durchsichtig, ...(jpeg ? { type: "jpeg", quality: 88 } : {}) };
     if (element) await p.locator(element).screenshot(opts); else await p.screenshot(opts);
   } finally { await p.close(); fs.rmSync(tmp, { force: true }); }
@@ -261,14 +294,17 @@ async function bilder(slug, c) {
   const k = c.seite.kuerzel, dir = path.join(ASSETS, k), assets = pathToFileURL(ASSETS).href;
   // 1. Hero-Geschenk (durchsichtig, doppelte Dichte → 1600 px) in 480/960/1400 WebP + 960 PNG als Ersatz
   const voll = path.join(dir, ".geschenk-voll.png");
-  await rendern(fuelle(vorlage("geschenk.html"), { assets, kuerzel: k }), voll, { breite: 800, hoehe: 540, dpr: 2, durchsichtig: true, element: "#g" });
+  await rendern(fuelle(vorlage("geschenk.html"), { assets, kuerzel: k }), voll, { breite: 800, hoehe: 540, dpr: 2, durchsichtig: true, element: "#k" });
   await umrechnen(voll, [480, 960, 1400].map((b) => ({ breite: b, typ: "image/webp", q: 0.9, datei: path.join(dir, `geschenk-${b}.webp`) }))
     .concat([{ breite: 960, typ: "image/png", datei: path.join(dir, "geschenk-960.png") }]));
-  // 2. Vorschaubild WhatsApp/Facebook 1200×630 (Mitte als Quadrat allein lesbar), zwei Fassungen (SHOPS[…].seite.vorschau):
-  //    og-weihnachten.jpg „500 € Gutschein für 375 €“ + rechts „Ab 200 €“, og-weihnachten-neutral.jpg ohne Beträge
-  for (const [fassung, datei] of [["angebot", "og-weihnachten.jpg"], ["neutral", "og-weihnachten-neutral.jpg"]]) {
+  // 2. Vorschaubild WhatsApp/Facebook 1200×630 (Mitte als Quadrat allein lesbar), drei Fassungen (siehe ogTexte). Jeder Text wird im
+  //    Bild gemessen (og.html: window.passt); passt einer nicht (z. B. Kartentext breiter als die Karte), bricht das Skript ab.
+  for (const [fassung, datei] of Object.entries(FASSUNGEN)) {
     const og = fuelle(vorlage("og.html"), { assets, kuerzel: k, geschenk: pathToFileURL(voll).href, ...ogTexte(c, fassung), zweigL: zweig("zw l"), zweigR: zweig("zw r", { beeren: false }) });
-    await rendern(og, path.join(dir, datei), { breite: 1200, hoehe: 630, jpeg: true, element: "#og" });
+    await rendern(og, path.join(dir, datei), { breite: 1200, hoehe: 630, jpeg: true, element: "#og", pruefen: async (p) => {
+      const r = await p.evaluate(() => window.passt);
+      if (!r?.ok) throw new Error(`Vorschaubild ${k} ${fassung}: Text passt nicht ${JSON.stringify(r)}`);
+    } });
   }
   fs.rmSync(voll, { force: true });
   // 3. Symbole 32 / 180 (iPhone) / 192 (Android)
@@ -284,24 +320,55 @@ async function bilder(slug, c) {
   await pdfMuster(slug, c, dir);
 }
 
+if (OG_PRUEFEN) {
+  const erg = [], tmp = fs.mkdtempSync(path.join(ASSETS, ".pruef-"));
+  try {
+    for (const [slug, c] of Object.entries(SHOPS)) {
+      if (!c.seite) continue;
+      const k = c.seite.kuerzel, assets = pathToFileURL(ASSETS).href;
+      for (const fassung of Object.keys(FASSUNGEN)) {
+        const og = fuelle(vorlage("og.html"), { assets, kuerzel: k, geschenk: pathToFileURL(path.join(ASSETS, k, "geschenk-960.png")).href, ...ogTexte(c, fassung), zweigL: zweig("zw l"), zweigR: zweig("zw r", { beeren: false }) });
+        let passt = null;
+        await rendern(og, path.join(tmp, `${k}-${fassung}.jpg`), { breite: 1200, hoehe: 630, jpeg: true, element: "#og", pruefen: async (p) => { passt = await p.evaluate(() => window.passt); } });
+        erg.push({ slug, fassung, ...passt });
+      }
+    }
+  } finally { fs.rmSync(tmp, { recursive: true, force: true }); await browser.close(); }
+  console.log("OG-PRUEFUNG " + JSON.stringify(erg));
+  process.exit(0);
+}
+
+const SEITEN = {};
 for (const [slug, c] of Object.entries(SHOPS)) {
   if (!c.seite) continue;
   // Bilder zuerst (die Seite nennt das Vorschaubild mit Prüfsumme, damit WhatsApp/Facebook ein neues Bild neu laden)
   if (MIT_OG) await bilder(slug, c);
   const w = werte(slug, c);
-  schreibe(`${slug}.html`, fuelle(vorlage("seite.html"), w));
+  // Die Seite selbst liefert die Funktion gutschein-seite.mjs aus (Standard-Fassung „angebot“, dazu die Meta-Blöcke aller Fassungen)
+  SEITEN[slug] = { html: fuelle(vorlage("seite.html"), w), og: Object.fromEntries(Object.keys(FASSUNGEN).map((f) => [f, metaBlock(c, w, f)])), stadt: c.seite.stadt, heroId: "nr4" };
   for (const [art, titel] of RECHT) {
     const fussLinks = RECHT.map(([a2, t2]) => `<a href="/gutschein-kaufen/${slug}-${a2}"${a2 === art ? ' aria-current="page"' : ""}>${esc(t2)}</a>`).join("") + `<a href="/gutschein-kaufen/${slug}">Zu den Gutscheinen</a>`;
-    schreibe(`${slug}-${art}.html`, fuelle(vorlage("recht.html"), { ...w, seitenTitel: titel, inhalt: rechtInhalt(art, slug, c, w), fussLinks }));
+    // Lange Wörter mit weichem Trennzeichen (bei 320 px passt „GUTSCHEINBEDINGUNGEN“ sonst nicht in die Zeile)
+    const titelH1 = esc(titel).replace("Gutscheinbedingungen", "Gutschein&shy;bedingungen").replace("Widerrufsbelehrung", "Widerrufs&shy;belehrung");
+    schreibe(`${slug}-${art}.html`, fuelle(vorlage("recht.html"), { ...w, seitenTitel: titel, seitenTitelH1: titelH1, inhalt: rechtInhalt(art, slug, c, w), fussLinks }));
   }
   if (VORSCHAU) {
     fs.mkdirSync(VORSCHAU, { recursive: true });
-    const wa = fuelle(vorlage("whatsapp.html"), { ...w, ogDatei: pathToFileURL(w.ogDatei).href, domain: new URL(BASIS).hostname });
-    await rendern(wa, path.join(path.resolve(VORSCHAU), `whatsapp-${slug}.png`), { breite: 760, hoehe: 420, dpr: 2, element: "body" });
+    // Alle drei Fassungen so, wie WhatsApp sie zeigt: groß (~320 px breit) und als kleines Quadrat (96 px)
+    for (const f of Object.keys(FASSUNGEN)) {
+      const og = ogTexte(c, f);
+      const wa = fuelle(vorlage("whatsapp.html"), { ...w, ogTitel: og.titel, ogText: og.ogText, ogDatei: pathToFileURL(path.join(ASSETS, c.seite.kuerzel, og.ogDatei)).href, domain: new URL(BASIS).hostname });
+      await rendern(wa, path.join(path.resolve(VORSCHAU), `whatsapp-${slug}${f === "angebot" ? "" : "-" + f}.png`), { breite: 760, hoehe: 420, dpr: 2, element: "body" });
+    }
   }
   console.log(`✓ ${slug}: /gutschein-kaufen/${slug} (+ ${RECHT.map(([a]) => a).join(", ")})${MIT_OG ? ", Bilder" : ""}`);
 }
 if (browser) await browser.close();
+// Modul für die Seiten-Funktion (wird mit der Funktion gebündelt, kein Dateizugriff zur Laufzeit)
+fs.writeFileSync(path.join(root, "netlify/functions/_lib/gutschein-seiten-html.mjs"),
+  "// Erzeugt von dev/gutschein-seiten.mjs aus dev/gutschein/seite.html – nicht von Hand ändern.\n" +
+  "// Je Stadt: html (Standard-Fassung), og.{angebot,neutral,danach} (Titel/Beschreibung/Vorschaubild), stadt, heroId.\n" +
+  `export const SEITEN = ${JSON.stringify(SEITEN)};\n`);
 
 // Alte, nicht mehr erzeugte Seiten entfernen (der Ordner gehört nur diesem Skript)
 for (const f of fs.readdirSync(ziel)) if (f.endsWith(".html") && !geschrieben.has(f)) { fs.rmSync(path.join(ziel, f)); console.log("  entfernt:", f); }

@@ -3,8 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<!-- Erzeugt von dev/gutschein-seiten.mjs aus dev/gutschein/seite.html – nicht von Hand ändern -->
-<title>{{titel}}</title>
+<!-- Erzeugt von dev/gutschein-seiten.mjs aus dev/gutschein/seite.html – nicht von Hand ändern. Ausgeliefert über die Funktion
+     netlify/functions/gutschein-seite.mjs: Sie setzt Titel, Beschreibung und Vorschaubild (zwischen og und /og) je nach Bestand und
+     Uhrzeit und die Zahlen im Hero aus dem echten Bestand (data-stand am html). -->
+<!--og--><title>{{titel}}</title>
 <meta name="description" content="{{ogText}}">
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#0B0B0B">
@@ -23,15 +25,17 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{{ogTitel}}">
 <meta name="twitter:description" content="{{ogText}}">
-<meta name="twitter:image" content="{{ogBild}}">
+<meta name="twitter:image" content="{{ogBild}}"><!--/og-->
 <link rel="icon" href="/assets/gs-shop/{{kuerzel}}/icon-32.png" sizes="32x32">
 <link rel="icon" href="/assets/gs-shop/{{kuerzel}}/icon-192.png" sizes="192x192">
 <link rel="apple-touch-icon" href="/assets/gs-shop/{{kuerzel}}/icon-180.png">
 <link rel="preload" as="font" type="font/woff2" href="/assets/gs-shop/schrift/oswald-latin.woff2" crossorigin>
 <link rel="preload" as="font" type="font/woff2" href="/assets/gs-shop/schrift/inter-latin.woff2" crossorigin>
-<link rel="preload" as="image" href="/assets/gs-shop/{{kuerzel}}/geschenk-960.webp" imagesrcset="{{geschenkSrcset}}" imagesizes="(min-width:900px) 460px, 80vw" fetchpriority="high">
+<link rel="preload" as="image" href="/assets/gs-shop/{{kuerzel}}/geschenk-960.webp" imagesrcset="{{geschenkSrcset}}" imagesizes="(min-width:900px) 520px, 92vw" fetchpriority="high">
 <!-- Inhalte unter dem Hero blenden beim Scrollen ein (nur mit Skript; läuft das Skript nicht, bleibt alles sichtbar) -->
-<script>document.documentElement.classList.add("js");setTimeout(function(){if(!window.gsBereit)document.documentElement.classList.remove("js")},3000);</script>
+<script>document.documentElement.classList.add("js");setTimeout(function(){if(!window.gsBereit)document.documentElement.classList.remove("js")},3000);
+// Beträge im Hero: Ohne Stand vom Server (data-stand) erst zeigen, wenn die echten Stückzahlen da sind, spätestens nach 1,5 s
+setTimeout(function(){document.documentElement.classList.add("zahlen")},1500);</script>
 <!-- Meta-Pixel {{name}} (wie die übrigen TF-Landingpages, ohne Einwilligungsfenster – Domenic 23.11.2026; nur auf tattoofin.de, nie in Vorschau/Test) -->
 <script>
 if (location.hostname === "tattoofin.de") {
@@ -55,8 +59,11 @@ a{color:inherit}
 :focus-visible{outline:2px solid var(--gold2);outline-offset:3px}
 .wrap{max-width:1120px;margin:0 auto;padding:0 20px}
 .nb{white-space:nowrap}
-.g{background:linear-gradient(180deg,#F6E7C3 0%,#E8CD92 40%,#C8A35A 75%,#A9843F 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+/* Goldtext: oben .2em Luft für die Punkte von Ü/Ä/Ö (der Verlauf malt sonst nur bis zur Oberkante der Schrift und schneidet sie ab) */
+.g{background:linear-gradient(180deg,#F6E7C3 0%,#E8CD92 40%,#C8A35A 75%,#A9843F 100%);-webkit-background-clip:text;background-clip:text;color:transparent;padding-top:.2em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
 .h{font-family:var(--hf);font-weight:700;text-transform:uppercase;line-height:1.04;letter-spacing:-.005em}
+/* Ohne Stand vom Server: Beträge erst mit den echten Zahlen zeigen (Platz bleibt), siehe Skript im Kopf */
+html.js:not([data-stand]):not(.zahlen) #h-wert,html.js:not([data-stand]):not(.zahlen) #h-preis,html.js:not([data-stand]):not(.zahlen) #hero-lead,html.js:not([data-stand]):not(.zahlen) #hero-klein{visibility:hidden}
 .eyebrow{display:inline-flex;align-items:center;gap:8px;white-space:nowrap;font:600 12px/1 var(--hf);letter-spacing:.2em;text-transform:uppercase;color:var(--gold2);border:1px solid rgba(200,163,90,.6);border-radius:999px;padding:9px 16px;background:rgba(11,11,11,.55)}
 @media(max-width:400px){.eyebrow{letter-spacing:.14em;padding:8px 13px}}
 /* Roter Punkt ruhig (kein Pulsieren, 24.11.2026) */
@@ -77,9 +84,13 @@ a{color:inherit}
 /* Weihnachten im TF-Stil: Gutschein als Geschenk mit dunkelroter Schleife, goldene Tannenzweige oben in den Ecken, feine Flocken nur um das Geschenk */
 .zweig{position:absolute;top:0;z-index:0;width:clamp(118px,30vw,260px);height:auto;color:var(--gold);opacity:.62;pointer-events:none}
 .zweig.l{left:0}.zweig.r{right:0;transform:scaleX(-1)}
+/* Hohe Handys: Tannenzweige größer, sie füllen den Platz über dem Geschenk */
+@media(min-height:780px) and (max-width:700px){.zweig{width:clamp(150px,40vw,250px)}}
 .hero .in{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;max-width:640px;margin:0 auto;padding:calc(64px + env(safe-area-inset-top)) 20px calc(24px + env(safe-area-inset-bottom));text-align:center}
-.logo-box{flex:1 1 0;min-height:56px;position:relative;width:min(80vw,460px);margin:0 auto 8px}
-.logo-box img{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:contain}
+/* Geschenk ohne durchsichtigen Rand (1,72:1), auf hohen Handys breiter; es sitzt unten direkt über der Pille, der Platz darüber gehört
+   den Tannenzweigen und Flocken (kein Loch zwischen Geschenk und Text) */
+.logo-box{flex:1 1 0;min-height:56px;position:relative;width:min(88vw,520px);margin:0 auto 14px}
+.logo-box img{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:contain;object-position:50% 100%;filter:drop-shadow(0 16px 24px rgba(0,0,0,.7)) drop-shadow(0 0 34px rgba(200,163,90,.14))}
 .flocken{position:absolute;z-index:0;left:calc(50% - 50vw);width:100vw;top:calc(-64px - env(safe-area-inset-top));bottom:0;pointer-events:none;overflow:hidden;-webkit-mask-image:linear-gradient(#000 55%,transparent);mask-image:linear-gradient(#000 55%,transparent)}
 .flocken i{position:absolute;top:0;bottom:0;left:var(--l);width:var(--s);opacity:var(--o);background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-12 -12 24 24' fill='none' stroke='%23E8CD92' stroke-width='1.2' stroke-linecap='round'%3E%3Cpath d='M0-11V11M-9.5-5.5 9.5 5.5M-9.5 5.5 9.5-5.5M0-7l-2.6-2.6M0-7l2.6-2.6M0 7l-2.6 2.6M0 7l2.6 2.6M-6-3.5-9.6-2.5M-6-3.5-7-7M6-3.5 9.6-2.5M6-3.5 7-7M-6 3.5-9.6 2.5M-6 3.5-7 7M6 3.5 9.6 2.5M6 3.5 7 7'/%3E%3C/svg%3E") center bottom/var(--s) var(--s) no-repeat;filter:blur(.25px);transform:translate3d(0,-100%,0);animation:fall var(--d) linear infinite;animation-delay:var(--w)}
 @keyframes fall{to{transform:translate3d(var(--x),0,0)}}
@@ -87,7 +98,7 @@ a{color:inherit}
 .hero .text{flex:none}
 .hero h1{font-size:clamp(36px,11vw,78px);margin:14px 0 10px}
 .hero h1 span{display:block}
-.hero h1 span.g{margin-top:.07em}
+.hero h1 span.g{margin-top:-.13em}
 .hero p.lead{font-size:17px;color:#ECE5D6;max-width:30em;margin:0 auto 16px}
 .mini{margin-top:12px;min-height:1.55em;font-size:13px;color:var(--mute);text-align:center}
 /* Countdown bis Aktionsende (echtes Ende 24.12.2026 16 Uhr aus der API, setzt sich nie zurück) */
@@ -102,7 +113,7 @@ a{color:inherit}
 .stars{position:relative;display:inline-block;color:#4a4339;letter-spacing:1px;line-height:1}
 .stars:before{content:"★★★★★";position:absolute;left:0;top:0;width:var(--p);overflow:hidden;white-space:nowrap;color:#F5C451}
 section{padding:68px 0}
-.sec-h{font-size:clamp(30px,8vw,52px);margin:14px 0 12px}
+.sec-h{font-size:clamp(30px,8vw,52px);margin:14px 0 12px;line-height:1.12}
 .sub{color:var(--mute);max-width:36em}
 /* Gutschein-Liste */
 .gs{display:grid;gap:10px;margin-top:22px}
@@ -110,12 +121,17 @@ button.zeile{position:relative;display:grid;grid-template-columns:1fr auto;align
 button.zeile:not([disabled]):hover,button.zeile:not([disabled]):focus-visible{border-color:var(--gold)}
 button.zeile:not([disabled]):active{transform:scale(.985)}
 button.zeile .wert{grid-column:1;grid-row:1;font:700 34px/1 var(--hf);text-transform:uppercase;white-space:nowrap}
+button.zeile .wert.g{margin-top:-.2em}
 button.zeile .preis{grid-column:1;grid-row:2;font-size:15px;color:var(--mute);white-space:nowrap}
 button.zeile .preis b{color:var(--txt);font-weight:600;white-space:nowrap}
 .chip{display:inline-block;white-space:nowrap;font:600 12px/1 var(--hf);letter-spacing:.08em;text-transform:uppercase;color:#0B0B0B;background:linear-gradient(180deg,var(--gold2),var(--gold));border-radius:999px;padding:7px 10px 6px}
 button.zeile .chip{grid-column:2;grid-row:1;justify-self:end}
-button.zeile .rest{grid-column:2;grid-row:2;justify-self:end;text-align:right;white-space:nowrap;font:600 13px/1.2 var(--hf);letter-spacing:.1em;text-transform:uppercase;color:var(--gold2)}
-button.zeile .hinweis{grid-column:1/-1;grid-row:3;font-size:13px;color:var(--mute)}
+/* Jede Aktions-Karte zeigt, dass man sie antippen kann („Wählen →“); die Stückzahl steht darunter links */
+button.zeile .waehlen{grid-column:2;grid-row:2;justify-self:end;white-space:nowrap;font:600 13px/1 var(--hf);letter-spacing:.1em;text-transform:uppercase;color:var(--gold2);border:1px solid rgba(232,205,146,.65);border-radius:999px;padding:7px 11px 6px}
+button.zeile:not([disabled]):hover .waehlen,button.zeile:not([disabled]):focus-visible .waehlen{background:linear-gradient(180deg,var(--gold2),var(--gold));color:#0B0B0B;border-color:transparent}
+button.zeile[disabled] .waehlen{display:none}
+button.zeile .rest{grid-column:1/-1;grid-row:3;justify-self:start;text-align:left;white-space:nowrap;font:600 12px/1.2 var(--hf);letter-spacing:.12em;text-transform:uppercase;color:var(--gold2);margin-top:4px}
+button.zeile .hinweis{grid-column:1/-1;grid-row:4;font-size:13px;color:var(--mute)}
 button.zeile .pfeil{grid-column:2;grid-row:1/span 2;font:700 24px var(--hf);color:var(--gold)}
 /* Aktions-Gutscheine mit schmalem rotem Satinband wie die Karte im Vorschaubild */
 button.zeile:not(.frei){overflow:hidden;padding-top:27px}
@@ -161,6 +177,18 @@ button.zeile.frei .wert{font-size:26px}
 .gbar .stars{font-size:20px}
 .gbar small{display:block;color:var(--mute);font-size:13px;margin-top:5px}
 .gbar .gl{margin-left:auto;width:42px;height:42px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;flex:none}
+/* Echte Google-Auszüge wie in der Glücksrad-Vorlage („Das sagen unsere Kunden“): am Handy zum Wischen, breit nebeneinander */
+.revs{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;margin:14px -20px 0;padding:4px 20px 12px;scrollbar-width:none}
+.revs::-webkit-scrollbar{display:none}
+.rev{flex:0 0 84%;max-width:360px;scroll-snap-align:start;background:var(--ink2);border:1px solid var(--line);border-radius:var(--r);padding:20px;display:flex;flex-direction:column;gap:12px}
+.rev .stars{font-size:16px}
+.rev p{font-size:15.5px;color:#E9E2D3}
+.rev .who{display:flex;align-items:center;gap:10px;margin-top:auto;font-size:13px;color:var(--mute)}
+.rev .av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;font:700 15px var(--hf);color:#0B0B0B;background:linear-gradient(180deg,var(--gold2),var(--gold))}
+.rev .who b{display:block;color:var(--txt);font-weight:600}
+@media(min-width:760px){.revs{flex-wrap:wrap;overflow:visible;margin:14px 0 0;padding:4px 0}.rev{flex:1 1 30%}}
+.hint{font-size:12px;color:#8f887b;margin-top:6px}
+.hint a{color:var(--gold2);text-decoration:none;white-space:nowrap}
 .faq{max-width:760px;margin-top:18px}
 /* Feiner Tannenzweig als Trenner vor den Fragen */
 .trenner{display:flex;justify-content:center;color:var(--gold);opacity:.6;margin:0 auto 22px}
@@ -258,8 +286,13 @@ textarea{min-height:76px;resize:vertical}
 .summe{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:14px;color:var(--mute);margin-bottom:10px}
 .summe span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .summe b{font:700 20px var(--hf);color:var(--txt);white-space:nowrap}
-.nav{display:flex;gap:10px}
-.back{background:none;border:1px solid #2c2822;color:var(--mute);border-radius:999px;padding:0 20px;font:600 18px var(--bf);cursor:pointer;min-height:56px}
+.nav{display:flex;gap:10px;align-items:center}
+.nav .btn{white-space:nowrap;min-width:0}
+/* Zurück-Knopf bleibt rund (fest quadratisch), auch wenn der Knopf daneben höher würde */
+.back{flex:0 0 56px;width:56px;height:56px;display:flex;align-items:center;justify-content:center;background:none;border:1px solid #2c2822;color:var(--mute);border-radius:50%;padding:0;font:600 18px var(--bf);cursor:pointer}
+@media(max-width:374px){.nav .btn{font-size:16px;letter-spacing:.03em;padding:20px 16px}}
+/* Wichtigste Bedingung des Angebots, solange ein Aktions-Gutschein gewählt ist (kein Rechtstext, eine Zeile) */
+.bonus-info{font-size:12.5px;line-height:1.35;color:var(--gold2);text-align:center;margin:0 0 9px}
 .legal{font-size:12px;color:#8f887b;margin-top:10px;text-align:center}
 .legal a{color:#a39b8c;padding:4px 2px}
 .done{text-align:center;padding:10px 4px 6px}
@@ -270,15 +303,15 @@ textarea{min-height:76px;resize:vertical}
 @media(max-height:700px){.cd b{font-size:24px}.cd div{padding:8px 0 6px}.cd{margin-bottom:12px}.cd-titel{margin-bottom:8px}.hero h1{margin:12px 0 8px}.hero p.lead{margin-bottom:12px}.mini{margin-top:10px}}
 @media(max-height:620px){.hero .in{padding-top:62px}.hero h1{font-size:clamp(32px,9vw,52px);margin:8px 0 6px}.hero p.lead{font-size:15px;margin-bottom:10px}.btn{padding:16px 26px}.rate{display:none}}
 /* Handy quer: Geschenk links, Text rechts, Countdown klein */
-@media(max-height:520px) and (orientation:landscape){.zweig{width:110px}.flocken{left:-10%;width:120%;top:-50px}.hero .in{flex-direction:row;align-items:center;gap:4vw;max-width:none;padding:54px 5vw 12px}.logo-box{flex:0 0 38%;height:72%;width:auto;margin:0}.hero .text{flex:1 1 0}.hero h1{font-size:30px;margin:10px 0 6px}.hero h1 span{display:inline}.hero p.lead{font-size:14px;margin-bottom:8px}.cd-titel{font-size:11px;letter-spacing:.14em;margin-bottom:6px}.cd{max-width:320px;gap:6px;margin-bottom:10px}.cd div{padding:5px 0 4px;border-radius:10px}.cd b{font-size:17px}.cd small{font-size:11px;letter-spacing:.08em;margin-top:2px}.mini{margin-top:6px}.rate{display:none}}
+@media(max-height:520px) and (orientation:landscape){.zweig{width:110px}.flocken{left:-10%;width:120%;top:-50px}.hero .in{flex-direction:row;align-items:center;gap:4vw;max-width:none;padding:54px 5vw 12px}.logo-box{flex:0 0 38%;height:72%;width:auto;margin:0}.logo-box img{object-position:50% 50%}.hero .text{flex:1 1 0}.hero h1{font-size:30px;margin:10px 0 6px}.hero h1 span{display:inline}.hero p.lead{font-size:14px;margin-bottom:8px}.cd-titel{font-size:11px;letter-spacing:.14em;margin-bottom:6px}.cd{max-width:320px;gap:6px;margin-bottom:10px}.cd div{padding:5px 0 4px;border-radius:10px}.cd b{font-size:17px}.cd small{font-size:11px;letter-spacing:.08em;margin-top:2px}.mini{margin-top:6px}.rate{display:none}}
 /* Niedrige Handys (iPhone SE in Safari 375×548, Instagram ≈ 375×560): Geschenk kleiner, Countdown und Pille bleiben (kompakt) */
 @media(max-height:560px) and (orientation:portrait){.hero .in{padding-top:58px;padding-bottom:14px}.logo-box{max-height:24svh;margin-bottom:2px}.hero .text>.eyebrow{font-size:11px;padding:6px 11px}.hero p.lead{font-size:14px;margin-bottom:8px}.cd-titel{font-size:11px;margin-bottom:6px}.cd{gap:5px;margin-bottom:10px;max-width:300px}.cd div{padding:5px 0 4px;border-radius:10px}.cd b{font-size:17px}.cd small{font-size:11px;letter-spacing:.06em;margin-top:2px}.mini{margin-top:6px}}
 @media(max-height:480px) and (orientation:portrait){.hero .text>.eyebrow{display:none}.hero h1{margin-top:4px}}
 @media(max-height:420px) and (orientation:landscape){.hero .text>.eyebrow{display:none}.hero .in{padding:50px 5vw 10px}.hero h1{font-size:26px;margin:0 0 6px}.btn{padding:13px 22px;font-size:16px}}
 /* Kauf-Fenster mit wenig Platz (Tastatur offen, kleines Handy): Kopf und Fuß kompakt, Eingabefeld bleibt sichtbar */
-.panel.eng .grab,.panel.eng .qs,.panel.eng .legal{display:none}.panel.eng .p-kopf{padding-top:4px}.panel.eng .x{min-height:38px}.panel.eng .bar{margin:2px 0 4px}.panel.eng .q{font-size:20px;margin:4px 0 8px}.panel.eng .p-fuss{padding-top:6px;padding-bottom:calc(6px + env(safe-area-inset-bottom))}.panel.eng .summe{margin-bottom:6px}.panel.eng .nav .btn{padding:12px 20px;font-size:16px}.panel.eng .back{min-height:44px}.panel.eng label.f{margin:8px 0 4px}.panel.eng input[type=text],.panel.eng input[type=email]{padding:12px 14px}
+.panel.eng .grab,.panel.eng .qs,.panel.eng .legal{display:none}.panel.eng .p-kopf{padding-top:4px}.panel.eng .x{min-height:38px}.panel.eng .bar{margin:2px 0 4px}.panel.eng .q{font-size:20px;margin:4px 0 8px}.panel.eng .p-fuss{padding-top:6px;padding-bottom:calc(6px + env(safe-area-inset-bottom))}.panel.eng .summe{margin-bottom:6px}.panel.eng .nav .btn{padding:13px 16px;font-size:16px}.panel.eng .back{flex-basis:46px;width:46px;height:46px}.panel.eng .bonus-info{margin-bottom:5px;font-size:12px}.panel.eng label.f{margin:8px 0 4px}.panel.eng input[type=text],.panel.eng input[type=email]{padding:12px 14px}
 /* Kauf-Fenster quer: Fuß kompakt, damit Inhalt Platz hat */
-@media(max-height:500px) and (orientation:landscape){.sheet .panel{max-height:100dvh;border-radius:18px 18px 0 0}.grab{display:none}.p-kopf{padding-top:4px}.bar{margin:2px 0 4px}.q{font-size:20px;margin:4px 0 8px}.qs{display:none}.opts{grid-template-columns:1fr 1fr}.p-fuss{padding-top:6px;padding-bottom:calc(6px + env(safe-area-inset-bottom))}.summe{margin-bottom:6px}.nav .btn{padding:12px 20px;font-size:16px}.back{min-height:44px}.legal{margin-top:4px;font-size:11px}}
+@media(max-height:500px) and (orientation:landscape){.sheet .panel{max-height:100dvh;border-radius:18px 18px 0 0}.grab{display:none}.p-kopf{padding-top:4px}.bar{margin:2px 0 4px}.q{font-size:20px;margin:4px 0 8px}.qs{display:none}.opts{grid-template-columns:1fr 1fr}.p-fuss{padding-top:6px;padding-bottom:calc(6px + env(safe-area-inset-bottom))}.summe{margin-bottom:6px}.nav .btn{padding:13px 16px;font-size:16px}.back{flex-basis:46px;width:46px;height:46px}.legal{margin-top:4px;font-size:11px}}
 </style>
 </head>
 <body>
@@ -296,18 +329,18 @@ textarea{min-height:76px;resize:vertical}
     <div class="in">
       <div class="logo-box">
         <div class="flocken" aria-hidden="true" id="flocken"></div>
-        <img srcset="{{geschenkSrcset}}" sizes="(min-width:900px) 460px, 80vw" src="/assets/gs-shop/{{kuerzel}}/geschenk-960.png" alt="Gutschein von {{name}} mit roter Schleife" width="1600" height="1080" fetchpriority="high">
+        <img srcset="{{geschenkSrcset}}" sizes="(min-width:900px) 520px, 92vw" src="/assets/gs-shop/{{kuerzel}}/geschenk-960.png" alt="Gutschein von {{name}} mit roter Schleife" width="{{geschenkB}}" height="{{geschenkH}}" fetchpriority="high">
       </div>
       <div class="text">
       <span class="eyebrow nur-aktion">Weihnachts-Aktion</span>
       <span class="eyebrow nur-danach">Tattoo-Gutschein</span>
       <h1 class="h" data-hero-pflicht="immer"><span class="nur-aktion"><span id="h-wert">{{heroWert}} Gutschein</span> <span class="g" id="h-preis">für {{heroPreis}}</span></span><span class="nur-danach"><span>Tattoo-Gutschein</span> <span class="g">zum Verschenken</span></span></h1>
-      <p class="lead nur-aktion" id="hero-lead" data-hero-pflicht="immer">{{zahlwort}} Beträge unter Wert, <span class="nb">schon ab {{abPreis}} (Wert&nbsp;{{abWert}}).</span></p>
+      <p class="lead nur-aktion" id="hero-lead" data-hero-pflicht="immer">Für Tattoo oder Piercing in {{stadt}}. <span class="nb">Schon ab {{abPreis}} (Wert&nbsp;{{abWert}}).</span></p>
       <p class="lead nur-danach">Mit eigenem Betrag von {{freiSpanne}}, sofort als PDF per E-Mail.</p>
       <p class="cd-titel nur-aktion" data-cd-titel>Aktion endet am 24.12. um 16 Uhr</p>
       <div class="cd nur-aktion" data-cd role="timer" aria-label="Zeit bis zum Ende der Weihnachts-Aktion"><div><b data-t>{{cdT}}</b><small>Tage</small></div><div><b data-h>{{cdH}}</b><small>Std</small></div><div><b data-m>{{cdM}}</b><small>Min</small></div><div><b data-s>{{cdS}}</b><small>Sek</small></div></div>
       <button type="button" class="btn full" id="hero-kaufen" data-ev="kaufen-start" data-ort="hero" data-hero-pflicht="immer">Gutschein aussuchen →</button>
-      <div class="mini" id="hero-klein" data-hero-pflicht="immer">Zusammen nur {{stueckAlle}}&nbsp;Stück</div>
+      <div class="mini" id="hero-klein" data-hero-pflicht="immer">{{heroKlein}}</div>
       <div class="rate"><a href="#bewertungen"><span class="stars" style="--p:{{sternProzent}}%" aria-hidden="true">★★★★★</span> <b>{{sterne}}</b> · {{bewertungen}} Google-Bewertungen</a></div>
       </div>
     </div>
@@ -318,8 +351,8 @@ textarea{min-height:76px;resize:vertical}
       <div class="reveal">
         <span class="eyebrow nur-aktion"><span class="dot"></span>Bis Heiligabend, 16 Uhr</span>
         <span class="eyebrow nur-danach">Tattoo-Gutschein</span>
-        <h2 class="h sec-h nur-aktion">{{zahlwort}} Beträge, <span class="g nb">alle unter Wert.</span></h2>
-        <p class="sub nur-aktion"><span id="liste-ab">Schon ab {{abPreis}} (Wert&nbsp;{{abWert}}).</span> Tipp auf deinen Gutschein. Ist ein Betrag verkauft, gibt es ihn nicht mehr.</p>
+        <h2 class="h sec-h nur-aktion">{{zahlwort}} Gutscheine. <span class="g nb">Du zahlst weniger.</span></h2>
+        <p class="sub nur-aktion"><span id="liste-ab">Schon ab {{abPreis}} (Wert&nbsp;{{abWert}}).</span> Tipp auf deinen Gutschein. Ist einer verkauft, gibt es ihn nicht mehr.</p>
         <h2 class="h sec-h nur-danach">Gutschein mit <span class="g">eigenem Betrag.</span></h2>
         <p class="sub nur-danach" id="danach-sub">Von {{freiSpanne}}, sofort als PDF per E-Mail.</p>
       </div>
@@ -382,6 +415,8 @@ textarea{min-height:76px;resize:vertical}
         <span><span class="stars" style="--p:{{sternProzent}}%" aria-hidden="true">★★★★★</span><small>aus {{bewertungen}} Bewertungen auf Google, Stand {{googleStand}}</small></span>
         <span class="gl" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg></span>
       </a>
+      <div class="revs reveal">{{{stimmen}}}</div>
+      <p class="hint">Auszüge aus echten Google-Bewertungen, Stand {{stimmenStand}}. <a href="{{stimmenLink}}" target="_blank" rel="noopener">Alle Bewertungen ansehen&nbsp;→</a></p>
       <a class="ig" href="https://www.instagram.com/{{instagram}}/" target="_blank" rel="noopener">Mehr auf Instagram: <span class="nb">@{{instagram}}&nbsp;→</span></a>
     </div>
   </section>
@@ -398,6 +433,7 @@ textarea{min-height:76px;resize:vertical}
         <details><summary>Was passiert nach dem {{bonusBis}}?</summary><p>Dann zählt der Betrag, den du bezahlt hast. Hast du zum Beispiel 375&nbsp;€ für den 500-€-Gutschein bezahlt, sind ab dem {{nachBonus}} noch 375&nbsp;€ einlösbar, bis {{gueltigBis}}.</p></details>
         <details><summary>Und wenn das Tattoo mehrere Sitzungen braucht?</summary><p>Kein Problem. Beispiel 500-€-Gutschein: Löst du bis {{bonusBis}} mindestens 125&nbsp;€ ein (zum Beispiel die erste Sitzung), bleiben die restlichen 375&nbsp;€ bis {{gueltigBis}} gültig.</p></details>
         <details><summary>Kann ich mehrere Aktions-Gutscheine kaufen?</summary><p>Pro Person gibt es einen Aktions-Gutschein, damit möglichst viele etwas davon haben. Einen Wertgutschein mit eigenem Betrag kannst du jederzeit dazu kaufen.</p></details>
+        <details><summary>Was bekommt man für {{abWert}}?</summary><p>Das hängt vom Motiv, von der Größe und von der Stelle ab. Das Motiv sucht der Beschenkte mit unseren Tätowierern aus und erfährt dabei vorher den Preis. Der Gutschein ist in Teilen einlösbar: Was übrig bleibt, bleibt auf dem Gutschein. Er gilt auch für Piercings.</p></details>
         <details><summary>Muss ich das Motiv schon kennen?</summary><p>Nein. Das klärt der Beschenkte mit unseren Tätowierern.</p></details>
         <details><summary>Wie kann ich bezahlen?</summary><p>Per Karte, Apple Pay oder Google Pay. Ratenkauf gibt es für Gutscheine nicht.</p></details>
         <details><summary>Wo löse ich den Gutschein ein?</summary><p>Bei {{name}}, {{strasse}} in {{stadt}}. Beim Termin einfach den Code oder QR-Code zeigen.</p></details>
@@ -478,6 +514,7 @@ textarea{min-height:76px;resize:vertical}
     <div class="p-fuss">
       <p class="hinw" id="f-hinweis" role="status"></p>
       <p class="err" id="f-fehler" role="alert"></p>
+      <p class="bonus-info" id="f-bonus" hidden></p>
       <button type="button" class="err-knopf" id="f-err-knopf" hidden>Eigenen Betrag wählen</button>
       <div class="summe" id="f-summe" hidden></div>
       <div class="nav"><button type="button" class="back" id="f-zurueck" aria-label="Zurück">←</button><button type="button" class="btn full" id="f-weiter">Weiter →</button></div>
@@ -495,7 +532,6 @@ textarea{min-height:76px;resize:vertical}
   var ZAHL = function (c) { return (c / 100).toLocaleString("de-DE", { minimumFractionDigits: c % 100 ? 2 : 0, maximumFractionDigits: 2 }); };
   var EURO = function (c) { return ZAHL(c) + NB + "€"; };
   var esc = function (t) { return String(t == null ? "" : t).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
-  var ZAHLWORT = ["", "Ein", "Zwei", "Drei", "Vier", "Fünf", "Sechs", "Sieben"];
   // Merkzettel im Tab (sessionStorage): offene Kasse und Eingaben, damit „Zurück“ aus der Kasse den Gutschein sofort freigibt
   var KASSE = "gs-kasse-" + slug, DATEN = "gs-daten-" + slug;
   function merke(k, v) { try { if (v == null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
@@ -546,6 +582,7 @@ textarea{min-height:76px;resize:vertical}
         ladeFehler = true;
         // Ohne echte Zahlen keine Stückzahl behaupten
         if (!D) { $("hero-klein").textContent = ""; $("top-pille").hidden = true; }
+        html.classList.add("zahlen");
         meldung(err && err.deutsch ? err.message : "Die Gutscheine konnten nicht geladen werden. Bitte versuch es noch einmal.", 0, { text: "Neu laden", tun: function () { meldung(""); laden(); } });
         return null;
       });
@@ -572,31 +609,34 @@ textarea{min-height:76px;resize:vertical}
   }
   function zeichnen() {
     var sh = D.shop, zu = !sh.offen || !D.studio.aktiv, aus = istAus(sh);
-    html.classList.toggle("aus", aus); html.classList.add("geladen");
+    html.classList.toggle("aus", aus); html.classList.add("geladen", "zahlen");
     var frei = '<button type="button" class="zeile frei" data-wahl="frei"' + (zu ? " disabled" : "") + '><span class="wert">Eigener Betrag</span><span class="preis">Wertgutschein, ' + ZAHL(sh.frei.minCent) + "–" + EURO(sh.frei.maxCent) + '</span><span class="pfeil" aria-hidden="true">→</span></button>';
     var karten = (sh.aktionOffen ? sh.aktionen : []).map(function (a) {
       var w = weg(a, sh);
       return '<button type="button" class="zeile" data-wahl="' + a.id + '"' + (w || zu ? " disabled" : "") + ">" +
         '<span class="wert g">' + EURO(a.wertCent) + '</span><span class="preis">du zahlst <b>' + EURO(a.preisCent) + "</b></span>" +
-        '<span class="chip">' + EURO(a.wertCent - a.preisCent) + " geschenkt</span>" + '<span class="rest">' + stueck(a, sh) + "</span>" +
+        '<span class="chip">' + EURO(a.wertCent - a.preisCent) + " geschenkt</span>" + '<span class="waehlen" aria-hidden="true">Wählen →</span><span class="rest">' + stueck(a, sh) + "</span>" +
         (reserviert(a, sh) ? '<span class="hinweis">' + HINWEIS + "</span>" : "") + "</button>";
     }).join("");
     $("bogen").innerHTML = aus ? frei + karten : karten + frei;
     if (aus) $("danach-sub").textContent = (!sh.aktionOffen ? "Die Weihnachts-Aktion ist vorbei. " : "Alle Aktions-Gutscheine sind verkauft. ") + "Wertgutscheine von " + ZAHL(sh.frei.minCent) + "–" + EURO(sh.frei.maxCent) + " gibt es weiter, sofort als PDF per E-Mail.";
     cdEnde = !aus && sh.aktionBis ? new Date(sh.aktionBis).getTime() : null; cd();
     // Überschrift, Unterzeile und „schon ab …“ nur aus dem, was es noch gibt
+    // (gleiche Regeln wie die Seiten-Funktion auf dem Server, netlify/functions/_lib/gutschein-seite.mjs)
     var best = aus ? null : heroAngebot(sh);
     if (best) { $("h-wert").textContent = EURO(best.wertCent) + " Gutschein"; $("h-preis").textContent = "für " + EURO(best.preisCent); }
     var da = sh.aktionen.filter(function (a) { return !a.ausverkauft; }), ab = da.slice().sort(function (x, y) { return x.preisCent - y.preisCent; })[0];
     if (ab) {
-      var abText = "schon ab " + EURO(ab.preisCent) + " (Wert" + NB + EURO(ab.wertCent) + ").";
-      $("hero-lead").innerHTML = da.length > 1 ? esc(ZAHLWORT[da.length] + " Beträge unter Wert, ") + '<span class="nb">' + esc(abText) + "</span>" : esc("Nur noch dieser Betrag unter Wert, solange die Stückzahl reicht.");
-      $("liste-ab").textContent = "S" + abText.slice(1);
+      var abText = "Schon ab " + EURO(ab.preisCent) + " (Wert" + NB + EURO(ab.wertCent) + ").";
+      $("hero-lead").innerHTML = esc("Für Tattoo oder Piercing in " + SEITE.stadt + ". ") + (da.length > 1 ? '<span class="nb">' + esc(abText) + "</span>" : esc("Nur noch dieser Gutschein zum Weihnachtspreis."));
+      $("liste-ab").textContent = abText;
     }
     var rest = sh.aktionen.reduce(function (s, a) { return s + a.verfuegbar; }, 0), alle = sh.aktionen.reduce(function (s, a) { return s + a.stueck; }, 0);
-    // Eine Quelle für die Stückzahl: Zeile unter dem Knopf und Kopf-Pille zeigen dieselbe Zahl
+    // Unter dem Knopf die Stückzahl genau des Angebots aus der Überschrift („Nur 6 Stück zu diesem Preis“, „Noch 4 von 6 …“),
+    // die Kopf-Pille zeigt alle zusammen („Nur 21 Stück“)
+    var bestRest = best ? (eigene(best) ? best.stueck : best.verfuegbar) : 0;
     $("hero-klein").textContent = zu ? (sh.grund || "Online-Kauf gerade nicht möglich.") : !sh.aktionOffen ? "Die Weihnachts-Aktion ist vorbei." : aus ? "Alle Aktions-Gutscheine sind verkauft." :
-      rest <= 0 ? "Gerade sind alle Aktions-Gutscheine reserviert." : rest >= alle ? "Zusammen nur " + alle + NB + "Stück" : "Noch " + rest + NB + "von " + alle + NB + "Stück";
+      rest <= 0 || !best || bestRest <= 0 ? "Gerade sind alle Aktions-Gutscheine reserviert." : bestRest >= best.stueck ? "Nur " + best.stueck + NB + "Stück zu diesem Preis" : "Noch " + bestRest + NB + "von " + best.stueck + NB + "zu diesem Preis";
     $("top-stueck").textContent = rest <= 0 ? "Gerade alle reserviert" : rest >= alle ? "Nur " + alle + NB + "Stück" : "Noch " + rest + NB + "von " + alle;
     $("top-pille").hidden = false;
     document.querySelectorAll("#hero-kaufen,[data-kaufen]").forEach(function (b) { b.disabled = zu; });
@@ -656,7 +696,16 @@ textarea{min-height:76px;resize:vertical}
     $("wahl").innerHTML = aus ? frei : kaufbar.map(opt).join("") + frei + res.map(opt).join("") + wegZeile;
     if (alt) $("f-betrag").value = alt;
   }
-  function markieren() { [].forEach.call($("wahl").querySelectorAll("label.opt"), function (l) { l.classList.toggle("an", l.querySelector("input").checked); }); }
+  function markieren() { [].forEach.call($("wahl").querySelectorAll("label.opt"), function (l) { l.classList.toggle("an", l.querySelector("input").checked); }); bonusZeile(); }
+  // Die wichtigste Bedingung, solange ein Aktions-Gutschein gewählt ist (Schritt 1 und 2): voller Wert nur bis 31.03.2027
+  var DATUM = function (iso) { return new Date(iso).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "Europe/Berlin" }); };
+  function bonusZeile() {
+    var b = $("f-bonus"), an = D && schritt !== 3 && auswahl && auswahl !== "frei" && D.shop.aktionOffen;
+    b.hidden = !an;
+    if (an) b.textContent = "Voller Wert bis " + DATUM(D.shop.bonusBis) + ", danach zählt der bezahlte Betrag bis Ende " + new Date(D.shop.gueltigBis).getFullYear() + ".";
+  }
+  // Bezahl-Knopf: unter 375 px kürzer („Zur Zahlung →“), damit er einzeilig bleibt
+  function zahlText() { return innerWidth < 375 ? "Zur Zahlung →" : "Weiter zur Zahlung →"; }
   // Eigener Betrag: Feld fokussieren und Feld + Vorschläge über den Fuß mit „Weiter“ holen
   function freiZeigen() {
     setTimeout(function () { var b = $("f-betrag"); if (!b) return; b.focus({ preventScroll: true }); var f = b.closest(".frei-feld"); (f || b).scrollIntoView({ block: "nearest" }); }, 60);
@@ -672,6 +721,13 @@ textarea{min-height:76px;resize:vertical}
     if (v === "frei") freiZeigen();
     // Aktions-Gutschein angetippt: gleich weiter zu Name und E-Mail (ein Tipp weniger)
     else setTimeout(function () { if (schritt === 1 && auswahl === v && !funnel.hidden) { ev("funnel-schritt-2"); zeige(2); } }, 250);
+  });
+  // Tipp auf die schon gewählte Aktions-Karte (z. B. der 500er, vorgewählt über den Hero-Knopf) löst kein change aus → hier weiter
+  $("wahl").addEventListener("click", function (e) {
+    var i = e.target;
+    if (i.name !== "wahl" || i.value === "frei" || i.disabled) return;
+    var v = i.value;
+    setTimeout(function () { if (schritt === 1 && auswahl === v && i.checked && !funnel.hidden) { ev("funnel-schritt-2"); zeige(2); } }, 250);
   });
   $("wahl").addEventListener("click", function (e) { var c = e.target.closest("[data-betrag]"); if (c) { e.preventDefault(); $("f-betrag").value = c.dataset.betrag; auswahl = "frei"; form.querySelector("input[value=frei]").checked = true; markieren(); $("f-fehler").textContent = ""; } });
   $("f-zweites").addEventListener("click", waehleFrei);
@@ -696,9 +752,9 @@ textarea{min-height:76px;resize:vertical}
     $("f-schritt").textContent = n === 3 ? "Fertig" : "Schritt " + n + " von 2";
     $("f-bar").style.width = n === 1 ? "50%" : "100%";
     $("f-zurueck").hidden = n !== 2;
-    $("f-weiter").textContent = n === 2 ? "Weiter zur Zahlung →" : n === 3 ? "Schließen" : "Weiter →";
+    $("f-weiter").textContent = n === 2 ? zahlText() : n === 3 ? "Schließen" : "Weiter →";
     $("f-legal").hidden = n !== 2;
-    $("f-fehler").textContent = ""; $("f-hinweis").textContent = ""; $("f-err-knopf").hidden = true;
+    $("f-fehler").textContent = ""; $("f-hinweis").textContent = ""; $("f-err-knopf").hidden = true; bonusZeile();
     var g = D && n === 2 && gewaehlt();
     $("f-summe").hidden = !g;
     if (g) $("f-summe").innerHTML = "<span>" + esc(g.titel) + "</span><b>du zahlst " + EURO(g.preisCent) + "</b>";
@@ -734,7 +790,7 @@ textarea{min-height:76px;resize:vertical}
     if (schritt === 1) { ev("funnel-schritt-2"); return zeige(2); }
     var btn = $("f-weiter"), g = gewaehlt();
     btn.disabled = true; btn.textContent = "Einen Moment …"; $("f-fehler").textContent = "";
-    var wieder = function () { btn.disabled = false; btn.textContent = "Weiter zur Zahlung →"; };
+    var wieder = function () { btn.disabled = false; btn.textContent = zahlText(); };
     fetch("/api/gutschein-shop", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({
       s: slug, auswahl: auswahl, betrag: g.frei ? String(g.preisCent / 100) : undefined, kunde: $("f-name").value.trim(), email: $("f-email").value.trim(),
       empfaenger: $("f-empf").value.trim(), nachricht: $("f-gruss").value.trim(), inhaltOk: true,
@@ -778,6 +834,7 @@ textarea{min-height:76px;resize:vertical}
   }
   if (window.visualViewport) { visualViewport.addEventListener("resize", vv); visualViewport.addEventListener("scroll", vv); }
   addEventListener("resize", vv);
+  addEventListener("resize", function () { var b = $("f-weiter"); if (schritt === 2 && !b.disabled) b.textContent = zahlText(); });
   form.addEventListener("focusin", function () { setTimeout(vv, 60); setTimeout(vv, 350); });
 
   // Countdown bis Aktionsende (Ende aus der API; vorher das feste Ende aus der Seite) und Schneeflocken um das Geschenk.
@@ -811,7 +868,7 @@ textarea{min-height:76px;resize:vertical}
   }
   window.addEventListener("pageshow", function (e) {
     if (!e.persisted) return;
-    var b = $("f-weiter"); b.disabled = false; if (schritt === 2) b.textContent = "Weiter zur Zahlung →";
+    var b = $("f-weiter"); b.disabled = false; if (schritt === 2) b.textContent = zahlText();
     var k = lies(KASSE); if (k && k.id) zurueckAusKasse(k.id, false); else laden();
   });
 

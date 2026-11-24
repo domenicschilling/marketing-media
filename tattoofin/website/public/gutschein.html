@@ -19,6 +19,7 @@
         <div class="gs-code" id="gs-code"></div>
         <p class="gs-daten" id="gs-daten"></p>
         <p class="gs-daten" id="gs-ort"></p>
+        <p class="gs-daten hidden" id="gs-bed"><a id="gs-bed-link" target="_blank" rel="noopener">Gutscheinbedingungen</a></p>
         <div id="gs-status"></div>
         <div class="gs-qr hidden" id="gs-qr-box" style="margin-top:14px;display:flex;align-items:center;gap:12px">
           <div id="gs-qr" style="background:#fff;padding:6px;border-radius:8px;line-height:0" aria-hidden="true"></div>
@@ -45,14 +46,15 @@
     if (g.empfaenger) { $("gs-fuer").textContent = "für " + g.empfaenger; $("gs-fuer").classList.remove("hidden"); }
     $("gs-betrag").textContent = TF.euro(g.wertCent || g.betragCent, true);
     // Aktions-Gutschein (Shop): Diese Ansicht öffnet oft der Beschenkte (QR-Code auf dem PDF) → wie das PDF ohne Aktions-Nummer
-    // und ohne „bezahlt“ (24.11.2026)
+    // und ohne den bezahlten Betrag, solange der volle Wert gilt (24.11.2026); danach steht hier, was noch einlösbar ist
     $("gs-art").textContent = (g.aktion ? "Weihnachts-Gutschein" : "Wertgutschein") + " · für alle Leistungen bei " + s.firma;
     if (g.bonusCent) $("gs-bonus").textContent = g.bonusAktiv
-      ? "Bis " + TF.datum(g.bonusBis) + " voller Wert " + TF.euro(g.wertCent, true) + ". Ab " + TF.datum(new Date(new Date(g.bonusBis).getTime() + 3 * 3600e3).toISOString()) + " noch " + TF.euro(g.bezahltCent, true) + " einlösbar, bis " + TF.datum(g.gueltigBis) + "."
+      ? "Voller Wert " + TF.euro(g.wertCent, true) + " bis " + TF.datum(g.bonusBis) + ". Danach gilt der bezahlte Betrag bis " + TF.datum(g.gueltigBis) + "."
       : "Seit " + TF.datum(new Date(new Date(g.bonusBis).getTime() + 3 * 3600e3).toISOString()) + " noch " + TF.euro(g.bezahltCent, true) + " einlösbar, bis " + TF.datum(g.gueltigBis) + ".";
     if (g.nachricht) { $("gs-nachricht").textContent = "„" + g.nachricht + "“"; $("gs-nachricht").classList.remove("hidden"); }
     $("gs-code").textContent = g.code;
     $("gs-daten").textContent = "Ausgestellt am " + TF.datum(g.ausgestelltAm) + " · Gültig bis " + TF.datum(g.gueltigBis);
+    if (g.bedingungen) { $("gs-bed-link").href = g.bedingungen; $("gs-bed").classList.remove("hidden"); }
     $("gs-ort").textContent = "Einlösbar bei " + [s.firma, s.strasse, [s.plz, s.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ");
     // Teil-Einlösung: Restwert anzeigen
     if (g.status === "gueltig" && g.restCent != null && g.restCent < (g.wertCent || g.betragCent)) $("gs-bonus").textContent = "Noch einlösbar: " + TF.euro(g.restCent, true) + (g.bonusCent && g.bonusAktiv ? " (voller Wert bis " + TF.datum(g.bonusBis) + ")" : "") + ".";

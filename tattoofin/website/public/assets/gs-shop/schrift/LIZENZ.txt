@@ -1,1 +1,2 @@
 Oswald und Inter: SIL Open Font License 1.1 (Google Fonts), lokal ausgeliefert. Gilt für alle Städte des Gutschein-Shops.
+oswald-600/700.ttf, inter-400.ttf: feste Schnitte (aus den variablen woff2 mit fontTools varLib.instancer, 24.11.2026) für das Gutschein-PDF (pdf-lib + fontkit).

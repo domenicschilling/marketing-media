@@ -36,15 +36,28 @@ const get = (u) => fetch(BASE + u).then((r) => r.json());
 // Fachliche Ablehnungen kommen mit HTTP 200 und { abgelehnt, status } (kein roter Netzwerkfehler im Browser) → hier wie bisher als Status prüfen
 const post = (b) => fetch(BASE + "/api/gutschein-shop", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(b) }).then(async (r) => { const d = await r.json(); return { status: r.status, ...d, http: r.status }; });
 const mockState = () => fetch(`http://localhost:${MOCK_PORT}/mock/state`).then((r) => r.json());
+// Seite roh vom Server (ohne Skript) und ein Meta-Tag daraus
+const seiteHole = async (u) => { const r = await fetch(BASE + u); return { status: r.status, html: await r.text(), kopf: Object.fromEntries(r.headers) }; };
+const metaVon = (html, k) => (html.match(new RegExp(`<meta (?:property|name)="${k.replace(/[.:]/g, (c) => "\\" + c)}" content="([^"]*)"`)) || [])[1];
 const bezahlen = (url) => fetch(url, { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: "pm=card", redirect: "manual" });
 const mailsAn = (to) => fs.readdirSync(dataDir).filter((f) => f.startsWith("mail%2F")).map((f) => JSON.parse(fs.readFileSync(path.join(dataDir, f)))).filter((m) => [].concat(m.to).includes(to));
 const kauf = (auswahl, email, extra = {}) => post({ s: "tattoo-fashion-munich", auswahl, kunde: "Kim Käufer", email, inhaltOk: true, ...extra });
 async function bisBezahlt(zid) { for (let i = 0; i < 40; i++) { const z = await getZahlung("st_tfm_test", zid); if (z?.status === "bezahlt" && z.gutschein?.gesendetAm) return z; await wait(150); } return getZahlung("st_tfm_test", zid); }
-// Text aus dem PDF (pdf-lib: Flate-Streams, Text als <hex> Tj in WinAnsi)
+// Text aus dem PDF. Standardschrift (pdf-lib: Flate-Streams, Text als <hex> Tj in WinAnsi) direkt aus dem PDF; eingebettete Schriften
+// (Oswald/Inter im Shop-PDF, Text als Glyphen-Nummern) über die mitgeschriebenen drawText-Aufrufe (pdfMitText).
+const gezeichnet = [];
+{
+  const { PDFPage } = await import("pdf-lib");
+  const orig = PDFPage.prototype.drawText;
+  PDFPage.prototype.drawText = function (t, o) { gezeichnet.push(String(t)); return orig.call(this, t, o); };
+}
+async function pdfMitText(fn) { gezeichnet.length = 0; const buf = Buffer.from(await fn()); return { buf, text: (gezeichnet.join(" ") + " " + pdfText(buf)).replace(/\u00a0/g, " ") }; }
 function pdfText(buf) {
   const s = buf.toString("latin1"), out = [];
   for (const m of s.matchAll(/stream\r?\n([\s\S]*?)\r?\nendstream/g)) {
     let roh; try { roh = zlib.inflateSync(Buffer.from(m[1], "latin1")).toString("latin1"); } catch { continue; }
+    // Nur Seiteninhalte (Text-Operatoren, lesbar); Schrift-Dateien (binär) würden die Suche unten sehr langsam machen
+    if (!/\bBT\b/.test(roh) || /[\x00-\x08\x0e-\x1f]/.test(roh)) continue;
     // Tj: einfacher Text; TJ: Text mit Abstand nach dem €-Zeichen (gutscheinPdf) → Teile ohne Trenner zusammensetzen
     for (const t of roh.matchAll(/<([0-9A-Fa-f]+)>\s*Tj|\[((?:\s*(?:<[0-9A-Fa-f]*>|-?[\d.]+))*)\s*\]\s*TJ/g))
       out.push(t[1] ? Buffer.from(t[1], "hex").toString("latin1") : [...t[2].matchAll(/<([0-9A-Fa-f]*)>/g)].map((h) => Buffer.from(h[1], "hex").toString("latin1")).join(""));
@@ -106,21 +119,29 @@ const m = mailsAn("kim@example.com").find((x) => /Dein Gutschein von Tattoo Fash
 check(m && (m.anhaenge || []).some((a) => a.endsWith(".pdf")), "Mail an Käufer: „über 500,00 €“ mit PDF", mailsAn("kim@example.com").map((x) => x.subject));
 check(m && /Bis 31\.03\.2027 löst du den vollen Wert von 500 € ein\. Danach gilt der bezahlte Betrag von 375 €, einlösbar bis 31\.12\.2029/.test(m.html) && /Widerrufsbelehrung/.test(m.html) && /Gutscheinbedingungen/.test(m.html) && /Muster-Widerrufsformular/.test(m.html), "Mail: Bonus-Satz, Gutscheinbedingungen, Widerrufsbelehrung + Formular");
 check(mailsAn("tfm@example.com").some((x) => /Gutschein verkauft: Wert 500,00 €, bezahlt 375,00 €/.test(x.subject)), "Studio-Mail: „Gutschein verkauft: Wert 500 €, bezahlt 375 €“");
-const pdf = Buffer.from(await gs.gutscheinPdf(await (await import("../netlify/functions/_lib/store.mjs")).getStudio("st_tfm_test"), z));
+const { buf: pdf, text: pt } = await pdfMitText(async () => gs.gutscheinPdf(await (await import("../netlify/functions/_lib/store.mjs")).getStudio("st_tfm_test"), z));
 fs.writeFileSync(path.join(shots, "gutschein-nr4.pdf"), pdf);
-const pt = pdfText(pdf);
-check(/500 €/.test(pt) && /Weihnachts-Gutschein für alle Leistungen/.test(pt) && /Bis 31\.03\.2027 voller Wert 500 €\. Ab 01\.04\.2027 noch 375 € einlösbar, bis 31\.12\.2029\./.test(pt) && /für Lena/.test(pt) && !/Aktions-Gutschein|Nr\. 4|bezahlt|Ausgestellt/.test(pt),
-  "PDF (Geschenk für Lena): „Weihnachts-Gutschein“, 500 €, „Bis 31.03.2027 voller Wert 500 €. Ab 01.04.2027 noch 375 € einlösbar, bis 31.12.2029.“, keine Aktions-Nummer, kein „bezahlt“, keine doppelte Fußzeile", pt.slice(0, 500));
+// 24.11.2026 (Runde 3): Der Beschenkte sieht nicht, was das Geschenk gekostet hat (kein 375 €), Schriften wie auf der Seite (Oswald/Inter)
+check(/500 €/.test(pt) && /Weihnachts-Gutschein für alle Leistungen/.test(pt) && /VOLLER WERT 500 € BIS 31\.03\.2027/.test(pt) && /Danach gilt der bezahlte Betrag bis 31\.12\.2029\./.test(pt) && /Bedingungen über den QR-Code/.test(pt) && /für Lena/.test(pt) && !/375|Aktions-Gutschein|Nr\. 4|Ausgestellt/.test(pt),
+  "PDF (Geschenk für Lena): „Weihnachts-Gutschein“, 500 €, „Voller Wert 500 € bis 31.03.2027“ / „Danach gilt der bezahlte Betrag bis 31.12.2029.“ (ohne 375 €), keine Aktions-Nummer, keine doppelte Fußzeile", pt.slice(0, 600));
+{
+  // Schriften im PDF (pdf-lib legt sie in komprimierte Objekt-Streams, darum über pdf-lib lesen)
+  const { PDFDocument, PDFName, PDFDict } = await import("pdf-lib");
+  const doc = await PDFDocument.load(pdf), namen = [];
+  for (const [, o] of doc.context.enumerateIndirectObjects()) if (o instanceof PDFDict && o.get(PDFName.of("Type")) === PDFName.of("Font") && o.get(PDFName.of("Subtype")) === PDFName.of("Type0")) namen.push(String(o.get(PDFName.of("BaseFont"))));
+  const alle = []; for (const [, o] of doc.context.enumerateIndirectObjects()) if (o instanceof PDFDict && o.get(PDFName.of("Type")) === PDFName.of("Font")) alle.push(String(o.get(PDFName.of("BaseFont"))));
+  check(namen.length === 3 && namen.filter((n) => /Oswald/.test(n)).length === 2 && namen.some((n) => /Inter/.test(n)) && !alle.some((n) => /Helvetica|Courier/.test(n)), "PDF mit eingebetteten Schriften der Seite (Oswald 600/700, Inter), keine Helvetica/Courier", alle);
+}
 {
   // Geschenkkarten-Look: Hintergrund (Satinband, Schleife, Logo) wird geladen; fehlt er, zeichnet das PDF dieselben Lagen selbst
   const echt = globalThis.fetch; let grundGeholt = false;
   globalThis.fetch = async (u, o) => { if (/pdf-grund\.jpg/.test(String(u))) { grundGeholt = true; return new Response("weg", { status: 404 }); } return echt(u, o); };
-  let ersatz; try { ersatz = Buffer.from(await gs.gutscheinPdf(await (await import("../netlify/functions/_lib/store.mjs")).getStudio("st_tfm_test"), z)); } finally { globalThis.fetch = echt; }
-  const pe = pdfText(ersatz);
+  let ersatz, pe; try { ({ buf: ersatz, text: pe } = await pdfMitText(async () => gs.gutscheinPdf(await (await import("../netlify/functions/_lib/store.mjs")).getStudio("st_tfm_test"), z))); } finally { globalThis.fetch = echt; }
   check(grundGeholt && /500 €/.test(pe) && /Weihnachts-Gutschein/.test(pe) && ersatz.length > 3000 && pdf.toString("latin1").includes("/DCTDecode") && !ersatz.toString("latin1").includes("/DCTDecode"), "PDF mit Hintergrund-Bild (Karte mit Satinband und Schleife); ohne Bild gezeichneter Ersatz mit allen Texten", { mit: pdf.length, ohne: ersatz.length });
 }
 const ga = await get("/api/gutschein?t=" + z.gutschein.token);
 check(ga.gutschein.wertCent === 50000 && ga.gutschein.bezahltCent === 37500 && ga.gutschein.bonusAktiv && ga.gutschein.aktuellerWertCent === 50000, "Online-Ansicht: Wert 500 €, bezahlt 375 €, Bonus aktiv");
+check(ga.gutschein.bedingungen === "/gutschein-kaufen/tattoo-fashion-munich-bedingungen", "Online-Ansicht (hinter dem QR-Code des PDFs): Link zu den Gutscheinbedingungen", ga.gutschein.bedingungen);
 check(gs.aktuellerWertCent(z, new Date("2027-03-31T20:00:00Z")) === 50000 && gs.aktuellerWertCent(z, new Date("2027-04-01T08:00:00Z")) === 37500, "Bonus-Frist: am 31.03.2027 500 €, ab 01.04.2027 375 €");
 const fs1 = fuerStudio(z);
 check(fs1.gutschein.wertCent === 50000 && fs1.gutschein.bezahltCent === 37500 && !("token" in fs1.gutschein) && !("reservierung" in fs1.gutschein), "Studio-Ansicht (App/Portal): Wert UND bezahlt, ohne Token/Reservierung");
@@ -264,10 +285,9 @@ console.log("Landshut: eigene Stückzahl, eigener Look");
   const ml = mailsAn("lea@example.com").find((x) => /Dein Gutschein von Tattoo Fashion Landshut über 2\.000,00 €/.test(x.subject));
   check(ml && /\/assets\/gs-shop\/tfla\/logo\.png/.test(ml.html) && /neelsen\.andy@gmail\.com/.test(ml.html) && /Neustadt 502/.test(ml.html) && /Widerrufsbelehrung/.test(ml.html) && !/tattoofashion\.munich/.test(ml.html), "Mail Landshut: Logo Landshut, Verkäufer/Fragen Landshut, Widerrufsbelehrung, nichts aus München", mailsAn("lea@example.com").map((x) => x.subject));
   check(mailsAn("tfla@example.com").some((x) => /Gutschein verkauft: Wert 2\.000,00 €, bezahlt 1\.500,00 €/.test(x.subject)), "Studio-Mail an Landshut");
-  const pdfL = Buffer.from(await gs.gutscheinPdf(await (await import("../netlify/functions/_lib/store.mjs")).getStudio("st_tfla_test"), zl));
+  const { buf: pdfL, text: ptL } = await pdfMitText(async () => gs.gutscheinPdf(await (await import("../netlify/functions/_lib/store.mjs")).getStudio("st_tfla_test"), zl));
   fs.writeFileSync(path.join(shots, "gutschein-landshut-nr1.pdf"), pdfL);
-  const ptL = pdfText(pdfL);
-  check(/2\.000 €/.test(ptL) && /Weihnachts-Gutschein/.test(ptL) && /Landshut/.test(ptL) && /noch 1\.500 € einlösbar/.test(ptL) && !/München|Munich|Aktions-Gutschein/.test(ptL), "PDF Landshut: Wert 2.000 €, „Weihnachts-Gutschein“, Landshut, kein München", ptL.slice(0, 300));
+  check(/2\.000 €/.test(ptL) && /Weihnachts-Gutschein/.test(ptL) && /Landshut/.test(ptL) && /VOLLER WERT 2\.000 € BIS 31\.03\.2027/.test(ptL) && !/1\.500/.test(ptL) && !/München|Munich|Aktions-Gutschein/.test(ptL), "PDF Landshut: Wert 2.000 €, „Weihnachts-Gutschein“, Landshut, kein München", ptL.slice(0, 300));
   const kimLa = await kaufLa("nr4", "kim@example.com");
   check(kimLa.status === 200, "1 Aktions-Gutschein pro Person gilt je Studio (Käufer aus München darf in Landshut)", kimLa);
   await post({ abbruch: kimLa.zahlung });
@@ -296,8 +316,9 @@ console.log("Seiten je Stadt (statisch, og-Tags, Rechtliches nur im Fuß)");
     check(mass.w === 1200 && mass.h === 630 && jpg.length < 300000 && crypto.createHash("sha1").update(jpg).digest("hex").slice(0, 8) === new URL(img || "https://x/").searchParams.get("v"), `${t.stadt}: Vorschaubild ${t.k}/og-weihnachten.jpg 1200×630, < 300 KB, Prüfsumme in der Adresse aktuell`, { mass, kb: Math.round(jpg.length / 1024) });
     const ogT = meta(x.html, "og:title"), ogD = meta(x.html, "og:description") || "";
     // Fette Zeile in WhatsApp: Studio + Angebot; Beschreibung mit richtiger Stückzahl (21 = alle zusammen, nicht 21 vom 500er), kurz genug für 2 Zeilen
-    check(ogT === `Tattoo Fashion ${t.stadt}: Weihnachts-Gutscheine unter Wert` && ogD.replace(/\u00a0/g, " ") === "500 € Gutschein für 375 €, auch 300 € für 200 €. Insgesamt nur 21 Stück." && meta(x.html, "description") === ogD && ogD.length <= 80, `${t.stadt}: og:title mit Studio, Beschreibung „… Insgesamt nur 21 Stück.“ (≤ 80 Zeichen)`, { ogT, ogD, l: ogD.length });
-    check(["icon-32.png", "icon-180.png", "icon-192.png", "geschenk-480.webp", "geschenk-960.webp", "geschenk-1400.webp", "geschenk-960.png", "pdf-muster.webp", "pdf-muster.jpg", "pdf-grund.jpg", "og-weihnachten-neutral.jpg", "logo-gold-480.webp", "logo-gold-960.webp", "logo-gold-1400.webp"].every((f) => fs.existsSync(path.join(root, "public/assets/gs-shop", t.k, f)))
+    check(ogT.replace(/\u00a0/g, " ") === `500 € Gutschein für 375 € · Tattoo Fashion ${t.stadt}` && (/<title>([^<]*)/.exec(x.html) || [])[1] === ogT && ogD.replace(/\u00a0/g, " ") === `Für Tattoo oder Piercing in ${t.stadt}. Auch 300 € für 200 €, insgesamt nur 21 Stück.` && meta(x.html, "description") === ogD && ogD.length <= 85 && !/unter Wert|Beträge/.test(x.html.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<!--[\s\S]*?-->/g, "")),
+      `${t.stadt}: Titel/og:title „500 € Gutschein für 375 € · Tattoo Fashion ${t.stadt}“ (Angebot vorn), Beschreibung mit wofür und wo, kein „unter Wert“/„Beträge“`, { ogT, ogD, l: ogD.length });
+    check(["icon-32.png", "icon-180.png", "icon-192.png", "geschenk-480.webp", "geschenk-960.webp", "geschenk-1400.webp", "geschenk-960.png", "pdf-muster.webp", "pdf-muster.jpg", "pdf-grund.jpg", "og-weihnachten-neutral.jpg", "og-gutschein.jpg", "logo-gold-480.webp", "logo-gold-960.webp", "logo-gold-1400.webp"].every((f) => fs.existsSync(path.join(root, "public/assets/gs-shop", t.k, f)))
       && x.html.includes(`apple-touch-icon" href="/assets/gs-shop/${t.k}/icon-180.png"`) && x.html.includes(`/assets/gs-shop/${t.k}/geschenk-1400.webp 1400w`) && !/w-[a-z-]+\.jpg|favicon\.png/.test(x.html), `${t.stadt}: scharfe Bilder (Geschenk 480/960/1400, Logo bis 1.400 px, Symbole 32/180/192, Gutschein-Muster)`);
     check(x.html.includes(`fbq('init','${t.pixel}')`) && !x.html.includes(anders.pixel) && x.html.includes(`/assets/gs-shop/${t.k}/logo-gold-480.webp`) && x.html.includes(t.tel) && x.html.includes(`wa.me/${t.wa}`) && x.html.includes(`instagram.com/${t.ig}/`) && x.html.includes(`Gutschein von Tattoo Fashion ${t.stadt} mit roter Schleife`) && x.html.includes(`<b>${t.g}</b> · ${t.n} Google-Bewertungen`) && !x.html.includes(anders.adr), `${t.stadt}: eigenes Pixel, Logo, Telefon, WhatsApp, Instagram, Google-Bewertung, keine Angaben der anderen Stadt`);
     const main = x.html.slice(x.html.indexOf("<main>"), x.html.indexOf("</main>"));
@@ -327,7 +348,7 @@ await p.waitForSelector("button.zeile[data-wahl=nr4] .rest:has-text('von')");
 const heroOk = await p.evaluate(() => { const h = document.querySelector(".hero").getBoundingClientRect(), k = document.getElementById("hero-kaufen").getBoundingClientRect(), l = document.querySelector(".logo-box").getBoundingClientRect(), t = document.querySelector(".hero .text").getBoundingClientRect(); return Math.abs(h.height - innerHeight) <= 2 && k.bottom <= innerHeight && l.height >= 60 && l.bottom <= t.top + 1; });
 check(heroOk, "Hero = erster Bildschirm, Geschenk mit Logo über dem Text, Knopf „Gutschein aussuchen“ sichtbar");
 const heroText = await p.evaluate(() => [...document.querySelectorAll(".hero h1, .hero p.lead, .hero .cd-titel")].filter((x) => x.offsetParent).map((x) => x.textContent.replace(/ /g, " ")).join(" | "));
-check(/500 € Gutschein für 375 €/.test(heroText) && /schon ab 200 € \(Wert 300 €\)/.test(heroText) && /Aktion endet am 24\.12\. um 16 Uhr/.test(heroText) && !/bis zu/i.test(heroText), "Hero: Angebot groß (500 € für 375 €), „schon ab 200 €“, Aktionsende sichtbar, kein „bis zu“", heroText);
+check(/500 € Gutschein für 375 €/.test(heroText) && /Für Tattoo oder Piercing in München\. Schon ab 200 € \(Wert 300 €\)/.test(heroText) && /Aktion endet am 24\.12\. um 16 Uhr/.test(heroText) && !/bis zu|Beträge|unter Wert/i.test(heroText), "Hero: Angebot groß (500 € für 375 €), „Für Tattoo oder Piercing in München. Schon ab 200 €“, Aktionsende sichtbar, kein „bis zu“/„unter Wert“", heroText);
 await p.screenshot({ path: path.join(shots, "handy-hero.png") });
 {
   const dApi = await get("/api/gutschein-shop?s=tattoo-fashion-munich");
@@ -337,7 +358,10 @@ await p.screenshot({ path: path.join(shots, "handy-hero.png") });
     "Liste: je Karte Ersparnis („125 € geschenkt“) und Stückzahl („Nur 10 Stück“ solange nichts weg ist, sonst „Noch 5 von 6“)", karten);
   const rest = dApi.shop.aktionen.reduce((s, a) => s + a.verfuegbar, 0);
   const klein = (await p.textContent("#hero-klein")).replace(/ /g, " "), pille = (await p.textContent("#top-stueck")).replace(/ /g, " ");
-  check(karten[0].aus && karten[0].rest === "Ausverkauft" && klein === `Noch ${rest} von 21 Stück` && pille === `Noch ${rest} von 21`, "Nr. 1 ausverkauft (gesperrt); Zeile unter dem Knopf und Kopf-Pille zeigen dieselbe echte Reststückzahl", { klein, pille });
+  const n4 = dApi.shop.aktionen.find((a) => a.id === "nr4");
+  check(karten[0].aus && karten[0].rest === "Ausverkauft" && klein === `Noch ${n4.verfuegbar} von 6 zu diesem Preis` && pille === `Noch ${rest} von 21`, "Nr. 1 ausverkauft (gesperrt); unter dem Knopf die Stückzahl des 500ers aus der Überschrift („Noch 5 von 6 zu diesem Preis“), Kopf-Pille alle zusammen", { klein, pille });
+  const waehlen = await p.$$eval("#bogen button.zeile", (l) => l.map((x) => ({ id: x.dataset.wahl, aus: x.disabled, pfeil: Boolean(x.querySelector(".waehlen,.pfeil") && getComputedStyle(x.querySelector(".waehlen,.pfeil")).display !== "none") })));
+  check(waehlen.every((x) => x.aus ? !x.pfeil : x.pfeil), "Jede kaufbare Karte zeigt „Wählen →“ (bzw. den Pfeil beim eigenen Betrag), verkaufte nicht", waehlen);
   const kopf = await p.evaluate(() => ({ imHero: getComputedStyle(document.getElementById("top-pille")).opacity, punkt: getComputedStyle(document.querySelector(".dot")).animationName, abschnitt: document.querySelector("#gutscheine .eyebrow").textContent, h2: document.querySelector("#gutscheine h2").textContent }));
   check(kopf.imHero === "0" && kopf.punkt === "none" && !/Stück/.test(kopf.abschnitt) && !/21|Aktions-Gutscheine/.test(kopf.h2), "Stückzahl nur einmal je Bildschirm: Kopf-Pille erst nach dem Hero, Abschnitt ohne zweite „Nur 21 Stück“-Pille, roter Punkt pulsiert nicht", kopf);
 }
@@ -492,8 +516,15 @@ for (const [eng, name] of [[chromium, "Chromium"], [webkit, "Safari"]]) {
   const p7 = await c7.newPage(); beobachten(p7);
   await p7.goto(BASE + "/gutschein-kaufen/tattoo-fashion-landshut"); await p7.waitForSelector("html.geladen");
   const v7 = await p7.evaluate(() => ({ h1: document.querySelector(".hero h1").innerText.replace(/\s+/g, " ").replace(/ /g, " "), lead: document.getElementById("hero-lead").textContent.replace(/ /g, " "), ab: document.getElementById("liste-ab").textContent.replace(/ /g, " ") }));
-  check(dl3.shop.aktionen.find((a) => a.id === "nr4").ausverkauft && /300 € GUTSCHEIN FÜR 200 €/i.test(v7.h1) && !/375/.test(v7.h1 + v7.lead) && /^Drei Beträge unter Wert, schon ab 200 € \(Wert 300 €\)/.test(v7.lead) && /^Schon ab 200 €/.test(v7.ab),
-    "500-€-Gutschein ausverkauft: Überschrift wirbt mit dem besten kaufbaren Angebot (300 € für 200 €), „Drei Beträge unter Wert, schon ab 200 €“", v7);
+  check(dl3.shop.aktionen.find((a) => a.id === "nr4").ausverkauft && /300 € GUTSCHEIN FÜR 200 €/i.test(v7.h1) && !/375/.test(v7.h1 + v7.lead) && /^Für Tattoo oder Piercing in Landshut\. Schon ab 200 € \(Wert 300 €\)\.$/.test(v7.lead) && /^Schon ab 200 €/.test(v7.ab),
+    "500-€-Gutschein ausverkauft: Überschrift wirbt mit dem besten kaufbaren Angebot (300 € für 200 €), „Für Tattoo oder Piercing in Landshut. Schon ab 200 €“", v7);
+  // Meldung an Domenic, sobald die letzte Einheit weg ist; Seite und Vorschau stellen sich schon beim Abruf um (vom Server, vor dem Skript)
+  const admin = fs.readdirSync(dataDir).filter((f) => f.startsWith("mail%2F")).map((f) => JSON.parse(fs.readFileSync(path.join(dataDir, f)))).filter((m) => /500er ausverkauft \(Landshut\): Vorschau auf neutral stellen, Anzeige anpassen/.test(m.subject || ""));
+  check(admin.length === 1 && /Anzeige/.test(admin[0].text || admin[0].html || ""), "Letzter 500er verkauft → genau eine Meldung an Domenic: „500er ausverkauft (Landshut): Vorschau auf neutral stellen, Anzeige anpassen“", admin.map((m) => m.subject));
+  const rohL = await seiteHole("/gutschein-kaufen/tattoo-fashion-landshut");
+  const vorSkript = { bild: metaVon(rohL.html, "og:image") || "", titel: metaVon(rohL.html, "og:title"), text: (metaVon(rohL.html, "og:description") || "").replace(/\u00a0/g, " "), t: (/<title>([^<]*)/.exec(rohL.html) || [])[1], wert: ((/id="h-wert"[^>]*>([^<]*)/.exec(rohL.html) || [])[1] || "").replace(/\u00a0/g, " "), stand: /<html lang="de" data-stand="[^"]+" data-fassung="neutral"/.test(rohL.html) };
+  check(/\/tfla\/og-weihnachten-neutral\.jpg\?v=[0-9a-f]{8}$/.test(vorSkript.bild) && vorSkript.titel === "Tattoo-Gutscheine zum Weihnachtspreis · Tattoo Fashion Landshut" && vorSkript.t === vorSkript.titel && !/375|500/.test(vorSkript.titel + vorSkript.text) && vorSkript.wert === "300 € Gutschein" && vorSkript.stand,
+    "Vom Server (vor dem Skript): Vorschau, Titel und Beschreibung ohne Beträge (neutral), Hero schon „300 € Gutschein“", vorSkript);
   await p7.screenshot({ path: path.join(shots, "landshut-500-ausverkauft.png") });
   await p7.click("#hero-kaufen");
   const w7 = await p7.evaluate(() => ({ an: (document.querySelector("#wahl input:checked") || {}).value, weg: ((document.querySelector("#wahl .weg-zeile") || {}).textContent || "").replace(/ /g, " ") }));
@@ -537,8 +568,71 @@ for (const [eng, name] of [[chromium, "Chromium"], [webkit, "Safari"]]) {
   await c9.close();
   process.env.TF_JETZT = "2026-11-23T21:05:00+01:00";
 }
+// Runde 3 (24.11.2026): Kauf-Fenster, Rechtsseiten, Vorschau-Fassungen
+{
+  // Tipp auf den schon vorgewählten 500er (Hero-Knopf) geht weiter zu Schritt 2; Bonus-Zeile nur bei Aktions-Gutscheinen
+  const c10 = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+  const p10 = await c10.newPage(); beobachten(p10);
+  await p10.goto(BASE + "/gutschein-kaufen/tattoo-fashion-munich"); await p10.waitForSelector("html.geladen");
+  await p10.click("#hero-kaufen"); await p10.waitForSelector("#funnel:not([hidden])");
+  const b1 = await p10.evaluate(() => ({ an: (document.querySelector("#wahl input:checked") || {}).value, bonus: document.getElementById("f-bonus").hidden ? "" : document.getElementById("f-bonus").textContent }));
+  await p10.click("#wahl label.opt.an"); await p10.waitForTimeout(700);
+  const b2 = await p10.evaluate(() => ({ schritt: document.getElementById("f-schritt").textContent, bonus: document.getElementById("f-bonus").hidden ? "" : document.getElementById("f-bonus").textContent }));
+  check(b1.an === "nr4" && /Schritt 2 von 2/.test(b2.schritt), "Hero-Knopf: 500er vorgewählt, Tipp auf genau diese Karte geht weiter zu Name und E-Mail", { b1, b2 });
+  check(b1.bonus === "Voller Wert bis 31.03.2027, danach zählt der bezahlte Betrag bis Ende 2029." && b2.bonus === b1.bonus, "Kauf-Fenster: „Voller Wert bis 31.03.2027, danach zählt der bezahlte Betrag bis Ende 2029.“ in Schritt 1 und 2", { b1, b2 });
+  await p10.click("#f-zurueck"); await p10.click("#wahl input[value=frei] ~ .k");
+  const b3 = await p10.evaluate(() => document.getElementById("f-bonus").hidden);
+  check(b3, "Eigener Betrag gewählt: keine Bonus-Zeile");
+  await c10.close();
+  // Bezahl-Knopf einzeilig, Zurück-Knopf rund (320/340/360 px; ab 375 der lange Text)
+  for (const w of [320, 340, 360, 375]) {
+    const c11 = await browser.newContext({ viewport: { width: w, height: 720 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+    const p11 = await c11.newPage(); beobachten(p11);
+    await p11.goto(BASE + "/gutschein-kaufen/tattoo-fashion-landshut"); await p11.waitForSelector("html.geladen");
+    await p11.click("#hero-kaufen"); await p11.waitForSelector("#funnel:not([hidden])");
+    await p11.click("#f-weiter"); await p11.waitForSelector("[data-schritt='2']:not([hidden])");
+    const k = await p11.evaluate(() => { const b = document.getElementById("f-weiter"), z = document.getElementById("f-zurueck").getBoundingClientRect(), r = document.createRange(); r.selectNodeContents(b); return { text: b.textContent, h: b.getBoundingClientRect().height, zeilen: new Set([...r.getClientRects()].map((x) => Math.round(x.top))).size, zw: z.width, zh: z.height, breit: document.documentElement.scrollWidth <= innerWidth }; });
+    check(k.zeilen === 1 && k.h <= 62 && Math.abs(k.zw - k.zh) < 1 && k.breit && (w < 375 ? k.text === "Zur Zahlung →" : k.text === "Weiter zur Zahlung →"), `${w} px: Bezahl-Knopf einzeilig („${w < 375 ? "Zur Zahlung →" : "Weiter zur Zahlung →"}“), Zurück-Knopf rund`, k);
+    await c11.close();
+  }
+  // Rechtsseiten bei 320 px ohne seitliches Schieben (lange Überschrift „Gutscheinbedingungen“ trennt weich)
+  const c12 = await browser.newContext({ viewport: { width: 320, height: 640 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+  const p12 = await c12.newPage(); beobachten(p12);
+  const breitRecht = [];
+  for (const slug of ["tattoo-fashion-munich", "tattoo-fashion-landshut"]) for (const a of ["impressum", "datenschutz", "widerruf", "bedingungen"]) {
+    await p12.goto(BASE + `/gutschein-kaufen/${slug}-${a}`);
+    const r = await p12.evaluate(() => ({ sw: document.documentElement.scrollWidth, h1: document.querySelector("h1").scrollWidth <= document.querySelector("h1").clientWidth + 1 }));
+    if (r.sw > 320 || !r.h1) breitRecht.push(`${slug}-${a}: ${r.sw}`);
+  }
+  check(!breitRecht.length, "Alle 8 Rechtsseiten bei 320 px ohne seitliches Schieben, Überschrift ganz sichtbar", breitRecht);
+  await c12.close();
+}
+{
+  // Vorschau-Fassungen und Hero vom Server (reine Funktion, ohne Speicher)
+  const { seiteAnpassen, fassungFuer } = await import("../netlify/functions/_lib/gutschein-seite.mjs");
+  const { SEITEN } = await import("../netlify/functions/_lib/gutschein-seiten-html.mjs");
+  const roh = SEITEN["tattoo-fashion-munich"], c = shop.SHOPS["tattoo-fashion-munich"];
+  const sh = (mod = {}, offen = true) => ({ offen: true, aktionOffen: offen, aktionen: c.aktionen.map((a) => ({ ...a, verkauft: 0, reserviert: 0, verfuegbar: a.stueck, ausverkauft: false, ...(mod[a.id] || {}) })) });
+  const og = (h) => ({ bild: (metaVon(h, "og:image") || "").replace(/\?v=.*/, "").split("/").pop(), titel: (metaVon(h, "og:title") || "").replace(/ /g, " "), t: ((/<title>([^<]*)/.exec(h) || [])[1] || "").replace(/ /g, " "), wert: ((/id="h-wert"[^>]*>([^<]*)/.exec(h) || [])[1] || "").replace(/ /g, " "), klein: ((/id="hero-klein"[^>]*>([^<]*)/.exec(h) || [])[1] || "").replace(/ /g, " "), aus: /<html[^>]*class="aus"/.test(h) });
+  const v1 = og(seiteAnpassen(roh, { shop: sh(), aktiv: true }));
+  const v2 = og(seiteAnpassen(roh, { shop: sh({ nr4: { verfuegbar: 0, verkauft: 6, ausverkauft: true } }), aktiv: true }));
+  const v3 = og(seiteAnpassen(roh, { shop: sh({ nr5: { verfuegbar: 0, verkauft: 10, ausverkauft: true }, nr4: { verfuegbar: 2, verkauft: 4 } }), aktiv: true }));
+  const v4 = og(seiteAnpassen(roh, { shop: sh({}, false), aktiv: true }));
+  check(v1.bild === "og-weihnachten.jpg" && v1.titel === "500 € Gutschein für 375 € · Tattoo Fashion München" && v1.t === v1.titel && v1.wert === "500 € Gutschein" && v1.klein === "Nur 6 Stück zu diesem Preis", "Server: alles da → Vorschau „500 € für 375 €“, Hero 500er, „Nur 6 Stück zu diesem Preis“", v1);
+  check(v2.bild === "og-weihnachten-neutral.jpg" && /Weihnachtspreis/.test(v2.titel) && v2.wert === "300 € Gutschein" && v2.klein === "Nur 10 Stück zu diesem Preis", "Server: 500er ausverkauft → Vorschau ohne Beträge, Hero „300 € Gutschein“", v2);
+  check(v3.bild === "og-weihnachten-neutral.jpg" && v3.wert === "500 € Gutschein" && v3.klein === "Noch 2 von 6 zu diesem Preis", "Server: günstigster ausverkauft → Vorschau ohne Beträge (sie nannte „300 € für 200 €“), Hero „Noch 2 von 6 zu diesem Preis“", v3);
+  check(v4.bild === "og-gutschein.jpg" && v4.titel === "Tattoo-Gutschein zum Verschenken · Tattoo Fashion München" && v4.aus, "Server: nach dem 24.12., 16 Uhr → Vorschau „Tattoo-Gutschein zum Verschenken“, Seite im Zustand danach", v4);
+  check(seiteAnpassen(roh, { shop: { ...sh(), offen: false }, aktiv: true }) === roh.html && seiteAnpassen(roh, { shop: sh(), aktiv: false }) === roh.html && fassungFuer(sh()) === "angebot", "Server: Shop zu oder Studio kann nicht kassieren → Seite unverändert");
+  const fn = await seiteHole("/gutschein-kaufen/tattoo-fashion-munich");
+  check(/data-stand="/.test(fn.html) && /s-maxage=30/.test(fn.kopf["netlify-cdn-cache-control"] || "") && fn.kopf["x-robots-tag"] === "noindex", "Seiten-Funktion: Stand vom Server, CDN hält die Seite 30 s, noindex", fn.kopf);
+  // Vorschaubilder: jeder Text passt (Kartentext ≥ 24 px Rand, Überschrift ≤ 540 px), alle Städte und Fassungen
+  const { spawnSync } = await import("node:child_process");
+  const pr = spawnSync(process.execPath, [path.join(root, "dev/gutschein-seiten.mjs"), "--og-pruefen"], { encoding: "utf8", env: process.env, timeout: 120000 });
+  let erg = []; try { erg = JSON.parse((/OG-PRUEFUNG (.*)/.exec(pr.stdout) || [])[1]); } catch {}
+  check(erg.length === 6 && erg.every((x) => x.ok && x.spans.slice(0, 3).every((y) => y.b <= x.innen)), "Vorschaubilder (2 Städte × 3 Fassungen): Kartentext passt mit ≥ 24 px Rand, Überschrift ≤ 540 px", erg.filter((x) => !x.ok).concat(pr.stderr ? [pr.stderr.slice(0, 300)] : []));
+}
 // Kleine Handys und quer: Hero passt, Geschenk über/neben dem Text, Knopf ganz sichtbar
-for (const [w, h] of [[320, 460], [375, 548], [375, 560], [320, 568], [390, 664], [430, 932], [844, 340]]) {
+for (const [w, h] of [[320, 460], [375, 548], [375, 560], [320, 568], [390, 664], [360, 780], [390, 844], [412, 839], [430, 932], [844, 340]]) {
   const c2 = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
   const p2 = await c2.newPage(); beobachten(p2);
   await p2.goto(BASE + "/gutschein-kaufen/tattoo-fashion-landshut"); await p2.waitForSelector("button.zeile[data-wahl]");
@@ -571,6 +665,8 @@ process.env.TF_JETZT = "2026-12-24T16:05:00+01:00";
   const vor = await p5.evaluate(() => { const i = document.querySelector("#wahl input:checked"); return i && i.value; });
   check(v.aus && !v.cd && !/375/.test(v.h1) && v.erste === "frei" && v.aktionen === 0 && /vorbei/.test(v.klein) && !/21 Stück/.test(v.pille) && vor === "frei", "Nach dem 24.12., 16 Uhr: kein Countdown, Hero und Liste zeigen den Wertgutschein (vorne, im Kauf vorgewählt), kein Rabatt mehr", { ...v, vor });
   await p5.screenshot({ path: path.join(shots, "nach-aktion.png") });
+  const r5 = await seiteHole("/gutschein-kaufen/tattoo-fashion-munich");
+  check(/\/tfm\/og-gutschein\.jpg\?v=/.test(metaVon(r5.html, "og:image") || "") && /^Tattoo-Gutschein zum Verschenken/.test(metaVon(r5.html, "og:title") || "") && /<html lang="de" data-stand="[^"]+" data-fassung="danach" class="aus"/.test(r5.html), "Nach der Aktion vom Server: Titel und Vorschau „Tattoo-Gutschein zum Verschenken“ (kein „nur bis 24.12.“ mehr)", metaVon(r5.html, "og:title"));
   await c5.close();
 }
 process.env.TF_JETZT = "2026-11-23T21:05:00+01:00";

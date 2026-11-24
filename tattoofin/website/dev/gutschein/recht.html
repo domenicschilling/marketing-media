@@ -19,7 +19,7 @@ main{max-width:720px;margin:0 auto;padding:24px 20px 80px}
 .kopf img{height:48px;width:auto;display:block}
 .kopf a:last-child{white-space:nowrap}
 .kopf a{color:#E8CD92;font-weight:600;text-decoration:none;padding:10px 0}
-h1{font:700 clamp(30px,8vw,40px)/1.05 "Oswald",system-ui,sans-serif;text-transform:uppercase;margin:28px 0 14px;background:linear-gradient(180deg,#F6E7C3 0%,#E8CD92 40%,#C8A35A 75%,#A9843F 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+h1{font:700 clamp(22px,7.5vw,40px)/1.12 "Oswald",system-ui,sans-serif;text-transform:uppercase;margin:28px 0 14px;padding-top:.15em;hyphens:manual;-webkit-hyphens:manual;overflow-wrap:break-word;background:linear-gradient(180deg,#F6E7C3 0%,#E8CD92 40%,#C8A35A 75%,#A9843F 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
 h2{font:700 19px "Oswald",system-ui,sans-serif;text-transform:uppercase;letter-spacing:.02em;margin:28px 0 6px;color:#E8CD92}
 p,li{color:#C9C1B2;margin:10px 0}
 ul,ol{padding-left:20px}
@@ -33,7 +33,7 @@ nav.fuss a[aria-current]{color:#E8CD92}
 <body>
 <main>
 <div class="kopf"><a href="/gutschein-kaufen/{{slug}}" aria-label="Zurück zu den Gutscheinen von {{name}}"><img src="/assets/gs-shop/{{kuerzel}}/logo-gold-480.webp" alt="{{name}}" width="89" height="48"></a><a href="/gutschein-kaufen/{{slug}}">← Zu den Gutscheinen</a></div>
-<h1>{{seitenTitel}}</h1>
+<h1>{{{seitenTitelH1}}}</h1>
 {{{inhalt}}}
 <nav class="fuss" aria-label="Rechtliches">{{{fussLinks}}}</nav>
 </main>
