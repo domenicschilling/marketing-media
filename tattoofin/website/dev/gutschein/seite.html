@@ -520,7 +520,7 @@ textarea{min-height:76px;resize:vertical}
       <button type="button" class="err-knopf" id="f-err-knopf" hidden>Eigenen Betrag wählen</button>
       <div class="summe" id="f-summe" hidden></div>
       <div class="nav"><button type="button" class="back" id="f-zurueck" aria-label="Zurück">←</button><button type="button" class="btn full" id="f-weiter">Weiter →</button></div>
-      <p class="legal" id="f-legal" hidden>Sichere Zahlung per Karte, Apple Pay oder Google Pay · <a href="/gutschein-kaufen/{{slug}}-bedingungen" target="_blank" rel="noopener">Bedingungen</a> · <a href="/gutschein-kaufen/{{slug}}-widerruf" target="_blank" rel="noopener">Widerruf</a></p>
+      <p class="legal" id="f-legal" hidden>Endpreis, keine weiteren Kosten. Sichere Zahlung per Karte, Apple Pay oder Google Pay · <a href="/gutschein-kaufen/{{slug}}-bedingungen" target="_blank" rel="noopener">Bedingungen</a> · <a href="/gutschein-kaufen/{{slug}}-widerruf" target="_blank" rel="noopener">Widerruf</a></p>
     </div>
   </div>
 </div>
@@ -573,6 +573,8 @@ textarea{min-height:76px;resize:vertical}
 
   var D = null, auswahl = null, schritt = 1;
   var params = new URLSearchParams(location.search);
+  // Link der Werbung mit ?g=nr5: dieses Angebot steht oben und ist im Kauf-Fenster vorgewählt, solange es kaufbar ist (wie der Server)
+  var gLink = params.get("g"); if (gLink && /^nr[1-9]$/.test(gLink)) SEITE.heroId = gLink;
   var ladeVersprechen = null, ladeFehler = false;
   // Stückzahlen laden. Netz weg, Zeitüberschreitung oder Fehlerseite statt Daten: immer ein deutscher Satz mit „Neu laden“
   // (nie „Load failed“ / „Failed to fetch“ aus dem Browser)
@@ -630,7 +632,9 @@ textarea{min-height:76px;resize:vertical}
     var da = sh.aktionen.filter(function (a) { return !a.ausverkauft; }), ab = da.slice().sort(function (x, y) { return x.preisCent - y.preisCent; })[0];
     if (ab) {
       var abText = "Schon ab " + EURO(ab.preisCent) + " (Wert" + NB + EURO(ab.wertCent) + ").";
-      $("hero-lead").innerHTML = esc("Für Tattoo oder Piercing in " + SEITE.stadt + ". ") + (da.length > 1 ? '<span class="nb">' + esc(abText) + "</span>" : esc("Nur noch dieser Gutschein zum Weihnachtspreis."));
+      var max = da.slice().sort(function (x, y) { return y.wertCent - x.wertCent; })[0];
+      $("hero-lead").innerHTML = esc("Für Tattoo oder Piercing in " + SEITE.stadt + ". ") + (da.length <= 1 ? esc("Nur noch dieser Gutschein zum Weihnachtspreis.")
+        : best && best.id === ab.id ? '<span class="nb">' + esc("Auch bis " + EURO(max.wertCent) + " Wert.") + "</span>" : '<span class="nb">' + esc(abText) + "</span>");
       $("liste-ab").textContent = abText;
     }
     var rest = sh.aktionen.reduce(function (s, a) { return s + a.verfuegbar; }, 0), alle = sh.aktionen.reduce(function (s, a) { return s + a.stueck; }, 0);

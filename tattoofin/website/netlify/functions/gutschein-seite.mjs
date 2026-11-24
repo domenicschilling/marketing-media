@@ -4,7 +4,7 @@
 // das es nicht mehr gibt, und der Hero springt beim Laden nicht von „500 € für 375 €“ auf ein anderes Angebot.
 // Sicherheitsnetz: Klappt das Lesen des Bestands nicht (Fehler, länger als 2,5 s), kommt die Seite unverändert (das Skript der Seite
 // lädt die Zahlen dann selbst). Das CDN hält die Antwort 30 s (danach bis 90 s alt, während im Hintergrund neu erzeugt wird), damit
-// nicht jeder Besuch die Funktion startet; query-Parameter (utm, fbclid) gehören nicht zum Cache-Schlüssel.
+// nicht jeder Besuch die Funktion startet. Zum Cache-Schlüssel gehört nur ?g= (Angebot aus der Werbung), nicht utm oder fbclid.
 import { testKasse } from "./_lib/config.mjs";
 import { studioBy } from "./_lib/store.mjs";
 import { darfKassieren } from "./_lib/domain.mjs";
@@ -29,17 +29,17 @@ async function daten(slug) {
 }
 
 export default async (req) => {
-  const slug = new URL(req.url).pathname.replace(/\/+$/, "").split("/").pop();
+  const url = new URL(req.url), slug = url.pathname.replace(/\/+$/, "").split("/").pop();
   const roh = Object.hasOwn(SEITEN, slug) ? SEITEN[slug] : null;
   if (!roh) return new Response("Nicht gefunden", { status: 404, headers: { "content-type": "text/plain; charset=utf-8" } });
   let html = roh.html, frisch = false;
   try {
     let uhr;
     const d = await Promise.race([daten(slug), new Promise((_, nein) => { uhr = setTimeout(() => nein(new Error("Bestand zu langsam")), 2500); })]).finally(() => clearTimeout(uhr));
-    if (d) { html = seiteAnpassen(roh, d); frisch = html !== roh.html; }
+    if (d) { html = seiteAnpassen(roh, d, { heroId: url.searchParams.get("g") }); frisch = html !== roh.html; }
   } catch (e) { console.error("gutschein-seite:", slug, e?.message || e); }
   return new Response(req.method === "HEAD" ? null : html, {
-    headers: { ...KOPF, ...(frisch ? { "netlify-cdn-cache-control": "public, durable, s-maxage=30, stale-while-revalidate=90", "netlify-vary": "query=keiner" } : { "netlify-cdn-cache-control": "no-store" }) },
+    headers: { ...KOPF, ...(frisch ? { "netlify-cdn-cache-control": "public, durable, s-maxage=30, stale-while-revalidate=90", "netlify-vary": "query=g" } : { "netlify-cdn-cache-control": "no-store" }) },
   });
 };
 
