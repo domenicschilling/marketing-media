@@ -12,7 +12,7 @@
 - Korrektur Runde 2 erledigt (25 Befunde, siehe BERICHT.md oben): Überschrift aus dem Bestand, PDF als Geschenkkarte, Zahlen klar, Abschnitte im Glücksrad-Look mit sparsamer Weihnacht, neue Landshut-Bilder, WhatsApp-Vorschau (Ü, Quadrat, neutrale Fassung), schnelleres Lesen der Stückzahl.
 - Korrektur Runde 1 erledigt (54 Befunde): Angebot als Überschrift, Geschenk-Grafik mit Schleife und Tannenzweigen, neue WhatsApp-Vorschau, Fehler immer sichtbar, Zurück aus der Kasse gibt sofort frei, iPhone-Tastatur, Zustand nach Aktionsende, echtes PDF-Muster, 6 saubere Bilder je Studio, scharfe Logos und Symbole.
 - Seiten und Bilder: `node dev/gutschein-seiten.mjs [--og] [--vorschau <ordner>] [--basis <url>] [--og-pruefen]` schreibt `netlify/functions/_lib/gutschein-seiten-html.mjs` (Seite je Stadt + Meta-Blöcke) und die Rechtsseiten (eingecheckt wird ohne `--basis`). `--og` braucht macOS (Quick Look für das PDF-Muster). Vorschau-Fassung wird NICHT mehr von Hand umgestellt.
-- Tests: `dev/gutschein-shop-test.mjs` 173/0, `dev/e2e.mjs` siehe BERICHT (Runde 3) (eigene Ports E2E_PORT, STRIPE_MOCK_PORT, E2E_RESEND_PORT; e2e wartet unter Last bis 4 Min. je Schritt). Abnahme beider Entwurfs-Adressen mit `--soll "500 €;375 €;200 €;300 €"` bestanden.
+- Tests: `dev/gutschein-shop-test.mjs` 173/0, `dev/e2e.mjs` 410/0 (Runde 3). Entwurf Deploy `6b04f2d32a3f62fc3eea185d`, Abnahme beider Adressen bestanden (eigene Ports E2E_PORT, STRIPE_MOCK_PORT, E2E_RESEND_PORT; e2e wartet unter Last bis 4 Min. je Schritt). Abnahme beider Entwurfs-Adressen mit `--soll "500 €;375 €;200 €;300 €"` bestanden.
 
 **Offen (Domenic / Andy)**
 - Live-OK für den Prod-Deploy (danach Landshut sofort offen). Vorher neuesten Haupt-Chat-Stand einmischen.
