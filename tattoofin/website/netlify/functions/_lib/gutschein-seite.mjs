@@ -5,7 +5,8 @@
 //       angebot  500er und günstigster Gutschein kaufbar          → „500 € Gutschein für 375 €“
 //       neutral  500er oder günstigster ausverkauft               → „Tattoo-Gutscheine zum Weihnachtspreis“ (ohne Beträge)
 //       danach   Aktion vorbei (24.12., 16 Uhr) oder alles verkauft → „Tattoo-Gutschein zum Verschenken“
-//   • Link der Werbung mit ?g=nr5 (nr1 … nr5): dieses Angebot steht oben (solange kaufbar), Vorschaubild bleibt gleich
+//   • Link der Werbung mit ?g=nr5 (nr1 … nr5): dieses Angebot steht oben (solange kaufbar), Vorschaubild bleibt gleich;
+//     ?g=frei: „Tattoo-Gutschein ab 50 €“ (Wertgutschein, Betrag frei) oben
 //   • Hero: Überschrift, Unterzeile, Stückzahl unter dem Knopf und Kopf-Pille wie das Skript der Seite (zeichnen()), html.aus nach
 //     der Aktion. data-stand am <html> sagt dem Skript, dass die Zahlen schon stimmen (kein Ausblenden bis zum Laden).
 const NB = " ";
@@ -21,6 +22,14 @@ export function fassungFuer(sh, heroId = "nr4") {
 
 // Texte des Heros (gleiche Regeln wie zeichnen() in dev/gutschein/seite.html, ohne „eigene Kasse“, die kennt nur der Browser)
 export function heroTexte(sh, { stadt, heroId = "nr4" }) {
+  const rest0 = sh.aktionen.reduce((s, a) => s + a.verfuegbar, 0), alle0 = sh.aktionen.reduce((s, a) => s + a.stueck, 0);
+  const pille0 = rest0 <= 0 ? "Gerade alle reserviert" : rest0 >= alle0 ? `Nur ${alle0}${NB}Stück` : `Noch ${rest0}${NB}von ${alle0}`;
+  if (heroId === "frei" && sh.frei) {
+    const da0 = sh.aktionen.filter((a) => !a.ausverkauft), ab0 = [...da0].sort((x, y) => x.preisCent - y.preisCent)[0];
+    return { wert: "Tattoo-Gutschein", preis: `ab ${EURO(sh.frei.minCent)}`, klein: "Sofort als PDF per E-Mail",
+      lead: esc(`Für Tattoo oder Piercing in ${stadt}. `) + `<span class="nb">${esc("Betrag frei wählbar.")}</span>`,
+      liste: ab0 ? `Schon ab ${EURO(ab0.preisCent)} (Wert${NB}${EURO(ab0.wertCent)}).` : null, pille: pille0 };
+  }
   const weg = (a) => a.ausverkauft || !sh.aktionOffen || a.verfuegbar <= 0;
   const l = [...sh.aktionen].sort((x, y) => (y.id === heroId) - (x.id === heroId) || x.preisCent - y.preisCent);
   const best = l.find((a) => !weg(a)) || l.find((a) => !a.ausverkauft) || null;
@@ -45,7 +54,8 @@ const setze = (html, id, inhalt, tag) => html.replace(new RegExp(`(<${tag}\\b[^>
 
 // roh: SEITEN[slug] aus gutschein-seiten-html.mjs; daten: { shop: shopOeffentlich(...), aktiv }; stand: Zeitpunkt (ISO)
 // heroId: Angebot aus dem Link der Werbung (?g=nr5), nur wenn es diese Nummer gibt; sonst roh.heroId. Vorschau (og) bleibt je Bestand.
-export const heroAusLink = (sh, g) => (typeof g === "string" && /^nr[1-9]$/.test(g) && sh?.aktionen?.some((a) => a.id === g) ? g : null);
+// g=frei: Wertgutschein (Betrag frei wählbar, z. B. Anzeige „Tattoo-Gutschein ab 50 €“) oben, im Kauf-Fenster „Eigener Betrag“ vorgewählt
+export const heroAusLink = (sh, g) => (g === "frei" && sh?.frei ? "frei" : typeof g === "string" && /^nr[1-9]$/.test(g) && sh?.aktionen?.some((a) => a.id === g) ? g : null);
 export function seiteAnpassen(roh, daten, { stand = new Date().toISOString(), heroId = null } = {}) {
   const sh = daten?.shop;
   // Shop zu oder Studio kann gerade nicht kassieren: Seite unverändert (das Skript zeigt den Grund)

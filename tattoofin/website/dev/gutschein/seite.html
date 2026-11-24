@@ -574,7 +574,9 @@ textarea{min-height:76px;resize:vertical}
   var D = null, auswahl = null, schritt = 1;
   var params = new URLSearchParams(location.search);
   // Link der Werbung mit ?g=nr5: dieses Angebot steht oben und ist im Kauf-Fenster vorgewählt, solange es kaufbar ist (wie der Server)
-  var gLink = params.get("g"); if (gLink && /^nr[1-9]$/.test(gLink)) SEITE.heroId = gLink;
+  var gLink = params.get("g"); if (gLink && /^(nr[1-9]|frei)$/.test(gLink)) SEITE.heroId = gLink;
+  // ?g=frei (Anzeige „Tattoo-Gutschein ab 50 €“): Wertgutschein oben, „Eigener Betrag“ im Kauf-Fenster vorne und vorgewählt
+  function freiOben(sh) { return SEITE.heroId === "frei" && !istAus(sh); }
   var ladeVersprechen = null, ladeFehler = false;
   // Stückzahlen laden. Netz weg, Zeitüberschreitung oder Fehlerseite statt Daten: immer ein deutscher Satz mit „Neu laden“
   // (nie „Load failed“ / „Failed to fetch“ aus dem Browser)
@@ -627,13 +629,14 @@ textarea{min-height:76px;resize:vertical}
     cdEnde = !aus && sh.aktionBis ? new Date(sh.aktionBis).getTime() : null; cd();
     // Überschrift, Unterzeile und „schon ab …“ nur aus dem, was es noch gibt
     // (gleiche Regeln wie die Seiten-Funktion auf dem Server, netlify/functions/_lib/gutschein-seite.mjs)
-    var best = aus ? null : heroAngebot(sh);
-    if (best) { $("h-wert").textContent = EURO(best.wertCent) + " Gutschein"; $("h-preis").textContent = "für " + EURO(best.preisCent); }
+    var fo = freiOben(sh), best = aus || fo ? null : heroAngebot(sh);
+    if (fo) { $("h-wert").textContent = "Tattoo-Gutschein"; $("h-preis").textContent = "ab " + EURO(sh.frei.minCent); }
+    else if (best) { $("h-wert").textContent = EURO(best.wertCent) + " Gutschein"; $("h-preis").textContent = "für " + EURO(best.preisCent); }
     var da = sh.aktionen.filter(function (a) { return !a.ausverkauft; }), ab = da.slice().sort(function (x, y) { return x.preisCent - y.preisCent; })[0];
     if (ab) {
       var abText = "Schon ab " + EURO(ab.preisCent) + " (Wert" + NB + EURO(ab.wertCent) + ").";
       var max = da.slice().sort(function (x, y) { return y.wertCent - x.wertCent; })[0];
-      $("hero-lead").innerHTML = esc("Für Tattoo oder Piercing in " + SEITE.stadt + ". ") + (da.length <= 1 ? esc("Nur noch dieser Gutschein zum Weihnachtspreis.")
+      $("hero-lead").innerHTML = esc("Für Tattoo oder Piercing in " + SEITE.stadt + ". ") + (fo ? '<span class="nb">' + esc("Betrag frei wählbar.") + "</span>" : da.length <= 1 ? esc("Nur noch dieser Gutschein zum Weihnachtspreis.")
         : best && best.id === ab.id ? '<span class="nb">' + esc("Auch bis " + EURO(max.wertCent) + " Wert.") + "</span>" : '<span class="nb">' + esc(abText) + "</span>");
       $("liste-ab").textContent = abText;
     }
@@ -641,7 +644,7 @@ textarea{min-height:76px;resize:vertical}
     // Unter dem Knopf die Stückzahl genau des Angebots aus der Überschrift („Nur 6 Stück zu diesem Preis“, „Noch 4 von 6 …“),
     // die Kopf-Pille zeigt alle zusammen („Nur 21 Stück“)
     var bestRest = best ? (eigene(best) ? best.stueck : best.verfuegbar) : 0;
-    $("hero-klein").textContent = zu ? (sh.grund || "Online-Kauf gerade nicht möglich.") : !sh.aktionOffen ? "Die Weihnachts-Aktion ist vorbei." : aus ? "Alle Aktions-Gutscheine sind verkauft." :
+    $("hero-klein").textContent = zu ? (sh.grund || "Online-Kauf gerade nicht möglich.") : !sh.aktionOffen ? "Die Weihnachts-Aktion ist vorbei." : aus ? "Alle Aktions-Gutscheine sind verkauft." : fo ? "Sofort als PDF per E-Mail" :
       rest <= 0 || !best || bestRest <= 0 ? "Gerade sind alle Aktions-Gutscheine reserviert." : bestRest >= best.stueck ? "Nur " + best.stueck + NB + "Stück zu diesem Preis" : "Noch " + bestRest + NB + "von " + best.stueck + NB + "zu diesem Preis";
     $("top-stueck").textContent = rest <= 0 ? "Gerade alle reserviert" : rest >= alle ? "Nur " + alle + NB + "Stück" : "Noch " + rest + NB + "von " + alle;
     $("top-pille").hidden = false;
@@ -671,6 +674,7 @@ textarea{min-height:76px;resize:vertical}
     var sh = D.shop, gewaehltWeg = auswahl && auswahl !== "frei" && sh.aktionen.some(function (a) { return a.id === auswahl && weg(a, sh); });
     if (vorwahl) auswahl = vorwahl;
     else if (html.classList.contains("aus") && (!auswahl || gewaehltWeg)) auswahl = "frei";
+    else if (vorschlag && freiOben(sh) && (!auswahl || gewaehltWeg)) auswahl = "frei";
     else if (vorschlag && (!auswahl || gewaehltWeg)) { var b = heroAngebot(sh); auswahl = b && !weg(b, sh) ? b.id : auswahl; }
     wahlZeichnen(); fuellen(); aufmachen();
     zeige(vorwahl && (vorwahl !== "frei" || gleichZahlen) ? 2 : 1);
@@ -699,7 +703,7 @@ textarea{min-height:76px;resize:vertical}
     };
     var wegZeile = verkauft.length ? '<p class="weg-zeile">Schon verkauft: ' + verkauft.map(function (a) { return EURO(a.wertCent); }).join(" · ") + "</p>" : "";
     var alt = $("f-betrag") ? $("f-betrag").value : "";
-    $("wahl").innerHTML = aus ? frei : kaufbar.map(opt).join("") + frei + res.map(opt).join("") + wegZeile;
+    $("wahl").innerHTML = aus ? frei : freiOben(sh) ? frei + kaufbar.map(opt).join("") + res.map(opt).join("") + wegZeile : kaufbar.map(opt).join("") + frei + res.map(opt).join("") + wegZeile;
     if (alt) $("f-betrag").value = alt;
   }
   function markieren() { [].forEach.call($("wahl").querySelectorAll("label.opt"), function (l) { l.classList.toggle("an", l.querySelector("input").checked); }); bonusZeile(); }

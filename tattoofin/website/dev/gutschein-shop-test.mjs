@@ -656,6 +656,9 @@ for (const [eng, name] of [[chromium, "Chromium"], [webkit, "Safari"]]) {
   const gx = og(seiteAnpassen(roh, { shop: sh(), aktiv: true }, { heroId: "nr9\"><script>" })), g5weg = og(seiteAnpassen(roh, { shop: sh({ nr5: { verfuegbar: 0, verkauft: 10, ausverkauft: true } }), aktiv: true }, { heroId: "nr5" }));
   check(g5.wert === "300 € Gutschein" && g5.klein === "Nur 10 Stück zu diesem Preis" && /Auch bis 2\.000 € Wert\./.test(lead(h5)) && !/Schon ab/.test(lead(h5)) && g5.bild === v1.bild && g5.titel === v1.titel, "Server ?g=nr5: Hero „300 € Gutschein für 200 €“, „Nur 10 Stück“, Unterzeile „Auch bis 2.000 € Wert.“, Vorschau unverändert", { ...g5, lead: lead(h5) });
   check(g1.wert === "2.000 € Gutschein" && g1.klein === "Nur 1 Stück zu diesem Preis" && JSON.stringify(gx) === JSON.stringify(v1) && g5weg.wert === "500 € Gutschein", "Server ?g=nr1 → 2.000er oben; unbekannter Wert → Standard (500er); ?g=nr5 ausverkauft → Standard", { g1, gx, g5weg });
+  const hF = seiteAnpassen(roh, { shop: { ...sh(), frei: c.frei }, aktiv: true }, { heroId: "frei" }), gF = og(hF);
+  const hFaus = og(seiteAnpassen(roh, { shop: { ...sh({}, false), frei: c.frei }, aktiv: true }, { heroId: "frei" }));
+  check(gF.wert === "Tattoo-Gutschein" && /id="h-preis"[^>]*>ab 50 €</.test(hF.replace(/\u00a0/g, " ")) && gF.klein === "Sofort als PDF per E-Mail" && /Betrag frei wählbar\./.test(lead(hF)) && gF.bild === v1.bild && hFaus.aus, "Server ?g=frei: Hero „Tattoo-Gutschein ab 50 €“, „Betrag frei wählbar.“, „Sofort als PDF per E-Mail“, Vorschau unverändert; nach der Aktion Zustand danach", { ...gF, lead: lead(hF) });
   check(seiteAnpassen(roh, { shop: { ...sh(), offen: false }, aktiv: true }) === roh.html && seiteAnpassen(roh, { shop: sh(), aktiv: false }) === roh.html && fassungFuer(sh()) === "angebot", "Server: Shop zu oder Studio kann nicht kassieren → Seite unverändert");
   const fn = await seiteHole("/gutschein-kaufen/tattoo-fashion-munich");
   check(/data-stand="/.test(fn.html) && /s-maxage=30/.test(fn.kopf["netlify-cdn-cache-control"] || "") && fn.kopf["netlify-vary"] === "query=g" && fn.kopf["x-robots-tag"] === "noindex", "Seiten-Funktion: Stand vom Server, CDN hält die Seite 30 s (Schlüssel nur ?g=), noindex", fn.kopf);
@@ -668,6 +671,12 @@ for (const [eng, name] of [[chromium, "Chromium"], [webkit, "Safari"]]) {
   await p6g.click("#hero-kaufen"); await p6g.waitForTimeout(450);
   const vg = await p6g.evaluate(() => { const i = document.querySelector("#wahl input:checked"); return i && i.value; });
   check(/300 € GUTSCHEIN FÜR 200 €/i.test(hg.h1) && /Auch bis [\d.]+ € Wert\./.test(hg.lead) && /(Nur 10 Stück|Noch \d+ von 10) zu diesem Preis/.test(hg.klein) && hg.breit && vg === "nr5", "Browser ?g=nr5: Überschrift 300 € für 200 €, Stückzahl des 300ers, Hero-Knopf wählt den 300er vor, kein Querscrollen", { ...hg, vg });
+  const p6f = await c6g.newPage(); beobachten(p6f);
+  await p6f.goto(BASE + "/gutschein-kaufen/tattoo-fashion-landshut?g=frei&utm_source=facebook"); await p6f.waitForSelector("button.zeile[data-wahl]");
+  const hf = await p6f.evaluate(() => ({ h1: document.querySelector(".hero h1").innerText.replace(/\s+/g, " "), lead: document.getElementById("hero-lead").textContent.replace(/\s+/g, " "), klein: document.getElementById("hero-klein").textContent.replace(/\s+/g, " "), breit: document.documentElement.scrollWidth <= innerWidth }));
+  await p6f.click("#hero-kaufen"); await p6f.waitForTimeout(450);
+  const vf = await p6f.evaluate(() => { const i = document.querySelector("#wahl input:checked"), e = document.querySelector("#wahl input"); return { an: i && i.value, erste: e && e.value }; });
+  check(/TATTOO-GUTSCHEIN AB 50 €/i.test(hf.h1) && /Betrag frei wählbar/.test(hf.lead) && /Sofort als PDF per E-Mail/.test(hf.klein) && hf.breit && vf.an === "frei" && vf.erste === "frei", "Browser ?g=frei: „Tattoo-Gutschein ab 50 €“, Hero-Knopf öffnet mit „Eigener Betrag“ vorne und vorgewählt", { ...hf, ...vf });
   await c6g.close();
   // Vorschaubilder: jeder Text passt (Kartentext ≥ 24 px Rand, Überschrift ≤ 540 px), alle Städte und Fassungen
   const { spawnSync } = await import("node:child_process");
