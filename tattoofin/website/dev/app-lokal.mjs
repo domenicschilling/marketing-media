@@ -136,8 +136,8 @@ const store = await studio("sam@nordlicht-tattoo.de", "Nordlicht Tattoo", "Hambu
   }
   await call("POST", "/api/app/abmelden", { token: ts });
   await mock("webhooks?an=0");
-  await mock("payout", { account: store.konto, amount: 184000, status: "paid", created: jetzt - 8 * tag, arrival_date: jetzt - 6 * tag });
-  await mock("payout", { account: store.konto, amount: 113000, status: "in_transit", created: jetzt - 1 * tag, arrival_date: jetzt + 1 * tag });
+  await mock("payout", { account: store.konto, bank_name: "Hamburger Sparkasse", last4: "4821", amount: 184000, status: "paid", created: jetzt - 8 * tag, arrival_date: jetzt - 6 * tag });
+  await mock("payout", { account: store.konto, bank_name: "Hamburger Sparkasse", last4: "4821", amount: 113000, status: "in_transit", created: jetzt - 1 * tag, arrival_date: jetzt + 1 * tag });
   await mock("webhooks?an=1");
   await mock(`saldo/${store.konto}?verfuegbar=63000&unterwegs=113000`);
   // Store-Bild „Team“: zwei Kolleginnen/Kollegen (Domain nordlicht-tattoo.de ist nicht vergeben, Stand 25.11.2026)

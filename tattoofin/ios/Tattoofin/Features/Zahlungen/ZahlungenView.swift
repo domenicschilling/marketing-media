@@ -144,8 +144,8 @@ struct KPIKopf: View {
             Text(titel)
                 .font(.dm(.caption, weight: .medium))
                 .foregroundStyle(Color.tfLeise)
-                // Alle Kacheln gleich hoch: Platz für zwei Zeilen auch bei kurzer Beschriftung (bei sehr großer Schrift frei umbrechen)
-                .lineLimit(schrift.isAccessibilitySize ? 10 : 2, reservesSpace: !schrift.isAccessibilitySize)
+                // Alle Kacheln gleich hoch: mindestens Platz für zwei Zeilen, mehr Zeilen erlaubt (kein Abschneiden, DS-Audit)
+                .lineLimit(2...10, reservesSpace: true)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)

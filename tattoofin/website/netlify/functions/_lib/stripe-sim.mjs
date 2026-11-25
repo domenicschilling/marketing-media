@@ -226,7 +226,7 @@ export function createSim({ load, save, pageBase, webhook }) {
         if (p.starting_after) { const i = liste.findIndex((x) => x.id === p.starting_after); liste = i >= 0 ? liste.slice(i + 1) : []; }
         const limit = Math.min(100, Math.max(1, Number(p.limit) || 10));
         const mitZiel = [].concat(p.expand || []).includes("data.destination");
-        const data = liste.slice(0, limit).map((x) => (mitZiel ? { ...x, destination: { id: x.destination, object: "bank_account", bank_name: "Testbank", last4: "3000", currency: "eur" } } : x));
+        const data = liste.slice(0, limit).map((x) => (mitZiel ? { ...x, destination: { id: x.destination, object: "bank_account", bank_name: x._bank?.name || "Testbank", last4: x._bank?.last4 || "3000", currency: "eur" } } : x));
         return { object: "list", data, has_more: liste.length > limit, url: "/v1/payouts" };
       }
       if (res1 === "payouts" && method === "GET" && id1) { const x = ((db.payouts || {})[account] || []).find((y) => y.id === id1); if (!x) throw new SimFehler(404, "Auszahlung fehlt"); return x; }
@@ -372,6 +372,8 @@ export function createSim({ load, save, pageBase, webhook }) {
           id: rid("po"), object: "payout", amount: Number(daten.amount) || 10000, currency: "eur", status, method: "standard", type: "bank_account",
           created: Number(daten.created) || jetzt, arrival_date: Number(daten.arrival_date) || jetzt + 2 * 86400, destination: "ba_" + account.slice(5, 17),
           failure_code: status === "failed" ? daten.failure_code || "account_closed" : null, failure_message: status === "failed" ? "The bank account has been closed." : null,
+          // Nur im Nachbau: Bankname/Endziffern fürs Ziel-Konto (Standard „Testbank ••3000“), z. B. für glaubwürdige Store-Bilder
+          ...(daten.bank_name ? { _bank: { name: String(daten.bank_name).slice(0, 40), last4: String(daten.last4 || "3000").slice(-4) } } : {}),
         };
         db.payouts = db.payouts || {};
         (db.payouts[account] = db.payouts[account] || []).push(po);

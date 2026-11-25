@@ -21,6 +21,8 @@ struct HeuteSchalter: View {
             .accessibilityIdentifier("heute-im-studio")
             Text(Texte.Kasse2.heuteHinweis).font(.dm(.caption)).foregroundStyle(Color.tfLeise)
                 .lineLimit(kompakt && !schrift.isAccessibilitySize ? 1 : nil)
+                // SE: eine Zeile, notfalls etwas kleiner statt abgeschnitten (DS-Audit „Text clipped“, 25.11.2026)
+                .minimumScaleFactor(kompakt ? 0.8 : 1)
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityHidden(true)
         }

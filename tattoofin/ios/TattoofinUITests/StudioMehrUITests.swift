@@ -186,8 +186,12 @@ final class StudioMehrUITests: XCTestCase {
         foto("b09-fragebogen")
         bisSichtbar(app, senden, versuche: 25)
         senden.tap()
-        XCTAssertTrue(app.staticTexts.containing(NSPredicate(format: "label BEGINSWITH %@", "Danke, gespeichert")).firstMatch.waitForExistence(timeout: 10),
-                      "Fragebogen ohne Rückmeldung")
+        let danke = app.staticTexts.containing(NSPredicate(format: "label BEGINSWITH %@", "Danke, gespeichert")).firstMatch
+        // Bei sehr großer Schrift steht die Rückmeldung außerhalb des sichtbaren Bereichs: erst warten, dann suchen
+        var gefunden = danke.waitForExistence(timeout: 10)
+        for _ in 0..<12 where !gefunden { app.swipeDown(); gefunden = danke.exists }
+        for _ in 0..<12 where !gefunden { app.swipeUp(); gefunden = danke.exists }
+        XCTAssertTrue(gefunden, "Fragebogen ohne Rückmeldung")
         foto("b10-fragebogen-gesendet")
         zurueck(app)
 

@@ -269,7 +269,9 @@ struct TheckenQRView: View {
                 if let adresse {
                     // Große Schrift: QR etwas kleiner, damit die Anleitung ganz Platz hat
                     QRCodeView(inhalt: adresse, beschreibung: Texte.Theke.qrLabel(name))
-                        .frame(maxWidth: schrift.isAccessibilitySize || schrift >= .xxLarge ? 300 : 420)
+                        .frame(minWidth: 220, maxWidth: schrift.isAccessibilitySize || schrift >= .xxLarge ? 300 : 420)
+                        // Der Kunde muss scannen können: der QR bekommt den Platz zuerst (vorher bei AX5 briefmarkengroß)
+                        .layoutPriority(1)
                 } else {
                     Text(Texte.Theke.fehlt).font(.dm(.body)).foregroundStyle(Color.tfBlau)
                 }
@@ -277,7 +279,9 @@ struct TheckenQRView: View {
                     .font(.dm(.title3, weight: .semibold))
                     .foregroundStyle(Color.tfBlau)
                     .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
+                    // Anzeige für den Kunden an der Theke: Schrift höchstens AX1, damit der QR groß bleibt
+                    .dynamicTypeSize(...DynamicTypeSize.accessibility1)  // ds-ok: Kundenanzeige, QR hat Vorrang
+                    .minimumScaleFactor(0.7)
                 Spacer(minLength: 0)
                 Image(.wortmarke)
                     .resizable()

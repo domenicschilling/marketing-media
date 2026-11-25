@@ -60,8 +60,12 @@ final class RegistrierungUITests: XCTestCase {
         let s = app.switches[id]
         XCTAssertTrue(s.waitForExistence(timeout: 5), "Schalter \(id) fehlt")
         if !s.isHittable { app.swipeUp() }
-        // Rechts auf den Schalter tippen (der lange Text daneben ist nur Beschriftung)
-        s.coordinate(withNormalizedOffset: CGVector(dx: 0.97, dy: 0.5)).tap()
+        // Rechts auf den Schalter tippen (der lange Text daneben ist nur Beschriftung). Bei sehr großer Schrift steht der
+        // Schalter unter dem mehrzeiligen Text: dann weiter unten probieren, bis er an ist.
+        for dy in [0.5, 0.92, 0.08] where (s.value as? String) != "1" {
+            s.coordinate(withNormalizedOffset: CGVector(dx: 0.97, dy: dy)).tap()
+        }
+        XCTAssertEqual(s.value as? String, "1", "Schalter \(id) bleibt aus")
     }
 
     /// R0 → R1 → Code → Angaben → Bestätigungen → Abo → Kauf → Einrichtung → Kasse mit Stripe-Karte (hell, normale Schrift)

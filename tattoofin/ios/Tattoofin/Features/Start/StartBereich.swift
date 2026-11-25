@@ -39,8 +39,7 @@ struct StartBereich: View {
                 }
             }
             monat
-                // Etwas Luft zu den Karten darüber (zusammen mit dem Abstand des Stapels etwa 14 pt)
-                .padding(.top, 8)
+                // Kein Zusatzabstand nach oben: auf dem iPhone SE rutscht sonst die untere Ziffernreihe hinter „Zahlungslink erstellen“
         }
         .task(id: portal.geladenAm) { await werbung.laden() }
         .sheet(item: $blatt, onDismiss: {

@@ -245,6 +245,7 @@ struct CodeView: View {
     let auswahlNoetig: (_ studios: [StudioKurz], _ token: String) -> Void
     var registrieren: (RegistrierenPruefenAntwort) -> Void = { _ in }
 
+    @Environment(\.dynamicTypeSize) private var schrift
     @Environment(AppState.self) private var app
     @State private var code = ""
     @State private var prueft = false
@@ -257,6 +258,18 @@ struct CodeView: View {
     @FocusState private var fokus: Bool
 
     private var sekundenBisNeu: Int { max(0, Int(neuMoeglichAb.timeIntervalSince(jetzt).rounded(.up))) }
+
+    private var anmeldenKnopf: some View {
+        Button {
+            pruefen()
+        } label: {
+            if prueft { ProgressView().tint(Color.tfBlau) } else {
+                Text(modus == .registrieren ? Texte.Registrieren.codeBestaetigen : Texte.Anmelden.anmelden)
+            }
+        }
+        .buttonStyle(.haupt)
+        .disabled(code.count != 6 || prueft || codeTot)
+    }
 
     var body: some View {
         ScrollView {
@@ -286,8 +299,9 @@ struct CodeView: View {
                         .foregroundStyle(Color.tfLeise)
                 }
 
-                // „Anmelden“ steht angeheftet über der Tastatur (safeAreaInset unten). Nach der 6. Ziffer meldet die App
-                // ohnehin selbst an (onChange oben).
+                // Normale Schrift: „Anmelden“ hier unter den Feldern (angeheftet würde er „Neuen Code schicken“ verdecken).
+                // Bedienungshilfen-Größen: angeheftet über der Tastatur (safeAreaInset unten). Nach der 6. Ziffer meldet die App ohnehin selbst an.
+                if !schrift.isAccessibilitySize { anmeldenKnopf }
 
                 Button {
                     neuSchicken()
@@ -311,21 +325,15 @@ struct CodeView: View {
         .scrollDismissesKeyboard(.interactively)
         // „Anmelden“ über der Tastatur angeheftet: bei großer Schrift sonst hinter der Ziffern-Tastatur (Gestaltungsprüfung 1.1, Nr. 7)
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            Button {
-                pruefen()
-            } label: {
-                if prueft { ProgressView().tint(Color.tfBlau) } else {
-                    Text(modus == .registrieren ? Texte.Registrieren.codeBestaetigen : Texte.Anmelden.anmelden)
-                }
+            if schrift.isAccessibilitySize {
+                anmeldenKnopf
+                    // Angeheftet: Schrift höchstens AX2, sonst nimmt der Knopf über der Tastatur zu viel Platz
+                    .dynamicTypeSize(...DynamicTypeSize.accessibility2)  // ds-ok: angehefteter Knopf über der Tastatur
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 8)
+                    .frame(maxWidth: .infinity)
+                    .background(Color.tfHintergrund)
             }
-            .buttonStyle(.haupt)
-            .disabled(code.count != 6 || prueft || codeTot)
-            // Angeheftet: Schrift höchstens AX2, sonst nimmt der Knopf über der Tastatur zu viel Platz
-            .dynamicTypeSize(...DynamicTypeSize.accessibility2)  // ds-ok: angehefteter Knopf über der Tastatur
-            .padding(.horizontal, 20)
-            .padding(.vertical, 8)
-            .frame(maxWidth: .infinity)
-            .background(Color.tfHintergrund)
         }
         .tfHintergrund()
         .navigationTitle(Texte.Anmelden.codeNavTitel)
