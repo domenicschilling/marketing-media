@@ -29,6 +29,8 @@ struct ScannerView: View {
     enum Modus { case pruefen, vision, avQR, manuell(String) }
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
+    @Environment(\.scenePhase) private var szene
     @State private var modus = Modus.pruefen
     @State private var code = ""
     @State private var gefunden = false
@@ -66,6 +68,15 @@ struct ScannerView: View {
         }
         .sensoryFeedback(.success, trigger: gefunden)
         .task { await modusWaehlen() }
+        .onChange(of: szene) { _, neu in
+            // Zurück aus den Einstellungen: Kamera-Erlaubnis neu prüfen
+            if neu == .active, ohneErlaubnis { Task { await modusWaehlen() } }
+        }
+    }
+
+    private var ohneErlaubnis: Bool {
+        if case let .manuell(grund) = modus { return grund == Texte.Scanner.keineErlaubnis }
+        return false
     }
 
     private var kameraLaeuft: Bool {
@@ -94,6 +105,15 @@ struct ScannerView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 HinweisKarte(text: grund, symbol: "camera.fill")
+                if grund == Texte.Scanner.keineErlaubnis, let u = URL(string: UIApplication.openSettingsURLString) {
+                    Button {
+                        openURL(u)
+                    } label: {
+                        Label(Texte.GutscheinWert.kameraErlauben, systemImage: "gearshape")
+                    }
+                    .buttonStyle(.zweit)
+                    .accessibilityHint(Texte.GutscheinWert.kameraErlaubenHinweis)
+                }
                 Text(Texte.Gutscheine.codeEingeben).font(.dm(.subheadline, weight: .semibold)).foregroundStyle(Color.tfTinte)
                 TextField(Texte.Gutscheine.codeEingeben, text: $code, prompt: tfPlatzhalter(Texte.Gutscheine.codePlatzhalter))
                     .accessibilityLabel(Texte.Gutscheine.codeEingeben)

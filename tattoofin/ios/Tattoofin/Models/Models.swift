@@ -118,6 +118,16 @@ struct GutscheinInfo: Codable, Sendable, Hashable {
     var einloeseNotiz: String?
     var gesendetAm: String?
     var gesendetAn: String?
+    // Wert und Teil-Einlösung (Gutschein-Shop, 23.11.2026): alle optional, ältere Antworten haben sie nicht. Logik in GutscheinWert.swift
+    var wertCent: Int?
+    var bezahltCent: Int?
+    var aktuellerWertCent: Int?
+    var bonusCent: Int?
+    var bonusBis: String?
+    var shop: Bool?
+    var teilbar: Bool?
+    var restCent: Int?
+    var teile: [GutscheinTeil]?
 }
 
 struct KPIs: Codable, Sendable, Hashable {

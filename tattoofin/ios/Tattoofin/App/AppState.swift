@@ -145,7 +145,7 @@ final class PortalStore {
     var fehler: String?
     var geladenAm: Date?
 
-    var gutscheine: [Zahlung] { zahlungen.filter(\.istGutschein) }
+    var gutscheine: [Zahlung] { zahlungen.filter(\.zeigtInGutscheinListe) }
 
     func cacheLaden() {
         if zahlungen.isEmpty, let c = ZahlungenCache.laden() { zahlungen = c }

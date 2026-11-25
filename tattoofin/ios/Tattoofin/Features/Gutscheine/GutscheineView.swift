@@ -3,6 +3,7 @@ import SwiftUI
 /// Bildschirm 11: Gutscheine (Tab 3). Scannen, Code eingeben, verkaufte Gutscheine, Gutschein verkaufen.
 struct GutscheineView: View {
     @Environment(PortalStore.self) private var portal
+    @Environment(AppState.self) private var app
     @State private var pfad: [Zahlung] = []
     @State private var code = ""
     @State private var sucht = false
@@ -10,6 +11,8 @@ struct GutscheineView: View {
     @State private var scannerOffen = false
     @State private var verkaufenOffen = false
     @State private var trefferZaehler = 0
+    /// Code wurde von der Suche selbst ins Feld gesetzt (nach Scan-Fehler): onChange soll die Meldung dann nicht löschen
+    @State private var codeAusSuche = false
     @FocusState private var codeFokus: Bool
 
     var body: some View {
@@ -60,8 +63,12 @@ struct GutscheineView: View {
                                     let f = GutscheinCode.formatieren(neu.replacingOccurrences(of: "\n", with: ""))
                                     if f != neu { code = f }
                                     if mitReturn, GutscheinCode.vollstaendig(f) { suchen() }
-                                    // Alte Meldung („nicht gefunden“) passt nicht mehr zum neuen Code
-                                    if !sucht { fehler = nil }
+                                    // Alte Meldung („nicht gefunden“) passt nicht mehr zum neuen Code – außer die Suche hat den Code selbst gesetzt
+                                    if codeAusSuche {
+                                        if f == neu { codeAusSuche = false }
+                                    } else if !sucht {
+                                        fehler = nil
+                                    }
                                 }
                                 .accessibilityLabel(Texte.Gutscheine.codeEingeben)
                             Button {
@@ -81,7 +88,20 @@ struct GutscheineView: View {
 
                 Section {
                     if portal.gutscheine.isEmpty {
-                        LeerAnsicht(titel: Texte.Gutscheine.leerTitel, text: Texte.Gutscheine.leerText, symbol: "gift")
+                        if portal.studio != nil, portal.studio?.darfKassieren != true {
+                            // Ohne fertige Kasse gibt es den Knopf „Gutschein verkaufen“ nicht: sagen, warum, und zur Kasse führen
+                            LeerAnsicht(titel: Texte.Gutscheine.leerTitel, text: Texte.GutscheinWert.leerOhneKasse, symbol: "gift")
+                            Button {
+                                app.tab = .kasse
+                            } label: {
+                                Label(Texte.GutscheinWert.zurKasse, systemImage: "creditcard")
+                            }
+                            .buttonStyle(.zweit)
+                            .listRowInsets(EdgeInsets())
+                            .listRowBackground(Color.clear)
+                        } else {
+                            LeerAnsicht(titel: Texte.Gutscheine.leerTitel, text: Texte.Gutscheine.leerText, symbol: "gift")
+                        }
                     } else {
                         ForEach(portal.gutscheine) { z in
                             NavigationLink(value: z) { GutscheinZeile(zahlung: z) }
@@ -149,10 +169,19 @@ struct GutscheineView: View {
             try? await Task.sleep(for: .milliseconds(250))
             pfad = [z]
         } catch {
-            // Gesuchten Code stehen lassen, damit man ihn korrigieren kann
-            if case let .code(c) = t { code = c }
-            fehler = fehlerText(error)
+            // Gesuchten Code stehen lassen, damit man ihn korrigieren kann (Meldung bleibt dabei stehen)
+            if case let .code(c) = t, c != code {
+                codeAusSuche = true
+                code = c
+            }
+            fehler = Self.suchFehlerText(error)
         }
+    }
+
+    /// 404 bei der Suche: klarer sagen, was los ist (fremdes Studio, falscher Code)
+    static func suchFehlerText(_ e: Error) -> String {
+        if let a = e as? APIFehler, a.status == 404 { return Texte.GutscheinWert.nichtGefunden }
+        return fehlerText(e)
     }
 }
 
@@ -175,8 +204,12 @@ struct GutscheinZeile: View {
             }
             if !schrift.isAccessibilitySize { Spacer() }
             VStack(alignment: schrift.isAccessibilitySize ? .leading : .trailing, spacing: 6) {
-                Text(Euro.text(zahlung.betragCent)).font(.dm(.body, weight: .bold)).foregroundStyle(Color.tfTinte)
+                Text(Euro.text(zahlung.gutscheinWertCent)).font(.dm(.body, weight: .bold)).foregroundStyle(Color.tfTinte)
                     .fixedSize(horizontal: false, vertical: true)
+                if zahlung.gutscheinBezahltAbweichend {
+                    Text(Texte.GutscheinWert.bezahlt(zahlung.gutscheinBezahltCent)).font(.dm(.footnote)).foregroundStyle(Color.tfLeise)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
                 StatusChip(gutschein: zahlung.gutschein?.status)
             }
         }
