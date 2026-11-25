@@ -123,7 +123,7 @@ struct KPIKopf: View {
 
     var body: some View {
         // Bedienungshilfe-Größen: Kacheln untereinander statt nebeneinander (DS: umbrechen statt verkleinern)
-        let layout = schrift.isAccessibilitySize ? AnyLayout(VStackLayout(spacing: 8)) : AnyLayout(HStackLayout(spacing: 8))
+        let layout = schrift.isAccessibilitySize ? AnyLayout(VStackLayout(spacing: 8)) : AnyLayout(HStackLayout(alignment: .top, spacing: 8))
         layout {
             kachel(Texte.Zahlungen.kpiUmsatz, kpis.map { Euro.text($0.umsatzMonatCent ?? 0) } ?? "–")
             kachel(Texte.Zahlungen.kpiAnzahl, kpis.map { "\($0.zahlungenMonat ?? 0)" } ?? "–")
@@ -144,6 +144,8 @@ struct KPIKopf: View {
             Text(titel)
                 .font(.dm(.caption, weight: .medium))
                 .foregroundStyle(Color.tfLeise)
+                // Alle Kacheln gleich hoch: Platz für zwei Zeilen auch bei kurzer Beschriftung (bei sehr großer Schrift frei umbrechen)
+                .lineLimit(schrift.isAccessibilitySize ? 10 : 2, reservesSpace: !schrift.isAccessibilitySize)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -163,10 +165,13 @@ struct ZahlungZeile: View {
         let layout = schrift.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 6)) : AnyLayout(HStackLayout(alignment: .top, spacing: 12))
         layout {
             VStack(alignment: .leading, spacing: 3) {
-                Text(zahlung.kunde?.leerAlsNil ?? Texte.Zahlungen.ohneName)
+                // Ohne Kundennamen: das Motiv als Titel, darunter leise „ohne Kundennamen“ (statt fettem „Ohne Namen“)
+                let kunde = zahlung.kunde?.leerAlsNil
+                Text(kunde ?? zahlung.titel)
                     .font(.dm(.body, weight: .semibold))
                     .foregroundStyle(Color.tfTinte)
-                Text(zahlung.titel)
+                    .lineLimit(kunde == nil ? 2 : nil)
+                Text(kunde == nil ? Texte.ZahlungenG2.ohneKundenname : zahlung.titel)
                     .font(.dm(.subheadline))
                     .foregroundStyle(Color.tfLeise)
                     .lineLimit(2)

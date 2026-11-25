@@ -9,32 +9,32 @@ struct StatusChip: View {
     /// Zahlungsstatus
     init(zahlung status: String) {
         let (t, f): (String, Color) = switch status {
-        case "offen": ("offen", .tfOrange)
-        case "angezahlt": ("angezahlt", .tfGruen)
-        case "in_pruefung": ("in Prüfung", .tfOrange)
-        case "bezahlt": ("bezahlt", .tfGruen)
-        case "storniert": ("storniert", .tfLeise)
-        case "abgebrochen": ("abgebrochen", .tfLeise)
-        case "fehlgeschlagen": ("fehlgeschlagen", .tfRot)
-        case "erstattet": ("erstattet", .tfLeise)
-        case "rueckgebucht": ("zurückgebucht", .tfRot)
+        case "offen": ("Offen", .tfOrange)
+        case "angezahlt": ("Angezahlt", .tfGruen)
+        case "in_pruefung": ("In Prüfung", .tfOrange)
+        case "bezahlt": ("Bezahlt", .tfGruen)
+        case "storniert": ("Storniert", .tfLeise)
+        case "abgebrochen": ("Abgebrochen", .tfLeise)
+        case "fehlgeschlagen": ("Fehlgeschlagen", .tfRot)
+        case "erstattet": ("Erstattet", .tfLeise)
+        case "rueckgebucht": ("Zurückgebucht", .tfRot)
         default: (status, .tfLeise)
         }
-        text = t
+        text = Self.grossAnfang(t)
         farbe = f
     }
 
     /// Gutscheinstatus
     init(gutschein status: String?) {
         let (t, f): (String, Color) = switch status {
-        case "gueltig": ("gültig", .tfGruen)
-        case "eingeloest": ("eingelöst", .tfLeise)
-        case "abgelaufen": ("abgelaufen", .tfRot)
-        case "storniert": ("storniert", .tfLeise)
-        case "erstattet": ("erstattet", .tfLeise)
-        default: ("noch nicht bezahlt", .tfOrange)
+        case "gueltig": ("Gültig", .tfGruen)
+        case "eingeloest": ("Eingelöst", .tfLeise)
+        case "abgelaufen": ("Abgelaufen", .tfRot)
+        case "storniert": ("Storniert", .tfLeise)
+        case "erstattet": ("Erstattet", .tfLeise)
+        default: ("Noch nicht bezahlt", .tfOrange)
         }
-        text = t
+        text = Self.grossAnfang(t)
         farbe = f
     }
 
@@ -46,13 +46,22 @@ struct StatusChip: View {
         case "failed": .tfRot
         default: .tfLeise
         }
-        text = a.statusText ?? a.status
+        text = Self.grossAnfang(a.statusText ?? a.status)
         farbe = f
+    }
+
+    /// Eine Schreibweise für alle Chips (App-Texte und Server-Texte): großer Anfangsbuchstabe
+    private static func grossAnfang(_ s: String) -> String {
+        guard let erster = s.first else { return s }
+        return erster.uppercased() + s.dropFirst()
     }
 
     var body: some View {
         Text(text)
             .font(.dm(.caption, weight: .bold))
+            // Nie mitten im Wort umbrechen („Unterwe|gs“): Chip bleibt einzeilig, die Zeile drumherum ordnet sich um
+            .lineLimit(1)
+            .fixedSize(horizontal: true, vertical: false)
             .foregroundStyle(farbe)
             .padding(.horizontal, 8)
             .padding(.vertical, 3)

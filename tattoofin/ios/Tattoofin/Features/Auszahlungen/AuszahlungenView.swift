@@ -42,7 +42,9 @@ struct AuszahlungenView: View {
                         ListenKopf(Texte.Auszahlungen.listeTitel)
                     } footer: {
                         // Wann kommt mein Geld? (häufigste Frage neuer Studios)
-                        ListenFuss(Texte.Kasse11.ersteAuszahlung)
+                        Text(Texte.Kasse11.ersteAuszahlung)
+                            .font(.dm(.footnote))
+                            .foregroundStyle(Color.tfLeise)
                     }
                 }
                 if let fehler { Section { FehlerZeile(text: fehler) } }
@@ -89,11 +91,19 @@ struct AuszahlungenView: View {
 
 struct SaldoKarte: View {
     let saldo: Saldo
+    @Environment(\.dynamicTypeSize) private var schrift
 
     var body: some View {
-        HStack(spacing: 0) {
+        // Bedienungshilfe-Größen: Werte untereinander mit waagerechter Linie (sonst brechen „Verfügbar“ und die Beträge mitten im Wort)
+        let gross = schrift.isAccessibilitySize
+        let layout = gross ? AnyLayout(VStackLayout(spacing: 12)) : AnyLayout(HStackLayout(spacing: 0))
+        layout {
             spalte(Texte.Auszahlungen.verfuegbar, saldo.verfuegbarCent)
-            Rectangle().fill(Color.tfBlau.opacity(0.25)).frame(width: 1).padding(.vertical, 6)
+            if gross {
+                Rectangle().fill(Color.tfBlau.opacity(0.25)).frame(height: 1).padding(.horizontal, 16)
+            } else {
+                Rectangle().fill(Color.tfBlau.opacity(0.25)).frame(width: 1).padding(.vertical, 6)
+            }
             spalte(Texte.Auszahlungen.unterwegs, saldo.unterwegsCent)
         }
         .padding(.vertical, 16)
@@ -111,6 +121,8 @@ struct SaldoKarte: View {
             Text(titel)
                 .font(.dm(.subheadline, weight: .semibold))
                 .foregroundStyle(Color.tfBlau)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity)
         .padding(.horizontal, 8)
@@ -120,13 +132,19 @@ struct SaldoKarte: View {
 
 struct AuszahlungZeile: View {
     let auszahlung: Auszahlung
+    @Environment(\.dynamicTypeSize) private var schrift
 
     var body: some View {
-        HStack(alignment: .top) {
+        // Bedienungshilfe-Größen: Status unter die Angaben statt daneben (wie GutscheinZeile)
+        let gross = schrift.isAccessibilitySize
+        let layout = gross ? AnyLayout(VStackLayout(alignment: .leading, spacing: 6)) : AnyLayout(HStackLayout(alignment: .top))
+        layout {
             VStack(alignment: .leading, spacing: 3) {
                 Text(Euro.text(auszahlung.betragCent))
                     .font(.dm(.body, weight: .bold))
                     .foregroundStyle(Color.tfTinte)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
                 // Fehlgeschlagene/abgebrochene Auszahlungen kommen nicht an → kein Ankunftsdatum
                 if !["failed", "canceled"].contains(auszahlung.status), let d = Datum.tag(auszahlung.ankunftAm) {
                     Text(auszahlung.status == "paid" ? Texte.Auszahlungen.angekommenAm(d) : Texte.Auszahlungen.ankunftAm(d))
@@ -143,7 +161,7 @@ struct AuszahlungZeile: View {
                     Text(f).font(.dm(.subheadline, weight: .medium)).foregroundStyle(Color.tfRot)
                 }
             }
-            Spacer()
+            if !gross { Spacer() }
             StatusChip(auszahlung: auszahlung)
         }
         .accessibilityElement(children: .combine)
