@@ -14,6 +14,8 @@ struct KasseView: View {
     @State private var heute = false
     /// Sichtbare Höhe der Kasse: auf kleinen iPhones (SE) wird alles enger, damit der ganze Ziffernblock über dem Knopf steht
     @State private var hoehe: CGFloat = 800
+    /// Wirklich sichtbare Höhe des Inhalts (ohne Navigationsleiste, angehefteten Knopf, Tab-Leiste und Tastatur)
+    @State private var sichtbareHoehe: CGFloat = 0
     @Environment(\.dynamicTypeSize) private var schrift
     private var kompakt: Bool { hoehe < 560 }
 
@@ -176,8 +178,13 @@ struct KasseView: View {
             .padding(.top, kompakt ? 4 : 8)
             .padding(.bottom, 16)
             // Mindestens so hoch wie der sichtbare Bereich, damit der Spacer über dem Betrag die freie Höhe aufnimmt
-            .frame(minHeight: max(0, hoehe - (kompakt ? 4 : 8) - 16 - 1), alignment: .top)
+            // (die Innenabstände liegen schon im Rahmen; 1 pt Luft gegen Rundung, sonst scrollt es um einen Punkt)
+            .frame(minHeight: max(0, sichtbareHoehe - 1), alignment: .top)
         }
+        // Höhe ohne alle Einsätze (angehefteter Knopf, Leisten, Tastatur): sonst rutscht der Ziffernblock hinter den Knopf
+        .onScrollGeometryChange(for: CGFloat.self) { g in
+            g.containerSize.height - g.contentInsets.top - g.contentInsets.bottom
+        } action: { _, neu in sichtbareHoehe = neu }
         .scrollDismissesKeyboard(.interactively)
         .refreshable { await portal.laden() }
         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { hoehe = $0 }
