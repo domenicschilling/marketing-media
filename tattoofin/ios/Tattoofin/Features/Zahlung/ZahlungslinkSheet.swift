@@ -21,6 +21,11 @@ struct ZahlungslinkSheet: View {
     /// Status-Abfrage fehlgeschlagen: „offen“ ist dann evtl. nicht mehr aktuell (DS: nie still einen alten Stand zeigen)
     @State private var abgleichFehler: String?
     @State private var stand = Date.now
+    /// false: Die 15 Minuten Live-Abfrage sind um, der Status wird nur noch auf Knopfdruck geprüft
+    @State private var prueftLive = true
+    /// Hochzählen startet die Live-Abfrage neu (zurück aus dem Hintergrund, „Jetzt prüfen“)
+    @State private var abfrageLauf = 0
+    @Environment(\.scenePhase) private var szene
 
     init(erstellt: ZahlungErstellt) {
         self.erstellt = erstellt
@@ -59,7 +64,16 @@ struct ZahlungslinkSheet: View {
         }
         .qrAnzeige()
         .sensoryFeedback(.success, trigger: bezahltZaehler)
-        .task { await abfragen() }
+        .task(id: abfrageLauf) {
+            prueftLive = true
+            if abfrageLauf > 0 { await neuLaden() }
+            await abfragen()
+            if !Task.isCancelled { prueftLive = false }
+        }
+        .onChange(of: szene) { _, neu in
+            // Zurück aus dem Hintergrund: sofort prüfen und die Live-Abfrage neu starten
+            if neu == .active && zahlung.istOffen && !storniert { abfrageLauf += 1 }
+        }
         .onChange(of: app.pushZahlung?.zaehler) { _, _ in
             if app.pushZahlung?.id == zahlung.id { Task { await neuLaden() } }
         }
@@ -72,6 +86,11 @@ struct ZahlungslinkSheet: View {
             if let h = erstellt.hinweis, !istStorniert { HinweisKarte(text: h) }
             if istStorniert {
                 HinweisKarte(text: Texte.Zahlung.istStorniert, symbol: "xmark.circle.fill")
+            } else if zahlung.istAusweichAngezahlt {
+                // Kunde hat stattdessen angezahlt: Link ist erledigt, kein QR mehr
+                HinweisKarte(text: zahlung.ausweich?.betragCent.flatMap { a in zahlung.restImStudioCent.map { Texte.Kasse11.angezahlt(anzahlung: a, rest: $0) } }
+                                ?? Texte.Kasse11.angezahltKurz, symbol: "checkmark.circle.fill")
+                    .accessibilityIdentifier("ausweich-angezahlt")
             } else {
                 QRCodeView(inhalt: erstellt.link, beschreibung: Texte.Zahlung.qrLabel(zahlung.betragCent))
                     .frame(maxWidth: 360)
@@ -87,11 +106,23 @@ struct ZahlungslinkSheet: View {
                     .multilineTextAlignment(.center)
             }
             if !storniert && zahlung.istOffen {
-                HStack(spacing: 8) {
-                    ProgressView()
-                    Text(Texte.Zahlung.wartet).font(.dm(.subheadline)).foregroundStyle(Color.tfLeise)
+                if prueftLive {
+                    HStack(spacing: 8) {
+                        ProgressView()
+                        Text(Texte.Zahlung.wartet).font(.dm(.subheadline)).foregroundStyle(Color.tfLeise)
+                    }
+                    .accessibilityElement(children: .combine)
+                } else {
+                    // Nach 15 Minuten kein Kreisel mehr, der so tut, als würde geprüft
+                    Text(Texte.Kasse11.nichtMehrAutomatisch)
+                        .font(.dm(.subheadline))
+                        .foregroundStyle(Color.tfLeise)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Button(Texte.Kasse11.jetztPruefen) { abfrageLauf += 1 }
+                        .buttonStyle(.zweit)
+                        .accessibilityIdentifier("jetzt-pruefen")
                 }
-                .accessibilityElement(children: .combine)
 
                 ShareLink(item: erstellt.whatsappText ?? erstellt.link) {
                     Label(Texte.Zahlung.teilen, systemImage: "square.and.arrow.up")

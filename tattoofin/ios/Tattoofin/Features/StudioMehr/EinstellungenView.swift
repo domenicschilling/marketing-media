@@ -52,6 +52,15 @@ struct EinstellungenView: View {
                 }
             }
 
+            // Studio ohne Anzahlung (anzahlungAus): Anzahlungsbedingungen und Ausweg ausblenden wie im Web
+            if studio?.keineAnzahlung == true {
+                Section {
+                    HinweisKarte(text: Texte.Kasse11.keineAnzahlung, symbol: "info.circle.fill")
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(Color.clear)
+                        .accessibilityIdentifier("keine-anzahlung")
+                }
+            } else {
             Section {
                 Text(Texte.Einst.anzahlungText).font(.dm(.footnote)).foregroundStyle(Color.tfLeise)
                 TextField(Texte.Einst.anzahlungFeld, text: $bedingungen, prompt: tfPlatzhalter(Texte.Einst.anzahlungFeld), axis: .vertical)
@@ -70,8 +79,10 @@ struct EinstellungenView: View {
             } header: {
                 Text(Texte.Einst.anzahlungTitel)
             }
+            }
 
             if studio?.hatKlarna == true {
+                if studio?.keineAnzahlung != true {
                 Section {
                     Text(Texte.Einst.ausweichText).font(.dm(.footnote)).foregroundStyle(Color.tfLeise)
                     Toggle(Texte.Einst.ausweichAn, isOn: $ausweichAn).disabled(!istInhaber)
@@ -88,6 +99,7 @@ struct EinstellungenView: View {
                     }
                 } header: {
                     Text(Texte.Einst.ausweichTitel)
+                }
                 }
 
                 Section {

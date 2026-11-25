@@ -49,7 +49,12 @@ struct RootView: View {
         .onChange(of: phase) { _, neu in
             switch neu {
             case .background: sperre.inDenHintergrund()
-            case .active: sperre.wiederAktiv()
+            case .active:
+                sperre.wiederAktiv()
+                // Zurück nach längerer Zeit: Zahlungen, Kennzahlen und Kassen-Stand (Abo, Stripe, Adresse) auffrischen
+                if app.phase == .bereit, !app.portal.laedt, PortalStore.neuLadenNoetig(geladenAm: app.portal.geladenAm) {
+                    Task { await app.portal.laden() }
+                }
             default: break
             }
         }

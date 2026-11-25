@@ -155,7 +155,8 @@ final class PortalStore {
         laedt = true
         defer { laedt = false }
         do {
-            let a = try await APIClient.shared.portal()
+            // Einmal holen, für Kasse und Konto lesen (kein zweites GET /api/portal durch den StudioMehrStore)
+            let a = try await APIClient.shared.portalBeide()
             uebernehmen(a)
             fehler = nil
         } catch is CancellationError {
@@ -178,6 +179,8 @@ final class PortalStore {
     /// Einzelne Zahlung in der Liste ersetzen bzw. vorne einfügen
     func aktualisieren(_ z: Zahlung) {
         let alt = zahlungen.first { $0.id == z.id }
+        // Unverändert (z. B. Abfrage alle 3 s im Zahlungslink-Blatt): nichts neu auf die Platte schreiben
+        if alt == z { return }
         if let i = zahlungen.firstIndex(where: { $0.id == z.id }) { zahlungen[i] = z } else { zahlungen.insert(z, at: 0) }
         ZahlungenCache.speichern(zahlungen)
         // Kennzahlen (Umsatz, Anzahl, offene Links) rechnet der Server: bei neuem Link oder geändertem Status neu holen
@@ -190,7 +193,7 @@ final class PortalStore {
         kennzahlenTask = Task { [weak self] in
             try? await Task.sleep(for: .milliseconds(300))
             guard !Task.isCancelled, let self else { return }
-            if let a = try? await APIClient.shared.portal() { self.uebernehmen(a) }  // ds-ok: Hintergrund-Nachladen der Kennzahlen; einen Fehler zeigt das nächste portal.laden() mit Stand-Zeile
+            if let a = try? await APIClient.shared.portalBeide() { self.uebernehmen(a) }  // ds-ok: Hintergrund-Nachladen der Kennzahlen; einen Fehler zeigt das nächste portal.laden() mit Stand-Zeile
         }
     }
 

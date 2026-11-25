@@ -51,10 +51,19 @@ struct KasseView: View {
             }
             .sensoryFeedback(.success, trigger: erfolgZaehler)
         }
-        .onAppear { eingabe = BetragEingabe(text: entwurf.betrag) }
+        .onAppear {
+            eingabe = BetragEingabe(text: entwurf.betrag)
+            entwurf = entwurf.passend(keineAnzahlung: keineAnzahlung)
+        }
+        // Studio ohne Anzahlung (anzahlungAus): auch einen gespeicherten Entwurf auf Gesamtpreis stellen
+        .onChange(of: portal.studio) { _, _ in entwurf = entwurf.passend(keineAnzahlung: keineAnzahlung) }
         .onChange(of: eingabe) { _, neu in entwurf.betrag = neu.text }
         .onChange(of: entwurf) { _, neu in Einstellungen.kasseEntwurf = neu.istLeer ? nil : neu }
     }
+
+    private var keineAnzahlung: Bool { portal.studio?.keineAnzahlung ?? false }
+    /// Anzahlung nur, wenn das Studio sie anbietet
+    private var anzahlung: Bool { entwurf.anzahlung && !keineAnzahlung }
 
     private var betragFehler: String? {
         guard let c = eingabe.cent, c > 0 else { return nil }
@@ -66,7 +75,7 @@ struct KasseView: View {
 
     /// Wie im Dashboard: Gutschein-Wörter im Projektfeld → Hinweis „Gutschein-Funktion nutzen, nur Karte“
     private var gutscheinWort: Bool {
-        KlarnaTexte.istGutscheinWort(entwurf.beschreibung, entwurf.anzahlung ? "" : entwurf.sitzungen)
+        KlarnaTexte.istGutscheinWort(entwurf.beschreibung, anzahlung ? "" : entwurf.sitzungen)
     }
 
     private var gueltigerBetrag: Bool { betragFehler == nil && (eingabe.cent ?? 0) > 0 }
@@ -121,17 +130,21 @@ struct KasseView: View {
                 }
                 .frame(maxWidth: .infinity)
 
-                Picker(Texte.Kasse.artLabel, selection: $entwurf.anzahlung) {
-                    Text(Texte.Kasse.gesamt).tag(false)
-                    Text(Texte.Kasse.anzahlung).tag(true)
+                // Studio ohne Anzahlung (TF München/Landshut): keine Auswahl, immer Gesamtpreis (wie im Web)
+                if !keineAnzahlung {
+                    Picker(Texte.Kasse.artLabel, selection: $entwurf.anzahlung) {
+                        Text(Texte.Kasse.gesamt).tag(false)
+                        Text(Texte.Kasse.anzahlung).tag(true)
+                    }
+                    .pickerStyle(.segmented)
+                    .accessibilityIdentifier("kasse-art")
                 }
-                .pickerStyle(.segmented)
 
                 // Bei „Anzahlung“ bleibt der Platz des Schalters frei, damit der Ziffernblock beim Umschalten nicht springt
                 HeuteSchalter(an: $heute, kompakt: kompakt)
-                    .opacity(entwurf.anzahlung ? 0 : 1)
-                    .disabled(entwurf.anzahlung)
-                    .accessibilityHidden(entwurf.anzahlung)
+                    .opacity(anzahlung ? 0 : 1)
+                    .disabled(anzahlung)
+                    .accessibilityHidden(anzahlung)
 
                 Ziffernblock(eingabe: $eingabe, tastenHoehe: kompakt ? 44 : 52, abstand: kompakt ? 6 : 8)
 
@@ -141,7 +154,7 @@ struct KasseView: View {
                         Eingabefeld(titel: Texte.Kasse.kunde, text: $entwurf.kunde, platzhalter: Texte.Kasse.kundeBeispiel, grossschreibung: .words)
                         Eingabefeld(titel: Texte.Kasse.email, text: $entwurf.email, platzhalter: Texte.Kasse.emailBeispiel, tastatur: .emailAddress)
                         Eingabefeld(titel: Texte.Kasse.motiv, text: $entwurf.beschreibung, platzhalter: Texte.Kasse.motivBeispiel)
-                        if !entwurf.anzahlung {
+                        if !anzahlung {
                             Eingabefeld(titel: Texte.Kasse.sitzungen, text: $entwurf.sitzungen, platzhalter: Texte.Kasse.sitzungenBeispiel)
                         }
                         if gutscheinWort {
@@ -188,7 +201,7 @@ struct KasseView: View {
         guard let cent = eingabe.cent else { return }
         sendet = true
         fehler = nil
-        let e = entwurf
+        let e = entwurf.passend(keineAnzahlung: keineAnzahlung)
         Task {
             defer { sendet = false }
             do {
@@ -208,6 +221,8 @@ struct KasseView: View {
                 heute = false
             } catch {
                 fehler = fehlerText(error)
+                // 409: Stand hat sich geändert (Abo beendet, Adresse fehlt, keine Anzahlung …) → neu laden, damit Sperrkarte bzw. Auswahl stimmen
+                if (error as? APIFehler)?.status == 409 { await portal.laden() }
             }
         }
     }
@@ -310,9 +325,10 @@ struct GesperrtKarte: View {
     @State private var prueft = false
     @State private var meldung: String?
     @State private var aboOffen = false
+    @State private var adresseOffen = false
 
     enum Fall: Equatable {
-        case aboBeendet, sandbox, stripeVerbinden, wartet
+        case aboBeendet, sandbox, stripeVerbinden, adresseFehlt, wartet
     }
 
     /// Welcher Hinweis gilt (Reihenfolge: beendetes Abo vor Testkauf, damit auch ein abgelaufener Testkauf neu abgeschlossen werden kann)
@@ -322,7 +338,20 @@ struct GesperrtKarte: View {
             if s.istApple, s.apple?.istSandbox == true { return .sandbox }
             return .stripeVerbinden
         }
+        // Stripe frei, aber die Adresse der Zahlseite fehlt (Server: darfKassieren → studioAdresseDa)
+        if s.stripe?.freigegeben == true, s.adresseFehlt { return .adresseFehlt }
         return .wartet
+    }
+
+    /// Meldung nach „Status neu prüfen“ passend zum Grund (nicht immer „Stripe hat noch nicht freigegeben“)
+    nonisolated static func pruefMeldung(_ s: Studio) -> String? {
+        if s.darfKassieren { return nil }
+        switch fall(s) {
+        case .aboBeendet: return nil
+        case .adresseFehlt: return Texte.Kasse11.adresseNochNoetig
+        case .wartet where s.stripe?.freigegeben == true: return Texte.Kasse.vertragNichtAktiv
+        case .sandbox, .stripeVerbinden, .wartet: return Texte.Kasse.nochNichtFrei
+        }
     }
 
     private var istInhaber: Bool { app.sitzung?.istInhaber ?? false }
@@ -335,6 +364,7 @@ struct GesperrtKarte: View {
                 case .aboBeendet: aboBeendet
                 case .sandbox: sandbox
                 case .stripeVerbinden: stripeVerbinden
+                case .adresseFehlt: adresseFehlt
                 case .wartet: wartet
                 }
             }
@@ -343,6 +373,10 @@ struct GesperrtKarte: View {
         }
         .refreshable { await portal.laden() }
         .sheet(isPresented: $aboOffen) { AboErneuernSheet() }
+        .sheet(isPresented: $adresseOffen) {
+            NavigationStack { AdresseView(alsBlatt: true) }
+                .environment(portal)
+        }
         .onChange(of: szene) { _, neu in
             // Zurück aus Safari (Stripe-Einrichtung) oder den Einstellungen: Stand neu holen
             if neu == .active { Task { await portal.laden() } }
@@ -400,12 +434,37 @@ struct GesperrtKarte: View {
         pruefenKnopf(haupt: connect == nil)
     }
 
+    @ViewBuilder private var adresseFehlt: some View {
+        symbol("mappin.and.ellipse")
+        Ueberschrift(Texte.Kasse11.adresseTitel, groesse: 26)
+        text(studio.adresseIstVorschlag ? Texte.Kasse11.adresseVorschlagText : Texte.Kasse11.adresseText)
+        if let meldung { HinweisKarte(text: meldung, symbol: "info.circle.fill") }
+        if istInhaber {
+            Button {
+                adresseOffen = true
+            } label: {
+                Label(studio.adresseIstVorschlag ? Texte.Kasse11.adressePruefen : Texte.Kasse11.adresseEintragen, systemImage: "mappin.and.ellipse")
+            }
+            .buttonStyle(.haupt)
+            .accessibilityIdentifier("adresse-eintragen")
+        } else {
+            HinweisKarte(text: Texte.Kasse11.adresseTeam, symbol: "person.fill")
+        }
+        pruefenKnopf(haupt: !istInhaber)
+    }
+
     @ViewBuilder private var wartet: some View {
         symbol("hourglass")
         Ueberschrift(Texte.Kasse.gesperrtTitel, groesse: 26)
         text(studio.stripe?.freigegeben == true ? Texte.Kasse.vertragNichtAktiv : Texte.Kasse.gesperrtText)
         if let meldung { HinweisKarte(text: meldung, symbol: "info.circle.fill") }
         pruefenKnopf(haupt: true)
+        // Stripe prüft noch, die Adresse fehlt auch: schon jetzt eintragen (wie die Checkliste im Web)
+        if istInhaber, studio.adresseFehlt {
+            Button(Texte.Kasse11.adresseSchonJetzt) { adresseOffen = true }
+                .buttonStyle(.zweit)
+                .accessibilityIdentifier("adresse-eintragen")
+        }
         if let u = connect, studio.stripe?.freigegeben != true {
             Button {
                 openURL(u)
@@ -435,7 +494,7 @@ struct GesperrtKarte: View {
             do {
                 let s = try await APIClient.shared.kontoStatus()
                 await portal.laden()
-                if !s.darfKassieren { meldung = Texte.Kasse.nochNichtFrei }
+                meldung = Self.pruefMeldung(portal.studio ?? s)
             } catch {
                 meldung = fehlerText(error)
             }

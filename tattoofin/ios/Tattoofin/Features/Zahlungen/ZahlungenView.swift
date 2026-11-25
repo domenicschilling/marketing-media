@@ -83,7 +83,7 @@ struct ZahlungenView: View {
                 .listRowSeparator(.hidden)
                 .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
             } header: {
-                KPIKopf(kpis: portal.kpis)
+                KPIKopf(kpis: portal.kpisAnzeige)
                     .textCase(nil)
                     .padding(.horizontal, -20)
                     .padding(.bottom, 8)
@@ -177,7 +177,7 @@ struct ZahlungZeile: View {
                     .font(.dm(.body, weight: .bold))
                     .foregroundStyle(Color.tfTinte)
                     .fixedSize(horizontal: false, vertical: true)
-                StatusChip(zahlung: zahlung.status)
+                StatusChip(zahlung: zahlung.anzeigeStatus)
             }
         }
         .padding(.vertical, 2)
