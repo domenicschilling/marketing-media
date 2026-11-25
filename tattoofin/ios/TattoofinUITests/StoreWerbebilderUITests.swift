@@ -51,7 +51,7 @@ final class StoreWerbebilderUITests: XCTestCase {
         app.navigationBars.buttons.firstMatch.tap()
 
         // a06: Auszahlungen
-        let ausz = app.buttons["Auszahlungen"].firstMatch
+        let ausz = app.buttons["auszahlungen-karte"].firstMatch  // Karte oben in Zahlungen (Abnahme G4, statt Umschalter)
         if ausz.waitForExistence(timeout: 5) { ausz.tap(); Thread.sleep(forTimeInterval: 2); foto(app, "a06-auszahlungen") }
 
         // a02: Kasse mit Betrag

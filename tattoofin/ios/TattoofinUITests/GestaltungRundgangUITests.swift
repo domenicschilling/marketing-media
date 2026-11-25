@@ -104,7 +104,7 @@ final class GestaltungRundgangUITests: XCTestCase {
         app.swipeDown(velocity: .fast); app.swipeDown(velocity: .fast)
         let jonas = app.staticTexts["Jonas Keller"].firstMatch
         if jonas.waitForExistence(timeout: 5) { jonas.tap(); seite(app, "zahlung-detail", tiefe: 1); zurueck(app) }
-        let ausz = app.buttons["Auszahlungen"].firstMatch
+        let ausz = app.buttons["auszahlungen-karte"].firstMatch  // Karte oben in Zahlungen (Abnahme G4, statt Umschalter)
         if ausz.waitForExistence(timeout: 5) { ausz.tap(); seite(app, "auszahlungen", tiefe: 1) }
 
         // Gutscheine, Detail, Verkaufen-Blatt

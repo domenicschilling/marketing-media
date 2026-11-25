@@ -29,7 +29,7 @@ struct GutscheineView: View {
                     .buttonStyle(.haupt)
                     .listRowInsets(EdgeInsets())
                     .listRowBackground(Color.clear)
-                    // Unter iOS 27 zeigt die Leiste nur das „+“: darum hier ein großer Knopf mit Text
+                    // Einziger Weg zum Verkaufen: großer Knopf mit Text (kein „+“ in der Leiste)
                     if portal.studio?.darfKassieren == true {
                         Button {
                             codeFokus = false
@@ -120,20 +120,7 @@ struct GutscheineView: View {
             .refreshable { await portal.laden() }
             .navigationTitle(Texte.Gutscheine.titel)
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                if portal.studio?.darfKassieren == true {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button {
-                            codeFokus = false
-                            verkaufenOffen = true
-                        } label: {
-                            Label(Texte.Gutscheine.verkaufen, systemImage: "plus")
-                                .labelStyle(.titleAndIcon)
-                                .font(.dm(.subheadline, weight: .semibold))
-                        }
-                    }
-                }
-            }
+            // Kein „+“ in der Leiste mehr: es doppelte den großen Knopf „Gutschein verkaufen“ (Abnahme G4)
             .navigationDestination(for: Zahlung.self) { GutscheinDetailView(zahlung: $0) }
             .sheet(isPresented: $verkaufenOffen) { GutscheinVerkaufenView() }
             .fullScreenCover(isPresented: $scannerOffen) {
