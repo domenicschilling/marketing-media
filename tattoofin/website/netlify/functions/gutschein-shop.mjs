@@ -124,8 +124,8 @@ export default handler(async (req, context) => {
   try {
     const url = await checkoutFuer(s, z, {
       nurKarte: true,
-      // Kasse im Look der Shop-Seite (TF-Logo der Stadt, Schwarz, Gold). Lehnt Stripe das ab, läuft die Kasse ohne (checkoutFuer).
-      branding: { display_name: c.seite?.name || s.firma, logo: { type: "url", url: `${CFG.siteUrl}${c.marke.logoPfad}` }, background_color: "#0B0B0B", button_color: "#C8A35A", border_style: "pill" },
+      // Kasse im Look der Shop-Seite (TF-Logo der Stadt, Schwarz, Gold; Chic: Weiß/Rot aus marke.kasse). Lehnt Stripe das ab, läuft die Kasse ohne (checkoutFuer).
+      branding: { display_name: c.seite?.name || s.firma, logo: { type: "url", url: `${CFG.siteUrl}${c.marke.logoPfad}` }, background_color: "#0B0B0B", button_color: "#C8A35A", border_style: "pill", ...(c.marke.kasse || {}) },
       extra: {
         // Möglichst einfache Kasse (Domenic 23.11.2026): keine Pflicht-Rechnungsadresse, keine Telefonnummer
         billing_address_collection: "auto",

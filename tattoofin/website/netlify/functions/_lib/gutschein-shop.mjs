@@ -54,6 +54,33 @@ const TF_WEIHNACHTEN = {
 // grundPfad: Hintergrund des Gutschein-PDFs (Karte mit Satinband, Schleife und Logo, dev/gutschein/pdf-grund.html)
 const tfMarke = (kuerzel, alt) => ({ kopf: "#0B0B0B", logoPfad: `/assets/gs-shop/${kuerzel}/logo.png`, grundPfad: `/assets/gs-shop/${kuerzel}/pdf-grund.jpg`, alt, knopf: "#C8A35A", knopfText: "#0B0B0B", titel: "#0B0B0B", band: "#0B0B0B", akzent: "#C8A35A", kasten: "#f6efe0" });
 
+// ---------- Chic Tattoo Augsburg (Domenic 25.11.2026, über Ultron) ----------
+// Eigene Stufen „Du zahlst → Du bekommst*“: 100 → 150, 200 → 280, 400 → 500, 800 → 1.000 € (ohne „+50 €“ aus dem alten Studio-Bild),
+// dazu Wertgutschein ab 50 €. Unbegrenzt, Knappheit nur aus der echten Frist 24.12.2026, 16 Uhr (Ultron 25.11.: wie MU/LA).
+// Voller Wert bis 31.03.2027, danach der Kaufpreis bis 31.12.2029. 1 Aktions-Gutschein pro Person wie bei TF München („wie bei TF Munich“).
+const CHIC_WEIHNACHTEN = {
+  titel: "Weihnachts-Gutscheine",
+  aktionen: [
+    { id: "nr1", nr: 1, wertCent: 15000, preisCent: 10000 },
+    { id: "nr2", nr: 2, wertCent: 28000, preisCent: 20000 },
+    { id: "nr3", nr: 3, wertCent: 50000, preisCent: 40000 },
+    { id: "nr4", nr: 4, wertCent: 100000, preisCent: 80000 },
+  ],
+  bonusBis: "2027-03-31",
+  aktionAb: null,
+  aktionBis: "2026-12-24T16:00:00+01:00",
+  aktionJeKaeufer: 1,
+  // Wertgutschein ab 50 € (Domenic); Vorschläge ab 100 €, damit der Anker nicht bei 50 € liegt
+  frei: { minCent: 5000, maxCent: 200000, vorschlaege: [10000, 15000, 25000, 50000] },
+};
+// Look von Chic (wie die Chic-Seiten seit 17.11.2026: Schwarz, Papierweiß, Chic-Rot #E3121B als einziger Akzent, eckige Knöpfe).
+// pdf: Schriftfarben auf dem Gutschein-PDF (dunkle Karte aus dev/gutschein/chic/pdf-grund.html); ohne pdf gelten die TF-Farben (Gold).
+// kasse: Look der Stripe-Kasse; ohne kasse gilt Schwarz/Gold (TF).
+const chicMarke = { kopf: "#0C0C0D", logoPfad: "/assets/gs-shop/chic/logo.png", grundPfad: "/assets/gs-shop/chic/pdf-grund.jpg", alt: "Chic Tattoo Augsburg",
+  knopf: "#C70F17", knopfText: "#FFFFFF", titel: "#0C0C0D", band: "#0C0C0D", akzent: "#C70F17", kasten: "#F4F2EE",
+  kasse: { background_color: "#FFFFFF", button_color: "#C70F17", border_style: "rectangular" },
+  pdf: { wert: "#FFFFFF", hell: "#FFFFFF", creme: "#E6E3DD", mute: "#A9A6A0", gold: "#FF5A5F", rand: "#3a3a3d", qr: "#0C0C0D", klein: "#8A877F" } };
+
 // seite: Angaben für die statische Shop-Seite je Stadt (dev/gutschein-seiten.mjs → public/gutschein-kaufen/<slug>.html)
 export const SHOPS = {
   "tattoo-fashion-munich": {
@@ -113,6 +140,33 @@ export const SHOPS = {
       },
     },
     // Domenic 23.11.2026: gleiche Aktion für Landshut (Live-Gang nur mit seinem OK im Chat)
+    freigegeben: true,
+  },
+  // Chic Tattoo Augsburg (Tattoofin-Studio seit 19.10.2026, Paket Risikofrei, Stripe-Konto acct_1USGZY0O569qR7tG, Zahlungen + Auszahlungen an;
+  // nur lesend geprüft 25.11.2026). Eigene Vorlage dev/gutschein/chic/ (modernes Chic-Design, zwei Wege „Geschenk gesucht?“ / „Gönn dir selbst was“).
+  "chic-tattoo-augsburg": {
+    studioId: "st_0yyvqSMyCfUr",
+    ...CHIC_WEIHNACHTEN,
+    marke: chicMarke,
+    // Verkäufer laut Impressum der Chic-Seiten (chic-tattoo-augsburg-rubbellos.netlify.app/impressum) und Stripe-Konto (Einzelunternehmer
+    // Christoph Weiße). Keine USt-IdNr. hinterlegt.
+    anbieter: { name: "Chic Tattoo & Piercing, Inhaber Christoph Weiße", rechtsform: "Einzelunternehmen", strasse: "Ulmer Straße 14", plz: "86154", ort: "Augsburg", email: "Lanzatattoo1@gmx.de", telefon: "+49 821 24299615" },
+    seite: {
+      kuerzel: "chic", name: "Chic Tattoo Augsburg", firma: "Chic Tattoo Augsburg", stadt: "Augsburg",
+      // Eigene Vorlagen (Seite, Rechtsseiten, Vorschaubild, PDF-Hintergrund, Symbol) statt der TF-Vorlagen
+      vorlagen: { seite: "chic/seite.html", recht: "chic/recht.html", og: "chic/og.html", pdfGrund: "chic/pdf-grund.html", icon: "chic/icon.html" },
+      // Angebot der Überschrift ohne ?g= (und im Vorschaubild): 100 € kaufen, 150 € bekommen (höchster Aufschlag, kleinster Einstieg)
+      heroId: "nr1", musterId: "nr2",
+      telefon: "0821 24299615", telefonLink: "+4982124299615", whatsapp: "4915204485125", instagram: "chic_tattoo_augsburg",
+      // Google: 5,0 aus 372 Bewertungen, Stand 15.11.2026 (Memory chic-tattoo-augsburg; vor dem Live-Gang neu nachsehen)
+      google: { sterne: "5,0", anzahl: 372, stand: "15.11.2026", suche: "Chic Tattoo & Piercing, Ulmer Straße 14, 86154 Augsburg" },
+      zeiten: [["Montag bis Freitag", "10–18 Uhr"], ["Samstag", "10–16 Uhr"], ["Sonntag", "geschlossen"]],
+      pixel: "1142712101501159",
+      // Echte Arbeiten aus dem Studio (Instagram @chic_tattoo_augsburg, Quellen public/assets/gs-shop/chic/LIZENZ.txt), keine KI, keine Narben-Bilder
+      bilder: ["loewe", "rosen", "rabe", "schildkroete", "herz", "sleeve"],
+      stimmen: null,
+    },
+    // Wie MU/LA: Live-Gang nur über den Prod-Deploy dieses Branches mit Domenics OK (Entwurf-Deploys zeigen die Seite offen, dort nie bezahlen)
     freigegeben: true,
   },
 };

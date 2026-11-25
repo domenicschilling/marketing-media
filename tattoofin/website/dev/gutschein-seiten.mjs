@@ -43,6 +43,12 @@ const fuelle = (vorlage, w) => vorlage
   .replace(/\{\{\{(\w+)\}\}\}/g, (_, k) => { if (!(k in w)) throw new Error(`Platzhalter {{{${k}}}} fehlt`); return String(w[k]); })
   .replace(/\{\{(\w+)\}\}/g, (_, k) => { if (!(k in w)) throw new Error(`Platzhalter {{${k}}} fehlt`); return esc(w[k]); });
 const vorlage = (n) => fs.readFileSync(path.join(root, "dev/gutschein", n), "utf8");
+// Vorlage je Studio (SHOPS[…].seite.vorlagen, z. B. Chic: eigene Seite, Rechtsseiten, Vorschaubild, PDF-Hintergrund, Symbol); sonst die TF-Vorlagen
+const STD_VORLAGEN = { seite: "seite.html", recht: "recht.html", og: "og.html", pdfGrund: "pdf-grund.html", icon: null, geschenk: "geschenk.html" };
+const vorlageFuer = (c, art) => { const v = c.seite?.vorlagen; return v ? v[art] ?? null : STD_VORLAGEN[art]; };
+const eigeneVorlagen = (c) => Boolean(c.seite?.vorlagen);
+// Angebot der Überschrift und des Vorschaubilds ohne ?g= (TF: Nr. 4 = 375 → 500 €; Chic: Nr. 1 = 100 → 150 €)
+const heroIdVon = (c) => c.seite?.heroId || "nr4";
 const ZAHL = (c) => (c / 100).toLocaleString("de-DE", { minimumFractionDigits: c % 100 ? 2 : 0, maximumFractionDigits: 2 });
 // Geschütztes Leerzeichen vor dem €: das Zeichen rutscht nie allein in die nächste Zeile
 const EURO = (c) => ZAHL(c) + " €";
@@ -121,7 +127,9 @@ const ICONS = {
 // Welche gilt, entscheidet die Seiten-Funktion nach der Uhrzeit (netlify/functions/_lib/gutschein-seite.mjs).
 const FASSUNGEN = { angebot: "og-weihnachten.jpg", danach: "og-gutschein.jpg" };
 function ogTexte(c, fassung = "angebot") {
-  const nr4 = c.aktionen.find((x) => x.id === "nr4"), ab = [...c.aktionen].sort((x, y) => x.preisCent - y.preisCent)[0];
+  const nr4 = c.aktionen.find((x) => x.id === heroIdVon(c)), ab = [...c.aktionen].sort((x, y) => x.preisCent - y.preisCent)[0];
+  // Steht der günstigste schon in der Überschrift (Chic: 100 → 150 €), nennt die Beschreibung den größten
+  const zweit = ab.id === nr4.id ? [...c.aktionen].sort((x, y) => y.wertCent - x.wertCent)[0] : ab;
   const name = c.seite.name, stadt = c.seite.stadt;
   const frei = `${ZAHL(c.frei.minCent)} bis ${EURO(c.frei.maxCent)}`, ogDatei = FASSUNGEN[fassung];
   const karteSofort = { karteOben: "Sofort", karteMitte: "PDF", karteUnten: "per E-Mail" };
@@ -138,15 +146,17 @@ function ogTexte(c, fassung = "angebot") {
     // WhatsApp/Facebook: fette Zeile = Angebot + Studio, darunter wofür, wo, der günstigste (200 € → 300 €) und die Frist (statt einer
     // Stückzahl, Domenic 24.11.2026); höchstens 85 Zeichen, sonst kürzt WhatsApp nach zwei Zeilen
     titel: `Gutschein für ${EURO(nr4.preisCent)} kaufen, ${EURO(nr4.wertCent)} bekommen · ${name}`,
-    ogText: `Für Tattoo oder Piercing in ${stadt}. Auch ${EURO(ab.preisCent)} → ${EURO(ab.wertCent)}. Nur bis 24.12., 16 Uhr.`,
+    ogText: `Für Tattoo oder Piercing in ${stadt}. Auch ${EURO(zweit.preisCent)} → ${EURO(zweit.wertCent)}. Nur bis 24.12., 16 Uhr.`,
+    // Die übrigen Stufen für eigene Vorschaubilder (Chic): „Du zahlst → Du bekommst*“ (ohne die Stufe der Überschrift)
+    stufenOg: [...c.aktionen].filter((x) => x.id !== nr4.id).sort((x, y) => x.preisCent - y.preisCent).map((x) => `<li><span>${EURO(x.preisCent)}</span><i>→</i><b>${EURO(x.wertCent)}</b></li>`).join(""),
     ogAlt: `${name}: Tattoo-Gutschein für ${EURO(nr4.preisCent)} kaufen, ${EURO(nr4.wertCent)} bekommen, nur bis 24.12., 16 Uhr. ${bedingung}`, ogDatei };
 }
 const ogBildUrl = (k, datei) => `${BASIS}/assets/gs-shop/${k}/${datei}?v=${hash(path.join(root, `public/assets/gs-shop/${k}/${datei}`))}`;
 // Titel, Beschreibung und Vorschaubild je Fassung (Block zwischen <!--og--> und <!--/og--> der Vorlage)
-const META = (() => { const v = vorlage("seite.html"), m = /<!--og-->[\s\S]*?<!--\/og-->/.exec(v); if (!m) throw new Error("<!--og--> fehlt in seite.html"); return m[0]; })();
+const META = (c) => { const n = vorlageFuer(c, "seite"), v = vorlage(n), m = /<!--og-->[\s\S]*?<!--\/og-->/.exec(v); if (!m) throw new Error(`<!--og--> fehlt in ${n}`); return m[0]; };
 function metaBlock(c, w, fassung) {
   const og = ogTexte(c, fassung);
-  return fuelle(META, { ...w, titel: og.titel, ogTitel: og.titel, ogText: og.ogText, ogAlt: og.ogAlt, ogBild: ogBildUrl(c.seite.kuerzel, og.ogDatei) });
+  return fuelle(META(c), { ...w, titel: og.titel, ogTitel: og.titel, ogText: og.ogText, ogAlt: og.ogAlt, ogBild: ogBildUrl(c.seite.kuerzel, og.ogDatei) });
 }
 
 function werte(slug, c) {
@@ -155,7 +165,8 @@ function werte(slug, c) {
   const nachBonus = new Date(new Date(bonusBis).getTime() + 2 * 3600e3);
   const og = ogTexte(c), ogDatei = path.join(root, `public/assets/gs-shop/${p.kuerzel}/${og.ogDatei}`);
   // Hero und Vorschau zeigen den 500-€-Gutschein (wie die Werbung), dazu den günstigsten („schon ab 200 €“)
-  const nr4 = c.aktionen.find((x) => x.id === "nr4"), ab = [...c.aktionen].sort((x, y) => x.preisCent - y.preisCent)[0];
+  const nr4 = c.aktionen.find((x) => x.id === heroIdVon(c)), ab = [...c.aktionen].sort((x, y) => x.preisCent - y.preisCent)[0];
+  const gross = [...c.aktionen].sort((x, y) => y.wertCent - x.wertCent)[0], zweit = ab.id === nr4.id ? gross : ab;
   const spanne = `${ZAHL(c.frei.minCent)}–${EURO(c.frei.maxCent)}`;
   const geschenk = [480, 960, 1400].map((w) => `/assets/gs-shop/${p.kuerzel}/geschenk-${w}.webp ${w}w`).join(", ");
   // Startzustand der Liste (das Skript zeichnet sie nach dem Laden gleich neu); unbegrenzt seit 24.11.2026: keine Stückzahl
@@ -176,6 +187,16 @@ function werte(slug, c) {
     waText: encodeURIComponent(`Hallo, ich habe eine Frage zu den Tattoo-Gutscheinen bei ${p.name}.`),
     bonusBis: DATUM(bonusBis), gueltigBis: DATUM(gBis), nachBonus: DATUM(nachBonus), bonusKurz: DATUM(bonusBis).slice(0, 5),
     zahlwort: ["", "Ein", "Zwei", "Drei", "Vier", "Fünf", "Sechs", "Sieben"][c.aktionen.length] || String(c.aktionen.length),
+    // Zweites Angebot der Unterzeile (gleiche Regel wie heroTexte): der günstigste, steht er schon oben, der größte
+    zweitPreis: EURO(zweit.preisCent), zweitWert: EURO(zweit.wertCent), grossPreis: EURO(gross.preisCent), grossWert: EURO(gross.wertCent),
+    // Chic-Liste ohne „+… € geschenkt“ (Domenic 25.11.: ohne „+50 €“), aufsteigend
+    kartenChic: [...c.aktionen].sort((x, y) => x.preisCent - y.preisCent).map((x) => `<button type="button" class="zeile" data-wahl="${x.id}"><span class="preis"><small>Du zahlst</small><b>${EURO(x.preisCent)}</b></span><span class="pf" aria-hidden="true">→</span>`
+      + `<span class="wert"><small>Du bekommst*</small><b>${EURO(x.wertCent)}</b></span><span class="waehlen" aria-hidden="true">Wählen</span></button>`).join("")
+      + `<button type="button" class="zeile frei" data-wahl="frei"><span class="preis"><small>Eigener Betrag</small><b>ab ${EURO(c.frei.minCent)}</b></span><span class="pf" aria-hidden="true"></span><span class="wert"><small>Wertgutschein</small><b>${spanne}</b></span><span class="waehlen" aria-hidden="true">Wählen</span></button>`,
+    stufenOg: ogTexte(c).stufenOg, freiMin: EURO(c.frei.minCent),
+    musterWert: EURO((c.aktionen.find((x) => x.id === (p.musterId || "nr4")) || nr4).wertCent),
+    beispielPreis: EURO((c.aktionen.find((x) => x.id === "nr3") || nr4).preisCent), beispielWert: EURO((c.aktionen.find((x) => x.id === "nr3") || nr4).wertCent),
+    beispielBonus: EURO((c.aktionen.find((x) => x.id === "nr3") || nr4).wertCent - (c.aktionen.find((x) => x.id === "nr3") || nr4).preisCent),
     heroWert: EURO(nr4.wertCent), heroWertLang: nr4.wertCent >= 100000 ? " lang" : "", heroPreis: EURO(nr4.preisCent), abPreis: EURO(ab.preisCent), abWert: EURO(ab.wertCent), freiSpanne: spanne,
     // FAQ „Was bekommt man mit einem 300-€-Gutschein?“ (nicht „für 300 €“: das läse sich wie der Kaufpreis)
     abGutschein: `${ZAHL(ab.wertCent)}-€-Gutschein`,
@@ -191,7 +212,7 @@ function werte(slug, c) {
       `<button type="button" class="zeile frei" data-wahl="frei"><span class="wert">Eigener Betrag</span><span class="preis">Wertgutschein, ${spanne}</span><span class="pfeil" aria-hidden="true">→</span></button>`,
     zeiten: p.zeiten.map(([t, z]) => `<tr><td>${esc(t)}</td><td>${esc(z)}</td></tr>`).join(""),
     // heroId: Angebot der Überschrift, solange kaufbar (wie in der Werbung); sonst wählt die Seite das günstigste kaufbare
-    seiteJson: JSON.stringify({ slug, kuerzel: p.kuerzel, stadt: p.stadt, name: p.name, bilder: p.bilder, aktionBis: aktionEndeIso(c), heroId: "nr4" }).replace(/</g, "\\u003c"),
+    seiteJson: JSON.stringify({ slug, kuerzel: p.kuerzel, stadt: p.stadt, name: p.name, bilder: p.bilder, aktionBis: aktionEndeIso(c), heroId: heroIdVon(c) }).replace(/</g, "\\u003c"),
   };
 }
 
@@ -278,7 +299,7 @@ async function pdfMuster(slug, c, dir) {
   const ql = spawnSync("which", ["qlmanage"]).status === 0;
   if (!ql) { console.log("  ! Gutschein-Muster übersprungen (macOS Quick Look fehlt)"); return; }
   const gs = await import("../netlify/functions/_lib/gutschein.mjs");
-  const a = c.aktionen.find((x) => x.id === "nr4");
+  const a = c.aktionen.find((x) => x.id === (c.seite.musterId || "nr4"));
   const s = { id: "st_muster", firma: c.seite.firma, slug, strasse: c.anbieter.strasse, plz: c.anbieter.plz, ort: c.anbieter.ort };
   const z = { id: "zl_muster", studioId: s.id, betragCent: a.preisCent, status: "bezahlt", gutschein: { shop: true, code: "GS-MUST-ER01", token: "muster", empfaenger: "Alex",
     nachricht: "Frohe Weihnachten! Such dir was Schönes aus.", aktion: { id: a.id, nr: a.nr }, wertCent: a.wertCent, bezahltCent: a.preisCent,
@@ -298,6 +319,7 @@ async function pdfMuster(slug, c, dir) {
 
 async function bilder(slug, c) {
   const k = c.seite.kuerzel, dir = path.join(ASSETS, k), assets = pathToFileURL(ASSETS).href;
+  if (eigeneVorlagen(c)) return bilderEigen(slug, c, dir, assets);
   // 1. Hero-Geschenk (durchsichtig, doppelte Dichte → 1600 px) in 480/960/1400 WebP + 960 PNG als Ersatz
   const voll = path.join(dir, ".geschenk-voll.png");
   await rendern(fuelle(vorlage("geschenk.html"), { assets, kuerzel: k }), voll, { breite: 800, hoehe: 540, dpr: 2, durchsichtig: true, element: "#k" });
@@ -326,14 +348,37 @@ async function bilder(slug, c) {
   await pdfMuster(slug, c, dir);
 }
 
+// Bilder für Studios mit eigenen Vorlagen (Chic): Vorschaubilder je Fassung, Symbole, PDF-Hintergrund, Gutschein-Muster.
+// Die Vorlagen bekommen assets (file-URL von public/assets/gs-shop) und kuerzel; Texte wie bei TF aus ogTexte (gemessen über window.passt).
+async function bilderEigen(slug, c, dir, assets) {
+  for (const [fassung, datei] of Object.entries(FASSUNGEN)) {
+    const og = fuelle(vorlage(vorlageFuer(c, "og")), { assets, kuerzel: c.seite.kuerzel, name: c.seite.name, fassung, stufenOg: "", ...ogTexte(c, fassung) });
+    await rendern(og, path.join(dir, datei), { breite: 1200, hoehe: 630, jpeg: true, element: "#og", pruefen: async (p) => {
+      const r = await p.evaluate(() => window.passt);
+      if (!r?.ok) throw new Error(`Vorschaubild ${c.seite.kuerzel} ${fassung}: Text passt nicht ${JSON.stringify(r)}`);
+    } });
+  }
+  const icon = path.join(dir, ".icon-512.png");
+  await rendern(fuelle(vorlage(vorlageFuer(c, "icon")), { assets, kuerzel: c.seite.kuerzel }), icon, { breite: 512, hoehe: 512, element: "#i" });
+  await umrechnen(icon, [32, 180, 192].map((b) => ({ breite: b, typ: "image/png", datei: path.join(dir, `icon-${b}.png`) })));
+  fs.rmSync(icon, { force: true });
+  const grundPng = path.join(dir, ".pdf-grund.png");
+  await rendern(fuelle(vorlage(vorlageFuer(c, "pdfGrund")), { assets, kuerzel: c.seite.kuerzel }), grundPng, { breite: 595, hoehe: 420, dpr: 3, element: "#p" });
+  await umrechnen(grundPng, [{ breite: 1785, typ: "image/jpeg", q: 0.86, datei: path.join(dir, "pdf-grund.jpg") }]);
+  fs.rmSync(grundPng, { force: true });
+  await pdfMuster(slug, c, dir);
+}
+
 if (OG_PRUEFEN) {
   const erg = [], tmp = fs.mkdtempSync(path.join(ASSETS, ".pruef-"));
   try {
     for (const [slug, c] of Object.entries(SHOPS)) {
-      if (!c.seite) continue;
+      // Eigene Vorlagen (Chic) messen sich beim Rendern selbst (window.passt); hier nur die TF-Vorschaubilder
+      if (!c.seite || eigeneVorlagen(c)) continue;
       const k = c.seite.kuerzel, assets = pathToFileURL(ASSETS).href;
       for (const fassung of Object.keys(FASSUNGEN)) {
-        const og = fuelle(vorlage("og.html"), { assets, kuerzel: k, geschenk: pathToFileURL(path.join(ASSETS, k, "geschenk-960.png")).href, ...ogTexte(c, fassung), zweigL: zweig("zw l"), zweigR: zweig("zw r", { beeren: false }) });
+        const og = eigeneVorlagen(c) ? fuelle(vorlage(vorlageFuer(c, "og")), { assets, kuerzel: k, name: c.seite.name, fassung, stufenOg: "", ...ogTexte(c, fassung) })
+          : fuelle(vorlage("og.html"), { assets, kuerzel: k, geschenk: pathToFileURL(path.join(ASSETS, k, "geschenk-960.png")).href, ...ogTexte(c, fassung), zweigL: zweig("zw l"), zweigR: zweig("zw r", { beeren: false }) });
         let passt = null;
         await rendern(og, path.join(tmp, `${k}-${fassung}.jpg`), { breite: 1200, hoehe: 630, jpeg: true, element: "#og", pruefen: async (p) => { passt = await p.evaluate(() => window.passt); } });
         erg.push({ slug, fassung, ...passt });
@@ -348,15 +393,16 @@ const SEITEN = {};
 for (const [slug, c] of Object.entries(SHOPS)) {
   if (!c.seite) continue;
   // Bilder zuerst (die Seite nennt das Vorschaubild mit Prüfsumme, damit WhatsApp/Facebook ein neues Bild neu laden)
-  if (MIT_OG) await bilder(slug, c);
+  // --nur <slug>: Bilder nur für dieses Studio neu rendern (die anderen bleiben unverändert)
+  if (MIT_OG && (!arg("--nur") || arg("--nur") === slug)) await bilder(slug, c);
   const w = werte(slug, c);
   // Die Seite selbst liefert die Funktion gutschein-seite.mjs aus (Standard-Fassung „angebot“, dazu die Meta-Blöcke aller Fassungen)
-  SEITEN[slug] = { html: fuelle(vorlage("seite.html"), w), og: Object.fromEntries(Object.keys(FASSUNGEN).map((f) => [f, metaBlock(c, w, f)])), stadt: c.seite.stadt, name: c.seite.name, heroId: "nr4" };
+  SEITEN[slug] = { html: fuelle(vorlage(vorlageFuer(c, "seite")), w), og: Object.fromEntries(Object.keys(FASSUNGEN).map((f) => [f, metaBlock(c, w, f)])), stadt: c.seite.stadt, name: c.seite.name, heroId: heroIdVon(c) };
   for (const [art, titel] of RECHT) {
     const fussLinks = RECHT.map(([a2, t2]) => `<a href="/gutschein-kaufen/${slug}-${a2}"${a2 === art ? ' aria-current="page"' : ""}>${esc(t2)}</a>`).join("") + `<a href="/gutschein-kaufen/${slug}">Zu den Gutscheinen</a>`;
     // Lange Wörter mit weichem Trennzeichen (bei 320 px passt „GUTSCHEINBEDINGUNGEN“ sonst nicht in die Zeile)
     const titelH1 = esc(titel).replace("Gutscheinbedingungen", "Gutschein&shy;bedingungen").replace("Widerrufsbelehrung", "Widerrufs&shy;belehrung");
-    schreibe(`${slug}-${art}.html`, fuelle(vorlage("recht.html"), { ...w, seitenTitel: titel, seitenTitelH1: titelH1, inhalt: rechtInhalt(art, slug, c, w), fussLinks }));
+    schreibe(`${slug}-${art}.html`, fuelle(vorlage(vorlageFuer(c, "recht")), { ...w, seitenTitel: titel, seitenTitelH1: titelH1, inhalt: rechtInhalt(art, slug, c, w), fussLinks }));
   }
   if (VORSCHAU) {
     fs.mkdirSync(VORSCHAU, { recursive: true });

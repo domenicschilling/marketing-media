@@ -1,0 +1,27 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8">
+<!-- Hintergrund des Gutschein-PDFs von Chic Tattoo Augsburg (dev/gutschein-seiten.mjs --og → public/assets/gs-shop/chic/pdf-grund.jpg).
+     1 CSS-Pixel = 1 PDF-Punkt (595 × 420). Texte (Name, Betrag, Gültigkeit, Code, QR) schreibt gutscheinPdf darüber in den Farben
+     aus SHOPS[…].marke.pdf; die Flächen dafür bleiben frei: links ab x 158 (Text), rechts unten Code-Kasten x 372–570 / y 252–378.
+     Look wie die Shop-Seite: tiefes Schwarz, ein roter Streifen (Chic-Rot), rundes Studio-Logo, keine Weihnachts-Deko. -->
+<style>
+@font-face{font-family:"Archivo";font-weight:100 900;font-stretch:62% 125%;src:url({{assets}}/schrift/archivo-var.woff2) format("woff2")}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:595px;height:420px;overflow:hidden;background:#0C0C0D}
+#p{position:relative;width:595px;height:420px;overflow:hidden;background:radial-gradient(70% 80% at 80% 20%,#1d1d20,#0C0C0D 70%)}
+.rahmen{position:absolute;inset:12px;border:1px solid #3a3a3d}
+.streifen{position:absolute;left:92px;top:12px;bottom:12px;width:26px;background:#C70F17}
+.streifen span{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-90deg);white-space:nowrap;font:700 10px/1 Archivo;font-stretch:80%;letter-spacing:.42em;text-transform:uppercase;color:#fff}
+.wort{position:absolute;left:158px;top:42px;font:800 30px/1 Archivo;font-stretch:66%;letter-spacing:.02em;text-transform:uppercase;color:#fff}
+.wort i{font-style:normal;color:#FF5A5F}
+.unter{position:absolute;left:159px;top:80px;font:600 9px/1 Archivo;letter-spacing:.32em;text-transform:uppercase;color:#A9A6A0}
+.logo{position:absolute;left:428px;top:30px;width:124px;height:124px;border-radius:50%;box-shadow:0 0 0 3px #0C0C0D,0 0 0 4.5px #3a3a3d}
+.kasten{position:absolute;left:372px;top:252px;width:198px;height:126px;background:#161618;border:1px solid #3a3a3d}
+.kasten:before{content:"";position:absolute;left:-1px;top:-1px;width:42px;height:3px;background:#C70F17}
+</style></head><body><div id="p">
+<div class="rahmen"></div>
+<div class="streifen"><span>Chic Tattoo Augsburg</span></div>
+<span class="wort">Tattoo-Gutschein<i>.</i></span>
+<span class="unter">Tattoo · Piercing · Augsburg</span>
+<img class="logo" src="{{assets}}/{{kuerzel}}/logo.png" alt="">
+<div class="kasten"></div>
+</div></body></html>

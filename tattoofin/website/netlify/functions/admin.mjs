@@ -1,7 +1,7 @@
 // Admin-API (Header: Authorization: Bearer <ADMIN_TOKEN>)
 //   GET   /api/admin/studios
 //   GET   /api/admin/studio/:id
-//   PATCH /api/admin/studio/:id               { status, notiz, benachrichtigungEmail, strasse, plz, ort, website }
+//   PATCH /api/admin/studio/:id               { status, notiz, benachrichtigungEmail, strasse, plz, ort, website, keineAnzahlung, provisionFreiBis }
 //   POST  /api/admin/studio/:id/live          Go-live setzen + E-Mail
 //   POST  /api/admin/studio/:id/erstattung    Garantie-Erstattung (Kauf) über Stripe
 //   POST  /api/admin/studio/:id/login-link    Login-Link für Support
@@ -108,6 +108,12 @@ export default handler(async (req) => {
       // Anschrift korrigieren (z. B. Firmenname im Feld Straße) – wichtig für Monatsabrechnung und Vertrag
       for (const k of ["strasse", "plz", "ort", "website"]) if (b[k] !== undefined) s[k] = clean(b[k], 160);
       if (b.status && STATUS[b.status]) s.status = b.status;
+      // Tattoofin gratis bis (Provision 0 %, nur Paket Risikofrei), z. B. { "provisionFreiBis": "2026-12-31" }; "" schaltet es ab
+      if (b.provisionFreiBis !== undefined) {
+        const t = clean(b.provisionFreiBis, 10);
+        if (t && !/^\d{4}-\d{2}-\d{2}$/.test(t)) return fail("provisionFreiBis bitte als JJJJ-MM-TT angeben.");
+        if (t) s.provisionFreiBis = t; else delete s.provisionFreiBis;
+      }
       // Anzahlungen für dieses Studio ausschalten (nur Finanzierung + Gutscheine), Domenic 23.11.2026
       if (b.keineAnzahlung !== undefined) { s.keineAnzahlung = Boolean(b.keineAnzahlung); if (s.keineAnzahlung && s.ausweichAnzahlung) s.ausweichAnzahlung.an = false; }
       await saveStudio(s);

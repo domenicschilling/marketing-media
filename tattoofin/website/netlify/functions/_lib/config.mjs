@@ -212,8 +212,13 @@ export function paketVon(s) {
 }
 
 // Provisionssatz eines Studios in Prozent (0 bei Kauf/Profi)
+// provisionFreiBis (YYYY-MM-DD, Admin-PATCH): Tattoofin gratis bis zu diesem Tag (Ende des Tages in Berlin), z. B. Chic Tattoo Augsburg bis
+// 31.12.2026 (Domenic 25.11.2026). Gilt für Zahlungen, deren Kasse in dieser Zeit entsteht (die Gebühr wird beim Anlegen der Kasse festgelegt).
+export const provisionFrei = (s, zeit = jetzt()) => Boolean(s?.provisionFreiBis) && /^\d{4}-\d{2}-\d{2}$/.test(s.provisionFreiBis)
+  && zeit.getTime() <= new Date(`${s.provisionFreiBis}T23:59:59+01:00`).getTime();
 export function provisionSatz(s) {
   if (!s || s.modell !== "provision") return 0;
+  if (provisionFrei(s)) return 0;
   return Number(s.provisionProzent ?? paketVon(s).provisionProzent ?? CFG.provisionProzent);
 }
 

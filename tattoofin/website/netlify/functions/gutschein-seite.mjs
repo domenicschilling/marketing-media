@@ -44,4 +44,4 @@ export default async (req) => {
 };
 
 // Muss als fester Wert dastehen (Netlify liest ihn beim Bündeln); neue Stadt: hier und in SHOPS eintragen
-export const config = { path: ["/gutschein-kaufen/tattoo-fashion-munich", "/gutschein-kaufen/tattoo-fashion-landshut"] };
+export const config = { path: ["/gutschein-kaufen/tattoo-fashion-munich", "/gutschein-kaufen/tattoo-fashion-landshut", "/gutschein-kaufen/chic-tattoo-augsburg"] };

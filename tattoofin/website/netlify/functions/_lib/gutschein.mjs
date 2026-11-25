@@ -220,7 +220,9 @@ export async function gutscheinPdf(s, z) {
   // steht in der Kauf-Mail und hinter dem QR-Code), Tattoofin nur ganz klein. Schriften wie auf der Seite: Oswald für Betrag,
   // Name, Gültigkeit und Code (gesperrt), Inter für den Fließtext. Lagen von oben in Punkt, wie im Hintergrund-Bild.
   if (marke) {
-    const GOLD = hex("#E8CD92"), HELL = hex("#F4EFE6"), CREME = hex("#ECE5D6"), MUTE = hex("#B3AB9C"), RAND = hex("#d9b46e");
+    // Schriftfarben: TF Gold/Creme; andere Marken setzen marke.pdf (z. B. Chic: Weiß mit Rot auf dunkler Karte)
+    const P = { gold: "#E8CD92", hell: "#F4EFE6", creme: "#ECE5D6", mute: "#B3AB9C", rand: "#d9b46e", qr: "#0B0B0B", klein: "#7d7569", ...(marke.pdf || {}) };
+    const GOLD = hex(P.gold), WERT = hex(P.wert || P.gold), HELL = hex(P.hell), CREME = hex(P.creme), MUTE = hex(P.mute), RAND = hex(P.rand);
     const Y = (top) => H - top, L = 158, LB = 200;
     // Oswald/Inter (oben eingebettet); klappte das nicht (Netz), bleibt Helvetica (alle Texte passen auch damit)
     const [O7, O6, I4] = eigene || [fb, fb, f];
@@ -248,7 +250,7 @@ export async function gutscheinPdf(s, z) {
     if (g.empfaenger) { for (const z1 of umbrechen("für " + g.empfaenger, O6, 19, LB, 1)) text(z1, L, Y(top), O6, 19, HELL); top += 62; } else top += 38;
     const betrag = kurzEuro(gutscheinWertCent(z));
     let bs = 64; while (bs > 34 && O7.widthOfTextAtSize(sauber(betrag), bs) > LB + 10) bs -= 2;
-    text(betrag, L - 2, Y(top), O7, bs, GOLD);
+    text(betrag, L - 2, Y(top), O7, bs, WERT);
     top += 22;
     const art = g.aktion ? "Weihnachts-Gutschein" : "Gutschein";
     for (const z1 of umbrechen(`${art} für alle Leistungen bei ${s.firma}`, I4, 10, LB, 2, s.firma)) { text(z1, L, Y(top), I4, 10, MUTE); top += 14; }
@@ -276,7 +278,7 @@ export async function gutscheinPdf(s, z) {
       const m = qrMatrix(gutscheinUrl(g)), gesamt = 62, modul = gesamt / (m.n + 4), qx = 372 + 198 - 12 - gesamt, qy = Y(366);
       page.drawRectangle({ x: qx, y: qy, width: gesamt, height: gesamt, color: weiss });
       for (let r = 0; r < m.n; r++) for (let c = 0; c < m.n; c++) {
-        if (m.dunkel(r, c)) page.drawRectangle({ x: qx + (c + 2) * modul, y: qy + gesamt - (r + 3) * modul, width: modul + 0.02, height: modul + 0.02, color: hex("#0B0B0B") });
+        if (m.dunkel(r, c)) page.drawRectangle({ x: qx + (c + 2) * modul, y: qy + gesamt - (r + 3) * modul, width: modul + 0.02, height: modul + 0.02, color: hex(P.qr) });
       }
       text("Beim Termin den Code", 384, Y(346), I4, 8, MUTE);
       text("oder QR-Code zeigen.", 384, Y(357), I4, 8, MUTE);
@@ -286,7 +288,7 @@ export async function gutscheinPdf(s, z) {
     const tf = "Technik: Tattoofin", tfB = I4.widthOfTextAtSize(tf, 6.5);
     const [fuss] = umbrechen(`Einlösbar bei ${s.firma}${adr ? ", " + adr : ""}`, I4, 8, W - 25 - L - tfB - 16, 1);
     text(fuss, L, Y(390), I4, 8, MUTE);
-    rechts(tf, W - 25, Y(390), I4, 6.5, hex("#7d7569"));
+    rechts(tf, W - 25, Y(390), I4, 6.5, hex(P.klein));
     return pdf.save();
   }
 
