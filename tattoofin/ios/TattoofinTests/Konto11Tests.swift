@@ -41,7 +41,10 @@ struct Konto11Tests {
     @Test func kaufFehlerTexte() {
         #expect(KaufFehler.text(StoreKitError.networkError(URLError(.notConnectedToInternet))) == Texte.Konto11.kaufKeinNetz)
         #expect(KaufFehler.text(Product.PurchaseError.purchaseNotAllowed) == Texte.Konto11.kaufGesperrt)
-        #expect(KaufFehler.text(StoreKitError.notEntitled) == Texte.Konto11.kaufGesperrt)
+        #expect(KaufFehler.text(StoreKitError.notEntitled) == Texte.Konto11.kaufAllgemein)
+        // Selbst abgebrochen: keine Fehlermeldung
+        #expect(KaufFehler.text(StoreKitError.userCancelled) == nil)
+        #expect(KaufFehler.text(URLError(.cancelled)) == nil)
         #expect(KaufFehler.text(StoreKitError.notAvailableInStorefront) == Texte.Konto11.kaufNichtVerfuegbar)
         #expect(KaufFehler.text(StoreKitError.unknown) == Texte.Konto11.kaufAllgemein)
         #expect(KaufFehler.text(URLError(.timedOut)) == Texte.Konto11.kaufKeinNetz)

@@ -81,6 +81,7 @@ final class PushManager {
     /// Nach jeder Anmeldung: Der Server hat ein neues Gerät ohne Token angelegt. Einen gemerkten Token sofort schicken
     /// (APNs antwortet erst nach der neuen Registrierung am Ende der Einrichtung), wenn Mitteilungen erlaubt sind.
     func nachAnmeldung() {
+        sendenAusstehend = false  // Rest aus der alten Sitzung nicht beim nächsten Vordergrund nachschicken
         guard let t = Einstellungen.pushToken, !t.isEmpty else { return }
         Task {
             let s = await status()

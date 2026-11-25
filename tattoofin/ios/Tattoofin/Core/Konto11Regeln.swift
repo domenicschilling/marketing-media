@@ -37,14 +37,16 @@ extension StartCheckpunkte {
     }
 }
 
-/// Verständlicher Text für einen gescheiterten Kauf (statt des rohen, oft technischen StoreKit-Textes)
+/// Verständlicher Text für einen gescheiterten Kauf (statt des rohen, oft technischen StoreKit-Textes).
+/// nil = nichts anzeigen (Kunde hat selbst abgebrochen).
 enum KaufFehler {
-    static func text(_ error: any Error) -> String {
+    static func text(_ error: any Error) -> String? {
         if let e = error as? StoreKitError {
             switch e {
+            case .userCancelled: return nil
             case .networkError: return Texte.Konto11.kaufKeinNetz
             case .notAvailableInStorefront: return Texte.Konto11.kaufNichtVerfuegbar
-            case .notEntitled: return Texte.Konto11.kaufGesperrt
+            // notEntitled heißt „kein Anrecht auf den Inhalt“, nicht „Käufe in Bildschirmzeit gesperrt“
             default: return Texte.Konto11.kaufAllgemein
             }
         }
@@ -55,7 +57,7 @@ enum KaufFehler {
             default: return Texte.Konto11.kaufAllgemein
             }
         }
-        if error is URLError { return Texte.Konto11.kaufKeinNetz }
+        if let e = error as? URLError { return e.code == .cancelled ? nil : Texte.Konto11.kaufKeinNetz }
         return Texte.Konto11.kaufAllgemein
     }
 }
