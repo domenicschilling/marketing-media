@@ -62,7 +62,8 @@ final class GestaltungRundgangUITests: XCTestCase {
         let env = ProcessInfo.processInfo.environment
         guard env["TF_GESTALTUNG"] == "1" else { throw XCTSkip("Nur für die Gestaltungsprüfung (TF_GESTALTUNG=1)") }
         art = name
-        XCUIDevice.shared.appearance = dunkel ? .dark : .light
+        // Darstellung setzt das Lauf-Skript per `xcrun simctl ui <sim> appearance dark|light` (XCUIDevice.appearance griff nicht, wenn simctl sie vorher gesetzt hatte)
+        if dunkel { XCUIDevice.shared.appearance = .dark }
         let app = XCUIApplication()
         app.launchArguments = ["-TFApiBase", env["TF_UI_API"] ?? "http://localhost:8888", "-TFTestEmail", "sam@nordlicht-tattoo.de",
                                "-TFZuruecksetzen", "YES", "-AppleLanguages", "(de)", "-AppleLocale", "de_DE"] + zusatz
