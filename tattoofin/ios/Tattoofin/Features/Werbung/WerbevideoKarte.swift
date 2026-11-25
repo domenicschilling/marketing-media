@@ -27,7 +27,7 @@ struct WerbevideoKarte: View {
                 Text(WerbungTexte.formatReel).tag(false)
                 Text(WerbungTexte.formatFeed).tag(true)
             }
-            .pickerStyle(.segmented)
+            .tfSegmente()
 
             if let videoURL {
                 PosterVideo(video: videoURL, poster: WerbungRegeln.adresse(datei.cover, basis: basis),

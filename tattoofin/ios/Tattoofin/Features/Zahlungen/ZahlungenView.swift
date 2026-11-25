@@ -35,7 +35,7 @@ struct ZahlungenView: View {
                     Text(Texte.Zahlungen.zahlungen).tag(Bereich.zahlungen)
                     Text(Texte.Zahlungen.auszahlungen).tag(Bereich.auszahlungen)
                 }
-                .pickerStyle(.segmented)
+                .tfSegmente()
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
 
@@ -78,7 +78,7 @@ struct ZahlungenView: View {
                     Text(Texte.Zahlungen.offen).tag(Filter.offen)
                     Text(Texte.Zahlungen.bezahlt).tag(Filter.bezahlt)
                 }
-                .pickerStyle(.segmented)
+                .tfSegmente()
                 .listRowBackground(Color.clear)
                 .listRowSeparator(.hidden)
                 .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
