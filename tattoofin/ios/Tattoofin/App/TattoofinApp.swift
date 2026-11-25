@@ -51,6 +51,7 @@ struct RootView: View {
             case .background: sperre.inDenHintergrund()
             case .active:
                 sperre.wiederAktiv()
+                PushManager.shared.imVordergrund()
                 // Zurück nach längerer Zeit: Zahlungen, Kennzahlen und Kassen-Stand (Abo, Stripe, Adresse) auffrischen
                 if app.phase == .bereit, !app.portal.laedt, PortalStore.neuLadenNoetig(geladenAm: app.portal.geladenAm) {
                     Task { await app.portal.laden() }

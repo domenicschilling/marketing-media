@@ -57,6 +57,8 @@ struct StripeStatus: Codable, Sendable, Hashable {
     var auszahlungen: Bool?
     var angabenGemacht: Bool?
     var kontoTyp: String?
+    /// Klarna im Stripe-Konto eingeschaltet (capabilities.klarna_payments). Fehlt bei älteren Servern.
+    var klarnaAktiv: Bool?
 }
 
 // MARK: - Zahlung (fuerStudio in portal.mjs)

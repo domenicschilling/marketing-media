@@ -73,11 +73,15 @@ final class AppState {
         sperre.entsperrt()
         tab = .kasse
         phase = Einstellungen.einrichtungFertig ? .bereit : .einrichtung
+        // Der Server legt bei jeder Anmeldung ein neues Gerät ohne Push-Token an: gemerkten Token gleich schicken
+        PushManager.shared.nachAnmeldung()
     }
 
     func einrichtungFertig() {
         Einstellungen.einrichtungFertig = true
         phase = .bereit
+        // Auch wenn die Einrichtung nicht nach Mitteilungen fragt (schon entschieden): neu bei APNs registrieren
+        PushManager.shared.beiStartRegistrieren()
     }
 
     /// Dieses Gerät abmelden (Server) und lokal alles löschen

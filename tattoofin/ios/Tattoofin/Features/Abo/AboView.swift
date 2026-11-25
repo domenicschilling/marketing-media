@@ -259,7 +259,7 @@ struct AboView: View {
                 }
             } catch {
                 log.error("Abo: Kauf fehlgeschlagen: \(error.localizedDescription, privacy: .public)")
-                fehler = error.localizedDescription
+                fehler = KaufFehler.text(error)  // Originaltext steht nur im Protokoll
             }
         }
     }

@@ -74,7 +74,7 @@ final class WerbungStore {
 
     // MARK: Abgeleitet
 
-    var klarnaMaterial: Bool { WerbungRegeln.klarnaMaterial(werbung: werbung, start: start?.studio) }
+    var klarnaMaterial: Bool { klarnaFall == .material }  // Regel in Core/Konto11Regeln.swift (auch Stripe-Stand)
     /// Manuelle Punkte (theke, werbung): vom Server-Stand oder aus dem Portal-Ausweg
     var checkliste: StartCheckliste {
         if let p = startServer?.punkte {

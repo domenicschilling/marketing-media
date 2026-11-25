@@ -1,6 +1,6 @@
 import XCTest
 
-/// DS-Rundgang (DS APPKonzept, Kern-Stufe, 18.11.2026): alle 5 Tabs in normaler Schrift, AX3 und dunkel,
+/// DS-Rundgang (DS APPKonzept, Kern-Stufe, 18.11.2026): alle 5 Tabs in normaler Schrift, AX3, AX5 (größte Schrift, seit 23.11.) und dunkel,
 /// je Tab Apples Barrierefreiheits-Prüfung (`performAccessibilityAudit`) und ein Bildschirmfoto (ds-<art>-<tab>).
 /// Gegen den lokalen Server wie die anderen Rundgänge (tattoofin/website: `node dev/app-lokal.mjs`, Code 123456),
 /// Server-Port über TEST_RUNNER_TF_UI_API=http://localhost:<port>.
@@ -29,6 +29,10 @@ final class DSRundgangUITests: XCTestCase {
     func testRundgangNormal() throws { try rundgang([], name: "normal") }
     func testRundgangGrosseSchrift() throws {
         try rundgang(["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXL"], name: "AX3")
+    }
+    /// Größte Schrift (AX5): die App begrenzt nur den Ziffernblock der Kasse, alles andere wächst bis hierhin mit
+    func testRundgangGroessteSchrift() throws {
+        try rundgang(["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"], name: "AX5")
     }
     func testRundgangDunkel() throws {
         // Dunkel direkt im Test (simctl-Einstellung griff nach `simctl erase` nicht zuverlässig, siehe ParitaetRundgangUITests)
@@ -78,8 +82,8 @@ final class DSRundgangUITests: XCTestCase {
         // 2) „Schriftgröße teilweise nicht änderbar“ nur im AX3-Durchgang werten: Dort wird das Wachsen der Schrift wirklich
         //    geprüft (dieser Befund kam dort nie). In normal/dunkel meldet das Audit Zeilen, die bei größerer Schrift absichtlich
         //    von nebeneinander auf untereinander umbrechen (DS-Regel, AnyLayout/ViewThatFits), als „nicht änderbar“.
-        if b.auditType == .dynamicType, durchgang != "AX3" { return true }
-        //    Auch in AX3: Elemente, die teilweise unter dem verdeckten Rand liegen (siehe 1), sind nicht zuverlässig messbar
+        if b.auditType == .dynamicType, !["AX3", "AX5"].contains(durchgang) { return true }
+        //    Auch in AX3/AX5: Elemente, die teilweise unter dem verdeckten Rand liegen (siehe 1), sind nicht zuverlässig messbar
         //    (iPhone 17e: Abschnittskopf „Verkaufte Gutscheine“ am unteren Rand; auf iPhone 17 frei sichtbar und ohne Befund).
         if b.auditType == .dynamicType, let e = b.element, !tabLeiste.isEmpty, e.frame.maxY > tabLeiste.minY - 60 { return true }
         guard let e = b.element else {

@@ -58,6 +58,8 @@ struct BeitraegeKarte: View {
                         Button(WerbungTexte.nameUebernehmen) { nameUebernehmen() }
                             .font(.dm(.body, weight: .semibold))
                             .buttonStyle(.bordered)
+                            .controlSize(.large)
+                            .frame(minHeight: 44)
                             .disabled(werbung.zeichnet || nameFeld.trimmingCharacters(in: .whitespaces) == werbung.bildName)
                     }
                     Text(WerbungTexte.nameHinweis).font(.dm(.caption)).foregroundStyle(Color.tfLeise)
