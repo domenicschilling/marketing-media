@@ -6,6 +6,7 @@ struct WerbungView: View {
     @Environment(AppState.self) private var app
     @Environment(PortalStore.self) private var portal
     @Environment(WerbungStore.self) private var werbung
+    @Environment(\.dynamicTypeSize) private var schrift
     @State private var stripeLaedt = false
     @State private var stripeFehler: String?
 
@@ -143,26 +144,48 @@ struct WerbungView: View {
         }
     }
 
+    /// Bei Bedienungshilfe-Größen brechen die Chips in mehrere Reihen um (nichts wird abgeschnitten); sonst eine
+    /// waagrechte Leiste, die rechts weich ausblendet, damit man sieht, dass sie weiterläuft.
+    @ViewBuilder
     private func sprungleiste(_ liste: [WerbungAbschnitt], _ leser: ScrollViewProxy) -> some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(liste) { a in
-                    Button { withAnimation { leser.scrollTo(a, anchor: .top) } } label: {
-                        Text(WerbungTexte.sprung(a))
-                            .font(.dm(.subheadline, weight: .semibold))
-                            .foregroundStyle(Color.tfTinte)
-                            .padding(.horizontal, 14)
-                            .frame(minHeight: 44)
-                            .background(Color.tfKarte, in: Capsule())
-                            .overlay(Capsule().stroke(Color.tfLinie, lineWidth: 1))
+        Group {
+            if schrift.isAccessibilitySize {
+                SprungFluss(abstand: 8) { sprungChips(liste, leser) }
+            } else {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) { sprungChips(liste, leser) }
+                        .padding(.trailing, 24)
+                }
+                .mask {
+                    HStack(spacing: 0) {
+                        Rectangle()
+                        LinearGradient(colors: [.black, .clear], startPoint: .leading, endPoint: .trailing)
+                            .frame(width: 24)
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("\(WerbungTexte.sprungLabel) \(WerbungTexte.sprung(a))")
                 }
             }
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("werbung-sprungleiste")
+    }
+
+    private func sprungChips(_ liste: [WerbungAbschnitt], _ leser: ScrollViewProxy) -> some View {
+        ForEach(liste) { a in
+            Button { withAnimation { leser.scrollTo(a, anchor: .top) } } label: {
+                Text(WerbungTexte.sprung(a))
+                    .font(.dm(.subheadline, weight: .semibold))
+                    .foregroundStyle(Color.tfTinte)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 6)
+                    .frame(minHeight: 44)
+                    .background(Color.tfKarte, in: Capsule())
+                    .overlay(Capsule().stroke(Color.tfLinie, lineWidth: 1))
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("\(WerbungTexte.sprungLabel) \(WerbungTexte.sprung(a))")
+        }
     }
 
     /// Studio ohne Klarna-Material: kurz sagen, warum, was es gibt und was man tun kann.
@@ -303,5 +326,46 @@ struct GleichBreitOderUntereinander: Layout {
                 y += h + abstand
             }
         }
+    }
+}
+
+/// Chips nebeneinander, die in die nächste Reihe umbrechen, wenn die Breite nicht reicht (Sprungleiste bei großer Schrift).
+/// Ein Chip breiter als die Zeile bekommt die volle Breite und bricht innen um.
+struct SprungFluss: Layout {
+    var abstand: CGFloat = 8
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let breite = proposal.width ?? .infinity
+        return anordnen(subviews, breite: breite).groesse
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let ergebnis = anordnen(subviews, breite: bounds.width)
+        for (i, rahmen) in ergebnis.rahmen.enumerated() {
+            subviews[i].place(at: CGPoint(x: bounds.minX + rahmen.minX, y: bounds.minY + rahmen.minY),
+                              proposal: ProposedViewSize(width: rahmen.width, height: rahmen.height))
+        }
+    }
+
+    private func anordnen(_ subviews: Subviews, breite: CGFloat) -> (rahmen: [CGRect], groesse: CGSize) {
+        var rahmen: [CGRect] = []
+        var x: CGFloat = 0, y: CGFloat = 0, reihenHoehe: CGFloat = 0, breiteste: CGFloat = 0
+        for sub in subviews {
+            var g = sub.sizeThatFits(.unspecified)
+            if g.width > breite {
+                g = sub.sizeThatFits(ProposedViewSize(width: breite, height: nil))
+                g.width = min(g.width, breite)
+            }
+            if x > 0, x + g.width > breite {
+                x = 0
+                y += reihenHoehe + abstand
+                reihenHoehe = 0
+            }
+            rahmen.append(CGRect(origin: CGPoint(x: x, y: y), size: g))
+            x += g.width + abstand
+            reihenHoehe = max(reihenHoehe, g.height)
+            breiteste = max(breiteste, x - abstand)
+        }
+        return (rahmen, CGSize(width: breite.isFinite ? breite : breiteste, height: y + reihenHoehe))
     }
 }

@@ -109,7 +109,7 @@ struct KontoView: View {
                 if s.istTestmodus {
                     WertZeile(titel: Texte.Konto.vertrag, wert: Texte.Konto.vertragTestmodus)
                 } else if let st = s.statusText?.leerAlsNil {
-                    WertZeile(titel: Texte.Konto.vertrag, wert: st)
+                    WertZeile(titel: Texte.Konto.vertrag, wert: Texte.GestaltungG3.vertragStatus(st))
                 }
                 if let k = s.kuendigung, let zum = Datum.tag(k.zum) {
                     WertZeile(titel: Texte.Konto.vertragEndet, wert: zum)
@@ -196,12 +196,21 @@ struct KontoView: View {
         }
     }
 
+    /// Passt Titel und Häkchen nicht nebeneinander (große Schrift), steht das Häkchen unter dem Titel (wie WertZeile)
     private func statusZeile(_ titel: String, _ ok: Bool) -> some View {
-        HStack {
-            Text(titel).foregroundStyle(Color.tfTinte)
-            Spacer()
-            Image(systemName: ok ? "checkmark.circle.fill" : "xmark.circle")
-                .foregroundStyle(ok ? Color.tfGruen : Color.tfLeise)
+        let zeichen = Image(systemName: ok ? "checkmark.circle.fill" : "xmark.circle")
+            .foregroundStyle(ok ? Color.tfGruen : Color.tfLeise)
+        return ViewThatFits(in: .horizontal) {
+            HStack {
+                Text(titel).foregroundStyle(Color.tfTinte)
+                Spacer(minLength: 12)
+                zeichen
+            }
+            VStack(alignment: .leading, spacing: 4) {
+                Text(titel).foregroundStyle(Color.tfTinte)
+                    .fixedSize(horizontal: false, vertical: true)
+                zeichen
+            }
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(titel): \(ok ? Texte.Allgemein.ja : Texte.Allgemein.nein)")
@@ -213,16 +222,22 @@ struct KontoView: View {
                 HinweisKarte(text: Texte.Konto.pushAus, symbol: "bell.slash.fill")
                     .listRowInsets(EdgeInsets())
                     .listRowBackground(Color.clear)
-                Button(Texte.Konto.einstellungenOeffnen) {
+                Button {
                     if let u = URL(string: UIApplication.openNotificationSettingsURLString) { openURL(u) }
+                } label: {
+                    TFAktionsZeile(titel: Texte.Konto.einstellungenOeffnen, symbol: "gearshape")
                 }
+                .buttonStyle(.plain)
             } else if pushErlaubt == nil {
-                Button(Texte.Einrichtung.pushJa) {
+                Button {
                     Task {
                         await PushManager.shared.erlaubnisAnfragen()
                         await pushStatusLaden()
                     }
+                } label: {
+                    TFAktionsZeile(titel: Texte.Einrichtung.pushJa, symbol: "bell.and.waves.left.and.right")
                 }
+                .buttonStyle(.plain)
             }
             if let geraetFehler {
                 TeilFehlerZeile(text: "\(Texte.Konto.mitteilungenNichtGeladen) \(geraetFehler)") {
@@ -230,11 +245,11 @@ struct KontoView: View {
                 }
             }
             Group {
-                Toggle(Texte.Konto.pushZahlung, isOn: $mitteilungenZahlungen)
+                Toggle(isOn: $mitteilungenZahlungen) { zeilenLabel(Texte.Konto.pushZahlung, "bell") }
                     .onChange(of: mitteilungenZahlungen) { alt, neu in if alt != neu { mitteilungenSpeichern() } }
-                Toggle(Texte.Konto.pushAuszahlung, isOn: $mitteilungenAuszahlungen)
+                Toggle(isOn: $mitteilungenAuszahlungen) { zeilenLabel(Texte.Konto.pushAuszahlung, "bell.badge") }
                     .onChange(of: mitteilungenAuszahlungen) { alt, neu in if alt != neu { mitteilungenSpeichern() } }
-                Toggle(Texte.Konto.pushVorname, isOn: $kundenname)
+                Toggle(isOn: $kundenname) { zeilenLabel(Texte.Konto.pushVorname, "person.text.rectangle") }
                     .onChange(of: kundenname) { alt, neu in if alt != neu { kundennameSpeichern() } }
             }
             .disabled(geraetFehler != nil)
@@ -248,7 +263,9 @@ struct KontoView: View {
 
     private var sicherheitAbschnitt: some View {
         Section {
-            Toggle(Texte.Konto.faceID(sperre.artName), isOn: $faceID)
+            Toggle(isOn: $faceID) {
+                zeilenLabel(Texte.Konto.faceID(sperre.artName), sperre.artName == "Touch ID" ? "touchid" : "faceid")
+            }
                 .disabled(!sperre.verfuegbar)
                 .onChange(of: faceID) { _, neu in
                     guard neu != Einstellungen.faceIDAn else { return }
@@ -269,8 +286,8 @@ struct KontoView: View {
             } else if let f = faceIDFehler {
                 FehlerZeile(text: f)
             }
-            NavigationLink { TeamView() } label: { Label(Texte.Konto.team, systemImage: "person.2") }
-            NavigationLink { GeraeteView() } label: { Label(Texte.Konto.geraete, systemImage: "iphone") }
+            NavigationLink { TeamView() } label: { zeilenLabel(Texte.Konto.team, "person.2") }
+            NavigationLink { GeraeteView() } label: { zeilenLabel(Texte.Konto.geraete, "iphone") }
         } header: {
             ListenKopf(Texte.Konto.sicherheit)
         }
@@ -294,8 +311,11 @@ struct KontoView: View {
         Section {
             if let fehler { FehlerZeile(text: fehler) }
             Button(Texte.Konto.abmelden) { abmeldenFrage = true }
+                .foregroundStyle(Color.tfTinte)
             if istInhaber {
+                // Ein Rotton für Gefahr-Zeilen (tfRot wie „Konto kündigen“), nicht das hellere System-Rot
                 Button(Texte.Konto.ueberall, role: .destructive) { ueberallFrage = true }
+                    .foregroundStyle(Color.tfRot)
                     .disabled(arbeitet)
             }
             NavigationLink {
@@ -305,6 +325,19 @@ struct KontoView: View {
             }
         } footer: {
             ListenFuss(Texte.Konto.version(APIClient.appVersionText))
+                .font(.dm(.footnote))
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity)
+                .padding(.top, 12)
+        }
+    }
+
+    /// Zeile mit Symbol in tfAkzent und Text in tfTinte: alle Zeilen (auch Schalter) teilen so eine Textkante
+    private func zeilenLabel(_ titel: String, _ symbol: String) -> some View {
+        Label {
+            Text(titel).foregroundStyle(Color.tfTinte)
+        } icon: {
+            Image(systemName: symbol).foregroundStyle(Color.tfAkzent)
         }
     }
 

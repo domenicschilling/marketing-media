@@ -50,16 +50,13 @@ struct BeitraegeKarte: View {
                             .submitLabel(.done)
                             .focused($nameFokus)
                             .onSubmit { nameUebernehmen() }
-                            .font(.dm(.body))
-                            .padding(12)
-                            .background(Color.tfHintergrund, in: RoundedRectangle(cornerRadius: 12))
-                            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.tfFeldRahmen, lineWidth: 1.5))
+                            .tfTextfeld()
                             .onChange(of: nameFeld) { _, neu in if neu.count > 60 { nameFeld = String(neu.prefix(60)) } }
+                        // Zweitknopf wie überall in der App (statt grauer System-Pille); neben dem Feld nur so breit wie
+                        // sein Text, bei großer Schrift (darunter) über die volle Breite, damit nichts abgeschnitten wird
                         Button(WerbungTexte.nameUebernehmen) { nameUebernehmen() }
-                            .font(.dm(.body, weight: .semibold))
-                            .buttonStyle(.bordered)
-                            .controlSize(.large)
-                            .frame(minHeight: 44)
+                            .buttonStyle(.zweit)
+                            .fixedSize(horizontal: schrift < .xxLarge, vertical: false)
                             .disabled(werbung.zeichnet || nameFeld.trimmingCharacters(in: .whitespaces) == werbung.bildName)
                     }
                     Text(WerbungTexte.nameHinweis).font(.dm(.caption)).foregroundStyle(Color.tfLeise)

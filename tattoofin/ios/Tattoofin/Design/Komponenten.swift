@@ -240,6 +240,10 @@ struct TFListe<Inhalt: View>: View {
         List {
             inhalt.listRowBackground(Color.tfKarte)
         }
+        // Eine Schrift für alle Zeilen; Schalter-Beschriftungen in tfTinte statt SF Pro Schwarz.
+        // Kein pauschales .foregroundStyle auf den Inhalt: das würde auch rote Gefahr-Knöpfe und Akzent-Knöpfe umfärben.
+        .font(.dm(.body))
+        .toggleStyle(TFToggleStil())
     }
 }
 
@@ -251,6 +255,10 @@ struct TFFormular<Inhalt: View>: View {
         Form {
             inhalt.listRowBackground(Color.tfKarte)
         }
+        // Eine Schrift für alle Zeilen; Schalter-Beschriftungen in tfTinte statt SF Pro Schwarz.
+        // Kein pauschales .foregroundStyle auf den Inhalt: das würde auch rote Gefahr-Knöpfe und Akzent-Knöpfe umfärben.
+        .font(.dm(.body))
+        .toggleStyle(TFToggleStil())
     }
 }
 

@@ -18,7 +18,7 @@ struct TeamView: View {
         TFListe {
             if let t = team {
                 Section {
-                    Label(t.hauptadresse ?? "–", systemImage: "person.crop.circle.badge.checkmark")
+                    adresse(t.hauptadresse ?? "–", "person.crop.circle.badge.checkmark")
                 } header: {
                     ListenKopf(Texte.Team.haupt)
                 }
@@ -28,7 +28,7 @@ struct TeamView: View {
                     }
                     ForEach(t.team, id: \.self) { e in
                         HStack {
-                            Label(e, systemImage: "person")
+                            adresse(e, "person")
                             Spacer()
                             if darfAendern {
                                 Button {
@@ -51,15 +51,24 @@ struct TeamView: View {
 
                 if darfAendern && t.team.count < max {
                     Section {
-                        TextField(Texte.Team.hinzufuegen, text: $neueAdresse, prompt: tfPlatzhalter(Texte.Team.adressePlatzhalter))
-                            .accessibilityLabel(Texte.Team.hinzufuegen)
-                            .textContentType(.emailAddress)
-                            .keyboardType(.emailAddress)
-                            .textInputAutocapitalization(.never)
-                            .autocorrectionDisabled()
-                            .onSubmit { hinzufuegen() }
-                        Button(Texte.Team.hinzufuegenKnopf) { hinzufuegen() }
+                        // Feld und Knopf zusammen in einer Zeile: gleicher Feldstil wie bei der Anmeldung, „Hinzufügen“ als
+                        // echter Zweitknopf mit Plus (ausgeschaltet in tfLeise, ≥ 4,5:1), nicht als blasser zweiter Platzhalter
+                        VStack(alignment: .leading, spacing: 10) {
+                            TextField(Texte.Team.hinzufuegen, text: $neueAdresse, prompt: tfPlatzhalter(Texte.Team.adressePlatzhalter))
+                                .accessibilityLabel(Texte.Team.hinzufuegen)
+                                .textContentType(.emailAddress)
+                                .keyboardType(.emailAddress)
+                                .textInputAutocapitalization(.never)
+                                .autocorrectionDisabled()
+                                .onSubmit { hinzufuegen() }
+                                .tfTextfeld()
+                            Button { hinzufuegen() } label: {
+                                Label(Texte.Team.hinzufuegenKnopf, systemImage: "plus")
+                            }
+                            .buttonStyle(.zweit)
                             .disabled(neueAdresse.leerAlsNil == nil || speichert)
+                        }
+                        .padding(.vertical, 6)
                     } header: {
                         ListenKopf(Texte.Team.hinzufuegen)
                     }
@@ -68,12 +77,13 @@ struct TeamView: View {
                     Section {
                         Toggle(Texte.Team.alleAbmelden, isOn: $alleAbmelden)
                     } footer: {
-                        ListenFuss(Texte.Team.alleAbmeldenHinweis)
+                        ListenFuss(Texte.GestaltungG3.alleAbmeldenHinweis)
                     }
                 }
                 if !darfAendern {
                     Section {
                         Button(Texte.Team.zugangEntfernen, role: .destructive) { eigenenFrage = true }
+                            .foregroundStyle(Color.tfRot)
                     }
                 }
             } else if fehler == nil {
@@ -102,6 +112,15 @@ struct TeamView: View {
             Button(Texte.Allgemein.abbrechen, role: .cancel) {}
         } message: {
             Text(Texte.Team.zugangEntfernenText)
+        }
+    }
+
+    /// Adresszeile in tfTinte (vorher Systemschwarz), Symbol in tfAkzent
+    private func adresse(_ text: String, _ symbol: String) -> some View {
+        Label {
+            Text(text).foregroundStyle(Color.tfTinte)
+        } icon: {
+            Image(systemName: symbol).foregroundStyle(Color.tfAkzent)
         }
     }
 

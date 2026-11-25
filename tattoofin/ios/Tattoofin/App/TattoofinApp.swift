@@ -4,6 +4,11 @@ import SwiftUI
 struct TattoofinApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
+    init() {
+        // Navigationstitel, Segmente und Tab-Leiste in DM Sans und Markenfarben (sonst SF Pro Schwarz)
+        TFLeistenStil.einrichten()
+    }
+
     var body: some Scene {
         WindowGroup {
             RootView()
