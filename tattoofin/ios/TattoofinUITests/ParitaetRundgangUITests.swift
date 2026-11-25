@@ -78,7 +78,7 @@ final class ParitaetRundgangUITests: XCTestCase {
     private func nachOben(_ app: XCUIApplication, _ e: XCUIElement) {
         bisSichtbar(app, e)
         let f = app.windows.firstMatch
-        let ziel = (app.navigationBars.firstMatch.exists ? app.navigationBars.firstMatch.frame.maxY : 60) + 20
+        let ziel = (app.navigationBars.firstMatch.exists ? app.navigationBars.firstMatch.frame.maxY : 60) + 90  // Abstand zur Leiste: sonst trifft der Tipp die Leiste statt der Zeile
         let dy = e.frame.minY - ziel
         if dy > 40 {
             let start = f.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.75))

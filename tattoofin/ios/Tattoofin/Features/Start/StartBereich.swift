@@ -42,7 +42,8 @@ struct StartBereich: View {
             }
             // Kleine iPhones (SE): ohne Monatszeile (steht auch unter Zahlungen), sonst rutscht die untere Ziffernreihe hinter
             // „Zahlungslink erstellen“
-            if !kompakt { monat }
+            // Der Testmodus-Hinweis bleibt immer sichtbar (App Review sieht diesen Bildschirm zuerst, auch auf kleinen iPhones)
+            if !kompakt || portal.studio?.istTestmodus == true { monat }
         }
         .task(id: portal.geladenAm) { await werbung.laden() }
         .sheet(item: $blatt, onDismiss: {
