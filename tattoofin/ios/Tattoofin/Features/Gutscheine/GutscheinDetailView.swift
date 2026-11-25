@@ -22,6 +22,7 @@ struct GutscheinDetailView: View {
     @State private var teilBlatt = false
     /// Einlösen/Zurücknehmen läuft: Knöpfe gesperrt, kein Doppel-Tipp (sonst 409 oder ein zweiter Teil)
     @State private var bucht = false
+    @Environment(\.dynamicTypeSize) private var schrift
 
     init(zahlung: Zahlung) {
         _zahlung = State(initialValue: zahlung)
@@ -34,12 +35,16 @@ struct GutscheinDetailView: View {
         TFListe {
             Section {
                 VStack(alignment: .leading, spacing: 10) {
-                    HStack(alignment: .firstTextBaseline) {
+                    // Bedienungshilfe-Größen: Status unter den Betrag (sonst steht das „€“ allein in der zweiten Zeile)
+                    let layout = schrift.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8)) : AnyLayout(HStackLayout(alignment: .firstTextBaseline))
+                    layout {
                         Text(Euro.text(zahlung.gutscheinWertCent))
                             .font(.luckiest(38, relativeTo: .largeTitle))
                             .foregroundStyle(Color.tfTinte)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.5)
                             .accessibilityLabel(Texte.GutscheinWert.wertTitel + " " + Euro.gesprochen(zahlung.gutscheinWertCent))
-                        Spacer()
+                        if !schrift.isAccessibilitySize { Spacer() }
                         StatusChip(gutschein: g.status)
                     }
                     if zahlung.gutscheinBezahltAbweichend {
@@ -61,6 +66,9 @@ struct GutscheinDetailView: View {
                         Text(c)
                             .font(.system(.title2, design: .monospaced).weight(.bold))
                             .foregroundStyle(Color.tfTinte)
+                            // Code nie am Bindestrich umbrechen („GS-5ZJV-|KBHK“)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.6)
                             .textSelection(.enabled)
                             .accessibilityLabel(Texte.Gutscheine.codeLabel(c))
                     }

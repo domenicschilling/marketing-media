@@ -14,6 +14,7 @@ struct ZahlungDetailView: View {
     @State private var bestaetigung: LinkAntwort?
     @State private var laedtBestaetigung = false
     @State private var stornoFrage = false
+    @Environment(\.dynamicTypeSize) private var schrift
 
     init(id: String, vorschau: Zahlung? = nil) {
         self.id = id
@@ -48,14 +49,21 @@ struct ZahlungDetailView: View {
         TFListe {
             Section {
                 VStack(alignment: .leading, spacing: 8) {
-                    HStack(alignment: .firstTextBaseline) {
+                    // Bedienungshilfe-Größen: Status unter den Betrag (sonst steht das „€“ allein in der zweiten Zeile)
+                    let layout = schrift.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8)) : AnyLayout(HStackLayout(alignment: .firstTextBaseline))
+                    layout {
                         Text(Euro.text(z.betragCent))
                             .font(.luckiest(36, relativeTo: .largeTitle))
                             .foregroundStyle(Color.tfTinte)
-                        Spacer()
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.5)
+                        if !schrift.isAccessibilitySize { Spacer() }
                         StatusChip(zahlung: z.anzeigeStatus)
                     }
                     Text(z.titel).font(.dm(.headline)).foregroundStyle(Color.tfTinte)
+                    if z.kunde?.leerAlsNil == nil {
+                        Text(Texte.ZahlungenG2.ohneKundenname).font(.dm(.subheadline)).foregroundStyle(Color.tfLeise)
+                    }
                 }
                 .padding(.vertical, 4)
             }
