@@ -11,6 +11,9 @@ struct StartBereich: View {
     /// Ab „größer als Standard“ untereinander. Die Schrift wächst hier bis AX5 (begrenzt ist nur der Ziffernblock der Kasse).
     private var grosseSchrift: Bool { schrift > .large }
 
+    /// Fortschrittsring wächst mit der Schrift (vorher fest 20 pt neben großem Text, Gestaltungsprüfung 1.1, Nr. 19)
+    @ScaledMetric(relativeTo: .body) private var ring: CGFloat = 22
+
     @AppStorage("tf-start-checkliste-aus") private var checklisteAus = false
     @State private var blatt: StartBlatt?
 
@@ -36,6 +39,8 @@ struct StartBereich: View {
                 }
             }
             monat
+                // Etwas Luft zu den Karten darüber (zusammen mit dem Abstand des Stapels etwa 14 pt)
+                .padding(.top, 8)
         }
         .task(id: portal.geladenAm) { await werbung.laden() }
         .sheet(item: $blatt, onDismiss: {
@@ -78,17 +83,18 @@ struct StartBereich: View {
             HStack(spacing: 8) {
                 if fertig == von {
                     Image(systemName: "checkmark.seal.fill").foregroundStyle(Color.tfGruen)
-                } else {
+                } else if !schrift.isAccessibilitySize {
+                    // Bei Bedienungshilfen-Größen ohne Ring: dort steht „4 von 8“ ausgeschrieben
                     ZStack {
                         Circle().stroke(Color.tfLinie, lineWidth: 3)
                         Circle().trim(from: 0, to: CGFloat(fertig) / CGFloat(max(von, 1)))
                             .stroke(Color.tfGruen, style: StrokeStyle(lineWidth: 3, lineCap: .round))
                             .rotationEffect(.degrees(-90))
                     }
-                    .frame(width: 20, height: 20)
+                    .frame(width: ring, height: ring)
                 }
-                // Bei Bedienungshilfen-Größen steht der Zähler unter dem Wort, damit „Einrichtung“ nicht zu „Einrich…“ wird
-                // (iPhone SE/17e ab etwa AX4). Nur im Notfall leicht verkleinern statt kürzen.
+                // Bei Bedienungshilfen-Größen steht der Zähler ausgeschrieben unter dem Wort („4 von 8“), damit „Einrichtung“
+                // nicht zu „Einrich…“ wird (iPhone SE/17e ab etwa AX4). Nur im Notfall leicht verkleinern statt kürzen.
                 let zaehler = Text(fertig == von ? "✓" : "\(fertig)/\(von)").font(.dm(.subheadline, weight: .semibold).monospacedDigit())
                     .foregroundStyle(Color.tfLeise)
                 let wort = Text(WerbungTexte.Start.einrichtung).font(.dm(.subheadline, weight: .bold)).foregroundStyle(Color.tfTinte)
@@ -96,7 +102,10 @@ struct StartBereich: View {
                 if schrift.isAccessibilitySize {
                     VStack(alignment: .leading, spacing: 2) {
                         wort.minimumScaleFactor(0.7)
-                        zaehler
+                        Text(fertig == von ? "✓" : WerbungTexte.Start.stand(fertig, von))
+                            .font(.dm(.subheadline, weight: .semibold).monospacedDigit())
+                            .foregroundStyle(Color.tfLeise)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                     Spacer(minLength: 2)
                 } else {
@@ -153,8 +162,9 @@ struct StartBereich: View {
                 // tfAkzent (hell Blau, dunkel Gelb): tfBlau auf dem dunklen Hintergrund hätte nur etwa 1,6:1
                 .foregroundStyle(Color.tfAkzent)
                 .padding(.horizontal, 4)
-                .frame(maxWidth: .infinity, alignment: .leading)
                 .accessibilityElement(children: .combine)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity, alignment: .center)
                 .accessibilityIdentifier("kasse-testmodus")
         } else if let k = portal.kpis {
             // Paket mit Provision: „an dich“ (nur, wenn der Portal-Ausweg die Zahl kennt), sonst Anzahl der Zahlungen
@@ -166,6 +176,9 @@ struct StartBereich: View {
              + Text(" · \(zweiter)").foregroundStyle(Color.tfLeise))
                 .font(.dm(.footnote))
                 .padding(.horizontal, 4)
+                // Mittig wie der Betrag darunter (vorher linksbündig, Gestaltungsprüfung 1.1, Nr. 9)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity, alignment: .center)
                 .accessibilityElement(children: .ignore)
                 .accessibilityAddTraits(.isStaticText)
                 .accessibilityLabel("\(WerbungTexte.Start.diesenMonat): \(WerbungTexte.Start.gezahlt) \(Euro.gesprochen(k.umsatzMonatCent ?? 0)). "
@@ -253,18 +266,15 @@ struct ChecklistenBlatt: View {
                     // Nebeneinander nur, wenn beide Beschriftungen in eine Zeile passen (große Schrift: untereinander, kein Buchstabensalat)
                     GleichBreitOderUntereinander(abstand: 8) {
                         if let a = p.aktion {
+                            // Marken-Knopfstil statt System-Pille (.bordered), Gestaltungsprüfung 1.1, Nr. 13
                             Button(a.knopf) { ausfuehren(a, punkt: p.id) }
-                                .buttonStyle(.bordered)
-                                .controlSize(.large)
-                                .tint(Color.tfAkzent)
+                                .buttonStyle(ZweitKnopfStil(farbe: .tfAkzent))
                                 .accessibilityIdentifier("checkliste-\(p.id)")
                         }
                         if let m = p.manuell {
                             // Neutral, damit es nicht wie „schon erledigt“ aussieht
                             Button(WerbungTexte.Start.erledigt) { Task { await werbung.abhaken(m) } }
-                                .buttonStyle(.bordered)
-                                .controlSize(.large)
-                                .tint(Color.tfTinte)
+                                .buttonStyle(.zweit)
                         }
                     }
                     .font(.dm(.subheadline, weight: .semibold))

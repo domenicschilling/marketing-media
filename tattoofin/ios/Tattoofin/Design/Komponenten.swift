@@ -268,3 +268,31 @@ struct ListenFuss: View {
     init(_ text: String) { self.text = text }
     var body: some View { Text(text).foregroundStyle(Color.tfLeise) }
 }
+
+// MARK: - Segment-Auswahl, die mit der Schrift wächst (Gestaltungsprüfung 1.1, Nr. 15)
+
+/// Segment-Schalter (UISegmentedControl) bleiben bei Bedienungshilfen-Größen klein (etwa 11 pt), während der Text daneben
+/// 40 pt hat. Ab AX-Größen deshalb ein Auswahl-Menü in Feld-Optik, dessen Schrift mitwächst. Darunter wie gewohnt Segmente.
+struct TFSegmentStil: ViewModifier {
+    @Environment(\.dynamicTypeSize) private var schrift
+
+    func body(content: Content) -> some View {
+        if schrift.isAccessibilitySize {
+            content
+                .pickerStyle(.menu)
+                .font(.dm(.body, weight: .semibold))
+                .tint(Color.tfAkzent)
+                .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading)
+                .padding(.horizontal, 8)
+                .background(Color.tfKarte, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Color.tfFeldRahmen, lineWidth: 1.5))
+        } else {
+            content.pickerStyle(.segmented)
+        }
+    }
+}
+
+extension View {
+    /// Statt .pickerStyle(.segmented): Segmente, ab AX-Größen ein mitwachsendes Auswahl-Menü
+    func tfSegmente() -> some View { modifier(TFSegmentStil()) }
+}

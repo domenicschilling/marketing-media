@@ -105,6 +105,9 @@ struct KasseView: View {
 
                 // Nach einem Testkauf (Apple-Sandbox, auch App Review): Hinweis „Testmodus“ steht im StartBereich statt der Monatszeile
 
+                // Freie Höhe sammelt sich über dem Betrag, nicht als Lücke vor dem Knopf (Gestaltungsprüfung 1.1, Nr. 9)
+                Spacer(minLength: 0)
+
                 // Betrag
                 VStack(spacing: 4) {
                     Text(eingabe.anzeige)
@@ -115,17 +118,12 @@ struct KasseView: View {
                         .contentTransition(.numericText())
                         .accessibilityLabel(Texte.Kasse.betragLabel)
                         .accessibilityValue(eingabe.cent.map(Euro.gesprochen) ?? "0 Euro")
-                    // Feste Höhe: Grenzen bzw. Fehler stehen immer in einer Zeile, der Gebührenhinweis hat seinen Platz immer
-                    // (unsichtbar, solange der Betrag ungültig ist). So rutscht beim Tippen nichts über dem Ziffernblock.
-                    // Kleine iPhones (SE): Grenzen und Gebührenhinweis teilen sich denselben festen Platz.
-                    if kompakt {
-                        ZStack(alignment: .top) {
-                            GebuehrHinweis(cent: eingabe.cent, sichtbar: gueltigerBetrag)
-                            if !gueltigerBetrag { grenzenZeile }
-                        }
-                    } else {
-                        grenzenZeile
-                        GebuehrHinweis(cent: eingabe.cent, sichtbar: betragFehler == nil)
+                    // Grenzen bzw. Fehler und Gebührenhinweis liegen übereinander auf demselben festen Platz (auf allen Geräten):
+                    // bei gültigem Betrag der Gebührenhinweis, sonst die Grenzen. So rutscht beim Tippen nichts über dem
+                    // Ziffernblock, und unter den Grenzen bleibt kein leerer Streifen (Gestaltungsprüfung 1.1, Nr. 9).
+                    ZStack(alignment: .top) {
+                        GebuehrHinweis(cent: eingabe.cent, sichtbar: gueltigerBetrag)
+                        if !gueltigerBetrag { grenzenZeile }
                     }
                 }
                 .frame(maxWidth: .infinity)
@@ -136,7 +134,7 @@ struct KasseView: View {
                         Text(Texte.Kasse.gesamt).tag(false)
                         Text(Texte.Kasse.anzahlung).tag(true)
                     }
-                    .pickerStyle(.segmented)
+                    .tfSegmente()
                     .accessibilityIdentifier("kasse-art")
                 }
 
@@ -147,6 +145,9 @@ struct KasseView: View {
                     .accessibilityHidden(anzahlung)
 
                 Ziffernblock(eingabe: $eingabe, tastenHoehe: kompakt ? 44 : 52, abstand: kompakt ? 6 : 8)
+
+                // Bedienungshilfen-Größen: Knopf direkt unter dem Ziffernblock statt angeheftet, sonst verdeckt er die Ziffern
+                if schrift.isAccessibilitySize { knopfBereich }
 
                 DisclosureGroup(isExpanded: $detailsOffen) {
                     VStack(spacing: 10) {
@@ -164,36 +165,55 @@ struct KasseView: View {
                     .padding(.top, 8)
                 } label: {
                     Text(Texte.Kasse.details)
-                        .font(.dm(.body, weight: .semibold))
+                        .font(.dm(.subheadline, weight: .semibold))
                         .foregroundStyle(Color.tfTinte)
                         .frame(minHeight: 44, alignment: .leading)
                 }
-                .karte()
+                // Flacher als .karte(): die zugeklappte Zeile ist nur so hoch wie ihr Inhalt
+                .modifier(KompaktKarte())
             }
             .padding(.horizontal, 16)
             .padding(.top, kompakt ? 4 : 8)
             .padding(.bottom, 16)
+            // Mindestens so hoch wie der sichtbare Bereich, damit der Spacer über dem Betrag die freie Höhe aufnimmt
+            .frame(minHeight: max(0, hoehe - (kompakt ? 4 : 8) - 16 - 1), alignment: .top)
         }
         .scrollDismissesKeyboard(.interactively)
         .refreshable { await portal.laden() }
         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { hoehe = $0 }
-        // „Zahlungslink erstellen“ über der Tab-Leiste angeheftet: auch auf dem iPhone SE und bei großer Schrift immer zu sehen
+        // „Zahlungslink erstellen“ über der Tab-Leiste angeheftet: auch auf dem iPhone SE immer zu sehen.
+        // Bei Bedienungshilfen-Größen steht er stattdessen in der Liste unter dem Ziffernblock (Gestaltungsprüfung 1.1, Nr. 6).
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            VStack(spacing: 8) {
-                if let fehler { FehlerZeile(text: fehler) }
-                Button {
-                    erstellen()
-                } label: {
-                    if sendet { ProgressView().tint(Color.tfBlau) } else { Label(Texte.Kasse.erstellen, systemImage: "qrcode") }
-                }
-                .buttonStyle(.haupt)
-                .disabled(!bereit)
+            if !schrift.isAccessibilitySize {
+                knopfBereich
+                    .padding(.horizontal, 16)
+                    .padding(.top, kompakt ? 5 : 8)
+                    .padding(.bottom, 8)
+                    .frame(maxWidth: .infinity)
+                    .background(Color.tfHintergrund)
             }
-            .padding(.horizontal, 16)
-            .padding(.top, kompakt ? 5 : 8)
-            .padding(.bottom, 8)
-            .frame(maxWidth: .infinity)
-            .background(Color.tfHintergrund)
+        }
+    }
+
+    /// Fehlerzeile und „Zahlungslink erstellen“. Bei AX-Größen nur Text ohne Symbol und Schrift höchstens AX2,
+    /// damit der Knopf nicht den halben Bildschirm einnimmt.
+    private var knopfBereich: some View {
+        VStack(spacing: 8) {
+            if let fehler { FehlerZeile(text: fehler) }
+            Button {
+                erstellen()
+            } label: {
+                if sendet {
+                    ProgressView().tint(Color.tfBlau)
+                } else if schrift.isAccessibilitySize {
+                    Text(Texte.Kasse.erstellen)
+                        .dynamicTypeSize(...DynamicTypeSize.accessibility2)  // ds-ok: Hauptknopf in der Liste, Schrift bis AX2
+                } else {
+                    Label(Texte.Kasse.erstellen, systemImage: "qrcode")
+                }
+            }
+            .buttonStyle(.haupt)
+            .disabled(!bereit)
         }
     }
 

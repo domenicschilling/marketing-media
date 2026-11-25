@@ -99,12 +99,14 @@ struct HauptKnopfStil: ButtonStyle {
             .labelStyle(KnopfLabelStil())
             .font(.dm(.headline, weight: .bold))
             .multilineTextAlignment(.center)
-            .foregroundStyle(aktiv ? Color.tfBlau : Color.tfKnopfAusSchrift)
+            // Ausgeschaltet: ruhige graue Fläche ohne Rand, Schrift tfLeise (hell und dunkel etwa 5:1). Vorher blasses Gelb
+            // mit Rand, das wie bedienbar aussah und das auffälligste Element war (Gestaltungsprüfung 1.1, Nr. 8).
+            .foregroundStyle(aktiv ? Color.tfBlau : Color.tfLeise)
             .frame(maxWidth: .infinity, minHeight: 54)
             .padding(.horizontal, 16)
             .padding(.vertical, 4)
-            .background(Color.tfGelb.opacity(aktiv ? 1 : 0.45), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.tfBlau.opacity(aktiv ? 0.9 : 0.35), lineWidth: 2))
+            .background(aktiv ? Color.tfGelb : Color.tfLinie, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(aktiv ? Color.tfBlau.opacity(0.9) : Color.clear, lineWidth: 2))
             .scaleEffect(configuration.isPressed ? 0.98 : 1)
             .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
     }
