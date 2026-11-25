@@ -53,6 +53,6 @@ extension Texte {
         static let erstattungProvision = "Geld an deinen Kunden zurückgeben: im Studio-Bereich auf tattoofin.de bei dieser Zahlung (Knopf „Geld zurückgeben“)."
 
         // Auszahlungen
-        static let ersteAuszahlung = "Die erste Auszahlung dauert laut Stripe meist 7 bis 14 Tage, danach kommt das Geld im Rhythmus deines Stripe-Kontos."
+        static let ersteAuszahlung = "Die erste Auszahlung dauert meist 7 bis 14 Tage. Danach kommt das Geld regelmäßig von selbst auf dein Bankkonto."
     }
 }

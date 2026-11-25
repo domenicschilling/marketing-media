@@ -4,6 +4,7 @@ import SwiftUI
 /// Bei Stripe ansehen (nur Inhaber, Stripe verbunden), Hilfe per WhatsApp.
 struct StudioMehrAbschnitt: View {
     @Environment(AppState.self) private var app
+    @Environment(\.dynamicTypeSize) private var schrift
     @State private var mehr = StudioMehrStore.shared
     @State private var stripeLaedt = false
     @State private var fehler: String?
@@ -66,14 +67,27 @@ struct StudioMehrAbschnitt: View {
         return Texte.Mehr.rechtOffen
     }
 
+    /// Bei Bedienungshilfe-Größen ohne Symbol: Titel und Unterzeile bündig links über die volle Breite,
+    /// sonst brechen Wörter wie „Einstellungen“ mitten im Wort (Symbol und Pfeil fressen Breite)
+    @ViewBuilder
     private func zeile(_ titel: String, _ unter: String?, _ symbol: String) -> some View {
-        Label {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(titel).foregroundStyle(Color.tfTinte)
-                if let unter { Text(unter).font(.dm(.footnote)).foregroundStyle(Color.tfLeise) }
+        let text = VStack(alignment: .leading, spacing: 2) {
+            Text(titel).foregroundStyle(Color.tfTinte)
+                .fixedSize(horizontal: false, vertical: true)
+            if let unter {
+                Text(unter).font(.dm(.footnote)).foregroundStyle(Color.tfLeise)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-        } icon: {
-            Image(systemName: symbol).foregroundStyle(Color.tfAkzent)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        if schrift.isAccessibilitySize {
+            text.accessibilityElement(children: .combine)
+        } else {
+            Label {
+                text
+            } icon: {
+                Image(systemName: symbol).foregroundStyle(Color.tfAkzent)
+            }
         }
     }
 
