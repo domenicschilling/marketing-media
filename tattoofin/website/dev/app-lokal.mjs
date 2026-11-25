@@ -23,7 +23,8 @@ const PORT = Number(process.env.PORT || 8888), BASE = `http://localhost:${PORT}`
 const CODE = /^\d{6}$/.test(process.env.APP_LOKAL_CODE || "") ? process.env.APP_LOKAL_CODE : "123456";
 const REVIEW_CODE = "246810";
 const BUNDLE = process.env.APNS_BUNDLE_ID || "de.tattoofin.app";
-const dataDir = path.join(root, "dev", ".data-app");
+// APP_LOKAL_DATA: eigener Datenordner, wenn zwei lokale Server gleichzeitig laufen (z. B. zweiter im Testmodus)
+const dataDir = process.env.APP_LOKAL_DATA || path.join(root, "dev", ".data-app");
 fs.rmSync(dataDir, { recursive: true, force: true });
 fs.mkdirSync(dataDir, { recursive: true });
 for (const k of ["RESEND_API_KEY", "SMTP_HOST", "STRIPE_SECRET_KEY", "META_CAPI_TOKEN", "TF_JETZT"]) delete process.env[k];
@@ -105,25 +106,42 @@ await mock("payout", { account: bamberg.konto, amount: 98000, status: "in_transi
 await mock("webhooks?an=1");
 await mock(`saldo/${bamberg.konto}?verfuegbar=12345&unterwegs=48000`);
 // Store-Bilder (App Store): eigenes Studio mit glaubwürdigen, erfundenen Daten (keine „Beispiel“-Namen im Bild)
-const store = await studio("store@beispiel.test", "Nordlicht Tattoo", "Hamburg", { inhaber: "Sam Lindqvist", strasse: "Schanzenstraße 12", plz: "20357" });
+const store = await studio("sam@nordlicht-tattoo.de", "Nordlicht Tattoo", "Hamburg", { inhaber: "Sam Lindqvist", strasse: "Schanzenstraße 12", plz: "20357" });
 {
-  const ts = await appToken("store@beispiel.test", store.id);
+  const ts = await appToken("sam@nordlicht-tattoo.de", store.id);
+  // Reihenfolge: neueste zuerst in der App → Klarna-Zahlung (Store-Bild 1) zuletzt anlegen
+  await bezahlt(ts, { art: "gutschein", betrag: "300", kunde: "Nina Vogel", email: "nina@beispiel.de", empfaenger: "Lisa", nachricht: "Frohe Weihnachten!" });
+  await bezahlt(ts, { art: "gutschein", betrag: "150", kunde: "Greta Hansen", email: "greta@beispiel.de", empfaenger: "Max", nachricht: "Alles Gute zum Geburtstag!" });
+  await bezahlt(ts, { betrag: "100", kunde: "Paul Neumann", beschreibung: "Fineline Handgelenk", art: "anzahlung" });
+  await bezahlt(ts, { betrag: "650", kunde: "Lea Brandt", beschreibung: "Mandala Oberschenkel" });
+  await bezahlt(ts, { betrag: "480", kunde: "Tom Richter", beschreibung: "Unterarm Blackwork" });
+  await bezahlt(ts, { betrag: "150", kunde: "Mia Sommer", beschreibung: "Fineline Schulter", art: "anzahlung" });
+  await call("POST", "/api/portal/zahlung", { token: ts, body: { betrag: "250", kunde: "Elif Demir", beschreibung: "Anzahlung Cover-up", art: "anzahlung" } });
   const klarnaId = await bezahlt(ts, { betrag: "1200", kunde: "Jonas Keller", beschreibung: "Rückenstück", sitzungen: "Sitzung 1 von 3" });
   // Store-Bild „Raten*“: diese Zahlung lief über Klarna (der Stripe-Nachbau kennt nur Karte)
   { const f = path.join(dataDir, encodeURIComponent(`zahlung/${store.id}/${klarnaId}`) + ".json"); fs.writeFileSync(f, JSON.stringify({ ...JSON.parse(fs.readFileSync(f, "utf8")), zahlart: "klarna", zahlartText: "Klarna" }, null, 2)); }
-  await bezahlt(ts, { betrag: "150", kunde: "Mia Sommer", beschreibung: "Fineline Schulter", art: "anzahlung" });
-  await bezahlt(ts, { betrag: "480", kunde: "Tom Richter", beschreibung: "Unterarm Blackwork" });
-  await bezahlt(ts, { betrag: "650", kunde: "Lea Brandt", beschreibung: "Mandala Oberschenkel" });
-  await bezahlt(ts, { betrag: "100", kunde: "Paul Neumann", beschreibung: "Fineline Handgelenk", art: "anzahlung" });
-  await bezahlt(ts, { art: "gutschein", betrag: "150", kunde: "Greta Hansen", email: "greta@beispiel.test", empfaenger: "Max", nachricht: "Alles Gute zum Geburtstag!" });
-  await bezahlt(ts, { art: "gutschein", betrag: "300", kunde: "Nina Vogel", email: "nina@beispiel.test", empfaenger: "Lisa", nachricht: "Frohe Weihnachten!" });
-  await call("POST", "/api/portal/zahlung", { token: ts, body: { betrag: "250", kunde: "Elif Demir", beschreibung: "Anzahlung Cover-up", art: "anzahlung" } });
+  // Store-Bilder: glaubwürdige Uhrzeiten (tagsüber, über die letzten Tage verteilt) statt „jetzt“
+  {
+    const ordner = fs.readdirSync(dataDir).filter((f) => decodeURIComponent(f).startsWith(`zahlung/${store.id}/`));
+    const liste = ordner.map((f) => ({ f: path.join(dataDir, f), z: JSON.parse(fs.readFileSync(path.join(dataDir, f), "utf8")) }))
+      .sort((x, y) => String(y.z.createdAt).localeCompare(String(x.z.createdAt)));
+    const uhr = [[17, 42], [14, 8], [12, 31], [16, 55], [11, 20], [18, 14], [15, 3], [13, 47], [10, 36]];
+    liste.forEach(({ f, z }, i) => {
+      const d = new Date(); d.setDate(d.getDate() - 1 - Math.floor(i * 0.7)); d.setHours(uhr[i % uhr.length][0], uhr[i % uhr.length][1], 0, 0);
+      z.createdAt = d.toISOString();
+      if (z.bezahltAm) z.bezahltAm = new Date(d.getTime() + 7 * 60000).toISOString();
+      if (z.gutschein?.gesendetAm) z.gutschein.gesendetAm = new Date(d.getTime() + 8 * 60000).toISOString();
+      fs.writeFileSync(f, JSON.stringify(z, null, 2));
+    });
+  }
   await call("POST", "/api/app/abmelden", { token: ts });
   await mock("webhooks?an=0");
   await mock("payout", { account: store.konto, amount: 184000, status: "paid", created: jetzt - 8 * tag, arrival_date: jetzt - 6 * tag });
   await mock("payout", { account: store.konto, amount: 113000, status: "in_transit", created: jetzt - 1 * tag, arrival_date: jetzt + 1 * tag });
   await mock("webhooks?an=1");
   await mock(`saldo/${store.konto}?verfuegbar=63000&unterwegs=113000`);
+  // Store-Bild „Team“: zwei Kolleginnen/Kollegen (Domain nordlicht-tattoo.de ist nicht vergeben, Stand 25.11.2026)
+  await call("POST", `/api/admin/studio/${store.id}/team`, { admin: true, body: { emails: ["kai@nordlicht-tattoo.de", "lena@nordlicht-tattoo.de"] } });
 }
 // Demo-Studio + Review-Zugang (wie später bei Apple)
 const demo = (await call("POST", "/api/admin/app-demo", { admin: true, body: { email: "review@beispiel.test" } })).data;

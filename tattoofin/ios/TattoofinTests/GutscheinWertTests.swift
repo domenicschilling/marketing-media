@@ -40,8 +40,8 @@ struct GutscheinWertTests {
         #expect(a.gutscheinRestCent == 200_000)
         #expect(!a.gutscheinZeigtHeuteEinloesbar)
         #expect(!a.gutscheinBonusVorbei())
-        #expect(Texte.GutscheinWert.bezahlt(150_000) == "bezahlt 1.500,00 €")
-        #expect(Texte.GutscheinWert.bonusZeile(wert: 200_000, bis: "31.03.2099", danach: 150_000) == "2.000,00 € bis 31.03.2099, danach 1.500,00 €")
+        #expect(Texte.GutscheinWert.bezahlt(150_000) == "bezahlt \(Euro.text(150_000))")
+        #expect(Texte.GutscheinWert.bonusZeile(wert: 200_000, bis: "31.03.2099", danach: 150_000) == "\(Euro.text(200_000)) bis 31.03.2099, danach \(Euro.text(150_000))")
     }
 
     /// Bonus-Frist vorbei: Server liefert aktuellerWertCent = bezahlt → „Heute einlösbar“, Einlöse-Frage mit diesem Betrag
@@ -55,7 +55,7 @@ struct GutscheinWertTests {
         #expect(a.gutscheinRestCent == 150_000)
         #expect(a.gutscheinZeigtHeuteEinloesbar)
         #expect(a.gutscheinBonusVorbei())
-        #expect(Texte.GutscheinWert.einloesenGanz(a.gutscheinRestCent).hasPrefix("1.500,00 €"))
+        #expect(Texte.GutscheinWert.einloesenGanz(a.gutscheinRestCent).hasPrefix(Euro.text(150_000)))
     }
 
     /// Live schickt bei eingelösten Gutscheinen noch den vollen aktuellerWertCent: nie als „Heute einlösbar“ zeigen

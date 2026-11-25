@@ -118,11 +118,19 @@ struct RegistrierungTests {
         #expect(nurLeerzeichen.fehler()[.firma] != nil)
     }
 
-    @Test(arguments: ["9604", "960470", "9604a", "96 47", "١٢٣٤٥"])
+    @Test(arguments: ["960470", "9604a", "96 47", "١٢٣٤٥", "123"])
     func plzFalsch(_ plz: String) {
         var d = gueltig()
         d.plz = plz
         #expect(d.fehler()[.plz] == Texte.Registrieren.plzFalsch)
+    }
+
+    /// Österreich/Schweiz (4 Ziffern): ehrlicher Hinweis statt „PLZ falsch“, Anmeldung bleibt gesperrt
+    @Test(arguments: ["1010", "8001"])
+    func plzOesterreichSchweiz(_ plz: String) {
+        var d = gueltig()
+        d.plz = plz
+        #expect(d.fehler()[.plz] == Texte.Registrieren.plzNichtDE)
     }
 
     @Test func plzUndTelefonRichtig() {
@@ -179,7 +187,7 @@ struct RegistrierungTests {
         let r = Texte.Registrieren.self
         return [r.einstiegFrage, r.einstieg, r.fortsetzen, r.navTitel, r.titel, r.einleitung, r.emailUngueltig, r.wiederherstellenLink,
                 r.codeHinweis, r.codeBestaetigen, r.angabenTitel, r.angabenEinleitung, r.firma, r.inhaber, r.strasse, r.plz, r.ort,
-                r.telefon, r.studioTelefon, r.ustid, r.website, r.unterzeichner, r.pflicht("PLZ"), r.plzFalsch, r.telefonFalsch,
+                r.telefon, r.studioTelefon, r.ustid, r.website, r.unterzeichner, r.pflicht("PLZ"), r.plzFalsch, r.plzNichtDE, r.telefonFalsch,
                 r.weiter, r.fehlerOben, r.bestaetigungenTitel, r.bestaetigungenEinleitung, r.unternehmer, r.kmu, r.vertrag, r.avv,
                 r.vertragLesen, r.avvLesen, r.datenschutzLesen, r.datenschutzHinweis, r.bitteBestaetigen, r.weiterZumAbo,
                 r.keinAboGefunden, r.aboGehoertZu("s•••@studio.de"), r.avvTitel]

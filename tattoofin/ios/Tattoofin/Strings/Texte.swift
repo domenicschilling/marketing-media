@@ -61,7 +61,7 @@ enum Texte {
         static let anmelden = "Anmelden"
         static let neuerCode = "Neuen Code schicken"
         static func neuerCodeIn(_ s: Int) -> String { "Neuen Code schicken (in \(s) s)" }
-        static let neuGeschickt = "Neuer Code ist unterwegs. Der alte gilt nicht mehr."
+        static let neuGeschickt = "Code ist angefordert. Nimm immer den neuesten aus deinem Postfach und schau auch im Spam-Ordner."
         static func restVersuche(_ n: Int) -> String { n == 1 ? "Noch 1 Versuch" : "Noch \(n) Versuche" }
         static let auswahlTitel = "Studio wählen"
         static let auswahlHinweis = "Zu deiner Adresse gehören mehrere Studios. Welches willst du in der App nutzen?"
@@ -94,7 +94,9 @@ enum Texte {
         static let website = "Website oder Instagram (optional)"
         static let unterzeichner = "Name des Unterzeichners"
         static func pflicht(_ feld: String) -> String { "Bitte ausfüllen: \(feld)" }
-        static let plzFalsch = "Die PLZ hat genau 5 Ziffern."
+        static let plzFalsch = "Bitte prüf die PLZ. Sie hat in Deutschland 5 Ziffern."
+        /// 4-stellige PLZ (Österreich, Schweiz): Server und Stripe-Konto sind noch auf Deutschland eingestellt
+        static let plzNichtDE = "Tattoofin gibt es im Moment nur für Studios in Deutschland."
         static let telefonFalsch = "Bitte mindestens 6 Ziffern eingeben."
         static let weiter = "Weiter"
         static let fehlerOben = "Bitte prüf die markierten Felder."

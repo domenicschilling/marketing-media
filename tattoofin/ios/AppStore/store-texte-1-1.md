@@ -1,4 +1,4 @@
-# App Store: Texte für Version 1.1 (de-DE), Stand 23.11.2026
+# App Store: Texte für Version 1.1 (de-DE), Stand 25.11.2026
 
 Entwurf vom Team (Texter + strenger Prüfer, Werberecht + Apple-Regeln), nachgeschärft. **Erst nach Domenics OK in App Store Connect eintragen.**
 
@@ -6,7 +6,7 @@ Entwurf vom Team (Texter + strenger Prüfer, Werberecht + Apple-Regeln), nachges
 |---|---|---|
 | Name | Tattoofin für Tattoo-Studios | 28/30 |
 | Untertitel | Anzahlung, Klarna, Gutscheine | 29/30 |
-| Werbetext | 7 Tage kostenlos testen. Betrag eintippen, Link per WhatsApp schicken: Dein Kunde zahlt mit Karte, Apple Pay oder Klarna. Keine Provision von Tattoofin. | 152/170 |
+| Werbetext | 7 Tage kostenlos testen. Zahlungslink in Sekunden per WhatsApp: Dein Kunde zahlt mit Karte, Apple Pay oder Klarna. Keine Provision von Tattoofin. | 145/170 |
 | Schlüsselwörter | Tattoostudio,Tätowierer,Kasse,Zahlungslink,Ratenzahlung,Vorkasse,Kartenzahlung,No-Show,Termin,QR | 96/100 |
 
 Warum „Raten*“ nicht im Namen/Untertitel steht: Zu „Raten*“ gehört direkt der Pflichtsatz mit Sternchen-Text und „Achtung! Kreditaufnahme kostet Geld.“ (Klarna-Regel, KlarnaTexte.swift). Name und Untertitel haben dafür keinen Platz. Darum steht „Raten*“ ganz oben in der Beschreibung und groß auf dem ersten Bild, jeweils mit Pflichtsatz.
@@ -65,12 +65,15 @@ Dazu viele kleine Verbesserungen.
 - Bedienungshilfen (App Store Connect → App-Informationen → Barrierefreiheit): nur angeben, was geprüft ist – VoiceOver, Größerer Text (Dynamic Type), Dunkelmodus, Ausreichender Kontrast, Reduzierte Bewegung (siehe Prüfbericht)
 - App-Datenschutz: „Fotos oder Videos“ entfernen (seit 1.1 kein Logo-Upload mehr)
 
-## Bilder (6,9 Zoll, 1320 × 2868, Reihenfolge)
-- Raten* für deine Kunden. – Dein Geld bekommst du auf einmal.
-- Betrag rein. Link raus. – Per WhatsApp schicken. Dein Kunde zahlt am Handy.
-- Erst Anzahlung. Dann Termin. – Weniger leere Termine. Kunde zahlt vorab per Link oder QR-Code.
-- Bezahlt? Siehst du sofort. – Mit Mitteilung aufs iPhone.
-- Gutscheine verkaufen. – Code scannen, einlösen, fertig.
-- Aufs eigene Stripe-Konto. – Keine Provision. Nur die Gebühr von Stripe.
-- Fertige Werbung mit deinem Namen. – Video und Beiträge für Instagram.
-- 7 Tage kostenlos testen. – Für berechtigte Apple-Accounts. Monatlich kündbar.
+## Bilder (6,9 Zoll 1320 × 2868 und 6,5 Zoll 1284 × 2778, Reihenfolge)
+Gestaltet als Werbung: echtes iPhone mit echter App (lokaler Server, Beispielstudio „Nordlicht Tattoo“), App-Symbol + Schriftzug, Tattoofin-Gelb/Marineblau, cremefarbenes Band als Panorama über alle Bilder. Vorlage `werbebilder/render.mjs` + `bilder.json`, Rohaufnahmen `StoreWerbebilderUITests`.
+1. **Raten\* für dein Studio** – Dein Kunde zahlt in Raten. Du bekommst den Betrag auf einmal. Stempel „7 Tage kostenlos testen“, Markierung „Mit Klarna“, Pflichtsatz als Fußzeile.
+2. **Zahlungslink in Sekunden** – Betrag eintippen, per WhatsApp schicken. Fertig. (Kasse + Link-Blatt mit QR)
+3. **Karte, Apple Pay oder Raten\*** – Dein Kunde wählt. Du siehst sofort, was bezahlt ist. Pflichtsatz als Fußzeile.
+4. **Gutscheine verkaufen & einlösen** – Code scannen, einlösen, erledigt.
+5. **Bezahlt? Dein iPhone sagt Bescheid.** – Mitteilung mit dem echten Server-Text („Zahlung eingegangen · 1.200,00 € · Rückenstück“).
+6. **Aufs eigene Konto** – Keine Provision von Tattoofin. Nur die Gebühr von Stripe.
+7. **Dein Team kassiert mit** – Eigene Zugänge für deine Artists.
+8. **QR-Code an die Theke** – Kunde scannt und zahlt selbst. Auch Anzahlungen. (Theken-QR im Vollbild)
+
+Geprüft gegen den Code: Mitteilungstext = `nachrichtZahlung` (push.mjs), Zahlseite nimmt Anzahlungen an (pay.mjs, außer Studios ohne Anzahlung), Team-Adressen können kassieren (TeamView-Text), keine Provision gilt für Apple-Abo-Studios (alle App-Neukunden). Keine Bewertungen, keine Zahlen außer Beispielbeträgen.

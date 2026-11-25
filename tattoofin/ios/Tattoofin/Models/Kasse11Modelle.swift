@@ -127,3 +127,15 @@ extension PortalStore {
         return jetzt.timeIntervalSince(g) > 120
     }
 }
+
+
+/// Kasse: Link nach einer Zeitüberschreitung wiederfinden (kein zweiter Link über denselben Betrag)
+enum KasseWiederfinden {
+    static func neuerLink(in zahlungen: [Zahlung], cent: Int, vorher: Set<String>, jetzt: Date = .now) -> Zahlung? {
+        zahlungen.first { z in
+            guard z.istOffen, !z.istGutschein, !vorher.contains(z.id), z.betragCent == cent else { return false }
+            guard let d = Datum.parse(z.createdAt) else { return false }
+            return jetzt.timeIntervalSince(d) < 120 && jetzt.timeIntervalSince(d) > -60
+        }
+    }
+}

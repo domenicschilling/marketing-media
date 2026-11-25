@@ -202,6 +202,8 @@ struct KasseView: View {
         sendet = true
         fehler = nil
         let e = entwurf.passend(keineAnzahlung: keineAnzahlung)
+        // Für den Fall einer Zeitüberschreitung: welche offenen Links es vorher schon gab
+        let vorherIds = Set(portal.zahlungen.filter(\.istOffen).map(\.id))
         Task {
             defer { sendet = false }
             do {
@@ -220,11 +222,31 @@ struct KasseView: View {
                 detailsOffen = false
                 heute = false
             } catch {
+                // Netzfehler (z. B. Zeitüberschreitung bei schlechtem WLAN): Der Server hat den Link vielleicht schon angelegt.
+                // Erst nachsehen, statt „nochmal versuchen“ zu sagen – sonst entsteht ein zweiter Link über denselben Betrag.
+                if (error as? APIFehler)?.code == "netz", let r = await schonErstellt(cent: cent, vorher: vorherIds) {
+                    portal.aktualisieren(r.zahlung)
+                    erfolgZaehler += 1
+                    erstellt = r
+                    entwurf = KasseEntwurf()
+                    eingabe.leeren()
+                    detailsOffen = false
+                    heute = false
+                    return
+                }
                 fehler = fehlerText(error)
                 // 409: Stand hat sich geändert (Abo beendet, Adresse fehlt, keine Anzahlung …) → neu laden, damit Sperrkarte bzw. Auswahl stimmen
                 if (error as? APIFehler)?.status == 409 { await portal.laden() }
             }
         }
+    }
+
+    /// Nach einem Netzfehler: Gibt es jetzt einen neuen offenen Link über genau diesen Betrag aus den letzten 2 Minuten?
+    private func schonErstellt(cent: Int, vorher: Set<String>) async -> ZahlungErstellt? {
+        await portal.laden()
+        guard let z = KasseWiederfinden.neuerLink(in: portal.zahlungen, cent: cent, vorher: vorher),
+              let einzeln = try? await APIClient.shared.zahlung(z.id), let link = einzeln.link else { return nil }
+        return ZahlungErstellt(zahlung: einzeln.zahlung, link: link, whatsappText: einzeln.whatsappText, hinweis: nil)
     }
 }
 

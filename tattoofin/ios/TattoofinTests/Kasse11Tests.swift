@@ -210,4 +210,23 @@ struct Kasse11Tests {
         }
         #expect(Texte.Kasse11.ersteAuszahlung.contains("7 bis 14 Tage"))
     }
+
+    // MARK: Zeitüberschreitung beim Erstellen (kasse-8)
+
+    private func offen(_ id: String, _ cent: Int, vor sekunden: TimeInterval, jetzt: Date) throws -> Zahlung {
+        let iso = ISO8601DateFormatter().string(from: jetzt.addingTimeInterval(-sekunden))
+        let json = #"{"id":"\#(id)","betragCent":\#(cent),"status":"offen","art":"gesamt","createdAt":"\#(iso)"}"#
+        return try JSONDecoder().decode(Zahlung.self, from: Data(json.utf8))
+    }
+
+    @Test func linkNachZeitueberschreitungWiederfinden() throws {
+        let jetzt = Date()
+        let alt = try offen("a", 25000, vor: 30, jetzt: jetzt)
+        let neu = try offen("b", 25000, vor: 10, jetzt: jetzt)
+        let anderer = try offen("c", 9900, vor: 5, jetzt: jetzt)
+        let zuAlt = try offen("d", 25000, vor: 600, jetzt: jetzt)
+        #expect(KasseWiederfinden.neuerLink(in: [alt, neu, anderer], cent: 25000, vorher: ["a"], jetzt: jetzt)?.id == "b")
+        #expect(KasseWiederfinden.neuerLink(in: [alt, anderer], cent: 25000, vorher: ["a"], jetzt: jetzt) == nil)
+        #expect(KasseWiederfinden.neuerLink(in: [zuAlt], cent: 25000, vorher: [], jetzt: jetzt) == nil)
+    }
 }

@@ -1,7 +1,7 @@
 import XCTest
 
 /// Rohaufnahmen für die gestalteten App-Store-Bilder (AppStore/werbebilder). Läuft gegen den lokalen Server
-/// (dev/app-lokal.mjs, Studio „Nordlicht Tattoo“, store@beispiel.test, Code 123456) auf einem 6,9-Zoll-iPhone (1320 × 2868):
+/// (dev/app-lokal.mjs, Studio „Nordlicht Tattoo“, sam@nordlicht-tattoo.de, Code 123456) auf einem 6,9-Zoll-iPhone (1320 × 2868):
 ///   xcrun simctl status_bar <sim> override --time 9:41 --batteryState charged --batteryLevel 100 --cellularBars 4 --wifiBars 3
 ///   TEST_RUNNER_TF_UI_API=http://localhost:<port> TEST_RUNNER_TF_STORE_BILDER=1 xcodebuild test-without-building … \
 ///     -only-testing:TattoofinUITests/StoreWerbebilderUITests
@@ -24,7 +24,7 @@ final class StoreWerbebilderUITests: XCTestCase {
         XCUIDevice.shared.appearance = .light
         let app = XCUIApplication()
         let api = env["TF_UI_API"] ?? "http://localhost:8888"
-        app.launchArguments = ["-TFApiBase", api, "-TFTestEmail", "store@beispiel.test", "-TFZuruecksetzen", "YES",
+        app.launchArguments = ["-TFApiBase", api, "-TFTestEmail", "sam@nordlicht-tattoo.de", "-TFZuruecksetzen", "YES",
                                "-AppleLanguages", "(de)", "-AppleLocale", "de_DE"]
         app.launch()
 
@@ -60,7 +60,7 @@ final class StoreWerbebilderUITests: XCTestCase {
         foto(app, "a02-kasse-betrag")
 
         // a03: Anzahlung-Link mit QR-Code
-        for _ in 0..<3 { app.buttons["Löschen"].firstMatch.tap() }
+        for _ in 0..<3 { app.buttons["Löschen. Lange drücken löscht alles."].firstMatch.tap() }
         let anz = app.buttons["Anzahlung"].firstMatch
         if anz.exists { anz.tap() } else { app.segmentedControls.buttons["Anzahlung"].firstMatch.tap() }
         for t in ["1", "5", "0"] { app.buttons[t].firstMatch.tap() }
@@ -70,14 +70,39 @@ final class StoreWerbebilderUITests: XCTestCase {
         let fertig = app.buttons["Fertig"]
         if fertig.exists { fertig.tap() }
 
-        // a05: Gutscheine
+        // a05: Gutscheine (Liste) und a05b: Gutschein-Detail
         app.tabBars.buttons["Gutscheine"].tap()
         Thread.sleep(forTimeInterval: 2)
         foto(app, "a05-gutscheine")
+        let greta = app.buttons.containing(NSPredicate(format: "label CONTAINS 'Greta Hansen'")).firstMatch
+        if greta.waitForExistence(timeout: 5) {
+            if !greta.isHittable { app.swipeUp(velocity: .slow) }
+            greta.tap()
+            foto(app, "a05b-gutschein-detail")
+            app.navigationBars.buttons.firstMatch.tap()
+        }
 
         // a07: Werbung
         app.tabBars.buttons["Werbung"].tap()
         Thread.sleep(forTimeInterval: 5)
         foto(app, "a07-werbung")
+
+        // a08: Theken-QR (Vollbild aus der Kasse)
+        app.tabBars.buttons["Kasse"].tap()
+        let theke = app.buttons["Theken-QR"].firstMatch
+        if theke.waitForExistence(timeout: 5) {
+            theke.tap()
+            Thread.sleep(forTimeInterval: 2)
+            foto(app, "a08-zahlseite-qr")
+            let zu = app.buttons["Schließen"].firstMatch
+            if zu.exists { zu.tap() } else { app.swipeDown(velocity: .fast) }
+        }
+
+        // a09: Team-Adressen
+        app.tabBars.buttons["Konto"].tap()
+        Thread.sleep(forTimeInterval: 2)
+        let team = app.buttons.containing(NSPredicate(format: "label BEGINSWITH 'Team-Adressen'")).firstMatch
+        for _ in 0..<5 where !(team.exists && team.isHittable) { app.swipeUp(velocity: .slow) }
+        if team.exists { team.tap(); Thread.sleep(forTimeInterval: 2); foto(app, "a09-team") }
     }
 }

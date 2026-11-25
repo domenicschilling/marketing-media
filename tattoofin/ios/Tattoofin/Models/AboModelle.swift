@@ -258,7 +258,8 @@ struct StudioDaten: Codable, Sendable, Hashable {
             }
             switch feld {
             case .plz where !v.isEmpty && !(v.count == 5 && v.allSatisfy(\.isASCIIDigitZiffer)):
-                f[feld] = Texte.Registrieren.plzFalsch
+                // 4 Ziffern = Österreich/Schweiz: ehrlich sagen, dass es dort noch nicht geht (statt „PLZ falsch“)
+                f[feld] = v.count == 4 && v.allSatisfy(\.isASCIIDigitZiffer) ? Texte.Registrieren.plzNichtDE : Texte.Registrieren.plzFalsch
             case .telefon, .studioTelefon:
                 if !v.isEmpty && Self.ziffern(v) < 6 { f[feld] = Texte.Registrieren.telefonFalsch }
             default: break
