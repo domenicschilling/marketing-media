@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// Bildschirm 13: Gutschein-Detail. Einlösen (immer der ganze Wert), zurücknehmen, PDF teilen, erneut mailen.
+/// Bildschirm 13: Gutschein-Detail. Wert (bei Aktions-Gutscheinen mit Bonus), einlösen (ganz oder – wenn der Server es kann – in Teilen),
+/// zurücknehmen, PDF teilen, erneut mailen.
 struct GutscheinDetailView: View {
     @Environment(PortalStore.self) private var portal
     @State private var zahlung: Zahlung
@@ -18,6 +19,9 @@ struct GutscheinDetailView: View {
     /// Neuladen fehlgeschlagen: der gezeigte Stand ist evtl. alt (DS „ohne Netz“: Stand mit Uhrzeit statt still)
     @State private var aktualisierenFehler: String?
     @State private var stand: Date?
+    @State private var teilBlatt = false
+    /// Einlösen/Zurücknehmen läuft: Knöpfe gesperrt, kein Doppel-Tipp (sonst 409 oder ein zweiter Teil)
+    @State private var bucht = false
 
     init(zahlung: Zahlung) {
         _zahlung = State(initialValue: zahlung)
@@ -31,11 +35,27 @@ struct GutscheinDetailView: View {
             Section {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack(alignment: .firstTextBaseline) {
-                        Text(Euro.text(zahlung.betragCent))
+                        Text(Euro.text(zahlung.gutscheinWertCent))
                             .font(.luckiest(38, relativeTo: .largeTitle))
                             .foregroundStyle(Color.tfTinte)
+                            .accessibilityLabel(Texte.GutscheinWert.wertTitel + " " + Euro.gesprochen(zahlung.gutscheinWertCent))
                         Spacer()
                         StatusChip(gutschein: g.status)
+                    }
+                    if zahlung.gutscheinBezahltAbweichend {
+                        Text(Texte.GutscheinWert.bezahlt(zahlung.gutscheinBezahltCent))
+                            .font(.dm(.subheadline)).foregroundStyle(Color.tfLeise)
+                    }
+                    if zahlung.gutscheinMitBonus, let bis = Datum.tag(g.bonusBis) {
+                        Text(Texte.GutscheinWert.bonusZeile(wert: zahlung.gutscheinWertCent, bis: bis, danach: zahlung.gutscheinBezahltCent))
+                            .font(.dm(.subheadline)).foregroundStyle(Color.tfLeise)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    if zahlung.gutscheinZeigtHeuteEinloesbar {
+                        Text(Texte.GutscheinWert.heuteEinloesbarZeile(zahlung.gutscheinRestCent)
+                             + (zahlung.gutscheinBonusVorbei() ? " (\(Texte.GutscheinWert.bonusVorbei))" : ""))
+                            .font(.dm(.body, weight: .semibold)).foregroundStyle(Color.tfTinte)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                     if let c = g.code {
                         Text(c)
@@ -65,6 +85,23 @@ struct GutscheinDetailView: View {
                 if let d = Datum.tagUhrzeit(g.gesendetAm) { WertZeile(titel: Texte.Gutscheine.gesendet, wert: d) }
             }
 
+            if !zahlung.gutscheinTeile.isEmpty {
+                Section {
+                    ForEach(Array(zahlung.gutscheinTeile.enumerated()), id: \.offset) { _, t in
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(Texte.GutscheinWert.teilZeile(t.cent, am: Datum.tagUhrzeit(t.am)))
+                                .foregroundStyle(Color.tfTinte)
+                            if let n = t.notiz?.leerAlsNil {
+                                Text(n).font(.dm(.subheadline)).foregroundStyle(Color.tfLeise)
+                            }
+                        }
+                        .accessibilityElement(children: .combine)
+                    }
+                } header: {
+                    ListenKopf(Texte.GutscheinWert.teileTitel)
+                }
+            }
+
             Section {
                 switch status {
                 case "gueltig", "abgelaufen":
@@ -73,17 +110,20 @@ struct GutscheinDetailView: View {
                     }
                     Button {
                         notiz = ""
-                        einloesenFrage = true
+                        if zahlung.gutscheinTeilbar { teilBlatt = true } else { einloesenFrage = true }
                     } label: {
-                        Label(Texte.Gutscheine.einloesen, systemImage: "checkmark.seal.fill")
+                        HStack(spacing: 8) {
+                            if bucht { ProgressView().tint(Color.tfBlau) }
+                            Label(Texte.Gutscheine.einloesen, systemImage: "checkmark.seal.fill")
+                        }
                     }
                     .buttonStyle(.haupt)
+                    .disabled(bucht)
                     .listRowInsets(EdgeInsets())
                     .listRowBackground(Color.clear)
+                    if zahlung.gutscheinKannZuruecknehmen { zuruecknehmenKnopf }
                 case "eingeloest":
-                    Button(role: .destructive) { zuruecknehmenFrage = true } label: {
-                        Label(Texte.Gutscheine.zuruecknehmen, systemImage: "arrow.uturn.backward")
-                    }
+                    zuruecknehmenKnopf
                 case "offen":
                     Text(Texte.Gutscheine.nochNichtBezahlt).font(.dm(.subheadline)).foregroundStyle(Color.tfLeise)
                     if let link {
@@ -142,14 +182,24 @@ struct GutscheinDetailView: View {
         .alert(Texte.Gutscheine.einloesenFrage, isPresented: $einloesenFrage) {
             TextField(Texte.Gutscheine.notizOptional, text: $notiz)
                 .accessibilityLabel(Texte.Gutscheine.notizOptional)
-            Button(Texte.Gutscheine.einloesenJa) { Task { await einloesen() } }
+            Button(Texte.Gutscheine.einloesenJa) { Task { await einloesen(.alles) } }
             Button(Texte.Allgemein.abbrechen, role: .cancel) {}
         } message: {
-            Text(Texte.Gutscheine.einloesenText(zahlung.betragCent))
+            Text(Texte.GutscheinWert.einloesenGanz(zahlung.gutscheinRestCent))
         }
         .alert(Texte.Gutscheine.zuruecknehmenFrage, isPresented: $zuruecknehmenFrage) {
             Button(Texte.Gutscheine.zuruecknehmen, role: .destructive) { Task { await zuruecknehmen() } }
             Button(Texte.Allgemein.abbrechen, role: .cancel) {}
+        } message: {
+            if status != "eingeloest", let letzter = zahlung.gutscheinTeile.last {
+                Text(Texte.GutscheinWert.letzteZuruecknehmenFrage(letzter.cent))
+            }
+        }
+        .sheet(isPresented: $teilBlatt) {
+            TeilEinloesenBlatt(rest: zahlung.gutscheinRestCent, abgelaufen: status == "abgelaufen") { auswahl, notiz in
+                teilBlatt = false
+                Task { await einloesen(auswahl, notiz: notiz) }
+            }
         }
         .refreshable { await neuLaden() }
         .task { await neuLaden() }
@@ -172,25 +222,50 @@ struct GutscheinDetailView: View {
         portal.aktualisieren(z)
     }
 
-    private func einloesen() async {
-        arbeitet = true
+    /// Knopf „Einlösung zurücknehmen“ bzw. bei Teil-Einlösungen „Letzte Einlösung zurücknehmen“
+    private var zuruecknehmenKnopf: some View {
+        Button(role: .destructive) { zuruecknehmenFrage = true } label: {
+            HStack(spacing: 8) {
+                Label(zahlung.gutscheinTeile.isEmpty ? Texte.Gutscheine.zuruecknehmen : Texte.GutscheinWert.letzteZuruecknehmen,
+                      systemImage: "arrow.uturn.backward")
+                if bucht { Spacer(); ProgressView() }
+            }
+        }
+        .disabled(bucht)
+    }
+
+    private func einloesen(_ auswahl: TeilEinloesung = .alles, notiz eigeneNotiz: String? = nil) async {
+        guard !bucht else { return }
+        bucht = true
         fehler = nil
         meldung = nil
-        defer { arbeitet = false }
+        defer { bucht = false }
+        let vorher = zahlung.gutscheinRestCent
+        var betrag: String?
+        if case let .betrag(c) = auswahl { betrag = TeilEinloesung.fuerServer(c) }
         do {
-            uebernehmen(try await APIClient.shared.gutscheinEinloesen(zahlung.id, notiz: notiz.leerAlsNil))
+            let z = try await APIClient.shared.gutscheinEinloesen(zahlung.id, notiz: (eigeneNotiz ?? notiz).leerAlsNil, betrag: betrag)
+            uebernehmen(z)
             eingeloestZaehler += 1
+            if z.gutscheinStatus == "eingeloest" {
+                if case let .betrag(c) = auswahl { meldung = Texte.GutscheinWert.eingeloest(c) } else { meldung = Texte.GutscheinWert.eingeloest(vorher) }
+            } else {
+                meldung = Texte.GutscheinWert.eingeloestRest(z.gutscheinRestCent)
+            }
         } catch {
             fehler = fehlerText(error)
         }
     }
 
     private func zuruecknehmen() async {
-        arbeitet = true
+        guard !bucht else { return }
+        bucht = true
         fehler = nil
-        defer { arbeitet = false }
+        meldung = nil
+        defer { bucht = false }
         do {
             uebernehmen(try await APIClient.shared.gutscheinEinloesungZuruecknehmen(zahlung.id))
+            meldung = Texte.GutscheinWert.zurueckgenommen
         } catch {
             fehler = fehlerText(error)
         }

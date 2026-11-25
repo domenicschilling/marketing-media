@@ -229,9 +229,10 @@ extension APIClient {
         try await senden("GET", "api/portal/gutschein-code", query: [URLQueryItem(name: "t", value: token)])
     }
 
-    func gutscheinEinloesen(_ id: String, notiz: String?) async throws -> Zahlung {
-        struct B: Encodable, Sendable { let notiz: String? }
-        return try await senden("POST", "api/portal/gutschein/\(id)/einloesen", body: B(notiz: notiz))
+    /// betrag nur bei teilbaren Gutscheinen (Euro-Text wie „12,50“); ohne betrag löst der Server den ganzen Rest ein
+    func gutscheinEinloesen(_ id: String, notiz: String?, betrag: String? = nil) async throws -> Zahlung {
+        struct B: Encodable, Sendable { let notiz: String?; let betrag: String? }
+        return try await senden("POST", "api/portal/gutschein/\(id)/einloesen", body: B(notiz: notiz, betrag: betrag))
     }
 
     func gutscheinEinloesungZuruecknehmen(_ id: String) async throws -> Zahlung {
