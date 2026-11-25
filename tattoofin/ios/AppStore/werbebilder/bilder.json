@@ -1,0 +1,10 @@
+[
+  { "name": "raten", "datei": "a01-zahlung-klarna.png", "ueberschrift": ["Raten* für", "deine Kunden."], "sub": "Dein Geld bekommst du auf einmal.", "fuss": "*Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, nicht Tattoofin. Achtung! Kreditaufnahme kostet Geld.", "handyTop": 1000 },
+  { "name": "link", "datei": "a02-kasse-betrag.png", "ueberschrift": ["Betrag rein.", "Link raus."], "sub": "Per WhatsApp schicken. Dein Kunde zahlt am Handy." },
+  { "name": "anzahlung", "datei": "a03-zahlungslink-qr.png", "ueberschrift": ["Erst Anzahlung.", "Dann Termin."], "sub": "Weniger leere Termine. Kunde zahlt vorab per Link oder QR-Code." },
+  { "name": "zahlungen", "datei": "a04-zahlungen.png", "ueberschrift": ["Bezahlt?", "Siehst du sofort."], "sub": "Mit Mitteilung aufs iPhone." },
+  { "name": "gutscheine", "datei": "a05-gutscheine.png", "ueberschrift": ["Gutscheine", "verkaufen."], "sub": "Code scannen, einlösen, fertig." },
+  { "name": "geld", "datei": "a06-auszahlungen.png", "ueberschrift": ["Aufs eigene", "Stripe-Konto."], "sub": "Keine Provision. Nur die Gebühr von Stripe." },
+  { "name": "werbung", "datei": "a07-werbung.png", "ueberschrift": ["Fertige Werbung", "mit deinem Namen."], "sub": "Video und Beiträge für Instagram." },
+  { "name": "testen", "datei": "a08-abo.png", "ueberschrift": ["7 Tage", "kostenlos testen."], "sub": "Für berechtigte Apple-Accounts. Monatlich kündbar." }
+]

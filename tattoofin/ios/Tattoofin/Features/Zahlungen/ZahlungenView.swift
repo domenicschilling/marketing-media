@@ -137,6 +137,9 @@ struct KPIKopf: View {
             Text(wert)
                 .font(.dm(.title3, weight: .bold))
                 .foregroundStyle(Color.tfTinte)
+                // Betrag nicht mitten in der Zahl umbrechen („1.080,00“ / „€“): normal einzeilig und notfalls kleiner, bei sehr großer Schrift umbrechen
+                .lineLimit(schrift.isAccessibilitySize ? nil : 1)
+                .minimumScaleFactor(0.6)
                 .fixedSize(horizontal: false, vertical: true)
             Text(titel)
                 .font(.dm(.caption, weight: .medium))
