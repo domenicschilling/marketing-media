@@ -83,6 +83,10 @@ enum TFLeistenStil {
 
         // Segmente
         let segment = UISegmentedControl.appearance()
+        // Flächen in Markenfarben statt System-Grau (fiel im Dunkelmodus als fremdes Bauteil auf)
+        let karte = UIColor(Color.tfKarte), linie = UIColor(Color.tfLinie)
+        segment.backgroundColor = UIColor { $0.userInterfaceStyle == .dark ? karte.resolvedColor(with: $0) : linie.resolvedColor(with: $0) }
+        segment.selectedSegmentTintColor = UIColor { $0.userInterfaceStyle == .dark ? UIColor(red: 0x2A / 255, green: 0x44 / 255, blue: 0x60 / 255, alpha: 1) : .white }
         segment.setTitleTextAttributes([.font: schrift(15, .medium), .foregroundColor: tinte], for: .normal)
         segment.setTitleTextAttributes([.font: schrift(15, .semibold), .foregroundColor: tinte], for: .selected)
 

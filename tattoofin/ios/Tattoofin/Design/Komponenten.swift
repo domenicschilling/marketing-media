@@ -319,9 +319,12 @@ struct TFAuswahl<Wert: Hashable>: View {
                                 .frame(maxWidth: .infinity, alignment: .leading)
                             Image(systemName: gewaehlt ? "checkmark.circle.fill" : "circle")
                                 .foregroundStyle(gewaehlt ? Color.tfAkzent : Color.tfLeise)
+                                .frame(width: 24)
                                 .accessibilityHidden(true)
                         }
-                        .padding(.horizontal, 14)
+                        // Höchstens AX3: größer passen Wörter wie „Auszahlungen“ nicht mehr in eine Zeile (brachen mitten im Wort)
+                        .dynamicTypeSize(...DynamicTypeSize.accessibility3)  // ds-ok: Auswahl-Knöpfe, Wortbruch vermeiden
+                        .padding(.horizontal, 10)
                         .padding(.vertical, 10)
                         .frame(minHeight: 48)
                         .background(gewaehlt ? Color.tfKarte : Color.clear, in: RoundedRectangle(cornerRadius: 14, style: .continuous))

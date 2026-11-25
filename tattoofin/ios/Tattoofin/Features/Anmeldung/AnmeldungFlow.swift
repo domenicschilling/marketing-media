@@ -337,6 +337,9 @@ struct CodeView: View {
         }
         .tfHintergrund()
         .navigationTitle("")  // Überschrift „Code eingeben“ steht schon groß im Inhalt
+        // Deckende Leiste: gescrollter Text läuft nicht hinter Zurück-Knopf und Uhrzeit (große Schrift)
+        .toolbarBackground(Color.tfHintergrund, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear { fokus = true }
         .task {

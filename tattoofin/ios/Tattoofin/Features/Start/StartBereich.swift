@@ -171,10 +171,10 @@ struct StartBereich: View {
         } else if let k = portal.kpis {
             // Paket mit Provision: „an dich“ (nur, wenn der Portal-Ausweg die Zahl kennt), sonst Anzahl der Zahlungen
             let anDich = werbung.start?.studio.istProvision == true ? werbung.start?.kpis?.auszahlungMonatCent : nil
-            let zweiter = anDich.map { "\(Euro.text($0)) \(WerbungTexte.Start.anDich)" }
+            let zweiter = anDich.map { "\(Euro.kurz($0)) \(WerbungTexte.Start.anDich)" }
                 ?? "\(k.zahlungenMonat ?? 0) \(WerbungTexte.Start.zahlungen)"
             (Text("\(WerbungTexte.Start.diesenMonat): ").foregroundStyle(Color.tfLeise)
-             + Text(Euro.text(k.umsatzMonatCent ?? 0)).fontWeight(.bold).foregroundStyle(Color.tfTinte)
+             + Text(Euro.kurz(k.umsatzMonatCent ?? 0)).fontWeight(.bold).foregroundStyle(Color.tfTinte)
              + Text(" · \(zweiter)").foregroundStyle(Color.tfLeise))
                 .font(.dm(.footnote))
                 .padding(.horizontal, 4)

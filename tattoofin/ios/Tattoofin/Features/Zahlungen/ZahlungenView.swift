@@ -103,6 +103,7 @@ struct ZahlungenView: View {
             }
         }
         .listStyle(.insetGrouped)
+        .listSectionSpacing(.compact)  // kein großer Abstand zwischen Filter und Liste
         .scrollContentBackground(.hidden)
         .searchable(text: $suche, placement: .navigationBarDrawer(displayMode: .automatic), prompt: Texte.Zahlungen.suche)
         .refreshable { await portal.laden() }

@@ -380,7 +380,9 @@ final class ParitaetRundgangUITests: XCTestCase {
         foto("recht-lesen")
         app.buttons["Fertig"].tap()
         let best = app.buttons["recht-bestaetigen"]
-        if best.waitForExistence(timeout: 3) {
+        // Der Knopf kann unter der sichtbaren Fläche liegen (Liste lädt ihn erst beim Scrollen): erst suchen, dann bestätigen
+        if !best.waitForExistence(timeout: 3) && !etwas(app, "Gelesen und bestätigt").exists { bisSichtbar(app, best, versuche: 8) }
+        if best.exists {
             app.descendants(matching: .any)["recht-haken"].firstMatch.tap()
             bisSichtbar(app, best)
             best.tap()

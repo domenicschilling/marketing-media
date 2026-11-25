@@ -80,6 +80,8 @@ struct StudioMehrAbschnitt: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        // Höchstens AX2: sonst brechen Wörter wie „Einstellungen“ mitten im Wort
+        .dynamicTypeSize(...DynamicTypeSize.accessibility2)  // ds-ok: Zeilentitel, Wortbruch vermeiden
         if schrift.isAccessibilitySize {
             text.accessibilityElement(children: .combine)
         } else {

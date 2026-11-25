@@ -4,6 +4,7 @@ import SwiftUI
 /// Studios mit Apple-Abo (In-App-Kauf): Abschnitt „Abo“ mit Status, „Abo verwalten“ (Apple-Sheet) und bei beendetem Abo
 /// „Abo wieder abschließen“. Studios, die über die Website zahlen: keine Preise, kein Kauf, keine Abo-Verwaltung (Apple 3.1.3).
 struct KontoView: View {
+    @Environment(\.dynamicTypeSize) private var schrift
     @Environment(AppState.self) private var app
     @Environment(PortalStore.self) private var portal
     @Environment(SperreManager.self) private var sperre
@@ -200,16 +201,21 @@ struct KontoView: View {
     private func statusZeile(_ titel: String, _ ok: Bool) -> some View {
         let zeichen = Image(systemName: ok ? "checkmark.circle.fill" : "xmark.circle")
             .foregroundStyle(ok ? Color.tfGruen : Color.tfLeise)
-        return ViewThatFits(in: .horizontal) {
-            HStack {
-                Text(titel).foregroundStyle(Color.tfTinte)
-                Spacer(minLength: 12)
-                zeichen
-            }
-            VStack(alignment: .leading, spacing: 4) {
-                Text(titel).foregroundStyle(Color.tfTinte)
-                    .fixedSize(horizontal: false, vertical: true)
-                zeichen
+        // Bei großer Schrift das Zeichen vorn in fester Spalte (alle Zeilen gleich), sonst rechts wie gewohnt
+        return Group {
+            if schrift.isAccessibilitySize {
+                HStack(alignment: .firstTextBaseline, spacing: 10) {
+                    zeichen.frame(width: 28)
+                    Text(titel).foregroundStyle(Color.tfTinte)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            } else {
+                HStack {
+                    Text(titel).foregroundStyle(Color.tfTinte)
+                    Spacer(minLength: 12)
+                    zeichen
+                }
             }
         }
         .accessibilityElement(children: .ignore)
@@ -340,6 +346,7 @@ struct KontoView: View {
             Image(systemName: symbol).foregroundStyle(Color.tfAkzent)
                 .frame(width: 28)  // feste Symbolspalte: breite Symbole (person.2) ragen nicht heraus
         }
+        .dynamicTypeSize(...DynamicTypeSize.accessibility2)  // ds-ok: Zeilentitel, Wortbruch vermeiden
     }
 
     #if DEBUG

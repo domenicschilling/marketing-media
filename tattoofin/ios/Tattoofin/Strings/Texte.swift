@@ -6,7 +6,7 @@ import Foundation
 
 enum Texte {
     enum Allgemein {
-        static let laedt = "Wird geladen …"
+        static let laedt = "Wird geladen\u{00A0}…"
         static let nochmal = "Nochmal versuchen"
         static let abbrechen = "Abbrechen"
         static let fertig = "Fertig"
@@ -409,7 +409,7 @@ enum Texte {
         static let vertragEndet = "Vertrag endet am"
         static let angemeldetAls = "Angemeldet als"
         static let rolle = "Rolle"
-        static let rolleInhaber = "Inhaber (Hauptadresse)"
+        static let rolleInhaber = "Inhaber · Hauptadresse"
         static let rolleTeam = "Team"
         static let bleiben = "Du willst doch bleiben? Schreib uns an info@tattoofin.de."
         static let stripe = "Stripe"

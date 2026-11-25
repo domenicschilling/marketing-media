@@ -53,9 +53,14 @@ Datenschutz: https://tattoofin.de/datenschutz.html#app
 ## Neuerungen in 1.1
 
 ```
-Deine Kasse kennt jetzt die Einstellungen deines Studios: Gibt es bei dir keine Anzahlung, bietet die App sie auch nicht an.
-Gutscheine zeigen ihren echten Wert, auch Aktions-Gutscheine.
-Die App passt sich deiner Schriftgröße an und sagt dir klar, wenn etwas nicht klappt.
+Neu in 1.1:
+• Ruhigeres, klareres Design auf allen Bildschirmen, auch im Dunkelmodus und mit großer Schrift.
+• Gutscheine zeigen ihren echten Wert, auch Aktions-Gutscheine mit Bonus.
+• Nimmt dein Studio keine Anzahlung, bietet die Kasse sie auch nicht an.
+• Fehlt die Adresse deiner Zahlseite, trägst du sie direkt in der App ein.
+• Bei schlechtem Netz entsteht kein doppelter Zahlungslink mehr.
+• Mitteilungen kommen auch nach dem Ab- und Anmelden zuverlässig.
+• Gutschein verkaufen: „Erstellen“ jetzt oben rechts.
 Dazu viele kleine Verbesserungen.
 ```
 

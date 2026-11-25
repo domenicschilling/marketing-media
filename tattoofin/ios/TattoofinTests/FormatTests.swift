@@ -39,8 +39,9 @@ struct BetragTests {
 
     @Test func euroFormat() {
         #expect(Euro.text(48_000).replacingOccurrences(of: "\u{a0}", with: " ") == "480,00 €")
-        #expect(Euro.kurz(5_000) == "50 €")
-        #expect(Euro.kurz(2_000_000) == "20.000 €")
+        // Geschütztes Leerzeichen vor „€“ (bricht nie allein um, 1.1)
+        #expect(Euro.kurz(5_000) == "50\u{00A0}€")
+        #expect(Euro.kurz(2_000_000) == "20.000\u{00A0}€")
         #expect(Euro.fuerServer(48_050) == "480.50")
         #expect(Euro.fuerServer(5) == "0.05")
         #expect(Euro.gesprochen(48_000) == "480 Euro")
