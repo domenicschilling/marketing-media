@@ -152,8 +152,7 @@ struct AboView: View {
                     .padding(.bottom, 4)
             }
             HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(p.displayPrice)
-                    .font(.luckiest(40, relativeTo: .largeTitle))
+                GrosserBetrag.text(p.displayPrice, groesse: 40)
                     .foregroundStyle(Color.tfTinte)
                     .minimumScaleFactor(0.6)
                     .lineLimit(1)

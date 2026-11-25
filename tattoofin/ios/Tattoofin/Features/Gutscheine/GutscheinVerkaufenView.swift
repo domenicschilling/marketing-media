@@ -39,8 +39,7 @@ struct GutscheinVerkaufenView: View {
             TFFormular {
                 Section {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(betrag.anzeige)
-                            .font(.luckiest(40, relativeTo: .largeTitle))
+                        GrosserBetrag.text(betrag.anzeige, groesse: 40)
                             .foregroundStyle(Color.tfTinte)
                             .frame(maxWidth: .infinity)
                             .accessibilityLabel(Texte.Gutscheine.wert)

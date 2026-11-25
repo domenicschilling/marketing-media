@@ -114,8 +114,7 @@ struct SaldoKarte: View {
 
     private func spalte(_ titel: String, _ cent: Int) -> some View {
         VStack(spacing: 4) {
-            Text(Euro.text(cent))
-                .font(.luckiest(26, relativeTo: .title2))
+            GrosserBetrag.text(Euro.text(cent), groesse: 26, relativeTo: .title2)
                 .foregroundStyle(Color.tfBlau)
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)

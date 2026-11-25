@@ -113,8 +113,7 @@ struct KasseView: View {
 
                 // Betrag
                 VStack(spacing: 4) {
-                    Text(eingabe.anzeige)
-                        .font(.luckiest(kompakt ? 38 : 46, relativeTo: .largeTitle))
+                    GrosserBetrag.text(eingabe.anzeige, groesse: kompakt ? 38 : 46)
                         .foregroundStyle(Color.tfTinte)
                         .lineLimit(1)
                         .minimumScaleFactor(0.4)

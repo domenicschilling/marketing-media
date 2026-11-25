@@ -96,8 +96,7 @@ struct ZahlungslinkSheet: View {
                     .frame(maxWidth: 360)
             }
             VStack(spacing: 4) {
-                Text(Euro.text(zahlung.betragCent))
-                    .font(.luckiest(40, relativeTo: .largeTitle))
+                GrosserBetrag.text(Euro.text(zahlung.betragCent), groesse: 40)
                     .foregroundStyle(Color.tfTinte)
                 // Beim Gutschein steht „Gutschein“ schon im Titel, die Art nicht doppelt
                 Text(([zahlung.istGutschein ? nil : zahlung.artText, zahlung.titel, zahlung.kunde] as [String?]).verbunden())
@@ -163,8 +162,7 @@ struct ZahlungslinkSheet: View {
                 .symbolEffect(.bounce, value: bezahltZaehler)
                 .padding(.top, 30)
                 .accessibilityHidden(true)
-            Text(Texte.Zahlung.bezahlt(zahlung.betragCent))
-                .font(.luckiest(34, relativeTo: .largeTitle))
+            GrosserBetrag.text(Texte.Zahlung.bezahlt(zahlung.betragCent), groesse: 34)
                 .foregroundStyle(Color.tfTinte)
                 .multilineTextAlignment(.center)
             if zahlung.status == "in_pruefung" {

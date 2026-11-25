@@ -52,8 +52,7 @@ struct ZahlungDetailView: View {
                     // Bedienungshilfe-Größen: Status unter den Betrag (sonst steht das „€“ allein in der zweiten Zeile)
                     let layout = schrift.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8)) : AnyLayout(HStackLayout(alignment: .firstTextBaseline))
                     layout {
-                        Text(Euro.text(z.betragCent))
-                            .font(.luckiest(36, relativeTo: .largeTitle))
+                        GrosserBetrag.text(Euro.text(z.betragCent), groesse: 36)
                             .foregroundStyle(Color.tfTinte)
                             .lineLimit(1)
                             .minimumScaleFactor(0.5)

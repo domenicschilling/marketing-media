@@ -181,3 +181,21 @@ struct Ueberschrift: View {
             .accessibilityAddTraits(.isHeader)
     }
 }
+
+/// Große Beträge in Luckiest Guy: Das „€“ dieser Schrift sieht aus wie „c“ oder „<“ (unabhängige Abnahme 1.1).
+/// Darum Zahl in Luckiest Guy, „€“ als eigenes Stück in DM Sans Bold mit etwa 70 % der Größe, auf derselben Grundlinie.
+enum GrosserBetrag {
+    /// Text wie „1.200,00 €“ (auch mit geschütztem Leerzeichen) oder „1.200,00 € bezahlt“ in die Teile zerlegen und gestalten
+    static func text(_ s: String, groesse: CGFloat, relativeTo stil: Font.TextStyle = .largeTitle) -> Text {
+        let teile = s.components(separatedBy: "€")
+        guard teile.count == 2 else { return Text(s).font(.luckiest(groesse, relativeTo: stil)) }
+        let zahl = teile[0].trimmingCharacters(in: .whitespaces.union(CharacterSet(charactersIn: "\u{00A0}")))
+        let rest = teile[1]
+        var t = Text(zahl).font(.luckiest(groesse, relativeTo: stil))
+            + Text("\u{2009}€").font(.dm(groesse * 0.7, relativeTo: stil, weight: .bold))
+        if !rest.trimmingCharacters(in: .whitespaces).isEmpty {
+            t = t + Text(rest).font(.luckiest(groesse, relativeTo: stil))
+        }
+        return t
+    }
+}

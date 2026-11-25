@@ -32,10 +32,15 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
 
     /// Auch im Vordergrund als Banner zeigen; offenes Zahlungslink-Sheet lädt sofort neu.
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter,
-                                            willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
+                                            willPresent notification: UNNotification,
+                                            withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        // Wie bei didReceive: Fassung mit Abschluss-Rückruf, Abschluss auf dem Haupt-Thread (sicherer als die async-Fassung)
         let f = Self.felder(notification)
-        await MainActor.run { AppState.shared.mitteilungErhalten(typ: f.typ, zahlungId: f.zahlungId) }
-        return [.banner, .list, .sound]
+        nonisolated(unsafe) let fertig = completionHandler
+        DispatchQueue.main.async {
+            MainActor.assumeIsolated { AppState.shared.mitteilungErhalten(typ: f.typ, zahlungId: f.zahlungId) }
+            fertig([.banner, .list, .sound])
+        }
     }
 
     /// Angetippt: in den passenden Tab bzw. die Detailseite springen.
