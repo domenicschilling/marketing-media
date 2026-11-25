@@ -68,10 +68,8 @@ struct WerbungView: View {
                         let liste = abschnitte(s)
                         if liste.count > 1 { sprungleiste(liste, leser) }
                         if werbung.klarnaMaterial {
-                            Text(WerbungTexte.einleitungKlarna)
-                                .font(.dm(.subheadline))
-                                .foregroundStyle(Color.tfLeise)
-                                .fixedSize(horizontal: false, vertical: true)
+                            // Anleitung 1–3 einmal für alle Karten
+                            WerbeAnleitung()
                             WerbevideoKarte().id(WerbungAbschnitt.video)
                             if let z = zahlseite(s) {
                                 BeitraegeKarte(firma: werbung.werbung?.firma ?? s.firma ?? s.name,
@@ -144,23 +142,29 @@ struct WerbungView: View {
         }
     }
 
-    /// Bei Bedienungshilfe-Größen brechen die Chips in mehrere Reihen um (nichts wird abgeschnitten); sonst eine
-    /// waagrechte Leiste, die rechts weich ausblendet, damit man sieht, dass sie weiterläuft.
+    /// Bei Bedienungshilfe-Größen brechen die Chips in mehrere Reihen um (nichts wird abgeschnitten). Sonst stehen alle
+    /// Chips nebeneinander, wenn sie in die Breite passen. Passen sie nicht (iPhone SE, größere Schrift), läuft die Leiste
+    /// von Rand zu Rand mit Innenabstand und blendet an beiden Seiten weich aus. So wirkt kein Chip halb abgeschnitten,
+    /// und man sieht, dass sie seitlich weitergeht.
     @ViewBuilder
     private func sprungleiste(_ liste: [WerbungAbschnitt], _ leser: ScrollViewProxy) -> some View {
         Group {
             if schrift.isAccessibilitySize {
                 SprungFluss(abstand: 8) { sprungChips(liste, leser) }
             } else {
-                ScrollView(.horizontal, showsIndicators: false) {
+                ViewThatFits(in: .horizontal) {
                     HStack(spacing: 8) { sprungChips(liste, leser) }
-                        .padding(.trailing, 24)
-                }
-                .mask {
-                    HStack(spacing: 0) {
-                        Rectangle()
-                        LinearGradient(colors: [.black, .clear], startPoint: .leading, endPoint: .trailing)
-                            .frame(width: 24)
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) { sprungChips(liste, leser) }
+                    }
+                    .contentMargins(.horizontal, 16, for: .scrollContent)
+                    .padding(.horizontal, -16)
+                    .mask {
+                        HStack(spacing: 0) {
+                            LinearGradient(colors: [.clear, .black], startPoint: .leading, endPoint: .trailing).frame(width: 16)
+                            Rectangle()
+                            LinearGradient(colors: [.black, .clear], startPoint: .leading, endPoint: .trailing).frame(width: 40)
+                        }
                     }
                 }
             }
@@ -176,12 +180,13 @@ struct WerbungView: View {
                     .font(.dm(.subheadline, weight: .semibold))
                     .foregroundStyle(Color.tfTinte)
                     .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.horizontal, 14)
+                    .fixedSize(horizontal: !schrift.isAccessibilitySize, vertical: true)
+                    .padding(.horizontal, 12)
                     .padding(.vertical, 6)
-                    .frame(minHeight: 44)
+                    .frame(maxWidth: schrift.isAccessibilitySize ? nil : .infinity, minHeight: 44)
                     .background(Color.tfKarte, in: Capsule())
                     .overlay(Capsule().stroke(Color.tfLinie, lineWidth: 1))
+                    .contentShape(Capsule())
             }
             .buttonStyle(.plain)
             .accessibilityLabel("\(WerbungTexte.sprungLabel) \(WerbungTexte.sprung(a))")

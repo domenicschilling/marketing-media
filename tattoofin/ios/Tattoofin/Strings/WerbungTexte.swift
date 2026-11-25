@@ -10,7 +10,6 @@ enum WerbungTexte {
     static let titel = "Werbung"
 
     // Kopf
-    static let einleitungKlarna = "Speichern, Text kopieren, posten."
     static let einleitung = "Dein QR-Code für die Theke."
     static let ohneKlarnaTitel = "Werbevideo und fertige Beiträge"
     static let ohneKlarnaText = "Die bekommst du, sobald Klarna bei dir fest freigeschaltet ist. Fragen? Schreib unserem Team."
@@ -32,7 +31,6 @@ enum WerbungTexte {
 
     // Werbevideo
     static let videoTitel = "Dein Werbevideo"
-    static let videoText = "Fertiges Video für Instagram, Facebook und TikTok. Deine Kunden sehen: Bei dir zahlen sie per Link oder QR-Code, auch mit Klarna."
     static let formatLabel = "Format"
     static let formatReel = "Reel / Story"
     static let formatFeed = "Beitrag"
@@ -55,10 +53,6 @@ enum WerbungTexte {
 
     // Beiträge
     static let beitraegeTitel = "Deine Beiträge"
-    static let beitraegeText = "Fertige Bilder für Instagram und Facebook, mit deinem Studionamen und dem QR-Code zu deiner Zahlseite."
-    static let schritte = ["Bilder speichern: Sie landen in deinen Fotos.",
-                           "Text kopieren: mit Klarna-Hinweis und Hashtags.",
-                           "In Instagram posten und den Text einfügen."]
     static let nameLabel = "Name auf den Bildern"
     static let nameUebernehmen = "Übernehmen"
     static let nameHinweis = "Ohne GmbH oder UG, so wie deine Kunden dich kennen."

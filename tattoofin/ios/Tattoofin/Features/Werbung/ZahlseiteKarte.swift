@@ -19,8 +19,7 @@ struct ZahlseiteKarte: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(WerbungTexte.zahlseiteTitel).font(.luckiest(24, relativeTo: .title2)).foregroundStyle(Color.tfTinte)
-                .accessibilityAddTraits(.isHeader)
+            WerbeUeberschrift(WerbungTexte.zahlseiteTitel)
             Text(WerbungTexte.zahlseiteText).font(.dm(.subheadline)).foregroundStyle(Color.tfLeise)
                 .fixedSize(horizontal: false, vertical: true)
 
@@ -35,21 +34,23 @@ struct ZahlseiteKarte: View {
                 .frame(maxWidth: .infinity)
                 .multilineTextAlignment(.center)
 
-            Button { qrSpeichern() } label: {
-                if arbeitet { ProgressView().tint(Color.tfBlau) } else { Label(WerbungTexte.qrSpeichern, systemImage: "square.and.arrow.down") }
-            }
-            .buttonStyle(.haupt)
-            .disabled(arbeitet)
-
-            KnopfReihe {
-                Button {
+            // Ein Hauptknopf „Speichern“, daneben rund: Link kopieren und Teilen
+            WerbeAktionen {
+                WerbeSpeichernKnopf(label: WerbungTexte.qrSpeichern, arbeitet: arbeitet) { qrSpeichern() }
+                    .disabled(arbeitet)
+                    .accessibilityIdentifier("werbung-qr-speichern")
+            } rund: {
+                RundKnopf(label: WerbungTexte.linkKopieren, symbol: "link") {
                     UIPasteboard.general.string = zahlseite
                     kurzZeigen(WerbungTexte.kopiert, in: $meldung)
-                } label: { Label(WerbungTexte.linkKopieren, systemImage: "doc.on.doc") }
-                    .buttonStyle(.zweit)
+                }
+                .accessibilityIdentifier("werbung-qr-kopieren")
                 if let u = URL(string: zahlseite) {
                     ShareLink(item: u) { Label(WerbungTexte.teilen, systemImage: "square.and.arrow.up") }
-                        .buttonStyle(.zweit)
+                        .buttonStyle(.rund)
+                        .accessibilityLabel(WerbungTexte.teilen)
+                        .accessibilityInputLabels([WerbungTexte.teilen])
+                        .accessibilityIdentifier("werbung-qr-teilen")
                 }
             }
             if let u = Self.appAnsicht(zahlseite) {
@@ -127,8 +128,7 @@ struct DruckmaterialKarte: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(WerbungTexte.druckTitel).font(.luckiest(24, relativeTo: .title2)).foregroundStyle(Color.tfTinte)
-                .accessibilityAddTraits(.isHeader)
+            WerbeUeberschrift(WerbungTexte.druckTitel)
             Text(WerbungTexte.druckText).font(.dm(.subheadline)).foregroundStyle(Color.tfLeise)
                 .fixedSize(horizontal: false, vertical: true)
             VStack(spacing: 0) {

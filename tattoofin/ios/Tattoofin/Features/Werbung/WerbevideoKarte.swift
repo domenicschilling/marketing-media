@@ -23,9 +23,8 @@ struct WerbevideoKarte: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(WerbungTexte.videoTitel).font(.luckiest(24, relativeTo: .title2)).foregroundStyle(Color.tfTinte)
-                .accessibilityAddTraits(.isHeader)
-            Text(WerbungTexte.videoText).font(.dm(.subheadline)).foregroundStyle(Color.tfLeise)
+            WerbeUeberschrift(WerbungTexte.videoTitel)
+            Text(Texte.AbnahmeG6.videoKurz).font(.dm(.subheadline)).foregroundStyle(Color.tfLeise)
                 .fixedSize(horizontal: false, vertical: true)
 
             TFAuswahl(WerbungTexte.formatLabel, auswahl: $feed,
@@ -34,29 +33,25 @@ struct WerbevideoKarte: View {
             if let videoURL {
                 PosterVideo(video: videoURL, poster: WerbungRegeln.adresse(datei.cover, basis: basis),
                             seitenverhaeltnis: feed ? 4.0 / 5.0 : 9.0 / 16.0, label: WerbungTexte.videoLabel)
-                    // Etwas kleiner, damit „In Fotos speichern“ ohne Scrollen sichtbar ist (iPhone SE: noch kleiner)
-                    .frame(maxHeight: kleinerBildschirm ? 140 : 290)
+                    // Großes Vorschaubild, „Speichern“ bleibt trotzdem ohne Scrollen sichtbar (iPhone SE: etwas kleiner)
+                    .frame(maxHeight: kleinerBildschirm ? 175 : 320)
                     .frame(maxWidth: .infinity)
             }
 
-            Button {
-                speichern()
-            } label: {
-                if arbeitet { ProgressView().tint(Color.tfBlau) } else { Label(WerbungTexte.videoSpeichern, systemImage: "square.and.arrow.down") }
-            }
-            .buttonStyle(.haupt)
-            .disabled(arbeitet || videoURL == nil)
-
-            // Gleiche Bedienung wie bei den Beiträgen: „Text kopieren“ kopiert sofort, „Text ansehen“ zeigt ihn
-            KnopfReihe {
-                Button {
+            // Ein Hauptknopf „Speichern“, daneben rund: Text kopieren (kopiert sofort) und Teilen
+            WerbeAktionen {
+                WerbeSpeichernKnopf(label: Texte.AbnahmeG6.videoSpeichernLabel, arbeitet: arbeitet) { speichern() }
+                    .disabled(arbeitet || videoURL == nil)
+                    .accessibilityIdentifier("werbung-video-speichern")
+            } rund: {
+                RundKnopf(label: WerbungTexte.textKopieren, symbol: "doc.on.doc") {
                     UIPasteboard.general.string = werbung.videoText
                     kurzZeigen(WerbungTexte.kopiert, in: $meldung)
-                } label: { Label(WerbungTexte.textKopieren, systemImage: "doc.on.doc") }
-                    .buttonStyle(.zweit)
-                Button { teilenVorbereiten() } label: { Label(WerbungTexte.teilen, systemImage: "square.and.arrow.up") }
-                    .buttonStyle(.zweit)
+                }
+                .accessibilityIdentifier("werbung-video-kopieren")
+                RundKnopf(label: WerbungTexte.teilen, symbol: "square.and.arrow.up") { teilenVorbereiten() }
                     .disabled(arbeitet || videoURL == nil)
+                    .accessibilityIdentifier("werbung-video-teilen")
             }
             Button { withAnimation { textOffen.toggle() } } label: {
                 Text(textOffen ? WerbungTexte.textAusblenden : WerbungTexte.textAnsehen).font(.dm(.subheadline, weight: .semibold))

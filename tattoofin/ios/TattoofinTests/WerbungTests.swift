@@ -171,8 +171,9 @@ struct WerbungTests {
                 #expect(!t.localizedCaseInsensitiveContains(verboten), "„\(verboten)“ in: \(t)")
             }
         }
-        let alle = immer + [WerbungTexte.einleitungKlarna, WerbungTexte.ohneKlarnaText, WerbungTexte.videoText, WerbungTexte.beitraegeText,
-                            WerbungTexte.druckText] + WerbungTexte.schritte
+        let alle = immer + [Texte.AbnahmeG6.anleitungLabel, WerbungTexte.ohneKlarnaText, Texte.AbnahmeG6.videoKurz,
+                            Texte.AbnahmeG6.beitraegeKurz, Texte.AbnahmeG6.speichern, Texte.AbnahmeG6.videoSpeichernLabel,
+                            WerbungTexte.druckText] + Texte.AbnahmeG6.anleitung
         for t in alle {
             for verboten in ["49", "netto", "Paket", "tattoofin.de", "Probe", "Abo", "Domenic"] {
                 #expect(!t.localizedCaseInsensitiveContains(verboten), "„\(verboten)“ in: \(t)")
@@ -353,7 +354,8 @@ struct WerbungTests {
                                      wofuer: "", kopieren: "link", text: "", bilder: [Data()])
         #expect(st.anzeigeFormat == "Story")
         #expect(st.kurzTitel == "Story")
-        for t in [WerbungTexte.formatReel, WerbungTexte.formatFeed, WerbungTexte.zahlseiteText, WerbungTexte.nameHinweis] + WerbungTexte.schritte {
+        for t in [WerbungTexte.formatReel, WerbungTexte.formatFeed, WerbungTexte.zahlseiteText, WerbungTexte.nameHinweis,
+                  Texte.AbnahmeG6.anleitungLabel, Texte.AbnahmeG6.videoKurz, Texte.AbnahmeG6.beitraegeKurz] + Texte.AbnahmeG6.anleitung {
             for wort in ["9:16", "4:5", "Bio-Link", "Rechtsform", "Pflichthinweis", "Karussell"] {
                 #expect(!t.contains(wort), "„\(wort)“ in: \(t)")
             }
