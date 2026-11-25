@@ -288,28 +288,58 @@ struct ListenFuss: View {
 
 // MARK: - Segment-Auswahl, die mit der Schrift wächst (Gestaltungsprüfung 1.1, Nr. 15)
 
-/// Segment-Schalter (UISegmentedControl) bleiben bei Bedienungshilfen-Größen klein (etwa 11 pt), während der Text daneben
-/// 40 pt hat. Ab AX-Größen deshalb ein Auswahl-Menü in Feld-Optik, dessen Schrift mitwächst. Darunter wie gewohnt Segmente.
-struct TFSegmentStil: ViewModifier {
+/// Auswahl zwischen wenigen Möglichkeiten. Normal als Segment-Schalter. Segmente bleiben bei Bedienungshilfen-Größen klein
+/// (etwa 11 pt), ein Menü schneidet zweizeilige Beschriftungen ab (Gestaltungsprüfung 1.1, Runde 2). Ab AX-Größen deshalb
+/// eine Liste großer Knöpfe mit Häkchen, die mit der Schrift wächst.
+struct TFAuswahl<Wert: Hashable>: View {
+    let titel: String
+    @Binding var auswahl: Wert
+    let optionen: [(Wert, String)]
     @Environment(\.dynamicTypeSize) private var schrift
 
-    func body(content: Content) -> some View {
+    init(_ titel: String, auswahl: Binding<Wert>, optionen: [(Wert, String)]) {
+        self.titel = titel
+        _auswahl = auswahl
+        self.optionen = optionen
+    }
+
+    var body: some View {
         if schrift.isAccessibilitySize {
-            content
-                .pickerStyle(.menu)
-                .font(.dm(.body, weight: .semibold))
-                .tint(Color.tfAkzent)
-                .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading)
-                .padding(.horizontal, 8)
-                .background(Color.tfKarte, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Color.tfFeldRahmen, lineWidth: 1.5))
+            VStack(spacing: 8) {
+                ForEach(optionen, id: \.0) { wert, text in
+                    let gewaehlt = wert == auswahl
+                    Button {
+                        auswahl = wert
+                    } label: {
+                        HStack(spacing: 10) {
+                            Text(text)
+                                .font(.dm(.body, weight: .semibold))
+                                .foregroundStyle(Color.tfTinte)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            Image(systemName: gewaehlt ? "checkmark.circle.fill" : "circle")
+                                .foregroundStyle(gewaehlt ? Color.tfAkzent : Color.tfLeise)
+                                .accessibilityHidden(true)
+                        }
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 10)
+                        .frame(minHeight: 48)
+                        .background(gewaehlt ? Color.tfKarte : Color.clear, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .stroke(gewaehlt ? Color.tfAkzent : Color.tfFeldRahmen, lineWidth: gewaehlt ? 2 : 1.5))
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityAddTraits(gewaehlt ? .isSelected : [])
+                }
+            }
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel(titel)
         } else {
-            content.pickerStyle(.segmented)
+            Picker(titel, selection: $auswahl) {
+                ForEach(optionen, id: \.0) { wert, text in Text(text).tag(wert) }
+            }
+            .pickerStyle(.segmented)
         }
     }
-}
-
-extension View {
-    /// Statt .pickerStyle(.segmented): Segmente, ab AX-Größen ein mitwachsendes Auswahl-Menü
-    func tfSegmente() -> some View { modifier(TFSegmentStil()) }
 }

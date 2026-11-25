@@ -528,7 +528,8 @@ extension Euro {
     /// 5000 → „50 €“, 2000000 → „20.000 €“, 5050 → „50,50 €“
     static func kurz(_ cent: Int) -> String {
         if cent % 100 == 0 {
-            return (cent / 100).formatted(.number.locale(Locale(identifier: "de_DE"))) + " €"
+            // Geschütztes Leerzeichen: „€“ bricht nie allein in die nächste Zeile
+            return (cent / 100).formatted(.number.locale(Locale(identifier: "de_DE"))) + "\u{00A0}€"
         }
         return text(cent)
     }

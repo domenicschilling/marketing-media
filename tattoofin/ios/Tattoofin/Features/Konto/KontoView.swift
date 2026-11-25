@@ -235,7 +235,7 @@ struct KontoView: View {
                         await pushStatusLaden()
                     }
                 } label: {
-                    TFAktionsZeile(titel: Texte.Einrichtung.pushJa, symbol: "bell.and.waves.left.and.right")
+                    TFAktionsZeile(titel: Texte.Einrichtung.pushJa, symbol: "bell.circle")
                 }
                 .buttonStyle(.plain)
             }
@@ -338,6 +338,7 @@ struct KontoView: View {
             Text(titel).foregroundStyle(Color.tfTinte)
         } icon: {
             Image(systemName: symbol).foregroundStyle(Color.tfAkzent)
+                .frame(width: 28)  // feste Symbolspalte: breite Symbole (person.2) ragen nicht heraus
         }
     }
 

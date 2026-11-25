@@ -31,11 +31,8 @@ struct ZahlungenView: View {
     var body: some View {
         NavigationStack(path: $pfad) {
             VStack(spacing: 0) {
-                Picker(Texte.Zahlungen.bereich, selection: $bereich) {
-                    Text(Texte.Zahlungen.zahlungen).tag(Bereich.zahlungen)
-                    Text(Texte.Zahlungen.auszahlungen).tag(Bereich.auszahlungen)
-                }
-                .tfSegmente()
+                TFAuswahl(Texte.Zahlungen.bereich, auswahl: $bereich,
+                          optionen: [(Bereich.zahlungen, Texte.Zahlungen.zahlungen), (Bereich.auszahlungen, Texte.Zahlungen.auszahlungen)])
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
 
@@ -73,12 +70,8 @@ struct ZahlungenView: View {
         TFListe {
             // Kennzahlen als Kopf des Abschnitts: Zeilen in .insetGrouped werden an den Ecken abgerundet beschnitten
             Section {
-                Picker(Texte.Zahlungen.filter, selection: $filter) {
-                    Text(Texte.Zahlungen.alle).tag(Filter.alle)
-                    Text(Texte.Zahlungen.offen).tag(Filter.offen)
-                    Text(Texte.Zahlungen.bezahlt).tag(Filter.bezahlt)
-                }
-                .tfSegmente()
+                TFAuswahl(Texte.Zahlungen.filter, auswahl: $filter,
+                          optionen: [(Filter.alle, Texte.Zahlungen.alle), (Filter.offen, Texte.Zahlungen.offen), (Filter.bezahlt, Texte.Zahlungen.bezahlt)])
                 .listRowBackground(Color.clear)
                 .listRowSeparator(.hidden)
                 .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
@@ -125,7 +118,7 @@ struct KPIKopf: View {
         // Bedienungshilfe-Größen: Kacheln untereinander statt nebeneinander (DS: umbrechen statt verkleinern)
         let layout = schrift.isAccessibilitySize ? AnyLayout(VStackLayout(spacing: 8)) : AnyLayout(HStackLayout(alignment: .top, spacing: 8))
         layout {
-            kachel(Texte.Zahlungen.kpiUmsatz, kpis.map { Euro.text($0.umsatzMonatCent ?? 0) } ?? "–")
+            kachel(Texte.Zahlungen.kpiUmsatz, kpis.map { Euro.kurz($0.umsatzMonatCent ?? 0) } ?? "–")
             kachel(Texte.Zahlungen.kpiAnzahl, kpis.map { "\($0.zahlungenMonat ?? 0)" } ?? "–")
             kachel(Texte.Zahlungen.kpiOffen, kpis.map { "\($0.offen ?? 0)" } ?? "–")
         }
@@ -144,8 +137,8 @@ struct KPIKopf: View {
             Text(titel)
                 .font(.dm(.caption, weight: .medium))
                 .foregroundStyle(Color.tfLeise)
-                // Alle Kacheln gleich hoch: mindestens Platz für zwei Zeilen, mehr Zeilen erlaubt (kein Abschneiden, DS-Audit)
-                .lineLimit(2...10, reservesSpace: true)
+                // Mindestens zwei Zeilen Platz, mehr erlaubt (kein Abschneiden, DS-Audit); gleiche Kachelhöhe kommt vom Rahmen unten
+                .lineLimit(2...)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -170,7 +163,7 @@ struct ZahlungZeile: View {
                 Text(kunde ?? zahlung.titel)
                     .font(.dm(.body, weight: .semibold))
                     .foregroundStyle(Color.tfTinte)
-                    .lineLimit(kunde == nil ? 2 : nil)
+                    .lineLimit(schrift.isAccessibilitySize ? nil : (kunde == nil ? 2 : nil))
                 Text(kunde == nil ? Texte.ZahlungenG2.ohneKundenname : zahlung.titel)
                     .font(.dm(.subheadline))
                     .foregroundStyle(Color.tfLeise)

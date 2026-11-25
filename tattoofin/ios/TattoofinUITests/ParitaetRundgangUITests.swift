@@ -64,10 +64,13 @@ final class ParitaetRundgangUITests: XCTestCase {
     /// In kleinen Schritten scrollen, bis das Element frei sichtbar ist
     private func bisSichtbar(_ app: XCUIApplication, _ e: XCUIElement, hoch: Bool = true, versuche: Int = 30) {
         let f = app.windows.firstMatch
-        for _ in 0..<versuche where !frei(app, e) {
-            let a = f.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: hoch ? 0.7 : 0.35))
-            let b = f.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: hoch ? 0.35 : 0.7))
-            a.press(forDuration: 0.05, thenDragTo: b)
+        // Erst in die gewünschte Richtung, dann (falls die Liste schon daran vorbei gescrollt war, z. B. Konto-Tab auf dem SE) zurück
+        for richtung in [hoch, !hoch] {
+            for _ in 0..<versuche where !frei(app, e) {
+                let a = f.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: richtung ? 0.7 : 0.35))
+                let b = f.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: richtung ? 0.35 : 0.7))
+                a.press(forDuration: 0.05, thenDragTo: b)
+            }
         }
     }
 
@@ -132,7 +135,8 @@ final class ParitaetRundgangUITests: XCTestCase {
         app.tabBars.buttons["Kasse"].tap()
         let einrichtung = app.buttons["start-einrichtung"]
         XCTAssertTrue(einrichtung.waitForExistence(timeout: 15), "Checkliste fehlt")
-        XCTAssertTrue(etwas(app, "Diesen Monat").exists, "„Diesen Monat“ fehlt")
+        // Kleine iPhones (SE, 667 pt) zeigen die Monatszeile nicht (Platz für den Ziffernblock), sie steht unter Zahlungen
+        if app.windows.firstMatch.frame.height > 700 { XCTAssertTrue(etwas(app, "Diesen Monat").exists, "„Diesen Monat“ fehlt") }
         // Befund 14.11.: Der Start-Bereich darf den Knopf „Zahlungslink erstellen“ nicht aus dem ersten Bildschirm schieben
         Thread.sleep(forTimeInterval: 1)
         XCTAssertTrue(frei(app, knopf(app, "Zahlungslink erstellen")), "„Zahlungslink erstellen“ ist ohne Scrollen nicht sichtbar")
@@ -530,7 +534,8 @@ final class ParitaetRundgangUITests: XCTestCase {
         Thread.sleep(forTimeInterval: 1)
         app.tabBars.buttons["Konto"].tap()
         let einst = knopf(app, "Einstellungen")
-        nachOben(app, einst)
+        // Nur sichtbar machen, nicht ganz nach oben ziehen (auf dem SE rutschte die Zeile sonst unter die Leiste)
+        bisSichtbar(app, einst)
         foto("ohne-klarna-konto")
         einst.tap()
         XCTAssertTrue(app.staticTexts["Anzahlungsbedingungen"].waitForExistence(timeout: 10) || etwas(app, "ANZAHLUNGSBEDINGUNGEN").exists)

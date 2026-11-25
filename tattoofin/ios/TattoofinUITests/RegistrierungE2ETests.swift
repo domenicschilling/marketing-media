@@ -87,10 +87,19 @@ final class RegistrierungE2ETests: XCTestCase {
         let s = app.switches[id]
         XCTAssertTrue(s.waitForExistence(timeout: 5), "Schalter \(id) fehlt")
         if !s.isHittable { app.swipeUp() }
+        // Bei sehr großer Schrift ist die Zeile höher als der Bildschirm: so scrollen, dass die Mitte (dort sitzt der Schalter) sichtbar ist
+        let fenster = app.windows.firstMatch.frame
+        for _ in 0..<6 {
+            let mitte = s.frame.midY
+            if mitte > fenster.maxY * 0.75 { app.swipeUp(velocity: .slow) } else if mitte < fenster.maxY * 0.2 { app.swipeDown(velocity: .slow) } else { break }
+        }
         // Rechts auf den Schalter tippen (der lange Text daneben ist nur Beschriftung). Bei sehr großer Schrift steht der
         // Schalter unter dem mehrzeiligen Text: dann weiter unten probieren, bis er an ist.
-        for dy in [0.5, 0.92, 0.08] where (s.value as? String) != "1" {
+        for dy in [0.5, 0.92, 0.08] {
             s.coordinate(withNormalizedOffset: CGVector(dx: 0.97, dy: dy)).tap()
+            // Kurz warten, bis der Schalter umgelegt ist, sonst schaltet der nächste Versuch ihn wieder aus
+            let an = expectation(for: NSPredicate(format: "value == '1'"), evaluatedWith: s)
+            if XCTWaiter().wait(for: [an], timeout: 2) == .completed { break }
         }
         XCTAssertEqual(s.value as? String, "1", "Schalter \(id) bleibt aus")
     }
@@ -398,7 +407,10 @@ final class RegistrierungE2ETests: XCTestCase {
         XCTAssertTrue(app.buttons["stripe-einrichten"].waitForExistence(timeout: 20))
         tabWaehlen(app, "Konto")
         let verwalten = app.buttons["Abo verwalten"]
-        XCTAssertTrue(verwalten.waitForExistence(timeout: 10))
+        // SE: der Abo-Abschnitt liegt unter der sichtbaren Fläche (Liste lädt Zeilen erst beim Scrollen)
+        var da = verwalten.waitForExistence(timeout: 10)
+        for _ in 0..<10 where !(da && verwalten.isHittable) { app.swipeUp(velocity: .slow); da = verwalten.exists }
+        XCTAssertTrue(da)
         verwalten.tap()
         try await Task.sleep(for: .seconds(5))
         foto("r26-abo-verwalten-apple")

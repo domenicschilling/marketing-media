@@ -66,7 +66,8 @@ final class GestaltungRundgangUITests: XCTestCase {
         if dunkel { XCUIDevice.shared.appearance = .dark }
         let app = XCUIApplication()
         app.launchArguments = ["-TFApiBase", env["TF_UI_API"] ?? "http://localhost:8888", "-TFTestEmail", "sam@nordlicht-tattoo.de",
-                               "-TFZuruecksetzen", "YES", "-AppleLanguages", "(de)", "-AppleLocale", "de_DE"] + zusatz
+                               "-TFZuruecksetzen", "YES", "-AppleLanguages", "(de)", "-AppleLocale", "de_DE",
+                               "-TFDarstellung", dunkel ? "dunkel" : "hell"] + zusatz
         app.launch()
 
         // Anmeldung

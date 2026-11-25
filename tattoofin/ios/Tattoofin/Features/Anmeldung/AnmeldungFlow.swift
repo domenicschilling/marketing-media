@@ -336,7 +336,7 @@ struct CodeView: View {
             }
         }
         .tfHintergrund()
-        .navigationTitle(Texte.Anmelden.codeNavTitel)
+        .navigationTitle("")  // Überschrift „Code eingeben“ steht schon groß im Inhalt
         .navigationBarTitleDisplayMode(.inline)
         .onAppear { fokus = true }
         .task {

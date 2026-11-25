@@ -44,6 +44,7 @@ struct TFAktionsZeile: View {
                 Text(titel).foregroundStyle(Color.tfTinte)
             } icon: {
                 Image(systemName: symbol).foregroundStyle(Color.tfAkzent)
+                    .frame(width: 28)  // feste Symbolspalte wie in den übrigen Konto-Zeilen
             }
             Spacer(minLength: 0)
             Image(systemName: "chevron.right")

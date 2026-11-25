@@ -13,6 +13,11 @@ struct WerbevideoKarte: View {
     @State private var teilen: TeilenInhalt?
 
     private var basis: URL { APIClient.basisURL() }
+    /// iPhone SE und ähnliche (Bildschirmhöhe unter 700 pt)
+    private var kleinerBildschirm: Bool {
+        let h = (UIApplication.shared.connectedScenes.first as? UIWindowScene)?.screen.bounds.height ?? 800
+        return h < 700
+    }
     private var datei: WerbeVideoDatei { werbung.video(feed: feed) }
     private var videoURL: URL? { WerbungRegeln.adresse(datei.url, basis: basis) }
 
@@ -23,17 +28,14 @@ struct WerbevideoKarte: View {
             Text(WerbungTexte.videoText).font(.dm(.subheadline)).foregroundStyle(Color.tfLeise)
                 .fixedSize(horizontal: false, vertical: true)
 
-            Picker(WerbungTexte.formatLabel, selection: $feed) {
-                Text(WerbungTexte.formatReel).tag(false)
-                Text(WerbungTexte.formatFeed).tag(true)
-            }
-            .tfSegmente()
+            TFAuswahl(WerbungTexte.formatLabel, auswahl: $feed,
+                      optionen: [(false, WerbungTexte.formatReel), (true, WerbungTexte.formatFeed)])
 
             if let videoURL {
                 PosterVideo(video: videoURL, poster: WerbungRegeln.adresse(datei.cover, basis: basis),
                             seitenverhaeltnis: feed ? 4.0 / 5.0 : 9.0 / 16.0, label: WerbungTexte.videoLabel)
-                    // Etwas kleiner, damit „In Fotos speichern“ ohne Scrollen sichtbar ist
-                    .frame(maxHeight: 290)
+                    // Etwas kleiner, damit „In Fotos speichern“ ohne Scrollen sichtbar ist (iPhone SE: noch kleiner)
+                    .frame(maxHeight: kleinerBildschirm ? 140 : 290)
                     .frame(maxWidth: .infinity)
             }
 

@@ -46,7 +46,7 @@ final class StudioMehrUITests: XCTestCase {
         // Sichtbar heißt auch: nicht unter der schwebenden Tab-Leiste
         let leiste = app.tabBars.firstMatch
         let frei = { e.exists && e.isHittable && (!leiste.exists || e.frame.maxY < leiste.frame.minY - 4) }
-        for _ in 0..<versuche where !frei() { hoch ? app.swipeUp() : app.swipeDown() }
+        for _ in 0..<versuche where !frei() { hoch ? app.swipeUp(velocity: .slow) : app.swipeDown(velocity: .slow) }  // langsam: ohne Schwung über die Zeile hinweg
     }
 
     /// Zeile mit Titel und Untertitel (VoiceOver liest „Titel, Untertitel“)
@@ -118,7 +118,8 @@ final class StudioMehrUITests: XCTestCase {
         // Konto: Abschnitt „Dein Studio“
         app.tabBars.buttons["Konto"].tap()
         let einst = zeile(app, "Einstellungen")
-        bisSichtbar(app, einst)
+        // SE mit größter Schrift: das Konto ist sehr lang, 8 Wischer reichen nicht
+        bisSichtbar(app, einst, versuche: 25)
         XCTAssertTrue(einst.waitForExistence(timeout: 10), "Abschnitt „Dein Studio“ fehlt")
         foto("b03-konto-dein-studio")
         // Kleine Schritte (ein ganzer Wisch springt über den Abschnitt hinweg)
@@ -161,7 +162,11 @@ final class StudioMehrUITests: XCTestCase {
         foto("b07-recht-lesen")
         app.buttons["Fertig"].tap()
         let bestaetigen = app.buttons["recht-bestaetigen"]
-        if bestaetigen.waitForExistence(timeout: 3) {
+        // SE/größte Schrift: der Knopf liegt unter der sichtbaren Fläche, ist aber da, solange noch nicht bestätigt
+        var knopfDa = bestaetigen.waitForExistence(timeout: 3)
+        let schonBestaetigt = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", "Gelesen und bestätigt")).firstMatch
+        for _ in 0..<10 where !knopfDa && !schonBestaetigt.exists { app.swipeUp(velocity: .slow); knopfDa = bestaetigen.exists }
+        if knopfDa {
             // Ohne Häkchen: Hinweis
             bisSichtbar(app, bestaetigen)
             bestaetigen.tap()
@@ -171,9 +176,12 @@ final class StudioMehrUITests: XCTestCase {
             foto("b07b-recht-bestaetigen")
             bestaetigen.tap()
         }
-        XCTAssertTrue(app.staticTexts.containing(NSPredicate(format: "label BEGINSWITH %@", "Gelesen und bestätigt")).firstMatch.waitForExistence(timeout: 10)
-                      || app.otherElements.containing(NSPredicate(format: "label BEGINSWITH %@", "Gelesen und bestätigt")).firstMatch.exists,
-                      "Bestätigung fehlt")
+        let gelesen = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", "Gelesen und bestätigt")).firstMatch
+        // SE/große Schrift: die Bestätigung steht außerhalb des sichtbaren Bereichs
+        var bestaetigt = gelesen.waitForExistence(timeout: 10)
+        for _ in 0..<12 where !bestaetigt { app.swipeUp(velocity: .slow); bestaetigt = gelesen.exists }
+        for _ in 0..<12 where !bestaetigt { app.swipeDown(velocity: .slow); bestaetigt = gelesen.exists }
+        XCTAssertTrue(bestaetigt, "Bestätigung fehlt")
         foto("b08-recht-bestaetigt")
         zurueck(app)
 

@@ -16,6 +16,10 @@ struct TattoofinApp: App {
                 .environment(AppState.shared.portal)
                 .environment(AppState.shared.sperre)
                 .tint(Color.tfAkzent)
+                #if DEBUG
+                // Nur Test-Build: Startargument „-TFDarstellung dunkel|hell“ legt die Darstellung fest (Gestaltungs-Fotos, verlässlicher als die Simulator-Einstellung)
+                .preferredColorScheme(UserDefaults.standard.string(forKey: "TFDarstellung").map { $0 == "dunkel" ? ColorScheme.dark : ColorScheme.light })
+                #endif
                 // Kein globaler Schrift-Deckel mehr (DS APPKonzept, 18.11.2026): Alle Größen bis AX5 sind erlaubt,
                 // nur der Ziffernblock der Kasse ist einzeln begrenzt (Ziffernblock in KasseView.swift).
         }

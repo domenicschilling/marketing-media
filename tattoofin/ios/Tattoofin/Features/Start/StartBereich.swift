@@ -8,6 +8,8 @@ struct StartBereich: View {
     @Environment(PortalStore.self) private var portal
     @Environment(WerbungStore.self) private var werbung
     @Environment(\.dynamicTypeSize) private var schrift
+    /// Kleine iPhones (SE): Kasse ohne Monatszeile
+    var kompakt = false
     /// Ab „größer als Standard“ untereinander. Die Schrift wächst hier bis AX5 (begrenzt ist nur der Ziffernblock der Kasse).
     private var grosseSchrift: Bool { schrift > .large }
 
@@ -38,8 +40,9 @@ struct StartBereich: View {
                     .fixedSize(horizontal: false, vertical: true)
                 }
             }
-            monat
-                // Kein Zusatzabstand nach oben: auf dem iPhone SE rutscht sonst die untere Ziffernreihe hinter „Zahlungslink erstellen“
+            // Kleine iPhones (SE): ohne Monatszeile (steht auch unter Zahlungen), sonst rutscht die untere Ziffernreihe hinter
+            // „Zahlungslink erstellen“
+            if !kompakt { monat }
         }
         .task(id: portal.geladenAm) { await werbung.laden() }
         .sheet(item: $blatt, onDismiss: {

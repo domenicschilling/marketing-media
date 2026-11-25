@@ -3,6 +3,7 @@ import SwiftUI
 /// Bildschirm 11: Gutscheine (Tab 3). Scannen, Code eingeben, verkaufte Gutscheine, Gutschein verkaufen.
 struct GutscheineView: View {
     @Environment(PortalStore.self) private var portal
+    @Environment(\.dynamicTypeSize) private var schrift
     @Environment(AppState.self) private var app
     @State private var pfad: [Zahlung] = []
     @State private var code = ""
@@ -48,7 +49,7 @@ struct GutscheineView: View {
                         Text(Texte.Gutscheine.codeEingeben).font(.dm(.subheadline, weight: .semibold)).foregroundStyle(Color.tfTinte)
                         HStack(spacing: 8) {
                             // Mehrzeilig erlaubt, damit der Code bei großer Schrift umbricht statt abgeschnitten zu werden (DS-Audit „Text clipped“)
-                            TextField(Texte.Gutscheine.codeEingeben, text: $code, prompt: tfPlatzhalter(Texte.Gutscheine.codePlatzhalter), axis: .vertical)
+                            TextField(Texte.Gutscheine.codeEingeben, text: $code, prompt: tfPlatzhalter(schrift.isAccessibilitySize ? Texte.Runde2.codeKurz : Texte.Gutscheine.codePlatzhalter), axis: .vertical)
                                 .lineLimit(1...3)
                                 .font(.system(.title3, design: .monospaced).weight(.semibold))
                                 .textInputAutocapitalization(.characters)

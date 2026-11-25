@@ -96,7 +96,8 @@ struct SaldoKarte: View {
     var body: some View {
         // Bedienungshilfe-Größen: Werte untereinander mit waagerechter Linie (sonst brechen „Verfügbar“ und die Beträge mitten im Wort)
         let gross = schrift.isAccessibilitySize
-        let layout = gross ? AnyLayout(VStackLayout(spacing: 12)) : AnyLayout(HStackLayout(spacing: 0))
+        // Oben bündig: beide Beträge auf einer Linie, auch wenn eine Beschriftung zweizeilig ist
+        let layout = gross ? AnyLayout(VStackLayout(spacing: 12)) : AnyLayout(HStackLayout(alignment: .top, spacing: 0))
         layout {
             spalte(Texte.Auszahlungen.verfuegbar, saldo.verfuegbarCent)
             if gross {

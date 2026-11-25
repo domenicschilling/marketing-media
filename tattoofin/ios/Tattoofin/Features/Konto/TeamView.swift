@@ -18,7 +18,7 @@ struct TeamView: View {
         TFListe {
             if let t = team {
                 Section {
-                    adresse(t.hauptadresse ?? "–", "person.crop.circle.badge.checkmark")
+                    adresse(t.hauptadresse ?? "–", "person.crop.circle.fill")
                 } header: {
                     ListenKopf(Texte.Team.haupt)
                 }
@@ -28,14 +28,15 @@ struct TeamView: View {
                     }
                     ForEach(t.team, id: \.self) { e in
                         HStack {
-                            adresse(e, "person")
+                            adresse(e, "person.crop.circle")
                             Spacer()
                             if darfAendern {
                                 Button {
                                     entfernenFrage = e
                                 } label: {
                                     Image(systemName: "minus.circle.fill").foregroundStyle(Color.tfRot)
-                                        .frame(minWidth: 44, minHeight: 44)
+                                        // 44 pt breit, aber flacher: die Zeile soll so hoch sein wie die der Hauptadresse
+                                        .frame(minWidth: 44, minHeight: 32)
                                         .contentShape(Rectangle())
                                 }
                                 .buttonStyle(.plain)

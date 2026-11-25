@@ -115,6 +115,11 @@ struct GutscheinVerkaufenView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button(Texte.Allgemein.abbrechen) { dismiss() } }
+                // Abschließen auch ohne bis ans Ende zu scrollen (SE, große Schrift)
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(Texte.Runde2.erstellen) { erstellen() }
+                        .disabled(!bereit || sendet)
+                }
             }
             .sheet(item: $erstellt, onDismiss: { dismiss() }) { ZahlungslinkSheet(erstellt: $0) }
         }

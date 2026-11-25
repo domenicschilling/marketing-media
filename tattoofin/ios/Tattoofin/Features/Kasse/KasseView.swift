@@ -103,12 +103,13 @@ struct KasseView: View {
             // Enger gesetzt: Start-Zeile, Betrag, Ziffernblock und „Zahlungslink erstellen“ passen bei normaler Schrift in den ersten Bildschirm
             VStack(spacing: kompakt ? 6 : 10) {
                 AktualisierenFehlerZeile()
-                StartBereich()
+                StartBereich(kompakt: kompakt && !schrift.isAccessibilitySize)
 
                 // Nach einem Testkauf (Apple-Sandbox, auch App Review): Hinweis „Testmodus“ steht im StartBereich statt der Monatszeile
 
                 // Freie Höhe sammelt sich über dem Betrag, nicht als Lücke vor dem Knopf (Gestaltungsprüfung 1.1, Nr. 9)
-                Spacer(minLength: 0)
+                // Nur bei normaler Schrift: bei Bedienungshilfen-Größen liegt der Inhalt einfach oben an (sonst große Lücke)
+                if !schrift.isAccessibilitySize { Spacer(minLength: 0) }
 
                 // Betrag
                 VStack(spacing: 4) {
@@ -132,11 +133,8 @@ struct KasseView: View {
 
                 // Studio ohne Anzahlung (TF München/Landshut): keine Auswahl, immer Gesamtpreis (wie im Web)
                 if !keineAnzahlung {
-                    Picker(Texte.Kasse.artLabel, selection: $entwurf.anzahlung) {
-                        Text(Texte.Kasse.gesamt).tag(false)
-                        Text(Texte.Kasse.anzahlung).tag(true)
-                    }
-                    .tfSegmente()
+                    TFAuswahl(Texte.Kasse.artLabel, auswahl: $entwurf.anzahlung,
+                              optionen: [(false, Texte.Kasse.gesamt), (true, Texte.Kasse.anzahlung)])
                     .accessibilityIdentifier("kasse-art")
                 }
 
@@ -179,7 +177,7 @@ struct KasseView: View {
             .padding(.bottom, 16)
             // Mindestens so hoch wie der sichtbare Bereich, damit der Spacer über dem Betrag die freie Höhe aufnimmt
             // (die Innenabstände liegen schon im Rahmen; 1 pt Luft gegen Rundung, sonst scrollt es um einen Punkt)
-            .frame(minHeight: max(0, sichtbareHoehe - 1), alignment: .top)
+            .frame(minHeight: schrift.isAccessibilitySize ? 0 : max(0, sichtbareHoehe - 1), alignment: .top)
         }
         // Höhe ohne alle Einsätze (angehefteter Knopf, Leisten, Tastatur): sonst rutscht der Ziffernblock hinter den Knopf
         .onScrollGeometryChange(for: CGFloat.self) { g in
@@ -198,6 +196,14 @@ struct KasseView: View {
                     .padding(.bottom, 8)
                     .frame(maxWidth: .infinity)
                     .background(Color.tfHintergrund)
+                    // Weicher Übergang: Inhalt, der hinter dem Knopf weiterläuft, blendet aus statt hart angeschnitten (iPhone SE)
+                    .overlay(alignment: .top) {
+                        LinearGradient(colors: [Color.tfHintergrund.opacity(0), Color.tfHintergrund], startPoint: .top, endPoint: .bottom)
+                            .frame(height: 10)
+                            .offset(y: -10)
+                            .allowsHitTesting(false)
+                            .accessibilityHidden(true)
+                    }
             }
         }
     }
