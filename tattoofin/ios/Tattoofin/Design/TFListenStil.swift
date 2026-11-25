@@ -1,4 +1,5 @@
 import SwiftUI
+import CoreText
 
 // Gemeinsame Bausteine für Listen, Schalter und Eingabefelder (Gestaltung 1.1): eine Schrift (DM Sans), eine Textfarbe (tfTinte).
 
@@ -109,7 +110,16 @@ enum TFLeistenStil {
     /// Segmente wachsen in iOS nicht mit Dynamic Type (dort hilft die Großansicht beim langen Drücken), sonst sprengt AX5 die Leisten.
     private static func schrift(_ groesse: CGFloat, _ staerke: UIFont.Weight) -> UIFont {
         guard let basis = UIFont(name: "DMSans9pt-Regular", size: groesse) else { return .systemFont(ofSize: groesse, weight: staerke) }
-        let mitStaerke = basis.fontDescriptor.addingAttributes([.traits: [UIFontDescriptor.TraitKey.weight: staerke]])
+        // Variable Schrift: die Stärke über die wght-Achse setzen (ein traits-Gewicht greift bei eigenen Schriften nicht)
+        let wght: CGFloat
+        switch staerke {
+        case .bold: wght = 700
+        case .semibold: wght = 600
+        case .medium: wght = 500
+        default: wght = 400
+        }
+        let achse = UIFontDescriptor.AttributeName(rawValue: kCTFontVariationAttribute as String)
+        let mitStaerke = basis.fontDescriptor.addingAttributes([achse: [0x7767_6874: wght]])
         return UIFont(descriptor: mitStaerke, size: groesse)
     }
 }
