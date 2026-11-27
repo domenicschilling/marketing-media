@@ -481,7 +481,7 @@ textarea{min-height:76px;resize:vertical}
         <details id="faq-studio"><summary>Kann ich den Gutschein auch im Studio kaufen?</summary><p>Ja, Gutscheine gibt es auch direkt bei uns im Studio in der {{strasse}}. Online geht es am schnellsten. Der Gutschein kommt dann sofort als PDF per E-Mail.</p></details>
         <details><summary>Was passiert nach dem {{bonusBis}}?</summary><p>Dann zählt der Betrag, den du bezahlt hast. Hast du zum Beispiel 375&nbsp;€ für den 500-€-Gutschein bezahlt, sind ab dem {{nachBonus}} noch 375&nbsp;€ einlösbar, bis {{gueltigBis}}.</p></details>
         <details><summary>Und wenn das Tattoo mehrere Sitzungen braucht?</summary><p>Kein Problem. Beispiel 500-€-Gutschein: Löst du bis {{bonusBis}} mindestens 125&nbsp;€ ein (zum Beispiel die erste Sitzung), bleiben die restlichen 375&nbsp;€ bis {{gueltigBis}} gültig.</p></details>
-        <details><summary>Kann ich mehrere Aktions-Gutscheine kaufen?</summary><p>Pro Person gibt es einen Aktions-Gutschein. Einen Wertgutschein mit eigenem Betrag kannst du jederzeit dazu kaufen.</p></details>
+        <details><summary>Kann ich mehrere Gutscheine kaufen?</summary><p>Ja, so viele du willst, zum Beispiel für mehrere Personen. Du kaufst sie nacheinander, jeder kommt als eigenes PDF per E-Mail.</p></details>
         <details><summary>Was bekommt man mit einem {{abGutschein}}?</summary><p>Das hängt vom Motiv, von der Größe und von der Stelle ab. Das Motiv sucht der Beschenkte mit unseren Tätowierern aus und erfährt dabei vorher den Preis. Der Gutschein ist in Teilen einlösbar: Was übrig bleibt, bleibt auf dem Gutschein. Er gilt auch für Piercings.</p></details>
         <details><summary>Muss ich das Motiv schon kennen?</summary><p>Nein. Das klärt der Beschenkte mit unseren Tätowierern.</p></details>
         <details><summary>Wie kann ich bezahlen?</summary><p>Per Karte, Apple Pay oder Google Pay. Ratenkauf gibt es für Gutscheine nicht.</p></details>
@@ -539,7 +539,7 @@ textarea{min-height:76px;resize:vertical}
       <div data-schritt="1">
         <p class="q" id="f-titel" tabindex="-1">Welcher Gutschein?</p>
         <div class="opts" id="wahl" role="radiogroup" aria-labelledby="f-titel"></div>
-        <p class="regel nur-aktion" id="f-regel">1 Aktions-Gutschein pro Person. Für ein zweites Geschenk: <button type="button" id="f-zweites">eigener Betrag</button>.</p>
+        <p class="regel nur-aktion" id="f-regel">Mehrere Gutscheine? Einfach nacheinander kaufen. Oder <button type="button" id="f-zweites">eigener Betrag</button>.</p>
       </div>
       <div data-schritt="2" hidden>
         <p class="q" tabindex="-1">Wohin schicken wir ihn?</p>
@@ -860,7 +860,7 @@ textarea{min-height:76px;resize:vertical}
         // Fachliche Ablehnung (Aktion vorbei): Auswahl neu zeigen, Meldung im Fuß über dem Knopf
         if (d.code === "aktion_vorbei") { laden().then(function () { zeige(1); $("f-fehler").textContent = d.error; }); return; }
         $("f-fehler").textContent = d.error || "Das hat nicht geklappt. Bitte versuch es noch einmal.";
-        // Schon einen Aktions-Gutschein gekauft (1 pro Person): Ausweg anbieten, Name und E-Mail bleiben
+        // Grenze je Käufer (nur falls aktionJeKaeufer gesetzt): Ausweg „eigener Betrag“ anbieten, Name und E-Mail bleiben
         if (d.code === "je_kaeufer") $("f-err-knopf").hidden = false;
         return;
       }
@@ -913,7 +913,7 @@ textarea{min-height:76px;resize:vertical}
   cd(); setInterval(cd, 1000);
   (function () { var h = ""; for (var i = 0; i < 12; i++) h += '<i style="--l:' + (4 + i * 8.3 % 92).toFixed(1) + "%;--s:" + (9 + i % 4 * 2) + "px;--o:" + (.28 + (i % 3) * .08).toFixed(2) + ";--d:" + (11 + i % 5 * 2) + "s;--w:-" + (i * 1.7 % 11).toFixed(1) + "s;--x:" + ((i % 5) - 2) * 14 + 'px"></i>'; $("flocken").innerHTML = h; })();
 
-  // Zurück aus der Kasse (Abbrechen in Stripe oder Zurück-Taste): Kasse sofort beenden (1 pro Person wieder frei), Fenster mit derselben Auswahl wieder auf
+  // Zurück aus der Kasse (Abbrechen in Stripe oder Zurück-Taste): Kasse sofort beenden (Ticket wieder frei), Fenster mit derselben Auswahl wieder auf
   function wiederOeffnen() {
     var d = lies(DATEN); if (!d || !d.auswahl || !D) return;
     var sh = D.shop;

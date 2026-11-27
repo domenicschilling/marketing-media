@@ -1,4 +1,6 @@
-# Werberecht-Check Gutschein-Aktion Chic Tattoo Augsburg (25.11.2026)
+# Werberecht-Check Gutschein-Aktion Chic Tattoo Augsburg (25.11.2026, Nachtrag 27.11.)
+
+**Nachtrag 27.11.2026:** Dunkles Design ändert an den Aussagen nichts (gleiche Texte, Bedingung zum Sternchen überall, axe 0 Kontrastfehler). „1 pro Person“ ist weg (Grenze aufgehoben): F6/A2 weiter ok, die Bedingungen nennen keine Grenze mehr. „Solange der Vorrat reicht“ bleibt ausdrücklich auf Domenics Entscheidung (Risiko gering, siehe A3/A4). Laufende MU/LA-Anzeigen nennen noch „Ein Aktions-Gutschein pro Person“: nach dem Live-Gang eine zu enge, keine irreführend lockende Angabe (geringes Risiko, besser angleichen).
 
 Geprüft (Selbstprüfung nach dem Wortlaut, Skill `werberecht-check`): Shop-Seite `tattoofin.de/gutschein-kaufen/chic-tattoo-augsburg` (Entwurf, Vorlage `tattoofin/website/dev/gutschein/chic/seite.html`), Rechtsseiten (Impressum, Datenschutz, Widerruf, Bedingungen), Kauf-Fenster/Stripe-Kasse/Mail/PDF (gleiche Technik wie MU/LA, Check 24.11.: `../gutschein-shop-tfm/WERBERECHT-CHECK-2026-11-24.md`), 5 Bildanzeigen + 1 Video ohne Stimme (Marketing-Maschine, Branch `claude/chic-gutschein-kampagne`, `content/chic-tattoo-augsburg/creatives/2026-11-25-gutschein-shop/`). Zielgruppe: Verbraucher, Augsburg.
 

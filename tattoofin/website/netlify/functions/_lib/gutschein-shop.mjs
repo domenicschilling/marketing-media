@@ -45,8 +45,9 @@ const TF_WEIHNACHTEN = {
   // Verkaufszeitraum der Aktions-Gutscheine (Domenic 23.11.2026: Start sofort, Ende 24.12.2026 16 Uhr; Wertgutschein läuft weiter)
   aktionAb: null,
   aktionBis: "2026-12-24T16:00:00+01:00",
-  // Ein Aktions-Gutschein pro Käufer (E-Mail, je Studio), Domenic 23.11.2026: beibehalten; durchgesetzt in reservieren() (Kasse). null = ohne Grenze
-  aktionJeKaeufer: 1,
+  // Ohne Grenze je Käufer (Domenic 27.11.2026: „nicht ein Gutschein pro Kunde, das ist egal, die können auch mehrere kaufen“).
+  // Eine Zahl (z. B. 1) würde reservieren() wieder durchsetzen und in den Bedingungen nennen; null = ohne Grenze
+  aktionJeKaeufer: null,
   // Normaler Wertgutschein mit frei wählbarem Betrag (50–2.000 €, volle Euro), ganzjährig
   // Vorschläge 100/200/300/500 € (24.11.2026: 50 € reicht kaum für ein Tattoo und setzt den Anker zu niedrig)
   frei: { minCent: 5000, maxCent: 200000, vorschlaege: [10000, 20000, 30000, 50000] },
@@ -57,7 +58,7 @@ const tfMarke = (kuerzel, alt) => ({ kopf: "#0B0B0B", logoPfad: `/assets/gs-shop
 // ---------- Chic Tattoo Augsburg (Domenic 25.11.2026, über Ultron) ----------
 // Eigene Stufen „Du zahlst → Du bekommst*“: 100 → 150, 200 → 280, 400 → 500, 800 → 1.000 € (ohne „+50 €“ aus dem alten Studio-Bild),
 // dazu Wertgutschein ab 50 €. Unbegrenzt, Knappheit nur aus der echten Frist 24.12.2026, 16 Uhr (Ultron 25.11.: wie MU/LA).
-// Voller Wert bis 31.03.2027, danach der Kaufpreis bis 31.12.2029. 1 Aktions-Gutschein pro Person wie bei TF München („wie bei TF Munich“).
+// Voller Wert bis 31.03.2027, danach der Kaufpreis bis 31.12.2029. Mehrere Aktions-Gutscheine je Person erlaubt wie bei TF München (Domenic 27.11.2026).
 const CHIC_WEIHNACHTEN = {
   titel: "Weihnachts-Gutscheine",
   aktionen: [
@@ -69,16 +70,16 @@ const CHIC_WEIHNACHTEN = {
   bonusBis: "2027-03-31",
   aktionAb: null,
   aktionBis: "2026-12-24T16:00:00+01:00",
-  aktionJeKaeufer: 1,
+  aktionJeKaeufer: null,
   // Wertgutschein ab 50 € (Domenic); Vorschläge ab 100 €, damit der Anker nicht bei 50 € liegt
   frei: { minCent: 5000, maxCent: 200000, vorschlaege: [10000, 15000, 25000, 50000] },
 };
-// Look von Chic (wie die Chic-Seiten seit 17.11.2026: Schwarz, Papierweiß, Chic-Rot #E3121B als einziger Akzent, eckige Knöpfe).
+// Look von Chic (seit 27.11.2026 dunkel, Domenic: Schwarz, Chic-Rot #E3121B als einziger Akzent, eckige Knöpfe).
 // pdf: Schriftfarben auf dem Gutschein-PDF (dunkle Karte aus dev/gutschein/chic/pdf-grund.html); ohne pdf gelten die TF-Farben (Gold).
 // kasse: Look der Stripe-Kasse; ohne kasse gilt Schwarz/Gold (TF).
 const chicMarke = { kopf: "#0C0C0D", logoPfad: "/assets/gs-shop/chic/logo.png", grundPfad: "/assets/gs-shop/chic/pdf-grund.jpg", alt: "Chic Tattoo Augsburg",
   knopf: "#C70F17", knopfText: "#FFFFFF", titel: "#0C0C0D", band: "#0C0C0D", akzent: "#C70F17", kasten: "#F4F2EE",
-  kasse: { background_color: "#FFFFFF", button_color: "#C70F17", border_style: "rectangular" },
+  kasse: { background_color: "#0D0C0C", button_color: "#E3121B", border_style: "rectangular" },
   pdf: { wert: "#FFFFFF", hell: "#FFFFFF", creme: "#E6E3DD", mute: "#A9A6A0", gold: "#FF5A5F", rand: "#3a3a3d", qr: "#0C0C0D", klein: "#8A877F" } };
 
 // seite: Angaben für die statische Shop-Seite je Stadt (dev/gutschein-seiten.mjs → public/gutschein-kaufen/<slug>.html)

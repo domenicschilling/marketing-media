@@ -1,5 +1,5 @@
 // Test Gutschein-Shop Chic Tattoo Augsburg (25.11.2026): Stufen 100→150 / 200→280 / 400→500 / 800→1.000 €, Wertgutschein ab 50 €,
-// Frist 24.12.2026 16 Uhr, 1 pro Person, Hero je ?g=, eigene Vorlage (Seite, Rechtsseiten), Mail/PDF im Chic-Look, Kasse im Stripe-Nachbau,
+// Frist 24.12.2026 16 Uhr, mehrere Aktions-Gutscheine je Person (Domenic 27.11.), Hero je ?g=, eigene Vorlage (Seite, Rechtsseiten), Mail/PDF im Chic-Look, Kasse im Stripe-Nachbau,
 // Provision frei bis (provisionFreiBis). Ergänzt dev/gutschein-shop-test.mjs (TF München/Landshut).
 //   NODE_PATH=… E2E_PORT=8997 STRIPE_MOCK_PORT=12997 node dev/gutschein-chic-test.mjs
 import fs from "node:fs";
@@ -28,7 +28,7 @@ console.log("Konfiguration");
 check(c.studioId === "st_0yyvqSMyCfUr", "Studio-ID Chic (st_0yyvqSMyCfUr)");
 check(JSON.stringify(c.aktionen.map((a) => [a.preisCent / 100, a.wertCent / 100])) === "[[100,150],[200,280],[400,500],[800,1000]]", "Stufen 100→150, 200→280, 400→500, 800→1.000", c.aktionen);
 check(c.frei.minCent === 5000, "Wertgutschein ab 50 €");
-check(c.aktionBis === "2026-12-24T16:00:00+01:00" && c.bonusBis === "2027-03-31" && c.aktionJeKaeufer === 1, "Frist 24.12. 16 Uhr, Bonus bis 31.03.2027, 1 pro Person");
+check(c.aktionBis === "2026-12-24T16:00:00+01:00" && c.bonusBis === "2027-03-31" && c.aktionJeKaeufer === null, "Frist 24.12. 16 Uhr, Bonus bis 31.03.2027, mehrere je Person erlaubt");
 check(!JSON.stringify(c).match(/stueck|ausverkauft/), "keine Stückzahl");
 
 await saveStudio({ id: "st_chic_test", firma: "Chic Tattoo Augsburg", slug, email: "chic@example.com", inhaber: "Test", strasse: "Ulmer Straße 14", plz: "86154", ort: "Augsburg",
@@ -41,7 +41,7 @@ check(r0.status === 200 && /Für 100\s€ kaufen,/.test(h0) && /150\s€ bekomme
 check(/Auch\sfür\s800\s€\skaufen,/.test(h0) && /1\.000\s€ bekommen/.test(h0), "Unterzeile nennt den größten (800 → 1.000 €)");
 check(/\*Voller Wert bis 31\.03\.2027, danach der Kaufpreis bis 31\.12\.2029\./.test(h0), "Bedingung zum Sternchen im Hero");
 check(h0.includes("Geschenk gesucht?") && h0.includes("Gönn dir selbst was"), "zwei Wege auf der Seite");
-check(!/geschenkt\*/.test(h0) && !/\+50\s€/.test(h0), "kein „+… € geschenkt“ / „+50 €“");
+check(/Mehrere Gutscheine\? Einfach nacheinander kaufen/.test(h0) && /background:var\(--grund\)/.test(h0) && !/geschenkt\*/.test(h0) && !/\+50\s€/.test(h0), "kein „+… € geschenkt“ / „+50 €“");
 check(!/nur online|nur im Studio/i.test(h0) && /im Studio/.test(h0), "online UND im Studio, nie „nur online“");
 check(/og-weihnachten\.jpg\?v=/.test(h0) && /property="og:title" content="Gutschein für 100\s€ kaufen, 150\s€ bekommen · Chic Tattoo Augsburg"/.test(h0), "Vorschau (og) mit Angebot");
 const h3 = await (await fetch(`${BASE}/gutschein-kaufen/${slug}?g=nr3`)).text();
@@ -62,7 +62,9 @@ await fetch(k1.url, { method: "POST", headers: { "content-type": "application/x-
 let zb = null; for (let i = 0; i < 40 && zb?.status !== "bezahlt"; i++) { await new Promise((r) => setTimeout(r, 150)); zb = await getZahlung("st_chic_test", k1.zahlung); }
 check(zb?.status === "bezahlt" && zb.gutschein?.code, "Zahlung im Nachbau bezahlt, Code vergeben", zb?.status);
 const k2 = await post({ s: slug, auswahl: "nr1", kunde: "Kim Käufer", email: "kim@example.com", inhaltOk: true });
-check(!k2.url && k2.code === "je_kaeufer", "nach dem Kauf: zweiter Aktions-Gutschein derselben E-Mail abgelehnt (1 pro Person)", k2);
+check(k2.url && k2.zahlung, "nach dem Kauf: zweiter Aktions-Gutschein derselben E-Mail geht (keine Grenze je Person, Domenic 27.11.)", k2);
+const bedT = await (await fetch(`${BASE}/gutschein-kaufen/${slug}-bedingungen`)).text();
+check(!/pro Person/i.test(bedT) && !/pro Person/i.test(h0), "nirgends „pro Person“ (Seite, Bedingungen)");
 const k3 = await post({ s: slug, auswahl: "frei", betrag: "50", kunde: "Kim Käufer", email: "kim@example.com", inhaltOk: true });
 check(k3.url, "Wertgutschein 50 € dazu kaufbar", k3);
 const k4 = await post({ s: slug, auswahl: "frei", betrag: "40", kunde: "Kim Käufer", email: "kim2@example.com", inhaltOk: true });
@@ -72,7 +74,7 @@ console.log("PDF und Kasse im Chic-Look");
 const pdf = Buffer.from(await gs.gutscheinPdf({ id: "st_chic_test", firma: "Chic Tattoo Augsburg", slug, strasse: "Ulmer Straße 14", plz: "86154", ort: "Augsburg" },
   { id: "zl_x", studioId: "st_chic_test", betragCent: 20000, status: "bezahlt", gutschein: { shop: true, code: "GS-TEST-AAAA", token: "t", aktion: { id: "nr2", nr: 2 }, wertCent: 28000, bezahltCent: 20000, bonusCent: 8000, bonusBis: shop.bonusBisIso(c), ausgestelltAm: new Date().toISOString() } }));
 check(pdf.slice(0, 4).toString() === "%PDF" && pdf.length > 20000, "Gutschein-PDF entsteht", pdf.length);
-check(shop.markeFuer(c).logo.endsWith("/assets/gs-shop/chic/logo.png") && c.marke.kasse.button_color === "#C70F17", "Logo und Kassenfarben von Chic");
+check(shop.markeFuer(c).logo.endsWith("/assets/gs-shop/chic/logo.png") && c.marke.kasse.button_color === "#E3121B" && c.marke.kasse.background_color === "#0D0C0C", "Logo und Kassenfarben von Chic");
 
 console.log("Tattoofin gratis bis (provisionFreiBis)");
 const prov = { modell: "provision", paket: "risikofrei" };
