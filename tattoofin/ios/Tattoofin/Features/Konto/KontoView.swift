@@ -19,11 +19,9 @@ struct KontoView: View {
     @State private var faceID = Einstellungen.faceIDAn
     @State private var faceIDFehler: String?
     @State private var pushErlaubt: Bool?
-    @State private var prueftStripe = false
     @State private var fehler: String?
     /// Fehler direkt im jeweiligen Abschnitt (nicht erst unten bei „Abmelden“)
     @State private var mitteilungenFehler: String?
-    @State private var stripeFehler: String?
     @State private var rechtsseite: Rechtsseite?
     @State private var abmeldenFrage = false
     @State private var ueberallFrage = false
@@ -44,12 +42,11 @@ struct KontoView: View {
                 AktualisierenFehlerZeile()
                 studioAbschnitt
                 if studio?.istApple == true { aboAbschnitt }
-                if studio != nil { stripeAbschnitt }
                 StudioMehrAbschnitt()
-                SoGehtsAbschnitt()
+                // Abnahme 1.1, Nr. 16: Hilfe an einer Stelle (So geht's, WhatsApp, E-Mail), Rechtliches als Links ganz unten
+                hilfeAbschnitt
                 mitteilungenAbschnitt
                 sicherheitAbschnitt
-                rechtAbschnitt
                 abmeldenAbschnitt
                 #if DEBUG
                 debugAbschnitt
@@ -106,12 +103,10 @@ struct KontoView: View {
                     if let i = s.inhaber?.leerAlsNil { Text(i).foregroundStyle(Color.tfLeise) }
                 }
                 .padding(.vertical, 4)
-                if let p = s.paketName?.leerAlsNil { WertZeile(titel: Texte.Konto.paket, wert: p) }
-                if s.istTestmodus {
-                    WertZeile(titel: Texte.Konto.vertrag, wert: Texte.Konto.vertragTestmodus)
-                } else if let st = s.statusText?.leerAlsNil {
-                    WertZeile(titel: Texte.Konto.vertrag, wert: Texte.GestaltungG3.vertragStatus(st))
-                }
+                // Paket und Stand in einer Zeile (Abnahme 1.1, Nr. 16: Konto kürzer)
+                let stand = s.istTestmodus ? Texte.Konto.vertragTestmodus : s.statusText?.leerAlsNil.map(Texte.GestaltungG3.vertragStatus)
+                let vertrag = Texte.AbnahmeG5.vertragWert(s.paketName?.leerAlsNil, stand)
+                if !vertrag.isEmpty { WertZeile(titel: Texte.Konto.vertrag, wert: vertrag) }
                 if let k = s.kuendigung, let zum = Datum.tag(k.zum) {
                     WertZeile(titel: Texte.Konto.vertragEndet, wert: zum)
                     if istInhaber {
@@ -119,13 +114,21 @@ struct KontoView: View {
                     }
                 }
                 if let sitzung = app.sitzung {
-                    WertZeile(titel: Texte.Konto.angemeldetAls, wert: sitzung.email)
-                    WertZeile(titel: Texte.Konto.rolle, wert: sitzung.istInhaber ? Texte.Konto.rolleInhaber : Texte.Konto.rolleTeam)
+                    angemeldetZeile(sitzung.email, rolle: sitzung.istInhaber ? Texte.Konto.rolleInhaber : Texte.Konto.rolleTeam)
+                }
+                // Stripe als eine Zeile, Einzelheiten auf der Unterseite (vorher vier Zeilen und eigener Abschnitt)
+                let zustand = StripeZustand(studio: s)
+                NavigationLink { StripeStatusView() } label: { StripeKontoZeile(zustand: zustand) }
+                if zustand == .fehlt, let u = s.connectUrl.flatMap(URL.init(string:)), s.stripe?.freigegeben != true {
+                    Button { openURL(u) } label: {
+                        TFAktionsZeile(titel: Texte.Kasse.stripeOeffnen, symbol: "safari")
+                    }
+                    .buttonStyle(.plain)
                 }
             } else if portal.fehler == nil {
                 ProgressView()
             } else if let sitzung = app.sitzung {
-                WertZeile(titel: Texte.Konto.angemeldetAls, wert: sitzung.email)
+                angemeldetZeile(sitzung.email, rolle: nil)
             }
         } header: {
             ListenKopf(Texte.Konto.studio)
@@ -166,60 +169,40 @@ struct KontoView: View {
         }
     }
 
-    private var stripeAbschnitt: some View {
-        Section {
-            let st = studio?.stripe
-            if studio?.istTestmodus == true && st?.verbunden != true {
-                // Testkauf: Stripe ist absichtlich aus, drei rote Kreuze wären falsch
-                Label(Texte.Konto.stripeTestmodus, systemImage: "testtube.2")
-                    .foregroundStyle(Color.tfTinte)
-                    .accessibilityIdentifier("stripe-testmodus")
-            } else {
-                statusZeile(Texte.Konto.stripeVerbunden, st?.verbunden == true)
-                statusZeile(Texte.Konto.stripeFreigegeben, st?.freigegeben == true)
-                statusZeile(Texte.Konto.stripeAuszahlungen, st?.auszahlungen == true)
+    /// „Angemeldet als“ mit Adresse (bei großer Schrift einzeilig, verkleinert, Mitte gekürzt) und Rolle darunter
+    private func angemeldetZeile(_ email: String, rolle: String?) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(Texte.Konto.angemeldetAls).foregroundStyle(Color.tfLeise)
+            Text(email).foregroundStyle(Color.tfTinte)
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
+                .truncationMode(.middle)
+            if let rolle {
+                Text(rolle).font(.dm(.subheadline)).foregroundStyle(Color.tfLeise)
             }
-            Button {
-                stripePruefen()
-            } label: {
-                HStack {
-                    Label(Texte.Konto.neuPruefen, systemImage: "arrow.clockwise")
-                    if prueftStripe { Spacer(); ProgressView() }
-                }
-            }
-            .disabled(prueftStripe)
-            if let stripeFehler { FehlerZeile(text: Texte.Konto11.nichtGeprueft(stripeFehler)) }
-            if let u = studio?.connectUrl.flatMap(URL.init(string:)), st?.freigegeben != true, studio?.istTestmodus != true {
-                Button { openURL(u) } label: { Label(Texte.Kasse.stripeOeffnen, systemImage: "safari") }
-            }
-        } header: {
-            ListenKopf(Texte.Konto.stripe)
         }
+        .font(.dm(.body))
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
     }
 
-    /// Passt Titel und Häkchen nicht nebeneinander (große Schrift), steht das Häkchen unter dem Titel (wie WertZeile)
-    private func statusZeile(_ titel: String, _ ok: Bool) -> some View {
-        let zeichen = Image(systemName: ok ? "checkmark.circle.fill" : "xmark.circle")
-            .foregroundStyle(ok ? Color.tfGruen : Color.tfLeise)
-        // Bei großer Schrift das Zeichen vorn in fester Spalte (alle Zeilen gleich), sonst rechts wie gewohnt
-        return Group {
-            if schrift.isAccessibilitySize {
-                HStack(alignment: .firstTextBaseline, spacing: 10) {
-                    zeichen.frame(width: 28)
-                    Text(titel).foregroundStyle(Color.tfTinte)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-            } else {
-                HStack {
-                    Text(titel).foregroundStyle(Color.tfTinte)
-                    Spacer(minLength: 12)
-                    zeichen
-                }
+    /// Hilfe an einer Stelle: Video-Anleitung, WhatsApp, E-Mail (ersetzt den Absatz „Fragen zu deinem Vertrag …“)
+    private var hilfeAbschnitt: some View {
+        Section {
+            NavigationLink { SoGehtsView() } label: { zeilenLabel(WerbungTexte.soGehtsTitel, "play.rectangle") }
+            Link(destination: StudioMehrAbschnitt.whatsappURL) {
+                TFAktionsZeile(titel: Texte.AbnahmeG5.whatsapp, symbol: "message")
+                    .dynamicTypeSize(...DynamicTypeSize.accessibility2)  // ds-ok: Zeilentitel, Wortbruch vermeiden
             }
+            .accessibilityHint(Texte.AbnahmeG5.whatsappHinweis)
+            Link(destination: URL(string: "mailto:info@tattoofin.de")!) {
+                TFAktionsZeile(titel: Texte.AbnahmeG5.email, symbol: "envelope")
+                    .dynamicTypeSize(...DynamicTypeSize.accessibility2)  // ds-ok: Zeilentitel, Wortbruch vermeiden
+            }
+            .accessibilityHint(Texte.AbnahmeG5.emailHinweis)
+        } header: {
+            ListenKopf(Texte.AbnahmeG5.hilfe)
         }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(titel): \(ok ? Texte.Allgemein.ja : Texte.Allgemein.nein)")
     }
 
     private var mitteilungenAbschnitt: some View {
@@ -299,20 +282,6 @@ struct KontoView: View {
         }
     }
 
-    private var rechtAbschnitt: some View {
-        Section {
-            Button { rechtsseite = .impressum } label: { Label(Texte.Konto.impressum, systemImage: "doc.text") }
-            Button { rechtsseite = .datenschutz } label: { Label(Texte.Konto.datenschutz, systemImage: "hand.raised") }
-            Button { rechtsseite = .vertrag } label: { Label(Texte.Konto.vertragText, systemImage: "signature") }
-            Link(destination: URL(string: "mailto:info@tattoofin.de")!) {
-                Label(Texte.Konto.hilfe, systemImage: "envelope")
-            }
-        } header: {
-            ListenKopf(Texte.Konto.rechtliches)
-        }
-        .foregroundStyle(Color.tfTinte)
-    }
-
     private var abmeldenAbschnitt: some View {
         Section {
             if let fehler { FehlerZeile(text: fehler) }
@@ -330,12 +299,33 @@ struct KontoView: View {
                 Text(istInhaber ? Texte.Konto.loeschen : Texte.Team.zugangEntfernen).foregroundStyle(Color.tfRot)
             }
         } footer: {
-            ListenFuss(Texte.Konto.version(APIClient.appVersionText))
-                .font(.dm(.footnote))
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: .infinity)
-                .padding(.top, 12)
+            VStack(spacing: 4) {
+                rechtsLinks
+                ListenFuss(Texte.Konto.version(APIClient.appVersionText))
+                    .font(.dm(.footnote))
+                    .multilineTextAlignment(.center)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.top, 8)
         }
+    }
+
+    /// Impressum, Datenschutz, Vertrag als Links unter der Liste (vorher ein eigener Abschnitt mit vier Zeilen).
+    /// Passen sie nicht nebeneinander (große Schrift), stehen sie untereinander.
+    private var rechtsLinks: some View {
+        let links = ForEach([Rechtsseite.impressum, .datenschutz, .vertrag], id: \.self) { seite in
+            Button { rechtsseite = seite } label: {
+                Text(seite.titel).frame(minHeight: 44).padding(.horizontal, 6).contentShape(Rectangle())
+            }
+        }
+        return ViewThatFits(in: .horizontal) {
+            HStack(spacing: 4) { links }
+            VStack(spacing: 0) { links }
+        }
+        .font(.dm(.footnote, weight: .semibold))
+        .foregroundStyle(Color.tfTinte)
+        .buttonStyle(.plain)
+        .textCase(nil)
     }
 
     /// Zeile mit Symbol in tfAkzent und Text in tfTinte: alle Zeilen (auch Schalter) teilen so eine Textkante
@@ -429,20 +419,6 @@ struct KontoView: View {
             } catch {
                 kundenname = geraet?.kundennameInMitteilung ?? false
                 mitteilungenFehler = fehlerText(error)
-            }
-        }
-    }
-
-    private func stripePruefen() {
-        prueftStripe = true
-        stripeFehler = nil
-        Task {
-            defer { prueftStripe = false }
-            do {
-                _ = try await APIClient.shared.kontoStatus()
-                await portal.laden()
-            } catch {
-                stripeFehler = fehlerText(error)
             }
         }
     }

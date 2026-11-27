@@ -182,21 +182,3 @@ final class SoGehtsSpieler {
         player?.pause()
     }
 }
-
-/// Zeile „So geht's“ im Konto (auch wenn die Karte in der Kasse ausgeblendet ist)
-struct SoGehtsAbschnitt: View {
-    var body: some View {
-        Section {
-            NavigationLink { SoGehtsView() } label: {
-                Label {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(WerbungTexte.soGehtsTitel).foregroundStyle(Color.tfTinte)
-                        Text(WerbungTexte.soGehtsKurz).font(.dm(.footnote)).foregroundStyle(Color.tfLeise)
-                    }
-                } icon: {
-                    Image(systemName: "play.rectangle").foregroundStyle(Color.tfAkzent)
-                }
-            }
-        }
-    }
-}
