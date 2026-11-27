@@ -23,8 +23,6 @@ extension Texte {
         static let hilfeWhatsappNachricht = "Hallo Tattoofin-Team, ich habe eine Frage zur App:"
         static let nurInhaber = "Das kann nur der Inhaber ändern."
         static let rechtNurInhaber = "Bestätigen kann nur der Inhaber."
-        /// Vertragsänderungen (Paketwechsel, Umstellung) und Erstattungen: in der App bewusst nicht (ohne Link auf die Website). Kündigen geht unten über „Konto kündigen und löschen“.
-        static let nichtInDerApp = "Fragen zu deinem Vertrag klärst du mit unserem Team. Schreib uns einfach."
     }
 
     enum Einst {

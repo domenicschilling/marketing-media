@@ -119,7 +119,7 @@ struct KontoView: View {
                 // Stripe als eine Zeile, Einzelheiten auf der Unterseite (vorher vier Zeilen und eigener Abschnitt)
                 let zustand = StripeZustand(studio: s)
                 NavigationLink { StripeStatusView() } label: { StripeKontoZeile(zustand: zustand) }
-                if zustand == .fehlt, let u = s.connectUrl.flatMap(URL.init(string:)), s.stripe?.freigegeben != true {
+                if zustand == .fehlt, !s.istTestmodus, let u = s.connectUrl.flatMap(URL.init(string:)), s.stripe?.freigegeben != true {
                     Button { openURL(u) } label: {
                         TFAktionsZeile(titel: Texte.Kasse.stripeOeffnen, symbol: "safari")
                     }

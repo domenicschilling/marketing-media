@@ -152,7 +152,7 @@ struct StudioMehrTests {
     @Test func texteOhnePaketUndWebPreis() {
         let M = Texte.Mehr.self
         let texte = [M.abschnitt, M.einstellungen, M.einstellungenText, M.hilfeWhatsapp,
-                     M.hilfeWhatsappText, M.hilfeWhatsappNachricht, M.nichtInDerApp, M.stripeAnsehen, M.stripeAnsehenText]
+                     M.hilfeWhatsappText, M.hilfeWhatsappNachricht, M.stripeAnsehen, M.stripeAnsehenText]
         for t in texte {
             for verboten in ["Paket", "netto", "49", "tattoofin.de", "Website", "Domenic", "Raten", "Klarna"] {
                 #expect(!t.localizedCaseInsensitiveContains(verboten), "„\(verboten)“ in: \(t)")

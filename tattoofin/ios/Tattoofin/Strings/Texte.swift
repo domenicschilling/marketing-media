@@ -424,7 +424,7 @@ enum Texte {
         static let pushZahlung = "Mitteilung bei Zahlung"
         static let pushAuszahlung = "Mitteilung bei Auszahlung"
         static let pushVorname = "Vorname des Kunden in der Mitteilung"
-        static let mitteilungenHinweis = "Den Vornamen zeigt das iPhone auch auf dem Sperrbildschirm."
+        static let mitteilungenHinweis = "Gilt nur für dieses Gerät. Den Vornamen zeigt das iPhone auch auf dem Sperrbildschirm."
         /// DS-Kern (18.11.2026): Geräteliste nicht geladen → nicht still die Standardwerte zeigen
         static let mitteilungenNichtGeladen = "Deine Mitteilungs-Einstellungen konnten nicht geladen werden."
         static let pushAus = "Mitteilungen sind in den iPhone-Einstellungen ausgeschaltet."
@@ -456,17 +456,12 @@ enum Texte {
         static let haupt = "Hauptadresse"
         static func teamTitel(_ n: Int, _ max: Int) -> String { "Team-Adressen (\(n) von \(max))" }
         static let leer = "Noch keine Team-Adressen."
-        static let hinweisInhaber = "Team-Mitglieder melden sich mit ihrer eigenen Adresse an und können kassieren. Entfernst du eine Adresse, werden ihre App-Geräte sofort abgemeldet."
         static let hinweisTeam = "Team-Adressen pflegt die Hauptadresse deines Studios."
         static let hinzufuegen = "Adresse hinzufügen"
         static let adressePlatzhalter = "name@studio.de"
         static let hinzufuegenKnopf = "Hinzufügen"
-        static func entfernenLabel(_ e: String) -> String { "\(e) entfernen" }
         static func entfernenFrage(_ e: String) -> String { "\(e) entfernen?" }
-        static let entfernenText = "Die App-Geräte dieser Adresse werden sofort abgemeldet."
         static let entfernen = "Entfernen"
-        static let alleAbmelden = "Zusätzlich alle abmelden"
-        static let alleAbmeldenHinweis = "Im Studio-Bereich auf tattoofin.de lassen sich einzelne Adressen nicht trennen. Mit diesem Schalter werden beim Speichern alle Geräte und Browser abgemeldet, auch dieses iPhone."
         static let zugangEntfernen = "Meinen Zugang entfernen"
         static let zugangEntfernenFrage = "Deinen Zugang wirklich entfernen?"
         static let zugangEntfernenText = "Deine Adresse wird aus dem Studio entfernt und alle deine Geräte werden abgemeldet."
