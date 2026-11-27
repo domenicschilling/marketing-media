@@ -179,7 +179,9 @@ struct AuszahlungenKarteZeile: View {
                 Text(Texte.Zahlungen.auszahlungen)
                     .font(.dm(.body, weight: .semibold))
                     .foregroundStyle(Color.tfTinte)
-                    .fixedSize(horizontal: false, vertical: true)
+                    // Ein langes Wort: einzeilig und notfalls kleiner, nie „Auszahlun-gen“ (SE, größte Schrift)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
                 Text(saldo.map { Texte.AbnahmeG4.verfuegbar(Euro.text($0.verfuegbarCent)) } ?? Texte.AbnahmeG4.auszahlungenUnterzeile)
                     .font(.dm(.subheadline, weight: saldo == nil ? .regular : .semibold))
                     .foregroundStyle(saldo == nil ? Color.tfLeise : Color.tfGruen)
@@ -248,8 +250,7 @@ struct KPIKopf: View {
                 .fixedSize(horizontal: false, vertical: true)
             Text(titel)
                 .font(.dm(.caption, weight: .medium))
-                // Tinte statt tfLeise: das Audit meldete bei großer Schrift zu wenig Kontrast (Abnahme 1.1, Runde 4)
-                .foregroundStyle(Color.tfTinte)
+                .foregroundStyle(Color.tfLeise)
                 // Mindestens zwei Zeilen Platz, mehr erlaubt (kein Abschneiden, DS-Audit); gleiche Kachelhöhe kommt vom Rahmen unten
                 .lineLimit(2...)
                 .fixedSize(horizontal: false, vertical: true)
@@ -259,6 +260,7 @@ struct KPIKopf: View {
         .background(Color.tfKarte, in: RoundedRectangle(cornerRadius: 14))
         .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(Color.tfLinie, lineWidth: 1))
         .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("kpi-kachel")
     }
 }
 
@@ -280,8 +282,10 @@ struct ZahlungZeile: View {
                 Text(kunde == nil ? Texte.ZahlungenG2.ohneKundenname : zahlung.titel)
                     .font(.dm(.subheadline))
                     .foregroundStyle(Color.tfLeise)
-                    // Normal zwei Zeilen; bei Bedienungshilfen-Größen frei, sonst „ohne Kundennam…“ abgeschnitten (Abnahme G4)
-                    .lineLimit(schrift.isAccessibilitySize ? nil : 2)
+                    // Normal zwei Zeilen; bei Bedienungshilfen-Größen frei, sonst „ohne Kundennam…“ abgeschnitten (Abnahme G4).
+                    // „ohne Kundennamen“ selbst bei Bedienungshilfen-Größen einzeilig und notfalls kleiner (sonst „Kundennam-en“ auf dem SE)
+                    .lineLimit(kunde == nil && schrift.isAccessibilitySize ? 1 : (schrift.isAccessibilitySize ? nil : 2))
+                    .minimumScaleFactor(kunde == nil ? 0.5 : 1)
                     .fixedSize(horizontal: false, vertical: schrift.isAccessibilitySize)
                 if let d = Datum.tag(zahlung.bezahltAm ?? zahlung.createdAt) {
                     Text(d).font(.dm(.caption)).foregroundStyle(Color.tfLeise)

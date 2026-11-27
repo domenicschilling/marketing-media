@@ -426,8 +426,12 @@ final class ParitaetRundgangUITests: XCTestCase {
         let app = starten(email: "studio@beispiel.test")
         anmelden(app)
         app.tabBars.buttons["Konto"].tap()
-        let sgKonto = knopf(app, "So geht's")
-        nachOben(app, sgKonto)
+        // Nicht den Knopf „start-so-gehts“ der Kasse erwischen (bleibt im Baum, wenn der Kasse-Tab vorher offen war)
+        let sgKonto = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@ AND identifier != %@", "So geht's", "start-so-gehts")).firstMatch
+        // Nur bis frei sichtbar (nachOben schob die Zeile auf dem iPhone 17 mit Schwung über den oberen Rand hinaus)
+        bisSichtbar(app, sgKonto)
+        Thread.sleep(forTimeInterval: 0.8)
+        if !frei(app, sgKonto) { bisSichtbar(app, sgKonto, hoch: false) }
         foto("konto-so-gehts-zeile")
         sgKonto.tap()
         XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Übersicht und Einrichtung")).firstMatch.waitForExistence(timeout: 10))

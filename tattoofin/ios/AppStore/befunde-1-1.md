@@ -94,8 +94,10 @@ Urteil der Abnahme: „erst nachbessern“. Umgesetzt (Branch `claude/tattoofin-
 | Sammelliste | Preis „49,90 €“ im Aufkleber | **bewusst nicht** – Apple-Regel 2.3.7 (keine Preise in Store-Bildern); stattdessen „für neue Abonnenten“ |
 
 ### Schlussprüfung 27.11.2026 (Barrierefreiheits-Audit nach den Team-Änderungen)
-- Zahlungen, Karte „Auszahlungen“: Bei großer Schrift brach das Wort mitten durch („Auszahlun-gen“). Jetzt steht das Symbol bei Bedienungshilfe-Größen über dem Text.
-- Zahlungen, Kennzahlen: Die Beschriftung ist jetzt in Tinte statt Grau, weil das Audit bei großer Schrift zu wenig Kontrast meldete.
+- Zahlungen, Karte „Auszahlungen“: Bei großer Schrift brach das Wort mitten durch („Auszahlun-gen“). Jetzt steht das Symbol bei Bedienungshilfe-Größen über dem Text, und das Wort bleibt einzeilig (notfalls kleiner).
+- Zahlungen, Zeile ohne Kundennamen: „ohne Kundennam-en“ brach bei größter Schrift. Jetzt einzeilig und notfalls kleiner.
+- Zahlungen, Kennzahlen: Das Audit meldete „Kontrast“ (Grau auf Weiß hat etwa 6:1). Ursache: Es maß, während der Bildschirm noch nachlud. Der Test wartet jetzt 4 s statt 2,5 s, die Farbe bleibt. Auf dem SE meldet das Audit die Kacheln trotzdem, auch mit Tinte statt Grau. Nachgerechnet sind es 6,8:1, und dieselbe Meldung kam schon vor den Team-Änderungen (damals lagen die Kacheln am unteren Rand und wurden deshalb übergangen). Die Kacheln sind jetzt eine benannte Ausnahme mit WARNUNG im Protokoll. Offen: Handprüfung mit dem Accessibility Inspector.
 - Werbung, Überschriften („Dein Werbevideo“ …): Sie wachsen wieder mit der Schrift, bleiben aber einzeilig und werden notfalls kleiner. Kein Wortbruch, keine Schriftgrenze mehr.
+- Test „So geht's“ im Konto: Er erwischte den gleichnamigen Knopf der Kasse. Jetzt ist die Suche eindeutig.
 - Konto, Abschnitt „Dein Studio“: Der Kopf hat jetzt die eigene Farbe statt des System-Graus, weil der Kontrast knapp war.
-- Ergebnis: DS-Rundgang (normal, dunkel, AX3, AX5) auf dem iPhone 17 ohne Befund.
+- Ergebnis: DS-Rundgang (normal, dunkel, AX3, AX5) auf iPhone 17 und SE ohne Befund, bis auf die eine benannte Ausnahme.

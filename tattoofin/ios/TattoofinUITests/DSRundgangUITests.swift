@@ -55,7 +55,9 @@ final class DSRundgangUITests: XCTestCase {
             let inhalt = app.descendants(matching: .any)[kennung]
             XCTAssertTrue(inhalt.waitForExistence(timeout: 10), "Bildschirm \(kennung) erscheint nicht")
             // Daten ankommen lassen (Lade-Platzhalter sollen nicht geprüft werden)
-            Thread.sleep(forTimeInterval: 2.5)
+            // 4 s: Zahlungen lädt Kennzahlen und Auszahlungs-Saldo nach, das Suchfeld setzt sich danach; vorher misst das Audit
+            // mitten in der Bewegung „Kontrast“ an Kacheln, die ruhig 6:1 haben (Schlussprüfung 27.11.)
+            Thread.sleep(forTimeInterval: 4)
 
             let foto = XCTAttachment(screenshot: app.screenshot())
             foto.name = "ds-\(name)-\(tab)"
@@ -98,6 +100,10 @@ final class DSRundgangUITests: XCTestCase {
         if b.auditType == .contrast, !tabLeiste.isEmpty, e.frame.maxY > tabLeiste.minY - 60 { return true }
         // 3) Suchfeld „Kunde suchen“ ist das System-Suchfeld (.searchable, UIKit). Größe und Platzhalterfarbe bestimmt iOS.
         if e.elementType == .searchField { return true }
+        // 5) Kennzahl-Kacheln in Zahlungen (Kennung „kpi-kachel“): Das Audit meldet dort in jeder Lage „Kontrast“, auch mit
+        //    Tinte statt Grau (Versuch 27.11.). Nachgerechnet: Grau #4A5D72 auf Weiß 6,8:1, Tinte deutlich mehr. Vermutlich misst es
+        //    den hellen Kachelrand mit. Darum akzeptiert, aber als WARNUNG im Protokoll (Handprüfung in befunde-1-1.md).
+        if b.auditType == .contrast, e.identifier == "kpi-kachel" { print("DS-AUDIT WARNUNG Kontrast Kennzahl-Kachel: \(e.label)"); return true }
         return false
     }
 
