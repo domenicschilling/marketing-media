@@ -184,7 +184,7 @@ final class ParitaetRundgangUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Springen zu QR-Code"].exists, "Sprungleiste fehlt")
         Thread.sleep(forTimeInterval: 1)
         foto("werbung-tab")
-        XCTAssertTrue(frei(app, knopf(app, "In Fotos speichern")), "„In Fotos speichern“ beim Video nicht im ersten Bildschirm")
+        XCTAssertTrue(frei(app, app.buttons["werbung-video-speichern"]), "„Speichern“ beim Video nicht im ersten Bildschirm")
         let poster = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Video abspielen")).firstMatch
         bisSichtbar(app, poster)
         poster.tap()
@@ -193,12 +193,12 @@ final class ParitaetRundgangUITests: XCTestCase {
         app.segmentedControls.buttons["Beitrag"].firstMatch.tap()
         Thread.sleep(forTimeInterval: 1.5)
         foto("werbevideo-format-feed")
-        let speichernVideo = knopf(app, "In Fotos speichern")
+        let speichernVideo = app.buttons["werbung-video-speichern"]
         bisSichtbar(app, speichernVideo)
         speichernVideo.tap()
         gespeichert(app, "werbevideo-gespeichert")
-        // Wie bei den Beiträgen: „Text kopieren“ kopiert sofort, „Text ansehen“ zeigt ihn (mit Fußnote, nur einmal)
-        let kopieren = knopf(app, "Text kopieren")
+        // Wie bei den Beiträgen: runder Knopf „Text kopieren“ kopiert sofort, „Text ansehen“ zeigt ihn (mit Fußnote, nur einmal)
+        let kopieren = app.buttons["werbung-video-kopieren"]
         bisSichtbar(app, kopieren)
         kopieren.tap()
         XCTAssertTrue(etwas(app, "Kopiert").waitForExistence(timeout: 5))
@@ -572,7 +572,7 @@ final class ParitaetRundgangUITests: XCTestCase {
         app.tabBars.buttons["Werbung"].tap()
         XCTAssertTrue(app.staticTexts["Dein Werbevideo"].waitForExistence(timeout: 15))
         foto("dunkel-gross-werbung")
-        let speichern = knopf(app, "In Fotos speichern")
+        let speichern = app.buttons["werbung-video-speichern"]
         bisSichtbar(app, speichern)
         foto("dunkel-gross-werbevideo-knoepfe")
         let b = app.staticTexts["Deine Beiträge"]

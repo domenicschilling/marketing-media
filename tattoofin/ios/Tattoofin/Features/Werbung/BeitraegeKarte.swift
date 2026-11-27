@@ -18,20 +18,10 @@ struct BeitraegeKarte: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             VStack(alignment: .leading, spacing: 10) {
-                Text(WerbungTexte.beitraegeTitel).font(.luckiest(24, relativeTo: .title2)).foregroundStyle(Color.tfTinte)
-                    .accessibilityAddTraits(.isHeader)
-                Text(WerbungTexte.beitraegeText).font(.dm(.subheadline)).foregroundStyle(Color.tfLeise)
+                WerbeUeberschrift(WerbungTexte.beitraegeTitel)
+                // Die Anleitung 1–3 steht einmal oben im Tab, nicht mehr hier
+                Text(Texte.AbnahmeG6.beitraegeKurz).font(.dm(.subheadline)).foregroundStyle(Color.tfLeise)
                     .fixedSize(horizontal: false, vertical: true)
-                VStack(alignment: .leading, spacing: 4) {
-                    ForEach(Array(WerbungTexte.schritte.enumerated()), id: \.offset) { i, t in
-                        HStack(alignment: .firstTextBaseline, spacing: 8) {
-                            Text("\(i + 1).").font(.dm(.subheadline, weight: .bold))
-                            Text(t).font(.dm(.subheadline)).fixedSize(horizontal: false, vertical: true)
-                        }
-                        .foregroundStyle(Color.tfTinte)
-                        .accessibilityElement(children: .combine)
-                    }
-                }
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(WerbungTexte.nameLabel).font(.dm(.subheadline, weight: .semibold)).foregroundStyle(Color.tfTinte)
@@ -54,8 +44,7 @@ struct BeitraegeKarte: View {
                     }
                     Text(WerbungTexte.nameHinweis).font(.dm(.caption)).foregroundStyle(Color.tfLeise)
                 }
-
-                KlarnaFussnote(text: werbung.fussnote)
+                // Der Klarna-Pflichtsatz steht jetzt direkt unter jedem Beitrag (BeitragKachel)
             }
             .karte()
 
@@ -173,22 +162,21 @@ struct BeitragKachel: View {
                 ScrollView(.horizontal, showsIndicators: false) { bilderReihe }
             }
 
-            Button { speichern(beitrag.bilder) } label: {
-                if arbeitet { ProgressView().tint(Color.tfBlau) } else {
-                    Label(WerbungTexte.alleSpeichern(beitrag.bilder.count), systemImage: "square.and.arrow.down")
+            // Ein Hauptknopf „Speichern“, daneben rund: Text/Link kopieren und Teilen
+            WerbeAktionen {
+                WerbeSpeichernKnopf(label: WerbungTexte.alleSpeichern(beitrag.bilder.count), arbeitet: arbeitet) {
+                    speichern(beitrag.bilder)
                 }
-            }
-            .buttonStyle(.haupt)
-            .disabled(arbeitet)
-
-            KnopfReihe {
-                Button {
+                .disabled(arbeitet)
+                .accessibilityIdentifier("werbung-beitrag-speichern-\(beitrag.id)")
+            } rund: {
+                RundKnopf(label: kopierKnopf, symbol: beitrag.kopieren == "link" ? "link" : "doc.on.doc") {
                     UIPasteboard.general.string = kopierText
                     kurzZeigen(WerbungTexte.kopiert, in: $meldung)
-                } label: { Label(kopierKnopf, systemImage: "doc.on.doc") }
-                    .buttonStyle(.zweit)
-                Button { teilenOeffnen() } label: { Label(WerbungTexte.teilen, systemImage: "square.and.arrow.up") }
-                    .buttonStyle(.zweit)
+                }
+                .accessibilityIdentifier("werbung-beitrag-kopieren-\(beitrag.id)")
+                RundKnopf(label: WerbungTexte.teilen, symbol: "square.and.arrow.up") { teilenOeffnen() }
+                    .accessibilityIdentifier("werbung-beitrag-teilen-\(beitrag.id)")
             }
             if beitrag.kopieren == nil {
                 Button { withAnimation { textOffen.toggle() } } label: {
@@ -203,6 +191,10 @@ struct BeitragKachel: View {
             }
             if let fehler { FehlerZeile(text: fehler) }
             RueckmeldungsText(text: meldung)
+            // Pflichtsatz direkt unter jedem Beitrag (die Bilder zeigen „Raten*“); steht er schon im offenen Text, nicht doppelt
+            if !((textOffen || beitrag.kopieren != nil) && kopierText.contains(werbung.fussnote)) {
+                KlarnaFussnote(text: werbung.fussnote)
+            }
         }
         .karte()
         .task(id: beitrag.stand) { bilder = beitrag.bilder.compactMap { UIImage(data: $0) } }
