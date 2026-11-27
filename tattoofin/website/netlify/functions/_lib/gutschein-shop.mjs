@@ -159,8 +159,8 @@ export const SHOPS = {
       // Angebot der Überschrift ohne ?g= (und im Vorschaubild): 100 € kaufen, 150 € bekommen (höchster Aufschlag, kleinster Einstieg)
       heroId: "nr1", musterId: "nr2",
       telefon: "0821 24299615", telefonLink: "+4982124299615", whatsapp: "4915204485125", instagram: "chic_tattoo_augsburg",
-      // Google: 5,0 aus 372 Bewertungen, Stand 15.11.2026 (Memory chic-tattoo-augsburg; vor dem Live-Gang neu nachsehen)
-      google: { sterne: "5,0", anzahl: 372, stand: "15.11.2026", suche: "Chic Tattoo & Piercing, Ulmer Straße 14, 86154 Augsburg" },
+      // Google: 5,0 aus 372 Bewertungen, am 27.11.2026 im Google-Maps-Profil nachgesehen (Chic Tattoo & Piercing, Ulmer Str. 14)
+      google: { sterne: "5,0", anzahl: 372, stand: "27.11.2026", suche: "Chic Tattoo & Piercing, Ulmer Straße 14, 86154 Augsburg" },
       zeiten: [["Montag bis Freitag", "10–18 Uhr"], ["Samstag", "10–16 Uhr"], ["Sonntag", "geschlossen"]],
       pixel: "1142712101501159",
       // Echte Arbeiten aus dem Studio (Instagram @chic_tattoo_augsburg, Quellen public/assets/gs-shop/chic/LIZENZ.txt), keine KI, keine Narben-Bilder

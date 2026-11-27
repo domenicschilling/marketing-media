@@ -107,15 +107,18 @@ html.js:not([data-stand]):not(.zahlen) #h-wert,html.js:not([data-stand]):not(.za
 .sterne:before{content:"★★★★★";position:absolute;left:0;top:0;width:var(--p);overflow:hidden;white-space:nowrap;color:#F0B400}
 html.frei-oben .hero [data-cd],html.frei-oben .hero [data-cd-titel]{display:none!important}
 @media(min-width:900px){
-  .hero .in{max-width:none;display:grid;grid-template-columns:52% 1fr;grid-template-rows:1fr auto;padding:calc(64px + env(safe-area-inset-top)) 0 0}
-  .bild{grid-row:1/span 2;height:100%}
-  .karte{grid-column:2;align-self:end;margin:0 56px 0 -120px;padding:36px 40px 30px}
-  .unten{grid-column:2;padding:20px 56px 40px 0;max-width:620px}
-  .hero h1{font-size:clamp(70px,6.8vw,124px)}
+  /* Desktop (27.11.): sauberes 50/50-Raster. Links Angebot, Countdown und Knopf in einer bündigen Spalte, rechts das Foto über die ganze Höhe */
+  .hero .in{max-width:none;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr auto auto 1fr;padding:calc(62px + env(safe-area-inset-top)) 0 0}
+  .bild{grid-column:2;grid-row:1/span 4;height:100%}
+  .bild img{object-position:50% 34%}
+  .karte{grid-column:1;grid-row:2;margin:0 56px 0 max(48px,calc(50vw - 590px));padding:34px 38px 28px}
+  .unten{grid-column:1;grid-row:3;margin:0 56px 0 max(48px,calc(50vw - 590px));padding:22px 0 0}
+  .hero h1{font-size:clamp(62px,5.4vw,104px)}
   .hero h1 #h-wert,.hero h1 #h-wert.lang{font-size:1em}
   .hero p.lead{font-size:19px}
-  .unten .btn{width:auto;min-width:380px}
+  .unten .btn{width:100%}
 }
+
 @media(max-height:700px){.hero h1{margin:6px 0 8px}.karte{padding:12px 16px 12px}.cdz{margin-bottom:10px}}
 @media(max-height:620px){.hero h1{font-size:clamp(34px,10.6vw,60px)}.hero p.lead{font-size:15px}.btn{padding:15px 22px;min-height:50px}.rate{display:none}.karte .wer img{display:none}}
 @media(max-height:560px) and (orientation:portrait){.hero .in{padding-top:50px;padding-bottom:8px}.karte{margin-top:-18px}.karte .wer{display:none}.hero p.fuss{font-size:12px}.cd b{font-size:16px}.cd div{min-width:38px;padding:4px 3px}.unten{padding-top:8px}}
@@ -530,7 +533,7 @@ textarea{min-height:76px;resize:vertical}
   }
   var io = "IntersectionObserver" in window ? new IntersectionObserver(function (es) { es.forEach(function (x) { if (x.isIntersecting) { x.target.classList.add("in"); io.unobserve(x.target); } }); }, { threshold: .12 }) : null;
   document.querySelectorAll(".reveal").forEach(function (el) { io ? io.observe(el) : el.classList.add("in"); });
-  $("band1").innerHTML = SEITE.bilder.concat(SEITE.bilder).map(function (n) { return '<img src="/assets/gs-shop/' + SEITE.kuerzel + "/b-" + n + '.jpg" alt="" loading="lazy" width="600" height="800">'; }).join("");
+  $("band1").innerHTML = SEITE.bilder.concat(SEITE.bilder).map(function (n) { return '<img src="/assets/gs-shop/' + SEITE.kuerzel + "/b-" + n + '.jpg" alt="" decoding="async" width="600" height="800">'; }).join("");
 
   var D = null, auswahl = null, schritt = 1;
   var params = new URLSearchParams(location.search);
