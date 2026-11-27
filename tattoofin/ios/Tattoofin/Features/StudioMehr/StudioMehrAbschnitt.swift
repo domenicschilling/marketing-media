@@ -23,7 +23,7 @@ struct StudioMehrAbschnitt: View {
     var body: some View {
         Section {
             NavigationLink { EinstellungenView() } label: {
-                zeile(Texte.Mehr.einstellungen, Texte.Mehr.einstellungenText, "gearshape")
+                zeile(Texte.Mehr.einstellungen, s?.keineAnzahlung == true ? Texte.Mehr.einstellungenTextOhneAnzahlung : Texte.Mehr.einstellungenText, "gearshape")
             }
             NavigationLink { RechtView() } label: {
                 zeile(Texte.Mehr.recht, rechtUnter, "scale.3d")

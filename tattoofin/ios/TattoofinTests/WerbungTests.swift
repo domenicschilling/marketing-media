@@ -353,6 +353,7 @@ struct WerbungTests {
         let st = GezeichneterBeitrag(id: "qr-story", titel: "Story: Mit Klarna bezahlen, QR-Code", format: "Story 9:16", art: "story",
                                      wofuer: "", kopieren: "link", text: "", bilder: [Data()])
         #expect(st.anzeigeFormat == "Story")
+        #expect(st.anzeigeTitel == "Mit Klarna bezahlen, QR-Code")  // „Story:“ steht schon als Chip daneben
         #expect(st.kurzTitel == "Story")
         for t in [WerbungTexte.formatReel, WerbungTexte.formatFeed, WerbungTexte.zahlseiteText, WerbungTexte.nameHinweis,
                   Texte.AbnahmeG6.anleitungLabel, Texte.AbnahmeG6.videoKurz, Texte.AbnahmeG6.beitraegeKurz] + Texte.AbnahmeG6.anleitung {

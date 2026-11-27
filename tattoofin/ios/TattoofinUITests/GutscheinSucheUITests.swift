@@ -33,7 +33,7 @@ final class GutscheinSucheUITests: XCTestCase {
 
         app.tabBars.buttons["Gutscheine"].tap()
         let verkaufen = app.buttons["gutschein-verkaufen"]
-        XCTAssertTrue(verkaufen.waitForExistence(timeout: 10), "Großer Knopf „Gutschein verkaufen“ fehlt")
+        XCTAssertTrue(verkaufen.waitForExistence(timeout: 10), "Knopf „Verkaufen“ (Gutschein verkaufen) fehlt")
         XCTAssertTrue(verkaufen.label.contains("Gutschein verkaufen"), "Knopf ohne Text: \(verkaufen.label)")
         foto("01-liste-mit-verkaufen-knopf")
 
@@ -47,7 +47,7 @@ final class GutscheinSucheUITests: XCTestCase {
         // Erst ein falscher Code: Fehler erscheint …
         feld.tap()
         feld.typeText("GS-ABCD-EFGH")
-        app.buttons["Gutschein suchen"].tap()
+        // Kein Such-Knopf mehr: vollständiger Code sucht sofort (Abnahme 1.1, Runde 2)
         let fehler = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", "Fehler:")).firstMatch
         XCTAssertTrue(fehler.waitForExistence(timeout: 10), "Kein Fehler bei falschem Code")
         foto("02-falscher-code")
@@ -58,7 +58,7 @@ final class GutscheinSucheUITests: XCTestCase {
         feld.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 14))
         feld.typeText(code)
         XCTAssertEqual(feld.value as? String, code, "Code wurde nicht übernommen")
-        app.buttons["Gutschein suchen"].tap()
+        // Kein Such-Knopf mehr: vollständiger Code sucht sofort (Abnahme 1.1, Runde 2)
 
         // Detail mit Titel und Zurück-Knopf
         let titel = app.navigationBars["Gutschein"]

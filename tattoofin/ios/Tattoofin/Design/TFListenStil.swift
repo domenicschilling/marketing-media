@@ -30,6 +30,10 @@ struct TFTextfeldStil: ViewModifier {
 }
 
 extension View {
+    /// Regel für Eingabefelder (Abnahme 1.1, Runde 2, benannt statt zwei Arten ohne Regel):
+    /// - Freistehendes Feld auf einer Fläche (Anmeldung, Kasse, Gutschein-Code, Registrierung): immer `tfTextfeld()`.
+    /// - Feld als Zeile einer gruppierten Liste (Formular-Blätter wie „Gutschein verkaufen“, Einstellungen): Listenzeile nach
+    ///   iOS-Standard ohne eigenen Rahmen, denn die Karte der Liste ist schon der Rahmen; Beschriftung als Platzhalter oder Abschnittskopf.
     func tfTextfeld() -> some View { modifier(TFTextfeldStil()) }
 }
 
@@ -86,9 +90,14 @@ enum TFLeistenStil {
         // Flächen in Markenfarben statt System-Grau (fiel im Dunkelmodus als fremdes Bauteil auf)
         let karte = UIColor(Color.tfKarte), linie = UIColor(Color.tfLinie)
         segment.backgroundColor = UIColor { $0.userInterfaceStyle == .dark ? karte.resolvedColor(with: $0) : linie.resolvedColor(with: $0) }
-        segment.selectedSegmentTintColor = UIColor { $0.userInterfaceStyle == .dark ? UIColor(red: 0x2A / 255, green: 0x44 / 255, blue: 0x60 / 255, alpha: 1) : .white }
+        // Gewählter Teil deutlich (Abnahme 1.1, Runde 2: dunkel vorher 1,11:1 zur Spur): dunkel Gelb #FBB316 mit Blau,
+        // hell Blau #1F3D5C mit Weiß. Beide weit über 3:1 zur Spur.
+        let markeGelb = UIColor(red: 0xFB / 255, green: 0xB3 / 255, blue: 0x16 / 255, alpha: 1)
+        let markeBlau = UIColor(red: 0x1F / 255, green: 0x3D / 255, blue: 0x5C / 255, alpha: 1)
+        segment.selectedSegmentTintColor = UIColor { $0.userInterfaceStyle == .dark ? markeGelb : markeBlau }
+        let gewaehltSchrift = UIColor { $0.userInterfaceStyle == .dark ? markeBlau : .white }
         segment.setTitleTextAttributes([.font: schrift(15, .medium), .foregroundColor: tinte], for: .normal)
-        segment.setTitleTextAttributes([.font: schrift(15, .semibold), .foregroundColor: tinte], for: .selected)
+        segment.setTitleTextAttributes([.font: schrift(15, .semibold), .foregroundColor: gewaehltSchrift], for: .selected)
 
         // Tab-Leiste: nicht gewählte Symbole in tfLeise statt Reinschwarz, gewählte in tfAkzent
         let eintrag = UITabBarItemAppearance()
@@ -126,5 +135,12 @@ enum TFLeistenStil {
         let achse = UIFontDescriptor.AttributeName(rawValue: kCTFontVariationAttribute as String)
         let mitStaerke = basis.fontDescriptor.addingAttributes([achse: [0x7767_6874: wght]])
         return UIFont(descriptor: mitStaerke, size: groesse)
+    }
+}
+
+extension View {
+    /// Ab iOS 26: harte Kante unter der Navigationsleiste statt weicher Unschärfe (kein Geistertext beim Scrollen)
+    @ViewBuilder func tfHarteKanteOben() -> some View {
+        if #available(iOS 26.0, *) { self.scrollEdgeEffectStyle(.hard, for: .top) } else { self }
     }
 }

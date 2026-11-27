@@ -54,7 +54,11 @@ struct WerbevideoKarte: View {
                     .accessibilityIdentifier("werbung-video-teilen")
             }
             Button { withAnimation { textOffen.toggle() } } label: {
-                Text(textOffen ? WerbungTexte.textAusblenden : WerbungTexte.textAnsehen).font(.dm(.subheadline, weight: .semibold))
+                Label {
+                        Text(textOffen ? WerbungTexte.textAusblenden : WerbungTexte.textAnsehen).font(.dm(.subheadline, weight: .semibold))
+                    } icon: {
+                        Image(systemName: textOffen ? "chevron.up" : "text.alignleft")  // Symbol + Pfeil (Abnahme 1.1, Runde 2)
+                    }
                     .frame(minHeight: 44)
                     .contentShape(Rectangle())
             }

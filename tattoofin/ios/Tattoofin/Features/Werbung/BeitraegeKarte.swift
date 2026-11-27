@@ -180,7 +180,11 @@ struct BeitragKachel: View {
             }
             if beitrag.kopieren == nil {
                 Button { withAnimation { textOffen.toggle() } } label: {
-                    Text(textOffen ? WerbungTexte.textAusblenden : WerbungTexte.textAnsehen).font(.dm(.subheadline, weight: .semibold))
+                    Label {
+                        Text(textOffen ? WerbungTexte.textAusblenden : WerbungTexte.textAnsehen).font(.dm(.subheadline, weight: .semibold))
+                    } icon: {
+                        Image(systemName: textOffen ? "chevron.up" : "text.alignleft")  // Symbol + Pfeil (Abnahme 1.1, Runde 2)
+                    }
                         .frame(minHeight: 44)
                         .contentShape(Rectangle())
                 }
@@ -324,7 +328,10 @@ struct BeitragGrossansicht: View {
 /// die Dateien bleiben unverändert, hier nur die Anzeige): „Karussell“ → „Bilder-Serie“, keine Seitenverhältnisse.
 extension GezeichneterBeitrag {
     var anzeigeTitel: String {
-        titel.replacingOccurrences(of: "Karussell:", with: "Bilder-Serie:")
+        // „Beitrag: …“ bzw. „Story: …“ weg: die Art steht schon als Chip daneben (Abnahme 1.1, Runde 2)
+        var t = titel.replacingOccurrences(of: "Karussell:", with: "Bilder-Serie:")
+        for vorne in ["Beitrag: ", "Story: "] where t.hasPrefix(vorne) { t = String(t.dropFirst(vorne.count)) }
+        return t
     }
 
     var anzeigeFormat: String {

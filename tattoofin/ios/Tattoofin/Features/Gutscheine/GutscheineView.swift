@@ -29,19 +29,7 @@ struct GutscheineView: View {
                     .buttonStyle(.haupt)
                     .listRowInsets(EdgeInsets())
                     .listRowBackground(Color.clear)
-                    // Einziger Weg zum Verkaufen: großer Knopf mit Text (kein „+“ in der Leiste)
-                    if portal.studio?.darfKassieren == true {
-                        Button {
-                            codeFokus = false
-                            verkaufenOffen = true
-                        } label: {
-                            Label(Texte.Gutscheine.verkaufen, systemImage: "gift")
-                        }
-                        .buttonStyle(.zweit)
-                        .listRowInsets(EdgeInsets(top: 10, leading: 0, bottom: 0, trailing: 0))
-                        .listRowBackground(Color.clear)
-                        .accessibilityIdentifier("gutschein-verkaufen")
-                    }
+                    // „Gutschein verkaufen“ steht jetzt als Text-Knopf oben in der Leiste (Abnahme 1.1, Runde 2: Kopf entschlacken)
                 }
 
                 Section {
@@ -57,12 +45,14 @@ struct GutscheineView: View {
                             .submitLabel(.search)
                             .focused($codeFokus)
                             .onSubmit { suchen() }
-                            .onChange(of: code) { _, neu in
+                            .onChange(of: code) { alt, neu in
                                 // Mehrzeiliges Feld: Return fügt einen Zeilenumbruch ein → als „Suchen“ werten
                                 let mitReturn = neu.contains("\n")
                                 let f = GutscheinCode.formatieren(neu.replacingOccurrences(of: "\n", with: ""))
                                 if f != neu { code = f }
                                 if mitReturn, GutscheinCode.vollstaendig(f) { suchen() }
+                                // Vollständig eingetippt (nicht von der Suche selbst gesetzt): gleich suchen
+                                else if !codeAusSuche, !sucht, f == neu, GutscheinCode.vollstaendig(f), !GutscheinCode.vollstaendig(alt) { suchen() }
                                 // Alte Meldung („nicht gefunden“) passt nicht mehr zum neuen Code – außer die Suche hat den Code selbst gesetzt
                                 if codeAusSuche {
                                     if f == neu { codeAusSuche = false }
@@ -72,15 +62,9 @@ struct GutscheineView: View {
                             }
                             .accessibilityLabel(Texte.Gutscheine.codeEingeben)
                             .tfTextfeld()  // ein Eingabefeld-Bauteil für die ganze App (Abnahme 1.1, Nr. 17)
-                        // Abschicken wie überall: Knopf in voller Breite unter dem Feld oder die Tastatur-Taste (vorher Pfeil-Symbol daneben)
-                        Button {
-                            suchen()
-                        } label: {
-                            if sucht { ProgressView() } else { Label(Texte.Gutscheine.suchen, systemImage: "magnifyingglass") }
-                        }
-                        .buttonStyle(.zweit)
-                        .disabled(!GutscheinCode.vollstaendig(code) || sucht)
-                        .accessibilityLabel(Texte.Gutscheine.suchen)
+                        // Kein eigener Such-Knopf mehr (Abnahme 1.1, Runde 2): Ist der Code vollständig, sucht die App sofort;
+                        // sonst die Taste „Suchen“ der Tastatur
+                        if sucht { ProgressView().frame(maxWidth: .infinity).accessibilityLabel(Texte.Gutscheine.suchen) }
                         if let fehler { FehlerZeile(text: fehler) }
                     }
                     .padding(.vertical, 4)
@@ -118,8 +102,23 @@ struct GutscheineView: View {
             .scrollDismissesKeyboard(.immediately)
             .refreshable { await portal.laden() }
             .navigationTitle(Texte.Gutscheine.titel)
+            .tfHarteKanteOben()  // wie Werbung (Abnahme 1.1, Runde 2)
             .navigationBarTitleDisplayMode(.inline)
-            // Kein „+“ in der Leiste mehr: es doppelte den großen Knopf „Gutschein verkaufen“ (Abnahme G4)
+            // Verkaufen als Text-Knopf in der Leiste (kein „+“, Abnahme G4; Kopf entschlackt, Abnahme 1.1, Runde 2)
+            .toolbar {
+                if portal.studio?.darfKassieren == true {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            codeFokus = false
+                            verkaufenOffen = true
+                        } label: {
+                            Text(Texte.GutscheinWert.verkaufenKurz).font(.dm(.body, weight: .semibold))
+                        }
+                        .accessibilityLabel(Texte.Gutscheine.verkaufen)
+                        .accessibilityIdentifier("gutschein-verkaufen")
+                    }
+                }
+            }
             .navigationDestination(for: Zahlung.self) { GutscheinDetailView(zahlung: $0) }
             .sheet(isPresented: $verkaufenOffen) { GutscheinVerkaufenView() }
             .fullScreenCover(isPresented: $scannerOffen) {

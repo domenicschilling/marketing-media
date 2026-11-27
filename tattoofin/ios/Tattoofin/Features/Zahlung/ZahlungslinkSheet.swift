@@ -137,8 +137,11 @@ struct ZahlungslinkSheet: View {
                 .buttonStyle(.zweit)
                 .sensoryFeedback(.success, trigger: kopiert)
 
+                // Roter Textknopf statt Rahmen-Knopf: Stornieren ist die seltene Aktion (Abnahme 1.1, Runde 2)
                 Button(Texte.Zahlung.stornieren, role: .destructive) { stornoFrage = true }
-                    .buttonStyle(.gefahr)
+                    .font(.dm(.body, weight: .semibold))
+                    .foregroundStyle(Color.tfRot)
+                    .frame(maxWidth: .infinity, minHeight: 44)
 
                 // Nur im Demo-Studio (App-Prüfung bei Apple) und nach einem Testkauf (Apple-Sandbox): Testzahlung ohne Geld
                 if portal.studio?.hatTestkasse == true {
@@ -260,6 +263,7 @@ struct TheckenQRView: View {
                 Spacer(minLength: 0)
                 Text(name)
                     .font(.luckiest(34, relativeTo: .largeTitle))
+                    .textCase(.uppercase)
                     .foregroundStyle(Color.tfBlau)
                     .multilineTextAlignment(.center)
                     .lineLimit(2)

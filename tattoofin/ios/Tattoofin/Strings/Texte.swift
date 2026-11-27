@@ -349,7 +349,7 @@ enum Texte {
         /// Kurz, damit der Titel im Blatt nicht an „Abbrechen“ klebt und bei großer Schrift nicht abgeschnitten wird
         static let verkaufenTitel = "Gutschein"
         static let leerTitel = "Noch keine Gutscheine"
-        static let leerText = "Verkaufe deinen ersten Gutschein über „Gutschein verkaufen“."
+        static let leerText = "Verkaufe deinen ersten Gutschein über „Verkaufen“ oben rechts."
         static let ohneCode = "Code kommt nach der Zahlung"
         static func codeLabel(_ c: String) -> String { "Code " + c.map(String.init).joined(separator: " ") }
         static let wert = "Wert"

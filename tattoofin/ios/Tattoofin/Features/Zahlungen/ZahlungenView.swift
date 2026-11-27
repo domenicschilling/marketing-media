@@ -74,7 +74,7 @@ struct ZahlungenView: View {
             }
             .pickerStyle(.inline)
         } label: {
-            Image(systemName: filter == .alle ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill")
+            Image(systemName: filter == .alle ? "line.3.horizontal.decrease" : "line.3.horizontal.decrease.circle.fill")
                 .font(.dm(.title3))
                 .foregroundStyle(Color.tfTinte)
         }
@@ -257,8 +257,8 @@ struct KPIKopf: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .padding(12)
+        // Ohne Rand wie die übrigen Karten (Abnahme 1.1, Runde 2)
         .background(Color.tfKarte, in: RoundedRectangle(cornerRadius: 14))
-        .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(Color.tfLinie, lineWidth: 1))
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("kpi-kachel")
     }

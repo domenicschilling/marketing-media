@@ -100,12 +100,28 @@ struct KasseView: View {
         return c >= portal.config.min && c <= portal.config.max && !sendet
     }
 
+    /// Art (Gesamtpreis/Anzahlung) und „Kunde wird heute tätowiert“
+    @ViewBuilder private var artUndHeute: some View {
+        // Studio ohne Anzahlung (TF München/Landshut): keine Auswahl, immer Gesamtpreis (wie im Web)
+        if !keineAnzahlung {
+            TFAuswahl(Texte.Kasse.artLabel, auswahl: $entwurf.anzahlung,
+                      optionen: [(false, Texte.Kasse.gesamt), (true, Texte.Kasse.anzahlung)])
+            .accessibilityIdentifier("kasse-art")
+        }
+        // Bei „Anzahlung“ bleibt der Platz des Schalters frei, damit der Ziffernblock beim Umschalten nicht springt
+        HeuteSchalter(an: $heute, kompakt: kompakt)
+            .opacity(anzahlung ? 0 : 1)
+            .disabled(anzahlung)
+            .accessibilityHidden(anzahlung)
+    }
+
     private var formular: some View {
         ScrollView {
             // Enger gesetzt: Start-Zeile, Betrag, Ziffernblock und „Zahlungslink erstellen“ passen bei normaler Schrift in den ersten Bildschirm
             VStack(spacing: kompakt ? 6 : 10) {
                 AktualisierenFehlerZeile()
-                StartBereich(kompakt: kompakt && !schrift.isAccessibilitySize)
+                // Bedienungshilfen-Größen: ohne „Diesen Monat …“ (wie kompakt), damit die Ziffern früher kommen (Abnahme 1.1, Runde 2)
+                StartBereich(kompakt: kompakt || schrift.isAccessibilitySize)
 
                 // Nach einem Testkauf (Apple-Sandbox, auch App Review): Hinweis „Testmodus“ steht im StartBereich statt der Monatszeile
 
@@ -126,30 +142,27 @@ struct KasseView: View {
                     // Grenzen bzw. Fehler und Gebührenhinweis liegen übereinander auf demselben festen Platz (auf allen Geräten):
                     // bei gültigem Betrag der Gebührenhinweis, sonst die Grenzen. So rutscht beim Tippen nichts über dem
                     // Ziffernblock, und unter den Grenzen bleibt kein leerer Streifen (Gestaltungsprüfung 1.1, Nr. 9).
-                    ZStack(alignment: .top) {
-                        GebuehrHinweis(cent: eingabe.cent, sichtbar: gueltigerBetrag)
-                        if !gueltigerBetrag { grenzenZeile }
+                    if schrift.isAccessibilitySize {
+                        // Bedienungshilfen-Größen: nur die jeweils passende Zeile, ohne reservierten Platz (sonst ~140 pt Lücke)
+                        if gueltigerBetrag { GebuehrHinweis(cent: eingabe.cent) } else { grenzenZeile }
+                    } else {
+                        ZStack(alignment: .top) {
+                            GebuehrHinweis(cent: eingabe.cent, sichtbar: gueltigerBetrag)
+                            if !gueltigerBetrag { grenzenZeile }
+                        }
                     }
                 }
                 .frame(maxWidth: .infinity)
 
-                // Studio ohne Anzahlung (TF München/Landshut): keine Auswahl, immer Gesamtpreis (wie im Web)
-                if !keineAnzahlung {
-                    TFAuswahl(Texte.Kasse.artLabel, auswahl: $entwurf.anzahlung,
-                              optionen: [(false, Texte.Kasse.gesamt), (true, Texte.Kasse.anzahlung)])
-                    .accessibilityIdentifier("kasse-art")
+                if schrift.isAccessibilitySize {
+                    // Bedienungshilfen-Größen: Betrag, Ziffern, Knopf zuerst; Art und Schalter danach (Abnahme 1.1, Runde 2)
+                    Ziffernblock(eingabe: $eingabe, tastenHoehe: 52, abstand: 8)
+                    knopfBereich
+                    artUndHeute
+                } else {
+                    artUndHeute
+                    Ziffernblock(eingabe: $eingabe, tastenHoehe: kompakt ? 44 : 52, abstand: kompakt ? 6 : 8)
                 }
-
-                // Bei „Anzahlung“ bleibt der Platz des Schalters frei, damit der Ziffernblock beim Umschalten nicht springt
-                HeuteSchalter(an: $heute, kompakt: kompakt)
-                    .opacity(anzahlung ? 0 : 1)
-                    .disabled(anzahlung)
-                    .accessibilityHidden(anzahlung)
-
-                Ziffernblock(eingabe: $eingabe, tastenHoehe: kompakt ? 44 : 52, abstand: kompakt ? 6 : 8)
-
-                // Bedienungshilfen-Größen: Knopf direkt unter dem Ziffernblock statt angeheftet, sonst verdeckt er die Ziffern
-                if schrift.isAccessibilitySize { knopfBereich }
 
                 DisclosureGroup(isExpanded: $detailsOffen) {
                     VStack(spacing: 10) {
@@ -173,6 +186,9 @@ struct KasseView: View {
                 }
                 // Flacher als .karte(): die zugeklappte Zeile ist nur so hoch wie ihr Inhalt
                 .modifier(KompaktKarte())
+                // Ruhend liegt die Karte ganz hinter dem angehefteten Knopf, statt mit ihrer Oberkante im Spalt über ihm
+                // hervorzuschauen (Abnahme 1.1, Runde 2, SE hell und dunkel). Beim Scrollen kommt sie normal nach oben.
+                .padding(.top, schrift.isAccessibilitySize ? 0 : 28)
             }
             .padding(.horizontal, 16)
             .padding(.top, kompakt ? 4 : 8)

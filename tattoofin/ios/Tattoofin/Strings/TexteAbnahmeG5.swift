@@ -23,7 +23,8 @@ extension Texte {
 
         // Konto: Vertrag in einer Zeile
         static func vertragWert(_ paket: String?, _ status: String?) -> String {
-            [paket, status].compactMap { $0 }.joined(separator: " · ")
+            // Geschütztes Leerzeichen vor „·“: bei größter Schrift beginnt keine Zeile mit „· Aktiv“ (Abnahme 1.1, Runde 2)
+            [paket, status].compactMap { $0 }.joined(separator: "\u{00A0}· ")
         }
 
         // Team: Entfernen per Wischen, Rückfrage mit der Wahl „alle abmelden“

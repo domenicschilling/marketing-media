@@ -5,6 +5,8 @@ import Foundation
 
 extension Texte {
     enum GutscheinWert {
+        /// Text-Knopf oben rechts in Gutscheine (VoiceOver: „Gutschein verkaufen“)
+        static let verkaufenKurz = "Verkaufen"
         /// Liste und Detail: unter dem Wert, wenn der bezahlte Betrag abweicht
         static func bezahlt(_ cent: Int) -> String { "bezahlt \(Euro.text(cent))" }
         static let bezahltTitel = "Bezahlt"

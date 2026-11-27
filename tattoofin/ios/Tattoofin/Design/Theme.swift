@@ -176,6 +176,9 @@ struct Ueberschrift: View {
     var body: some View {
         Text(text)
             .font(.luckiest(groesse, relativeTo: .title))
+            // Luckiest Guy nur in Großbuchstaben: die Kleinbuchstaben der Schrift wirken wie „AnmeLDen“ (Abnahme 1.1, Runde 2).
+            // VoiceOver liest den Text in normaler Schreibweise (das Label bleibt unverändert).
+            .textCase(.uppercase)
             .foregroundStyle(Color.tfTinte)
             .fixedSize(horizontal: false, vertical: true)
             .accessibilityAddTraits(.isHeader)
@@ -194,7 +197,7 @@ enum GrosserBetrag {
         var t = Text(zahl).font(.luckiest(groesse, relativeTo: stil))
             + Text("\u{2009}€").font(.dm(groesse * 0.7, relativeTo: stil, weight: .bold))
         if !rest.trimmingCharacters(in: .whitespaces).isEmpty {
-            t = t + Text(rest).font(.luckiest(groesse, relativeTo: stil))
+            t = t + Text(rest.uppercased()).font(.luckiest(groesse, relativeTo: stil))  // Luckiest Guy nur in Großbuchstaben
         }
         return t
     }

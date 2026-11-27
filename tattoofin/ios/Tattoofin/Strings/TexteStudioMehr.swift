@@ -9,6 +9,8 @@ extension Texte {
         static let abschnitt = "Dein Studio"
         static let einstellungen = "Einstellungen"
         static let einstellungenText = "Anzahlung, Zahlseite, E-Mail"
+        /// Studio ohne Anzahlung (TF München/Landshut): keine Anzahlung in der Unterzeile
+        static let einstellungenTextOhneAnzahlung = "Zahlseite, E-Mail"
         static let recht = "Deine rechtliche Lage"
         static let rechtOffen = "Wer trägt welches Risiko? Kurz erklärt."
         static func rechtGelesen(_ d: String) -> String { "Gelesen am \(d)" }

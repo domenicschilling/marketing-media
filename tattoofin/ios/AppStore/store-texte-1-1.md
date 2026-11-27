@@ -6,14 +6,14 @@ Entwurf vom Team (Texter + strenger Prüfer, Werberecht + Apple-Regeln), nachges
 |---|---|---|
 | Name | Tattoofin für Tattoo-Studios | 28/30 |
 | Untertitel | Anzahlung, Klarna, Gutscheine | 29/30 |
-| Werbetext | 7 Tage kostenlos testen. Zahlungslink in Sekunden per WhatsApp: Dein Kunde zahlt mit Karte, Apple Pay oder Klarna. Keine Provision von Tattoofin. | 145/170 |
+| Werbetext | Neu-Abonnenten: 7 Tage gratis, danach 49,90 €/Monat. Zahlungslink per WhatsApp: Dein Kunde zahlt mit Karte, Apple Pay oder Klarna. Keine Provision von Tattoofin. | 161/170 |
 | Schlüsselwörter | Tattoostudio,Tätowierer,Kasse,Zahlungslink,Ratenzahlung,Vorkasse,Kartenzahlung,No-Show,Gutschein,QR | 99/100 |
 
 Warum „Raten*“ nicht im Namen/Untertitel steht: Zu „Raten*“ gehört direkt der Pflichtsatz mit Sternchen-Text und „Achtung! Kreditaufnahme kostet Geld.“ (Klarna-Regel, KlarnaTexte.swift). Name und Untertitel haben dafür keinen Platz. Darum steht „Raten*“ ganz oben in der Beschreibung und groß auf dem ersten Bild, jeweils mit Pflichtsatz.
 
 Länder: Der Server nimmt heute nur deutsche Studios an (PLZ mit 5 Ziffern, Stripe-Konto fest „DE“, deutsche USt.). Darum sagt der Text „Deutschland“. Österreich/Schweiz erst nach einem Server-Umbau (Domenic entscheidet).
 
-## Beschreibung (2566/4000)
+## Beschreibung (2682/4000)
 
 ```
 Raten* für deine Kunden. Den Betrag bekommst du auf einmal. Achtung! Kreditaufnahme kostet Geld.
@@ -27,7 +27,7 @@ WAS DU DAMIT MACHST
 • Gutscheine verkaufen: Dein Kunde bekommt Code und PDF per E-Mail. In der App scannst du den Code und löst den Gutschein ein. Gutscheine zahlt man mit Karte, Apple Pay oder Google Pay.
 • Mitteilung aufs iPhone, sobald bezahlt ist.
 • Zahlungen und Auszahlungen deines Stripe-Kontos auf einen Blick.
-• Fertige Werbung mit deinem Studionamen: Video und Beiträge für Instagram.
+• Fertige Werbung mit deinem Studionamen: QR-Code für die Theke, dazu Video und Instagram-Beiträge, sobald Klarna in deinem Stripe-Konto an ist.
 • Zugang für dein Team.
 
 DEIN GELD

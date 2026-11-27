@@ -23,6 +23,8 @@ struct WerbungView: View {
             }
             .tfHintergrund()
             .navigationTitle(WerbungTexte.titel)
+            // Harte Kante unter der Leiste: kein Geistertext und kein gelber Fleck hinter ihr beim Scrollen (Abnahme 1.1, Runde 2)
+            .tfHarteKanteOben()
             .navigationBarTitleDisplayMode(.inline)
         }
         .task { await werbung.laden() }
@@ -142,32 +144,14 @@ struct WerbungView: View {
         }
     }
 
-    /// Bei Bedienungshilfe-Größen brechen die Chips in mehrere Reihen um (nichts wird abgeschnitten). Sonst stehen alle
-    /// Chips nebeneinander, wenn sie in die Breite passen. Passen sie nicht (iPhone SE, größere Schrift), läuft die Leiste
-    /// von Rand zu Rand mit Innenabstand und blendet an beiden Seiten weich aus. So wirkt kein Chip halb abgeschnitten,
-    /// und man sieht, dass sie seitlich weitergeht.
+    /// Alle Chips nebeneinander, wenn sie passen; sonst mehrere Reihen (nichts wird abgeschnitten).
     @ViewBuilder
     private func sprungleiste(_ liste: [WerbungAbschnitt], _ leser: ScrollViewProxy) -> some View {
-        Group {
-            if schrift.isAccessibilitySize {
-                SprungFluss(abstand: 8) { sprungChips(liste, leser) }
-            } else {
-                ViewThatFits(in: .horizontal) {
-                    HStack(spacing: 8) { sprungChips(liste, leser) }
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 8) { sprungChips(liste, leser) }
-                    }
-                    .contentMargins(.horizontal, 16, for: .scrollContent)
-                    .padding(.horizontal, -16)
-                    .mask {
-                        HStack(spacing: 0) {
-                            LinearGradient(colors: [.clear, .black], startPoint: .leading, endPoint: .trailing).frame(width: 16)
-                            Rectangle()
-                            LinearGradient(colors: [.black, .clear], startPoint: .leading, endPoint: .trailing).frame(width: 40)
-                        }
-                    }
-                }
-            }
+        // Passen die Chips nicht in eine Reihe (iPhone SE, größere Schrift), brechen sie in zwei Reihen um statt seitlich
+        // zu laufen: so ist kein Chip angeschnitten (Abnahme 1.1, Runde 2: „Drucke…“ auf dem SE)
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 8) { sprungChips(liste, leser) }
+            SprungFluss(abstand: 8) { sprungChips(liste, leser) }
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("werbung-sprungleiste")

@@ -99,7 +99,7 @@ struct KontoView: View {
         Section {
             if let s = studio {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(s.name).font(.luckiest(24, relativeTo: .title2)).foregroundStyle(Color.tfTinte)
+                    Text(s.name).font(.luckiest(24, relativeTo: .title2)).textCase(.uppercase).foregroundStyle(Color.tfTinte)
                     if let i = s.inhaber?.leerAlsNil { Text(i).foregroundStyle(Color.tfLeise) }
                 }
                 .padding(.vertical, 4)

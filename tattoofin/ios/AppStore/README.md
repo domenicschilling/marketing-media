@@ -135,6 +135,9 @@ Sign-in (no password): enter the e-mail below and tap "Code schicken". No e-mail
 - Kasse: type an amount, tap "Zahlungslink erstellen", then "Testzahlung auslösen" (no payment, no Stripe).
 - Gutscheine: search one of the listed codes or scan the QR code on a voucher PDF; redeem and undo.
 - Zahlungen: list of sample payments; the "Auszahlungen" card at the top opens sample payouts.
+- Installments ("Raten") via Klarna: Klarna is offered to the studio's customer in the Stripe Checkout in the browser, not in the
+  app. It requires Klarna to be switched on in the studio's own Stripe account; in the demo studio it is switched off. In the app
+  the studio only sees the result, e.g. "Bezahlt mit: Klarna" on a payment (see screenshot 1).
 - Konto: Impressum and privacy policy (also on the sign-in screen), notification settings, team, devices.
 - Werbung (marketing tab): in the demo studio, Klarna is switched off in its (simulated) Stripe account. The tab therefore shows the
   card "Klarna ist bei dir noch aus" and the QR code of the studio's payment page (can be saved to Photos with add-only access).

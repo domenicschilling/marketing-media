@@ -99,7 +99,8 @@ struct MarkenKopf: View {
     var kompakt = false
 
     var body: some View {
-        VStack(spacing: kompakt ? 8 : 10) {
+        // Linksbündig wie Überschrift und Text darunter (Abnahme 1.1, Runde 2: vorher Kopf mittig, „Anmelden“ links)
+        VStack(alignment: .leading, spacing: kompakt ? 8 : 10) {
             Image(.figur)
                 .resizable()
                 .scaledToFit()
@@ -113,7 +114,7 @@ struct MarkenKopf: View {
                 .frame(maxWidth: kompakt ? 170 : 220)
                 .accessibilityLabel(Texte.Allgemein.logoLabel)
         }
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -149,7 +150,7 @@ struct EmailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: hoehe < 700 ? 14 : 20) {
-                MarkenKopf(kompakt: hoehe < 700).padding(.top, hoehe < 700 ? 4 : 24)
+                MarkenKopf(kompakt: hoehe < 700).padding(.top, hoehe < 700 ? 4 : 24).padding(.bottom, hoehe < 700 ? 6 : 12)
                 Ueberschrift(Texte.Anmelden.titel)
                 Text(Texte.Anmelden.einleitung)
                     .font(.dm(.body))

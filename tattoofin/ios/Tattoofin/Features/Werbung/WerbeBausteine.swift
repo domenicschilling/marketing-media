@@ -10,6 +10,7 @@ struct WerbeUeberschrift: View {
     var body: some View {
         Text(text)
             .font(.luckiest(24, relativeTo: .title2))
+            .textCase(.uppercase)  // Luckiest Guy nur in Großbuchstaben (Abnahme 1.1, Runde 2)
             .foregroundStyle(Color.tfTinte)
             // Wächst mit der Schrift (DS-Audit), bleibt aber einzeilig und wird notfalls kleiner: so bricht „Werbevideo“ nie mitten im Wort
             .lineLimit(1)
