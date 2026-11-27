@@ -137,6 +137,32 @@ final class StoreWerbebilderUITests: XCTestCase {
         }
     }
 
+    /// Bild 7 „Dein Team kassiert mit“: Kasse, angemeldet als Team-Adresse (kai@nordlicht-tattoo.de), Betrag eingetippt.
+    /// Läuft mit TF_STORE_BILDER=1 nach testRohaufnahmen (eigener App-Start, eigene Anmeldung).
+    func testTeamKasse() throws {
+        let env = ProcessInfo.processInfo.environment
+        guard env["TF_STORE_BILDER"] == "1" else { throw XCTSkip("Nur für Store-Bilder (TF_STORE_BILDER=1)") }
+        continueAfterFailure = false
+        XCUIDevice.shared.appearance = .light
+        let app = XCUIApplication()
+        app.launchArguments = ["-TFApiBase", env["TF_UI_API"] ?? "http://localhost:8888", "-TFTestEmail", "kai@nordlicht-tattoo.de",
+                               "-TFZuruecksetzen", "YES", "-AppleLanguages", "(de)", "-AppleLocale", "de_DE",
+                               "-TFQRZiel", env["TF_QR_ZIEL"] ?? "https://tattoofin.de"]
+        app.launch()
+        let schicken = app.buttons["Code schicken"]
+        XCTAssertTrue(schicken.waitForExistence(timeout: 15))
+        schicken.tap()
+        let code = app.textFields["Code mit 6 Ziffern"]
+        XCTAssertTrue(code.waitForExistence(timeout: 10))
+        code.tap()
+        code.typeText("123456")
+        for t in ["Nicht jetzt", "Später"] { let b = app.buttons[t]; if b.waitForExistence(timeout: 6) { b.tap() } }
+        XCTAssertTrue(app.tabBars.buttons["Kasse"].waitForExistence(timeout: 15), "Team-Anmeldung ohne Tabs")
+        app.tabBars.buttons["Kasse"].tap()
+        for t in ["3", "8", "0"] { app.buttons[t].firstMatch.tap() }
+        foto(app, "a11-team-kasse")
+    }
+
     /// Nur der Sperrbildschirm (Bild 5), wenn die App schon Mitteilungen darf: TF_STORE_SPERRE=1 und TF_PUSH_MARKER
     func testSperrbildschirm() throws {
         let env = ProcessInfo.processInfo.environment

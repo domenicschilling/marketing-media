@@ -43,7 +43,7 @@ function handy(datei, { breite = 980, x = (W - 980) / 2, y = 1000, drehung = 0, 
   return `<div class="handy" style="left:${x}px;top:${y}px;width:${breite + 2 * rand}px;height:${h + 2 * rand}px;border-radius:${radius + rand}px;padding:${rand}px;transform:rotate(${drehung}deg);z-index:${z}">
   <span class="knopf l1"></span><span class="knopf l2"></span><span class="knopf l3"></span><span class="knopf r1"></span>
   <img src="data:image/png;base64,${b64(path.join(quelle, datei))}" style="border-radius:${radius}px" alt="">
-  ${(arguments[1]?.markierung || []).map((m) => `<span class="mark" style="left:${rand + m.x * breite / 1320}px;top:${rand + m.y * breite / 1320}px;width:${m.w * breite / 1320}px;height:${m.h * breite / 1320}px"></span>${m.text ? `<span class="marktext" style="left:${rand + (m.x + m.w) * breite / 1320 - 20}px;top:${rand + m.y * breite / 1320 - 70}px">${esc(m.text)}</span>` : ""}`).join("")}
+  ${(arguments[1]?.markierung || []).map((m) => `<span class="mark" style="left:${rand + m.x * breite / 1320}px;top:${rand + m.y * breite / 1320}px;width:${m.w * breite / 1320}px;height:${m.h * breite / 1320}px"></span>${m.text ? `<span class="marktext" style="left:${m.tx != null ? rand + m.tx * breite / 1320 : rand + (m.x + m.w) * breite / 1320 - 20}px;top:${rand + (m.ty ?? m.y) * breite / 1320 - 70}px">${esc(m.text)}</span>` : ""}`).join("")}
   <span class="insel" style="width:${Math.round(breite * .29)}px;height:${Math.round(breite * .085)}px;top:${rand + Math.round(breite * .035)}px"></span></div>`;
 }
 

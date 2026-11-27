@@ -32,7 +32,8 @@
             "y": 1030,
             "w": 1208,
             "h": 156,
-            "text": "Mit Klarna"
+            "text": "Mit Klarna",
+            "tx": 820
           }
         ]
       }
@@ -46,21 +47,21 @@
       "Zahlungslink",
       "[in Sekunden]"
     ],
-    "sub": "Betrag eintippen, Link per WhatsApp oder QR-Code. Fertig.",
+    "sub": "Betrag eintippen, Link teilen oder QR-Code zeigen. Fertig.",
     "handys": [
       {
         "datei": "a02-kasse-betrag.png",
-        "breite": 800,
-        "x": 40,
-        "y": 900,
+        "breite": 620,
+        "x": 20,
+        "y": 880,
         "drehung": -4,
         "z": 2
       },
       {
         "datei": "a03-zahlungslink-qr.png",
-        "breite": 800,
-        "x": 480,
-        "y": 1080,
+        "breite": 660,
+        "x": 620,
+        "y": 1140,
         "drehung": 4,
         "z": 3
       }
@@ -148,12 +149,23 @@
       "Dein Team",
       "[kassiert mit]"
     ],
-    "sub": "Eigene Zugänge für deine Artists.",
+    "sub": "Eigene Zugänge für deine Artists: Sie kassieren mit der App.",
     "handys": [
       {
         "datei": "a09-team.png",
-        "breite": 1000,
-        "y": 940
+        "breite": 560,
+        "x": 30,
+        "y": 2380,
+        "drehung": -6,
+        "z": 2
+      },
+      {
+        "datei": "a11-team-kasse.png",
+        "breite": 820,
+        "x": 400,
+        "y": 880,
+        "drehung": 3,
+        "z": 3
       }
     ]
   },
