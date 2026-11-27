@@ -18,6 +18,8 @@ struct KasseView: View {
     @State private var sichtbareHoehe: CGFloat = 0
     @Environment(\.dynamicTypeSize) private var schrift
     private var kompakt: Bool { hoehe < 560 }
+    /// Höhe des Verlaufs über „Zahlungslink erstellen“ (SE: der Spalt unter dem Ziffernblock ist etwas größer)
+    private var verlaufHoehe: CGFloat { kompakt ? 22 : 16 }
 
     var body: some View {
         NavigationStack {
@@ -113,7 +115,8 @@ struct KasseView: View {
 
                 // Betrag
                 VStack(spacing: 4) {
-                    GrosserBetrag.text(eingabe.anzeige, groesse: kompakt ? 38 : 46)
+                    // Großer Betrag ~52 pt (Abnahme G4), auf kleinen iPhones (SE) bleibt er bei 38 pt
+                    GrosserBetrag.text(eingabe.anzeige, groesse: kompakt ? 38 : 52)
                         .foregroundStyle(Color.tfTinte)
                         .lineLimit(1)
                         .minimumScaleFactor(0.4)
@@ -195,11 +198,18 @@ struct KasseView: View {
                     .padding(.bottom, 8)
                     .frame(maxWidth: .infinity)
                     .background(Color.tfHintergrund)
-                    // Weicher Übergang: Inhalt, der hinter dem Knopf weiterläuft, blendet aus statt hart angeschnitten (iPhone SE)
+                    // Weicher Übergang: Inhalt, der hinter dem Knopf weiterläuft (Karte „Kunde und Motiv“), blendet sanft aus
+                    // statt als harter leerer Streifen (iPhone SE, Abnahme G4). Höhe so gewählt, dass er unter der letzten
+                    // Ziffernreihe beginnt; oben fast durchsichtig, darum verdeckt er keine Taste.
                     .overlay(alignment: .top) {
-                        LinearGradient(colors: [Color.tfHintergrund.opacity(0), Color.tfHintergrund], startPoint: .top, endPoint: .bottom)
-                            .frame(height: 10)
-                            .offset(y: -10)
+                        LinearGradient(stops: [
+                            .init(color: Color.tfHintergrund.opacity(0), location: 0),
+                            .init(color: Color.tfHintergrund.opacity(0.35), location: 0.35),
+                            .init(color: Color.tfHintergrund.opacity(0.8), location: 0.7),
+                            .init(color: Color.tfHintergrund, location: 1)
+                        ], startPoint: .top, endPoint: .bottom)
+                            .frame(height: verlaufHoehe)
+                            .offset(y: -verlaufHoehe)
                             .allowsHitTesting(false)
                             .accessibilityHidden(true)
                     }

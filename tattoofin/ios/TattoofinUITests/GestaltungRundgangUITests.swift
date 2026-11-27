@@ -108,7 +108,7 @@ final class GestaltungRundgangUITests: XCTestCase {
         app.swipeDown(velocity: .fast); app.swipeDown(velocity: .fast)
         let jonas = app.staticTexts["Jonas Keller"].firstMatch
         if jonas.waitForExistence(timeout: 5) { jonas.tap(); seite(app, "zahlung-detail", tiefe: 1); zurueck(app) }
-        let ausz = app.buttons["Auszahlungen"].firstMatch
+        let ausz = app.buttons["auszahlungen-karte"].firstMatch  // Karte oben in Zahlungen (Abnahme G4, statt Umschalter)
         if ausz.waitForExistence(timeout: 5) { ausz.tap(); seite(app, "auszahlungen", tiefe: 1) }
 
         // Gutscheine, Detail, Verkaufen-Blatt
@@ -121,7 +121,7 @@ final class GestaltungRundgangUITests: XCTestCase {
             greta.tap(); seite(app, "gutschein-detail", tiefe: 1); zurueck(app)
         }
         app.swipeDown(velocity: .fast); app.swipeDown(velocity: .fast)
-        let verkaufen = app.buttons["Gutschein verkaufen"].firstMatch
+        let verkaufen = app.buttons["gutschein-verkaufen"].firstMatch  // einziger Verkaufen-Knopf (kein „+“ mehr, Abnahme G4)
         if verkaufen.waitForExistence(timeout: 5) {
             if !verkaufen.isHittable { app.swipeUp(velocity: .slow) }
             verkaufen.tap(); foto(app, "gutschein-verkaufen"); schliessen(app)

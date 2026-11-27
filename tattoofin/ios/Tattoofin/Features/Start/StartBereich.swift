@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Start-Bereich oben in der Kasse: eine schmale Zeile mit „Einrichtung 4/8 ›“ und „So geht's“, darunter „Diesen Monat“ als kleine Zeile.
 /// Die Checkliste (wie im Web) öffnet als Blatt. So bleiben Betrag, Ziffernblock und „Zahlungslink erstellen“ im ersten Bildschirm.
-/// Ist alles erledigt, lässt sich die Einrichtung ausblenden.
+/// Ist alles erledigt (z. B. 8/8), verschwindet „Einrichtung“ von selbst (Abnahme G4).
 struct StartBereich: View {
     @Environment(AppState.self) private var app
     @Environment(PortalStore.self) private var portal
@@ -16,7 +16,6 @@ struct StartBereich: View {
     /// Fortschrittsring wächst mit der Schrift (vorher fest 20 pt neben großem Text, Gestaltungsprüfung 1.1, Nr. 19)
     @ScaledMetric(relativeTo: .body) private var ring: CGFloat = 22
 
-    @AppStorage("tf-start-checkliste-aus") private var checklisteAus = false
     @State private var blatt: StartBlatt?
 
     var body: some View {
@@ -25,7 +24,8 @@ struct StartBereich: View {
                 werbung.punkte(studio: s, hatZahlungen: !portal.zahlungen.isEmpty, istInhaber: app.sitzung?.istInhaber == true)
             }
             let fertig = punkte?.filter(\.ok).count ?? 0
-            let zeigeEinrichtung = punkte.map { !(checklisteAus && fertig == $0.count) } ?? false
+            // Alles erledigt: kein „Einrichtung 8/8“ mehr, die Zeile zeigt nur noch „So geht's“
+            let zeigeEinrichtung = punkte.map { fertig < $0.count } ?? false
             Group {
                 if grosseSchrift {
                     VStack(spacing: 8) {
@@ -62,7 +62,7 @@ struct StartBereich: View {
                             }
                     }
                 case .checkliste:
-                    ChecklistenBlatt(checklisteAus: $checklisteAus) { ziel in
+                    ChecklistenBlatt { ziel in
                         blatt = nil
                         app.werbungSprung = ziel
                         app.tab = .werbung
@@ -192,7 +192,6 @@ struct StartBereich: View {
 
 /// Einrichtungs-Checkliste als Blatt (wie im Web-Dashboard). Recht und Fragebogen öffnen direkt, „Werbung“ springt in den Tab.
 struct ChecklistenBlatt: View {
-    @Binding var checklisteAus: Bool
     let zurWerbung: (WerbungAbschnitt) -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -219,13 +218,6 @@ struct ChecklistenBlatt: View {
                             ForEach(punkte) { p in zeile(p) }
                         }
                         .karte()
-                        if fertig == punkte.count {
-                            Button(WerbungTexte.Start.ausblendenLang) {
-                                withAnimation { checklisteAus = true }
-                                dismiss()
-                            }
-                            .buttonStyle(.zweit)
-                        }
                     } else {
                         LadeAnsicht().frame(minHeight: 160)
                     }
