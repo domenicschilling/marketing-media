@@ -14,6 +14,8 @@ struct GutscheineView: View {
     @State private var trefferZaehler = 0
     /// Code wurde von der Suche selbst ins Feld gesetzt (nach Scan-Fehler): onChange soll die Meldung dann nicht löschen
     @State private var codeAusSuche = false
+    /// Zuletzt automatisch gesuchter Code: jeder vollständige Code wird genau einmal gesucht
+    @State private var zuletztGesucht = ""
     @FocusState private var codeFokus: Bool
 
     var body: some View {
@@ -45,14 +47,15 @@ struct GutscheineView: View {
                             .submitLabel(.search)
                             .focused($codeFokus)
                             .onSubmit { suchen() }
-                            .onChange(of: code) { alt, neu in
+                            .onChange(of: code) { _, neu in
                                 // Mehrzeiliges Feld: Return fügt einen Zeilenumbruch ein → als „Suchen“ werten
                                 let mitReturn = neu.contains("\n")
                                 let f = GutscheinCode.formatieren(neu.replacingOccurrences(of: "\n", with: ""))
                                 if f != neu { code = f }
                                 if mitReturn, GutscheinCode.vollstaendig(f) { suchen() }
                                 // Vollständig eingetippt (nicht von der Suche selbst gesetzt): gleich suchen
-                                else if !codeAusSuche, !sucht, f == neu, GutscheinCode.vollstaendig(f), !GutscheinCode.vollstaendig(alt) { suchen() }
+                                else if !sucht, GutscheinCode.vollstaendig(f), f != zuletztGesucht { zuletztGesucht = f; suchen(f) }
+                                if !GutscheinCode.vollstaendig(f) { zuletztGesucht = "" }
                                 // Alte Meldung („nicht gefunden“) passt nicht mehr zum neuen Code – außer die Suche hat den Code selbst gesetzt
                                 if codeAusSuche {
                                     if f == neu { codeAusSuche = false }
@@ -132,9 +135,10 @@ struct GutscheineView: View {
         }
     }
 
-    private func suchen() {
-        guard GutscheinCode.vollstaendig(code) else { return }
-        Task { await nachScan(.code(code)) }
+    private func suchen(_ c: String? = nil) {
+        let c = c ?? code
+        guard GutscheinCode.vollstaendig(c) else { return }
+        Task { await nachScan(.code(c)) }
     }
 
     private func nachScan(_ t: ScanTreffer) async {

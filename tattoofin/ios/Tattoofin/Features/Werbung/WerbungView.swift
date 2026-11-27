@@ -151,13 +151,15 @@ struct WerbungView: View {
         // zu laufen: so ist kein Chip angeschnitten (Abnahme 1.1, Runde 2: „Drucke…“ auf dem SE)
         ViewThatFits(in: .horizontal) {
             HStack(spacing: 8) { sprungChips(liste, leser) }
+            // iPhone SE: erst enger in einer Reihe, damit „Speichern“ beim Video im ersten Bildschirm bleibt
+            HStack(spacing: 6) { sprungChips(liste, leser, eng: true) }
             SprungFluss(abstand: 8) { sprungChips(liste, leser) }
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("werbung-sprungleiste")
     }
 
-    private func sprungChips(_ liste: [WerbungAbschnitt], _ leser: ScrollViewProxy) -> some View {
+    private func sprungChips(_ liste: [WerbungAbschnitt], _ leser: ScrollViewProxy, eng: Bool = false) -> some View {
         ForEach(liste) { a in
             Button { withAnimation { leser.scrollTo(a, anchor: .top) } } label: {
                 Text(WerbungTexte.sprung(a))
@@ -165,7 +167,7 @@ struct WerbungView: View {
                     .foregroundStyle(Color.tfTinte)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: !schrift.isAccessibilitySize, vertical: true)
-                    .padding(.horizontal, 12)
+                    .padding(.horizontal, eng ? 8 : 12)
                     .padding(.vertical, 6)
                     .frame(maxWidth: schrift.isAccessibilitySize ? nil : .infinity, minHeight: 44)
                     .background(Color.tfKarte, in: Capsule())

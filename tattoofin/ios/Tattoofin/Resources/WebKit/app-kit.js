@@ -35,7 +35,7 @@ window.TFKit = (function () {
   }
   function rund(c, x, y, w, h, r) { r = Math.min(r, h / 2, w / 2); c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
   // Luckiest Guy nur in Großbuchstaben (Abnahme 1.1, Runde 2: Kleinbuchstaben der Schrift wirken wie „AnmeLDen“)
-  function gross(t) { return String(t).toLocaleUpperCase("de-DE"); }
+  function versal(t) { return String(t).toLocaleUpperCase("de-DE"); }
   function font(c, gewicht, px, fam) { c.font = gewicht + " " + px + "px " + fam; }
 
   // Hintergrund: Fläche + Punktraster + Strahlen (wie im Werbevideo)
@@ -93,7 +93,7 @@ window.TFKit = (function () {
 
   // Comic-Überschrift: Füllung + dicke Navy-Kontur + harter Schatten (wie die Wortmarke)
   function comic(c, text, x, y, s, farbe, kontur) {
-    text = gross(text);
+    text = versal(text);
     c.save(); font(c, "400", s, HEAD); c.textAlign = "center"; c.textBaseline = "alphabetic"; c.lineJoin = "round";
     var k = Math.max(8, s * 0.14), sx = s * 0.08, sy = s * 0.095;
     c.fillStyle = kontur || NAVY; c.strokeStyle = kontur || NAVY; c.lineWidth = k;
@@ -105,7 +105,7 @@ window.TFKit = (function () {
   // Block aus Comic-Zeilen; jede Zeile {t, f: Farbe, g: Größenfaktor}. Gibt die Unterkante zurück.
   function comicBlock(c, zeilen, cx, top, max, maxW, abstand, kontur) {
     var basis = Math.min.apply(null, zeilen.map(function (z) {
-      var g = z.g || 1; return passend(c, [gross(z.t)], "400", HEAD, Math.round(max * g), 30, maxW, function (s) { return s * 0.22; }) / g;
+      var g = z.g || 1; return passend(c, [versal(z.t)], "400", HEAD, Math.round(max * g), 30, maxW, function (s) { return s * 0.22; }) / g;
     }));
     var y = top;
     zeilen.forEach(function (z, i) {
@@ -133,7 +133,7 @@ window.TFKit = (function () {
   // Studioname groß als weißes Schild (1–3 Zeilen, Schrift passt sich an), darunter der Ort mit Pin. Gibt Unterkante zurück.
   function studioKopf(c, k, W, top, opt) {
     opt = opt || {};
-    var maxW = opt.maxW || W - 180, max = opt.size || 76, min = opt.min || 40, name = gross(String(k.firma || "Dein Studio").trim());
+    var maxW = opt.maxW || W - 180, max = opt.size || 76, min = opt.min || 40, name = versal(String(k.firma || "Dein Studio").trim());
     var zeilen = [name], s = passend(c, zeilen, "400", HEAD, max, min, maxW);
     if (s <= min + 8 || s < max * 0.62) {
       font(c, "400", max, HEAD);
@@ -271,7 +271,7 @@ window.TFKit = (function () {
     c.fillStyle = GELB; c.strokeStyle = NAVY; c.lineWidth = 5; c.beginPath(); c.arc(kx, ky, r, 0, 7); c.fill(); c.stroke();
     font(c, "400", Math.round(r * 1.15), HEAD); c.fillStyle = NAVY; c.textAlign = "center"; c.textBaseline = "alphabetic"; c.fillText(String(nr), kx, ky + r * 0.42);
     var tx = kx + r + 28, tw = x + w - tx - 26;
-    titel = gross(titel);
+    titel = versal(titel);
     var ts = passend(c, [titel], "400", HEAD, Math.round(50 * Math.max(0.85, k)), 28, tw);
     var bs = Math.round(31 * Math.max(0.88, k)); font(c, "600", bs, BODY);
     var z = umbruch(c, text, tw);

@@ -168,6 +168,7 @@ struct ZahlungslinkSheet: View {
             GrosserBetrag.text(Texte.Zahlung.bezahlt(zahlung.betragCent), groesse: 34)
                 .foregroundStyle(Color.tfTinte)
                 .multilineTextAlignment(.center)
+                .accessibilityLabel(Texte.Zahlung.bezahlt(zahlung.betragCent))  // VoiceOver liest normal, nicht „B-E-Z-A-H-L-T“
             if zahlung.status == "in_pruefung" {
                 Text(Texte.Zahlung.inPruefung).font(.dm(.body)).foregroundStyle(Color.tfLeise).multilineTextAlignment(.center)
             }

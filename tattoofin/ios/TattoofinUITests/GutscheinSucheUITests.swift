@@ -57,7 +57,7 @@ final class GutscheinSucheUITests: XCTestCase {
         XCTAssertFalse(fehler.waitForExistence(timeout: 1), "Alter Fehler steht nach dem Weitertippen noch da")
         feld.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 14))
         feld.typeText(code)
-        XCTAssertEqual(feld.value as? String, code, "Code wurde nicht übernommen")
+        // Vollständiger Code öffnet das Detail sofort; das Feld ist danach leer bzw. nicht mehr sichtbar
         // Kein Such-Knopf mehr: vollständiger Code sucht sofort (Abnahme 1.1, Runde 2)
 
         // Detail mit Titel und Zurück-Knopf

@@ -101,3 +101,30 @@ Urteil der Abnahme: „erst nachbessern“. Umgesetzt (Branch `claude/tattoofin-
 - Test „So geht's“ im Konto: Er erwischte den gleichnamigen Knopf der Kasse. Jetzt ist die Suche eindeutig.
 - Konto, Abschnitt „Dein Studio“: Der Kopf hat jetzt die eigene Farbe statt des System-Graus, weil der Kontrast knapp war.
 - Ergebnis: DS-Rundgang (normal, dunkel, AX3, AX5) auf iPhone 17 und SE ohne Befund, bis auf die eine benannte Ausnahme.
+
+## Zweite unabhängige Abnahme (27.11.2026) – Nachbesserung
+
+| Nr. | Befund | Stand |
+|---|---|---|
+| 1 (hoch) | Schmuckschrift in gemischter Schreibweise („AnmeLDen“) | behoben: `Ueberschrift`, `WerbeUeberschrift`, Studioname (Konto, Zahlungslink-Blatt), Wort hinter großen Beträgen und die gezeichneten Werbebilder (app-kit.js) stehen in Großbuchstaben. VoiceOver liest normal. |
+| 2 | Werbetext ohne Bedingung/Folgepreis | behoben: „Neu-Abonnenten: 7 Tage gratis, danach 49,90 €/Monat …“ (161/170). Preis gegen die StoreKit-Datei geprüft (49,90 €, 1 Woche gratis). Ob der Preis dort stehen soll, entscheidet Domenic. |
+| 3 | Beschreibung: Video/Beiträge ohne Bedingung | behoben: „… sobald Klarna in deinem Stripe-Konto an ist.“ |
+| 4 | Review-Notiz ohne Klarna-Erklärung | behoben: eigener Punkt „Installments via Klarna“ im README |
+| 5 | Bild 2: hinteres Handy abgeschnitten, „WhatsApp“ | behoben: neue Anordnung, Unterzeile „Betrag eintippen, Link teilen oder QR-Code zeigen. Fertig.“ Beide Handys zeigen „Anzahlung“. |
+| 6 | Bild 1: Etikett verdeckt die Zeile „Art“ | behoben: Etikett in der freien Mitte der Zeile (render.mjs: Etikett-Position `tx`) |
+| 7 | Bild 7 zeigt Adressenpflege | behoben: Hauptbild Kasse, angemeldet als Team-Adresse (neuer Test `testTeamKasse`), Team-Liste klein unten ohne Hinweis und Eingabefeld |
+| 8 | Dunkel: gewähltes Segment unsichtbar | behoben: dunkel Gelb mit Blau, hell Blau mit Weiß |
+| 9 | Kasse AX5: Ziffern erst nach zwei Scrollschritten | behoben: Betrag, Ziffern, Knopf, danach Art/Schalter; ohne Monatszeile, ohne Lücke unter der Spanne |
+| 10 | Rundgang überspringt Bildschirme ohne Meldung | behoben: `XCTFail("FEHLT: …")`, Scroll-Schleife; neu Stripe-Status und Geräte (der Test suchte „Geräte“, die Zeile heißt „Angemeldete Geräte“) |
+| 11 | Gutscheine-Kopf überladen | behoben: Such-Knopf weg (vollständiger Code sucht sofort, sonst Tastatur „Suchen“), „Verkaufen“ als Text-Knopf in der Leiste, oben nur der Scan-Knopf |
+| niedrig, war nicht behoben | Anmeldung Kopf mittig | behoben: Kopf linksbündig, mehr Abstand |
+| niedrig, war nicht behoben | SE Kasse: Kartenkante über dem Knopf | behoben: Karte liegt ruhend ganz hinter dem Knopf |
+| niedrig, war nicht behoben | SE Werbung: Chip angeschnitten | behoben: Chips brechen in zwei Reihen um |
+| niedrig, war nicht behoben | Zwei Arten Eingabefelder | Regel benannt (TFListenStil.swift): freistehend `tfTextfeld()`, in gruppierten Listen Listenzeile nach iOS-Standard |
+| niedrig | Navigationsleiste: Geistertext | behoben: harte Kante (iOS 26) bei Gutscheine und Werbung |
+| niedrig | Stornieren | behoben: roter Textknopf statt Rahmen-Knopf |
+| niedrig | Werbung „Beitrag:“, „Text ansehen“ | behoben: Präfix weg (Art steht als Chip), „Text ansehen“ mit Symbol |
+| niedrig | Kennzahl-Kacheln mit Rand | behoben: ohne Rand. Beschriftung bleibt (Zeitraum gehört nur zu zwei der drei Kacheln) |
+| niedrig | Filter-Symbol mit Kreis, Einstellungen-Unterzeile, „· Aktiv“ | behoben |
+| niedrig | „So geht's“ als Leisten-Knopf, „Link kopieren“ rund, „Neuen Code schicken“ anheften, SE Blatt-Titel/Leistenknöpfe AX2, Leere-Zustände im Rundgang | offen (nächste Runde) |
+| Kopfzeile Bild 1 | „Raten* für dein Studio“ | bleibt (Domenic) |
