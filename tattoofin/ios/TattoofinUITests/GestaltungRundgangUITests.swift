@@ -18,6 +18,10 @@ final class GestaltungRundgangUITests: XCTestCase {
     func testGroessteSchrift() throws {
         try rundgang(["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"], "ax5", dunkel: false)
     }
+    /// Dunkel UND größte Schrift (fehlte bis zur unabhängigen Abnahme 1.1)
+    func testDunkelGroessteSchrift() throws {
+        try rundgang(["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"], "dunkel-ax5", dunkel: true)
+    }
 
     private func foto(_ app: XCUIApplication, _ name: String) {
         Thread.sleep(forTimeInterval: 1.5)
