@@ -236,6 +236,8 @@
       ["Stripe-Konto", (sk.accountId || "–") + (sk.chargesEnabled ? " · freigegeben" : " · nicht freigegeben")], ["Zahlseite", location.origin + "/zahlen/" + s.slug],
       ["Seit", TF.datum(s.createdAt)], ["Live seit", TF.datum(s.goLiveAt)],
       ["Kündigung", s.kuendigung ? TF.datum(s.kuendigung.zum) + (s.kuendigung.garantie ? " (GARANTIE)" : "") + " · " + (s.kuendigung.grund || "") : "–"]];
+    if (s.modell === "provision") zeilen.push(["Abwicklung", s.risikofreiDirect ? "Risikofrei direkt (Direct Charge auf dem Studio-Konto, Klarna bleibt)" : "über das Plattformkonto (Destination Charge)"]);
+    if (s.provisionFreiBis) zeilen.push(["Tattoofin gratis bis", TF.datum(s.provisionFreiBis + "T12:00:00+01:00")]);
     if (k.provision) zeilen.push(["Provision", k.provision.prozent + " % · gesamt " + euro(k.provision.nettoCent) + " netto"], ["Nach Stripe-Gebühren", euro(k.provision.nachGebuehrenCent)]);
     if (k.recht) zeilen.push(["Rechtstexte", "Fassung " + k.recht.version + (k.recht.am ? " vom " + TF.datum(k.recht.am) : "") + (k.recht.aktuell ? " (aktuell)" : " (alt)")]);
     if (k.extras && k.extras.length) zeilen.push(["Extras", k.extras.join(", ")]);
@@ -257,6 +259,10 @@
       "</div>" +
       '<div id="d-linkbox"></div>' +
       '<div class="block"><h3>Angaben</h3><dl class="liste">' + zeilen.map(function (r) { return "<dt>" + e(r[0]) + "</dt><dd>" + e(r[1] || "–") + "</dd>"; }).join("") + "</dl></div>" +
+      (s.modell === "provision" ? '<div class="block"><h3>Risikofrei: Sonderregeln</h3>' +
+        '<label style="display:flex;gap:10px;align-items:center;min-height:44px"><input type="checkbox" id="d-direkt"' + (s.risikofreiDirect ? " checked" : "") + (sk.accountId ? "" : " disabled") + '> Risikofrei direkt (Zahlung direkt auf das Stripe-Konto des Studios, Klarna bleibt)</label>' +
+        '<div class="field"><label for="d-freibis">Tattoofin gratis bis (leer = aus)</label><input type="date" id="d-freibis" value="' + e(s.provisionFreiBis || "") + '"></div>' +
+        '<button class="k dunkel" id="d-sonder">Sonderregeln speichern</button></div>' : "") +
       '<div class="block"><h3>Notiz</h3><div class="field"><label for="d-notiz" class="hidden">Notiz</label><textarea id="d-notiz" aria-label="Notiz">' + e(s.notiz || "") + '</textarea></div><button class="k dunkel" id="d-save">Speichern</button></div>' +
       '<div class="block"><h3>Zahlungen (' + zahl.length + ")</h3>" + (zahl.length ? '<ul class="posten">' + zahl.slice(0, 40).map(function (z) {
         return '<li><span class="betrag">' + TF.euro(z.betragCent, true) + "</span><b>" + e(z.kunde || "–") + "</b> · " + e(z.status) + '<br><span class="klein">' + e(TF.datum(z.bezahltAm || z.createdAt)) + (z.zahlartText ? " · " + e(z.zahlartText) : "") + (z.beschreibung ? " · " + e(z.beschreibung) : "") + (z.gebuehrNettoCent ? " · Provision " + TF.euro(z.gebuehrNettoCent, true) : "") + (z.abgerechnet ? " · abgerechnet " + e(z.abgerechnet) : "") + "</span></li>";
@@ -286,6 +292,11 @@
     window.scrollTo(0, 0);
 
     $("d-save").onclick = async function () { try { zeig(await api("studio/" + id, { method: "PATCH", body: { notiz: $("d-notiz").value } }), "Notiz gespeichert."); msg("Gespeichert."); } catch (err) { msg(err.message, "err"); } };
+    if ($("d-sonder")) $("d-sonder").onclick = async function () {
+      var direkt = $("d-direkt").checked, bis = $("d-freibis").value;
+      if (direkt !== Boolean(s.risikofreiDirect) && !confirm(direkt ? "Risikofrei direkt einschalten? Neue Zahlungen laufen dann direkt über das Stripe-Konto des Studios (mit Klarna)." : "Risikofrei direkt ausschalten? Neue Zahlungen laufen dann wieder über das Plattformkonto (ohne Klarna).")) return;
+      try { zeig(await api("studio/" + id, { method: "PATCH", body: { risikofreiDirect: direkt, provisionFreiBis: bis } }), "Sonderregeln gespeichert."); msg("Gespeichert."); neuLaden(); } catch (err) { msg(err.message, "err"); }
+    };
     $("d-ansehen").onclick = async function () { try { var r = await api("studio/" + id + "/ansehen", { body: {} }); location.href = r.url; } catch (err) { msg(err.message, "err"); } };
     if ($("d-live")) $("d-live").onclick = async function () { if (!confirm("Live schalten und Go-live-E-Mail senden?")) return; try { zeig(await api("studio/" + id + "/live", { body: {} }), "Live geschaltet."); msg("Live geschaltet."); neuLaden(); } catch (err) { msg(err.message, "err"); } };
     $("d-konto").onclick = async function () {
