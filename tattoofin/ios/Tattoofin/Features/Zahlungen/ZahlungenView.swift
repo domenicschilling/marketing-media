@@ -162,9 +162,12 @@ struct ZahlungenView: View {
 struct AuszahlungenKarteZeile: View {
     let saldo: Saldo?
     @ScaledMetric(relativeTo: .body) private var symbol: CGFloat = 36
+    @Environment(\.dynamicTypeSize) private var schrift
 
     var body: some View {
-        HStack(spacing: 12) {
+        // Bedienungshilfe-Größen: Symbol über dem Text, sonst bricht „Auszahlungen“ mitten im Wort (Rundgang 1.1, AX3)
+        let layout = schrift.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8)) : AnyLayout(HStackLayout(spacing: 12))
+        layout {
             Image(systemName: "building.columns.fill")
                 .font(.dm(.body, weight: .semibold))
                 .foregroundStyle(Color.tfBlau)
@@ -245,7 +248,8 @@ struct KPIKopf: View {
                 .fixedSize(horizontal: false, vertical: true)
             Text(titel)
                 .font(.dm(.caption, weight: .medium))
-                .foregroundStyle(Color.tfLeise)
+                // Tinte statt tfLeise: das Audit meldete bei großer Schrift zu wenig Kontrast (Abnahme 1.1, Runde 4)
+                .foregroundStyle(Color.tfTinte)
                 // Mindestens zwei Zeilen Platz, mehr erlaubt (kein Abschneiden, DS-Audit); gleiche Kachelhöhe kommt vom Rahmen unten
                 .lineLimit(2...)
                 .fixedSize(horizontal: false, vertical: true)

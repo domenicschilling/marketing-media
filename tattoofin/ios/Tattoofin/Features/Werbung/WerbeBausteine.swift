@@ -11,9 +11,9 @@ struct WerbeUeberschrift: View {
         Text(text)
             .font(.luckiest(24, relativeTo: .title2))
             .foregroundStyle(Color.tfTinte)
-            .lineLimit(2)
-            .minimumScaleFactor(0.6)
-            .dynamicTypeSize(...DynamicTypeSize.accessibility1)  // ds-ok: Schmuck-Überschrift, sonst bricht „Werbevideo“ mitten im Wort
+            // Wächst mit der Schrift (DS-Audit), bleibt aber einzeilig und wird notfalls kleiner: so bricht „Werbevideo“ nie mitten im Wort
+            .lineLimit(1)
+            .minimumScaleFactor(0.4)
             .accessibilityAddTraits(.isHeader)
     }
 }

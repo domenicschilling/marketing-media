@@ -52,7 +52,7 @@ struct StudioMehrAbschnitt: View {
             // WhatsApp-Hilfe steht jetzt im Abschnitt „Hilfe“ des Kontos (Abnahme 1.1, Nr. 16), der Absatz darunter ist weg
             if let fehler { FehlerZeile(text: fehler) }
         } header: {
-            Text(Texte.Mehr.abschnitt)
+            ListenKopf(Texte.Mehr.abschnitt)  // eigene Farbe statt System-Grau (DS-Audit: Kontrast knapp)
         }
         .task { await mehr.laden(wennAelterAls: 30) }
     }

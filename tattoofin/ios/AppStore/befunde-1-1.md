@@ -92,3 +92,10 @@ Urteil der Abnahme: „erst nachbessern“. Umgesetzt (Branch `claude/tattoofin-
 | 17 | Eingabefelder uneinheitlich | **behoben** – `tfTextfeld()` überall, Abschicken einheitlich |
 | Sammelliste | Wortmarke Marine, Schlüsselwort Gutschein statt Termin, Impressum-Zeile, Einrichtung bei 8/8 weg, Betrag 52 pt, „+“ bei Gutscheinen weg, Anmeldung (Ausrichtung, Rechtliches bei Tastatur aus, SE-Figur kleiner), „Neuen Code schicken“ als Textlink, Verlauf über dem Kassen-Knopf, E-Mails mittig gekürzt, Rundgang „dunkel + größte Schrift“ | **behoben** |
 | Sammelliste | Preis „49,90 €“ im Aufkleber | **bewusst nicht** – Apple-Regel 2.3.7 (keine Preise in Store-Bildern); stattdessen „für neue Abonnenten“ |
+
+### Schlussprüfung 27.11.2026 (Barrierefreiheits-Audit nach den Team-Änderungen)
+- Zahlungen, Karte „Auszahlungen“: Bei großer Schrift brach das Wort mitten durch („Auszahlun-gen“). Jetzt steht das Symbol bei Bedienungshilfe-Größen über dem Text.
+- Zahlungen, Kennzahlen: Die Beschriftung ist jetzt in Tinte statt Grau, weil das Audit bei großer Schrift zu wenig Kontrast meldete.
+- Werbung, Überschriften („Dein Werbevideo“ …): Sie wachsen wieder mit der Schrift, bleiben aber einzeilig und werden notfalls kleiner. Kein Wortbruch, keine Schriftgrenze mehr.
+- Konto, Abschnitt „Dein Studio“: Der Kopf hat jetzt die eigene Farbe statt des System-Graus, weil der Kontrast knapp war.
+- Ergebnis: DS-Rundgang (normal, dunkel, AX3, AX5) auf dem iPhone 17 ohne Befund.
