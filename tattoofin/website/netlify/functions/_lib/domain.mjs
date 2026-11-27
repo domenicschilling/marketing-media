@@ -194,17 +194,21 @@ export function connectAdresse(acct) {
 }
 
 // Provisions-Studios (Paket Risikofrei): Standard = Tattoofin kassiert als Plattform (Destination Charge), Stripe überweist den Rest
-// an das Studio. Mit RISIKOFREI_DIRECT=1 (Standard AUS, Prototyp) zahlt der Kunde direkt auf dem Stripe-Konto des Studios
-// (Direct Charge mit Stripe-Account-Header), Tattoofin bekommt nur die Plattformgebühr (application_fee_amount, 10 %).
+// an das Studio. Mit RISIKOFREI_DIRECT=1 (global, Standard AUS) oder studio.risikofreiDirect=true (nur dieses Studio) zahlt der Kunde direkt
+// auf dem Stripe-Konto des Studios (Direct Charge mit Stripe-Account-Header), Tattoofin bekommt nur die Plattformgebühr
+// (application_fee_amount = provisionSatz, also 0 €, solange provisionFreiBis gilt).
 export const istProvision = (s) => s.modell === "provision";
-export const direktCharge = (s) => istProvision(s) && risikofreiDirect();
+export const direktCharge = (s) => istProvision(s) && risikofreiDirect(s);
 // Geld läuft über das Plattformkonto (Destination Charge)
-export const plattformKassiert = (s) => istProvision(s) && !risikofreiDirect();
+export const plattformKassiert = (s) => istProvision(s) && !risikofreiDirect(s);
+// Abwicklung, die eine NEUE Kasse dieses Studios jetzt bekäme: plattform | direkt | studio
+export const abwicklungFuer = (s) => (plattformKassiert(s) ? "plattform" : direktCharge(s) ? "direkt" : "studio");
 // Zahlung mit Tattoofin-Provision (egal ob Destination oder Direct Charge); z.abwicklung: plattform | direkt | studio
 export const provisionZahlung = (z) => z.abwicklung === "plattform" || z.abwicklung === "direkt";
 // Klarna für dieses Studio zum Zeitpunkt „zeit“ (Standard: jetzt). Ab dem Stichtag (KLARNA_PLATTFORM_BIS, Standard 20.11.2026, 00:00 deutscher
-// Zeit) nicht mehr im Plattform-Modell (Risikofrei über das Plattformkonto); mit RISIKOFREI_DIRECT=1 oder bei eigenem Stripe-Konto weiter ja.
-export const klarnaFuer = (s, zeit) => CFG.zahlarten.includes("klarna") && !(s && plattformKassiert(s) && klarnaPlattformAus(zeit));
+// Zeit) nicht mehr im Plattform-Modell (Risikofrei über das Plattformkonto); mit RISIKOFREI_DIRECT=1, studio.risikofreiDirect oder bei eigenem
+// Stripe-Konto weiter ja.
+export const klarnaFuer = (s, zeit) => CFG.zahlarten.includes("klarna") && !(s && plattformKassiert(s) && klarnaPlattformAus(zeit, s));
 // Klarna auch nach dem Stichtag? Für Dinge, die länger halten als der Stichtag (graviertes Holzschild, Beiträge/Bilder für Social Media):
 // dort steht Klarna nur, wenn das Studio es dauerhaft anbietet.
 export const klarnaDauerhaft = (s) => klarnaFuer(s, new Date("2100-01-01T00:00:00Z"));
@@ -277,6 +281,27 @@ async function zahlartFehlt(studio, z, e) {
   await notifyAdmin("⚠️ Klarna beim Studio-Konto nicht aktiviert: Kunden können nur per Karte zahlen", studio, { Zahlung: z.id, Konto: studio.stripe?.accountId, Stripe: String(e.message).slice(0, 200), Tipp: "Studio bitten, Klarna im eigenen Stripe-Dashboard (Einstellungen → Zahlungsmethoden) zu aktivieren" });
 }
 
+// Abwicklung gewechselt, seit diese Zahlung ihre Kasse bekam (z. B. Admin schaltet studio.risikofreiDirect ein: Plattformkonto → Studio-Konto)?
+// Kunde, Checkout-Sitzung und PaymentIntent liegen dann auf dem alten Konto. Alte Kasse beenden (damit niemand mehr über den alten Weg zahlt),
+// Felder leeren, danach legt die Kasse alles auf dem richtigen Konto neu an. Läuft dort gerade eine Zahlung (z. B. Klarna in Prüfung), nichts anfassen.
+const feeFeld = (fee) => (fee.bruttoCent > 0 ? { application_fee_amount: fee.bruttoCent } : {});
+async function abwicklungAngleichen(studio, z) {
+  const neu = abwicklungFuer(studio);
+  if (!z.abwicklung || z.abwicklung === neu) return;
+  const altOpts = z.abwicklung === "plattform" ? {} : { account: studio.stripe?.accountId };
+  if (z.paymentIntentId) {
+    const pi = await stripe("GET", `/payment_intents/${z.paymentIntentId}`, null, altOpts).catch(() => null);
+    if (pi && ["processing", "succeeded", "requires_capture"].includes(pi.status)) throw new HttpError(409, "Diese Zahlung wird gerade verarbeitet. Bitte warte einen Moment und lade die Seite neu.");
+    if (pi && pi.status !== "canceled") await stripe("POST", `/payment_intents/${z.paymentIntentId}/cancel`, {}, altOpts).catch((e) => console.error("[abwicklung] PI abbrechen:", e.message));
+  }
+  if (z.checkoutSessionId) await stripe("POST", `/checkout/sessions/${z.checkoutSessionId}/expire`, {}, altOpts).catch(() => null);
+  const alt = z.abwicklung;
+  for (const k of ["checkoutSessionId", "paymentIntentId", "clientSecret", "betragFuerPi", "stripeCustomerId", "abwicklung"]) delete z[k];
+  z.gebuehrNettoCent = 0; z.gebuehrBruttoCent = 0;
+  await saveZahlung(z);
+  await log("abwicklung-wechsel", { studioId: studio.id, zahlungId: z.id, alt, neu });
+}
+
 // Checkout-Sitzung für eine Kundenzahlung.
 //  Kauf:      auf dem eigenen Stripe-Konto des Studios (Direct Charge), keine Plattformgebühr.
 //  Provision: auf der Tattoofin-Plattform mit transfer_data → Konto des Studios und on_behalf_of (Studio ist Händler).
@@ -287,6 +312,7 @@ export async function checkoutFuer(studio, z, { nurKarte = false, extra = null, 
   if (!darfKassieren(studio)) throw new HttpError(409, "Dieses Studio kann gerade keine Zahlungen annehmen.");
   // Shop-Bestellungen nur aus dem Shop (mit Ticket für 1 pro Person), nie über andere Wege nachkaufbar
   if (z.gutschein?.shop && !extra) throw new HttpError(410, "Diese Bestellung ist nicht mehr offen. Bitte kauf den Gutschein neu im Gutschein-Shop des Studios.");
+  await abwicklungAngleichen(studio, z);
   const plattform = plattformKassiert(studio);
   const direkt = direktCharge(studio);
   const fee = plattformgebuehr(z.betragCent, studio);
@@ -317,8 +343,9 @@ export async function checkoutFuer(studio, z, { nurKarte = false, extra = null, 
     custom_text: anzahlung ? { submit: { message: ("Anzahlungsbedingungen: " + anzahlungsbedingungen(studio)).slice(0, 1200) } }
       : ausweichHinweis ? { submit: { message: ausweichHinweis } } : undefined,
     payment_intent_data: {
-      ...(plattform ? { application_fee_amount: fee.bruttoCent, on_behalf_of: studio.stripe.accountId, transfer_data: { destination: studio.stripe.accountId }, transfer_group: z.id }
-        : direkt ? { application_fee_amount: fee.bruttoCent } : {}),
+      // Plattformgebühr nur, wenn es eine gibt (Tattoofin gratis bis provisionFreiBis → 0 € → Feld weglassen, kein leerer Gebühren-Datensatz)
+      ...(plattform ? { ...feeFeld(fee), on_behalf_of: studio.stripe.accountId, transfer_data: { destination: studio.stripe.accountId }, transfer_group: z.id }
+        : direkt ? feeFeld(fee) : {}),
       description: `${artikel.name} · ${z.kunde || "Kunde"}`.slice(0, 500),
       metadata: meta,
     },
@@ -401,6 +428,7 @@ export async function klarnaVersuch(studio, z) {
 export async function bezahlfeldFuer(studio, z) {
   if (!darfKassieren(studio)) throw new HttpError(409, "Dieses Studio kann gerade keine Zahlungen annehmen.");
   if (z.gutschein?.shop) throw new HttpError(410, "Diese Bestellung ist nicht mehr offen. Bitte kauf den Gutschein neu im Gutschein-Shop des Studios.");
+  await abwicklungAngleichen(studio, z);
   const plattform = plattformKassiert(studio);
   const direkt = direktCharge(studio);
   const fee = plattformgebuehr(z.betragCent, studio);
@@ -413,8 +441,8 @@ export async function bezahlfeldFuer(studio, z) {
     amount: z.betragCent, currency: "eur", payment_method_types: arten,
     description: `${artikelText(studio, z).name} · ${z.kunde || "Kunde"}`.slice(0, 500),
     receipt_email: z.email || undefined, metadata: z.art === "gutschein" ? { ...meta, typ: "gutschein" } : meta,
-    ...(plattform ? { application_fee_amount: fee.bruttoCent, on_behalf_of: studio.stripe.accountId, transfer_data: { destination: studio.stripe.accountId }, transfer_group: z.id }
-      : direkt ? { application_fee_amount: fee.bruttoCent } : {}),
+    ...(plattform ? { ...feeFeld(fee), on_behalf_of: studio.stripe.accountId, transfer_data: { destination: studio.stripe.accountId }, transfer_group: z.id }
+      : direkt ? feeFeld(fee) : {}),
   });
   const piOpts = (schluessel) => ({ idempotencyKey: schluessel, ...(plattform ? {} : { account: studio.stripe.accountId }) });
   let pi;

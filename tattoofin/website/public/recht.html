@@ -42,12 +42,21 @@ body.app{background:#fff;padding-bottom:20px}
   <li>Dann prüfen Bank bzw. Zahlungsanbieter den Fall. <b>Sie entscheiden</b> – nicht Tattoofin und nicht du. Niemand kann garantieren, dass du gewinnst.</li>
   <li>Stripe berechnet pro Rückbuchung eine Gebühr, derzeit <b><span data-c="ruecklastGebuehrCent|cent2">20,00 €</span></b>.</li>
 </ul>
-<div data-prov hidden>
+<div data-prov="plattform" hidden>
 <p><b>Paket Risikofrei</b> (nur für Studios, die es schon haben; für neue Anmeldungen gibt es das Paket seit 26.10.2026 nicht mehr. Die Zahlung läuft über das Plattformkonto von Tattoofin bei Stripe, Provision <span data-c="provisionProzent">10</span> %):</p>
 <ul>
   <li>Stripe bucht den Betrag und die Gebühr zuerst bei Tattoofin ab.</li>
   <li>Tattoofin holt sich dann von deinem Auszahlungskonto zurück: den Betrag <b>minus</b> der Provision für diese Zahlung <b>plus</b> die <span data-c="ruecklastGebuehrCent|cent2">20,00 €</span> Rückbuchungsgebühr. Du bekommst dazu eine E-Mail.</li>
   <li><b>Gewinnst du den Fall</b>, bekommst du alles zurück, auch die Gebühr, sobald Stripe den Betrag wieder gutgeschrieben hat.</li>
+  <li><b>Verlierst du den Fall</b>, geht das Geld an den Kunden zurück. Tattoofin verlangt für diese Zahlung dann keine Provision.</li>
+  <li>Tattoofin reicht deine Nachweise bei Stripe ein. Du schickst sie uns schnell (meist hat man nur wenige Tage Zeit).</li>
+</ul>
+</div>
+<div data-prov="direkt" hidden>
+<p><b>Paket Risikofrei, Zahlung direkt auf dein Stripe-Konto</b> (für dein Studio eingeschaltet: Kunden zahlen direkt auf dein Stripe-Konto, nicht über das Plattformkonto von Tattoofin):</p>
+<ul>
+  <li>Stripe bucht den Betrag direkt von deinem Stripe-Konto ab. Die <span data-c="ruecklastGebuehrCent|cent2">20,00 €</span> Rückbuchungsgebühr trägt Tattoofin. Du bekommst dazu eine E-Mail.</li>
+  <li><b>Gewinnst du den Fall</b>, bucht Stripe den Betrag wieder auf dein Stripe-Konto.</li>
   <li><b>Verlierst du den Fall</b>, geht das Geld an den Kunden zurück. Tattoofin verlangt für diese Zahlung dann keine Provision.</li>
   <li>Tattoofin reicht deine Nachweise bei Stripe ein. Du schickst sie uns schnell (meist hat man nur wenige Tage Zeit).</li>
 </ul>
@@ -91,7 +100,8 @@ body.app{background:#fff;padding-bottom:20px}
 <script src="/js/common.js"></script>
 <script>
 // „Paket Risikofrei / Provision“ nur für Studios zeigen, die dieses Paket haben (Bestandsstudios). Ohne Anmeldung bleibt der Block aus.
-var provStudio = fetch("/api/portal", { credentials: "same-origin" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) { return Boolean(d && d.studio && d.studio.modell === "provision"); }).catch(function () { return false; });
-Promise.all([TF.config(), provStudio]).then(function (a) { var c = a[0], prov = a[1]; TF.fill(c); document.querySelectorAll("[data-prov]").forEach(function (el) { el.hidden = !prov; }); if (c.klarnaPlattformBis && prov) { document.getElementById("recht-klarna").hidden = false; document.getElementById("recht-klarna-datum").textContent = new Date(c.klarnaPlattformBis).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "Europe/Berlin" }); } if (new URLSearchParams(location.search).get("druck")) setTimeout(function () { print(); }, 400); });
+// Der Hinweis „Klarna endet am Stichtag“ nur, wenn die Zahlung über das Plattformkonto läuft (nicht bei „Risikofrei direkt“, dort bleibt Klarna).
+var provStudio = fetch("/api/portal", { credentials: "same-origin" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) { return d && d.studio && d.studio.modell === "provision" ? (d.studio.klarnaDauerhaft === true ? "direkt" : "plattform") : false; }).catch(function () { return false; });
+Promise.all([TF.config(), provStudio]).then(function (a) { var c = a[0], prov = a[1]; TF.fill(c); document.querySelectorAll("[data-prov]").forEach(function (el) { el.hidden = !prov || (el.getAttribute("data-prov") !== "" && el.getAttribute("data-prov") !== prov); }); if (c.klarnaPlattformBis && prov === "plattform") { document.getElementById("recht-klarna").hidden = false; document.getElementById("recht-klarna-datum").textContent = new Date(c.klarnaPlattformBis).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "Europe/Berlin" }); } if (new URLSearchParams(location.search).get("druck")) setTimeout(function () { print(); }, 400); });
 </script>
 </body></html>

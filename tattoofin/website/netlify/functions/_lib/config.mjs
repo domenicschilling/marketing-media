@@ -131,11 +131,16 @@ export function klarnaPlattformStichtag() {
   return berlinMitternacht(roh) ?? berlinMitternacht(KLARNA_PLATTFORM_BIS_STANDARD);
 }
 export const jetzt = () => { const o = process.env.TF_JETZT; const d = o ? new Date(o) : null; return d && !isNaN(d) ? d : new Date(); };
-// Risikofrei als Direct Charge (Geld läuft nie über das Plattformkonto). Standard AUS, nur nach Stripe-Test aktivieren.
-export const risikofreiDirect = () => ["1", "an", "true", "ja"].includes(String(process.env.RISIKOFREI_DIRECT || "").trim().toLowerCase());
-// Ist Klarna im Plattform-Modell zu diesem Zeitpunkt abgeschaltet? (Direct-Schalter an → nie)
-export function klarnaPlattformAus(zeit = jetzt()) {
-  if (risikofreiDirect()) return false;
+// Risikofrei als Direct Charge (Geld läuft nie über das Plattformkonto). Zwei Wege:
+//   global:    RISIKOFREI_DIRECT=1 (alle Risikofrei-Studios, Standard AUS, nur nach Stripe-Test aktivieren)
+//   je Studio: studio.risikofreiDirect === true (Admin-PATCH, z. B. Chic Tattoo Augsburg, Domenic 27.11.2026). Wirkt für dieses eine Studio
+//              genau wie der globale Schalter; alle anderen Studios bleiben unverändert.
+export const risikofreiDirectGlobal = () => ["1", "an", "true", "ja"].includes(String(process.env.RISIKOFREI_DIRECT || "").trim().toLowerCase());
+export const risikofreiDirect = (s = null) => risikofreiDirectGlobal() || s?.risikofreiDirect === true;
+// Ist Klarna im Plattform-Modell zu diesem Zeitpunkt abgeschaltet? (Direct-Schalter an, global oder für dieses Studio → nie)
+// Ohne Studio (öffentliche Konfiguration) zählt nur der globale Schalter.
+export function klarnaPlattformAus(zeit = jetzt(), s = null) {
+  if (risikofreiDirect(s)) return false;
   const st = klarnaPlattformStichtag();
   return st !== null && new Date(zeit).getTime() >= st;
 }
@@ -251,7 +256,7 @@ export function publicConfig() {
     ruecklastGebuehrCent: c.ruecklastGebuehrCent, rechtVersion: c.rechtVersion,
     // Klarna im Paket Risikofrei: Zeitpunkt (ISO) ab dem es dort nicht mehr angeboten wird (null = nie) + Direct-Schalter.
     // Die Seiten rechnen selbst gegen die Uhr des Besuchers, damit der Stichtag auch bei zwischengespeicherter Antwort stimmt.
-    klarnaPlattformBis: klarnaPlattformStichtag() === null || risikofreiDirect() ? null : new Date(klarnaPlattformStichtag()).toISOString(),
+    klarnaPlattformBis: klarnaPlattformStichtag() === null || risikofreiDirectGlobal() ? null : new Date(klarnaPlattformStichtag()).toISOString(),
     klarnaPlattformAus: klarnaPlattformAus(),
   };
 }
