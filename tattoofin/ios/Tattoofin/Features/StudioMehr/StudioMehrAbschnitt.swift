@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Abschnitt „Dein Studio“ im Konto: Einstellungen, rechtliche Lage, Fragebogen, Abrechnungen (nur Provision über Stripe),
-/// Bei Stripe ansehen (nur Inhaber, Stripe verbunden), Hilfe per WhatsApp.
+/// Bei Stripe ansehen (nur Inhaber, Stripe verbunden). Die WhatsApp-Adresse (whatsappURL) nutzen Konto-Hilfe und Werbung.
 struct StudioMehrAbschnitt: View {
     @Environment(AppState.self) private var app
     @Environment(\.dynamicTypeSize) private var schrift
@@ -49,15 +49,10 @@ struct StudioMehrAbschnitt: View {
                 }
                 .disabled(stripeLaedt)
             }
-            Link(destination: Self.whatsappURL) {
-                zeile(Texte.Mehr.hilfeWhatsapp, Texte.Mehr.hilfeWhatsappText, "message")
-            }
-            .accessibilityHint("Öffnet WhatsApp")
+            // WhatsApp-Hilfe steht jetzt im Abschnitt „Hilfe“ des Kontos (Abnahme 1.1, Nr. 16), der Absatz darunter ist weg
             if let fehler { FehlerZeile(text: fehler) }
         } header: {
             Text(Texte.Mehr.abschnitt)
-        } footer: {
-            Text(Texte.Mehr.nichtInDerApp)
         }
         .task { await mehr.laden(wennAelterAls: 30) }
     }

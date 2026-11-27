@@ -7,14 +7,8 @@ struct BeitraegeKarte: View {
     let zahlseite: String
 
     @Environment(WerbungStore.self) private var werbung
-    @Environment(\.dynamicTypeSize) private var schrift
     @State private var nameFeld = ""
     @FocusState private var nameFokus: Bool
-
-    /// Große Schrift: „Übernehmen“ unter das Namensfeld, sonst wird beides zu schmal
-    private var nameReihe: AnyLayout {
-        schrift >= .xxLarge ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8)) : AnyLayout(HStackLayout(spacing: 8))
-    }
 
     private var gepostet: Binding<Bool> {
         Binding(get: { werbung.checkliste.werbung != nil },
@@ -41,7 +35,9 @@ struct BeitraegeKarte: View {
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(WerbungTexte.nameLabel).font(.dm(.subheadline, weight: .semibold)).foregroundStyle(Color.tfTinte)
-                    nameReihe {
+                    // Feld und Knopf wie überall in der App: Feld oben, Knopf in voller Breite darunter, die Tastatur-Taste
+                    // schickt genauso ab (Abnahme 1.1, Nr. 17)
+                    VStack(alignment: .leading, spacing: 8) {
                         TextField(WerbungTexte.nameLabel, text: $nameFeld, prompt: tfPlatzhalter(firma))
                             .accessibilityLabel(WerbungTexte.nameLabel)
                             .textContentType(.organizationName)
@@ -52,11 +48,8 @@ struct BeitraegeKarte: View {
                             .onSubmit { nameUebernehmen() }
                             .tfTextfeld()
                             .onChange(of: nameFeld) { _, neu in if neu.count > 60 { nameFeld = String(neu.prefix(60)) } }
-                        // Zweitknopf wie überall in der App (statt grauer System-Pille); neben dem Feld nur so breit wie
-                        // sein Text, bei großer Schrift (darunter) über die volle Breite, damit nichts abgeschnitten wird
                         Button(WerbungTexte.nameUebernehmen) { nameUebernehmen() }
                             .buttonStyle(.zweit)
-                            .fixedSize(horizontal: schrift < .xxLarge, vertical: false)
                             .disabled(werbung.zeichnet || nameFeld.trimmingCharacters(in: .whitespaces) == werbung.bildName)
                     }
                     Text(WerbungTexte.nameHinweis).font(.dm(.caption)).foregroundStyle(Color.tfLeise)

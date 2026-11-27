@@ -87,10 +87,7 @@ struct RegistrierenEmailView: View {
                         .submitLabel(.send)
                         .focused($fokus)
                         .onSubmit { if gueltig { senden() } }
-                        .font(.dm(.body))
-                        .padding(14)
-                        .background(Color.tfKarte, in: RoundedRectangle(cornerRadius: 14))
-                        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.tfFeldRahmen, lineWidth: 1.5))
+                        .tfTextfeld()  // ein Eingabefeld-Bauteil für die ganze App (Abnahme 1.1, Nr. 17)
                         .accessibilityIdentifier("reg-email")
                 }
 
@@ -125,7 +122,7 @@ struct RegistrierenEmailView: View {
                 .foregroundStyle(Color.tfAkzent)
                 .disabled(stelltHer)
 
-                RechtsFuss()
+                if !fokus { RechtsFuss() }
             }
             .padding(20)
         }

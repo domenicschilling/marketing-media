@@ -93,21 +93,24 @@ struct AnmeldungFlow: View {
     }
 }
 
-/// Kopf der Anmeldung: Figur + Wortmarke
+/// Kopf der Anmeldung: Figur + Wortmarke. `kompakt` (kleine Bildschirme wie das SE oder offene Tastatur): kleinere Figur,
+/// damit „Konto anlegen“ ohne Scrollen sichtbar bleibt (Abnahme 1.1, Sammelliste)
 struct MarkenKopf: View {
+    var kompakt = false
+
     var body: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: kompakt ? 8 : 10) {
             Image(.figur)
                 .resizable()
                 .scaledToFit()
-                .frame(width: 110, height: 110)
-                .padding(10)
+                .frame(width: kompakt ? 64 : 110, height: kompakt ? 64 : 110)
+                .padding(kompakt ? 8 : 10)
                 .background(Color.tfGelb, in: Circle())
                 .accessibilityHidden(true)
             Image(.wortmarke)
                 .resizable()
                 .scaledToFit()
-                .frame(maxWidth: 220)
+                .frame(maxWidth: kompakt ? 170 : 220)
                 .accessibilityLabel(Texte.Allgemein.logoLabel)
         }
         .frame(maxWidth: .infinity)
@@ -125,6 +128,8 @@ struct EmailView: View {
     @State private var email = EmailView.vorbelegung
     @State private var sendet = false
     @State private var fehler: String?
+    /// Höhe des sichtbaren Bereichs: unter 700 pt (iPhone SE) wird der Kopf kompakt
+    @State private var hoehe: CGFloat = 800
     @FocusState private var fokus: Bool
 
     /// Nur im Debug-Build: Startargument -TFTestEmail <adresse> füllt das Feld vor (lokale Tests im Simulator)
@@ -143,8 +148,8 @@ struct EmailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                MarkenKopf().padding(.top, 24)
+            VStack(alignment: .leading, spacing: hoehe < 700 ? 14 : 20) {
+                MarkenKopf(kompakt: hoehe < 700).padding(.top, hoehe < 700 ? 4 : 24)
                 Ueberschrift(Texte.Anmelden.titel)
                 Text(Texte.Anmelden.einleitung)
                     .font(.dm(.body))
@@ -165,10 +170,7 @@ struct EmailView: View {
                         .submitLabel(.send)
                         .focused($fokus)
                         .onSubmit { if gueltig { senden() } }
-                        .font(.dm(.body))
-                        .padding(14)
-                        .background(Color.tfKarte, in: RoundedRectangle(cornerRadius: 14))
-                        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.tfFeldRahmen, lineWidth: 1.5))
+                        .tfTextfeld()  // ein Eingabefeld-Bauteil für die ganze App (Abnahme 1.1, Nr. 17)
                         .accessibilityIdentifier("anmelden-email")
                 }
 
@@ -185,9 +187,11 @@ struct EmailView: View {
                 Text(Texte.Anmelden.keinPasswort)
                     .font(.dm(.footnote))
                     .foregroundStyle(Color.tfLeise)
+                    .fixedSize(horizontal: false, vertical: true)
 
-                // Neues Studio: Konto in der App anlegen (bzw. offene Anmeldung fortsetzen)
-                VStack(spacing: 10) {
+                // Neues Studio: Konto in der App anlegen (bzw. offene Anmeldung fortsetzen).
+                // Linksbündig wie alles darüber (vorher als einziger Block mittig, Abnahme 1.1)
+                VStack(alignment: .leading, spacing: 10) {
                     Text(Texte.Registrieren.einstiegFrage)
                         .font(.dm(.body, weight: .semibold))
                         .foregroundStyle(Color.tfTinte)
@@ -197,14 +201,16 @@ struct EmailView: View {
                     .buttonStyle(.zweit)
                     .accessibilityIdentifier("neues-studio")
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.top, 8)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.top, hoehe < 700 ? 0 : 8)
 
-                RechtsFuss()
+                // Bei offener Tastatur ausblenden: dort zählt nur das Feld und der Knopf
+                if !fokus { RechtsFuss() }
             }
             .padding(20)
         }
         .scrollDismissesKeyboard(.interactively)
+        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { hoehe = $0 }
         .tfHintergrund()
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
@@ -272,6 +278,7 @@ struct CodeView: View {
     }
 
     var body: some View {
+        ScrollViewReader { leser in
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 Ueberschrift(Texte.Anmelden.codeTitel)
@@ -282,6 +289,10 @@ struct CodeView: View {
                 Text(email)
                     .font(.dm(.body, weight: .semibold))
                     .foregroundStyle(Color.tfLeise)
+                    // Adresse einzeilig: bei großer Schrift kleiner und in der Mitte gekürzt statt mitten im Wort umgebrochen
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                    .truncationMode(.middle)
                 if verzoegert {
                     HinweisKarte(text: Texte.Anmelden.verzoegert, symbol: "clock.fill")
                 }
@@ -303,13 +314,20 @@ struct CodeView: View {
                 // Bedienungshilfen-Größen: angeheftet über der Tastatur (safeAreaInset unten). Nach der 6. Ziffer meldet die App ohnehin selbst an.
                 if !schrift.isAccessibilitySize { anmeldenKnopf }
 
+                // Als Textlink (vorher Umriss-Knopf): braucht weniger Höhe und steht auf dem SE nicht halb unter der Tastatur
                 Button {
                     neuSchicken()
                 } label: {
                     Text(sekundenBisNeu > 0 ? Texte.Anmelden.neuerCodeIn(sekundenBisNeu) : Texte.Anmelden.neuerCode)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                        .contentShape(Rectangle())
                 }
-                .buttonStyle(.zweit)
+                .buttonStyle(.plain)
+                .font(.dm(.subheadline, weight: .semibold))
+                .foregroundStyle(sekundenBisNeu > 0 ? Color.tfLeise : Color.tfAkzent)
                 .disabled(sekundenBisNeu > 0)
+                .id("code-neu")
 
                 if neuGeschickt {
                     Text(Texte.Anmelden.neuGeschickt)
@@ -317,9 +335,20 @@ struct CodeView: View {
                         .foregroundStyle(Color.tfGruen)
                 }
 
-                RechtsFuss()
+                // Bei offener Tastatur ausblenden (Abnahme 1.1, Sammelliste)
+                if !fokus { RechtsFuss() }
             }
             .padding(20)
+        }
+        .onAppear {
+            // Kleine Bildschirme (SE): nach dem Hochfahren der Tastatur bis „Neuen Code schicken“ scrollen.
+            // Nicht bei großer Schrift: dort würden sonst die Ziffernfelder oben aus dem Bild geschoben
+            guard !schrift.isAccessibilitySize else { return }
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(450))
+                withAnimation(.easeOut(duration: 0.25)) { leser.scrollTo("code-neu", anchor: .bottom) }
+            }
+        }
         }
         // Wischen nach unten schließt die Tastatur, damit „Neuen Code schicken“ auch bei großer Schrift erreichbar ist
         .scrollDismissesKeyboard(.interactively)
