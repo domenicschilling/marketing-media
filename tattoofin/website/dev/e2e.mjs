@@ -93,12 +93,11 @@ async function signup(p, { paket, modell, email, firma, zahlart, geschenk, shot 
   await cookiesAblehnen(p);
   if (shot) await p.screenshot({ path: path.join(shot, "01-einladung.png"), fullPage: true });
   if (paket === "einmal" || modell === "kauf") await einmalNachbilden(p, zahlart);
-  // Einfache Anmeldung (16.11.2026): ein Bildschirm, 4 Felder + 1 Häkchen. Adresse nur bei Einladung bzw. Einmalzahlung (dann sichtbar und Pflicht).
+  // Einfache Anmeldung (16.11.2026): ein Bildschirm, 4 Felder, seit 28.11.2026 ohne Häkchen (Zustimmung per Knopf). Adresse nur bei Einladung bzw. Einmalzahlung (dann sichtbar und Pflicht).
   const mitAdresse = Boolean(geschenk) || paket === "einmal" || modell === "kauf";
   check(await p.isVisible("#adresse-block") === mitAdresse, `/start (${geschenk ? "Einladung" : paket || modell}): Adressfelder ${mitAdresse ? "sichtbar" : "ausgeblendet"}`);
   for (const [k, v] of Object.entries({ firma, inhaber: "Alex Muster", email, telefon: "0151 1234567", ...(mitAdresse ? { strasse: "Musterstr. 1", plz: "96047", ort: "Bamberg" } : {}) })) await p.fill("#" + k, v);
   if (shot) await p.screenshot({ path: path.join(shot, "02-einladung-daten.png"), fullPage: true });
-  await p.check("input[name=ak_alle]");
   await p.screenshot({ path: path.join(shot || shots, shot ? "03-einladung-vertrag.png" : `start-${paket || modell || "geschenk"}.png`), fullPage: true });
   await p.click("#submit");
 }
@@ -337,7 +336,7 @@ try {
   check(!("aufsteller" in inklAbo.data.studio) && !("aufstellerInklusive" in inklAbo.data.studio) && inklAbo.data.studio.paketName === "Monatlich", "Dashboard-Daten: Paket Monatlich ohne Aufsteller-Felder");
 
   // ---------------------------------------------------------------- D2: Einfache Anmeldung (16.11.2026)
-  console.log("Einfache Anmeldung: ein Bildschirm, 4 Felder, 1 Häkchen, 1 Knopf; Rechnungsdaten aus dem Checkout, Adresse aus dem Stripe-Konto bzw. der Karte");
+  console.log("Einfache Anmeldung: ein Bildschirm, 4 Felder, kein Häkchen (Zustimmung per Knopf), 1 Knopf; Rechnungsdaten aus dem Checkout, Adresse aus dem Stripe-Konto bzw. der Karte");
   {
     const ereignisse = [];
     const pE = await neueSeite({ viewport: { width: 390, height: 844 }, hasTouch: true });
@@ -361,15 +360,16 @@ try {
         firma: a("firma"), inhaber: a("inhaber"), email: a("email"), telefon: a("telefon"),
         knopf: knopf.textContent.replace(/\s+/g, " ").trim(), knopfUnten: knopf.getBoundingClientRect().bottom, sicher: document.getElementById("anm-sicher").textContent,
         kurzUnter: kurz.getBoundingClientRect().top > knopf.getBoundingClientRect().bottom && !kurz.open, label: document.querySelector("label[for=firma]").textContent + "|" + document.querySelector("label[for=inhaber]").textContent + "|" + document.querySelector("label[for=telefon]").textContent,
-        minuten: /Minute/.test(document.querySelector("main").innerText.split("Das Wichtigste")[0]), haken: document.querySelector("label.check").textContent.replace(/\s+/g, " "),
-        vertragLink: Boolean(document.querySelector("label.check a[href='/vertrag.html']") && document.querySelector("label.check a[href='/avv.html']")),
+        minuten: /Minute/.test(document.querySelector("main").innerText.split("Das Wichtigste")[0]), haken: document.getElementById("anm-zustimmung").textContent.replace(/\s+/g, " "),
+        zustVorKnopf: document.getElementById("anm-zustimmung").nextElementSibling === knopf, checkboxen: document.querySelectorAll("#f input[type=checkbox]").length,
+        vertragLink: Boolean(document.querySelector("#anm-zustimmung a[href='/vertrag.html']") && document.querySelector("#anm-zustimmung a[href='/avv.html']")),
       };
     });
-    check(form.felder === "firma,inhaber,email,telefon,ak_alle" && form.alt === 0, "/start: genau 4 Felder + 1 Häkchen, kein Fortschrittsbalken, kein Zurück, kein Unterzeichner, kein KMU-Extra, kein Studio-Telefon/Website", form.felder + " alt=" + form.alt);
+    check(form.felder === "firma,inhaber,email,telefon" && form.checkboxen === 0 && form.alt === 0, "/start: genau 4 Felder, kein Häkchen, kein Fortschrittsbalken, kein Zurück, kein Unterzeichner, kein KMU-Extra, kein Studio-Telefon/Website", form.felder + " alt=" + form.alt);
     check(form.label === "Name deines Studios|Dein Vor- und Nachname|Handynummer (WhatsApp)" && form.firma === "text|organization|" && form.inhaber === "text|name|" && form.email === "email|email|email" && form.telefon === "tel|tel|tel", "/start: Beschriftungen + Autofill-Tokens (organization, name, email, tel) + Handy-Tastatur", JSON.stringify(form));
     check(form.h1 === "1 Woche testen." && !form.minuten, "/start: Überschrift „1 Woche testen.“ (Testwoche seit 17.11.2026), keine Minutenangabe über dem Knopf");
     check(form.knopf.replace(/\u00a0/g, " ") === "1 Woche testen · heute 0 €" && /Karte sicher bei Stripe hinterlegen\. Kündigst du in der Testwoche, zahlst du nichts\./.test(form.sicher), "/start: Knopf „1 Woche testen · heute 0 €“, darunter klein „Karte sicher bei Stripe hinterlegen. Kündigst du in der Testwoche, zahlst du nichts.“", form.knopf);
-    check(form.kurzUnter && /Unternehmer an \(weniger als 250 Mitarbeitende\) und akzeptiere den Vertrag und den AVV/.test(form.haken) && form.vertragLink, "/start: ein Häkchen (Unternehmer < 250 MA + Vertrag + AVV, verlinkt), „Das Wichtigste in Kürze“ zugeklappt unter dem Knopf", form.haken);
+    check(form.kurzUnter && /^Mit Klick auf den Knopf meldest du dein Studio als Unternehmer an \(weniger als 250 Mitarbeitende\) und akzeptierst den Vertrag und den AVV\.$/.test(form.haken.trim()) && form.vertragLink && form.zustVorKnopf, "/start: Zustimmungssatz direkt über dem Knopf (Unternehmer < 250 MA + Vertrag + AVV, verlinkt), „Das Wichtigste in Kürze“ zugeklappt unter dem Knopf", form.haken);
     check(form.knopfUnten <= 844, "/start 390×844: Knopf im ersten Bildschirm (ohne Tastatur)", String(Math.round(form.knopfUnten)));
     // Leer absenden: Fehlermeldung, keine Anfrage, keine Messung
     await pE.click("#submit");
@@ -377,13 +377,7 @@ try {
     check(/Felder aus/.test(leer.oben) && leer.am && leer.fokus === "firma" && !ereignisse.some((x) => /checkout-weiter|InitiateCheckout/.test(x)), "Leer absenden: Hinweis oben + direkt an jedem Feld (aria-describedby), Fokus aufs erste Feld, keine Messung", JSON.stringify(leer));
     for (const [k, v] of Object.entries({ firma: "Ink Einfach", inhaber: "Eva Einfach", email: "einfach@example.com", telefon: "0151 7654321" })) await pE.fill("#" + k, v);
     await pE.evaluate(() => document.querySelectorAll("[id$=-err]").forEach((p) => { if (!p.hidden) throw new Error("Fehler bleibt stehen: " + p.id); }));
-    await pE.click("#submit");
-    await pE.waitForTimeout(400);
-    const ohneH = await pE.evaluate(() => { const p = document.getElementById("ak_alle-err"), lab = document.querySelector("label.anm-check"), r = p && p.getBoundingClientRect();
-      return { text: p && !p.hidden ? p.textContent : "", rot: lab.classList.contains("anm-check-fehler"), imBild: Boolean(r) && r.top >= 0 && r.bottom <= innerHeight, oben: document.getElementById("alert").textContent, vorHaken: p && p.nextElementSibling === lab }; });
-    check(/Häkchen/.test(ohneH.text) && ohneH.rot && ohneH.imBild && ohneH.vorHaken && !ohneH.oben && !ereignisse.some((x) => /checkout-weiter|InitiateCheckout/.test(x)), "Ohne Häkchen: Satz direkt über dem Häkchen (im Bild), Häkchen rot umrandet, keine Messung", JSON.stringify(ohneH));
     check(/Du schließt ab als: Eva Einfach, Ink Einfach/.test(await pE.textContent("#anm-als")), "Unter dem Knopf: „Du schließt ab als: <Name>, <Studio>“");
-    await pE.check("#ak_alle");
     await pE.screenshot({ path: path.join(shots, "start-einfach-390.png"), fullPage: true });
     await pE.click("#submit");
     await pE.waitForURL(MOCK_PAY);
@@ -391,24 +385,23 @@ try {
     const sE = await storeMod.studioBy("email", "einfach@example.com");
     check(sE?.vertrag?.name === "Eva Einfach" && sE.inhaber === "Eva Einfach" && sE.studioTelefon === "0151 7654321" && !sE.strasse && !sE.plz && !sE.ort && sE.vertrag.kmu === true && sE.vertrag.avv === true && sE.quelle?.source === "meta", "Server: Unterzeichner = Inhaber/in, Studio-Telefon = Handy, keine Adresse, alle 4 Bestätigungen, Herkunft gespeichert", JSON.stringify({ n: sE?.vertrag?.name, t: sE?.studioTelefon, s: sE?.strasse }));
     { const startHtml = await (await fetch(BASE + "/start.html")).text();
-      const satz = (startHtml.match(/<label class="check anm-check">([\s\S]*?)<\/label>/) || [])[1]?.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
-      check(sE.vertrag?.bestaetigung?.art === "ein-haekchen" && sE.vertrag.bestaetigung.version === "v1" && Boolean(satz) && sE.vertrag.bestaetigung.text === satz, "Vertragsannahme: Art „ein Häkchen“ und Wortlaut mitgespeichert, gleichlautend mit dem Häkchen auf /start", JSON.stringify({ gespeichert: sE.vertrag?.bestaetigung?.text, seite: satz })); }
+      const satz = (startHtml.match(/<p class="anm-zustimmung" id="anm-zustimmung">([\s\S]*?)<\/p>/) || [])[1]?.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
+      check(sE.vertrag?.bestaetigung?.art === "knopf" && sE.vertrag.bestaetigung.version === "v2" && Boolean(satz) && sE.vertrag.bestaetigung.text === satz, "Vertragsannahme: Art „Knopf“ und Wortlaut mitgespeichert, gleichlautend mit dem Satz am Knopf auf /start", JSON.stringify({ gespeichert: sE.vertrag?.bestaetigung?.text, seite: satz })); }
     let st = await mock("state");
     const csE = st.sessions[sE.stripe.checkoutSessionId];
     check(String(csE?.tax_id_collection?.enabled) === "true" && csE.customer_update?.address === "auto" && !csE.payment_method_types && !csE.name_collection && csE.billing_address_collection !== "required" && csE.excluded_payment_method_types?.includes("klarna") && /^Heute zahlst du nichts: 7 Tage testen\. Danach 49,90 € im Monat inkl\. MwSt\., außer du kündigst vorher im Studio-Bereich\./.test(csE.custom_text?.submit?.message || ""), "Abo-Checkout: USt-IdNr. optional, Adresse auto (keine Pflicht), keine festen Zahlarten, kein name_collection, Hinweis „Heute zahlst du nichts: 7 Tage testen …“", JSON.stringify({ t: csE?.tax_id_collection, c: csE?.customer_update, m: csE?.custom_text }));
     const cusE = st.customers[sE.stripe.customerId];
     check(cusE && !("address" in cusE) && cusE.name === "Ink Einfach" && cusE.phone === "0151 7654321", "Stripe-Kunde: ohne leere Adresse angelegt (ensureCustomer schickt nur vorhandene Angaben)", JSON.stringify(cusE?.address));
-    // Abbruch im Checkout → /start?resume…&abbruch=1: 4 Felder vorbelegt, Häkchen erneut, gleicher Stripe-Kunde, nichts überschrieben
+    // Abbruch im Checkout → /start?resume…&abbruch=1: 4 Felder vorbelegt, Knopf erneut, gleicher Stripe-Kunde, nichts überschrieben
     await fetch(`http://localhost:${MOCK_PORT}/v1/customers/${sE.stripe.customerId}`, { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ "address[line1]": "Rechnungsweg 7", "address[city]": "Bamberg", "address[postal_code]": "96047", "address[country]": "DE" }) });
     await pE.click("#cancel");
     await pE.waitForURL(/start\.html\?resume=.*abbruch=1/);
     await pE.waitForFunction(() => document.getElementById("email").value === "einfach@example.com");
     await pE.waitForTimeout(150);
-    const wieder = await pE.evaluate(() => { const h = document.getElementById("ak-hinweis"), r = h.getBoundingClientRect(); return { f: ["firma", "inhaber", "email", "telefon"].map((k) => document.getElementById(k).value).join("|"), adr: getComputedStyle(document.getElementById("adresse-block")).display, fokus: document.activeElement?.id, hinweis: h.hidden ? "" : h.textContent, imBild: r.top >= 60 && r.bottom <= innerHeight, hervor: document.querySelector("label.anm-check").classList.contains("anm-check-hervor"), oben: document.getElementById("alert").textContent }; });
-    check(wieder.f === "Ink Einfach|Eva Einfach|einfach@example.com|0151 7654321" && wieder.adr === "none" && /Häkchen setzen/.test(wieder.hinweis) && wieder.imBild && wieder.hervor && /gespeichert/.test(wieder.oben) && ereignisse.includes("umami:checkout-abbruch"), "Wiederaufnahme nach Abbruch: 4 Felder vorbelegt, keine Adressfelder, Satz direkt über dem Häkchen (im Bild, nicht unter der Navigation), Häkchen hervorgehoben, Umami „checkout-abbruch“", JSON.stringify(wieder));
+    const wieder = await pE.evaluate(() => { const h = document.getElementById("ak-hinweis"), r = h.getBoundingClientRect(); return { f: ["firma", "inhaber", "email", "telefon"].map((k) => document.getElementById(k).value).join("|"), adr: getComputedStyle(document.getElementById("adresse-block")).display, fokus: document.activeElement?.id, hinweis: h.hidden ? "" : h.textContent, imBild: r.top >= 60 && r.bottom <= innerHeight, hervor: document.getElementById("anm-zustimmung").classList.contains("anm-zust-hervor"), oben: document.getElementById("alert").textContent }; });
+    check(wieder.f === "Ink Einfach|Eva Einfach|einfach@example.com|0151 7654321" && wieder.adr === "none" && /Klick auf den Knopf/.test(wieder.hinweis) && wieder.imBild && wieder.hervor && /gespeichert/.test(wieder.oben) && ereignisse.includes("umami:checkout-abbruch"), "Wiederaufnahme nach Abbruch: 4 Felder vorbelegt, keine Adressfelder, Satz direkt über dem Zustimmungssatz am Knopf (im Bild, nicht unter der Navigation), Satz hervorgehoben, Umami „checkout-abbruch“", JSON.stringify(wieder));
     await pE.waitForTimeout(120);
-    check(["ak_alle", "submit"].includes(await pE.evaluate(() => document.activeElement?.id)), "Wiederaufnahme: Fokus direkt beim Häkchen/Knopf");
-    await pE.check("#ak_alle");
+    check(await pE.evaluate(() => document.activeElement?.id) === "submit", "Wiederaufnahme: Fokus direkt auf dem Knopf");
     await pE.click("#submit");
     await pE.waitForURL(MOCK_PAY);
     st = await mock("state");

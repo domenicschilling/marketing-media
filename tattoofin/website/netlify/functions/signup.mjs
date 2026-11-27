@@ -11,7 +11,7 @@
 // GET  /api/signup?id=…  → Status für Danke-Seite bzw. Fortsetzen
 // GET  /api/signup?pakete=1 → die Pakete, die neu gewählt werden können (öffentlich; ohne Risikofrei)
 // Alte Links: ?modell=provision → Risikofrei, ?modell=kauf → Einmalzahlung. Der Aktionscode (RATENJA) ist abgeschaltet.
-import { CFG, PAKETE, PAKET_ALIAS, paketNeuWaehlbar, PAKETE_NEU_TEXT, istApple, HAEKCHEN } from "./_lib/config.mjs";
+import { CFG, PAKETE, PAKET_ALIAS, paketNeuWaehlbar, PAKETE_NEU_TEXT, istApple, HAEKCHEN, ZUSTIMMUNG_KNOPF } from "./_lib/config.mjs";
 import { json, fail, body, clean, id, now, handler, clientIp, brutto, addMonths } from "./_lib/util.mjs";
 import { studioDatenPruefen } from "./_lib/anmeldung-daten.mjs";
 import { getStudio, saveStudio, studioBy, store, log, normEmail, studiosPerEmail, AKTIV } from "./_lib/store.mjs";
@@ -106,7 +106,9 @@ export default handler(async (req, context) => {
       ua: (req.headers.get("user-agent") || "").slice(0, 200), vertrag: true, avv: true, unternehmer: true, kmu: true,
       modell, paket: paketId, preisNetto, monatNetto, testTage: testTage || null, provisionProzent: modell === "provision" ? CFG.provisionProzent : null,
       // Einfache Anmeldung: ein gemeinsames Häkchen für Vertrag, AVV, Unternehmer und KMU, mit Wortlaut (Nachweis)
-      bestaetigung: b.akzeptiert?.art === "ein-haekchen" ? { art: "ein-haekchen", version: HAEKCHEN.version, text: HAEKCHEN.text } : null,
+      // Seit 28.11.2026: Zustimmung per Klick auf den Knopf (Satz am Knopf); „ein-haekchen“ bleibt für ältere, noch offene Seiten im Browser
+      bestaetigung: b.akzeptiert?.art === "knopf" ? { art: "knopf", version: ZUSTIMMUNG_KNOPF.version, text: ZUSTIMMUNG_KNOPF.text }
+        : b.akzeptiert?.art === "ein-haekchen" ? { art: "ein-haekchen", version: HAEKCHEN.version, text: HAEKCHEN.text } : null,
     },
     stripe: s?.stripe || {},
   };

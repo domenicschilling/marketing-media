@@ -369,3 +369,10 @@ details .raten-fn{margin-top:-6px;margin-bottom:12px}
   .anm-form.form{padding:12px 12px 14px}.anm-form .field{margin-bottom:8px}.anm-form .lab{margin-bottom:4px}.anm-form .field label{margin-bottom:4px}
   .anm-form input[type=text],.anm-form input[type=email],.anm-form input[type=tel]{padding:9px 12px}
   .anm-check{font-size:13.5px;margin:2px 0 10px;line-height:1.4}.anm-knopf{padding:11px 12px}}
+/* /start ohne Häkchen (28.11.2026, Domenic 27.11.: Zustimmung per Klick auf den Knopf): Satz direkt über dem Knopf */
+.anm-zustimmung{margin:6px 0 12px;font-size:14px;line-height:1.45;color:var(--ink)}
+.anm-zustimmung a{font-weight:700}
+.anm-zust-hervor{outline:3px solid var(--orange-t);outline-offset:4px;background:#fff7e6;border-radius:10px}
+.anm-hinweis + .anm-zustimmung{margin-top:10px}
+@media (max-width:480px){.anm-zustimmung{font-size:13.5px;margin:4px 0 12px}}
+@media (max-width:480px) and (max-height:700px){.anm-zustimmung{font-size:13px;margin:2px 0 10px;line-height:1.4}}

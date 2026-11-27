@@ -492,7 +492,7 @@ FN_HTML = f"""<dialog class="fn" data-funnel aria-labelledby="fn-stand">
     <div class="fn-spalte">
       <section data-funnel-schritt="1" aria-labelledby="fn-t1">
         <h2 id="fn-t1" tabindex="-1">Fragen deine Kunden nach&nbsp;Raten?</h2>
-        <p class="fn-grund">Zwei kurze Fragen, damit wir dir zeigen, was Tattoofin in deinem Studio ändert.</p>
+        <p class="fn-grund">Zwei kurze Fragen, dann trägst du dein Studio ein.</p>
         {kacheln("raten", "fn-t1", [("oft", "Ja, bei großen Motiven"), ("manchmal", "Ab und zu"), ("selten", "Eher selten"), ("offen", "Weiß ich nicht")])}
         <p class="fn-fuss">7 Tage kostenlos · danach 49,90&nbsp;€ im Monat inkl. MwSt. · monatlich kündbar</p>
       </section>

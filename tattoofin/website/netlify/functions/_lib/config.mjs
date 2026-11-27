@@ -91,6 +91,9 @@ export const CFG = {
 // Wortlaut des einen Häkchens auf /start (seit 16.11.2026), wird beim Abschluss in s.vertrag.bestaetigung mitgespeichert (Nachweis, welcher Satz
 // bestätigt wurde). Muss mit dem Text von label.anm-check in public/start.html übereinstimmen (Prüfung in dev/e2e.mjs). Bei Änderung Version hochzählen.
 export const HAEKCHEN = { version: "v1", text: "Ich melde mein Studio als Unternehmer an (weniger als 250 Mitarbeitende) und akzeptiere den Vertrag und den AVV." };
+// Seit 28.11.2026 ohne Häkchen (Domenic 27.11.2026: Zustimmung per Klick auf den Knopf). Wortlaut des Satzes direkt über dem Knopf auf /start
+// (#anm-zustimmung), wird beim Abschluss in s.vertrag.bestaetigung gespeichert. Muss mit public/start.html übereinstimmen (Prüfung in dev/e2e.mjs).
+export const ZUSTIMMUNG_KNOPF = { version: "v2", text: "Mit Klick auf den Knopf meldest du dein Studio als Unternehmer an (weniger als 250 Mitarbeitende) und akzeptierst den Vertrag und den AVV." };
 
 export const SECRETS = {
   stripeKey: STRIPE_KEY,

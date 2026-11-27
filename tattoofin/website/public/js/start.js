@@ -1,5 +1,6 @@
 // Anmeldung /start (einfache Anmeldung seit 16.11.2026, Domenic: „super easy und fertig“):
-// EIN Bildschirm, 4 Felder (Studio, Name, E-Mail, Handy), 1 Häkchen (Unternehmer < 250 MA + Vertrag + AVV), 1 Knopf → Stripe.
+// EIN Bildschirm, 4 Felder (Studio, Name, E-Mail, Handy), 1 Knopf → Stripe. Zustimmung (Unternehmer < 250 MA + Vertrag + AVV)
+// per Klick auf den Knopf, Satz direkt darüber (seit 28.11.2026, Domenic 27.11.: keine Häkchen in Formularen).
 // Kein Fortschrittsbalken, kein Zurück, kein Unterzeichner-Feld (Name = Inhaber/in = Unterzeichner/in), keine Adresse.
 // Adresse nur bei Einladung (?geschenk) bzw. Einmalzahlung (Bestandsabläufe), dann Pflicht. Der Server prüft dasselbe (signup.mjs).
 (function () {
@@ -29,7 +30,7 @@
   // (#alert) bleibt nur für „alle Felder“ und Server-Meldungen.
   function feldFehler(k, msg) {
     var el = f.elements[k]; if (!el || el instanceof RadioNodeList) return;
-    var id = k + "-err", p = document.getElementById(id), lab = k === "ak_alle" ? el.closest("label") : null;
+    var id = k + "-err", p = document.getElementById(id), lab = null;
     if (!p && msg) {
       p = document.createElement("p"); p.id = id; p.className = "anm-err";
       if (lab) lab.parentNode.insertBefore(p, lab); else el.insertAdjacentElement("afterend", p);
@@ -41,10 +42,10 @@
     el.setAttribute("aria-invalid", msg ? "true" : "false");
     if (lab) lab.classList.toggle("anm-check-fehler", Boolean(msg));
   }
-  function fehlerWeg() { PFLICHT.concat(ADRESSE, ["ak_alle"]).forEach(function (k) { feldFehler(k, ""); }); }
+  function fehlerWeg() { PFLICHT.concat(ADRESSE).forEach(function (k) { feldFehler(k, ""); }); }
   // Fokus aufs erste falsche Feld und Feld samt Meldung mittig ins Bild (nicht unter die feste Navigation)
   function zeige(k) {
-    var el = f.elements[k], box = k === "ak_alle" ? el.closest("label") : el.closest(".field") || el;
+    var el = f.elements[k], box = el.closest(".field") || el;
     try { el.focus({ preventScroll: true }); } catch (e) { el.focus(); }
     try { box.scrollIntoView({ block: "center" }); } catch (e) {}
   }
@@ -60,8 +61,7 @@
     }
     var falsch = !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(val("email")) ? ["email", "Bitte gib eine gültige E-Mail-Adresse ein."]
       : val("telefon").replace(/\D/g, "").length < 6 ? ["telefon", "Bitte gib deine Handynummer mit Vorwahl ein."]
-      : mitAdresse() && !/^\d{5}$/.test(val("plz")) ? ["plz", "Bitte gib die PLZ mit 5 Ziffern ein."]
-      : !val("ak_alle") ? ["ak_alle", "Bitte noch das Häkchen setzen."] : null;
+      : mitAdresse() && !/^\d{5}$/.test(val("plz")) ? ["plz", "Bitte gib die PLZ mit 5 Ziffern ein."] : null;
     if (falsch) { feldFehler(falsch[0], falsch[1]); zeige(falsch[0]); return { feld: falsch[0], oben: "" }; }
     return { feld: "", oben: "" };
   }
@@ -174,14 +174,13 @@
 
   f.addEventListener("change", function (e) {
     if (e.target.name === "paket" || e.target.name === "zahlart") ansicht();
-    if (e.target.name === "ak_alle" && e.target.checked) { feldFehler("ak_alle", ""); hervor(false); }
     merken();
   });
   f.addEventListener("input", function (e) { if (e.target.name === "firma" || e.target.name === "inhaber") alsZeile(); if (e.target.getAttribute("aria-invalid") === "true" && e.target.value.trim()) feldFehler(e.target.name, ""); });
-  // Nach Abbruch im Checkout: kurzer Satz direkt über dem Häkchen, Häkchen sichtbar hervorgehoben (auch ohne Fokusrahmen des Browsers)
+  // Nach Abbruch im Checkout bzw. Ankunft aus dem Funnel: kurzer Satz direkt über dem Zustimmungssatz am Knopf
   function hervor(an) {
-    var h = document.getElementById("ak-hinweis"), lab = f.elements.ak_alle.closest("label");
-    h.hidden = !an; lab.classList.toggle("anm-check-hervor", an);
+    var h = document.getElementById("ak-hinweis");
+    h.hidden = !an; document.getElementById("anm-zustimmung").classList.toggle("anm-zust-hervor", an);
   }
 
   f.addEventListener("submit", async function (e) {
@@ -196,8 +195,8 @@
     try { if (window.umami) window.umami.track("checkout-weiter", { paket: geschenk ? "geschenk" : paket() }); } catch (x) {}
     try {
       var d = daten();
-      // Ein Häkchen deckt Vertrag, AVV, Unternehmer und KMU ab (Server speichert Version, Zeit, IP, Browser, Name und den Wortlaut des Häkchens)
-      d.akzeptiert = { vertrag: true, avv: true, unternehmer: true, kmu: true, art: "ein-haekchen" };
+      // Der Klick auf den Knopf deckt Vertrag, AVV, Unternehmer und KMU ab (Server speichert Version, Zeit, IP, Browser, Name und den Wortlaut des Satzes am Knopf)
+      d.akzeptiert = { vertrag: true, avv: true, unternehmer: true, kmu: true, art: "knopf" };
       if (resumeId) d.resumeId = resumeId;
       // Herkunft (Werbung/Instagram) aus der Adresse mitschicken, ohne etwas im Browser zu speichern
       var qu = {}; ["utm_source", "utm_medium", "utm_campaign", "utm_content"].forEach(function (k) { var v = q.get(k); if (v) qu[k.slice(4)] = v; });
@@ -243,11 +242,11 @@
   // Vorbelegung: ?modell=…, gespeicherter Entwurf (nur diese Sitzung), ?resume=<id> nach Abbruch im Checkout
   try { var alt = JSON.parse(sessionStorage.getItem("tf-start") || "{}"); if (GESCHLOSSEN[String(alt.paket || "").toLowerCase()]) alt.paket = ""; if (alt.paket && !f.querySelector('input[name=paket][value="' + alt.paket + '"]')) alt.paket = ""; setze(alt); if (!alt.paket && alt.modell) setzePaket(alt.modell); } catch (e) {}
   // Ankunft aus dem Funnel einer Kampagnenseite (Schilling-Konzept, 18.11.2026): Die 4 Angaben stehen schon über „tf-start“ im Formular.
-  // Der Merker „schilling-funnel“ (nur Antipp-Antworten, keine Personendaten) wird sofort gelöscht; nur noch das Häkchen ist offen.
+  // Der Merker „schilling-funnel“ (nur Antipp-Antworten, keine Personendaten) wird sofort gelöscht; nur noch der Klick auf den Knopf ist offen.
   try {
     var fn = JSON.parse(sessionStorage.getItem("schilling-funnel") || "null"); sessionStorage.removeItem("schilling-funnel");
     if (fn && Date.now() - (fn.t || 0) < 36e5 && !q.get("resume") && PFLICHT.every(function (k) { return val(k); })) {
-      document.getElementById("ak-hinweis").textContent = "Deine Angaben sind eingetragen. Nur noch das Häkchen setzen, dann geht es zu Stripe.";
+      document.getElementById("ak-hinweis").textContent = "Deine Angaben sind eingetragen. Kurz prüfen, dann mit dem Knopf weiter zu Stripe.";
       hervor(true);
     }
   } catch (e) {}
@@ -261,12 +260,12 @@
       ansicht();
       if (q.get("abbruch")) {
         try { if (window.umami) window.umami.track("checkout-abbruch"); } catch (x) {}
-        // Angaben sind vorbelegt: nur noch das Häkchen setzen (eine Zustimmung darf nicht vorausgewählt sein), dann direkt wieder zur Zahlung
+        // Angaben sind vorbelegt: Fokus auf den Knopf (Zustimmung erst mit dem Klick), dann direkt wieder zur Zahlung
         show("Die Zahlung hat nicht geklappt. Kein Problem, deine Angaben sind gespeichert.", "info");
         alertBox.insertAdjacentHTML("beforeend", '<p style="margin:8px 0 0"><a href="https://wa.me/491624502375?text=Hi%20Tattoofin-Team%2C%20bei%20meiner%20Anmeldung%20hat%20die%20Zahlung%20nicht%20geklappt.%20K%C3%B6nnt%20ihr%20mir%20helfen%3F" target="_blank" rel="noopener" data-umami-event="whatsapp-abbruch"><b>Hängt es? Schreib unserem Team per WhatsApp, wir helfen dir sofort →</b></a></p>');
-        if (!val("ak_alle")) hervor(true);
-        var ziel = val("ak_alle") ? document.getElementById("submit") : f.elements.ak_alle;
-        setTimeout(function () { try { ziel.focus({ preventScroll: true }); (ziel.closest("label") || ziel).scrollIntoView({ block: "center" }); } catch (x) {} }, 50);
+        hervor(true);
+        var ziel = document.getElementById("submit");
+        setTimeout(function () { try { ziel.focus({ preventScroll: true }); ziel.scrollIntoView({ block: "center" }); } catch (x) {} }, 50);
       }
     }).catch(function () { resumeId = null; });
   }

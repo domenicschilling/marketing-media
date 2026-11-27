@@ -3,12 +3,13 @@
 <title>Jetzt starten – Tattoofin</title>
 <meta name="description" content="Tattoofin fürs Tattoo-Studio 1 Woche testen: heute 0 €, danach 49,90 € im Monat inkl. MwSt., ohne Provision, monatlich kündbar. 4 Angaben, Karte sicher bei Stripe hinterlegen.">
 <link rel="canonical" href="https://tattoofin.de/start.html"><link rel="icon" href="/favicon.png" type="image/png"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link rel="stylesheet" href="/css/site.css?v=20261116b">
+<link rel="stylesheet" href="/css/site.css?v=20261128a">
 <meta name="robots" content="noindex">
 </head><body class="anm-seite" data-wa="aus">
 <header class="nav"><div class="wrap"><a class="brand" href="/" aria-label="Tattoofin, zur Startseite"><img src="/assets/figur.png" alt=""><img class="wm" src="/assets/wortmarke.png" alt="Tattoofin"></a><nav class="links"><a href="https://wa.me/491624502375?text=Hi%20Tattoofin-Team%2C%20ich%20bin%20gerade%20bei%20der%20Anmeldung%20und%20habe%20eine%20Frage%3A" target="_blank" rel="noopener" data-umami-event="whatsapp-start">Fragen? WhatsApp</a><a href="/login.html">Login</a></nav></div></header>
 
-<!-- Einfache Anmeldung (16.11.2026, Domenic: „super easy und fertig“): EIN Bildschirm, 4 Felder, 1 Häkchen, 1 Knopf.
+<!-- Einfache Anmeldung (16.11.2026, Domenic: „super easy und fertig“): EIN Bildschirm, 4 Felder, 1 Knopf.
+     Seit 28.11.2026 ohne Häkchen (Domenic 27.11.2026: Zustimmung per Klick auf den Knopf, Satz direkt über dem Knopf).
      Kein Fortschrittsbalken, kein Zurück, keine Adresse (kommt aus dem Stripe-Konto bzw. der Karte im Studio-Bereich).
      Adressfelder nur bei Einladung (?geschenk) bzw. Einmalzahlung (Bestandsabläufe). -->
 <main class="sec tight anm"><div class="wrap narrow">
@@ -34,8 +35,8 @@
       <div class="field"><label for="ustid">USt-IdNr. (optional)</label><input type="text" id="ustid" name="ustid" placeholder="DE…" autocomplete="off" autocapitalize="characters" spellcheck="false"></div>
     </fieldset>
 
-    <p class="anm-hinweis" id="ak-hinweis" hidden>Nur noch das Häkchen setzen, dann geht es nochmal zu Stripe.</p>
-    <label class="check anm-check"><input type="checkbox" name="ak_alle" id="ak_alle" required> <span>Ich melde mein Studio als Unternehmer an (weniger als 250 Mitarbeitende) und akzeptiere den <a href="/vertrag.html" target="_blank">Vertrag</a> und den <a href="/avv.html" target="_blank">AVV</a>.</span></label>
+    <p class="anm-hinweis" id="ak-hinweis" hidden>Deine Angaben sind gespeichert. Ein Klick auf den Knopf, dann geht es nochmal zu Stripe.</p>
+    <p class="anm-zustimmung" id="anm-zustimmung">Mit Klick auf den Knopf meldest du dein Studio als Unternehmer an (weniger als 250 Mitarbeitende) und akzeptierst den <a href="/vertrag.html" target="_blank">Vertrag</a> und den <a href="/avv.html" target="_blank">AVV</a>.</p>
 
     <button type="submit" class="btn gold anm-knopf" id="submit"><span class="k1">1 Woche testen</span><span class="k-sep"> · </span><span class="k2">heute 0 €</span></button>
     <p class="anm-sicher" id="anm-sicher">🔒 Karte sicher bei Stripe hinterlegen. Kündigst du in der Testwoche, zahlst du nichts.</p>
@@ -51,14 +52,14 @@
         <div class="vbox" id="vertrag-box">Vertrag wird geladen …</div>
         <p class="anm-klein"><a href="/vertrag.html" target="_blank">Vertrag in neuem Fenster</a> · <a href="/avv.html" target="_blank">AVV</a> · <a href="/datenschutz.html" target="_blank">Datenschutz</a> · Den Link zu Vertrag (Version <span data-c="vertragVersion"></span>) und AVV bekommst du nach dem Abschluss auch per E-Mail.</p>
       </details>
-      <p class="anm-klein"><b>Nur für Unternehmer:</b> Tattoofin schließt Verträge ausschließlich mit Studios und anderen Unternehmern (§ 14 BGB), nicht mit Verbrauchern. Ein Widerrufsrecht für Verbraucher besteht deshalb nicht. Mit dem Häkchen bestätigst du auch, dass dein Studio ein kleines oder mittleres Unternehmen ist (unter 250 Mitarbeitende, höchstens 50 Mio. € Umsatz oder 43 Mio. € Bilanzsumme).</p>
+      <p class="anm-klein"><b>Nur für Unternehmer:</b> Tattoofin schließt Verträge ausschließlich mit Studios und anderen Unternehmern (§ 14 BGB), nicht mit Verbrauchern. Ein Widerrufsrecht für Verbraucher besteht deshalb nicht. Mit dem Klick auf den Knopf bestätigst du auch, dass dein Studio ein kleines oder mittleres Unternehmen ist (unter 250 Mitarbeitende, höchstens 50 Mio. € Umsatz oder 43 Mio. € Bilanzsumme).</p>
       <p class="anm-klein">Dein Geld geht direkt auf dein eigenes Stripe-Konto. Wir sehen keine Karten- oder Kontodaten. Fragen? <a href="https://wa.me/491624502375" target="_blank" rel="noopener">WhatsApp 0162 4502375</a></p>
     </details>
   </form>
 </div></main>
 
 <script src="/js/common.js"></script>
-<script src="/js/start.js?v=20261118a"></script>
+<script src="/js/start.js?v=20261128a"></script>
 <script src="/js/tf-track.js?v=20261116b"></script>
 <script defer src="https://cloud.umami.is/script.js" data-website-id="507b740f-264e-4ba1-a7d0-9dbe49db75af" data-domains="tattoofin.de"></script>
 <footer class="recht-fuss" style="max-width:640px;margin:24px auto 32px;padding:0 16px;font:400 14px/1.5 'DM Sans',system-ui,sans-serif;text-align:center"><a href="/impressum.html">Impressum</a> · <a href="/datenschutz.html">Datenschutz</a> · <a href="/vertrag.html">Vertrag</a></footer>

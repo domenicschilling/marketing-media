@@ -141,14 +141,14 @@ await abschnitt("1 Start-Seite: Cookie-Hinweis verdeckt weder Feld noch Knopf (o
       // Feld, in dem getippt wird, nicht vom Hinweis verdeckt
       frei.push(await p.evaluate((id) => { const cc = document.querySelector(".tf-cc"); if (!cc || getComputedStyle(cc).visibility === "hidden") return true; const a = cc.getBoundingClientRect(), b = document.getElementById(id).getBoundingClientRect(); return a.top >= b.bottom || a.bottom <= b.top; }, k));
     }
-    await p.locator("#ak_alle").blur().catch(() => {});
+    await p.locator("#telefon").blur().catch(() => {});
     const banner = Boolean(await p.waitForSelector(".tf-cc", { timeout: 3000, state: "attached" }).catch(() => null)) && vorher === (w >= 1000);
     // Häkchen echt anklicken (kein force): Der Hinweis darf nicht darüber liegen (Prüfung 16.11.2026, 320×568)
-    const haken = await p.check("input[name=ak_alle]", { timeout: 3000 }).then(() => p.isChecked("input[name=ak_alle]")).catch(() => false);
+    const haken = await p.isVisible("#anm-zustimmung") && !(await p.$("#f input[type=checkbox]")); // seit 28.11.2026 kein Häkchen: Zustimmungssatz am Knopf sichtbar
     const s3 = await trial("#submit");
     // Knopf sichtbar im Bild: Der Hinweis liegt nie darüber (er weicht aus oder sitzt daneben)
     const ueber = await p.evaluate(() => { const cc = document.querySelector(".tf-cc"), k = document.getElementById("submit"); k.scrollIntoView({ block: "center" }); return new Promise((ok) => requestAnimationFrame(() => requestAnimationFrame(() => { if (!cc || getComputedStyle(cc).visibility === "hidden") return ok(false); const a = cc.getBoundingClientRect(), b = k.getBoundingClientRect(); ok(!(a.top >= b.bottom || a.bottom <= b.top || a.left >= b.right || a.right <= b.left)); }))); });
-    check(banner && frei.every(Boolean) && haken && s3 && !ueber, `start.html ${w}x${h}: Hinweis da (am Handy erst nach der ersten Eingabe), alle 4 Felder frei beim Tippen, Häkchen klickbar, Knopf „Weiter zur Zahlung“ klickbar und nicht verdeckt`, `banner=${banner} sofort=${vorher} felder=${frei.join("")} haken=${haken} knopf=${s3} verdeckt=${ueber}`);
+    check(banner && frei.every(Boolean) && haken && s3 && !ueber, `start.html ${w}x${h}: Hinweis da (am Handy erst nach der ersten Eingabe), alle 4 Felder frei beim Tippen, Zustimmungssatz sichtbar (kein Häkchen), Knopf „Weiter zur Zahlung“ klickbar und nicht verdeckt`, `banner=${banner} sofort=${vorher} felder=${frei.join("")} haken=${haken} knopf=${s3} verdeckt=${ueber}`);
     await p.context().close();
   }
   // Ankunft von der Landingpage (Hinweis dort schon offen, nicht weggeklickt) auf kleinen Handys: Felder, Häkchen und Knopf frei
@@ -164,10 +164,10 @@ await abschnitt("1 Start-Seite: Cookie-Hinweis verdeckt weder Feld noch Knopf (o
     }
     await p.locator("#telefon").blur().catch(() => {});
     await p.waitForTimeout(300);
-    const haken = await p.check("input[name=ak_alle]", { timeout: 3000 }).then(() => p.isChecked("input[name=ak_alle]")).catch(() => false);
+    const haken = await p.isVisible("#anm-zustimmung") && !(await p.$("#f input[type=checkbox]")); // seit 28.11.2026 kein Häkchen: Zustimmungssatz am Knopf sichtbar
     const knopf = await p.click("#submit", { timeout: 3000, trial: true }).then(() => true).catch(() => false);
     const cc = await p.evaluate(() => { const c = document.querySelector(".tf-cc"); return c ? (c.classList.contains("tf-cc-weg") ? "weg" : "da") : "keiner"; });
-    check(frei.every(Boolean) && haken && knopf, `start.html ${w}x${h} von der Landingpage: alle 4 Felder, Häkchen und Knopf frei (Cookie-Hinweis weicht aus)`, `felder=${frei.join("")} haken=${haken} knopf=${knopf} hinweis=${cc}`);
+    check(frei.every(Boolean) && haken && knopf, `start.html ${w}x${h} von der Landingpage: alle 4 Felder, Zustimmungssatz und Knopf frei (Cookie-Hinweis weicht aus)`, `felder=${frei.join("")} haken=${haken} knopf=${knopf} hinweis=${cc}`);
     await p.context().close();
   }
 });
@@ -180,7 +180,6 @@ async function browserAnmeldung(paket, email, firma, viewport) {
   if (paket === "einmal") await p.evaluate(() => { const f = document.getElementById("f"); f.insertAdjacentHTML("beforeend", '<input type="radio" name="paket" value="einmal" checked style="display:none"><input type="radio" name="zahlart" value="sofort" checked style="display:none">'); f.querySelector("input[name=paket][value=einmal]").dispatchEvent(new Event("change", { bubbles: true })); });
   // Einfache Anmeldung (16.11.2026): ein Bildschirm, 4 Felder + 1 Häkchen; Adresse nur bei Einmalzahlung
   for (const [k, v] of Object.entries({ firma, inhaber: "Alex Muster", email, telefon: "0151 1234567", ...(paket === "einmal" ? { strasse: "Musterstr. 1", plz: "96047", ort: "Bamberg" } : {}) })) await p.fill("#" + k, v);
-  await p.check("input[name=ak_alle]");
   await p.screenshot({ path: path.join(shots, `anmeldung-${paket}.png`), fullPage: true });
   await p.click("#submit");
   return p;
