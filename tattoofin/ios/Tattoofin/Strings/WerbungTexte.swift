@@ -34,7 +34,6 @@ enum WerbungTexte {
     static let formatLabel = "Format"
     static let formatReel = "Reel / Story"
     static let formatFeed = "Beitrag"
-    static let videoSpeichern = "In Fotos speichern"
     static let videoLaedt = "Video wird geladen …"
     static let teilen = "Teilen"
     static let videoFehler = "Das Video lädt gerade nicht. Bitte prüf dein Internet."
