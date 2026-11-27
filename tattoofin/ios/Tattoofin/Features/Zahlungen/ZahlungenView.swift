@@ -153,10 +153,8 @@ struct ZahlungenView: View {
         .listSectionSpacing(.compact)
         .scrollContentBackground(.hidden)
         .searchable(text: $suche, placement: .navigationBarDrawer(displayMode: .automatic), prompt: Texte.Zahlungen.suche)
-        .refreshable {
-            await portal.laden()
-            await saldoLaden()
-        }
+        // Neu laden setzt portal.geladenAm, damit holt .task(id:) oben auch den Betrag der Auszahlungen-Karte neu
+        .refreshable { await portal.laden() }
     }
 }
 
