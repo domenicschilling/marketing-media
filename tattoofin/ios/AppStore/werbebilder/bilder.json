@@ -15,8 +15,8 @@
         "testen"
       ],
       "klein": "für neue Abonnenten",
-      "x": 800,
-      "y": 890,
+      "x": 790,
+      "y": 2150,
       "groesse": 64
     },
     "handys": [
@@ -46,7 +46,7 @@
       "Zahlungslink",
       "[in Sekunden]"
     ],
-    "sub": "Betrag eintippen, Link teilen. Fertig.",
+    "sub": "Betrag eintippen, Link per WhatsApp oder QR-Code. Fertig.",
     "handys": [
       {
         "datei": "a02-kasse-betrag.png",
@@ -57,7 +57,7 @@
         "z": 2
       },
       {
-        "datei": "a03b-teilen.png",
+        "datei": "a03-zahlungslink-qr.png",
         "breite": 800,
         "x": 480,
         "y": 1080,

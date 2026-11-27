@@ -38,7 +38,16 @@ final class StoreWerbebilderUITests: XCTestCase {
         XCTAssertTrue(code.waitForExistence(timeout: 10))
         code.tap()
         code.typeText("123456")
-        for t in ["Nicht jetzt", "Später"] { let b = app.buttons[t]; if b.waitForExistence(timeout: 8) { b.tap() } }
+        // Face ID: nicht jetzt. Mitteilungen erlauben (für den echten Sperrbildschirm, Bild 5)
+        let nichtJetzt = app.buttons["Nicht jetzt"]
+        if nichtJetzt.waitForExistence(timeout: 8) { nichtJetzt.tap() }
+        let erlauben = app.buttons["Mitteilungen erlauben"]
+        if erlauben.waitForExistence(timeout: 8) {
+            erlauben.tap()
+            let sb = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+            let ok = sb.buttons["Erlauben"]
+            if ok.waitForExistence(timeout: 8) { ok.tap() }
+        }
         XCTAssertTrue(app.tabBars.buttons["Konto"].waitForExistence(timeout: 15))
 
         // a01: Zahlung über Klarna (Detail)
@@ -56,19 +65,22 @@ final class StoreWerbebilderUITests: XCTestCase {
         let ausz = app.buttons["auszahlungen-karte"].firstMatch  // Karte oben in Zahlungen (Abnahme G4, statt Umschalter)
         if ausz.waitForExistence(timeout: 5) { ausz.tap(); Thread.sleep(forTimeInterval: 2); foto(app, "a06-auszahlungen") }
 
-        // a02: Kasse mit Betrag
+        // a02 → a03 → a03b: EIN Vorgang (Bild 2): 150 € Anzahlung eintippen, Link erstellen, echtes Teilen-Blatt
         app.tabBars.buttons["Kasse"].tap()
-        for t in ["6", "5", "0"] { app.buttons[t].firstMatch.tap() }
-        foto(app, "a02-kasse-betrag")
-
-        // a03: Anzahlung-Link mit QR-Code
-        for _ in 0..<3 { app.buttons["Löschen. Lange drücken löscht alles."].firstMatch.tap() }
-        let anz = app.buttons["Anzahlung"].firstMatch
-        if anz.exists { anz.tap() } else { app.segmentedControls.buttons["Anzahlung"].firstMatch.tap() }
+        let anz = app.segmentedControls.buttons["Anzahlung"].firstMatch
+        if anz.waitForExistence(timeout: 5) { anz.tap() } else { app.buttons["Anzahlung"].firstMatch.tap() }
         for t in ["1", "5", "0"] { app.buttons[t].firstMatch.tap() }
+        foto(app, "a02-kasse-betrag")
         app.buttons["Zahlungslink erstellen"].tap()
-        XCTAssertTrue(app.buttons["Teilen"].waitForExistence(timeout: 20), "Zahlungslink nicht erstellt")
+        let teilen = app.buttons["Teilen"]
+        XCTAssertTrue(teilen.waitForExistence(timeout: 20), "Zahlungslink nicht erstellt")
         foto(app, "a03-zahlungslink-qr")
+        teilen.tap()
+        Thread.sleep(forTimeInterval: 3)
+        foto(app, "a03b-teilen")
+        let blattZu = app.buttons["Schließen"].firstMatch
+        if blattZu.exists { blattZu.tap() } else { app.swipeDown(velocity: .fast) }
+        Thread.sleep(forTimeInterval: 1)
         let fertig = app.buttons["Fertig"]
         if fertig.exists { fertig.tap() }
 
@@ -106,5 +118,40 @@ final class StoreWerbebilderUITests: XCTestCase {
         let team = app.buttons.containing(NSPredicate(format: "label BEGINSWITH 'Team-Adressen'")).firstMatch
         for _ in 0..<5 where !(team.exists && team.isHittable) { app.swipeUp(velocity: .slow) }
         if team.exists { team.tap(); Thread.sleep(forTimeInterval: 2); foto(app, "a09-team") }
+
+        // a10: echter Sperrbildschirm mit der Mitteilung des Servers (Bild 5). Das Lauf-Skript schickt sie per `xcrun simctl push`,
+        // sobald die Marker-Datei TF_PUSH_MARKER existiert, und legt danach <marker>.gesendet an.
+        if let marker = env["TF_PUSH_MARKER"] {
+            XCUIDevice.shared.press(.home)
+            Thread.sleep(forTimeInterval: 2)
+            FileManager.default.createFile(atPath: marker, contents: Data("bereit".utf8))
+            let gesendet = marker + ".gesendet"
+            for _ in 0..<60 where !FileManager.default.fileExists(atPath: gesendet) { Thread.sleep(forTimeInterval: 1) }
+            Thread.sleep(forTimeInterval: 6)  // Banner abwarten
+            // Mitteilungszentrale von oben links herunterziehen (sieht aus wie der Sperrbildschirm, mit Uhrzeit und Mitteilung)
+            let sb = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+            let oben = sb.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.003))
+            oben.press(forDuration: 0.1, thenDragTo: sb.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.75)))
+            Thread.sleep(forTimeInterval: 3)
+            foto(app, "a10-sperrbildschirm")
+        }
+    }
+
+    /// Nur der Sperrbildschirm (Bild 5), wenn die App schon Mitteilungen darf: TF_STORE_SPERRE=1 und TF_PUSH_MARKER
+    func testSperrbildschirm() throws {
+        let env = ProcessInfo.processInfo.environment
+        guard env["TF_STORE_SPERRE"] == "1", let marker = env["TF_PUSH_MARKER"] else { throw XCTSkip("Nur für Store-Bild 5") }
+        XCUIDevice.shared.press(.home)
+        Thread.sleep(forTimeInterval: 2)
+        // Mitteilungszentrale (zeigt Uhrzeit, Datum und Mitteilungen wie der Sperrbildschirm) von oben Mitte herunterziehen
+        let sb = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let oben = sb.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.0))
+        oben.press(forDuration: 0.3, thenDragTo: sb.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.85)), withVelocity: .slow, thenHoldForDuration: 0.3)
+        Thread.sleep(forTimeInterval: 2)
+        FileManager.default.createFile(atPath: marker, contents: Data("bereit".utf8))
+        let gesendet = marker + ".gesendet"
+        for _ in 0..<60 where !FileManager.default.fileExists(atPath: gesendet) { Thread.sleep(forTimeInterval: 1) }
+        Thread.sleep(forTimeInterval: 4)
+        foto(XCUIApplication(), "a10-sperrbildschirm")
     }
 }
