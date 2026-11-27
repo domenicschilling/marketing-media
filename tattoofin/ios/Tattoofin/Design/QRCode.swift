@@ -44,7 +44,15 @@ struct QRCodeView: View {
         .accessibilityElement()
         .accessibilityLabel(beschreibung)
         .accessibilityAddTraits(.isImage)
-        .task(id: inhalt) { bild = QRErzeuger.bild(inhalt) }
+        .task(id: inhalt) { bild = QRErzeuger.bild(Self.anzeigeInhalt(inhalt)) }
+    }
+
+    /// Nur Test-Build: Startargument „-TFQRZiel https://…“ ersetzt den Inhalt (Store-Bilder dürfen nicht auf localhost zeigen)
+    private static func anzeigeInhalt(_ inhalt: String) -> String {
+        #if DEBUG
+        if let ziel = UserDefaults.standard.string(forKey: "TFQRZiel"), !ziel.isEmpty { return ziel }
+        #endif
+        return inhalt
     }
 }
 

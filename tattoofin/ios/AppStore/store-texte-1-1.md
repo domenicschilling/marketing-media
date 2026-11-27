@@ -7,7 +7,7 @@ Entwurf vom Team (Texter + strenger Prüfer, Werberecht + Apple-Regeln), nachges
 | Name | Tattoofin für Tattoo-Studios | 28/30 |
 | Untertitel | Anzahlung, Klarna, Gutscheine | 29/30 |
 | Werbetext | 7 Tage kostenlos testen. Zahlungslink in Sekunden per WhatsApp: Dein Kunde zahlt mit Karte, Apple Pay oder Klarna. Keine Provision von Tattoofin. | 145/170 |
-| Schlüsselwörter | Tattoostudio,Tätowierer,Kasse,Zahlungslink,Ratenzahlung,Vorkasse,Kartenzahlung,No-Show,Termin,QR | 96/100 |
+| Schlüsselwörter | Tattoostudio,Tätowierer,Kasse,Zahlungslink,Ratenzahlung,Vorkasse,Kartenzahlung,No-Show,Gutschein,QR | 99/100 |
 
 Warum „Raten*“ nicht im Namen/Untertitel steht: Zu „Raten*“ gehört direkt der Pflichtsatz mit Sternchen-Text und „Achtung! Kreditaufnahme kostet Geld.“ (Klarna-Regel, KlarnaTexte.swift). Name und Untertitel haben dafür keinen Platz. Darum steht „Raten*“ ganz oben in der Beschreibung und groß auf dem ersten Bild, jeweils mit Pflichtsatz.
 
@@ -48,6 +48,7 @@ ABO „TATTOOFIN MONATLICH“
 Nutzungsbedingungen (Apple-Standard-EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 Vertrag: https://tattoofin.de/vertrag.html?app=1
 Datenschutz: https://tattoofin.de/datenschutz.html#app
+Impressum: https://tattoofin.de/impressum.html
 ```
 
 ## Neuerungen in 1.1

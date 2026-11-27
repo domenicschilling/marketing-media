@@ -1,6 +1,14 @@
-# Tattoofin-App: Angaben für App Store Connect (Entwurf, Stand 15.11.2026)
+# Tattoofin-App: Angaben für App Store Connect (Entwurf, Stand 25.11.2026)
 
-## Version 1.1 (Build 2): ohne QR-Aufsteller (vorbereitet 15.11.2026, nicht gebaut, nicht eingereicht)
+## Version 1.1 (Build 4) – aktueller Stand
+Store-Texte, Bilder und „Neuerungen“ für 1.1 stehen in `store-texte-1-1.md`, die Bilder entstehen mit `werbebilder/render.mjs`
+aus `StoreWerbebilderUITests`. Alle Befunde und Prüfrunden: `befunde-1-1.md`. Ist Build 4 schon hochgeladen, wird der nächste Upload Build 5.
+Neu in 1.1 (für die Prüfung relevant): Adress-Maske der Zahlseite (Kasse gesperrt → „Adresse eintragen“), Studios ohne Anzahlung
+(Kasse bietet sie nicht an), Karte „Klarna ist bei dir noch aus“ im Werbung-Tab, Gratis-Woche über das Einführungsangebot des Abos,
+Auszahlungen als Karte in Zahlungen, Mitteilungen: Absturz beim Antippen behoben.
+
+
+## Version 1.1 (Build 2, ältere Planung vom 15.11.2026): ohne QR-Aufsteller
 
 Domenic 15.11.2026: Den QR-Aufsteller aus Holz gibt es nicht mehr. In 1.1 ist er ganz aus der App entfernt (Konto → „Dein Studio“,
 Werbung → Zahlseiten-Karte, Bestellung, Logo-Auswahl aus Fotos). Der QR-Code der Zahlseite („QR-Code in Fotos speichern“) und die
@@ -70,7 +78,7 @@ Sandbox, TestFlight und App Review kaufen nie mit echtem Geld. Nach so einem Tes
 und „Testzahlung auslösen“ gehen, Kunden können nicht wirklich bezahlen, die Stripe-Einrichtung ist aus. So sieht der Prüfer, was das Abo
 freischaltet (Regel 2.1, 3.1.1), und ein kostenloser Testkauf öffnet nie eine echte Kasse.
 
-## App-Beschreibung (de-DE, Entwurf)
+## App-Beschreibung 1.0 (alt, für 1.1 gilt `store-texte-1-1.md`)
 
 ```
 Tattoofin ist die Kasse für dein Tattoo-Studio: Betrag eintippen, Zahlungslink oder QR-Code erstellen, und dein Kunde bezahlt mit
@@ -97,7 +105,7 @@ Vertrag: https://tattoofin.de/vertrag.html?app=1
 Datenschutz: https://tattoofin.de/datenschutz.html#app
 ```
 
-Untertitel (max. 30 Zeichen), Vorschlag: `Zahlungslinks fürs Studio`. Schlüsselwörter: `Tattoo,Studio,Kasse,Zahlungslink,QR,Gutschein,Anzahlung,Stripe`.
+Untertitel und Schlüsselwörter für 1.1: siehe `store-texte-1-1.md` (1.0 hatte: `Zahlungslinks fürs Studio`, `Tattoo,Studio,Kasse,Zahlungslink,QR,Gutschein,Anzahlung,Stripe`).
 
 ## Review-Notiz (App Review Information → Notes), Englisch
 
@@ -126,13 +134,14 @@ Sign-in (no password): enter the e-mail below and tap "Code schicken". No e-mail
   Code:   <APP_REVIEW_CODE>
 - Kasse: type an amount, tap "Zahlungslink erstellen", then "Testzahlung auslösen" (no payment, no Stripe).
 - Gutscheine: search one of the listed codes or scan the QR code on a voucher PDF; redeem and undo.
-- Zahlungen → Auszahlungen: sample payouts.
+- Zahlungen: list of sample payments; the "Auszahlungen" card at the top opens sample payouts.
 - Konto: Impressum and privacy policy (also on the sign-in screen), notification settings, team, devices.
-- Werbung (marketing tab): a ready-made promo video (streamed from our own server, can be saved to Photos with add-only access)
-  and ready-made Instagram posts with the studio's name and the QR code of its payment page. The post images are drawn on the
-  device from JavaScript files bundled with the app (an invisible WKWebView used only as a renderer, no remote code, no web UI);
-  all controls are native SwiftUI. "Zum Ausdrucken" opens printable sheets (window sticker, flyer) on tattoofin.de in
-  SFSafariViewController. No digital content or features are sold in this tab.
+- Werbung (marketing tab): in the demo studio, Klarna is switched off in its (simulated) Stripe account. The tab therefore shows the
+  card "Klarna ist bei dir noch aus" and the QR code of the studio's payment page (can be saved to Photos with add-only access).
+  Studios with Klarna switched on additionally get a ready-made promo video (streamed from our own server) and Instagram posts
+  with the studio's name and that QR code; the post images are drawn on the device from JavaScript files bundled with the app
+  (an invisible WKWebView used only as a renderer, no remote code, no web UI); all controls are native SwiftUI. Where offered, printable sheets
+  open on tattoofin.de in SFSafariViewController. No digital content or features are sold in this tab.
 - So geht's (Kasse → "So geht's", or Konto): a short tutorial video with chapters. It shows the same features in the browser
   version of Tattoofin; the chapter about adding the web app to the home screen is skipped.
 Nothing in the app can be bought outside the App Store.
@@ -144,7 +153,7 @@ Contact: info@tattoofin.de
 
 ## URLs
 
-- Support-URL: `https://tattoofin.de/impressum.html` (Kontakt: Telefon, WhatsApp, info@tattoofin.de)
+- Support-URL: `https://tattoofin.de/fragen/` (Fragen-Seite mit WhatsApp-Knopf und info@tattoofin.de; ab 1.1, vorher Impressum)
 - Datenschutz-URL: `https://tattoofin.de/datenschutz.html#app` (mit „Dein Studio in der App“ und „Werbung“; der Abschnitt zum QR-Aufsteller entfällt seit 15.11.2026)
 - Marketing-URL: leer lassen. In der App gibt es keinen Hinweis und keinen Link auf die Website zum Bezahlen und keinen anderen Preis (Apple 3.1.3).
 - Nutzungsbedingungen: Apple-Standard-EULA `https://www.apple.com/legal/internet-services/itunes/dev/stdeula/` (Link in der Beschreibung und im

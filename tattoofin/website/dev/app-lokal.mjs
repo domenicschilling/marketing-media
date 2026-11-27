@@ -117,7 +117,8 @@ const store = await studio("sam@nordlicht-tattoo.de", "Nordlicht Tattoo", "Hambu
   await bezahlt(ts, { betrag: "480", kunde: "Tom Richter", beschreibung: "Unterarm Blackwork" });
   await bezahlt(ts, { betrag: "150", kunde: "Mia Sommer", beschreibung: "Fineline Schulter", art: "anzahlung" });
   await call("POST", "/api/portal/zahlung", { token: ts, body: { betrag: "250", kunde: "Elif Demir", beschreibung: "Anzahlung Cover-up", art: "anzahlung" } });
-  const klarnaId = await bezahlt(ts, { betrag: "1200", kunde: "Jonas Keller", beschreibung: "Rückenstück", sitzungen: "Sitzung 1 von 3" });
+  // Ohne Sitzungsangabe: „Sitzung 1 von 3“ neben „Mit Klarna“ läse sich im Store-Bild wie ein Ratenstand (Abnahme 25.11.2026)
+  const klarnaId = await bezahlt(ts, { betrag: "1200", kunde: "Jonas Keller", beschreibung: "Rückenstück" });
   // Store-Bild „Raten*“: diese Zahlung lief über Klarna (der Stripe-Nachbau kennt nur Karte)
   { const f = path.join(dataDir, encodeURIComponent(`zahlung/${store.id}/${klarnaId}`) + ".json"); fs.writeFileSync(f, JSON.stringify({ ...JSON.parse(fs.readFileSync(f, "utf8")), zahlart: "klarna", zahlartText: "Klarna" }, null, 2)); }
   // Store-Bilder: glaubwürdige Uhrzeiten (tagsüber, über die letzten Tage verteilt) statt „jetzt“
@@ -140,6 +141,14 @@ const store = await studio("sam@nordlicht-tattoo.de", "Nordlicht Tattoo", "Hambu
   await mock("payout", { account: store.konto, bank_name: "Hamburger Sparkasse", last4: "4821", amount: 113000, status: "in_transit", created: jetzt - 1 * tag, arrival_date: jetzt + 1 * tag });
   await mock("webhooks?an=1");
   await mock(`saldo/${store.konto}?verfuegbar=63000&unterwegs=113000`);
+  // Store-Bilder: Studio fertig eingerichtet (Checkliste 8/8 → „Einrichtung“ verschwindet aus der Kasse)
+  {
+    const f = path.join(dataDir, encodeURIComponent("studio/" + store.id) + ".json");
+    const st = JSON.parse(fs.readFileSync(f, "utf8"));
+    const am = new Date(Date.now() - 5 * 86400000).toISOString();
+    fs.writeFileSync(f, JSON.stringify({ ...st, checkliste: { ...(st.checkliste || {}), theke: true, werbung: true },
+      fragebogen: { ...(st.fragebogen || {}), updatedAt: am }, recht: { version: "2026-12", am } }, null, 2));
+  }
   // Store-Bild „Team“: zwei Kolleginnen/Kollegen (Domain nordlicht-tattoo.de ist nicht vergeben, Stand 25.11.2026)
   await call("POST", `/api/admin/studio/${store.id}/team`, { admin: true, body: { emails: ["kai@nordlicht-tattoo.de", "lena@nordlicht-tattoo.de"] } });
 }

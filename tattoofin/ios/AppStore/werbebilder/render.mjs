@@ -61,8 +61,9 @@ body{background:${dunkel ? NACHT : GOLD};font-family:DMSans,sans-serif;color:${v
 .band{position:absolute;top:0;left:${-i * W}px;width:${N * W}px;height:${H}px;background:url(${BAND}) no-repeat;background-size:${N * W}px ${H}px;opacity:${dunkel ? ".16" : ".55"}}
 .kopf{position:absolute;top:${b.kopfTop ?? 170}px;left:96px;right:96px;z-index:5;text-align:${b.links ? "left" : "center"}}
 .marke{display:flex;align-items:center;gap:26px;${b.links ? "" : "justify-content:center;"}margin-bottom:70px}
-.marke img.ic{width:104px;height:104px;border-radius:24px;box-shadow:0 6px 0 ${dunkel ? "rgba(0,0,0,.35)" : NAVY}}
+.marke img.ic{width:104px;height:104px;border-radius:24px;border:5px solid ${dunkel ? "rgba(255,250,240,.0)" : NACHT};box-shadow:0 6px 0 ${dunkel ? "rgba(0,0,0,.35)" : NACHT}}
 .marke img.wm{height:70px}
+.marke .wm-navy{height:70px;width:${Math.round(70 * 519 / 116)}px;background:${NACHT};-webkit-mask:url(data:image/png;base64,${b64(path.join(assets, "wortmarke.png"))}) center/contain no-repeat}
 h1{font-family:Luckiest;font-weight:400;font-size:${b.groesse || 150}px;line-height:.98;letter-spacing:1px;text-transform:uppercase;color:${dunkel ? GOLD : NACHT};text-shadow:${dunkel ? "7px 7px 0 rgba(0,0,0,.45)" : `7px 7px 0 ${CREME}`}}
 h1 em{font-style:normal;color:${dunkel ? CREME : CREME};text-shadow:7px 7px 0 ${dunkel ? "rgba(0,0,0,.45)" : NACHT}}
 .sub{margin-top:46px;font-size:58px;line-height:1.22;font-weight:700;color:${vorne}}
@@ -70,6 +71,7 @@ h1 em{font-style:normal;color:${dunkel ? CREME : CREME};text-shadow:7px 7px 0 ${
 .chip{font-size:44px;font-weight:800;padding:18px 34px;border-radius:999px;background:${dunkel ? GOLD : NACHT};color:${dunkel ? NACHT : CREME}}
 .stempel{position:absolute;z-index:6;background:${CREME};color:${NACHT};font-family:Luckiest;text-transform:uppercase;text-align:center;border:8px solid ${NACHT};box-shadow:10px 10px 0 ${NACHT};border-radius:36px;padding:34px 44px 24px;line-height:1.02;transform:rotate(-5deg)}
 .stempel b{display:block;font-weight:400;color:${NAVY}}
+.stempel small{display:block;margin-top:14px;font-family:DMSans,sans-serif;font-weight:700;font-size:30px;text-transform:none;color:${NACHT}}
 .handy{position:absolute;background:linear-gradient(145deg,#3a4656,#11161d 40%,#2b3440 70%,#0c1015);box-shadow:0 0 0 3px #5b6776 inset, 0 60px 120px rgba(10,20,35,.45), 0 18px 40px rgba(10,20,35,.35)}
 .handy img{width:100%;height:100%;display:block;object-fit:cover;object-position:top}
 .handy .insel{position:absolute;left:50%;transform:translateX(-50%);background:#000;border-radius:999px}
@@ -84,11 +86,11 @@ h1 em{font-style:normal;color:${dunkel ? CREME : CREME};text-shadow:7px 7px 0 ${
 .fuss{position:absolute;z-index:8;left:0;right:0;bottom:0;padding:36px 84px 48px;background:${CREME};font-size:34px;line-height:1.36;color:${NACHT};text-align:center;border-top:8px solid ${NACHT}}
 </style></head><body>
 <div class="raster"></div><div class="band"></div>
-<div class="kopf"><div class="marke"><img class="ic" src="data:image/png;base64,${b64(icon)}" alt=""><img class="wm" src="data:image/png;base64,${b64(path.join(assets, "wortmarke.png"))}" alt=""></div>
+<div class="kopf"><div class="marke"><img class="ic" src="data:image/png;base64,${b64(icon)}" alt="">${dunkel ? `<img class="wm" src="data:image/png;base64,${b64(path.join(assets, "wortmarke.png"))}" alt="">` : `<span class="wm-navy"></span>`}</div>
 <h1>${b.ueberschrift.map((z) => esc(z).replace(/\[(.+?)\]/g, "<em>$1</em>")).join("<br>")}</h1>
 ${b.sub ? `<div class="sub">${esc(b.sub)}</div>` : ""}
 ${b.chips ? `<div class="chips">${b.chips.map((c) => `<span class="chip">${esc(c)}</span>`).join("")}</div>` : ""}</div>
-${b.stempel ? `<div class="stempel" style="left:${b.stempel.x}px;top:${b.stempel.y}px;font-size:${b.stempel.groesse || 76}px">${b.stempel.zeilen.map((z, k) => k ? `<b>${esc(z)}</b>` : esc(z)).join("")}</div>` : ""}
+${b.stempel ? `<div class="stempel" style="left:${b.stempel.x}px;top:${b.stempel.y}px;font-size:${b.stempel.groesse || 76}px">${b.stempel.zeilen.map((z, k) => k ? `<b>${esc(z)}</b>` : esc(z)).join("")}${b.stempel.klein ? `<small>${esc(b.stempel.klein)}</small>` : ""}</div>` : ""}
 ${handys}
 ${b.karte ? `<div class="karte"><img src="data:image/png;base64,${b64(icon)}" alt=""><div style="flex:1"><div class="k1">${esc(b.karte.titel)}<span>${esc(b.karte.zeit || "jetzt")}</span></div><div class="k2">${esc(b.karte.text)}</div></div></div>` : ""}
 ${b.fuss ? `<div class="fuss">${esc(b.fuss)}</div>` : ""}
@@ -123,3 +125,19 @@ await s.setContent(`<body style="margin:0;background:#e9e4da;display:flex;gap:10
 await s.screenshot({ path: path.join(ziel, "kontaktbogen.png"), type: "png" });
 await browser.close();
 console.log("✓ kontaktbogen", path.join(ziel, "kontaktbogen.png"));
+
+// Prüfschritt: Jeder QR-Code in den fertigen Bildern wird ausgelesen (Apple Vision, qr-lesen.swift).
+// Erlaubt sind nur öffentliche Adressen (Standard: https://tattoofin.de…); localhost/127.0.0.1/private Netze brechen ab.
+const { execFileSync } = await import("node:child_process");
+const erlaubt = (process.env.QR_ERLAUBT || "https://tattoofin.de").split(",");
+const ausgabe = execFileSync("swift", [path.join(hier, "qr-lesen.swift"), ...fertig], { encoding: "utf8", timeout: 240000 });
+let fehler = 0, gefunden = 0;
+for (const zeile of ausgabe.trim().split("\n").filter(Boolean)) {
+  const [datei, inhalt] = zeile.split("\t");
+  gefunden++;
+  const schlecht = /localhost|127\.0\.0\.1|192\.168\.|10\.\d+\.|\.local\b/i.test(inhalt) || !erlaubt.some((e) => inhalt.startsWith(e));
+  console.log(`${schlecht ? "✗" : "✓"} QR ${path.basename(datei)}: ${inhalt}`);
+  if (schlecht) fehler++;
+}
+if (fehler) { console.error(`✗ ${fehler} QR-Code(s) zeigen auf eine nicht erlaubte Adresse – Bilder NICHT verwenden`); process.exit(1); }
+console.log(`✓ QR-Prüfung: ${gefunden} QR-Code(s), alle öffentlich`);

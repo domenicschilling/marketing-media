@@ -14,16 +14,17 @@
         "kostenlos",
         "testen"
       ],
-      "x": 880,
-      "y": 1130,
-      "groesse": 70
+      "klein": "für neue Abonnenten",
+      "x": 800,
+      "y": 890,
+      "groesse": 64
     },
     "handys": [
       {
         "datei": "a01-zahlung-klarna.png",
-        "breite": 900,
-        "x": 150,
-        "y": 1180,
+        "breite": 1000,
+        "x": 90,
+        "y": 930,
         "drehung": -3,
         "markierung": [
           {
@@ -45,21 +46,21 @@
       "Zahlungslink",
       "[in Sekunden]"
     ],
-    "sub": "Betrag eintippen, per WhatsApp schicken. Fertig.",
+    "sub": "Betrag eintippen, Link teilen. Fertig.",
     "handys": [
       {
         "datei": "a02-kasse-betrag.png",
-        "breite": 760,
-        "x": 70,
-        "y": 1060,
+        "breite": 800,
+        "x": 40,
+        "y": 900,
         "drehung": -4,
         "z": 2
       },
       {
-        "datei": "a03-zahlungslink-qr.png",
-        "breite": 760,
-        "x": 500,
-        "y": 1240,
+        "datei": "a03b-teilen.png",
+        "breite": 800,
+        "x": 480,
+        "y": 1080,
         "drehung": 4,
         "z": 3
       }
@@ -82,8 +83,8 @@
     "handys": [
       {
         "datei": "a04-zahlungen.png",
-        "breite": 940,
-        "y": 1240
+        "breite": 1000,
+        "y": 1060
       }
     ],
     "fuss": "*Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, nicht Tattoofin. Achtung! Kreditaufnahme kostet Geld."
@@ -101,8 +102,8 @@
     "handys": [
       {
         "datei": "a05b-gutschein-detail.png",
-        "breite": 940,
-        "y": 1230
+        "breite": 1000,
+        "y": 1000
       }
     ]
   },
@@ -117,18 +118,12 @@
     "groesse": 140,
     "handys": [
       {
-        "datei": "a01-zahlung-klarna.png",
-        "breite": 940,
-        "y": 1320
+        "datei": "a10-sperrbildschirm.png",
+        "breite": 1000,
+        "y": 1000
       }
     ],
-    "karte": {
-      "titel": "Zahlung eingegangen",
-      "text": "1.200,00 € · Rückenstück",
-      "x": 100,
-      "y": 1130,
-      "breite": 1120
-    }
+    "sub": "Mitteilung, sobald dein Kunde bezahlt hat."
   },
   {
     "name": "auszahlung",
@@ -141,8 +136,8 @@
     "handys": [
       {
         "datei": "a06-auszahlungen.png",
-        "breite": 940,
-        "y": 1180
+        "breite": 1000,
+        "y": 940
       }
     ]
   },
@@ -157,8 +152,8 @@
     "handys": [
       {
         "datei": "a09-team.png",
-        "breite": 940,
-        "y": 1180
+        "breite": 1000,
+        "y": 940
       }
     ]
   },
@@ -173,8 +168,8 @@
     "handys": [
       {
         "datei": "a08-zahlseite-qr.png",
-        "breite": 940,
-        "y": 1180
+        "breite": 1000,
+        "y": 940
       }
     ]
   }

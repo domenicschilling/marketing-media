@@ -25,7 +25,9 @@ final class StoreWerbebilderUITests: XCTestCase {
         let app = XCUIApplication()
         let api = env["TF_UI_API"] ?? "http://localhost:8888"
         app.launchArguments = ["-TFApiBase", api, "-TFTestEmail", "sam@nordlicht-tattoo.de", "-TFZuruecksetzen", "YES",
-                               "-AppleLanguages", "(de)", "-AppleLocale", "de_DE"]
+                               "-AppleLanguages", "(de)", "-AppleLocale", "de_DE",
+                               // QR-Codes in den Store-Bildern zeigen auf die öffentliche Seite, nie auf localhost (Prüfschritt in render.mjs)
+                               "-TFQRZiel", env["TF_QR_ZIEL"] ?? "https://tattoofin.de"]
         app.launch()
 
         // Anmelden
