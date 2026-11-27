@@ -99,7 +99,15 @@ Branch `claude/tf-kundenpruefung` (Repo marketing-media), Commit siehe unten.
 
 Belege: `bilder/20-verbessert-start-ohne-haekchen.jpg`, `bilder/21-verbessert-login-kopf.jpg`.
 
-DEPLOY_PLATZHALTER
+**Live seit 27.11.2026 ~21:50:** Deploy `6b09e774f0165e09803e0bd8` (Commit 534aa23 auf `claude/tf-kundenpruefung`).
+**Rückweg:** `npx -y netlify-cli@17 api restoreSiteDeploy --data '{"site_id":"dd784ec7-3a7e-4122-a8a3-87087ef7be7a","deploy_id":"6b09a389546c6b2441ea7727"}'` (= Stand vorher, Chic: Stripe-Gebühr trägt das Studio).
+**Künftige tattoofin.de-Deploys auf `claude/tf-kundenpruefung` aufbauen** (= `claude/chic-live-raten` + diese Fixes), sonst kommt das Häkchen zurück.
+
+Geprüft vor dem Live-Gang:
+- Tests (Stripe-Nachbau, lokal): e2e 409/0, Gutschein-Shop 223/0, Chic 32/0, Risikofrei direkt 36/0. Betrieb 363 ok / 7 Fehler – **dieselben 7 Fehler auch auf dem unveränderten Live-Code** (Nachfass-Erinnerungen nach abgebrochener Anmeldung, schlagen im Test fehl; Vermutung: die Dubletten-Prüfung `schonAbgeschlossen()` greift, weil alle Test-Studios dieselbe Telefonnummer haben – nicht nachgewiesen, nicht von dieser Änderung).
+- `npm run abnahme -- …/tattoofin/website/public`: **BESTANDEN** (axe ohne schwere Verstöße, Hero auf 12 Geräten). Zusätzlich /studios-raten lokal mit `--soll "0 €;49,90 €"`: BESTANDEN. /start und /login: axe ok; die Hero-Regel passt nicht auf Formularseiten (live vorher genauso).
+
+Geprüft nach dem Live-Gang (Safari-Engine, 390 × 844): 16 Seiten 200 (Startseite, /studios-raten, /start, /login, /preis, /raten, 3 Shops, 7 Rechtsseiten der Shops), kein Querscrollen, keine Skriptfehler; /api/config, /api/status, /api/gutschein-shop (MU, Chic) 200; Funnel bis /start ohne Häkchen, Knopf schickt direkt an /api/signup (im Test abgefangen); alle 3 Shops bis zur Kauf-Anfrage (abgefangen). Bild: `bilder/22-live-funnel-schritt5-ohne-haekchen.jpg`.
 
 ## e) Was Domenic entscheiden muss
 
@@ -135,6 +143,6 @@ DEPLOY_PLATZHALTER
 | Raten-Zahlung als Endkunde | teilweise: über die vorhandenen Tests (Stripe-Nachbau) und Code, echte Zahlung tabu |
 | App prüfen | teilweise: Code gelesen; Simulator nicht genutzt, weil der Speicher unter 3 GB lag (zeitweise unter 1 GB, durch einen anderen Chat) |
 | Noten, Befunde mit Schwere und Beleg | erledigt |
-| Website-Fixes auf eigenem Branch, Tests grün | TESTS_PLATZHALTER |
-| Abnahme bestanden, live, live geprüft | ABNAHME_PLATZHALTER |
+| Website-Fixes auf eigenem Branch, Tests grün | teilweise: e2e, Shop, Chic, Risikofrei grün; Betrieb mit 7 Fehlern, die genauso auf dem unveränderten Live-Code auftreten (siehe d) |
+| Abnahme bestanden, live, live geprüft | erledigt (Deploy 6b09e774, Rückweg 6b09a389) |
 | Bericht, Commit, Push, Worktree löschen | erledigt (siehe Abschlussmeldung) |
