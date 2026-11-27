@@ -123,12 +123,12 @@ final class StudioMehrUITests: XCTestCase {
         XCTAssertTrue(einst.waitForExistence(timeout: 10), "Abschnitt „Dein Studio“ fehlt")
         foto("b03-konto-dein-studio")
         // Kleine Schritte (ein ganzer Wisch springt über den Abschnitt hinweg)
-        let whatsapp = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", "Hilfe per WhatsApp")).firstMatch
+        let whatsapp = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", "WhatsApp schreiben")).firstMatch
         let liste = app.collectionViews.firstMatch
         for _ in 0..<8 where !(whatsapp.exists && whatsapp.isHittable && whatsapp.frame.maxY < app.tabBars.firstMatch.frame.minY - 4) {
             liste.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.6)).press(forDuration: 0.05, thenDragTo: liste.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.35)))
         }
-        XCTAssertTrue(whatsapp.exists, "Hilfe per WhatsApp fehlt")
+        XCTAssertTrue(whatsapp.exists, "WhatsApp-Hilfe fehlt")
         foto("b03b-konto-dein-studio-unten")
 
         // Einstellungen: Ausweich-Anzahlung an, speichern

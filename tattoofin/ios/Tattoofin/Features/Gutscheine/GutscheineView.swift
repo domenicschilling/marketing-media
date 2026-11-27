@@ -47,41 +47,40 @@ struct GutscheineView: View {
                 Section {
                     VStack(alignment: .leading, spacing: 8) {
                         Text(Texte.Gutscheine.codeEingeben).font(.dm(.subheadline, weight: .semibold)).foregroundStyle(Color.tfTinte)
-                        HStack(spacing: 8) {
-                            // Mehrzeilig erlaubt, damit der Code bei großer Schrift umbricht statt abgeschnitten zu werden (DS-Audit „Text clipped“)
-                            TextField(Texte.Gutscheine.codeEingeben, text: $code, prompt: tfPlatzhalter(schrift.isAccessibilitySize ? Texte.Runde2.codeKurz : Texte.Gutscheine.codePlatzhalter), axis: .vertical)
-                                .lineLimit(1...3)
-                                .font(.system(.title3, design: .monospaced).weight(.semibold))
-                                .textInputAutocapitalization(.characters)
-                                .autocorrectionDisabled()
-                                .keyboardType(.asciiCapable)
-                                .submitLabel(.search)
-                                .focused($codeFokus)
-                                .onSubmit { suchen() }
-                                .onChange(of: code) { _, neu in
-                                    // Mehrzeiliges Feld: Return fügt einen Zeilenumbruch ein → als „Suchen“ werten
-                                    let mitReturn = neu.contains("\n")
-                                    let f = GutscheinCode.formatieren(neu.replacingOccurrences(of: "\n", with: ""))
-                                    if f != neu { code = f }
-                                    if mitReturn, GutscheinCode.vollstaendig(f) { suchen() }
-                                    // Alte Meldung („nicht gefunden“) passt nicht mehr zum neuen Code – außer die Suche hat den Code selbst gesetzt
-                                    if codeAusSuche {
-                                        if f == neu { codeAusSuche = false }
-                                    } else if !sucht {
-                                        fehler = nil
-                                    }
+                        // Mehrzeilig erlaubt, damit der Code bei großer Schrift umbricht statt abgeschnitten zu werden (DS-Audit „Text clipped“)
+                        TextField(Texte.Gutscheine.codeEingeben, text: $code, prompt: tfPlatzhalter(schrift.isAccessibilitySize ? Texte.Runde2.codeKurz : Texte.Gutscheine.codePlatzhalter), axis: .vertical)
+                            .lineLimit(1...3)
+                            .font(.system(.title3, design: .monospaced).weight(.semibold))
+                            .textInputAutocapitalization(.characters)
+                            .autocorrectionDisabled()
+                            .keyboardType(.asciiCapable)
+                            .submitLabel(.search)
+                            .focused($codeFokus)
+                            .onSubmit { suchen() }
+                            .onChange(of: code) { _, neu in
+                                // Mehrzeiliges Feld: Return fügt einen Zeilenumbruch ein → als „Suchen“ werten
+                                let mitReturn = neu.contains("\n")
+                                let f = GutscheinCode.formatieren(neu.replacingOccurrences(of: "\n", with: ""))
+                                if f != neu { code = f }
+                                if mitReturn, GutscheinCode.vollstaendig(f) { suchen() }
+                                // Alte Meldung („nicht gefunden“) passt nicht mehr zum neuen Code – außer die Suche hat den Code selbst gesetzt
+                                if codeAusSuche {
+                                    if f == neu { codeAusSuche = false }
+                                } else if !sucht {
+                                    fehler = nil
                                 }
-                                .accessibilityLabel(Texte.Gutscheine.codeEingeben)
-                            Button {
-                                suchen()
-                            } label: {
-                                if sucht { ProgressView() } else { Image(systemName: "arrow.right.circle.fill").font(.title) }
                             }
-                            .frame(minWidth: 44, minHeight: 44)
-                            .contentShape(Rectangle())
-                            .disabled(!GutscheinCode.vollstaendig(code) || sucht)
-                            .accessibilityLabel(Texte.Gutscheine.suchen)
+                            .accessibilityLabel(Texte.Gutscheine.codeEingeben)
+                            .tfTextfeld()  // ein Eingabefeld-Bauteil für die ganze App (Abnahme 1.1, Nr. 17)
+                        // Abschicken wie überall: Knopf in voller Breite unter dem Feld oder die Tastatur-Taste (vorher Pfeil-Symbol daneben)
+                        Button {
+                            suchen()
+                        } label: {
+                            if sucht { ProgressView() } else { Label(Texte.Gutscheine.suchen, systemImage: "magnifyingglass") }
                         }
+                        .buttonStyle(.zweit)
+                        .disabled(!GutscheinCode.vollstaendig(code) || sucht)
+                        .accessibilityLabel(Texte.Gutscheine.suchen)
                         if let fehler { FehlerZeile(text: fehler) }
                     }
                     .padding(.vertical, 4)
