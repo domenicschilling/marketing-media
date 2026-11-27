@@ -117,7 +117,7 @@ final class GestaltungRundgangUITests: XCTestCase {
             greta.tap(); seite(app, "gutschein-detail", tiefe: 1); zurueck(app)
         }
         app.swipeDown(velocity: .fast); app.swipeDown(velocity: .fast)
-        let verkaufen = app.buttons["Gutschein verkaufen"].firstMatch
+        let verkaufen = app.buttons["gutschein-verkaufen"].firstMatch  // einziger Verkaufen-Knopf (kein „+“ mehr, Abnahme G4)
         if verkaufen.waitForExistence(timeout: 5) {
             if !verkaufen.isHittable { app.swipeUp(velocity: .slow) }
             verkaufen.tap(); foto(app, "gutschein-verkaufen"); schliessen(app)
