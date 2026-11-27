@@ -68,3 +68,27 @@ Bekannte Grenze (ehrlich, nach unabhängiger Abnahme): Bei größter Bedienungsh
 - **Runde 2** (3 frische Prüfer, iPhone 17 + SE): Noten 7 / 7,5 / 7 von 10. 14 Punkte, 13 umgesetzt (`3bf0257`): Auswahl wächst bei großer Schrift mit (Liste großer Knöpfe statt abgeschnittenem Menü), Kasse ohne Lücke bei großer Schrift und mit weichem Übergang auf dem SE, € bricht nie allein um, Saldo bündig, Umsatz ohne „,00“, „Erstellen“ oben im Blatt Gutschein verkaufen, feste Symbolspalte im Konto, Team einheitlich, kein doppelter Titel beim Code. Nicht gemacht: Suchfeld/Segment in Zahlungen an derselben Stelle halten (Umbau, kleiner Gewinn).
 - **Runde 3** (erstmals echter Dunkelmodus, Nachprüfung Runde 2): Noten 8 / 8 / 7,5 von 10 – „Dunkelmodus wirklich dunkel und aus einem Guss“, „hell und dunkel bei normaler Schrift keine echten Fehler mehr“. 9 Punkte, 8 umgesetzt (`d6f029d`): kein Wortbruch in Auswahl und Konto-Navigationszeilen bei größter Schrift (KORREKTUR nach unabhängiger Abnahme: die Stripe-Statuszeilen brachen weiter mitten im Wort, das war nicht behoben – nachgebessert in der Abnahme-Runde), deckende Leiste im Code-Schritt, Segmente in Markenfarben (auch dunkel), Stripe-Häkchen einheitlich, Monatsumsatz ohne „,00“, kompakter Abstand in Zahlungen, „Wird geladen …“ ohne einsame Punkte. Nicht gemacht: eigenes Suchfeld in Zahlungen bei größter Schrift (System-Suchfeld, iOS zeichnet es).
 - Fotos aller Bildschirme: hell, dunkel (seit Runde 3 per Startargument sicher dunkel) und größte Schrift, je ~85 auf iPhone 17 und SE.
+
+## Unabhängige Abnahme (5 Prüfer, 26.11.2026) – Nachbesserung 27.11.2026
+Urteil der Abnahme: „erst nachbessern“. Umgesetzt (Branch `claude/tattoofin-app-1-1-store`):
+| Nr. | Befund | Stand |
+|---|---|---|
+| 1 | Absturz beim Antippen einer Mitteilung | **behoben** – Commit 4c4ff6b übernommen, dazu `willPresent` ebenfalls mit Abschluss-Rückruf auf dem Haupt-Thread (3ed9c95) |
+| 2 | Review-Notiz beschreibt Werbevideo, Demo-Studio hat Klarna aus | **behoben (Text)** – README/Review-Notiz beschreibt die Karte „Klarna ist bei dir noch aus“; `klarnaAktiv` im Demo nur mit Domenics OK (Server) |
+| 3 | QR-Codes in Store-Bildern auf localhost | **behoben** – QR-Ziel `https://tattoofin.de` (Debug-Startargument nur für Fotos), Prüfschritt im Render liest jeden QR (Apple Vision) und bricht bei localhost ab |
+| 4 | €-Zeichen in Luckiest Guy | **behoben** – `GrosserBetrag`: € in DM Sans Bold, 70 %, Grundlinie (Kasse, Zahlung, Link-Blatt, Gutschein, Verkaufen, Saldo, Abo-Preis) |
+| 5 | Stripe-Statuszeilen Wortbruch | **behoben** – AX2-Deckel (Unterseite StripeStatusView) |
+| 6 | „Dein Werbevideo“ bricht auf dem SE | **behoben** – WerbeUeberschrift (AX1-Deckel, 2 Zeilen, verkleinern) |
+| 7 | Team: rote Minus-Kreise | **behoben** – Entfernen per Wischen mit Rückfrage, „alle abmelden“ nur im Dialog |
+| 8 | README/Review-Notiz alt | **behoben** – Build 4, Support /fragen/, Neu in 1.1, 1.0-Text gekennzeichnet |
+| 9 | Aufkleber Bild 1 abgeschnitten | **behoben** – ganz im Bild, Statusleiste frei, „für neue Abonnenten“ |
+| 10 | Bild 2 widersprüchlich | **behoben** – beide Handys aus einem Vorgang (150 € Anzahlung), Studio fertig eingerichtet; echtes Teilen-Blatt mit WhatsApp geht im Simulator nicht (kein WhatsApp), darum QR-Blatt desselben Links |
+| 11 | Bild 1 = Bild 5 | **behoben** – Bild 5 mit echter iOS-Mitteilung (Text aus push.mjs, per `simctl push`) auf dem Startbildschirm; echte Sperre im kopflosen Simulator nicht auslösbar |
+| 12 | „Sitzung 1 von 3“ neben Klarna | **behoben** – Beispielzahlung ohne Sitzungsangabe |
+| 13 | Leeres Feld über dem Handy | **behoben** – Handys höher und größer |
+| 14 | Zwei Umschalter in Zahlungen | **behoben** – Auszahlungen als Karte, Filter als Menü in der Leiste |
+| 15 | Werbung-Tab | **behoben** – Karten mit „Speichern“ + 2 runden Knöpfen, Anleitung einmal oben, Sprungleiste ohne halben Chip |
+| 16 | Konto zu lang | **behoben** – Stripe eine Zeile, Bereich „Hilfe“, Absatz gestrichen |
+| 17 | Eingabefelder uneinheitlich | **behoben** – `tfTextfeld()` überall, Abschicken einheitlich |
+| Sammelliste | Wortmarke Marine, Schlüsselwort Gutschein statt Termin, Impressum-Zeile, Einrichtung bei 8/8 weg, Betrag 52 pt, „+“ bei Gutscheinen weg, Anmeldung (Ausrichtung, Rechtliches bei Tastatur aus, SE-Figur kleiner), „Neuen Code schicken“ als Textlink, Verlauf über dem Kassen-Knopf, E-Mails mittig gekürzt, Rundgang „dunkel + größte Schrift“ | **behoben** |
+| Sammelliste | Preis „49,90 €“ im Aufkleber | **bewusst nicht** – Apple-Regel 2.3.7 (keine Preise in Store-Bildern); stattdessen „für neue Abonnenten“ |
