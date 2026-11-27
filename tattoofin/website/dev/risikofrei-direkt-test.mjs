@@ -81,11 +81,11 @@ const s1 = await starte(d1.zahlung.id);
 check(i1.zahlung.zahlarten.includes("klarna") && i1.studio.klarna === true, "Zahlseite bietet Klarna an", i1.zahlung.zahlarten);
 check(s1.pmt.includes("klarna") && s1.pmt[0] === "card", "Checkout mit Karte und Klarna (Karte zuerst)", s1.pmt);
 check(s1.cs.account === chic.stripe.accountId && !s1.pid.transfer_data && !s1.pid.on_behalf_of && !s1.pid.transfer_group, "Direct Charge: Sitzung mit Stripe-Account-Header auf dem Konto von Chic, ohne transfer_data/on_behalf_of", { account: s1.cs.account, pid: s1.pid });
-check(s1.pid.application_fee_amount === undefined, "bis 31.12.2026: keine Plattformgebühr (0 €, Feld weggelassen)", s1.pid.application_fee_amount);
+check(s1.pid.application_fee_amount === 3025, "bis 31.12.2026: keine Provision, aber Stripe-Gebühr trägt Chic (Klarna-Satz 2,99 % + 0,35 € = 30,25 €)", s1.pid.application_fee_amount);
 check(/1\.000/.test(d1.whatsappText) && /Klarna/.test(d1.whatsappText), "WhatsApp-Text nennt Klarna wieder", d1.whatsappText.slice(0, 120));
 await stripeBezahlen(s1.r.data.url, "klarna");
 let z1 = null; for (let i = 0; i < 30 && z1?.status !== "bezahlt"; i++) { await wait(150); z1 = await getZahlung(chic.id, d1.zahlung.id); }
-check(z1?.status === "bezahlt" && z1.abwicklung === "direkt" && z1.zahlart === "klarna" && !z1.transferId && z1.gebuehrBruttoCent === 0 && !z1.applicationFeeId, "bezahlt mit Klarna: Abwicklung „direkt“, kein Transfer, Gebühr 0", { st: z1?.status, ab: z1?.abwicklung, za: z1?.zahlart, fee: z1?.gebuehrBruttoCent });
+check(z1?.status === "bezahlt" && z1.abwicklung === "direkt" && z1.zahlart === "klarna" && !z1.transferId && z1.gebuehrBruttoCent === 0 && z1.stripeGebuehrDurchCent === 3025, "bezahlt mit Klarna: Abwicklung „direkt“, kein Transfer, keine Provision, Stripe-Gebühr 30,25 € von Chic", { st: z1?.status, ab: z1?.abwicklung, za: z1?.zahlart, fee: z1?.gebuehrBruttoCent });
 check(domain.stripeLuecken(z1).length === 0, "keine offenen Stripe-Lücken (keine Gebühr zum Nachtragen)", domain.stripeLuecken(z1));
 const portal = (await json("/api/portal", {}, CHIC.cookie)).data;
 check(portal.studio.klarna === true && portal.studio.klarnaDauerhaft === true && /Klarna/.test(portal.ratenText), "App/Dashboard: Klarna an, Raten-Text mit Klarna", { k: portal.studio.klarna, d: portal.studio.klarnaDauerhaft });
@@ -107,7 +107,7 @@ const b1 = await link(CHIC, "400", "Bea Bezahlfeld");
 const rb = await post("/api/pay", { z: b1.zahlung.id, inhaltOk: true });
 const piB = (await mockState()).paymentIntents[String(rb.data.clientSecret || "").split("_secret_")[0]];
 check(rb.status === 200 && rb.data.stripeAccount === chic.stripe.accountId && rb.data.zahlarten.includes("klarna"), "Bezahlfeld mit stripeAccount von Chic und Klarna", { http: rb.status, acc: rb.data.stripeAccount, za: rb.data.zahlarten });
-check(piB && piB.account === chic.stripe.accountId && !piB.transfer_data && !piB.on_behalf_of && !piB.application_fee_amount, "PaymentIntent auf dem Konto von Chic, ohne Transfer, ohne Gebühr", piB && { account: piB.account, fee: piB.application_fee_amount });
+check(piB && piB.account === chic.stripe.accountId && !piB.transfer_data && !piB.on_behalf_of && piB.application_fee_amount === 1231, "PaymentIntent auf dem Konto von Chic, ohne Transfer, nur Stripe-Gebühr (400 € → 12,31 €)", piB && { account: piB.account, fee: piB.application_fee_amount });
 process.env.TF_BEZAHLFELD = "aus";
 
 console.log("Erstattung bei Direct Charge");

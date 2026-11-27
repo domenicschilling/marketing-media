@@ -214,6 +214,11 @@ export const klarnaFuer = (s, zeit) => CFG.zahlarten.includes("klarna") && !(s &
 export const klarnaDauerhaft = (s) => klarnaFuer(s, new Date("2100-01-01T00:00:00Z"));
 // Grobe Schätzung der Stripe-Gebühr (für die Provisions-Verrechnung bei Erstattungen), falls Stripe sie auf dem Studio-Konto nicht ausweist
 const schaetzGebuehr = (betragCent, zahlart) => (zahlart === "klarna" ? Math.round(betragCent * 0.0299) + 35 : Math.round(betragCent * 0.015) + 25);
+// Risikofrei direkt + Tattoofin gratis (provisionFreiBis): Stripe zieht die Gebühren bei Express-Konten (fees.payer = application) von
+// Tattoofin ab. Das Studio trägt sie selbst (Domenic 27.11.2026: „die stripe gebühren zahlen wir nicht das zahlt der natürlich selbst“)
+// → Plattformgebühr = geschätzte Stripe-Gebühr; bietet die Kasse Klarna an, pauschal der Klarna-Satz (Domenic: „Klarna-Satz pauschal“).
+export const gebuehrDurchreichen = (betragCent, arten = []) => schaetzGebuehr(betragCent, arten.includes("klarna") ? "klarna" : "karte");
+const durchFee = (direkt, fee, betragCent, arten) => (direkt && !fee.bruttoCent ? gebuehrDurchreichen(betragCent, arten) : 0);
 
 // Standard-Anzahlungsbedingungen (Verbraucher-AGB des Studios, Fassung 18.10.2026): Pauschale nur bei kurzfristiger Absage/
 // Nichterscheinen, Nachweis eines geringeren Schadens ausdrücklich möglich (§ 309 Nr. 5 BGB), Rückzahlung bei Absage durch das Studio.
@@ -320,6 +325,7 @@ export async function checkoutFuer(studio, z, { nurKarte = false, extra = null, 
   const meta = { tattoofinZahlung: z.id, studioId: studio.id, ...(z.art === "gutschein" ? { typ: "gutschein" } : {}) };
   const opts = plattform ? {} : { account: studio.stripe.accountId };
   const zahlarten = zahlartenFuer(z, { nurKarte, studio });
+  const durch = durchFee(direkt, fee, z.betragCent, zahlarten);
   const artikel = artikelText(studio, z);
   // Kunde vorab anlegen (Name + E-Mail vorausgefüllt). Klappt das nicht, sammelt Checkout die Angaben selbst.
   let customer = z.stripeCustomerId;
@@ -345,7 +351,7 @@ export async function checkoutFuer(studio, z, { nurKarte = false, extra = null, 
     payment_intent_data: {
       // Plattformgebühr nur, wenn es eine gibt (Tattoofin gratis bis provisionFreiBis → 0 € → Feld weglassen, kein leerer Gebühren-Datensatz)
       ...(plattform ? { ...feeFeld(fee), on_behalf_of: studio.stripe.accountId, transfer_data: { destination: studio.stripe.accountId }, transfer_group: z.id }
-        : direkt ? feeFeld(fee) : {}),
+        : direkt ? feeFeld(durch ? { bruttoCent: durch } : fee) : {}),
       description: `${artikel.name} · ${z.kunde || "Kunde"}`.slice(0, 500),
       metadata: meta,
     },
@@ -381,6 +387,7 @@ export async function checkoutFuer(studio, z, { nurKarte = false, extra = null, 
   z.abwicklung = plattform ? "plattform" : direkt ? "direkt" : "studio";
   z.gebuehrNettoCent = fee.nettoCent;
   z.gebuehrBruttoCent = fee.bruttoCent;
+  z.stripeGebuehrDurchCent = durch || 0;
   await saveZahlung(z);
   return session.url;
 }
@@ -437,12 +444,12 @@ export async function bezahlfeldFuer(studio, z) {
   if (z.paymentIntentId && z.clientSecret && z.betragFuerPi === z.betragCent) {
     return { clientSecret: z.clientSecret, stripeAccount: plattform ? null : studio.stripe.accountId, zahlarten: zahlartenFuer(z, { studio }) };
   }
-  const piParams = (arten) => ({
+  const piParams = (arten, durch = durchFee(direkt, fee, z.betragCent, arten)) => ({
     amount: z.betragCent, currency: "eur", payment_method_types: arten,
     description: `${artikelText(studio, z).name} · ${z.kunde || "Kunde"}`.slice(0, 500),
     receipt_email: z.email || undefined, metadata: z.art === "gutschein" ? { ...meta, typ: "gutschein" } : meta,
     ...(plattform ? { ...feeFeld(fee), on_behalf_of: studio.stripe.accountId, transfer_data: { destination: studio.stripe.accountId }, transfer_group: z.id }
-      : direkt ? feeFeld(fee) : {}),
+      : direkt ? feeFeld(durch ? { bruttoCent: durch } : fee) : {}),
   });
   const piOpts = (schluessel) => ({ idempotencyKey: schluessel, ...(plattform ? {} : { account: studio.stripe.accountId }) });
   let pi;
@@ -460,6 +467,7 @@ export async function bezahlfeldFuer(studio, z) {
   z.weg = "bezahlfeld";
   z.gebuehrNettoCent = fee.nettoCent;
   z.gebuehrBruttoCent = fee.bruttoCent;
+  z.stripeGebuehrDurchCent = durchFee(direkt, fee, z.betragCent, pi.payment_method_types || arten);
   await saveZahlung(z);
   return { clientSecret: pi.client_secret, stripeAccount: plattform ? null : studio.stripe.accountId, zahlarten: arten };
 }
