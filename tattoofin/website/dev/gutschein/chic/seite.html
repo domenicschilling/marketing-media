@@ -9,6 +9,7 @@
      (dev/gutschein/seite.html): Die Funktion netlify/functions/gutschein-seite.mjs setzt Titel/Vorschau je Uhrzeit und die Zahlen im Hero
      je ?g= (feste ids h-preis, h-wert, hero-pille, hero-fuss, hero-lead, hero-klein, liste-ab). ?w=geschenk|selbst (Link der Werbung)
      setzt nur die Pille über der Überschrift und öffnet beim Kauf für Geschenke gleich „Für wen ist er?“. -->
+<!-- Fotos seit 27.11.2026: echte Arbeiten aus dem Google-Profil des Studios (Schneeleopard, Phönix, Schlange, Galerie), siehe public/assets/gs-shop/chic/LIZENZ.txt -->
 <!--og--><title>{{titel}}</title>
 <meta name="description" content="{{ogText}}">
 <meta name="robots" content="noindex">
@@ -33,7 +34,7 @@
 <link rel="icon" href="/assets/gs-shop/{{kuerzel}}/icon-192.png" sizes="192x192">
 <link rel="apple-touch-icon" href="/assets/gs-shop/{{kuerzel}}/icon-180.png">
 <link rel="preload" as="font" type="font/woff2" href="/assets/gs-shop/schrift/archivo-var.woff2" crossorigin>
-<link rel="preload" as="image" href="/assets/gs-shop/{{kuerzel}}/hero-loewe-960.webp" imagesrcset="/assets/gs-shop/{{kuerzel}}/hero-loewe-480.webp 480w, /assets/gs-shop/{{kuerzel}}/hero-loewe-960.webp 960w" imagesizes="(min-width:900px) 480px, 100vw" fetchpriority="high">
+<link rel="preload" as="image" href="/assets/gs-shop/{{kuerzel}}/hero-960.webp" imagesrcset="/assets/gs-shop/{{kuerzel}}/hero-480.webp 480w, /assets/gs-shop/{{kuerzel}}/hero-960.webp 960w" imagesizes="(min-width:900px) 480px, 100vw" fetchpriority="high">
 <script>document.documentElement.classList.add("js");setTimeout(function(){if(!window.gsBereit)document.documentElement.classList.remove("js")},3000);
 setTimeout(function(){document.documentElement.classList.add("zahlen")},1500);</script>
 <!-- Meta-Pixel {{name}} (wie MU/LA ohne Einwilligungsfenster, Entscheidung Domenic; nur auf tattoofin.de, nie in Entwurf/Test) -->
@@ -314,7 +315,7 @@ textarea{min-height:76px;resize:vertical}
 <main>
   <section class="hero" data-hero style="padding:0">
     <div class="in">
-      <div class="bild"><img srcset="/assets/gs-shop/{{kuerzel}}/hero-loewe-480.webp 480w, /assets/gs-shop/{{kuerzel}}/hero-loewe-960.webp 960w" sizes="(min-width:900px) 52vw, 100vw" src="/assets/gs-shop/{{kuerzel}}/hero-loewe-960.webp" alt="Löwe mit Spartanerhelm, Black-and-Grey-Tattoo am Unterarm, gestochen bei {{name}}" width="960" height="1200" fetchpriority="high"></div>
+      <div class="bild"><img srcset="/assets/gs-shop/{{kuerzel}}/hero-480.webp 480w, /assets/gs-shop/{{kuerzel}}/hero-960.webp 960w" sizes="(min-width:900px) 52vw, 100vw" src="/assets/gs-shop/{{kuerzel}}/hero-960.webp" alt="Schneeleopard, Black-and-Grey-Sleeve am Arm, gestochen bei {{name}}" width="960" height="1200" fetchpriority="high"></div>
       <div class="karte">
         <div class="wer"><span><span class="nur-aktion" id="hero-pille">Tattoo-Gutschein</span><span class="nur-danach">Tattoo-Gutschein</span> · {{name}}</span><img src="/assets/gs-shop/{{kuerzel}}/logo-120.webp" alt="" width="40" height="40"></div>
         <h1 class="d" data-hero-pflicht="immer"><span class="nur-aktion"><span id="h-preis">Für {{heroPreis}} kaufen,</span> <span class="{{heroWertLang}}" id="h-wert">{{heroWert}} bekommen*</span></span><span class="nur-danach"><span>Tattoo-Gutschein</span> <span class="rot">zum Verschenken</span></span></h1>
@@ -337,13 +338,13 @@ textarea{min-height:76px;resize:vertical}
       <h2 class="d h2 reveal">Verschenken oder <span class="rot">selbst einlösen.</span></h2>
       <div class="wege">
         <article class="weg geschenk reveal">
-          <picture><img src="/assets/gs-shop/{{kuerzel}}/weg-geschenk-558.webp" alt="Rote Rosen mit Schmetterlingen, Farb-Tattoo am Oberarm, gestochen bei {{name}}" width="558" height="697" loading="lazy"></picture>
+          <picture><img src="/assets/gs-shop/{{kuerzel}}/weg-geschenk-480.webp" srcset="/assets/gs-shop/{{kuerzel}}/weg-geschenk-480.webp 480w, /assets/gs-shop/{{kuerzel}}/weg-geschenk-960.webp 960w" sizes="(min-width:900px) 560px, 100vw" alt="Schlange mit Rosen, Fineline- und Black-and-Grey-Tattoo am Bein, gestochen bei {{name}}" width="960" height="1200" loading="lazy"></picture>
           <h3 class="d">Geschenk gesucht?</h3>
           <p>Für alle, die sich schon lange ein Tattoo oder Piercing wünschen. Das Motiv suchen sie sich selbst aus, Name und Gruß stehen auf dem PDF.</p>
           <button type="button" class="btn" data-ev="kaufen-start" data-ort="weg-geschenk" data-kaufen data-weg="geschenk">Gutschein verschenken →</button>
         </article>
         <article class="weg selbst reveal">
-          <picture><img src="/assets/gs-shop/{{kuerzel}}/weg-selbst-480.webp" srcset="/assets/gs-shop/{{kuerzel}}/weg-selbst-480.webp 480w, /assets/gs-shop/{{kuerzel}}/weg-selbst-960.webp 960w" sizes="(min-width:900px) 560px, 100vw" alt="Black-and-Grey-Sleeve mit Rabe und Wald, gestochen bei {{name}}" width="960" height="1200" loading="lazy"></picture>
+          <picture><img src="/assets/gs-shop/{{kuerzel}}/weg-selbst-480.webp" srcset="/assets/gs-shop/{{kuerzel}}/weg-selbst-480.webp 480w, /assets/gs-shop/{{kuerzel}}/weg-selbst-960.webp 960w" sizes="(min-width:900px) 560px, 100vw" alt="Phönix, Black-and-Grey-Tattoo an Schulter und Oberarm, gestochen bei {{name}}" width="960" height="1200" loading="lazy"></picture>
           <h3 class="d">Gönn dir selbst was.</h3>
           <p>Du planst eh ein Tattoo? Kauf den Gutschein jetzt und lös ihn bei deinem Termin ein. Den vollen Wert* bekommst du bis {{bonusBis}}.</p>
           <button type="button" class="btn hell" data-ev="kaufen-start" data-ort="weg-selbst" data-kaufen data-weg="selbst">Für mich kaufen →</button>

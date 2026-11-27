@@ -1,5 +1,6 @@
-Bilder Gutschein-Shop Chic Tattoo Augsburg (25.11.2026)
-Alle Fotos sind echte Arbeiten von Chic Tattoo & Piercing Augsburg (Instagram @chic_tattoo_augsburg, eigene Studio-Beiträge; Quellen im Repo Marketing-Maschine: brands/chic-tattoo-augsburg/web/quellen.md und insta-hd/quellen.md). Keine KI-Bilder, keine erkennbaren Personen.
-hero-loewe-*.webp: insta-hd/ganz/05-loewe-spartaner.png · weg-geschenk-*.webp: Rosen/Schmetterlinge (arbeit-2 der Chic-Rubbellos-Seite) · weg-selbst-*.webp: insta-hd/ganz/03-rabe-sleeve.png
-b-*.jpg: Bildstreifen (arbeit-1…6 der Chic-Rubbellos-Seite, 600×800) · logo*.png/webp: rundes Studio-Logo (alte Website chictattoo.de), rund freigestellt
-Nicht verwendet: Narben-Cover-up, Bauch-Rose (Domenic 16./17.11.2026). Schrift: Archivo (SIL Open Font License), schrift/archivo-var.woff2.
+Bilder Gutschein-Shop Chic Tattoo Augsburg (Stand 27.11.2026)
+Alle Fotos sind echte Arbeiten von Chic Tattoo & Piercing Augsburg. Keine KI-Bilder, keine erkennbaren Personen.
+Seit 27.11.2026 (Domenic: bessere Fotos, „Ja, Auswahl so nehmen“): Fotos aus dem Google-Maps-Profil des Studios, laut Google vom Studio selbst hochgeladen, Originale im Repo Marketing-Maschine unter brands/chic-tattoo-augsburg/google/ (quellen.md).
+hero-*.webp: G4 Schneeleopard-Sleeve · weg-geschenk-*.webp: G6 Schlange mit Rosen · weg-selbst-*.webp: G3 Phönix (Ausschnitt ohne Kopf/Hals)
+b-samurai.jpg G2 · b-figur.jpg G5 · b-hund.jpg G7 (blaues Shirt entsättigt) · b-medusa.jpg G9 · b-madonna.jpg G10 · b-rosen.jpg: Rosen mit Schmetterlingen (Instagram @chic_tattoo_augsburg)
+logo*.png/webp: rundes Studio-Logo (alte Website chictattoo.de). Nicht verwendet: Narben-Cover-up, Bauch-Rose. Schrift: Archivo (SIL Open Font License).

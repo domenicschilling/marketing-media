@@ -163,8 +163,8 @@ export const SHOPS = {
       google: { sterne: "5,0", anzahl: 372, stand: "27.11.2026", suche: "Chic Tattoo & Piercing, Ulmer Straße 14, 86154 Augsburg" },
       zeiten: [["Montag bis Freitag", "10–18 Uhr"], ["Samstag", "10–16 Uhr"], ["Sonntag", "geschlossen"]],
       pixel: "1142712101501159",
-      // Echte Arbeiten aus dem Studio (Instagram @chic_tattoo_augsburg, Quellen public/assets/gs-shop/chic/LIZENZ.txt), keine KI, keine Narben-Bilder
-      bilder: ["loewe", "rosen", "rabe", "schildkroete", "herz", "sleeve"],
+      // Echte Arbeiten aus dem Studio (seit 27.11.2026 vor allem aus dem Google-Profil des Studios, Domenic: „Ja, Auswahl so nehmen“; Quellen public/assets/gs-shop/chic/LIZENZ.txt), keine KI, keine Narben-Bilder
+      bilder: ["samurai", "medusa", "hund", "rosen", "figur", "madonna"],
       stimmen: null,
     },
     // Wie MU/LA: Live-Gang nur über den Prod-Deploy dieses Branches mit Domenics OK (Entwurf-Deploys zeigen die Seite offen, dort nie bezahlen)
