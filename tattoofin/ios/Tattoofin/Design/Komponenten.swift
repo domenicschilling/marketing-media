@@ -276,7 +276,19 @@ struct TFFormular<Inhalt: View>: View {
 struct ListenKopf: View {
     let text: String
     init(_ text: String) { self.text = text }
-    var body: some View { Text(text).foregroundStyle(Color.tfLeise) }
+    var body: some View {
+        // Bei AX5 brachen Köpfe mitten im Wort um („Hauptadress/e“, Abnahme 1.1, Runde 3): deckeln und notfalls leicht verkleinern
+        // Nur Köpfe mit sehr langen Wörtern (ab 11 Buchstaben, z. B. „Hauptadresse“) werden gedeckelt; alle anderen wachsen
+        // voll mit (Apple-Audit meldet jede Deckelung als „teilweise nicht änderbar“, Runde 3).
+        if langesWort {
+            Text(text).foregroundStyle(Color.tfLeise)
+                .lineLimit(2).minimumScaleFactor(0.7)
+                .dynamicTypeSize(...DynamicTypeSize.accessibility2)  // ds-ok: sonst Wortbruch bei AX5
+        } else {
+            Text(text).foregroundStyle(Color.tfLeise)
+        }
+    }
+    private var langesWort: Bool { text.split(whereSeparator: { !$0.isLetter }).contains { $0.count >= 11 } }
 }
 
 /// Fußzeile eines Listen-Abschnitts mit genug Kontrast (wie ListenKopf)

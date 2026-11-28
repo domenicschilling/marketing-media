@@ -100,7 +100,7 @@ Urteil der Abnahme: „erst nachbessern“. Umgesetzt (Branch `claude/tattoofin-
 - Werbung, Überschriften („Dein Werbevideo“ …): Sie wachsen wieder mit der Schrift, bleiben aber einzeilig und werden notfalls kleiner. Kein Wortbruch, keine Schriftgrenze mehr.
 - Test „So geht's“ im Konto: Er erwischte den gleichnamigen Knopf der Kasse. Jetzt ist die Suche eindeutig.
 - Konto, Abschnitt „Dein Studio“: Der Kopf hat jetzt die eigene Farbe statt des System-Graus, weil der Kontrast knapp war.
-- Ergebnis: DS-Rundgang (normal, dunkel, AX3, AX5) auf iPhone 17 und SE ohne Befund, bis auf die eine benannte Ausnahme.
+- Ergebnis damals: DS-Rundgang (normal, dunkel, AX3, AX5) ohne Befund des Audits. **Korrektur 28.11.:** Das Audit erkennt Wortbrüche nicht; „Hauptadress/e“ u. a. standen weiter auf den AX5-Fotos. Seit Runde 3 prüft `scripts/wortbruch-pruefen.swift` die Fotos automatisch.
 
 ## Zweite unabhängige Abnahme (27.11.2026) – Nachbesserung
 
@@ -114,17 +114,57 @@ Urteil der Abnahme: „erst nachbessern“. Umgesetzt (Branch `claude/tattoofin-
 | 6 | Bild 1: Etikett verdeckt die Zeile „Art“ | behoben: Etikett in der freien Mitte der Zeile (render.mjs: Etikett-Position `tx`) |
 | 7 | Bild 7 zeigt Adressenpflege | behoben: Hauptbild Kasse, angemeldet als Team-Adresse (neuer Test `testTeamKasse`), Team-Liste klein unten ohne Hinweis und Eingabefeld |
 | 8 | Dunkel: gewähltes Segment unsichtbar | behoben: dunkel Gelb mit Blau, hell Blau mit Weiß |
-| 9 | Kasse AX5: Ziffern erst nach zwei Scrollschritten | behoben: Betrag, Ziffern, Knopf, danach Art/Schalter; ohne Monatszeile, ohne Lücke unter der Spanne |
+| 9 | Kasse AX5: Ziffern erst nach zwei Scrollschritten | **nur teilweise** (Runde 3: Knopf und Ziffern lagen weiter unter der Tab-Leiste), neu in Runde 3 → siehe unten. Damals: Betrag, Ziffern, Knopf, danach Art/Schalter; ohne Monatszeile, ohne Lücke unter der Spanne |
 | 10 | Rundgang überspringt Bildschirme ohne Meldung | behoben: `XCTFail("FEHLT: …")`, Scroll-Schleife; neu Stripe-Status und Geräte (der Test suchte „Geräte“, die Zeile heißt „Angemeldete Geräte“) |
 | 11 | Gutscheine-Kopf überladen | behoben: Such-Knopf weg (vollständiger Code sucht sofort, sonst Tastatur „Suchen“), „Verkaufen“ als Text-Knopf in der Leiste, oben nur der Scan-Knopf |
 | niedrig, war nicht behoben | Anmeldung Kopf mittig | behoben: Kopf linksbündig, mehr Abstand |
-| niedrig, war nicht behoben | SE Kasse: Kartenkante über dem Knopf | behoben: Karte liegt ruhend ganz hinter dem Knopf |
+| niedrig, war nicht behoben | SE Kasse: Kartenkante über dem Knopf | **nicht behoben** (Runde 3: auf dem iPhone 17 weiter leere Kante sichtbar) → siehe unten |
 | niedrig, war nicht behoben | SE Werbung: Chip angeschnitten | behoben: Chips brechen in zwei Reihen um |
 | niedrig, war nicht behoben | Zwei Arten Eingabefelder | Regel benannt (TFListenStil.swift): freistehend `tfTextfeld()`, in gruppierten Listen Listenzeile nach iOS-Standard |
-| niedrig | Navigationsleiste: Geistertext | behoben: harte Kante (iOS 26) bei Gutscheine und Werbung |
+| niedrig | Navigationsleiste: Geistertext | **nicht behoben** (Runde 3: Text schien weiter durch; harte Kante allein reicht nicht) → siehe unten |
 | niedrig | Stornieren | behoben: roter Textknopf statt Rahmen-Knopf |
 | niedrig | Werbung „Beitrag:“, „Text ansehen“ | behoben: Präfix weg (Art steht als Chip), „Text ansehen“ mit Symbol |
 | niedrig | Kennzahl-Kacheln mit Rand | behoben: ohne Rand. Beschriftung bleibt (Zeitraum gehört nur zu zwei der drei Kacheln) |
-| niedrig | Filter-Symbol mit Kreis, Einstellungen-Unterzeile, „· Aktiv“ | behoben |
+| niedrig | Filter-Symbol mit Kreis, Einstellungen-Unterzeile, „· Aktiv“ | Filter und Unterzeile behoben; „· Aktiv“ **nicht behoben** (AX5: „Monatlich · / Aktiv“) → siehe unten |
 | niedrig | „So geht's“ als Leisten-Knopf, „Link kopieren“ rund, „Neuen Code schicken“ anheften, SE Blatt-Titel/Leistenknöpfe AX2, Leere-Zustände im Rundgang | offen (nächste Runde) |
 | Kopfzeile Bild 1 | „Raten* für dein Studio“ | bleibt (Domenic) |
+
+## Dritte Abnahme (28.11.2026) – Nachbesserung
+
+Als behoben steht hier nur, was ein Foto zeigt. Die Fotos stammen aus dem Gestaltungs-Rundgang (`g-<gerät>/g-<lage>-<nr>-…png`, im Vorschau-Paket als Kontaktblätter).
+
+| Nr. | Befund | Stand | Beweis |
+|---|---|---|---|
+| 1 (hoch) | Wortmarke auf gelben Store-Bildern verklumpt | behoben: Schriftzug „TATTOOFIN“ in Luckiest, 76 px, Laufweite 0,03 em, Nachtblau | store-kontaktbogen.png, Bild 1, 3, 5, 7 |
+| 2 | Text scheint unter der Titelleiste durch | behoben: deckende Leiste (`tfHarteKanteOben`: Hintergrund sichtbar + harte Kante) auf allen Listen-Bildschirmen | i17 g-hell-10-zahlungen-unten1, g-hell-27-konto-unten1; SE g-hell-13-zahlung-detail-unten1 |
+| 3 | Kasse iPhone 17: leere Kartenkante über dem Knopf | behoben: Knopf auf allen Größen fest unten, keine Mindesthöhe mehr | i17 g-hell-03-kasse |
+| 4 | Kasse AX5: Knopf und Ziffern unter der Tab-Leiste | behoben: über den Ziffern nur noch ein Fehlerhinweis, die Art als kompakte Zeile, der Knopf fest über der Tab-Leiste | i17 g-ax5-03-kasse; SE g-ax5-03-kasse, g-ax5-05-kasse-betrag |
+| 5 | Wortbrüche bei AX5 + automatische Prüfung | behoben: neues `scripts/wortbruch-pruefen.swift` (Texterkennung über alle Rundgang-Fotos). Ergebnis i17 und SE: **0 Funde** (der alte Stand meldete u. a. Hauptadress/e, voraussichtlic/h, Abmel/…) | Protokoll Runde 3 |
+| 6 | Geräte-Seite bei AX5 | behoben: Kopf untereinander, Chip „Dieses Gerät“ einzeilig, Knöpfe untereinander, Adresse bricht nur vor „@“ | SE g-ax5-34-geraete |
+| 7 | Store-Text: Klarna-Bedingung unter den Pflichtsatz | behoben (store-texte-1-1.md) | – |
+| 8 | Bild 6 Unterzeile | behoben: „Keine Provision pro Zahlung. Stripe zahlt direkt auf dein Bankkonto.“ | Bild 6 |
+| 9 | Bilder 5, 6, 8 mit leeren Flächen | behoben: größere Handys; Bild 5 mit vergrößerter Mitteilung, Bild 6 mit vergrößerter Betragskarte | Bild 5, 6, 8 |
+| niedrig | Bild 2: Handy x≈580, Breite ≈640 | behoben (580/640) | Bild 2 |
+| niedrig | Bild 1: Markierung „Mit Klarna“ | **neu gefunden und behoben**: Rahmen lag nach der neuen Kopfzeile „Zahlung“ zwischen zwei Zeilen und war leer; jetzt auf „Bezahlt mit · Klarna“ | Bild 1 |
+| niedrig | Panorama-Band | entfernt | – |
+| niedrig | Konto: Abmelde-Zeilen mit Symbolspalte | behoben | i17 g-hell-29-konto-unten3 |
+| niedrig | Schmales Leerzeichen vor € | behoben (`GrosserBetrag`) | – |
+| niedrig | Gutscheine SE: Symbol-Knopf | behoben: „+“ mit Beschriftung „Gutschein verkaufen“ für VoiceOver | SE g-hell-16-gutscheine |
+| niedrig | Team: Fußsatz, „+ Adresse hinzufügen“ als Zeile, AX5 Adressen | behoben: Zeile am Ende der Liste, Eingabe im Dialog; Adressen brechen nur vor „@“ | SE g-ax5-33-team-unten1 |
+| niedrig | Anmeldung: eine Hauptzeile, „Neuen Code schicken“ angeheftet | behoben: Kopf als eine Zeile (Figur + Wortmarke), Knopf über der Tastatur | SE g-hell-02-anmelden-code, g-ax5-02-anmelden-code |
+| niedrig | Zahlungsdetail: einheitliche Abschnittsköpfe | behoben: „Zahlung“, „Kunde“, „Nachweise“ bzw. „Zahlungslink“ | SE g-hell-13-zahlung-detail-unten1 |
+| niedrig | Zahlungen AX5: Suchfeld | behoben: Suchfeld immer sichtbar | i17 g-hell-10-zahlungen-unten1 |
+| niedrig | E-Mail-Umbruch (U+200B) | behoben (`Umbruch.email`): Umbruch nur vor „@“ und vor dem letzten Punkt | SE g-ax5-33-team-unten1 |
+| niedrig | Konto AX5: „Monatlich · Aktiv“ | behoben: Paket und Stand untereinander in einer normalen Wertzeile | i17 g-ax5-26-konto |
+| niedrig | Kasse AX5: Art als kompakte Zeile | behoben (Menü „Gesamtpreis“) | SE g-ax5-03-kasse |
+| niedrig | „So geht's“ als Leisten-Knopf, „Link kopieren“ rund | behoben | i17 g-hell-03-kasse (Leisten-Knopf), g-hell-07-zahlungslink-blatt (rund) |
+| niedrig | Bild 4 Scanner | **offen, Grund**: Der Simulator hat keine Kamera. Ein Scanner-Bild wäre nachgestellt. Darum bleibt das echte Gutschein-Detail. | – |
+| niedrig | Geräte-Karte als Listenzeile mit Menü | **teilweise**: Knöpfe untereinander, Abmelden zusätzlich per Wischen; ein Menü gibt es nicht | SE g-ax5-34-geraete |
+| niedrig | Leere Zustände im Rundgang | offen | – |
+
+Nachtrag Apple-Audit Runde 3: Die neuen Deckelungen (Vertrags-Chip, Listenköpfe, E-Mail mit Zeilengrenze) meldete das Audit als „teilweise nicht änderbar“ bzw. „abgeschnitten“. Darum:
+- Der Vertrags-Chip ist zu einer normalen Wertzeile geworden.
+- Die E-Mail hat keine Zeilengrenze mehr.
+- Listenköpfe werden nur noch gedeckelt, wenn ein Wort ab 11 Buchstaben vorkommt.
+
+Danach ist der DS-Rundgang (normal, dunkel, AX3, AX5) auf beiden Geräten grün, und die Wortbruch-Prüfung findet weiter 0.

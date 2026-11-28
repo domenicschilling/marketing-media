@@ -195,7 +195,7 @@ enum GrosserBetrag {
         let zahl = teile[0].trimmingCharacters(in: .whitespaces.union(CharacterSet(charactersIn: "\u{00A0}")))
         let rest = teile[1]
         var t = Text(zahl).font(.luckiest(groesse, relativeTo: stil))
-            + Text("\u{2009}€").font(.dm(groesse * 0.7, relativeTo: stil, weight: .bold))
+            + Text("\u{202F}€").font(.dm(groesse * 0.7, relativeTo: stil, weight: .bold))
         if !rest.trimmingCharacters(in: .whitespaces).isEmpty {
             t = t + Text(rest.uppercased()).font(.luckiest(groesse, relativeTo: stil))  // Luckiest Guy nur in Großbuchstaben
         }

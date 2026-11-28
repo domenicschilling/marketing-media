@@ -318,7 +318,7 @@ struct AboErneuernSheet: View {
             AboView(modus: .erneuern, aktionen: AboView.Aktionen(fertig: { dismiss() }))
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button(Texte.Allgemein.abbrechen) { dismiss() }.font(.dm(.body))
+                        Button(Texte.Allgemein.abbrechen) { dismiss() }.font(.dm(.body)).dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                     }
                 }
         }

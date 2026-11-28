@@ -80,7 +80,7 @@ struct TeilEinloesenBlatt: View {
             .navigationTitle(Texte.GutscheinWert.blattTitel)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button(Texte.Allgemein.abbrechen) { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) { Button(Texte.Allgemein.abbrechen) { dismiss() }.dynamicTypeSize(...DynamicTypeSize.xxxLarge) }
             }
         }
     }

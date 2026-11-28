@@ -34,6 +34,7 @@ struct KasseView: View {
             }
             .tfHintergrund()
             .navigationTitle(Texte.Kasse.titel)
+            .tfHarteKanteOben()  // Abnahme 1.1, Runde 3
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 if portal.studio?.darfKassieren == true {
@@ -115,13 +116,40 @@ struct KasseView: View {
             .accessibilityHidden(anzahlung)
     }
 
+    /// Bei Bedienungshilfen-Größen: Art als eine Menü-Zeile statt zweier großer Auswahl-Zeilen
+    private var artMenue: some View {
+        Menu {
+            Picker(Texte.Kasse.artLabel, selection: $entwurf.anzahlung) {
+                Text(Texte.Kasse.gesamt).tag(false)
+                Text(Texte.Kasse.anzahlung).tag(true)
+            }
+        } label: {
+            HStack(spacing: 8) {
+                Text(entwurf.anzahlung ? Texte.Kasse.anzahlung : Texte.Kasse.gesamt)
+                    .font(.dm(.body, weight: .semibold))
+                    .foregroundStyle(Color.tfTinte)
+                    .lineLimit(1).minimumScaleFactor(0.7)
+                Spacer(minLength: 4)
+                Image(systemName: "chevron.up.chevron.down").foregroundStyle(Color.tfLeise).accessibilityHidden(true)
+            }
+            .dynamicTypeSize(...DynamicTypeSize.accessibility3)
+            .frame(maxWidth: .infinity, minHeight: 44)
+            .contentShape(Rectangle())
+        }
+        .modifier(KompaktKarte())
+        .accessibilityLabel(Texte.Kasse.artLabel)
+        .accessibilityValue(entwurf.anzahlung ? Texte.Kasse.anzahlung : Texte.Kasse.gesamt)
+        .accessibilityIdentifier("kasse-art")
+    }
+
     private var formular: some View {
         ScrollView {
             // Enger gesetzt: Start-Zeile, Betrag, Ziffernblock und „Zahlungslink erstellen“ passen bei normaler Schrift in den ersten Bildschirm
+            VStack(spacing: 0) {
             VStack(spacing: kompakt ? 6 : 10) {
                 AktualisierenFehlerZeile()
                 // Bedienungshilfen-Größen: ohne „Diesen Monat …“ (wie kompakt), damit die Ziffern früher kommen (Abnahme 1.1, Runde 2)
-                StartBereich(kompakt: kompakt || schrift.isAccessibilitySize)
+                StartBereich(kompakt: kompakt || schrift.isAccessibilitySize, soGehtsInLeiste: true)
 
                 // Nach einem Testkauf (Apple-Sandbox, auch App Review): Hinweis „Testmodus“ steht im StartBereich statt der Monatszeile
 
@@ -143,8 +171,9 @@ struct KasseView: View {
                     // bei gültigem Betrag der Gebührenhinweis, sonst die Grenzen. So rutscht beim Tippen nichts über dem
                     // Ziffernblock, und unter den Grenzen bleibt kein leerer Streifen (Gestaltungsprüfung 1.1, Nr. 9).
                     if schrift.isAccessibilitySize {
-                        // Bedienungshilfen-Größen: nur die jeweils passende Zeile, ohne reservierten Platz (sonst ~140 pt Lücke)
-                        if gueltigerBetrag { GebuehrHinweis(cent: eingabe.cent) } else { grenzenZeile }
+                        // Bedienungshilfen-Größen: über den Ziffern nur ein echter Fehler; Grenzen und Gebühr stehen unter
+                        // den Ziffern, damit diese früh kommen und beim Tippen nicht springen (Abnahme 1.1, Runde 3)
+                        if betragFehler != nil { grenzenZeile }
                     } else {
                         ZStack(alignment: .top) {
                             GebuehrHinweis(cent: eingabe.cent, sichtbar: gueltigerBetrag)
@@ -155,14 +184,24 @@ struct KasseView: View {
                 .frame(maxWidth: .infinity)
 
                 if schrift.isAccessibilitySize {
-                    // Bedienungshilfen-Größen: Betrag, Ziffern, Knopf zuerst; Art und Schalter danach (Abnahme 1.1, Runde 2)
+                    // Bedienungshilfen-Größen: Art als kompakte Zeile, dann Ziffern; Hinweise und Schalter darunter.
+                    // „Zahlungslink erstellen“ ist wie bei normaler Schrift über der Tab-Leiste angeheftet (Abnahme 1.1, Runde 3).
+                    if !keineAnzahlung { artMenue }
                     Ziffernblock(eingabe: $eingabe, tastenHoehe: 52, abstand: 8)
-                    knopfBereich
-                    artUndHeute
+                    if gueltigerBetrag { GebuehrHinweis(cent: eingabe.cent) } else if betragFehler == nil { grenzenZeile }
+                    HeuteSchalter(an: $heute, kompakt: kompakt)
+                        .opacity(anzahlung ? 0 : 1)
+                        .disabled(anzahlung)
+                        .accessibilityHidden(anzahlung)
                 } else {
                     artUndHeute
                     Ziffernblock(eingabe: $eingabe, tastenHoehe: kompakt ? 44 : 52, abstand: kompakt ? 6 : 8)
                 }
+
+            }
+            // Erster Bildschirm = alles bis zum Ziffernblock. Die Karte „Kunde und Motiv“ beginnt in Ruhe erst unterhalb
+            // (vorher schaute ihre Oberkante auf dem iPhone 17 als leere Kante über dem Knopf hervor, Abnahme 1.1, Runde 3)
+            .frame(minHeight: schrift.isAccessibilitySize ? 0 : max(0, sichtbareHoehe - 1 - (kompakt ? 4 : 8) - verlaufHoehe), alignment: .top)
 
                 DisclosureGroup(isExpanded: $detailsOffen) {
                     VStack(spacing: 10) {
@@ -188,14 +227,13 @@ struct KasseView: View {
                 .modifier(KompaktKarte())
                 // Ruhend liegt die Karte ganz hinter dem angehefteten Knopf, statt mit ihrer Oberkante im Spalt über ihm
                 // hervorzuschauen (Abnahme 1.1, Runde 2, SE hell und dunkel). Beim Scrollen kommt sie normal nach oben.
-                .padding(.top, schrift.isAccessibilitySize ? 0 : 28)
+                .padding(.top, schrift.isAccessibilitySize ? 10 : verlaufHoehe + 24)
             }
             .padding(.horizontal, 16)
             .padding(.top, kompakt ? 4 : 8)
             .padding(.bottom, 16)
             // Mindestens so hoch wie der sichtbare Bereich, damit der Spacer über dem Betrag die freie Höhe aufnimmt
             // (die Innenabstände liegen schon im Rahmen; 1 pt Luft gegen Rundung, sonst scrollt es um einen Punkt)
-            .frame(minHeight: schrift.isAccessibilitySize ? 0 : max(0, sichtbareHoehe - 1), alignment: .top)
         }
         // Höhe ohne alle Einsätze (angehefteter Knopf, Leisten, Tastatur): sonst rutscht der Ziffernblock hinter den Knopf
         .onScrollGeometryChange(for: CGFloat.self) { g in
@@ -205,9 +243,9 @@ struct KasseView: View {
         .refreshable { await portal.laden() }
         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { hoehe = $0 }
         // „Zahlungslink erstellen“ über der Tab-Leiste angeheftet: auch auf dem iPhone SE immer zu sehen.
-        // Bei Bedienungshilfen-Größen steht er stattdessen in der Liste unter dem Ziffernblock (Gestaltungsprüfung 1.1, Nr. 6).
+        // Seit Runde 3 auch bei Bedienungshilfen-Größen (vorher lag er dort unter der Tab-Leiste).
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            if !schrift.isAccessibilitySize {
+            Group {
                 knopfBereich
                     .padding(.horizontal, 16)
                     .padding(.top, kompakt ? 5 : 8)

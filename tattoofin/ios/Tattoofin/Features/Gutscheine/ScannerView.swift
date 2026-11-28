@@ -58,7 +58,7 @@ struct ScannerView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button(Texte.Allgemein.abbrechen) { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) { Button(Texte.Allgemein.abbrechen) { dismiss() }.dynamicTypeSize(...DynamicTypeSize.xxxLarge) }
                 if kameraLaeuft {
                     ToolbarItem(placement: .primaryAction) {
                         Button(Texte.Scanner.eintippen) { modus = .manuell(Texte.Scanner.eintippenHinweis) }

@@ -301,7 +301,7 @@ struct BeitragGrossansicht: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(Texte.Allgemein.fertig) { dismiss() }.font(.dm(.body, weight: .semibold))
+                    Button(Texte.Allgemein.fertig) { dismiss() }.font(.dm(.body, weight: .semibold)).dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                 }
             }
             .sheet(item: $teilen) { TeilenSheet(dinge: $0.dinge).presentationDetents([.medium, .large]) }

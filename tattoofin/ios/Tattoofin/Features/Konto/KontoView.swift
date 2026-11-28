@@ -56,6 +56,7 @@ struct KontoView: View {
             .scrollContentBackground(.hidden)
             .tfHintergrund()
             .navigationTitle(Texte.Konto.titel)
+            .tfHarteKanteOben()  // Abnahme 1.1, Runde 3
             .navigationBarTitleDisplayMode(.inline)
             .refreshable { await allesLaden() }
             .task { await allesLaden() }
@@ -106,7 +107,11 @@ struct KontoView: View {
                 // Paket und Stand in einer Zeile (Abnahme 1.1, Nr. 16: Konto kürzer)
                 let stand = s.istTestmodus ? Texte.Konto.vertragTestmodus : s.statusText?.leerAlsNil.map(Texte.GestaltungG3.vertragStatus)
                 let vertrag = Texte.AbnahmeG5.vertragWert(s.paketName?.leerAlsNil, stand)
-                if !vertrag.isEmpty { WertZeile(titel: Texte.Konto.vertrag, wert: vertrag) }
+                if schrift.isAccessibilitySize, let paket = s.paketName?.leerAlsNil {
+                    // Große Schrift: Paket und Stand untereinander statt „Monatlich · / Aktiv“ (Abnahme 1.1, Runde 3);
+                    // als normale WertZeile, damit die Schrift voll mitwächst (eigener Chip meldete das Apple-Audit als abgeschnitten)
+                    WertZeile(titel: Texte.Konto.vertrag, wert: [paket, stand].compactMap { $0 }.joined(separator: "\n"))
+                } else if !vertrag.isEmpty { WertZeile(titel: Texte.Konto.vertrag, wert: vertrag) }
                 if let k = s.kuendigung, let zum = Datum.tag(k.zum) {
                     WertZeile(titel: Texte.Konto.vertragEndet, wert: zum)
                     if istInhaber {
@@ -173,10 +178,9 @@ struct KontoView: View {
     private func angemeldetZeile(_ email: String, rolle: String?) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(Texte.Konto.angemeldetAls).foregroundStyle(Color.tfLeise)
-            Text(email).foregroundStyle(Color.tfTinte)
-                .lineLimit(1)
-                .minimumScaleFactor(0.5)
-                .truncationMode(.middle)
+            // Ohne Zeilen-Grenze: Umbruch.email erlaubt den Umbruch vor „@“ und vor dem letzten Punkt (Audit meldete „abgeschnitten“)
+            Text(Umbruch.email(email)).foregroundStyle(Color.tfTinte)
+                .fixedSize(horizontal: false, vertical: true)
             if let rolle {
                 Text(rolle).font(.dm(.subheadline)).foregroundStyle(Color.tfLeise)
             }
@@ -282,21 +286,32 @@ struct KontoView: View {
         }
     }
 
+    private func gefahrLabel(_ text: String, _ symbol: String, farbe: Color) -> some View {
+        Label {
+            Text(text).foregroundStyle(farbe)
+        } icon: {
+            Image(systemName: symbol).foregroundStyle(farbe).frame(minWidth: 28)
+        }
+    }
+
     private var abmeldenAbschnitt: some View {
         Section {
             if let fehler { FehlerZeile(text: fehler) }
-            Button(Texte.Konto.abmelden) { abmeldenFrage = true }
-                .foregroundStyle(Color.tfTinte)
+            // Mit Symbolspalte wie die übrigen Konto-Zeilen (Abnahme 1.1, Runde 3)
+            Button { abmeldenFrage = true } label: {
+                gefahrLabel(Texte.Konto.abmelden, "rectangle.portrait.and.arrow.right", farbe: Color.tfTinte)
+            }
             if istInhaber {
                 // Ein Rotton für Gefahr-Zeilen (tfRot wie „Konto kündigen“), nicht das hellere System-Rot
-                Button(Texte.Konto.ueberall, role: .destructive) { ueberallFrage = true }
-                    .foregroundStyle(Color.tfRot)
-                    .disabled(arbeitet)
+                Button(role: .destructive) { ueberallFrage = true } label: {
+                    gefahrLabel(Texte.Konto.ueberall, "iphone.slash", farbe: Color.tfRot)
+                }
+                .disabled(arbeitet)
             }
             NavigationLink {
                 KontoLoeschenView()
             } label: {
-                Text(istInhaber ? Texte.Konto.loeschen : Texte.Team.zugangEntfernen).foregroundStyle(Color.tfRot)
+                gefahrLabel(istInhaber ? Texte.Konto.loeschen : Texte.Team.zugangEntfernen, "trash", farbe: Color.tfRot)
             }
         } footer: {
             VStack(spacing: 4) {

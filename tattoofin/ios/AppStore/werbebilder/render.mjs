@@ -63,7 +63,8 @@ body{background:${dunkel ? NACHT : GOLD};font-family:DMSans,sans-serif;color:${v
 .marke{display:flex;align-items:center;gap:26px;${b.links ? "" : "justify-content:center;"}margin-bottom:70px}
 .marke img.ic{width:104px;height:104px;border-radius:24px;border:5px solid ${dunkel ? "rgba(255,250,240,.0)" : NACHT};box-shadow:0 6px 0 ${dunkel ? "rgba(0,0,0,.35)" : NACHT}}
 .marke img.wm{height:70px}
-.marke .wm-navy{height:70px;width:${Math.round(70 * 519 / 116)}px;background:${NACHT};-webkit-mask:url(data:image/png;base64,${b64(path.join(assets, "wortmarke.png"))}) center/contain no-repeat}
+/* Auf Gelb: Wortmarke als reine Marine-Schrift ohne Kontur und Schatten, etwas mehr Laufweite (Abnahme 1.1, Runde 3: die Maske der Kontur-Wortmarke verklumpte) */
+.marke .wm-navy{font-family:Luckiest;font-size:76px;line-height:1;letter-spacing:.03em;color:${NACHT};padding-top:10px}
 h1{font-family:Luckiest;font-weight:400;font-size:${b.groesse || 150}px;line-height:.98;letter-spacing:1px;text-transform:uppercase;color:${dunkel ? GOLD : NACHT};text-shadow:${dunkel ? "7px 7px 0 rgba(0,0,0,.45)" : `7px 7px 0 ${CREME}`}}
 h1 em{font-style:normal;color:${dunkel ? CREME : CREME};text-shadow:7px 7px 0 ${dunkel ? "rgba(0,0,0,.45)" : NACHT}}
 .sub{margin-top:46px;font-size:58px;line-height:1.22;font-weight:700;color:${vorne}}
@@ -83,15 +84,18 @@ h1 em{font-style:normal;color:${dunkel ? CREME : CREME};text-shadow:7px 7px 0 ${
 .karte img{width:104px;height:104px;border-radius:24px;flex:none}
 .karte .k1{display:flex;justify-content:space-between;font-size:38px;font-weight:700}.karte .k1 span{font-weight:500;color:#8a8a8e;font-size:34px}
 .karte .k2{margin-top:6px;font-size:40px;line-height:1.25}
+/* Auszug: vergrößerter Ausschnitt aus dem echten Bildschirmfoto, seitlich herausgezogen (Abnahme 1.1, Runde 3: leere Flächen füllen) */
+.auszug{position:absolute;z-index:6;background-repeat:no-repeat;box-shadow:0 0 0 6px ${NACHT}, 0 34px 80px rgba(10,20,35,.45)}
 .fuss{position:absolute;z-index:8;left:0;right:0;bottom:0;padding:36px 84px 48px;background:${CREME};font-size:34px;line-height:1.36;color:${NACHT};text-align:center;border-top:8px solid ${NACHT}}
 </style></head><body>
-<div class="raster"></div><div class="band"></div>
-<div class="kopf"><div class="marke"><img class="ic" src="data:image/png;base64,${b64(icon)}" alt="">${dunkel ? `<img class="wm" src="data:image/png;base64,${b64(path.join(assets, "wortmarke.png"))}" alt="">` : `<span class="wm-navy"></span>`}</div>
+<div class="raster"></div>
+<div class="kopf"><div class="marke"><img class="ic" src="data:image/png;base64,${b64(icon)}" alt="">${dunkel ? `<img class="wm" src="data:image/png;base64,${b64(path.join(assets, "wortmarke.png"))}" alt="">` : `<span class="wm-navy" role="img" aria-label="Tattoofin">TATTOOFIN</span>`}</div>
 <h1>${b.ueberschrift.map((z) => esc(z).replace(/\[(.+?)\]/g, "<em>$1</em>")).join("<br>")}</h1>
 ${b.sub ? `<div class="sub">${esc(b.sub)}</div>` : ""}
 ${b.chips ? `<div class="chips">${b.chips.map((c) => `<span class="chip">${esc(c)}</span>`).join("")}</div>` : ""}</div>
 ${b.stempel ? `<div class="stempel" style="left:${b.stempel.x}px;top:${b.stempel.y}px;font-size:${b.stempel.groesse || 76}px">${b.stempel.zeilen.map((z, k) => k ? `<b>${esc(z)}</b>` : esc(z)).join("")}${b.stempel.klein ? `<small>${esc(b.stempel.klein)}</small>` : ""}</div>` : ""}
 ${handys}
+${(b.auszuege || []).map((a) => { const f = a.breite / a.quelle.w; return `<div class="auszug" style="left:${a.x}px;top:${a.y}px;width:${a.breite}px;height:${Math.round(a.quelle.h * f)}px;transform:rotate(${a.drehung || 0}deg);background-image:url(data:image/png;base64,${b64(path.join(quelle, a.datei))});background-size:${Math.round(1320 * f)}px auto;background-position:${-Math.round(a.quelle.x * f)}px ${-Math.round(a.quelle.y * f)}px;border-radius:${a.rund ?? 40}px"></div>`; }).join("")}
 ${b.karte ? `<div class="karte"><img src="data:image/png;base64,${b64(icon)}" alt=""><div style="flex:1"><div class="k1">${esc(b.karte.titel)}<span>${esc(b.karte.zeit || "jetzt")}</span></div><div class="k2">${esc(b.karte.text)}</div></div></div>` : ""}
 ${b.fuss ? `<div class="fuss">${esc(b.fuss)}</div>` : ""}
 </body></html>`;

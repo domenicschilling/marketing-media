@@ -115,7 +115,8 @@ struct GutscheineView: View {
                             codeFokus = false
                             verkaufenOffen = true
                         } label: {
-                            Text(Texte.GutscheinWert.verkaufenKurz).font(.dm(.body, weight: .semibold))
+                            // Symbol-Knopf: lässt dem Titel auch auf dem iPhone SE Platz (Abnahme 1.1, Runde 3)
+                            Image(systemName: "plus")
                         }
                         .accessibilityLabel(Texte.Gutscheine.verkaufen)
                         .accessibilityIdentifier("gutschein-verkaufen")

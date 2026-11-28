@@ -28,7 +28,7 @@ extension Texte {
         }
 
         // Team: Entfernen per Wischen, Rückfrage mit der Wahl „alle abmelden“
-        static let teamHinweisInhaber = "Team-Mitglieder melden sich mit ihrer eigenen Adresse an und können kassieren. Zum Entfernen eine Adresse nach links wischen."
+        static let teamHinweisInhaber = "Team-Mitglieder melden sich mit eigener Adresse an und kassieren mit; zum Entfernen eine Adresse nach links wischen."
         static let entfernenText = "Die App-Geräte dieser Adresse werden sofort abgemeldet. Willst du sicher sein, dass niemand mehr angemeldet ist, melde alle ab. Dann bist du auch auf diesem iPhone abgemeldet."
         static let entfernenUndAlleAbmelden = "Entfernen und alle abmelden"
     }

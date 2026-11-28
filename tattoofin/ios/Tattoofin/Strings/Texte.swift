@@ -312,6 +312,9 @@ enum Texte {
         static let erstattet = "Erstattet"
         static let sitzungen = "Sitzungen"
         static let kundeAbschnitt = "Kunde"
+        static let zahlungAbschnitt = "Zahlung"
+        static let aktionenAbschnitt = "Nachweise"
+        static let linkAbschnitt = "Zahlungslink"
         static let kunde = "Name"
         static let email = "E-Mail"
         static let qrZeigen = "QR-Code zeigen"
@@ -332,6 +335,8 @@ enum Texte {
         static let keinKonto = "Noch kein Stripe-Konto verbunden."
         static let nichtAktiv = "Auszahlungen sind bei Stripe noch nicht aktiv. Prüf im Konto-Tab den Stripe-Status."
         static func ankunftAm(_ d: String) -> String { "Kommt voraussichtlich am \(d)" }
+        /// Kurzform bei sehr großer Schrift (kein Wortbruch „voraussichtlic/h“, Abnahme 1.1, Runde 3)
+        static func ankunftKurz(_ d: String) -> String { "Kommt am \(d)" }
         static func angekommenAm(_ d: String) -> String { "Angekommen am \(d)" }
         static func bankLabel(_ name: String?, _ endet: String?) -> String {
             [name, endet.map { "Konto endet auf \($0)" }].compactMap { $0 }.joined(separator: ", ")
@@ -349,7 +354,7 @@ enum Texte {
         /// Kurz, damit der Titel im Blatt nicht an „Abbrechen“ klebt und bei großer Schrift nicht abgeschnitten wird
         static let verkaufenTitel = "Gutschein"
         static let leerTitel = "Noch keine Gutscheine"
-        static let leerText = "Verkaufe deinen ersten Gutschein über „Verkaufen“ oben rechts."
+        static let leerText = "Verkaufe deinen ersten Gutschein über „+“ oben rechts."
         static let ohneCode = "Code kommt nach der Zahlung"
         static func codeLabel(_ c: String) -> String { "Code " + c.map(String.init).joined(separator: " ") }
         static let wert = "Wert"
@@ -460,6 +465,7 @@ enum Texte {
         static let hinzufuegen = "Adresse hinzufügen"
         static let adressePlatzhalter = "name@studio.de"
         static let hinzufuegenKnopf = "Hinzufügen"
+        static let hinzufuegenHinweis = "Die Person meldet sich danach mit dieser Adresse an."
         static func entfernenFrage(_ e: String) -> String { "\(e) entfernen?" }
         static let entfernen = "Entfernen"
         static let zugangEntfernen = "Meinen Zugang entfernen"

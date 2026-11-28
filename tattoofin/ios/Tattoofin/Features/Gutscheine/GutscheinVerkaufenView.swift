@@ -113,11 +113,12 @@ struct GutscheinVerkaufenView: View {
             .navigationTitle(Texte.Gutscheine.verkaufenTitel)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button(Texte.Allgemein.abbrechen) { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) { Button(Texte.Allgemein.abbrechen) { dismiss() }.dynamicTypeSize(...DynamicTypeSize.xxxLarge) }
                 // Abschließen auch ohne bis ans Ende zu scrollen (SE, große Schrift)
                 ToolbarItem(placement: .confirmationAction) {
                     Button(Texte.Runde2.erstellen) { erstellen() }
                         .disabled(!bereit || sendet)
+                        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)  // Leisten-Knöpfe wie bei iOS gedeckelt (Abnahme 1.1, Runde 3, SE)
                 }
             }
             .sheet(item: $erstellt, onDismiss: { dismiss() }) { ZahlungslinkSheet(erstellt: $0) }

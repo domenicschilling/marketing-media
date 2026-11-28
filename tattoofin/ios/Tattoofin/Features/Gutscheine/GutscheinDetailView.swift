@@ -84,7 +84,7 @@ struct GutscheinDetailView: View {
             Section {
                 if let d = Datum.tag(g.gueltigBis) { WertZeile(titel: Texte.Gutscheine.gueltigBis, wert: d) }
                 if let k = zahlung.kunde?.leerAlsNil { WertZeile(titel: Texte.Gutscheine.kaeufer, wert: k) }
-                if let e = zahlung.email?.leerAlsNil { WertZeile(titel: Texte.Gutscheine.kaeuferEmail, wert: e) }
+                if let e = zahlung.email?.leerAlsNil { WertZeile(titel: Texte.Gutscheine.kaeuferEmail, wert: Umbruch.email(e)) }
                 if let e = g.empfaenger?.leerAlsNil { WertZeile(titel: Texte.Gutscheine.empfaengerKurz, wert: e) }
                 if let n = g.nachricht?.leerAlsNil { WertZeile(titel: Texte.Gutscheine.nachrichtKurz, wert: n) }
                 if let n = g.einloeseNotiz?.leerAlsNil { WertZeile(titel: Texte.Gutscheine.notiz, wert: n) }
@@ -180,6 +180,7 @@ struct GutscheinDetailView: View {
         .scrollContentBackground(.hidden)
         .tfHintergrund()
         .navigationTitle(Texte.Gutscheine.detailTitel)
+        .tfHarteKanteOben()  // Abnahme 1.1, Runde 3
         .navigationBarTitleDisplayMode(.inline)
         .sensoryFeedback(.success, trigger: eingeloestZaehler)
         .sheet(item: $linkSheet) { ZahlungslinkSheet(erstellt: $0) }

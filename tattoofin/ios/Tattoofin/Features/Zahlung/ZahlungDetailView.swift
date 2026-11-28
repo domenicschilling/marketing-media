@@ -33,6 +33,7 @@ struct ZahlungDetailView: View {
         }
         .tfHintergrund()
         .navigationTitle(Texte.Detail.titel)
+        .tfHarteKanteOben()  // Abnahme 1.1, Runde 3
         .navigationBarTitleDisplayMode(.inline)
         .task { await laden() }
         .sheet(item: $linkSheet) { ZahlungslinkSheet(erstellt: $0) }
@@ -89,12 +90,15 @@ struct ZahlungDetailView: View {
                 if let s = z.sitzungen?.leerAlsNil { WertZeile(titel: Texte.Detail.sitzungen, wert: s) }
                 if z.istAusweichAngezahlt, let a = z.ausweich?.betragCent { WertZeile(titel: Texte.Kasse11.angezahltWert, wert: Euro.text(a)) }
                 if let r = z.restImStudioCent, r > 0 { WertZeile(titel: Texte.Kasse11.restImStudio, wert: Euro.text(r)) }
+            } header: {
+                // Einheitliche Abschnittsköpfe für alle Gruppen (Abnahme 1.1, Runde 3)
+                ListenKopf(Texte.Detail.zahlungAbschnitt)
             }
 
             if z.kunde?.leerAlsNil != nil || z.email?.leerAlsNil != nil {
                 Section {
                     if let k = z.kunde?.leerAlsNil { WertZeile(titel: Texte.Detail.kunde, wert: k) }
-                    if let e = z.email?.leerAlsNil { WertZeile(titel: Texte.Detail.email, wert: e) }
+                    if let e = z.email?.leerAlsNil { WertZeile(titel: Texte.Detail.email, wert: Umbruch.email(e)) }
                 } header: {
                     ListenKopf(Texte.Detail.kundeAbschnitt)
                 }
@@ -126,6 +130,8 @@ struct ZahlungDetailView: View {
                     NachweisKnopf(zahlungId: z.id)
                 }
                 if let aktionFehler { FehlerZeile(text: aktionFehler) }
+            } header: {
+                ListenKopf(z.istOffen ? Texte.Detail.linkAbschnitt : Texte.Detail.aktionenAbschnitt)
             } footer: {
                 if z.istBezahlt {
                     Text(z.erstattungHinweis).font(.dm(.footnote))
@@ -208,7 +214,7 @@ struct BestaetigungSheet: View {
             .navigationTitle(Texte.Detail.leistung)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) { Button(Texte.Allgemein.fertig) { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) { Button(Texte.Allgemein.fertig) { dismiss() }.dynamicTypeSize(...DynamicTypeSize.xxxLarge) }
             }
         }
         .qrAnzeige()

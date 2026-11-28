@@ -49,10 +49,11 @@ struct ZahlungslinkSheet: View {
             }
             .tfHintergrund()
             .navigationTitle(zahlung.istGutschein ? Texte.Zahlung.gutscheinTitel : Texte.Zahlung.titel)
+            .tfHarteKanteOben()  // Abnahme 1.1, Runde 3
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(Texte.Allgemein.fertig) { dismiss() }.font(.dm(.body, weight: .semibold))
+                    Button(Texte.Allgemein.fertig) { dismiss() }.font(.dm(.body, weight: .semibold)).dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                 }
             }
             .alert(Texte.Zahlung.stornoFrage, isPresented: $stornoFrage) {
@@ -123,19 +124,19 @@ struct ZahlungslinkSheet: View {
                         .accessibilityIdentifier("jetzt-pruefen")
                 }
 
-                ShareLink(item: erstellt.whatsappText ?? erstellt.link) {
-                    Label(Texte.Zahlung.teilen, systemImage: "square.and.arrow.up")
+                // „Teilen“ groß, „Link kopieren“ als runder Knopf daneben wie bei der Werbung (Abnahme 1.1, Runde 3)
+                WerbeAktionen {
+                    ShareLink(item: erstellt.whatsappText ?? erstellt.link) {
+                        Label(Texte.Zahlung.teilen, systemImage: "square.and.arrow.up")
+                    }
+                    .buttonStyle(.haupt)
+                } rund: {
+                    RundKnopf(label: kopiert ? Texte.Zahlung.kopiert : Texte.Zahlung.kopieren, symbol: kopiert ? "checkmark" : "link") {
+                        UIPasteboard.general.string = erstellt.link
+                        kopiert = true
+                    }
+                    .sensoryFeedback(.success, trigger: kopiert)
                 }
-                .buttonStyle(.haupt)
-
-                Button {
-                    UIPasteboard.general.string = erstellt.link
-                    kopiert = true
-                } label: {
-                    Label(kopiert ? Texte.Zahlung.kopiert : Texte.Zahlung.kopieren, systemImage: kopiert ? "checkmark" : "doc.on.doc")
-                }
-                .buttonStyle(.zweit)
-                .sensoryFeedback(.success, trigger: kopiert)
 
                 // Roter Textknopf statt Rahmen-Knopf: Stornieren ist die seltene Aktion (Abnahme 1.1, Runde 2)
                 Button(Texte.Zahlung.stornieren, role: .destructive) { stornoFrage = true }

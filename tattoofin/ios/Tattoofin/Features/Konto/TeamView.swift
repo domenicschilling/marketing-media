@@ -9,6 +9,8 @@ struct TeamView: View {
     @State private var speichert = false
     @State private var entfernenFrage: String?
     @State private var eigenenFrage = false
+    @State private var hinzuOffen = false
+    @Environment(\.dynamicTypeSize) private var schrift
 
     private var darfAendern: Bool { team?.darfAendern ?? (app.sitzung?.istInhaber ?? false) }
     private var max: Int { team?.max ?? 5 }
@@ -35,37 +37,22 @@ struct TeamView: View {
                             }
                             .accessibilityIdentifier("team-adresse")
                     }
+                    // „+ Adresse hinzufügen“ als Listenzeile statt eigenem Formular-Block (Abnahme 1.1, Runde 3)
+                    if darfAendern && t.team.count < max {
+                        Button { neueAdresse = ""; hinzuOffen = true } label: {
+                            Label(Texte.Team.hinzufuegen, systemImage: "plus.circle.fill")
+                                .foregroundStyle(Color.tfAkzent)
+                                .font(.dm(.body, weight: .semibold))
+                        }
+                        .disabled(speichert)
+                        .accessibilityIdentifier("team-hinzufuegen")
+                    }
                 } header: {
                     ListenKopf(Texte.Team.teamTitel(t.team.count, max))
                 } footer: {
                     ListenFuss(darfAendern ? Texte.AbnahmeG5.teamHinweisInhaber : Texte.Team.hinweisTeam)
                 }
 
-                if darfAendern && t.team.count < max {
-                    Section {
-                        // Ein Eingabefeld-Bauteil für die ganze App (tfTextfeld), darunter der Knopf in voller Breite;
-                        // die Tastatur-Taste schickt genauso ab (Abnahme 1.1, Nr. 17)
-                        VStack(alignment: .leading, spacing: 10) {
-                            TextField(Texte.Team.hinzufuegen, text: $neueAdresse, prompt: tfPlatzhalter(Texte.Team.adressePlatzhalter))
-                                .accessibilityLabel(Texte.Team.hinzufuegen)
-                                .textContentType(.emailAddress)
-                                .keyboardType(.emailAddress)
-                                .textInputAutocapitalization(.never)
-                                .autocorrectionDisabled()
-                                .submitLabel(.done)
-                                .onSubmit { hinzufuegen() }
-                                .tfTextfeld()
-                            Button { hinzufuegen() } label: {
-                                Label(Texte.Team.hinzufuegenKnopf, systemImage: "plus")
-                            }
-                            .buttonStyle(.zweit)
-                            .disabled(neueAdresse.leerAlsNil == nil || speichert)
-                        }
-                        .padding(.vertical, 6)
-                    } header: {
-                        ListenKopf(Texte.Team.hinzufuegen)
-                    }
-                }
                 if !darfAendern {
                     Section {
                         Button(Texte.Team.zugangEntfernen, role: .destructive) { eigenenFrage = true }
@@ -81,6 +68,7 @@ struct TeamView: View {
         .scrollContentBackground(.hidden)
         .tfHintergrund()
         .navigationTitle(Texte.Konto.team)
+        .tfHarteKanteOben()  // Abnahme 1.1, Runde 3
         .navigationBarTitleDisplayMode(.inline)
         .task { await laden() }
         .refreshable { await laden() }
@@ -97,6 +85,17 @@ struct TeamView: View {
         } message: {
             Text(Texte.AbnahmeG5.entfernenText)
         }
+        .alert(Texte.Team.hinzufuegen, isPresented: $hinzuOffen) {
+            TextField(Texte.Team.adressePlatzhalter, text: $neueAdresse)
+                .textContentType(.emailAddress)
+                .keyboardType(.emailAddress)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+            Button(Texte.Team.hinzufuegenKnopf) { hinzufuegen() }
+            Button(Texte.Allgemein.abbrechen, role: .cancel) {}
+        } message: {
+            Text(Texte.Team.hinzufuegenHinweis)
+        }
         .alert(Texte.Team.zugangEntfernenFrage, isPresented: $eigenenFrage) {
             Button(Texte.Team.zugangEntfernen, role: .destructive) { eigenenZugangEntfernen() }
             Button(Texte.Allgemein.abbrechen, role: .cancel) {}
@@ -109,9 +108,10 @@ struct TeamView: View {
     /// und in der Mitte gekürzt statt mitten im Wort umgebrochen
     private func adresse(_ text: String, _ symbol: String) -> some View {
         Label {
-            Text(text).foregroundStyle(Color.tfTinte)
-                .lineLimit(1)
-                .minimumScaleFactor(0.5)
+            // Große Schrift: umbrechen statt kürzen, nur an „@“ und am letzten Punkt (Abnahme 1.1, Runde 3)
+            Text(schrift.isAccessibilitySize ? Umbruch.email(text) : text).foregroundStyle(Color.tfTinte)
+                .lineLimit(schrift.isAccessibilitySize ? nil : 1)
+                .minimumScaleFactor(schrift.isAccessibilitySize ? 1 : 0.5)
                 .truncationMode(.middle)
         } icon: {
             Image(systemName: symbol).foregroundStyle(Color.tfAkzent)

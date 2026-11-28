@@ -45,6 +45,7 @@ struct ZahlungenView: View {
             zahlungsListe
                 .tfHintergrund()
                 .navigationTitle(Texte.Zahlungen.zahlungen)
+                .tfHarteKanteOben()  // Abnahme 1.1, Runde 3
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) { filterMenue }
@@ -56,6 +57,7 @@ struct ZahlungenView: View {
                     AuszahlungenView()
                         .tfHintergrund()
                         .navigationTitle(Texte.Zahlungen.auszahlungen)
+                        .tfHarteKanteOben()  // Abnahme 1.1, Runde 3
                         .navigationBarTitleDisplayMode(.inline)
                 }
         }
@@ -152,7 +154,7 @@ struct ZahlungenView: View {
         .listStyle(.insetGrouped)
         .listSectionSpacing(.compact)
         .scrollContentBackground(.hidden)
-        .searchable(text: $suche, placement: .navigationBarDrawer(displayMode: .automatic), prompt: Texte.Zahlungen.suche)
+        .searchable(text: $suche, placement: .navigationBarDrawer(displayMode: .always), prompt: Texte.Zahlungen.suche)
         // Neu laden setzt portal.geladenAm, damit holt .task(id:) oben auch den Betrag der Auszahlungen-Karte neu
         .refreshable { await portal.laden() }
     }

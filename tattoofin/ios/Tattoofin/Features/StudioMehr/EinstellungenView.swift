@@ -35,6 +35,7 @@ struct EinstellungenView: View {
         }
         .tfHintergrund()
         .navigationTitle(Texte.Einst.titel)
+        .tfHarteKanteOben()  // Abnahme 1.1, Runde 3
         .navigationBarTitleDisplayMode(.inline)
         .task {
             await mehr.laden()

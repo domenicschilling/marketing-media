@@ -10,6 +10,8 @@ struct StartBereich: View {
     @Environment(\.dynamicTypeSize) private var schrift
     /// Kleine iPhones (SE): Kasse ohne Monatszeile
     var kompakt = false
+    /// „So geht's“ als Knopf oben links in der Leiste statt als Karte (Abnahme 1.1, Runde 3: mehr Platz für Ziffern und Knopf)
+    var soGehtsInLeiste = false
     /// Ab „größer als Standard“ untereinander. Die Schrift wächst hier bis AX5 (begrenzt ist nur der Ziffernblock der Kasse).
     private var grosseSchrift: Bool { schrift > .large }
 
@@ -27,7 +29,9 @@ struct StartBereich: View {
             // Alles erledigt: kein „Einrichtung 8/8“ mehr, die Zeile zeigt nur noch „So geht's“
             let zeigeEinrichtung = punkte.map { fertig < $0.count } ?? false
             Group {
-                if grosseSchrift {
+                if soGehtsInLeiste {
+                    if zeigeEinrichtung, let punkte { einrichtungKnopf(fertig: fertig, von: punkte.count) }
+                } else if grosseSchrift {
                     VStack(spacing: 8) {
                         if zeigeEinrichtung, let punkte { einrichtungKnopf(fertig: fertig, von: punkte.count) }
                         soGehtsKnopf
@@ -45,6 +49,20 @@ struct StartBereich: View {
             // Der Testmodus-Hinweis bleibt immer sichtbar (App Review sieht diesen Bildschirm zuerst, auch auf kleinen iPhones)
             if !kompakt || portal.studio?.istTestmodus == true { monat }
         }
+        .toolbar {
+            if soGehtsInLeiste {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button { blatt = .soGehts } label: {
+                        Label(WerbungTexte.soGehtsTitel, systemImage: "play.rectangle")
+                            .labelStyle(.titleAndIcon)
+                            .font(.dm(.subheadline, weight: .semibold))
+                    }
+                    .accessibilityLabel(WerbungTexte.soGehtsTitel)
+                    .accessibilityHint(WerbungTexte.soGehtsLabel)
+                    .accessibilityIdentifier("start-so-gehts")
+                }
+            }
+        }
         .task(id: portal.geladenAm) { await werbung.laden() }
         .sheet(item: $blatt, onDismiss: {
             // Nach Recht/Fragebogen: Häkchen neu holen
@@ -57,7 +75,7 @@ struct StartBereich: View {
                         SoGehtsView()
                             .toolbar {
                                 ToolbarItem(placement: .confirmationAction) {
-                                    Button(Texte.Allgemein.fertig) { blatt = nil }.font(.dm(.body, weight: .semibold))
+                                    Button(Texte.Allgemein.fertig) { blatt = nil }.font(.dm(.body, weight: .semibold)).dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                                 }
                             }
                     }
@@ -229,7 +247,7 @@ struct ChecklistenBlatt: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(Texte.Allgemein.fertig) { dismiss() }.font(.dm(.body, weight: .semibold))
+                    Button(Texte.Allgemein.fertig) { dismiss() }.font(.dm(.body, weight: .semibold)).dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                 }
             }
             .navigationDestination(item: $ziel) { z in

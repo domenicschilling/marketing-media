@@ -13,11 +13,12 @@ Warum „Raten*“ nicht im Namen/Untertitel steht: Zu „Raten*“ gehört dire
 
 Länder: Der Server nimmt heute nur deutsche Studios an (PLZ mit 5 Ziffern, Stripe-Konto fest „DE“, deutsche USt.). Darum sagt der Text „Deutschland“. Österreich/Schweiz erst nach einem Server-Umbau (Domenic entscheidet).
 
-## Beschreibung (2682/4000)
+## Beschreibung (2782/4000)
 
 ```
 Raten* für deine Kunden. Den Betrag bekommst du auf einmal. Achtung! Kreditaufnahme kostet Geld.
 *Raten über Klarna, nach deren Bonitätsprüfung. Vertragspartner der Raten ist Klarna, nicht Tattoofin.
+Klarna schaltest du einmal selbst in deinem Stripe-Konto ein; Stripe und Klarna prüfen dein Studio.
 
 Tattoofin ist die Kasse für dein Tattoo-Studio am iPhone. Du tippst den Betrag ein und schickst den Link per WhatsApp. Dein Kunde zahlt am Handy mit Karte, Apple Pay, Google Pay oder Klarna. Den Vertrag mit Klarna schließt er selbst, nicht mit dir. Du finanzierst nichts vor.
 
@@ -72,13 +73,13 @@ Dazu viele kleine Verbesserungen.
 - App-Datenschutz: „Fotos oder Videos“ entfernen (seit 1.1 kein Logo-Upload mehr)
 
 ## Bilder (6,9 Zoll 1320 × 2868 und 6,5 Zoll 1284 × 2778, Reihenfolge)
-Gestaltet als Werbung: echtes iPhone mit echter App (lokaler Server, Beispielstudio „Nordlicht Tattoo“), App-Symbol + Schriftzug, Tattoofin-Gelb/Marineblau, cremefarbenes Band als Panorama über alle Bilder. Vorlage `werbebilder/render.mjs` + `bilder.json`, Rohaufnahmen `StoreWerbebilderUITests`.
+Gestaltet als Werbung: echtes iPhone mit echter App (lokaler Server, Beispielstudio „Nordlicht Tattoo“), App-Symbol + Schriftzug, Tattoofin-Gelb/Marineblau. Vorlage `werbebilder/render.mjs` + `bilder.json`, Rohaufnahmen `StoreWerbebilderUITests`.
 1. **Raten\* für dein Studio** – Dein Kunde zahlt in Raten. Du bekommst den Betrag auf einmal. Stempel „7 Tage kostenlos testen“, Markierung „Mit Klarna“, Pflichtsatz als Fußzeile.
 2. **Zahlungslink in Sekunden** – Betrag eintippen, per WhatsApp schicken. Fertig. (Kasse + Link-Blatt mit QR)
 3. **Karte, Apple Pay oder Raten\*** – Dein Kunde wählt. Du siehst sofort, was bezahlt ist. Pflichtsatz als Fußzeile.
 4. **Gutscheine verkaufen & einlösen** – Code scannen, einlösen, erledigt.
-5. **Bezahlt? Dein iPhone sagt Bescheid.** – Mitteilung mit dem echten Server-Text („Zahlung eingegangen · 1.200,00 € · Rückenstück“).
-6. **Aufs eigene Konto** – Keine Provision von Tattoofin. Nur die Gebühr von Stripe.
+5. **Bezahlt? Dein iPhone sagt Bescheid.** – Mitteilung mit dem echten Server-Text („Zahlung eingegangen · 1.200,00 € · Rückenstück“), vergrößert über dem Handy.
+6. **Aufs eigene Konto** – Keine Provision pro Zahlung. Stripe zahlt direkt auf dein Bankkonto. Kachel „Verfügbar / Kommt in den nächsten Tagen“ vergrößert herausgezogen.
 7. **Dein Team kassiert mit** – Eigene Zugänge für deine Artists.
 8. **QR-Code an die Theke** – Kunde scannt und zahlt selbst. Auch Anzahlungen. (Theken-QR im Vollbild)
 

@@ -29,7 +29,7 @@
         "markierung": [
           {
             "x": 56,
-            "y": 1030,
+            "y": 1110,
             "w": 1208,
             "h": 156,
             "text": "Mit Klarna",
@@ -59,8 +59,8 @@
       },
       {
         "datei": "a03-zahlungslink-qr.png",
-        "breite": 660,
-        "x": 620,
+        "breite": 640,
+        "x": 580,
         "y": 1140,
         "drehung": 4,
         "z": 3
@@ -124,7 +124,23 @@
         "y": 1000
       }
     ],
-    "sub": "Mitteilung, sobald dein Kunde bezahlt hat."
+    "sub": "Mitteilung, sobald dein Kunde bezahlt hat.",
+    "auszuege": [
+      {
+        "datei": "a10-sperrbildschirm.png",
+        "quelle": {
+          "x": 28,
+          "y": 172,
+          "w": 1264,
+          "h": 196
+        },
+        "x": 70,
+        "y": 1140,
+        "breite": 1180,
+        "drehung": -2,
+        "rund": 56
+      }
+    ]
   },
   {
     "name": "auszahlung",
@@ -133,12 +149,29 @@
       "Aufs eigene",
       "[Konto]"
     ],
-    "sub": "Keine Provision von Tattoofin. Nur die Gebühr von Stripe.",
+    "sub": "Keine Provision pro Zahlung. Stripe zahlt direkt auf dein Bankkonto.",
     "handys": [
       {
         "datei": "a06-auszahlungen.png",
-        "breite": 1000,
-        "y": 940
+        "breite": 1150,
+        "y": 980,
+        "x": 85
+      }
+    ],
+    "auszuege": [
+      {
+        "datei": "a06-auszahlungen.png",
+        "quelle": {
+          "x": 58,
+          "y": 452,
+          "w": 1204,
+          "h": 304
+        },
+        "x": 30,
+        "y": 1347,
+        "breite": 1260,
+        "drehung": -3,
+        "rund": 60
       }
     ]
   },
@@ -180,8 +213,9 @@
     "handys": [
       {
         "datei": "a08-zahlseite-qr.png",
-        "breite": 1000,
-        "y": 940
+        "breite": 1120,
+        "y": 890,
+        "x": 100
       }
     ]
   }

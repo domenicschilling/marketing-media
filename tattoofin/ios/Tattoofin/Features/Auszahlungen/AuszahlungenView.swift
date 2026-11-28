@@ -147,7 +147,7 @@ struct AuszahlungZeile: View {
                     .minimumScaleFactor(0.6)
                 // Fehlgeschlagene/abgebrochene Auszahlungen kommen nicht an → kein Ankunftsdatum
                 if !["failed", "canceled"].contains(auszahlung.status), let d = Datum.tag(auszahlung.ankunftAm) {
-                    Text(auszahlung.status == "paid" ? Texte.Auszahlungen.angekommenAm(d) : Texte.Auszahlungen.ankunftAm(d))
+                    Text(auszahlung.status == "paid" ? Texte.Auszahlungen.angekommenAm(d) : (schrift.isAccessibilitySize ? Texte.Auszahlungen.ankunftKurz(d) : Texte.Auszahlungen.ankunftAm(d)))
                         .font(.dm(.subheadline))
                         .foregroundStyle(Color.tfLeise)
                 }

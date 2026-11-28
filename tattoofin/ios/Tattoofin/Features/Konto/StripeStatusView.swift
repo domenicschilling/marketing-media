@@ -112,6 +112,7 @@ struct StripeStatusView: View {
         .scrollContentBackground(.hidden)
         .tfHintergrund()
         .navigationTitle(Texte.AbnahmeG5.stripe)
+        .tfHarteKanteOben()  // Abnahme 1.1, Runde 3
         .navigationBarTitleDisplayMode(.inline)
     }
 

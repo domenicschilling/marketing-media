@@ -165,3 +165,15 @@ enum TokenHex {
         daten.map { String(format: "%02x", $0) }.joined()
     }
 }
+
+/// Umbruch-Helfer für E-Mail-Adressen: erlaubt Zeilenumbrüche nur vor „@“ und vor dem letzten Punkt (U+200B),
+/// statt mitten im Namen (Abnahme 1.1, Runde 3)
+enum Umbruch {
+    static func email(_ e: String) -> String {
+        guard let at = e.firstIndex(of: "@") else { return e }
+        var name = String(e[..<at]), domain = String(e[e.index(after: at)...])
+        if let p = domain.lastIndex(of: ".") { domain = String(domain[..<p]) + "\u{200B}" + String(domain[p...]) }
+        name += "\u{200B}"
+        return name + "@" + domain
+    }
+}

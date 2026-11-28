@@ -99,19 +99,20 @@ struct MarkenKopf: View {
     var kompakt = false
 
     var body: some View {
-        // Linksbündig wie Überschrift und Text darunter (Abnahme 1.1, Runde 2: vorher Kopf mittig, „Anmelden“ links)
-        VStack(alignment: .leading, spacing: kompakt ? 8 : 10) {
+        // Ruhige Markenzeile (Figur klein + Wortmarke nebeneinander), damit die Überschrift darunter die eine klare
+        // Hauptzeile ist (Abnahme 1.1, Runde 3: vorher drei laute Schmuck-Elemente untereinander)
+        HStack(spacing: 10) {
             Image(.figur)
                 .resizable()
                 .scaledToFit()
-                .frame(width: kompakt ? 64 : 110, height: kompakt ? 64 : 110)
-                .padding(kompakt ? 8 : 10)
+                .frame(width: kompakt ? 34 : 42, height: kompakt ? 34 : 42)
+                .padding(6)
                 .background(Color.tfGelb, in: Circle())
                 .accessibilityHidden(true)
             Image(.wortmarke)
                 .resizable()
                 .scaledToFit()
-                .frame(maxWidth: kompakt ? 170 : 220)
+                .frame(height: kompakt ? 24 : 30)
                 .accessibilityLabel(Texte.Allgemein.logoLabel)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -315,21 +316,6 @@ struct CodeView: View {
                 // Bedienungshilfen-Größen: angeheftet über der Tastatur (safeAreaInset unten). Nach der 6. Ziffer meldet die App ohnehin selbst an.
                 if !schrift.isAccessibilitySize { anmeldenKnopf }
 
-                // Als Textlink (vorher Umriss-Knopf): braucht weniger Höhe und steht auf dem SE nicht halb unter der Tastatur
-                Button {
-                    neuSchicken()
-                } label: {
-                    Text(sekundenBisNeu > 0 ? Texte.Anmelden.neuerCodeIn(sekundenBisNeu) : Texte.Anmelden.neuerCode)
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity, minHeight: 44)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .font(.dm(.subheadline, weight: .semibold))
-                .foregroundStyle(sekundenBisNeu > 0 ? Color.tfLeise : Color.tfAkzent)
-                .disabled(sekundenBisNeu > 0)
-                .id("code-neu")
-
                 if neuGeschickt {
                     Text(Texte.Anmelden.neuGeschickt)
                         .font(.dm(.subheadline))
@@ -341,29 +327,23 @@ struct CodeView: View {
             }
             .padding(20)
         }
-        .onAppear {
-            // Kleine Bildschirme (SE): nach dem Hochfahren der Tastatur bis „Neuen Code schicken“ scrollen.
-            // Nicht bei großer Schrift: dort würden sonst die Ziffernfelder oben aus dem Bild geschoben
-            guard !schrift.isAccessibilitySize else { return }
-            Task { @MainActor in
-                try? await Task.sleep(for: .milliseconds(450))
-                withAnimation(.easeOut(duration: 0.25)) { leser.scrollTo("code-neu", anchor: .bottom) }
-            }
-        }
         }
         // Wischen nach unten schließt die Tastatur, damit „Neuen Code schicken“ auch bei großer Schrift erreichbar ist
         .scrollDismissesKeyboard(.interactively)
         // „Anmelden“ über der Tastatur angeheftet: bei großer Schrift sonst hinter der Ziffern-Tastatur (Gestaltungsprüfung 1.1, Nr. 7)
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            if schrift.isAccessibilitySize {
-                anmeldenKnopf
-                    // Angeheftet: Schrift höchstens AX2, sonst nimmt der Knopf über der Tastatur zu viel Platz
-                    .dynamicTypeSize(...DynamicTypeSize.accessibility2)  // ds-ok: angehefteter Knopf über der Tastatur
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 8)
-                    .frame(maxWidth: .infinity)
-                    .background(Color.tfHintergrund)
+            VStack(spacing: 4) {
+                if schrift.isAccessibilitySize {
+                    anmeldenKnopf
+                        // Angeheftet: Schrift höchstens AX2, sonst nimmt der Knopf über der Tastatur zu viel Platz
+                        .dynamicTypeSize(...DynamicTypeSize.accessibility2)  // ds-ok: angehefteter Knopf über der Tastatur
+                }
+                neuCodeKnopf
             }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 4)
+            .frame(maxWidth: .infinity)
+            .background(Color.tfHintergrund)
         }
         .tfHintergrund()
         .navigationTitle("")  // Überschrift „Code eingeben“ steht schon groß im Inhalt
@@ -430,6 +410,23 @@ struct CodeView: View {
         default:
             fehler = Texte.Fehler.unbekannt
         }
+    }
+
+    /// „Neuen Code schicken“: fest unten über der Tastatur (Abnahme 1.1, Runde 3), als Textlink
+    private var neuCodeKnopf: some View {
+        Button {
+            neuSchicken()
+        } label: {
+            Text(sekundenBisNeu > 0 ? Texte.Anmelden.neuerCodeIn(sekundenBisNeu) : Texte.Anmelden.neuerCode)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity, minHeight: 44)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .font(.dm(.subheadline, weight: .semibold))
+        .foregroundStyle(sekundenBisNeu > 0 ? Color.tfLeise : Color.tfAkzent)
+        .disabled(sekundenBisNeu > 0)
+        .dynamicTypeSize(...DynamicTypeSize.accessibility2)  // ds-ok: angeheftete Zeile über der Tastatur
     }
 
     private func neuSchicken() {

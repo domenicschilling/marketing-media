@@ -12,6 +12,7 @@ struct GeraeteView: View {
 
     private var istInhaber: Bool { app.sitzung?.istInhaber ?? false }
 
+    @Environment(\.dynamicTypeSize) private var schrift
     var body: some View {
         TFListe {
             if let geraete {
@@ -37,6 +38,7 @@ struct GeraeteView: View {
         .scrollContentBackground(.hidden)
         .tfHintergrund()
         .navigationTitle(Texte.Konto.geraete)
+        .tfHarteKanteOben()  // Abnahme 1.1, Runde 3
         .navigationBarTitleDisplayMode(.inline)
         .task { await laden() }
         .refreshable { await laden() }
@@ -56,27 +58,48 @@ struct GeraeteView: View {
         }
     }
 
+    @ViewBuilder private func knoepfe(_ g: Geraet) -> some View {
+        if g.diesesGeraet == true {
+            Button {
+                neuerName = g.name ?? ""
+                umbenennen = true
+            } label: {
+                Text(Texte.Geraete.umbenennen).fixedSize().frame(minHeight: 44, alignment: .leading).contentShape(Rectangle())
+            }
+            .foregroundStyle(Color.tfTinte)
+        }
+        if darfAbmelden(g) {
+            Button(role: .destructive) { abmeldenFrage = g } label: {
+                Text(Texte.Geraete.abmelden).fixedSize().frame(minHeight: 44, alignment: .leading).contentShape(Rectangle())
+            }
+        }
+    }
+
     private func darfAbmelden(_ g: Geraet) -> Bool {
         istInhaber || g.email == nil || g.diesesGeraet == true || g.email?.lowercased() == app.sitzung?.email.lowercased()
     }
 
     private func zeile(_ g: Geraet) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            HStack {
+            // Bei großer Schrift steht der Chip unter dem Namen statt daneben (Runde 3: Chip zweizeilig bei AX5)
+            let kopf = schrift.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 4)) : AnyLayout(HStackLayout())
+            kopf {
                 Text(g.name ?? Texte.Geraete.ohneName).font(.dm(.body, weight: .semibold)).foregroundStyle(Color.tfTinte)
                 if g.diesesGeraet == true {
                     Text(Texte.Geraete.diesesGeraet)
                         .font(.dm(.caption, weight: .bold))
                         .foregroundStyle(Color.tfBlau)
+                        .lineLimit(1)
                         .padding(.horizontal, 8).padding(.vertical, 2)
                         .background(Color.tfGelb, in: Capsule())
+                        .dynamicTypeSize(...DynamicTypeSize.accessibility2)
                 }
             }
             // Technische Kennungen wie „iPhone18,3“ sagen dem Studio nichts → weglassen
             Text([g.plattformText, g.modell.flatMap { $0.range(of: #"^[A-Za-z]+\d+,\d+$"#, options: .regularExpression) == nil ? $0 : nil }]
                     .compactMap { $0 }.joined(separator: " · "))
                 .font(.dm(.subheadline)).foregroundStyle(Color.tfLeise)
-            if let e = g.email { Text(Texte.Geraete.angemeldetMit(e)).font(.dm(.subheadline)).foregroundStyle(Color.tfLeise) }
+            if let e = g.email { Text(Texte.Geraete.angemeldetMit(Umbruch.email(e))).font(.dm(.subheadline)).foregroundStyle(Color.tfLeise) }
             // Der Server schreibt „zuletzt aktiv“ höchstens stündlich; dieses Gerät ist gerade in Benutzung
             if g.diesesGeraet == true {
                 Text(Texte.Geraete.geradeAktiv).font(.dm(.caption)).foregroundStyle(Color.tfLeise)
@@ -88,21 +111,13 @@ struct GeraeteView: View {
                   systemImage: g.push == true ? "bell.fill" : "bell.slash")
                 .font(.dm(.caption))
                 .foregroundStyle(Color.tfLeise)
-            HStack(spacing: 20) {
-                if g.diesesGeraet == true {
-                    Button(Texte.Geraete.umbenennen) {
-                        neuerName = g.name ?? ""
-                        umbenennen = true
-                    }
-                    .foregroundStyle(Color.tfTinte)
-                }
-                if darfAbmelden(g) {
-                    Button(Texte.Geraete.abmelden, role: .destructive) { abmeldenFrage = g }
-                }
+            // Knöpfe: nebeneinander, wenn sie passen, sonst untereinander; jede Tippfläche mindestens 44 pt (Runde 3)
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 20) { knoepfe(g) }
+                VStack(alignment: .leading, spacing: 0) { knoepfe(g) }
             }
             .font(.dm(.subheadline, weight: .semibold))
             .buttonStyle(.borderless)
-            .padding(.top, 2)
         }
         .padding(.vertical, 4)
     }

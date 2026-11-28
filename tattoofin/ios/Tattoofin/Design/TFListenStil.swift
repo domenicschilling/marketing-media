@@ -57,6 +57,7 @@ struct TFAktionsZeile: View {
                 .accessibilityHidden(true)
         }
         .contentShape(Rectangle())
+        .dynamicTypeSize(...DynamicTypeSize.accessibility3)  // kein Wortbruch wie „Mitteilun/gen“ bei AX5 (Runde 3)
     }
 }
 
@@ -140,7 +141,12 @@ enum TFLeistenStil {
 
 extension View {
     /// Ab iOS 26: harte Kante unter der Navigationsleiste statt weicher Unschärfe (kein Geistertext beim Scrollen)
+    /// Abnahme 1.1, Runde 3: Leiste zusätzlich deckend im Seitenhintergrund, damit kein Text unter dem Titel durchscheint.
+    /// Direkt an die scrollende List/ScrollView hängen (dort, wo auch `.navigationTitle` steht), nicht an den NavigationStack.
     @ViewBuilder func tfHarteKanteOben() -> some View {
-        if #available(iOS 26.0, *) { self.scrollEdgeEffectStyle(.hard, for: .top) } else { self }
+        let deckend = self
+            .toolbarBackground(Color.tfHintergrund, for: .navigationBar)
+            .toolbarBackgroundVisibility(.visible, for: .navigationBar)
+        if #available(iOS 26.0, *) { deckend.scrollEdgeEffectStyle(.hard, for: .top) } else { deckend }
     }
 }
